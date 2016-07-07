@@ -17,18 +17,10 @@ using namespace Ph2_HwDescription;
 namespace Ph2_HwInterface {
 
     // Event implementation
-    Event::Event ( uint32_t pNbCbc, const std::vector<uint32_t>& list )
-    {
-        SetSize ( pNbCbc );
-        SetEvent ( list );
-    }
-
 
     Event::Event ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
-        SetSize ( pNbCbc );
-        AddBoard ( pBoard );
-        SetEvent ( list );
+        SetEvent (pBoard, pNbCbc, list);
     }
 
     Event::Event ( const Event& pEvent ) :
@@ -38,31 +30,28 @@ namespace Ph2_HwInterface {
         fEventCount ( pEvent.fEventCount ),
         fEventCountCBC ( pEvent.fEventCountCBC ),
         fTDC ( pEvent.fTDC ),
-        fEventMap ( pEvent.fEventMap )
+        fEventDataMap ( pEvent.fEventDataMap )
     {
 
     }
 
-    void Event::SetSize ( uint32_t pNbCbc )
+    void Event::SetEvent (const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& pList )
     {
-        //  need to introduce a factor of 2 because the 2CBC FW is written for 4 CBCs actually
-
         fEventSize = pNbCbc *  CBC_EVENT_SIZE_32  + EVENT_HEADER_TDC_SIZE_32;
-        fOffsetTDC = EVENT_HEADER_SIZE_32  + CBC_EVENT_SIZE_32 * pNbCbc * 2; //in 32 bit words
 
-#ifdef __CBCDAQ_DEV__
+        // now decode the header Info
+        fBunch = 0x00FFFFFF & pList.at (0);
+        fOrbit = 0x00FFFFFF & pList.at (1);
+        fLumi = 0x00FFFFFF & pList.at (2);
+        fEventCount = 0x00FFFFFF &  pList.at (3);
+        fEventCountCBC = 0x00FFFFFF & pList.at (4);
+        fTDC = 0x000000FF & pList.back();
 
-        std::cout << "DEBUG EVENT SET SIZE: Event size " << fEventSize << " nCBC = "
-                  << pNbCbc <<  " this should be 168 with 4cbc" << " and Offset TDC " << fOffsetTDC
-                  << std::endl;
-#endif
-    }
-
-    void Event::AddBoard ( const BeBoard* pBoard )
-    {
+        //now decode FEEvents
+        uint8_t cBeId = pBoard->getBeId();
         uint32_t cNFe = static_cast<uint32_t> ( pBoard->getNFe() );
 
-        for ( uint32_t i = 0; i < cNFe; i++ )
+        for ( uint8_t cFeId = 0; cFeId < cNFe; cFeId++ )
         {
             uint32_t cNCbc;
 
@@ -75,182 +64,87 @@ namespace Ph2_HwInterface {
                 else cNCbc = static_cast<uint32_t> ( pBoard->getNCbcDataSize() / cNFe );
             }
             // if there is no FWVersion node in the xml, the CBCs will be counted for each module according to the xml file
-            else cNCbc = static_cast<uint32_t> ( pBoard->getModule ( i )->getNCbc() );
+            else cNCbc = static_cast<uint32_t> ( pBoard->getModule ( cFeId )->getNCbc() );
 
-            FeEventMap cFeEventMap;
-
-            for ( uint32_t j = 0; j < cNCbc; j++ )
-                cFeEventMap[j] = {0, 0};
-
-            fEventMap[i] = cFeEventMap;
-        }
-    }
-
-
-    int Event::SetEvent ( const std::vector<uint32_t>& list )
-    {
-        int vsize = sizeof ( uint32_t );
-
-        // Debug
-        //for(int i = 0; i< list.size(); i++) {
-        //std::cout << std::bitset<8>(list.at(i)) << " ";
-        //if((i+1)%4 == 0 && i != 0) std::cout << std::endl;
-        //}
-
-        fBunch = 0x00FFFFFF & list.at (0);
-        fOrbit = 0x00FFFFFF & list.at (1);
-        fLumi = 0x00FFFFFF & list.at (2);
-        fEventCount = 0x00FFFFFF &  list.at (3);
-        fEventCountCBC = 0x00FFFFFF & list.at (4);
-        fTDC = 0x000000FF & list.back();
-
-        uint32_t event_size = EVENT_HEADER_SIZE_32;
-
-        // uint32_t begin = EVENT_HEADER_SIZE_CHAR;
-        uint32_t begin = 0;
-
-        uint32_t end = 0;
-
-        for ( auto& it : fEventMap )
-        {
-            //loop the FrontEnds
-            uint8_t cFeId = static_cast<uint8_t> ( it.first );
-            uint8_t cNCbc = static_cast<uint8_t> ( it.second.size() );
-            event_size += cNCbc * CBC_EVENT_SIZE_32;
-
-            for ( auto& jt : it.second )
+            //now loop the CBCs and encode the IDs in key
+            for ( uint8_t cCbcId = 0; cCbcId < cNCbc; cCbcId++ )
             {
-                //loop the CBCs
-                uint8_t cCbcId = static_cast<uint8_t> ( jt.first );
-                // begin += cFeId * CBC_EVENT_SIZE_CHAR * cNCbc + cCbcId * CBC_EVENT_SIZE_CHAR;
-                begin = EVENT_HEADER_SIZE_32 + cFeId * CBC_EVENT_SIZE_32 * cNCbc + cCbcId * CBC_EVENT_SIZE_32;
-                end = begin + CBC_EVENT_SIZE_32 - 1;
-                jt.second = {begin, end};
+                uint32_t cKey = encodeId (cFeId, cCbcId);
+                std::bitset<CBC_EVENT_SIZE_32 * 32> cCbcData;
 
-#ifdef __CBCDAQ_DEV__
-                std::cout << "DEBUG FE " << +cFeId << "  with " << +cNCbc << " cbcs on CBC " << +cCbcId
-                          << " and the start and end indices of CBC data: {"
-                          << begin << ", " << end << "}"
-                          << std::endl;
-#endif
+                uint32_t begin = EVENT_HEADER_SIZE_32 + cFeId * CBC_EVENT_SIZE_32 * cNCbc + cCbcId * CBC_EVENT_SIZE_32;
+                uint32_t end = begin + CBC_EVENT_SIZE_32 - 1;
+                std::cout << "DEBUG Be: " << +cBeId << " FE: " << +cFeId << " Cbc: " << +cCbcId << " begins at " << begin << " ends at  " << end << std::endl;
+
+                //ok, now I have the begin and end index for each CBC - just insert the corresponding words in a bitset
+                //TODO: check if the indices are inclusive end or not
+                uint32_t cIndex = 0;
+
+                for (uint32_t cWordIndex = begin; cWordIndex <= end; cWordIndex++)
+                {
+                    //add words to bitset
+                    this->setBitsetValue (cCbcData, pList.at (cWordIndex), cIndex * CBC_EVENT_SIZE_32);
+                    cIndex++;
+                }
+
+                //now insert in map
+                fEventDataMap[cKey] = cCbcData;
             }
         }
-
-        //since I also need the TDC info, need to increment event_size
-        event_size += 1;
-
-        fEventData.reserve ( event_size );
-        fEventData.assign ( list.begin(), list.end() );
-
-        //for ( uint8_t i = vsize; i > 0; i-- )
-        //fEventData.push_back ( list[list.size() - i] );
-
-        return 0;
     }
 
     void Event::GetCbcEvent ( const uint8_t& pFeId, const uint8_t& pCbcId, std::vector< uint32_t >& cbcData )  const
     {
         cbcData.clear();
 
-        //Event map is a map of (uint32_t vs FeEventMap)
-        EventMap::const_iterator cIt = fEventMap.find ( pFeId );
+        uint32_t cKey = encodeId (pFeId, pCbcId);
+        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
-        if ( cIt != fEventMap.end() )
+        if (cData != std::end (fEventDataMap) )
         {
-            //FeEventMap is a map of uint32_t vs pair(uin32_t, uint32_t)
-            FeEventMap::const_iterator cJt = cIt->second.find ( pCbcId );
-
-            if ( cJt != cIt->second.end() )
-            {
-                //ok, I have found the FE and CBC
-                //cJt->second is pair with indices
-                cbcData.reserve ( cJt->second.second - cJt->second.first + 1 );
-                cbcData.assign ( fEventData.begin() + cJt->second.first, fEventData.begin() + cJt->second.second + 1 );
-            }
-            else
-                std::cout << "Event: CBC " << +pCbcId << " is not found." << std::endl;
+            //use cData.second and convert it to std::vector<uint32_t>
+            for (size_t cWord = 0; cWord < CBC_EVENT_SIZE_32; cWord++)
+                cbcData.push_back ( this->subset (cData.second, cWord * 32, 32)  ) ;
         }
         else
-            std::cout << "Event: FE " << +pFeId << " is not found." << std::endl;
+            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
     }
 
     void Event::GetCbcEvent ( const uint8_t& pFeId, const uint8_t& pCbcId, std::vector< uint8_t >& cbcData )  const
     {
-        cbcData.clear();
-        std::vector<uint32_t> ctmpVec32;
+        uint32_t cKey = encodeId (pFeId, pCbcId);
+        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
-        //Event map is a map of (uint32_t vs FeEventMap)
-        EventMap::const_iterator cIt = fEventMap.find ( pFeId );
-
-        if ( cIt != fEventMap.end() )
+        if (cData != std::end (fEventDataMap) )
         {
-            //FeEventMap is a map of uint32_t vs pair(uin32_t, uint32_t)
-            FeEventMap::const_iterator cJt = cIt->second.find ( pCbcId );
-
-            if ( cJt != cIt->second.end() )
+            //use cData.second and convert it to std::vector<uint32_t>
+            //TODO: continue here
+            for (size_t cWord = 0; cWord < CBC_EVENT_SIZE_32; cWord++)
             {
-                //ok, I have found the FE and CBC
-                //cJt->second is pair with indices
-                ctmpVec32.reserve ( cJt->second.second - cJt->second.first + 1 );
-                ctmpVec32.assign ( fEventData.begin() + cJt->second.first, fEventData.begin() + cJt->second.second + 1 );
-
-                //ok, now need to make this into a vector of uint8_t
-                for (auto& cWord : ctmpVec32)
-                {
-                    cbcData.push_back ( ( cWord >> 24 ) & 0xFF);
-                    cbcData.push_back ( ( cWord >> 16 ) & 0xFF);
-                    cbcData.push_back ( ( cWord >> 8 ) & 0xFF);
-                    cbcData.push_back ( ( cWord ) & 0xFF);
-                }
+                uint32_t cWord32 = this->subset (cData.second, cWord * 32, 32);
+                cbcData.push_back ( (cWord32 >> 24) & 0xFF);
+                cbcData.push_back ( (cWord32 >> 16) & 0xFF);
+                cbcData.push_back ( (cWord32 >> 8) & 0xFF);
+                cbcData.push_back ( (cWord32 ) & 0xFF);
             }
-            else
-                std::cout << "Event: CBC " << +pCbcId << " is not found." << std::endl;
         }
         else
-            std::cout << "Event: FE " << +pFeId << " is not found." << std::endl;
-    }
-
-    void Event::GetEventBytes ( std::vector< uint8_t >& cbcData ) const
-    {
-        cbcData.clear();
-
-        for (auto& cWord : GetEventData() )
-        {
-            cbcData.push_back ( ( cWord >> 24 ) & 0xFF);
-            cbcData.push_back ( ( cWord >> 16 ) & 0xFF);
-            cbcData.push_back ( ( cWord >> 8 ) & 0xFF);
-            cbcData.push_back ( ( cWord ) & 0xFF);
-        }
-    }
-
-    std::string Event::HexString() const
-    {
-        std::stringbuf tmp;
-        std::ostream os ( &tmp );
-
-        os << std::hex;
-
-        for ( uint32_t i = 0; i < fEventSize; i++ )
-            os << std::uppercase << std::setw ( 2 ) << std::setfill ( '0' ) << ( fEventData.at (i) & 0xFF000000 ) << " " << ( fEventData.at (i) & 0x00FF0000 ) << " " << ( fEventData.at (i) & 0x0000FF00 ) << " " << ( fEventData.at (i) & 0x000000FF );
-
-        //os << std::endl;
-
-        return tmp.str();
+            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << "is not found." << std::endl;
     }
 
 
     bool Event::Bit ( uint8_t pFeId, uint8_t pCbcId, uint32_t pPosition ) const
     {
-        uint32_t cWordP = pPosition / 32;
-        uint32_t cBitP = pPosition % 32;
-        std::vector< uint32_t > vTemp;
-        GetCbcEvent ( pFeId, pCbcId, vTemp );
+        uint32_t cKey = encodeId (pFeId, pCbcId);
+        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
-        // if the WordPosition is larger than CbcEventvector (32 bit).size() return 0
-        if ( cWordP >= vTemp.size() ) return 0;
-
-        //return ( vTemp[cByteP] & ( 1 << ( 7 - cBitP ) ) );
-        return ( ( vTemp.at (cWordP) >> ( 31 - cBitP ) ) & 0x1 );
+        if (cData != std::end (fEventDataMap) )
+            return cData.second.test (pPosition);
+        else
+        {
+            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            return false;
+        }
     }
 
 
@@ -261,86 +155,77 @@ namespace Ph2_HwInterface {
 
     uint32_t Event::Error ( uint8_t pFeId, uint8_t pCbcId ) const
     {
+        uint32_t cKey = encodeId (pFeId, pCbcId);
+        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
-        uint32_t val ( 0 );
-        uint32_t cWidth = WIDTH_ERROR;
+        if (cData != std::end (fEventDataMap) )
+            return this->subset (cData.second, OFFSET_ERROR, WIDTH_ERROR, 0x00000003);
 
-        for ( uint32_t i = 0; i < cWidth; i++ )
+        else
         {
-            val <<= 1;
-            val |= Error ( pFeId, pCbcId, i );
+            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            return 0;
         }
-
-        return val;
     }
 
 
     uint32_t Event::PipelineAddress ( uint8_t pFeId, uint8_t pCbcId ) const
     {
-        uint32_t cOffset = OFFSET_PIPELINE_ADDRESS;
-        uint32_t cWidth = WIDTH_PIPELINE_ADDRESS;
-        uint32_t val ( 0 );
+        uint32_t cKey = encodeId (pFeId, pCbcId);
+        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
-        for ( uint32_t i = 0; i < cWidth; i++ )
+        if (cData != std::end (fEventDataMap) )
+            return this->subset (cData.second, OFFSET_PIPELINE_ADDRESS, WIDTH_PIPELINE_ADDRESS, 0x000000FF);
+
+        else
         {
-            val <<= 1;
-            val |= Bit ( pFeId, pCbcId, cOffset + i );
+            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            return 0;
         }
-
-        return val;
     }
 
     bool Event::DataBit ( uint8_t pFeId, uint8_t pCbcId, uint32_t i ) const
     {
         if ( i > NCHANNELS )
-            return 0;
-
-        return Bit ( pFeId, pCbcId, i + OFFSET_CBCDATA );
+            return false;
+        else
+            return this->Bit (pFeId, pCbcId, i + OFFSET_CBCDATA);
     }
 
 
     std::string Event::BitString ( uint8_t pFeId, uint8_t pCbcId, uint32_t pOffset, uint32_t pWidth ) const
     {
-        std::vector<uint32_t> cbcData;
-        GetCbcEvent ( pFeId, pCbcId, cbcData );
+        uint32_t cKey = encodeId (pFeId, pCbcId);
+        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
-        std::ostringstream os;
-
-        for ( uint32_t i = 0; i < pWidth; ++i )
+        if (cData != std::end (fEventDataMap) )
         {
-            uint32_t pos = i + pOffset;
-            uint32_t cWordP = pos / 32;
-            uint32_t cBitP = pos % 32;
-
-            if ( cWordP >= cbcData.size() ) break;
-
-            //os << ((cbcData[cByteP] & ( 1 << ( 7 - cBitP ) ))?"1":"0");
-            os << ( ( cbcData[cWordP] >> ( 31 - cBitP ) ) & 0x1 );
+            std::string cStr = cData.second.to_string();
+            cStr = std::string (cStr.rbegin(), cStr.rend() );
+            return cStr.substr (pOffset, pWidth);
         }
-
-        return os.str();
+        else
+        {
+            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            return "";
+        }
     }
+
     std::vector<bool> Event::BitVector ( uint8_t pFeId, uint8_t pCbcId, uint32_t pOffset, uint32_t pWidth ) const
     {
-        std::vector< uint32_t > cbcData;
-        GetCbcEvent ( pFeId, pCbcId, cbcData );
-
         std::vector<bool> blist;
+        uint32_t cKey = encodeId (pFeId, pCbcId);
+        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
-        for ( uint32_t i = 0; i < pWidth; ++i )
+        if (cData != std::end (fEventDataMap) )
         {
-            uint32_t pos = i + pOffset;
-            uint32_t cWordP = pos / 32;
-            uint32_t cBitP = pos % 32;
-
-            if ( cWordP >= cbcData.size() ) break;
-
-            //blist.push_back(cbcData[cByteP] & ( 1 << ( 7 - cBitP ) ));
-            blist.push_back ( ( cbcData[cWordP] >> ( 31 - cBitP ) ) & 0x1 );
+            for (uint32_t cBit = pOffset; cBit <= pWidth; cBit++)
+                blist.push_back (cData.second.test (cBit) );
         }
 
         return blist;
     }
+
     std::string Event::DataBitString ( uint8_t pFeId, uint8_t pCbcId ) const
     {
         return BitString ( pFeId, pCbcId, OFFSET_CBCDATA, WIDTH_CBCDATA );
@@ -354,98 +239,34 @@ namespace Ph2_HwInterface {
 
     std::vector<bool> Event::DataBitVector ( uint8_t pFeId, uint8_t pCbcId, const std::vector<uint8_t>& channelList ) const
     {
-        uint32_t pOffset = OFFSET_CBCDATA;
-
-        std::vector< uint32_t > cbcData;
-        GetCbcEvent ( pFeId, pCbcId, cbcData );
-
         std::vector<bool> blist;
+        uint32_t cKey = encodeId (pFeId, pCbcId);
+        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
-        for ( auto i :  channelList )
+        if (cData != std::end (fEventDataMap) )
         {
-            uint32_t pos = i + pOffset;
-            uint32_t cWordP = pos / 32;
-            uint32_t cBitP = pos % 32;
-
-            if ( cWordP >= cbcData.size() ) break;
-
-            blist.push_back ( ( cbcData[cWordP] >> ( 31 - cBitP ) ) & 0x1 );
-            //blist.push_back(cbcData[cByteP] & ( 1 << ( 7 - cBitP ) ));
+            for (auto& cChan : channelList)
+                blist.push_back (cData.second.test (OFFSET_CBCDATA + cChan) );
         }
 
         return blist;
     }
 
-
-
     //#if 0
     std::string Event::DataHexString ( uint8_t pFeId, uint8_t pCbcId ) const
     {
-        std::stringbuf tmp;
-        std::ostream os ( &tmp );
-        os << std::hex << std::setfill ('0');
+        //start from here
+        //uin32_t cKey = encodeId (pFeId, pCbcId);
+        //EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
-        //get the CBC event for pFeId and pCbcId into vector<32bit> cbcData
-        std::vector< uint32_t > cbcData;
-        GetCbcEvent (pFeId, pCbcId, cbcData);
-        //for the first 32-bit word, use only the 22 LSBs
-        //this unfortunately means that i have two leading bits that are always 0
-        os << std::setw (6) << (cbcData.at (0) & 0x003FFFFF);
+        //if (cData != std::end (fEventDataMap) )
+        //return  this->subset (cData.second, pOffset, pOffset + pWidth).to_string() ;
 
-        //this is the body of 7 words that are full of data
-        for ( uint32_t i = 1; i < 8; i++ )
-            os << std::setw (8) << cbcData.at (i);
-
-        //the last word with only 8 bits
-        os << std::setw (2) << (cbcData.at (8) & 0xFF000000);
-
-
-        //uint32_t cFirstByteP = OFFSET_CBCDATA / 8;
-        //uint32_t cFirstBitP = OFFSET_CBCDATA % 8;
-        //uint32_t cLastByteP = ( cFirstByteP + WIDTH_CBCDATA - 1 ) / 8;
-        //uint32_t cLastBitP = ( cFirstByteP + WIDTH_CBCDATA - 1 ) % 8;
-
-        //uint32_t cMask ( 0 );
-        //uint32_t cMaskLastBit ( 0 );
-        //uint32_t cMaskWidth ( 0 );
-
-        ////First byte
-        //cMaskLastBit = cFirstByteP < cLastByteP ? 7 : cLastBitP;
-        //cMaskWidth = cMaskLastBit - cFirstBitP + 1;
-        //cMask = ( 1 << ( 7 - cMaskLastBit ) );
-
-        //for ( uint32_t i = 0; i < cMaskWidth; i++ )
+        //else
         //{
-        //cMask <<= 1;
-        //cMask |= 1;
+        //std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId " is not found." << std::endl;
+        //return "";
         //}
-
-        //os << std::uppercase << std::setw ( 2 ) << std::setfill ( '0' ) << ( GetCbcEvent ( pFeId, pCbcId, cbcData ) [cFirstByteP]&cMask );
-
-        //if ( cFirstByteP == cLastByteP )
-        //return tmp.str();
-
-        ////Second to the second last byte
-        //if ( cFirstByteP != cLastByteP - 1 )
-        //{
-        //for ( uint32_t j = cFirstByteP + 1; j < cLastByteP; j++ )
-        //os << std::uppercase << std::setw ( 2 ) << std::setfill ( '0' ) << ( GetCbcEvent ( pFeId, pCbcId, cbcData ) [j] & 0xFF );
-        //}
-
-        ////Last byte
-        //cMaskLastBit = cLastBitP;
-        //cMaskWidth = cMaskLastBit + 1;
-        //cMask = ( 1 << ( 7 - cMaskLastBit ) );
-
-        //for ( uint32_t i = 0; i < cMaskWidth; i++ )
-        //{
-        //cMask <<= 1;
-        //cMask |= 1;
-        //}
-
-        //os << std::uppercase << std::setw ( 2 ) << std::setfill ( '0' ) << ( GetCbcEvent ( pFeId, pCbcId, cbcData ) [cFirstByteP]&cMask );
-
-        return tmp.str();
     }
     //#endif
 
@@ -464,6 +285,33 @@ namespace Ph2_HwInterface {
     bool Event::StubBit ( uint8_t pFeId, uint8_t pCbcId ) const
     {
         return Bit ( pFeId, pCbcId, OFFSET_CBCSTUBDATA );
+    }
+
+    uint32_t Event::GetNHits (uint8_t pFeId, uint8_t pCbcId)
+    {
+        uin32_t cKey = encodeId (pFeId, pCbcId);
+        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
+
+        if (cData != std::end (fEventDataMap) )
+            return static_cast<uint32_t> ( (cData.second & fChannelMask).count() );
+        else
+        {
+            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId " is not found." << std::endl;
+            return 0;
+        }
+    }
+
+    std::vector<uint8_t> Event::GetHits (uint8_t pFeId, uint8_t pCbcId) const;
+    {
+        std::vector<uint8_t> cHits;
+
+        for (uint8_t cChan = 0; cChan < NCHANNELS; cChan++)
+        {
+            if (DataBit (pFeId, pCbcId, cChan) )
+                cHits.push_back (cChan);
+        }
+
+        return cHits;
     }
 
     std::ostream& operator<< ( std::ostream& os, const Event& ev )
