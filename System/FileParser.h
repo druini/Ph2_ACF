@@ -57,7 +57,7 @@ namespace Ph2_System {
         ~FileParser() {}
 
         void parseHW ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os = std::cout );
-        void parseSettings ( const std::string& pFilename, SettingsMap pSettingsMap,  std::ostream& os = std::cout );
+        void parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os = std::cout );
 
 
       protected:
@@ -94,7 +94,7 @@ namespace Ph2_System {
          * \param pFilename : HW Description file
          *\param os : ostream to dump output
          */
-        void parseSettingsxml ( const std::string& pFilename, SettingsMap pSettingsMap, std::ostream& os = std::cout);
+        void parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os = std::cout);
 
         BeBoard* parseBeBoard (pugi::xml_node pNode, BeBoardVec& pBoardVector, std::ostream& os = std::cout);
         void parseRegister (pugi::xml_node pNode, BeBoard* pBoard, std::ostream& os = std::cout);

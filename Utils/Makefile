@@ -16,7 +16,7 @@ IncludePaths            = $(IncludeDirs:%=-I%)
 	$(CXX) -std=c++11  $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
 
 all: print $(Objs) ../HWDescription/Definition.h
-	$(CC) -std=c++11 -shared -L/usr/lib64/ -o libPh2_Utils.so $(Objs) -pthread
+	$(CC) -std=c++11 -pthread -shared -L/usr/lib64/ -o libPh2_Utils.so $(Objs) -pthread
 	mv libPh2_Utils.so ../lib
 
 print:

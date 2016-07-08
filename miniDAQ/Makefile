@@ -1,6 +1,6 @@
 CC              = gcc
 CXX             = g++
-CCFlags         = -g -O0 -w -Wall -pedantic -std=c++0x -fPIC 
+CCFlags         = -g -O0 -w -Wall -pedantic -pthread -std=c++0x -fPIC 
 CCFlagsRoot	= `root-config --cflags --glibs`
 ROOTVERSION := $(shell root-config --has-http)
 HttpFlag = -D__HTTP__
@@ -66,17 +66,17 @@ rootflags:
 
 
 publisher.o: publisher.cc publisher.h
-	$(CXX) -std=c++11  $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
+	$(CXX) $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
 
 DQMHistogrammer.o: DQMHistogrammer.cc DQMHistogrammer.h
-	$(CXX) -std=c++11  $(DevFlags) $(CCFlags) $(CCFlagsRoot) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
+	$(CXX) $(DevFlags) $(CCFlags) $(CCFlagsRoot) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
 
 miniDQM: miniDQM.cc publisher.h publisher.o DQMHistogrammer.h DQMHistogrammer.o
-	$(CXX) -std=c++11 $(CCFlags) -o $@ $< $(IncludePaths) publisher.o DQMHistogrammer.o $(ExternalObjects) 
+	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) publisher.o DQMHistogrammer.o $(ExternalObjects) 
 	cp $@ ../bin
 
 miniDAQ: miniDAQ.cc
-	$(CXX) -std=c++11 $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects)
+	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects)
 	cp $@ ../bin
 
 print:

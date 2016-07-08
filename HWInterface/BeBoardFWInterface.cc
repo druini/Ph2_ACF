@@ -36,7 +36,6 @@ namespace Ph2_HwInterface {
     {
     }
 
-
     std::string BeBoardFWInterface::readBoardType()
     {
         std::string cBoardTypeString;

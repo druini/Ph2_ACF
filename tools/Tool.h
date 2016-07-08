@@ -42,7 +42,10 @@ class Tool : public SystemController
 #ifdef __HTTP__
     THttpServer* fHttpServer;
 #endif
-    Tool() {}
+    Tool()
+    {
+        fResultFile = nullptr;
+    }
 
     ~Tool()
     {
@@ -54,7 +57,13 @@ class Tool : public SystemController
 #ifdef __HTTP__
         delete fHttpServer;
 #endif
-        delete fResultFile;
+
+        if (fResultFile != nullptr)
+        {
+            if (fResultFile->IsOpen() ) fResultFile->Close();
+
+            delete fResultFile;
+        }
     }
 
 

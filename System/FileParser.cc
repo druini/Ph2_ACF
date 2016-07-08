@@ -11,7 +11,7 @@ namespace Ph2_System {
             std::cerr << "Could not parse settings file " << pFilename << " - it is not .xml!" << std::endl;
     }
 
-    void FileParser::parseSettings ( const std::string& pFilename, SettingsMap pSettingsMap,  std::ostream& os)
+    void FileParser::parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os)
     {
         if ( pFilename.find ( ".xml" ) != std::string::npos )
             parseSettingsxml ( pFilename, pSettingsMap, os );
@@ -213,7 +213,7 @@ namespace Ph2_System {
         }
     }
 
-    void FileParser::parseSettingsxml ( const std::string& pFilename, SettingsMap pSettingsMap,  std::ostream& os)
+    void FileParser::parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os)
     {
         pugi::xml_document doc;
         pugi::xml_parse_result result = doc.load_file ( pFilename.c_str() );

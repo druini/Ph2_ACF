@@ -98,7 +98,15 @@ class FileHandler
 
     void rewind()
     {
-        if (file_open() ) fBinaryFile.seekg ( 0, std::ios::beg );
+        if (fOption == 'r' && file_open() )
+        {
+            if (fHeader.fValid == true)
+                //TODO: check me if this is actually 12 32-bit words
+                fBinaryFile.seekg (48, std::ios::beg);
+            else
+                fBinaryFile.seekg ( 0, std::ios::beg );
+        }
+        else std::cout << "FileHandler: Error, should not try to rewind a file opened in write mode (or file not open!)" << std::endl;
     }
 
     /*!

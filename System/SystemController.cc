@@ -26,7 +26,12 @@ namespace Ph2_System {
     }
     void SystemController::Destroy()
     {
-        if (fFileHandler) delete fFileHandler;
+        if (fFileHandler)
+        {
+            if (fFileHandler->file_open() ) fFileHandler->closeFile();
+
+            delete fFileHandler;
+        }
 
         delete fBeBoardInterface;
         delete fCbcInterface;

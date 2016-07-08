@@ -24,7 +24,8 @@ class FileHeader
   public:
     bool fValid;
     // FW type
-    char fType[8];
+    std::string fType;
+    //char fType[8];
     uint32_t fVersionMajor;
     uint32_t fVersionMinor;
     // Info about HW
@@ -37,6 +38,7 @@ class FileHeader
 
   public:
     FileHeader() :
+        fType ( "" ),
         fValid (false),
         fVersionMajor (0),
         fVersionMinor (0),
@@ -52,9 +54,10 @@ class FileHeader
         fBeId (pBeId),
         fNCbc (pNCbc),
         fEventSize32 (pEventSize32),
-        fValid (true)
+        fValid (true),
+        fType (pType)
     {
-        strcpy (fType, pType.c_str() );
+        //strcpy (fType, pType.c_str() );
     }
 
 
@@ -66,8 +69,15 @@ class FileHeader
         cVec.push_back (0xAAAAAAAA);
         //insert the header
         //2 words
-        cVec.push_back (fType[0] << 24 | fType[1] << 16 | fType[2] << 8 | fType[3]);
-        cVec.push_back (fType[4] << 24 | fType[5] << 16 | fType[6] << 8 | fType[7]);
+        char cType[8] = {0};
+
+        if (fType.size() < 9)
+            strcpy (cType, fType.c_str() );
+        else
+            std::cout << "FileHeader: Error, type string can only be up to 8 characters long!" << std::endl;
+
+        cVec.push_back (cType[0] << 24 | cType[1] << 16 | cType[2] << 8 | cType[3]);
+        cVec.push_back (cType[4] << 24 | cType[5] << 16 | cType[6] << 8 | cType[7]);
 
         cVec.push_back (0xAAAAAAAA);
         // 2 words FW version
@@ -85,11 +95,7 @@ class FileHeader
         cVec.push_back (fEventSize32);
         cVec.push_back (0xAAAAAAAA);
 
-        std::cout << "Board Type: ";
-
-        for (int i = 0; i < 8; i++) std::cout << fType[i] << " ";
-
-        std::cout << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << " BeId " << fBeId << " fNCbc " << fNCbc << " EventSize32  " << fEventSize32 << " valid: " << fValid << std::endl;
+        std::cout << "Board Type: " << fType << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << " BeId " << fBeId << " fNCbc " << fNCbc << " EventSize32  " << fEventSize32 << " valid: " << fValid << std::endl;
         return cVec;
     }
 
@@ -99,15 +105,19 @@ class FileHeader
 
         if (pVec.at (0) == cMask && pVec.at (3) == cMask && pVec.at (6) == cMask && pVec.at (9) == cMask && pVec.at (11) == cMask )
         {
-            fType[0] = (pVec.at (1) && 0xFF000000) >> 24;
-            fType[1] = (pVec.at (1) && 0x00FF0000) >> 16;
-            fType[2] = (pVec.at (1) && 0x0000FF00) >> 8;
-            fType[3] = (pVec.at (1) && 0x000000FF);
+            char cType[8] = {0};
+            cType[0] = (pVec.at (1) && 0xFF000000) >> 24;
+            cType[1] = (pVec.at (1) && 0x00FF0000) >> 16;
+            cType[2] = (pVec.at (1) && 0x0000FF00) >> 8;
+            cType[3] = (pVec.at (1) && 0x000000FF);
 
-            fType[4] = (pVec.at (2) && 0xFF000000) >> 24;
-            fType[5] = (pVec.at (2) && 0x00FF0000) >> 16;
-            fType[6] = (pVec.at (2) && 0x0000FF00) >> 8;
-            fType[7] = (pVec.at (2) && 0x000000FF);
+            cType[4] = (pVec.at (2) && 0xFF000000) >> 24;
+            cType[5] = (pVec.at (2) && 0x00FF0000) >> 16;
+            cType[6] = (pVec.at (2) && 0x0000FF00) >> 8;
+            cType[7] = (pVec.at (2) && 0x000000FF);
+
+            std::string cTypeString (cType);
+            fType = cTypeString;
 
             fVersionMajor = pVec.at (4);
             fVersionMinor = pVec.at (5);

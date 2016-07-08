@@ -35,7 +35,9 @@ FileHandler::FileHandler ( const std::string& pBinaryFileName, char pOption, Fil
 //destructor
 FileHandler::~FileHandler()
 {
-    fThread.join();
+    if (fOption == 'w')
+        fThread.join();
+
     closeFile();
 }
 
@@ -108,7 +110,11 @@ void FileHandler::closeFile()
 {
     fMutex.lock();
 
-    if (fFileIsOpened)  closeFile();
+    if (fFileIsOpened)
+    {
+        fBinaryFile.close();
+        fFileIsOpened = false;
+    }
 
     fMutex.unlock();
 }
@@ -128,7 +134,7 @@ std::vector<uint32_t> FileHandler::readFile( )
         cVector.push_back ( word );
     }
 
-    fBinaryFile.close();
+    closeFile();
     return cVector;
 }
 
@@ -149,7 +155,8 @@ std::vector<uint32_t> FileHandler::readFileChunks ( uint32_t pNWords32 )
         cWordCounter++;
     }
 
-    if (fBinaryFile.eof() ) fBinaryFile.close();
+    if (fBinaryFile.eof() )
+        closeFile();
 
     if (cWordCounter < pNWords32) std::cout << "FileHandler: Attention, input file " << fBinaryFileName << " ended before reading " << pNWords32 << " 32-bit words!" << std::endl;
 
@@ -177,7 +184,7 @@ std::vector<uint32_t> FileHandler::readFileTail ( long pNbytes )
         cVector.push_back ( word );
     }
 
-    fBinaryFile.close();
+    closeFile();
     return cVector;
 }
 
