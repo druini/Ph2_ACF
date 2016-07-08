@@ -22,7 +22,7 @@ endif
 
 .PHONY: print dependencies $(DEPENDENCIES) clean src miniDAQ tools
 
-all: src miniDAQ
+all: src #miniDAQ
 
 dependencies: print $(DEPENDENCIES)
 

@@ -54,7 +54,6 @@ namespace Ph2_HwInterface {
            id of CbcEvent also should be the order of CBCEvents in data stream starting from 0
          */
       private:
-        EventDataMap fEventDataMap;
         uint32_t fBunch;                /*!< Bunch value */
         uint32_t fOrbit;                /*!< Orbit value */
         uint32_t fLumi;                 /*!< LuminositySection value */
@@ -62,19 +61,14 @@ namespace Ph2_HwInterface {
         uint32_t fEventCountCBC;        /*!< Cbc Event Counter */
         uint32_t fTDC;                  /*!< TDC value*/
         //to mask out all non channel data
-        const static std::bitset<CBC_EVENT_SIZE_32 * 32> fChannelMask ("000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000");
+        std::bitset<CBC_EVENT_SIZE_32 * 32> fChannelMask;
 
 
       public:
         uint32_t fEventSize;                     /*!< Size of an Event */
+        EventDataMap fEventDataMap;
 
       private:
-        /*!
-         * \brief Method to set the size of the Event according to the number of CBCs
-         * \param pNbCbc : Number of CBCs connected
-         */
-        //void SetSize ( uint32_t pNbCbc );
-
         /*!
          * \brief: method to add the contents of a 32 bit word at in dex cBitsetIndex in a bitset
          * \param pCbcSet: bitset to hold CBC data
@@ -91,7 +85,7 @@ namespace Ph2_HwInterface {
             }
         }
 
-        uint32_t subset (const std::bitset<CBC_EVENT_SIZE_32 * 32>& pSet, uint32_t pPosition, uint32_t pWidth, uint32_t pMask = 0xFFFFFFFF)
+        uint32_t subset (const std::bitset<CBC_EVENT_SIZE_32 * 32>& pSet, uint32_t pPosition, uint32_t pWidth, uint32_t pMask = 0xFFFFFFFF) const
         {
             uint32_t cMask = 1;
             uint32_t cResult = 0;
@@ -108,9 +102,15 @@ namespace Ph2_HwInterface {
         }
 
         uint32_t encodeId (/* const uint8_t& pBeI, */
-            const uint8_t& pFeId, const uint8_t& pCbcId) const;
+            const uint8_t& pFeId, const uint8_t& pCbcId) const
         {
             return (/*pBeId << 24 |*/ pFeId << 16 | pCbcId );
+        }
+
+        void decodeId (const uint32_t& pKey, uint8_t& pFeId, uint8_t& pCbcId) const
+        {
+            pFeId = (pKey >> 16) & 0x000000FF;
+            pCbcId = pKey & 0x000000FF;
         }
 
       public:
@@ -146,10 +146,10 @@ namespace Ph2_HwInterface {
         void SetEvent ( const BeBoard* pBoard, uint32_t pNbCb, const std::vector<uint32_t>& pList );
 
         /*! \brief Get raw data */
-        const std::vector<uint32_t>& GetEventData() const
-        {
-            return fEventData;
-        }
+        //const std::vector<uint32_t>& GetEventData() const
+        //{
+        //return fEventData;
+        //}
 
         /*! \brief Get the event size in bytes */
         uint32_t GetSize() const
@@ -343,14 +343,15 @@ namespace Ph2_HwInterface {
          */
         unsigned char Char ( uint8_t pFeId, uint8_t pCbcId, uint32_t pBytePosition );
 
-        const EventMap& GetEventMap() const
-        {
-            return fEventMap;
-        }
+        //const EventMap& GetEventMap() const
+        //{
+        //return fEventMap;
+        //}
         friend std::ostream& operator<< ( std::ostream& out, const Event& ev );
 
         std::vector<Cluster> getClusters ( uint8_t pFeId, uint8_t pCbcId);
 
     };
+    //const std::bitset<CBC_EVENT_SIZE_32 * 32> Event::fChannelMask  ( "000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000" );
 }
 #endif

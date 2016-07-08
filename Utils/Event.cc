@@ -18,7 +18,8 @@ namespace Ph2_HwInterface {
 
     // Event implementation
 
-    Event::Event ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
+    Event::Event ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) :
+        fChannelMask ("000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000")
     {
         SetEvent (pBoard, pNbCbc, list);
     }
@@ -30,9 +31,9 @@ namespace Ph2_HwInterface {
         fEventCount ( pEvent.fEventCount ),
         fEventCountCBC ( pEvent.fEventCountCBC ),
         fTDC ( pEvent.fTDC ),
-        fEventDataMap ( pEvent.fEventDataMap )
+        fEventDataMap ( pEvent.fEventDataMap ),
+        fChannelMask ("000000000000000000000000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110000000000")
     {
-
     }
 
     void Event::SetEvent (const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& pList )
@@ -74,7 +75,7 @@ namespace Ph2_HwInterface {
 
                 uint32_t begin = EVENT_HEADER_SIZE_32 + cFeId * CBC_EVENT_SIZE_32 * cNCbc + cCbcId * CBC_EVENT_SIZE_32;
                 uint32_t end = begin + CBC_EVENT_SIZE_32 - 1;
-                std::cout << "DEBUG Be: " << +cBeId << " FE: " << +cFeId << " Cbc: " << +cCbcId << " begins at " << begin << " ends at  " << end << std::endl;
+                //std::cout << "DEBUG Be: " << +cBeId << " FE: " << +cFeId << " Cbc: " << +cCbcId << " begins at " << begin << " ends at  " << end << std::endl;
 
                 //ok, now I have the begin and end index for each CBC - just insert the corresponding words in a bitset
                 //TODO: check if the indices are inclusive end or not
@@ -103,8 +104,8 @@ namespace Ph2_HwInterface {
         if (cData != std::end (fEventDataMap) )
         {
             //use cData.second and convert it to std::vector<uint32_t>
-            for (size_t cWord = 0; cWord < CBC_EVENT_SIZE_32; cWord++)
-                cbcData.push_back ( this->subset (cData.second, cWord * 32, 32)  ) ;
+            for (uint32_t cWord = 0; cWord < CBC_EVENT_SIZE_32; cWord++)
+                cbcData.push_back ( this->subset (cData->second, cWord * 32, 32 )  ) ;
         }
         else
             std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
@@ -121,7 +122,7 @@ namespace Ph2_HwInterface {
             //TODO: continue here
             for (size_t cWord = 0; cWord < CBC_EVENT_SIZE_32; cWord++)
             {
-                uint32_t cWord32 = this->subset (cData.second, cWord * 32, 32);
+                uint32_t cWord32 = this->subset (cData->second, cWord * 32, 32);
                 cbcData.push_back ( (cWord32 >> 24) & 0xFF);
                 cbcData.push_back ( (cWord32 >> 16) & 0xFF);
                 cbcData.push_back ( (cWord32 >> 8) & 0xFF);
@@ -139,7 +140,7 @@ namespace Ph2_HwInterface {
         EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
         if (cData != std::end (fEventDataMap) )
-            return cData.second.test (pPosition);
+            return cData->second.test (pPosition);
         else
         {
             std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
@@ -159,7 +160,7 @@ namespace Ph2_HwInterface {
         EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
         if (cData != std::end (fEventDataMap) )
-            return this->subset (cData.second, OFFSET_ERROR, WIDTH_ERROR, 0x00000003);
+            return this->subset (cData->second, OFFSET_ERROR, WIDTH_ERROR, 0x00000003);
 
         else
         {
@@ -175,7 +176,7 @@ namespace Ph2_HwInterface {
         EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
         if (cData != std::end (fEventDataMap) )
-            return this->subset (cData.second, OFFSET_PIPELINE_ADDRESS, WIDTH_PIPELINE_ADDRESS, 0x000000FF);
+            return this->subset (cData->second, OFFSET_PIPELINE_ADDRESS, WIDTH_PIPELINE_ADDRESS, 0x000000FF);
 
         else
         {
@@ -200,7 +201,7 @@ namespace Ph2_HwInterface {
 
         if (cData != std::end (fEventDataMap) )
         {
-            std::string cStr = cData.second.to_string();
+            std::string cStr = cData->second.to_string();
             cStr = std::string (cStr.rbegin(), cStr.rend() );
             return cStr.substr (pOffset, pWidth);
         }
@@ -220,7 +221,7 @@ namespace Ph2_HwInterface {
         if (cData != std::end (fEventDataMap) )
         {
             for (uint32_t cBit = pOffset; cBit <= pWidth; cBit++)
-                blist.push_back (cData.second.test (cBit) );
+                blist.push_back (cData->second.test (cBit) );
         }
 
         return blist;
@@ -246,7 +247,7 @@ namespace Ph2_HwInterface {
         if (cData != std::end (fEventDataMap) )
         {
             for (auto& cChan : channelList)
-                blist.push_back (cData.second.test (OFFSET_CBCDATA + cChan) );
+                blist.push_back (cData->second.test (OFFSET_CBCDATA + cChan) );
         }
 
         return blist;
@@ -267,6 +268,7 @@ namespace Ph2_HwInterface {
         //std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId " is not found." << std::endl;
         //return "";
         //}
+        return "";
     }
     //#endif
 
@@ -287,21 +289,21 @@ namespace Ph2_HwInterface {
         return Bit ( pFeId, pCbcId, OFFSET_CBCSTUBDATA );
     }
 
-    uint32_t Event::GetNHits (uint8_t pFeId, uint8_t pCbcId)
+    uint32_t Event::GetNHits (uint8_t pFeId, uint8_t pCbcId) const
     {
-        uin32_t cKey = encodeId (pFeId, pCbcId);
+        uint32_t cKey = encodeId (pFeId, pCbcId);
         EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
         if (cData != std::end (fEventDataMap) )
-            return static_cast<uint32_t> ( (cData.second & fChannelMask).count() );
+            return static_cast<uint32_t> ( (cData->second & fChannelMask).count() );
         else
         {
-            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId " is not found." << std::endl;
+            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
             return 0;
         }
     }
 
-    std::vector<uint8_t> Event::GetHits (uint8_t pFeId, uint8_t pCbcId) const;
+    std::vector<uint8_t> Event::GetHits (uint8_t pFeId, uint8_t pCbcId) const
     {
         std::vector<uint8_t> cHits;
 
@@ -324,48 +326,44 @@ namespace Ph2_HwInterface {
         os << BOLDRED << "  TDC Counter: " << ev.GetTDC() << RESET << std::endl;
 
         os << "CBC Data:" << std::endl;
-        const EventMap& evmap = ev.GetEventMap();
         const int FIRST_LINE_WIDTH = 22;
         const int LINE_WIDTH = 32;
         const int LAST_LINE_WIDTH = 8;
 
-        for ( auto const& it : evmap )
+        for ( auto const& cKey : ev.fEventDataMap )
         {
-            uint32_t feId = it.first;
+            uint8_t cFeId;
+            uint8_t cCbcId;
+            ev.decodeId (cKey.first, cFeId, cCbcId);
+            std::string data ( ev.DataBitString ( cFeId, cCbcId ) );
+            os << GREEN << "FEId = " << +cFeId << " CBCId = " << +cCbcId << RESET << " len(data) = " << data.size() << std::endl;
+            os << YELLOW << "PipelineAddress: " << ev.PipelineAddress (cFeId, cCbcId) << RESET << std::endl;
+            os << RED << "Error: " << static_cast<std::bitset<2>> ( ev.Error ( cFeId, cCbcId ) ) << RESET << std::endl;
+            os << "Ch. Data:      ";
 
-            for ( auto const& jt : it.second )
-            {
-                uint32_t cbcId = jt.first;
-                std::string data ( ev.DataBitString ( feId, cbcId ) );
-                os << GREEN << "FEId = " << feId << " CBCId = " << cbcId << RESET << " len(data) = " << data.size() << std::endl;
-                os << YELLOW << "PipelineAddress: " << ev.PipelineAddress (feId, cbcId) << RESET << std::endl;
-                os << RED << "Error: " << static_cast<std::bitset<2>> ( ev.Error ( feId, cbcId ) ) << RESET << std::endl;
-                os << "Ch. Data:      ";
-
-                for (int i = 0; i < FIRST_LINE_WIDTH; i += 2)
-                    os << data.substr ( i, 2 ) << " ";
-
-                os << std::endl;
-
-                for ( int i = 0; i < 7; ++i )
-                {
-                    for (int j = 0; j < LINE_WIDTH; j += 2)
-                        //os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * i, LINE_WIDTH ) << std::endl;
-                        os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * i + j, 2 ) << " ";
-
-                    os << std::endl;
-                }
-
-                for (int i = 0; i < LAST_LINE_WIDTH; i += 2)
-                    os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i , 2 ) << " ";
-
-                os << std::endl;
-
-                os << BLUE << "Stubs: " << ev.StubBitString ( feId, cbcId ).c_str() << RESET << std::endl;
-            }
+            for (int i = 0; i < FIRST_LINE_WIDTH; i += 2)
+                os << data.substr ( i, 2 ) << " ";
 
             os << std::endl;
+
+            for ( int i = 0; i < 7; ++i )
+            {
+                for (int j = 0; j < LINE_WIDTH; j += 2)
+                    //os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * i, LINE_WIDTH ) << std::endl;
+                    os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * i + j, 2 ) << " ";
+
+                os << std::endl;
+            }
+
+            for (int i = 0; i < LAST_LINE_WIDTH; i += 2)
+                os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i , 2 ) << " ";
+
+            os << std::endl;
+
+            os << BLUE << "Stubs: " << ev.StubBitString ( cFeId, cCbcId ).c_str() << RESET << std::endl;
         }
+
+        os << std::endl;
 
         return os;
     }
