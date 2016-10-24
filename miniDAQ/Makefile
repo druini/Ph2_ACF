@@ -49,6 +49,8 @@ else
 endif
 
 
+#ExternalObjects= $(LibraryPaths) -lpthread  -lcactus_extern_pugixml -lcactus_uhal_log -lcactus_uhal_grammars -lcactus_uhal_uhal \
+                                 -lboost_system -lPh2_Interface -lPh2_Description -lPh2_System -lPh2_Utils -L$(BOOST_LIB) -lboost_filesystem -lboost_program_options -lboost_thread -L../RootWeb/lib -lRootWeb
 
 IncludePaths            = $(IncludeDirs:%=-I%)
 	RootLibraryDirs = /usr/local/lib/root

@@ -5,9 +5,11 @@ export CACTUSBIN=/opt/cactus/bin
 export CACTUSLIB=/opt/cactus/lib
 export CACTUSINCLUDE=/opt/cactus/include
 
+
 # BOOST
 export BOOST_LIB=/opt/cactus/lib
 export BOOST_INCLUDE=/opt/cactus/include
+
 
 #ROOT
 #source /usr/local/bin/thisroot.sh

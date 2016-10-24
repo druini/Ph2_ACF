@@ -85,7 +85,8 @@ namespace Ph2_System {
     {
         os << std::endl << BOLDBLUE << "Configuring HW parsed from .xml file: " << RESET << std::endl;
 
-        bool cHoleMode, cCheck;
+        bool cHoleMode = false;
+        bool cCheck = false;
 
         if ( !fSettingsMap.empty() )
         {

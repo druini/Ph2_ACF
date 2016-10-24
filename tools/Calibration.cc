@@ -533,7 +533,7 @@ void Calibration::updateHists ( std::string pHistname )
     }
 
 #ifdef __HTTP__
-    //fHttpServer->ProcessRequests();
+    fHttpServer->ProcessRequests();
 #endif
 }
 

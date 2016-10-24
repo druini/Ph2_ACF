@@ -131,12 +131,16 @@ int main ( int argc, char* argv[] )
     mkdir ( cDirectory ,  777 );
     cOutputFile = "Data/" + getFileName() ;
 
+    std::cout << __PRETTY_FUNCTION__ << cOutputFile << std::endl;
     pEventsperVcth = ( cmd.foundOption ( "events" ) ) ? convertAnyInt ( cmd.optionValue ( "events" ).c_str() ) : 10;
 
+
     cSystemController.addFileHandler ( cOutputFile, 'w' );
+    //    cSystemController.initializeFileHandler();
 
     cSystemController.InitializeHw ( cHWFile );
     cSystemController.ConfigureHw ( std::cout );
+
 
     BeBoard* pBoard = cSystemController.fBoardVector.at ( 0 );
 

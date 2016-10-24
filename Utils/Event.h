@@ -115,7 +115,7 @@ namespace Ph2_HwInterface {
          * \param pEvent : Event to set
          * \return Aknowledgement of the Event setting (1/0)
          */
-        int SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list );
+        void SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list );
 
         /*! \brief Get raw data */
         //const std::vector<uint32_t>& GetEventData() const
@@ -194,7 +194,7 @@ namespace Ph2_HwInterface {
          * \brief Convert Data to Hex string
          * \return Data string in hex
          */
-        std::string HexString() const;
+        //std::string HexString() const;
 
         /*!
          * \brief Function to get the bit at the global data string position
@@ -324,8 +324,6 @@ namespace Ph2_HwInterface {
         {
             return fEventDataMap;
         }
-
-        bool operator== (const Event& pEvent) const;
 
         friend std::ostream& operator<< ( std::ostream& out, const Event& ev );
 

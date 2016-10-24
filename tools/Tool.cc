@@ -33,9 +33,6 @@ void Tool::bookHistogram ( Cbc* pCbc, std::string pName, TObject* pObject )
     if ( cHisto != std::end ( cCbcHistMap->second ) ) cCbcHistMap->second.erase ( cHisto );
 
     cCbcHistMap->second[pName] = pObject;
-#ifdef __HTTP__
-    fHttpServer->Register ("/", pObject);
-#endif
 }
 
 void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject )
@@ -58,9 +55,6 @@ void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject 
     if ( cHisto != std::end ( cModuleHistMap->second ) ) cModuleHistMap->second.erase ( cHisto );
 
     cModuleHistMap->second[pName] = pObject;
-#ifdef __HTTP__
-    fHttpServer->Register ("/", pObject);
-#endif
 }
 
 TObject* Tool::getHist ( Cbc* pCbc, std::string pName )
@@ -189,24 +183,13 @@ void Tool::InitResultFile ( const std::string& pFilename )
     else std::cout << RED << "ERROR: " << RESET << "No Result Directory initialized - not saving results!" << std::endl;
 }
 
-void Tool::StartHttpServer ( const int pPort, bool pReadonly )
+void Tool::StartHttpServer ( const int pPort, const int pRefreshTime, bool pReadonly )
 {
 #ifdef __HTTP__
     fHttpServer = new THttpServer ( Form ( "http:%d", pPort ) );
     fHttpServer->SetReadOnly ( pReadonly );
-    //fHttpServer->SetTimer ( pRefreshTime, kTRUE );
-    fHttpServer->SetTimer (1000, kFALSE);
-    fHttpServer->SetJSROOT ("https://root.cern.ch/js/latest/");
-
-    //configure the server
-    // see: https://root.cern.ch/gitweb/?p=root.git;a=blob_plain;f=tutorials/http/httpcontrol.C;hb=HEAD
-    fHttpServer->SetItemField ("/", "_monitoring", "5000");
-    fHttpServer->SetItemField ("/", "_layout", "grid2x2");
-
-    char hostname[HOST_NAME_MAX];
-    gethostname (hostname, HOST_NAME_MAX);
-
-    std::cout << "Opening THttpServer on port " << pPort << ". Point your browser to: " << BOLDGREEN << hostname << ":" << pPort << RESET << std::endl;
+    fHttpServer->SetTimer ( pRefreshTime, kTRUE );
+    std::cout << "Opening THttpServer on port " << pPort << "." << std::endl;
 #else
     std::cout << "Error, ROOT version < 5.34 detected or not compiled with Http Server support!" << std::endl << " No THttpServer available! - The webgui will fail to show plots!" << std::endl;
     std::cout << "ROOT must be built with '--enable-http' flag to use this feature." << std::endl;

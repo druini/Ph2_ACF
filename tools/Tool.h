@@ -122,7 +122,7 @@ class Tool : public SystemController
             fResultFile->Close();
     }
 
-    void StartHttpServer ( const int pPort = 8082, bool pReadonly = true );
+    void StartHttpServer ( const int pPort = 8082, const int pRefreshTime = 100, bool pReadonly = true );
     void ProcessRequests()
     {
 #ifdef __HTTP__

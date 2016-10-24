@@ -34,16 +34,16 @@ int main ( int argc, char* argv[] )
     // options
     cmd.setHelpOption ( "h", "help", "Print this help page" );
 
-    cmd.defineOption ( "file", "Hw Description File . Default value: settings/Calibration8CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
+    cmd.defineOption ( "file", "Hw Description File . Default value: settings/Calibration2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     cmd.defineOptionAlternative ( "file", "f" );
 
     cmd.defineOption ( "output", "Output Directory . Default value: Results", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     cmd.defineOptionAlternative ( "output", "o" );
 
     cmd.defineOption ( "skip", "skip scaning VCth vs Vplus", ArgvParser::NoOptionAttribute );
-    cmd.defineOptionAlternative ( "skip", "s" );
-
-    //cmd.defineOption( "old", "Use old calibration algorithm", ArgvParser::NoOptionAttribute );
+	 cmd.defineOptionAlternative ( "skip", "s" );
+    
+	 //cmd.defineOption( "old", "Use old calibration algorithm", ArgvParser::NoOptionAttribute );
     //cms.defineOptionAlternative ("old", "v" );
 
     cmd.defineOption ( "noise", "Perform noise scan after Offset tuning", ArgvParser::NoOptionAttribute );
@@ -65,7 +65,7 @@ int main ( int argc, char* argv[] )
     }
 
     // now query the parsing results
-    std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/Calibration8CBC.xml";
+    std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/Calibration2CBC.xml";
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
     cDirectory += "Calibration";
     bool cVplus = ( cmd.foundOption ( "skip" ) ) ? false : true;
@@ -95,7 +95,7 @@ int main ( int argc, char* argv[] )
     //{
     t.start();
 
-    // now create a calibration object
+    // now create a calibration object 
     Calibration cCalibration;
     cCalibration.Inherit (&cTool);
     //cCalibration->ConfigureHw();
@@ -125,7 +125,6 @@ int main ( int argc, char* argv[] )
         t.stop();
         t.show ( "Time to Scan Pedestals and Noise" );
     }
-
     cTool.SaveResults();
     cTool.CloseResultFile();
     cTool.Destroy();

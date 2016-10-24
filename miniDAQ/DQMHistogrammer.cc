@@ -242,7 +242,7 @@ void DQMHistogrammer::fillHistos (const std::vector<Event*>& event_list, int nev
             uint32_t pladdress_cbc = ev->PipelineAddress (feId, cbcId);
             int nstub_cbc          = std::stoi ( ev->StubBitString ( feId, cbcId ), nullptr, 10);
             std::stringstream ss;
-            ss << "FeId" << feId << "CbcId" << cbcId;
+            ss << "fed" << feId << "cbc" << cbcId;
             std::string key_cbc = ss.str();
 
             totalStubs_ += nstub_cbc;
@@ -550,7 +550,7 @@ void DQMHistogrammer::resetHistos()
 void DQMHistogrammer::bookEventTrendHisto (TH1I*& th, const TString& name, const TString& title, int size)
 {
     th = new TH1I (name, title, size, 0.5, size + 0.5);
-    th->SetBit (TH1::kCanRebin); // valid for Root 5
+    //th->SetBit (TH1::kCanRebin); // valid for Root 5
 }
 void DQMHistogrammer::fillEventTrendHisto (TH1I* th, unsigned long ival, unsigned int val)
 {

@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <HwDescription>
   <BeBoard Id="0" boardType="GLIB">
-    <!-- <connection id="board" uri="ipbusudp-2.0://192.168.000.175:50001" address_table="file://settings/address_table_2CBC.xml" /> -->
-    <connection id="board" uri="chtcp-2.0://cmsuptracker008:10203?target=192.168.0.175:50001" address_table="file://settings/address_table_2CBC.xml" />
+    <connection id="board" uri="ipbusudp-2.0://192.168.000.175:50001" address_table="file://settings/address_table_2CBC.xml" />
+    <!--connection id="board" uri="chtcp-2.0://cmsuptracker008:10203?target=192.168.0.175:50001" address_table="file://settings/address_table_2CBC.xml" /-->
     <FW_Version NCbcDataSize="4" />
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
       <Global_CBC_Register name="MiscTestPulseCtrl&amp;AnalogMux">0x21</Global_CBC_Register>
@@ -50,7 +50,7 @@
 <Settings>
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>
-    <Setting name="Nevents">200</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>

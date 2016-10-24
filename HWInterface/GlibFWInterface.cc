@@ -220,6 +220,12 @@ namespace Ph2_HwInterface {
 
     uint32_t GlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger )
     {
+    	std::vector<uint32_t> cData;
+    	return ReadData ( pBoard,  pBreakTrigger, cData);
+    }
+
+    uint32_t GlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData)
+    {
         //Readout settings
         std::chrono::milliseconds cWait ( 1 );
 
@@ -251,7 +257,8 @@ namespace Ph2_HwInterface {
         WriteReg ( fStrSramUserLogic, 0 );
 
         //Read SRAM
-        std::vector<uint32_t> cData =  ReadBlockRegValue ( fStrSram, fBlockSize );
+        //std::vector<uint32_t> cData =  ReadBlockRegValue ( fStrSram, fBlockSize );
+        cData =  ReadBlockRegValue ( fStrSram, fBlockSize );
 
         WriteReg ( fStrSramUserLogic, 1 );
         WriteReg ( fStrReadout, 1 );
@@ -548,7 +555,6 @@ namespace Ph2_HwInterface {
         do
         {
             cVal = ReadReg ( "cbc_i2c_cmd_ack" );
-
             if ( cVal != pAckVal )
                 usleep ( cWait );
             else cAckReceived = true;
@@ -583,7 +589,7 @@ namespace Ph2_HwInterface {
 
         //now remove the 0xFFFFFFFF word again so I can re-use the vector
         pVecReq.pop_back();
-
+        //std::cout << __PRETTY_FUNCTION__ << "Timing out here! size: " << pVecReq.size() << std::endl;
         if ( I2cCmdAckWait ( ( uint32_t ) 1, pVecReq.size() ) == 0 )
             throw Exception ( "CbcInterface: Command Request Timed out." );
 

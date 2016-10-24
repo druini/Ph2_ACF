@@ -49,18 +49,18 @@ void SCurve::setOffset ( uint8_t pOffset, int  pGroup )
 
             //for ( auto cCbc : cFe->fCbcVector )
             //{
-            //uint32_t cCbcId = cCbc->getCbcId();
+                //uint32_t cCbcId = cCbc->getCbcId();
 
-            RegisterVector cRegVec;   // vector of pairs for the write operation
+                RegisterVector cRegVec;   // vector of pairs for the write operation
 
-            // loop the channels of the current group and toggle bit i in the global map
-            for ( auto& cChannel : fTestGroupChannelMap[pGroup] )
-            {
-                TString cRegName = Form ( "Channel%03d", cChannel + 1 );
-                cRegVec.push_back ( {cRegName.Data(), pOffset} );
-            }
+                // loop the channels of the current group and toggle bit i in the global map
+                for ( auto& cChannel : fTestGroupChannelMap[pGroup] )
+                {
+                    TString cRegName = Form ( "Channel%03d", cChannel + 1 );
+                    cRegVec.push_back ( {cRegName.Data(), pOffset} );
+                }
 
-            fCbcInterface->WriteBroadcastMultReg ( cFe, cRegVec );
+                fCbcInterface->WriteBroadcastMultReg ( cFe, cRegVec );
             //}
         }
     }
@@ -79,7 +79,6 @@ void SCurve::measureSCurves ( int  pTGrpId )
     uint32_t cAllOneCounter = 0;
     uint8_t cValue, cDoubleValue;
     int cStep;
-    uint8_t cIterationCount = 0;
 
     // the expression below mimics XOR
     if ( fHoleMode )
@@ -96,12 +95,6 @@ void SCurve::measureSCurves ( int  pTGrpId )
     // Adaptive VCth loop
     while ( 0x00 <= cValue && cValue <= 0xFF )
     {
-        if (cIterationCount > 0 && (cValue == 0xFF || cValue == 0x00) )
-        {
-            std::cout << BOLDRED << "ERROR: something wrong with these SCurves"  << RESET << std::endl;
-            break;
-        }
-
         // DEBUG
         if ( cAllOne ) break;
 
@@ -125,8 +118,10 @@ void SCurve::measureSCurves ( int  pTGrpId )
 
         for ( BeBoard* pBoard : fBoardVector )
         {
-            for (Module* cFe : pBoard->fModuleVector)
-                fCbcInterface->WriteBroadcast (cFe, "VCth", cValue);
+            for(Module* cFe : pBoard->fModuleVector)
+                fCbcInterface->WriteBroadcast(cFe, "VCth", cValue);
+            //Counter cCounter;
+            //pBoard->accept ( cCounter );
 
             fBeBoardInterface->ReadNEvents ( pBoard, fEventsPerPoint );
 
@@ -140,10 +135,8 @@ void SCurve::measureSCurves ( int  pTGrpId )
             }
 
             cNthAcq++;
-            //Counter cCounter;
-            //pBoard->accept ( cCounter );
 
-            //std::cout << "DEBUG Vcth " << int ( cValue ) << " Hits " << cHitCounter << " and should be " <<  0.95 * fEventsPerPoint*   cCounter.getNCbc() * fTestGroupChannelMap[pTGrpId].size() << std::endl;
+            // std::cout << "DEBUG Vcth " << int( cValue ) << " Hits " << cHitCounter << " and should be " <<  0.95 * fEventsPerPoint*   cCounter.getNCbc() * fTestGroupChannelMap[pTGrpId].size() << std::endl;
 
             // check if the hitcounter is all ones
             if ( cNonZero == false && cHitCounter != 0 )
@@ -173,8 +166,6 @@ void SCurve::measureSCurves ( int  pTGrpId )
 
             cValue += cStep;
         }
-
-        cIterationCount++;
     }
 } // end of VCth loop
 
@@ -356,18 +347,19 @@ void SCurve::setFWTestPulse()
         std::vector<std::pair<std::string, uint32_t> > cRegVec;
         std::string cBoardType = cBoard->getBoardType();
 
-        if (cBoardType == "GLIB" || cBoardType == "CTA")
+        if (cBoardType == "GLIB" || cBoardType =="CTA")
         {
             cRegVec.push_back ({"COMMISSIONNING_MODE_RQ", 1 });
             cRegVec.push_back ({"COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID", 1 });
         }
-        else if (cBoardType == "ICGLIB" || cBoardType == "ICFC7")
+        else if (cBoardType == "ICGLIB" || cBoardType =="ICFC7")
         {
             cRegVec.push_back ({"cbc_daq_ctrl.commissioning_cycle.mode_flags.enable", 1 });
             cRegVec.push_back ({"cbc_daq_ctrl.commissioning_cycle.mode_flags.test_pulse_enable", 1 });
             cRegVec.push_back ({"cbc_daq_ctrl.commissioning_cycle_ctrl", 0x1 });
         }
 
-        fBeBoardInterface->WriteBoardMultReg (cBoard, cRegVec);
+        fBeBoardInterface->WriteBoardMultReg(cBoard,cRegVec);
     }
 }
+

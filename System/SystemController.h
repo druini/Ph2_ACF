@@ -47,7 +47,7 @@ namespace Ph2_System {
 
     /*!
      * \class SystemController
-     * \brief Create, initialise, configure a predefined HW structure
+     * \brief Create, initialize, configure a predefined HW structure
      */
     class SystemController
     {
@@ -104,7 +104,7 @@ namespace Ph2_System {
             else return nullptr;
         }
 
-      private:
+//      private:
         /*!
         * \brief issues a FileHandler for writing files to every BeBoardFWInterface if addFileHandler was called
         */

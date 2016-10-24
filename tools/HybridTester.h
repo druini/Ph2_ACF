@@ -66,21 +66,13 @@ class HybridTester : public Tool
 	*/
 	void TestRegisters();
 	/*!
-	* \brief Test CBC registers by writing complimentary bit patterns (0x55, 0xAA)
-	*/
-	void FindShorts();
-	/*!
 	* \brief Scan the thresholds to identify the threshold with no noise occupancy
 	*/
-	void ScanThresholds();
 	void ScanThreshold();
 	/*!
 	* \brief Measure the single strip efficiency
 	*/
 	void Measure();
-	// scan latency 
-	void ScanLatency();
-	
 	/*!
 	* \brief Measure the single strip efficiency
 	*/
@@ -121,13 +113,6 @@ class HybridTester : public Tool
 	int fSigmas;
 	uint8_t fVcth;
 	double fDecisionThreshold = 10.0;   /*!< Decision Threshold for channels occupancy based tests, values from 1 to 100 as % */
-
-	void SetBeBoardForShortsFinding(BeBoard* pBoard);
-	void ReconstructShorts(std::array<std::vector<std::array<int, 5>>, 8> pShortedGroupsArray);
-	void DisplayGroupsContent(std::array<std::vector<std::array<int, 5>>, 8> pShortedGroupsArray);
-	bool CheckShortsConnection(std::vector<std::array<int, 2>> pShortA, std::vector<std::array<int, 2>> pShortB);
-	bool CheckChannelInShortPresence( std::array<int, 2> pShortedChannel, std::vector<std::array<int, 2>> pShort);
-	std::vector<std::array<int, 2>> MergeShorts(std::vector<std::array<int, 2>> pShortA, std::vector<std::array<int, 2>> pShortB);
 
 	//double fChannelDiagnosisThreshold;
 	/*!

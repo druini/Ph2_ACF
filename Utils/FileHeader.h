@@ -38,8 +38,8 @@ class FileHeader
 
   public:
     FileHeader() :
-        fType ( "" ),
         fValid (false),
+        fType ( "" ),
         fVersionMajor (0),
         fVersionMinor (0),
         fBeId (0),
@@ -49,13 +49,13 @@ class FileHeader
     }
 
     FileHeader (const std::string pType, const uint32_t& pFWMajor, const uint32_t& pFWMinor, const uint32_t& pBeId, const uint32_t& pNCbc, const uint32_t& pEventSize32) :
+        fValid (true),
+        fType (pType),
         fVersionMajor (pFWMajor),
         fVersionMinor (pFWMinor),
         fBeId (pBeId),
         fNCbc (pNCbc),
-        fEventSize32 (pEventSize32),
-        fValid (true),
-        fType (pType)
+        fEventSize32 (pEventSize32)
     {
         //strcpy (fType, pType.c_str() );
     }

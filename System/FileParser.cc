@@ -23,7 +23,7 @@ namespace Ph2_System {
     void FileParser::parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os )
     {
         pugi::xml_document doc;
-        uint32_t cBeId, cModuleId, cCbcId;
+        uint32_t cBeId, cModuleId;//, cCbcId;
         uint32_t cNBeBoard = 0;
         int i, j;
 

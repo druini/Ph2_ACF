@@ -303,6 +303,12 @@ namespace Ph2_HwInterface {
 
     uint32_t CtaFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger )
     {
+    	std::vector<uint32_t> cData;
+    	return ReadData ( pBoard,  pBreakTrigger, cData);
+    }
+
+    uint32_t CtaFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData)
+    {
         //Readout settings
         std::chrono::milliseconds cWait ( 1 );
 
@@ -330,7 +336,7 @@ namespace Ph2_HwInterface {
 
         uint32_t nbEvtPacket = fNpackets;
         uint32_t nbBlockSize = fBlockSize;
-        std::vector<uint32_t> cData;
+        //std::vector<uint32_t> cData;
 
         if (fJustPaused)
         {

@@ -235,6 +235,12 @@ namespace Ph2_HwInterface {
 
     uint32_t ICGlibFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger )
     {
+    	std::vector<uint32_t> cData;
+    	return ReadData ( pBoard,  pBreakTrigger, cData);
+    }
+
+    uint32_t ICGlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData)
+    {
         std::chrono::milliseconds cWait ( 1 );
         //first, read how many Events per Acquisition
         fNEventsperAcquistion = ReadReg ("cbc_daq_ctrl.nevents_per_pcdaq");
@@ -250,7 +256,7 @@ namespace Ph2_HwInterface {
         }
 
         //ok, packet complete, now let's read
-        std::vector<uint32_t> cData =  ReadBlockRegValue ( "data_buf", fNEventsperAcquistion * fDataSizeperEvent32 );
+        cData =  ReadBlockRegValue ( "data_buf", fNEventsperAcquistion * fDataSizeperEvent32 );
 
         // just creates a new Data object, setting the pointers and getting the correct sizes happens in Set()
         if ( fData ) delete fData;

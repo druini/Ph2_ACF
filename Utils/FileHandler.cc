@@ -35,7 +35,7 @@ FileHandler::FileHandler ( const std::string& pBinaryFileName, char pOption, Fil
 //destructor
 FileHandler::~FileHandler()
 {
-    if (fOption == 'w' && fThread.joinable() )
+    if (fOption == 'w')
         fThread.join();
 
     closeFile();
@@ -197,7 +197,7 @@ void FileHandler::writeFile()
         uint32_t cBuffer[fData.size()];
         std::copy ( fData.begin(), fData.end(), cBuffer );
         fBinaryFile.write ( ( char* ) &cBuffer, sizeof ( cBuffer ) );
-        fBinaryFile.flush();
+	fBinaryFile.flush();
         fData.clear();
         is_set = false;
         fMutex.unlock();

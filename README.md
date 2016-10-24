@@ -1,4 +1,4 @@
-# CMS Ph2 ACF (Acquisition & Control Framework) 
+Cbc_default_electron# CMS Ph2 ACF (Acquisition & Control Framework) 
 
 ##### Contains:
 
@@ -27,7 +27,6 @@ You'll need Xilinx Impact and a [Xilinx Platform Cable USB II] (http://uk.farnel
 #### Setup on SLC6
 
 1. Install the latest gcc compiler:
-
         $> sudo wget -O /etc/yum.repos.d/slc6-devtoolset.repo http://linuxsoft.cern.ch/cern/devtoolset/slc6-devtoolset.repo
         $> sudo yum install devtoolset-2
         $> . /opt/rh/devtoolset-2/enable   # add this to your .bashrc
