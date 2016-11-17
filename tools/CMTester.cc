@@ -185,14 +185,14 @@ void CMTester::Initialize()
 
     // initializeHists();
 
-    std::cout << "Histograms and Settings initialised." << std::endl;
+    LOG (INFO) << "Histograms and Settings initialised." ;
 }
 
 
 
 void CMTester::ScanNoiseChannels()
 {
-    std::cout << "Scanning for noisy channels! " << std::endl;
+    LOG (INFO) << "Scanning for noisy channels! " ;
     uint32_t cTotalEvents = 500;
 
     for ( BeBoard* pBoard : fBoardVector )
@@ -231,7 +231,7 @@ void CMTester::ScanNoiseChannels()
 
             if ( cN % 100 == 0 )
                 // updateHists();
-                std::cout << "Acquired " << cN << " Events for Noise Strip Scan!" << std::endl;
+                LOG (INFO) << "Acquired " << cN << " Events for Noise Strip Scan!" ;
 
             cN++;
         }
@@ -250,13 +250,13 @@ void CMTester::ScanNoiseChannels()
 
         auto cNoiseSet  =  fNoiseStripMap.find ( cCbc.first );
 
-        if ( cNoiseSet == std::end ( fNoiseStripMap ) ) std::cerr << " Error: Could not find noisy strip container for CBC " << int ( cCbc.first->getCbcId() ) << std::endl;
+        if ( cNoiseSet == std::end ( fNoiseStripMap ) ) LOG (ERROR) << " Error: Could not find noisy strip container for CBC " << int ( cCbc.first->getCbcId() ) ;
         else
         {
             double cMean = cNoiseStrips->GetMean ( 2 );
             double cNoise = cNoiseStrips->GetRMS ( 2 );
 
-            std::cout << "Found average Occupancy of " << cMean << std::endl;
+            LOG (INFO) << "Found average Occupancy of " << cMean ;
 
             for ( int  cBin = 0; cBin < cNoiseStrips->GetNbinsX(); cBin++ )
             {
@@ -265,7 +265,7 @@ void CMTester::ScanNoiseChannels()
                 if ( fabs ( cStripOccupancy - cMean ) > cMean / 2 )
                 {
                     cNoiseSet->second.insert ( cNoiseStrips->GetBinCenter ( cBin ) );
-                    std::cout << "Found noisy Strip on CBC " << int ( cCbc.first->getCbcId() ) << " : " << cNoiseStrips->GetBinCenter ( cBin ) << std::endl;
+                    LOG (INFO) << "Found noisy Strip on CBC " << int ( cCbc.first->getCbcId() ) << " : " << cNoiseStrips->GetBinCenter ( cBin ) ;
                 }
             }
         }
@@ -302,7 +302,7 @@ void CMTester::TakeData()
 
             if ( cN % 100 == 0 )
             {
-                std::cout << cN << " Events recorded!" << std::endl;
+                LOG (INFO) << cN << " Events recorded!" ;
                 updateHists();
             }
 
@@ -323,9 +323,9 @@ void CMTester::TakeData()
 void CMTester::FinishRun()
 {
     //  Iterate through maps, pick histogram that I need and the other one
-    std::cout << "Fitting and computing aditional histograms ... " << std::endl;
+    LOG (INFO) << "Fitting and computing aditional histograms ... " ;
     // first CBCs
-    std::cout << "per CBC ..";
+    LOG (INFO) << "per CBC ..";
 
     for ( auto cCbc : fCbcHistMap )
     {
@@ -371,8 +371,8 @@ void CMTester::FinishRun()
         }
     }
 
-    std::cout << " done!" << std::endl;
-    std::cout << "per module ... ";
+    LOG (INFO) << " done!" ;
+    LOG (INFO) << "per module ... ";
 
     // now module wise
     for ( auto& cFe : fModuleHistMap )
@@ -407,7 +407,7 @@ void CMTester::FinishRun()
         }
     }
 
-    std::cout << " done!" << std::endl;
+    LOG (INFO) << " done!" ;
     // Not drawing anything yet
     updateHists ( true );
 }
@@ -535,7 +535,7 @@ void CMTester::updateHists ( bool pFinal )
     {
         auto cCanvas = fCanvasMap.find ( cCbc.first );
 
-        if ( cCanvas == fCanvasMap.end() ) std::cout << "Error: could not find the canvas for Cbc " << int ( cCbc.first->getCbcId() ) << std::endl;
+        if ( cCanvas == fCanvasMap.end() ) LOG (INFO) << "Error: could not find the canvas for Cbc " << int ( cCbc.first->getCbcId() ) ;
         else
         {
             TH1F* cTmpNHits = dynamic_cast<TH1F*> ( getHist ( cCbc.first, "nhits" ) );
@@ -623,7 +623,7 @@ bool CMTester::isMasked ( Cbc* pCbc, int pChannel )
 
     if ( cNoiseStripSet == std::end ( fNoiseStripMap ) )
     {
-        std::cerr << "Error: could not find the set of noisy strips for CBC " << int ( cNoiseStripSet->first->getCbcId() ) << std::endl;
+        LOG (ERROR) << "Error: could not find the set of noisy strips for CBC " << int ( cNoiseStripSet->first->getCbcId() ) ;
         return false;
     }
     else
@@ -683,9 +683,9 @@ void CMTester::parseSettings()
     if ( cSetting != std::end ( fSettingsMap ) )  fSimOccupancy = cSetting->second;
     else fSimOccupancy = 50;
 
-    std::cout << "Parsed the following settings:" << std::endl;
-    std::cout << "	Nevents = " << fNevents << std::endl;
-    std::cout << "	simulate = " << int ( fDoSimulate ) << std::endl;
-    std::cout << "	sim. Occupancy (%) = " << int ( fSimOccupancy ) << std::endl;
+    LOG (INFO) << "Parsed the following settings:" ;
+    LOG (INFO) << "	Nevents = " << fNevents ;
+    LOG (INFO) << "	simulate = " << int ( fDoSimulate ) ;
+    LOG (INFO) << "	sim. Occupancy (%) = " << int ( fSimOccupancy ) ;
 
 }

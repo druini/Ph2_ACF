@@ -1,5 +1,7 @@
 #include <cstring>
 
+
+//#include "../Utils/easylogging++.h"
 #include "../Utils/Utilities.h"
 #include "../tools/SignalScan.h"
 #include "../tools/LatencyScan.h"
@@ -13,13 +15,17 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
-
 using namespace CommandLineProcessing;
-
+INITIALIZE_EASYLOGGINGPP
 
 int main ( int argc, char* argv[] )
 {
+    //configure the logger
+    el::Configurations conf ("settings/logger.conf");
+    el::Loggers::reconfigureAllLoggers (conf);
+
     ArgvParser cmd;
+
 
     // init
     cmd.setIntroductoryDescription ( "CMS Ph2_ACF  Commissioning tool to perform the following procedures:\n-Timing / Latency scan\n-Threshold Scan\n-Stub Latency Scan" );
@@ -60,7 +66,7 @@ int main ( int argc, char* argv[] )
 
     if ( result != ArgvParser::NoParserError )
     {
-        std::cout << cmd.parseErrorDescription ( result );
+        LOG (INFO) << cmd.parseErrorDescription ( result );
         exit ( 1 );
     }
 
@@ -94,13 +100,15 @@ int main ( int argc, char* argv[] )
     else if ( cSignal ) cResultfile = "SignalScan";
     else cResultfile = "Commissioning";
 
+    std::stringstream outp;
     Tool cTool;
-    cTool.InitializeHw ( cHWFile );
-    cTool.InitializeSettings ( cHWFile );
+    cTool.InitializeHw ( cHWFile , outp);
+    cTool.InitializeSettings ( cHWFile, outp );
     cTool.CreateResultDirectory ( cDirectory );
     cTool.InitResultFile ( cResultfile );
     cTool.StartHttpServer();
-    cTool.ConfigureHw();
+    cTool.ConfigureHw (outp);
+    LOG (INFO) << outp.str();
 
     if ( cLatency || cStubLatency )
     {
@@ -124,9 +132,11 @@ int main ( int argc, char* argv[] )
 
     else if ( cNoise )
     {
+        outp.str ("");
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit (&cTool);
-        cPedeNoise.ConfigureHw();
+        cPedeNoise.ConfigureHw (outp);
+        LOG (INFO) << outp.str();
         cPedeNoise.Initialise(); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         cPedeNoise.Validate();

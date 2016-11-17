@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <iostream>
 
+#include "../Utils/easylogging++.h"
+
 typedef std::map<std::string, uint32_t> RegMap;
 
 // a little forward declaration!
@@ -15,29 +17,29 @@ struct BGO;
 
 class Amc13Description
 {
-public:
+  public:
     Amc13Description();
     ~Amc13Description();
 
-    uint32_t getReg(int pTounge, std::string& pReg);
-    void setReg(int pTounge, std::string& pReg, uint32_t pValue);
-    RegMap getRegMap(int pTounge)
+    uint32_t getReg (int pTounge, std::string& pReg);
+    void setReg (int pTounge, std::string& pReg, uint32_t pValue);
+    RegMap getRegMap (int pTounge)
     {
         return (pTounge == 1) ? fT1map : fT2map;
     }
     int Id;
 
-    void setTrigger(bool pLocal, int pType, int pRate, int pBurst, int pRules);
-    void setTrigger( Trigger* pTrigger);
+    void setTrigger (bool pLocal, int pType, int pRate, int pBurst, int pRules);
+    void setTrigger ( Trigger* pTrigger);
     Trigger* getTrigger();
 
-    void addBGO( int pCommand, bool pRepeat, int pPrescale, int pBX );
-    void addBGO( BGO* pBGO );
-    BGO* getBGO( int pPos );
+    void addBGO ( int pCommand, bool pRepeat, int pPrescale, int pBX );
+    void addBGO ( BGO* pBGO );
+    BGO* getBGO ( int pPos );
 
-    void setAMCMask(const std::vector<int>& pMask);
-    void setTTCSimulator(bool pSimulate);
-public:
+    void setAMCMask (const std::vector<int>& pMask);
+    void setTTCSimulator (bool pSimulate);
+  public:
     RegMap fT1map;
     RegMap fT2map;
     std::vector<int> fAMCMask;
@@ -48,7 +50,7 @@ public:
 
 struct BGO
 {
-    BGO(int pCommand, bool pRepeat, int pPrescale, int pBX) : fCommand( pCommand ), fRepeat( pRepeat ), fPrescale( pPrescale ), fBX( pBX ) {}
+    BGO (int pCommand, bool pRepeat, int pPrescale, int pBX) : fCommand ( pCommand ), fRepeat ( pRepeat ), fPrescale ( pPrescale ), fBX ( pBX ) {}
     int fCommand;
     bool fRepeat;
     int fPrescale;
@@ -57,7 +59,7 @@ struct BGO
 
 struct Trigger
 {
-    Trigger(bool pLocal, int pMode, int pRate, int pBurst, int pRules) : fLocal(pLocal), fMode( pMode ), fRate( pRate ), fBurst(pBurst), fRules( pRules ) {}
+    Trigger (bool pLocal, int pMode, int pRate, int pBurst, int pRules) : fLocal (pLocal), fMode ( pMode ), fRate ( pRate ), fBurst (pBurst), fRules ( pRules ) {}
     bool fLocal;
     int fMode;
     int fRate;

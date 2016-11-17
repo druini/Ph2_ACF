@@ -22,35 +22,40 @@ using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 using namespace CommandLineProcessing;
+INITIALIZE_EASYLOGGINGPP
 
 //Class used to process events acquired by a parallel acquisition
-class AcqVisitor: public HwInterfaceVisitor
-{
-    int cN;
-  public:
-    AcqVisitor()
-    {
-        cN = 0;
-    }
-    //void init(std::ofstream* pfSave, bool bText);
-    virtual void visit ( const Ph2_HwInterface::Event& pEvent )
-    {
-        cN++;
-        std::cout << ">>> Event #" << cN << std::endl;
-        std::cout << pEvent << std::endl;
-    }
-};
+//class AcqVisitor: public HwInterfaceVisitor
+//{
+//int cN;
+//public:
+//AcqVisitor()
+//{
+//cN = 0;
+//}
+////void init(std::ofstream* pfSave, bool bText);
+//virtual void visit ( const Ph2_HwInterface::Event& pEvent )
+//{
+//cN++;
+//std::cout << ">>> Event #" << cN << std::endl;
+//std::cout << pEvent << std::endl;
+//}
+//};
 
-void syntax ( int argc )
-{
-    if ( argc > 4 ) std::cerr << RED << "ERROR: Syntax: calibrationtest VCth NEvents (HWDescriptionFile)" << std::endl;
-    else if ( argc < 3 ) std::cerr << RED << "ERROR: Syntax: calibrationtest VCth NEvents (HWDescriptionFile)" << std::endl;
-    else return;
-}
+//void syntax ( int argc )
+//{
+//if ( argc > 4 ) std::cerr << RED << "ERROR: Syntax: calibrationtest VCth NEvents (HWDescriptionFile)" << std::endl;
+//else if ( argc < 3 ) std::cerr << RED << "ERROR: Syntax: calibrationtest VCth NEvents (HWDescriptionFile)" << std::endl;
+//else return;
+//}
 
 
 std::string getFileName()
 {
+    //configure the logger
+    el::Configurations conf ("settings/logger.conf");
+    el::Loggers::reconfigureAllLoggers (conf);
+
     std::string line;
     std::fstream cFile;
     int cRunNumber;
@@ -71,7 +76,7 @@ std::string getFileName()
             cFile.close();
         }
         else
-            std::cout << "File not opened!" << std::endl;
+            LOG (WARNING) << "File not opened!" ;
     }
     else
     {
@@ -118,7 +123,7 @@ int main ( int argc, char* argv[] )
 
     if ( result != ArgvParser::NoParserError )
     {
-        std::cout << cmd.parseErrorDescription ( result );
+        LOG (INFO) << cmd.parseErrorDescription ( result );
         exit ( 1 );
     }
 
@@ -138,62 +143,69 @@ int main ( int argc, char* argv[] )
     cSystemController.addFileHandler ( cOutputFile, 'w' );
     //    cSystemController.initializeFileHandler();
 
-    cSystemController.InitializeHw ( cHWFile );
-    cSystemController.ConfigureHw ( std::cout );
+    std::stringstream outp;
+    cSystemController.InitializeHw ( cHWFile, outp );
+    LOG(INFO) << outp.str();
+    outp.str ("");
+    cSystemController.ConfigureHw (outp);
+    LOG (INFO) << outp.str();
 
 
     BeBoard* pBoard = cSystemController.fBoardVector.at ( 0 );
 
     //if ( cmd.foundOption ( "parallel" ) )
     //{
-        //uint32_t nbPacket = pBoard->getReg ( "pc_commands.CBC_DATA_PACKET_NUMBER" ), nbAcq = pEventsperVcth / ( nbPacket + 1 ) + ( pEventsperVcth % ( nbPacket + 1 ) != 0 ? 1 : 0 );
-        //std::cout << "Packet number=" << nbPacket << ", Nb events=" << pEventsperVcth << " -> Nb acquisition iterations=" << nbAcq << std::endl;
+    //uint32_t nbPacket = pBoard->getReg ( "pc_commands.CBC_DATA_PACKET_NUMBER" ), nbAcq = pEventsperVcth / ( nbPacket + 1 ) + ( pEventsperVcth % ( nbPacket + 1 ) != 0 ? 1 : 0 );
+    //std::cout << "Packet number=" << nbPacket << ", Nb events=" << pEventsperVcth << " -> Nb acquisition iterations=" << nbAcq << std::endl;
 
-        //AcqVisitor visitor;
-        //std::cout << "Press Enter to start the acquisition, press Enter again to stop i" << std::endl;
-        //std::cin.ignore();
-        //cSystemController.fBeBoardInterface->StartThread ( pBoard, nbAcq, &visitor );
-        //std::cin.ignore();
-        //cSystemController.fBeBoardInterface->StopThread ( pBoard );
+    //AcqVisitor visitor;
+    //std::cout << "Press Enter to start the acquisition, press Enter again to stop i" << std::endl;
+    //std::cin.ignore();
+    //cSystemController.fBeBoardInterface->StartThread ( pBoard, nbAcq, &visitor );
+    //std::cin.ignore();
+    //cSystemController.fBeBoardInterface->StopThread ( pBoard );
     //}
     //else
     //{
-        // make event counter start at 1 as does the L1A counter
-        uint32_t cN = 1;
-        uint32_t cNthAcq = 0;
-        uint32_t count = 0;
+    // make event counter start at 1 as does the L1A counter
+    uint32_t cN = 1;
+    uint32_t cNthAcq = 0;
+    uint32_t count = 0;
 
-        cSystemController.fBeBoardInterface->Start ( pBoard );
+    cSystemController.fBeBoardInterface->Start ( pBoard );
 
-        while ( cN <= pEventsperVcth )
+    while ( cN <= pEventsperVcth )
+    {
+        uint32_t cPacketSize = cSystemController.fBeBoardInterface->ReadData ( pBoard, false );
+
+        if ( cN + cPacketSize >= pEventsperVcth )
+            cSystemController.fBeBoardInterface->Stop ( pBoard );
+
+        const std::vector<Event*>& events = cSystemController.GetEvents ( pBoard );
+
+        for ( auto& ev : events )
         {
-            uint32_t cPacketSize = cSystemController.fBeBoardInterface->ReadData ( pBoard, false );
+            count++;
+            cN++;
 
-            if ( cN + cPacketSize >= pEventsperVcth )
-                cSystemController.fBeBoardInterface->Stop ( pBoard );
-
-            const std::vector<Event*>& events = cSystemController.GetEvents ( pBoard );
-
-            for ( auto& ev : events )
+            if ( cmd.foundOption ( "dqm" ) )
             {
-                count++;
-                cN++;
-
-                if ( cmd.foundOption ( "dqm" ) )
+                if ( count % atoi ( cmd.optionValue ( "dqm" ).c_str() ) == 0 )
                 {
-                    if ( count % atoi ( cmd.optionValue ( "dqm" ).c_str() ) == 0 )
-                    {
-                        std::cout << ">>> Event #" << count << std::endl;
-                        std::cout << *ev << std::endl;
-                    }
+                    LOG (INFO) << ">>> Event #" << count ;
+                    outp.str ("");
+                    outp << *ev << std::endl;
+                    LOG (INFO) << outp.str();
                 }
-
-                if ( count % 100  == 0 )
-                    std::cout << ">>> Recorded Event #" << count << std::endl;
             }
 
-            cNthAcq++;
+            if ( count % 100  == 0 )
+                LOG (INFO) << ">>> Recorded Event #" << count ;
         }
+
+        cNthAcq++;
+    }
+
     //}
     cSystemController.Destroy();
 }

@@ -108,7 +108,7 @@ namespace Ph2_HwInterface {
             cbcData.assign (cData->second.begin(), cData->second.end() );
         }
         else
-            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
     }
 
     void Event::GetCbcEvent ( const uint8_t& pFeId, const uint8_t& pCbcId, std::vector< uint8_t >& cbcData )  const
@@ -129,7 +129,7 @@ namespace Ph2_HwInterface {
             }
         }
         else
-            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
     }
 
 //    std::string Event::HexString() const
@@ -164,7 +164,7 @@ namespace Ph2_HwInterface {
         }
         else
         {
-            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
             return false;
         }
     }
@@ -184,7 +184,7 @@ namespace Ph2_HwInterface {
             return ( (cData->second.at (0) >> 30) & 0x00000003);
         else
         {
-            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
             return 0;
         }
     }
@@ -199,7 +199,7 @@ namespace Ph2_HwInterface {
             return ( (cData->second.at (0) >> 22) & 0x000000FF);
         else
         {
-            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
             return 0;
         }
     }
@@ -239,7 +239,7 @@ namespace Ph2_HwInterface {
         }
         else
         {
-            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
             return "";
         }
     }
@@ -266,7 +266,7 @@ namespace Ph2_HwInterface {
             }
         }
         else
-            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
 
         return blist;
     }
@@ -303,7 +303,7 @@ namespace Ph2_HwInterface {
             }
         }
         else
-            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
 
         return blist;
     }
@@ -415,7 +415,7 @@ namespace Ph2_HwInterface {
             cNHits += __builtin_popcount (cData->second.back() & 0xFF000000);
         }
         else
-            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
 
         return cNHits;
     }
@@ -445,9 +445,9 @@ namespace Ph2_HwInterface {
             }
         }
         else
-            std::cout << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." << std::endl;
+            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
         return cHits;
-    }
+     }
 
     std::ostream& operator<< ( std::ostream& os, const Event& ev )
     {

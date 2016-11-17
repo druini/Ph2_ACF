@@ -35,7 +35,7 @@ namespace Ph2_HwInterface {
             BeBoardFWMap::iterator i = fBoardMap.find ( pBoardIdentifier );
 
             if ( i == fBoardMap.end() )
-                std::cout << "The Board: " << + ( pBoardIdentifier >> 8 ) << "  doesn't exist" << std::endl;
+                LOG (INFO) << "The Board: " << + ( pBoardIdentifier >> 8 ) << "  doesn't exist" ;
             else
             {
                 fBoardFW = i->second;
@@ -99,7 +99,7 @@ namespace Ph2_HwInterface {
             }
             catch (...)
             {
-                std::cerr << "Error while reading: " + cReg.first << std::endl;
+                std::cerr << "Error while reading: " + cReg.first ;
                 throw ;
             }
     }

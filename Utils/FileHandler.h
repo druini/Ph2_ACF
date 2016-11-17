@@ -9,6 +9,7 @@
 #include <mutex>
 #include <thread>
 #include "FileHeader.h"
+#include "../Utils/easylogging++.h"
 
 /*!
  * \class FileHandler
@@ -106,7 +107,7 @@ class FileHandler
             else
                 fBinaryFile.seekg ( 0, std::ios::beg );
         }
-        else std::cout << "FileHandler: Error, should not try to rewind a file opened in write mode (or file not open!)" << std::endl;
+        else LOG (INFO) << "FileHandler: Error, should not try to rewind a file opened in write mode (or file not open!)";
     }
 
     /*!

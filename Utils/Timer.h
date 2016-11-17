@@ -26,6 +26,7 @@ public:
               << " finished at: " << tnow
               << "\telapsed time: " << time_span.count() << " seconds" << std::endl;
   }
+  double getElapsedTime(){ duration<double> time_span = duration_cast<duration<double>>(end_ - start_); return time_span.count();}
   void reset() {start_ = end_;}
 
 private:

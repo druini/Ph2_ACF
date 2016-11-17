@@ -232,7 +232,7 @@ namespace Ph2_HwInterface {
         void DecodeReg ( CbcRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
 
 
-        bool WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
+        bool WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts , bool pReadback) override;
         bool BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
         void ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg );
 

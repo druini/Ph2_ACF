@@ -19,6 +19,9 @@ export BASE_DIR=$(pwd)
 
 #ANTENNA
 export ANTENNALIB=CMSPh2_AntennaDriver/lib
+#HMP4040
+export USBINSTLIB=../Ph2_USBInstDriver/lib
+
 
 export PATH=$BASE_DIR/bin:$PATH
-export LD_LIBRARY_PATH=$BASE_DIR/$ANTENNALIB:$BASE_DIR/RootWeb/lib:/opt/cactus/lib:$BASE_DIR/lib:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=$BASE_DIR/$USBINSTLIB:$BASE_DIR/$ANTENNALIB:$BASE_DIR/RootWeb/lib:/opt/cactus/lib:$BASE_DIR/lib:${LD_LIBRARY_PATH}

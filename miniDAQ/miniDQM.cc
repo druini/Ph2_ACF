@@ -25,6 +25,8 @@ using namespace Ph2_System;
 
 using namespace CommandLineProcessing;
 
+INITIALIZE_EASYLOGGINGPP
+
 void tokenize ( const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters )
 {
     // Skip delimiters at beginning.
@@ -50,13 +52,19 @@ void dumpEvents ( const std::vector<Event*>& elist )
 {
     for ( int i = 0; i < elist.size(); i++ )
     {
-        std::cout << "Event index: " << i + 1 << std::endl;
-        std::cout << *elist[i] << std::endl;
+        LOG (INFO) << "Event index: " << i + 1 << std::endl;
+        std::stringstream outp;
+        outp << *elist[i] << std::endl;
+        LOG (INFO) << outp.str();
     }
 }
 
 int main ( int argc, char* argv[] )
 {
+    //configure the logger
+    el::Configurations conf ("settings/logger.conf");
+    el::Loggers::reconfigureAllLoggers (conf);
+
     ArgvParser cmd;
 
     // init
@@ -108,7 +116,7 @@ int main ( int argc, char* argv[] )
 
     if ( result != ArgvParser::NoParserError )
     {
-        std::cout << cmd.parseErrorDescription ( result ) << std::endl;
+        LOG (INFO) << cmd.parseErrorDescription ( result );
         exit ( 1 );
     }
 
@@ -117,14 +125,14 @@ int main ( int argc, char* argv[] )
 
     if ( rawFilename.empty() )
     {
-        std::cerr << "Error, no binary file provided. Quitting" << std::endl;
+        LOG (ERROR) << "Error, no binary file provided. Quitting" ;
         exit ( 2 );
     }
 
     // Check if the file can be found
     if ( ! boost::filesystem::exists ( rawFilename ) )
     {
-        std::cerr << "Error!! binary file " << rawFilename << " not found, exiting!" << std::endl;
+        LOG (ERROR) << "Error!! binary file " << rawFilename << " not found, exiting!";
         exit ( 3 );
     }
 
@@ -132,7 +140,7 @@ int main ( int argc, char* argv[] )
 
     if ( cbcTypeEvtSizeMap.find ( cbcType ) == cbcTypeEvtSizeMap.end()  )
     {
-        std::cerr << "Wrong CBC type specified!!!!" << std::endl;
+        LOG (ERROR) << "Wrong CBC type specified!!!!";
         exit ( 4 );
     }
 
@@ -154,9 +162,11 @@ int main ( int argc, char* argv[] )
     cHWFile += "/";
     cHWFile += cbcTypeEvtSizeMap[cbcType].second;
 
-    std::cout << "HWfile=" << cHWFile << std::endl;
+    LOG (INFO) << "HWfile=" << cHWFile;
     //dqmh->parseHWxml ( cHWFile );
-    dqmh->InitializeHw ( cHWFile );
+    std::ofstream outp;
+    dqmh->InitializeHw ( cHWFile, outp );
+    LOG (INFO) << outp;
     //dqmh->fParser.parseHW (cHWFile, fBeBoardFWMap, fBoardVector, os);
     const BeBoard* pBoard = dqmh->getBoard ( 0 );
 
@@ -194,10 +204,9 @@ int main ( int argc, char* argv[] )
             const std::vector<Event*>& evlist = d.GetEvents ( pBoard );
             dqmh->fillHistos (evlist, ntotevt);
             ntotevt += nEvents;
-            std::cout << "eventSize = "  << eventSize
-                      << ", eventsRead = " << nEvents
-                      << ", totalEventsRead = " << ntotevt
-                      << std::endl;
+            LOG (INFO) << "eventSize = "  << eventSize
+                       << ", eventsRead = " << nEvents
+                       << ", totalEventsRead = " << ntotevt;
 
             if ( !dqmh->getFileHandler()->file_open() ) break;
         }
@@ -229,7 +238,7 @@ int main ( int argc, char* argv[] )
 
         // now read back the Root file and publish the histograms on the DQM page
         RootWeb::makeDQMmonitor ( dqmFilename, cDirBasePath, runLabel );
-        std::cout << "Saving root file to " << dqmFilename << " and webpage to " << cDirBasePath << std::endl;
+        LOG (INFO) << "Saving root file to " << dqmFilename << " and webpage to " << cDirBasePath ;
     }
 
     else dumpEvents ( elist );

@@ -7,23 +7,25 @@
 #include "../HWDescription/Definition.h"
 #include "../tools/Calibration.h"
 #include "../tools/PedeNoise.h"
-#include "../tools/OldCalibration.h"
 #include "../Utils/argvparser.h"
 #include "TROOT.h"
 #include "TApplication.h"
 #include "../Utils/Timer.h"
 
 
-
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
-
 using namespace CommandLineProcessing;
 
+INITIALIZE_EASYLOGGINGPP
 
 int main ( int argc, char* argv[] )
 {
+    //configure the logger
+    el::Configurations conf ("settings/logger.conf");
+    el::Loggers::reconfigureAllLoggers (conf);
+
     ArgvParser cmd;
 
     // init
@@ -60,7 +62,7 @@ int main ( int argc, char* argv[] )
 
     if ( result != ArgvParser::NoParserError )
     {
-        std::cout << cmd.parseErrorDescription ( result );
+        LOG (INFO) << cmd.parseErrorDescription ( result );
         exit ( 1 );
     }
 
@@ -85,12 +87,15 @@ int main ( int argc, char* argv[] )
     //create a genereic Tool Object, I can then construct all other tools from that using the Inherit() method
     //this tool stays on the stack and lives until main finishes - all other tools will update the HWStructure from cTool
     Tool cTool;
-    cTool.InitializeHw ( cHWFile );
-    cTool.InitializeSettings ( cHWFile );
+    std::stringstream outp;
+    cTool.InitializeHw ( cHWFile, outp );
+    cTool.InitializeSettings ( cHWFile, outp );
     cTool.CreateResultDirectory ( cDirectory );
     cTool.InitResultFile ( "CalibrationResults" );
     cTool.StartHttpServer();
-    cTool.ConfigureHw();
+    cTool.ConfigureHw (outp);
+    LOG (INFO) << outp.str();
+    outp.str ("");
     //if ( !cOld )
     //{
     t.start();
@@ -116,7 +121,9 @@ int main ( int argc, char* argv[] )
         //tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit (&cTool);
-        cPedeNoise.ConfigureHw();
+        cPedeNoise.ConfigureHw (outp);
+        LOG (INFO) << outp.str();
+        outp.str ("");
         cPedeNoise.Initialise(); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         cPedeNoise.Validate();
@@ -128,27 +135,6 @@ int main ( int argc, char* argv[] )
     cTool.SaveResults();
     cTool.CloseResultFile();
     cTool.Destroy();
-    //introduce a separate Destroy method for tool? And delete objects there?
-
-    //}
-    //else
-    //{
-    //t.start();
-    //OldCalibration cCalibration( cCalibrateTGrp );
-    //cCalibration.InitializeHw( cHWFile );
-    //cCalibration.InitializeSettings( cHWFile );
-    //cCalibration.CreateResultDirectory( cDirectory );
-    //cCalibration.InitResultFile( "CalibrationResults" );
-    //cCalibration.StartHttpServer();
-
-    //cCalibration.Initialise( ); // canvases etc. for fast calibration
-    //if ( cVplus ) cCalibration.ScanVplus();
-    //cCalibration.ScanOffset();
-    //cCalibration.SaveResults();
-
-    //t.stop();
-    //t.show( "Time to Calibrate the system: " );
-    //}
 
     if ( !batchMode ) cApp.Run();
 

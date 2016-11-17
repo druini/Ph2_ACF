@@ -26,6 +26,7 @@
 #include "../Utils/picojson.h"
 #include "../Utils/pugixml.hpp"
 #include "../Utils/ConsoleColor.h"
+#include "../Utils/easylogging++.h"
 #include <iostream>
 #include <vector>
 #include <map>
@@ -56,8 +57,8 @@ namespace Ph2_System {
         FileParser() {}
         ~FileParser() {}
 
-        void parseHW ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os = std::cout );
-        void parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os = std::cout );
+        void parseHW ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os  );
+        void parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os  );
 
 
       protected:
@@ -88,17 +89,17 @@ namespace Ph2_System {
          * \param pFilename : HW Description file
          *\param os : ostream to dump output
          */
-        void parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os = std::cout );
+        void parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os  );
         /*!
          * \brief Initialize the hardware via JSON config file
          * \param pFilename : HW Description file
          *\param os : ostream to dump output
          */
-        void parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os = std::cout);
+        void parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os );
 
-        BeBoard* parseBeBoard (pugi::xml_node pNode, BeBoardVec& pBoardVector, std::ostream& os = std::cout);
-        void parseRegister (pugi::xml_node pNode, BeBoard* pBoard, std::ostream& os = std::cout);
-        void parseCbc (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os = std::cout);
+        BeBoard* parseBeBoard (pugi::xml_node pNode, BeBoardVec& pBoardVector, std::ostream& os );
+        void parseRegister (pugi::xml_node pNode, BeBoard* pBoard, std::ostream& os );
+        void parseCbc (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os );
         /*! \brief Expand environment variables in string
          * \param s input string
          * \return Result with variables expanded */

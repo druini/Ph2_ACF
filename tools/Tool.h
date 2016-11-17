@@ -99,6 +99,9 @@ class Tool : public SystemController
         fModuleHistMap = pTool->fModuleHistMap;
     }
 
+    void CreateReport(){ std::ofstream report; report.open (fDirectoryName + "/TestReport.txt", std::ofstream::out | std::ofstream::app);  report.close(); };
+    void AmmendReport(std::string pString ){ std::ofstream report; report.open (fDirectoryName + "/TestReport.txt", std::ofstream::out | std::ofstream::app); report << pString << std::endl; report.close(); };
+
     void bookHistogram ( Cbc* pCbc, std::string pName, TObject* pObject );
 
     void bookHistogram ( Module* pModule, std::string pName, TObject* pObject );

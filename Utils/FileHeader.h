@@ -14,6 +14,8 @@
 #include <iostream>
 #include <vector>
 
+#include "../Utils/easylogging++.h"
+
 /*!
  * \class FileHandler
  * \brief Class to write Data objects in binary file using multithreading
@@ -74,7 +76,7 @@ class FileHeader
         if (fType.size() < 9)
             strcpy (cType, fType.c_str() );
         else
-            std::cout << "FileHeader: Error, type string can only be up to 8 characters long!" << std::endl;
+            LOG (INFO) << "FileHeader: Error, type string can only be up to 8 characters long!" ;
 
         cVec.push_back (cType[0] << 24 | cType[1] << 16 | cType[2] << 8 | cType[3]);
         cVec.push_back (cType[4] << 24 | cType[5] << 16 | cType[6] << 8 | cType[7]);
@@ -95,7 +97,7 @@ class FileHeader
         cVec.push_back (fEventSize32);
         cVec.push_back (0xAAAAAAAA);
 
-        std::cout << "Board Type: " << fType << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << " BeId " << fBeId << " fNCbc " << fNCbc << " EventSize32  " << fEventSize32 << " valid: " << fValid << std::endl;
+        LOG (INFO) << "Board Type: " << fType << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << " BeId " << fBeId << " fNCbc " << fNCbc << " EventSize32  " << fEventSize32 << " valid: " << fValid ;
         return cVec;
     }
 
@@ -127,12 +129,12 @@ class FileHeader
 
             fEventSize32 = pVec.at (10);
             fValid = true;
-            std::cout << "Sucess, this is a valid header!" << std::endl;
-            std::cout << "Board Type: " << fType << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << " BeId " << fBeId << " fNCbc " << fNCbc << " EventSize32  " << fEventSize32 << " valid: " << fValid << std::endl;
+            LOG (INFO) << "Sucess, this is a valid header!" ;
+            LOG (INFO) << "Board Type: " << fType << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << " BeId " << fBeId << " fNCbc " << fNCbc << " EventSize32  " << fEventSize32 << " valid: " << fValid ;
         }
         else
         {
-            std::cout << "Error, this is not a valid header!" << std::endl;
+            LOG (INFO) << "Error, this is not a valid header!" ;
             fValid = false;
         }
     }

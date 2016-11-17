@@ -24,6 +24,7 @@
 #include "TCanvas.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Utilities.h"
+#include "../Utils/easylogging++.h"
 
 
 /*!
@@ -33,7 +34,7 @@
 struct Channel
 {
 
-    Channel( uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uint8_t pChannelId );
+    Channel ( uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uint8_t pChannelId );
     ~Channel();
 
     // members
@@ -74,32 +75,32 @@ struct Channel
     * \brief set the Offset of the Channel object: this is not propagated to HW
     * \param pOffset:  set the fOffset member to pOffset
     */
-    void setOffset( uint8_t pOffset );
+    void setOffset ( uint8_t pOffset );
     /*!
     * \brief Initialize the Histogram and Fit for the Channel
     * \param pParameter: the current parameter that is being varied for storing in file
     * \param pValue: the value of pParameter
     */
-    void initializeHist( uint8_t pValue, TString pParameter );
+    void initializeHist ( uint8_t pValue, TString pParameter );
     /*!
      *brief  Initialize the TGraph to store the PulseShapeMeasurement
      *param pTitle: the Title for the TGraph
     */
-    void initializePulse( TString pTitle );
+    void initializePulse ( TString pTitle );
     /*!
      *\ brief: set a point on the Test Pulse Graph
      *\ param x: xCoordinate
      *\ param y: yCoordinate
     */
-    void setPulsePoint( double x, double y )
+    void setPulsePoint ( double x, double y )
     {
-        fPulse->SetPoint( fPulse->GetN(), x, y );
+        fPulse->SetPoint ( fPulse->GetN(), x, y );
     }
     /*!
     * \brief fill the histogram
     * \param pVcth: the bin at which to fill the histogram (normally Vcth value)
     */
-    void fillHist( uint8_t pVcth );
+    void fillHist ( uint8_t pVcth );
 
     /*!
     * \brief fit the SCurve Histogram with the Fit object
@@ -109,7 +110,7 @@ struct Channel
     * \param pValue: the value of pParameter
     *\param pResutlfile: pointer to the ROOT file where the results are supposed to be stored
     */
-    void fitHist( uint32_t pEventsperVcth, bool pHole, uint8_t pValue, TString pParameter, TFile* pResultfile );
+    void fitHist ( uint32_t pEventsperVcth, bool pHole, uint8_t pValue, TString pParameter, TFile* pResultfile );
 
     /*!
     * \brief differentiate the SCurve Histogram with the Derivative object
@@ -119,7 +120,7 @@ struct Channel
     * \param pValue: the value of pParameter
     *\param pResutlfile: pointer to the ROOT file where the results are supposed to be stored
     */
-    void differentiateHist( uint32_t pEventsperVcth, bool pHole, uint8_t pValue, TString pParameter, TFile* pResultfile );
+    void differentiateHist ( uint32_t pEventsperVcth, bool pHole, uint8_t pValue, TString pParameter, TFile* pResultfile );
 
     /*!
     * \brief reset the Histogram and Fit objects
@@ -129,7 +130,7 @@ struct Channel
 
 struct TestGroup
 {
-    TestGroup( uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uint8_t pGroupId );
+    TestGroup ( uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uint8_t pGroupId );
 
     uint8_t fBeId;
     uint8_t fFeId;
@@ -140,27 +141,27 @@ struct TestGroup
 struct TestGroupGraph
 {
     TestGroupGraph();
-    TestGroupGraph( uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uint8_t pGroupId );
-    void FillVplusVcthGraph( uint8_t& pVplus, double pPedestal, double pNoise );
+    TestGroupGraph ( uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uint8_t pGroupId );
+    void FillVplusVcthGraph ( uint8_t& pVplus, double pPedestal, double pNoise );
     TGraphErrors* fVplusVcthGraph;
 
 };
 
 struct TestGroupComparer
 {
-    bool operator()( const TestGroup& g1, const TestGroup& g2 ) const
+    bool operator() ( const TestGroup& g1, const TestGroup& g2 ) const
     {
-      if ( g1.fBeId == g2.fBeId )
-	{
-	  if ( g1.fFeId == g2.fFeId )
-	    {
-	      if ( g1.fCbcId == g2.fCbcId )
-		return g1.fGroupId < g2.fGroupId;
-	      else return g1.fCbcId < g2.fCbcId;
-	    }
-	  else return g1.fFeId < g2.fFeId;
-	}
-      else return g1.fBeId < g2.fBeId;
+        if ( g1.fBeId == g2.fBeId )
+        {
+            if ( g1.fFeId == g2.fFeId )
+            {
+                if ( g1.fCbcId == g2.fCbcId )
+                    return g1.fGroupId < g2.fGroupId;
+                else return g1.fCbcId < g2.fCbcId;
+            }
+            else return g1.fFeId < g2.fFeId;
+        }
+        else return g1.fBeId < g2.fBeId;
     }
 };
 

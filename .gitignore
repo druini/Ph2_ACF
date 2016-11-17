@@ -7,6 +7,8 @@ latex
 html
 html/
 latex/
+logs/
+logs/*
 *.bin
 *.raw
 Results/

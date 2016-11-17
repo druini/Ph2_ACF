@@ -20,6 +20,7 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/Exception.h"
 #include "../Utils/FileHandler.h"
+#include "../Utils/easylogging++.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/CbcRegItem.h"
@@ -147,8 +148,9 @@ namespace Ph2_HwInterface {
         * \brief Write register blocks of a Cbc
         * \param pFeId : FrontEnd to work with
         * \param pVecReq : Block of words to write
+        * \param pWriteAttempt : number of tries write was attempted
         */
-        virtual bool WriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, bool pReadback ) = 0;
+        virtual bool WriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts , bool pReadback ) = 0;
         //r/w the Cbc registers
         /*!
         * \brief Write register blocks of a Cbc

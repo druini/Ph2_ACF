@@ -28,7 +28,7 @@ void SignalScan::Initialize ()
 
     // To read the blah-specific stuff
     parseSettings();
-    std::cout << "Histograms & Settings initialised." << std::endl;
+    LOG (INFO) << "Histograms & Settings initialised." ;
 }
 
 
@@ -38,7 +38,7 @@ void SignalScan::ScanSignal (int pSignalScanLength)
     std::ofstream output;
     std::string cFilename = fDirectoryName + "/SignalScanData.txt";
     output.open (cFilename, std::ios::out | std::ios::app);
-    output << "TDC/I:nHits/I:nClusters/I:thresh/I:dataBitString/C:clusterString/C" << std::endl;
+    output << "TDC/I:nHits/I:nClusters/I:thresh/I:dataBitString/C:clusterString/C" ;
 
     // The step scan is +1 for hole mode
     int cVcthDirection = ( fHoleMode == 1 ) ? +1 : -1;
@@ -51,7 +51,7 @@ void SignalScan::ScanSignal (int pSignalScanLength)
     this->accept (cReader);
     uint8_t cVCth = cReader.fRegValue;
 
-    std::cout << "Programmed VCth value = " << +cVCth << " - falling back by " << fStepback << " to " << uint32_t (cVCth - cVcthDirection * fStepback) << std::endl;
+    LOG (INFO) << "Programmed VCth value = " << +cVCth << " - falling back by " << fStepback << " to " << uint32_t (cVCth - cVcthDirection * fStepback) ;
 
     cVCth = uint8_t (cVCth - cVcthDirection * fStepback);
     CbcRegWriter cWriter (fCbcInterface, "VCth", cVCth);
@@ -59,13 +59,13 @@ void SignalScan::ScanSignal (int pSignalScanLength)
 
     // Example of incrementer
     // CbcRegIncrementer cIncrementer ( fCbcInterface, "VCth", -1 * cVcthDirection * fStepback);
-    // std::cout << "Stepping back " << fStepback << " from the configuration threshold" << std::endl;
+    // LOG(INFO) << "Stepping back " << fStepback << " from the configuration threshold" ;
     // this->accept ( cIncrementer );
     // cIncrementer.setRegister ("VCth", cVcthDirection * fSignalScanStep );
 
     for (int i = 0; i < pSignalScanLength; i += fSignalScanStep )
     {
-        std::cout << "Threshold: " << +cVCth << " - Iteration " << i << " - Taking " << fNevents << std::endl;
+        LOG (INFO) << "Threshold: " << +cVCth << " - Iteration " << i << " - Taking " << fNevents ;
 
         // Take Data for all Modules
         for ( BeBoard* pBoard : fBoardVector )
@@ -133,11 +133,11 @@ void SignalScan::ScanSignal (int pSignalScanLength)
                                << cEventClusters << " "
                                << +cVCth << " "
                                << cDataString << " "
-                               << cClusterDataString << std::endl;
+                               << cClusterDataString ;
                     }
                 }
 
-                std::cout << "Recorded " << cTotalEvents << " Events" << std::endl;
+                LOG (INFO) << "Recorded " << cTotalEvents << " Events" ;
                 updateHists ( "module_signal", false );
             }
 
@@ -205,9 +205,9 @@ void SignalScan::parseSettings()
     if ( cSetting != std::end ( fSettingsMap ) )  fSignalScanStep = cSetting->second;
     else fSignalScanStep = 1;
 
-    std::cout << "Parsed the following settings:" << std::endl;
-    std::cout << "	Nevents = " << fNevents << std::endl;
-    std::cout << "	HoleMode = " << int ( fHoleMode ) << std::endl;
-    std::cout << "	Step back from Pedestal = " << fStepback << std::endl;
-    std::cout << "	SignalScanStep = " << fSignalScanStep << std::endl;
+    LOG (INFO) << "Parsed the following settings:" ;
+    LOG (INFO) << "	Nevents = " << fNevents ;
+    LOG (INFO) << "	HoleMode = " << int ( fHoleMode ) ;
+    LOG (INFO) << "	Step back from Pedestal = " << fStepback ;
+    LOG (INFO) << "	SignalScanStep = " << fSignalScanStep ;
 }

@@ -52,7 +52,7 @@ void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange)
     }
 
     parseSettings();
-    std::cout << "Histograms and Settings initialised." << std::endl;
+    LOG (INFO) << "Histograms and Settings initialised." ;
 }
 
 std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uint8_t pLatencyRange )
@@ -64,7 +64,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uin
     uint8_t cVcth = cReader.fRegValue;
 
     int cVcthStep = ( fHoleMode == 1 ) ? +10 : -10;
-    std::cout << "VCth value from config file is: " << +cVcth << " ;  changing by " << cVcthStep << "  to " << + ( cVcth + cVcthStep ) << " supress noise hits for crude latency scan!" << std::endl;
+    LOG (INFO) << "VCth value from config file is: " << +cVcth << " ;  changing by " << cVcthStep << "  to " << + ( cVcth + cVcthStep ) << " supress noise hits for crude latency scan!" ;
     cVcth += cVcthStep;
 
     //  Set that VCth Value on all FEs
@@ -73,7 +73,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uin
     this->accept ( cReader );
 
     // Now the actual scan
-    std::cout << "Scanning Latency ... " << std::endl;
+    LOG (INFO) << "Scanning Latency ... " ;
     uint32_t cIterationCount = 0;
 
     for ( uint8_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++ )
@@ -103,7 +103,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uin
     // analyze the Histograms
     std::map<Module*, uint8_t> cLatencyMap;
 
-    //std::cout << "Identified the Latency with the maximum number of Hits at: " << std::endl;
+    //LOG(INFO) << "Identified the Latency with the maximum number of Hits at: " ;
 
     //for ( auto cFe : fModuleHistMap )
     //{
@@ -114,7 +114,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uin
     //cWriter.setRegister ( "TriggerLatency", cLatency );
     //this->accept ( cWriter );
 
-    //std::cout << "    FE " << +cFe.first->getModuleId()  << ": " << +cLatency << " clock cycles!" << std::endl;
+    //LOG(INFO) << "    FE " << +cFe.first->getModuleId()  << ": " << +cLatency << " clock cycles!" ;
     //}
     updateHists ( "module_latency", true );
 
@@ -130,7 +130,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
     uint8_t cVcth = cReader.fRegValue;
 
     int cVcthStep = ( fHoleMode == 1 ) ? +10 : -10;
-    std::cout << "VCth value from config file is: " << +cVcth << " ;  changing by " << cVcthStep << "  to " << + ( cVcth + cVcthStep ) << " supress noise hits for crude latency scan!" << std::endl;
+    LOG (INFO) << "VCth value from config file is: " << +cVcth << " ;  changing by " << cVcthStep << "  to " << + ( cVcth + cVcthStep ) << " supress noise hits for crude latency scan!" ;
     cVcth += cVcthStep;
 
     //  Set that VCth Value on all FEs
@@ -139,7 +139,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
     this->accept ( cReader );
 
     // Now the actual scan
-    std::cout << "Scanning Stub Latency ... " << std::endl;
+    LOG (INFO) << "Scanning Stub Latency ... " ;
 
     for ( uint8_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++ )
     {
@@ -155,7 +155,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
             fBeBoardInterface->ReadNEvents ( pBoard, fNevents );
             const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
 
-            // if(cN <3 ) std::cout << *cEvent << std::endl;
+            // if(cN <3 ) LOG(INFO) << *cEvent ;
 
             // Loop over Events from this Acquisition
             for ( auto& cEvent : events )
@@ -166,7 +166,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
                 cN++;
             }
 
-            std::cout << "Stub Latency " << +cLat << " Stubs " << cNStubs  << " Events " << cN << std::endl;
+            LOG (INFO) << "Stub Latency " << +cLat << " Stubs " << cNStubs  << " Events " << cN ;
 
         }
 
@@ -177,7 +177,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
     // analyze the Histograms
     std::map<Module*, uint8_t> cStubLatencyMap;
 
-    std::cout << "Identified the Latency with the maximum number of Stubs at: " << std::endl;
+    LOG (INFO) << "Identified the Latency with the maximum number of Stubs at: " ;
 
     for ( auto cFe : fModuleHistMap )
     {
@@ -192,7 +192,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
 
         //this->accept ( cLatWriter );
 
-        std::cout << "Stub Latency FE " << +cFe.first->getModuleId()  << ": " << +cStubLatency << " clock cycles!" << std::endl;
+        LOG (INFO) << "Stub Latency FE " << +cFe.first->getModuleId()  << ": " << +cStubLatency << " clock cycles!" ;
     }
 
     return cStubLatencyMap;
@@ -234,7 +234,7 @@ int LatencyScan::countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEve
             if (cTDCVal != 0 && cBoardType == "GLIB") cTDCVal -= 5;
             else if (cTDCVal != 0 && cBoardType == "CTA") cTDCVal -= 3;
 
-            if (cTDCVal > 8 ) std::cout << "ERROR, TDC value not within expected range - normalized value is " << +cTDCVal << " - original Value was " << +cEvent->GetTDC() << "; not considering this Event!" <<  std::endl;
+            if (cTDCVal > 8 ) LOG (INFO) << "ERROR, TDC value not within expected range - normalized value is " << +cTDCVal << " - original Value was " << +cEvent->GetTDC() << "; not considering this Event!" <<  std::endl;
 
             else
             {
@@ -255,7 +255,7 @@ int LatencyScan::countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEve
             }
         }
 
-        std::cout << "FE: " << +cFe->getFeId() << "; Latency " << +pParameter << " clock cycles; Hits " << cHitSum  << "; Events " << fNevents << std::endl;
+        LOG (INFO) << "FE: " << +cFe->getFeId() << "; Latency " << +pParameter << " clock cycles; Hits " << cHitSum  << "; Events " << fNevents ;
         cTotalHits += cHitSum;
     }
 
@@ -325,7 +325,7 @@ void LatencyScan::parseSettings()
     else fHoleMode = 1;
 
 
-    std::cout << "Parsed the following settings:" << std::endl;
-    std::cout << "	Nevents = " << fNevents << std::endl;
-    std::cout << "	HoleMode = " << int ( fHoleMode ) << std::endl;
+    LOG (INFO) << "Parsed the following settings:" ;
+    LOG (INFO) << "	Nevents = " << fNevents ;
+    LOG (INFO) << "	HoleMode = " << int ( fHoleMode ) ;
 }

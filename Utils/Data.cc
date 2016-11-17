@@ -84,10 +84,10 @@ namespace Ph2_HwInterface {
                 word = swap_bytes (word);
 
 #ifdef __CBCDAQ_DEV__
-            std::cout << std::setw (3) << "Original " << cWordIndex << " ### " << std::bitset<32> (pData.at (cWordIndex) ) << std::endl;
-            std::cout << std::setw (3) << "Treated  " << cWordIndex << " ### " << std::bitset<32> (word) << std::endl;
+            LOG (DEBUG) << std::setw (3) << "Original " << cWordIndex << " ### " << std::bitset<32> (pData.at (cWordIndex) );
+            LOG (DEBUG) << std::setw (3) << "Treated  " << cWordIndex << " ### " << std::bitset<32> (word);
 
-            if ( (cWordIndex + 1) % fEventSize == 0 && cWordIndex > 0 ) std::cout << std::endl << std::endl;
+            if ( (cWordIndex + 1) % fEventSize == 0 && cWordIndex > 0 ) LOG (DEBUG) << std::endl << std::endl;
 
 #endif
 

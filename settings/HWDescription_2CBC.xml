@@ -1,28 +1,28 @@
 <?xml version='1.0' encoding = 'UTF-8' ?>
 <HwDescription>
-    <!--Connections name="file://${CBCDAQ}/GlibSupervisor/xml/connections.xml"/-->
+  <BeBoard Id="0" boardType="GLIB">
+ 	<!-- <connection id="board" uri="ipbusudp-2.0://192.168.000.163:50001" address_table="file://settings/address_table_2CBC.xml" /> -->
+    <!-- <connection id="board" uri="chtcp-2.0://cmsuptracker002:10203?target=192.168.0.175:50001" address_table="file://settings/address_table_2CBC.xml" /> -->
+	    	<!--connection id="board0" uri="chtcp-2.0://cmsuptracker002.cern.ch:10203?target=192.168.0.175:50001" address_table="file://${HOME}/mrbots/srcs/otsdaq_cmsoutertracker/otsdaq-cmsoutertracker/Ph2_ACF/settings/address_table_2CBC.xml" /-->
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.175:50001" address_table="file://settings/address_table_2CBC.xml" />
+    
+	<FW_Version NCbcDataSize="4" />
+    <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
+        <Global_CBC_Register name="VCth"> 0x76 </Global_CBC_Register>
+        <!--<Global_CBC_Register name="TriggerLatency"> 0x0F </Global_CBC_Register>-->
+      <Global_CBC_Register name="MiscTestPulseCtrl&amp;AnalogMux">0x21</Global_CBC_Register>
+      <!--<Global_CBC_Register name="MiscTestPulseCtrl&amp;AnalogMux">0xE1</Global_CBC_Register>-->
+      <!--<Global_CBC_Register name="TestPulsePot">0xE0</Global_CBC_Register>-->
+      <!--<Global_CBC_Register name="SelTestPulseDel&ChanGroup">0x00</Global_CBC_Register>-->
 
-        <BeBoard Id="0" connectionId="ignored" boardType="GLIB">
-	    	<connection id="board0" uri="chtcp-2.0://cmsuptracker002.cern.ch:10203?target=192.168.0.175:50001" address_table="file://${HOME}/mrbots/srcs/otsdaq_cmsoutertracker/otsdaq-cmsoutertracker/Ph2_ACF/settings/address_table_2CBC.xml" />
-		<FW_Version NCbcDataSize="4"/>
-
-        	<Module FeId="0" FMCId="0" ModuleId="0" Status="1">
-			<Global_CBC_Register name="VCth"> 0x6E </Global_CBC_Register>
-			<Global_CBC_Register name="TriggerLatency"> 0x0d </Global_CBC_Register>
-			<Global_CBC_Register name="MiscTestPulseCtrl&amp;AnalogMux">0x21</Global_CBC_Register>
-			<Global_CBC_Register name="MiscStubLogic">0x5E</Global_CBC_Register>
-
-                        <CBC_Files path="${HOME}/mrbots/srcs/otsdaq_cmsoutertracker/otsdaq-cmsoutertracker/Ph2_ACF/CalibrationBeamtestSeptember16/"/>
-                        <!--CBC_Files path="${CBCDAQ}/GlibSupervisor/config/i2c/"/-->
-                          <!--<CBC_Files path="${CBCDAQ}/GlibSupervisor/config/i2c/"/>-->
-        		<CBC Id="0" configfile="FE0CBC0.txt"/>
-        		<CBC Id="1" configfile="FE0CBC1.txt"/>
-        	</Module>
-
-    <!-- Stub Latency -->
-    <Register name="cbc_stubdata_latency_adjust_fe1"> 4 </Register>
-    <Register name="cbc_stubdata_latency_adjust_fe2"> 4 </Register>
-
+     <!--CBC_Files path="./settings/" /-->
+     <CBC_Files path="${HOME}/mrbots/srcs/otsdaq_cmsoutertracker/otsdaq-cmsoutertracker/Ph2_ACF/CalibrationBeamtestSeptember16/"/>
+       <!--CBC Id="0" configfile="Cbc_default_electron.txt" />
+       <CBC Id="1" configfile="Cbc_default_electron.txt" /--> 
+       <CBC Id="0" configfile="FE0CBC0.txt"/>
+       <CBC Id="1" configfile="FE0CBC1.txt"/>
+    </Module>
+     
     <!-- Commissioning Mode -->
     <!-- set to 1 to enable commissioning mode -->
     <Register name="COMMISSIONNING_MODE_RQ">0</Register>
@@ -39,7 +39,7 @@
     
     <!-- Trigger -->
     <!-- set to 2 to use external triggers, set to 1 to use external triggers with backpressure -->
-    <Register name="pc_commands.TRIGGER_SEL">1</Register>
+    <Register name="pc_commands.TRIGGER_SEL">0</Register>
     <Register name="pc_commands.INT_TRIGGER_FREQ">1</Register>
 
     <!-- Clock -->
@@ -78,3 +78,8 @@
     
   </BeBoard>
 </HwDescription>
+<Settings>
+    <Setting name="Nevents">1000</Setting>
+    <Setting name="RunNumber">1</Setting>
+    <Setting name="HoleMode">0</Setting>
+</Settings>

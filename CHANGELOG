@@ -145,6 +145,7 @@
     - updated DQM histogramer to work with new Event implementation
     - revised mapping of Events vs CBC and FE
     - merged most recent AMC13 code from Pixel Phase 1 developments
+<<<<<<< HEAD
 =======
 Changelog:
 
@@ -264,3 +265,6 @@ added support for CMS Tk Ph2 Data format (.daq) files generation
 added the option for CMS Tk Ph2 Antenna driver as plugin
 removed the Shelf objects from the code for simplicity
 >>>>>>> master
+=======
+- 24.10.2016: added easylogging++ class for convenient log file creation and different logging levels
+>>>>>>> knash_Dev

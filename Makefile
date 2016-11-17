@@ -1,10 +1,12 @@
 ANTENNADIR=CMSPh2_AntennaDriver
 AMC13DIR=/opt/cactus/include/amc13
+USBINSTDIR=../Ph2_USBInstDriver
 
 #DEPENDENCIES := Utils HWDescription HWInterface System tools RootWeb Tracker src miniDAQ
 DEPENDENCIES := Utils HWDescription HWInterface RootWeb Tracker
 ANTENNAINSTALLED = no
 AMC13INSTALLED = no
+USBINSTINSTALLED = no
 
 ifneq ("$(wildcard $(ANTENNADIR))","")
 	DEPENDENCIES := CMSPh2_AntennaDriver $(DEPENDENCIES)
@@ -18,6 +20,14 @@ ifneq ("$(wildcard $(AMC13DIR))","")
 	AMC13INSTALLED = yes
 else
 	AMC13INSTRUCTIONS = This feature can only be built if the AMC13 libraries are installed with cactus!
+endif
+
+ifneq ("$(wildcard $(USBINSTDIR))","")
+	#DEPENDENCIES := ../Ph2_USBInstDriver $(DEPENDENCIES)
+	USBINSTINSTALLED = yes
+	USBINSTINSTRUCTIONS = 
+else
+	USBINSTINSTRUCTIONS = To use the Ph2_USBInstDriver please download it from 'https://gitlab.cern.ch/cms_tk_ph2/Ph2_USBInstDriver.git'.
 endif
 
 .PHONY: print dependencies $(DEPENDENCIES) clean src miniDAQ tools
@@ -53,6 +63,9 @@ print:
 	@echo 'Antenna Driver installed:' $(ANTENNAINSTALLED)
 	@echo $(ANTENNAINSTRUCTIONS)
 	@echo '*****************************'
+	@echo 'Ph2 USB Inst Driver installed:' $(USBINSTINSTALLED)
+	@echo $(USBINSTINSTRUCTIONS)
+	@echo '*****************************'
 
 
 clean:
@@ -66,6 +79,5 @@ clean:
 	(cd miniDAQ; make clean)
 	(cd Tracker; make clean)
 	(cd AMC13; make clean)
-	#(cd doc; make clean)
+	 #(cd doc; make clean)
 	(rm -f lib/* bin/*)
-

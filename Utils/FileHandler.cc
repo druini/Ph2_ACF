@@ -65,7 +65,7 @@ bool FileHandler::openFile( )
 
             // if the header is null or not valid, continue without and delete the header
             if ( fHeader.fValid == false )
-                std::cout << "FileHandler: Warning - No valid file Header provided, writing file without ... " << std::endl;
+                LOG (INFO) << "FileHandler: Warning - No valid file Header provided, writing file without ... " ;
             //if the header object is valid i serialize it in the file
             else if ( fHeader.fValid)
             {
@@ -91,12 +91,12 @@ bool FileHandler::openFile( )
             // and treat it as normal data
             if (!fHeader.fValid)
             {
-                std::cout << "FileHandler: No valid header found in file " << fBinaryFileName << " - resetting to 0 and treating as normal data!" << std::endl;
+                LOG (INFO) << "FileHandler: No valid header found in file " << fBinaryFileName << " - resetting to 0 and treating as normal data!" ;
                 fBinaryFile.clear( );
                 fBinaryFile.seekg ( 0, std::ios::beg );
                 // if the file Header is nullptr I do not get info from it!
             }
-            else std::cout << "FileHandler: Found a valid header in file " << fBinaryFileName << std::endl;
+            else LOG (INFO) << "FileHandler: Found a valid header in file " << fBinaryFileName ;
         }
 
         fMutex.unlock();
@@ -158,7 +158,7 @@ std::vector<uint32_t> FileHandler::readFileChunks ( uint32_t pNWords32 )
     if (fBinaryFile.eof() )
         closeFile();
 
-    if (cWordCounter < pNWords32) std::cout << "FileHandler: Attention, input file " << fBinaryFileName << " ended before reading " << pNWords32 << " 32-bit words!" << std::endl;
+    if (cWordCounter < pNWords32) LOG (INFO) << "FileHandler: Attention, input file " << fBinaryFileName << " ended before reading " << pNWords32 << " 32-bit words!" ;
 
     return cVector;
 }

@@ -26,7 +26,7 @@ namespace Ph2_HwInterface {
         fData ( nullptr ),
         fBroadcastCbcId (0),
         fReplyBufferSize (1024),
-        fFMCId (1)
+        fFMCId (1) 
     {}
 
 
@@ -80,33 +80,33 @@ namespace Ph2_HwInterface {
             fFileHandler = pHandler;
             fSaveToFile = true;
         }
-        else std::cout << "Error, can not set NULL FileHandler" << std::endl;
+        else LOG (INFO) << "Error, can not set NULL FileHandler" ;
     }
 
     uint32_t ICFc7FWInterface::getBoardInfo()
     {
-        //std::cout << "FMC1 present : " << ReadReg ( "user_stat.current_fec_fmc2_cbc0" ) << std::endl;
-        //std::cout << "FMC2 present : " << ReadReg ( "user_stat.current_fec_fmc2_cbc1" ) << std::endl;
+        //LOG(INFO) << "FMC1 present : " << ReadReg ( "user_stat.current_fec_fmc2_cbc0" ) ;
+        //LOG(INFO) << "FMC2 present : " << ReadReg ( "user_stat.current_fec_fmc2_cbc1" ) ;
         uint32_t cVersionMajor, cVersionMinor;
         cVersionMajor = ReadReg ( "user_stat.version.ver_major" );
         cVersionMinor = ReadReg ( "user_stat.version.ver_minor" );
-        std::cout << "FW version : " << cVersionMajor << "." << cVersionMinor << "." << ReadReg ( "user_stat.version.ver_build" ) << std::endl;
+        LOG (INFO) << "FW version : " << cVersionMajor << "." << cVersionMinor << "." << std::to_string (ReadReg ( "user_stat.version.ver_build" ) ) ;
 
         uhal::ValWord<uint32_t> cBoardType = ReadReg ( "sys_regs.board_id" );
 
-        std::cout << "BoardType : ";
+        LOG (INFO) << "BoardType : ";
 
         char cChar = ( ( cBoardType & cMask4 ) >> 24 );
-        std::cout << cChar;
+        LOG (INFO) << cChar;
 
         cChar = ( ( cBoardType & cMask3 ) >> 16 );
-        std::cout << cChar;
+        LOG (INFO) << cChar;
 
         cChar = ( ( cBoardType & cMask2 ) >> 8 );
-        std::cout << cChar;
+        LOG (INFO) << cChar;
 
         cChar = ( cBoardType & cMask1 );
-        std::cout << cChar << std::endl;
+        LOG (INFO) << cChar ;
 
         uint32_t cVersionWord = ( (cVersionMajor & 0x0000FFFF) << 16 || (cVersionMinor & 0x0000FFFF) );
         return cVersionWord;
@@ -124,9 +124,9 @@ namespace Ph2_HwInterface {
         bool cfmc2_en = ReadReg ("user_stat.fw_cnfg.fmc_cnfg.fmc2_cbc_en");
         bool cDIO5_en = ReadReg ("user_stat.fw_cnfg.dio5ch_xtrig_en");
         fBroadcastCbcId = ReadReg ("user_stat.fw_cnfg.fmc_cnfg.ncbc_per_fmc");
-        std::cout << "FMC1 en: " << cfmc1_en << std::endl << "FMC2 en: " << cfmc2_en << std::endl << "Number of CBCs: " << fBroadcastCbcId << std::endl;
-        std::cout << "DIO5 en: " << cDIO5_en << std::endl;
-        std::cout << "Number of 32-bit words/Event in this configuration: " << fDataSizeperEvent32 << std::endl;
+        LOG (INFO) << "FMC1 en: " << cfmc1_en  << "FMC2 en: " << cfmc2_en  << "Number of CBCs: " << fBroadcastCbcId ;
+        LOG (INFO) << "DIO5 en: " << cDIO5_en ;
+        LOG (INFO) << "Number of 32-bit words/Event in this configuration: " << fDataSizeperEvent32 ;
         //this does not work because BeBoard* is const
         //pBoard->setNCbcDataSize(uint16_t(cNCbcperFMC));
 
@@ -188,8 +188,8 @@ namespace Ph2_HwInterface {
         for (auto& cWord : pReplies)
             cSuccess = ( ( (cWord >> 20) & 0x1) == 0 && ( (cWord) & 0x000000FF) != 0 ) ? true : false;
 
-        if (cSuccess) std::cout << "Successfully received *Pings* from " << fBroadcastCbcId << " Cbcs on FMC " << +fFMCId << std::endl;
-        else std::cout << "Error, did not receive the correct number of *Pings*; expected: " << fBroadcastCbcId << ", received: " << pReplies.size() << std::endl;
+        if (cSuccess) LOG (INFO) << "Successfully received *Pings* from " << fBroadcastCbcId << " Cbcs on FMC " << +fFMCId ;
+        else LOG (INFO) << "Error, did not receive the correct number of *Pings*; expected: " << fBroadcastCbcId << ", received: " << pReplies.size() ;
 
         cVecReg.push_back ({"cbc_daq_ctrl.cbc_i2c_ctrl", 0x2});
         WriteStackReg ( cVecReg );
@@ -298,7 +298,7 @@ namespace Ph2_HwInterface {
                 cNCycles = ceil (pNEvents / double (cNEvents) );
             }
 
-            std::cout << "Packet Size larger than 2000, splitting in Acquisitions of " << cNEvents << " in " << cNCycles << " cycles!" << std::endl;
+            LOG (INFO) << "Packet Size larger than 2000, splitting in Acquisitions of " << cNEvents << " in " << cNCycles << " cycles!" ;
         }
 
         std::vector< std::pair<std::string, uint32_t> > cVecReg;
@@ -449,7 +449,7 @@ namespace Ph2_HwInterface {
 
         if (cNReplies != pNReplies)
         {
-            std::cout << "Error: Read " << cNReplies << " I2C replies whereas " << pNReplies << " are expected!" << std::endl;
+            LOG (INFO) << "Error: Read " << cNReplies << " I2C replies whereas " << pNReplies << " are expected!" ;
             cFailed = true;
         }
 
@@ -530,8 +530,10 @@ namespace Ph2_HwInterface {
 
 
 
-    bool ICFc7FWInterface::WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback)
+    bool ICFc7FWInterface::WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts , bool pReadback)
     {
+        
+        uint8_t cMaxWriteAttempts = 5;
         // the actual write & readback command is in the vector
         std::vector<uint32_t> cReplies;
         bool cSuccess = !WriteI2C ( pVecReg, cReplies, pReadback, false );
@@ -544,7 +546,7 @@ namespace Ph2_HwInterface {
         //uint32_t cWord1 = pVecReg.at (index);
         //uint32_t cWord2 = cReplies.at (2 * index);
         //uint32_t cWord3 = cReplies.at ( (2 * index) + 1);
-        //std::cout << std::endl << " ## " << std::bitset<32> (cWord1) << " ### Written: FMCId " <<  + ( (cWord1 >> 28) & 0xF) << " CbcId " << + ( (cWord1 >> 24) & 0xF) << " Read " << + ( (cWord1 >> 21) & 0x1) << " Write " << + ( (cWord1 >> 20) & 0x1) << " Page  " << + ( (cWord1 >> 16) & 0x1) << " Address " << + ( (cWord1 >> 8) & 0xFF) << " Value " << + ( (cWord1) & 0xFF)  << std::endl << " ## " << std::bitset<32> (cWord2) << " ### Read:           CbcId " << + ( (cWord2 >> 24) & 0xF) << " Info " << + ( (cWord2 >> 20) & 0x1) << " Read? " << + ( (cWord2 >> 17) & 0x1) << " Page  " << + ( (cWord2 >> 16) & 0x1) << " Address " << + ( (cWord2 >> 8) & 0xFF) << " Value " << + ( (cWord2) & 0xFF)  << std::endl << " ## " << std::bitset<32> (cWord3) << " ### Read:           CbcId " << + ( (cWord3 >> 24) & 0xF) << " Info " << + ( (cWord3 >> 20) & 0x1) << " Read? " << + ( (cWord3 >> 17) & 0x1) << " Page  " << + ( (cWord3 >> 16) & 0x1) << " Address " << + ( (cWord3 >> 8) & 0xFF) << " Value " << + ( (cWord3) & 0xFF)  << std::endl;
+        //LOG(INFO)  << " ## " << std::bitset<32> (cWord1) << " ### Written: FMCId " <<  + ( (cWord1 >> 28) & 0xF) << " CbcId " << + ( (cWord1 >> 24) & 0xF) << " Read " << + ( (cWord1 >> 21) & 0x1) << " Write " << + ( (cWord1 >> 20) & 0x1) << " Page  " << + ( (cWord1 >> 16) & 0x1) << " Address " << + ( (cWord1 >> 8) & 0xFF) << " Value " << + ( (cWord1) & 0xFF)   << " ## " << std::bitset<32> (cWord2) << " ### Read:           CbcId " << + ( (cWord2 >> 24) & 0xF) << " Info " << + ( (cWord2 >> 20) & 0x1) << " Read? " << + ( (cWord2 >> 17) & 0x1) << " Page  " << + ( (cWord2 >> 16) & 0x1) << " Address " << + ( (cWord2 >> 8) & 0xFF) << " Value " << + ( (cWord2) & 0xFF)   << " ## " << std::bitset<32> (cWord3) << " ### Read:           CbcId " << + ( (cWord3 >> 24) & 0xF) << " Info " << + ( (cWord3 >> 20) & 0x1) << " Read? " << + ( (cWord3 >> 17) & 0x1) << " Page  " << + ( (cWord3 >> 16) & 0x1) << " Address " << + ( (cWord3 >> 8) & 0xFF) << " Value " << + ( (cWord3) & 0xFF)  ;
         //;
         //}
 
@@ -577,22 +579,29 @@ namespace Ph2_HwInterface {
         }
 
         // now check the size of the WriteAgain vector and assert Success or not
+        // also check that the number of write attempts does not exceed cMaxWriteAttempts
         if (cWriteAgain.empty() ) cSuccess = true;
         else
         {
             cSuccess = false;
 
             // if the number of errors is greater than 100, give up
-            if (cWriteAgain.size() < 100)
+            if (cWriteAgain.size() < 100 && pWriteAttempts < cMaxWriteAttempts )
             {
-                if (pReadback) std::cout << "There were " << cWriteAgain.size() << " Readback Errors -trying again!" << std::endl;
-                else std::cout << "There were " << cWriteAgain.size() << " CBC CMD acknowledge bits missing -trying again!" << std::endl;
-
-                this->WriteCbcBlockReg ( cWriteAgain, true);
+                if (pReadback)  LOG (INFO) << BOLDRED <<  "(WRITE#"  << std::to_string(pWriteAttempts) << ") There were " << cWriteAgain.size() << " Readback Errors -trying again!" << RESET ;
+                else LOG (INFO) << BOLDRED <<  "(WRITE#"  << std::to_string(pWriteAttempts) << ") There were " << cWriteAgain.size() << " CBC CMD acknowledge bits missing -trying again!" << RESET ;
+            
+                pWriteAttempts++;
+                this->WriteCbcBlockReg ( cWriteAgain, pWriteAttempts, true);
             }
-            //else std::cout << "There were too many errors (>100 Registers). Something is wrong - aborting!" << std::endl;
+            else if ( pWriteAttempts >= cMaxWriteAttempts )
+            {
+                cSuccess = false; 
+                pWriteAttempts = 0 ;   
+            }
             else throw Exception ( "Too many CBC readback errors - no functional I2C communication. Check the Setup" );
         }
+
 
         return cSuccess;
     }
@@ -621,7 +630,7 @@ namespace Ph2_HwInterface {
                 else
                     cSuccess = false;
 
-                //std::cout << std::bitset<32>(cWord) << std::endl;
+                //LOG(INFO) << std::bitset<32>(cWord) ;
             }
 
             //cWriteAgain = get_mismatches (pVecReg.begin(), pVecReg.end(), cReplies.begin(), ICFc7FWInterface::cmd_reply_ack);
@@ -712,7 +721,7 @@ namespace Ph2_HwInterface {
     {
         //TODO: cleanup
         //if ( (cWord1 & 0x0F00FFFF) != (cWord2 & 0x0F00FFFF) )
-        //std::cout << std::endl << " ## " << std::bitset<32> (cWord1) << " ### Written: FMCId " <<  + ( (cWord1 >> 28) & 0xF) << " CbcId " << + ( (cWord1 >> 24) & 0xF) << " Read " << + ( (cWord1 >> 21) & 0x1) << " Write " << + ( (cWord1 >> 20) & 0x1) << " Page  " << + ( (cWord1 >> 16) & 0x1) << " Address " << + ( (cWord1 >> 8) & 0xFF) << " Value " << + ( (cWord1) & 0xFF)  << std::endl << " ## " << std::bitset<32> (cWord2) << " ### Read:           CbcId " << + ( (cWord2 >> 24) & 0xF) << " Info " << + ( (cWord2 >> 20) & 0x1) << " Read? " << + ( (cWord2 >> 17) & 0x1) << " Page  " << + ( (cWord2 >> 16) & 0x1) << " Address " << + ( (cWord2 >> 8) & 0xFF) << " Value " << + ( (cWord2) & 0xFF)  << std::endl;
+        //LOG(INFO)  << " ## " << std::bitset<32> (cWord1) << " ### Written: FMCId " <<  + ( (cWord1 >> 28) & 0xF) << " CbcId " << + ( (cWord1 >> 24) & 0xF) << " Read " << + ( (cWord1 >> 21) & 0x1) << " Write " << + ( (cWord1 >> 20) & 0x1) << " Page  " << + ( (cWord1 >> 16) & 0x1) << " Address " << + ( (cWord1 >> 8) & 0xFF) << " Value " << + ( (cWord1) & 0xFF)   << " ## " << std::bitset<32> (cWord2) << " ### Read:           CbcId " << + ( (cWord2 >> 24) & 0xF) << " Info " << + ( (cWord2 >> 20) & 0x1) << " Read? " << + ( (cWord2 >> 17) & 0x1) << " Page  " << + ( (cWord2 >> 16) & 0x1) << " Address " << + ( (cWord2 >> 8) & 0xFF) << " Value " << + ( (cWord2) & 0xFF)  ;
 
         //if the Register is FrontEndControl at p0 addr0, page is not defined and therefore I ignore it!
         if ( ( (cWord1 >> 16) & 0x1) == 0 && ( (cWord1 >> 8 ) & 0xFF) == 0) return ( (cWord1 & 0x0F00FFFF) == (cWord2 & 0x0F00FFFF) );

@@ -18,6 +18,7 @@
 #include <cstring>
 #include <iomanip>
 #include "ConsoleColor.h"
+#include "../Utils/easylogging++.h"
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/BeBoard.h"
 

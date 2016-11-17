@@ -7,6 +7,7 @@
 #include "amc13/AMC13.hh"
 #include "uhal/uhal.hpp"
 #include "../Utils/ConsoleColor.h"
+#include "../Utils/easylogging++.h"
 
 class Amc13Interface
 {

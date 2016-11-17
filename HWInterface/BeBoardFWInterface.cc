@@ -60,29 +60,29 @@ namespace Ph2_HwInterface {
 
     //void BeBoardFWInterface::getBoardInfo()
     //{
-    //std::cout << "FMC1 present : " << ReadReg( "status.fmc1_present" ) << std::endl;
-    //std::cout << "FMC2 present : " << ReadReg( "status.fmc2_present" ) << std::endl;
-    //std::cout << "FW version : " << ReadReg( "firm_id.firmware_major" ) << "." << ReadReg( "firm_id.firmware_minor" ) << "." << ReadReg( "firm_id.firmware_build" ) << std::endl;
+    //LOG(INFO) << "FMC1 present : " << ReadReg( "status.fmc1_present" ) ;
+    //LOG(INFO) << "FMC2 present : " << ReadReg( "status.fmc2_present" ) ;
+    //LOG(INFO) << "FW version : " << ReadReg( "firm_id.firmware_major" ) << "." << ReadReg( "firm_id.firmware_minor" ) << "." << ReadReg( "firm_id.firmware_build" ) ;
 
     //uhal::ValWord<uint32_t> cBoardType = ReadReg( "board_id" );
 
-    //std::cout << "BoardType : ";
+    //LOG(INFO) << "BoardType : ";
 
     //char cChar = ( ( cBoardType & cMask4 ) >> 24 );
-    //std::cout << cChar;
+    //LOG(INFO) << cChar;
 
     //cChar = ( ( cBoardType & cMask3 ) >> 16 );
-    //std::cout << cChar;
+    //LOG(INFO) << cChar;
 
     //cChar = ( ( cBoardType & cMask2 ) >> 8 );
-    //std::cout << cChar;
+    //LOG(INFO) << cChar;
 
     //cChar = ( cBoardType & cMask1 );
-    //std::cout << cChar << std::endl;
+    //LOG(INFO) << cChar ;
 
-    //std::cout << "FMC User Board ID : " << ReadReg( "user_wb_ttc_fmc_regs.user_board_id" ) << std::endl;
-    //std::cout << "FMC User System ID : " << ReadReg( "user_wb_ttc_fmc_regs.user_sys_id" ) << std::endl;
-    //std::cout << "FMC User Version : " << ReadReg( "user_wb_ttc_fmc_regs.user_version" ) << std::endl;
+    //LOG(INFO) << "FMC User Board ID : " << ReadReg( "user_wb_ttc_fmc_regs.user_board_id" ) ;
+    //LOG(INFO) << "FMC User System ID : " << ReadReg( "user_wb_ttc_fmc_regs.user_sys_id" ) ;
+    //LOG(INFO) << "FMC User Version : " << ReadReg( "user_wb_ttc_fmc_regs.user_version" ) ;
 
     //}
 
@@ -99,11 +99,11 @@ namespace Ph2_HwInterface {
     //}
     //catch ( std::exception& e )
     //{
-    //std::cerr << "Death to Stop in BeBoardFWInterface::StopThread()" << e.what() << std::endl;
+    //std::cerr << "Death to Stop in BeBoardFWInterface::StopThread()" << e.what() ;
     //}
     //catch ( ... )
     //{
-    //std::cerr << "Death to Stop in BeBoardFWInterface::StopThread(). failed to perform thrAcq.join()" << std::endl;
+    //std::cerr << "Death to Stop in BeBoardFWInterface::StopThread(). failed to perform thrAcq.join()" ;
     //}
     //}
 

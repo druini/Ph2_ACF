@@ -17,6 +17,7 @@
 #include <ios>
 #include <istream>
 #include "../Utils/Event.h"
+#include "../Utils/easylogging++.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
 

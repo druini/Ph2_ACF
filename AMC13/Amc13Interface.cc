@@ -29,21 +29,23 @@ void Amc13Interface::ConfigureAmc13()
     uint32_t cMask = 0;
 
     // first reset the 2 boards
-    std::cout << "Resetting T1, T2 & all counters!" << std::endl;
+    LOG (INFO) << "Resetting T1, T2 & all counters!" ;
     fAMC13->reset (amc13::AMC13Simple::T1);
     fAMC13->reset (amc13::AMC13Simple::T2);
     // now reset the counters
     fAMC13->resetCounters();
     // now enable the AMC inputs as specified in the config File
-    std::cout << "Enabling TTC links for the following AMCs: " << std::endl;
+    LOG (INFO) << "Enabling TTC links for the following AMCs: " ;
+
+    std::stringstream ss;
 
     for (auto& cAMC : fDescription->fAMCMask)
     {
         setBit (cMask, cAMC, true);
-        std::cout << cAMC << ", ";
+        ss << cAMC << ", ";
     }
 
-    std::cout << std::endl;
+    LOG (INFO) << ss.str() ;
     fAMC13->AMCInputEnable ( cMask );
 
     //now configure the BGOs, loop through the list, get the properties and call the function
@@ -55,7 +57,7 @@ void Amc13Interface::ConfigureAmc13()
         {
             this->configureBGO (cIndex, uint8_t (cBGO->fCommand), uint16_t (cBGO->fBX), uint16_t (cBGO->fPrescale), cBGO->fRepeat);
             this->enableBGO (cIndex);
-            std::cout << "Configured & enabling BGO Channel " << cIndex << " : Command: " << cBGO->fCommand << " BX: " << cBGO->fBX << " Prescale: " << cBGO->fPrescale << " Repetetive: " << cBGO->fRepeat << std::endl;
+            LOG (INFO) << "Configured & enabling BGO Channel " << cIndex << " : Command: " << cBGO->fCommand << " BX: " << cBGO->fBX << " Prescale: " << cBGO->fPrescale << " Repetetive: " << cBGO->fRepeat ;
             cIndex++;
         }
     }
@@ -68,14 +70,14 @@ void Amc13Interface::ConfigureAmc13()
         //Edit GA: not sure if this is actually required
         fAMC13->write (amc13::AMC13Simple::T1, "CONF.LOCAL_TRIG.FAKE_DATA_ENABLE", 1);
 
-        std::cout << "Configuring local L1A: Mode: " << fDescription->fTrigger->fMode << " Rate: " << fDescription->fTrigger->fRate << " Burst: " << fDescription->fTrigger->fBurst << " Rules: " << fDescription->fTrigger->fRules << std::endl;
+        LOG (INFO) << "Configuring local L1A: Mode: " << fDescription->fTrigger->fMode << " Rate: " << fDescription->fTrigger->fRate << " Burst: " << fDescription->fTrigger->fBurst << " Rules: " << fDescription->fTrigger->fRules ;
     }
 
     // if TTC simulator is enabled, the loopback fiber is required and no external TTC stream will be received, the Triggers are local by definition
     if (fDescription->fSimulate)
     {
         fAMC13->localTtcSignalEnable (fDescription->fSimulate);
-        std::cout << RED << "AMC13 configured to use local TTC simulator - don't forget to plug the loopback fibre!" << RESET << std::endl;
+        LOG (INFO) << RED << "AMC13 configured to use local TTC simulator - don't forget to plug the loopback fibre!" << RESET ;
     }
 
     //now need to iterate the two maps of Registers and write them
@@ -85,7 +87,7 @@ void Amc13Interface::ConfigureAmc13()
     for (auto& cReg : fDescription->fT2map)
         fAMC13->write (amc13::AMC13Simple::T2, cReg.first, cReg.second);
 
-    std::cout << GREEN << "AMC13 successfully configured!" << RESET << std::endl;
+    LOG (INFO) << GREEN << "AMC13 successfully configured!" << RESET ;
 }
 
 
@@ -138,7 +140,7 @@ void Amc13Interface::DumpHistory (int pNlastEntries)
     std::vector<uint32_t> cVec = fAMC13->getTTCHistory (pNlastEntries);
 
     //now decode the Info in here!
-    std::cout << BOLDRED << "TTC History showing the last " << pNlastEntries << " items!" << RESET << std::endl;
+    LOG (INFO) << BOLDRED << "TTC History showing the last " << pNlastEntries << " items!" << RESET ;
 
     for (int index = 0; index < cVec.size() / 4; index++)
     {
@@ -148,18 +150,18 @@ void Amc13Interface::DumpHistory (int pNlastEntries)
         uint32_t cBX    = cVec.at (index * 4 + 2);
         uint32_t cEvent = cVec.at (index * 4 + 3);
 
-        std::cout << "Command: " << (cCommand & 0xFF) << " - Orbit: " << cOrbit << " - BX: " << (cBX & 0x7FF) << " - Event Nr: " << (cEvent & 0x00FFFFFF) << std::endl;
+        LOG (INFO) << "Command: " << (cCommand & 0xFF) << " - Orbit: " << cOrbit << " - BX: " << (cBX & 0x7FF) << " - Event Nr: " << (cEvent & 0x00FFFFFF) ;
     }
 }
 
 void Amc13Interface::DumpTriggers (int pNlastEntries)
 {
-    if ( pNlastEntries > 127 ) std::cerr << "Only last 128 Events available in L1A history buffer!" << std::endl;
+    if ( pNlastEntries > 127 ) std::cerr << "Only last 128 Events available in L1A history buffer!" ;
 
     std::vector<uint32_t> cVec = fAMC13->getL1AHistory (pNlastEntries);
 
     //now decode the Info in here!
-    std::cout << BOLDRED << "L1A History showing the last " << pNlastEntries << " items!" << RESET << std::endl;
+    LOG (INFO) << BOLDRED << "L1A History showing the last " << pNlastEntries << " items!" << RESET ;
 
     for (int index = 0; index < cVec.size() / 4; index++)
     {
@@ -169,13 +171,13 @@ void Amc13Interface::DumpTriggers (int pNlastEntries)
         uint32_t cEventNr = cVec.at (index * 4 + 2);
         uint32_t cFlags = cVec.at (index * 4 + 3);
 
-        std::cout << "Orbit: " << cOrbit << " - Bunch: " << (cBunch & 0xFFF) << " - Event Nr: " << (cEventNr & 0xFFFFFF) << " - Flags: " << cFlags << std::endl;
+        LOG (INFO) << "Orbit: " << cOrbit << " - Bunch: " << (cBunch & 0xFFF) << " - Event Nr: " << (cEventNr & 0xFFFFFF) << " - Flags: " << cFlags ;
     }
 }
 
 void Amc13Interface::HaltAMC13()
 {
-    std::cout << "Resetting T1, T2 & all counters!" << std::endl;
+    LOG (INFO) << "Resetting T1, T2 & all counters!" ;
     fAMC13->reset (amc13::AMC13Simple::T1);
     fAMC13->reset (amc13::AMC13Simple::T2);
     // now reset the counters
@@ -184,7 +186,7 @@ void Amc13Interface::HaltAMC13()
 
 void Amc13Interface::ResetAMC13()
 {
-    std::cout << "Resetting T1, T2 & all counters! - Remind Georg to add OC0 and EC0 when you read this!" << std::endl;
+    LOG (INFO) << "Resetting T1, T2 & all counters! - Remind Georg to add OC0 and EC0 when you read this!" ;
     fAMC13->reset (amc13::AMC13Simple::T1);
     fAMC13->reset (amc13::AMC13Simple::T2);
     // now reset the counters
@@ -246,17 +248,17 @@ std::vector<uint32_t> Amc13Interface::getBGOConfig (int pChan)
     std::vector<uint32_t> pBuf;
     pBuf = fAMC13->getBGOConfig (pChan);
 
-    if (pBuf.size() > 6) std::cerr << "There is a problem: BGO config vector should not be longer than 6 words!" << std::endl;
+    if (pBuf.size() > 6) LOG (ERROR) << "There is a problem: BGO config vector should not be longer than 6 words!" ;
 
     else
     {
-        std::cout << BOLDBLUE << "Channel: " << pChan << std::endl;
-        std::cout << BLUE << "Repetetive: " << pBuf.at (0) << std::endl;
-        std::cout << BLUE << "  Cmd Word: " << std::hex << pBuf.at (2) << std::dec << std::endl;
-        std::cout << BLUE << "     BX nr: " << pBuf.at (3) << std::endl;
-        std::cout << BLUE << "  Prescale: " << pBuf.at (4) << std::endl;
-        std::cout << BLUE << "Repetetive: " << pBuf.at (5) << std::endl;
-        std::cout << RESET << std::endl;
+        LOG (INFO) << BOLDBLUE << "Channel: " << pChan ;
+        LOG (INFO) << BLUE << "Repetetive: " << pBuf.at (0) ;
+        LOG (INFO) << BLUE << "  Cmd Word: " << std::hex << pBuf.at (2) << std::dec ;
+        LOG (INFO) << BLUE << "     BX nr: " << pBuf.at (3) ;
+        LOG (INFO) << BLUE << "  Prescale: " << pBuf.at (4) ;
+        LOG (INFO) << BLUE << "Repetetive: " << pBuf.at (5) ;
+        LOG (INFO) << RESET ;
     }
 }
 

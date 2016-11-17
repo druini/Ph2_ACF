@@ -17,6 +17,7 @@ before_script:
  - yum -y -q groupinstall uhal
  - yum -y -q install root
  - yum -y -q install root-net-http root-montecarlo-eg root-graf3d-eve root-geom root-physics root-graf3d-gl
+ - yum -y -q install zeromq
 
 build_Ph2_ACF:
  script:

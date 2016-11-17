@@ -70,7 +70,7 @@ void DQMHistogrammer::bookHistos (const Ph2_HwInterface::EventDataMap& evmap)
         uint32_t feId = (cKey >> 8) & 0x00FF;
         uint32_t cbcId = cKey & 0xFF;
 
-        std::cout << " fedId " << feId << " cbcId " << cbcId << " Columns " << nColumn_ << " nCbc " << nCbc << std::endl;
+        LOG (INFO) << " fedId " << feId << " cbcId " << cbcId << " Columns " << nColumn_ << " nCbc " << nCbc ;
 
         if (nColumn_ == 1 && cbcId > 1) continue;
 
@@ -103,7 +103,7 @@ void DQMHistogrammer::bookHistos (const Ph2_HwInterface::EventDataMap& evmap)
 
     if ( (nCbc % 8) == 0) nbin = 8 * 127;
 
-    std::cout << " nCbc " << nCbc << " nbin " << nbin << std::endl;
+    LOG (DEBUG) << " nCbc " << nCbc << " nbin " << nbin ;
 
     dut0HitProfH_ = new TH2I ( "evenSensor_hitprofile", "Even Sensor Hitmap", nbin, 0.5, nbin + 0.5, nColumn_, -0.5, nColumn_ - 0.5);
     dut1HitProfH_ = new TH2I ( "oddSensor_hitprofile", "Odd Sensor Hitmap",   nbin, 0.5, nbin + 0.5, nColumn_, -0.5, nColumn_ - 0.5);

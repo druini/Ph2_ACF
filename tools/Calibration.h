@@ -52,6 +52,7 @@ class Calibration : public Tool
 
 	void Initialise( bool pAllChan = false );
 	void FindVplus();
+	// offsets are found by taking pMultiple*fEvents triggers
 	void FindOffsets();
 	void SaveResults() {
 		writeGraphs();

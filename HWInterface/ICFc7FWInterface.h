@@ -49,7 +49,7 @@ namespace Ph2_HwInterface {
         uint32_t fNEventsperAcquistion;
         uint32_t fDataSizeperEvent32;
         uint32_t fFMCId;
-
+        
         const uint32_t SINGLE_I2C_WAIT = 70; //usec for 1MHz I2C
         //  const uint32_t SINGLE_I2C_WAIT = 700; //usec for 100 kHz I2C
         static const int RESET_ALL = 0x1;
@@ -232,7 +232,7 @@ namespace Ph2_HwInterface {
         void DecodeReg ( CbcRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
 
 
-        bool WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
+        bool WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
         bool BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
         void ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg );
 

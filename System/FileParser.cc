@@ -8,7 +8,7 @@ namespace Ph2_System {
         if ( pFilename.find ( ".xml" ) != std::string::npos )
             parseHWxml ( pFilename, pBeBoardFWMap, pBoardVector, os );
         else
-            std::cerr << "Could not parse settings file " << pFilename << " - it is not .xml!" << std::endl;
+            LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xml!" ;
     }
 
     void FileParser::parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os)
@@ -16,7 +16,7 @@ namespace Ph2_System {
         if ( pFilename.find ( ".xml" ) != std::string::npos )
             parseSettingsxml ( pFilename, pSettingsMap, os );
         else
-            std::cerr << "Could not parse settings file " << pFilename << " - it is not .xm!" << std::endl;
+            LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xm!" ;
     }
 
 
@@ -70,10 +70,10 @@ namespace Ph2_System {
             if (!strUhalConfig.empty() )
                 RegManager::setDummyXml (strUhalConfig);
 
-            std::cout << BOLDBLUE << "	" <<  "|"  << "----" << "Board Id: " << BOLDYELLOW << cId << BOLDBLUE << " URI: " << BOLDYELLOW << cUri << BOLDBLUE << " Address Table: " << BOLDYELLOW << cAddressTable;
-            std::cout << BOLDBLUE << " Type: " << BOLDYELLOW << cBoardType << RESET << std::endl;
+            os << BOLDBLUE << "	" <<  "|"  << "----" << "Board Id: " << BOLDYELLOW << cId << BOLDBLUE << " URI: " << BOLDYELLOW << cUri << BOLDBLUE << " Address Table: " << BOLDYELLOW << cAddressTable << std::endl;
+            os << BOLDBLUE << " Type: " << BOLDYELLOW << cBoardType << RESET << std::endl;
 
-            //else std::cout << BOLDBLUE << "   " <<  "|"  << "----" << "Board Id: " << BOLDYELLOW << cId << BOLDBLUE << " Type: " << BOLDYELLOW << cBoardType << RESET << std::endl;
+            //else LOG(INFO) << BOLDBLUE << "   " <<  "|"  << "----" << "Board Id: " << BOLDYELLOW << cId << BOLDBLUE << " Type: " << BOLDYELLOW << cBoardType << RESET ;
 
             // Iterate over the BeBoardRegister Nodes
             for ( pugi::xml_node cBeBoardRegNode = cBeBoardNode.child ( "Register" ); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling() )
@@ -101,7 +101,7 @@ namespace Ph2_System {
                 {
                     bool cStatus = cModuleNode.attribute ( "Status" ).as_bool();
 
-                    //std::cout << cStatus << std::endl;
+                    //LOG(INFO) << cStatus ;
                     if ( cStatus )
                     {
                         os << BOLDCYAN << "|" << "	" << "|" << "----" << cModuleNode.name() << "  "
@@ -227,10 +227,12 @@ namespace Ph2_System {
 
         for ( pugi::xml_node nSettings = doc.child ( "Settings" ); nSettings; nSettings = nSettings.next_sibling() )
         {
+            os << std::endl;
+
             for ( pugi::xml_node nSetting = nSettings.child ( "Setting" ); nSetting; nSetting = nSetting.next_sibling() )
             {
                 pSettingsMap[nSetting.attribute ( "name" ).value()] = convertAnyInt ( nSetting.first_child().value() );
-                os << RED << "Setting" << RESET << " --" << BOLDCYAN << nSetting.attribute ( "name" ).value() << RESET << ":" << BOLDYELLOW << convertAnyInt ( nSetting.first_child().value() ) << RESET << std:: endl;
+                os <<  RED << "Setting" << RESET << " --" << BOLDCYAN << nSetting.attribute ( "name" ).value() << RESET << ":" << BOLDYELLOW << convertAnyInt ( nSetting.first_child().value() ) << RESET << std:: endl;
             }
         }
     }

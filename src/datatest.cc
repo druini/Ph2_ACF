@@ -17,40 +17,46 @@
 #include "../Utils/CommonVisitors.h"
 #include "../Tracker/TrackerEvent.h"
 
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
-
 using namespace CommandLineProcessing;
+
 using namespace std;
+INITIALIZE_EASYLOGGINGPP
 
 //Class used to process events acquired by a parallel acquisition
-class AcqVisitor: public HwInterfaceVisitor
-{
-    int cN;
-  public:
-    AcqVisitor()
-    {
-        cN = 0;
-    }
-    //void init(std::ofstream* pfSave, bool bText);
-    virtual void visit ( const Ph2_HwInterface::Event& pEvent )
-    {
-        cN++;
-        std::cout << ">>> Event #" << cN << std::endl;
-        std::cout << pEvent << std::endl;
-    }
-};
+//class AcqVisitor: public HwInterfaceVisitor
+//{
+//int cN;
+//public:
+//AcqVisitor()
+//{
+//cN = 0;
+//}
+////void init(std::ofstream* pfSave, bool bText);
+//virtual void visit ( const Ph2_HwInterface::Event& pEvent )
+//{
+//cN++;
+//std::cout << ">>> Event #" << cN << std::endl;
+//std::cout << pEvent << std::endl;
+//}
+//};
 
-void syntax ( int argc )
-{
-    if ( argc > 4 ) std::cerr << RED << "ERROR: Syntax: calibrationtest VCth NEvents (HWDescriptionFile)" << std::endl;
-    else if ( argc < 3 ) std::cerr << RED << "ERROR: Syntax: calibrationtest VCth NEvents (HWDescriptionFile)" << std::endl;
-    else return;
-}
+//void syntax ( int argc )
+//{
+//if ( argc > 4 ) std::cerr << RED << "ERROR: Syntax: calibrationtest VCth NEvents (HWDescriptionFile)" << std::endl;
+//else if ( argc < 3 ) std::cerr << RED << "ERROR: Syntax: calibrationtest VCth NEvents (HWDescriptionFile)" << std::endl;
+//else return;
+//}
 
 int main ( int argc, char* argv[] )
 {
+    //configure the logger
+    el::Configurations conf ("settings/logger.conf");
+    el::Loggers::reconfigureAllLoggers (conf);
+
 
     int pEventsperVcth;
     int cVcth;
@@ -101,7 +107,7 @@ int main ( int argc, char* argv[] )
 
     if ( result != ArgvParser::NoParserError )
     {
-        std::cout << cmd.parseErrorDescription ( result );
+        LOG (INFO) << cmd.parseErrorDescription ( result );
         exit ( 1 );
     }
 
@@ -129,10 +135,16 @@ int main ( int argc, char* argv[] )
     t.start();
     cSystemController.addFileHandler ( cOutputFile, 'w' );
 
-    cSystemController.InitializeHw ( cHWFile );
+    std::stringstream outp;
+    cSystemController.InitializeHw ( cHWFile, outp );
+    LOG (INFO) << outp.str();
+    outp.str ("");
 
     if (!cmd.foundOption ("read") )
-        cSystemController.ConfigureHw ( std::cout, cmd.foundOption ( "ignoreI2c" ) );
+    {
+        cSystemController.ConfigureHw ( outp, cmd.foundOption ( "ignoreI2c" ) );
+        LOG (INFO) << outp.str();
+    }
 
     t.stop();
     t.show ( "Time to Initialize/configure the system: " );
@@ -154,83 +166,86 @@ int main ( int argc, char* argv[] )
     BeBoard* pBoard = cSystemController.fBoardVector.at ( 0 );
     //if ( cmd.foundOption ( "parallel" ) )
     //{
-        //uint32_t nbPacket = pBoard->getReg ( "pc_commands.CBC_DATA_PACKET_NUMBER" ), nbAcq = pEventsperVcth / ( nbPacket + 1 ) + ( pEventsperVcth % ( nbPacket + 1 ) != 0 ? 1 : 0 );
-        //std::cout << "Packet number=" << nbPacket << ", Nb events=" << pEventsperVcth << " -> Nb acquisition iterations=" << nbAcq << std::endl;
+    //uint32_t nbPacket = pBoard->getReg ( "pc_commands.CBC_DATA_PACKET_NUMBER" ), nbAcq = pEventsperVcth / ( nbPacket + 1 ) + ( pEventsperVcth % ( nbPacket + 1 ) != 0 ? 1 : 0 );
+    //std::cout << "Packet number=" << nbPacket << ", Nb events=" << pEventsperVcth << " -> Nb acquisition iterations=" << nbAcq << std::endl;
 
-        //AcqVisitor visitor;
-        //std::cout << "Press Enter to start the acquisition, press Enter again to stop it." << std::endl;
-        //std::cin.ignore();
-        //cSystemController.fBeBoardInterface->StartThread ( pBoard, nbAcq, &visitor );
-        //std::cin.ignore();
-        //cSystemController.fBeBoardInterface->StopThread ( pBoard );
+    //AcqVisitor visitor;
+    //std::cout << "Press Enter to start the acquisition, press Enter again to stop it." << std::endl;
+    //std::cin.ignore();
+    //cSystemController.fBeBoardInterface->StartThread ( pBoard, nbAcq, &visitor );
+    //std::cin.ignore();
+    //cSystemController.fBeBoardInterface->StopThread ( pBoard );
     //}
     //else
     //{
-        t.start();
-        // make event counter start at 1 as does the L1A counter
-        uint32_t cN = 1;
-        uint32_t cNthAcq = 0;
+    t.start();
+    // make event counter start at 1 as does the L1A counter
+    uint32_t cN = 1;
+    uint32_t cNthAcq = 0;
 
-        if (!cmd.foundOption ( "read") )
-            cSystemController.fBeBoardInterface->Start ( pBoard );
+    if (!cmd.foundOption ( "read") )
+        cSystemController.fBeBoardInterface->Start ( pBoard );
 
-        Counter cCbcCounter;
-        pBoard->accept ( cCbcCounter );
-        uint32_t uFeMask = (1 << cCbcCounter.getNFe() ) - 1;
-        char arrSize[4];
-        Data data;
-        ParamSet* pPSet = nullptr;
+    Counter cCbcCounter;
+    pBoard->accept ( cCbcCounter );
+    uint32_t uFeMask = (1 << cCbcCounter.getNFe() ) - 1;
+    char arrSize[4];
+    Data data;
+    ParamSet* pPSet = nullptr;
 
-        if (cmd.foundOption ( "condition") )
+    if (cmd.foundOption ( "condition") )
+    {
+        pPSet = new ParamSet (cmd.optionValue ("condition") );
+        TrackerEvent::setI2CValuesForConditionData (pBoard, pPSet);
+    }
+
+    const std::vector<Event*>* pEvents ;
+
+    while ( cN <= pEventsperVcth )
+    {
+        if (cmd.foundOption ( "read") )
         {
-            pPSet = new ParamSet (cmd.optionValue ("condition") );
-            TrackerEvent::setI2CValuesForConditionData (pBoard, pPSet);
+            FileHandler fFile (cmd.optionValue ("read"), 'r');
+            data.Set ( pBoard, fFile.readFile(), pEventsperVcth, false);
+            pEvents = &data.GetEvents ( pBoard);
+        }
+        else
+        {
+            uint32_t cPacketSize = cSystemController.fBeBoardInterface->ReadData ( pBoard, false );
+
+            pEvents = &cSystemController.GetEvents ( pBoard );
+
+            if ( cN + cPacketSize > pEventsperVcth )
+                cSystemController.fBeBoardInterface->Stop ( pBoard );
         }
 
-        const std::vector<Event*>* pEvents ;
-
-        while ( cN <= pEventsperVcth )
+        for ( auto& ev : *pEvents )
         {
-            if (cmd.foundOption ( "read") )
+            LOG (INFO) << ">>> Event #" << cN++ ;
+            outp.str ("");
+            outp << *ev;
+            LOG (INFO) << outp.str();
+
+            if (filNewDaq.is_open() )
             {
-                FileHandler fFile (cmd.optionValue ("read"), 'r');
-                data.Set ( pBoard, fFile.readFile(), pEventsperVcth, false);
-                pEvents = &data.GetEvents ( pBoard);
+                TrackerEvent evtTracker (ev, pBoard->getNCbcDataSize(), uFeMask, cCbcCounter.getCbcMask(), cmd.foundOption ("read"), pPSet );
+                evtTracker.fillArrayWithSize (arrSize);
+                filNewDaq.write (arrSize, 4);
+                filNewDaq.write (evtTracker.getData(), evtTracker.getDaqSize() );
+                filNewDaq.flush();
             }
-            else
-            {
-                uint32_t cPacketSize = cSystemController.fBeBoardInterface->ReadData ( pBoard, false );
-
-                pEvents = &cSystemController.GetEvents ( pBoard );
-                
-                if ( cN + cPacketSize > pEventsperVcth )
-                    cSystemController.fBeBoardInterface->Stop ( pBoard );
-            }
-
-            for ( auto& ev : *pEvents )
-            {
-                std::cout << ">>> Event #" << cN++ << std::endl;
-                std::cout << *ev << std::endl;
-
-                if (filNewDaq.is_open() )
-                {
-                    TrackerEvent evtTracker (ev, pBoard->getNCbcDataSize(), uFeMask, cCbcCounter.getCbcMask(), cmd.foundOption ("read"), pPSet );
-                    evtTracker.fillArrayWithSize (arrSize);
-                    filNewDaq.write (arrSize, 4);
-                    filNewDaq.write (evtTracker.getData(), evtTracker.getDaqSize() );
-                    filNewDaq.flush();
-                }
-            }
-
-            cNthAcq++;
         }
 
-        t.stop();
-        t.show ( "Time to take data:" );
-        delete pPSet;
+        cNthAcq++;
+    }
+
+    t.stop();
+    t.show ( "Time to take data:" );
+    delete pPSet;
     //}
 
     if (filNewDaq.is_open() )
         filNewDaq.close();
+
     cSystemController.Destroy();
 }

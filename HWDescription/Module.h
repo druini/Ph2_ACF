@@ -15,6 +15,7 @@
 #include "FrontEndDescription.h"
 #include "Cbc.h"
 #include "../Utils/Visitor.h"
+#include "../Utils/easylogging++.h"
 #include <vector>
 #include <stdint.h>
 
@@ -25,100 +26,108 @@
  * \namespace Ph2_HwDescription
  * \brief Namespace regrouping all the hardware description
  */
-namespace Ph2_HwDescription
-{
+namespace Ph2_HwDescription {
 
-	/*!
-	 * \class Module
-	 * \brief handles a vector of Cbc which are connected to the Module
-	 */
-	class Module : public FrontEndDescription
-	{
+    /*!
+     * \class Module
+     * \brief handles a vector of Cbc which are connected to the Module
+     */
+    class Module : public FrontEndDescription
+    {
 
-	  public:
+      public:
 
-		// C'tors take FrontEndDescription or hierachy of connection
-		Module( const FrontEndDescription& pFeDesc, uint8_t pModuleId );
-		Module( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId );
+        // C'tors take FrontEndDescription or hierachy of connection
+        Module ( const FrontEndDescription& pFeDesc, uint8_t pModuleId );
+        Module ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId );
 
-		// Default C'tor
-		Module();
+        // Default C'tor
+        Module();
 
-		// D'tor
-		~Module() {
-		        for ( auto& pCbc: fCbcVector )
-				delete pCbc;
-			fCbcVector.clear();
-		};
+        // D'tor
+        ~Module()
+        {
+            for ( auto& pCbc : fCbcVector )
+                delete pCbc;
 
-		/*!
-		 * \brief acceptor method for HwDescriptionVisitor
-		 * \param pVisitor
-		 */
-		void accept( HwDescriptionVisitor& pVisitor ) {
-			pVisitor.visit( *this );
-			for ( Cbc* cCbc : fCbcVector )
-				cCbc->accept( pVisitor );
-		}
-		// void accept( HwDescriptionVisitor& pVisitor ) const {
-		//  pVisitor.visit( *this );
-		//  for ( auto& cCbc : fCbcVector )
-		//      cCbc.accept( pVisitor );
-		// }
-		/*!
-		* \brief Get the number of Cbc connected to the Module
-		* \return The size of the vector
-		*/
-		uint8_t getNCbc() const {
-			return fCbcVector.size();
-		}
-		/*!
-		 * \brief Adding a Cbc to the vector
-		 * \param pCbc
-		 */
-		void addCbc( Cbc& pCbc ) {
-			fCbcVector.push_back( &pCbc );
-		}
-		void addCbc( Cbc* pCbc ) {
-			fCbcVector.push_back( pCbc );
-		}
-		/*!
-		 * \brief Remove a Cbc from the vector
-		 * \param pCbcId
-		 * \return a bool which indicate if the removing was successful
-		 */
-		bool   removeCbc( uint8_t pCbcId );
-		/*!
-		 * \brief Get a Cbc from the vector
-		 * \param pCbcId
-		 * \return a pointer of Cbc, so we can manipulate directly the Cbc contained in the vector
-		 */
-		Cbc* getCbc( uint8_t pCbcId ) const;
+            fCbcVector.clear();
+        };
 
-		/*!
-		* \brief Get the Module Id
-		* \return The Module ID
-		*/
-		uint8_t getModuleId() const {
-			return fModuleId;
-		};
-		/*!
-		 * \brief Set the Module Id
-		 * \param pModuleId
-		 */
-		void setModuleId( uint8_t pModuleId ) {
-			fModuleId = pModuleId;
-		};
+        /*!
+         * \brief acceptor method for HwDescriptionVisitor
+         * \param pVisitor
+         */
+        void accept ( HwDescriptionVisitor& pVisitor )
+        {
+            pVisitor.visit ( *this );
+
+            for ( Cbc* cCbc : fCbcVector )
+                cCbc->accept ( pVisitor );
+        }
+        // void accept( HwDescriptionVisitor& pVisitor ) const {
+        //  pVisitor.visit( *this );
+        //  for ( auto& cCbc : fCbcVector )
+        //      cCbc.accept( pVisitor );
+        // }
+        /*!
+        * \brief Get the number of Cbc connected to the Module
+        * \return The size of the vector
+        */
+        uint8_t getNCbc() const
+        {
+            return fCbcVector.size();
+        }
+        /*!
+         * \brief Adding a Cbc to the vector
+         * \param pCbc
+         */
+        void addCbc ( Cbc& pCbc )
+        {
+            fCbcVector.push_back ( &pCbc );
+        }
+        void addCbc ( Cbc* pCbc )
+        {
+            fCbcVector.push_back ( pCbc );
+        }
+        /*!
+         * \brief Remove a Cbc from the vector
+         * \param pCbcId
+         * \return a bool which indicate if the removing was successful
+         */
+        bool   removeCbc ( uint8_t pCbcId );
+        /*!
+         * \brief Get a Cbc from the vector
+         * \param pCbcId
+         * \return a pointer of Cbc, so we can manipulate directly the Cbc contained in the vector
+         */
+        Cbc* getCbc ( uint8_t pCbcId ) const;
+
+        /*!
+        * \brief Get the Module Id
+        * \return The Module ID
+        */
+        uint8_t getModuleId() const
+        {
+            return fModuleId;
+        };
+        /*!
+         * \brief Set the Module Id
+         * \param pModuleId
+         */
+        void setModuleId ( uint8_t pModuleId )
+        {
+            fModuleId = pModuleId;
+        };
 
 
-		std::vector < Cbc* > fCbcVector;
+        std::vector < Cbc* > fCbcVector;
 
 
-	  protected:
+      protected:
 
-		//moduleID
-		uint8_t fModuleId;
-	};
+        //moduleID
+        uint8_t fModuleId;
+    };
 }
 
 

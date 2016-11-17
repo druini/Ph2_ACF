@@ -21,8 +21,6 @@
 #include "../HWDescription/Module.h"
 #include "../Utils/Visitor.h"
 
-
-
 using namespace Ph2_HwDescription;
 
 /*!
@@ -49,7 +47,7 @@ namespace Ph2_HwInterface {
         FileHandler* fFileHandler ;
         uint32_t fNthAcq, fNpackets;
         bool fJustPaused;
-
+       
       private:
         /*!
          * \brief SRAM selection for DAQ
@@ -264,7 +262,7 @@ namespace Ph2_HwInterface {
          * \param pFeId : FrontEnd to work with
          * \param pVecReq : Vector to stack the read words
          */
-        bool WriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, bool pReadback ) override;
+        bool WriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts, bool pReadback ) override;
         /*!
          * \brief Read register blocks of a Cbc
          * \param pFeId : FrontEnd to work with

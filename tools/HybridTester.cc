@@ -1,9 +1,8 @@
 #include "HybridTester.h"
-#include <fstream>
 #include <ctime>
+#include <fstream>
 
 // fill the Histograms, count the hits and increment Vcth
-
 struct HistogramFiller  : public HwDescriptionVisitor
 {
     TH1F* fBotHist;
@@ -22,7 +21,7 @@ struct HistogramFiller  : public HwDescriptionVisitor
             {
                 uint32_t globalChannel = ( pCbc.getCbcId() * 254 ) + cId;
 
-                //              std::cout << "Channel " << globalChannel << " VCth " << int(pCbc.getReg( "VCth" )) << std::endl;
+                //              LOG(INFO) << "Channel " << globalChannel << " VCth " << int(pCbc.getReg( "VCth" )) ;
                 // find out why histograms are not filling!
                 if ( globalChannel % 2 == 0 )
                     fBotHist->Fill ( globalChannel / 2 );
@@ -34,78 +33,151 @@ struct HistogramFiller  : public HwDescriptionVisitor
     }
 };
 
+void HybridTester::ReconfigureCBCRegisters(std::string pDirectoryName )
+{
+    bool cCheck;
+    bool cHoleMode;
+    auto cSetting = fSettingsMap.find ( "HoleMode" );
+
+    if ( cSetting != std::end ( fSettingsMap ) )
+    {
+        cCheck = true;
+        cHoleMode = ( cSetting->second == 1 ) ? true : false;
+    }
+
+    std::string cMode;
+
+    if ( cCheck )
+    {
+        if ( cHoleMode ) cMode = "hole";
+        else cMode = "electron";
+    }
+
+    
+
+    for (auto& cBoard : fBoardVector)
+    {
+        fBeBoardInterface->CbcHardReset ( cBoard );
+        for (auto& cFe : cBoard->fModuleVector)
+        {
+            for (auto& cCbc : cFe->fCbcVector)
+            {
+                std::string pRegFile ;
+                char buffer[120];
+                if( pDirectoryName.empty() )
+                {
+                    sprintf(buffer, "%s/FE%dCBC%d.txt" , fDirectoryName.c_str() , cCbc->getFeId(), cCbc->getCbcId() );
+                }
+                else
+                {
+                    sprintf(buffer, "%s/FE%dCBC%d.txt" , pDirectoryName.c_str() , cCbc->getFeId(), cCbc->getCbcId() );
+                }
+    			
+    			pRegFile = buffer;
+                cCbc->loadfRegMap(pRegFile);
+                fCbcInterface->ConfigureCbc ( cCbc );
+                LOG (INFO) << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getCbcId() ) << "'s regsiters from " << pRegFile << " ." << RESET ;
+            }
+        }
+
+        //CbcFastReset as per recommendation of Mark Raymond
+        fBeBoardInterface->CbcFastReset ( cBoard );
+    }
+}
 
 void HybridTester::InitializeHists()
 {
-    TString cFrontName ( "fHistTop" );
-    fHistTop = ( TH1F* ) ( gROOT->FindObject ( cFrontName ) );
+	TString cFrontName( "fHistTop" );
+	fHistTop = ( TH1F* )( gROOT->FindObject( cFrontName ) );
+	if ( fHistTop ) delete fHistTop;
 
-    if ( fHistTop ) delete fHistTop;
+	fHistTop = new TH1F( cFrontName, "Front Pad Channels; Pad Number; Occupancy [%]", ( fNCbc / 2 * 254 ), -0.5, ( fNCbc / 2 * 254 ) - 0.5 );
+	fHistTop->SetFillColor( 4 );
+	fHistTop->SetFillStyle( 3001 );
 
-    fHistTop = new TH1F ( cFrontName, "Front Pad Channels; Pad Number; Occupancy [%]", ( fNCbc / 2 * 253 ) + 1, -0.5, ( fNCbc / 2 * 253 ) + .5 );
-    fHistTop->SetFillColor ( 4 );
-    fHistTop->SetFillStyle ( 3001 );
+	TString cBackName( "fHistBottom" );
+	fHistBottom = ( TH1F* )( gROOT->FindObject( cBackName ) );
+	if ( fHistBottom ) delete fHistBottom;
 
-    TString cBackName ( "fHistBottom" );
-    fHistBottom = ( TH1F* ) ( gROOT->FindObject ( cBackName ) );
+	fHistBottom = new TH1F( cBackName, "Back Pad Channels; Pad Number; Occupancy [%]", ( fNCbc / 2 * 254 ), -0.5, ( fNCbc / 2 * 254 ) - 0.5 );
+	fHistBottom->SetFillColor( 4 );
+	fHistBottom->SetFillStyle( 3001 );
+	
+	TString cFrontNameMerged( "fHistTopMerged" );
+	fHistTopMerged = ( TH1F* )( gROOT->FindObject( cFrontNameMerged ) );
+	if ( fHistTopMerged ) delete fHistTopMerged;
 
-    if ( fHistBottom ) delete fHistBottom;
+	fHistTopMerged = new TH1F( cFrontNameMerged, "Front Pad Channels; Pad Number; Occupancy [%]", ( fNCbc / 2 * 254 ) , -0.5, ( fNCbc / 2 * 254 ) -0.5 );
+	fHistTopMerged->SetFillColor( 4 );
+	fHistTopMerged->SetFillStyle( 3001 );
 
-    fHistBottom = new TH1F ( cBackName, "Back Pad Channels; Pad Number; Occupancy [%]", ( fNCbc / 2 * 253 ) + 1 , -0.5, ( fNCbc / 2 * 253 ) + .5 );
-    fHistBottom->SetFillColor ( 4 );
-    fHistBottom->SetFillStyle ( 3001 );
+	TString cBackNameMerged( "fHistBottomMerged" );
+	fHistBottomMerged = ( TH1F* )( gROOT->FindObject( cBackNameMerged ) );
+	if ( fHistBottomMerged ) delete fHistBottomMerged;
 
-    TString cFrontNameMerged ( "fHistTopMerged" );
-    fHistTopMerged = ( TH1F* ) ( gROOT->FindObject ( cFrontNameMerged ) );
+	fHistBottomMerged = new TH1F( cBackNameMerged, "Back Pad Channels; Pad Number; Occupancy [%]", ( fNCbc / 2 * 254 ) , -0.5, ( fNCbc / 2 * 254 ) - 0.5 );
+	fHistBottomMerged->SetFillColor( 4 );
+	fHistBottomMerged->SetFillStyle( 3001 );
 
-    if ( fHistTopMerged ) delete fHistTopMerged;
+	TString cOccupancyBottom("fHistOccupancyBottom"); 
+	fHistOccupancyBottom = ( TH1F* )( gROOT->FindObject( cOccupancyBottom ) );
+	if ( fHistOccupancyBottom ) delete fHistOccupancyBottom;
+	fHistOccupancyBottom = new TH1F( cOccupancyBottom, "Back Pad Channels.", (int)( 110/1.0 ) , -0.5 , 110.0 - 0.5 );
+	fHistOccupancyBottom->SetStats(1);
+	fHistOccupancyBottom->SetFillColor( 4 );
+	fHistOccupancyBottom->SetLineColor( 4 );
+	fHistOccupancyBottom->SetFillStyle( 3004 );
+	fHistOccupancyBottom->GetYaxis()->SetTitle("Number of Strips");
+	fHistOccupancyBottom->GetXaxis()->SetTitle("Occupancy (%)");
+	fHistOccupancyBottom->GetXaxis()->SetRangeUser(0.0,101.0);
 
-    fHistTopMerged = new TH1F ( cFrontNameMerged, "Front Pad Channels; Pad Number; Occupancy [%]", ( fNCbc / 2 * 253 ) + 1, -0.5, ( fNCbc / 2 * 253 ) + .5 );
-    fHistTopMerged->SetFillColor ( 4 );
-    fHistTopMerged->SetFillStyle ( 3001 );
+	TString cOccupancyTop("fHistOccupancyTop"); 
+	fHistOccupancyTop = ( TH1F* )( gROOT->FindObject( cOccupancyTop ) );
+	if ( fHistOccupancyTop ) delete fHistOccupancyTop;
+	fHistOccupancyTop = new TH1F( cOccupancyTop, "Top Pad Channels.", (int)( 110/1.0 ) , -0.5 , 110.0 - 0.5 );
+	fHistOccupancyTop->SetStats(1);
+	fHistOccupancyTop->SetFillColor( 3 );
+	fHistOccupancyTop->SetLineColor( 3 );
+	fHistOccupancyTop->SetFillStyle( 3004 );
+	fHistOccupancyTop->GetYaxis()->SetTitle("Number of Strips");
+	fHistOccupancyTop->GetXaxis()->SetTitle("Occupancy (%)");
+	fHistOccupancyTop->GetXaxis()->SetRangeUser(0.0,101.0);
+	
 
-    TString cBackNameMerged ( "fHistBottomMerged" );
-    fHistBottomMerged = ( TH1F* ) ( gROOT->FindObject ( cBackNameMerged ) );
 
-    if ( fHistBottomMerged ) delete fHistBottomMerged;
 
-    fHistBottomMerged = new TH1F ( cBackNameMerged, "Back Pad Channels; Pad Number; Occupancy [%]", ( fNCbc / 2 * 253 ) + 1 , -0.5, ( fNCbc / 2 * 253 ) + .5 );
-    fHistBottomMerged->SetFillColor ( 4 );
-    fHistBottomMerged->SetFillStyle ( 3001 );
+	// Now the Histograms for SCurves
+	for ( auto cBoard : fBoardVector )
+	  {
+	    uint32_t cBoardId = cBoard->getBeId();
+	    
+	    for ( auto cFe : cBoard->fModuleVector )
+	      {
+		uint32_t cFeId = cFe->getFeId();
+		
+		for ( auto cCbc : cFe->fCbcVector )
+		  {
+		    
+		    uint32_t cCbcId = cCbc->getCbcId();
+		    
+		    TString cName = Form( "SCurve_Fe%d_Cbc%d", cFeId, cCbcId );
+		    TObject* cObject = static_cast<TObject*>( gROOT->FindObject( cName ) );
+		    if ( cObject ) delete cObject;
+		    TH1F* cTmpScurve = new TH1F( cName, Form( "Noise Occupancy Cbc%d; VCth; Counts", cCbcId ), 255, 0, 255 );
+		    cTmpScurve->SetMarkerStyle( 8 );
+			bookHistogram( cCbc, "Scurve", cTmpScurve );
+			fSCurveMap[cCbc] = cTmpScurve;
+		    
+		    cName = Form( "SCurveFit_Fe%d_Cbc%d", cFeId, cCbcId );
+		    cObject = static_cast<TObject*>( gROOT->FindObject( cName ) );
+		    if ( cObject ) delete cObject;
+		    TF1* cTmpFit = new TF1( cName, MyErf, 0, 255, 2 );
+			bookHistogram( cCbc, "ScurveFit", cTmpFit );
 
-    // Now the Histograms for SCurves
-    for ( auto cBoard : fBoardVector )
-    {
-        uint32_t cBoardId = cBoard->getBeId();
-
-        for ( auto cFe : cBoard->fModuleVector )
-        {
-            uint32_t cFeId = cFe->getFeId();
-
-            for ( auto cCbc : cFe->fCbcVector )
-            {
-
-                uint32_t cCbcId = cCbc->getCbcId();
-
-                TString cName = Form ( "SCurve_Fe%d_Cbc%d", cFeId, cCbcId );
-                TObject* cObject = static_cast<TObject*> ( gROOT->FindObject ( cName ) );
-
-                if ( cObject ) delete cObject;
-
-                TH1F* cTmpScurve = new TH1F ( cName, Form ( "Noise Occupancy Cbc%d; VCth; Counts", cCbcId ), 255, 0, 255 );
-                cTmpScurve->SetMarkerStyle ( 8 );
-                fSCurveMap[cCbc] = cTmpScurve;
-
-                cName = Form ( "SCurveFit_Fe%d_Cbc%d", cFeId, cCbcId );
-                cObject = static_cast<TObject*> ( gROOT->FindObject ( cName ) );
-
-                if ( cObject ) delete cObject;
-
-                TF1* cTmpFit = new TF1 ( cName, MyErf, 0, 255, 2 );
-                fFitMap[cCbc] = cTmpFit;
-            }
-        }
-    }
+		    fFitMap[cCbc] = cTmpFit;
+			}
+	      }
+	  }
 }
 
 void HybridTester::InitialiseSettings()
@@ -118,37 +190,186 @@ void HybridTester::InitialiseSettings()
     fHoleMode = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : true;
 
 
-    // std::cout << "Read the following Settings: " << std::endl;
-    // std::cout << "Hole Mode: " << fHoleMode << std::endl << "NEvents: " << fTotalEvents << std::endl << "NSigmas: " << fSigmas << std::endl;
+    // LOG(INFO) << "Read the following Settings: " ;
+    // LOG(INFO) << "Hole Mode: " << fHoleMode << std::endl << "NEvents: " << fTotalEvents << std::endl << "NSigmas: " << fSigmas ;
 }
 
 void HybridTester::Initialize ( bool pThresholdScan )
 {
-    fThresholdScan = pThresholdScan;
-    gStyle->SetOptStat ( 000000 );
-    //gStyle->SetTitleOffset( 1.3, "Y" );
-    //  special Visito class to count objects
-    Counter cCbcCounter;
-    accept ( cCbcCounter );
-    fNCbc = cCbcCounter.getNCbc();
+	fThresholdScan = pThresholdScan;
+	gStyle->SetOptStat( 000000 );
+	//gStyle->SetTitleOffset( 1.3, "Y" );
+	//  special Visito class to count objects
+	Counter cCbcCounter;
+	accept( cCbcCounter );
+	fNCbc = cCbcCounter.getNCbc();
 
-    fDataCanvas = new TCanvas ( "fDataCanvas", "SingleStripEfficiency", 1200, 800 );
-    fDataCanvas->Divide ( 2 );
+	fDataCanvas = new TCanvas( "fDataCanvas", "SingleStripEfficiency", 10, 0, 500, 500 );
+	fDataCanvas->Divide( 2 );
 
-    if ( fThresholdScan )
-    {
-        fSCurveCanvas = new TCanvas ( "fSCurveCanvas", "Noise Occupancy as function of VCth" );
-        fSCurveCanvas->Divide ( fNCbc );
-    }
+	fSummaryCanvas = new TCanvas( "fSummaryCanvas", "Summarizing Module Efficiency", 10, 0, 500, 500 );
+	fSummaryCanvas->Divide( 2 );
 
-    InitializeHists();
-    InitialiseSettings();
+
+	if ( fThresholdScan )
+	{
+		fSCurveCanvas = new TCanvas( "fSCurveCanvas", "Noise Occupancy as function of VCth" );
+		fSCurveCanvas->Divide( fNCbc );
+
+	}
+	InitializeHists();
+	InitialiseSettings();
+
+	fNoisyChannelsTop.clear();
+	fNoisyChannelsBottom.clear();
+	fDeadChannelsTop.clear();
+	fDeadChannelsBottom.clear();
 }
 
+uint32_t HybridTester::fillSCurves ( BeBoard* pBoard,  const Event* pEvent, uint8_t pValue )
+{
+    uint32_t cHitCounter = 0;
+
+    for ( auto cFe : pBoard->fModuleVector )
+    {
+        for ( auto cCbc : cFe->fCbcVector )
+        {
+            // SS
+            /*TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
+            uint32_t cbcEventCounter = 0;
+            for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
+            {
+                if ( pEvent->DataBit( cCbc->getFeId(), cCbc->getCbcId(), cId ) )
+                {
+                    sCurveHist->Fill( pValue );
+                    cHitCounter++;
+                    cbcEventCounter++;
+                }
+            }*/
+
+            auto cScurve = fSCurveMap.find ( cCbc );
+
+            if ( cScurve == fSCurveMap.end() ) LOG (INFO) << "Error: could not find an Scurve object for Cbc " << int ( cCbc->getCbcId() ) ;
+            else
+            {
+                for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
+                {
+                    if ( pEvent->DataBit ( cCbc->getFeId(), cCbc->getCbcId(), cId ) )
+                    {
+                        cScurve->second->Fill ( pValue );
+                        cHitCounter++;
+                    }
+                }
+            }
+        }
+    }
+
+    return cHitCounter;
+}
+
+void HybridTester::ScanThresholds()
+{
+    LOG (INFO) << "Mesuring Efficiency per Strip ... " ;
+    LOG (INFO) << "Taking data with " << fTotalEvents << " Events!" ;
+
+    int cVcthStep = 2;
+    uint8_t cVcth = ( fHoleMode ) ?  0xFF :  0x00;
+    int cStep = ( fHoleMode ) ? (-1 * cVcthStep) : cVcthStep;
+
+    int iVcth =  + (cVcth);
+    //LOG(INFO) << RED << "Vcth = " <<  iVcth << RESET ;
+
+    //simple VCth loop
+    while ( 0 <= iVcth && iVcth <= 255 )
+    {
+
+        CbcRegWriter cWriter ( fCbcInterface, "VCth", cVcth );
+        accept ( cWriter );
+
+        fHistTop->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
+        fHistBottom->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
+
+        for ( BeBoard* pBoard : fBoardVector )
+        {
+            uint32_t cN = 1;
+            uint32_t cNthAcq = 0;
+
+            fBeBoardInterface->Start ( pBoard );
+
+            while ( cN <=  fTotalEvents )
+            {
+                // Run( pBoard, cNthAcq );
+                fBeBoardInterface->ReadData ( pBoard, false );
+                const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
+
+                // Loop over Events from this Acquisition
+                for ( auto& cEvent : events )
+                {
+                    HistogramFiller cFiller ( fHistBottom, fHistTop, cEvent );
+                    pBoard->accept ( cFiller );
+
+                    fillSCurves ( pBoard,  cEvent , cVcth );
+
+                    if ( cN % 100 == 0 )
+                    {
+                        updateSCurveCanvas ( pBoard );
+                        UpdateHists();
+                    }
+
+                    cN++;
+                }
+
+                cNthAcq++;
+            }
+
+            fBeBoardInterface->Stop ( pBoard);
+        }
+
+        fHistTop->Scale ( 100 / double_t ( fTotalEvents ) );
+        fHistTop->GetYaxis()->SetRangeUser ( 0, 100 );
+        fHistBottom->Scale ( 100 / double_t ( fTotalEvents ) );
+        fHistBottom->GetYaxis()->SetRangeUser ( 0, 100 );
+        UpdateHists();
+
+
+
+        //LOG(INFO) << RED << "Vcth = " <<  iVcth << RESET << " " ;
+        //LOG(INFO) << GREEN << "Mean occupancy at the Top side: " << fHistTop->Integral()/(double)(fNCbc*127) << RESET << " ";
+        //LOG(INFO) << BLUE << "Mean occupancy at the Bottom side: " << fHistBottom->Integral()/(double)(fNCbc*127) << RESET ;
+        iVcth = + (cVcth + cStep);
+        cVcth += cStep;
+
+
+    }
+
+    // Fit and save the SCurve & Fit - extract the right threshold
+    // TODO
+    processSCurves ( fTotalEvents );
+
+    //normalize noise scan
+    /*for ( BeBoard* pBoard : fBoardVector )
+    {
+        for ( auto cFe : pBoard->fModuleVector )
+        {
+            for ( auto cCbc : cFe->fCbcVector )
+            {
+                fSCurveCanvas->cd(cCbc->getCbcId()+1);
+                TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
+                sCurveHist->Scale(100./(NCHANNELS*fTotalEvents));
+                sCurveHist->GetYaxis()->SetTitle("Occupancy (%)");
+                sCurveHist->GetYaxis()->SetTitleOffset(1.2);
+                sCurveHist->DrawCopy("P0");
+
+                sCurveHist->Write( sCurveHist->GetName(), TObject::kOverwrite );
+                fSCurveCanvas->cd(cCbc->getCbcId()+1)->Update();
+            }
+        }
+    }*/
+}
 
 void HybridTester::ScanThreshold()
 {
-    std::cout << "Scanning noise Occupancy to find threshold for test with external source ... " << std::endl;
+    LOG (INFO) << "Scanning noise Occupancy to find threshold for test with external source ... " ;
 
     // Necessary variables
     uint32_t cEventsperVcth = 10;
@@ -185,19 +406,27 @@ void HybridTester::ScanThreshold()
 
         for ( BeBoard* pBoard : fBoardVector )
         {
-            fBeBoardInterface->ReadNEvents ( pBoard, cEventsperVcth );
-            const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
+            fBeBoardInterface->Start ( pBoard );
 
-            // Loop over Events from this Acquisition
-            for ( auto& cEvent : events )
+            while ( cN <=  cEventsperVcth )
             {
-                // loop over Modules & Cbcs and count hits separately
-                cHitCounter += fillSCurves ( pBoard,  cEvent, cVcth );
-                cN++;
+                // Run( pBoard, cNthAcq );
+                fBeBoardInterface->ReadData ( pBoard, false );
+                const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
+
+                // Loop over Events from this Acquisition
+                for ( auto& cEvent : events )
+                {
+                    // loop over Modules & Cbcs and count hits separately
+                    cHitCounter += fillSCurves ( pBoard,  cEvent, cVcth );
+                    cN++;
+                }
+
+                cNthAcq++;
             }
 
-            cNthAcq++;
-            // std::cout << +cVcth << " " << cHitCounter << std::endl;
+            fBeBoardInterface->Stop ( pBoard);
+            // LOG(INFO) << +cVcth << " " << cHitCounter ;
             // Draw the thing after each point
             updateSCurveCanvas ( pBoard );
 
@@ -227,13 +456,13 @@ void HybridTester::ScanThreshold()
 
             if ( cAllOne )
             {
-                std::cout << "All strips firing -- ending the scan at VCth " << +cVcth << std::endl;
+                LOG (INFO) << "All strips firing -- ending the scan at VCth " << +cVcth ;
                 break;
             }
 
             // else if ( cSlopeZero )
             // {
-            //   std::cout << "Slope of SCurve 0 -- ending the scan at VCth " << +cVcth << std::endl;
+            //   LOG(INFO) << "Slope of SCurve 0 -- ending the scan at VCth " << +cVcth ;
             //  break;
             // }
 
@@ -306,7 +535,7 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
         // find the corresponding fit
         auto cFit = fFitMap.find ( cScurve.first );
 
-        if ( cFit == std::end ( fFitMap ) ) std::cout << "Error: could not find Fit for Cbc " << int ( cScurve.first->getCbcId() ) << std::endl;
+        if ( cFit == std::end ( fFitMap ) ) LOG (INFO) << "Error: could not find Fit for Cbc " << int ( cScurve.first->getCbcId() ) ;
         else
         {
             // Fit
@@ -314,6 +543,7 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
             cFit->second->SetParameter ( 1, cWidth );
 
             cScurve.second->Fit ( cFit->second, "RNQ+" );
+            cScurve.second->SetLineStyle (2);
             cFit->second->Draw ( "same" );
 
             // Write to File
@@ -326,11 +556,11 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
 
             uint8_t cThreshold = ceil ( pedestal + fSigmas * fabs ( noise ) );
 
-            std::cout << "Identified a noise Occupancy of 50% at VCth " << static_cast<int> ( pedestal ) << " -- increasing by " << fSigmas <<  " sigmas (=" << fabs ( noise ) << ") to " << +cThreshold << " for Cbc " << int ( cScurve.first->getCbcId() ) << std::endl;
+            LOG (INFO) << "Identified a noise Occupancy of 50% at VCth " << static_cast<int> ( pedestal ) << " -- increasing by " << fSigmas <<  " sigmas (=" << fabs ( noise ) << ") to " << +cThreshold << " for Cbc " << int ( cScurve.first->getCbcId() ) ;
 
             TLine* cLine = new TLine ( cThreshold, 0, cThreshold, 1 );
             cLine->SetLineWidth ( 3 );
-            cLine->SetLineColor ( 2 );
+            cLine->SetLineColor ( kCyan );
             cLine->Draw ( "same" );
 
             fCbcInterface->WriteCbcReg ( cScurve.first, "VCth", cThreshold );
@@ -339,6 +569,7 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
     }
 
     fSCurveCanvas->Update();
+
 #ifdef __HTTP__
     fHttpServer->ProcessRequests();
 #endif
@@ -349,39 +580,23 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
     fSCurveCanvas->SaveAs ( cPdfName.c_str() );
 }
 
-uint32_t HybridTester::fillSCurves ( BeBoard* pBoard,  const Event* pEvent, uint8_t pValue )
-{
-    uint32_t cHitCounter = 0;
-
-    for ( auto cFe : pBoard->fModuleVector )
-    {
-        for ( auto cCbc : cFe->fCbcVector )
-        {
-            auto cScurve = fSCurveMap.find ( cCbc );
-
-            if ( cScurve == fSCurveMap.end() ) std::cout << "Error: could not find an Scurve object for Cbc " << int ( cCbc->getCbcId() ) << std::endl;
-            else
-            {
-                for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
-                {
-                    if ( pEvent->DataBit ( cCbc->getFeId(), cCbc->getCbcId(), cId ) )
-                    {
-                        cScurve->second->Fill ( pValue );
-                        cHitCounter++;
-                    }
-                }
-            }
-        }
-    }
-
-    return cHitCounter;
-}
-
 void HybridTester::updateSCurveCanvas ( BeBoard* pBoard )
 {
 
+    /*for ( auto cFe : pBoard->fModuleVector )
+    {
+        for ( auto cCbc : cFe->fCbcVector )
+        {
+            fSCurveCanvas->cd(cCbc->getCbcId()+1);
+            TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
+            sCurveHist->DrawCopy("P0");
+            fSCurveCanvas->cd(cCbc->getCbcId()+1)->Update();
+        }
+    }*/
+
     // Here iterate over the fScurveMap and update
-    // fSCurveCanvas->cd();
+    fSCurveCanvas->cd();
+
     for ( auto cFe : pBoard->fModuleVector )
     {
         for ( auto cCbc : cFe->fCbcVector )
@@ -389,16 +604,17 @@ void HybridTester::updateSCurveCanvas ( BeBoard* pBoard )
             uint32_t cCbcId = cCbc->getCbcId();
             auto cScurve = fSCurveMap.find ( cCbc );
 
-            if ( cScurve == fSCurveMap.end() ) std::cout << "Error: could not find an Scurve object for Cbc " << int ( cCbc->getCbcId() ) << std::endl;
+            if ( cScurve == fSCurveMap.end() ) LOG (INFO) << "Error: could not find an Scurve object for Cbc " << int ( cCbc->getCbcId() ) ;
             else
             {
                 fSCurveCanvas->cd ( cCbcId + 1 );
-                cScurve->second->Draw ( "P" );
+                cScurve->second->DrawCopy ( "P" );
             }
         }
     }
 
     fSCurveCanvas->Update();
+
 #ifdef __HTTP__
     fHttpServer->ProcessRequests();
 #endif
@@ -408,16 +624,18 @@ void HybridTester::updateSCurveCanvas ( BeBoard* pBoard )
 
 void HybridTester::TestRegisters()
 {
-    // This method has to be followed by a configure call, otherwise the CBCs will be in an undefined state
+	// This method has to be followed by a configure call, otherwise the CBCs will be in an undefined state
     struct RegTester : public HwDescriptionVisitor
     {
         CbcInterface* fInterface;
         std::map<uint32_t, std::set<std::string>> fBadRegisters;
-        RegTester ( CbcInterface* pInterface ) : fInterface ( pInterface )
+        RegTester ( CbcInterface* pInterface, uint32_t pNCbc ) : fInterface ( pInterface )
         {
             std::set<std::string> tempset;
-            fBadRegisters[0] = tempset;
-            fBadRegisters[1] = tempset;
+            uint32_t cCbcIterator = 0;
+
+            for (cCbcIterator = 0; cCbcIterator < pNCbc; cCbcIterator++)
+                fBadRegisters[cCbcIterator] = tempset;
         }
 
         void visit ( Cbc& pCbc )
@@ -449,29 +667,242 @@ void HybridTester::TestRegisters()
             }
 
             report.close();
-            std::cout << "Channels diagnosis report written to: " + fDirectoryName + "/registers_test.txt" << std::endl;
+            LOG (INFO) << "Channels diagnosis report written to: " + fDirectoryName + "/registers_test.txt" ;
         }
     };
 
     // This should probably be done in the top level application but there I do not have access to the settings map
     time_t start_time = time (0);
     char* start = ctime (&start_time);
-    std::cout << "start: " << start << std::endl;
-    std::cout << std::endl << "Running registers testing tool ... " << std::endl;
-    RegTester cRegTester ( fCbcInterface );
+    LOG (INFO) << "start: " << start ;
+    LOG (INFO) << std::endl << "Running registers testing tool ... " ;
+    RegTester cRegTester ( fCbcInterface, fNCbc );
     accept ( cRegTester );
     cRegTester.dumpResult ( fDirectoryName );
-    std::cout << "Done testing registers, re-configuring to calibrated state!" << std::endl;
+    LOG (INFO) << "Done testing registers, re-configuring to calibrated state!" ;
     start_time = time (0);
     char* stop = ctime (&start_time);
-    std::cout << "stop: " << stop << std::endl;
-    ConfigureHw();
+    LOG (INFO) << "stop: " << stop ;
+    std::stringstream ss;
+    ConfigureHw (ss);
+    LOG (INFO) << ss.str();
 }
 
-void HybridTester::Measure()
+void HybridTester::DisplayGroupsContent (std::array<std::vector<std::array<int, 5>>, 8> pShortedGroupsArray)
 {
-    std::cout << "Mesuring Efficiency per Strip ... " << std::endl;
-    std::cout << "Taking data with " << fTotalEvents << " Events!" << std::endl;
+    std::stringstream ss;
+
+    for ( int i = 0; i < 8; i++)
+    {
+        ss << "TP group ID: " << i << std::endl;
+
+        for (auto cShortsVector : pShortedGroupsArray[i])
+        {
+            for (auto i : cShortsVector) ss << i << ' ';
+
+            ss << std::endl;
+        }
+
+        ss << std::endl;
+    }
+
+    LOG (INFO) << ss.str();
+}
+
+std::vector<std::array<int, 2>> HybridTester::MergeShorts (std::vector<std::array<int, 2>> pShortA, std::vector<std::array<int, 2>> pShortB)
+{
+    std::stringstream ss;
+
+    for (auto cChannel : pShortA)
+    {
+        if (!CheckChannelInShortPresence (cChannel, pShortB) )
+            pShortB.push_back (cChannel);
+    }
+
+    for (auto cMemberChannel : pShortB)
+    {
+        for (auto i : cMemberChannel) ss << i << ' ';
+    }
+
+    ss << std::endl;
+    LOG (INFO) << ss.str();
+
+    return pShortB;
+}
+
+bool HybridTester::CheckShortsConnection (std::vector<std::array<int, 2>> pShortA, std::vector<std::array<int, 2>> pShortB)
+{
+    for (auto cChannel : pShortA)
+    {
+        if (CheckChannelInShortPresence (cChannel, pShortB) ) return true;
+    }
+
+    return false;
+}
+
+bool HybridTester::CheckChannelInShortPresence ( std::array<int, 2> pShortedChannel, std::vector<std::array<int, 2>> pShort)
+{
+    for (auto cChannel : pShort)
+    {
+        if (cChannel[0] == pShortedChannel[0] && cChannel[1] == pShortedChannel[1]) return true;
+    }
+
+    return false;
+}
+
+void HybridTester::ReconstructShorts (std::array<std::vector<std::array<int, 5>>, 8> pShortedGroupsArray)
+{
+    std::stringstream ss;
+    ss << std::endl << "---------Creating shorted pairs-----------------" << std::endl;
+    std::vector<std::vector<std::array <int, 2>>> cShortsVector;
+    std::vector<std::array<int, 2>> cShort;
+    std::array<int, 2> temp_shorted_channel;
+
+    std::array<int, 2> best_candidate;
+    int best_candidate_index = 0;
+    int index = 0;
+    int sub_index = 0;
+    int cross_side_punishment = 2;
+    int smallest_distance = 10000;
+    bool matching_channel_found;
+
+    for ( auto cShortedChannelsGroup : pShortedGroupsArray)
+    {
+        for (auto cShortedChannelInfo : cShortedChannelsGroup)
+        {
+            temp_shorted_channel[0] = cShortedChannelInfo[0];
+            temp_shorted_channel[1] = cShortedChannelInfo[1];
+
+            cShort.push_back (temp_shorted_channel);
+            cShort.push_back (temp_shorted_channel);
+
+            index = 0;
+            matching_channel_found = false;
+
+            for ( auto cCandidate : pShortedGroupsArray[cShortedChannelInfo[2]] )
+            {
+                if (cShortedChannelInfo[3] == cCandidate[2])
+                {
+                    if ( smallest_distance > (cross_side_punishment * (cShort[0][0] - cCandidate[0]) * (cShort[0][0] - cCandidate[0]) + (cShort[0][1] - cCandidate[1]) *  (cShort[0][1] - cCandidate[1]) ) )
+                    {
+                        smallest_distance = (cross_side_punishment * (cShort[0][0] - cCandidate[0]) * (cShort[0][0] - cCandidate[0]) + (cShort[0][1] - cCandidate[1]) * (cShort[0][1] - cCandidate[1]) );
+                        best_candidate[0] = cCandidate[0];
+                        best_candidate[1] = cCandidate[1];
+                        best_candidate_index = index;
+                        matching_channel_found = true;
+                    }
+                }
+
+                index++;
+            }
+
+            if (matching_channel_found)
+            {
+                if (best_candidate[0] <= cShort[0][0] && best_candidate[1] < cShort[0][1] )
+                {
+                    cShort[0][0] = best_candidate[0];
+                    cShort[0][1] = best_candidate[1];
+                }
+
+                else
+                {
+                    cShort[1][0] = best_candidate[0];
+                    cShort[1][1] = best_candidate[1];
+                }
+
+                pShortedGroupsArray[cShortedChannelInfo[2]].erase (pShortedGroupsArray[cShortedChannelInfo[2]].begin() + best_candidate_index);
+
+                for (auto cMemberChannel : cShort)
+                {
+                    for (auto i : cMemberChannel) ss << i << ' ';
+                }
+
+                ss << "smallest distance: " << smallest_distance << std::endl;
+                //DisplayGroupsContent(pShortedGroupsArray);
+
+                cShortsVector.push_back (cShort);
+            }
+            else ss << "ERROR: No matching channel found for detected short (watch the level of noise)!" << std::endl;
+
+            smallest_distance = 10000;
+            cShort.clear();
+        }
+    }
+
+    ss << "---------Merging shorts-------------------------" << std::endl;
+    index = cShortsVector.size();
+    ss << "Number of shorted connections found: " << index << std::endl;
+
+    while ( index > 1 )
+    {
+        index--;
+        sub_index = index;
+
+        while (sub_index > 0)
+        {
+            sub_index--;
+
+            if (CheckShortsConnection ( cShortsVector[index], cShortsVector[sub_index]) )
+            {
+                cShortsVector[sub_index] = MergeShorts ( cShortsVector[index], cShortsVector[sub_index]);
+                cShortsVector.erase (cShortsVector.begin() + index);
+                break;
+            }
+        }
+    }
+
+    ss << "---------Outcome--------------------------------" << std::endl;
+
+    for (auto someShort : cShortsVector)
+    {
+        for (auto cMemberChannel : someShort)
+        {
+            for (auto i : cMemberChannel) ss << i << ' ';
+        }
+
+        ss << std::endl;
+    }
+
+    LOG (INFO) << ss.str();
+}
+
+void HybridTester::SetBeBoardForShortsFinding (BeBoard* pBoard)
+{
+    fBeBoardInterface->WriteBoardReg (pBoard, "COMMISSIONNING_MODE_RQ", 1 );
+    fBeBoardInterface->WriteBoardReg (pBoard, "COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID", 1 );
+    fBeBoardInterface->WriteBoardReg (pBoard, "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE", 2 );
+
+    LOG (INFO) << "COMMISSIONNING_MODE_RQ: " << fBeBoardInterface->ReadBoardReg ( pBoard, "COMMISSIONNING_MODE_RQ" ) ;
+    LOG (INFO) << "COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID: " << fBeBoardInterface->ReadBoardReg ( pBoard, "COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID" ) ;
+    LOG (INFO) << "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE: " << fBeBoardInterface->ReadBoardReg ( pBoard, "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE" ) ;
+
+    std::vector<std::pair<std::string, uint8_t>> cRegVec;
+
+    if ( fHoleMode )
+        cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux", 0xE1 ) );
+    else
+        cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux", 0x61 ) );
+
+    cRegVec.push_back ( std::make_pair ( "TestPulsePot", 0xF0 ) );
+
+    cRegVec.push_back ( std::make_pair ( "VCth", 0x90 ) );
+
+    cRegVec.push_back ( std::make_pair ( "TriggerLatency", 0x01 ) );
+
+    CbcMultiRegWriter cMultiWriter ( fCbcInterface, cRegVec );
+    this->accept ( cMultiWriter );
+}
+
+void HybridTester::FindShorts()
+{
+    std::stringstream ss;
+    uint8_t cGroupAddress[8] = {0, 4, 2, 6, 1, 5, 3, 7};
+    uint8_t cTestPulseGroupId = 0;
+    std::array<int, 5> cShortedChannelInfo;
+    std::array<std::vector<std::array<int, 5>>, 8> cShortedGroupsArray;
+
+    std::array<int,2> cGroundedChannel;
+    std::vector<std::array<int,2> > cGroundedChannelsList;
 
     CbcRegReader cReader ( fCbcInterface, "VCth" );
     accept ( cReader );
@@ -483,42 +914,220 @@ void HybridTester::Measure()
         uint32_t cN = 1;
         uint32_t cNthAcq = 0;
 
-        fBeBoardInterface->Start ( pBoard );
+        SetBeBoardForShortsFinding (pBoard);
 
-        fBeBoardInterface->ReadNEvents ( pBoard, fTotalEvents );
-        const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
+        CbcRegWriter cWriter ( fCbcInterface, "SelTestPulseDel&ChanGroup", cGroupAddress[cTestPulseGroupId]);
+        //CbcRegReader cReader( fCbcInterface, "SelTestPulseDel&ChanGroup" );
+        ss << "\nShorted channels searching procedure\nSides: Top - 0\tBottom - 1 (Channel numbering starts from 0)\n" << std::endl;
+        ss << "      Side\t| Channel_ID\t| Group_ID\t| Shorted_With_Group_ID" << std::endl;
 
-        // Loop over Events from this Acquisition
-        for ( auto& cEvent : events )
+        for (cTestPulseGroupId = 0; cTestPulseGroupId < 8; cTestPulseGroupId++)
         {
-            HistogramFiller cFiller ( fHistBottom, fHistTop, cEvent );
-            pBoard->accept ( cFiller );
+            cN = 1;
+            cNthAcq = 0;
 
-            if ( cN % 100 == 0 )
-                UpdateHists();
+            cWriter.setRegister ( "SelTestPulseDel&ChanGroup", cGroupAddress[cTestPulseGroupId]);
+            accept ( cWriter );
+            //accept( cReader );
 
-            cN++;
+            fBeBoardInterface->Start ( pBoard );
+
+            while ( cN <=  fTotalEvents )
+            {
+                //Run( pBoard, cNthAcq );
+                fBeBoardInterface->ReadData ( pBoard, false );
+                //fBeBoardInterface->ReadNEvents ( pBoard, cNthAcq );
+                const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
+
+                // Loop over Events from this Acquisition
+                for ( auto& cEvent : events )
+                {
+                    HistogramFiller cFiller ( fHistBottom, fHistTop, cEvent );
+                    pBoard->accept ( cFiller );
+
+                    if ( cN % 100 == 0 )
+                        UpdateHists();
+
+                    cN++;
+                }
+
+                cNthAcq++;
+            }
+
+            fBeBoardInterface->Stop ( pBoard);
+
+            std::vector<std::array<int, 5>> cShortedChannelsGroup;
+
+            for ( uint16_t cChannelId = 1; cChannelId < fNCbc * 127 + 1; cChannelId++ )
+            {
+                if ( fHistTop->GetBinContent ( cChannelId ) > 0.5 * fTotalEvents && ( (cChannelId - 1) % 127) % 8 != cTestPulseGroupId )
+                {
+                    cShortedChannelInfo = {0, (cChannelId - 1), ( (cChannelId - 1) % 127) % 8, cTestPulseGroupId, 0};
+                    cShortedChannelsGroup.push_back (cShortedChannelInfo);
+                    ss << "\t0\t|\t" << cShortedChannelInfo[1] << "\t|\t" << cShortedChannelInfo[2] << "\t|\t" << cShortedChannelInfo[3] << std::endl;
+                    fHistTopMerged->SetBinContent ( cChannelId, fHistTop->GetBinContent ( cChannelId ) );
+                }
+                if (fHistTop->GetBinContent( cChannelId ) < 0.5*fTotalEvents && ((cChannelId-1)%127)%8 == cTestPulseGroupId)
+                {
+                    cGroundedChannel = {0, (cChannelId-1)};
+                    cGroundedChannelsList.push_back(cGroundedChannel);
+                    ss<<"\t0\t|\t"<<(cChannelId-1)<<"\t|\t"<<(cTestPulseGroupId + 0)<<"\t|\tGND"<<std::endl;
+                }
+
+                if ( fHistBottom->GetBinContent ( cChannelId ) > 0.5 * fTotalEvents && ( (cChannelId - 1) % 127) % 8 != cTestPulseGroupId)
+                {
+                    cShortedChannelInfo = {1, (cChannelId - 1), ( (cChannelId - 1) % 127) % 8, cTestPulseGroupId, 0};
+                    cShortedChannelsGroup.push_back (cShortedChannelInfo);
+                    ss << "\t1\t|\t" << cShortedChannelInfo[1] << "\t|\t" << cShortedChannelInfo[2] << "\t|\t" << cShortedChannelInfo[3] << std::endl;
+                    fHistBottomMerged->SetBinContent ( cChannelId, fHistBottom->GetBinContent ( cChannelId ) );
+                }
+                if (fHistBottom->GetBinContent( cChannelId ) < 0.5*fTotalEvents && ((cChannelId-1)%127)%8 == cTestPulseGroupId)
+                {
+                    cGroundedChannel = {1, (cChannelId-1)};
+                    cGroundedChannelsList.push_back(cGroundedChannel);
+                    ss<<"\t1\t|\t"<<(cChannelId-1)<<"\t|\t"<<(cTestPulseGroupId + 0)<<"\t|\tGND"<<std::endl;
+                }
+
+            }
+            
+            cShortedGroupsArray[cTestPulseGroupId] = cShortedChannelsGroup;
+            //if (cTestPulseGroupId == 2) return;
+            fHistBottom->Reset();
+            fHistTop->Reset();
+            ss << "------------------------------------------------------------------------" << std::endl;
+            
+
         }
-
-        cNthAcq++;
-
     }
+    LOG (INFO) << ss.str();
+    fHistTopMerged->Scale ( 100 / double_t ( fTotalEvents ) );
+    fHistTopMerged->GetYaxis()->SetRangeUser ( 0, 100 );
+    fHistBottomMerged->Scale ( 100 / double_t ( fTotalEvents ) );
+    fHistBottomMerged->GetYaxis()->SetRangeUser ( 0, 100 );
+    ReconstructShorts (cShortedGroupsArray);
+    UpdateHistsMerged();
 
-    fHistTop->Scale ( 100 / double_t ( fTotalEvents ) );
-    fHistTop->GetYaxis()->SetRangeUser ( 0, 100 );
-    fHistBottom->Scale ( 100 / double_t ( fTotalEvents ) );
-    fHistBottom->GetYaxis()->SetRangeUser ( 0, 100 );
-    UpdateHists();
-
-    std::cout << "Mean occupancy at the Top side: " << fHistTop->Integral() / (double) (fNCbc * 127) << std::endl;
-    std::cout << "Mean occupancy at the Bottom side: " << fHistBottom->Integral() / (double) (fNCbc * 127) << std::endl;
+    //LOG (INFO) << ss.str();
 }
 
+void HybridTester::Measure()
+{
+    LOG (INFO) << "Mesuring Efficiency per Strip ... " ;
+    LOG (INFO) << "Taking data with " << fTotalEvents << " Events!" ;
+
+    CbcRegReader cReader ( fCbcInterface, "VCth" );
+    accept ( cReader );
+    fHistTop->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
+    fHistBottom->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
+
+
+
+    for ( BeBoard* pBoard : fBoardVector )
+    {
+        uint32_t cN = 1;
+        uint32_t cNthAcq = 0;
+
+        fBeBoardInterface->Start ( pBoard );
+
+        while ( cN <=  fTotalEvents )
+        {
+            //Run( pBoard, cNthAcq );
+            fBeBoardInterface->ReadData ( pBoard, false );
+            //fBeBoardInterface->ReadNEvents ( pBoard, cNthAcq );
+            const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
+
+            // Loop over Events from this Acquisition
+            for ( auto& cEvent : events )
+            {
+                HistogramFiller cFiller ( fHistBottom, fHistTop, cEvent );
+                pBoard->accept ( cFiller );
+
+                if ( cN % 100 == 0 )
+                    UpdateHists();
+
+                cN++;
+            }
+
+            cNthAcq++;
+        }
+
+        fBeBoardInterface->Stop ( pBoard);
+    }
+	for( int i = 1 ; i < ( fNCbc/2 * 254 ) ; i++ )
+	{
+		double cOccupancyTop = 100*fHistTop->GetBinContent(i)/(double)(fTotalEvents); 
+		double cOccupancyBottom = 100*fHistBottom->GetBinContent(i)/(double)(fTotalEvents);
+		fHistOccupancyBottom->Fill( cOccupancyBottom );
+		fHistOccupancyTop->Fill( cOccupancyTop );
+	}
+
+	fHistTop->Scale( 100 / double_t( fTotalEvents ) );
+	fHistTop->GetYaxis()->SetRangeUser( 0, 100 );
+	fHistBottom->Scale( 100 / double_t( fTotalEvents ) );
+	fHistBottom->GetYaxis()->SetRangeUser( 0, 100 );
+	UpdateHists();
+	
+	LOG (INFO) << "\t\tMean occupancy for the Top side: " << fHistOccupancyTop->GetMean() << " ± " << fHistOccupancyTop->GetRMS() << RESET  ; 
+	LOG (INFO) << "\t\tMean occupancy for the Botton side: " << fHistOccupancyBottom->GetMean() << " ± " <<  fHistOccupancyBottom->GetRMS()  << RESET ; 
+	ClassifyChannels();
+}
+void HybridTester::ClassifyChannels(double pNoiseLevel , double pDeadLevel ) 
+{
+	for( int i = 1 ; i < ( fNCbc/2 * 254 ) ; i++ )
+	{
+		if( fHistBottom->GetBinContent(i) >= pNoiseLevel ) fNoisyChannelsBottom.push_back(i) ; 
+		if( fHistTop->GetBinContent(i) >= pNoiseLevel ) fNoisyChannelsTop.push_back(i); 
+
+
+		if( fHistBottom->GetBinContent(i) <= pDeadLevel ) fDeadChannelsBottom.push_back(i) ; 
+		if( fHistTop->GetBinContent(i) <= pDeadLevel ) fDeadChannelsTop.push_back(i); 
+	}	
+}
+void HybridTester::DisplayNoisyChannels(std::ostream& os)
+{
+	std::string line;
+
+	line = "# Noisy channels on Bottom Sensor : "; 
+	for( int i = 0 ; i <  fNoisyChannelsBottom.size() ; i++ ) 
+	{	
+		line += std::to_string( fNoisyChannelsBottom[i] ) ;
+		line +=  ( i < fNoisyChannelsBottom.size()-1 ) ? "," : "" ;
+	}
+	os << line << std::endl;
+
+	line = "# Noisy channels on Top Sensor : "; 
+	for( int i = 0 ; i <  fNoisyChannelsTop.size() ; i++ ) 
+	{	
+		line += std::to_string( fNoisyChannelsTop[i] ) ;
+		line +=  ( i < fNoisyChannelsTop.size()-1 ) ? "," : "" ;
+	}
+	os << line << std::endl;
+}
+void HybridTester::DisplayDeadChannels(std::ostream& os)
+{
+	std::string line;
+
+	line = "# Dead channels on Bottom Sensor : "; 
+	for( int i = 0 ; i <  fDeadChannelsBottom.size() ; i++ ) 
+	{	
+		line += std::to_string( fDeadChannelsBottom[i] ) ;
+		line +=  ( i < fDeadChannelsBottom.size()-1 ) ? "," : "" ;
+	}
+	os << line << std::endl;
+
+	line = "# Dead channels on Top Sensor : "; 
+	for( int i = 0 ; i <  fDeadChannelsTop.size() ; i++ ) 
+	{	
+		line += std::to_string( fDeadChannelsTop[i] ) ;
+		line +=  ( i < fDeadChannelsTop.size()-1 ) ? "," : "" ;
+	}
+	os << line << std::endl;
+}
 void HybridTester::AntennaScan()
 {
 #ifdef __ANTENNA__
-    std::cout << "Mesuring Efficiency per Strip ... " << std::endl;
-    std::cout << "Taking data with " << fTotalEvents << " Events!" << std::endl;
+    LOG (INFO) << "Mesuring Efficiency per Strip ... " ;
+    LOG (INFO) << "Taking data with " << fTotalEvents << " Events!" ;
 
     CbcRegReader cReader ( fCbcInterface, "VCth" );
     accept ( cReader );
@@ -533,7 +1142,7 @@ void HybridTester::AntennaScan()
 
     for ( uint8_t analog_switch_cs = 0; analog_switch_cs < fNCbc; analog_switch_cs++ )
     {
-        std::cout << "Chip Select ID " << +analog_switch_cs << std::endl;
+        LOG (INFO) << "Chip Select ID " << +analog_switch_cs ;
         cAntenna.ConfigureSpiSlave ( analog_switch_cs );
 
         for ( uint8_t channel_position = 1; channel_position < 10; channel_position++ )
@@ -551,24 +1160,27 @@ void HybridTester::AntennaScan()
 
                     fBeBoardInterface->Start ( pBoard );
 
-                    //while ( cN <=  fTotalEvents )
-                    //{
-                    //// Run( pBoard, cNthAcq );
-                    fBeBoardInterface->ReadNEvents ( pBoard, fTotalEvents );
-                    const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
-
-                    // Loop over Events from this Acquisition
-                    for ( auto& cEvent : events )
+                    while ( cN <=  fTotalEvents )
                     {
-                        HistogramFiller cFiller ( fHistBottom, fHistTop, cEvent );
-                        pBoard->accept ( cFiller );
+                        // Run( pBoard, cNthAcq );
+                        fBeBoardInterface->ReadData ( pBoard, cNthAcq, false );
+                        const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
 
-                        if ( cN % 100 == 0 ) UpdateHists();
+                        // Loop over Events from this Acquisition
+                        for ( auto& cEvent : events )
+                        {
+                            HistogramFiller cFiller ( fHistBottom, fHistTop, cEvent );
+                            pBoard->accept ( cFiller );
 
-                        cN++;
+                            if ( cN % 100 == 0 ) UpdateHists();
+
+                            cN++;
+                        }
+
+                        cNthAcq++;
                     }
 
-                    cNthAcq++;
+                    fBeBoardInterface->Stop ( pBoard, cNthAcq );
 
                     /*Here the reconstruction of histograms happens*/
                     for ( uint16_t channel_id = 1; channel_id < fNCbc * 127 + 1; channel_id++ )
@@ -638,27 +1250,32 @@ void HybridTester::SaveTestingResults (std::string pHybridId)
     infile.close();
     myfile << content_buffer << std::endl;
     myfile.close();
-    std::cout << std::endl << "Summary testing report written to: " << std::endl << filename << std::endl;
+    LOG (INFO) << std::endl << "Summary testing report written to: " << std::endl << filename ;
 }
-
 void HybridTester::SaveResults()
 {
-    fHistTop->Write ( fHistTop->GetName(), TObject::kOverwrite );
-    fHistBottom->Write ( fHistBottom->GetName(), TObject::kOverwrite );
-    fDataCanvas->Write ( fDataCanvas->GetName(), TObject::kOverwrite );
+	fResultFile->cd();
+	fHistTop->Write( fHistTop->GetName(), TObject::kOverwrite );
+	fHistBottom->Write( fHistBottom->GetName(), TObject::kOverwrite );
+	fDataCanvas->Write( fDataCanvas->GetName(), TObject::kOverwrite );
 
-    fResultFile->Write();
-    fResultFile->Close();
+    fHistOccupancyTop->Write( fHistOccupancyTop->GetName(), TObject::kOverwrite );
+	fHistOccupancyBottom->Write( fHistOccupancyBottom->GetName(), TObject::kOverwrite );
+	fSummaryCanvas->Write( fSummaryCanvas->GetName(), TObject::kOverwrite );
 
+	//fResultFile->Write();
+    //fResultFile->Close();
+    LOG (INFO) << BOLDBLUE << "Results of occupancy measured written to " << fDirectoryName + "/Summary.root" << RESET ;
 
-    std::cout << std::endl << "Resultfile written correctly!" << std::endl;
+	std::string cPdfName = fDirectoryName + "/HybridTestResults.pdf";
+	fDataCanvas->SaveAs( cPdfName.c_str() );
+	cPdfName = fDirectoryName + "/NoiseOccupancySummary.pdf";
+	fSummaryCanvas->SaveAs( cPdfName.c_str() );
+	
 
-    std::string cPdfName = fDirectoryName + "/HybridTestResults.pdf";
-    fDataCanvas->SaveAs ( cPdfName.c_str() );
-
-    if ( fThresholdScan )
-    {
-        cPdfName = fDirectoryName + "/ThresholdScanResults.pdf";
-        fSCurveCanvas->SaveAs ( cPdfName.c_str() );
-    }
+	if ( fThresholdScan )
+	{
+		cPdfName = fDirectoryName + "/ThresholdScanResults.pdf";
+		fSCurveCanvas->SaveAs( cPdfName.c_str() );
+	}
 }
