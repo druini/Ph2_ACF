@@ -115,6 +115,12 @@ std::pair<std::vector<uint32_t>, std::vector<uint32_t>> MPAInterface::ReadMPADat
 }
 
 
+std::vector<uint32_t>*  MPAInterface::GetcurData()
+{
+	setBoard(0);
+	return fMPAFW->GetcurData();
+}
+
 void MPAInterface::ReadTrig(int buffer_num)
 {
 	setBoard(0);

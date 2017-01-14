@@ -167,7 +167,7 @@ public:
 
     uint32_t ReadData( BeBoard* pBoard, bool pBreakTrigger ) override;
     uint32_t ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData) override;
-   /*!
+    /*!
      * \brief Get next event from data buffer
      * \return Next event
      */
@@ -183,6 +183,15 @@ public:
     {
         return fData->GetEvents( pBoard );
     }
+
+
+
+    std::vector<uint32_t>* GetcurData() const
+    {
+        return curData;
+    }
+
+
     /*! \brief Read a block of a given size
      * \param pRegNode Param Node name
      * \param pBlocksize Number of 32-bit words to read

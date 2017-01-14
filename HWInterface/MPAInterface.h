@@ -73,6 +73,9 @@ namespace Ph2_HwInterface
 
 
 		void ReadTrig(int buffer_num);
+
+		std::vector<uint32_t>* GetcurData();
+
 		/*!
 		* \initializes AR header 
 		*/

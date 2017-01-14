@@ -108,6 +108,8 @@ namespace Ph2_HwInterface {
 
             cNMPA = static_cast<uint32_t> ( pBoard->getModule ( cFeId )->getNMPA() );
 
+            cNMPA = static_cast<uint32_t> ( pBoard->getModule ( cFeId )->getNMPA() );
+
             //now loop the CBCs and encode the IDs in key
             for ( uint8_t cCbcId = 0; cCbcId < cNCbc; cCbcId++ )
             {
