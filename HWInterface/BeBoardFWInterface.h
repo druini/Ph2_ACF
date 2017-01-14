@@ -240,6 +240,25 @@ namespace Ph2_HwInterface {
 
         virtual std::vector<uint32_t> ReadBlockRegValue ( const std::string& pRegNode, const uint32_t& pBlocksize ) = 0;
 
+
+
+
+
+
+        /*!
+         * Activate power on and off sequence 
+         */
+
+         virtual void PowerOn()=0;
+         virtual void PowerOff()=0;
+
+         /*!
+          * Read the firmware version
+          */
+
+         virtual void ReadVer()=0;
+
+
         virtual BoardType getBoardType() const = 0;
         /*! \brief Reboot the board */
         virtual void RebootBoard() = 0;

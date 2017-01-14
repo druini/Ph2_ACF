@@ -106,7 +106,7 @@ void RegisterTester::ReconfigureRegisters(std::string pDirectoryName )
 }
 void RegisterTester::PrintTestReport()
 {
-  std::ofstream report( fDirectoryName + "/registers_test.txt" ); // Creates a file in the current directory
+    std::ofstream report( fDirectoryName + "/registers_test.txt" ); // Creates a file in the current directory
     PrintTestResults( report);
     report.close();
     

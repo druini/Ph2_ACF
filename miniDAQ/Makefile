@@ -59,8 +59,8 @@ LibraryPaths = $(LibraryDirs:%=-L%)
 RootLibraryPaths = $(RootLibraryDirs:%=-L%)
 
 
-binaries=print miniDQM miniDAQ
-all: rootflags clean $(binaries) 
+#binaries=print miniDQM miniDAQ
+#all: rootflags clean $(binaries) 
 
 rootflags:
 	$(eval CCFlags += $(CCFlagsRoot))
@@ -70,16 +70,16 @@ rootflags:
 publisher.o: publisher.cc publisher.h
 	$(CXX) $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
 
-DQMHistogrammer.o: DQMHistogrammer.cc DQMHistogrammer.h
-	$(CXX) $(DevFlags) $(CCFlags) $(CCFlagsRoot) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
+#DQMHistogrammer.o: DQMHistogrammer.cc DQMHistogrammer.h
+#	$(CXX) $(DevFlags) $(CCFlags) $(CCFlagsRoot) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
 
-miniDQM: miniDQM.cc publisher.h publisher.o DQMHistogrammer.h DQMHistogrammer.o
-	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) publisher.o DQMHistogrammer.o $(ExternalObjects) 
-	cp $@ ../bin
+#miniDQM: miniDQM.cc publisher.h publisher.o DQMHistogrammer.h DQMHistogrammer.o
+#	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) publisher.o DQMHistogrammer.o $(ExternalObjects) 
+#	cp $@ ../bin
 
-miniDAQ: miniDAQ.cc
-	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects)
-	cp $@ ../bin
+#miniDAQ: miniDAQ.cc
+#	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects)
+#	cp $@ ../bin
 
 print:
 	@echo '****************************'

@@ -784,4 +784,22 @@ namespace Ph2_HwInterface {
     {
         WriteReg ( "pc_commands2.force_BG0_start", bStart ? 1 : 0);
     }
+
+
+
+    void GlibFWInterface::PowerOn()
+    {
+
+    }
+
+    void GlibFWInterface::PowerOff()
+    {
+
+    }
+
+
+    void GlibFWInterface::ReadVer()
+    {
+
+    }
 }

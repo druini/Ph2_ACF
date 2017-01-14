@@ -132,7 +132,7 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
 
             for ( auto const& v : pVecReg ) std::cerr << v.first << ", ";
 
-            std::cerr ;
+            //std::cerr ;
             throw ;
         }
 

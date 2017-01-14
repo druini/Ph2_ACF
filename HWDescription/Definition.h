@@ -33,6 +33,10 @@
 #define EVENT_HEADER_TDC_SIZE_32    6 // total of 6 32 bit words for HEADER + TDC
 #define EVENT_HEADER_SIZE_32    5  // 5 words for the header
 
+#define MPA_HEADER_SIZE_32   4099 
+#define MPA_EVENT_SIZE_32   240 
+
+
 //Event
 #define OFFSET_BUNCH               8
 #define WIDTH_BUNCH                24

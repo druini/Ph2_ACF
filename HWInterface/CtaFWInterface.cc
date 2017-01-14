@@ -892,4 +892,25 @@ namespace Ph2_HwInterface {
         WriteReg ( "pc_commands.force_BG0_start", bStart ? 1 : 0);
     }
 
+
+
+    void CtaFWInterface::PowerOn()
+    {
+
+    }
+
+    void CtaFWInterface::PowerOff()
+    {
+
+    }
+
+
+    void CtaFWInterface::ReadVer()
+    {
+
+    }
+
+
+
+
 }

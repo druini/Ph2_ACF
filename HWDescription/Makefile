@@ -1,4 +1,4 @@
-Objs                    = FrontEndDescription.o BeBoard.o Cbc.o Module.o 
+Objs                    = FrontEndDescription.o BeBoard.o Cbc.o MPA.o Module.o 
 CC              = g++
 CXX             = g++
 CCFlags         = -g -O1 -Wall -fPIC

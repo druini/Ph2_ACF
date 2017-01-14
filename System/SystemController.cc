@@ -36,6 +36,8 @@ namespace Ph2_System {
 
         delete fBeBoardInterface;
         delete fCbcInterface;
+	delete fMPAInterface;
+
         fBeBoardFWMap.clear();
         fSettingsMap.clear();
 
@@ -73,7 +75,7 @@ namespace Ph2_System {
 
         fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
         fCbcInterface = new CbcInterface ( fBeBoardFWMap );
-
+        fMPAInterface = new MPAInterface( fBeBoardFWMap );
         if (fWriteHandlerEnabled)
             this->initializeFileHandler();
     }

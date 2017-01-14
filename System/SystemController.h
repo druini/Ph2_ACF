@@ -15,6 +15,7 @@
 
 #include "FileParser.h"
 #include "../HWInterface/CbcInterface.h"
+#include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/BeBoardFWInterface.h"
 #include "../HWInterface/GlibFWInterface.h"
@@ -55,6 +56,7 @@ namespace Ph2_System {
       public:
         BeBoardInterface*       fBeBoardInterface;                     /*!< Interface to the BeBoard */
         CbcInterface*           fCbcInterface;                         /*!< Interface to the Cbc */
+        MPAInterface*           fMPAInterface;                         /*!< Interface to the Cbc */
         BeBoardVec              fBoardVector;                          /*!< Vector of Board pointers */
         BeBoardFWMap            fBeBoardFWMap;
         SettingsMap             fSettingsMap;                          /*!< Maps the settings */

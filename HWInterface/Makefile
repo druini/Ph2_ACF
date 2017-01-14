@@ -1,4 +1,4 @@
-Objs            = RegManager.o BeBoardFWInterface.o GlibFWInterface.o ICGlibFWInterface.o CtaFWInterface.o ICFc7FWInterface.o  BeBoardInterface.o FpgaConfig.o GlibFpgaConfig.o CtaFpgaConfig.o CbcInterface.o MmcPipeInterface.o Firmware.o
+Objs            = RegManager.o BeBoardFWInterface.o  MPAInterface.o MPAGlibFWInterface.o GlibFWInterface.o ICGlibFWInterface.o CtaFWInterface.o ICFc7FWInterface.o  BeBoardInterface.o FpgaConfig.o GlibFpgaConfig.o CtaFpgaConfig.o CbcInterface.o MmcPipeInterface.o Firmware.o
 CC              = g++
 CXX             = g++
 CCFlags         = -g -O1 -w -Wall -pedantic -fPIC  

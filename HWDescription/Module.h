@@ -14,6 +14,7 @@
 
 #include "FrontEndDescription.h"
 #include "Cbc.h"
+#include "MPA.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/easylogging++.h"
 #include <vector>
@@ -51,6 +52,12 @@ namespace Ph2_HwDescription {
                 delete pCbc;
 
             fCbcVector.clear();
+
+            for ( auto& pMPA : fMPAVector )
+                delete pMPA;
+
+            fMPAVector.clear();
+
         };
 
         /*!
@@ -77,6 +84,14 @@ namespace Ph2_HwDescription {
         {
             return fCbcVector.size();
         }
+
+
+        uint8_t getNMPA() const
+        {
+            return fMPAVector.size();
+        }
+
+
         /*!
          * \brief Adding a Cbc to the vector
          * \param pCbc
@@ -89,6 +104,17 @@ namespace Ph2_HwDescription {
         {
             fCbcVector.push_back ( pCbc );
         }
+
+        void addMPA ( MPA& pMPA )
+        {
+            fMPAVector.push_back ( &pMPA );
+        }
+        void addMPA ( MPA* pMPA )
+        {
+            fMPAVector.push_back ( pMPA );
+        }
+
+
         /*!
          * \brief Remove a Cbc from the vector
          * \param pCbcId
@@ -121,6 +147,7 @@ namespace Ph2_HwDescription {
 
 
         std::vector < Cbc* > fCbcVector;
+        std::vector < MPA* > fMPAVector;
 
 
       protected:

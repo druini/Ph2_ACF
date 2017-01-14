@@ -717,4 +717,21 @@ namespace Ph2_HwInterface {
     }
 
 
+    void ICGlibFWInterface::PowerOn()
+    {
+
+    }
+
+    void ICGlibFWInterface::PowerOff()
+    {
+
+    }
+
+
+    void ICGlibFWInterface::ReadVer()
+    {
+
+    }
+
+
 }
