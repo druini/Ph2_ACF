@@ -57,7 +57,7 @@ class PedeNoise : public SCurve
 
     void Initialise();
     void measureNoise();
-    void Validate(uint32_t pNoiseStripThreshold = 1);
+    void Validate(double pNoiseStripThreshold = 0.001);
     void SaveResults();
 
   private:

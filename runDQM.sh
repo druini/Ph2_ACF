@@ -20,26 +20,23 @@ let "max_size = 500 * min_size" # MB
 
 # Globals
 WORKDIR=$(pwd)
-TREEOUTDIR=/afs/cern.ch/work/c/cmstkph2/public/BeamTestDQM/May2016/root_files
+TREEOUTDIR=/afs/cern.ch/work/c/cmstkph2/public/BeamTestDQM/Oct2016/root_files
 
 # Define all types of available data 
 # Raw Data folder
-declare -a rawFileFolders=("/cmsuptrackernas/Raw/2016"
+declare -a rawFileFolders=("/cmsuptrackernas/Raw/2016/October2016/xDAQ_runs"
     "/cmsuptrackernas/Raw/2016/imperial"
-    "/cmsuptrackernas/Raw/2016/strasbourg")
+    "/cmsuptrackernas/Raw/2016/October2016/miniDAQ_runs")
 
 # Output web folder
-declare -a webFolders=("/afs/cern.ch/work/g/gauzinge/public/TB_DQM"
+declare -a webFolders=("/afs/cern.ch/work/g/gauzinge/public/TB_DQM/Debug"
     "/afs/cern.ch/work/g/gauzinge/public/TB_DQM/LabTest"
-    "/afs/cern.ch/work/g/gauzinge/public/TB_DQM/LabTest")
+    "/afs/cern.ch/work/g/gauzinge/public/TB_DQM/Oct2016/miniDAQ")
 
 # exclusive command line options
-#declare -a optionList=(" --cbcType=4 --swap=2 --filter --tree"
-    #" --cbcType=2 --swap=1"
-    #" --cbcType=4 --swap=0")
-declare -a optionList=(" --cbcType=4 --swap --filter --tree"
+declare -a optionList=(" --cbcType=4 --swap --filter --skipDebugHist"
     " --cbcType=2 --reverse"
-    " --cbcType=4")
+    " --cbcType=4 --filter --tree --skipDebugHist")
 
 # filename containing runs already processed
 declare -a runProcList=("run_processed.txt" 
@@ -71,7 +68,7 @@ function runDQM() {
   echo "=> Most recent file is: $lastfile"
     
   # now find the latest files (changed last hour)
-  for rawfile in $(find $rawFileFolder -maxdepth 1 -name "*.raw" -cmin -30); do
+  for rawfile in $(find $rawFileFolder -maxdepth 1 -name "*.raw" -cmin -300000); do
      echo "=> Processing $rawfile"
 	
      basefile=$(basename $rawfile)
@@ -85,15 +82,15 @@ function runDQM() {
      [ $? -eq 0 ] && { echo "=> $dqmfile already available!"; continue; }
 	
      # find modification timestamp of the raw file to check if it is closed
-     lastmod=$(stat -c "%Y" $rawfile)
-     size=$(stat -c "%s" $rawfile)
+     let "lastmod = $(stat -c "%Y" $rawfile)"
+     let "size = $(stat -c "%s" $rawfile)"
      [ $size -lt $min_size ] && { echo "=> File $rawfile too small in size($size bytes), skipping"; continue; }
 	
      # convert the file but do not finalize it, i.e do not add the filename in the list of already processed files
      let "checkout = 1"
      # check if the file may still getting updated 
      if [ "$rawfile" == "$lastfile" ]; then
-	now=$(date "+%s")
+	let "now = $(date "+%s")"
 	let "diff = now - lastmod"
 	if [ $diff -lt 300 ]; then
 	  echo "=> Raw file $rawfile may still be updated, size=$size bytes." 
@@ -109,21 +106,24 @@ function runDQM() {
           $command  # bash seems to work this way
 
      # for dev version we do not use the exit code yet	
-     let "ecode=$?"
+     let "ecode = $?"
      [ $ignore_ecode -gt 0 ] && let "ecode=0"
      if [ $ecode -eq 0 ]; then
 	[ $checkout -eq 1 ] && echo $dqmfile >> $RUNLIST
-	mv Rawtuple*.root $TREEOUTDIR
+	echo mv Rawtuple_$dqmfile $TREEOUTDIR
+  	     mv Rawtuple_$dqmfile $TREEOUTDIR
      else
 	echo "=> $rawfile: raw->dqm failed!"
      fi
+
+     break
   done
 } 
 
 # Now run
 # Simply comment out the other if you want to run over only one type
 
-#runDQM 0  # GlibSupervisor BT+Lab
+runDQM 0  # GlibSupervisor BT+Lab
 #runDQM 1  # miniDAQ Imperial Lab 
 #runDQM 2  # miniDAQ Strasbourg Lab
 

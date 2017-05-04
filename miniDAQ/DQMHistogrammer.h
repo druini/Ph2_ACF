@@ -12,6 +12,7 @@
 #define __DQMHISTOGRAMMER_H__
 
 #include "../tools/Tool.h"
+#include "../Utils/easylogging++.h"
 
 #include <vector>
 #include <string>
@@ -33,7 +34,7 @@ class DQMHistogrammer : public Tool
     /*!
      * constructor
      */
-    DQMHistogrammer (bool addTree = false, int ncol = 2, bool eventFilter = true, bool addDebugHisto = true);
+    DQMHistogrammer (bool addTree = false, int ncol = 2, bool eventFilter = true, bool addDebugHisto = false);
 
     /*!
      * destructor
@@ -48,14 +49,14 @@ class DQMHistogrammer : public Tool
     /*!
      * Fill histogram
      */
-    void fillHistos (const std::vector<Event*>& event_list, int nevtp);
+    void fillHistos (const std::vector<Event*>& event_list, int nevtp, const int data_size);
     void saveHistos (const std::string& out_file);
     void resetHistos();
     void fillSensorHistos (int ncbc, const std::vector<int>& even_values, const std::vector<int>& odd_values);
     void fillCBCHistos (unsigned long ievt, std::string cbc_hid, uint32_t error, uint32_t address, int nstub,
                         const std::vector<uint32_t>& channles);
     void fillEventTrendHisto (TH1I* th, unsigned long ival, unsigned int val);
-    bool getEventFlag (const unsigned long& ievt);
+    bool getEventFlag (const unsigned long& ievt, const int data_size);
 
   private:
 
@@ -70,6 +71,7 @@ class DQMHistogrammer : public Tool
     uint32_t periodicityOffset_;
     uint32_t eventBlock_;
     uint32_t skipEvents_;
+    long lineOffset_;
 
     TTree* tree_;
     // Following same convention as HitProfile histo naming
@@ -79,6 +81,7 @@ class DQMHistogrammer : public Tool
     uint32_t totalStubs_;
     bool eventFlag_;
     uint32_t eventCountCBC_;
+
     std::vector<unsigned int>* cbcErrorVal_;
     std::vector<unsigned int>* cbcPLAddressVal_;
     std::vector<unsigned int>* dut0C0chData_;

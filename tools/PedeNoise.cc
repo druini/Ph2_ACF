@@ -68,20 +68,20 @@ void PedeNoise::Initialise()
                 bookHistogram ( cCbc, "Cbc_Pedestal", cHist );
 
                 cHistname = Form ( "Fe%dCBC%d_Noise_even", cFe->getFeId(), cCbc->getCbcId() );
-                cHist = new TH1F ( cHistname, cHistname, 128, -0.5, 127.5 );
+                cHist = new TH1F ( cHistname, cHistname, 127, -0.5, 126.5 );
                 cHist->SetMaximum (10);
                 cHist->SetMinimum (0);
                 bookHistogram ( cCbc, "Cbc_Noise_even", cHist );
 
                 cHistname = Form ( "Fe%dCBC%d_Noise_odd", cFe->getFeId(), cCbc->getCbcId() );
-                cHist = new TH1F ( cHistname, cHistname, 128, -0.5, 127.5 );
+                cHist = new TH1F ( cHistname, cHistname, 127, -0.5, 126.5 );
                 cHist->SetLineColor ( 2 );
                 cHist->SetMaximum (10);
                 cHist->SetMinimum (0);
                 bookHistogram ( cCbc, "Cbc_noise_odd", cHist );
 
                 cHistname = Form ( "Fe%dCBC%d_Occupancy", cFe->getFeId(), cCbc->getCbcId() );
-                cHist = new TH1F ( cHistname, cHistname, 254, 0, 253 );
+                cHist = new TH1F ( cHistname, cHistname, 254, -0.5, 253.5 );
                 cHist->SetLineColor ( 31 );
                 cHist->SetMaximum (1);
                 cHist->SetMinimum (0);
@@ -94,7 +94,7 @@ void PedeNoise::Initialise()
             bookHistogram ( cFe, "Module_noisehist", cNoise );
 
             cNoisehistname = Form ( "Fe%d_StripNoise", cFeId );
-            TProfile* cStripnoise = new TProfile ( cNoisehistname, cNoisehistname, ( NCHANNELS * cCbcCount ) + 1, -.5, cCbcCount * NCHANNELS + .5 );
+            TProfile* cStripnoise = new TProfile ( cNoisehistname, cNoisehistname, (NCHANNELS*cCbcCount), -.5, (NCHANNELS*cCbcCount)-.5 );
             cStripnoise->SetMinimum (0);
             cStripnoise->SetMaximum (15);
             bookHistogram ( cFe, "Module_Stripnoise", cStripnoise );
@@ -145,7 +145,7 @@ void PedeNoise::measureNoise()
         // if we want to run with test pulses, we'll have to enable commissioning mode and enable the TP for each test group
         if ( fTestPulse )
         {
-            LOG (INFO) << BLUE << "Enabling Commissioninc cycle with TestPulse in FW" << RESET ;
+            LOG (INFO) << BLUE << "Enabling Commissioning cycle with TestPulse in FW" << RESET ;
             setFWTestPulse();
             LOG (INFO) << RED <<  "Enabling Test Pulse for Test Group " << cTGrpM.first << " with amplitude " << +fTestPulseAmplitude << RESET ;
             setSystemTestPulse ( fTestPulseAmplitude, cTGrpM.first );
@@ -215,10 +215,12 @@ void PedeNoise::measureNoise()
                 // here add the CBC histos to the module histos
                 cTmpHist->Add ( cNoiseHist );
 
-                for ( int cBin = 0; cBin < NCHANNELS; cBin++ )
+                for ( int cBin = 1; cBin <= NCHANNELS; cBin++ )
                 {
                     // LOG(INFO) << cBin << " Strip " << +cCbcId * 254 + cBin << " Noise " << cStripHist->second->GetBinContent( cBin ) ;
-                    if ( cStripHist->GetBinContent ( cBin ) > 0 && cStripHist->GetBinContent ( cBin ) < 255 ) cTmpProfile->Fill ( cCbcId * 254 + cBin, cStripHist->GetBinContent ( cBin ) );
+                    if ( cStripHist->GetBinContent ( cBin ) > 0 && cStripHist->GetBinContent ( cBin ) < 255 ){
+                        cTmpProfile->Fill ( cCbcId * 254 + cBin-1, cStripHist->GetBinContent ( cBin ) );
+                    }
 
                     // else cTmpProfile->Fill( cCbcId * 254 + cBin, 255 );
                 }
@@ -242,7 +244,7 @@ void PedeNoise::measureNoise()
 }
 
 
-void PedeNoise::Validate ( uint32_t pNoiseStripThreshold )
+void PedeNoise::Validate ( double pNoiseStripThreshold )
 {
     LOG (INFO) << "Validation: Taking Data with " << fEventsPerPoint * 200 << " random triggers!" ;
 
@@ -262,7 +264,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold )
         fillOccupancyHist (cBoard, events);
 
         //now I've filled the histogram with the occupancy
-        //let's say if there is more than 1% noise occupancy, we consider the strip as noise and thus set the offset to either 0 or FF
+        //let's say if there is more than pNoiseStripThreshold noise occupancy, we consider the strip as noisy and thus set the offset to either 0 or FF
         for ( auto cFe : cBoard->fModuleVector )
         {
             for ( auto cCbc : cFe->fCbcVector )
@@ -270,7 +272,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold )
                 //get the histogram for the occupancy
                 TH1F* cHist = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_occupancy" ) );
                 cHist->Scale (1 / (fEventsPerPoint * 200.) );
-                TLine* line = new TLine (0, pNoiseStripThreshold * 0.001, NCHANNELS, pNoiseStripThreshold * 0.001);
+                TLine* line = new TLine (0, pNoiseStripThreshold, NCHANNELS, pNoiseStripThreshold);
 
                 //as we are at it, draw the plot
                 fNoiseCanvas->cd ( cCbc->getCbcId() + 1 );
@@ -282,14 +284,14 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold )
 
                 RegisterVector cRegVec;
 
-                for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
+                for (uint32_t iChan = 1; iChan <= NCHANNELS; iChan++)
                 {
-                    if (cHist->GetBinContent (iChan) > double ( pNoiseStripThreshold * 0.001 ) ) // consider it noisy
+                    if (cHist->GetBinContent (iChan) > pNoiseStripThreshold) // consider it noisy
                     {
-                        TString cRegName = Form ( "Channel%03d", iChan + 1 );
+                        TString cRegName = Form ( "Channel%03d", iChan );
                         uint8_t cValue = fHoleMode ? 0x00 : 0xFF;
                         cRegVec.push_back ({cRegName.Data(), cValue });
-                        LOG (INFO) << RED << "Found a noisy channel on CBC " << +cCbc->getCbcId() << " Channel " << iChan + 1 << " with an occupancy of " << cHist->GetBinContent (iChan) << "; setting offset to " << +cValue << RESET ;
+                        LOG (INFO) << RED << "Found a noisy channel on CBC " << +cCbc->getCbcId() << " Channel " << iChan << " with an occupancy of " << cHist->GetBinContent (iChan) << "; setting offset to " << +cValue << RESET ;
                     }
 
                 }
@@ -351,7 +353,7 @@ void PedeNoise::enableTestGroupforNoise ( int  pTGrpId )
                         for ( auto& cChan : cGrp.second )
                         {
 
-                            uint8_t cEnableOffset = cOffsets->GetBinContent ( cChan );
+                            uint8_t cEnableOffset = cOffsets->GetBinContent ( cChan+1 );
                             TString cRegName = Form ( "Channel%03d", cChan + 1 );
                             cRegVec.push_back ( { cRegName.Data(), cEnableOffset } );
                             // LOG(INFO) << GREEN << "DEBUG CBC " << cCbcId << " Channel " << +cChan << " group " << cGrp.first << " offset " << std::hex << "0x" << +cEnableOffset << std::dec << RESET ;
@@ -468,9 +470,9 @@ void PedeNoise::saveInitialOffsets()
                 // std::map<uint8_t, uint8_t> cCbcOffsetMap;
                 TH1F* cOffsetHist = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_Offsets" ) );
 
-                for ( uint8_t cChan = 0; cChan < NCHANNELS; cChan++ )
+                for ( uint8_t cChan = 1; cChan <= NCHANNELS; cChan++ )
                 {
-                    TString cRegName = Form ( "Channel%03d", cChan + 1 );
+                    TString cRegName = Form ( "Channel%03d", cChan );
                     uint8_t cOffset = cCbc->getReg ( cRegName.Data() );
                     cOffsetHist->SetBinContent ( cChan, cOffset );
                     // cCbcOffsetMap[cChan] = cOffset;
@@ -503,11 +505,11 @@ void PedeNoise::setInitialOffsets()
                 //also write to CBCs
                 RegisterVector cRegVec;
 
-                for ( int iChan = 0; iChan < NCHANNELS; iChan++ )
+                for ( int iChan = 1; iChan <= NCHANNELS; iChan++ )
                 {
                     uint8_t cOffset = cOffsetHist->GetBinContent ( iChan );
-                    cCbc->setReg ( Form ( "Channel%03d", iChan + 1 ), cOffset );
-                    cRegVec.push_back ({ Form ( "Channel%03d", iChan + 1 ), cOffset } );
+                    cCbc->setReg ( Form ( "Channel%03d", iChan ), cOffset );
+                    cRegVec.push_back ({ Form ( "Channel%03d", iChan ), cOffset } );
                     //LOG(INFO) << GREEN << "Offset for CBC " << cCbcId << " Channel " << iChan << " : 0x" << std::hex << +cOffset << std::dec << RESET ;
                 }
 
@@ -534,7 +536,7 @@ void PedeNoise::setThresholdtoNSigma (BeBoard* pBoard, uint32_t pNSigma)
             int cDiff = fHoleMode ? pNSigma * cNoise : -pNSigma * cNoise;
             uint8_t cValue = cPedestal + cDiff;
 
-            if (pNSigma > 0) LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " by " << cDiff << " to " << cPedestal + cDiff << " VCth units to supress noise!" ;
+            if (pNSigma > 0) LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " by " << cDiff << " to " << +cValue << " VCth units to supress noise!" ;
             else LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " back to the pedestal at " << +cPedestal ;
 
             fCbcInterface->WriteCbcReg (cCbc, "VCth", cValue);

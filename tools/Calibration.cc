@@ -69,7 +69,7 @@ void Calibration::Initialise ( bool pAllChan )
                 TH1F* cOffsetHist = new TH1F ( cName, Form ( "Offsets FE%d CBC%d ; Channel; Offset", cFeId, cCbcId ), 254, -.5, 253.5 );
                 uint8_t cOffset = ( fHoleMode ) ? 0x00 : 0xFF;
 
-                for ( int iBin = 0; iBin < NCHANNELS; iBin++ )
+                for ( int iBin = 1; iBin <= NCHANNELS; iBin++ )
                     cOffsetHist->SetBinContent ( iBin, cOffset );
 
                 bookHistogram ( cCbc, "Offsets", cOffsetHist );
@@ -79,7 +79,7 @@ void Calibration::Initialise ( bool pAllChan )
 
                 if ( cObj ) delete cObj;
 
-                TH1F* cOccHist = new TH1F ( cName, Form ( "Occupancy FE%d CBC%d ; Channel; Occupancy", cFeId, cCbcId ), 254, -.5, 254.5 );
+                TH1F* cOccHist = new TH1F ( cName, Form ( "Occupancy FE%d CBC%d ; Channel; Occupancy", cFeId, cCbcId ), 254, -.5, 253.5 );
                 bookHistogram ( cCbc, "Occupancy", cOccHist );
             }
         }
@@ -418,7 +418,7 @@ void Calibration::setOffset ( uint8_t pOffset, int  pGroup, bool pVPlus )
                     TString cRegName = Form ( "Channel%03d", cChannel + 1 );
                     cRegVec.push_back ( {cRegName.Data(), pOffset} );
 
-                    if ( pVPlus ) cOffsetHist->SetBinContent ( cChannel, pOffset );
+                    if ( pVPlus ) cOffsetHist->SetBinContent ( cChannel+1, pOffset );
                 }
 
                 fCbcInterface->WriteCbcMultReg ( cCbc, cRegVec );
@@ -454,13 +454,13 @@ void Calibration::toggleOffset ( uint8_t pGroup, uint8_t pBit, bool pBegin )
                     if ( pBegin )
                     {
                         // get the offset
-                        uint8_t cOffset = cOffsetHist->GetBinContent ( cChannel );
+                        uint8_t cOffset = cOffsetHist->GetBinContent ( cChannel+1 );
 
                         // toggle Bit i
                         toggleRegBit ( cOffset, pBit );
 
                         // modify the histogram
-                        cOffsetHist->SetBinContent ( cChannel, cOffset );
+                        cOffsetHist->SetBinContent ( cChannel+1, cOffset );
 
                         // push in a vector for CBC write transaction
                         cRegVec.push_back ( {cRegName.Data(), cOffset} );
@@ -469,22 +469,21 @@ void Calibration::toggleOffset ( uint8_t pGroup, uint8_t pBit, bool pBegin )
                     {
                         // if the occupancy is larger than 50%, flip the bit back, if it is smaller, don't do anything
                         // get the offset
-                        uint8_t cOffset = cOffsetHist->GetBinContent ( cChannel );
+                        uint8_t cOffset = cOffsetHist->GetBinContent ( cChannel+1 );
 
                         // get the occupancy
-                        int iBin = cOccHist->GetXaxis()->FindBin ( cChannel );
-                        float cOccupancy = cOccHist->GetBinContent ( iBin );
+                        float cOccupancy = cOccHist->GetBinContent ( cChannel+1 );
 
                         // only if the occupancy is too high I need to flip the bit back and write, if not, I can leave it
                         if ( cOccupancy > 0.57 * fEventsPerPoint )
                         {
                             toggleRegBit ( cOffset, pBit ); // toggle the bit back that was previously flipped
-                            cOffsetHist->SetBinContent ( cChannel, cOffset );
+                            cOffsetHist->SetBinContent ( cChannel+1, cOffset );
                             cRegVec.push_back ( {cRegName.Data(), cOffset} );
                         }
 
                         // since I extracted the info from the occupancy profile for this bit (this iteration), i need to clear the corresponding bins
-                        cOccHist->SetBinContent ( iBin, 0 );
+                        cOccHist->SetBinContent(cChannel+1, 0);
                     }
                 }
 
@@ -552,10 +551,10 @@ void Calibration::setRegValues()
                 // first, find the offset Histogram for this CBC
                 TH1F* cOffsetHist = static_cast<TH1F*> ( getHist ( cCbc, "Offsets" ) );
 
-                for ( int iChan = 0; iChan < NCHANNELS; iChan++ )
+                for ( int iChan = 1; iChan <= NCHANNELS; iChan++ )
                 {
                     uint8_t cOffset = cOffsetHist->GetBinContent ( iChan );
-                    cCbc->setReg ( Form ( "Channel%03d", iChan + 1 ), cOffset );
+                    cCbc->setReg ( Form ( "Channel%03d", iChan ), cOffset );
                     //LOG(INFO) << GREEN << "Offset for CBC " << cCbcId << " Channel " << iChan << " : 0x" << std::hex << +cOffset << std::dec << RESET ;
                 }
 

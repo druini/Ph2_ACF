@@ -52,9 +52,6 @@ INITIALIZE_EASYLOGGINGPP
 
 std::string getFileName()
 {
-    //configure the logger
-    el::Configurations conf ("settings/logger.conf");
-    el::Loggers::reconfigureAllLoggers (conf);
 
     std::string line;
     std::fstream cFile;
@@ -92,6 +89,9 @@ std::string getFileName()
 
 int main ( int argc, char* argv[] )
 {
+    //configure the logger
+    el::Configurations conf ("settings/logger.conf");
+    el::Loggers::reconfigureAllLoggers (conf);
 
     int pEventsperVcth;
     int cVcth;
