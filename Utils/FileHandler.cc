@@ -1,4 +1,5 @@
 #include "FileHandler.h"
+#include <algorithm>    // std::copy
 
 //Constructor
 FileHandler::FileHandler ( const std::string& pBinaryFileName, char pOption ) :
@@ -72,6 +73,7 @@ bool FileHandler::openFile( )
                 std::vector<uint32_t> cHeaderVec = fHeader.encodeHeader();
                 uint32_t cBuffer[cHeaderVec.size()];
                 std::copy ( cHeaderVec.begin(), cHeaderVec.end(), cBuffer );
+                std::cout << __PRETTY_FUNCTION__ << "Writing header out!" << std::endl;
                 fBinaryFile.write ( ( char* ) &cBuffer, sizeof ( cBuffer ) );
             }
         }
@@ -191,13 +193,16 @@ std::vector<uint32_t> FileHandler::readFileTail ( long pNbytes )
 void FileHandler::writeFile()
 {
     //while ( true ) {
-    if ( is_set )
+    //std::cout << __PRETTY_FUNCTION__ << "Is set? " << is_set << std::endl;
+    //std::cout << __PRETTY_FUNCTION__ << "size: " << fData.size() << std::endl;
+	if ( is_set )
     {
         fMutex.lock();
-        uint32_t cBuffer[fData.size()];
-        std::copy ( fData.begin(), fData.end(), cBuffer );
-        fBinaryFile.write ( ( char* ) &cBuffer, sizeof ( cBuffer ) );
-	fBinaryFile.flush();
+        //uint32_t cBuffer[fData.size()];
+        //std::copy ( fData.begin(), fData.end(), cBuffer );
+        for(auto& d : fData)
+        	fBinaryFile.write ( ( char* ) &d, sizeof ( uint32_t ) );
+	    fBinaryFile.flush();
         fData.clear();
         is_set = false;
         fMutex.unlock();

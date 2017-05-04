@@ -165,6 +165,7 @@ namespace Ph2_System {
             if (fRawFileName.find (".raw") != std::string::npos)
                 cFilename.insert (fRawFileName.find (".raw"), cBeBoardString.str() );
 
+            LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << cFilename << RESET ;
             FileHandler* cHandler = new FileHandler (cFilename, 'w', cHeader);
 
             //finally set the handler

@@ -290,6 +290,7 @@ namespace Ph2_HwInterface {
         // set the vector<uint32_t> as event buffer and let him know how many packets it contains
         fData->Set ( pBoard, cData , fNpackets, false );
 
+        std::cout << __PRETTY_FUNCTION__ << "Save file? " << fSaveToFile << std::endl;
         if ( fSaveToFile )
         {
             fFileHandler->set ( cData );
