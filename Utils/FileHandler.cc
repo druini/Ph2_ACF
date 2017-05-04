@@ -73,7 +73,7 @@ bool FileHandler::openFile( )
                 std::vector<uint32_t> cHeaderVec = fHeader.encodeHeader();
                 uint32_t cBuffer[cHeaderVec.size()];
                 std::copy ( cHeaderVec.begin(), cHeaderVec.end(), cBuffer );
-                std::cout << __PRETTY_FUNCTION__ << "Writing header out!" << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << "Writing header out, MAKE SURE IT WORKS BECAUSE THERE IS COPY ALSO HERE!" << std::endl;
                 fBinaryFile.write ( ( char* ) &cBuffer, sizeof ( cBuffer ) );
             }
         }

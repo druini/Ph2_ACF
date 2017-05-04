@@ -8,7 +8,7 @@
     
 	<FW_Version NCbcDataSize="8" />
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
-      <Global_CBC_Register name="VCth"> 0x28 </Global_CBC_Register>
+      <Global_CBC_Register name="VCth"> 0x60 </Global_CBC_Register>
       <Global_CBC_Register name="TriggerLatency"> 0x13 </Global_CBC_Register>
       <Global_CBC_Register name="MiscTestPulseCtrl&AnalogMux"> 0x21 </Global_CBC_Register>
       <!--<Global_CBC_Register name="MiscTestPulseCtrl&amp;AnalogMux">0xE1</Global_CBC_Register>-->

@@ -50,7 +50,7 @@
 #define WIDTH_EVENT_COUNT_CBC      3*8
 
 //Cbc Event
-#define NCHANNELS                   254
+#define NCHANNELS                 254
 #define OFFSET_ERROR              0
 #define WIDTH_ERROR               2
 #define OFFSET_PIPELINE_ADDRESS   2       //OFFSET_ERROR + WIDTH_ERROR
@@ -60,6 +60,6 @@
 #define OFFSET_GLIBFLAG           10+254  //OFFSET_CBCDATA + WIDTH_CBCDATA
 #define WIDTH_GLIBFLAG            12
 #define OFFSET_CBCSTUBDATA        264+23  //LAST BIT
-#define IC_OFFSET_CBCSTUBDATA        276  //BIT 12
+#define IC_OFFSET_CBCSTUBDATA     276  //BIT 12
 #define WIDTH_CBCSTUBDATA         12
 //------------------------------------------------------------------------------
