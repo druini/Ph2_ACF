@@ -107,7 +107,7 @@ int main ( int argc, char* argv[] )
     // options
     cmd.setHelpOption ( "h", "help", "Print this help page" );
 
-    cmd.defineOption ( "file", "Hw Description File . Default value: settings/HWDescription_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
+    cmd.defineOption ( "file", "Hw Description File . Default value: settings/HWDescription_8CBC_FNAL.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     cmd.defineOptionAlternative ( "file", "f" );
 
     cmd.defineOption ( "events", "Number of Events . Default value: 10", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
@@ -130,7 +130,7 @@ int main ( int argc, char* argv[] )
     //bool cSaveToFile = false;
     std::string cOutputFile;
     // now query the parsing results
-    std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/HWDescription_2CBC.xml";
+    std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/HWDescription_8CBC_FNAL.xml";
 
     const char* cDirectory = "Data";
     mkdir ( cDirectory ,  777 );
@@ -199,7 +199,7 @@ int main ( int argc, char* argv[] )
                 }
             }
 
-            if ( count % 100  == 0 )
+//            if ( count % 100  == 0 )
                 LOG (INFO) << ">>> Recorded Event #" << count ;
         }
 

@@ -19,10 +19,6 @@ namespace Ph2_HwInterface {
     // Event implementation
     Event::Event ( const BeBoard* pBoard,  uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
-
-
-
-
         SetEvent ( pBoard, pNbCbc, list );
     }
 
@@ -34,18 +30,21 @@ namespace Ph2_HwInterface {
         fEventCount ( pEvent.fEventCount ),
         fEventCountCBC ( pEvent.fEventCountCBC ),
         fTDC ( pEvent.fTDC ),
+        fEventSize (pEvent.fEventSize),
         fEventDataMap ( pEvent.fEventDataMap )
-
     {
 
     }
 
-    void Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
+    bool Event::operator== (const Event& pEvent) const
+    {
+        return fEventDataMap == pEvent.fEventDataMap;
+    }
+
+    int Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
         fEventSize = pNbCbc *  CBC_EVENT_SIZE_32  + EVENT_HEADER_TDC_SIZE_32;
 
-
-        
         //now decode the header info
         fBunch = 0x00FFFFFF & list.at (0);
         fOrbit = 0x00FFFFFF & list.at (1);
@@ -55,25 +54,6 @@ namespace Ph2_HwInterface {
         fTDC = 0x000000FF & list.back();
 
 
-        //MPA header for now 
-
-
-
-        ftotal_trigs = 0x00FFFFFF & list.at (0);
-        ftrigger_total_counter = 0x00FFFFFF & list.at (1);
-        ftrigger_counter = 0x00FFFFFF & list.at (2);
-
-
-	ftrigger_offset_BEAM.clear();
-
-	ftrigger_offset_MPA.clear();
-
-
-        ftrigger_offset_BEAM.insert( ftrigger_offset_BEAM.begin(), list.begin()+3, list.begin()+(3+2048) );
-        ftrigger_offset_MPA.insert( ftrigger_offset_MPA.begin(), list.begin()+(3+2048), list.begin()+(3+2048*2) );
-
-
-
         //now decode FEEvents
         //uint8_t cBeId = pBoard->getBeId();
         uint32_t cNFe = static_cast<uint32_t> ( pBoard->getNFe() );
@@ -81,7 +61,7 @@ namespace Ph2_HwInterface {
         for ( uint8_t cFeId = 0; cFeId < cNFe; cFeId++ )
         {
             uint32_t cNCbc;
-            uint32_t cNMPA;
+
             // if the NCbcDataSize in the FW Version node of the BeBoard is set, the DataSize is assumed fixed:
             // if 1 module is defined, the number of CBCs is the datasize given in the xml
             // if more than one module is defined, the number of CBCs for each FE is the datasize divided by the nFe
@@ -91,24 +71,7 @@ namespace Ph2_HwInterface {
                 else cNCbc = static_cast<uint32_t> ( pBoard->getNCbcDataSize() / cNFe );
             }
             // if there is no FWVersion node in the xml, the CBCs will be counted for each module according to the xml file
-			else
-				{
-				std::cout << __PRETTY_FUNCTION__ << "I had to comment out the following line because I couldn't compile. Hopefully you'll never see this message!!!!" << std::endl;
-				std::cout << __PRETTY_FUNCTION__ << "I had to comment out the following line because I couldn't compile. Hopefully you'll never see this message!!!!" << std::endl;
-				std::cout << __PRETTY_FUNCTION__ << "I had to comment out the following line because I couldn't compile. Hopefully you'll never see this message!!!!" << std::endl;
-				std::cout << __PRETTY_FUNCTION__ << "I had to comment out the following line because I couldn't compile. Hopefully you'll never see this message!!!!" << std::endl;
-				std::cout << __PRETTY_FUNCTION__ << "I had to comment out the following line because I couldn't compile. Hopefully you'll never see this message!!!!" << std::endl;
-				std::cout << __PRETTY_FUNCTION__ << "I had to comment out the following line because I couldn't compile. Hopefully you'll never see this message!!!!" << std::endl;
-				std::cout << __PRETTY_FUNCTION__ << "I had to comment out the following line because I couldn't compile. Hopefully you'll never see this message!!!!" << std::endl;
-				std::cout << __PRETTY_FUNCTION__ << "I had to comment out the following line because I couldn't compile. Hopefully you'll never see this message!!!!" << std::endl;
-				std::cout << __PRETTY_FUNCTION__ << "I had to comment out the following line because I couldn't compile. Hopefully you'll never see this message!!!!" << std::endl;
-				std::cout << __PRETTY_FUNCTION__ << "I had to comment out the following line because I couldn't compile. Hopefully you'll never see this message!!!!" << std::endl;
-					//cNCbc = static_cast<uint32_t>( pBoard->getModule( i )->getNCbc() );
-				}
-
-            cNMPA = static_cast<uint32_t> ( pBoard->getModule ( cFeId )->getNMPA() );
-
-            cNMPA = static_cast<uint32_t> ( pBoard->getModule ( cFeId )->getNMPA() );
+            else cNCbc = static_cast<uint32_t> ( pBoard->getModule ( cFeId )->getNCbc() );
 
             //now loop the CBCs and encode the IDs in key
             for ( uint8_t cCbcId = 0; cCbcId < cNCbc; cCbcId++ )
@@ -116,32 +79,14 @@ namespace Ph2_HwInterface {
                 uint16_t cKey = encodeId (cFeId, cCbcId);
 
                 uint32_t begin = EVENT_HEADER_SIZE_32 + cFeId * CBC_EVENT_SIZE_32 * cNCbc + cCbcId * CBC_EVENT_SIZE_32;
-                uint32_t end = begin + CBC_EVENT_SIZE_32 - 1;
+                uint32_t end = begin + CBC_EVENT_SIZE_32;
 
                 std::vector<uint32_t> cCbcData (std::next (std::begin (list), begin), std::next (std::begin (list), end) );
 
-
-
                 fEventDataMap[cKey] = cCbcData;
             }
-
-
-            for ( uint8_t cMPAId = 0; cMPAId < cNMPA; cMPAId++ )
-            {
-                uint16_t cKey = encodeId (cFeId, cMPAId);
-		
-                uint32_t begin = MPA_HEADER_SIZE_32 + cFeId * MPA_EVENT_SIZE_32 * cNMPA + cMPAId * MPA_EVENT_SIZE_32;
-                uint32_t end = begin + MPA_EVENT_SIZE_32;
-
-                std::vector<uint32_t> cMPAData (std::next (std::begin (list), begin), std::next (std::begin (list), end) );
-		
-
-
-                fEventDataMap[cKey] = cMPAData;
-            }
-
-
         }
+        return 1;
     }
 
     void Event::GetCbcEvent ( const uint8_t& pFeId, const uint8_t& pCbcId, std::vector< uint32_t >& cbcData )  const
@@ -237,7 +182,6 @@ namespace Ph2_HwInterface {
             return 0;
         }
     }
-
 
     uint32_t Event::PipelineAddress ( uint8_t pFeId, uint8_t pCbcId ) const
     {
@@ -500,7 +444,7 @@ namespace Ph2_HwInterface {
         else
             LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
         return cHits;
-     }
+    }
 
     std::ostream& operator<< ( std::ostream& os, const Event& ev )
     {
@@ -517,42 +461,41 @@ namespace Ph2_HwInterface {
         const int LINE_WIDTH = 32;
         const int LAST_LINE_WIDTH = 8;
 
-        //for ( auto const& it : evmap )
-        //{
-        //uint32_t cFeId = it.first;
-
-        //for ( auto const& jt : it.second )
-        //{
-        //uint32_t cCbcId = jt.first;
         for (auto const& cKey : ev.fEventDataMap)
         {
-            uint8_t cFeId  = 0;
-            uint8_t cCbcId = 0;
+            uint8_t cFeId;
+            uint8_t cCbcId;
             ev.decodeId (cKey.first, cFeId, cCbcId);
+
+            //for (auto& cWord : cKey.second)
+            //std::cout << std::bitset<32> (cWord) << std::endl;
+
             std::string data ( ev.DataBitString ( cFeId, cCbcId ) );
-            os << GREEN << "FEId = " << cFeId << " CBCId = " << cCbcId << RESET << " len(data) = " << data.size() << std::endl;
+            std::string allOnes(254,'0');
+            if(data == allOnes) continue;
+            os << GREEN << "FEId = " << +cFeId << " CBCId = " << +cCbcId << RESET << " len(data) = " << data.size() << std::endl;
             os << YELLOW << "PipelineAddress: " << ev.PipelineAddress (cFeId, cCbcId) << RESET << std::endl;
             os << RED << "Error: " << static_cast<std::bitset<2>> ( ev.Error ( cFeId, cCbcId ) ) << RESET << std::endl;
-//            os << "Ch. Data:      ";
-//
-//            for (int i = 0; i < FIRST_LINE_WIDTH; i += 2)
-//                os << data.substr ( i, 2 ) << " ";
-//
-//            os << std::endl;
-//
-//            for ( int i = 0; i < 7; ++i )
-//            {
-//                for (int j = 0; j < LINE_WIDTH; j += 2)
-//                    //os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * i, LINE_WIDTH ) << std::endl;
-//                    os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * i + j, 2 ) << " ";
-//
-//                os << std::endl;
-//            }
+            os << "Ch. Data:      ";
 
-//            for (int i = 0; i < LAST_LINE_WIDTH; i += 2)
-//                os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i , 2 ) << " ";
-//
-//            os << std::endl;
+            for (int i = 0; i < FIRST_LINE_WIDTH; i += 2)
+                os << data.substr ( i, 2 ) << " ";
+
+            os << std::endl;
+
+            for ( int i = 0; i < 7; ++i )
+            {
+                for (int j = 0; j < LINE_WIDTH; j += 2)
+                    //os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * i, LINE_WIDTH ) << std::endl;
+                    os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * i + j, 2 ) << " ";
+
+                os << std::endl;
+            }
+
+            for (int i = 0; i < LAST_LINE_WIDTH; i += 2)
+                os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i , 2 ) << " ";
+
+            os << std::endl;
 
             os << BLUE << "Stubs: " << ev.StubBitString ( cFeId, cCbcId ).c_str() << RESET << std::endl;
         }
@@ -573,7 +516,7 @@ namespace Ph2_HwInterface {
         // Cluster finding
         Cluster aCluster;
 
-        for (unsigned int iSensor = 0; iSensor < 2; ++iSensor)
+        for (int iSensor = 0; iSensor < 2; ++iSensor)
         {
             aCluster.fSensor = iSensor;
             bool inCluster = false;

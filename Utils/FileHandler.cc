@@ -71,10 +71,10 @@ bool FileHandler::openFile( )
             else if ( fHeader.fValid)
             {
                 std::vector<uint32_t> cHeaderVec = fHeader.encodeHeader();
-                uint32_t cBuffer[cHeaderVec.size()];
-                std::copy ( cHeaderVec.begin(), cHeaderVec.end(), cBuffer );
-                std::cout << __PRETTY_FUNCTION__ << "Writing header out, MAKE SURE IT WORKS BECAUSE THERE IS COPY ALSO HERE!" << std::endl;
-                fBinaryFile.write ( ( char* ) &cBuffer, sizeof ( cBuffer ) );
+//                uint32_t cBuffer[cHeaderVec.size()];
+//                std::copy ( cHeaderVec.begin(), cHeaderVec.end(), cBuffer );
+//                fBinaryFile.write ( ( char* ) &cBuffer, sizeof ( cBuffer ) );
+            	  fBinaryFile.write ( ( char* ) &cHeaderVec[0], cHeaderVec.size()*sizeof(uint32_t) );
             }
         }
 
@@ -200,8 +200,8 @@ void FileHandler::writeFile()
         fMutex.lock();
         //uint32_t cBuffer[fData.size()];
         //std::copy ( fData.begin(), fData.end(), cBuffer );
-        for(auto& d : fData)
-        	fBinaryFile.write ( ( char* ) &d, sizeof ( uint32_t ) );
+        //for(auto& d : fData)
+        fBinaryFile.write ( ( char* ) &fData[0], fData.size()*sizeof ( uint32_t ) );
 	    fBinaryFile.flush();
         fData.clear();
         is_set = false;

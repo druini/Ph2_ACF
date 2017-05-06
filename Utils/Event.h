@@ -64,17 +64,6 @@ namespace Ph2_HwInterface {
         uint32_t fEventCount;           /*!< Event Counter */
         uint32_t fEventCountCBC;        /*!< Cbc Event Counter */
         uint32_t fTDC;                  /*!< TDC value*/
-        uint32_t fTrigCountShutter;                  /*!< TrigCountShutter value*/
-
-        uint32_t ftotal_trigs;
-        uint32_t ftrigger_total_counter;
-        uint32_t ftrigger_counter;
-
-        std::vector<uint32_t> ftrigger_offset_BEAM;
-        std::vector<uint32_t> ftrigger_offset_MPA;
-
-
-
 
         //std::vector<uint8_t> fEventData;
         //std::vector<uint32_t> fEventData;
@@ -127,7 +116,7 @@ namespace Ph2_HwInterface {
          * \param pEvent : Event to set
          * \return Aknowledgement of the Event setting (1/0)
          */
-        void SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list );
+        int SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list );
 
         /*! \brief Get raw data */
         //const std::vector<uint32_t>& GetEventData() const
@@ -202,53 +191,6 @@ namespace Ph2_HwInterface {
         {
             return fTDC;
         }
-
-
-
-
-
-
-
-        uint32_t Gettotal_trigs() const
-        {
-            return ftotal_trigs;
-        }
-
-        uint32_t Gettrigger_total_counter() const
-        {
-            return ftrigger_total_counter;
-        }
-
-        uint32_t Gettrigger_counter() const
-        {
-            return ftrigger_counter;
-        }
-
-	std::vector<uint32_t> Gettrigger_offset_BEAM() const
-        {
-            return ftrigger_offset_BEAM;
-        }
-
-	std::vector<uint32_t> Gettrigger_offset_MPA() const
-        {
-            return ftrigger_offset_MPA;
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         /*!
          * \brief Convert Data to Hex string
          * \return Data string in hex
@@ -383,6 +325,8 @@ namespace Ph2_HwInterface {
         {
             return fEventDataMap;
         }
+
+        bool operator== (const Event& pEvent) const;
 
         friend std::ostream& operator<< ( std::ostream& out, const Event& ev );
 
