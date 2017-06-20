@@ -143,7 +143,7 @@ namespace Ph2_HwInterface {
          * \return fNpackets: the number of packets read
          */
         uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger ) override;
-        uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& cData ) override;//FIXME THIS IS A PATCH FOR OTSDAQ
+        uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait=true ) override;//FIXME THIS IS A PATCH FOR OTSDAQ
         /*!
          * \brief Read data for pNEvents
          * \param pBoard : the pointer to the BeBoard

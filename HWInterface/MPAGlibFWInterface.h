@@ -166,7 +166,7 @@ public:
 
 
     uint32_t ReadData( BeBoard* pBoard, bool pBreakTrigger ) override;
-    uint32_t ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData) override;
+    uint32_t ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait=true) override;
     /*!
      * \brief Get next event from data buffer
      * \return Next event

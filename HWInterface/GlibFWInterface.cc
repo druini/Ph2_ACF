@@ -224,10 +224,11 @@ namespace Ph2_HwInterface {
     	return ReadData ( pBoard,  pBreakTrigger, cData);
     }
 
-    uint32_t GlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData)
+    uint32_t GlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait)
     {
         //Readout settings
         std::chrono::milliseconds cWait ( 1 );
+        //fNpackets = 0;
 
         uhal::ValWord<uint32_t> cVal;
 
@@ -244,9 +245,12 @@ namespace Ph2_HwInterface {
         do
         {
             cVal = ReadReg ( fStrFull );
-
             if ( cVal == 0 )
+            {
+                if(!wait)
+                	return 0;
                 std::this_thread::sleep_for ( cWait );
+            }
         }
         while ( cVal == 0 );
 

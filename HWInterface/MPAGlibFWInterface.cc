@@ -118,7 +118,7 @@ namespace Ph2_HwInterface
     	return ReadData ( pBoard,  pBreakTrigger, cData);
     }
 
-    uint32_t MPAGlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData)
+    uint32_t MPAGlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait)
 	{
 
         if ( fData ) delete fData;
