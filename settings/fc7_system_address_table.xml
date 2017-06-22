@@ -1,0 +1,28 @@
+<node id="sysreg">
+	<node id="board_id" address="0x0"/>
+	<node id="rev_id" address="0x1"/>
+	<node id="version" address="0x2">
+		<node id="ver_major" mask="0xF0000000"/>
+		<node id="ver_minor" mask="0x0F000000"/>
+		<node id="ver_build" mask="0x00FF0000"/>
+		<node id="ver_year"  mask="0x0000FE00"/>
+		<node id="ver_month" mask="0x000001E0"/>
+		<node id="ver_day"   mask="0x0000001F"/>
+	</node>
+	<node id="buf_test" address="0x0000400" class="MmcPipeInterface" description="UC link buffer test register" size="0x3" tags="slave">
+		<node id="FPGAtoMMCcounters" address="0x0"/>
+		<node id="MMCtoFPGAcounters" address="0x1"/>
+		<node id="FIFO" address="0x2" mode="non-incremental" size="512" />
+	</node>
+	<node id="ctrl" address="0x00000004" permission="rw">
+		<node id="pcieclk_pll_sel"   mask="0x000001"/>
+		<node id="pcieclk_mr"        mask="0x000002"/>
+		<node id="pcieclk_fsel1"     mask="0x000003"/>
+		<node id="pcieclk_fsel0"     mask="0x000008"/>
+		<node id="cdce_powerup"      mask="0x000010"/>
+		<node id="cdce_refsel"       mask="0x000020"/>
+		<node id="cdce_sync"         mask="0x000040"/>
+		<node id="cdce_ctrl_sel"     mask="0x000080"/>
+	</node>
+</node>
+

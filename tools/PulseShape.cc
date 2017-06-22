@@ -17,9 +17,11 @@ void PulseShape::Initialize()
         {
             uint32_t cFeId = cFe->getFeId();
             std::cerr << "cFeId = " << cFeId ;
+            fType = cFe->getChipType();
 
             for ( auto& cCbc : cFe->fCbcVector )
             {
+                uint16_t cMaxValue = (cCbc->getChipType() == ChipType::CBC2) ? 255 : 1023;
                 uint32_t cCbcId = cCbc->getCbcId();
                 std::cerr << "cCbcId = " << cCbcId ;
                 fNCbc++;
@@ -31,12 +33,12 @@ void PulseShape::Initialize()
                 //should set the canvas frames sane!
                 int cLow = ( fDelayAfterPulse - 1 ) * 25;
                 int cHigh = ( fDelayAfterPulse + 8 ) * 25;
-                TH2I* cFrame = new TH2I ( "cFrame", "PulseShape; Delay [ns]; Amplitude [VCth]", 350, cLow, cHigh, 255, 0, 255 );
+                TH2I* cFrame = new TH2I ( "cFrame", "PulseShape; Delay [ns]; Amplitude [VCth]", 350, cLow, cHigh, cMaxValue, 0, cMaxValue );
                 cFrame->SetStats ( false );
                 ctmpCanvas->cd ( 2 );
                 cFrame->Draw( );
                 bookHistogram ( cCbc, "frame", cFrame );
-                std::cerr << "Initializing map fCanvasMap[" << Form ( "0x%x", cCbc ) << "] = " << Form ( "0x%x", ctmpCanvas ) ;
+                LOG (ERROR) << "Initializing map fCanvasMap[" << Form ( "0x%x", cCbc ) << "] = " << Form ( "0x%x", ctmpCanvas ) ;
                 // Create Multigraph Object for each CBC
                 TString cName =  Form ( "g_cbc_pulseshape_MultiGraph_Fe%dCbc%d", cFeId, cCbcId );
                 TObject* cObj = gROOT->FindObject ( cName );
@@ -91,17 +93,19 @@ void PulseShape::ScanVcth ( uint32_t pDelay )
         for ( auto& cChannel : cChannelVector.second )
             cChannel->initializeHist ( pDelay, "Delay" );
 
-
-    uint8_t cVcth = ( fHoleMode ) ?  0xFF :  0x00;
+    uint16_t cMaxValue = (fType == ChipType::CBC2) ? 0xFF : 0x003F;
+    uint16_t cVcth = ( fHoleMode ) ?  cMaxValue :  0x00;
     int cStep = ( fHoleMode ) ? -10 : +10;
     uint32_t cAllOneCounter = 0;
     bool cAllOne = false;
     bool cNonZero = false;
     bool cSaturate = false;
-    uint8_t cDoubleVcth;
+    uint16_t cDoubleVcth;
+
+    ThresholdVisitor cVisitor (fCbcInterface, 0);
 
     // Adaptive VCth loop
-    while ( 0x00 <= cVcth && cVcth <= 0xFF )
+    while ( 0x00 <= cVcth && cVcth <= cMaxValue )
     {
         if ( cAllOne ) break;
 
@@ -110,10 +114,6 @@ void PulseShape::ScanVcth ( uint32_t pDelay )
             cVcth +=  cStep;
             continue;
         }
-
-        // if ( cAllOne ) break;
-        //CbcRegWriter cWriter ( fCbcInterface, "VCth", cVcth );
-        //this->accept ( cWriter );
 
         // then we take fNEvents
         uint32_t cN = 1;
@@ -124,28 +124,26 @@ void PulseShape::ScanVcth ( uint32_t pDelay )
         for ( BeBoard* pBoard : fBoardVector )
         {
             for (Module* cFe : pBoard->fModuleVector)
-                fCbcInterface->WriteBroadcast (cFe, "VCth", cVcth);
+            {
+                cVisitor.setThreshold (cVcth);
+                cFe->accept (cVisitor);
+            }
 
-            //fBeBoardInterface->Start( pBoard );
-            //while ( cN <= fNevents )
-            //{
-            fBeBoardInterface->ReadNEvents ( pBoard, fNevents );
-            const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
+            ReadNEvents ( pBoard, fNevents );
+            const std::vector<Event*>& events = GetEvents ( pBoard );
 
             for ( auto& cEvent : events )
                 cNHits += fillVcthHist ( pBoard, cEvent, cVcth );
 
             cNthAcq++;
 
-            //}
-            //fBeBoardInterface->Stop( pBoard );
             if ( !cNonZero && cNHits != 0 )
             {
                 cNonZero = true;
                 cDoubleVcth = cVcth;
                 int cBackStep = 2 * cStep;
 
-                if ( int ( cVcth ) - cBackStep > 255 ) cVcth = 255;
+                if ( int ( cVcth ) - cBackStep > cMaxValue ) cVcth = cMaxValue;
                 else if ( int ( cVcth ) - cBackStep < 0 ) cVcth = 0;
                 else cVcth -= cBackStep;
 
@@ -165,7 +163,7 @@ void PulseShape::ScanVcth ( uint32_t pDelay )
             cVcth += cStep;
             updateHists ( "", false );
 
-            if ( fHoleMode && cVcth >= 0xFE && cNHits != 0 )
+            if ( fHoleMode && cVcth >= cMaxValue - 1 && cNHits != 0 )
             {
                 cSaturate = true;
                 break;
@@ -245,6 +243,7 @@ void PulseShape::fitGraph ( int pLow )
             cChannel->fPulse->Write ( cChannel->fPulse->GetName(), TObject::kOverwrite );
             cPulseFit->Write ( cPulseFit->GetName(), TObject::kOverwrite );
             fResultFile->cd();
+            fResultFile->Flush();
         }
 
     }
@@ -303,7 +302,7 @@ void PulseShape::setDelayAndTesGroup ( uint32_t pDelay )
     for (auto& cBoard : fBoardVector)
     {
         //potentially have to reset the IC FW commissioning cycle state machine?
-        fBeBoardInterface->WriteBoardReg (cBoard, getDelAfterTPString (cBoard->getBoardType() ) , cCoarseDelay);
+        fBeBoardInterface->WriteBoardReg (cBoard, getDelAfterTPString (cBoard->getBoardType() ), cCoarseDelay);
     }
 
     CbcRegWriter cWriter ( fCbcInterface, "SelTestPulseDel&ChanGroup", to_reg ( cFineDelay, fTestGroup ) );
@@ -530,9 +529,6 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         cCanvas.second->Update();
     }
 
-    //#ifdef __HTTP__
-    //fHttpServer->ProcessRequests();
-    //#endif
 }
 
 double pulseshape ( double* x, double* par )

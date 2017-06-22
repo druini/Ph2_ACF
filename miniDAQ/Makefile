@@ -3,19 +3,13 @@ CXX             = g++
 CCFlags         = -g -O0 -w -Wall -pedantic -pthread -std=c++11 -fPIC
 CCFlagsRoot	= `root-config --cflags --glibs`
 ROOTVERSION := $(shell root-config --has-http)
-HttpFlag = -D__HTTP__
 
-DevFlags        =
+RootLibraryDirs = $(ROOTLIB)
+RootLibraryPaths = $(RootLibraryDirs:%=-L%)
 
-ANTENNADIR=../CMSPh2_AntennaDriver
-AntennaFlag = -D__ANTENNA__
-AMC13DIR=/opt/cactus/include/amc13
-Amc13Flag     = -D__AMC13__
-
-
-LibraryDirs = /opt/cactus/lib ../lib 
-IncludeDirs     =  /opt/cactus/include ../ 
-ExternalObjects= $(LibraryPaths) -lpthread  -lcactus_extern_pugixml -lcactus_uhal_log -lcactus_uhal_grammars -lcactus_uhal_uhal -lboost_system -lPh2_Interface -lPh2_Description -lPh2_System -lPh2_Utils -lPh2_Tracker -lboost_filesystem -lboost_program_options -L../RootWeb/lib -lRootWeb
+LibraryDirs = $(CACTUSLIB) ../lib ../RootWeb/lib
+IncludeDirs     =  $(CACTUSINCLUDE) ../ 
+ExternalObjects= -lpthread -lcactus_extern_pugixml -lcactus_uhal_log -lcactus_uhal_grammars -lcactus_uhal_uhal -lboost_system -lPh2_Interface -lPh2_Description -lPh2_System -lPh2_Utils -lPh2_Tracker -lboost_filesystem -lboost_program_options -lRootWeb
 
 ##################################################
 ## check if the Root has THttp
@@ -48,7 +42,6 @@ else
 	AMC13INSTALLED = no
 endif
 
-
 #ExternalObjects= $(LibraryPaths) -lpthread  -lcactus_extern_pugixml -lcactus_uhal_log -lcactus_uhal_grammars -lcactus_uhal_uhal \
                                  -lboost_system -lPh2_Interface -lPh2_Description -lPh2_System -lPh2_Utils -L$(BOOST_LIB) -lboost_filesystem -lboost_program_options -lboost_thread -L../RootWeb/lib -lRootWeb
 
@@ -56,10 +49,9 @@ IncludePaths            = $(IncludeDirs:%=-I%)
 	RootLibraryDirs = /usr/local/lib/root
 
 LibraryPaths = $(LibraryDirs:%=-L%) 
-RootLibraryPaths = $(RootLibraryDirs:%=-L%)
+IncludePaths = $(IncludeDirs:%=-I%)
 
-
-binaries=print miniDQM miniDAQ
+binaries = print miniDQM miniDAQ
 all: rootflags clean $(binaries) 
 
 rootflags:
@@ -68,17 +60,17 @@ rootflags:
 
 
 publisher.o: publisher.cc publisher.h
-	$(CXX) $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
+	$(CXX) $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) $(LibraryPaths) -c -o $@ $<
 
 DQMHistogrammer.o: DQMHistogrammer.cc DQMHistogrammer.h
-	$(CXX) $(DevFlags) $(CCFlags) $(CCFlagsRoot) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
+	$(CXX) $(DevFlags) $(CCFlags) $(CCFlagsRoot) $(UserCCFlags) $(CCDefines) $(IncludePaths) $(LibraryPaths) -c -o $@ $<
 
 miniDQM: miniDQM.cc publisher.h publisher.o DQMHistogrammer.h DQMHistogrammer.o
-	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) publisher.o DQMHistogrammer.o $(ExternalObjects) 
+	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) publisher.o DQMHistogrammer.o $(ExternalObjects) 
 	cp $@ ../bin
 
 miniDAQ: miniDAQ.cc
-	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects)
+	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
 	cp $@ ../bin
 
 print:

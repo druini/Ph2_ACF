@@ -270,20 +270,20 @@ void Amc13Interface::SendBGO()
 
 void Amc13Interface::enableBGO (int pChan)
 {
-    //char tmp[32];
+    char tmp[32];
 
-    //if ( pChan < 0 || pChan > 3)
-    //{
-    //amc13::Exception::UnexpectedRange e;
-    //e.Append ("AMC13::enableBGO() - channel must be in range 0 to 3");
-    //throw e;
-    //}
+    if ( pChan < 0 || pChan > 3)
+    {
+    amc13::Exception::UnexpectedRange e;
+    e.Append ("AMC13::enableBGO() - channel must be in range 0 to 3");
+    throw e;
+    }
 
-    //snprintf ( tmp, sizeof (tmp), "CONF.TTC.BGO%d.%s", pChan, "ENABLE");
-    //fAMC13->write ( amc13::AMC13Simple::T1, tmp, 1);
+    snprintf ( tmp, sizeof (tmp), "CONF.TTC.BGO%d.%s", pChan, "ENABLE");
+    fAMC13->write ( amc13::AMC13Simple::T1, tmp, 1);
 
     //Edit GA: updated AMC13 core libraries and this should work now!
-    fAMC13->enableBGO (pChan);
+    //fAMC13->enableBGO (pChan);
 
     // Edit by Georg Auzinger, not in official AMC13 SW package but required
     fAMC13->write ( amc13::AMC13Simple::T1, "CONF.TTC.ENABLE_BGO", 1);

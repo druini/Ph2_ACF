@@ -20,6 +20,8 @@
 #include <limits>
 #include "../HWDescription/Definition.h"
 #include <iostream>
+#include <bitset>
+#include <vector>
 
 /*!
  * \brief Get time took since the start
@@ -27,12 +29,12 @@
  * \param pMili : Result in milliseconds/microseconds -> 1/0
  * \return The time took
  */
-long getTimeTook( struct timeval& pStart, bool pMili );
+long getTimeTook ( struct timeval& pStart, bool pMili );
 /*!
  * \brief Flush the content of the input stream
  * \param in : input stream
  */
-void myflush( std::istream& in );
+void myflush ( std::istream& in );
 /*!
  * \brief Wait for Enter key press
  */
@@ -47,12 +49,18 @@ const std::string currentDateTime();
  * \param p: parameter array
  * \return function value
  */
-double MyErf( double* x, double* par );
+double MyErf ( double* x, double* par );
 /*!
  * \brief converts any char array to int by automatically detecting if it is hex or dec
  * \param pRegValue: parsed xml parmaeter char*
  * \return converted integer
  */
-uint32_t convertAnyInt( const char* pRegValue );
+uint32_t convertAnyInt ( const char* pRegValue );
+//uint8_t convertAnyInt ( const char* pRegValue );
+
+uint8_t reverseBits (const uint8_t cValue);
+
+// tokenize string
+void tokenize ( const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters );
 
 #endif

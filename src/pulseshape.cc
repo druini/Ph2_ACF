@@ -79,8 +79,7 @@ int main ( int argc, char* argv[] )
     std::string cResultfile;
     cResultfile = "PulseShape";
     cPulseShape.InitResultFile ( cResultfile );
-    cPulseShape.ConfigureHw (outp);
-    LOG (INFO) << outp.str();
+    cPulseShape.ConfigureHw ();
 
     cPulseShape.ScanTestPulseDelay ( cScanStep );
     cPulseShape.SaveResults();

@@ -7,9 +7,10 @@
     <FW_Version NCbcDataSize="4" />
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
       <Global_CBC_Register name="MiscTestPulseCtrl&amp;AnalogMux">0x21</Global_CBC_Register>
-      <CBC Id="0" configfile="./settings/Cbc_default_hole.txt" />
-      <CBC Id="1" configfile="./settings/Cbc_default_hole.txt" />
+      <CBC Id="0" configfile="./settings/Cbc_default_electron.txt" />
+      <CBC Id="1" configfile="./settings/Cbc_default_electron.txt" />
     </Module>
+
     <!-- Commissioning Mode -->
     <!-- set to 1 to enable commissioning mode -->
     <Register name="COMMISSIONNING_MODE_RQ">0</Register>
@@ -21,38 +22,45 @@
     <!-- Acquisition -->
     <Register name="cbc_stubdata_latency_adjust_fe1">1</Register>
     <Register name="cbc_stubdata_latency_adjust_fe2">1</Register>
-    <Register name="pc_commands.CBC_DATA_PACKET_NUMBER">9</Register>
-    <Register name="pc_commands.CBC_DATA_GENE">1</Register>
-    <Register name="pc_commands.ACQ_MODE">1</Register>
-    <!-- Trigger -->
-    <!-- set to 1 to use external triggers -->
-    <Register name="pc_commands.TRIGGER_SEL">0</Register>
-    <Register name="pc_commands.INT_TRIGGER_FREQ">10</Register>
+
+    <Register name="pc_commands">
+        <Register name="CBC_DATA_PACKET_NUMBER">9</Register>
+        <Register name="CBC_DATA_GENE">1</Register>
+        <Register name="ACQ_MODE">1</Register>
+        <!-- Trigger -->
+        <!-- set to 1 to use external triggers -->
+        <Register name="TRIGGER_SEL">0</Register>
+        <Register name="INT_TRIGGER_FREQ">10</Register>
+    </Register>
+
     <!-- Clock -->
     <!-- set to 1 for external clocking -->
-    <Register name="dio5.clk_mux_sel">0</Register>
-    <!-- DIO5 Config -->
-    <!-- set to 0 for rising edge, 1 for falling -->
-    <Register name="dio5.fmcdio5_trig_in_edge">0</Register>
-    <!-- set to 1 to output L1A signal, 0 for input pulse -->
-    <Register name="dio5.fmcdio5_lemo2_sig_sel">0</Register>
-    <!-- set to 1 for active low or 1 for active high || NEEDS TO BE 0 for the TLU-->
-    <Register name="dio5.fmcdio5_backpressure_out_polar">0</Register>
-    <!-- DIO5 threshold: [v]/3.3*256 -->
-    <Register name="dio5.fmcdio5_threshold_trig_in">40</Register>
-    <Register name="dio5.fmcdio5_threshold_clk_in">78</Register>
-    <!-- DIO5 Termination -->
-    <Register name="dio5.fmcdio5_clk_in_50ohms">1</Register>
-    <Register name="dio5.fmcdio5_clk_out_50ohms">0</Register>
-    <Register name="dio5.fmcdio5_trig_in_50ohms">1</Register>
-    <Register name="dio5.fmcdio5_trig_out_50ohms">0</Register>
+    <Register name="dio5">
+        <Register name="clk_mux_sel">0</Register>
+        <!-- DIO5 Config -->
+        <!-- set to 0 for rising edge, 1 for falling -->
+        <Register name="fmcdio5_trig_in_edge">0</Register>
+        <!-- set to 1 to output L1A signal, 0 for input pulse -->
+        <Register name="fmcdio5_lemo2_sig_sel">0</Register>
+        <!-- set to 1 for active low or 1 for active high || NEEDS TO BE 0 for the TLU-->
+        <Register name="fmcdio5_backpressure_out_polar">0</Register>
+        <!-- DIO5 threshold: [v]/3.3*256 -->
+        <Register name="fmcdio5_threshold_trig_in">40</Register>
+        <Register name="fmcdio5_threshold_clk_in">78</Register>
+        <!-- DIO5 Termination -->
+        <Register name="fmcdio5_clk_in_50ohms">1</Register>
+        <Register name="fmcdio5_clk_out_50ohms">0</Register>
+        <Register name="fmcdio5_trig_in_50ohms">1</Register>
+        <Register name="fmcdio5_trig_out_50ohms">0</Register>
+    </Register>
   </BeBoard>
 </HwDescription>
+
 <Settings>
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>
 	<Setting name="Nevents">100</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
-    <Setting name="HoleMode">1</Setting>
+    <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
 </Settings>

@@ -47,21 +47,16 @@ void SignalScan::ScanSignal (int pSignalScanLength)
     // CBC VCth reader and writer
 
     // This is a bit ugly but since I program the same global value to both chips I guess it is ok...
-    CbcRegReader cReader (fCbcInterface, "VCth");
-    this->accept (cReader);
-    uint8_t cVCth = cReader.fRegValue;
+    ThresholdVisitor cVisitor (fCbcInterface);
+    this->accept (cVisitor);
+    uint16_t cVCth = cVisitor.getThreshold();
 
     LOG (INFO) << "Programmed VCth value = " << +cVCth << " - falling back by " << fStepback << " to " << uint32_t (cVCth - cVcthDirection * fStepback) ;
 
-    cVCth = uint8_t (cVCth - cVcthDirection * fStepback);
-    CbcRegWriter cWriter (fCbcInterface, "VCth", cVCth);
-    this->accept (cWriter);
-
-    // Example of incrementer
-    // CbcRegIncrementer cIncrementer ( fCbcInterface, "VCth", -1 * cVcthDirection * fStepback);
-    // LOG(INFO) << "Stepping back " << fStepback << " from the configuration threshold" ;
-    // this->accept ( cIncrementer );
-    // cIncrementer.setRegister ("VCth", cVcthDirection * fSignalScanStep );
+    cVCth = uint16_t (cVCth - cVcthDirection * fStepback);
+    cVisitor.setOption ('w');
+    cVisitor.setThreshold (cVCth);
+    this->accept (cVisitor);
 
     for (int i = 0; i < pSignalScanLength; i += fSignalScanStep )
     {
@@ -73,16 +68,16 @@ void SignalScan::ScanSignal (int pSignalScanLength)
             // I need this to normalize the TDC values I get from the Strasbourg FW
             bool pStrasbourgFW = false;
 
-            //if (pBoard->getBoardType() == "GLIB" || pBoard->getBoardType() == "CTA") pStrasbourgFW = true;
+            //if (pBoard->getBoardType() == BoardType::GLIB || pBoard->getBoardType() == BoardType::CTA) pStrasbourgFW = true;
             uint32_t cTotalEvents = 0;
 
             fBeBoardInterface->Start (pBoard);
 
             while (cTotalEvents < fNevents)
             {
-                fBeBoardInterface->ReadData ( pBoard, fNevents );
+                ReadData ( pBoard );
 
-                const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
+                const std::vector<Event*>& events = GetEvents ( pBoard );
                 cTotalEvents += events.size();
 
                 // Loop over Events from this Acquisition
@@ -104,7 +99,7 @@ void SignalScan::ScanSignal (int pSignalScanLength)
                             {
                                 if ( cEvent->DataBit ( cCbc->getFeId(), cCbc->getCbcId(), cId ) )
                                 {
-                                    cSignalHist->Fill (cCbc->getCbcId() *NCHANNELS + cId, cCbc->getReg ("VCth") );
+                                    cSignalHist->Fill (cCbc->getCbcId() *NCHANNELS + cId, cVCth );
                                     cEventHits++;
                                 }
                             }
@@ -149,8 +144,9 @@ void SignalScan::ScanSignal (int pSignalScanLength)
         updateHists ( "module_signal", false );
         // now I need to increment the threshold by cVCth+fVcthDirecton*fSignalScanStep
         cVCth += cVcthDirection * fSignalScanStep;
-        cWriter.setRegister ("VCth", cVCth);
-        this->accept (cWriter);
+        cVisitor.setOption ('w');
+        cVisitor.setThreshold (cVCth);
+        this->accept (cVisitor);
 
     }
 
@@ -175,9 +171,6 @@ void SignalScan::updateHists ( std::string pHistName, bool pFinal )
             cCanvas.second->Update();
         }
 
-#ifdef __HTTP__
-        fHttpServer->ProcessRequests();
-#endif
     }
 }
 

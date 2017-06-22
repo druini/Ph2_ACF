@@ -27,99 +27,126 @@ namespace Ph2_HwInterface {
     }
 
 
-    void Data::Set ( const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, bool swapBits, bool swapBytes )
+    void Data::Set (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
+    {
+        fFuture = std::async (&Data::privateSet, this, pBoard, pData, pNevents, pType);
+        //fFuture.share();
+    }
+
+
+    void Data::privateSet (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
     {
         Reset();
 
         fNevents = static_cast<uint32_t> ( pNevents );
         fEventSize = static_cast<uint32_t> ( (pData.size() ) / fNevents );
-        fNCbc = ( fEventSize - ( EVENT_HEADER_TDC_SIZE_32 ) ) / ( CBC_EVENT_SIZE_32 );
+        uint32_t fNFe = pBoard->getNFe();
+
+        // it's not so easy for d19c to compute the number of cbc's because of zero suppression. evrything is checked in the event class
+        if (pType == BoardType::D19C) fNCbc = 0;
+        else if (pType == BoardType::CBC3FC7) fNCbc = (fEventSize - (EVENT_HEADER_SIZE_32_CBC3) ) / (CBC_EVENT_SIZE_32_CBC3);
+        else fNCbc = ( fEventSize - ( EVENT_HEADER_TDC_SIZE_32 ) ) / ( CBC_EVENT_SIZE_32 );
+
+        // to fill fEventList
+        std::vector<uint32_t> lvec;
 
         //use a SwapIndex to decide wether to swap a word or not
         //use a WordIndex to pick events apart
         uint32_t cWordIndex = 0;
         uint32_t cSwapIndex = 0;
 
-        // to Fill fEventList
-        std::vector<uint32_t> lvec;
-
         for ( auto word : pData )
         {
             //if the SwapIndex is greater than 0 and a multiple of the event size in 32 bit words, reset SwapIndex to 0
             if (cSwapIndex > 0 && cSwapIndex % fEventSize == 0) cSwapIndex = 0;
 
-            // old version
-            //if (swapBits && is_channel_data (cSwapIndex, fNCbc) ) word = reverse_bits (word);
-            //new version
-            if (swapBits)
-            {
-                if (is_channel_first_row (cSwapIndex) )
-                {
-                    // here I need to shift out the Error bits and PipelineAddress
-                    //uint8_t cErrors = word & 0x00000003;
-                    uint8_t cPipeAddress = (word & 0x000003FC) >> 2;
-                    //next I need to reverse the bit order and mask out the corresponding bits for errors & pipe address
-                    word = reverse_bits (word) & 0xC03FFFFF;;
-                    //now just need to shift the Errors & Pipe address back in
-                    word |=  cPipeAddress << 22;
-                }
+            if (pType == BoardType::ICGLIB || pType == BoardType::ICFC7)
+                this->setIC (word, cWordIndex, cSwapIndex);
+            else if (pType == BoardType::SUPERVISOR)
+                this->setStrasbourgSupervisor (word);
 
-                if (is_channel_last_row (cSwapIndex) )
-                {
-                    //OLD METHOD
-                    // here i need to shift out the GlibFlags which are supposed to be 0 and the Stub word
-                    uint16_t cStubWord = (word & 0xFFF00000) >> 20;
-                    //uint16_t cGlibFlag = (word & 0x000FFF00) >> 8;
-                    //reverse the bit order and mask stuff out
-                    //word = reverse_bits (word) & 0xFF000000;
-                    word = reverse_bits (word) & 0xFFFFF000;
-                    //now shift the GlibFlag and the StubWord back in
-                    //word |= ( ( (cGlibFlag & 0x0FFF ) << 12) | (cStubWord & 0x0FFF) );
-                    word |= (cStubWord & 0x0FFF);
-                }
-                //is_channel_data will also be true for first and last word but since it's an else if, it should be ok
-                else if ( is_channel_data (cSwapIndex) ) word = reverse_bits (word);
-            }
-            else if (swapBytes)
-                word = swap_bytes (word);
+            //else if (pType == BoardType::CBC3FC7)
+            //this->setCbc3Fc7 (word);
 
 #ifdef __CBCDAQ_DEV__
             LOG (DEBUG) << std::setw (3) << "Original " << cWordIndex << " ### " << std::bitset<32> (pData.at (cWordIndex) );
-            LOG (DEBUG) << std::setw (3) << "Treated  " << cWordIndex << " ### " << std::bitset<32> (word);
+            //LOG (DEBUG) << std::setw (3) << "Treated  " << cWordIndex << " ### " << std::bitset<32> (word);
 
             if ( (cWordIndex + 1) % fEventSize == 0 && cWordIndex > 0 ) LOG (DEBUG) << std::endl << std::endl;
 
 #endif
-		
+
             lvec.push_back ( word );
-            std::bitset<32> p(word);
-            //std::cout<<"data.cc: inserting "<<p.to_string()<<"\n";
 
             if ( cWordIndex > 0 &&  (cWordIndex + 1) % fEventSize == 0 )
             {
-             //   std::cout<<"data.cc: end of event! "<<cWordIndex<<" " << fEventSize<<"\n";
-                fEventList.push_back ( new Event ( pBoard, fNCbc, lvec ) );
+                if (pType == BoardType::D19C)
+                    fEventList.push_back ( new D19cCbc3Event ( pBoard, fNCbc, lvec ) );
+                else if (pType == BoardType::CBC3FC7)
+                    fEventList.push_back ( new Cbc3Event ( pBoard, fNCbc, lvec ) );
+                else
+                    fEventList.push_back ( new Cbc2Event ( pBoard, fNCbc, lvec ) );
+
                 lvec.clear();
+
+                if (fEventList.size() >= fNevents) break;
             }
 
             cWordIndex++;
             cSwapIndex++;
-        }
 
-        //#ifdef __CBCDAQ_DEV__
-        //std::cout << "Initializing list with " << pData.size() << " 32 bit words
-        //<< " containing data from "
-        //<< fNevents << "  Events with an eventbuffer size of " << fEventSize << " and " << fNCbc
-        //<< " CBCs each! " << EVENT_HEADER_TDC_SIZE_32 << " " << CBC_EVENT_SIZE_32 << std::endl;
-        //#endif
+        }
     }
 
     void Data::Reset()
     {
         for ( auto& pevt : fEventList )
-            delete pevt;
+            if (pevt) delete pevt;
 
         fEventList.clear();
         fCurrentEvent = 0;
     }
+
+    void Data::setIC (uint32_t& pWord, uint32_t pWordIndex, uint32_t pSwapIndex)
+    {
+
+        if (this->is_channel_first_row (pSwapIndex) )
+        {
+            // here I need to shift out the Error bits and PipelineAddress
+            //uint8_t cErrors = word & 0x00000003;
+            uint8_t cPipeAddress = (pWord & 0x000003FC) >> 2;
+            //next I need to reverse the bit order and mask out the corresponding bits for errors & pipe address
+            pWord = this->reverse_bits (pWord) & 0xC03FFFFF;;
+            //now just need to shift the Errors & Pipe address back in
+            pWord |=  cPipeAddress << 22;
+        }
+
+        if (this->is_channel_last_row (pSwapIndex) )
+        {
+            //OLD METHOD
+            // here i need to shift out the GlibFlags which are supposed to be 0 and the Stub word
+            uint16_t cStubWord = (pWord & 0xFFF00000) >> 20;
+            //uint16_t cGlibFlag = (word & 0x000FFF00) >> 8;
+            //reverse the bit order and mask stuff out
+            //word = reverse_bits (word) & 0xFF000000;
+            pWord = this->reverse_bits (pWord) & 0xFFFFF000;
+            //now shift the GlibFlag and the StubWord back in
+            //word |= ( ( (cGlibFlag & 0x0FFF ) << 12) | (cStubWord & 0x0FFF) );
+            pWord |= (cStubWord & 0x0FFF);
+        }
+        //is_channel_data will also be true for first and last word but since it's an else if, it should be ok
+        else if ( this->is_channel_data (pSwapIndex) ) pWord = this->reverse_bits (pWord);
+    }
+
+    void Data::setStrasbourgSupervisor (uint32_t& pWord)
+    {
+        pWord = this->swap_bytes (pWord);
+    }
+
+
+    void Data::setCbc3Fc7 (uint32_t& pWord)
+    {
+
+    }
 }
+

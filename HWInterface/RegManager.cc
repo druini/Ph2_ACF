@@ -18,16 +18,16 @@
 namespace Ph2_HwInterface {
     std::string RegManager::strDummyXml = "file://HWInterface/dummy.xml";
 
-    RegManager::RegManager ( const char* puHalConfigFileName, uint32_t pBoardId ) :
-        fThread ( [ = ]
-    {
-        StackWriteTimeOut();
-    } ),
-    fDeactiveThread ( false )
+    RegManager::RegManager ( const char* puHalConfigFileName, uint32_t pBoardId ) //:
+    //fThread ( [ = ]
+    //{
+    //StackWriteTimeOut();
+    //} ),
+    //fDeactiveThread ( false )
     {
         // Loging settings
         uhal::disableLogging();
-        //uhal::setLogLevelTo(uhal::Error()); //Raise the log level
+        //uhal::setLogLevelTo (uhal::Debug() ); //Raise the log level
 
         fUHalConfigFileName = puHalConfigFileName;
 
@@ -37,20 +37,20 @@ namespace Ph2_HwInterface {
 
         fBoard = new uhal::HwInterface ( cm.getDevice ( ( cBuff ) ) );
 
-        fThread.detach();
+        //fThread.detach();
 
     }
 
-RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddressTable ) :
-        fThread ( [ = ]
-    {
-        StackWriteTimeOut();
-    } ),
-    fDeactiveThread ( false )
+    RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddressTable ) //:
+    //fThread ( [ = ]
+    //{
+    //StackWriteTimeOut();
+    //} ),
+    //fDeactiveThread ( false )
     {
         // Loging settings
         uhal::disableLogging();
-        //uhal::setLogLevelTo(uhal::Error()); //Raise the log level
+        //uhal::setLogLevelTo (uhal::Debug() ); //Raise the log level
 
         //OTSDAQ
     	std::string fileName = "file://HWInterface/dummy.xml";
@@ -64,14 +64,14 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
         //OTSDAQ COMMENTuhal::ConnectionManager cm ( strDummyXml ); // Get connection
         fBoard = new uhal::HwInterface ( cm.getDevice ( pId, pUri, pAddressTable ) );
 
-        fThread.detach();
+        //fThread.detach();
 
     }
 
 
     RegManager::~RegManager()
     {
-        fDeactiveThread = true;
+        //fDeactiveThread = true;
 
         if ( fBoard ) delete fBoard;
     }
@@ -83,18 +83,17 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
 
     bool RegManager::WriteReg ( const std::string& pRegNode, const uint32_t& pVal )
     {
-        fBoardMutex.lock();
+        std::lock_guard<std::mutex> cGuard (fBoardMutex);
         fBoard->getNode ( pRegNode ).write ( pVal );
         fBoard->dispatch();
-        fBoardMutex.unlock();
+
+        //LOG (DEBUG) << "Write: " <<  pRegNode << ": " << pVal;
 
         // Verify if the writing is done correctly
         if ( DEV_FLAG )
         {
-            fBoardMutex.lock();
             uhal::ValWord<uint32_t> reply = fBoard->getNode ( pRegNode ).read();
             fBoard->dispatch();
-            fBoardMutex.unlock();
 
             uint32_t comp = ( uint32_t ) reply;
 
@@ -113,13 +112,12 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
 
     bool RegManager::WriteStackReg ( const std::vector< std::pair<std::string, uint32_t> >& pVecReg )
     {
-
-        fBoardMutex.lock();
+        std::lock_guard<std::mutex> cGuard (fBoardMutex);
 
         for ( auto const& v : pVecReg )
         {
             fBoard->getNode ( v.first ).write ( v.second );
-            // LOG(INFO) << v.first << "  :  " << v.second ;
+            //LOG (DEBUG) << "Write: " <<  v.first << ": " << v.second;
         }
 
         try
@@ -136,7 +134,6 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
             throw ;
         }
 
-        fBoardMutex.unlock();
 
         if ( DEV_FLAG )
         {
@@ -145,10 +142,8 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
 
             for ( auto const& v : pVecReg )
             {
-                fBoardMutex.lock();
                 uhal::ValWord<uint32_t> reply = fBoard->getNode ( v.first ).read();
                 fBoard->dispatch();
-                fBoardMutex.unlock();
 
                 comp = static_cast<uint32_t> ( reply );
 
@@ -276,10 +271,14 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
 
     bool RegManager::WriteBlockReg ( const std::string& pRegNode, const std::vector< uint32_t >& pValues )
     {
-        fBoardMutex.lock();
+        std::lock_guard<std::mutex> cGuard (fBoardMutex);
         fBoard->getNode ( pRegNode ).writeBlock ( pValues );
         fBoard->dispatch();
-        fBoardMutex.unlock();
+
+        //LOG (DEBUG) << "Write block: " << pRegNode;
+
+        //for (auto cWord : pValues)
+        //LOG (DEBUG) << "Write block: " <<  std::bitset<32> (cWord);
 
         bool cWriteCorr = true;
 
@@ -288,10 +287,8 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
         {
             int cErrCount = 0;
 
-            fBoardMutex.lock();
             uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlock ( pValues.size() );
             fBoard->dispatch();
-            fBoardMutex.unlock();
 
             //Use size_t and not an iterator as op[] only works with size_t type
             for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
@@ -311,10 +308,9 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
 
     bool RegManager::WriteBlockAtAddress ( uint32_t uAddr, const std::vector< uint32_t >& pValues, bool bNonInc )
     {
-        fBoardMutex.lock();
+        std::lock_guard<std::mutex> cGuard (fBoardMutex);
         fBoard->getClient().writeBlock ( uAddr, pValues, bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL );
         fBoard->dispatch();
-        fBoardMutex.unlock();
 
         bool cWriteCorr = true;
 
@@ -323,10 +319,8 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
         {
             int cErrCount = 0;
 
-            fBoardMutex.lock();
             uhal::ValVector<uint32_t> cBlockRead = fBoard->getClient().readBlock ( uAddr, pValues.size(), bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL );
             fBoard->dispatch();
-            fBoardMutex.unlock();
 
             //Use size_t and not an iterator as op[] only works with size_t type
             for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
@@ -347,10 +341,10 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
 
     uhal::ValWord<uint32_t> RegManager::ReadReg ( const std::string& pRegNode )
     {
-        fBoardMutex.lock();
+        std::lock_guard<std::mutex> cGuard (fBoardMutex);
         uhal::ValWord<uint32_t> cValRead = fBoard->getNode ( pRegNode ).read();
         fBoard->dispatch();
-        fBoardMutex.unlock();
+        //LOG (DEBUG) << "Read: " << pRegNode << ": " << static_cast<uint32_t> (cValRead);
 
         if ( DEV_FLAG )
         {
@@ -363,10 +357,9 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
 
     uhal::ValWord<uint32_t> RegManager::ReadAtAddress ( uint32_t uAddr, uint32_t uMask )
     {
-        fBoardMutex.lock();
+        std::lock_guard<std::mutex> cGuard (fBoardMutex);
         uhal::ValWord<uint32_t> cValRead = fBoard->getClient().read ( uAddr, uMask );
         fBoard->dispatch();
-        fBoardMutex.unlock();
 
         if ( DEV_FLAG )
         {
@@ -381,10 +374,13 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
 
     uhal::ValVector<uint32_t> RegManager::ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlockSize )
     {
-        fBoardMutex.lock();
+        std::lock_guard<std::mutex> cGuard (fBoardMutex);
         uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlock ( pBlockSize );
         fBoard->dispatch();
-        fBoardMutex.unlock();
+        //LOG (DEBUG) << "Read block: " << pRegNode;
+
+        //for (auto cWord : cBlockRead)
+        //if (pRegNode != "data") LOG (DEBUG) << "Read block: " << std::bitset<32> (cWord);
 
         if ( DEV_FLAG )
         {
@@ -468,28 +464,28 @@ RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddress
 
     void RegManager::StackWriteTimeOut()
     {
-        uint32_t i = 0;
+        //uint32_t i = 0;
 
-        while ( !fDeactiveThread )
-        {
-            std::this_thread::sleep_for ( std::chrono::seconds ( TIME_OUT ) );
-            //LOG(INFO) << "Ping ! \nThread ID : " << std::this_thread::get_id() << "\n" ;
+        //while ( !fDeactiveThread )
+        //{
+        //std::this_thread::sleep_for ( std::chrono::seconds ( TIME_OUT ) );
+        ////LOG(INFO) << "Ping ! \nThread ID : " << std::this_thread::get_id() << "\n" ;
 
-            if ( fStackReg.size() != 0 && i == 1 )
-            {
-                WriteStackReg ( fStackReg );
-                fStackReg.clear();
-            }
-            else if ( i == 0 )
-                i = 1;
+        //if ( fStackReg.size() != 0 && i == 1 )
+        //{
+        //WriteStackReg ( fStackReg );
+        //fStackReg.clear();
+        //}
+        //else if ( i == 0 )
+        //i = 1;
 
-        }
+        //}
     }
 
     const uhal::Node& RegManager::getUhalNode ( const std::string& pStrPath )
     {
+        std::lock_guard<std::mutex> cGuard (fBoardMutex);
         return fBoard->getNode ( pStrPath );
     }
-//>>>>>>> knash_Dev
 
 }

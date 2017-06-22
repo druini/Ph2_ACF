@@ -1,23 +1,19 @@
 Objs            = FileParser.o SystemController.o
 CC              = g++
 CXX             = g++
-CCFlags         = -g -O1 -w -Wall -pedantic -fPIC 
-#DevFlags                   = -D__CBCDAQ_DEV__
-DevFlags                =
+CCFlags         = -g -O1 -w -Wall -pthread -pedantic -fPIC 
 
 .PHONY: clean print
 
+IncludeDirs = ../ $(CACTUSINCLUDE) 
+LibraryDirs = ../lib
+ExternalObjects = -lPh2_Interface -lPh2_Description -lPh2_Utils
 
-IncludeDirs     =  /opt/cactus/include ../ ../lib
-IncludePaths            = $(IncludeDirs:%=-I%)
-
-LibraryDirs = /opt/cactus/include ../ ../lib
+IncludePaths = $(IncludeDirs:%=-I%)
 LibraryPaths = $(LibraryDirs:%=-L%)
 
-ExternalObjects = $(LibraryPaths) -lPh2_Interface -lPh2_Description
-
 %.o: %.cc %.h
-	$(CXX) -std=c++0x  $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
+	$(CXX) -std=c++0x $(CCFlags) $(IncludePaths) $(LibraryPaths) -c -o $@ $<
 
 all: print $(Objs)
 	$(CC) -std=c++0x -shared -o libPh2_System.so $(Objs)

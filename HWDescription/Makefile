@@ -1,17 +1,16 @@
 Objs                    = FrontEndDescription.o BeBoard.o Cbc.o MPA.o Module.o 
 CC              = g++
 CXX             = g++
-CCFlags         = -g -O1 -Wall -fPIC
+CCFlags         = -g -O1 -Wall -fPIC -pedantic
 DevFlags               =
+
+IncludeDirs     =
+IncludePaths            = $(IncludeDirs:%=-I%)
 
 .PHONY: clean print
 
-
-IncludeDirs     =  /opt/cactus/include ../
-
-IncludePaths            = $(IncludeDirs:%=-I%)
-
 %.o: %.cc %.h
+	$(CXX) -std=c++11 $(CCFlags) $(IncludePaths) -c -o $@ $<
 	$(CXX) -std=c++11 $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
 
 

@@ -74,10 +74,7 @@ int main ( int argc, char* argv[] )
     cSystemController.InitializeHw ( cHWFile, outp );
 
     if (!cRead)
-    {
-        cSystemController.ConfigureHw (outp);
-        LOG (INFO) << outp.str();
-    }
+        cSystemController.ConfigureHw ();
     else LOG (INFO) << "Called with -r option, HW will not be configured!" ;
 
     t.stop();

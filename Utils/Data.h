@@ -12,11 +12,15 @@
 #ifndef __DATA_H__
 #define __DATA_H__
 
-#include <uhal/uhal.hpp>
+//#include <uhal/uhal.hpp>
 #include <memory>
+#include <future>
 #include <ios>
 #include <istream>
 #include "../Utils/Event.h"
+#include "../Utils/Cbc2Event.h"
+#include "../Utils/Cbc3Event.h"
+#include "../Utils/D19cCbc3Event.h"
 #include "../Utils/easylogging++.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
@@ -42,6 +46,7 @@ namespace Ph2_HwInterface {
         const std::set<uint32_t> fChannelLastRows {13, 22, 31, 40, 49, 58, 67, 76};
 
         std::vector<Event*> fEventList;
+        std::future<void> fFuture;
 
       private:
 
@@ -79,6 +84,11 @@ namespace Ph2_HwInterface {
             return fChannelLastRows.find (pIndex) != std::end (fChannelLastRows);
         }
 
+        //private methods to be used in set according to the BoardType enum
+        void setIC (uint32_t& pWord, uint32_t pWordIndex, uint32_t pSwapIndex);
+        void setCbc3Fc7 (uint32_t& pWord);
+        void setStrasbourgSupervisor (uint32_t& pWord);
+
       public:
         /*!
          * \brief Constructor of the Data class
@@ -97,7 +107,7 @@ namespace Ph2_HwInterface {
         ~Data()
         {
             for ( auto pevt : fEventList )
-                delete pevt;
+                if (pevt) delete pevt;
 
             fEventList.clear();
         }
@@ -106,8 +116,11 @@ namespace Ph2_HwInterface {
          * \param *pBoard : pointer to Boat
          * \param *pData : Data from the Cbc
          * \param pNevents : The number of events in this acquisiton
+         * \param pType : the board type according to the Enum defined in Definitions.h
          */
-        void Set ( const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, bool swapBits = false, bool swapBytes = false );
+        void Set ( const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+        void privateSet ( const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+
         /*!
          * \brief Reset the data structure
          */
@@ -120,14 +133,20 @@ namespace Ph2_HwInterface {
         // cannot be const as fCurrentEvent is incremented
         const Event* GetNextEvent ( const BeBoard* pBoard )
         {
+            //fFuture.wait();
+            fFuture.get();
             return ( ( fCurrentEvent >= fEventList.size() ) ? nullptr : fEventList.at ( fCurrentEvent++ ) );
         }
-        const Event* GetEvent ( const BeBoard* pBoard, int i ) const
+        const Event* GetEvent ( const BeBoard* pBoard, int i )
         {
+            //fFuture.wait();
+            fFuture.get();
             return ( ( i >= (int) fEventList.size() ) ? nullptr : fEventList.at ( i ) );
         }
-        const std::vector<Event*>& GetEvents ( const BeBoard* pBoard ) const
+        const std::vector<Event*>& GetEvents ( const BeBoard* pBoard )
         {
+            //fFuture.wait();
+            fFuture.get();
             return fEventList;
         }
     };

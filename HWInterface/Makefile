@@ -1,22 +1,18 @@
-Objs            = RegManager.o BeBoardFWInterface.o  MPAInterface.o MPAGlibFWInterface.o GlibFWInterface.o ICGlibFWInterface.o CtaFWInterface.o ICFc7FWInterface.o  BeBoardInterface.o FpgaConfig.o GlibFpgaConfig.o CtaFpgaConfig.o CbcInterface.o MmcPipeInterface.o Firmware.o
+Objs            = RegManager.o BeBoardFWInterface.o  MPAInterface.o MPAGlibFWInterface.o GlibFWInterface.o ICGlibFWInterface.o CtaFWInterface.o ICFc7FWInterface.o Cbc3Fc7FWInterface.o D19cFWInterface.o  BeBoardInterface.o FpgaConfig.o GlibFpgaConfig.o CtaFpgaConfig.o CbcInterface.o MmcPipeInterface.o Firmware.o
 CC              = g++
 CXX             = g++
-CCFlags         = -g -O1 -w -Wall -pedantic -fPIC  
-#DevFlags                   = -D__CBCDAQ_DEV__
-DevFlags	=
+CCFlags         = -g -O1 -w -Wall -pthread -pedantic -fPIC  
 
 .PHONY: clean print
 
-
-IncludeDirs     =  /opt/cactus/include ../ .
-
-IncludePaths            = $(IncludeDirs:%=-I%)
+IncludeDirs  = $(CACTUSINCLUDE) ../ .
+IncludePaths = $(IncludeDirs:%=-I%)
 
 %.o: %.cc %.h
-	$(CXX) -std=c++0x  $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
+	$(CXX) -std=c++0x $(CCFlags) $(IncludePaths) -c -o $@ $<
 
 all: print $(Objs) ../HWDescription/Definition.h
-	$(CC) -std=c++0x -shared -o libPh2_Interface.so $(Objs) -pthread
+	$(CC) -std=c++0x -shared -pthread -o libPh2_Interface.so $(Objs)
 	mv libPh2_Interface.so ../lib
 
 print:
