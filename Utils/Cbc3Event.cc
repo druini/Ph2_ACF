@@ -37,7 +37,7 @@ namespace Ph2_HwInterface {
     //}
 
 
-    int Cbc3Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
+    void Cbc3Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
         //if (list.at (0) == list.at (13) )
         //{
@@ -139,6 +139,9 @@ namespace Ph2_HwInterface {
         ////os << std::endl;
 
         //return tmp.str();
+
+        // Basil: Return dummy string for now, but this needs to be fixed
+        return "";
     }
 
     std::string Cbc3Event::DataHexString ( uint8_t pFeId, uint8_t pCbcId ) const
@@ -584,7 +587,7 @@ namespace Ph2_HwInterface {
             aCluster.fSensor = iSensor;
             bool inCluster = false;
 
-            for (int iStrip = iSensor; iStrip < stripBits.size(); iStrip += 2)
+            for (unsigned int iStrip = iSensor; iStrip < stripBits.size(); iStrip += 2)
             {
                 if (stripBits.at (iStrip) )
                 {

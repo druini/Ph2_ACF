@@ -231,13 +231,7 @@ namespace Ph2_HwInterface {
         WriteReg ( "cbc_daq_ctrl.daq_ctrl", 0x2000 );
     }
 
-    uint32_t ICFc7FWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData )
-    {
-    	std::vector<uint32_t> cData;
-    	return ReadData ( pBoard,  pBreakTrigger, cData);
-    }
-
-    uint32_t ICFc7FWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait)
+    uint32_t ICFc7FWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& pData, bool wait)
     {
         std::chrono::milliseconds cWait ( 1 );
         //first, read how many Events per Acquisition
@@ -447,8 +441,8 @@ namespace Ph2_HwInterface {
 
         //here i create a dummy reg item for decoding so I can find if 1 cFailed
         CbcRegItem cItem;
-        uint8_t cCbcId;
-        bool cRead;
+        //uint8_t cCbcId;
+        //bool cRead;
 
         //explicitly reset the nwdata word
         WriteReg ("cbc_daq_ctrl.cbc_i2c_ctrl", 0x2);
@@ -604,7 +598,7 @@ namespace Ph2_HwInterface {
                     // infor bit is 0 which means that the transaction was acknowledged by the CBC
                     if ( ( (cWord >> 20) & 0x1) == 0)
                         cSuccess = true;
-                    else cSuccess == false;
+                    else cSuccess = false;
                 }
                 else
                     cSuccess = false;

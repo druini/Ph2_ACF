@@ -37,7 +37,7 @@ namespace Ph2_HwInterface {
     //}
 
     // NOT READY (still need to add some additional checks and additional variables)
-    int D19cCbc3Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
+    void D19cCbc3Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
         // these two values come from width of the hybrid/cbc enabled mask
         uint8_t fMaxHybrids = 8;
@@ -145,6 +145,9 @@ namespace Ph2_HwInterface {
         ////os << std::endl;
 
         //return tmp.str();
+
+        // Basil: Return dummy string for now, but this needs to be fixed
+        return "";
     }
 
     std::string D19cCbc3Event::DataHexString ( uint8_t pFeId, uint8_t pCbcId ) const
@@ -595,7 +598,7 @@ namespace Ph2_HwInterface {
             aCluster.fSensor = iSensor;
             bool inCluster = false;
 
-            for (int iStrip = iSensor; iStrip < stripBits.size(); iStrip += 2)
+            for (unsigned int iStrip = iSensor; iStrip < stripBits.size(); iStrip += 2)
             {
                 if (stripBits.at (iStrip) )
                 {

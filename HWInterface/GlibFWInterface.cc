@@ -214,13 +214,7 @@ namespace Ph2_HwInterface {
         WriteReg ( "break_trigger", 0 );
     }
 
-    uint32_t GlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& pData)
-    {
-    	std::vector<uint32_t> cData;
-    	return ReadData ( pBoard,  pBreakTrigger, cData);
-    }
-
-    uint32_t GlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait)
+    uint32_t GlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& pData, bool wait)
     {
         //Readout settings
         std::chrono::milliseconds cWait ( 1 );

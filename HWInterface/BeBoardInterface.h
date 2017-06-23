@@ -231,8 +231,8 @@ namespace Ph2_HwInterface {
          * \param pBreakTrigger : if true, enable the break trigger
          * \return fNpackets: the number of packets read
          */
-        uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData );
-        uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait=true);//ADDED FOR OTSDAQ
+        void ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData );
+        void ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait=true);//ADDED FOR OTSDAQ
         /*!
          * \brief Read data for pNEvents
          * \param pBoard : the pointer to the BeBoard

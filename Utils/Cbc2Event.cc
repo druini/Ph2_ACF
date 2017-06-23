@@ -37,7 +37,7 @@ namespace Ph2_HwInterface {
     //}
 
 
-    int Cbc2Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
+    void Cbc2Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
         fEventSize = pNbCbc *  CBC_EVENT_SIZE_32  + EVENT_HEADER_TDC_SIZE_32;
 
@@ -57,7 +57,7 @@ namespace Ph2_HwInterface {
         fBeStatus = 0;
 
         //now decode FEEvents
-        uint8_t cBeId = pBoard->getBeId();
+        //uint8_t cBeId = pBoard->getBeId();
         uint32_t cNFe = static_cast<uint32_t> ( pBoard->getNFe() );
 
         for ( uint8_t cFeId = 0; cFeId < cNFe; cFeId++ )
@@ -104,6 +104,9 @@ namespace Ph2_HwInterface {
         ////os << std::endl;
 
         //return tmp.str();
+
+        // Basil: Return dummy string for now, but this needs to be fixed
+        return "";
     }
     std::string Cbc2Event::DataHexString ( uint8_t pFeId, uint8_t pCbcId ) const
     {
@@ -431,7 +434,7 @@ namespace Ph2_HwInterface {
             aCluster.fSensor = iSensor;
             bool inCluster = false;
 
-            for (int iStrip = iSensor; iStrip < stripBits.size(); iStrip += 2)
+            for (unsigned int iStrip = iSensor; iStrip < stripBits.size(); iStrip += 2)
             {
                 if (stripBits.at (iStrip) )
                 {

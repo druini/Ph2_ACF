@@ -125,18 +125,18 @@ namespace Ph2_HwInterface
 	fNpackets = 1;
 
 
-        fData = new Data();
+        //fData = new Data();
 
-        // set the vector<uint32_t> as event buffer and let him know how many packets it contains
-        fData->Set ( pBoard, *curData , fNpackets, false );
+        //// set the vector<uint32_t> as event buffer and let him know how many packets it contains
+        //fData->Set ( pBoard, *curData , fNpackets, false );
 
-        if ( fSaveToFile )
-        {
-            fFileHandler->set ( *curData );
-            fFileHandler->writeFile();
-        }
+        //if ( fSaveToFile )
+        //{
+        //    fFileHandler->set ( *curData );
+        //    fFileHandler->writeFile();
+        //}
 
-        cData = *curData;
+        //cData = *curData;
         return fNpackets;
 
 

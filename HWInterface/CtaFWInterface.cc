@@ -223,13 +223,7 @@ namespace Ph2_HwInterface {
         WriteStackReg ( cVecReg );
     }
 
-    uint32_t CtaFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& pData )
-    {
-    	std::vector<uint32_t> cData;
-    	return ReadData ( pBoard,  pBreakTrigger, cData);
-    }
-
-    uint32_t CtaFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait)
+    uint32_t CtaFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& pData, bool wait)
     {
         //Readout settings
         std::chrono::milliseconds cWait ( 1 );
@@ -530,7 +524,7 @@ namespace Ph2_HwInterface {
     {
         // temporary for 16CBC readout FW  (Beamtest NOV 15)
         // will have to be corrected if we want to read two modules from the same GLIB
-        uint8_t cbcAddr = ( pWord & cMask7 ) >> 21;
+        //uint8_t cbcAddr = ( pWord & cMask7 ) >> 21;
         pCbcId = ( ( pWord & cMask5 )  ) >> 17;
         pRegItem.fPage = ( pWord & cMask6 ) >> 16;
         pRegItem.fAddress = ( pWord & cMask2 ) >> 8;

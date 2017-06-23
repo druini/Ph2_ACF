@@ -40,7 +40,7 @@ namespace Ph2_HwInterface {
 
         fNevents = static_cast<uint32_t> ( pNevents );
         fEventSize = static_cast<uint32_t> ( (pData.size() ) / fNevents );
-        uint32_t fNFe = pBoard->getNFe();
+        //uint32_t fNFe = pBoard->getNFe();
 
         // it's not so easy for d19c to compute the number of cbc's because of zero suppression. evrything is checked in the event class
         if (pType == BoardType::D19C) fNCbc = 0;

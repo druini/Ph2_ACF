@@ -190,21 +190,10 @@ namespace Ph2_HwInterface {
         fBoardFW->Resume();
     }
 
-
-    uint32_t BeBoardInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData )
+    void BeBoardInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait)
     {
         setBoard ( pBoard->getBeBoardIdentifier() );
-
-        // Basil: Not clear how to fix merge conflict
-        return fBoardFW->ReadData ( pBoard, pBreakTrigger );
-        //fBoardFW->ReadData ( pBoard, pBreakTrigger, pData );
-    }
-
-    uint32_t BeBoardInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait)
-    {
-        setBoard ( pBoard->getBeBoardIdentifier() );
-        return fBoardFW->ReadData ( pBoard, pBreakTrigger, cData, wait);
-
+        fBoardFW->ReadData ( pBoard, pBreakTrigger, cData, wait);
     }
 
     void BeBoardInterface::ReadNEvents ( BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData )

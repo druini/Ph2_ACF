@@ -165,21 +165,21 @@ public:
 
 
 
-    uint32_t ReadData( BeBoard* pBoard, bool pBreakTrigger ) override;
+    uint32_t ReadData( BeBoard* pBoard, bool pBreakTrigger );
     uint32_t ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait=true) override;
     /*!
      * \brief Get next event from data buffer
      * \return Next event
      */
-    const Event* GetNextEvent( const BeBoard* pBoard ) const override
+    const Event* GetNextEvent( const BeBoard* pBoard ) const
     {
         return fData->GetNextEvent( pBoard );
     }
-    const Event* GetEvent( const BeBoard* pBoard, int i ) const override
+    const Event* GetEvent( const BeBoard* pBoard, int i ) const
     {
         return fData->GetEvent( pBoard, i );
     }
-    const std::vector<Event*>& GetEvents( const BeBoard* pBoard ) const override
+    const std::vector<Event*>& GetEvents( const BeBoard* pBoard ) const
     {
         return fData->GetEvents( pBoard );
     }
