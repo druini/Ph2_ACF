@@ -207,7 +207,7 @@ namespace Ph2_HwInterface {
         //std::vector<uint32_t> cReplies;
         //std::vector<uint32_t> cVecReq = {0b00100000001100000001001000000000 | (fStubLogicInput & 0xCF | 0x20 0x30)};
         //this->WriteI2C (cVecReq, cReplies, false, bool pBroadcast );
-        CbcRegItem cRegItem (0, 0x12, 0, (fStubLogicInput & 0xCF | 0x20 & 0x30) );
+        CbcRegItem cRegItem (0, 0x12, 0, ((fStubLogicInput & 0xCF) | (0x20 & 0x30)) );
         std::vector<uint32_t> cVecReq;
         this->EncodeReg (cRegItem, 0, cVecReq, true, true);
         //LOG (DEBUG) << std::bitset<32> (cVecReq.at (0) );
@@ -311,7 +311,7 @@ namespace Ph2_HwInterface {
         WriteReg ("cbc_system_ctrl.fast_command_manager.start_trigger", 0x1);
     }
 
-    uint32_t Cbc3Fc7FWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData )
+    uint32_t Cbc3Fc7FWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
     {
         //ok, first query the number of words to read from FW and if it is 0, wait for half a second
         //in other words, poll for the ring buffer to be NOT empty
@@ -344,7 +344,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    void Cbc3Fc7FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData )
+    void Cbc3Fc7FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
     {
         //as per Kirika's recommendation, I will use the internal fast signal generator for this - if a method shows up to do this also with external triggers I can always modify in the future!
         //Procedure as follows:
@@ -629,7 +629,7 @@ namespace Ph2_HwInterface {
                         // infor bit is 0 which means that the transaction was acknowledged by the CBC
                         if ( ( (cWord >> 20) & 0x1) == 0)
                             cSuccess = true;
-                        else cSuccess == false;
+                        else cSuccess = false;
                     }
                     else
                         cSuccess = false;
@@ -744,5 +744,18 @@ namespace Ph2_HwInterface {
             return false;
     }
 
+    void Cbc3Fc7FWInterface::PowerOn()
+    {
+        ;
+    }
 
+    void Cbc3Fc7FWInterface::PowerOff()
+    {
+        ;
+    }
+
+    void Cbc3Fc7FWInterface::ReadVer()
+    {
+        ;
+    }
 }

@@ -137,7 +137,7 @@ namespace Ph2_HwInterface {
         /*!
          * \brief Destructor of the Event Class
          */
-        ~Event()
+        virtual ~Event()
         {
         }
         /*!
@@ -262,7 +262,7 @@ namespace Ph2_HwInterface {
          * \param pEvent : Event to set
          * \return Aknowledgement of the Event setting (1/0)
          */
-        virtual int SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) = 0;
+        virtual void SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) = 0;
         /*!
          * \brief Convert Data to Hex string
          * \return Data string in hex

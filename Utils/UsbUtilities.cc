@@ -17,7 +17,6 @@ bool InitializeMonitoring (std::string pHostname,  std::string pInstrumentName, 
     InstrPorts cHttpInstrPorts = { { "HMP4040", 8080 },  {"Ke2110", 8082} };
     InstrPorts cZmqInstrPorts = { { "HMP4040", 8081 },  {"Ke2110", 8083} };
 
-    uint8_t cValue = 0;
     auto cHttpSearch = cHttpInstrPorts.find (pInstrumentName);
     bool cStatus = false;
 

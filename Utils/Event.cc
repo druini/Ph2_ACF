@@ -49,7 +49,7 @@ namespace Ph2_HwInterface {
         return fEventDataMap == pEvent.fEventDataMap;
     }
 
-    int Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
+    void Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
         fEventSize = pNbCbc *  CBC_EVENT_SIZE_32  + EVENT_HEADER_TDC_SIZE_32;
 
@@ -94,7 +94,7 @@ namespace Ph2_HwInterface {
                 fEventDataMap[cKey] = cCbcData;
             }
         }
-        return 1;
+        //return 1;
     }
 
     void Event::GetCbcEvent ( const uint8_t& pFeId, const uint8_t& pCbcId, std::vector< uint32_t >& cbcData )  const
@@ -213,3 +213,4 @@ namespace Ph2_HwInterface {
 
         return blist;
     }
+}

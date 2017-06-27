@@ -112,34 +112,29 @@ namespace Ph2_HwInterface
 
 	}
 
-	uint32_t MPAGlibFWInterface::ReadData( BeBoard* pBoard, bool pBreakTrigger )
-    {
-    	std::vector<uint32_t> cData;
-    	return ReadData ( pBoard,  pBreakTrigger, cData);
-    }
-
-    uint32_t MPAGlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait)
+    uint32_t MPAGlibFWInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 	{
+        // Basil: This method is out of date
 
-        if ( fData ) delete fData;
-	fNpackets = 1;
-
-
-        fData = new Data();
-
-        // set the vector<uint32_t> as event buffer and let him know how many packets it contains
-        fData->Set ( pBoard, *curData , fNpackets, false );
-
-        if ( fSaveToFile )
-        {
-            fFileHandler->set ( *curData );
-            fFileHandler->writeFile();
-        }
-
-        cData = *curData;
-        return fNpackets;
+        //if ( fData ) delete fData;
+        //fNpackets = 1;
 
 
+        //fData = new Data();
+
+        //// set the vector<uint32_t> as event buffer and let him know how many packets it contains
+        //fData->Set ( pBoard, *curData , fNpackets, false );
+
+        //if ( fSaveToFile )
+        //{
+        //    fFileHandler->set ( *curData );
+        //    fFileHandler->writeFile();
+        //}
+
+        //pData = *curData;
+        //return fNpackets;
+
+        return 0;
 	}
 
 

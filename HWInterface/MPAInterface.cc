@@ -302,7 +302,7 @@ void MPAInterface::ModifyPerif(std::pair < std::vector< std::string > ,std::vect
 	  std::vector< uint32_t > vals = mod.second;
 	  int perif = conf_upload->at(0);
 
-	  for (int iperif=0;iperif<vars.size(); iperif++)
+	  for (unsigned int iperif=0;iperif<vars.size(); iperif++)
 	  {
 		if (vars[iperif]=="OM") 
 			{
@@ -353,7 +353,7 @@ void MPAInterface::ModifyPix(std::pair < std::vector< std::string > ,std::vector
 		uint32_t pix = conf_upload->at(pixnum);
 		if (pixnum<17 and pixnum>8)
 			{
-				for (int ipix=0;ipix<vars.size(); ipix++)
+				for (unsigned int ipix=0;ipix<vars.size(); ipix++)
 				{
 					if (vars[ipix]=="PMR") 
 					{
@@ -415,7 +415,7 @@ void MPAInterface::ModifyPix(std::pair < std::vector< std::string > ,std::vector
 			}
 		else if (pixnum<25 and pixnum>0)
 			{
-				for (int ipix=0;ipix<vars.size(); ipix++)
+				for (unsigned int ipix=0;ipix<vars.size(); ipix++)
 				{
 					if (vars[ipix]=="PML") 
 					{

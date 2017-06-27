@@ -173,7 +173,7 @@ namespace Ph2_HwInterface {
         usleep(500);
 
         // read info about current firmware
-        int cbc_version = ReadReg("fc7_daq_stat.general.info.cbc_version");
+        //int cbc_version = ReadReg("fc7_daq_stat.general.info.cbc_version");
         int num_hybrids = ReadReg("fc7_daq_stat.general.info.num_hybrids");
         int num_chips = ReadReg("fc7_daq_stat.general.info.num_chips");
 
@@ -183,15 +183,18 @@ namespace Ph2_HwInterface {
         //then loop the HWDescription and find out about our Connected CBCs
         for (Module* cFe : pBoard->fModuleVector)
         {
-            //configure the CBCs - preliminary FW only supports 1 CBC but put the rest of the code there and comment
-            for ( Cbc* cCbc : cFe->fCbcVector)
-            {
-                //need to increment the NCbc counter for I2C controller
-                fNCbc++;
-            }
+            // Basil: This loop is somewhat useless?
+            fNCbc += cFe->fCbcVector.size();
+
+            ////configure the CBCs - preliminary FW only supports 1 CBC but put the rest of the code there and comment
+            //for ( Cbc* cCbc : cFe->fCbcVector)
+            //{
+            //    //need to increment the NCbc counter for I2C controller
+            //    fNCbc++;
+            //}
         }
 
-        if(num_hybrids*num_chips != fNCbc) LOG (ERROR) << "Number of chips in the configuration file doesn't correspond to the number of chips in the firmware. Firmware: " << num_hybrids << " hybrids, " << num_chips << " chips. Configuration file: " << fNCbc << " chips in total.";
+        if((unsigned int)num_hybrids*num_chips != fNCbc) LOG (ERROR) << "Number of chips in the configuration file doesn't correspond to the number of chips in the firmware. Firmware: " << num_hybrids << " hybrids, " << num_chips << " chips. Configuration file: " << fNCbc << " chips in total.";
 
         //last, loop over the variable registers from the HWDescription.xml file
         //this is where I should get all the clocking and FastCommandInterface settings
@@ -219,7 +222,7 @@ namespace Ph2_HwInterface {
         bool cReadSuccess = !ReadI2C (fNCbc, pReplies);
         bool cWordCorrect = true;
         if (cReadSuccess) {
-            for (int i=0; i < pReplies.size(); i++) {
+            for (unsigned int i=0; i < pReplies.size(); i++) {
                 cWord = pReplies.at(i);
                 cWordCorrect = ( (((cWord) & 0x00f00000) >> 20) == i%num_chips ) ? true : false;
                 if (!cWordCorrect) break;
@@ -261,7 +264,7 @@ namespace Ph2_HwInterface {
         WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
     }
 
-    uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData )
+    uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
     {
         uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
 
@@ -288,7 +291,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData )
+    void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )
     {
 
         // first write the amount of the test pulses to be sent
@@ -680,5 +683,18 @@ namespace Ph2_HwInterface {
             return false;
     }
 
+    void D19cFWInterface::PowerOn()
+    {
+        ;
+    }
 
+    void D19cFWInterface::PowerOff()
+    {
+        ;
+    }
+
+    void D19cFWInterface::ReadVer()
+    {
+        ;
+    }
 }

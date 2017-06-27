@@ -71,7 +71,7 @@ void CtaFpgaConfig::jumpToImage( const std::string& strImage)
 void CtaFpgaConfig::runDownload(const std::string& strImage, const char* szFile) throw (std::string)
 {
     vector<string> lstNames = lNode.ListFilesOnSD();
-    for (int iName = 0; iName < lstNames.size(); iName++)
+    for (unsigned int iName = 0; iName < lstNames.size(); iName++)
     {
         if (!strImage.compare(lstNames[iName]))
             numUploadingFpga = iName + 1;

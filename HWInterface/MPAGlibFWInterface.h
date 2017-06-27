@@ -165,12 +165,12 @@ public:
 
 
 
-    uint32_t ReadData( BeBoard* pBoard, bool pBreakTrigger ) override;
-    uint32_t ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait=true) override;
+    uint32_t ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait=true) override;
     /*!
      * \brief Get next event from data buffer
      * \return Next event
      */
+    /* Basil: obsolete, should probably remove this
     const Event* GetNextEvent( const BeBoard* pBoard ) const override
     {
         return fData->GetNextEvent( pBoard );
@@ -182,7 +182,7 @@ public:
     const std::vector<Event*>& GetEvents( const BeBoard* pBoard ) const override
     {
         return fData->GetEvents( pBoard );
-    }
+    }*/
 
 
 
@@ -263,7 +263,7 @@ public:
 
     void CbcHardReset() {};
 
-    void ReadNEvents (BeBoard* pBoard, uint32_t pNEvents ) {};
+    //void ReadNEvents (BeBoard* pBoard, uint32_t pNEvents ) {};
 
   
     void FlashProm( const std::string& strConfig, const char* pstrFile );

@@ -172,17 +172,10 @@ namespace Ph2_HwInterface {
         fBoardFW->Resume();
     }
 
-
-    uint32_t BeBoardInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData )
+    void BeBoardInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
     {
         setBoard ( pBoard->getBeBoardIdentifier() );
-        fBoardFW->ReadData ( pBoard, pBreakTrigger, pData );
-    }
-
-    uint32_t BeBoardInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool wait)
-    {
-        setBoard ( pBoard->getBeBoardIdentifier() );
-        fBoardFW->ReadData ( pBoard, pBreakTrigger, pData, wait);
+        fBoardFW->ReadData ( pBoard, pBreakTrigger, pData, pWait);
     }
 
     void BeBoardInterface::ReadNEvents ( BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData )

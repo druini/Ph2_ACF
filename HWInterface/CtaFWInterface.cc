@@ -223,13 +223,7 @@ namespace Ph2_HwInterface {
         WriteStackReg ( cVecReg );
     }
 
-    uint32_t CtaFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& pData )
-    {
-    	std::vector<uint32_t> cData;
-    	return ReadData ( pBoard,  pBreakTrigger, cData);
-    }
-
-    uint32_t CtaFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait)
+    uint32_t CtaFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& pData , bool pWait)
     {
         //Readout settings
         std::chrono::milliseconds cWait ( 1 );
@@ -309,7 +303,7 @@ namespace Ph2_HwInterface {
         return nbEvtPacket;
     }
 
-    void CtaFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData )
+    void CtaFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )
     {
         std::vector< std::pair<std::string, uint32_t> > cVecReg;
 
@@ -350,8 +344,12 @@ namespace Ph2_HwInterface {
         {
             cVal = ReadReg ( fStrFull );
 
-            if ( cVal == 0 )
+            if ( cVal == 0 ){
+                if (!pWait){
+                    return;
+                }
                 std::this_thread::sleep_for ( cWait );
+            }
         }
         while ( cVal == 0 );
 
@@ -380,6 +378,8 @@ namespace Ph2_HwInterface {
         }
 
         WriteReg ( "pc_commands.PC_config_ok", 0 );
+
+        //return fNpackets;
     }
 
 
@@ -530,7 +530,6 @@ namespace Ph2_HwInterface {
     {
         // temporary for 16CBC readout FW  (Beamtest NOV 15)
         // will have to be corrected if we want to read two modules from the same GLIB
-        uint8_t cbcAddr = ( pWord & cMask7 ) >> 21;
         pCbcId = ( ( pWord & cMask5 )  ) >> 17;
         pRegItem.fPage = ( pWord & cMask6 ) >> 16;
         pRegItem.fAddress = ( pWord & cMask2 ) >> 8;
@@ -806,7 +805,6 @@ namespace Ph2_HwInterface {
     {
         ;
     }
-
 
     void CtaFWInterface::ReadVer()
     {

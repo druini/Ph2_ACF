@@ -130,7 +130,7 @@ namespace Ph2_HwInterface {
 
             for ( auto const& v : pVecReg ) std::cerr << v.first << ", ";
 
-            std::cerr ;
+            //std::cerr ;
             throw ;
         }
 
