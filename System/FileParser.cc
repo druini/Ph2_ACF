@@ -191,9 +191,11 @@ namespace Ph2_System {
 
             std::string cFileName;
 
-            if ( !cFilePrefix.empty() )
+            if ( !cFilePrefix.empty() ){
+		if (cFilePrefix.at(cFilePrefix.length()-1) != '/')
+			cFilePrefix.append("/");
                 cFileName = cFilePrefix + expandEnvironmentVariables (cCbcNode.attribute ( "configfile" ).value() );
-            else cFileName = expandEnvironmentVariables (cCbcNode.attribute ( "configfile" ).value() );
+            } else cFileName = expandEnvironmentVariables (cCbcNode.attribute ( "configfile" ).value() );
 
             Cbc* cCbc = new Cbc ( pModule->getBeId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cCbcNode.attribute ( "Id" ).as_int(), cFileName );
 

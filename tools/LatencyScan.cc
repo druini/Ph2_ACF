@@ -1,6 +1,6 @@
 #include "LatencyScan.h"
 
-void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange)
+void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange, bool bNoTdc)
 {
     for ( auto& cBoard : fBoardVector )
     {
@@ -22,20 +22,26 @@ void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange)
 
             if ( cObj ) delete cObj;
 
-            TH1F* cLatHist = new TH1F ( cName, Form ( "Latency FE%d; Latency; # of Hits", cFeId ), (pLatencyRange ) * fTDCBins, pStartLatency ,  pStartLatency + (pLatencyRange )  * fTDCBins );
-            //modify the axis labels
-            uint32_t pLabel = pStartLatency;
+            TH1F* cLatHist;
+	    if (bNoTdc){
+		    cLatHist = new TH1F ( cName, Form ( "Latency FE%d; Latency; # of Hits", cFeId ), (pLatencyRange ) , pStartLatency ,  pStartLatency + (pLatencyRange )  );
+		    cLatHist->GetXaxis()->SetTitle ("Signal timing [TriggerLatency]" );
+	    } else {
+		    cLatHist = new TH1F ( cName, Form ( "Latency FE%d; Latency; # of Hits", cFeId ), (pLatencyRange ) * fTDCBins, pStartLatency ,  pStartLatency + (pLatencyRange )  * fTDCBins );
+		    //modify the axis labels
+		    uint32_t pLabel = pStartLatency;
 
-            for (uint32_t cLatency = pStartLatency; cLatency < pStartLatency + pLatencyRange; ++cLatency)
-            {
-                for (uint32_t cPhase = 0; cPhase < fTDCBins; ++cPhase)
-                {
-                    int cBin = convertLatencyPhase (pStartLatency, cLatency, cPhase);
-                    cLatHist->GetXaxis()->SetBinLabel (cBin, Form ("%d+%d", cLatency, cPhase) );
-                }
-            }
+		    for (uint32_t cLatency = pStartLatency; cLatency < pStartLatency + pLatencyRange; ++cLatency)
+		    {
+			    for (uint32_t cPhase = 0; cPhase < fTDCBins; ++cPhase)
+			    {
+				    int cBin = convertLatencyPhase (pStartLatency, cLatency, cPhase);
+				    cLatHist->GetXaxis()->SetBinLabel (cBin, Form ("%d+%d", cLatency, cPhase) );
+			    }
+		    }
 
-            cLatHist->GetXaxis()->SetTitle (Form ("Signal timing (reverse time) [TriggerLatency*%d+TDC]", fTDCBins) );
+		    cLatHist->GetXaxis()->SetTitle (Form ("Signal timing (reverse time) [TriggerLatency*%d+TDC]", fTDCBins) );
+	    }
             cLatHist->SetFillColor ( 4 );
             cLatHist->SetFillStyle ( 3001 );
             bookHistogram ( cFe, "module_latency", cLatHist );
@@ -55,7 +61,7 @@ void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange)
     LOG (INFO) << "Histograms and Settings initialised." ;
 }
 
-std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uint8_t pLatencyRange )
+std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uint8_t pLatencyRange, bool bNoTdc )
 {
     // This is not super clean but should work
     // Take the default VCth which should correspond to the pedestal and add 8 depending on the mode to exclude noise
@@ -82,7 +88,6 @@ std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uin
         cWriter.setRegister ( "TriggerLatency", cLat );
         this->accept ( cWriter );
 
-
         // Take Data for all Modules
         for ( BeBoard* pBoard : fBoardVector )
         {
@@ -91,7 +96,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uin
             const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
 
             // Loop over Events from this Acquisition
-            countHitsLat ( pBoard, events, "module_latency", cLat, pStartLatency );
+            countHitsLat ( pBoard, events, "module_latency", cLat, pStartLatency, bNoTdc );
         }
 
         // done counting hits for all FE's, now update the Histograms
@@ -202,7 +207,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
 //////////////////////////////////////          PRIVATE METHODS             //////////////////////////////////////
 
 
-int LatencyScan::countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEventVec, std::string pHistName, uint8_t pParameter, uint32_t pStartLatency)
+int LatencyScan::countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEventVec, std::string pHistName, uint8_t pParameter, uint32_t pStartLatency, bool pNoTdc)
 {
     std::string cBoardType = pBoard->getBoardType();
     uint32_t cTotalHits = 0;
@@ -234,8 +239,7 @@ int LatencyScan::countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEve
             if (cTDCVal != 0 && cBoardType == "GLIB") cTDCVal -= 5;
             else if (cTDCVal != 0 && cBoardType == "CTA") cTDCVal -= 3;
 
-            if (cTDCVal > 8 ) LOG (INFO) << "ERROR, TDC value not within expected range - normalized value is " << +cTDCVal << " - original Value was " << +cEvent->GetTDC() << "; not considering this Event!" <<  std::endl;
-
+            if (!pNoTdc && cTDCVal > 8) LOG (INFO) << "ERROR, TDC value not within expected range - normalized value is " << +cTDCVal << " - original Value was " << +cEvent->GetTDC() << "; not considering this Event!" <<  std::endl;
             else
             {
                 for ( auto cCbc : cFe->fCbcVector )
@@ -250,7 +254,7 @@ int LatencyScan::countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEve
 
                 //now I have the number of hits in this particular event for all CBCs and the TDC value
                 uint32_t cBin = convertLatencyPhase (pStartLatency, cFillVal, cTDCVal);
-                cTmpHist->Fill ( cBin, cHitCounter);
+                cTmpHist->Fill ( pNoTdc ? pParameter : cBin, cHitCounter);
                 cHitSum += cHitCounter;
             }
         }

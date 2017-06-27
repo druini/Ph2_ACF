@@ -41,12 +41,12 @@ class LatencyScan : public Tool
 {
 
   public:
-    void Initialize (uint32_t pStartLatency, uint32_t pLatencyRange);
-    std::map<Module*, uint8_t> ScanLatency ( uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20 );
+    void Initialize (uint32_t pStartLatency, uint32_t pLatencyRange, bool bNoTdc);
+    std::map<Module*, uint8_t> ScanLatency ( uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20, bool pNoTdc = false );
     std::map<Module*, uint8_t> ScanStubLatency ( uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20 );
 
   private:
-    int countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEventVec, std::string pHistName, uint8_t pParameter, uint32_t pStartLatency );
+    int countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEventVec, std::string pHistName, uint8_t pParameter, uint32_t pStartLatency, bool pNoTdc );
     int countHits ( Module* pFe,  const Event* pEvent, std::string pHistName, uint8_t pParameter );
     int countStubs ( Module* pFe,  const Event* pEvent, std::string pHistName, uint8_t pParameter );
     void updateHists ( std::string pHistName, bool pFinal );

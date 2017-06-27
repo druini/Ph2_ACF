@@ -1,3 +1,4 @@
+#include "uhal/log/log.hpp"
 
 #include "SignalScan.h"
 
@@ -80,8 +81,14 @@ void SignalScan::ScanSignal (int pSignalScanLength)
 
             while (cTotalEvents < fNevents)
             {
-                fBeBoardInterface->ReadData ( pBoard, fNevents );
-
+		try{
+			fBeBoardInterface->ReadNEvents ( pBoard, fNevents );
+		} catch (uhal::exception::exception& e){
+			LOG(ERROR)<< e.what();
+			updateHists ( "module_signal", false );
+			output.close();
+			return;
+		}
                 const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
                 cTotalEvents += events.size();
 
@@ -139,7 +146,7 @@ void SignalScan::ScanSignal (int pSignalScanLength)
 
                 LOG (INFO) << "Recorded " << cTotalEvents << " Events" ;
                 updateHists ( "module_signal", false );
-            }
+            }//while events
 
             fBeBoardInterface->Stop (pBoard);
 

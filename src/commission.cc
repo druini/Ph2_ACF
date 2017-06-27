@@ -62,6 +62,9 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "batch", "b" );
 
+    cmd.defineOption ( "noTDC", "Ignore TDC values", ArgvParser::NoOptionAttribute );
+    cmd.defineOptionAlternative ( "noTDC", "T" );
+
     int result = cmd.parse ( argc, argv );
 
     if ( result != ArgvParser::NoParserError )
@@ -76,6 +79,7 @@ int main ( int argc, char* argv[] )
     bool cStubLatency = ( cmd.foundOption ( "stublatency" ) ) ? true : false;
     bool cSignal = ( cmd.foundOption ( "signal" ) ) ? true : false;
     bool cNoise = ( cmd.foundOption ( "noise" ) ) ? true : false;
+    bool cNoTdc = ( cmd.foundOption ( "noTDC" ) ) ? true : false;
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
 
     if ( !cNoise ) cDirectory += "Commissioning";
@@ -114,10 +118,10 @@ int main ( int argc, char* argv[] )
     {
         LatencyScan cLatencyScan;
         cLatencyScan.Inherit (&cTool);
-        cLatencyScan.Initialize (cStartLatency, cLatencyRange );
+        cLatencyScan.Initialize (cStartLatency, cLatencyRange, cNoTdc );
 
         // Here comes our Part:
-        if ( cLatency ) cLatencyScan.ScanLatency ( cStartLatency, cLatencyRange );
+        if ( cLatency ) cLatencyScan.ScanLatency ( cStartLatency, cLatencyRange, cNoTdc );
 
         if ( cStubLatency ) cLatencyScan.ScanStubLatency ( cStartLatency, cLatencyRange );
     }
