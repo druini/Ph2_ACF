@@ -3,6 +3,7 @@
 
 //#include "../Utils/easylogging++.h"
 #include "../Utils/Utilities.h"
+#include "../Utils/Timer.h"
 #include "../tools/SignalScan.h"
 #include "../tools/LatencyScan.h"
 #include "../tools/PedeNoise.h"
@@ -106,13 +107,13 @@ int main ( int argc, char* argv[] )
 
     std::stringstream outp;
     Tool cTool;
-    cTool.InitializeHw ( cHWFile , outp);
+    cTool.InitializeHw ( cHWFile, outp);
     cTool.InitializeSettings ( cHWFile, outp );
+    LOG (INFO) << outp.str();
     cTool.CreateResultDirectory ( cDirectory );
     cTool.InitResultFile ( cResultfile );
     cTool.StartHttpServer();
-    cTool.ConfigureHw (outp);
-    LOG (INFO) << outp.str();
+    cTool.ConfigureHw ();
 
     if ( cLatency || cStubLatency )
     {
@@ -136,15 +137,17 @@ int main ( int argc, char* argv[] )
 
     else if ( cNoise )
     {
-        outp.str ("");
+        Timer t;
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit (&cTool);
-        cPedeNoise.ConfigureHw (outp);
-        LOG (INFO) << outp.str();
+        //cPedeNoise.ConfigureHw ();
         cPedeNoise.Initialise(); // canvases etc. for fast calibration
+        t.start();
         cPedeNoise.measureNoise();
+        t.stop();
+        t.show ("Time for noise measurement");
         cPedeNoise.Validate();
-        cPedeNoise.SaveResults( );
+        cPedeNoise.writeObjects( );
         cPedeNoise.dumpConfigFiles();
     }
 

@@ -22,8 +22,11 @@
 #include "../HWInterface/ICGlibFWInterface.h"
 #include "../HWInterface/CtaFWInterface.h"
 #include "../HWInterface/ICFc7FWInterface.h"
+#include "../HWInterface/Cbc3Fc7FWInterface.h"
+#include "../HWInterface/D19cFWInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/Visitor.h"
+#include "../Utils/Data.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/FileHandler.h"
 #include "../Utils/ConsoleColor.h"
@@ -68,6 +71,7 @@ namespace Ph2_System {
 
       private:
         FileParser fParser;
+        Data* fData;
 
       public:
         /*!
@@ -107,7 +111,7 @@ namespace Ph2_System {
             else return nullptr;
         }
 
-//      private:
+      public:
         /*!
         * \brief issues a FileHandler for writing files to every BeBoardFWInterface if addFileHandler was called
         */
@@ -147,12 +151,41 @@ namespace Ph2_System {
         /*!
          * \brief Configure the Hardware with XML file indicated values
          */
-        void ConfigureHw ( std::ostream& os = std::cout , bool bIgnoreI2c = false );
+        void ConfigureHw ( bool bIgnoreI2c = false );
         /*!
          * \brief Run a DAQ
          * \param pBeBoard
          */
-        void Run ( BeBoard* pBeBoard );
+        //void Run ( BeBoard* pBoard );
+
+        /*!
+         * \brief Read Data from pBoard
+         * \param pBeBoard
+         * \return: number of packets
+         */
+        uint32_t ReadData (BeBoard* pBoard);
+
+        void Start (BeBoard* pBoard);
+        void Stop (BeBoard* pBoard);
+
+        /*!
+         * \brief Read Data from all boards
+         */
+        void ReadData();
+
+        /*!
+         * \brief Read N Events from pBoard
+         * \param pBeBoard
+         * \param pNEvents
+         * \return: number of packets
+         */
+        void ReadNEvents (BeBoard* pBoard, uint32_t pNEvents);
+
+        /*!
+         * \brief Read N Events from all boards
+         * \param pNEvents
+         */
+        void ReadNEvents (uint32_t pNEvents);
 
         const BeBoard* getBoard (int index) const
         {
@@ -165,15 +198,15 @@ namespace Ph2_System {
          */
         const Event* GetNextEvent ( const BeBoard* pBoard )
         {
-            return fBeBoardInterface->GetNextEvent ( pBoard );
+            return fData->GetNextEvent ( pBoard );
         }
         const Event* GetEvent ( const BeBoard* pBoard, int i ) const
         {
-            return fBeBoardInterface->GetEvent ( pBoard, i );
+            return fData->GetEvent ( pBoard, i );
         }
         const std::vector<Event*>& GetEvents ( const BeBoard* pBoard ) const
         {
-            return fBeBoardInterface->GetEvents ( pBoard );
+            return fData->GetEvents ( pBoard );
         }
     };
 }

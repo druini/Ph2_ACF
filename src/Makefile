@@ -1,25 +1,17 @@
-ANTENNADIR=../CMSPh2_AntennaDriver
-AMC13DIR=/opt/cactus/include/amc13
-USBINSTDIR=../../Ph2_USBInstDriver
-ZMQ_HEADER_PATH = /usr/include/zmq.hpp
- 
 CC              = gcc
 CXX             = g++
 CCFlags         = -g -O0 -w -Wall -pedantic -pthread -std=c++0x -fPIC 
+
 CCFlagsRoot	= `root-config --cflags --glibs`
 ROOTVERSION := $(shell root-config --has-http)
+RootLibraryDirs = $(ROOTLIB)
+RootLibraryPaths = $(RootLibraryDirs:%=-L%)
 
-HttpFlag = -D__HTTP__
-ZmqFlag = -D__ZMQ__
-USBINSTFlag     = -D__USBINST__
-Amc13Flag     = -D__AMC13__
-AntennaFlag = -D__ANTENNA__
+LibraryDirs = $(BOOST_LIB) ../lib
+IncludeDirs     = $(BOOST_INCLUDE) ../ ../HWInterface ../System ../Utils ../tools
+ExternalObjects= -lboost_system -lboost_thread -lcactus_uhal_uhal -lcactus_extern_pugixml -lcactus_uhal_log -lcactus_uhal_grammars -lPh2_Utils -lPh2_Description -lPh2_Tracker -lPh2_Interface -lPh2_System -lPh2_Tools 
 
-DevFlags        =
-
-LibraryDirs = /opt/cactus/lib ../lib 
-	IncludeDirs     =  /opt/cactus/include ../ 
-	ExternalObjects= $(LibraryPaths) -lcactus_extern_pugixml -lcactus_uhal_log -lcactus_uhal_grammars -lcactus_uhal_uhal -lboost_system -lPh2_Interface -lPh2_Description -lPh2_System -lPh2_Utils -lPh2_Tracker -lPh2_Tools 
+binaries=print systemtest datatest hybridtest cmtest calibrate commission fpgaconfig pulseshape configure integratedtester d19c_test
 
 ##################################################
 ## check if the Root has THttp
@@ -33,10 +25,9 @@ endif
 ##################################################
 ## check if the Antenna driver is installed
 ##################################################
-ifneq ("$(wildcard $(ANTENNADIR))","")
+ifneq ("$(wildcard ../$(ANTENNADIR))","")
 	IncludeDirs += $(ANTENNADIR)
-	LibraryDirs += $(ANTENNADIR)/lib /usr/lib64/ 
-	#ExternalObjects += -lboost_thread -lPh2_Antenna $(AntennaFlag) 
+	LibraryDirs += $(ANTENNALIB) /usr/lib64/ 
 	ExternalObjects += -lPh2_Antenna $(AntennaFlag) 
 	ANTENNAINSTALLED = yes
 else
@@ -68,17 +59,16 @@ endif
 ## check if the Ph2_USBInstDriver drivers are installed
 ##################################################
 ifneq ("$(wildcard $(USBINSTDIR))","")
-	LibraryDirs += $(USBINSTDIR)/lib $(USBINSTDIR)/Utils $(USBINSTDIR)/HMP4040
-	IncludeDirs += $(BOOST_INCLUDE) $(USBINSTDIR)/HMP4040 $(USBINSTDIR)/Utils $(USBINSTDIR)/Drivers 
-	ExternalObjects += -lpthread -lboost_thread -lPh2_HMP4040 -lPh2_USBUtils -lPh2_Drivers $(USBINSTFlag)
+	LibraryDirs += $(USBINSTLIB)
+	IncludeDirs += $(USBINSTDIR)/HMP4040 $(USBINSTDIR)/Ke2110 $(USBINSTDIR)/ArdNano $(USBINSTDIR)/Utils
+	ExternalObjects +=  -lPh2_Drivers -lPh2_USBUtils -lPh2_HMP4040 -lPh2_Ke2110 -lPh2_ArdNano $(USBINSTFlag)
 	USBINSTLIBINSTALLED = yes
+	binaries +=  cbc3test arduinotest cbc3irrad
 else
 	USBINSTLIBINSTALLED = no
 endif
 
-IncludePaths            = $(IncludeDirs:%=-I%)
-RootLibraryDirs = /usr/local/lib/root
-
+IncludePaths = $(IncludeDirs:%=-I%)
 LibraryPaths = $(LibraryDirs:%=-L%) 
 RootLibraryPaths = $(RootLibraryDirs:%=-L%)
 
@@ -88,11 +78,10 @@ binariesNoRoot=systemtest datatest fpgaconfig configure rtest
 
 .PHONY: clean $(binaries)
 all: rootflags clean $(binaries) 
+
 rootflags:
 	$(eval CCFlags += $(CCFlagsRoot))
 	$(eval ExternalObjects += $(ExtObjectsRoot))
-
-noroot: clean $(binariesNoRoot)
 
 print:
 	@echo '****************************'
@@ -104,8 +93,65 @@ print:
 	@echo 'ZeroMQ installed:' $(ZMQINSTALLED)
 	@echo '****************************'
 
-rtest: rtest.cc
-	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects)
+integratedtester: integratedtester.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths)$(ExternalObjects)
 	cp $@ ../bin
+
+datatest: datatest.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
+systemtest: systemtest.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
+d19c_test: d19c_test.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
+calibrate: calibrate.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+	
+configure: configure.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
+hybridtest: hybridtest.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
+cmtest: cmtest.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
+configure: configure.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
+commission: commission.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
+fpgaconfig: fpgaconfig.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
+pulseshape: pulseshape.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
+cbc3test: cbc3test.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
+cbc3irrad: cbc3irrad.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
+arduinotest: Arduino.cc
+	$(CXX)  $(CCFlags) -o $@ $< $(IncludePaths) $(LibraryPaths) $(ExternalObjects)
+	cp $@ ../bin
+
 clean:
 	rm -f $(binaries) *.o

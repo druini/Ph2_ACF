@@ -96,8 +96,7 @@ int main ( int argc, char* argv[] )
     cHybridTester.CreateResultDirectory ( cDirectory );
     cHybridTester.InitResultFile ( "HybridTest" );
     cHybridTester.StartHttpServer();
-    cHybridTester.ConfigureHw (outp);
-    LOG (INFO) << outp.str();
+    cHybridTester.ConfigureHw ();
 
 
     // Here comes our Part:
@@ -138,6 +137,7 @@ int main ( int argc, char* argv[] )
         cHybridTester.Measure();
     }
 
+    cHybridTester.writeObjects();
     cHybridTester.SaveResults();
     cHybridTester.CloseResultFile();
     cHybridTester.Destroy();

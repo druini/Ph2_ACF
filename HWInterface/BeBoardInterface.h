@@ -95,6 +95,18 @@ namespace Ph2_HwInterface {
         void SetFileHandler (BeBoard* pBoard, FileHandler* pHandler);
 
         /*!
+         * \brief enable the file handler
+         * \param pBoard
+         */
+        void enableFileHandler (BeBoard* pBoard);
+
+        /*!
+         * \brief disable the file handler
+         * \param pBoard
+         */
+        void disableFileHandler (BeBoard* pBoard);
+
+        /*!
          * \brief Update both Board register and Config File
          * \param pBoard
          * \param pRegNode : Node of the register to update
@@ -113,7 +125,7 @@ namespace Ph2_HwInterface {
          * \param pBoard
          * \param pRegVec : Vector of Register/Value pairs
          */
-        void WriteBoardMultReg ( BeBoard* pBoard, const std::vector < std::pair< std::string , uint32_t > >& pRegVec );
+        void WriteBoardMultReg ( BeBoard* pBoard, const std::vector < std::pair< std::string, uint32_t > >& pRegVec );
         /*!
         * \brief Update Config File with the value in the Board register
         * \param pBoard
@@ -132,32 +144,29 @@ namespace Ph2_HwInterface {
          * \param pBoard
          * \param pRegVec : Vector of Register/Value pairs
          */
-        void ReadBoardMultReg ( BeBoard* pBoard, std::vector < std::pair< std::string , uint32_t > >& pRegVec );
+        void ReadBoardMultReg ( BeBoard* pBoard, std::vector < std::pair< std::string, uint32_t > >& pRegVec );
         /*!
          * \brief Get the board infos
          * \param pBoard
          */
         uint32_t getBoardInfo ( const BeBoard* pBoard );
+        /*!
+         * \brief Get the board infos
+         * \param pBoard
+         */
+        BoardType getBoardType ( const BeBoard* pBoard );
 
         /*!
          * \brief Configure the board with its Config File
          * \param pBoard
          */
         void ConfigureBoard ( const BeBoard* pBoard );
+
         /*!
-         * \brief Start an acquisition in a separate thread
-         * \param pBoard Board running the acquisition
-         * \param uNbAcq Number of acquisition iterations (each iteration will get CBC_DATA_PACKET_NUMBER + 1 events)
-         * \param visitor override the visit() method of this object to process each event
+         * \brief Run the Phase finding for CBC3
+         * \param pBoard
          */
-        //void StartThread( BeBoard* pBoard , uint32_t uNbAcq, HwInterfaceVisitor* visitor );
-        /*! \brief Stop a running parallel acquisition
-         */
-        //void StopThread( BeBoard* pBoard );
-        //[>! \brief Get the parallel acquisition iteration number <]
-        //int getNumAcqThread( BeBoard* pBoard );
-        //[>! \brief Is a parallel acquisition running ? <]
-        //bool isRunningThread( BeBoard* pBoard );
+        void FindPhase ( const BeBoard* pBoard );
 
         /*!
          * \brief Hard reset of all Cbc
@@ -169,6 +178,17 @@ namespace Ph2_HwInterface {
          * \param pCbc
          */
         void CbcFastReset ( const BeBoard* pBoard );
+        /*!
+         * \brief Send Cbc Trigger
+         * \param pCbc
+         */
+        void CbcTrigger ( const BeBoard* pBoard );
+
+        /*!
+         * \brief Send Cbc TestPulse
+         * \param pCbc
+         */
+        void CbcTestPulse ( const BeBoard* pBoard );
 
         /*!
          * \brief Start a DAQ
@@ -196,22 +216,14 @@ namespace Ph2_HwInterface {
          * \param pBreakTrigger : if true, enable the break trigger
          * \return fNpackets: the number of packets read
          */
-        uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger );
-        uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait=true);//ADDED FOR OTSDAQ
+        uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData );
+        uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool wait=true);//ADDED FOR OTSDAQ
         /*!
          * \brief Read data for pNEvents
          * \param pBoard : the pointer to the BeBoard
          * \param pNEvents :  the 1 indexed number of Events to read - this will set the packet size to this value -1
          */
-        void ReadNEvents (BeBoard* pBoard, uint32_t pNEvents);
-        /*!
-         * \brief Get next event from data buffer
-         * \param pBoard
-         * \return Next event
-         */
-        const Event* GetNextEvent ( const BeBoard* pBoard );
-        const Event* GetEvent ( const BeBoard* pBoard, int i );
-        const std::vector<Event*>& GetEvents ( const BeBoard* pBoard );
+        void ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData);
 
         /*! \brief Get a uHAL node object from its path in the uHAL XML address file
          * \param pBoard pointer to a board description
@@ -254,30 +266,22 @@ namespace Ph2_HwInterface {
         void RebootBoard (BeBoard* pBoard);
         /*! \brief Set or reset the start signal */
         void SetForceStart (BeBoard* pBoard, bool bStart);
-
-
-
-
         /*!
-         * Activate power on and off sequence 
+         * Activate power on sequence
          */
         void PowerOn( BeBoard* pBoard );
-
+        /*!
+         * Activate power off sequence
+         */
         void PowerOff( BeBoard* pBoard );
-
         /*!
          * Read the firmware version
          */
         void ReadVer( BeBoard* pBoard );
-
         /*!
-         * Returns data from buffernum and mpa.  Raw register output.
+         * Returns data from buffernum and mpa. Raw register output.
          */
         std::pair<std::vector<uint32_t>, std::vector<uint32_t>>   ReadData( BeBoard* pBoard, int buffernum, int mpa);
-
-
-
-
     };
 }
 

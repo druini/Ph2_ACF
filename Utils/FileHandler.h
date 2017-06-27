@@ -7,6 +7,8 @@
 #include <fstream>
 #include <vector>
 #include <mutex>
+#include <queue>
+#include <condition_variable>
 #include <thread>
 #include "FileHeader.h"
 #include "../Utils/easylogging++.h"
@@ -28,15 +30,16 @@ class FileHandler
 
     std::string fBinaryFileName;
     std::thread fThread;/*!< a thread for the multitrading */
-    std::mutex fMutex;/*!< Mutex */
+    mutable std::mutex fMutex;/*!< Mutex */
+    std::queue<std::vector<uint32_t>> fQueue; /*!<Queue to populate from set() and depopulate in writeFile() */
     bool fFileIsOpened ;/*!< to check if the file is opened */
-    bool is_set;/*!< check if fdata is set */
+    std::condition_variable fSet;/*!< condition variable to notify writer thread of new data*/
 
 
   public:
 
     std::fstream fBinaryFile;/*!< the stream of the binary file */
-    std::vector<uint32_t> fData;/*!< the vector of data */
+    //std::vector<uint32_t> fData;[>!< the vector of data <]
 
     /*!
     * \brief constructor for the class
@@ -122,6 +125,9 @@ class FileHandler
     * \brief Write data to file
     */
     void writeFile() ;
+
+  private:
+    void dequeue (std::vector<uint32_t>& pData);
 };
 
 #endif

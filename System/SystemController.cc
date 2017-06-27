@@ -18,7 +18,8 @@ namespace Ph2_System {
 
     SystemController::SystemController()
         : fFileHandler (nullptr),
-          fWriteHandlerEnabled (false)
+          fWriteHandlerEnabled (false),
+          fData (nullptr)
     {
     }
 
@@ -31,23 +32,25 @@ namespace Ph2_System {
         {
             if (fFileHandler->file_open() ) fFileHandler->closeFile();
 
-            delete fFileHandler;
+            if (fFileHandler) delete fFileHandler;
         }
 
-        delete fBeBoardInterface;
-        delete fCbcInterface;
-	delete fMPAInterface;
+        if (fBeBoardInterface) delete fBeBoardInterface;
+        if (fCbcInterface) delete fCbcInterface;
+        if (fMPAInterface) delete fMPAInterface;
 
         fBeBoardFWMap.clear();
         fSettingsMap.clear();
 
         for ( auto& el : fBoardVector )
-            delete el;
+            if (el) delete el;
 
         fBoardVector.clear();
+
+        if (fData) delete fData;
     }
 
-    void SystemController::addFileHandler ( const std::string& pFilename , char pOption )
+    void SystemController::addFileHandler ( const std::string& pFilename, char pOption )
     {
         //if the opion is read, create a handler object and use it to read the
         //file in the method below!
@@ -68,8 +71,8 @@ namespace Ph2_System {
         else pVec = fFileHandler->readFileChunks (pNWords32);
     }
 
-   
-     void SystemController::InitializeHw ( const std::string& pFilename, std::ostream& os )
+
+    void SystemController::InitializeHw ( const std::string& pFilename, std::ostream& os )
     {
         this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, os );
 
@@ -79,15 +82,15 @@ namespace Ph2_System {
         if (fWriteHandlerEnabled)
             this->initializeFileHandler();
     }
-    
+
     void SystemController::InitializeSettings ( const std::string& pFilename, std::ostream& os )
     {
         this->fParser.parseSettings (pFilename, fSettingsMap, os );
     }
 
-    void SystemController::ConfigureHw ( std::ostream& os , bool bIgnoreI2c )
+    void SystemController::ConfigureHw ( bool bIgnoreI2c )
     {
-        os << std::endl << BOLDBLUE << "Configuring HW parsed from .xml file: " << RESET << std::endl;
+        LOG (INFO) << BOLDBLUE << "Configuring HW parsed from .xml file: " << RESET;
 
         bool cHoleMode = false;
         bool cCheck = false;
@@ -106,15 +109,16 @@ namespace Ph2_System {
         for (auto& cBoard : fBoardVector)
         {
             fBeBoardInterface->ConfigureBoard ( cBoard );
-            fBeBoardInterface->CbcHardReset ( cBoard );
+            fBeBoardInterface->CbcFastReset ( cBoard );
+            //fBeBoardInterface->CbcHardReset ( cBoard );
 
-            if ( cCheck && cBoard->getBoardType() == "GLIB")
+            if ( cCheck && cBoard->getBoardType() == BoardType::GLIB)
             {
                 fBeBoardInterface->WriteBoardReg ( cBoard, "pc_commands2.negative_logic_CBC", ( ( cHoleMode ) ? 0 : 1 ) );
-                os << GREEN << "Overriding GLIB register values for signal polarity with value from settings node!" << RESET << std::endl;
+                LOG (INFO) << GREEN << "Overriding GLIB register values for signal polarity with value from settings node!" << RESET;
             }
 
-            os << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET << std::endl;
+            LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
 
             for (auto& cFe : cBoard->fModuleVector)
             {
@@ -123,7 +127,7 @@ namespace Ph2_System {
                     if ( !bIgnoreI2c )
                     {
                         fCbcInterface->ConfigureCbc ( cCbc );
-                        os << GREEN <<  "Successfully configured Cbc " << int ( cCbc->getCbcId() ) << RESET << std::endl;
+                        LOG (INFO) << GREEN <<  "Successfully configured Cbc " << int ( cCbc->getCbcId() ) << RESET;
                     }
                 }
             }
@@ -140,7 +144,17 @@ namespace Ph2_System {
         // here would be the ideal position to fill the file Header and call openFile when in read mode
         for (const auto& cBoard : fBoardVector)
         {
-            std::string cBoardTypeString = cBoard->getBoardType();
+            std::string cBoardTypeString;
+            BoardType cBoardType = cBoard->getBoardType();
+
+            if (cBoardType == BoardType::GLIB) cBoardTypeString = "GLIB";
+            else if (cBoardType == BoardType::CTA) cBoardTypeString = "CTA";
+            else if (cBoardType == BoardType::ICGLIB) cBoardTypeString = "ICGLIB";
+            else if (cBoardType == BoardType::ICFC7) cBoardTypeString = "ICFC7";
+            else if (cBoardType == BoardType::CBC3FC7) cBoardTypeString = "CBC3FC7";
+            else if (cBoardType == BoardType::D19C) cBoardTypeString = "D19C";
+
+
             uint32_t cBeId = cBoard->getBeId();
             uint32_t cNCbc = 0;
 
@@ -171,5 +185,57 @@ namespace Ph2_System {
             //finally set the handler
             fBeBoardInterface->SetFileHandler (cBoard, cHandler);
         }
+    }
+
+    void SystemController::Start (BeBoard* pBoard)
+    {
+        fBeBoardInterface->Start (pBoard);
+    }
+    void SystemController::Stop (BeBoard* pBoard)
+    {
+        fBeBoardInterface->Stop (pBoard);
+    }
+
+    uint32_t SystemController::ReadData (BeBoard* pBoard)
+    {
+        //reset the data object
+        if (fData) delete fData;
+
+        fData = new Data();
+
+        std::vector<uint32_t> cData;
+        //read the data and get it by reference
+        uint32_t cNPackets = fBeBoardInterface->ReadData (pBoard, false, cData);
+        //pass data by reference to set and let it know what board we are dealing with
+        fData->Set (pBoard, cData, cNPackets, fBeBoardInterface->getBoardType (pBoard) );
+        //return the packet size
+        return cNPackets;
+    }
+
+    void SystemController::ReadData()
+    {
+        for (auto cBoard : fBoardVector)
+            this->ReadData (cBoard);
+
+    }
+
+    void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents)
+    {
+        //reset the data object
+        if (fData) delete fData;
+
+        fData = new Data();
+        std::vector<uint32_t> cData;
+        //read the data and get it by reference
+        fBeBoardInterface->ReadNEvents (pBoard, pNEvents, cData);
+        //pass data by reference to set and let it know what board we are dealing with
+        fData->Set (pBoard, cData, pNEvents, fBeBoardInterface->getBoardType (pBoard) );
+        //return the packet size
+    }
+
+    void SystemController::ReadNEvents (uint32_t pNEvents)
+    {
+        for (auto cBoard : fBoardVector)
+            this->ReadNEvents (cBoard, pNEvents);
     }
 }

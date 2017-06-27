@@ -36,8 +36,8 @@ namespace Ph2_HwInterface {
         uhal::HwInterface* fBoard;         /*!< Board in use*/
         const char* fUHalConfigFileName;         /*!< path of the uHal Config File*/
         std::vector< std::pair<std::string, uint32_t> > fStackReg;        /*!< Stack of registers*/
-        std::thread fThread;         /*!< Thread for timeout stack writing*/
-        bool fDeactiveThread;         /*!< Bool to terminate the thread in the destructor*/
+        //std::thread fThread;         [>!< Thread for timeout stack writing<]
+        //bool fDeactiveThread;         [>!< Bool to terminate the thread in the destructor<]
         std::mutex fBoardMutex;         /*!< Mutex to avoid conflict btw threads on shared resources*/
         static std::string strDummyXml;
 

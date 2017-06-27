@@ -1,8 +1,3 @@
-ANTENNADIR=CMSPh2_AntennaDriver
-AMC13DIR=/opt/cactus/include/amc13
-USBINSTDIR=../Ph2_USBInstDriver
-
-#DEPENDENCIES := Utils HWDescription HWInterface System tools RootWeb Tracker src miniDAQ
 DEPENDENCIES := Utils HWDescription HWInterface RootWeb Tracker
 ANTENNAINSTALLED = no
 AMC13INSTALLED = no
@@ -23,7 +18,6 @@ else
 endif
 
 ifneq ("$(wildcard $(USBINSTDIR))","")
-	#DEPENDENCIES := ../Ph2_USBInstDriver $(DEPENDENCIES)
 	USBINSTINSTALLED = yes
 	USBINSTINSTRUCTIONS = 
 else
@@ -69,7 +63,6 @@ print:
 
 
 clean:
-	#$(MAKE) -C System clean 
 	(cd System; make clean)
 	(cd Utils; make clean)
 	(cd HWInterface; make clean)
@@ -79,5 +72,4 @@ clean:
 	(cd miniDAQ; make clean)
 	(cd Tracker; make clean)
 	(cd AMC13; make clean)
-	 #(cd doc; make clean)
 	(rm -f lib/* bin/*)

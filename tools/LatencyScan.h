@@ -52,11 +52,11 @@ class LatencyScan : public Tool
     void updateHists ( std::string pHistName, bool pFinal );
     void parseSettings();
 
-	//  Members
-	uint32_t fNevents;
-	//uint32_t fInitialThreshold;
-	uint32_t fHoleMode;
-	uint32_t fNCbc;
+    //  Members
+    uint32_t fNevents;
+    //uint32_t fInitialThreshold;
+    uint32_t fHoleMode;
+    uint32_t fNCbc;
 
     const uint32_t fTDCBins = 8;
 
@@ -68,11 +68,12 @@ class LatencyScan : public Tool
         return result + 1;
     }
 
-    const std::string getStubLatencyName(const std::string pBoardIdentifier)
+    const std::string getStubLatencyName (const BoardType pBoardType)
     {
-        if (pBoardIdentifier == "GLIB" ) return "cbc_stubdata_latency_adjust_fe1";
-        else if ( pBoardIdentifier == "CTA") return "cbc.STUBDATA_LATENCY_MODE";
-        else if (pBoardIdentifier == "ICGLIB" || pBoardIdentifier == "ICFC7") return "cbc_daq_ctrl.latencies.stub_latency";
+        if (pBoardType == BoardType::GLIB) return "cbc_stubdata_latency_adjust_fe1";
+        else if (pBoardType == BoardType::CTA) return "cbc.STUBDATA_LATENCY_MODE";
+        else if (pBoardType == BoardType::ICGLIB || pBoardType == BoardType::ICFC7) return "cbc_daq_ctrl.latencies.stub_latency";
+        else if (pBoardType == BoardType::CBC3FC7) return "cbc_system_cnfg.cbc_data_processor.cbc0.latencies.trig_data";
         else return "not recognized";
     }
 };

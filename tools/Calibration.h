@@ -42,87 +42,64 @@ typedef std::map< int, std::vector<uint8_t> >  TestGroupChannelMap;
 class Calibration : public Tool
 {
   public:
-	Calibration() {};
-	~Calibration() {
-		//if ( fResultFile ) {
-			//fResultFile->Write();
-			//fResultFile->Close();
-		//}
-	}
+    Calibration() {};
+    ~Calibration() {};
 
-	void Initialise( bool pAllChan = false );
-	void FindVplus();
-	// offsets are found by taking pMultiple*fEvents triggers
-	void FindOffsets();
-	void SaveResults() {
-		writeGraphs();
-		//dumpConfigFiles();
-	}
+    void Initialise ( bool pAllChan = false );
+    void FindVplus();
+    // offsets are found by taking pMultiple*fEvents triggers
+    void FindOffsets();
+    void writeObjects();
 
 
   protected:
-	void MakeTestGroups( bool pAllChan = false );
+    void bitwiseVplus ( int pTGroup );
 
-	void bitwiseVplus( int pTGroup );
+    void bitwiseVCth ( int pTGroup );
 
-	void bitwiseOffset( int pTGroup );
+    void bitwiseOffset ( int pTGroup );
 
-	void setOffset( uint8_t pOffset, int  pTGroupId, bool pVPlus = false );
+    void setOffset ( uint8_t pOffset, int  pTGroupId, bool pVPlus = false );
 
-	void toggleOffset( uint8_t pGroup, uint8_t pBit, bool pBegin );
+    void toggleOffset ( uint8_t pGroup, uint8_t pBit, bool pBegin );
 
-	void measureOccupancy( uint32_t pNEvents, int pTGroup );
+    void measureOccupancy ( uint32_t pNEvents, int pTGroup );
 
-	float findCbcOccupancy( Cbc* pCbc, int pTGroup, int pEventsPerPoint );
+    float findCbcOccupancy ( Cbc* pCbc, int pTGroup, int pEventsPerPoint );
 
-	void fillOccupancyHist( Cbc* pCbc, int pTGroup, const Event* pEvent );
+    void fillOccupancyHist ( Cbc* pCbc, int pTGroup, const Event* pEvent );
 
-	void clearOccupancyHists( Cbc* pCbc );
+    void clearOccupancyHists ( Cbc* pCbc );
 
-	void clearVPlusMap();
+    void clearVPlusMap();
 
-	void setRegValues();
+    void setRegValues();
 
-	void updateHists( std::string pHistname );
+    void updateHists ( std::string pHistname );
 
-	void writeGraphs();
 
 
   private:
-	// helper methods
-	void setRegBit( uint8_t& pRegValue, uint8_t pPos, bool pValue ) {
-		pRegValue ^= ( -pValue ^ pRegValue ) & ( 1 << pPos );
-	}
+    // Canvases
+    TCanvas* fVplusCanvas;
+    TCanvas* fOffsetCanvas;
+    TCanvas* fOccupancyCanvas;
 
-	void toggleRegBit( uint8_t& pRegValue, uint8_t pPos ) {
-		pRegValue ^= 1 << pPos;
-	}
+    // Containers
+    std::map<Cbc*, uint16_t> fVplusMap;
 
-	bool getBit( uint8_t& pRegValue, uint8_t pPos ) {
-		return ( pRegValue >> pPos ) & 1;
-	}
+    // Counters
+    uint32_t fNCbc;
+    uint32_t fNFe;
 
-	// Canvases
-	TCanvas* fVplusCanvas;
-	TCanvas* fOffsetCanvas;
-	TCanvas* fOccupancyCanvas;
-
-	// Containers
-	TestGroupChannelMap fTestGroupChannelMap;
-	std::map<Cbc*, uint8_t> fVplusMap;
-
-	// Counters
-	uint32_t fNCbc;
-	uint32_t fNFe;
-
-	// Settings
-	bool fHoleMode;
-	bool fTestPulse;
-	uint8_t fTestPulseAmplitude;
-	uint32_t fEventsPerPoint;
-	uint8_t fTargetVcth;
-	uint8_t fTargetOffset;
-	bool fCheckLoop;
+    // Settings
+    bool fHoleMode;
+    bool fTestPulse;
+    uint8_t fTestPulseAmplitude;
+    uint32_t fEventsPerPoint;
+    uint16_t fTargetVcth;
+    uint8_t fTargetOffset;
+    bool fCheckLoop;
 
 };
 

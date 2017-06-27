@@ -90,12 +90,12 @@ int main ( int argc, char* argv[] )
     std::stringstream outp;
     cTool.InitializeHw ( cHWFile, outp );
     cTool.InitializeSettings ( cHWFile, outp );
+    LOG (INFO) << outp.str();
+    outp.str ("");
     cTool.CreateResultDirectory ( cDirectory );
     cTool.InitResultFile ( "CalibrationResults" );
     cTool.StartHttpServer();
-    cTool.ConfigureHw (outp);
-    LOG (INFO) << outp.str();
-    outp.str ("");
+    cTool.ConfigureHw ();
     //if ( !cOld )
     //{
     t.start();
@@ -109,7 +109,7 @@ int main ( int argc, char* argv[] )
     if ( cVplus ) cCalibration.FindVplus();
 
     cCalibration.FindOffsets();
-    cCalibration.SaveResults();
+    cCalibration.writeObjects();
     cCalibration.dumpConfigFiles();
     t.stop();
     t.show ( "Time to Calibrate the system: " );
@@ -121,13 +121,15 @@ int main ( int argc, char* argv[] )
         //tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit (&cTool);
-        cPedeNoise.ConfigureHw (outp);
-        LOG (INFO) << outp.str();
-        outp.str ("");
+        //cPedeNoise.ConfigureHw ();
         cPedeNoise.Initialise(); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
+
+        cPedeNoise.sweepSCurves (225);
+        cPedeNoise.sweepSCurves (205);
+
         cPedeNoise.Validate();
-        cPedeNoise.SaveResults( );
+        cPedeNoise.writeObjects( );
         cPedeNoise.dumpConfigFiles();
         t.stop();
         t.show ( "Time to Scan Pedestals and Noise" );

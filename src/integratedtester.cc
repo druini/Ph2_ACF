@@ -52,11 +52,11 @@ const std::string rst ("\033[0m");
 // Typedefs for Containers
 typedef std::map<std::string, double> HMP4040_currents;
 typedef std::map<double, std::string> HMP4040_voltages;
-typedef std::pair< time_t , HMP4040_currents> HMP4040_measurement;
+typedef std::pair< time_t, HMP4040_currents> HMP4040_measurement;
 
 
 // generic tokenize string function  - blatantly copied from G.Auzinger
-std::vector<std::string> tokenize_input ( std::string& cInput , const char* cSeperator)
+std::vector<std::string> tokenize_input ( std::string& cInput, const char* cSeperator)
 {
     std::vector<std::string> cOutput;
 
@@ -73,12 +73,12 @@ std::string getHomeDirectory()
 {
     char buffer[256];
     std::string currentDir = getcwd (buffer, sizeof (buffer) );
-    std::vector<std::string> directories = tokenize_input ( currentDir , "/");
+    std::vector<std::string> directories = tokenize_input ( currentDir, "/");
     std::string homeDir = "/" + directories[0] + "/" +  directories[1];
     return homeDir;
 }
 // function to create bash script which launches the HMP4040 server in a tmux session called HMP4040_Server
-void create_HMP4040server_tmuxSession (std::string pHostname  = "localhost" , int pZmqPortNumber = 8081 , int pHttpPortNumber = 8080 , int pMeasureInterval_s = 2 )
+void create_HMP4040server_tmuxSession (std::string pHostname  = "localhost", int pZmqPortNumber = 8081, int pHttpPortNumber = 8080, int pMeasureInterval_s = 2 )
 {
     char buffer[256];
     std::string currentDir = getcwd (buffer, sizeof (buffer) );
@@ -93,12 +93,12 @@ void create_HMP4040server_tmuxSession (std::string pHostname  = "localhost" , in
     starterScript << "SESSION_NAME=HMP4040_Server" << std::endl <<  std::endl ;
     starterScript << "tmux list-session 2>&1 | grep -q \"^$SESSION_NAME\" || tmux new-session -s $SESSION_NAME -d" << std::endl;
     // send chdir via tmux session
-    sprintf (buffer, "tmux send-keys -t $SESSION_NAME \"cd %s\" Enter" , baseDirectory.c_str() );
+    sprintf (buffer, "tmux send-keys -t $SESSION_NAME \"cd %s\" Enter", baseDirectory.c_str() );
     starterScript << buffer << std::endl << std::endl;
     // set-up environment for Ph2_USB_InstDriver
     starterScript << "tmux send-keys -t $SESSION_NAME \". ./setup.sh\" Enter" << std::endl;
     // launch HMP4040 server
-    sprintf (buffer, "tmux send-keys -t $SESSION_NAME \"lvSupervisor -r %d -p %d -i %d\" Enter" , pZmqPortNumber, pHttpPortNumber , pMeasureInterval_s ) ;
+    sprintf (buffer, "tmux send-keys -t $SESSION_NAME \"lvSupervisor -r %d -p %d -i %d\" Enter", pZmqPortNumber, pHttpPortNumber, pMeasureInterval_s ) ;
     starterScript << buffer << std::endl;
     starterScript.close();
 }
@@ -114,7 +114,7 @@ bool is_numeric (std::string const& str)
 // check if the HMP4040 server has been launched
 // if not launch it in a tmux session using a bask script created by create_HMP4040server_tmuxSession
 //
-int launch_HMP4040server ( std::string pHostname , int& pZmqPortNumber  , int& pHttpPortNumber , int pMeasureInterval_s )
+int launch_HMP4040server ( std::string pHostname, int& pZmqPortNumber, int& pHttpPortNumber, int pMeasureInterval_s )
 {
 #ifdef __USBINST__
     LOG (INFO) << "Check if HMP4040 server is not launched and if so launch it."  ;
@@ -133,11 +133,12 @@ int launch_HMP4040server ( std::string pHostname , int& pZmqPortNumber  , int& p
         std::string cInfo = cLock->get_info();
         LOG (INFO) << "Retreived the following parameters from the info file: " << cInfo;
         LOG (INFO) <<  "HMP4040 server already running .... so do nothing!";
-        delete cLock;
+
+        if (cLock) delete cLock;
 
 
         //tokenize the cInfo string to recover the port numbers so the client can be smart enough to connect to the correct port!
-        std::vector<std::string> cTokens = tokenize_input ( cInfo , " ");
+        std::vector<std::string> cTokens = tokenize_input ( cInfo, " ");
         std::vector<int> cPorts;
         cPorts.clear();
 
@@ -155,23 +156,24 @@ int launch_HMP4040server ( std::string pHostname , int& pZmqPortNumber  , int& p
     else
     {
         // have to do this here because actually lvSupervisor attempts to access the LOCK file as well...
-        delete cLock;
+        if (cLock) delete cLock;
 
         LOG (INFO)  <<  "HMP4040 server not running .... so try and launch it.";
         // launch the server in the background with nohup... probably not the smartest way of doing this but the only way I know how without using screen/tmux
         // // sprintf(cmd, "nohup bin/lvSupervisor -r %d -p %d -i %d  0< /dev/null", pZmqPortNumber, pHttpPortNumber, cMeasureInterval_s);
         // nohup has a problem that i cannot seem to make it ignore std_in ... which seems to cause the server to crash/time-out ...
         // so do this with tmux instead
-        create_HMP4040server_tmuxSession (pHostname , pZmqPortNumber, pHttpPortNumber, pMeasureInterval_s );
+        create_HMP4040server_tmuxSession (pHostname, pZmqPortNumber, pHttpPortNumber, pMeasureInterval_s );
         char cmd[120];
-        sprintf (cmd , ". %s/start_HMP4040.sh" ,  baseDirectory.c_str() );
+        sprintf (cmd, ". %s/start_HMP4040.sh",  baseDirectory.c_str() );
         system (cmd);
 
         // start monitoring the voltages and currents on the HMP4040
         HMP4040Client* cClient = new HMP4040Client (pHostname, pZmqPortNumber);
         cClient->StartMonitoring();
         std::this_thread::sleep_for (std::chrono::seconds (pMeasureInterval_s * 2) );
-        delete cClient;
+
+        if (cClient) delete cClient;
     }
 
 
@@ -179,11 +181,11 @@ int launch_HMP4040server ( std::string pHostname , int& pZmqPortNumber  , int& p
     return 0;
 }
 // check that the currents drawn on the low voltage lines of the hybrid are within the "normal" range
-HMP4040_measurement get_HMP4040currents ( std::string pHostname = "localhost" , int pZmqPortNumber = 8081 , int pHttpPortNumber = 8080  )
+HMP4040_measurement get_HMP4040currents ( std::string pHostname = "localhost", int pZmqPortNumber = 8081, int pHttpPortNumber = 8080  )
 {
     HMP4040_measurement cMeasurement;
     HMP4040_currents cCurrents ;
-    HMP4040_voltages cVoltages = { {5.0, "pLVDS"}  , {5.0, "nLVDS"} , {3.3, "VREG"} , {1.2, "CBC"}};
+    HMP4040_voltages cVoltages = { {5.0, "pLVDS"}, {5.0, "nLVDS"}, {3.3, "VREG"}, {1.2, "CBC"}};
 
 #ifdef __USBINST__
     HMP4040Client* cClient = new HMP4040Client (pHostname, pZmqPortNumber);
@@ -199,15 +201,17 @@ HMP4040_measurement get_HMP4040currents ( std::string pHostname = "localhost" , 
         auto search = cVoltages.find (cValues.fVoltages.at (i) );
 
         if (search != cVoltages.end() )
-            cCurrents.insert (std::pair<std::string, double> (search->second , cValues.fCurrents.at (i) * 1e3 ) );
+            cCurrents.insert (std::pair<std::string, double> (search->second, cValues.fCurrents.at (i) * 1e3 ) );
     }
 
     cMeasurement.second = cCurrents;
-    delete cClient;
+
+    if (cClient) delete cClient;
+
 #endif
     return cMeasurement;
 }
-bool check_CurrentConsumption (Tool pTool , int pNCBCs = 2 , std::string pHostname = "localhost" , int pZmqPortNumber = 8081 , int pHttpPortNumber = 8080 , int pMeasureInterval_s = 2 )
+bool check_CurrentConsumption (Tool pTool, int pNCBCs = 2, std::string pHostname = "localhost", int pZmqPortNumber = 8081, int pHttpPortNumber = 8080, int pMeasureInterval_s = 2 )
 {
     double vLVDS = 5.0 ;
     double vRegulator = 3.3 ;
@@ -216,8 +220,8 @@ bool check_CurrentConsumption (Tool pTool , int pNCBCs = 2 , std::string pHostna
     //nominal currents for the 4 different low voltage lines on the hybrid : all in mA
     //nominal current drawn by one CBC
     double ncCBC = 60;
-    HMP4040_currents cCurrentLimits = { {"pLVDS", 14.0}  , {"nLVDS", 14.0} , {"VREG", 160.0} , {"CBC", ncCBC * pNCBCs}};
-    std::vector<std::string> cChannelNames = { "pLVDS" , "nLVDS" , "VREG" , "CBC"};
+    HMP4040_currents cCurrentLimits = { {"pLVDS", 14.0}, {"nLVDS", 14.0}, {"VREG", 160.0}, {"CBC", ncCBC * pNCBCs}};
+    std::vector<std::string> cChannelNames = { "pLVDS", "nLVDS", "VREG", "CBC"};
 
     int chkLVDS = 0;
     int chkRegulator = 0;
@@ -228,7 +232,7 @@ bool check_CurrentConsumption (Tool pTool , int pNCBCs = 2 , std::string pHostna
     std::string message;
     int iterations = 0 ;
     // get the latest reading from the logged using the HMP4040 monitoring function.
-    HMP4040_measurement cMeasurement = get_HMP4040currents ( pHostname , pZmqPortNumber, pHttpPortNumber );
+    HMP4040_measurement cMeasurement = get_HMP4040currents ( pHostname, pZmqPortNumber, pHttpPortNumber );
     time_t cTimeStamp = cMeasurement.first;
     HMP4040_currents cCurrentsMeasured = cMeasurement.second;
     int cNumTimes_limitReached = 0 ;
@@ -252,7 +256,7 @@ bool check_CurrentConsumption (Tool pTool , int pNCBCs = 2 , std::string pHostna
                     double deviationFromNominalValue = std::fabs (srch_cLimits->second - srch_cMeasurements->second) / srch_cLimits->second ;
                     limitReached = ( deviationFromNominalValue > 0.33 ) ? true : false ;
                     char buffer[120];
-                    sprintf (buffer, "# Current measured on %s = %.3f mA.\n" , (srch_cMeasurements->first).c_str() , (double) (srch_cMeasurements->second)  );
+                    sprintf (buffer, "# Current measured on %s = %.3f mA.\n", (srch_cMeasurements->first).c_str(), (double) (srch_cMeasurements->second)  );
                     message += buffer;
                     //LOG (INFO) << srch_cLimits->first << " : " << srch_cLimits->second ;
                     //LOG (INFO) << srch_cMeasurements->first << " : " << srch_cMeasurements->second;
@@ -263,7 +267,7 @@ bool check_CurrentConsumption (Tool pTool , int pNCBCs = 2 , std::string pHostna
         // wait for 5s before checking for a new value
         std::this_thread::sleep_for (std::chrono::seconds (pMeasureInterval_s * 2) );
         // check for a new value
-        cMeasurement = get_HMP4040currents ( pHostname , pZmqPortNumber, pHttpPortNumber );
+        cMeasurement = get_HMP4040currents ( pHostname, pZmqPortNumber, pHttpPortNumber );
         cCurrentsMeasured = cMeasurement.second;
 
         if ( cTimeStamp < cMeasurement.first) iterations++;
@@ -316,11 +320,11 @@ void perform_Calibration (Tool* pTool)
 
     cCalibration.FindVplus();
     cCalibration.FindOffsets();
-    cCalibration.SaveResults();
+    cCalibration.writeObjects();
     cCalibration.dumpConfigFiles();
 }
 // find the shorts on the DUT
-bool check_Shorts (Tool* pTool ,  uint32_t cMaxNumShorts)
+bool check_Shorts (Tool* pTool,  uint32_t cMaxNumShorts)
 {
     ShortFinder cShortFinder;
     cShortFinder.Inherit (pTool);
@@ -332,10 +336,11 @@ bool check_Shorts (Tool* pTool ,  uint32_t cMaxNumShorts)
 
     cShortFinder.Initialize();
     cShortFinder.FindShorts();
+    //cShortFinder.writeObjects();
     cShortFinder.SaveResults();
     uint32_t cNShorts = cShortFinder.GetNShorts() ;
     char line[120];
-    sprintf (line, "# %d shorts found on hybrid = %d" , cNShorts );
+    sprintf (line, "# %d shorts found on hybrid = %d", cNShorts );
     cShortFinder.AmmendReport (line);
     cShortFinder.AmmendReport ( ( cNShorts <= cMaxNumShorts) ? ("# Shorts test passed.") : ("# Shorts test failed.") );
 
@@ -365,12 +370,12 @@ void perform_OccupancyMeasurment (Tool* pTool )
     cHybridTester.DisplayDeadChannels();
 
     // save results
-    cHybridTester.SaveResults();
+    cHybridTester.writeObjects();
 
     char line[120];
-    sprintf (line, "# Top Pad Occupancy = %.2f ± %.3f" , cHybridTester.GetMeanOccupancyTop() , cHybridTester.GetRMSOccupancyTop() );
+    sprintf (line, "# Top Pad Occupancy = %.2f ± %.3f", cHybridTester.GetMeanOccupancyTop(), cHybridTester.GetRMSOccupancyTop() );
     cHybridTester.AmmendReport (line);
-    sprintf (line, "# Bottom Pad Occupancy = %.2f ± %.3f" , cHybridTester.GetMeanOccupancyBottom() , cHybridTester.GetRMSOccupancyBottom() );
+    sprintf (line, "# Bottom Pad Occupancy = %.2f ± %.3f", cHybridTester.GetMeanOccupancyBottom(), cHybridTester.GetRMSOccupancyBottom() );
     cHybridTester.AmmendReport (line);
 
     // measure pedestal
@@ -380,12 +385,9 @@ void perform_AntennaOccupancyMeasurement (Tool* pTool )
 {
     LOG (INFO) << "Starting occupancy measurement using the antenna." ;
 
-    std::stringstream outp;
-
     AntennaTester cAntennaTester;
     cAntennaTester.Inherit (pTool);
-    cAntennaTester.ConfigureHw (outp);
-    LOG (INFO) << outp.str();
+    cAntennaTester.ConfigureHw ();
     cAntennaTester.Initialize();
 
     // re-configure CBC regsiters with values from the calibration
@@ -396,7 +398,7 @@ void perform_AntennaOccupancyMeasurement (Tool* pTool )
     cAntennaTester.Measure();
 
     // save results
-    cAntennaTester.SaveResults();
+    cAntennaTester.writeObjects();
     //char line[120];
     //sprintf(line, "# Top Pad Occupancy = %.2f ± %.3f" , cHybridTester.GetMeanOccupancyTop() , cHybridTester.GetRMSOccupancyTop() );
     //cHybridTester.AmmendReport(line);
@@ -527,7 +529,7 @@ int main ( int argc, char* argv[] )
         if ( cCurrents )
         {
             // launch HMP4040 server
-            launch_HMP4040server ( cHostname , zmqPortNumber, httpPortNumber, cInterval);
+            launch_HMP4040server ( cHostname, zmqPortNumber, httpPortNumber, cInterval);
             exit (0);
         }
     }
@@ -553,14 +555,14 @@ int main ( int argc, char* argv[] )
             //this tool stays on the stack and lives until main finishes - all other tools will update the HWStructure from cTool
             std::stringstream outp;
             Tool cTool;
-            cTool.InitializeHw ( cHWFile , outp );
-            cTool.InitializeSettings ( cHWFile , outp );
+            cTool.InitializeHw ( cHWFile, outp );
+            cTool.InitializeSettings ( cHWFile, outp );
+            LOG (INFO) << outp.str();
             cTool.CreateResultDirectory ( cDirectory );
             cTool.InitResultFile ( "Summary" );
             cTool.StartHttpServer();
-            cTool.ConfigureHw (outp );
+            cTool.ConfigureHw ();
             cTool.CreateReport();
-            LOG (INFO) << outp.str();
 
             char line[120];
 
@@ -568,7 +570,7 @@ int main ( int argc, char* argv[] )
             if ( cCurrents )
             {
                 t.start();
-                bool currentConsumptionTest_passed = check_CurrentConsumption (cTool , cNumCBCs , cHostname , zmqPortNumber, httpPortNumber, cInterval);
+                bool currentConsumptionTest_passed = check_CurrentConsumption (cTool, cNumCBCs, cHostname, zmqPortNumber, httpPortNumber, cInterval);
                 cTool.AmmendReport ( ( currentConsumptionTest_passed) ? ("# Current consumption test passed.") : ("# Current consumption test failed.") );
                 t.stop();
                 sprintf (line, "# %.3f s required to check current consumption on low voltage power supply.", t.getElapsedTime() );

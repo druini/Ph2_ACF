@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="LATIN1"?>
+<node id="FPGA1" address="0x00000000" >
+	<!-- FC7 system register address table -->
+	<node id="sysreg" address="0x00000000" module="file://fc7_system_address_table.xml"/>
+	<!-- GLIB user logic registers -->
+	<!-- firmware configurations -->
+    <node id="user_stat" address ="0x40000000" permission="r" mode="block" size="0x0000000F">
+    </node>
+    <!--------------------------------------------------------------------------------------------------------------------->
+    <!--CONFIG REGISTERS-->
+    <!--------------------------------------------------------------------------------------------------------------------->
+	<node id="cbc_system_cnfg" address="0x40000100" permission="rw" >
+		<node id="global" > 
+			<node id="be" address="0x00" >
+				<node id="id" mask="0x0000007F"/>
+			</node>
+			<node id="cbc0" address="0x01">
+				<node id="active" mask="0x00000001" description="0x1(default)"/>
+                <!--other values are not valid for single cbc firmware.-->
+                <node id="id"          mask="0x000001F0" description="0x1(default)"/>
+                <node id="fe_id"       mask="0x00000E00" description="0x1(default)"/>
+                <node id="i2c_address" mask="0x0007F000" description="0x5F(default)"/>
+			</node>
+             <!--some more reigsters here that have to go into initial configure-->
+             <node id="misc"        address="0x10">
+                 <node id="trigger_master_external" mask="0x00000002"/>
+             </node>
+             <node id="test_out" address="0x11">
+				 <node id="1" mask="0x0000FFFF"/>
+				 <node id="2" mask="0xFFFF0000"/>
+			 </node>
+		</node>
+		<node id="cbc_system_clk" address="0x20" description="0x0(external)/0x1(internal)"/>
+		<node id="fast_command_manager">
+			<node id="fast_signal_enable" address="0x21">
+				<node id="async_l1a" mask="0x00000001"/>
+				<node id="fmc"       mask="0x00000002"/>
+				<node id="ipbus"     mask="0x00000004"/>
+				<node id="internal"  mask="0x00000008"/>
+			</node>
+			<node id="fast_signal_generator" description="internal fast signal is generated in the fast_signal_generator module and the settings are here.">
+				<node id="enable" address="0x22">
+					<node id="fast_reset"  mask="0x00000001"/>
+					<node id="trigger"     mask="0x00000002"/>
+					<node id="test_pulse"  mask="0x00000004"/>
+					<node id="orbit_reset" mask="0x00000008"/>
+				</node>
+				<node id="Ncycle"             address="0x23" description="# of periodic fast signal cycle from the start signal."/>
+				<node id="cycle_period"       address="0x24" description="period of one cycle in 40MHz clock cycle."/>
+				<!-- fast reset timing is fixed to 0 -->
+				<node id="trigger_timing"     address="0x25" description="timing of the trigger in the periodic cycle in 40MHz clock cycle."/>
+				<node id="test_pulse_timing"  address="0x26" description="timing of the test pulse in the periodic cycle in 40MHz clock cycle."/>
+				<node id="orbit_reset_timing" address="0x27" description="timing of the orbit reset in the periodic cycle in 40MHz clock cycle."/>
+			</node>
+		</node>
+        <node id="data_buffer">
+            <node id="safe_nwords_free" address="0x2A"/>
+        </node>
+		<node id="cbc_data_processor">
+			<node id="cbc0">
+				<node id="latencies"     address="0x50">
+					<node id="l1a"       mask="0x000001FF" description="l1a latency, The event timing to the timing of the l1a arrival at CBC. the same as the one at CBC."/>
+					<node id="trig_data" mask="0x0003FE00" description="trigger data latency. The event timing to the trigger data arrival timing at BE + time for l1a from BE to CBC."/>
+				</node>
+			</node>
+		</node>
+        <node id="mmcme2_drp" address="0x60">
+            <node id="ipb_ctrl_en" mask="0x00000001"/>
+            <node id="saddr" mask="0x00000006"/>
+        </node>
+        <node id="io">
+            <node id="data_clock_timing_tuning" address="0x70">
+                <node id="min_tuning_idelay_tap" mask="0x0000001F"/>
+                <node id="max_tuning_idelay_tap" mask="0x000003E0"/>
+                <node id="idelay_offset" mask="0x00007C00"/>
+            </node>
+        </node>
+    </node>
+    <!--------------------------------------------------------------------------------------------------------------------->
+    <!--CONTROL REGISTERS-->
+    <!--------------------------------------------------------------------------------------------------------------------->
+	<node id="cbc_system_ctrl" address="0x40000200" permission="w" >
+		<node id="global"                   address="0x00">
+			<node id="reset"                             mask="0x00000001" description="reset all the modules."/>
+			<node id="daq_reset"                         mask="0x00000002" description="The daq chain (except for signal delays) and serial_command_generator is reset. Should be sent before starting a new run."/> 
+            <!--TODO:to be implemented -->
+			<!--<node id="init"                              mask="0x00000004" description="initialize cbc i2c manager, configure cbc to send only sync bits, ser_data_delay_start_tuning signal is emitted."/>-->
+			<node id="cbc_hard_reset"                    mask="0x00010000" description="send a CBC hard reset on the corresponding line"/>
+            <node id="idelayctrl_reset"                  mask="0x00100000"/>
+            <node id="fs_oserdes_reset"                  mask="0x00400000"/>
+		</node>
+		<node id="fast_command_manager" address="0x01">
+			<node id="reset"                             mask="0x00000001"/>
+			<node id="start_trigger"                     mask="0x00000002"/>
+			<node id="stop_trigger"                      mask="0x00000004"/>
+			<node id="fast_signal_reset"                 mask="0x00010000"/>
+			<node id="fast_signal_test_pulse_req"        mask="0x00020000"/>
+			<node id="fast_signal_trigger"               mask="0x00040000"/>
+			<node id="fast_signal_orbit_reset"           mask="0x00080000"/>
+			<node id="fast_signal_generator_reset"       mask="0x00100000"/>
+			<node id="fast_signal_generator_load_config" mask="0x00200000"/>
+			<node id="fast_signal_generator_start"       mask="0x00400000"/>
+			<node id="fast_signal_generator_stop"        mask="0x00800000"/>
+		</node>
+		<node id="event_builder"            address="0x02">
+			<node id="reset"                             mask="0x00000001"/>
+		</node>
+		<node id="data_buffer"              address="0x03">
+			<node id="reset"                             mask="0x00000001"/>
+            <node id="trig_readall"                      mask="0x00000002" description="set the read pointer to read all the contents of the buffer. (just for debugging.)"/>
+		</node>
+		<node id="cbc_data_processor"       address="0x10">
+            <node id="cbc0">
+			    <node id="reset"                         mask="0x00000001"/>
+			    <node id="ser_data_delay_reset"          mask="0x00000002"/>
+			    <node id="ser_data_delay_start_tuning"   mask="0x00000004"/>
+            </node>
+		</node>
+		<node id="cbc_i2c_bus_managers">
+			<node id="fe0"              address="0x30">
+				<node id="reset"                             mask="0x00000001"/>
+				<node id="init"                              mask="0x00000002"/>
+				<node id="reset_fifos"                       mask="0x00000004"/>
+			</node>
+		</node>
+        <node id="io" address="0x40">
+            <node id="fs_oserdes_reset"  mask="0x00000001"/>
+            <node id="cdctsb_reset"  mask="0x00000002"/>
+            <node id="data_clock_timing_reset"  mask="0x00000004"/>
+            <node id="data_clock_timing_tune"  mask="0x00000008"/>
+            <node id="data_clock_timing_scan_pulse"  mask="0x00000010"/>
+        </node>
+        <node id="mmcme2_drp" address="0x50">
+            <node id="rst" mask="0x00000001"/>
+            <node id="sen" mask="0x00000002"/>
+        </node>
+	</node>
+    <!--------------------------------------------------------------------------------------------------------------------->
+    <!--STATUS REGISTER-->
+    <!--------------------------------------------------------------------------------------------------------------------->
+	<node id="cbc_system_stat" address="0x40000300" permission="r" >
+        <node id="system">
+		    <node id="id"                       address = "0x00"/> <!-- 'C' 'B' 'C' '3' --> 
+		    <node id="version"                  address = "0x01">  <!-- The version information --> 
+		    	<node id="ver_major"                         mask="0xF0000000"/>
+		    	<node id="ver_minor"                         mask="0x0F000000"/>
+		    	<node id="ver_build"                         mask="0x00FF0000"/>
+		    	<node id="ver_year"                          mask="0x0000FE00"/>
+		    	<node id="ver_month"                         mask="0x000001E0"/>
+		    	<node id="ver_day"                           mask="0x0000001F"/>
+		    </node>
+            <node id="type" address="0x02"/>
+        </node>
+        <node id="global" address="0x03">
+            <node id="cbc_system_clocks_0_locked" mask="0x00000001"/>
+            <node id="cbc_system_clocks_1_locked" mask="0x00000002"/>
+            <node id="cbc_system_clocks_1_saddr" mask="0x0000000C"/>
+        </node>
+		<node id="fast_command_manager" address = "0x04">
+			<node id="fsm"                               mask="0x00000001"/>
+			<node id="trigger_fsm"                       mask="0x00000010"/>
+			<node id="fast_signal_generator_fsm"         mask="0x00000100"/>
+		</node>
+		<node id="event_builder"            address = "0x05">
+			<node id="write_data_fsm"                    mask="0x00000007"/>
+			<node id="send_data_fsm"                     mask="0x00000030"/> 
+		</node>
+		<node id="data_buffer">
+			<node id="nword_all"                 address="0x06" mask="0x0001FFFF" description="# of words ready to be read."/>
+			<node id="nword_events"              address="0x07" mask="0x0001FFFF" description="# of words in event block ready to be read."/>
+			<node id="nword_free"                address="0x08" mask="0x0001FFFF" description="# of free words in the buffer." />
+            <node id="waddr"                     address="0x09" mask="0x0000FFFF"/>
+            <node id="raddr"                     address="0x0a" mask="0x0000FFFF"/>
+		</node>
+		<node id="cbc_data_processor">
+			<node id="cbc0"                     address="0x30">
+				<node id="deserializer_fsm"                  mask="0x00000001"/>
+				<node id="ser_data_delay_idelay_tuning_fsm"  mask="0x0000000E"/>
+				<node id="ser_data_delay_idelay_delay"       mask="0x000001F0"/>
+			</node>
+            <node id="cbc0_data_frame_counter" address="0x31"/>
+		</node>
+		<node id="cbc_i2c_bus_managers">
+			<node id="fe0">
+				<node id="command_fifo_stat"           address = "0x50">
+					<node id="empty"                             mask="0x00000001"/> 
+					<node id="full"                              mask="0x00000002"/> 
+				</node>
+				<node id="reply_fifo_stat"             address = "0x51">
+					<node id="empty"                             mask="0x00000001"/>
+					<node id="full"                              mask="0x00000002"/>
+				</node>
+				<node id="reply_fifo_ndata"            address = "0x52"/>
+                <!--<node id="reply_fifo_nrdata"            address = "0x52"/>-->
+                <node id="bus_ready"                   address = "0x53"/>
+			</node>
+		</node>
+      <node id="io">
+      <node id="cbc0"                            >
+        <node id="data_clock_timing"           address="0x65">
+          <node id="fsm"                     mask="0x0000000F"/>
+          <node id="iserdes_idelay_fsm"      mask="0x00000070"/>
+          <node id="iserdes_bitslip_counter" mask="0x00000380"/>
+          <node id="idelay_tap"              mask="0x00007C00"/>
+          <node id="delay_locked"            mask="0x00008000"/>
+          <node id="pattern"                 mask="0x00FF0000"/>
+        </node>
+        <node id="data"                        address="0x66">
+          <node id="slvs5"                   mask="0x000000FF"/>
+        </node>
+        <node id="tuning_clk0"                 address="0x67">
+          <node id="pre_idelay_tuning_tap"   mask="0x0000001F"/>
+          <node id="pattern_at_idelay_reset" mask="0x0000FF00"/>
+          <node id="fsm_passed"              mask="0x00FF0000"/>
+          <node id="idelay_reset_tuning_tap" mask="0x1F000000"/>
+        </node>
+        <node id="tuning_clk1"                 address="0x68">
+          <node id="pre_idelay_tuning_tap"   mask="0x0000001F"/>
+          <node id="pattern_at_idelay_reset" mask="0x0000FF00"/>
+          <node id="fsm_passed"              mask="0x00FF0000"/>
+          <node id="idelay_reset_tuning_tap" mask="0x1F000000"/>
+        </node>
+      </node>
+         </node>
+    <node id="mmcme2_drp"                          address="0x70">
+      <node id="srdy"                                      mask="0x00000001"/>
+    </node>
+        <node id="cbc_data_frame"       address="0xa0">
+            <node id="cbc0"             address="0x0" mode="non_incremental" size="9"/>
+        </node>
+	</node>
+    <!--------------------------------------------------------------------------------------------------------------------->
+    <!--FIFOS-->
+    <!--------------------------------------------------------------------------------------------------------------------->
+	<node id="data"          address="0x40000400" permission="r" mode="non-incremental" size="65536"/>
+	<node id="cbc_i2c_regs"  address="0x40000800">
+		<node id="command_fifos"  address="0x00" permission="w" mode="non-incremental" size="65536" /> 
+		<node id="reply_fifos" >
+			<node id="fe0"   address="0x01" permission="r" size="65536" mode="non-incremental"/>
+		</node>
+	</node>
+    <node id="cdctb"  address="0x40000804" permission="r" mode="non-incremental" size="60"/>
+
+    <!--------------------------------------------------------------------------------------------------------------------->
+    <!--FPGACONFIG REGISTERS-->
+    <!--------------------------------------------------------------------------------------------------------------------->
+    <!--Present in Glib or FC7 address table for fpgaconfig-->
+	  <node id="flash_async_read_cmd"	address="0x0800bddf"  mask="0xFFFFFFFF" description="FLASH memory asynchronous read mode"/>
+    <node id="flash_block" address="0x08000000"     mode="block" size="0x00800000" permission="rw" description="FLASH memory for FPGA configuration"/>
+    <!-- ICAP MEMORY SPACE -->
+    <node id="icap" address="0x00000200" mask="0xffffffff" permission="rw" />
+
+    <node id="buf_cta" address="0x0000400" class="MmcPipeInterface" description="UC link buffer test register" size="0x3" tags="slave">
+      <node id="FPGAtoMMCcounters" address="0x0"/>
+      <node id="MMCtoFPGAcounters" address="0x1"/>
+      <node id="FIFO" address="0x2" mode="non-incremental" size="512" />
+  	</node>
+</node>

@@ -63,7 +63,7 @@ namespace Ph2_HwDescription {
         ~BeBoard()
         {
             for ( auto& pModule : fModuleVector )
-                delete pModule;
+                if (pModule) delete pModule;
 
             fModuleVector.clear();
         }
@@ -183,12 +183,12 @@ namespace Ph2_HwDescription {
             return fNCbcDataSize;
         };
 
-        void setBoardType (const std::string& pBoardType)
+        void setBoardType (const BoardType pBoardType)
         {
             fBoardType = pBoardType;
         }
 
-        std::string getBoardType() const
+        BoardType getBoardType() const
         {
             return fBoardType;
         }
@@ -200,7 +200,7 @@ namespace Ph2_HwDescription {
         //Connection Members
         uint8_t fBeId;
         uint16_t fNCbcDataSize;
-        std::string fBoardType;
+        BoardType fBoardType;
 
 
         BeBoardRegMap fRegMap;             /*!< Map of BeBoard Register Names vs. Register Values */

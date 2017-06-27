@@ -81,7 +81,7 @@ struct Channel
     * \param pParameter: the current parameter that is being varied for storing in file
     * \param pValue: the value of pParameter
     */
-    void initializeHist ( uint8_t pValue, TString pParameter );
+    void initializeHist ( uint16_t pValue, TString pParameter );
     /*!
      *brief  Initialize the TGraph to store the PulseShapeMeasurement
      *param pTitle: the Title for the TGraph
@@ -100,7 +100,7 @@ struct Channel
     * \brief fill the histogram
     * \param pVcth: the bin at which to fill the histogram (normally Vcth value)
     */
-    void fillHist ( uint8_t pVcth );
+    void fillHist ( uint16_t pVcth );
 
     /*!
     * \brief fit the SCurve Histogram with the Fit object
@@ -110,7 +110,7 @@ struct Channel
     * \param pValue: the value of pParameter
     *\param pResutlfile: pointer to the ROOT file where the results are supposed to be stored
     */
-    void fitHist ( uint32_t pEventsperVcth, bool pHole, uint8_t pValue, TString pParameter, TFile* pResultfile );
+    void fitHist ( uint32_t pEventsperVcth, bool pHole, uint16_t pValue, TString pParameter, TFile* pResultfile );
 
     /*!
     * \brief differentiate the SCurve Histogram with the Derivative object
@@ -120,7 +120,7 @@ struct Channel
     * \param pValue: the value of pParameter
     *\param pResutlfile: pointer to the ROOT file where the results are supposed to be stored
     */
-    void differentiateHist ( uint32_t pEventsperVcth, bool pHole, uint8_t pValue, TString pParameter, TFile* pResultfile );
+    void differentiateHist ( uint32_t pEventsperVcth, bool pHole, uint16_t pValue, TString pParameter, TFile* pResultfile );
 
     /*!
     * \brief reset the Histogram and Fit objects

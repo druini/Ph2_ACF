@@ -21,8 +21,7 @@ namespace Ph2_HwInterface {
                                        uint32_t pBoardId ) :
         BeBoardFWInterface ( puHalConfigFileName, pBoardId ),
         fpgaConfig ( nullptr ),
-        fData ( nullptr ),
-        fNthAcq (0) 
+        fNthAcq (0)
     {
     }
 
@@ -32,7 +31,6 @@ namespace Ph2_HwInterface {
                                        FileHandler* pFileHandler ) :
         BeBoardFWInterface ( puHalConfigFileName, pBoardId ),
         fpgaConfig ( nullptr ),
-        fData ( nullptr ),
         fFileHandler ( pFileHandler ),
         fNthAcq (0)
     {
@@ -45,7 +43,6 @@ namespace Ph2_HwInterface {
                                        const char* pAddressTable ) :
         BeBoardFWInterface ( pId, pUri, pAddressTable ),
         fpgaConfig ( nullptr ),
-        fData ( nullptr ),
         fNthAcq (0)
     {
     }
@@ -57,7 +54,6 @@ namespace Ph2_HwInterface {
                                        FileHandler* pFileHandler ) :
         BeBoardFWInterface ( pId, pUri, pAddressTable ),
         fpgaConfig ( nullptr ),
-        fData ( nullptr ),
         fFileHandler ( pFileHandler ),
         fNthAcq (0)
     {
@@ -218,17 +214,10 @@ namespace Ph2_HwInterface {
         WriteReg ( "break_trigger", 0 );
     }
 
-    uint32_t GlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger )
-    {
-    	std::vector<uint32_t> cData;
-    	return ReadData ( pBoard,  pBreakTrigger, cData);
-    }
-
-    uint32_t GlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& cData, bool wait)
+    uint32_t GlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& pData)
     {
         //Readout settings
         std::chrono::milliseconds cWait ( 1 );
-        //fNpackets = 0;
 
         uhal::ValWord<uint32_t> cVal;
 
@@ -245,12 +234,9 @@ namespace Ph2_HwInterface {
         do
         {
             cVal = ReadReg ( fStrFull );
+
             if ( cVal == 0 )
-            {
-                if(!wait)
-                	return 0;
                 std::this_thread::sleep_for ( cWait );
-            }
         }
         while ( cVal == 0 );
 
@@ -261,8 +247,7 @@ namespace Ph2_HwInterface {
         WriteReg ( fStrSramUserLogic, 0 );
 
         //Read SRAM
-        //std::vector<uint32_t> cData =  ReadBlockRegValue ( fStrSram, fBlockSize );
-        cData =  ReadBlockRegValue ( fStrSram, fBlockSize );
+        pData =  ReadBlockRegValue ( fStrSram, fBlockSize );
 
         WriteReg ( fStrSramUserLogic, 1 );
         WriteReg ( fStrReadout, 1 );
@@ -286,25 +271,16 @@ namespace Ph2_HwInterface {
 
         if ( pBreakTrigger ) WriteReg ( "break_trigger", 0 );
 
-        // just creates a new Data object, setting the pointers and getting the correct sizes happens in Set()
-        if ( fData ) delete fData;
-
-        fData = new Data();
-
-        // set the vector<uint32_t> as event buffer and let him know how many packets it contains
-        fData->Set ( pBoard, cData , fNpackets, false );
-
-        std::cout << __PRETTY_FUNCTION__ << "Save file? " << fSaveToFile << std::endl;
         if ( fSaveToFile )
         {
-            fFileHandler->set ( cData );
-            fFileHandler->writeFile();
+            fFileHandler->set ( pData );
+            //fFileHandler->writeFile();
         }
 
         return fNpackets;
     }
 
-    void GlibFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents )
+    void GlibFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData )
     {
         std::vector< std::pair<std::string, uint32_t> > cVecReg;
 
@@ -361,25 +337,17 @@ namespace Ph2_HwInterface {
         WriteReg ( fStrSramUserLogic, 0 );
 
         //Read SRAM
-        std::vector<uint32_t> cData =  ReadBlockRegValue ( fStrSram, fBlockSize );
+        pData =  ReadBlockRegValue ( fStrSram, fBlockSize );
 
         WriteReg ( fStrSramUserLogic, 1 );
 
         //need to increment the internal Acquisition counter
         fNthAcq++;
 
-        // just creates a new Data object, setting the pointers and getting the correct sizes happens in Set()
-        if ( fData ) delete fData;
-
-        fData = new Data();
-
-        // set the vector<uint32_t> as event buffer and let him know how many packets it contains
-        fData->Set ( pBoard, cData , fNpackets, false );
-
         if ( fSaveToFile )
         {
-            fFileHandler->set ( cData );
-            fFileHandler->writeFile();
+            fFileHandler->set ( pData );
+            //fFileHandler->writeFile();
         }
 
         WriteReg ( "pc_commands.PC_config_ok", 0 );
@@ -675,15 +643,15 @@ namespace Ph2_HwInterface {
                 // if the number of errors is greater than 100, give up
                 if (cWriteAgain.size() < 100 && pWriteAttempts < cMaxWriteAttempts )
                 {
-                    if (pReadback)  LOG (INFO) << BOLDRED <<  "(WRITE#"  << std::to_string(pWriteAttempts) << ") There were " << cWriteAgain.size() << " Readback Errors -trying again!" << RESET ;
-                    
+                    if (pReadback)  LOG (INFO) << BOLDRED <<  "(WRITE#"  << std::to_string (pWriteAttempts) << ") There were " << cWriteAgain.size() << " Readback Errors -trying again!" << RESET ;
+
                     pWriteAttempts++;
                     this->WriteCbcBlockReg ( cWriteAgain, pWriteAttempts, true);
                 }
                 else if ( pWriteAttempts >= cMaxWriteAttempts )
                 {
-                    cSuccess = false; 
-                    pWriteAttempts = 0 ;   
+                    cSuccess = false;
+                    pWriteAttempts = 0 ;
                 }
                 //else std::cout << "There were too many errors " << cWriteAgain.size() << " (>120 Registers). Something is wrong - aborting!" << std::endl;
                 else throw Exception ( "Too many CBC readback errors - no functional I2C communication. Check the Setup" );
@@ -790,21 +758,19 @@ namespace Ph2_HwInterface {
         WriteReg ( "pc_commands2.force_BG0_start", bStart ? 1 : 0);
     }
 
-
-
     void GlibFWInterface::PowerOn()
     {
-
+        ;
     }
 
     void GlibFWInterface::PowerOff()
     {
-
+        ;
     }
 
 
     void GlibFWInterface::ReadVer()
     {
-
+        ;
     }
 }

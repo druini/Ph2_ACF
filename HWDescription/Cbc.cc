@@ -27,6 +27,10 @@ namespace Ph2_HwDescription {
 
     {
         loadfRegMap ( filename );
+
+        // determine the chip type by checking for existence of VCth register (CBC2 only, called VCth1 & VCth2 for CBC3)
+        if (fRegMap.find ("VCth2") != std::end (fRegMap) ) this->setChipType ( ChipType::CBC3);
+        else this->setChipType ( ChipType::CBC2);
     }
 
     // C'tors which take BeId, FMCId, FeID, CbcId
@@ -35,13 +39,26 @@ namespace Ph2_HwDescription {
 
     {
         loadfRegMap ( filename );
+
+        // determine the chip type by checking for existence of VCth register (CBC2 only, called VCth1 & VCth2 for CBC3)
+        if (fRegMap.find ("VCth2") != std::end (fRegMap) ) this->setChipType ( ChipType::CBC3);
+        else this->setChipType ( ChipType::CBC2);
+    }
+
+    Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename, ChipType pType ) : FrontEndDescription ( pBeId, pFMCId, pFeId ), fCbcId ( pCbcId )
+
+    {
+        loadfRegMap ( filename );
+
+        this->setChipType (pType);
     }
 
     // Copy C'tor
 
     Cbc::Cbc ( const Cbc& cbcobj ) : FrontEndDescription ( cbcobj ),
         fCbcId ( cbcobj.fCbcId ),
-        fRegMap ( cbcobj.fRegMap )
+        fRegMap ( cbcobj.fRegMap ),
+        fCommentMap (cbcobj.fCommentMap)
     {
     }
 
@@ -62,23 +79,38 @@ namespace Ph2_HwDescription {
         if ( file )
         {
             std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
+            int cLineCounter = 0;
             CbcRegItem fRegItem;
 
             while ( getline ( file, line ) )
             {
-                if ( line.find_first_not_of ( " \t" ) == std::string::npos ) continue;
+                if ( line.find_first_not_of ( " \t" ) == std::string::npos )
+                {
+                    fCommentMap[cLineCounter] = line;
+                    cLineCounter++;
+                    //continue;
+                }
 
-                if ( line.at ( 0 ) == '#' || line.at ( 0 ) == '*' ) continue;
+                else if ( line.at ( 0 ) == '#' || line.at ( 0 ) == '*' || line.empty() )
+                {
+                    //if it is a comment, save the line mapped to the line number so I can later insert it in the same place
+                    fCommentMap[cLineCounter] = line;
+                    cLineCounter++;
+                    //continue;
+                }
+                else
+                {
+                    std::istringstream input ( line );
+                    input >> fName >> fPage_str >> fAddress_str >> fDefValue_str >> fValue_str;
 
-                std::istringstream input ( line );
-                input >> fName >> fPage_str >> fAddress_str >> fDefValue_str >> fValue_str;
+                    fRegItem.fPage = strtoul ( fPage_str.c_str(), 0, 16 );
+                    fRegItem.fAddress = strtoul ( fAddress_str.c_str(), 0, 16 );
+                    fRegItem.fDefValue = strtoul ( fDefValue_str.c_str(), 0, 16 );
+                    fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
 
-                fRegItem.fPage = strtoul ( fPage_str.c_str(), 0, 16 );
-                fRegItem.fAddress = strtoul ( fAddress_str.c_str(), 0, 16 );
-                fRegItem.fDefValue = strtoul ( fDefValue_str.c_str(), 0, 16 );
-                fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
-
-                fRegMap[fName] = fRegItem;
+                    fRegMap[fName] = fRegItem;
+                    cLineCounter++;
+                }
             }
 
             file.close();
@@ -88,6 +120,9 @@ namespace Ph2_HwDescription {
             LOG (ERROR) << "The CBC Settings File " << filename << " does not exist!" ;
             exit (1);
         }
+
+        //for (auto cItem : fRegMap)
+        //LOG (DEBUG) << cItem.first;
     }
 
 
@@ -139,23 +174,22 @@ namespace Ph2_HwDescription {
 
         if ( file )
         {
-            file << "* RegName";
-
-            for ( int j = 0; j < 48; j++ )
-                file << " ";
-
-            file.seekp ( -strlen ( "* RegName" ), std::ios_base::cur );
-
-            file << "Page\tAddr\tDefval\tValue" << std::endl;
-            file << "*--------------------------------------------------------------------------------" << std::endl;
-
             std::set<CbcRegPair, RegItemComparer> fSetRegItem;
 
             for ( auto& it : fRegMap )
                 fSetRegItem.insert ( {it.first, it.second} );
 
+            int cLineCounter = 0;
+
             for ( const auto& v : fSetRegItem )
             {
+                while (fCommentMap.find (cLineCounter) != std::end (fCommentMap) )
+                {
+                    auto cComment = fCommentMap.find (cLineCounter);
+
+                    file << cComment->second << std::endl;
+                    cLineCounter++;
+                }
 
                 file << v.first;
 
@@ -167,6 +201,7 @@ namespace Ph2_HwDescription {
 
                 file << "0x" << std::setfill ( '0' ) << std::setw ( 2 ) << std::hex << std::uppercase << int ( v.second.fPage ) << "\t0x" << std::setfill ( '0' ) << std::setw ( 2 ) << std::hex << std::uppercase << int ( v.second.fAddress ) << "\t0x" << std::setfill ( '0' ) << std::setw ( 2 ) << std::hex << std::uppercase << int ( v.second.fDefValue ) << "\t0x" << std::setfill ( '0' ) << std::setw ( 2 ) << std::hex << std::uppercase << int ( v.second.fValue ) << std::endl;
 
+                cLineCounter++;
             }
 
             file.close();

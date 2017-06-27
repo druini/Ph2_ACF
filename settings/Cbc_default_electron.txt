@@ -1,3 +1,6 @@
+*--------------------------------------------------------------------------------
+* Control Registers
+*--------------------------------------------------------------------------------
 * RegName                                    	Page	Addr	Defval	Value
 *--------------------------------------------------------------------------------
 FrontEndControl                              	0x00	0x00	0x7F	0x43
@@ -20,6 +23,12 @@ TestPulseChargePumpCurrent                   	0x00	0x10	0x64	0x64
 TestPulseChargeMirrCascodeVolt               	0x00	0x11	0x3F	0x41
 CwdWindow&Coincid                            	0x00	0x18	0x00	0xC0
 MiscStubLogic                                	0x00	0x19	0x30	0x7E
+
+*--------------------------------------------------------------------------------
+* Channel Masks
+*--------------------------------------------------------------------------------
+* RegName                                    	Page	Addr	Defval	Value
+*--------------------------------------------------------------------------------
 MaskChannelFrom008downto001                  	0x00	0x20	0x00	0xFF
 MaskChannelFrom016downto009                  	0x00	0x21	0x00	0xFF
 MaskChannelFrom024downto017                  	0x00	0x22	0x00	0xFF
@@ -52,6 +61,12 @@ MaskChannelFrom232downto225                  	0x00	0x3C	0x00	0xFF
 MaskChannelFrom240downto233                  	0x00	0x3D	0x00	0xFF
 MaskChannelFrom248downto241                  	0x00	0x3E	0x00	0xFF
 MaskChannelFrom254downto249                  	0x00	0x3F	0x00	0xFF
+
+*--------------------------------------------------------------------------------
+* Channel Offsets
+*--------------------------------------------------------------------------------
+* RegName                                    	Page	Addr	Defval	Value
+*--------------------------------------------------------------------------------
 Channel001                                   	0x01	0x01	0x80	0xFF
 Channel002                                   	0x01	0x02	0x80	0xFF
 Channel003                                   	0x01	0x03	0x80	0xFF

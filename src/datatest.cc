@@ -121,7 +121,10 @@ int main ( int argc, char* argv[] )
         cSaveToFile = true ;
 
     if ( cSaveToFile )
+    {
         cOutputFile =  cmd.optionValue ( "save" );
+        cSystemController.addFileHandler ( cOutputFile, 'w' );
+    }
 
     if (cmd.foundOption ( "daq") )
         filNewDaq.open (cmd.optionValue ( "daq" ), ios_base::binary);
@@ -133,7 +136,6 @@ int main ( int argc, char* argv[] )
 
     Timer t;
     t.start();
-    cSystemController.addFileHandler ( cOutputFile, 'w' );
 
     std::stringstream outp;
     cSystemController.InitializeHw ( cHWFile, outp );
@@ -141,10 +143,7 @@ int main ( int argc, char* argv[] )
     outp.str ("");
 
     if (!cmd.foundOption ("read") )
-    {
-        cSystemController.ConfigureHw ( outp, cmd.foundOption ( "ignoreI2c" ) );
-        LOG (INFO) << outp.str();
-    }
+        cSystemController.ConfigureHw ( cmd.foundOption ( "ignoreI2c" ) );
 
     t.stop();
     t.show ( "Time to Initialize/configure the system: " );
@@ -152,15 +151,12 @@ int main ( int argc, char* argv[] )
     if ( cVcth != 0 )
     {
         t.start();
-
-
-        CbcRegWriter cWriter ( cSystemController.fCbcInterface, "VCth", uint8_t ( cVcth ) );
-        cSystemController.accept ( cWriter );
+        ThresholdVisitor cVisitor (cSystemController.fCbcInterface, 0);
+        cVisitor.setThreshold (cVcth);
+        cSystemController.accept (cVisitor);
 
         t.stop();
         t.show ( "Time for changing VCth on all CBCs:" );
-        CbcRegReader cReader ( cSystemController.fCbcInterface, "VCth" );
-        cSystemController.accept ( cReader );
     }
 
     BeBoard* pBoard = cSystemController.fBoardVector.at ( 0 );
@@ -183,9 +179,6 @@ int main ( int argc, char* argv[] )
     uint32_t cN = 1;
     uint32_t cNthAcq = 0;
 
-    if (!cmd.foundOption ( "read") )
-        cSystemController.fBeBoardInterface->Start ( pBoard );
-
     Counter cCbcCounter;
     pBoard->accept ( cCbcCounter );
     uint32_t uFeMask = (1 << cCbcCounter.getNFe() ) - 1;
@@ -199,6 +192,9 @@ int main ( int argc, char* argv[] )
         TrackerEvent::setI2CValuesForConditionData (pBoard, pPSet);
     }
 
+    if (!cmd.foundOption ( "read") )
+        cSystemController.fBeBoardInterface->Start ( pBoard );
+
     const std::vector<Event*>* pEvents ;
 
     while ( cN <= pEventsperVcth )
@@ -206,17 +202,18 @@ int main ( int argc, char* argv[] )
         if (cmd.foundOption ( "read") )
         {
             FileHandler fFile (cmd.optionValue ("read"), 'r');
-            data.Set ( pBoard, fFile.readFile(), pEventsperVcth, false);
+            data.Set ( pBoard, fFile.readFile(), pEventsperVcth, cSystemController.fBeBoardInterface->getBoardType (pBoard) );
             pEvents = &data.GetEvents ( pBoard);
         }
         else
         {
-            uint32_t cPacketSize = cSystemController.fBeBoardInterface->ReadData ( pBoard, false );
+            uint32_t cPacketSize = cSystemController.ReadData ( pBoard );
 
-            pEvents = &cSystemController.GetEvents ( pBoard );
 
             if ( cN + cPacketSize > pEventsperVcth )
                 cSystemController.fBeBoardInterface->Stop ( pBoard );
+
+            pEvents = &cSystemController.GetEvents ( pBoard );
         }
 
         for ( auto& ev : *pEvents )

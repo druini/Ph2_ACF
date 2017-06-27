@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8'?>
+<HwDescription>
+  <BeBoard Id="0" boardType="D19C">
+    <connection id="board" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://settings/d19c_address_table.xml" />
+
+    <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
+        
+        <CBC_Files path="./settings/" />
+        <CBC Id="0" configfile="Cbc_default_hole_d19c.txt" />
+        <CBC Id="1" configfile="Cbc_default_hole_d19c.txt" />
+        <CBC Id="2" configfile="Cbc_default_hole_d19c.txt" />
+        <CBC Id="3" configfile="Cbc_default_hole_d19c.txt" />
+        <CBC Id="4" configfile="Cbc_default_hole_d19c.txt" />
+        <CBC Id="5" configfile="Cbc_default_hole_d19c.txt" />
+        <CBC Id="6" configfile="Cbc_default_hole_d19c.txt" />
+        <CBC Id="7" configfile="Cbc_default_hole_d19c.txt" />
+    </Module>
+
+    <!--CONFIG-->
+    <Register name="fc7_daq_cnfg">
+        <!-- Fast Command Block -->
+        <Register name="fast_command_block">
+                <Register name="triggers_to_accept"> 10 </Register>
+		<Register name="trigger_source"> 3 </Register>
+		<Register name="user_trigger_frequency"> 1 </Register>
+		<Register name="stubs_mask"> 0 </Register>
+                <Register name="test_pulse">
+                    <Register name="delay_after_fast_reset"> 50 </Register>
+                    <Register name="delay_after_test_pulse"> 200 </Register>
+	            <Register name="delay_before_next_pulse"> 400 </Register>
+		    <Register name="number_of_test_pulses"> 1 </Register>
+                </Register>
+        </Register>
+	<!-- I2C manager -->
+        <Register name="command_processor_block">
+                <Register name="i2c_write_mask"> 0xFF </Register>
+	</Register>
+	<!-- Readout Block -->
+    	<Register name="readout_block">
+            <Register name="packet_nbr"> 0 </Register>
+            <Register name="global">
+		    <Register name="data_handshake_enable"> 0 </Register>
+                    <Register name="int_trig_enable"> 0 </Register>
+                    <Register name="int_trig_rate"> 0 </Register>
+                    <Register name="trigger_type"> 0 </Register>
+                    <Register name="data_type"> 0 </Register>
+                    <Register name="common_stubdata_delay"> 0 </Register>
+            </Register>
+    	</Register>
+    </Register>
+  </BeBoard>
+</HwDescription>
+
+<Settings>
+    <!--Calibration-->
+    <Setting name="Nevents" > 10 </Setting>
+    <Setting name="VerificationLoop">1</Setting>
+    <Setting name="FitSCurves" > 1 </Setting>
+
+</Settings>

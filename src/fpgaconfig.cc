@@ -6,7 +6,8 @@
 #include "../HWInterface/CbcInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
-#include "../HWInterface/FpgaConfig.h"
+//#include "../HWInterface/FpgaConfig.h"
+#include "FpgaConfig.h"
 //#include "../tools/Calibration.h"
 #include "../Utils/Timer.h"
 //#include <TApplication.h>
@@ -83,7 +84,7 @@ void verifyImageName ( const string& strImage, const vector<string>& lstNames)
 
 int main ( int argc, char* argv[] )
 {
- 	//configure the logger
+    //configure the logger
     el::Configurations conf ("settings/logger.conf");
     el::Loggers::reconfigureAllLoggers (conf);
 
@@ -132,7 +133,6 @@ int main ( int argc, char* argv[] )
 
     std::string cHWFile = ( cmd.foundOption ( "config" ) ) ? cmd.optionValue ( "config" ) : "settings/HWDescription_2CBC.xml";
     cSystemController.InitializeHw ( cHWFile );
-    //cSystemController.ConfigureHw( std::cout, cmd.foundOption( "ignoreI2c" ) );
     BeBoard* pBoard = cSystemController.fBoardVector.at (0);
     vector<string> lstNames = cSystemController.fBeBoardInterface->getFpgaConfigList (pBoard);
     std::string cFWFile;

@@ -20,7 +20,7 @@ void Tool::bookHistogram ( Cbc* pCbc, std::string pName, TObject* pObject )
 
     if ( cCbcHistMap == std::end ( fCbcHistMap ) )
     {
-        LOG (ERROR) << "Histo Map for CBC " << int ( pCbc->getCbcId() ) <<  " (FE " << int ( pCbc->getFeId() ) << ") does not exist - creating " ;
+        LOG (INFO) << "Histo Map for CBC " << int ( pCbc->getCbcId() ) <<  " (FE " << int ( pCbc->getFeId() ) << ") does not exist - creating " ;
         std::map<std::string, TObject*> cTempCbcMap;
 
         fCbcHistMap[pCbc] = cTempCbcMap;
@@ -33,6 +33,11 @@ void Tool::bookHistogram ( Cbc* pCbc, std::string pName, TObject* pObject )
     if ( cHisto != std::end ( cCbcHistMap->second ) ) cCbcHistMap->second.erase ( cHisto );
 
     cCbcHistMap->second[pName] = pObject;
+#ifdef __HTTP__
+
+    if (fHttpServer) fHttpServer->Register ("/", pObject);
+
+#endif
 }
 
 void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject )
@@ -42,7 +47,7 @@ void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject 
 
     if ( cModuleHistMap == std::end ( fModuleHistMap ) )
     {
-        LOG (ERROR) << "Histo Map for Module " << int ( pModule->getFeId() ) << " does not exist - creating " ;
+        LOG (INFO) << "Histo Map for Module " << int ( pModule->getFeId() ) << " does not exist - creating " ;
         std::map<std::string, TObject*> cTempModuleMap;
 
         fModuleHistMap[pModule] = cTempModuleMap;
@@ -55,6 +60,11 @@ void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject 
     if ( cHisto != std::end ( cModuleHistMap->second ) ) cModuleHistMap->second.erase ( cHisto );
 
     cModuleHistMap->second[pName] = pObject;
+#ifdef __HTTP__
+
+    if (fHttpServer) fHttpServer->Register ("/", pObject);
+
+#endif
 }
 
 TObject* Tool::getHist ( Cbc* pCbc, std::string pName )
@@ -94,9 +104,10 @@ void Tool::SaveResults()
         TString cDirName = Form ( "FE%d", cFe.first->getFeId() );
         TObject* cObj = gROOT->FindObject ( cDirName );
 
-        if ( cObj ) delete cObj;
+        //if ( cObj ) delete cObj;
 
-        fResultFile->mkdir ( cDirName );
+        if (!cObj) fResultFile->mkdir ( cDirName );
+
         fResultFile->cd ( cDirName );
 
         for ( const auto& cHist : cFe.second )
@@ -110,9 +121,10 @@ void Tool::SaveResults()
         TString cDirName = Form ( "FE%dCBC%d", cCbc.first->getFeId(), cCbc.first->getCbcId() );
         TObject* cObj = gROOT->FindObject ( cDirName );
 
-        if ( cObj ) delete cObj;
+        //if ( cObj ) delete cObj;
 
-        fResultFile->mkdir ( cDirName );
+        if (!cObj) fResultFile->mkdir ( cDirName );
+
         fResultFile->cd ( cDirName );
 
         for ( const auto& cHist : cCbc.second )
@@ -129,13 +141,13 @@ void Tool::SaveResults()
         cCanvas.second->SaveAs ( cPdfName.c_str() );
     }
 
-    fResultFile->Write();
-    // fResultFile->Close();
+    //fResultFile->Write();
+    //fResultFile->Close();
 
     LOG (INFO) << "Results saved!" ;
 }
 
-void Tool::CreateResultDirectory ( const std::string& pDirname, bool pDate )
+void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool pDate )
 {
     bool cCheck;
     bool cHoleMode;
@@ -157,7 +169,7 @@ void Tool::CreateResultDirectory ( const std::string& pDirname, bool pDate )
 
     std::string nDirname = pDirname;
 
-    if ( cCheck ) nDirname +=  cMode;
+    if ( cCheck && pMode ) nDirname +=  cMode;
 
     if ( pDate ) nDirname +=  currentDateTime();
 
@@ -186,6 +198,10 @@ void Tool::InitResultFile ( const std::string& pFilename )
 void Tool::StartHttpServer ( const int pPort, const int pRefreshTime, bool pReadonly )
 {
 #ifdef __HTTP__
+
+    if (fHttpServer)
+        delete fHttpServer;
+
     fHttpServer = new THttpServer ( Form ( "http:%d", pPort ) );
     fHttpServer->SetReadOnly ( pReadonly );
 //    fHttpServer->SetTimer ( pRefreshTime, kTRUE );
@@ -232,4 +248,122 @@ void Tool::dumpConfigFiles()
     accept ( cDumper );
 
     LOG (INFO) << BOLDBLUE << "Configfiles for all Cbcs written to " << fDirectoryName << RESET ;
+}
+void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTPState, bool pHoleMode )
+{
+
+    for (auto cBoard : this->fBoardVector)
+    {
+        for (auto cFe : cBoard->fModuleVector)
+        {
+            for (auto cCbc : cFe->fCbcVector)
+            {
+                //first, get the Amux Value
+                uint8_t cOriginalAmuxValue;
+                cOriginalAmuxValue = cCbc->getReg ("MiscTestPulseCtrl&AnalogMux" );
+
+                std::vector<std::pair<std::string, uint8_t>> cRegVec;
+                uint8_t cRegValue =  to_reg ( 0, pTestGroup );
+
+                if (fType == ChipType::CBC3)
+                {
+                    uint8_t cTPRegValue;
+
+                    if (pTPState) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
+                    else if (!pTPState) cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
+
+                    cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux",  cTPRegValue ) );
+                    cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );
+                    cRegVec.push_back ( std::make_pair ( "TestPulsePotNodeSel", pTPAmplitude ) );
+                    LOG (DEBUG) << BOLDBLUE << "Read original Amux Value to be: " << std::bitset<8> (cOriginalAmuxValue) << " and changed to " << std::bitset<8> (cTPRegValue) << " - the TP is bit 6!" RESET;
+                }
+                else
+                {
+                    //CBC2
+                    cRegVec.push_back ( std::make_pair ( "SelTestPulseDel&ChanGroup",  cRegValue ) );
+
+                    //set the value of test pulsepot registrer and MiscTestPulseCtrl&AnalogMux register
+                    if ( pHoleMode )
+                        cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux", 0xE1 ) );
+                    else
+                        cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux", 0x61 ) );
+
+                    cRegVec.push_back ( std::make_pair ( "TestPulsePot", pTPAmplitude ) );
+                }
+
+                this->fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+            }
+        }
+    }
+}
+
+void Tool::setFWTestPulse()
+{
+    for (auto& cBoard : fBoardVector)
+    {
+        std::vector<std::pair<std::string, uint32_t> > cRegVec;
+        BoardType cBoardType = cBoard->getBoardType();
+
+        if (cBoardType == BoardType::GLIB || cBoardType == BoardType::CTA)
+        {
+            cRegVec.push_back ({"COMMISSIONNING_MODE_RQ", 1 });
+            cRegVec.push_back ({"COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID", 1 });
+        }
+        else if (cBoardType == BoardType::ICGLIB || cBoardType == BoardType::ICFC7)
+        {
+            cRegVec.push_back ({"cbc_daq_ctrl.commissioning_cycle.mode_flags.enable", 1 });
+            cRegVec.push_back ({"cbc_daq_ctrl.commissioning_cycle.mode_flags.test_pulse_enable", 1 });
+            cRegVec.push_back ({"cbc_daq_ctrl.commissioning_cycle_ctrl", 0x1 });
+        }
+        else if (cBoardType == BoardType::CBC3FC7)
+        {
+            cRegVec.push_back ({"cbc_system_cnfg.fast_command_manager.fast_signal_generator.enable.test_pulse", 0x1});
+        }
+
+        fBeBoardInterface->WriteBoardMultReg (cBoard, cRegVec);
+    }
+}
+
+void Tool::MakeTestGroups ( bool pAllChan )
+{
+    if ( !pAllChan )
+    {
+        for ( int cGId = 0; cGId < 8; cGId++ )
+        {
+            std::vector<uint8_t> tempchannelVec;
+
+            for ( int idx = 0; idx < 16; idx++ )
+            {
+                int ctemp1 = idx * 16 + cGId * 2;
+                int ctemp2 = ctemp1 + 1;
+
+                if ( ctemp1 < 254 ) tempchannelVec.push_back ( ctemp1 );
+
+                if ( ctemp2 < 254 )  tempchannelVec.push_back ( ctemp2 );
+
+            }
+
+            fTestGroupChannelMap[cGId] = tempchannelVec;
+
+        }
+
+        int cGId = -1;
+        std::vector<uint8_t> tempchannelVec;
+
+        for ( int idx = 0; idx < 254; idx++ )
+            tempchannelVec.push_back ( idx );
+
+        fTestGroupChannelMap[cGId] = tempchannelVec;
+    }
+    else
+    {
+        int cGId = -1;
+        std::vector<uint8_t> tempchannelVec;
+
+        for ( int idx = 0; idx < 254; idx++ )
+            tempchannelVec.push_back ( idx );
+
+        fTestGroupChannelMap[cGId] = tempchannelVec;
+
+    }
 }

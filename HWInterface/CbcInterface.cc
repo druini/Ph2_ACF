@@ -80,7 +80,7 @@ namespace Ph2_HwInterface {
         // write the registers, the answer will be in the same cVec
         // the number of times the write operation has been attempted is given by cWriteAttempts
         uint8_t cWriteAttempts = 0 ;
-        bool cSuccess = fBoardFW->WriteCbcBlockReg ( cVec, cWriteAttempts , pVerifLoop);
+        bool cSuccess = fBoardFW->WriteCbcBlockReg ( cVec, cWriteAttempts, pVerifLoop);
 
 #ifdef COUNT_FLAG
         fTransactionCount++;

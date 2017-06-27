@@ -145,10 +145,9 @@ int main ( int argc, char* argv[] )
 
     std::stringstream outp;
     cSystemController.InitializeHw ( cHWFile, outp );
-    LOG(INFO) << outp.str();
-    outp.str ("");
-    cSystemController.ConfigureHw (outp);
     LOG (INFO) << outp.str();
+    outp.str ("");
+    cSystemController.ConfigureHw ();
 
 
     BeBoard* pBoard = cSystemController.fBoardVector.at ( 0 );
@@ -176,7 +175,7 @@ int main ( int argc, char* argv[] )
 
     while ( cN <= pEventsperVcth )
     {
-        uint32_t cPacketSize = cSystemController.fBeBoardInterface->ReadData ( pBoard, false );
+        uint32_t cPacketSize = cSystemController.ReadData ( pBoard );
 
         if ( cN + cPacketSize >= pEventsperVcth )
             cSystemController.fBeBoardInterface->Stop ( pBoard );

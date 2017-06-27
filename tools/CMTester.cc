@@ -204,8 +204,8 @@ void CMTester::ScanNoiseChannels()
 
         //while ( cN <=  cTotalEvents )
         //{
-        fBeBoardInterface->ReadNEvents ( pBoard, cTotalEvents );
-        const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
+        ReadNEvents ( pBoard, cTotalEvents );
+        const std::vector<Event*>& events = GetEvents ( pBoard );
 
         // Loop over Events from this Acquisition
         for ( auto& cEvent : events )
@@ -278,7 +278,7 @@ void CMTester::TakeData()
 {
     parseSettings();
 
-    CbcRegReader cReader ( fCbcInterface, "VCth" );
+    //CbcRegReader cReader ( fCbcInterface, "VCth" );
     // accept( cReader );
 
     for ( BeBoard* pBoard : fBoardVector )
@@ -291,8 +291,8 @@ void CMTester::TakeData()
         //while ( cN <=  fNevents )
         //{
         // Run( pBoard, cNthAcq );
-        fBeBoardInterface->ReadNEvents ( pBoard, fNevents );
-        const std::vector<Event*>& events = fBeBoardInterface->GetEvents ( pBoard );
+        ReadNEvents ( pBoard, fNevents );
+        const std::vector<Event*>& events = GetEvents ( pBoard );
 
         // Loop over Events from this Acquisition
 
@@ -599,9 +599,6 @@ void CMTester::updateHists ( bool pFinal )
             }
 
             cCanvas->second->Update();
-#ifdef __HTTP__
-            fHttpServer->ProcessRequests();
-#endif
 
         }
     }

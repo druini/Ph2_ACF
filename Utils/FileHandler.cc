@@ -5,23 +5,21 @@
 FileHandler::FileHandler ( const std::string& pBinaryFileName, char pOption ) :
     fBinaryFileName ( pBinaryFileName ),
     fOption ( pOption ),
-    fFileIsOpened ( false ) ,
-    is_set ( false )
+    fFileIsOpened ( false )
 {
     openFile();
 
     if ( fOption == 'w' )
     {
         fThread = std::thread ( &FileHandler::writeFile, this );
-        fThread.detach();
+        //fThread.detach();
     }
 }
 
 FileHandler::FileHandler ( const std::string& pBinaryFileName, char pOption, FileHeader pHeader ) :
     fBinaryFileName ( pBinaryFileName ),
     fOption ( pOption ),
-    fFileIsOpened ( false ) ,
-    is_set ( false ),
+    fFileIsOpened ( false ),
     fHeader ( pHeader )
 {
     openFile();
@@ -29,7 +27,7 @@ FileHandler::FileHandler ( const std::string& pBinaryFileName, char pOption, Fil
     if ( fOption == 'w' )
     {
         fThread = std::thread ( &FileHandler::writeFile, this );
-        fThread.detach();
+        //fThread.detach();
     }
 }
 
@@ -44,13 +42,17 @@ FileHandler::~FileHandler()
 
 void FileHandler::set ( std::vector<uint32_t> pVector )
 {
-    fMutex.lock();
-    fData.clear();
-    fData = pVector;
-    is_set = true;
+    //fMutex.lock();
+    //fData.clear();
+    //fData = pVector;
+    //is_set = true;
 
-    if ( is_set )
-        fMutex.unlock();
+    //if ( is_set )
+    //fMutex.unlock();
+
+    std::lock_guard<std::mutex> cLock (fMutex);
+    fQueue.push (pVector);
+    fSet.notify_one();
 }
 
 bool FileHandler::openFile( )
@@ -58,7 +60,7 @@ bool FileHandler::openFile( )
 
     if ( !file_open() )
     {
-        fMutex.lock();
+        std::lock_guard<std::mutex> cLock (fMutex);
 
         if ( fOption == 'w' )
         {
@@ -101,7 +103,6 @@ bool FileHandler::openFile( )
             else LOG (INFO) << "FileHandler: Found a valid header in file " << fBinaryFileName ;
         }
 
-        fMutex.unlock();
         fFileIsOpened = true;
     }
 
@@ -110,15 +111,13 @@ bool FileHandler::openFile( )
 
 void FileHandler::closeFile()
 {
-    fMutex.lock();
+    std::lock_guard<std::mutex> cLock (fMutex);
 
     if (fFileIsOpened)
     {
         fBinaryFile.close();
         fFileIsOpened = false;
     }
-
-    fMutex.unlock();
 }
 
 //read from raw file to vector
@@ -193,28 +192,55 @@ std::vector<uint32_t> FileHandler::readFileTail ( long pNbytes )
 void FileHandler::writeFile()
 {
     //while ( true ) {
-    //std::cout << __PRETTY_FUNCTION__ << "Is set? " << is_set << std::endl;
-    //std::cout << __PRETTY_FUNCTION__ << "size: " << fData.size() << std::endl;
-	if ( is_set )
-    {
-        fMutex.lock();
-        //uint32_t cBuffer[fData.size()];
-        //std::copy ( fData.begin(), fData.end(), cBuffer );
-        //for(auto& d : fData)
-        fBinaryFile.write ( ( char* ) &fData[0], fData.size()*sizeof ( uint32_t ) );
-	    fBinaryFile.flush();
-        fData.clear();
-        is_set = false;
-        fMutex.unlock();
-        //continue;
-    }
+    //if ( is_set )
+    //{
+    //fMutex.lock();
+    //uint32_t cBuffer[fData.size()];
+    //std::copy ( fData.begin(), fData.end(), cBuffer );
+    //fMutex.unlock();
+    //fBinaryFile.write ( ( char* ) &cBuffer, sizeof ( cBuffer ) );
+    //fBinaryFile.flush();
+    //fData.clear();
+    //is_set = false;
+    ////continue;
+    //}
 
-    else
-    {
-        fMutex.lock();
-        fMutex.unlock();
-        //continue;
-    }
+    //else
+    //{
+    //fMutex.lock();
+    //fMutex.unlock();
+    ////continue;
+    //}
 
     //}
+
+    //new implementation using queue
+    //this needs to run in an infinite loop, otherwise it will end after the first data was processed and the second on is not ready I think
+    //anyway, dequeue will block this thread as long as fQueue is empty, if it is not, the first element will immediately be extracted
+    while (true)
+    {
+        // a local data handle
+        std::vector<uint32_t> cData;
+        //populate the local handle with values from the queue -
+        //this method blocks this thread until it receives data
+        this->dequeue (cData);
+        //copy data in buffer array for faster I/O
+        uint32_t cBuffer[cData.size()];
+        std::copy ( cData.begin(), cData.end(), cBuffer );
+        //write the buffer
+        fBinaryFile.write ( ( char* ) &cBuffer, sizeof ( cBuffer ) );
+        fBinaryFile.flush();
+    }
+
+}
+
+void FileHandler::dequeue (std::vector<uint32_t>& pData)
+{
+    std::unique_lock<std::mutex> cLock (fMutex);
+
+    while (fQueue.empty() )
+        fSet.wait (cLock);
+
+    pData = fQueue.front();
+    fQueue.pop();
 }

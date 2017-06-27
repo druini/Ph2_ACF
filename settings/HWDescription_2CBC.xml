@@ -5,7 +5,7 @@
     <!-- <connection id="board" uri="chtcp-2.0://cmsuptracker002:10203?target=192.168.0.175:50001" address_table="file://settings/address_table_2CBC.xml" /> -->
 	    	<!--connection id="board0" uri="chtcp-2.0://cmsuptracker002.cern.ch:10203?target=192.168.0.175:50001" address_table="file://${HOME}/mrbots/srcs/otsdaq_cmsoutertracker/otsdaq-cmsoutertracker/Ph2_ACF/settings/address_table_2CBC.xml" /-->
     <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.175:50001" address_table="file://settings/address_table_2CBC.xml" />
-    
+
 	<FW_Version NCbcDataSize="4" />
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
         <Global_CBC_Register name="VCth"> 0x76 </Global_CBC_Register>
@@ -18,11 +18,11 @@
      <!--CBC_Files path="./settings/" /-->
      <CBC_Files path="${HOME}/mrbots/srcs/otsdaq_cmsoutertracker/otsdaq-cmsoutertracker/Ph2_ACF/CalibrationBeamtestSeptember16/"/>
        <!--CBC Id="0" configfile="Cbc_default_electron.txt" />
-       <CBC Id="1" configfile="Cbc_default_electron.txt" /--> 
+       <CBC Id="1" configfile="Cbc_default_electron.txt" /-->
        <CBC Id="0" configfile="FE0CBC0.txt"/>
        <CBC Id="1" configfile="FE0CBC1.txt"/>
     </Module>
-     
+
     <!-- Commissioning Mode -->
     <!-- set to 1 to enable commissioning mode -->
     <Register name="COMMISSIONNING_MODE_RQ">0</Register>
@@ -31,12 +31,12 @@
     <Register name="COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET">50</Register>
     <Register name="COMMISSIONNING_MODE_DELAY_AFTER_L1A">400</Register>
     <Register name="COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE">201</Register>
-    
+
     <!-- Acquisition -->
     <Register name="pc_commands.CBC_DATA_PACKET_NUMBER">99</Register>
     <Register name="pc_commands.CBC_DATA_GENE"> 1 </Register>
     <!--<Register name="pc_commands.ACQ_MODE"> 1 </Register>-->
-    
+
     <!-- Trigger -->
     <!-- set to 2 to use external triggers, set to 1 to use external triggers with backpressure -->
     <Register name="pc_commands.TRIGGER_SEL">0</Register>
@@ -49,7 +49,7 @@
     <!-- Sampling phase selection -->
     <!--<Register name="dio5.stubRxClkPhase"> 0 </Register>
     <Register name="dio5.trigDataRxClkPhase" > 0 </Register>-->
-    
+
     <!-- DIO5 Config -->
     <!-- set to 0 for rising edge, 1 for falling -->
     <Register name="dio5.fmcdio5_trig_in_edge">1</Register>
@@ -57,12 +57,12 @@
     <Register name="dio5.fmcdio5_lemo2_sig_sel">0</Register>
     <!-- set to 1 for active low or 1 for active high || NEEDS TO BE 0 for the TLU-->
     <Register name="dio5.fmcdio5_backpressure_out_polar">0</Register>
-    
+
     <!-- DIO5 threshold: [v]/3.3*256 -->
 	<!--edit G.Auzinger, test to increase clock in threshold to reduce error bits -->
     <Register name="dio5.fmcdio5_threshold_trig_in">78</Register>
     <Register name="dio5.fmcdio5_threshold_clk_in">78</Register>
-    
+
     <!-- DIO5 Termination -->
     <Register name="dio5.fmcdio5_clk_in_50ohms">1</Register>
     <Register name="dio5.fmcdio5_clk_out_50ohms">0</Register>
@@ -75,7 +75,7 @@
     <Register name="pc_commands2.negative_logic_CBC"> 0 </Register>
     <Register name="pc_commands2.negative_logic_sTTS"> 0 </Register>
     <Register name="pc_commands2.polarity_tlu"> 0 </Register>
-    
+
   </BeBoard>
 </HwDescription>
 <Settings>

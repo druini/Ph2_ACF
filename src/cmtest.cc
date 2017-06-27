@@ -76,18 +76,17 @@ int main ( int argc, char* argv[] )
     std::stringstream outp;
     CMTester cTester;
     cTester.InitializeHw ( cHWFile, outp );
-    cTester.Initialize ();
     cTester.InitializeSettings ( cHWFile, outp );
+    LOG (INFO) << outp.str();
+    outp.str ("");
     cTester.CreateResultDirectory ( cDirectory );
     cTester.InitResultFile ( "CMTest" );
     cTester.StartHttpServer ( 8082 );
-    LOG (INFO) << outp.str();
-    outp.str ("");
 
-    if ( !isGui ) cTester.ConfigureHw ( outp );
+    cTester.Initialize ();
 
-    LOG (INFO) << outp.str();
-    outp.str ("");
+    if ( !isGui ) cTester.ConfigureHw ();
+
 
     // Here comes our Part:
     if ( cScan ) cTester.ScanNoiseChannels();

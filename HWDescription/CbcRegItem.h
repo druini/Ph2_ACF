@@ -14,22 +14,23 @@
 
 #include <stdint.h>
 
-namespace Ph2_HwDescription
-{
+namespace Ph2_HwDescription {
 
-	/*!
-	 * \struct CbcRegItem
-	 * \brief Struct for CbcRegisterItem that is identified by Page, Address, DefaultValue, Value
-	 */
-	struct CbcRegItem
-	{
+    /*!
+     * \struct CbcRegItem
+     * \brief Struct for CbcRegisterItem that is identified by Page, Address, DefaultValue, Value
+     */
+    struct CbcRegItem
+    {
+        CbcRegItem() {};
+        CbcRegItem (uint8_t pPage, uint8_t pAddress, uint8_t pDefValue, uint8_t pValue) : fPage (pPage), fAddress (pAddress), fDefValue (pDefValue), fValue (pValue) {}
 
-		uint8_t fPage;
-		uint8_t fAddress;
-		uint8_t fDefValue;
-		uint8_t fValue;
+        uint8_t fPage;
+        uint8_t fAddress;
+        uint8_t fDefValue;
+        uint8_t fValue;
 
-	};
+    };
 }
 
 #endif

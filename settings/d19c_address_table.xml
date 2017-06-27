@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="LATIN1"?>
+<node id="FPGA1" address="0x00000000" >
+	<!-- FC7 system register address table -->
+        <node id="sysreg" address="0x00000000" module="file://fc7_system_address_table.xml"/>
+	<!-- GLIB user logic registers -->
+	<!-- firmware configurations -->
+    <node id="user_stat" address ="0x40000000" permission="r" mode="block" size="0x0000000F">
+    </node>
+
+    <node id="fc7_daq_cnfg" address="0x40010000" permission="rw" >
+
+        <node id="command_processor_block"      address="0x1000">
+            <node id="i2c_write_mask"                   address="0x001" mask="0x000000FF"/>
+        </node>
+
+        <node id="fast_command_block"           address="0x2000" description="internal fast signal is generated in the fast_signal_generator module and the settings are here.">
+            <node id="triggers_to_accept"               address="0x000" description="# of periodic fast signal cycle from the start signal."/>
+            <node id="user_trigger_frequency"           address="0x001" description="User-defined frequency in kHz"/>
+            <node id="trigger_source"                   address="0x002" mask="0x0000000F" description="1 - L1, 2 - Stubs, 3 - User-Defined Frequency"/>
+            <node id="stubs_mask"                       address="0x003" description="if mode is stubs, then coincidence mask can be set here: 0x0000000f requires presence of stubs from hybrids 0,1,2,3"/>
+            <node id="test_pulse" description="configuration of the test pulse delays.">
+                <node id="delay_after_fast_reset"       address="0x004" description="delay between fast reset and following test pulse command"/>
+                <node id="delay_after_test_pulse"       address="0x005" description="delay after test pulse command before l1a signal sent to readout the data"/>
+		<node id="delay_before_next_pulse"      address="0x006" description="delay before next pulse"/>
+		<node id="number_of_test_pulses"        address="0x007" description="number of the test pulses to be sent at once"/>
+            </node>
+        </node>
+
+        <node id="physical_interface_block"     address="0x3000">
+        </node>
+
+        <node id="readout_block"                address="0x5000">
+            <node id="packet_nbr"                       address="0x000" mask="0x0000ffff"/>
+            <node id="global"                          address="0x001">
+		<node id="data_handshake_enable"            mask="0x00000001"/>                
+                <node id="int_trig_enable"                  mask="0x00000004"/>
+                <node id="int_trig_rate"                    mask="0x000001f0"/>
+                <node id="trigger_type"                     mask="0x0000f000"/>
+                <node id="data_type"                        mask="0x000f0000"/>
+                <node id="common_stubdata_delay"            mask="0x0ff00000"/>
+            </node>
+        </node>
+
+        <node id="dio5_block"                   address="0x6000">
+            <node id="ch1"                              address="0x000">
+                <node id="out_enable"                       mask="0x00000001"/>
+                <node id="term_enable"                      mask="0x00000002"/>
+                <node id="threshold"                        mask="0x0000ff00"/>
+            </node>
+            <node id="ch2"                              address="0x001">
+                <node id="out_enable"                       mask="0x00000001"/>
+                <node id="term_enable"                      mask="0x00000002"/>
+                <node id="threshold"                        mask="0x0000ff00"/>
+            </node>
+            <node id="ch3"                              address="0x002">
+                <node id="out_enable"                       mask="0x00000001"/>
+                <node id="term_enable"                      mask="0x00000002"/>
+                <node id="threshold"                        mask="0x0000ff00"/>
+            </node>
+            <node id="ch4"                              address="0x003">
+                <node id="out_enable"                       mask="0x00000001"/>
+                <node id="term_enable"                      mask="0x00000002"/>
+                <node id="threshold"                        mask="0x0000ff00"/>
+            </node>
+            <node id="ch5"                              address="0x004">
+                <node id="out_enable"                       mask="0x00000001"/>
+                <node id="term_enable"                      mask="0x00000002"/>
+                <node id="threshold"                        mask="0x0000ff00"/>
+            </node>
+        </node>
+    </node>
+
+    <node id="fc7_daq_ctrl" address="0x40020000" permission="rw" >
+
+        <node id="global"                       address="0x0000">
+            <node id="clock_generator"                  address="0x001">
+                <node id="clk40_reset"                      mask="0x00000001"/>
+                <node id="clk40_mux"                        mask="0x00000002"/>
+                <node id="refclk_reset"                     mask="0x00000004"/>
+            </node>
+
+            <node id="ttc"                              address="0x002">
+                <node id="dec_reset"                        mask="0x00000001"/>
+            </node>
+
+            <node id="amc13"                            address="0x003">
+                <node id="link_reset"                       mask="0x00000001"/>
+                <node id="sw_tts_state_valid"               mask="0x00000002"/>
+                <node id="sw_tts_state"                     mask="0x000000f0"/>
+            </node>
+        </node>
+
+        <node id="command_processor_block"      address="0x1000">
+            <node id="global"                           address="0x000">
+                    <node id="reset"                        mask="0x00000001" description="reset all the modules."/>
+            </node>
+            <node id="i2c">
+                    <node id="control"                  address="0x001">
+                        <node id="reset"                    mask="0x00000001" description="reset i2c"/>
+                        <node id="reset_fifos"              mask="0x00000004" description="reset fifos"/>
+                    </node>
+                    <node id="command_fifo"             address="0x002" permission="w" mode="non-incremental" description="command fifo(write i2c commands here)"/>
+                    <node id="reply_fifo"               address="0x003" permission="r" mode="non-incremental" description="reply fifo(read i2c replies here)"/>
+            </node>
+        </node>
+
+        <node id="fast_command_block"           address="0x2000">
+            <node id="control"                          address="0x000">
+                <node id="reset"                            mask="0x00000001"/>
+                <node id="start_trigger"                    mask="0x00000002"/>
+                <node id="stop_trigger"                     mask="0x00000004"/>
+                <node id="load_config"                 	    mask="0x00000008"/>
+                <node id="fast_reset"		            mask="0x00010000"/>
+                <node id="fast_test_pulse"		    mask="0x00020000"/>
+                <node id="fast_trigger"		            mask="0x00040000"/>
+                <node id="fast_orbit_reset"		    mask="0x00080000"/>
+                <node id="fast_i2c_refresh"                 mask="0x00100000"/>
+            </node>
+        </node>
+
+        <node id="physical_interface_block"     address="0x3000">
+        </node>
+
+        <node id="readout_block"                address="0x5000">
+            <node id="control"                          address="0x000">
+                <node id="readout_reset"                    mask="0x00000001"/>
+                <node id="readout_done"                     mask="0x00000002"/>
+            </node>
+	    <node id="readout_fifo"                     address="0x001" permission="r" mode="non-incremental" description="data fifo"/>
+        </node>
+
+        <node id="dio5_block"                   address="0x6000">
+            <node id="control"                          address="0x000">
+                <node id="load_config"                      mask="0x00000001"/>
+            </node>
+        </node>
+
+    </node>
+
+    <node id="fc7_daq_stat" address="0x40030000" permission="r" >
+
+        <node id="general"                     address="0x0000">
+            <node id="global_error">
+		<node id="full_error"			address="0x001"   mode="non-incremental"/>
+		<node id="counter"			address="0x002"   mask="0x000001ff"/>
+            </node>
+            <node id="info"                             address="0x003">
+                <node id="implementation"                   mask="0x0000000f"/>
+                <node id="cbc_version"                      mask="0x000000f0"/>
+                <node id="num_hybrids"                      mask="0x0000ff00"/>
+                <node id="num_chips"                        mask="0x00ff0000"/>
+            </node>
+
+            <node id="clock_generator"                  address="0x004">
+                <node id="clk_40_locked"                    mask="0x00000001"/>
+                <node id="ref_clk_locked"                   mask="0x00000002"/>
+            </node>
+
+            <node id="ttc">
+                <node id="ready"                        address="0x005" mask="0x00000001"/>
+                <node id="dec_single_err_cnt"           address="0x006" mask="0x0000ffff"/>
+                <node id="dec_double_err_cnt"           address="0x006" mask="0xffff0000"/>
+            </node>
+        </node>
+
+        <node id="command_processor_block"      address="0x1000">
+            <node id="i2c">
+                <node id="master_status_fsm"            address="0x001" mask="0x0000000f"/>
+                <node id="command_fifo"                 address="0x002">
+                        <node id="empty"                    mask="0x00000001"/>
+                        <node id="full"                     mask="0x00000002"/>
+                </node>
+                <node id="reply_fifo"                   address="0x003">
+                        <node id="empty"                    mask="0x00000001"/>
+                        <node id="full"                     mask="0x00000002"/>
+                </node>
+                <node id="nreplies"                     address="0x004" description="nreplies present in reply fifo"/>
+            </node>
+        </node>
+
+        <node id="fast_command_block"           address="0x2000">
+            <node id="general"                          address="0x000">
+                <node id="source"                           mask="0x0000000f"/>
+                <node id="fsm_state"                        mask="0x00000010"/>
+                <node id="configured"                       mask="0x00000020"/>
+            </node>
+        </node>
+
+        <node id="physical_interface_block"     address="0x3000">
+        </node>
+
+        <node id="be_proc"                      address="0x4000">
+            <node id="general"                          address="0x000">
+                <node id="evnt_cnt"                         mask="0x00ffffff"/>
+                <node id="evnt_cnt_buf_empty"               mask="0x01000000"/>
+                <node id="data_payload_buf_empty"           mask="0x02000000"/>
+                <node id="trigdata_buf_empty"               mask="0x04000000"/>
+            </node>
+        </node>
+
+        <node id="readout_block"                address="0x5000">
+            <node id="general">
+                <node id="readout_req"                   address="0x000" mask="0x00000001"/>
+                <node id="fsm_status"                    address="0x000" mask="0x00000ff0"/>
+		<node id="words_cnt"                     address="0x001" mask="0xffffffff"/>
+            </node>
+	    
+        </node>
+
+        <node id="dio5_block"                   address="0x6000">
+            <node id="status"                           address="0x000">
+                <node id="not_ready"                        mask="0x00000001"/>
+                <node id="error"                            mask="0x00000002"/>
+            </node>
+        </node>
+
+        <node id="test_clock"                   address="0xf000">
+            <node id="ipb_clk_rate"                     address="0x000"/>
+            <node id="40mhz_clk_rate"                   address="0x001"/>
+            <node id="trigger_rate"                     address="0x002"/>
+        </node>
+    </node>
+
+    <!--Present in Glib or FC7 address table for fpgaconfig-->
+	<node id="flash_async_read_cmd"	address="0x0800bddf"  mask="0xFFFFFFFF" description="FLASH memory asynchronous read mode"/>
+    	<node id="flash_block" address="0x08000000"     mode="block" size="0x00800000" permission="rw" description="FLASH memory for FPGA configuration"/>
+    <!-- ICAP MEMORY SPACE -->
+    	<node id="icap" address="0x00000200" mask="0xffffffff" permission="rw" />
+
+    	<node id="buf_cta" address="0x0000400" class="MmcPipeInterface" description="UC link buffer test register" size="0x3" tags="slave">
+      		<node id="FPGAtoMMCcounters" address="0x0"/>
+      		<node id="MMCtoFPGAcounters" address="0x1"/>
+      		<node id="FIFO" address="0x2" mode="non-incremental" size="512" />
+  	</node>
+</node>
