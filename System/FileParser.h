@@ -26,6 +26,7 @@
 #include "../HWInterface/D19cFWInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/Utilities.h"
+#include "../Utils/ConditionDataSet.h"
 #include "../Utils/picojson.h"
 #include "../Utils/pugixml.hpp"
 #include "../Utils/ConsoleColor.h"
@@ -62,6 +63,7 @@ namespace Ph2_System {
 
         void parseHW ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os  );
         void parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os  );
+        //void parseConditionDataSet (const std::string& pFilename, ConditionDataSet& pSet, std::ostream& os);
 
 
       protected:
@@ -94,14 +96,21 @@ namespace Ph2_System {
          */
         void parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os  );
         /*!
-         * \brief Initialize the hardware via JSON config file
+         * \brief Initialize the hardware via xml config file
          * \param pFilename : HW Description file
          *\param os : ostream to dump output
          */
         void parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os );
+        /*!
+         * \brief Initialize the ConditionData from xml file
+         * \param pFilename : HW Description file
+         *\param os : ostream to dump output
+         */
+        //void parseConditionDataSetxml (const std::string& pFilename, ConditionDataSet& pSet, std::ostream& os);
 
         BeBoard* parseBeBoard (pugi::xml_node pNode, BeBoardVec& pBoardVector, std::ostream& os );
         void parseRegister (pugi::xml_node pNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os );
+        void parseSLink (pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ostream& os );
         void parseCbc (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os );
         void parseCbcSettings (pugi::xml_node pCbcNode, Cbc* pCbc, std::ostream& os);
         void parseGlobalCbcSettings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os);

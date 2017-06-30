@@ -1,7 +1,14 @@
-DEPENDENCIES := Utils HWDescription HWInterface RootWeb Tracker
+YEL='\033[1m\033[33m'
+RED='\033[1m\033[31m'
+BLU='\033[1m\033[35m'
+RESET='\033[0m'
+
+DEPENDENCIES := Utils HWDescription HWInterface RootWeb
 ANTENNAINSTALLED = no
 AMC13INSTALLED = no
 USBINSTINSTALLED = no
+
+ROOTVERSION := $(shell root-config --version)
 
 ifneq ("$(wildcard $(ANTENNADIR))","")
 	DEPENDENCIES := CMSPh2_AntennaDriver $(DEPENDENCIES)
@@ -45,21 +52,22 @@ src miniDAQ: tools
 
 
 print:
-	@echo '   '   
-	@echo '*****************************'
-	@echo 'BUILDING PH2 ACF FRAMEWORK'
-	@echo 'with the following Dependencies:'
-	@echo $(DEPENDENCIES)
-	@echo '*****************************'
-	@echo 'Amc13 SW installed:' $(AMC13INSTALLED)
-	@echo $(AMC13INSTRUCTIONS)
-	@echo '*****************************'
-	@echo 'Antenna Driver installed:' $(ANTENNAINSTALLED)
-	@echo $(ANTENNAINSTRUCTIONS)
-	@echo '*****************************'
-	@echo 'Ph2 USB Inst Driver installed:' $(USBINSTINSTALLED)
-	@echo $(USBINSTINSTRUCTIONS)
-	@echo '*****************************'
+	@echo -e '   '   
+	@echo -e ${YEL}'*****************************'
+	@echo -e 'BUILDING PH2 ACF FRAMEWORK'
+	@echo -e 'with the following Dependencies:'${RESET}
+	@echo -e ${BLU}$(DEPENDENCIES)${RESET}
+	@echo -e ${YEL}'ROOT Version: '${RED} $(ROOTVERSION)${RESET}
+	@echo -e ${YEL}'*****************************'${RESET}
+	@echo -e ${YEL}'Amc13 SW installed:'${RED} $(AMC13INSTALLED)${RESET}
+	@echo -e $(AMC13INSTRUCTIONS)
+	@echo -e ${YEL}'*****************************'${RESET}
+	@echo -e ${YEL}'Antenna Driver installed:' ${RED}$(ANTENNAINSTALLED)${RESET}
+	@echo -e $(ANTENNAINSTRUCTIONS)
+	@echo -e ${YEL}'*****************************'${RESET}
+	@echo -e ${YEL}'Ph2 USB Inst Driver installed:' ${RED}$(USBINSTINSTALLED)${RESET}
+	@echo -e $(USBINSTINSTRUCTIONS)
+	@echo -e ${YEL}'*****************************'${RESET}
 
 
 clean:
@@ -70,6 +78,5 @@ clean:
 	(cd tools; make clean)
 	(cd RootWeb; make clean)
 	(cd miniDAQ; make clean)
-	(cd Tracker; make clean)
 	(cd AMC13; make clean)
 	(rm -f lib/* bin/*)

@@ -24,5 +24,31 @@
 		<node id="cdce_sync"         mask="0x000040"/>
 		<node id="cdce_ctrl_sel"     mask="0x000080"/>
 	</node>
+        <node id="fmc_pwr" address="0x00000005" permission="rw">
+                <node id="l12_pwr_en"   mask="0x10000000"/>
+                <node id="l8_pwr_en"    mask="0x20000000"/>
+                <node id="pg_c2m"       mask="0x40000000"/>
+        </node>
+        <node id="i2c_settings" address="0x0000000d" permission="rw">
+                <node id="i2c_enable"           mask="0x00008000"/>
+                <node id="i2c_bus_select"       mask="0x00000400"/>
+                <node id="i2c_prescaler"        mask="0x000003ff"/>
+        </node>
+        <node id="i2c_command" address="0x0000000e" permission="rw">
+                <node id="strobe"               mask="0x80000000"/>
+                <node id="mode16"               mask="0x02000000"/>
+                <node id="mem"                  mask="0x01000000"/>
+                <node id="write"                mask="0x00800000"/>
+                <node id="slvaddr_7b"           mask="0x007f0000"/>
+                <node id="regaddr"              mask="0x0000ff00"/>
+                <node id="wrdata"               mask="0x000000ff"/>
+        </node>
+        <node id="i2c_reply" address="0x0000000f" permission="r">
+                <node id="status"               mask="0x0c000000"/>
+                <node id="error"                mask="0x08000000"/>
+                <node id="done"                 mask="0x04000000"/>
+                <node id="r_8b"                 mask="0x000000ff"/>
+                <node id="r_16b"                mask="0x0000ffff"/>
+        </node>
 </node>
 

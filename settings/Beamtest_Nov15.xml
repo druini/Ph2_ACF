@@ -4,7 +4,7 @@
   <BeBoard Id="0" boardType="GLIB">
     <connection id="board" uri="ipbusudp-2.0://192.168.000.175:50001" address_table="file://settings/address_table_8CBC.xml" />
     
-    <FW_Version NCbcDataSize="16"/>
+    <!--<FW_Version NCbcDataSize="16"/>-->
     
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
       

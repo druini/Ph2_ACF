@@ -48,7 +48,11 @@ namespace Ph2_HwInterface {
         uint32_t fNCbc;
         uint32_t fFMCId;
 
-        const uint32_t SINGLE_I2C_WAIT = 2000; //used for 0.1MHz I2C
+        // number of chips and hybrids defined in firmware (compiled for)
+        int fFWNHybrids;
+        int fFWNChips;
+
+        const uint32_t SINGLE_I2C_WAIT = 200; //used for 1MHz I2C
 
       public:
         /*!
@@ -162,6 +166,11 @@ namespace Ph2_HwInterface {
         //binary predicate for comparing sent I2C commands with replies using std::mismatch
         static bool cmd_reply_comp (const uint32_t& cWord1, const uint32_t& cWord2);
         static bool cmd_reply_ack (const uint32_t& cWord1, const uint32_t& cWord2);
+
+        // dedicated method to power on dio5
+        void PowerOnDIO5();
+        // get fmc card name
+        std::string getFMCCardName(uint32_t id);
 
         //template to copy every nth element out of a vector to another vector
         template<class in_it, class out_it>

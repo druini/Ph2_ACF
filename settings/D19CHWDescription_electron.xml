@@ -6,30 +6,22 @@
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
         
         <CBC_Files path="./settings/" />
-        <CBC Id="0" configfile="Cbc_default_hole.txt" />
-        <CBC Id="1" configfile="Cbc_default_hole.txt" />
-        <CBC Id="2" configfile="Cbc_default_hole.txt" />
-        <CBC Id="3" configfile="Cbc_default_hole.txt" />
-        <CBC Id="4" configfile="Cbc_default_hole.txt" />
-        <CBC Id="5" configfile="Cbc_default_hole.txt" />
-        <CBC Id="6" configfile="Cbc_default_hole.txt" />
-        <CBC Id="7" configfile="Cbc_default_hole.txt" />
+        <CBC Id="0" configfile="Cbc_default_electron.txt" />
+        <CBC Id="1" configfile="Cbc_default_electron.txt" />
+        <CBC Id="2" configfile="Cbc_default_electron.txt" />
+        <CBC Id="3" configfile="Cbc_default_electron.txt" />
+        <CBC Id="4" configfile="Cbc_default_electron.txt" />
+        <CBC Id="5" configfile="Cbc_default_electron.txt" />
+        <CBC Id="6" configfile="Cbc_default_electron.txt" />
+        <CBC Id="7" configfile="Cbc_default_electron.txt" />
     </Module>
-
-    <SLink>
-        <DebugMode type="FULL"/>
-        <ConditionData type="I2C" Register="VCth" FeId="0" CbcId="0"/>
-        <ConditionData type="User" UID="0x80" FeId="0" CbcId="0"> 0x22 </ConditionData>
-        <ConditionData type="HV" FeId="0" Sensor="2"> 250 </ConditionData>
-        <ConditionData type="TDC" FeId="0xFF"/>
-    </SLink>
 
     <!--CONFIG-->
     <Register name="fc7_daq_cnfg">
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
                 <Register name="triggers_to_accept"> 10 </Register>
-		<Register name="trigger_source"> 6 </Register>
+                <Register name="trigger_source"> 6 </Register>
 		<Register name="user_trigger_frequency"> 1 </Register>
 		<Register name="stubs_mask"> 1 </Register>
 		<Register name="stub_trigger_latency"> 194 </Register>
@@ -63,7 +55,7 @@
     	</Register>
 	<!-- DIO5 Block -->
 	<Register name="dio5_block">
-	    <Register name="dio5_en"> 0 </Register>
+            <Register name="dio5_en"> 0 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 1 </Register>
                 <Register name="term_enable"> 0 </Register>
@@ -103,8 +95,8 @@
    <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>
     <Setting name="Nevents">50</Setting>
-    <Setting name="TestPulsePotentiometer">0x00</Setting>
-    <Setting name="HoleMode">1</Setting>
+    <Setting name="TestPulsePotentiometer">0xFF</Setting>
+    <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
 
 </Settings>

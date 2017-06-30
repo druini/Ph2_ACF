@@ -175,11 +175,17 @@
     - Calibration et al work
     - added StubSweep tool to check Stub addresses
  - 07.02.2017:
-    - added new address table for FC7 FW v2
     - cleaned up root file handling
     - cleaned up histogram binning in Calibration, PedeNoise and Channel classes
     - added cbc3irrad binary to run the complete radiation test cycle
     - added UsbUtilities helper functions to launch and query Ke2110 and HMP4040 servers running in Tmux
     - renamed Vth to VCth for CBC3 too
+- 22.06.2017:
+    - new D19C FW Interface and D19C CBC3 Event classes to handle D19C
+    - new implementation of SLink 64 bit event data format for downstream DAQ chain - see example in datatest and miniDAQ
+    - with this comes new GenericPayload container that stores data internally as 64 bits but can return them in vectors of any wordsize < 64 - the data is always padded to 64 bits
+    - ability to parse a SLink node with all the condition data and debug level from the config file (Cbc3HWDescription.xml) - this ConditionDataSet object belongs to BeBoard pointers as this makes it easier to update I2C values for every event
+    - added "eventType" attribute to BeBoard node to indicate either ZeroSupressed or VirginRaw mode - even if the attribute is missing this will always be assumed VR unless ZS is explicitly specified - this is now also a member of BeBoard including setters and getters
+    - removed NCbcDataSize and corresponding nodes in HWDescription.xml files. only for GLIB and CTA, if the number of CBCs is smaller than 4, 4 is assumed, if the number is between 4 and 8, 8 is assumed and if the number is greater than 8, 16 is assumed
 
 

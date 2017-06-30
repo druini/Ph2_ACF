@@ -75,8 +75,9 @@
 #define EVENT_HEADER_TDC_SIZE_32_CBC3    3 // total of 6 32 bit words for HEADER + TDC
 #define EVENT_HEADER_SIZE_32_CBC3    3  // 5 words for the header
 
-//FC7 DAQ event header size
-#define D19C_EVENT_HEADER_SIZE_32_CBC3 7
+//D19C event header size
+#define D19C_EVENT_HEADER1_SIZE_32_CBC3 5
+#define D19C_EVENT_HEADER2_SIZE_32_CBC3 1
 // points to bufferoverlow
 #define D19C_OFFSET_ERROR_CBC3              8*32+1
 
@@ -108,5 +109,7 @@
 
 enum class BoardType {GLIB, ICGLIB, CTA, ICFC7, CBC3FC7, D19C, SUPERVISOR};
 enum class ChipType {UNDEFINED = 0, CBC2, CBC3};
+enum class SLinkDebugMode {SUMMARY = 0, FULL = 1, ERROR = 2};
+enum class EventType {ZS = 1, VR = 2};
 
 #endif

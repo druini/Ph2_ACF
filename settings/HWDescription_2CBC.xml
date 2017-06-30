@@ -8,12 +8,16 @@
 
 	<FW_Version NCbcDataSize="4" />
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
-        <Global_CBC_Register name="VCth"> 0x76 </Global_CBC_Register>
-        <!--<Global_CBC_Register name="TriggerLatency"> 0x0F </Global_CBC_Register>-->
+       <!--<Global>-->
+           <!--<Settings threshold="120" latency="12"/>-->
+           <!--<TestPulse enable="1" polarity="0" amplitude="0x08" channelgroup="0" delay="0" groundothers="1"/>-->
+           <!--<ClusterStub clusterwidth="4" ptwidth="3" layerswap="0" off1="0"/>-->
+           <!--<Misc analogmux="0b00000"/>-->
+           <!--<ChannelMask disable="1"/>-->
+       <!--</Global>-->
+
+      <Global_CBC_Register name="VCth"> 0x76 </Global_CBC_Register>
       <Global_CBC_Register name="MiscTestPulseCtrl&amp;AnalogMux">0x21</Global_CBC_Register>
-      <!--<Global_CBC_Register name="MiscTestPulseCtrl&amp;AnalogMux">0xE1</Global_CBC_Register>-->
-      <!--<Global_CBC_Register name="TestPulsePot">0xE0</Global_CBC_Register>-->
-      <!--<Global_CBC_Register name="SelTestPulseDel&ChanGroup">0x00</Global_CBC_Register>-->
 
      <!--CBC_Files path="./settings/" /-->
      <CBC_Files path="${HOME}/mrbots/srcs/otsdaq_cmsoutertracker/otsdaq-cmsoutertracker/Ph2_ACF/CalibrationBeamtestSeptember16/"/>
@@ -22,6 +26,13 @@
        <CBC Id="0" configfile="FE0CBC0.txt"/>
        <CBC Id="1" configfile="FE0CBC1.txt"/>
     </Module>
+    <SLink>
+        <DebugMode type="FULL"/>
+        <ConditionData type="I2C" Register="VCth" FeId="0" CbcId="0"/>
+        <ConditionData type="User" UID="0x80" FeId="0" CbcId="0"> 0x22 </ConditionData>
+        <ConditionData type="HV" FeId="0" Sensor="2"> 250 </ConditionData>
+        <ConditionData type="TDC" FeId="0xFF"/>
+    </SLink>
 
     <!-- Commissioning Mode -->
     <!-- set to 1 to enable commissioning mode -->
@@ -78,6 +89,7 @@
 
   </BeBoard>
 </HwDescription>
+
 <Settings>
     <Setting name="Nevents">1000</Setting>
     <Setting name="RunNumber">1</Setting>

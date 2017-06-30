@@ -179,9 +179,7 @@ For instructions on how to use it, see this [file](https://github.com/gauzinge/P
           <HwDescription>
           <Connections name="file://settings/connections_2CBC.xml"/>
 
-          <Shelve Id="0" >
           <BeBoard Id="0" connectionId="board0" boardType="GLIB">
-          <FW_Version NCbcDataSize="4"/>
 
           <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
           <!--Global_CBC_Register name="VCth"> 0x88 </Global_CBC_Register>
@@ -233,7 +231,6 @@ For instructions on how to use it, see this [file](https://github.com/gauzinge/P
           <Register name="user_wb_ttc_fmc_regs.dio5.fmcdio5_trig_in_50ohms">1</Register>
           <Register name="user_wb_ttc_fmc_regs.dio5.fmcdio5_trig_out_50ohms">0</Register>
           </BeBoard>
-          </Shelve>
           </HwDescription>
 
           <Settings>

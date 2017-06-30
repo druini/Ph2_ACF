@@ -9,6 +9,26 @@
 
     <node id="fc7_daq_cnfg" address="0x40010000" permission="rw" >
 
+	<node id="global"                       address="0x0000">
+            <node id="hybrid_enable"			address="0x001" mask="0x0000FFFF"/>
+	    <node id="chips_enable_hyb_00"		address="0x002" mask="0x000000FF"/>
+	    <node id="chips_enable_hyb_01"		address="0x002" mask="0x0000FF00"/>
+	    <node id="chips_enable_hyb_02"		address="0x002" mask="0x00FF0000"/>
+            <node id="chips_enable_hyb_03"		address="0x002" mask="0xFF000000"/>
+            <node id="chips_enable_hyb_04"		address="0x003" mask="0x000000FF"/>
+            <node id="chips_enable_hyb_05"		address="0x003" mask="0x0000FF00"/>
+            <node id="chips_enable_hyb_06"		address="0x003" mask="0x00FF0000"/>
+            <node id="chips_enable_hyb_07"		address="0x003" mask="0xFF000000"/>
+	    <node id="chips_enable_hyb_08"		address="0x004" mask="0x000000FF"/>
+	    <node id="chips_enable_hyb_09"		address="0x004" mask="0x0000FF00"/>
+	    <node id="chips_enable_hyb_10"		address="0x004" mask="0x00FF0000"/>
+            <node id="chips_enable_hyb_11"		address="0x004" mask="0xFF000000"/>
+            <node id="chips_enable_hyb_12"		address="0x005" mask="0x000000FF"/>
+            <node id="chips_enable_hyb_13"		address="0x005" mask="0x0000FF00"/>
+            <node id="chips_enable_hyb_14"		address="0x005" mask="0x00FF0000"/>
+            <node id="chips_enable_hyb_15"		address="0x005" mask="0xFF000000"/>	
+        </node>
+
         <node id="command_processor_block"      address="0x1000">
             <node id="i2c_write_mask"                   address="0x001" mask="0x000000FF"/>
         </node>
@@ -17,16 +37,19 @@
             <node id="triggers_to_accept"               address="0x000" description="# of periodic fast signal cycle from the start signal."/>
             <node id="user_trigger_frequency"           address="0x001" description="User-defined frequency in kHz"/>
             <node id="trigger_source"                   address="0x002" mask="0x0000000F" description="1 - L1, 2 - Stubs, 3 - User-Defined Frequency"/>
-            <node id="stubs_mask"                       address="0x003" description="if mode is stubs, then coincidence mask can be set here: 0x0000000f requires presence of stubs from hybrids 0,1,2,3"/>
+            <node id="stubs_mask"                       address="0x003" mask="0x0000FFFF" description="if mode is stubs, then coincidence mask can be set here: 0x0000000f requires presence of stubs from hybrids 0,1,2,3"/>
+	    <node id="stub_trigger_latency"		address="0x003" mask="0x00FF0000"/>
             <node id="test_pulse" description="configuration of the test pulse delays.">
                 <node id="delay_after_fast_reset"       address="0x004" description="delay between fast reset and following test pulse command"/>
                 <node id="delay_after_test_pulse"       address="0x005" description="delay after test pulse command before l1a signal sent to readout the data"/>
 		<node id="delay_before_next_pulse"      address="0x006" description="delay before next pulse"/>
-		<node id="number_of_test_pulses"        address="0x007" description="number of the test pulses to be sent at once"/>
             </node>
         </node>
 
         <node id="physical_interface_block"     address="0x3000">
+	    <node id="i2c"				address="0x001">
+		<node id="frequency"			    mask="0x0000ffff"/>
+	    </node>
         </node>
 
         <node id="readout_block"                address="0x5000">
@@ -42,6 +65,7 @@
         </node>
 
         <node id="dio5_block"                   address="0x6000">
+	    <node id="dio5_en"				address="0x005" mask="0x00000001"/>
             <node id="ch1"                              address="0x000">
                 <node id="out_enable"                       mask="0x00000001"/>
                 <node id="term_enable"                      mask="0x00000002"/>
@@ -68,6 +92,10 @@
                 <node id="threshold"                        mask="0x0000ff00"/>
             </node>
         </node>
+
+	<node id="tlu_block"			address="0x7000">
+		<node id="handshake_mode"		address="0x000" mask="0x00000003"/>
+	</node>
     </node>
 
     <node id="fc7_daq_ctrl" address="0x40020000" permission="rw" >
@@ -110,6 +138,7 @@
                 <node id="start_trigger"                    mask="0x00000002"/>
                 <node id="stop_trigger"                     mask="0x00000004"/>
                 <node id="load_config"                 	    mask="0x00000008"/>
+		<node id="reset_test_pulse"		    mask="0x00000010"/>
                 <node id="fast_reset"		            mask="0x00010000"/>
                 <node id="fast_test_pulse"		    mask="0x00020000"/>
                 <node id="fast_trigger"		            mask="0x00040000"/>
@@ -135,6 +164,9 @@
             </node>
         </node>
 
+	<node id="tlu_block"			address="0x7000">
+	</node>
+
     </node>
 
     <node id="fc7_daq_stat" address="0x40030000" permission="r" >
@@ -149,6 +181,8 @@
                 <node id="cbc_version"                      mask="0x000000f0"/>
                 <node id="num_hybrids"                      mask="0x0000ff00"/>
                 <node id="num_chips"                        mask="0x00ff0000"/>
+		<node id="fmc1_card_type"		    mask="0x0f000000"/>
+		<node id="fmc2_card_type"		    mask="0xf0000000"/>
             </node>
 
             <node id="clock_generator"                  address="0x004">
@@ -161,6 +195,8 @@
                 <node id="dec_single_err_cnt"           address="0x006" mask="0x0000ffff"/>
                 <node id="dec_double_err_cnt"           address="0x006" mask="0xffff0000"/>
             </node>
+
+            <node id="hybrids_available"                address="0x007" mask="0xffffffff"/>
         </node>
 
         <node id="command_processor_block"      address="0x1000">
@@ -181,8 +217,8 @@
         <node id="fast_command_block"           address="0x2000">
             <node id="general"                          address="0x000">
                 <node id="source"                           mask="0x0000000f"/>
-                <node id="fsm_state"                        mask="0x00000010"/>
-                <node id="configured"                       mask="0x00000020"/>
+                <node id="fsm_state"                        mask="0x00000030"/>
+                <node id="configured"                       mask="0x00000040"/>
             </node>
         </node>
 
@@ -195,6 +231,18 @@
                 <node id="evnt_cnt_buf_empty"               mask="0x01000000"/>
                 <node id="data_payload_buf_empty"           mask="0x02000000"/>
                 <node id="trigdata_buf_empty"               mask="0x04000000"/>
+            </node>
+            <node id="frame_counters">
+                <node id="hybrid0">
+                    <node id="chip0"                    address="0x001" mask="0xffffffff"/>
+                    <node id="chip1"                    address="0x002" mask="0xffffffff"/>
+                    <node id="chip2"                    address="0x003" mask="0xffffffff"/>
+                    <node id="chip3"                    address="0x004" mask="0xffffffff"/>
+                    <node id="chip4"                    address="0x005" mask="0xffffffff"/>
+                    <node id="chip5"                    address="0x006" mask="0xffffffff"/>
+                    <node id="chip6"                    address="0x007" mask="0xffffffff"/>
+                    <node id="chip7"                    address="0x008" mask="0xffffffff"/>
+                </node>
             </node>
         </node>
 
@@ -213,6 +261,12 @@
                 <node id="error"                            mask="0x00000002"/>
             </node>
         </node>
+
+	<node id="tlu_block"			address="0x7000">
+		<node id="fifo_empty"		address="0x000" mask="0x00000001"/>
+		<node id="fifo_full"		address="0x000" mask="0x00000002"/>
+		<node id="trigger_id_fifo"	address="0x001" mask="0x00007fff"/>		
+	</node> 
 
         <node id="test_clock"                   address="0xf000">
             <node id="ipb_clk_rate"                     address="0x000"/>

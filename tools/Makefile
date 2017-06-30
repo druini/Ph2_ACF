@@ -1,3 +1,8 @@
+YEL='\033[1m\033[33m'
+RED='\033[1m\033[31m'
+BLU='\033[1m\033[35m'
+RESET='\033[0m'
+
 CC              = g++
 CXX             = g++
 CCFlags         = -g -O1 -w -Wall -pedantic -pthread -fPIC `root-config --cflags --evelibs` 
@@ -79,12 +84,12 @@ all: print $(Objs) ../HWDescription/Definition.h
 	mv libPh2_Tools.so ../lib
 
 print:
-	@echo '****************************'
-	@echo 'Building tools with:'
-	@echo 'Root Has Http:' $(ROOTVERSION)
-	@echo 'Amc13 SW installed:' $(AMC13INSTALLED)
-	@echo 'Antenna installed:' $(ANTENNAINSTALLED)
-	@echo 'Ph2_USBInstDriver installed:' $(USBINSTLIBINSTALLED)
-	@echo '****************************'
+	@echo -e ${YEL}'****************************'
+	@echo -e ${YEL}'Building tools with:'
+	@echo -e ${YEL}'Root Has Http:' ${RED}$(ROOTVERSION)
+	@echo -e ${YEL}'Amc13 SW installed:' ${RED}$(AMC13INSTALLED)
+	@echo -e ${YEL}'Antenna installed:' ${RED}$(ANTENNAINSTALLED)
+	@echo -e ${YEL}'Ph2_USBInstDriver installed:' ${RED}$(USBINSTLIBINSTALLED)
+	@echo -e ${YEL}'****************************'${RESET}
 clean:
 	rm -f *.o

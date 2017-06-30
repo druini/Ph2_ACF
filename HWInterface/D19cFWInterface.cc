@@ -16,6 +16,7 @@
 #include <uhal/uhal.hpp>
 #include "D19cFWInterface.h"
 #include "CtaFpgaConfig.h"
+
 //#include "CbcInterface.h"
 
 
@@ -97,6 +98,40 @@ namespace Ph2_HwInterface {
         }
     }
 
+    std::string D19cFWInterface::getFMCCardName(uint32_t id)
+    {
+        std::string name = "";
+
+        switch(id) {
+            case 0x0:
+                name = "None";
+                break;
+            case 0x1:
+                name = "DIO5";
+                break;
+            case 0x2:
+                name = "2xCBC2";
+                break;
+            case 0x3:
+                name = "8xCBC2";
+                break;
+            case 0x4:
+                name = "2xCBC3";
+                break;
+            case 0x5:
+                name = "8xCBC3";
+                break;
+            case 0x6:
+                name = "OPTO_QUAD";
+                break;
+            case 0xf:
+                name = "UNKNOWN";
+                break;
+        }
+
+        return name;
+    }
+
     uint32_t D19cFWInterface::getBoardInfo()
     {
         // firmware info
@@ -107,6 +142,8 @@ namespace Ph2_HwInterface {
         int cbc_version = ReadReg("fc7_daq_stat.general.info.cbc_version");
         int num_hybrids = ReadReg("fc7_daq_stat.general.info.num_hybrids");
         int num_chips = ReadReg("fc7_daq_stat.general.info.num_chips");
+        uint32_t fmc1_card_type = ReadReg("fc7_daq_stat.general.info.fmc1_card_type");
+        uint32_t fmc2_card_type = ReadReg("fc7_daq_stat.general.info.fmc2_card_type");
 
         if (implementation == 0)
             LOG (INFO) << "Implementation: " << BOLDGREEN << "Optical" << RESET;
@@ -116,6 +153,9 @@ namespace Ph2_HwInterface {
             LOG (INFO) << "Implementation: " << BOLDGREEN << "CBC3 Emulation" << RESET;
         else
             LOG (WARNING) << "Implementation: " << BOLDRED << "Unknown" << RESET;
+
+        LOG (INFO) << BOLDYELLOW << "FMC1 Card: " << RESET << getFMCCardName(fmc1_card_type);
+        LOG (INFO) << BOLDYELLOW << "FMC2 Card: " << RESET << getFMCCardName(fmc2_card_type);
 
         LOG (INFO) << "CBC Version: " << BOLDGREEN << cbc_version << RESET;
         LOG (INFO) << "Number of Hybrids: " << BOLDGREEN << num_hybrids << RESET;
@@ -135,6 +175,12 @@ namespace Ph2_HwInterface {
             LOG (INFO) << "Trigger Source: " << BOLDGREEN << "Stubs" << RESET;
         else if (source_id == 3)
             LOG (INFO) << "Trigger Source: " << BOLDGREEN << "User Frequency (" << user_frequency << " kHz)" << RESET;
+        else if (source_id == 4)
+            LOG (INFO) << "Trigger Source: " << BOLDGREEN << "TLU" << RESET;
+        else if (source_id == 5)
+            LOG (INFO) << "Trigger Source: " << BOLDGREEN << "Ext Trigger (DIO5)" << RESET;
+        else if (source_id == 6)
+            LOG (INFO) << "Trigger Source: " << BOLDGREEN << "Test Pulse Trigger" << RESET;
         else
             LOG (WARNING) << " Trigger Source: " << BOLDRED << "Unknown" << RESET;
 
@@ -143,6 +189,8 @@ namespace Ph2_HwInterface {
             LOG (INFO) << "Trigger State: " << BOLDGREEN << "Idle" << RESET;
         else if (state_id == 1)
             LOG (INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+        else if (state_id == 2)
+            LOG (INFO) << "Trigger State: " << BOLDGREEN << "Paused. Waiting for readout" << RESET;
         else
             LOG (WARNING) << " Trigger State: " << BOLDRED << "Unknown" << RESET;
 
@@ -173,36 +221,53 @@ namespace Ph2_HwInterface {
         usleep(500);
 
         // read info about current firmware
-        //int cbc_version = ReadReg("fc7_daq_stat.general.info.cbc_version");
-        int num_hybrids = ReadReg("fc7_daq_stat.general.info.num_hybrids");
-        int num_chips = ReadReg("fc7_daq_stat.general.info.num_chips");
+        int cbc_version = ReadReg("fc7_daq_stat.general.info.cbc_version");
+        fFWNHybrids = ReadReg("fc7_daq_stat.general.info.num_hybrids");
+        fFWNChips = ReadReg("fc7_daq_stat.general.info.num_chips");
 
         fNCbc = 0;
         std::vector< std::pair<std::string, uint32_t> > cVecReg;
 
+        LOG (INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " CBC" << cbc_version << " chip(s) per hybrid" << RESET;
+
+        int fNHybrids = 0;
+        uint16_t hybrid_enable = 0;
+        uint8_t *chips_enable = new uint8_t[16];
+        for(int i=0; i<16; i++) chips_enable[i] = 0;
         //then loop the HWDescription and find out about our Connected CBCs
         for (Module* cFe : pBoard->fModuleVector)
         {
-            // Basil: This loop is somewhat useless?
-            fNCbc += cFe->fCbcVector.size();
-
-            ////configure the CBCs - preliminary FW only supports 1 CBC but put the rest of the code there and comment
-            //for ( Cbc* cCbc : cFe->fCbcVector)
-            //{
-            //    //need to increment the NCbc counter for I2C controller
-            //    fNCbc++;
-            //}
+            fNHybrids++;
+            LOG (INFO) << "Enabling Hybrid " << (int)cFe->getFeId();
+            hybrid_enable |= 1 << cFe->getFeId();
+            //configure the CBCs - preliminary FW only supports 1 CBC but put the rest of the code there and comment
+            for ( Cbc* cCbc : cFe->fCbcVector)
+            {
+                LOG (INFO) << "     Enabling Chip " << (int)cCbc->getCbcId();
+                chips_enable[cFe->getFeId()] |= 1 << cCbc->getCbcId();
+                //need to increment the NCbc counter for I2C controller
+                fNCbc++;
+            }
         }
-
-        if((unsigned int)num_hybrids*num_chips != fNCbc) LOG (ERROR) << "Number of chips in the configuration file doesn't correspond to the number of chips in the firmware. Firmware: " << num_hybrids << " hybrids, " << num_chips << " chips. Configuration file: " << fNCbc << " chips in total.";
+        cVecReg.push_back({"fc7_daq_cnfg.global.hybrid_enable",hybrid_enable});
+        for(uint32_t i=0; i<16; i++) {
+            char name[50];
+            std::sprintf(name, "fc7_daq_cnfg.global.chips_enable_hyb_%02d", i);
+            std::string name_str(name);
+            cVecReg.push_back({name_str, chips_enable[i]});
+        }
+        delete chips_enable;
+        LOG (INFO) << BOLDGREEN << fNHybrids << " hybrid(s) was(were) enabled with the total amount of " << fNCbc << " chip(s)!" << RESET;
 
         //last, loop over the variable registers from the HWDescription.xml file
         //this is where I should get all the clocking and FastCommandInterface settings
         BeBoardRegMap cGlibRegMap = pBoard->getBeBoardRegMap();
 
+        bool dio5_enabled = false;
         for ( auto const& it : cGlibRegMap )
         {
             cVecReg.push_back ( {it.first, it.second} );
+            if (it.first == "fc7_daq_cnfg.dio5_block.dio5_en") dio5_enabled = (bool)it.second;
         }
 
         WriteStackReg ( cVecReg );
@@ -211,8 +276,13 @@ namespace Ph2_HwInterface {
         // load trigger configuration
         WriteReg ("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
 
+        // load dio5 configuration
+        if (dio5_enabled) {
+            PowerOnDIO5();
+            WriteReg("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
+        }
 
-        // ping cbcs (reads data from registers #0)
+        // ping all cbcs (reads data from registers #0)
         uint32_t cInit = ( ( (2) << 28 ) | (  (0) << 18 )  | ( (0) << 17 ) | ( (1) << 16 ) | (0 << 8 ) | 0);
 
         WriteReg("fc7_daq_ctrl.command_processor_block.i2c.command_fifo", cInit);
@@ -224,7 +294,9 @@ namespace Ph2_HwInterface {
         if (cReadSuccess) {
             for (unsigned int i=0; i < pReplies.size(); i++) {
                 cWord = pReplies.at(i);
-                cWordCorrect = ( (((cWord) & 0x00f00000) >> 20) == i%num_chips ) ? true : false;
+                //cWordCorrect = ( (((cWord) & 0x00f00000) >> 20) == i%num_chips ) ? true : false;
+                // has to be reimplemented, because now some chips can be disabled and i doesn't correspond to the actual chip id
+                cWordCorrect = true;
                 if (!cWordCorrect) break;
             }
         }
@@ -233,6 +305,124 @@ namespace Ph2_HwInterface {
 
         if (!cReadSuccess) LOG (ERROR) << "Did not receive the correct number of *Pings*; expected: " << fNCbc << ", received: " << pReplies.size() ;
         if (!cWordCorrect) LOG (ERROR) << "CBC's ids are not correct!";
+    }
+
+    void D19cFWInterface::PowerOnDIO5()
+    {
+        LOG(INFO) << BOLDGREEN << "Powering on DIO5" << RESET;
+
+        uint32_t fmc1_card_type = ReadReg("fc7_daq_stat.general.info.fmc1_card_type");
+        uint32_t fmc2_card_type = ReadReg("fc7_daq_stat.general.info.fmc2_card_type");
+
+        //define constants
+        uint8_t i2c_slv   = 0x2f;
+        uint8_t wr = 1;
+        uint8_t rd = 0;
+
+        uint8_t sel_fmc_l8  = 0;
+        uint8_t sel_fmc_l12 = 1;
+
+        uint8_t p3v3 = 0xff - 0x09;
+        uint8_t p2v5 = 0xff - 0x2b;
+        uint8_t p1v8 = 0xff - 0x67;
+
+        if(fmc1_card_type == 0x1) {
+            LOG(INFO) << "Found DIO5 at L12. Configuring";
+
+            // disable power
+            WriteReg("sysreg.fmc_pwr.l12_pwr_en",0x0);
+
+            // enable i2c
+            WriteReg("sysreg.i2c_settings.i2c_bus_select", 0x0);
+            WriteReg("sysreg.i2c_settings.i2c_prescaler", 1000);
+            WriteReg("sysreg.i2c_settings.i2c_enable", 0x1);
+            //uint32_t i2c_settings_reg_command = (0x1 << 15) | (0x0 << 10) | 1000;
+            //WriteReg("sysreg.i2c_settings", i2c_settings_reg_command);
+
+            // set value
+            uint8_t reg_addr = (sel_fmc_l12<<7)+0x08;
+            uint8_t wrdata = p2v5;
+            uint32_t sys_i2c_command = ( (1 << 24) | (wr << 23) | (i2c_slv << 16) | (reg_addr << 8) | (wrdata) );
+
+            WriteReg("sysreg.i2c_command", sys_i2c_command | 0x80000000);
+            WriteReg("sysreg.i2c_command", sys_i2c_command);
+
+            int status	 = 0; // 0 - busy, 1 -done, 2 - error
+            int attempts = 0;
+            int max_attempts = 1000;
+            usleep(1000);
+            while (status == 0 && attempts < max_attempts) {
+                uint32_t i2c_status = ReadReg("sysreg.i2c_reply.status");
+                attempts = attempts + 1;
+                //
+                if ((int)i2c_status==1){
+                        status = 1;
+                }
+                else if ((int)i2c_status==0){
+                        status = 0;
+                }
+                else {
+                        status = 2;
+                }
+            }
+
+            // disable i2c
+            WriteReg("sysreg.i2c_settings.i2c_enable", 0x0);
+
+            usleep(1000);
+            WriteReg("sysreg.fmc_pwr.l12_pwr_en",0x1);
+        }
+
+        if(fmc2_card_type == 0x1) {
+            LOG(INFO) << "Found DIO5 at L8. Configuring";
+
+            // disable power
+            WriteReg("sysreg.fmc_pwr.l8_pwr_en",0x0);
+
+            // enable i2c
+            WriteReg("sysreg.i2c_settings.i2c_bus_select", 0x0);
+            WriteReg("sysreg.i2c_settings.i2c_prescaler", 1000);
+            WriteReg("sysreg.i2c_settings.i2c_enable", 0x1);
+            //uint32_t i2c_settings_reg_command = (0x1 << 15) | (0x0 << 10) | 1000;
+            //WriteReg("sysreg.i2c_settings", i2c_settings_reg_command);
+
+            // set value
+            uint8_t reg_addr = (sel_fmc_l8<<7)+0x08;
+            uint8_t wrdata = p2v5;
+            uint32_t sys_i2c_command = ( (1 << 24) | (wr << 23) | (i2c_slv << 16) | (reg_addr << 8) | (wrdata) );
+
+            WriteReg("sysreg.i2c_command", sys_i2c_command | 0x80000000);
+            WriteReg("sysreg.i2c_command", sys_i2c_command);
+
+            int status	 = 0; // 0 - busy, 1 -done, 2 - error
+            int attempts = 0;
+            int max_attempts = 1000;
+            usleep(1000);
+            while (status == 0 && attempts < max_attempts) {
+                uint32_t i2c_status = ReadReg("sysreg.i2c_reply.status");
+                attempts = attempts + 1;
+                //
+                if ((int)i2c_status==1){
+                        status = 1;
+                }
+                else if ((int)i2c_status==0){
+                        status = 0;
+                }
+                else {
+                        status = 2;
+                }
+            }
+
+            // disable i2c
+            WriteReg("sysreg.i2c_settings.i2c_enable", 0x0);
+
+            usleep(1000);
+            WriteReg("sysreg.fmc_pwr.l8_pwr_en",0x1);
+        }
+
+        if(fmc1_card_type != 0x1 && fmc2_card_type != 0x1) {
+            LOG(ERROR) << "No DIO5 found, you should disable it in the config file..";
+        }
     }
 
     void D19cFWInterface::FindPhase()
@@ -275,6 +465,27 @@ namespace Ph2_HwInterface {
         uint32_t cNWords = 0;
         do
         {
+            std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+            cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+        }
+
+        uint32_t cNEvents = 0;
+        while(cNWords > 0) {
+            // reading header 1
+            uint32_t header1 = ReadReg ("fc7_daq_ctrl.readout_block.readout_fifo");
+            uint32_t cEventSize = (0x0000FFFF & header1);
+
+            while (cNWords < cEventSize-1)
+            {
+                LOG(INFO) << "Need: " << cEventSize-1 << " words for this event, Get: " << cNWords;
+                std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+                cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+
+            }
+            pData.push_back(header1);
+            std::vector<uint32_t> rest_of_data = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cEventSize-1);
+            pData.insert(pData.end(), rest_of_data.begin(), rest_of_data.end());
+            cNEvents++;
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
             if ( cNWords == 0 )
             {
@@ -285,19 +496,11 @@ namespace Ph2_HwInterface {
         }
         while (cNWords == 0);
 
-        pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
 
         if (fSaveToFile)
             fFileHandler->set (pData);
 
         //need to return the number of events read
-        uint32_t cEventSize = computeEventSize (pBoard);
-        uint32_t cNEvents = 0;
-
-        if (cNWords % cEventSize == 0 ) cNEvents = cNWords / cEventSize;
-        else
-            LOG (ERROR) << "Packet Size is not a multiple of the event size!";
-
         return cNEvents;
     }
 
@@ -306,28 +509,63 @@ namespace Ph2_HwInterface {
     {
 
         // first write the amount of the test pulses to be sent
-        WriteReg("fc7_daq_cnfg.fast_command_block.test_pulse.number_of_test_pulses", pNEvents);
-        usleep(100);
-        WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
-        usleep(100);
+        WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents);        
+        WriteReg ("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+        usleep(1);
 
-        // send N test pulses now
-        // TODO does ReadNEvents has to send test pulses???
-        this->CbcTestPulse();
+        // start triggering machine which will collect N events
+        this->Start();
 
-        uint32_t cEventSize = computeEventSize (pBoard);
-        uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+        bool failed = false;
+        for(uint32_t event = 0; event < pNEvents; event++) {
+            uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");            
 
-        while (cNWords < pNEvents * cEventSize)
-        {
-            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-            cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-            LOG(INFO) << "Need: " << pNEvents*cEventSize << "words, Get: " << cNWords;
+            int cNTries = 0;
+            int cNTriesMax = 50;
+            while (cNWords < 1)
+            {
+                if(cNTries >= cNTriesMax) {
+                    uint32_t state_id = ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
+                    if (state_id == 0) {
+                        LOG(INFO) << "After fsm stopped, still no data: resetting and re-trying";
+                        failed = true;
+                        break;
+                    }
+                    else cNTries = 0;
+                }
+
+                std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+                cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+                cNTries++;
+            }
+            if (failed) break;
+
+            // reading header 1
+            uint32_t header1 = ReadReg ("fc7_daq_ctrl.readout_block.readout_fifo");
+            uint32_t cEventSize = (0x0000FFFF & header1);
+
+            while (cNWords < cEventSize-1)
+            {
+                std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+                cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+            }
+            pData.push_back(header1);
+            std::vector<uint32_t> rest_of_data = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cEventSize-1);
+            pData.insert(pData.end(), rest_of_data.begin(), rest_of_data.end());
+
         }
+        if(failed) {
 
-        if (cNWords != pNEvents * cEventSize) LOG (ERROR) << "Error, did not read correct number of words for " << pNEvents << " Events! (read value= " << cNWords << "; expected= " << pNEvents* cEventSize << ")";
+            pData.clear();
+            this->Stop();
 
-        pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
+            WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
+            usleep(10);
+            WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x0);
+            usleep(10);
+
+            this->ReadNEvents(pBoard,pNEvents,pData);
+        }
 
         if (fSaveToFile)
             fFileHandler->set (pData);
@@ -337,26 +575,7 @@ namespace Ph2_HwInterface {
      * this will have to change with a more generic FW */
     uint32_t D19cFWInterface::computeEventSize ( BeBoard* pBoard )
     {
-        //use a counting visitor to find out the number of CBCs
-        struct CbcCounter : public HwDescriptionVisitor
-        {
-            uint32_t fNCbc = 0;
-
-            void visit ( Cbc& pCbc )
-            {
-                fNCbc++;
-            }
-            uint32_t getNCbc()
-            {
-                return fNCbc;
-            }
-        };
-
-        CbcCounter cCounter;
-        pBoard->accept ( cCounter );
-
-        //return 7 words header + fNCbc * CBC Event Size  (11 words)
-        return cCounter.getNCbc() * CBC_EVENT_SIZE_32_CBC3 + D19C_EVENT_HEADER_SIZE_32_CBC3;
+        return 0;
     }
 
     std::vector<uint32_t> D19cFWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize )
@@ -431,19 +650,27 @@ namespace Ph2_HwInterface {
 
     bool D19cFWInterface::ReadI2C (  uint32_t pNReplies, std::vector<uint32_t>& pReplies)
     {
-        usleep (SINGLE_I2C_WAIT * pNReplies );
+        bool cFailed (false);        
 
-        bool cFailed (false);
+        uint32_t single_WaitingTime = SINGLE_I2C_WAIT*pNReplies;
+        uint32_t max_Attempts = 100;
+        uint32_t counter_Attempts = 0;
 
         //read the number of received replies from ndata and use this number to compare with the number of expected replies and to read this number 32-bit words from the reply FIFO
+        usleep(single_WaitingTime);
         uint32_t cNReplies = ReadReg ("fc7_daq_stat.command_processor_block.i2c.nreplies");
-
-
-        if (cNReplies != pNReplies)
+        while (cNReplies != pNReplies)
         {
-            LOG (INFO) << "Error: Read " << cNReplies << " I2C replies whereas " << pNReplies << " are expected!" ;
-            ReadErrors();
-            cFailed = true;
+            if (counter_Attempts > max_Attempts) {
+                LOG (INFO) << "Error: Read " << cNReplies << " I2C replies whereas " << pNReplies << " are expected!" ;
+                ReadErrors();
+                cFailed = true;
+                break;
+            }
+
+            usleep(single_WaitingTime);
+            cNReplies = ReadReg ("fc7_daq_stat.command_processor_block.i2c.nreplies");
+            counter_Attempts++;
         }
 
         try
@@ -464,7 +691,7 @@ namespace Ph2_HwInterface {
         bool cFailed ( false );
         //reset the I2C controller
         WriteReg ("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 0x1);
-
+        usleep(10);
         try
         {
             WriteBlockReg ( "fc7_daq_ctrl.command_processor_block.i2c.command_fifo", pVecSend );
@@ -474,7 +701,14 @@ namespace Ph2_HwInterface {
             throw except;
         }
 
-        uint32_t cNReplies = pVecSend.size() * ( pReadback ? 1 : 0 ) * ( pBroadcast ? fNCbc : 1 );
+        uint32_t cNReplies = 0;
+        for(auto word: pVecSend) {
+            // if read or readback for write == 1, then count
+            if ( (((word & 0x00010000) >> 16) == 1) or (((word & 0x00080000) >> 19) == 1) ) {
+                if (pBroadcast) cNReplies += fNCbc;
+                else cNReplies += 1;
+            }
+        }
 
         cFailed = ReadI2C (  cNReplies, pReplies) ;
 
@@ -609,6 +843,11 @@ namespace Ph2_HwInterface {
         WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_reset", 0x1 );
     }
 
+    void D19cFWInterface::CbcI2CRefresh()
+    {
+        WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1 );
+    }
+
     void D19cFWInterface::CbcHardReset()
     {
         ;
@@ -616,7 +855,7 @@ namespace Ph2_HwInterface {
 
     void D19cFWInterface::CbcTestPulse()
     {
-        WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_test_pulse", 0x1 );
+        ;
     }
 
     void D19cFWInterface::CbcTrigger()

@@ -7,15 +7,13 @@
 #include "../HWInterface/CbcInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
-//#include "../tools/Calibration.h"
 #include "../Utils/Timer.h"
-//#include <TApplication.h>
 #include <inttypes.h>
 #include "../Utils/argvparser.h"
 #include "../Utils/ConsoleColor.h"
 #include "../System/SystemController.h"
 #include "../Utils/CommonVisitors.h"
-#include "../Tracker/TrackerEvent.h"
+#include "../Utils/SLinkEvent.h"
 
 
 using namespace Ph2_HwDescription;
@@ -25,31 +23,6 @@ using namespace CommandLineProcessing;
 
 using namespace std;
 INITIALIZE_EASYLOGGINGPP
-
-//Class used to process events acquired by a parallel acquisition
-//class AcqVisitor: public HwInterfaceVisitor
-//{
-//int cN;
-//public:
-//AcqVisitor()
-//{
-//cN = 0;
-//}
-////void init(std::ofstream* pfSave, bool bText);
-//virtual void visit ( const Ph2_HwInterface::Event& pEvent )
-//{
-//cN++;
-//std::cout << ">>> Event #" << cN << std::endl;
-//std::cout << pEvent << std::endl;
-//}
-//};
-
-//void syntax ( int argc )
-//{
-//if ( argc > 4 ) std::cerr << RED << "ERROR: Syntax: calibrationtest VCth NEvents (HWDescriptionFile)" << std::endl;
-//else if ( argc < 3 ) std::cerr << RED << "ERROR: Syntax: calibrationtest VCth NEvents (HWDescriptionFile)" << std::endl;
-//else return;
-//}
 
 int main ( int argc, char* argv[] )
 {
@@ -84,9 +57,6 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "events", "Number of Events . Default value: 10", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     cmd.defineOptionAlternative ( "events", "e" );
 
-    //cmd.defineOption( "parallel", "Acquisition running in parallel in a separate thread (only prints events)" );
-    //cmd.defineOptionAlternative( "parallel", "p" );
-
     cmd.defineOption ( "save", "Save the data to a raw file.  ", ArgvParser::OptionRequiresValue );
     cmd.defineOptionAlternative ( "save", "s" );
 
@@ -95,9 +65,6 @@ int main ( int argc, char* argv[] )
 
     cmd.defineOption ( "read", "Read the data from a raw file instead of the board.  ", ArgvParser::OptionRequiresValue );
     cmd.defineOptionAlternative ( "read", "r" );
-
-    cmd.defineOption ( "condition", "Read condition data and other parameters required to generate the phase-2 tracker data file (.daq) from a text file with key=value format", ArgvParser::OptionRequiresValue );
-    cmd.defineOptionAlternative ( "condition", "c" );
 
     // cmd.defineOption( "option", "Define file access mode: w : write , a : append, w+ : write/update", ArgvParser::OptionRequiresValue );
     // cmd.defineOptionAlternative( "option", "o" );
@@ -113,7 +80,6 @@ int main ( int argc, char* argv[] )
 
     bool cSaveToFile = false;
     std::string cOutputFile;
-    ofstream filNewDaq;
     // now query the parsing results
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/HWDescription_2CBC.xml";
 
@@ -124,13 +90,20 @@ int main ( int argc, char* argv[] )
     {
         cOutputFile =  cmd.optionValue ( "save" );
         cSystemController.addFileHandler ( cOutputFile, 'w' );
+        LOG (INFO) << "Writing Binary Rawdata to:   " << cOutputFile ;
     }
 
-    if (cmd.foundOption ( "daq") )
-        filNewDaq.open (cmd.optionValue ( "daq" ), ios_base::binary);
+    std::string cDAQFileName;
+    FileHandler* cDAQFileHandler = nullptr;
+    bool cDAQFile = cmd.foundOption ("daq");
 
-    std::cout << "save:   " << cOutputFile << std::endl;
-    // std::string cOptionWrite = ( cmd.foundOption( "option" ) ) ? cmd.optionValue( "option" ) : "w+";
+    if (cDAQFile)
+    {
+        cDAQFileName = cmd.optionValue ("daq");
+        cDAQFileHandler = new FileHandler (cDAQFileName, 'w');
+        LOG (INFO) << "Writing DAQ File to:   " << cDAQFileName << " - ConditionData, if present, parsed from " << cHWFile ;
+    }
+
     cVcth = ( cmd.foundOption ( "vcth" ) ) ? convertAnyInt ( cmd.optionValue ( "vcth" ).c_str() ) : 0;
     pEventsperVcth = ( cmd.foundOption ( "events" ) ) ? convertAnyInt ( cmd.optionValue ( "events" ).c_str() ) : 10;
 
@@ -160,20 +133,6 @@ int main ( int argc, char* argv[] )
     }
 
     BeBoard* pBoard = cSystemController.fBoardVector.at ( 0 );
-    //if ( cmd.foundOption ( "parallel" ) )
-    //{
-    //uint32_t nbPacket = pBoard->getReg ( "pc_commands.CBC_DATA_PACKET_NUMBER" ), nbAcq = pEventsperVcth / ( nbPacket + 1 ) + ( pEventsperVcth % ( nbPacket + 1 ) != 0 ? 1 : 0 );
-    //std::cout << "Packet number=" << nbPacket << ", Nb events=" << pEventsperVcth << " -> Nb acquisition iterations=" << nbAcq << std::endl;
-
-    //AcqVisitor visitor;
-    //std::cout << "Press Enter to start the acquisition, press Enter again to stop it." << std::endl;
-    //std::cin.ignore();
-    //cSystemController.fBeBoardInterface->StartThread ( pBoard, nbAcq, &visitor );
-    //std::cin.ignore();
-    //cSystemController.fBeBoardInterface->StopThread ( pBoard );
-    //}
-    //else
-    //{
     t.start();
     // make event counter start at 1 as does the L1A counter
     uint32_t cN = 1;
@@ -181,16 +140,7 @@ int main ( int argc, char* argv[] )
 
     Counter cCbcCounter;
     pBoard->accept ( cCbcCounter );
-    uint32_t uFeMask = (1 << cCbcCounter.getNFe() ) - 1;
-    char arrSize[4];
     Data data;
-    ParamSet* pPSet = nullptr;
-
-    if (cmd.foundOption ( "condition") )
-    {
-        pPSet = new ParamSet (cmd.optionValue ("condition") );
-        TrackerEvent::setI2CValuesForConditionData (pBoard, pPSet);
-    }
 
     if (!cmd.foundOption ( "read") )
         cSystemController.fBeBoardInterface->Start ( pBoard );
@@ -201,9 +151,14 @@ int main ( int argc, char* argv[] )
     {
         if (cmd.foundOption ( "read") )
         {
-            FileHandler fFile (cmd.optionValue ("read"), 'r');
-            data.Set ( pBoard, fFile.readFile(), pEventsperVcth, cSystemController.fBeBoardInterface->getBoardType (pBoard) );
-            pEvents = &data.GetEvents ( pBoard);
+            //FileHandler fFile (cmd.optionValue ("read"), 'r');
+            ////TODO
+            ////uint32_t cEventSize = ;
+            ////std::vector<uint32_t> cReadVec = fFile.readFileChunks (cEventSize * pEventsperVcth);
+            //std::vector<uint32_t> cReadVec = fFile.readFileChunks (940000);
+            //data.Set ( pBoard, cReadVec, 10000, cSystemController.fBeBoardInterface->getBoardType (pBoard) );
+            //pEvents = &data.GetEvents ( pBoard);
+            LOG (ERROR) << "Read option currently not supported!";
         }
         else
         {
@@ -219,17 +174,12 @@ int main ( int argc, char* argv[] )
         for ( auto& ev : *pEvents )
         {
             LOG (INFO) << ">>> Event #" << cN++ ;
-            outp.str ("");
-            outp << *ev;
-            LOG (INFO) << outp.str();
+            LOG (INFO) << *ev;
 
-            if (filNewDaq.is_open() )
+            if (cDAQFile)
             {
-                TrackerEvent evtTracker (ev, pBoard->getNCbcDataSize(), uFeMask, cCbcCounter.getCbcMask(), cmd.foundOption ("read"), pPSet );
-                evtTracker.fillArrayWithSize (arrSize);
-                filNewDaq.write (arrSize, 4);
-                filNewDaq.write (evtTracker.getData(), evtTracker.getDaqSize() );
-                filNewDaq.flush();
+                SLinkEvent cSLev = ev->GetSLinkEvent (pBoard);
+                cDAQFileHandler->set (cSLev.getData<uint32_t>() );
             }
         }
 
@@ -238,11 +188,11 @@ int main ( int argc, char* argv[] )
 
     t.stop();
     t.show ( "Time to take data:" );
-    delete pPSet;
-    //}
 
-    if (filNewDaq.is_open() )
-        filNewDaq.close();
+
+    if (cDAQFile)
+        delete cDAQFileHandler;
 
     cSystemController.Destroy();
+
 }

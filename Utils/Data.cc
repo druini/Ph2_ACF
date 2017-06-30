@@ -40,8 +40,10 @@ namespace Ph2_HwInterface {
 
         fNevents = static_cast<uint32_t> ( pNevents );
         fEventSize = static_cast<uint32_t> ( (pData.size() ) / fNevents );
+        uint32_t fNFe = pBoard->getNFe();
 
-        if (pType == BoardType::D19C) fNCbc = (fEventSize - D19C_EVENT_HEADER_SIZE_32_CBC3) / (CBC_EVENT_SIZE_32_CBC3);
+        // it's not so easy for d19c to compute the number of cbc's because of zero suppression. evrything is checked in the event class
+        if (pType == BoardType::D19C) fNCbc = 0;
         else if (pType == BoardType::CBC3FC7) fNCbc = (fEventSize - (EVENT_HEADER_SIZE_32_CBC3) ) / (CBC_EVENT_SIZE_32_CBC3);
         else fNCbc = ( fEventSize - ( EVENT_HEADER_TDC_SIZE_32 ) ) / ( CBC_EVENT_SIZE_32 );
 
@@ -67,6 +69,7 @@ namespace Ph2_HwInterface {
             //this->setCbc3Fc7 (word);
 
 #ifdef __CBCDAQ_DEV__
+            //TODO
             LOG (DEBUG) << std::setw (3) << "Original " << cWordIndex << " ### " << std::bitset<32> (pData.at (cWordIndex) );
             //LOG (DEBUG) << std::setw (3) << "Treated  " << cWordIndex << " ### " << std::bitset<32> (word);
 

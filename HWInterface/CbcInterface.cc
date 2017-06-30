@@ -71,7 +71,7 @@ namespace Ph2_HwInterface {
 
         for ( auto& cRegItem : cCbcRegMap )
         {
-            fBoardFW->EncodeReg (cRegItem.second, pCbc->getCbcId(), cVec, pVerifLoop, true);
+            fBoardFW->EncodeReg (cRegItem.second, pCbc->getFeId(), pCbc->getCbcId(), cVec, pVerifLoop, true);
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif
@@ -107,7 +107,7 @@ namespace Ph2_HwInterface {
         for ( auto& cRegItem : cCbcRegMap )
         {
             cRegItem.second.fValue = 0x00;
-            fBoardFW->EncodeReg (cRegItem.second, pCbc->getCbcId(), cVec, true, false);
+            fBoardFW->EncodeReg (cRegItem.second, pCbc->getFeId(), pCbc->getCbcId(), cVec, true, false);
             //push back the names in cNameVec for latercReg
             cNameVec.push_back (cRegItem.first);
 #ifdef COUNT_FLAG
@@ -161,7 +161,7 @@ namespace Ph2_HwInterface {
         std::vector<uint32_t> cVec;
 
         // encode the reg specific to the FW, pVerifLoop decides if it should be read back, true means to write it
-        fBoardFW->EncodeReg ( cRegItem, pCbc->getCbcId(), cVec, pVerifLoop, true );
+        fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getCbcId(), cVec, pVerifLoop, true );
         // write the registers, the answer will be in the same cVec
         // the number of times the write operation has been attempted is given by cWriteAttempts
         uint8_t cWriteAttempts = 0 ;
@@ -194,7 +194,7 @@ namespace Ph2_HwInterface {
             cRegItem = pCbc->getRegItem ( cReg.first );
             cRegItem.fValue = cReg.second;
 
-            fBoardFW->EncodeReg ( cRegItem, pCbc->getCbcId(), cVec, pVerifLoop, true );
+            fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getCbcId(), cVec, pVerifLoop, true );
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif
@@ -232,7 +232,7 @@ namespace Ph2_HwInterface {
 
         std::vector<uint32_t> cVecReq;
 
-        fBoardFW->EncodeReg ( cRegItem, pCbc->getCbcId(), cVecReq, true, false );
+        fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getCbcId(), cVecReq, true, false );
         fBoardFW->ReadCbcBlockReg (  cVecReq );
 
         //bools to find the values of failed and read
@@ -261,7 +261,7 @@ namespace Ph2_HwInterface {
         {
             cRegItem = pCbc->getRegItem ( cReg );
 
-            fBoardFW->EncodeReg ( cRegItem, pCbc->getCbcId(), cVec, true, false );
+            fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getCbcId(), cVec, true, false );
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif

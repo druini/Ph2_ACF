@@ -199,14 +199,16 @@ namespace Ph2_HwInterface {
             n = ( (n >> 16) & 0x0000ffff) | ( (n << 16) & 0xffff0000) ;
             return n;
         }
-        void calculate_address(uint32_t &cWordP, uint32_t &cBitP, uint32_t i) const
+        void calculate_address (uint32_t& cWordP, uint32_t& cBitP, uint32_t i) const
         {
             // we have odd and even channels, so let's first define the oddness.
-            if ( i%2 == 1 ) {
+            if ( i % 2 == 1 )
+            {
                 // the word with channel 1 (from zero)
                 cWordP = 7;
             }
-            else {
+            else
+            {
                 // the word with channel 0 (from zero)
                 cWordP = 3;
             }
@@ -214,23 +216,28 @@ namespace Ph2_HwInterface {
             // then let's find real position and word
             if (i <= 61) {
                 cWordP = cWordP;
-                cBitP = (int)(i/2);
+                cBitP = (int) (i / 2);
             }
-            else if (i >= 62 && i <= 125) {
-                cWordP = cWordP-1;
-                cBitP = (int)((i-62)/2);
+            else if (i >= 62 && i <= 125)
+            {
+                cWordP = cWordP - 1;
+                cBitP = (int) ( (i - 62) / 2);
             }
-            else if (i >= 126 && i <= 189) {
-                cWordP = cWordP-2;
-                cBitP = (int)((i-62)/2);
+            else if (i >= 126 && i <= 189)
+            {
+                cWordP = cWordP - 2;
+                cBitP = (int) ( (i - 62) / 2);
             }
-            else if (i >= 190) {
-                cWordP = cWordP-3;
-                cBitP = (int)((i-190)/2);
+            else if (i >= 190)
+            {
+                cWordP = cWordP - 3;
+                cBitP = (int) ( (i - 190) / 2);
             }
         }
 
         void printCbcHeader (std::ostream& os, uint8_t pFeId, uint8_t pCbcId) const;
+
+        SLinkEvent GetSLinkEvent (const BeBoard* pBoard) const override;
     };
 }
 #endif

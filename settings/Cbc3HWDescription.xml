@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <HwDescription>
-  <BeBoard Id="0" boardType="CBC3FC7">
+  <BeBoard Id="0" boardType="CBC3FC7" eventType="VR">
     <connection id="board" uri="chtcp-2.0://cmsuptracker009.cern.ch:10203?target=icfc7:50001" address_table="file://settings/cbc3_system_address_table.xml" />
 
     <Module FeId="0" FMCId="1" ModuleId="0" Status="1">
@@ -22,6 +22,14 @@
             <Register name="Pipe&StubInpSel&Ptwidth"> 0x63 </Register>
         </CBC>
     </Module>
+
+    <SLink>
+        <DebugMode type="FULL"/>
+        <ConditionData type="I2C" Register="VCth1" FeId="0" CbcId="0"/>
+        <ConditionData type="User" UID="0x80" FeId="0" CbcId="0"> 0x22 </ConditionData>
+        <ConditionData type="HV" FeId="0" Sensor="2"> 250 </ConditionData>
+        <ConditionData type="TDC" FeId="0xFF"/>
+    </SLink>
 
     <!--TRIGGER-->
     <Register name="cbc_system_cnfg">

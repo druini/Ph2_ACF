@@ -21,6 +21,7 @@
 #include "../Utils/easylogging++.h"
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/BeBoard.h"
+#include "SLinkEvent.h"
 
 
 using namespace Ph2_HwDescription;
@@ -103,6 +104,10 @@ namespace Ph2_HwInterface {
         uint8_t fNCbc;
         uint16_t fEventDataSize;
         uint32_t fBeStatus;
+
+        // d19c variables
+        uint16_t fTLUTriggerID;
+        uint8_t fDummySize;
 
 
       public:
@@ -246,6 +251,7 @@ namespace Ph2_HwInterface {
          */
         unsigned char Char ( uint8_t pFeId, uint8_t pCbcId, uint32_t pBytePosition );
 
+
         const EventDataMap& GetEventDataMap() const
         {
             return fEventDataMap;
@@ -370,7 +376,13 @@ namespace Ph2_HwInterface {
         * \return vector with hit channels
         */
         virtual std::vector<uint32_t> GetHits (uint8_t pFeId, uint8_t pCbcId) const = 0;
-
+        /*!
+        * \brief Function to get an encoded SLinkEvent object
+        * \param pBoard : pointer to BeBoard
+        * \param pSet : set of condition data parsed from config file
+        * \return SlinkEvent object
+        */
+        virtual SLinkEvent GetSLinkEvent ( const BeBoard* pBoard) const = 0;
 
         friend std::ostream& operator<< ( std::ostream& out, const Event& ev )
         {

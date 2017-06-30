@@ -6,8 +6,10 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <bitset>
 #include <mutex>
 #include <queue>
+#include <atomic>
 #include <condition_variable>
 #include <thread>
 #include "FileHeader.h"
@@ -24,6 +26,7 @@ class FileHandler
 {
   public:
     FileHeader fHeader;
+    bool fHeaderPresent;
     char fOption;/*!< option for read or write */
 
   private:
@@ -32,7 +35,7 @@ class FileHandler
     std::thread fThread;/*!< a thread for the multitrading */
     mutable std::mutex fMutex;/*!< Mutex */
     std::queue<std::vector<uint32_t>> fQueue; /*!<Queue to populate from set() and depopulate in writeFile() */
-    bool fFileIsOpened ;/*!< to check if the file is opened */
+    std::atomic<bool> fFileIsOpened ;/*!< to check if the file is opened */
     std::condition_variable fSet;/*!< condition variable to notify writer thread of new data*/
 
 
@@ -63,10 +66,27 @@ class FileHandler
      * \brief set the header
      * \param pHeader: reference to a FileHeaderObject
      */
-    void setHeader ( FileHeader pHeader )
+    void setHeader ( const FileHeader pHeader )
     {
         fHeader = pHeader;
+        fHeaderPresent = true;
     }
+
+    /*!
+     * \brief get the header
+     * \return: a FileHeaderObject - if the header is not valid, a default header that is non-valid will be returned
+     */
+    FileHeader getHeader() const
+    {
+        if (fHeaderPresent) return fHeader;
+
+        else
+        {
+            FileHeader cBogusHeader;
+            return cBogusHeader;
+        }
+    }
+
     /*!
     * \brief set fData to pVector
     */
@@ -97,11 +117,14 @@ class FileHandler
     */
     bool file_open()
     {
+        std::lock_guard<std::mutex> cLock (fMutex);
         return fFileIsOpened;
     }
 
     void rewind()
     {
+        std::lock_guard<std::mutex> cLock (fMutex);
+
         if (fOption == 'r' && file_open() )
         {
             if (fHeader.fValid == true)

@@ -54,6 +54,7 @@ namespace Ph2_System {
     {
         //if the opion is read, create a handler object and use it to read the
         //file in the method below!
+
         if (pOption == 'r')
             fFileHandler = new FileHandler ( pFilename, pOption );
         //if the option is w, remember the filename and construct a new
@@ -63,6 +64,7 @@ namespace Ph2_System {
             fRawFileName = pFilename;
             fWriteHandlerEnabled = true;
         }
+
     }
 
     void SystemController::readFile ( std::vector<uint32_t>& pVec, uint32_t pNWords32 )
@@ -144,32 +146,71 @@ namespace Ph2_System {
         // here would be the ideal position to fill the file Header and call openFile when in read mode
         for (const auto& cBoard : fBoardVector)
         {
-            std::string cBoardTypeString;
-            BoardType cBoardType = cBoard->getBoardType();
-
-            if (cBoardType == BoardType::GLIB) cBoardTypeString = "GLIB";
-            else if (cBoardType == BoardType::CTA) cBoardTypeString = "CTA";
-            else if (cBoardType == BoardType::ICGLIB) cBoardTypeString = "ICGLIB";
-            else if (cBoardType == BoardType::ICFC7) cBoardTypeString = "ICFC7";
-            else if (cBoardType == BoardType::CBC3FC7) cBoardTypeString = "CBC3FC7";
-            else if (cBoardType == BoardType::D19C) cBoardTypeString = "D19C";
-
-
             uint32_t cBeId = cBoard->getBeId();
             uint32_t cNCbc = 0;
+
+            uint32_t cNFe = cBoard->getNFe();
+            uint32_t cNEventSize32 = 0;
 
             for (const auto& cFe : cBoard->fModuleVector)
                 cNCbc += cFe->getNCbc();
 
-            //nCbcDataSize is set to 0 if not explicitly set
-            uint32_t cNEventSize32 = (cBoard->getNCbcDataSize() == 0 ) ? EVENT_HEADER_TDC_SIZE_32 + cNCbc * CBC_EVENT_SIZE_32 : EVENT_HEADER_TDC_SIZE_32 + cBoard->getNCbcDataSize() * CBC_EVENT_SIZE_32;
+            std::string cBoardTypeString;
+            BoardType cBoardType = cBoard->getBoardType();
+
+            if (cBoardType == BoardType::GLIB)
+            {
+                cBoardTypeString = "GLIB";
+
+                //this is legacy as the fNCbcDataSize is not used any more
+                //cNEventSize32 = (cBoard->getNCbcDataSize() == 0 ) ? EVENT_HEADER_TDC_SIZE_32 + cNCbc * CBC_EVENT_SIZE_32 : EVENT_HEADER_TDC_SIZE_32 + cBoard->getNCbcDataSize() * CBC_EVENT_SIZE_32;
+                if (cNCbc <= 4)
+                    cNEventSize32 = EVENT_HEADER_TDC_SIZE_32 + 4 * CBC_EVENT_SIZE_32;
+                else if (cNCbc > 4 && cNCbc <= 8)
+                    cNEventSize32 = EVENT_HEADER_TDC_SIZE_32 + 8 * CBC_EVENT_SIZE_32;
+                else if (cNCbc > 8 && cNCbc <= 16)
+                    cNEventSize32 = EVENT_HEADER_SIZE_32 + 16 * CBC_EVENT_SIZE_32;
+            }
+            else if (cBoardType == BoardType::CTA)
+            {
+                cBoardTypeString = "CTA";
+
+                //this is legacy as the fNCbcDataSize is not used any more
+                //cNEventSize32 = (cBoard->getNCbcDataSize() == 0 ) ? EVENT_HEADER_TDC_SIZE_32 + cNCbc * CBC_EVENT_SIZE_32 : EVENT_HEADER_TDC_SIZE_32 + cBoard->getNCbcDataSize() * CBC_EVENT_SIZE_32;
+                if (cNCbc <= 4)
+                    cNEventSize32 = EVENT_HEADER_TDC_SIZE_32 + 4 * CBC_EVENT_SIZE_32;
+                else if (cNCbc > 4 && cNCbc <= 8)
+                    cNEventSize32 = EVENT_HEADER_TDC_SIZE_32 + 8 * CBC_EVENT_SIZE_32;
+                else if (cNCbc > 8 && cNCbc <= 16)
+                    cNEventSize32 = EVENT_HEADER_SIZE_32 + 16 * CBC_EVENT_SIZE_32;
+            }
+            else if (cBoardType == BoardType::ICGLIB)
+            {
+                cBoardTypeString = "ICGLIB";
+                cNEventSize32 = EVENT_HEADER_TDC_SIZE_32 + cNCbc * CBC_EVENT_SIZE_32;
+            }
+            else if (cBoardType == BoardType::ICFC7)
+            {
+                cBoardTypeString = "ICFC7";
+                cNEventSize32 = EVENT_HEADER_TDC_SIZE_32 + cNCbc * CBC_EVENT_SIZE_32;
+            }
+            else if (cBoardType == BoardType::CBC3FC7)
+            {
+                cBoardTypeString = "CBC3FC7";
+                cNEventSize32 = EVENT_HEADER_TDC_SIZE_32_CBC3 + cNCbc * CBC_EVENT_SIZE_32_CBC3;
+            }
+            else if (cBoardType == BoardType::D19C)
+            {
+                cBoardTypeString = "D19C";
+                cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNFe * D19C_EVENT_HEADER2_SIZE_32_CBC3 + cNCbc * CBC_EVENT_SIZE_32_CBC3;
+            }
 
             uint32_t cFWWord = fBeBoardInterface->getBoardInfo (cBoard);
             uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
             uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
 
             //with the above info fill the header
-            FileHeader cHeader (cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNCbc, cNEventSize32);
+            FileHeader cHeader (cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNCbc, cNEventSize32, cBoard->getEventType() );
 
             //construct a Handler
             std::stringstream cBeBoardString;

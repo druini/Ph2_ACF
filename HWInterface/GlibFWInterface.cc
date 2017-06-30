@@ -384,8 +384,15 @@ namespace Ph2_HwInterface {
         CbcCounter cCounter;
         pBoard->accept ( cCounter );
 
-        if ( pBoard->getNCbcDataSize() != 0 ) return fNpackets * ( pBoard->getNCbcDataSize() * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32 );
-        else return fNpackets * ( cCounter.getNCbc() * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32 ); // in 32 bit words
+        //if ( pBoard->getNCbcDataSize() != 0 ) return fNpackets * ( pBoard->getNCbcDataSize() * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32 );
+        //else return fNpackets * ( cCounter.getNCbc() * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32 ); // in 32 bit words
+
+        uint32_t cEvtSize = 0;
+
+        if (cCounter.getNCbc() <= 4) cEvtSize = std::max (cCounter.getNCbc(), (uint32_t) 4) * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32;
+        else if (cCounter.getNCbc() > 4 && cCounter.getNCbc() <= 8) cEvtSize = std::max (cCounter.getNCbc(), (uint32_t) 8) * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32;
+        else if (cCounter.getNCbc() > 8 ) cEvtSize = std::max (cCounter.getNCbc(), (uint32_t) 16) * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32;
+
     }
 
     std::vector<uint32_t> GlibFWInterface::ReadBlockRegValue ( const std::string& pRegNode, const uint32_t& pBlocksize )
@@ -595,7 +602,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool GlibFWInterface::WriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts ,  bool pReadback)
+    bool GlibFWInterface::WriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts,  bool pReadback)
     {
         int cMaxWriteAttempts = 5;
         bool cSuccess = false;

@@ -417,10 +417,10 @@ namespace Ph2_HwInterface {
 
         uint32_t cEvtSize = 0;
 
-        if ( pBoard->getNCbcDataSize() != 0 )
-            cEvtSize = std::max (pBoard->getNCbcDataSize(), (uint16_t) 4) * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32 ;
-        else
-            cEvtSize = std::max (cCounter.getNCbc()   , (uint32_t) 4) * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32 ; // in 32 bit words
+        //if ( pBoard->getNCbcDataSize() != 0 )
+        //cEvtSize = std::max (pBoard->getNCbcDataSize(), (uint16_t) 4) * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32 ;
+        //else
+        cEvtSize = std::max (cCounter.getNCbc(), (uint32_t) 4) * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32;
 
         return cEvtSize * fNpackets;
     }
@@ -614,7 +614,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool CtaFWInterface::WriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts , bool pReadback)
+    bool CtaFWInterface::WriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts, bool pReadback)
     {
         int cMaxWriteAttempts = 5;
         bool cSuccess = false;

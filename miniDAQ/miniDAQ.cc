@@ -24,32 +24,6 @@ using namespace Ph2_System;
 using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP
 
-//Class used to process events acquired by a parallel acquisition
-//class AcqVisitor: public HwInterfaceVisitor
-//{
-//int cN;
-//public:
-//AcqVisitor()
-//{
-//cN = 0;
-//}
-////void init(std::ofstream* pfSave, bool bText);
-//virtual void visit ( const Ph2_HwInterface::Event& pEvent )
-//{
-//cN++;
-//std::cout << ">>> Event #" << cN << std::endl;
-//std::cout << pEvent << std::endl;
-//}
-//};
-
-//void syntax ( int argc )
-//{
-//if ( argc > 4 ) std::cerr << RED << "ERROR: Syntax: calibrationtest VCth NEvents (HWDescriptionFile)" << std::endl;
-//else if ( argc < 3 ) std::cerr << RED << "ERROR: Syntax: calibrationtest VCth NEvents (HWDescriptionFile)" << std::endl;
-//else return;
-//}
-
-
 std::string getFileName()
 {
 
@@ -113,11 +87,11 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "events", "Number of Events . Default value: 10", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     cmd.defineOptionAlternative ( "events", "e" );
 
-    //cmd.defineOption( "parallel", "Acquisition running in parallel in a separate thread" );
-    //cmd.defineOptionAlternative( "parallel", "p" );
-
     cmd.defineOption ( "dqm", "Print every i-th event.  ", ArgvParser::OptionRequiresValue );
     cmd.defineOptionAlternative ( "dqm", "d" );
+
+    cmd.defineOption ( "daq", "Save the data into a .daq file using the phase-2 Tracker data format.  ", ArgvParser::OptionRequiresValue );
+    cmd.defineOptionAlternative ( "daq", "d" );
 
     int result = cmd.parse ( argc, argv );
 
@@ -133,7 +107,7 @@ int main ( int argc, char* argv[] )
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/HWDescription_8CBC_FNAL.xml";
 
     const char* cDirectory = "Data";
-    mkdir ( cDirectory ,  777 );
+    mkdir ( cDirectory,  777 );
     cOutputFile = "Data/" + getFileName() ;
 
     std::cout << __PRETTY_FUNCTION__ << cOutputFile << std::endl;
@@ -142,6 +116,17 @@ int main ( int argc, char* argv[] )
 
     cSystemController.addFileHandler ( cOutputFile, 'w' );
     //    cSystemController.initializeFileHandler();
+
+    std::string cDAQFileName;
+    FileHandler* cDAQFileHandler = nullptr;
+    bool cDAQFile = cmd.foundOption ("daq");
+
+    if (cDAQFile)
+    {
+        cDAQFileName = cmd.optionValue ("daq");
+        cDAQFileHandler = new FileHandler (cDAQFileName, 'w');
+        LOG (INFO) << "Writing DAQ File to:   " << cDAQFileName << " - ConditionData, if present, parsed from " << cHWFile ;
+    }
 
     std::stringstream outp;
     cSystemController.InitializeHw ( cHWFile, outp );
@@ -187,6 +172,12 @@ int main ( int argc, char* argv[] )
             count++;
             cN++;
 
+            if (cDAQFile)
+            {
+                SLinkEvent cSLev = ev->GetSLinkEvent (pBoard);
+                cDAQFileHandler->set (cSLev.getData<uint32_t>() );
+            }
+
             if ( cmd.foundOption ( "dqm" ) )
             {
                 if ( count % atoi ( cmd.optionValue ( "dqm" ).c_str() ) == 0 )
@@ -204,6 +195,9 @@ int main ( int argc, char* argv[] )
 
         cNthAcq++;
     }
+
+    if (cDAQFile)
+        delete cDAQFileHandler;
 
     //}
     cSystemController.Destroy();

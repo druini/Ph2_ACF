@@ -13,6 +13,7 @@
 #define __CBC3EVENT_H__
 
 #include "Event.h"
+#include "GenericPayload.h"
 
 
 using namespace Ph2_HwDescription;
@@ -187,6 +188,8 @@ namespace Ph2_HwInterface {
         std::vector<uint32_t> GetHits (uint8_t pFeId, uint8_t pCbcId) const override;
 
         std::vector<Cluster> getClusters ( uint8_t pFeId, uint8_t pCbcId) const override;
+
+        SLinkEvent GetSLinkEvent (const BeBoard* pBoard) const override;
 
         void print (std::ostream& out) const override;
 

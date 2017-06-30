@@ -19,7 +19,6 @@ namespace Ph2_System {
             LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xm!" ;
     }
 
-
     void FileParser::parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os )
     {
         pugi::xml_document doc;
@@ -61,19 +60,6 @@ namespace Ph2_System {
         for ( pugi::xml_node cBeBoardNode = doc.child ( "HwDescription" ).child ( "BeBoard" ); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling() )
         {
             BeBoard* cBeBoard = this->parseBeBoard (cBeBoardNode, pBoardVector, os);
-            std::string cBoardType = cBeBoardNode.attribute ( "boardType" ).value();
-
-            if (cBoardType == "GLIB") cBeBoard->setBoardType (BoardType::GLIB);
-            else if (cBoardType == "CTA") cBeBoard->setBoardType (BoardType::CTA);
-            else if (cBoardType == "ICGLIB") cBeBoard->setBoardType (BoardType::ICGLIB);
-            else if (cBoardType == "ICFC7") cBeBoard->setBoardType (BoardType::ICFC7);
-            else if (cBoardType == "CBC3FC7") cBeBoard->setBoardType (BoardType::CBC3FC7);
-            else if (cBoardType == "D19C") cBeBoard->setBoardType (BoardType::D19C);
-            else
-            {
-                LOG (ERROR) << "Error: Unknown Board Type: " << cBoardType << " - aborting!";
-                exit (1);
-            }
 
             pugi::xml_node cBeBoardConnectionNode = cBeBoardNode.child ("connection");
 
@@ -84,10 +70,8 @@ namespace Ph2_System {
             if (!strUhalConfig.empty() )
                 RegManager::setDummyXml (strUhalConfig);
 
-            os << BOLDBLUE << "	" <<  "|"  << "----" << "Board Id: " << BOLDYELLOW << cId << BOLDBLUE << " URI: " << BOLDYELLOW << cUri << BOLDBLUE << " Address Table: " << BOLDYELLOW << cAddressTable << std::endl;
-            os << BOLDBLUE << "|\t|----Type: " << BOLDYELLOW << cBoardType << RESET << std::endl << BLUE << "|\t|" << RESET << std::endl;
+            os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
 
-            //else LOG(INFO) << BOLDBLUE << "   " <<  "|"  << "----" << "Board Id: " << BOLDYELLOW << cId << BOLDBLUE << " Type: " << BOLDYELLOW << cBoardType << RESET ;
 
             // Iterate over the BeBoardRegister Nodes
             for ( pugi::xml_node cBeBoardRegNode = cBeBoardNode.child ( "Register" ); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling() )
@@ -143,6 +127,9 @@ namespace Ph2_System {
                 }
             }
 
+            //here parse the Slink Node
+            pugi::xml_node cSLinkNode = cBeBoardNode.child ("SLink");
+            this->parseSLink (cSLinkNode, cBeBoard, os);
         }
 
         cNBeBoard++;
@@ -172,16 +159,59 @@ namespace Ph2_System {
         uint32_t cBeId = pNode.attribute ( "Id" ).as_int();
         BeBoard* cBeBoard = new BeBoard ( cBeId );
 
-        os << BOLDCYAN << "|" << "----" << pNode.name() << "  " << pNode.first_attribute().name() << " :" << pNode.attribute ( "Id" ).value() << RESET << std:: endl;
 
-        pugi::xml_node cBeBoardFWVersionNode = pNode.child ( "FW_Version" );
-        uint16_t cNCbcDataSize = 0;
-        cNCbcDataSize = static_cast<uint16_t> ( cBeBoardFWVersionNode.attribute ( "NCbcDataSize" ).as_int() );
+        //pugi::xml_node cBeBoardFWVersionNode = pNode.child ( "FW_Version" );
+        //uint16_t cNCbcDataSize = 0;
+        //cNCbcDataSize = static_cast<uint16_t> ( cBeBoardFWVersionNode.attribute ( "NCbcDataSize" ).as_int() );
 
-        if ( cNCbcDataSize != 0 ) os << BOLDCYAN << "|" << "	" << "|" << "----" << cBeBoardFWVersionNode.name() << " NCbcDataSize: " << cNCbcDataSize  <<  RESET << std:: endl;
+        //if ( cNCbcDataSize != 0 ) os << BOLDCYAN << "|" << "  " << "|" << "----" << cBeBoardFWVersionNode.name() << " NCbcDataSize: " << cNCbcDataSize  <<  RESET << std:: endl;
 
-        cBeBoard->setNCbcDataSize ( cNCbcDataSize );
+        //cBeBoard->setNCbcDataSize ( cNCbcDataSize );
+
+        pugi::xml_attribute cBoardTypeAttribute = pNode.attribute ("boardType");
+
+        if (cBoardTypeAttribute == nullptr)
+        {
+            LOG (ERROR) << BOLDRED << "Error: Board Type not specified - aborting!";
+            exit (1);
+        }
+
+        //std::string cBoardType = pNode.attribute ( "boardType" ).value();
+        std::string cBoardType = cBoardTypeAttribute.value();
+
+        if (cBoardType == "GLIB") cBeBoard->setBoardType (BoardType::GLIB);
+        else if (cBoardType == "CTA") cBeBoard->setBoardType (BoardType::CTA);
+        else if (cBoardType == "ICGLIB") cBeBoard->setBoardType (BoardType::ICGLIB);
+        else if (cBoardType == "ICFC7") cBeBoard->setBoardType (BoardType::ICFC7);
+        else if (cBoardType == "CBC3FC7") cBeBoard->setBoardType (BoardType::CBC3FC7);
+        else if (cBoardType == "D19C") cBeBoard->setBoardType (BoardType::D19C);
+        else
+        {
+            LOG (ERROR) << "Error: Unknown Board Type: " << cBoardType << " - aborting!";
+            exit (1);
+        }
+
+        pugi::xml_attribute cEventTypeAttribute = pNode.attribute ("eventType");
+        std::string cEventTypeString;
+
+        if (cEventTypeAttribute == nullptr)
+        {
+            //the HWDescription object does not have and EventType node, so assume EventType::VR
+            cBeBoard->setEventType (EventType::VR);
+            cEventTypeString = "VR";
+        }
+        else
+        {
+            cEventTypeString = cEventTypeAttribute.value();
+
+            if (cEventTypeString == "ZS") cBeBoard->setEventType (EventType::ZS);
+            else cBeBoard->setEventType (EventType::VR);
+        }
+
         pBoardVector.push_back ( cBeBoard );
+
+        os << BOLDCYAN << "|" << "----" << pNode.name() << "  " << pNode.first_attribute().name() << " :" << BOLDBLUE << pNode.attribute ( "Id" ).value() << BOLDCYAN << " BoardType: " << BOLDBLUE << cBoardType << BOLDCYAN << " EventType: " << BOLDRED << cEventTypeString << RESET << std:: endl;
+
         return cBeBoard;
     }
 
@@ -216,6 +246,125 @@ namespace Ph2_System {
 
     }
 
+    void FileParser::parseSLink (pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ostream& os )
+    {
+        ConditionDataSet* cSet = new ConditionDataSet();
+
+        if (pSLinkNode != nullptr && std::string (pSLinkNode.name() ) == "SLink")
+        {
+            os << BLUE << "|" << "	" << "|" << std::endl << "|" << "	" << "|" << "----" << pSLinkNode.name() << RESET << std::endl;
+
+            pugi::xml_node cDebugModeNode = pSLinkNode.child ("DebugMode");
+            std::string cDebugString;
+
+            //the debug mode node exists
+            if (cDebugModeNode != nullptr)
+            {
+                cDebugString = cDebugModeNode.attribute ("type").value();
+
+                if (cDebugString == "FULL" )
+                    cSet->setDebugMode (SLinkDebugMode::FULL);
+                else if (cDebugString == "SUMMARY")
+                    cSet->setDebugMode (SLinkDebugMode::SUMMARY);
+                else if (cDebugString == "ERROR")
+                    cSet->setDebugMode (SLinkDebugMode::ERROR);
+
+            }
+            else
+            {
+                SLinkDebugMode pMode = cSet->getDebugMode();
+
+                if (pMode == SLinkDebugMode::FULL) cDebugString = "FULL";
+                else if (pMode == SLinkDebugMode::SUMMARY) cDebugString = "SUMMARY";
+                else if (pMode == SLinkDebugMode::ERROR) cDebugString = "ERROR";
+            }
+
+            os << BLUE <<  "|" << "	" << "|" << "       " << "|"  << "----"   << pSLinkNode.child ("DebugMode").name() << MAGENTA << " : SLinkDebugMode::" << cDebugString << RESET << std::endl;
+
+            //now loop the condition data node
+            for ( pugi::xml_node cNode = pSLinkNode.child ( "ConditionData" ); cNode; cNode = cNode.next_sibling() )
+            {
+                if (cNode != nullptr)
+                {
+                    uint8_t cUID = 0;
+                    uint8_t cFeId = 0;
+                    uint8_t cCbcId = 0;
+                    uint8_t cPage = 0;
+                    uint8_t cAddress = 0;
+                    uint32_t cValue = 0;
+                    std::string cRegName;
+
+                    std::string cTypeString = cNode.attribute ("type").value();
+
+                    if (cTypeString == "HV")
+                    {
+                        cUID = 5;
+                        cFeId = convertAnyInt (cNode.attribute ("FeId").value() );
+                        cCbcId = convertAnyInt (cNode.attribute ("Sensor").value() );
+                        cValue = convertAnyInt (cNode.first_child().value() );
+                    }
+                    else if (cTypeString == "TDC")
+                    {
+                        cUID = 3;
+                        cFeId = 0xFF;
+                    }
+                    else if (cTypeString == "User")
+                    {
+                        cUID = convertAnyInt (cNode.attribute ("UID").value() );
+                        cFeId = convertAnyInt (cNode.attribute ("FeId").value() );
+                        cCbcId = convertAnyInt (cNode.attribute ("CbcId").value() );
+                        cValue = convertAnyInt (cNode.first_child().value() );
+                    }
+                    else if (cTypeString == "I2C")
+                    {
+                        //here is where it gets nasty
+                        cUID = 1;
+                        cRegName = cNode.attribute ("Register").value();
+                        cFeId = convertAnyInt (cNode.attribute ("FeId").value() );
+                        cCbcId = convertAnyInt (cNode.attribute ("CbcId").value() );
+
+                        //ok, now I need to loop th CBCs to find page & address and the initial value
+                        for (auto cFe : pBoard->fModuleVector )
+                        {
+                            if (cFe->getFeId() != cFeId) continue;
+
+                            for (auto cCbc : cFe->fCbcVector )
+                            {
+                                if (cCbc->getCbcId() != cCbcId) continue;
+                                else if (cCbc->getFeId() == cFeId && cCbc->getCbcId() == cCbcId)
+                                {
+                                    CbcRegItem cRegItem = cCbc->getRegItem ( cRegName );
+                                    cPage = cRegItem.fPage;
+                                    cAddress = cRegItem.fAddress;
+                                    cValue = cRegItem.fValue;
+                                }
+                                else
+                                    LOG (ERROR) << RED << "SLINK ERROR: no Cbc with Id " << +cCbcId << " on Fe " << +cFeId << " - check your SLink Settings!";
+                            }
+                        }
+                    }
+
+                    cSet->addCondData (cRegName, cUID, cFeId, cCbcId, cPage, cAddress, cValue);
+                    os << BLUE <<  "|" << "	" << "|" << "       " << "|"  << "----"   <<  cNode.name() << ": Type " << RED << cTypeString << " " << cRegName << BLUE << ", UID " << RED << +cUID << BLUE << ", FeId " << RED << +cFeId << BLUE << ", CbcId " << RED << +cCbcId << std::hex << BLUE << ", Page " << RED << +cPage << BLUE << ", Address " << RED << +cAddress << BLUE << ", Value " << std::dec << MAGENTA << cValue << RESET << std::endl;
+                }
+
+            }
+
+            //only add if there is condition data defined
+            //pBoard->addConditionDataSet (cSet);
+        }
+
+        //else
+        //{
+
+        //}
+
+        //LOG (ERROR) << "No Slink node found for Board " << +pBoard->getBeId() << " - continuing with default debug mode!";
+        //add ConditionDataSet to pBoard in any case, even if there is no SLink node in the xml, that way at least
+        //an SLinkDebugMode property is set for this board (SUMMARY)
+        pBoard->addConditionDataSet (cSet);
+    }
+
     void FileParser::parseCbc (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os )
     {
         pugi::xml_node cCbcPathPrefixNode = pModuleNode.child ( "CBC_Files" );
@@ -229,7 +378,6 @@ namespace Ph2_System {
             os << BOLDCYAN << "|" << "	" << "|" << "	" << "|" << "----" << cCbcNode.name() << "  "
                << cCbcNode.first_attribute().name() << " :" << cCbcNode.attribute ( "Id" ).value()
                << ", File: " << expandEnvironmentVariables (cCbcNode.attribute ( "configfile" ).value() ) << RESET << std:: endl;
-
 
             std::string cFileName;
 

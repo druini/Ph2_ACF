@@ -1,3 +1,8 @@
+YEL='\033[1m\033[33m'
+RED='\033[1m\033[31m'
+BLU='\033[1m\033[35m'
+RESET='\033[0m'
+
 ROOTFLAGS=`root-config --cflags`
 ROOTLIBDIR=`root-config --libdir`
 ROOTLIBFLAGS=`root-config --libs`
@@ -41,9 +46,9 @@ lib: $(LIBDIR)/rootweb.o
 	$(COMP) -shared -o $(LIBDIR)/libRootWeb.so $(LIBDIR)/rootweb.o -pthread $(BOOSTLIBFLAGS)
 
 print:
-	@echo '****************************'
-	@echo 'Building RootWeb'
-	@echo '****************************'
+	@echo -e ${YEL}'****************************'
+	@echo -e ${YEL}'Building RootWeb'
+	@echo -e ${YEL}'****************************'${RESET}
 #CLEANUP
 cleanall:
 	@rm -rf $(LIBDIR)/*

@@ -20,15 +20,22 @@ namespace Ph2_HwDescription {
     // Constructors
 
     BeBoard::BeBoard() :
-        fBeId ( 0 ) {}
+        fBeId ( 0 ),
+        fEventType (EventType::VR),
+        fCondDataSet (nullptr)
+    {}
 
     BeBoard::BeBoard ( uint8_t pBeId ) :
-        fBeId ( pBeId )
+        fBeId ( pBeId ),
+        fEventType (EventType::VR),
+        fCondDataSet (nullptr)
     {
     }
 
     BeBoard::BeBoard ( uint8_t pBeId, const std::string& filename ) :
-        fBeId ( pBeId )
+        fBeId ( pBeId ),
+        fEventType (EventType::VR),
+        fCondDataSet (nullptr)
     {
         loadConfigFile ( filename );
     }
@@ -93,6 +100,38 @@ namespace Ph2_HwDescription {
         }
 
         return nullptr;
+    }
+
+    void BeBoard::updateCondData (uint32_t& pTDCVal) const
+    {
+        if (fCondDataSet == nullptr) return;
+        else if (fCondDataSet->fCondDataVector.size() == 0 ) return;
+        else if (!fCondDataSet->testEffort() ) return;
+        else
+        {
+            for (auto cCondItem : this->fCondDataSet->fCondDataVector)
+            {
+                // if it is the TDC item, save it in fValue
+                if (cCondItem.fUID == 3 ) cCondItem.fValue = pTDCVal;
+                else if (cCondItem.fUID == 1 )
+                {
+                    for (auto cFe : this->fModuleVector)
+                    {
+                        if (cCondItem.fFeId != cFe->getFeId() ) continue;
+
+                        for (auto cCbc : cFe->fCbcVector )
+                        {
+                            if (cCondItem.fCbcId != cCbc->getCbcId() ) continue;
+                            else if (cCbc->getFeId() == cCondItem.fFeId && cCbc->getCbcId() == cCondItem.fCbcId)
+                            {
+                                CbcRegItem cRegItem = cCbc->getRegItem ( cCondItem.fRegName );
+                                cCondItem.fValue = cRegItem.fValue;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Private Members:

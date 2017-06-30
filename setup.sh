@@ -46,6 +46,3 @@ export USBINSTFlag='-D__USBINST__'
 export Amc13Flag='-D__AMC13__'
 export AntennaFlag='-D__ANTENNA__'
 export DevFlags='-D__DEV__'
-
-
->>>>>>> remotes/upstream/CBC3

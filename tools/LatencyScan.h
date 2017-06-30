@@ -74,6 +74,7 @@ class LatencyScan : public Tool
         else if (pBoardType == BoardType::CTA) return "cbc.STUBDATA_LATENCY_MODE";
         else if (pBoardType == BoardType::ICGLIB || pBoardType == BoardType::ICFC7) return "cbc_daq_ctrl.latencies.stub_latency";
         else if (pBoardType == BoardType::CBC3FC7) return "cbc_system_cnfg.cbc_data_processor.cbc0.latencies.trig_data";
+        else if (pBoardType == BoardType::D19C) return "fc7_daq_cnfg.readout_block.global.common_stubdata_delay";
         else return "not recognized";
     }
 };

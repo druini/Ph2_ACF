@@ -5,7 +5,7 @@
     <connection id="board" uri="chtcp-2.0://cmsuptracker008:10203?target=192.168.0.175:50001" address_table="file://settings/address_table_2CBC.xml" />
 
     <!-- 4 for 2CBC and 8 for 8CBC -->
-    <FW_Version NCbcDataSize="4"/>
+    <!--<FW_Version NCbcDataSize="4"/>-->
     
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
        <Global_CBC_Register name="VCth"> 0x6A </Global_CBC_Register> 

@@ -1,3 +1,8 @@
+YEL='\033[1m\033[33m'
+RED='\033[1m\033[31m'
+BLU='\033[1m\033[35m'
+RESET='\033[0m'
+
 Objs            = FileParser.o SystemController.o
 CC              = g++
 CXX             = g++
@@ -20,9 +25,9 @@ all: print $(Objs)
 	mv libPh2_System.so ../lib
 
 print:
-	@echo '****************************'
-	@echo 'Building SystemController '
-	@echo '****************************'
+	@echo -e${YEL}'****************************'
+	@echo -e'Building System Components '
+	@echo -e'****************************'${RESET}
 clean:
 	rm -f *.o
 
