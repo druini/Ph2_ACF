@@ -311,6 +311,12 @@ namespace Ph2_HwInterface {
         WriteReg ("cbc_system_ctrl.fast_command_manager.start_trigger", 0x1);
     }
 
+    uint32_t Cbc3Fc7FWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger )
+    {
+    	std::vector<uint32_t> cData;
+    	return ReadData ( pBoard,  pBreakTrigger, cData);
+    }
+
     uint32_t Cbc3Fc7FWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
     {
         //ok, first query the number of words to read from FW and if it is 0, wait for half a second

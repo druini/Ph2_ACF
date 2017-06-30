@@ -157,14 +157,16 @@ public:
     void Resume() override;
     /*!
      * \brief Read data from DAQ
+     * \param pBreakTrigger : if true, enable the break trigger
+     * \return fNpackets: the number of packets read
+     */
+    uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger) override;
+    /*!
+     * \brief Read data from DAQ
      * \param pNthAcq : actual number of acquisitions
      * \param pBreakTrigger : if true, enable the break trigger
      * \return cNPackets: the number of packets read
      */
-
-
-
-
     uint32_t ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait=true) override;
     /*!
      * \brief Get next event from data buffer

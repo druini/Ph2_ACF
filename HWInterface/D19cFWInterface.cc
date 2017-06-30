@@ -264,15 +264,26 @@ namespace Ph2_HwInterface {
         WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
     }
 
+    uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger )
+    {
+    	std::vector<uint32_t> cData;
+    	return ReadData ( pBoard,  pBreakTrigger, cData);
+    }
+
     uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
     {
-        uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-
-        while (cNWords == 0)
+        uint32_t cNWords = 0;
+        do
         {
-            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+            if ( cNWords == 0 )
+            {
+                if (!pWait)
+                    return 0;
+                std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+            }
         }
+        while (cNWords == 0);
 
         pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
 

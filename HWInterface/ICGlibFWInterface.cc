@@ -229,6 +229,12 @@ namespace Ph2_HwInterface {
         WriteReg ( "cbc_daq_ctrl.daq_ctrl", 0x2000 );
     }
 
+    uint32_t ICGlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger )
+    {
+    	std::vector<uint32_t> cData;
+    	return ReadData ( pBoard,  pBreakTrigger, cData);
+    }
+
     uint32_t ICGlibFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait )
     {
         std::chrono::milliseconds cWait ( 1 );

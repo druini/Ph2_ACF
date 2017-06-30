@@ -214,6 +214,12 @@ namespace Ph2_HwInterface {
         WriteReg ( "break_trigger", 0 );
     }
 
+    uint32_t GlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger )
+    {
+    	std::vector<uint32_t> cData;
+    	return ReadData ( pBoard,  pBreakTrigger, cData);
+    }
+
     uint32_t GlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
     {
         //Readout settings
@@ -228,11 +234,9 @@ namespace Ph2_HwInterface {
         //Select SRAM
         SelectDaqSRAM();
 
-        //Wait for the SRAM full condition.
-        cVal = ReadReg ( fStrFull );
-
         do
         {
+            //Wait for the SRAM full condition.
             cVal = ReadReg ( fStrFull );
 
             if ( cVal == 0 ){
@@ -276,10 +280,7 @@ namespace Ph2_HwInterface {
         if ( pBreakTrigger ) WriteReg ( "break_trigger", 0 );
 
         if ( fSaveToFile )
-        {
             fFileHandler->set ( pData );
-            //fFileHandler->writeFile();
-        }
 
         return fNpackets;
     }

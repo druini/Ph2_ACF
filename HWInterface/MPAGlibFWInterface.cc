@@ -112,6 +112,12 @@ namespace Ph2_HwInterface
 
 	}
 
+    uint32_t MPAGlibFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger )
+    {
+    	std::vector<uint32_t> cData;
+    	return ReadData ( pBoard,  pBreakTrigger, cData);
+    }
+
     uint32_t MPAGlibFWInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 	{
         // Basil: This method is out of date

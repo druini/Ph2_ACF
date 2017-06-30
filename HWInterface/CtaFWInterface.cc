@@ -223,6 +223,12 @@ namespace Ph2_HwInterface {
         WriteStackReg ( cVecReg );
     }
 
+    uint32_t CtaFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger )
+    {
+    	std::vector<uint32_t> cData;
+    	return ReadData ( pBoard,  pBreakTrigger, cData);
+    }
+
     uint32_t CtaFWInterface::ReadData ( BeBoard* pBoard,  bool pBreakTrigger, std::vector<uint32_t>& pData , bool pWait)
     {
         //Readout settings

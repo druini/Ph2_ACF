@@ -206,9 +206,8 @@ namespace Ph2_System {
         std::vector<uint32_t> cData;
         //read the data and get it by reference
         // Basil: ReadData() returns void, this needs to be fixed
-        //uint32_t cNPackets = fBeBoardInterface->ReadData (pBoard, false, cData);
-        uint32_t cNPackets = 0;
-        fBeBoardInterface->ReadData (pBoard, false, cData);
+        //Lorenzo fixed
+        uint32_t cNPackets = fBeBoardInterface->ReadData (pBoard, false, cData);
         //pass data by reference to set and let it know what board we are dealing with
         fData->Set (pBoard, cData, cNPackets, fBeBoardInterface->getBoardType (pBoard) );
         //return the packet size

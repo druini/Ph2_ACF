@@ -74,7 +74,8 @@ bool FileHandler::openFile( )
             {
                 std::vector<uint32_t> cHeaderVec = fHeader.encodeHeader();
 //                uint32_t cBuffer[cHeaderVec.size()];
-//                std::copy ( cHeaderVec.begin(), cHeaderVec.end(), cBuffer );
+                  //Lorenzo somehow our compiler does a different thing so I just write out the vector which is what I think you wanted to do...
+//                std::copy ( cHeaderVec.begin(), cHeaderVec.end(), cBuffer );//SUBSTITUTED FOR OTSDAQ
 //                fBinaryFile.write ( ( char* ) &cBuffer, sizeof ( cBuffer ) );
             	  fBinaryFile.write ( ( char* ) &cHeaderVec[0], cHeaderVec.size()*sizeof(uint32_t) );
             }
@@ -225,10 +226,11 @@ void FileHandler::writeFile()
         //this method blocks this thread until it receives data
         this->dequeue (cData);
         //copy data in buffer array for faster I/O
-        uint32_t cBuffer[cData.size()];
-        std::copy ( cData.begin(), cData.end(), cBuffer );
+        //uint32_t cBuffer[cData.size()];
+        //std::copy ( cData.begin(), cData.end(), cBuffer );
         //write the buffer
-        fBinaryFile.write ( ( char* ) &cBuffer, sizeof ( cBuffer ) );
+        //fBinaryFile.write ( ( char* ) &cBuffer, sizeof ( cBuffer ) );
+        fBinaryFile.write ( ( char* ) &cData[0], cData.size()*sizeof ( uint32_t ) );//SUBSTITUTED FOR OTSDAQ Lorenzo No need to copy, C++ guarantees sequential vector
         fBinaryFile.flush();
     }
 
