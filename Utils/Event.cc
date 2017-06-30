@@ -49,54 +49,6 @@ namespace Ph2_HwInterface {
         return fEventDataMap == pEvent.fEventDataMap;
     }
 
-    void Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
-    {
-        fEventSize = pNbCbc *  CBC_EVENT_SIZE_32  + EVENT_HEADER_TDC_SIZE_32;
-
-        //now decode the header info
-        fBunch = 0x00FFFFFF & list.at (0);
-        fOrbit = 0x00FFFFFF & list.at (1);
-        fLumi = 0x00FFFFFF & list.at (2);
-        fEventCount = 0x00FFFFFF &  list.at (3);
-        fEventCountCBC = 0x00FFFFFF & list.at (4);
-        fTDC = 0x000000FF & list.back();
-
-
-        //now decode FEEvents
-        //uint8_t cBeId = pBoard->getBeId();
-        uint32_t cNFe = static_cast<uint32_t> ( pBoard->getNFe() );
-
-        for ( uint8_t cFeId = 0; cFeId < cNFe; cFeId++ )
-        {
-            uint32_t cNCbc;
-
-            // if the NCbcDataSize in the FW Version node of the BeBoard is set, the DataSize is assumed fixed:
-            // if 1 module is defined, the number of CBCs is the datasize given in the xml
-            // if more than one module is defined, the number of CBCs for each FE is the datasize divided by the nFe
-            if ( pBoard->getNCbcDataSize() )
-            {
-                if ( cNFe == 1 ) cNCbc = static_cast<uint32_t> ( pBoard->getNCbcDataSize() );
-                else cNCbc = static_cast<uint32_t> ( pBoard->getNCbcDataSize() / cNFe );
-            }
-            // if there is no FWVersion node in the xml, the CBCs will be counted for each module according to the xml file
-            else cNCbc = static_cast<uint32_t> ( pBoard->getModule ( cFeId )->getNCbc() );
-
-            //now loop the CBCs and encode the IDs in key
-            for ( uint8_t cCbcId = 0; cCbcId < cNCbc; cCbcId++ )
-            {
-                uint16_t cKey = encodeId (cFeId, cCbcId);
-
-                uint32_t begin = EVENT_HEADER_SIZE_32 + cFeId * CBC_EVENT_SIZE_32 * cNCbc + cCbcId * CBC_EVENT_SIZE_32;
-                uint32_t end = begin + CBC_EVENT_SIZE_32;
-
-                std::vector<uint32_t> cCbcData (std::next (std::begin (list), begin), std::next (std::begin (list), end) );
-
-                fEventDataMap[cKey] = cCbcData;
-            }
-        }
-        //return 1;
-    }
-
     void Event::GetCbcEvent ( const uint8_t& pFeId, const uint8_t& pCbcId, std::vector< uint32_t >& cbcData )  const
     {
         cbcData.clear();
@@ -213,4 +165,6 @@ namespace Ph2_HwInterface {
 
         return blist;
     }
+
+
 }
