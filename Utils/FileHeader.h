@@ -24,7 +24,6 @@
 class FileHeader
 {
   public:
-    bool fValid;
     // FW type
     std::string fType;
     //char fType[8];
@@ -35,33 +34,35 @@ class FileHeader
     uint32_t fNCbc;
     //EventSize
     uint32_t fEventSize32;
-    //readout mode
-    EventType fEventType;
     //Header Size useful for encoding and decoding
     static const uint32_t fHeaderSize32 = 12;
+    //readout mode
+    EventType fEventType;
+    bool fValid;
+
 
   public:
     FileHeader() :
-        fValid (false),
         fType ( "" ),
         fVersionMajor (0),
         fVersionMinor (0),
         fBeId (0),
         fNCbc (0),
         fEventSize32 (0),
-        fEventType (EventType::VR)
+        fEventType (EventType::VR),
+  	  	fValid (false)
     {
     }
 
     FileHeader (const std::string pType, const uint32_t& pFWMajor, const uint32_t& pFWMinor, const uint32_t& pBeId, const uint32_t& pNCbc, const uint32_t& pEventSize32, EventType pEventType = EventType::VR) :
+        fType (pType),
         fVersionMajor (pFWMajor),
         fVersionMinor (pFWMinor),
         fBeId (pBeId),
         fNCbc (pNCbc),
         fEventSize32 (pEventSize32),
-        fValid (true),
-        fType (pType),
-        fEventType (pEventType)
+        fEventType (pEventType),
+		fValid (true)
     {
         //strcpy (fType, pType.c_str() );
     }
@@ -140,9 +141,9 @@ class FileHeader
             fEventSize32 = pVec.at (10);
             fValid = true;
 
-            if (cEventTypeId == 0) fEventType == EventType::VR;
-            else if (cEventTypeId == 1) fEventType == EventType::ZS;
-            else if (cEventTypeId == 2) fEventType == EventType::VR;
+            if (cEventTypeId == 0) fEventType = EventType::VR;
+            else if (cEventTypeId == 1) fEventType = EventType::ZS;
+            else if (cEventTypeId == 2) fEventType = EventType::VR;
 
             std::string cEventTypeString;
 

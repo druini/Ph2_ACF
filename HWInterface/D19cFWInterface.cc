@@ -465,9 +465,16 @@ namespace Ph2_HwInterface {
         uint32_t cNWords = 0;
         do
         {
-            std::this_thread::sleep_for (std::chrono::milliseconds (10) );
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+            if ( cNWords == 0 )
+            {
+                if (!pWait)
+                    return 0;
+                else
+                	std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+            }
         }
+        while (cNWords == 0);
 
         uint32_t cNEvents = 0;
         while(cNWords > 0) {
@@ -487,14 +494,7 @@ namespace Ph2_HwInterface {
             pData.insert(pData.end(), rest_of_data.begin(), rest_of_data.end());
             cNEvents++;
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-            if ( cNWords == 0 )
-            {
-                if (!pWait)
-                    return 0;
-                std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-            }
         }
-        while (cNWords == 0);
 
 
         if (fSaveToFile)

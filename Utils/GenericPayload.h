@@ -47,15 +47,15 @@ class GenericPayload
 
   private:
     std::vector<uint64_t> fData;
+    size_t fBitCount;
     size_t fWordIndex;
     size_t fWriteBitIndex;
-    size_t fBitCount;
 
   public:
     GenericPayload() :
         fData (1, 0),
-        fWordIndex (0),
         fBitCount (0),
+        fWordIndex (0),
         fWriteBitIndex (0)
     {
     }
