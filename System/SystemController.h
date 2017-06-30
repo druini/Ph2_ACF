@@ -163,6 +163,13 @@ namespace Ph2_System {
          * \param pBeBoard
          * \return: number of packets
          */
+        uint32_t ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait=true);//ADDED FOR OTSDAQ
+
+        /*!
+         * \brief Read Data from pBoard
+         * \param pBeBoard
+         * \return: number of packets
+         */
         uint32_t ReadData (BeBoard* pBoard);
 
         void Start (BeBoard* pBoard);
@@ -206,7 +213,8 @@ namespace Ph2_System {
         }
         const std::vector<Event*>& GetEvents ( const BeBoard* pBoard ) const
         {
-            return fData->GetEvents ( pBoard );
+	  std::cout << __PRETTY_FUNCTION__ << "FDatap: " << fData << " pBoard: " << pBoard << std::endl;
+	  return fData->GetEvents ( pBoard );
         }
     };
 }

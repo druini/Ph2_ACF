@@ -11,7 +11,7 @@
         <Global_CBC_Register name="MiscStubLogic"> 0x5E </Global_CBC_Register>
         <Global_CBC_Register name="TriggerLatency"> 0x0C </Global_CBC_Register>
  
-	<CBC_Files path="${OTSDAQ_CMSOUTERTRACKER_DIR}/otsdaq-cmsoutertracker/Ph2_ACF//Results/Calibration_Hole_30-06-17_11:21/" />
+	<CBC_Files path="${OTSDAQ_CMSOUTERTRACKER_DIR}/otsdaq-cmsoutertracker/Ph2_ACF/Results/CalibrationHole/" />
         <CBC Id="0" configfile="FE0CBC0.txt" />
         <!--CBC Id="1" configfile="FE0CBC1.txt" /-->
         <!--CBC Id="2" configfile="Cbc_default_hole.txt" />

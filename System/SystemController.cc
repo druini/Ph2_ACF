@@ -239,18 +239,23 @@ namespace Ph2_System {
 
     uint32_t SystemController::ReadData (BeBoard* pBoard)
     {
+      std::vector<uint32_t> pData;
+      return this->ReadData(pBoard, false, pData);
+    }
+    
+  uint32_t SystemController::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
+    {
         //reset the data object
         if (fData) delete fData;
 
         fData = new Data();
 
-        std::vector<uint32_t> cData;
         //read the data and get it by reference
         // Basil: ReadData() returns void, this needs to be fixed
         //Lorenzo fixed
-        uint32_t cNPackets = fBeBoardInterface->ReadData (pBoard, false, cData);
+        uint32_t cNPackets = fBeBoardInterface->ReadData (pBoard, pBreakTrigger, pData, pWait);
         //pass data by reference to set and let it know what board we are dealing with
-        fData->Set (pBoard, cData, cNPackets, fBeBoardInterface->getBoardType (pBoard) );
+        fData->Set (pBoard, pData, cNPackets, fBeBoardInterface->getBoardType (pBoard) );
         //return the packet size
         return cNPackets;
     }
