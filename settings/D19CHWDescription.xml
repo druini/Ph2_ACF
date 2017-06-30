@@ -1,35 +1,33 @@
 <?xml version='1.0' encoding='utf-8'?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C">
-    <connection id="board" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://settings/d19c_address_table.xml" />
+    <connection id="board" uri="ipbusudp-2.0://192.168.0.83:50001" address_table="file://${OTSDAQ_CMSOUTERTRACKER_DIR}/otsdaq-cmsoutertracker/Ph2_ACF/settings/d19c_address_table.xml" />
 
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
-        
-        <CBC_Files path="./settings/" />
-        <CBC Id="0" configfile="Cbc_default_hole.txt" />
-        <CBC Id="1" configfile="Cbc_default_hole.txt" />
-        <CBC Id="2" configfile="Cbc_default_hole.txt" />
+    	<!--Global_CBC_Register name="HitDetectSLVS"> 0xA7 </Global_CBC_Register>
+        <Global_CBC_Register name="TestPulsePot"> 0xB0 </Global_CBC_Register-->
+	<Global_CBC_Register name="MiscTestPulseCtrl&AnalogMux"> 0xE1 </Global_CBC_Register>    
+        <Global_CBC_Register name="VCth"> 0x7A </Global_CBC_Register>
+        <Global_CBC_Register name="MiscStubLogic"> 0x5E </Global_CBC_Register>
+        <Global_CBC_Register name="TriggerLatency"> 0x0C </Global_CBC_Register>
+ 
+	<CBC_Files path="${OTSDAQ_CMSOUTERTRACKER_DIR}/otsdaq-cmsoutertracker/Ph2_ACF//Results/Calibration_Hole_30-06-17_11:21/" />
+        <CBC Id="0" configfile="FE0CBC0.txt" />
+        <!--CBC Id="1" configfile="FE0CBC1.txt" /-->
+        <!--CBC Id="2" configfile="Cbc_default_hole.txt" />
         <CBC Id="3" configfile="Cbc_default_hole.txt" />
         <CBC Id="4" configfile="Cbc_default_hole.txt" />
         <CBC Id="5" configfile="Cbc_default_hole.txt" />
         <CBC Id="6" configfile="Cbc_default_hole.txt" />
-        <CBC Id="7" configfile="Cbc_default_hole.txt" />
+        <CBC Id="7" configfile="Cbc_default_hole.txt" /-->
     </Module>
-
-    <SLink>
-        <DebugMode type="FULL"/>
-        <ConditionData type="I2C" Register="VCth" FeId="0" CbcId="0"/>
-        <ConditionData type="User" UID="0x80" FeId="0" CbcId="0"> 0x22 </ConditionData>
-        <ConditionData type="HV" FeId="0" Sensor="2"> 250 </ConditionData>
-        <ConditionData type="TDC" FeId="0xFF"/>
-    </SLink>
 
     <!--CONFIG-->
     <Register name="fc7_daq_cnfg">
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
                 <Register name="triggers_to_accept"> 10 </Register>
-		<Register name="trigger_source"> 6 </Register>
+		<Register name="trigger_source"> 5 </Register>
 		<Register name="user_trigger_frequency"> 1 </Register>
 		<Register name="stubs_mask"> 1 </Register>
 		<Register name="stub_trigger_latency"> 194 </Register>
@@ -63,7 +61,7 @@
     	</Register>
 	<!-- DIO5 Block -->
 	<Register name="dio5_block">
-	    <Register name="dio5_en"> 0 </Register>
+	    <Register name="dio5_en"> 1 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 1 </Register>
                 <Register name="term_enable"> 0 </Register>
