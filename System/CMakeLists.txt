@@ -32,11 +32,11 @@ else()
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
     )
      
-    cet_make(LIBRARY_NAME Ph2_System
+    cet_make(LIBRARY_NAME Ph2_System_${Ph2_ACF_Master}
             LIBRARIES
-            Ph2_Description
-            Ph2_Interface
-            Ph2_Utils
+            Ph2_Description_${Ph2_ACF_Master}
+            Ph2_Interface_${Ph2_ACF_Master}
+            Ph2_Utils_${Ph2_ACF_Master}
             )
     
     install_headers()

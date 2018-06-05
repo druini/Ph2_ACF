@@ -29,9 +29,9 @@ else()
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
     )
      
-    cet_make(LIBRARY_NAME Ph2_Interface
+    cet_make(LIBRARY_NAME Ph2_Interface_${Ph2_ACF_Master}
             LIBRARIES
-            Ph2_Description
+            Ph2_Description_${Ph2_ACF_Master}
             #pthread
             cactus_uhal_uhal
             )

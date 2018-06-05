@@ -39,6 +39,7 @@ namespace Ph2_HwInterface
 class HwDescriptionVisitor
 {
   public:
+	virtual ~HwDescriptionVisitor(){}
 	/*!
 	 * \brief Visitor for top level System Controller
 	 * \param pSystemController
@@ -72,6 +73,7 @@ class HwDescriptionVisitor
 class HwInterfaceVisitor
 {
     public:
+	virtual ~HwInterfaceVisitor(){}
 	virtual void visit ( const Ph2_HwInterface::Event& pEvent ) = 0;
 };
 

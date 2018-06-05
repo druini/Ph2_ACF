@@ -17,9 +17,9 @@ cet_set_compiler_flags(
  EXTRA_FLAGS -Wno-reorder -Wl,--undefined
 )
  
-cet_make(LIBRARY_NAME Ph2_Description
+cet_make(LIBRARY_NAME Ph2_Description_${Ph2_ACF_Master}
         LIBRARIES
-    Ph2_Utils
+    Ph2_Utils_${Ph2_ACF_Master}
     pthread
         )
 

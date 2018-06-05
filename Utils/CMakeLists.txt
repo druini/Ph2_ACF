@@ -53,7 +53,7 @@ else()
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
      )
     
-    cet_make(LIBRARY_NAME Ph2_Utils
+    cet_make(LIBRARY_NAME Ph2_Utils_${Ph2_ACF_Master}
             LIBRARIES
     	pthread
     	${Boost_SYSTEM_LIBRARY}
