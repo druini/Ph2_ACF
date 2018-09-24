@@ -9,7 +9,7 @@ export CACTUSINCLUDE=/opt/cactus/include
 
 
 # BOOST
-if [[ $KERNELRELEASE == *"el6"* ]]; then
+if [[ $KERNELRELEASE == *"el7"* ]]; then
     export BOOST_LIB=/opt/cactus/lib
     export BOOST_INCLUDE=/opt/cactus/include
 else
@@ -19,9 +19,11 @@ fi
 
 
 #ROOT
-source /usr/local/bin/thisroot.sh
+#source /usr/local/bin/thisroot.sh
+source /opt/local/root/bin/thisroot.sh
 #export ROOTLIB=/usr/local/lib/root
-export ROOTSYS=/usr/local/lib/root
+export ROOTLIB=/opt/local/root/lib
+#export ROOTSYS=/usr/local/lib/root
 
 #ZMQ
 export ZMQ_HEADER_PATH=/usr/include/zmq.hpp
