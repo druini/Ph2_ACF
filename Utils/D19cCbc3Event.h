@@ -234,6 +234,7 @@ namespace Ph2_HwInterface {
                 cWordP = cWordP - 3;
                 cBitP = (int) ( (i - 190) / 2);
             }
+            cWordP++; // because the first word is actually header
         }
 
         void printCbcHeader (std::ostream& os, uint8_t pFeId, uint8_t pCbcId) const;

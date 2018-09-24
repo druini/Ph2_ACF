@@ -461,26 +461,15 @@ int LatencyScan::countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEve
             if (cTDCVal != 0 && cBoardType == BoardType::GLIB) cTDCVal -= 5;
             else if (cTDCVal != 0 && cBoardType == BoardType::CTA) cTDCVal -= 3;
             
-            if ( !pNoTdc && cBoardType == BoardType::D19C) 
-                // this is the case for additional delay of 15 ns on external trigger 
-                // expect to change for other values 
-                // final fix to be implemented 
-                //if( cTDCVal == 6 || cTDCVal == 7 ) 
-                //{
-                //   cFillVal -= 1;
-                //}
-                // Mykyta's equivalent fix (I'm thick so the one above is easier to understand....)
-                //cTDCVal = ( cTDCVal < 6) ? (cTDCVal+2) : (cTDCVal-6);
-
-                // w.fix implemented for external triggers weird tdc phase only affects one bin 
-                // now seems to only affect one bin 
-                if( cTDCVal == 7 ) 
-                {
-                   cFillVal -= 1;
-                }
+            if ( !pNoTdc && cBoardType == BoardType::D19C) {
+                // Fix from Mykyta, ONLY the value of the cTDCShiftValue variable have to be changed, NEVER change the formula
+                uint8_t cTDCShiftValue = 1;
+                // don't touch next two lines (!!!)
+                if ( cTDCVal < cTDCShiftValue ) cTDCVal += (8-cTDCShiftValue);
+                else cTDCVal -= cTDCShiftValue;
+            }
 
             if (!pNoTdc && cTDCVal > 8 ) LOG (INFO) << "ERROR, TDC value not within expected range - normalized value is " << +cTDCVal << " - original Value was " << +cEvent->GetTDC() << "; not considering this Event!" <<  std::endl;
-
             else
             {
                 for ( auto cCbc : cFe->fCbcVector )

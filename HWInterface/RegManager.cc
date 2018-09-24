@@ -276,6 +276,30 @@ namespace Ph2_HwInterface {
         return cBlockRead;
     }
 
+    uhal::ValVector<uint32_t> RegManager::ReadBlockRegOffset ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
+    {
+        //std::lock_guard<std::mutex> cGuard (fBoardMutex);
+        uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlockOffset ( pBlocksize, pBlockOffset );
+        fBoard->dispatch();
+        //LOG (DEBUG) << "Read block: " << pRegNode;
+
+        //for (auto cWord : cBlockRead)
+        //if (pRegNode != "data") LOG (DEBUG) << "Read block: " << std::bitset<32> (cWord);
+
+        if ( DEV_FLAG )
+        {
+            LOG (DEBUG) << "Values in register block " << pRegNode << " : " ;
+
+            //Use size_t and not an iterator as op[] only works with size_t type
+            for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
+            {
+                uint32_t read = static_cast<uint32_t> ( cBlockRead[i] );
+                LOG (DEBUG) << " " << read << " " ;
+            }
+        }
+
+        return cBlockRead;
+    }
 
     void RegManager::StackReg ( const std::string& pRegNode, const uint32_t& pVal, bool pSend )
     {

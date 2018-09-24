@@ -39,8 +39,10 @@ You'll need Xilinx Impact and a [Xilinx Platform Cable USB II] (http://uk.farnel
         $> gcc --version
 
 2. Alternatively you can use a gcc version > 4.8 from AFS
+ 
+If you are working on CC7, gcc4.8 is the default compiler.
 
-3. Install uHAL (latest version, instructions below for v2.3):
+3. Install uHAL (latest version [Instructions](http://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html), instructions below for v2.3):
 
         $> wget http://svnweb.cern.ch/trac/cactus/export/28265/tags/ipbus_sw/uhal_2_3_0/scripts/release/cactus.slc6.x86_64.repo 
 
@@ -152,70 +154,78 @@ For debugging purpose, you can activate DEV_FLAG in the sources or in the Makefi
 
 
 #### External Clock and Trigger:
-
-In order to use external Clock and Trigger functionality, a DIO5 mezzanine is required. It is available from the [CERN OHR](http://www.ohwr.org/projects/fmc-dio-5chttla) and sold by several commercial vendors.
+Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/Middleware_Short_Guide.md) for instructions on how to use external clock and trigger with the various FMCs (DIO5 and CBC3 FMC)
 
 
 #### Example HWDescription.xml File with DIO5 support:
 
 ```xml
 
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR">
-      <connection id="board" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://settings/address_tables/d19c_address_table.xml" />
+      <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.1.81:50001" address_table="file://settings/address_tables/d19c_address_table.xml" />
 
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
-       <!--<Global>-->
-           <!--<Settings threshold="120" latency="12"/>-->
-           <!--<TestPulse enable="1" polarity="0" amplitude="0x08" channelgroup="0" delay="0" groundothers="1"/>-->
-           <!--<ClusterStub clusterwidth="4" ptwidth="3" layerswap="0" off1="0"/>-->
-           <!--<Misc analogmux="0b00000"/>-->
-           <!--<ChannelMask disable="1"/>-->
-       <!--</Global>-->
+        <Global>
+            <Settings threshold="550" latency="26"/>
+            <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
+            <ClusterStub clusterwidth="4" ptwidth="3" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+            <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="1" dll="4"/>
+            <ChannelMask disable=""/>
+        </Global>
         <CBC_Files path="./settings/CbcFiles/" />
-        <CBC Id="0" configfile="Cbc_default_electron.txt" />
-        <CBC Id="1" configfile="Cbc_default_electron.txt" />
-        <CBC Id="2" configfile="Cbc_default_electron.txt" />
-        <CBC Id="3" configfile="Cbc_default_electron.txt" />
-        <CBC Id="4" configfile="Cbc_default_electron.txt" />
-        <CBC Id="5" configfile="Cbc_default_electron.txt" />
-        <CBC Id="6" configfile="Cbc_default_electron.txt" />
-        <CBC Id="7" configfile="Cbc_default_electron.txt" />
-            <!--<Settings threshold="120" latency="80"/>-->
-            <!--<TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>-->
-            <!--<ClusterStub clusterwidth="4" ptwidth="3" layerswap="0" off1="0"/>-->
-            <!--<Misc analogmux="0b00000"/>-->
-            <!--<ChannelMask disable=""/>-->
-            <!--<Register name="Pipe&StubInpSel&Ptwidth"> 0x63 </Register>-->
+        <CBC Id="0" configfile="CBC3_default.txt" />
+        <CBC Id="1" configfile="CBC3_default.txt" />
     </Module>
 
     <SLink>
         <DebugMode type="FULL"/>
-        <ConditionData type="I2C" Register="VCth" FeId="0" CbcId="0"/>
+        <ConditionData type="I2C" Register="VCth1" FeId="0" CbcId="0"/>
         <ConditionData type="User" UID="0x80" FeId="0" CbcId="0"> 0x22 </ConditionData>
         <ConditionData type="HV" FeId="0" Sensor="2"> 250 </ConditionData>
         <ConditionData type="TDC" FeId="0xFF"/>
     </SLink>
 
     <!--CONFIG-->
+    <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
     <Register name="fc7_daq_cnfg">
+	<!-- Clock control -->
+	<Register name="clock">
+	    <Register name="ext_clk_en"> 0 </Register>
+	</Register>
+        <!-- TTC -->
+        <Register name="ttc">
+            <Register name="ttc_enable"> 0 </Register>
+        </Register>
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
-            <Register name="triggers_to_accept"> 0 </Register>
-		    <Register name="trigger_source"> 6 </Register>
-		    <Register name="user_trigger_frequency"> 1 </Register>
-		    <Register name="stubs_mask"> 1 </Register>
-		    <Register name="stub_trigger_latency"> 194 </Register>
-            <Register name="test_pulse">
-                <Register name="delay_after_fast_reset"> 50 </Register>
-                <Register name="delay_after_test_pulse"> 200 </Register>
-	            <Register name="delay_before_next_pulse"> 400 </Register>
-            </Register>
+		<Register name="triggers_to_accept"> 0 </Register>
+		<Register name="trigger_source"> 3 </Register>
+		<Register name="user_trigger_frequency"> 1 </Register>
+		<Register name="stubs_mask"> 1 </Register>
+                <!--this is the delay for the stub trigger-->
+		<Register name="stub_trigger_delay_value"> 0 </Register>
+                <Register name="stub_trigger_veto_length"> 0 </Register>
+		<Register name="test_pulse">
+			<Register name="delay_after_fast_reset"> 50 </Register>
+			<Register name="delay_after_test_pulse"> 200 </Register>
+			<Register name="delay_before_next_pulse"> 400 </Register>
+			<Register name="en_fast_reset"> 1 </Register>
+			<Register name="en_test_pulse"> 1 </Register>
+			<Register name="en_l1a"> 1 </Register>
+		</Register>
+                <Register name="ext_trigger_delay_value"> 50 </Register>
+                <Register name="antenna_trigger_delay_value"> 200 </Register>
+                <Register name="delay_between_two_consecutive"> 10 </Register>
+                <Register name="misc">
+                        <Register name="backpressure_enable"> 1 </Register>
+                        <Register name="stubOR"> 1 </Register>
+                        <Register name="initial_fast_reset_enable"> 0 </Register>
+                </Register>
         </Register>
 	<!-- I2C manager -->
         <Register name="command_processor_block">
-                <Register name="i2c_write_mask"> 0xFF </Register>
 	</Register>
 	<!-- Phy Block -->
 	<Register name="physical_interface_block">
@@ -232,6 +242,7 @@ In order to use external Clock and Trigger functionality, a DIO5 mezzanine is re
                     <Register name="int_trig_rate"> 0 </Register>
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
+                    <!--this is what is commonly known as stub latency-->
                     <Register name="common_stubdata_delay"> 194 </Register>
             </Register>
     	</Register>
@@ -267,21 +278,28 @@ In order to use external Clock and Trigger functionality, a DIO5 mezzanine is re
 	<!-- TLU Block -->
 	<Register name="tlu_block">
 		<Register name="handshake_mode"> 2 </Register>
+		<Register name="tlu_enabled"> 0 </Register>
 	</Register>
     </Register>
   </BeBoard>
-</HwDescription>
 
 <Settings>
-    <!--Calibration-->
-   <Setting name="TargetVcth">0x78</Setting>
+
+    <!--[>Calibration<]-->
+    <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>
     <Setting name="Nevents">50</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
 
+    <!--Signal Scan Fit-->
+	  <Setting name="InitialVcth">0x78</Setting>
+	  <Setting name="SignalScanStep">2</Setting>
+    <Setting name="FitSignal">0</Setting>
+
 </Settings>
+</HwDescription>
 
 
 ```

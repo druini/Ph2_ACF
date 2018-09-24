@@ -110,6 +110,14 @@ namespace Ph2_HwInterface {
         */
         virtual uhal::ValVector<uint32_t> ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlocksize );
         /*!
+        * \brief Read a block of values in a register
+        * \param pRegNode : Node of the register to read
+        * \param pBlocksize : Size of the block to read
+        * \param pBlockOffset : Offset of the block
+        * \return ValVector block values of the register
+        */
+        virtual uhal::ValVector<uint32_t> ReadBlockRegOffset ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset );
+        /*!
         * \brief Time Out for sending the register/value stack in the writting.
         * \brief It has only to be set in a detached thread from the one you're working on
         */

@@ -54,6 +54,8 @@ int main ( int argc, char** argv )
     cmd.defineOption ( "dqm", "Print every i-th event.  ", ArgvParser::OptionRequiresValue );
     cmd.defineOptionAlternative ( "dqm", "d" );
     cmd.defineOption ( "hard_reset", "Hard Reset the board", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "ddr3test", "Test the on-board ddr3 chip", ArgvParser::NoOptionAttribute );
+
 
     int result = cmd.parse ( argc, argv );
 
@@ -64,6 +66,7 @@ int main ( int argc, char** argv )
     }
 
     bool cHardReset = ( cmd.foundOption ( "hard_reset" ) ) ? true : false;
+    bool cDDR3SelfTest = ( cmd.foundOption ( "ddr3test" ) ) ? true : false;
 
     bool cSaveToFile = false;
     std::string cOutputFile;
@@ -95,8 +98,11 @@ int main ( int argc, char** argv )
 
     if ( cHardReset ) {
         cTool.fBeBoardInterface->RebootBoard(pBoard);
-    }
-    else {
+    } else if ( cDDR3SelfTest ) {
+        cTool.fBeBoardInterface->setBoard ( pBoard->getBeBoardIdentifier() );
+        dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->DDR3SelfTest();
+        //(D19cFWInterface*)(cTool.fBeBoardInterface->fBoardFW)->DDR3SelfTest();
+    } else {
         if ( cTestPulse )
         {
             auto cSetting = cTool.fSettingsMap.find ( "TestPulsePotentiometer" );

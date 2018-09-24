@@ -25,14 +25,15 @@ namespace Ph2_HwInterface {
     void D19cCbc3EventZS::SetEvent ( const BeBoard* pBoard, uint32_t pZSEventSize, const std::vector<uint32_t>& list)
     {
         //LOG(INFO) << "event size: " << +pZSEventSize;
-
+ 
         // these two values come from width of the hybrid/cbc enabled mask
         uint8_t fMaxHybrids = 8;
 
         fEventSize = 0x0000FFFF & list.at (0);
+        //LOG (INFO) << "Block size: " << fEventSize;
 
         if (fEventSize != list.size() || fEventSize != pZSEventSize )
-            LOG (ERROR) << "Vector size doesnt match the BLOCK_SIZE in Header1";
+            LOG (ERROR) << "Vector size doesnt match the BLOCK_SIZE in Header1";        
 
         uint8_t header1_size = (0xFF000000 & list.at (0) ) >> 24;
 
@@ -89,43 +90,44 @@ namespace Ph2_HwInterface {
 
                 // iterating through the hybrid words
                 address_offset += D19C_EVENT_HEADER2_SIZE_32_CBC3;
-                uint32_t begin = address_offset;
-                uint32_t end = begin+1;
-                bool cLastWord = false;
-                for (uint32_t word_id = address_offset; word_id < address_offset + (fe_data_size - 1); word_id++) {
+
+                uint8_t cChipIDPrev = 255; // to be sure that we are starting from new chip everytime
+                uint32_t word_id = address_offset;
+
+                while (word_id < (address_offset + (fe_data_size - 1))) {
 
                     uint8_t cChipID = (0xE0000000 & list.at(word_id)) >> 29;
                     //LOG(INFO) << "ChipId: " << +cChipID << ", Word ID: " << +word_id;
-                    uint8_t cDataType = (0x18000000 & list.at(word_id)) >> 27;
 
-		    // check sync bit
-		    if (cDataType == 1) {
-			uint8_t cSyncBit = (0x00000008 & list.at(word_id)) >> 3;
-                        if (!cSyncBit) LOG (INFO) << BOLDRED << "Warning, sync bit not 1, data frame probably misaligned!" << RESET;	
-	 	    }
+                    if (cChipID != cChipIDPrev) {
+                        // means that this word is a header
+                        uint32_t cNclusters = (0x1FC00000 & list.at(word_id)) >> 22;
+                        uint32_t cNstripDataWords = (cNclusters + cNclusters%2)/2;
+                        //LOG(INFO) << "N Clusters for chip " << +cChipID << " is " << cNclusters << " (" << std::hex << list.at(word_id) << std::dec << ")";
+                        uint32_t cChipDataSize = 1+cNstripDataWords+2; // 1 for header, 2 for stubs
 
-                    // checks the last word
-                    if (word_id == (address_offset + fe_data_size - 2)) cLastWord = true;
-                    else {
-                        uint8_t cNextChipID = (0xE0000000 & list.at(word_id+1)) >> 29;
-                        if (cNextChipID != cChipID) cLastWord = true;
-                        else cLastWord = false;
-                    }
-
-                    if( cLastWord ) {
-                        // now store the ZS event
+                        // assign the data to the map
                         uint16_t cKey = encodeId (cFeId, cChipID);
-                        std::vector<uint32_t> cCbcDataZS (std::next (std::begin (list), begin), std::next (std::begin (list), end) );
+                        std::vector<uint32_t> cCbcDataZS (std::next (std::begin (list), word_id), std::next (std::begin (list), word_id+cChipDataSize) );
                         fEventDataMap[cKey] = cCbcDataZS;
+                        word_id += cChipDataSize;
 
-                        begin = end;
+                        // check the data for sync and cluster overflow
+                        uint8_t cSyncBit = (0x00000008 & cCbcDataZS.at(cCbcDataZS.size()-1)) >> 3;
+                        if (!cSyncBit) LOG (INFO) << BOLDRED << "Warning, sync bit not 1, data frame probably misaligned!" << RESET;
+                        int8_t cClusterOverflow = (0x00000004 & cCbcDataZS.at(0)) >> 2;
+                        if (cClusterOverflow) LOG(INFO) << BOLDRED << "Warning, cluster overflow happened!" << RESET;
+
+                        // now update the chip id
+                        cChipIDPrev = cChipID;
+                    } else {
+                       LOG(ERROR) << "Error, the same chip id - should never happen";
+                       exit(1);
                     }
-
-                    end++;
 
                 }
 
-                address_offset = address_offset + fe_data_size;
+                address_offset = address_offset + (fe_data_size-1);
 
             }
 
@@ -168,14 +170,13 @@ namespace Ph2_HwInterface {
 
         if (cData != std::end (fEventDataMap) )
         {
-            for(auto word : cData->second) {
-                uint8_t cDataType = (0x18000000 & word) >> 27;
-                if (cDataType == 2) {
-                    // buf overflow and lat error
-                    if (i == 0) return ((0x00000001 & word) >> 0); // lat err
-                    if (i == 1) return ((0x00000002 & word) >> 1); // buf ovf
-                }
-            }
+            // get word
+            uint32_t word = cData->second.at(0);
+
+            // buf overflow and lat error
+            if (i == 0) return ((0x00000001 & word) >> 0); // lat err
+            if (i == 1) return ((0x00000002 & word) >> 1); // buf ovf
+
             return true;
         }
         else
@@ -192,14 +193,10 @@ namespace Ph2_HwInterface {
 
         if (cData != std::end (fEventDataMap) )
         {
-            uint32_t cError = 0;
-            for(auto word : cData->second) {
-                uint8_t cDataType = (0x18000000 & word) >> 27;
-                if (cDataType == 2) {
-                    // buf overflow and lat error
-                    cError = (0x00000003 & word) >> 0;
-                }
-            }
+            // get word
+            uint32_t word = cData->second.at(0);
+            // buf overflow and lat error
+            uint32_t cError = (0x00000003 & word) >> 0;
             return cError;
         }
         else
@@ -216,14 +213,10 @@ namespace Ph2_HwInterface {
 
         if (cData != std::end (fEventDataMap) )
         {
-            uint32_t cPipelineAddress = 0;
-            for(auto word : cData->second) {
-                uint8_t cDataType = (0x18000000 & word) >> 27;
-                if (cDataType == 2) {
-                    // pipe address
-                    cPipelineAddress = (0x00001ff0 & word) >> 4;
-                }
-            }
+            // get word
+            uint32_t word = cData->second.at(0);
+            // pipe address
+            uint32_t cPipelineAddress = (0x00001ff0 & word) >> 4;
             return cPipelineAddress;
         }
         else
@@ -240,11 +233,17 @@ namespace Ph2_HwInterface {
 
         if (cData != std::end (fEventDataMap) )
         {
-            for(auto word : cData->second) {
-                uint8_t cDataType = (0x18000000 & word) >> 27;
-                if (cDataType == 0) {
-                    uint8_t cDataMask = (0x03000000 & word) >> 24;
-                    if ( (cDataMask >> 0) & 1 ) {
+            // data vector
+            std::vector<uint32_t> cDataVector = cData->second;
+            // nclusters
+            uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
+            uint32_t cGotClusters = 0;
+            if (cNclusters > 0) {
+                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                    uint32_t word = cDataVector.at(word_id);
+
+                    if(cGotClusters < cNclusters) {
+                        // low part of the word
                         uint8_t cClusterAddress = (0x000007f8 & word) >> 3;
                         uint8_t cClusterWidth = ( (0x00000007 & word) >> 0 ) + 1;
 
@@ -253,17 +252,28 @@ namespace Ph2_HwInterface {
                             // check if it's in cluster
                             if ( (i >= cClusterAddress) && (i < (cClusterAddress+2*cClusterWidth)) ) return 1;
                         }
+
+                        // increment got clusters
+                        cGotClusters++;
                     }
-                    if ( (cDataMask >> 1) & 1 ) {
-                        uint8_t cClusterAddress = (0x003fc000 & word) >> 14;
-                        uint8_t cClusterWidth = ( (0x00003800 & word) >> 11 ) + 1;
+
+                    if(cGotClusters < cNclusters) {
+                        // top part of the word
+                        uint8_t cClusterAddress = (0x07f80000 & word) >> 19;
+                        uint8_t cClusterWidth = ( (0x00070000 & word) >> 16 ) + 1;
 
                         // check parity
                         if( (cClusterAddress-i)%2 == 0 ) {
                             // check if it's in cluster
                             if ( (i >= cClusterAddress) && (i < (cClusterAddress+2*cClusterWidth)) ) return 1;
                         }
+
+                        // increment got clusters
+                        cGotClusters++;
                     }
+
+                    // break if got all clusters
+                    if(cGotClusters >= cNclusters) break;
                 }
             }
             // not found
@@ -287,23 +297,41 @@ namespace Ph2_HwInterface {
             bool *hit_bits = new bool[NCHANNELS];
             for(uint32_t i=0; i < NCHANNELS; i++) hit_bits[i] = false;
 
-            for(auto word : cData->second) {
-                uint8_t cDataType = (0x18000000 & word) >> 27;
-                if (cDataType == 0) {
-                    uint8_t cDataMask = (0x03000000 & word) >> 24;
-                    if ( (cDataMask >> 0) & 1 ) {
+            // data vector
+            std::vector<uint32_t> cDataVector = cData->second;
+            // nclusters
+            uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
+            uint32_t cGotClusters = 0;
+            if (cNclusters > 0) {
+                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                    uint32_t word = cDataVector.at(word_id);
+
+                    if(cGotClusters < cNclusters) {
+                        // low part of the word
                         uint8_t cClusterAddress = (0x000007f8 & word) >> 3;
                         uint8_t cClusterWidth = ( (0x00000007 & word) >> 0 ) + 1;
 
                         for(uint8_t i = 0; i < cClusterWidth; i++)
                             hit_bits[cClusterAddress + 2*i] = true;
-                    }
-                    if ( (cDataMask >> 1) & 1 ) {
-                        uint8_t cClusterAddress = (0x003fc000 & word) >> 14;
-                        uint8_t cClusterWidth = ( (0x00003800 & word) >> 11 ) + 1;
 
-                        for(uint8_t i = 0; i < cClusterWidth; i++) hit_bits[cClusterAddress + 2*i] = true;
+                        // increment got clusters
+                        cGotClusters++;
                     }
+
+                    if(cGotClusters < cNclusters) {
+                        // top part of the word
+                        uint8_t cClusterAddress = (0x07f80000 & word) >> 19;
+                        uint8_t cClusterWidth = ( (0x00070000 & word) >> 16 ) + 1;
+
+                        for(uint8_t i = 0; i < cClusterWidth; i++)
+                            hit_bits[cClusterAddress + 2*i] = true;
+
+                        // increment got clusters
+                        cGotClusters++;
+                    }
+
+                    // break if got all clusters
+                    if(cGotClusters >= cNclusters) break;
                 }
             }
 
@@ -333,23 +361,41 @@ namespace Ph2_HwInterface {
             bool *hit_bits = new bool[NCHANNELS];
             for(uint32_t i=0; i < NCHANNELS; i++) hit_bits[i] = false;
 
-            for(auto word : cData->second) {
-                uint8_t cDataType = (0x18000000 & word) >> 27;
-                if (cDataType == 0) {
-                    uint8_t cDataMask = (0x03000000 & word) >> 24;
-                    if ( (cDataMask >> 0) & 1 ) {
+            // data vector
+            std::vector<uint32_t> cDataVector = cData->second;
+            // nclusters
+            uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
+            uint32_t cGotClusters = 0;
+            if (cNclusters > 0) {
+                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                    uint32_t word = cDataVector.at(word_id);
+
+                    if(cGotClusters < cNclusters) {
+                        // low part of the word
                         uint8_t cClusterAddress = (0x000007f8 & word) >> 3;
                         uint8_t cClusterWidth = ( (0x00000007 & word) >> 0 ) + 1;
 
                         for(uint8_t i = 0; i < cClusterWidth; i++)
                             hit_bits[cClusterAddress + 2*i] = true;
-                    }
-                    if ( (cDataMask >> 1) & 1 ) {
-                        uint8_t cClusterAddress = (0x003fc000 & word) >> 14;
-                        uint8_t cClusterWidth = ( (0x00003800 & word) >> 11 ) + 1;
 
-                        for(uint8_t i = 0; i < cClusterWidth; i++) hit_bits[cClusterAddress + 2*i] = true;
+                        // increment got clusters
+                        cGotClusters++;
                     }
+
+                    if(cGotClusters < cNclusters) {
+                        // top part of the word
+                        uint8_t cClusterAddress = (0x07f80000 & word) >> 19;
+                        uint8_t cClusterWidth = ( (0x00070000 & word) >> 16 ) + 1;
+
+                        for(uint8_t i = 0; i < cClusterWidth; i++)
+                            hit_bits[cClusterAddress + 2*i] = true;
+
+                        // increment got clusters
+                        cGotClusters++;
+                    }
+
+                    // break if got all clusters
+                    if(cGotClusters >= cNclusters) break;
                 }
             }
 
@@ -373,23 +419,41 @@ namespace Ph2_HwInterface {
         {
             std::vector<uint32_t> cHitsVector;
 
-            for(auto word : cData->second) {
-                uint8_t cDataType = (0x18000000 & word) >> 27;
-                if (cDataType == 0) {
-                    uint8_t cDataMask = (0x03000000 & word) >> 24;
-                    if ( (cDataMask >> 0) & 1 ) {
+            // data vector
+            std::vector<uint32_t> cDataVector = cData->second;
+            // nclusters
+            uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
+            uint32_t cGotClusters = 0;
+            if (cNclusters > 0) {
+                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                    uint32_t word = cDataVector.at(word_id);
+
+                    if(cGotClusters < cNclusters) {
+                        // low part of the word
                         uint8_t cClusterAddress = (0x000007f8 & word) >> 3;
                         uint8_t cClusterWidth = ( (0x00000007 & word) >> 0 ) + 1;
 
                         for(uint8_t i = 0; i < cClusterWidth; i++)
                             cHitsVector.push_back(cClusterAddress + 2*i);
-                    }
-                    if ( (cDataMask >> 1) & 1 ) {
-                        uint8_t cClusterAddress = (0x003fc000 & word) >> 14;
-                        uint8_t cClusterWidth = ( (0x00003800 & word) >> 11 ) + 1;
 
-                        for(uint8_t i = 0; i < cClusterWidth; i++) cHitsVector.push_back(cClusterAddress + 2*i);
+                        // increment got clusters
+                        cGotClusters++;
                     }
+
+                    if(cGotClusters < cNclusters) {
+                        // top part of the word
+                        uint8_t cClusterAddress = (0x07f80000 & word) >> 19;
+                        uint8_t cClusterWidth = ( (0x00070000 & word) >> 16 ) + 1;
+
+                        for(uint8_t i = 0; i < cClusterWidth; i++)
+                            cHitsVector.push_back(cClusterAddress + 2*i);
+
+                        // increment got clusters
+                        cGotClusters++;
+                    }
+
+                    // break if got all clusters
+                    if(cGotClusters >= cNclusters) break;
                 }
             }
 
@@ -439,14 +503,19 @@ namespace Ph2_HwInterface {
 
         if (cData != std::end (fEventDataMap) )
         {
-            for(auto word : cData->second) {
-                uint8_t cDataType = (0x18000000 & word) >> 27;
-                if (cDataType == 1) {
-                    uint8_t cStubAddress = (0x001fe000 & word) >> 13;
-                    uint8_t cStubBend = (0x000003c0 & word) >> 6 ;
-                    cStubVec.emplace_back (cStubAddress, cStubBend);
-                }
-            }
+            uint8_t pos1 =  (cData->second.at (cData->second.size()-2) &  0x000000FF) ;
+            uint8_t pos2 =   (cData->second.at (cData->second.size()-2) & 0x0000FF00) >> 8;
+            uint8_t pos3 =   (cData->second.at (cData->second.size()-2) & 0x00FF0000) >> 16;
+            //LOG (DEBUG) << std::bitset<8> (pos1);
+            //LOG (DEBUG) << std::bitset<8> (pos2);
+            //LOG (DEBUG) << std::bitset<8> (pos3);
+            uint8_t bend1 = (cData->second.at (cData->second.size()-1) & 0x00000F00) >> 8;
+            uint8_t bend2 = (cData->second.at (cData->second.size()-1) & 0x000F0000) >> 16;
+            uint8_t bend3 = (cData->second.at (cData->second.size()-1) & 0x0F000000) >> 24;
+
+            if (pos1 != 0 ) cStubVec.emplace_back (pos1, bend1) ;
+            if (pos2 != 0 ) cStubVec.emplace_back (pos2, bend2) ;
+            if (pos3 != 0 ) cStubVec.emplace_back (pos3, bend3) ;
         }
         else
             LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
@@ -462,20 +531,39 @@ namespace Ph2_HwInterface {
 
         if (cData != std::end (fEventDataMap) )
         {
-            for(auto word : cData->second) {
-                uint8_t cDataType = (0x18000000 & word) >> 27;
-                if (cDataType == 0) {
-                    uint8_t cDataMask = (0x03000000 & word) >> 24;
-                    if ( (cDataMask >> 0) & 1 ) {
+            // data vector
+            std::vector<uint32_t> cDataVector = cData->second;
+            // nclusters
+            uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
+            uint32_t cGotClusters = 0;
+            if (cNclusters > 0) {
+                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                    uint32_t word = cDataVector.at(word_id);
+
+                    if(cGotClusters < cNclusters) {
+                        // low part of the word
                         //uint8_t cClusterAddress = (0x000007f8 & word) >> 3;
                         uint8_t cClusterWidth = ( (0x00000007 & word) >> 0 ) + 1;
+
                         cNHits += cClusterWidth;
+
+                        // increment got clusters
+                        cGotClusters++;
                     }
-                    if ( (cDataMask >> 1) & 1 ) {
-                        //uint8_t cClusterAddress = (0x003fc000 & word) >> 14;
-                        uint8_t cClusterWidth = ( (0x00003800 & word) >> 11 ) + 1;
+
+                    if(cGotClusters < cNclusters) {
+                        // top part of the word
+                        //uint8_t cClusterAddress = (0x07f80000 & word) >> 19;
+                        uint8_t cClusterWidth = ( (0x00070000 & word) >> 16 ) + 1;
+
                         cNHits += cClusterWidth;
+
+                        // increment got clusters
+                        cGotClusters++;
                     }
+
+                    // break if got all clusters
+                    if(cGotClusters >= cNclusters) break;
                 }
             }
         }
@@ -493,25 +581,44 @@ namespace Ph2_HwInterface {
 
         if (cData != std::end (fEventDataMap) )
         {
-            for(auto word : cData->second) {
-                uint8_t cDataType = (0x18000000 & word) >> 27;
-                if (cDataType == 0) {
-                    uint8_t cDataMask = (0x03000000 & word) >> 24;
-                    if ( (cDataMask >> 0) & 1 ) {
+            // data vector
+            std::vector<uint32_t> cDataVector = cData->second;
+            // nclusters
+            uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
+            uint32_t cGotClusters = 0;
+            if (cNclusters > 0) {
+                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                    uint32_t word = cDataVector.at(word_id);
+
+                    if(cGotClusters < cNclusters) {
+                        // low part of the word
                         uint8_t cClusterAddress = (0x000007f8 & word) >> 3;
                         uint8_t cClusterWidth = ( (0x00000007 & word) >> 0 ) + 1;
 
                         for(uint8_t i = 0; i < cClusterWidth; i++)
                             cHits.push_back(cClusterAddress + 2*i);
-                    }
-                    if ( (cDataMask >> 1) & 1 ) {
-                        uint8_t cClusterAddress = (0x003fc000 & word) >> 14;
-                        uint8_t cClusterWidth = ( (0x00003800 & word) >> 11 ) + 1;
 
-                        for(uint8_t i = 0; i < cClusterWidth; i++) cHits.push_back(cClusterAddress + 2*i);
+                        // increment got clusters
+                        cGotClusters++;
                     }
+
+                    if(cGotClusters < cNclusters) {
+                        // top part of the word
+                        uint8_t cClusterAddress = (0x07f80000 & word) >> 19;
+                        uint8_t cClusterWidth = ( (0x00070000 & word) >> 16 ) + 1;
+
+                        for(uint8_t i = 0; i < cClusterWidth; i++)
+                            cHits.push_back(cClusterAddress + 2*i);
+
+                        // increment got clusters
+                        cGotClusters++;
+                    }
+
+                    // break if got all clusters
+                    if(cGotClusters >= cNclusters) break;
                 }
             }
+
         }
         else
             LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
@@ -649,11 +756,17 @@ namespace Ph2_HwInterface {
 
         if (cData != std::end (fEventDataMap) )
         {
-            for(auto word : cData->second) {
-                uint8_t cDataType = (0x18000000 & word) >> 27;
-                if (cDataType == 0) {
-                    uint8_t cDataMask = (0x03000000 & word) >> 24;
-                    if ( (cDataMask >> 0) & 1 ) {
+            // data vector
+            std::vector<uint32_t> cDataVector = cData->second;
+            // nclusters
+            uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
+            uint32_t cGotClusters = 0;
+            if (cNclusters > 0) {
+                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                    uint32_t word = cDataVector.at(word_id);
+
+                    if(cGotClusters < cNclusters) {
+                        // low part of the word
                         uint8_t cClusterAddress = (0x000007f8 & word) >> 3;
                         uint8_t cClusterWidth = ( (0x00000007 & word) >> 0 ) + 1;
 
@@ -662,19 +775,31 @@ namespace Ph2_HwInterface {
                         aCluster.fFirstStrip = cClusterAddress;
                         aCluster.fClusterWidth = cClusterWidth;
                         cClusterVec.push_back(aCluster);
+
+                        // increment got clusters
+                        cGotClusters++;
                     }
-                    if ( (cDataMask >> 1) & 1 ) {
-                        uint8_t cClusterAddress = (0x003fc000 & word) >> 14;
-                        uint8_t cClusterWidth = ( (0x00003800 & word) >> 11 ) + 1;
+
+                    if(cGotClusters < cNclusters) {
+                        // top part of the word
+                        uint8_t cClusterAddress = (0x07f80000 & word) >> 19;
+                        uint8_t cClusterWidth = ( (0x00070000 & word) >> 16 ) + 1;
 
                         Cluster aCluster;
                         aCluster.fSensor = cClusterAddress % 2;
                         aCluster.fFirstStrip = cClusterAddress;
                         aCluster.fClusterWidth = cClusterWidth;
                         cClusterVec.push_back(aCluster);
+
+                        // increment got clusters
+                        cGotClusters++;
                     }
+
+                    // break if got all clusters
+                    if(cGotClusters >= cNclusters) break;
                 }
             }
+
         }
         else
             LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
@@ -726,48 +851,77 @@ namespace Ph2_HwInterface {
                     //init
                     bool cStatusBit = false;
 
-                    for (auto word: cData->second)
-                    {
-                        uint8_t cDataType = (0x18000000 & word) >> 27;
+                    // data vector
+                    std::vector<uint32_t> cDataVector = cData->second;
 
-                        // if there are no clusters, we will just have the FE header which comes for free by later encoding of cFeCluCounter
-                        if (cDataType == 0)
-                        {
-                            uint8_t cDataMask = (0x03000000 & word) >> 24;
-                            if ( (cDataMask >> 0) & 1 )
-                            {
+                    // !!! put clusters
+                    // nclusters
+                    uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
+                    uint32_t cGotClusters = 0;
+                    if (cNclusters > 0) {
+                        for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                            uint32_t word = cDataVector.at(word_id);
+
+                            if(cGotClusters < cNclusters) {
+                                // low part of the word
                                 uint8_t cClusterAddress = (0x000007f8 & word) >> 3;
-                                uint8_t cClusterWidth = ( (0x00000007 & word) >> 0 );
+                                uint8_t cClusterWidth = ( (0x00000007 & word) >> 0 ) + 1;
 
                                 // i don't do cClusterWidth-1 here because from the fw it comes in a proper way
                                 cPayload.append (uint16_t ( (cCbcId & 0x0F) << 11 | cClusterAddress << 3 | ( (cClusterWidth) & 0x07) ) );
                                 cFeCluCounter++;
+
+                                // increment got clusters
+                                cGotClusters++;
                             }
-                            if ( (cDataMask >> 1) & 1 )
-                            {
-                                uint8_t cClusterAddress = (0x003fc000 & word) >> 14;
-                                uint8_t cClusterWidth = ( (0x00003800 & word) >> 11 );
+
+                            if(cGotClusters < cNclusters) {
+                                // top part of the word
+                                uint8_t cClusterAddress = (0x07f80000 & word) >> 19;
+                                uint8_t cClusterWidth = ( (0x00070000 & word) >> 16 ) + 1;
 
                                 // i don't do cClusterWidth-1 here because from the fw it comes in a proper way
                                 cPayload.append (uint16_t ( (cCbcId & 0x0F) << 11 | cClusterAddress << 3 | ( (cClusterWidth) & 0x07) ) );
                                 cFeCluCounter++;
-                            }
-                        }
-                        // if there are no stubs, we will just have the FE header which comes for free by later encoding of cFeStubCounter
-                        else if (cDataType == 1)
-                        {
-                            uint8_t cStubAddress = (0x001fe000 & word) >> 13;
-                            uint8_t cStubBend = (0x000003c0 & word) >> 6 ;
 
-                            cStubPayload.append ( uint16_t ( (cCbcId & 0x0F) << 12 | cStubAddress << 4 | (cStubBend & 0xF) ) );
-                            cFeStubCounter++;
-                        }
-                        else if (cDataType == 2)
-                        {
-                            //we are in sparsified mode so in full debug we get 1 error bit per chip + 1 L1A counter per CIC
-                            cStatusBit = ((word & 0x00000003) != 0);
+                                // increment got clusters
+                                cGotClusters++;
+                            }
+
+                            // break if got all clusters
+                            if(cGotClusters >= cNclusters) break;
                         }
                     }
+
+                    // !!! stubs
+                    uint8_t pos1 =  (cDataVector.at (cDataVector.size()-2) &  0x000000FF) ;
+                    uint8_t pos2 =   (cDataVector.at (cDataVector.size()-2) & 0x0000FF00) >> 8;
+                    uint8_t pos3 =   (cDataVector.at (cDataVector.size()-2) & 0x00FF0000) >> 16;
+                    uint8_t bend1 = (cDataVector.at (cDataVector.size()-1) & 0x00000F00) >> 8;
+                    uint8_t bend2 = (cDataVector.at (cDataVector.size()-1) & 0x000F0000) >> 16;
+                    uint8_t bend3 = (cDataVector.at (cDataVector.size()-1) & 0x0F000000) >> 24;
+
+                    if (pos1 != 0)
+                    {
+                        cStubPayload.append ( uint16_t ( (cCbcId & 0x0F) << 12 | pos1 << 4 | (bend1 & 0xF)) );
+                        cFeStubCounter++;
+                    }
+
+                    if (pos2 != 0)
+                    {
+                        cStubPayload.append ( uint16_t ( (cCbcId & 0x0F) << 12 | pos2 << 4 | (bend2 & 0xF)) );
+                        cFeStubCounter++;
+                    }
+
+                    if (pos3 != 0)
+                    {
+                        cStubPayload.append ( uint16_t ( (cCbcId & 0x0F) << 12 | pos3 << 4 | (bend3 & 0xF)) );
+                        cFeStubCounter++;
+                    }
+
+                    // !!! error
+                    //we are in sparsified mode so in full debug we get 1 error bit per chip + 1 L1A counter per CIC
+                    cStatusBit = ((cDataVector.at(0) & 0x00000003) != 0);
 
                     //just append a status bit to the status payload, since the format is the same for full and Error mode for the moment
                     //so if we are in summary mode, we just don't insert the staus payload at all a bit further down

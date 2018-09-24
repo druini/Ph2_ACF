@@ -195,3 +195,4 @@
     - signal scans added
     - some minor bug fixes
     - new DQM code based on SLink Data format to avoid having to read HWDescription files
+- 13.02.2018 Latest Release (v1-50): merging the latest D19CFwInterface class to go along with the latest D19C FW compatible with CBC3

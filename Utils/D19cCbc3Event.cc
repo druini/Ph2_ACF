@@ -116,7 +116,7 @@ namespace Ph2_HwInterface {
                     {
 
                         //check the sync bit
-			uint8_t cSyncBit = (0x00000008 & list.at(data_offset+10)) >> 3;
+                        uint8_t cSyncBit = (0x00000008 & list.at(data_offset+10)) >> 3;
 
                         if (!cSyncBit) LOG (INFO) << BOLDRED << "Warning, sync bit not 1, data frame probably misaligned!" << RESET;
 
@@ -168,20 +168,20 @@ namespace Ph2_HwInterface {
         std::vector< uint32_t > cbcData;
         GetCbcEvent (pFeId, pCbcId, cbcData);
 
+        // l1cnt
+        os << std::setw (3) << ( (cbcData.at (0) & 0x01FF0000) >> 16) << std::endl;
+        // pipeaddr
+        os << std::setw (3) << ( (cbcData.at (0) & 0x00001FF0) >> 4) << std::endl;
         // trigdata
         os << std::endl;
-        os << std::setw (8) << cbcData.at (0) << std::endl;
         os << std::setw (8) << cbcData.at (1) << std::endl;
         os << std::setw (8) << cbcData.at (2) << std::endl;
-        os << std::setw (8) << (cbcData.at (3) & 0x7FFFFFFF) << std::endl;
-        os << std::setw (8) << cbcData.at (4) << std::endl;
+        os << std::setw (8) << cbcData.at (3) << std::endl;
+        os << std::setw (8) << (cbcData.at (4) & 0x7FFFFFFF) << std::endl;
         os << std::setw (8) << cbcData.at (5) << std::endl;
         os << std::setw (8) << cbcData.at (6) << std::endl;
-        os << std::setw (8) << (cbcData.at (7) & 0x7FFFFFFF) << std::endl;
-        // l1cnt
-        os << std::setw (3) << ( (cbcData.at (8) & 0x01FF0000) >> 16) << std::endl;
-        // pipeaddr
-        os << std::setw (3) << ( (cbcData.at (8) & 0x00001FF0) >> 4) << std::endl;
+        os << std::setw (8) << cbcData.at (7) << std::endl;
+        os << std::setw (8) << (cbcData.at (8) & 0x7FFFFFFF) << std::endl;
         // stubdata
         os << std::setw (8) << cbcData.at (9) << std::endl;
         os << std::setw (8) << cbcData.at (10) << std::endl;
@@ -205,7 +205,7 @@ namespace Ph2_HwInterface {
         if (cData != std::end (fEventDataMap) )
         {
             // buf overflow and lat error
-            uint32_t cError = ( (cData->second.at (8) & 0x00000003) >> 0 );;
+            uint32_t cError = ( (cData->second.at (0) & 0x00000003) >> 0 );;
             return cError;
         }
         else
@@ -222,7 +222,7 @@ namespace Ph2_HwInterface {
 
         if (cData != std::end (fEventDataMap) )
         {
-            uint32_t cPipeAddress = ( (cData->second.at (8) & 0x00001FF0) >> 4 );
+            uint32_t cPipeAddress = ( (cData->second.at (0) & 0x00001FF0) >> 4 );
             return cPipeAddress;
         }
         else
@@ -428,15 +428,15 @@ namespace Ph2_HwInterface {
 
         if (cData != std::end (fEventDataMap) )
         {
-            cNHits += __builtin_popcount ( cData->second.at (7) & 0x7FFFFFFF);
+            cNHits += __builtin_popcount ( cData->second.at (8) & 0x7FFFFFFF);
+            cNHits += __builtin_popcount ( cData->second.at (7) & 0xFFFFFFFF);
             cNHits += __builtin_popcount ( cData->second.at (6) & 0xFFFFFFFF);
             cNHits += __builtin_popcount ( cData->second.at (5) & 0xFFFFFFFF);
-            cNHits += __builtin_popcount ( cData->second.at (4) & 0xFFFFFFFF);
 
-            cNHits += __builtin_popcount ( cData->second.at (3) & 0x7FFFFFFF);
+            cNHits += __builtin_popcount ( cData->second.at (4) & 0x7FFFFFFF);
+            cNHits += __builtin_popcount ( cData->second.at (3) & 0xFFFFFFFF);
             cNHits += __builtin_popcount ( cData->second.at (2) & 0xFFFFFFFF);
             cNHits += __builtin_popcount ( cData->second.at (1) & 0xFFFFFFFF);
-            cNHits += __builtin_popcount ( cData->second.at (0) & 0xFFFFFFFF);
         }
         else
             LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
@@ -674,7 +674,7 @@ namespace Ph2_HwInterface {
 
                 if (cData != std::end (fEventDataMap) )
                 {
-                    uint16_t cError = ( cData->second.at (8) & 0x00000003 );
+                    uint16_t cError = ( cData->second.at (0) & 0x00000003 );
 
                     //now get the CBC status summary
                     if (pBoard->getConditionDataSet()->getDebugMode() == SLinkDebugMode::ERROR)
@@ -683,8 +683,8 @@ namespace Ph2_HwInterface {
                     else if (pBoard->getConditionDataSet()->getDebugMode() == SLinkDebugMode::FULL)
                     {
                         //assemble the error bits (63, 62, pipeline address and L1A counter) into a status word
-                        uint16_t cPipeAddress = (cData->second.at (8) & 0x00001FF0) >> 4;
-                        uint16_t cL1ACounter = (cData->second.at (8) &  0x01FF0000) >> 16;
+                        uint16_t cPipeAddress = (cData->second.at (0) & 0x00001FF0) >> 4;
+                        uint16_t cL1ACounter = (cData->second.at (0) &  0x01FF0000) >> 16;
                         uint32_t cStatusWord = cError << 18 | cPipeAddress << 9 | cL1ACounter;
                         cStatusPayload.append (cStatusWord, 20);
                     }
@@ -697,8 +697,8 @@ namespace Ph2_HwInterface {
                     //since the D19C FW splits in even and odd channels, I need to
                     //Morton-encode these bits into words of the double size
                     //but first I need to reverse the bit order
-                    uint32_t cFirstChanWordEven = reverse_bits (cData->second.at (3) ) >> 1;
-                    uint32_t cFirstChanWordOdd = reverse_bits (cData->second.at (7) ) >> 1;
+                    uint32_t cFirstChanWordEven = reverse_bits (cData->second.at (4) ) >> 1;
+                    uint32_t cFirstChanWordOdd = reverse_bits (cData->second.at (8) ) >> 1;
                     //now both words are swapped to have channel 0/1 at bit 30 and channel 60/61 at bit 0
                     //I can now interleave/morton encode and append them but only the 62 LSBs
                     cPayload.appendD19CData (cFirstChanWordEven, cFirstChanWordOdd, 62);

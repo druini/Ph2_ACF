@@ -69,14 +69,13 @@ namespace Ph2_HwInterface {
         BeBoardFWInterface* fBoardFW;                     /*!< Board loaded */
         uint16_t prevBoardIdentifier;                     /*!< Id of the previous board */
 
-      private:
+      public:
         /*!
          * \brief Set the board to talk with
          * \param pBoardId
          */
         void setBoard ( uint16_t pBoardIdentifier );
 
-      public:
         /*!
          * \brief Constructor of the BeBoardInterface class
          * \param pBoardMap Reference to the BoardFWInterface
@@ -228,6 +227,10 @@ namespace Ph2_HwInterface {
          * \return pointer to the uhal::HwInterface object
          */
         uhal::HwInterface* getHardwareInterface ( const BeBoard* pBoard );
+        /*! \brief Access to the firmware interface for a given board
+         * \return pointer to the BeBoardFWInterface object
+         */
+        BeBoardFWInterface* getFirmwareInterface () { return fBoardFW; }
         /*! \brief Upload a configuration in a board FPGA
          * \param pBoard pointer to a board description
          * \param numConfig FPGA configuration number to be uploaded
