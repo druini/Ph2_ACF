@@ -108,10 +108,11 @@ namespace Ph2_System {
          */
         //void parseConditionDataSetxml (const std::string& pFilename, ConditionDataSet& pSet, std::ostream& os);
 
-        BeBoard* parseBeBoard (pugi::xml_node pNode, BeBoardVec& pBoardVector, std::ostream& os );
-        void parseRegister (pugi::xml_node pNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os );
+        void parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os );
+        void parseRegister (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os );
         void parseSLink (pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ostream& os );
-        void parseCbc (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os );
+        void parseModule (pugi::xml_node pModuleNode, BeBoard* pBoard, std::ostream& os );
+        void parseCbc (pugi::xml_node pModuleNode, Module* cModule, std::string cFilePrefix, std::ostream& os );
         void parseCbcSettings (pugi::xml_node pCbcNode, Cbc* pCbc, std::ostream& os);
         void parseGlobalCbcSettings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os);
 

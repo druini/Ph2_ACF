@@ -5,6 +5,8 @@ namespace Ph2_System {
 
     void FileParser::parseHW ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os, bool pIsFile )
     {
+
+        //FIXME-FR
         if (pIsFile && pFilename.find ( ".xml" ) != std::string::npos )
             parseHWxml ( pFilename, pBeBoardFWMap, pBoardVector, os, pIsFile );
         else if (!pIsFile)
@@ -15,6 +17,8 @@ namespace Ph2_System {
 
     void FileParser::parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
     {
+        
+        //FIXME-FR
         if ( pIsFile && pFilename.find ( ".xml" ) != std::string::npos )
             parseSettingsxml ( pFilename, pSettingsMap, os, pIsFile );
         else if (!pIsFile)
@@ -25,9 +29,7 @@ namespace Ph2_System {
 
     void FileParser::parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os, bool pIsFile )
     {
-        uint32_t cBeId, cModuleId;
-        uint32_t cNBeBoard = 0;
-        cBeId = cModuleId = 0;
+        // uint32_t cNBeBoard = 0;
         int i, j;
 
         pugi::xml_document doc;
@@ -74,78 +76,11 @@ namespace Ph2_System {
         {
             if (static_cast<std::string> (cBeBoardNode.name() ) == "BeBoard")
             {
-                BeBoard* cBeBoard = this->parseBeBoard (cBeBoardNode, pBoardVector, os);
-
-                pugi::xml_node cBeBoardConnectionNode = cBeBoardNode.child ("connection");
-
-                std::string cId = cBeBoardConnectionNode.attribute ( "id" ).value();
-                std::string cUri = cBeBoardConnectionNode.attribute ( "uri" ).value();
-                std::string cAddressTable = expandEnvironmentVariables (cBeBoardConnectionNode.attribute ( "address_table" ).value() );
-
-                os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
-
-
-                // Iterate over the BeBoardRegister Nodes
-                for ( pugi::xml_node cBeBoardRegNode = cBeBoardNode.child ( "Register" ); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling() )
-                {
-                    if (std::string (cBeBoardRegNode.name() ) == "Register")
-                    {
-                        std::string cNameString;
-                        uint32_t cValue;
-                        this->parseRegister (cBeBoardRegNode, cNameString, cValue, cBeBoard, os);
-                    }
-                }
-
-                os << BLUE <<  "|\t|" << RESET << std::endl;
-
-                if (cBeBoard->getBoardType() == BoardType::GLIB)
-                    pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new GlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-                else if (cBeBoard->getBoardType() == BoardType::ICGLIB)
-                    pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new ICGlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-                else if (cBeBoard->getBoardType() == BoardType::CTA)
-                    pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new CtaFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-                else if (cBeBoard->getBoardType() == BoardType::ICFC7)
-                    pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new ICFc7FWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-                else if (cBeBoard->getBoardType() == BoardType::CBC3FC7)
-                    pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new Cbc3Fc7FWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-                else if (cBeBoard->getBoardType() == BoardType::D19C)
-                    pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-                else if (cBeBoard->getBoardType() == BoardType::MPAGLIB)
-                    pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new MPAGlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-
-                //else
-                //cBeBoardFWInterface = new OtherFWInterface();
-
-                // Iterate the module node
-                for ( pugi::xml_node cModuleNode = cBeBoardNode.child ( "Module" ); cModuleNode; cModuleNode = cModuleNode.next_sibling() )
-                {
-                    if ( static_cast<std::string> ( cModuleNode.name() ) == "Module" )
-                    {
-                        bool cStatus = cModuleNode.attribute ( "Status" ).as_bool();
-
-                        //LOG(INFO) << cStatus ;
-                        if ( cStatus )
-                        {
-                            os << BOLDCYAN << "|" << "	" << "|" << "----" << cModuleNode.name() << "  "
-                               << cModuleNode.first_attribute().name() << " :" << cModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
-
-                            cModuleId = cModuleNode.attribute ( "ModuleId" ).as_int();
-
-                            Module* cModule = new Module ( cBeId, cModuleNode.attribute ( "FMCId" ).as_int(), cModuleNode.attribute ( "FeId" ).as_int(), cModuleId );
-                            cBeBoard->addModule ( cModule );
-
-                            this->parseCbc (cModuleNode, cModule, os);
-                        }
-                    }
-                }
-
-                //here parse the Slink Node
-                pugi::xml_node cSLinkNode = cBeBoardNode.child ("SLink");
-                this->parseSLink (cSLinkNode, cBeBoard, os);
+                this->parseBeBoard (cBeBoardNode, pBeBoardFWMap, pBoardVector, os);
             }
+            // cNBeBoard++;
         }
 
-        cNBeBoard++;
 
         os << "\n";
         os << "\n";
@@ -167,21 +102,13 @@ namespace Ph2_System {
         os << "\n";
     }
 
-    BeBoard* FileParser::parseBeBoard (pugi::xml_node pNode, BeBoardVec& pBoardVector,  std::ostream& os)
+    void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector,  std::ostream& os)
     {
-        uint32_t cBeId = pNode.attribute ( "Id" ).as_int();
+
+        uint32_t cBeId = pBeBordNode.attribute ( "Id" ).as_int();
         BeBoard* cBeBoard = new BeBoard ( cBeId );
 
-
-        //pugi::xml_node cBeBoardFWVersionNode = pNode.child ( "FW_Version" );
-        //uint16_t cNCbcDataSize = 0;
-        //cNCbcDataSize = static_cast<uint16_t> ( cBeBoardFWVersionNode.attribute ( "NCbcDataSize" ).as_int() );
-
-        //if ( cNCbcDataSize != 0 ) os << BOLDCYAN << "|" << "  " << "|" << "----" << cBeBoardFWVersionNode.name() << " NCbcDataSize: " << cNCbcDataSize  <<  RESET << std:: endl;
-
-        //cBeBoard->setNCbcDataSize ( cNCbcDataSize );
-
-        pugi::xml_attribute cBoardTypeAttribute = pNode.attribute ("boardType");
+        pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute ("boardType");
 
         if (cBoardTypeAttribute == nullptr)
         {
@@ -189,7 +116,7 @@ namespace Ph2_System {
             exit (1);
         }
 
-        //std::string cBoardType = pNode.attribute ( "boardType" ).value();
+        //std::string cBoardType = pBeBordNode.attribute ( "boardType" ).value();
         std::string cBoardType = cBoardTypeAttribute.value();
 
         if (cBoardType == "GLIB") cBeBoard->setBoardType (BoardType::GLIB);
@@ -207,7 +134,7 @@ namespace Ph2_System {
             exit (1);
         }
 
-        pugi::xml_attribute cEventTypeAttribute = pNode.attribute ("eventType");
+        pugi::xml_attribute cEventTypeAttribute = pBeBordNode.attribute ("eventType");
         std::string cEventTypeString;
 
         if (cEventTypeAttribute == nullptr)
@@ -224,25 +151,78 @@ namespace Ph2_System {
             else cBeBoard->setEventType (EventType::VR);
         }
 
+        os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << " :" << BOLDBLUE << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << " BoardType: " << BOLDBLUE << cBoardType << BOLDCYAN << " EventType: " << BOLDRED << cEventTypeString << RESET << std:: endl;
+
+        pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child ("connection");
+
+        std::string cId = cBeBoardConnectionNode.attribute ( "id" ).value();
+        std::string cUri = cBeBoardConnectionNode.attribute ( "uri" ).value();
+        std::string cAddressTable = expandEnvironmentVariables (cBeBoardConnectionNode.attribute ( "address_table" ).value() );
+
+        if (cBeBoard->getBoardType() == BoardType::GLIB)
+            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new GlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+        else if (cBeBoard->getBoardType() == BoardType::ICGLIB)
+            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new ICGlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+        else if (cBeBoard->getBoardType() == BoardType::CTA)
+            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new CtaFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+        else if (cBeBoard->getBoardType() == BoardType::ICFC7)
+            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new ICFc7FWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+        else if (cBeBoard->getBoardType() == BoardType::CBC3FC7)
+            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new Cbc3Fc7FWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+        else if (cBeBoard->getBoardType() == BoardType::D19C)
+            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+        else if (cBeBoard->getBoardType() == BoardType::MPAGLIB)
+            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new MPAGlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+
+
+        os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
+
+        // Iterate over the BeBoardRegister Nodes
+        for ( pugi::xml_node cBeBoardRegNode = pBeBordNode.child ( "Register" ); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling() )
+        {
+            if (std::string (cBeBoardRegNode.name() ) == "Register")
+            {
+                std::string cNameString;
+                uint32_t cValue;
+                this->parseRegister (cBeBoardRegNode, cNameString, cValue, cBeBoard, os);
+            }
+        }
+
+        os << BLUE <<  "|\t|" << RESET << std::endl;
+
+        // Iterate the module node
+        for ( pugi::xml_node pModuleNode = pBeBordNode.child ( "Module" ); pModuleNode; pModuleNode = pModuleNode.next_sibling() )
+        {
+            if ( static_cast<std::string> ( pModuleNode.name() ) == "Module" )
+            {
+                this->parseModule (pModuleNode, cBeBoard, os );
+            }
+        }
+
+        //here parse the Slink Node
+        pugi::xml_node cSLinkNode = pBeBordNode.child ("SLink");
+        this->parseSLink (cSLinkNode, cBeBoard, os);
+
         pBoardVector.push_back ( cBeBoard );
 
-        os << BOLDCYAN << "|" << "----" << pNode.name() << "  " << pNode.first_attribute().name() << " :" << BOLDBLUE << pNode.attribute ( "Id" ).value() << BOLDCYAN << " BoardType: " << BOLDBLUE << cBoardType << BOLDCYAN << " EventType: " << BOLDRED << cEventTypeString << RESET << std:: endl;
+        return;
 
-        return cBeBoard;
     }
 
-    void FileParser::parseRegister (pugi::xml_node pNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os)
+
+
+    void FileParser::parseRegister (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os)
     {
-        if (std::string (pNode.name() ) == "Register")
+        if (std::string (pRegisterNode.name() ) == "Register")
         {
-            if (std::string (pNode.first_child().value() ).empty() ) // the node has no value associated and thus is just a container
+            if (std::string (pRegisterNode.first_child().value() ).empty() ) // the node has no value associated and thus is just a container
             {
                 if (!pAttributeString.empty() ) pAttributeString += ".";
 
-                pAttributeString += pNode.attribute ("name").value();
+                pAttributeString += pRegisterNode.attribute ("name").value();
 
                 //ok, I have appended .name to the attribute string, now loop over all the children
-                for ( pugi::xml_node cNode = pNode.child ( "Register" ); cNode; cNode = cNode.next_sibling() )
+                for ( pugi::xml_node cNode = pRegisterNode.child ( "Register" ); cNode; cNode = cNode.next_sibling() )
                 {
                     std::string cAttributeString = pAttributeString;
                     this->parseRegister (cNode, cAttributeString, pValue, pBoard, os);
@@ -253,9 +233,9 @@ namespace Ph2_System {
                 if (!pAttributeString.empty() ) // this is the first node in the hierarchy and thus no children
                     pAttributeString += ".";
 
-                pAttributeString += pNode.attribute ("name").value();
-                pValue = convertAnyInt (pNode.first_child().value() );
-                os << BLUE << "|" << "\t" << "|" << "----" << pNode.name() << "  " << pAttributeString << ": " << BOLDYELLOW << pValue << RESET << std:: endl;
+                pAttributeString += pRegisterNode.attribute ("name").value();
+                pValue = convertAnyInt (pRegisterNode.first_child().value() );
+                os << BLUE << "|" << "\t" << "|" << "----" << pRegisterNode.name() << "  " << pAttributeString << ": " << BOLDYELLOW << pValue << RESET << std:: endl;
                 pBoard->setReg ( pAttributeString, pValue );
             }
         }
@@ -381,48 +361,77 @@ namespace Ph2_System {
         pBoard->addConditionDataSet (cSet);
     }
 
-    void FileParser::parseCbc (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os )
-    {
-        pugi::xml_node cCbcPathPrefixNode = pModuleNode.child ( "CBC_Files" );
-        std::string cFilePrefix = expandEnvironmentVariables (static_cast<std::string> ( cCbcPathPrefixNode.attribute ( "path" ).value() ) );
 
-        if ( !cFilePrefix.empty() ) os << GREEN << "|" << "	" << "|" << "	" << "|" << "----" << "CBC Files Path : " << cFilePrefix << RESET << std::endl;
+    void FileParser::parseModule (pugi::xml_node pModuleNode, BeBoard* pBoard, std::ostream& os ){
 
-        // Iterate the CBC node
-        for ( pugi::xml_node cCbcNode = pModuleNode.child ( "CBC" ); cCbcNode; cCbcNode = cCbcNode.next_sibling() )
+        bool cStatus = pModuleNode.attribute ( "Status" ).as_bool();
+
+        //LOG(INFO) << cStatus ;
+        if ( cStatus )
         {
-            os << BOLDCYAN << "|" << "	" << "|" << "	" << "|" << "----" << cCbcNode.name() << "  "
-               << cCbcNode.first_attribute().name() << " :" << cCbcNode.attribute ( "Id" ).value()
-               << ", File: " << expandEnvironmentVariables (cCbcNode.attribute ( "configfile" ).value() ) << RESET << std:: endl;
+            os << BOLDCYAN << "|" << "  " << "|" << "----" << pModuleNode.name() << "  "
+               << pModuleNode.first_attribute().name() << " :" << pModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
 
-            std::string cFileName;
+            uint32_t cModuleId = pModuleNode.attribute ( "ModuleId" ).as_int();
 
-            if ( !cFilePrefix.empty() )
+            Module* cModule = new Module ( pBoard->getBeBoardIdentifier(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId );
+            pBoard->addModule ( cModule );
+
+            pugi::xml_node cCbcPathPrefixNode = pModuleNode.child ( "CBC_Files" );
+            std::string cFilePrefix = expandEnvironmentVariables (static_cast<std::string> ( cCbcPathPrefixNode.attribute ( "path" ).value() ) );
+
+            if ( !cFilePrefix.empty() ) os << GREEN << "|" << " " << "|" << "   " << "|" << "----" << "CBC Files Path : " << cFilePrefix << RESET << std::endl;
+
+            // Iterate the CBC node
+            for ( pugi::xml_node pCbcNode = pModuleNode.child ( "CBC" ); pCbcNode; pCbcNode = pCbcNode.next_sibling() )
             {
-                if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
-                    cFilePrefix.append ("/");
-
-                cFileName = cFilePrefix + expandEnvironmentVariables (cCbcNode.attribute ( "configfile" ).value() );
-            }
-            else cFileName = expandEnvironmentVariables (cCbcNode.attribute ( "configfile" ).value() );
-
-            Cbc* cCbc = new Cbc ( pModule->getBeId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cCbcNode.attribute ( "Id" ).as_int(), cFileName );
-
-            // parse the specific CBC settings so that Registers take precedence
-            this->parseCbcSettings (pModuleNode.child ("CBC"), cCbc, os);
-
-            for ( pugi::xml_node cCbcRegisterNode = cCbcNode.child ( "Register" ); cCbcRegisterNode; cCbcRegisterNode = cCbcRegisterNode.next_sibling() )
-            {
-                cCbc->setReg ( std::string ( cCbcRegisterNode.attribute ( "name" ).value() ), convertAnyInt ( cCbcRegisterNode.first_child().value() ) );
-                os << BLUE << "|\t|\t|\t|----Register: " << std::string ( cCbcRegisterNode.attribute ( "name" ).value() ) << " : " << RED << std::hex << "0x" <<  convertAnyInt ( cCbcRegisterNode.first_child().value() ) << RESET << std::dec << std::endl;
+                this->parseCbc (pCbcNode, cModule, cFilePrefix, os);
             }
 
-            pModule->addCbc (cCbc);
+            // parse the GlobalCbcSettings so that Global CBC regisers take precedence over Global CBC settings which take precedence over CBC specific settings
+            this->parseGlobalCbcSettings (pModuleNode, cModule, os);
+
+
         }
 
-        // parse the GlobalCbcSettings so that Global CBC regisers take precedence over Global CBC settings which take precedence over CBC specific settings
-        this->parseGlobalCbcSettings (pModuleNode, pModule, os);
+        return;
+
     }
+
+
+
+    void FileParser::parseCbc (pugi::xml_node pCbcNode, Module* cModule, std::string cFilePrefix, std::ostream& os )
+    {
+
+        os << BOLDCYAN << "|" << "	" << "|" << "	" << "|" << "----" << pCbcNode.name() << "  "
+           << pCbcNode.first_attribute().name() << " :" << pCbcNode.attribute ( "Id" ).value()
+           << ", File: " << expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() ) << RESET << std:: endl;
+
+        std::string cFileName;
+
+        if ( !cFilePrefix.empty() )
+        {
+            if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
+                cFilePrefix.append ("/");
+
+            cFileName = cFilePrefix + expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() );
+        }
+        else cFileName = expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() );
+
+        Cbc* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
+
+        // parse the specific CBC settings so that Registers take precedence
+        this->parseCbcSettings (pCbcNode, cCbc, os);
+
+        for ( pugi::xml_node cCbcRegisterNode = pCbcNode.child ( "Register" ); cCbcRegisterNode; cCbcRegisterNode = cCbcRegisterNode.next_sibling() )
+        {
+            cCbc->setReg ( std::string ( cCbcRegisterNode.attribute ( "name" ).value() ), convertAnyInt ( cCbcRegisterNode.first_child().value() ) );
+            os << BLUE << "|\t|\t|\t|----Register: " << std::string ( cCbcRegisterNode.attribute ( "name" ).value() ) << " : " << RED << std::hex << "0x" <<  convertAnyInt ( cCbcRegisterNode.first_child().value() ) << RESET << std::dec << std::endl;
+        }
+
+        cModule->addCbc (cCbc);
+    }
+
 
     void FileParser::parseGlobalCbcSettings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os)
     {
