@@ -15,7 +15,8 @@ PedeNoise::PedeNoise() :
     fTestPulse (false),
     fFitted (false),
     fTestPulseAmplitude (0),
-    fEventsPerPoint (0)
+    fEventsPerPoint (0),
+    fSkipMaskedChannels(0)
 {
 }
 
@@ -28,6 +29,10 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     fDisableStubLogic = pDisableStubLogic;
     this->MakeTestGroups ( pAllChan );
     fAllChan = pAllChan;
+
+    auto maskSkipSetting = fSettingsMap.find ( "SkipMaskedChannels" );
+    fSkipMaskedChannels = ( maskSkipSetting != std::end ( fSettingsMap ) ) ? maskSkipSetting->second : false;
+
 
     //is to be called after system controller::InitialiseHW, InitialiseSettings
     // populates all the maps
@@ -522,10 +527,12 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
                 cVisitor.setThreshold (cValue);
                 cFe->accept (cVisitor);
             }
-
+            
             ReadNEvents ( pBoard, fEventsPerPoint );
 
             const std::vector<Event*>& events = GetEvents ( pBoard );
+
+            uint32_t cMaxHits=0;
 
             // Loop over Events from this Acquisition
             for ( auto& ev : events )
@@ -537,15 +544,28 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
                     for ( auto cCbc : cFe->fCbcVector )
                     {
                         TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (cCbc, pHistName) );
+                         const uint32_t *cbcMask = cCbc->getCbcmask();
+
+                         // std::cout<< (cbcMask[0]&0x0f) <<std::endl;
 
                         for ( auto& cChan : cTestGrpChannelVec )
                         {
+
+                            bool isChannelEnabled = true;
+                            // if(true){
+                            if(fSkipMaskedChannels){
+                                if(!( (cbcMask[cChan>>5]>>(cChan&0x1F)) &0x1) ){
+                                    isChannelEnabled=false;
+                                }
+                            }
+
+                            if(isChannelEnabled) cMaxHits++;
 
                             if ( ev->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChan) )
                             {
                                 //fill the strip number and the current threshold
                                 cSCurveHist->Fill (cChan, cValue);
-                                cHitCounter++;
+                                if(isChannelEnabled) cHitCounter++;
                             }
                         }
                     }
@@ -554,7 +574,7 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
 
             Counter cCbcCounter;
             pBoard->accept ( cCbcCounter );
-            uint32_t cMaxHits = fEventsPerPoint *   cCbcCounter.getNCbc() * cTestGrpChannelVec.size();
+            // uint32_t cMaxHits = fEventsPerPoint *   cCbcCounter.getNCbc() * cTestGrpChannelVec.size();
 
             //now establish if I'm zero or one
             if (cHitCounter == 0) cAllZeroCounter ++;

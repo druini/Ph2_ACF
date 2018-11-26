@@ -105,7 +105,8 @@ int main ( int argc, char* argv[] )
     Calibration cCalibration;
     cCalibration.Inherit (&cTool);
     //second parameter disables stub logic on CBC3
-    cCalibration.Initialise ( cAllChan, true );
+    cCalibration.Initialise ( false, true );
+    // cCalibration.Initialise ( cAllChan, true );
 
     if ( cVplus ) cCalibration.FindVplus();
 

@@ -133,6 +133,11 @@ namespace Ph2_HwDescription {
             fCbcId = pCbcId;
         }
 
+        const uint32_t * getCbcmask() const 
+        {
+            return fCbcMask;
+        }
+
 
       protected:
 
@@ -141,6 +146,7 @@ namespace Ph2_HwDescription {
         // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value
         CbcRegMap fRegMap;
         CommentMap fCommentMap;
+        uint32_t fCbcMask[8]; //mask is stored in 8 uint32
 
     };
 

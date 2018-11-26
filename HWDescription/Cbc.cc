@@ -108,12 +108,17 @@ namespace Ph2_HwDescription {
                     fRegItem.fDefValue = strtoul ( fDefValue_str.c_str(), 0, 16 );
                     fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
 
+                    if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
+                        fCbcMask[(fRegItem.fAddress - 0x20)>>2] += fRegItem.fValue << (((fRegItem.fAddress - 0x20)&0x3)<<3);
+                    }
+
                     fRegMap[fName] = fRegItem;
                     cLineCounter++;
                 }
             }
 
             file.close();
+
         }
         else
         {
