@@ -15,8 +15,8 @@ PedeNoise::PedeNoise() :
     fTestPulse (false),
     fFitted (false),
     fTestPulseAmplitude (0),
-    fEventsPerPoint (0),
-    fSkipMaskedChannels(0)
+    fEventsPerPoint (0)
+    // fSkipMaskedChannels(0)
 {
 }
 
@@ -518,7 +518,6 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
 
     while (! (cAllZero && cAllOne) )
     {
-        uint32_t cHitCounter = 0;
 
         for ( BeBoard* pBoard : fBoardVector )
         {
@@ -527,6 +526,7 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
                 cVisitor.setThreshold (cValue);
                 cFe->accept (cVisitor);
             }
+            uint32_t cHitCounter = 0;
             
             ReadNEvents ( pBoard, fEventsPerPoint );
 

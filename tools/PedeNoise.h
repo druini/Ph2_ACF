@@ -78,7 +78,7 @@ class PedeNoise : public Tool
     bool fFitted;
     uint8_t fTestPulseAmplitude;
     uint32_t fEventsPerPoint;
-    bool fSkipMaskedChannels;
+    // bool fSkipMaskedChannels;
     bool fDisableStubLogic;
 
     //to hold the original register values

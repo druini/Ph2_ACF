@@ -9,7 +9,8 @@ Tool::Tool() :
     fType(),
     fTestGroupChannelMap(),
     fDirectoryName (""),
-    fResultFile (nullptr)
+    fResultFile (nullptr),
+    fSkipMaskedChannels(0)
 {
 #ifdef __HTTP__
     fHttpServer = nullptr;
@@ -26,7 +27,8 @@ Tool::Tool (THttpServer* pHttpServer) :
     fTestGroupChannelMap(),
     fDirectoryName (""),
     fResultFile (nullptr),
-    fHttpServer (pHttpServer)
+    fHttpServer (pHttpServer),
+    fSkipMaskedChannels(0)
 {
 }
 #endif
@@ -564,3 +566,296 @@ void Tool::AmmendReport (std::string pString )
     report << pString << std::endl;
     report.close();
 }
+
+
+// decode bend LUT for a given CBC
+std::map<uint8_t, double> Tool::decodeBendLUT(Cbc* pCbc)
+{
+
+    std::map<uint8_t, double> cLUT;
+
+    double cBend=-7.0; 
+    uint8_t cRegAddress = 0x40; 
+    LOG (DEBUG) << BOLDGREEN << "Decoding bend LUT for CBC" << +pCbc->getCbcId() << " ." << RESET; 
+    for( int i = 0 ; i <= 14 ; i++ )
+    {
+        TString cRegName = Form ( "Bend%d", i  );
+        uint8_t cRegValue = fCbcInterface->ReadCbcReg (pCbc, cRegName.Data() ); 
+        //LOG (INFO) << BOLDGREEN << "Reading register " << cRegName.Data() << " - value of 0x" << std::hex <<  +cRegValue << " found [LUT entry for bend of " << cBend << " strips]" <<  RESET;
+
+        uint8_t cLUTvalue_0 = (cRegValue >> 0) & 0x0F;
+        uint8_t cLUTvalue_1 = (cRegValue >> 4) & 0x0F;
+
+        LOG (DEBUG) << BOLDGREEN << "LUT entry for bend of " << cBend << " strips found to be " << std::bitset<4>(cLUTvalue_0) <<   RESET;
+        cLUT[cLUTvalue_0] =  cBend ; 
+        // just check if the bend code is already in the map 
+        // and if it is ... do nothing 
+        cBend += 0.5;
+        if( cBend > 7) continue; 
+
+        auto cItem = cLUT.find(cLUTvalue_1);
+        if(cItem == cLUT.end()) 
+        {
+            LOG (DEBUG) << BOLDGREEN << "LUT entry for bend of " << cBend << " strips found to be " << std::bitset<4>(cLUTvalue_1) <<   RESET;
+            cLUT[cLUTvalue_1] = cBend ; 
+        }
+        cBend += 0.5;
+    }
+    return cLUT;
+}
+
+
+// first a method to mask all channels in the CBC 
+void Tool::maskAllChannels (Cbc* pCbc)
+{
+    uint8_t cRegValue ;
+    std::string cRegName;
+    // this doesn't seem like the smartest way to do this .... but ok might work for now 
+    // TO-DO : figure out how to do this "properly" 
+    ChipType cChipType; 
+    for ( BeBoard* pBoard : fBoardVector )
+    {
+        for (auto cFe : pBoard->fModuleVector)
+        {
+            cChipType = cFe->getChipType();
+        }
+    }
+
+    
+    if (cChipType == ChipType::CBC2)
+    {
+        for ( unsigned int i = 0 ; i < fChannelMaskMapCBC2.size() ; i++ )
+        {
+            pCbc->setReg (fChannelMaskMapCBC2[i], 0);
+            cRegValue = pCbc->getReg (fChannelMaskMapCBC2[i]);
+            cRegName =  fChannelMaskMapCBC2[i];
+            fCbcInterface->WriteCbcReg ( pCbc, cRegName,  cRegValue  );
+        }
+    }
+
+    if (cChipType == ChipType::CBC3)
+    {
+        RegisterVector cRegVec; cRegVec.clear(); 
+        for ( unsigned int i = 0 ; i < fChannelMaskMapCBC3.size() ; i++ )
+        {
+            cRegVec.push_back ( {fChannelMaskMapCBC3[i] ,0 } ); 
+            //pCbc->setReg (fChannelMaskMapCBC3[i], 0);
+            //cRegValue = pCbc->getReg (fChannelMaskMapCBC3[i]);
+            //cRegName =  fChannelMaskMapCBC3[i];
+            //fCbcInterface->WriteCbcReg ( pCbc, cRegName,  cRegValue  );
+            LOG (DEBUG) << BOLDBLUE << fChannelMaskMapCBC3[i] << " " << std::bitset<8> (0);
+        }
+        fCbcInterface->WriteCbcMultReg ( pCbc , cRegVec );
+
+    }
+}
+
+
+// then a method to un-mask pairs of channels on a given CBC
+void Tool::unmaskPair(Cbc* cCbc ,  std::pair<uint16_t,uint16_t> pPair)
+{
+    ChipType cChipType; 
+    for ( BeBoard* pBoard : fBoardVector )
+    {
+        for (auto cFe : pBoard->fModuleVector)
+        {
+            cChipType = cFe->getChipType();
+        }
+    }
+
+    // get ready to mask/un-mask channels in pairs... 
+    MaskedChannelsList cMaskedList; 
+    MaskedChannels cMaskedChannels; cMaskedChannels.clear(); cMaskedChannels.push_back(pPair.first);
+    
+    uint8_t cRegisterIndex = pPair.first/ 8;
+    std::string cMaskRegName = (cChipType == ChipType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
+    cMaskedList.insert ( std::pair<std::string , MaskedChannels>(cMaskRegName.c_str()  ,cMaskedChannels ) );
+    
+    cRegisterIndex = pPair.second/ 8;
+    cMaskRegName = (cChipType == ChipType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
+    auto it = cMaskedList.find(cMaskRegName.c_str() );
+    if (it != cMaskedList.end())
+    {
+        ( it->second ).push_back( pPair.second );
+    }
+    else
+    {
+        cMaskedChannels.clear(); cMaskedChannels.push_back(pPair.second);
+        cMaskedList.insert ( std::pair<std::string , MaskedChannels>(cMaskRegName.c_str()  ,cMaskedChannels ) );
+    }
+
+    // do the actual channel un-masking
+    //LOG (INFO) << GREEN << "\t ......... UNMASKing channels : " << RESET ;  
+    for( auto cMasked : cMaskedList)
+    {
+        uint8_t cRegValue = 0; //cCbc->getReg (cMasked.first);
+        std::string cOutput = "";  
+        for(auto cMaskedChannel : cMasked.second )
+        {
+            uint8_t cBitShift = (cMaskedChannel) % 8;
+            cRegValue |=  (1 << cBitShift);
+            std::string cChType =  ( (+cMaskedChannel % 2) == 0 ) ? "seed" : "correlation"; 
+            TString cOut; cOut.Form("Channel %d in the %s layer\t", (int)cMaskedChannel, cChType.c_str() ); 
+            cOutput += cOut.Data(); 
+        }
+        //LOG (INFO) << GREEN << "\t Writing " << std::bitset<8> (cRegValue) <<  " to " << cMasked.first << " to UNMASK channels for stub sweep : " << cOutput.c_str() << RESET ; 
+        fCbcInterface->WriteCbcReg ( cCbc, cMasked.first ,  cRegValue  );
+    }
+
+}
+
+
+
+// and finally a method to un-mask a list of channels on a given CBC
+void Tool::unmaskList(Cbc* cCbc , std::vector<uint16_t> pList )
+{
+    ChipType cChipType; 
+    for ( BeBoard* pBoard : fBoardVector )
+    {
+        for (auto cFe : pBoard->fModuleVector)
+        {
+            cChipType = cFe->getChipType();
+        }
+    }
+
+    // get ready to mask/un-mask channels in pairs... 
+    uint16_t cChan = pList[0];
+    MaskedChannelsList cMaskedList; 
+    MaskedChannels cMaskedChannels; cMaskedChannels.clear(); cMaskedChannels.push_back(cChan);
+    uint8_t cRegisterIndex = cChan/ 8;
+    std::string cMaskRegName = (cChipType == ChipType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
+    cMaskedList.insert ( std::pair<std::string , MaskedChannels>(cMaskRegName.c_str()  , cMaskedChannels ) );
+
+    for( unsigned int cIndex = 1 ; cIndex < pList.size(); cIndex ++ )
+    {
+        cChan = pList[cIndex];
+        cRegisterIndex = cChan/8;
+        cMaskRegName = (cChipType == ChipType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
+        auto it = cMaskedList.find(cMaskRegName.c_str() );
+        if (it != cMaskedList.end())
+        {
+            ( it->second ).push_back( cChan );
+        }
+        else
+        {
+            cMaskedChannels.clear(); cMaskedChannels.push_back(cChan);
+            cMaskedList.insert ( std::pair<std::string , MaskedChannels>(cMaskRegName.c_str()  ,cMaskedChannels ) );
+        }
+    }
+
+    // do the actual channel un-masking
+    LOG (DEBUG) << GREEN << "\t ......... UNMASKing channels : " << RESET ;  
+    for( auto cMasked : cMaskedList)
+    {
+        //LOG (INFO) << GREEN << "\t Writing to " << cMasked.first << " to un-mask " <<  (cMasked.second).size() << " channel(s) : " << RESET ; 
+        // store original value of registe 
+        uint8_t cRegValue = 0; //cCbc->getReg (cMasked.first);
+        std::string cOutput = "";  
+        for(auto cMaskedChannel : cMasked.second )
+        {
+            uint8_t cBitShift = (cMaskedChannel) % 8;
+            cRegValue |=  (1 << cBitShift);
+            std::string cChType =  ( (+cMaskedChannel % 2) == 0 ) ? "seed" : "correlation"; 
+            TString cOut; cOut.Form("Channel %d in the %s layer\t", (int)cMaskedChannel, cChType.c_str() ); 
+            //LOG (INFO) << cOut.Data();
+            cOutput += cOut.Data(); 
+        }
+        LOG (DEBUG) << GREEN << "\t Writing " << std::bitset<8> (cRegValue) <<  " to " << cMasked.first << " to UNMASK channels for stub sweep : " << cOutput.c_str() << RESET ; 
+        fCbcInterface->WriteCbcReg ( cCbc, cMasked.first ,  cRegValue  );
+    }
+
+}
+
+// Two dimensional dac scan
+void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyMap> > > &backEndOccupancyMap){return;}
+
+// Two dimensional dac scan per BeBoard
+void Tool::scanBeBoardDacDac(BeBoard* pBoard, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyMap> > &moduleOccupancyMap){return;}
+
+// One dimensional dac scan
+void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyMap> > &backEndOccupancyMap){return;}
+
+// One dimensional dac scan per BeBoard
+void Tool::scanBeBoardDac(BeBoard* pBoard, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyMap> &moduleOccupancyMap){return;}
+
+// bit wise scan
+void Tool::bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy , std::map<uint16_t, ModuleOccupancyMap> &backEndOccupanyAtTargetMap){return;}
+
+// set dac and measure occupancy
+void Tool::setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyMap> &backEndOccupancyMap){return;}
+
+// set dac and measure occupancy per BeBoard
+void Tool::setDacAndMeasureBeBoardOccupancy(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap){return;}
+
+
+// measure occupancy
+void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap){return;}
+
+// measure occupancy per group
+void Tool::measureBeBoardOccupancyPerGroup(int pTGrpId, BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap){
+   
+    const std::vector<uint8_t>& cTestGrpChannelVec = fTestGroupChannelMap[pTGrpId];
+
+    ReadNEvents ( pBoard, numberOfEvents );
+
+
+    const std::vector<Event*>& events = GetEvents ( pBoard );
+
+    uint32_t cMaxHits=0;
+    uint32_t cHitCounter = 0;
+
+    // Loop over Events from this Acquisition
+    for ( auto& ev : events )
+    {
+
+        for ( auto cFe : pBoard->fModuleVector )
+        {
+            if(moduleOccupancyMap.find(cFe->getModuleId())==moduleOccupancyMap.end()){
+                moduleOccupancyMap[cFe->getModuleId()]=CbcOccupancyMap();
+            }
+            CbcOccupancyMap *cbcOccupancy = &moduleOccupancyMap[cFe->getModuleId()];
+
+            for ( auto cCbc : cFe->fCbcVector )
+            {
+                // TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (cCbc, pHistName) );
+                 const uint32_t *cbcMask = cCbc->getCbcmask();
+
+                 // std::cout<< (cbcMask[0]&0x0f) <<std::endl;
+
+                if(cbcOccupancy->find(cCbc->getCbcId())==cbcOccupancy->end()){
+                    cbcOccupancy->at(cCbc->getCbcId())=ChannelOccupancyMap();
+                }
+                ChannelOccupancyMap *stripOccupancy = &cbcOccupancy->at(cCbc->getCbcId());
+
+                for ( auto& cChan : cTestGrpChannelVec )
+                {
+
+                    bool isChannelEnabled = true;
+                    // if(true){
+                    if(fSkipMaskedChannels){
+                        if(!( (cbcMask[cChan>>5]>>(cChan&0x1F)) &0x1) ){
+                            isChannelEnabled=false;
+                        }
+                    }
+
+                    if(isChannelEnabled) cMaxHits++;
+
+                    if ( ev->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChan) )
+                    {
+                        if(stripOccupancy->find(cChan)==stripOccupancy->end()){
+                            stripOccupancy->at(cChan)=1;
+                        }
+                        else ++stripOccupancy->at(cChan);
+
+                        //fill the strip number and the current threshold
+                        // cSCurveHist->Fill (cChan, cValue);
+                        if(isChannelEnabled) cHitCounter++;
+                    }
+                }
+            }
+        }
+    }
+
+    return;
+}
+
