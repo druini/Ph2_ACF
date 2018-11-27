@@ -526,12 +526,12 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
                 cVisitor.setThreshold (cValue);
                 cFe->accept (cVisitor);
             }
-            uint32_t cHitCounter = 0;
             
             ReadNEvents ( pBoard, fEventsPerPoint );
 
             const std::vector<Event*>& events = GetEvents ( pBoard );
 
+            uint32_t cHitCounter = 0;
             uint32_t cMaxHits=0;
 
             // Loop over Events from this Acquisition
@@ -559,13 +559,13 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
                                 }
                             }
 
-                            if(isChannelEnabled) cMaxHits++;
+                            if(isChannelEnabled) ++cMaxHits;
 
                             if ( ev->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChan) )
                             {
                                 //fill the strip number and the current threshold
                                 cSCurveHist->Fill (cChan, cValue);
-                                if(isChannelEnabled) cHitCounter++;
+                                if(isChannelEnabled) ++cHitCounter;
                             }
                         }
                     }
@@ -577,9 +577,11 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
             // uint32_t cMaxHits = fEventsPerPoint *   cCbcCounter.getNCbc() * cTestGrpChannelVec.size();
 
             //now establish if I'm zero or one
-            if (cHitCounter == 0) cAllZeroCounter ++;
+            if (cHitCounter == 0) ++cAllZeroCounter;
 
-            if (cHitCounter > 0.98 * cMaxHits ) cAllOneCounter++;
+            if (cHitCounter > 0.98 * cMaxHits ) ++cAllOneCounter;
+
+            std::cout<<"Threshold = "<< cValue << " MaxHits = "<< cMaxHits <<" HitCounter = "<<cHitCounter<<std::endl;
 
             //it will either find one or the other extreme first and thus these will be mutually exclusive
             //if any of the two conditions is true, just revert the sign and go the opposite direction starting from startvalue+1
@@ -597,8 +599,6 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
                 cSign = fHoleMode ? 1 : -1;
                 cIncrement = 0;
             }
-
-            cIncrement++;
 
             // following checks if we're not going out of bounds
             if (cSign == 1 && (pStartValue + (cIncrement * cSign) > cMaxValue) )
@@ -619,6 +619,7 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
                 cSign = -1 * cSign;
             }
 
+            cIncrement++;
 
             LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Hitcounter: " << cHitCounter << " Max hits: " << cMaxHits;
             cValue = pStartValue + (cIncrement * cSign);

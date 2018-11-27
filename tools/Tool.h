@@ -286,10 +286,13 @@ class Tool : public SystemController
     void measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap);
 
     // measure occupancy per group
-    void measureBeBoardOccupancyPerGroup(int pTGrpId, BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap);
+    void measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpChannelVec, BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap, float &groupOccupancy);
 
   protected:
     bool fSkipMaskedChannels;
+    bool fAllChan;
+    bool fMaskChannelsFromOtherGroups;
+
 
 };
 

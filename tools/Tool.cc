@@ -10,7 +10,9 @@ Tool::Tool() :
     fTestGroupChannelMap(),
     fDirectoryName (""),
     fResultFile (nullptr),
-    fSkipMaskedChannels(0)
+    fSkipMaskedChannels(false),
+    fAllChan(false),
+    fMaskChannelsFromOtherGroups(true)
 {
 #ifdef __HTTP__
     fHttpServer = nullptr;
@@ -28,7 +30,9 @@ Tool::Tool (THttpServer* pHttpServer) :
     fDirectoryName (""),
     fResultFile (nullptr),
     fHttpServer (pHttpServer),
-    fSkipMaskedChannels(0)
+    fSkipMaskedChannels(false),
+    fAllChan(false),
+    fMaskChannelsFromOtherGroups(true)
 {
 }
 #endif
@@ -789,12 +793,28 @@ void Tool::setDacAndMeasureBeBoardOccupancy(BeBoard* pBoard, const std::string &
 
 
 // measure occupancy
-void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap){return;}
+void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap){
+    
+    for(const auto & group : fTestGroupChannelMap){
+        float groupOccupancy=0;
+
+        if(!fAllChan && fMaskChannelsFromOtherGroups){// mask channel not scanned
+
+        }
+        measureBeBoardOccupancyPerGroup(group.second, pBoard, numberOfEvents, moduleOccupancyMap, groupOccupancy);
+    }
+
+    if(!fAllChan && fMaskChannelsFromOtherGroups){//re-enable all the channels
+
+    }
+
+    return;
+}
 
 // measure occupancy per group
-void Tool::measureBeBoardOccupancyPerGroup(int pTGrpId, BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap){
+void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpChannelVec, BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap, float &groupOccupancy){
    
-    const std::vector<uint8_t>& cTestGrpChannelVec = fTestGroupChannelMap[pTGrpId];
+    // const std::vector<uint8_t>& cTestGrpChannelVec = fTestGroupChannelMap[pTGrpId];
 
     ReadNEvents ( pBoard, numberOfEvents );
 
@@ -855,6 +875,8 @@ void Tool::measureBeBoardOccupancyPerGroup(int pTGrpId, BeBoard* pBoard, const u
             }
         }
     }
+
+    groupOccupancy = cHitCounter/cMaxHits;
 
     return;
 }
