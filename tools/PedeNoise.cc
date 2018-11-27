@@ -518,7 +518,6 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
 
     while (! (cAllZero && cAllOne) )
     {
-        uint32_t cHitCounter = 0;
 
         for ( BeBoard* pBoard : fBoardVector )
         {
@@ -532,6 +531,7 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
 
             const std::vector<Event*>& events = GetEvents ( pBoard );
 
+            uint32_t cHitCounter = 0;
             uint32_t cMaxHits=0;
 
             // Loop over Events from this Acquisition
