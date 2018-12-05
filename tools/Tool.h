@@ -43,12 +43,12 @@ class Tool : public SystemController
     using CanvasMap = std::map<Ph2_HwDescription::FrontEndDescription*, TCanvas*>;
     using TestGroupChannelMap =  std::map< int, std::vector<uint8_t> >;
 
+  public:
     using ChannelOccupancyMap       = std::map<uint8_t,uint16_t         >; //strip        : occupancy
     using CbcOccupancyMap           = std::map<uint8_t,ChannelOccupancyMap>; //cbc          : { strip  : occupancy }
     using ModuleOccupancyMap        = std::map<uint8_t,CbcOccupancyMap    >; //module       : { cbc    : { strip : occupancy } }
     // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
 
-  public:
     CanvasMap fCanvasMap;
     CbcHistogramMap fCbcHistMap;
     ModuleHistogramMap fModuleHistMap;
@@ -251,14 +251,20 @@ class Tool : public SystemController
     // decode bend LUT for a given CBC
     std::map<uint8_t, double> decodeBendLUT(Cbc* pCbc);
     
-    // first a method to mask all channels in the CBC 
-    void maskAllChannels (Cbc* pCbc);
+    // first a method set mask to all channels in the CBC 
+    void SetMaskAllChannels (Cbc* pCbc, bool mask);
+
+    //method to mask all channels
+    void maskAllChannels (Cbc* pCbc) {SetMaskAllChannels (pCbc, true); }
+
+    //method to unmask all channels
+    void unmaskAllChannels (Cbc* pCbc) {SetMaskAllChannels (pCbc, false); }
 
     // then a method to un-mask pairs of channels on a given CBC
-    void unmaskPair(Cbc* cCbc ,  std::pair<uint16_t,uint16_t> pPair);
+    void unmaskPair(Cbc* cCbc ,  std::pair<uint8_t,uint8_t> pPair);
 
     // and finally a method to un-mask a list of channels on a given CBC
-    void unmaskList(Cbc* cCbc , std::vector<uint16_t> pList );
+    void unmaskList(Cbc* cCbc , const std::vector<uint8_t> &pList );
 
 
     // Two dimensional dac scan
@@ -274,19 +280,31 @@ class Tool : public SystemController
     void scanBeBoardDac(BeBoard* pBoard, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyMap> &moduleOccupancyMap);
 
     // bit wise scan
-    void bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy , std::map<uint16_t, ModuleOccupancyMap> &backEndOccupanyAtTargetMap);
+    void bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy, const bool &isOccupancyTheMaximumAccepted, std::map<uint16_t, ModuleOccupancyMap> &backEndOccupanyAtTargetMap);
 
+    // bit wise scan per BeBoard
+    void bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy, const bool &isOccupancyTheMaximumAccepted, ModuleOccupancyMap &moduleOccupancyMap);
+    
     // set dac and measure occupancy
     void setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyMap> &backEndOccupancyMap);
 
     // set dac and measure occupancy per BeBoard
-    void setDacAndMeasureBeBoardOccupancy(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap);
+    void setDacAndMeasureBeBoardOccupancy(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap, float &globalOccupancy);
 
     // measure occupancy
-    void measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap);
+    void measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap, float &globalOccupancy);
 
     // measure occupancy per group
-    void measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpChannelVec, BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap, float &groupOccupancy);
+    void measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpChannelVec, BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap, uint32_t &normalization, uint32_t &numberOfHits);
+
+    //Set global DAC for all CBCs in the BeBoard
+    void setDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
+
+    //Set local DAC list for all CBCs in the BeBoard
+    void setLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::map<uint8_t,uint8_t> > > &dacList);
+
+    //Set local DAC list for all CBCs in the BeBoard
+    void setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint8_t &dacValue);
 
   protected:
     bool fSkipMaskedChannels;

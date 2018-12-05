@@ -581,7 +581,7 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
 
             if (cHitCounter > 0.98 * cMaxHits ) ++cAllOneCounter;
 
-            std::cout<<"Threshold = "<< cValue << " MaxHits = "<< cMaxHits <<" HitCounter = "<<cHitCounter<<std::endl;
+            // std::cout<<"Threshold = "<< cValue << " MaxHits = "<< cMaxHits <<" HitCounter = "<<cHitCounter<<std::endl;
 
             //it will either find one or the other extreme first and thus these will be mutually exclusive
             //if any of the two conditions is true, just revert the sign and go the opposite direction starting from startvalue+1

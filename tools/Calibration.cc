@@ -209,6 +209,11 @@ void Calibration::FindVplus()
         }
     }
 
+    // std::map<uint16_t, Tool::ModuleOccupancyMap> backEndOccupanyAtTargetMap;
+
+    // bitWiseScan("Vplus", fEventsPerPoint, 0.56, false, backEndOccupanyAtTargetMap);
+
+
     // done extracting reasonable Vplus values for all test groups, now find the mean
     // since I am lazy and do not want to iterate all boards, FEs etc, i Iterate fVplusMap
     //
