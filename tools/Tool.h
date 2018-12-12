@@ -44,10 +44,13 @@ class Tool : public SystemController
     using TestGroupChannelMap =  std::map< int, std::vector<uint8_t> >;
 
   public:
-    using ChannelOccupancyMap       = std::map<uint8_t,uint16_t         >; //strip        : occupancy
-    using CbcOccupancyMap           = std::map<uint8_t,ChannelOccupancyMap>; //cbc          : { strip  : occupancy }
-    using ModuleOccupancyMap        = std::map<uint8_t,CbcOccupancyMap    >; //module       : { cbc    : { strip : occupancy } }
-    // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
+    using ChannelOccupancyMap                 = std::map<uint8_t,float                        >; //strip        : occupancy
+    using CbcOccupancyPerChannelMap           = std::map<uint8_t,ChannelOccupancyMap          >; //cbc          : { strip  : occupancy }
+    using ModuleOccupancyPerChannelMap        = std::map<uint8_t,CbcOccupancyPerChannelMap    >; //module       : { cbc    : { strip : occupancy } }
+
+    using CbcGlobalOccupancyMap               = std::map<uint8_t,float>; //cbc          : { strip  : occupancy }
+    using ModuleGlobalOccupancyMap            = std::map<uint8_t,CbcGlobalOccupancyMap    >; //module       : { cbc    : { strip : occupancy } }
+        // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyPerChannelMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
 
     CanvasMap fCanvasMap;
     CbcHistogramMap fCbcHistMap;
@@ -268,37 +271,40 @@ class Tool : public SystemController
 
 
     // Two dimensional dac scan
-    void scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyMap> > > &backEndOccupancyMap);
+    void scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > > &backEndOccupancyPerChannelMap, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > > &backEndCbcOccupanyMap);
     
     // Two dimensional dac scan per BeBoard
-    void scanBeBoardDacDac(BeBoard* pBoard, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyMap> > &moduleOccupancyMap);
+    void scanBeBoardDacDac(BeBoard* pBoard, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > &moduleOccupancyPerChannelMap, std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > &backEndCbcOccupanyMap);
 
     // One dimensional dac scan
-    void scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyMap> > &backEndOccupancyMap);
+    void scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > &backEndOccupancyPerChannelMap, std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > &backEndCbcOccupanyMap);
 
     // One dimensional dac scan per BeBoard
-    void scanBeBoardDac(BeBoard* pBoard, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyMap> &moduleOccupancyMap);
+    void scanBeBoardDac(BeBoard* pBoard, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &moduleOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &moduleCbcOccupanyMap);
 
     // bit wise scan
-    void bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy, const bool &isOccupancyTheMaximumAccepted, std::map<uint16_t, ModuleOccupancyMap> &backEndOccupanyAtTargetMap);
+    void bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy, const bool &isOccupancyTheMaximumAccepted, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupanyPerChannelAtTargetMap, std::map<uint16_t, ModuleGlobalOccupancyMap> &backEndOccupanyAtTargetMap);
 
     // bit wise scan per BeBoard
-    void bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy, const bool &isOccupancyTheMaximumAccepted, ModuleOccupancyMap &moduleOccupancyMap);
+    void bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy, const bool &isOccupancyTheMaximumAccepted, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap, ModuleGlobalOccupancyMap &moduleOccupancyMap);
     
     // set dac and measure occupancy
-    void setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyMap> &backEndOccupancyMap);
+    void setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndCbcOccupanyMap);
 
     // set dac and measure occupancy per BeBoard
-    void setDacAndMeasureBeBoardOccupancy(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap, float &globalOccupancy);
+    void setDacAndMeasureBeBoardOccupancy(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap, ModuleGlobalOccupancyMap &cbcOccupanyMap, float &globalOccupancy);
 
     // measure occupancy
-    void measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap, float &globalOccupancy);
+    void measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap, ModuleGlobalOccupancyMap &cbcOccupanyMap, float &globalOccupancy);
 
     // measure occupancy per group
-    void measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpChannelVec, BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyMap &moduleOccupancyMap, uint32_t &normalization, uint32_t &numberOfHits);
+    void measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpChannelVec, BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap, std::map<uint8_t, std::map<uint8_t,uint32_t> > &moduleNormalizationMap, std::map<uint8_t, std::map<uint8_t,uint32_t> > &moduleNumberOfHitsMap);
 
     //Set global DAC for all CBCs in the BeBoard
-    void setDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
+    void setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, uint16_t> > &dacList);
+
+    //Set same global DAC for all CBCs in the BeBoard
+    void setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
 
     //Set local DAC list for all CBCs in the BeBoard
     void setLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::map<uint8_t,uint8_t> > > &dacList);

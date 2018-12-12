@@ -17,8 +17,8 @@
          <CBC Id="1" configfile="FE0CBC1.txt" /-->
 
         <CBC_Files path="./settings/CbcFiles/" />
-        <CBC Id="0" configfile="CBC3_default.txt" />
-        <!-- <CBC Id="0" configfile="CBC3_maskedStrips.txt" /> -->
+        <!-- <CBC Id="0" configfile="CBC3_default.txt" /> -->
+        <CBC Id="0" configfile="CBC3_maskedStrips.txt" />
         <!-- <CBC Id="1" configfile="CBC3_maskedStrips.txt" /> -->
         <CBC Id="1" configfile="CBC3_default.txt" />
     </Module>

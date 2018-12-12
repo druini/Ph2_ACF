@@ -162,94 +162,127 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
 void Calibration::FindVplus()
 {
-    // first, set VCth to the target value for each CBC
-    ThresholdVisitor cThresholdVisitor (fCbcInterface, fTargetVcth);
-    this->accept (cThresholdVisitor);
+    // // first, set VCth to the target value for each CBC
+    // ThresholdVisitor cThresholdVisitor (fCbcInterface, fTargetVcth);
+    // this->accept (cThresholdVisitor);
 
-    // now all offsets are either off (0x00 in holes mode, 0xFF in electrons mode)
-    // next a group needs to be enabled - therefore now the group loop
-    if (fType == ChipType::CBC2) LOG (INFO) << BOLDBLUE << "Extracting Vplus ..." << RESET ;
-    else if (fType == ChipType::CBC3) LOG (INFO) << BOLDBLUE << "Extracting Target VCth ..." << RESET ;
+    // // now all offsets are either off (0x00 in holes mode, 0xFF in electrons mode)
+    // // next a group needs to be enabled - therefore now the group loop
+    // if (fType == ChipType::CBC2) LOG (INFO) << BOLDBLUE << "Extracting Vplus ..." << RESET ;
+    // else if (fType == ChipType::CBC3) LOG (INFO) << BOLDBLUE << "Extracting Target VCth ..." << RESET ;
 
-    uint8_t cOffset = ( fHoleMode ) ? 0x00 : 0xFF;
-    LOG (INFO) << "Disabling all channels by setting offsets to " << std::hex << "0x" << +cOffset << std::dec;
-    //do i need this?
-    setOffset (cOffset, -1, true);
+    // uint8_t cOffset = ( fHoleMode ) ? 0x00 : 0xFF;
+    // LOG (INFO) << "Disabling all channels by setting offsets to " << std::hex << "0x" << +cOffset << std::dec;
+    // //do i need this?
+    // setOffset (cOffset, -1, true);
 
-    for ( auto& cTGroup : fTestGroupChannelMap )
+    // for ( auto& cTGroup : fTestGroupChannelMap )
+    // {
+    //     if (cTGroup.first == -1)
+    //         //use this to loop over groups instead of doing all at once
+    //         //if (cTGroup.first != -1)
+    //     {
+    //         // start with a fresh <Cbc, Vplus> map
+    //         clearVPlusMap();
+
+    //         // looping over the test groups, enable it
+    //         LOG (INFO) << GREEN << "Enabling Test Group...." << cTGroup.first << RESET ;
+    //         setOffset ( fTargetOffset, cTGroup.first, true ); // takes the group ID
+    //         //updateHists ( "Offsets" );
+
+    //         if (fType == ChipType::CBC2) bitwiseVplus ( cTGroup.first );
+    //         else if (fType == ChipType::CBC3) bitwiseVCth ( cTGroup.first );
+
+    //         LOG (INFO) << RED << "Disabling Test Group...." << cTGroup.first << RESET  ;
+    //         setOffset ( cOffset, cTGroup.first, true );
+
+    //         // done looping all the bits - I should now have the Vplus value that corresponds to 50% occupancy at the desired VCth and Offset for this test group mapped against CBC
+    //         for ( auto& cCbc : fVplusMap )
+    //         {
+    //             TProfile* cTmpProfile = static_cast<TProfile*> ( getHist ( cCbc.first, "Vplus" ) );
+    //             cTmpProfile->Fill ( cTGroup.first, cCbc.second ); // fill Vplus value for each test group
+    //         }
+
+    //         //updateHists ( "Vplus" );
+    //         this->HttpServerProcess();
+    //         //
+    //     }
+    // }
+
+
+    // // done extracting reasonable Vplus values for all test groups, now find the mean
+    // // since I am lazy and do not want to iterate all boards, FEs etc, i Iterate fVplusMap
+    // //
+    // // instead of writing individual VPlus / Vcth to all chips, take the mean of all chips?
+    // float cMeanValue = 0;
+
+    // for ( auto& cCbc : fVplusMap ) //this toggles bit i on Vplus for each
+    // {
+    //     TProfile* cTmpProfile = static_cast<TProfile*> ( getHist ( cCbc.first, "Vplus" ) );
+    //     cCbc.second = cTmpProfile->GetMean ( 2 );
+    //     cMeanValue += cCbc.second;
+
+    //     if (fType == ChipType::CBC2)
+    //     {
+    //         fCbcInterface->WriteCbcReg ( cCbc.first, "Vplus", static_cast<uint8_t> (cCbc.second ) );
+    //         LOG (INFO) << BOLDGREEN <<  "Mean Vplus value for FE " << +cCbc.first->getFeId() << " CBC " << +cCbc.first->getCbcId() << " is " << BOLDRED << +cCbc.second << RESET ;
+    //     }
+    //     else if (fType == ChipType::CBC3)
+    //         LOG (INFO) << BOLDGREEN <<  "Mean VCth value for FE " << +cCbc.first->getFeId() << " CBC " << +cCbc.first->getCbcId() << " is " << BOLDRED << +cCbc.second << RESET ;
+    // }
+
+    // if (fType == ChipType::CBC2)
+    // {
+    //     LOG (INFO) << BOLDBLUE << "Mean VPlus value of all chips is " << static_cast<uint16_t> (cMeanValue / fNCbc) <<  RESET;
+
+    //     //for (auto& cCbc : fVplusMap)
+    //     //fCbcInterface->WriteCbcReg (cCbc.first, "Vplus", static_cast<uint8_t> (cMeanValue / fNCbc) );
+    // }
+    // else if (fType == ChipType::CBC3)
+    // {
+    //     //threshold visitor to set target VCth on all CBCs, set fTargetVcth to the mean/fNCbc
+    //     fTargetVcth = static_cast<uint16_t> (cMeanValue / fNCbc);
+    //     cThresholdVisitor.setThreshold (fTargetVcth);
+    //     this->accept (cThresholdVisitor);
+    //     LOG (INFO) << BOLDBLUE << "Mean VCth value of all chips is " << static_cast<uint16_t> (cMeanValue / fNCbc) << " - using as TargetVcth value for all chips!" << RESET;
+    // }
+
+
+
+
+    bool originalAllChannelFlag = this->fAllChan;
+    std::cout<< "Before " << this->fAllChan<<std::endl;
+    this->fAllChan=true;
+    std::cout<< "After " << this->fAllChan<<std::endl;
+    std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
+    std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
+
+    bitWiseScan("VCth", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
+
+    float cMeanValue = 0.;
+    uint32_t nCbc = 0;
+
+    for (auto& cBoard : fBoardVector)
     {
-        if (cTGroup.first == -1)
-            //use this to loop over groups instead of doing all at once
-            //if (cTGroup.first != -1)
+        for ( auto cFe : cBoard->fModuleVector )
         {
-            // start with a fresh <Cbc, Vplus> map
-            clearVPlusMap();
-
-            // looping over the test groups, enable it
-            LOG (INFO) << GREEN << "Enabling Test Group...." << cTGroup.first << RESET ;
-            setOffset ( fTargetOffset, cTGroup.first, true ); // takes the group ID
-            //updateHists ( "Offsets" );
-
-            if (fType == ChipType::CBC2) bitwiseVplus ( cTGroup.first );
-            else if (fType == ChipType::CBC3) bitwiseVCth ( cTGroup.first );
-
-            LOG (INFO) << RED << "Disabling Test Group...." << cTGroup.first << RESET  ;
-            setOffset ( cOffset, cTGroup.first, true );
-
-            // done looping all the bits - I should now have the Vplus value that corresponds to 50% occupancy at the desired VCth and Offset for this test group mapped against CBC
-            for ( auto& cCbc : fVplusMap )
+            for ( auto cCbc : cFe->fCbcVector )
             {
-                TProfile* cTmpProfile = static_cast<TProfile*> ( getHist ( cCbc.first, "Vplus" ) );
-                cTmpProfile->Fill ( cTGroup.first, cCbc.second ); // fill Vplus value for each test group
+                uint16_t tmpVthr = (cCbc->getReg("VCth1") + (cCbc->getReg("VCth2")<<8));
+                LOG (INFO) << GREEN << "VCth value for BeBoard " << cBoard->getBeId() << " Module " << cFe->getModuleId() << " CBC " << cCbc->getCbcId() << " = " << tmpVthr << RESET;
+                cMeanValue+=tmpVthr;
+                ++nCbc;
             }
-
-            //updateHists ( "Vplus" );
-            this->HttpServerProcess();
-            //
         }
     }
 
-    // std::map<uint16_t, Tool::ModuleOccupancyMap> backEndOccupanyAtTargetMap;
+    ThresholdVisitor cThresholdVisitor (fCbcInterface, fTargetVcth);
+    fTargetVcth = static_cast<uint16_t> (cMeanValue / nCbc);
+    cThresholdVisitor.setThreshold (fTargetVcth);
+    this->accept (cThresholdVisitor);
+    LOG (INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
+    this->fAllChan = originalAllChannelFlag;
 
-    // bitWiseScan("Vplus", fEventsPerPoint, 0.56, false, backEndOccupanyAtTargetMap);
-
-
-    // done extracting reasonable Vplus values for all test groups, now find the mean
-    // since I am lazy and do not want to iterate all boards, FEs etc, i Iterate fVplusMap
-    //
-    // instead of writing individual VPlus / Vcth to all chips, take the mean of all chips?
-    float cMeanValue = 0;
-
-    for ( auto& cCbc : fVplusMap ) //this toggles bit i on Vplus for each
-    {
-        TProfile* cTmpProfile = static_cast<TProfile*> ( getHist ( cCbc.first, "Vplus" ) );
-        cCbc.second = cTmpProfile->GetMean ( 2 );
-        cMeanValue += cCbc.second;
-
-        if (fType == ChipType::CBC2)
-        {
-            fCbcInterface->WriteCbcReg ( cCbc.first, "Vplus", static_cast<uint8_t> (cCbc.second ) );
-            LOG (INFO) << BOLDGREEN <<  "Mean Vplus value for FE " << +cCbc.first->getFeId() << " CBC " << +cCbc.first->getCbcId() << " is " << BOLDRED << +cCbc.second << RESET ;
-        }
-        else if (fType == ChipType::CBC3)
-            LOG (INFO) << BOLDGREEN <<  "Mean VCth value for FE " << +cCbc.first->getFeId() << " CBC " << +cCbc.first->getCbcId() << " is " << BOLDRED << +cCbc.second << RESET ;
-    }
-
-    if (fType == ChipType::CBC2)
-    {
-        LOG (INFO) << BOLDBLUE << "Mean VPlus value of all chips is " << static_cast<uint16_t> (cMeanValue / fNCbc) <<  RESET;
-
-        //for (auto& cCbc : fVplusMap)
-        //fCbcInterface->WriteCbcReg (cCbc.first, "Vplus", static_cast<uint8_t> (cMeanValue / fNCbc) );
-    }
-    else if (fType == ChipType::CBC3)
-    {
-        //threshold visitor to set target VCth on all CBCs, set fTargetVcth to the mean/fNCbc
-        fTargetVcth = static_cast<uint16_t> (cMeanValue / fNCbc);
-        cThresholdVisitor.setThreshold (fTargetVcth);
-        this->accept (cThresholdVisitor);
-        LOG (INFO) << BOLDBLUE << "Mean VCth value of all chips is " << static_cast<uint16_t> (cMeanValue / fNCbc) << " - using as TargetVcth value for all chips!" << RESET;
-    }
 }
 
 void Calibration::bitwiseVplus ( int pTGroup )
