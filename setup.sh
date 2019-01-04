@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "----------"
 export CBCDAQ=$HOME/CBCDAQ
 export KERNELRELEASE=$(uname -r)
 
