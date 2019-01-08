@@ -110,6 +110,7 @@ class Tool : public SystemController
     void setFWTestPulse();
     // make test groups for everything Test pulse or Calibration
     void MakeTestGroups ( bool pAllChan = false );
+    void SetTestAllChannels( bool pAllChan ) {fAllChan = pAllChan; }
     //for hybrid testing
     void CreateReport();
     void AmmendReport (std::string pString );
@@ -263,6 +264,10 @@ class Tool : public SystemController
     //method to unmask all channels
     void unmaskAllChannels (Cbc* pCbc) {SetMaskAllChannels (pCbc, false); }
 
+    //method to mask a channel list
+    void unmaskChannelList (Cbc* pCbc, const std::vector<uint8_t> channelsToEnable);
+
+
     // then a method to un-mask pairs of channels on a given CBC
     void unmaskPair(Cbc* cCbc ,  std::pair<uint8_t,uint8_t> pPair);
 
@@ -303,13 +308,19 @@ class Tool : public SystemController
     //Set global DAC for all CBCs in the BeBoard
     void setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, uint16_t> > &dacList);
 
+    //Set same global DAC for all CBCs
+    void setSameGlobalDac(const std::string &dacName, const uint16_t &dacValue);
+
     //Set same global DAC for all CBCs in the BeBoard
     void setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
 
     //Set local DAC list for all CBCs in the BeBoard
     void setLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::map<uint8_t,uint8_t> > > &dacList);
 
-    //Set local DAC list for all CBCs in the BeBoard
+    //Set same local DAC list for all CBCs
+    void setSameLocalDac(const std::string &dacName, const uint8_t &dacValue);
+
+    //Set same local DAC list for all CBCs in the BeBoard
     void setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint8_t &dacValue);
 
   protected:

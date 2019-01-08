@@ -27,6 +27,7 @@ namespace Ph2_HwDescription {
 
     {
         loadfRegMap ( filename );
+        fNumberOfChannels = 254;
 
         // determine the chip type by checking for existence of VCth register (CBC2 only, called VCth1 & VCth2 for CBC3)
         if (fRegMap.find ("VCth2") != std::end (fRegMap) ) this->setChipType ( ChipType::CBC3);
@@ -39,6 +40,7 @@ namespace Ph2_HwDescription {
 
     {
         loadfRegMap ( filename );
+        fNumberOfChannels = 254;
 
         // determine the chip type by checking for existence of VCth register (CBC2 only, called VCth1 & VCth2 for CBC3)
         if (fRegMap.find ("VCth2") != std::end (fRegMap) ) this->setChipType ( ChipType::CBC3);
@@ -49,6 +51,8 @@ namespace Ph2_HwDescription {
 
     {
         loadfRegMap ( filename );
+        fNumberOfChannels = 254;
+
 
         this->setChipType (pType);
     }
@@ -58,7 +62,8 @@ namespace Ph2_HwDescription {
     Cbc::Cbc ( const Cbc& cbcobj ) : FrontEndDescription ( cbcobj ),
         fCbcId ( cbcobj.fCbcId ),
         fRegMap ( cbcobj.fRegMap ),
-        fCommentMap (cbcobj.fCommentMap)
+        fCommentMap (cbcobj.fCommentMap),
+        fNumberOfChannels (cbcobj.fNumberOfChannels)
     {
     }
 

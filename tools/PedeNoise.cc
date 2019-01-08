@@ -600,26 +600,28 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
                 cIncrement = 0;
             }
 
+            cIncrement++;
             // following checks if we're not going out of bounds
             if (cSign == 1 && (pStartValue + (cIncrement * cSign) > cMaxValue) )
             {
+                std::cout<<"culo1\n";
                 if (fHoleMode) cAllZero = true;
                 else cAllOne = true;
 
-                cIncrement = 0;
+                cIncrement = 1;
                 cSign = -1 * cSign;
             }
 
             if (cSign == -1 && (pStartValue + (cIncrement * cSign) < 0) )
             {
+                std::cout<<"culo2\n";
                 if (fHoleMode) cAllOne = true;
                 else cAllZero = true;
 
-                cIncrement = 0;
+                cIncrement = 1;
                 cSign = -1 * cSign;
             }
 
-            cIncrement++;
 
             LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Hitcounter: " << cHitCounter << " Max hits: " << cMaxHits;
             cValue = pStartValue + (cIncrement * cSign);

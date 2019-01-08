@@ -304,7 +304,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
 
             if (fOption == 'w')
             {
-                if (fThreshold > 1023) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
+                if (fThreshold > 1023) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!"; //h
                 else
                 {
                     std::vector<std::pair<std::string, uint8_t>> cRegVec;

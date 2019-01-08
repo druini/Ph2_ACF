@@ -133,7 +133,9 @@ namespace Ph2_HwDescription {
             fCbcId = pCbcId;
         }
 
-        const uint32_t * getCbcmask() const 
+        const uint16_t getNumberOfChannels() const { return fNumberOfChannels; }
+
+        const uint32_t* getCbcmask() const 
         {
             return fCbcMask;
         }
@@ -153,6 +155,7 @@ namespace Ph2_HwDescription {
 
       protected:
 
+        uint16_t fNumberOfChannels;
         uint8_t fCbcId;
 
         // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value

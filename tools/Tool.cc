@@ -642,7 +642,9 @@ void Tool::SetMaskAllChannels (Cbc* pCbc, bool mask)
 
     if (cChipType == ChipType::CBC3)
     {
-        RegisterVector cRegVec; cRegVec.clear(); 
+        RegisterVector cRegVec; 
+        cRegVec.clear(); 
+
         for ( unsigned int i = 0 ; i < fChannelMaskMapCBC3.size() ; i++ )
         {
             cRegVec.push_back ( {fChannelMaskMapCBC3[i] ,maskValue } ); 
@@ -656,6 +658,34 @@ void Tool::SetMaskAllChannels (Cbc* pCbc, bool mask)
 
     }
 }
+
+
+//method to mask a channel list
+void Tool::unmaskChannelList (Cbc* pCbc, const std::vector<uint8_t> channelsToEnable){
+
+    const uint32_t *cbcMask = pCbc->getCbcmask();
+
+    RegisterVector cRegVec; 
+    cRegVec.clear(); 
+
+    std::map<std::string,uint8_t> maskMap;
+
+    for(const auto & channel : channelsToEnable ){
+        uint8_t maskValue = ( (cbcMask[channel>>5] >> (channel & 0x1F) ) & 0x1 ) << ( channel & 0x7 );
+        if(maskMap.find(fChannelMaskMapCBC3[channel>>3])==maskMap.end() ) maskMap[fChannelMaskMapCBC3[channel>>3]] = 0;
+        maskMap[fChannelMaskMapCBC3[channel>>3]] += maskValue;
+    }
+
+    for(const auto & reg : maskMap){
+        cRegVec.push_back ( {reg.first, reg.second} );
+    }
+
+    fCbcInterface->WriteCbcMultReg ( pCbc , cRegVec );
+
+    return;
+
+}
+
 
 
 // then a method to un-mask pairs of channels on a given CBC
@@ -903,9 +933,9 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
         {
             if(localDAC)
             {
-                for(uint8_t iStrip=0; iStrip<254; ++iStrip)
+                for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel)
                 {
-                    previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iStrip] = 0;
+                    previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] = 0;
                 }
             }
             else
@@ -914,6 +944,7 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
             }
         }
     }
+    
 
     if(localDAC) setLocalDacBeBoard(pBoard, dacName, previousLocalDacListPerBoard);
     else setGlobalDacBeBoard(pBoard, dacName, previousGlobalDacListPerBoard);
@@ -945,9 +976,9 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
             {
                 if(localDAC)
                 {
-                    for(uint8_t iStrip=0; iStrip<254; ++iStrip)
+                    for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel)
                     {
-                        currentLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iStrip] = previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iStrip] + (1<<iBit);
+                        currentLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] = previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] + (1<<iBit);
                     }
                 }
                 else
@@ -970,28 +1001,38 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
                 // std::cout<<"CBC "<<(int16_t)cCbc->getCbcId()<<std::endl;
                 if(localDAC)
                 {
-                    for(uint8_t iStrip=0; iStrip<254; ++iStrip)
+                    // if(cCbc->getCbcId()==0) std::cout<<"Current DAC: "<<std::bitset<10>(currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(10))
+                    //     <<" Current occupancy: "<<moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(10)
+                    //     <<" Previous Occupancy: "<<moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(10);
+                    for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel)
                     {
+
+                        
                         if(isOccupancyTheMaximumAccepted){
-                            if( occupanyDirectlyProportionalToDAC && (float)moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip)/numberOfEvents <= targetOccupancy)
+                            if( occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) <= targetOccupancy)
                             {
-                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip) = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip);
-                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip) = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip);
+                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel);
+                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel);
                             }
-                            else if( !occupanyDirectlyProportionalToDAC && (float)moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip)/numberOfEvents >= targetOccupancy)
+                            else if( !occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) >= targetOccupancy)
                             {
-                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip) = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip);
-                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip) = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip);
+                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel);
+                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel);
                             }
                         }
                         else{
-                            if( abs( ((float)moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip)/numberOfEvents - targetOccupancy)/ ((float)moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip) - targetOccupancy)/numberOfEvents ) <= 1. )
+                            if( abs( ( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) - targetOccupancy))/ (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) - targetOccupancy) ) <= 1. 
+                                && abs( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) - targetOccupancy)/
+                                    ( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) - moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) ) / (0xFFFF>>(16-iBit)) ) ) < 1.  )
                             {
-                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip) = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip);
-                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip) = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip);
+                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel);
+                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel);
                             }
                         }
+
                     }
+                    // if(cCbc->getCbcId()==0) std::cout<<" Chosen Occupancy: "<<moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(10)
+                    //     <<" DAC: "<<std::bitset<10>(previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(10))<<std::endl;
                 }
                 else
                 {
@@ -1021,9 +1062,12 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
     }
 
 
-    if(localDAC) setLocalDacBeBoard(pBoard, dacName, previousLocalDacListPerBoard);
+    if(localDAC){
+        setLocalDacBeBoard(pBoard, dacName, previousLocalDacListPerBoard);
+    }
     else setGlobalDacBeBoard(pBoard, dacName, previousGlobalDacListPerBoard);
-
+    
+    
     measureBeBoardOccupancy(pBoard, numberOfEvents, moduleOccupancyPerChannelMap, moduleOccupancyMap, globalOccupancy);
 
     dumpConfigFiles();
@@ -1074,20 +1118,14 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
 
     for(const auto & group : fTestGroupChannelMap){
 
-        // std::cout<<"fAllChan = "<<fAllChan<<" group.first "<<group.first<<std::endl;
-
         if(!fAllChan && group.first >=0){
-            LOG (INFO) << GREEN << "Enabling Test Group...." << group.first << RESET ;
             if(fMaskChannelsFromOtherGroups){// mask channel not scanned
                 for ( auto cFe : pBoard->fModuleVector )
                 {
                     for ( auto cCbc : cFe->fCbcVector )
                     {
                         maskAllChannels(cCbc);
-                        unmaskList(cCbc , group.second );
-
-                        //MASK back channels!!!
-
+                        unmaskChannelList (cCbc, group.second);
                     }
                 }
             }
@@ -1095,7 +1133,6 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
         }
 
         else if(fAllChan && group.first == -1){
-            LOG (INFO) << GREEN << "Enabling all channels ..." << RESET ;
             measureBeBoardOccupancyPerGroup(group.second, pBoard, numberOfEvents, moduleOccupancyPerChannelMap, moduleNormalizationMap, moduleNumberOfHitsMap);
         }
             
@@ -1107,9 +1144,7 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
         {
             for ( auto cCbc : cFe->fCbcVector )
             {
-                unmaskAllChannels(cCbc);
-
-                //MASK back channels!!!
+                fCbcInterface->ConfigureCbcOriginalMask ( cCbc );
             }
         }
     }
@@ -1126,7 +1161,6 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
     }
 
     globalOccupancy = (float)numberOfHits/normalization;
-    // std::cout<<"Occupancy: "<<numberOfHits << " " << normalization << " " << globalOccupancy <<std::endl;
 
     return;
 }
@@ -1257,6 +1291,18 @@ void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, cons
 
 }
 
+//Set same global DAC for all CBCs
+void Tool::setSameGlobalDac(const std::string &dacName, const uint16_t &dacValue){
+
+    for (auto& cBoard : fBoardVector)
+    {
+        setSameGlobalDacBeBoard(cBoard, dacName, dacValue);
+    }
+
+    return;
+}
+
+
 //Set same global DAC for all CBCs in the BeBoard
 void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue){
 
@@ -1294,7 +1340,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
 }
 
 
-// set dac  per BeBoard
+// set local dac per BeBoard
 void Tool::setLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::map<uint8_t,uint8_t> > > &dacList)
 {
 
@@ -1311,25 +1357,25 @@ void Tool::setLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const
         for ( auto cCbc : cFe->fCbcVector )
         {
             std::vector<std::pair<std::string, uint8_t> > cRegVec;
-            std::vector<uint8_t> listOfChannelToMask;
+            std::vector<uint8_t> listOfChannelToUnMask;
 
 
-            for(uint8_t iStrip=0; iStrip<254; ++iStrip){
+            for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel){
                 if(isMask){
-                    if( dacList.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip) ){
-                        listOfChannelToMask.emplace_back(iStrip);
+                    if( dacList.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel) ){
+                        listOfChannelToUnMask.emplace_back(iChannel);
                     }
                 }
                 else {
-                    char *dacName1;
-                    sprintf (dacName1, dacTemplate.data(), iStrip);
-                    cRegVec.emplace_back(dacName1,dacList.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iStrip));
+                    char dacName1[30];
+                    sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
+                    cRegVec.emplace_back(dacName1,dacList.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(iChannel));
                 }
             }
 
             if(isMask){
                 maskAllChannels(cCbc);
-                unmaskList(cCbc , listOfChannelToMask);
+                unmaskList(cCbc , listOfChannelToUnMask);
             }
             else{
                 fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
@@ -1342,9 +1388,23 @@ void Tool::setLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const
 
 }
 
-void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint8_t &dacValue)
+
+// set same local dac for all BeBoard
+void Tool::setSameLocalDac(const std::string &dacName, const uint8_t &dacValue)
 {
 
+    for (auto& cBoard : fBoardVector)
+    {
+        setSameLocalDacBeBoard(cBoard, dacName, dacValue);
+    }
+
+    return;
+}
+
+
+// set same local dac per BeBoard
+void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint8_t &dacValue)
+{
     std::string dacTemplate;
     bool isMask = false;
     if(dacName == "ChannelOffset") dacTemplate = "Channel%03d";
@@ -1360,16 +1420,17 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, c
             std::vector<uint8_t> listOfChannelToMask;
 
             if(!isMask){
-                for(uint8_t iStrip=0; iStrip<254; ++iStrip){
-                    char *dacName1;
-                    sprintf (dacName1, dacTemplate.data(), iStrip);
+                for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel){
+                    char dacName1[30];
+                    sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
                     cRegVec.emplace_back(dacName1,dacValue);
                 }
+                fCbcInterface->WriteCbcMultReg ( cCbc, cRegVec );
             }
             else{
                 if(dacValue) unmaskAllChannels(cCbc);
                 else maskAllChannels(cCbc);
-            }
+            }  
         }
     }
 

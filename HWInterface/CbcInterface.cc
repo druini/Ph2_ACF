@@ -95,6 +95,37 @@ namespace Ph2_HwInterface {
     }
 
 
+    bool CbcInterface::ConfigureCbcOriginalMask ( const Cbc* pCbc, bool pVerifLoop, uint32_t pBlockSize )
+    {
+        //first, identify the correct BeBoardFWInterface
+        setBoard ( pCbc->getBeBoardIdentifier() );
+
+        //vector to encode all the registers into
+        std::vector<uint32_t> cVec;
+        const uint32_t *cbcMask = pCbc->getCbcmask();
+
+        uint8_t maskAddressStartingPoint = 0x20;
+        for ( uint8_t address=0; address<=0x1F; ++address){
+            fBoardFW->EncodeReg (CbcRegItem (0x00, maskAddressStartingPoint+address, 0x00, (cbcMask[address>>2] >> ((address & 0x3) *8)) & 0xFF), pCbc->getFeId(), pCbc->getCbcId(), cVec, pVerifLoop, true);
+        
+#ifdef COUNT_FLAG
+            fRegisterCount++;
+#endif
+        }
+
+        // write the registers, the answer will be in the same cVec
+        // the number of times the write operation has been attempted is given by cWriteAttempts
+        uint8_t cWriteAttempts = 0 ;
+        bool cSuccess = fBoardFW->WriteCbcBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+
+#ifdef COUNT_FLAG
+        fTransactionCount++;
+#endif
+
+        return cSuccess;
+    }
+
+
     void CbcInterface::ReadCbc ( Cbc* pCbc )
     {
         //first, identify the correct BeBoardFWInterface

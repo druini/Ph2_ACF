@@ -68,6 +68,13 @@ namespace Ph2_HwInterface {
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
         bool ConfigureCbc ( const Cbc* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 );
+
+         /*!
+         * \brief Reapply the stored mask for the CBC, use it after group masking is applied
+         * \param pCbc: pointer to CBC object
+         */
+        bool ConfigureCbcOriginalMask ( const Cbc* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 );
+
         /*!
          * \brief Read all the I2C parameters from the CBC
          * \param pCbc: pointer to CBC object
