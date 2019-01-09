@@ -90,10 +90,10 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
                 TString cTitle;
 
-                if (fType == ChipType::CBC2) cTitle = Form ( "Vplus Values for Test Groups FE%d CBC%d ; Test Group; Vplus", cFeId, cCbcId );
-                else if (fType == ChipType::CBC3) cTitle = Form ( "VCth Values for Test Groups FE%d CBC%d ; Test Group; Vth", cFeId, cCbcId );
+                if (fType == ChipType::CBC2) cTitle = Form ( "Vplus Values for Test Groups FE%d CBC%d; Vplus", cFeId, cCbcId );
+                else if (fType == ChipType::CBC3) cTitle = Form ( "VCth Values for Test Groups FE%d CBC%d; Vth", cFeId, cCbcId );
 
-                TProfile* cHist = new TProfile ( cName, cTitle, 9, -1.5, 7.5 );
+                TH1I* cHist = new TH1I ( cName, cTitle, 1, 0, 1 );
                 cHist->SetMarkerStyle ( 20 );
                 // cHist->SetLineWidth( 2 );
                 bookHistogram ( cCbc, "Vplus", cHist );
@@ -103,16 +103,8 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
                 if ( cObj ) delete cObj;
 
-                TProfile* cOffsetHist = new TProfile ( cName, Form ( "Offsets FE%d CBC%d ; Channel; Offset", cFeId, cCbcId ), 254, -.5, 253.5  );
+                TH1I* cOffsetHist = new TH1I ( cName, Form ( "Offsets FE%d CBC%d ; Channel; Offset", cFeId, cCbcId ), 254, -.5, 253.5  );
                 uint8_t cOffset = ( fHoleMode ) ? 0x00 : 0xFF;
-
-                for ( int iChan = 0; iChan < NCHANNELS; iChan++ )
-                {
-                    //suggested B. Schneider
-                    int iBin = cOffsetHist->FindBin (iChan);
-                    cOffsetHist->SetBinContent ( iBin, cOffset );
-                    cOffsetHist->SetBinEntries ( iBin, 1 );
-                }
 
                 bookHistogram ( cCbc, "Offsets", cOffsetHist );
 
@@ -187,7 +179,10 @@ void Calibration::FindVplus()
         {
             for ( auto cCbc : cFe->fCbcVector )
             {
+
+                TH1I* vPlusHist = static_cast<TH1I*> ( getHist ( cCbc, "Vplus" ) );
                 uint16_t tmpVthr = (cCbc->getReg("VCth1") + (cCbc->getReg("VCth2")<<8));
+                vPlusHist->Fill(0.,tmpVthr);
                 LOG (INFO) << GREEN << "VCth value for BeBoard " << cBoard->getBeId() << " Module " << cFe->getModuleId() << " CBC " << cCbc->getCbcId() << " = " << tmpVthr << RESET;
                 cMeanValue+=tmpVthr;
                 ++nCbc;
@@ -230,10 +225,23 @@ void Calibration::FindOffsets()
                 for (int i=0; i<=backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()].size(); ++i)
                 {
                     cOccHist->Fill(i, backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()][i]);
+
+                    TH1I* cOffsetHist = static_cast<TH1I*> ( getHist ( cCbc, "Offsets" ) );
+
+                    for ( int cChannel=0; cChannel<254; ++cChannel)
+                    {
+                        std::string cRegName = Form ( "Channel%03d", cChannel + 1 );
+                        cOffsetHist->Fill ( cChannel, (uint16_t)cCbc->getReg(cRegName) );
+
+                    }
+
                 }
             }
         }
     }
+
+    updateHists ( "Occupancy" );
+    updateHists ( "Offsets" );
 
 }
 
@@ -252,18 +260,6 @@ void Calibration::clearOccupancyHists ( Cbc* pCbc )
     cOccHist->Reset ( "ICESM" );
 }
 
-void Calibration::clearVPlusMap()
-{
-    for ( auto cBoard : fBoardVector )
-    {
-        for ( auto cFe : cBoard->fModuleVector )
-        {
-            for ( auto cCbc : cFe->fCbcVector )
-                fVplusMap[cCbc] = 0;
-        }
-    }
-}
-
 void Calibration::updateHists ( std::string pHistname )
 {
     // loop the CBCs
@@ -274,15 +270,6 @@ void Calibration::updateHists ( std::string pHistname )
 
         if ( cHist != std::end ( cCbc.second ) )
         {
-            // now cHist.second is the Histogram
-            //if ( pHistname == "Vplus" )
-            //{
-            //fVplusCanvas->cd ( cCbc.first->getCbcId() + 1 );
-            //TProfile* cTmpProfile = static_cast<TProfile*> ( cHist->second );
-            //cTmpProfile->DrawCopy ( "H P0 E" );
-            //fVplusCanvas->Update();
-            //}
-
             if ( pHistname == "Offsets" )
             {
                 fOffsetCanvas->cd ( cCbc.first->getCbcId() + 1 );
@@ -294,7 +281,7 @@ void Calibration::updateHists ( std::string pHistname )
             if ( pHistname == "Occupancy" )
             {
                 fOccupancyCanvas->cd ( cCbc.first->getCbcId() + 1 );
-                TProfile* cTmpProfile = static_cast<TProfile*> ( cHist->second );
+                TH1F* cTmpProfile = static_cast<TH1F*> ( cHist->second );
                 cTmpProfile->DrawCopy ();
                 fOccupancyCanvas->Update();
             }

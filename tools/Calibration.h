@@ -68,8 +68,6 @@ class Calibration : public Tool
 
     void clearOccupancyHists ( Cbc* pCbc );
 
-    void clearVPlusMap();
-
     void updateHists ( std::string pHistname );
 
 
