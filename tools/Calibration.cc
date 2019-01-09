@@ -215,7 +215,7 @@ void Calibration::FindOffsets()
     std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
     std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
 
-    bitWiseScan("ChannelOffset", fEventsPerPoint, 0.44, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
+    bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
     
     // setSameLocalDac("ChannelOffset", ( fHoleMode ) ? 0x00 : 0xFF);
 

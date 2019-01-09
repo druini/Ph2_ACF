@@ -18,8 +18,8 @@
 
         <CBC_Files path="./settings/CbcFiles/" />
 
-        <!-- <CBC Id="0" configfile="CBC3_default.txt" /> -->
-        <CBC Id="0" configfile="CBC3_maskedStrips.txt" />
+        <CBC Id="0" configfile="CBC3_default.txt" />
+        <!-- <CBC Id="0" configfile="CBC3_maskedStrips.txt" /> -->
         <!-- <CBC Id="1" configfile="CBC3_maskedStrips.txt" /> -->
         <CBC Id="1" configfile="CBC3_default.txt" />
     </Module>
@@ -147,6 +147,7 @@
 	  <Setting name="InitialVcth">0x78</Setting>
 	  <Setting name="SignalScanStep">2</Setting>
     <Setting name="FitSignal">0</Setting>
+    <Setting name="FitSCurves">0</Setting>
 
 
 </Settings>

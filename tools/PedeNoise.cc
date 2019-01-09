@@ -794,10 +794,14 @@ void PedeNoise::differentiateHist (Cbc* pCbc, std::string pHistName)
 
 void PedeNoise::fitHist (Cbc* pCbc, std::string pHistName)
 {
+    TH1F* cNoiseHist = dynamic_cast<TH1F*> ( getHist ( pCbc, "Cbc_Noise" ) );
+    TH1F* cPedeHist  = dynamic_cast<TH1F*> ( getHist ( pCbc, "Cbc_Pedestal" ) );
+    
     //first get the SCurveHisto and create a differential histo
     TH2F* cHist = dynamic_cast<TH2F*> ( getHist ( pCbc, pHistName) );
     TString cDirName = Form ("FE%dCBC%d/%s_Fits", pCbc->getFeId(), pCbc->getCbcId(), pHistName.c_str() );
     TDirectory* cDir = dynamic_cast<TDirectory*> (gROOT->FindObject (cDirName) );
+
 
     if (!cDir) fResultFile->mkdir (cDirName);
 
@@ -867,6 +871,9 @@ void PedeNoise::fitHist (Cbc* pCbc, std::string pHistName)
 
         // Fit
         cProjection->Fit ( cFit, "RQ+" );
+        cPedeHist->Fill ( cFit->GetParameter(0) );
+        cNoiseHist->Fill ( cFit->GetParameter(1) );
+
         cProjection->SetDirectory (cDir);
         cProjection->Write (cProjection->GetName(), TObject::kOverwrite);
     }
@@ -910,8 +917,11 @@ void PedeNoise::extractPedeNoise (std::string pHistName)
 
                     if ( cProjection->GetRMS() == 0 || cProjection->GetRMS() > 1023 ) LOG (INFO) << RED << "Error, SCurve Fit for Fe " << int ( cCbc->getFeId() ) << " Cbc " << int ( cCbc->getCbcId() ) << " Channel " << cChan << " did not work correctly! Noise " << cProjection->GetRMS() << RESET ;
 
-                    cNoiseHist->Fill ( cProjection->GetRMS() );
-                    cPedeHist->Fill ( cProjection->GetMean() );
+                    if (!fFitted)
+                    {
+                        cNoiseHist->Fill ( cProjection->GetRMS() );
+                        cPedeHist->Fill ( cProjection->GetMean() );
+                    }
 
                     // Even and odd channel noise
                     if ( ( int (cChan) % 2 ) == 0 )

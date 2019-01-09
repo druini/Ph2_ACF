@@ -882,7 +882,7 @@ void Tool::scanBeBoardDac(BeBoard* pBoard, const std::string &dacName, const std
 
 
 // bit wise scan
-void Tool::bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy, const bool &isOccupancyTheMaximumAccepted, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupanyPerChannelAtTargetMap, std::map<uint16_t, ModuleGlobalOccupancyMap> &backEndOccupanyAtTargetMap)
+void Tool::bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy, bool isOccupancyTheMaximumAccepted, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupanyPerChannelAtTargetMap, std::map<uint16_t, ModuleGlobalOccupancyMap> &backEndOccupanyAtTargetMap)
 {
 
     for (auto& cBoard : fBoardVector)
@@ -900,8 +900,13 @@ void Tool::bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvent
 
 
 // bit wise scan per BeBoard
-void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy, const bool &isOccupancyTheMaximumAccepted, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap, ModuleGlobalOccupancyMap &moduleOccupancyMap)
+void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy, bool &isOccupancyTheMaximumAccepted, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap, ModuleGlobalOccupancyMap &moduleOccupancyMap)
 {
+
+    if(!isOccupancyTheMaximumAccepted){
+        LOG (INFO) << BOLDRED << "Tool::bitWiseScanBeBoard: isOccupancyTheMaximumAccepted = false not supported, using true" << RESET;
+        isOccupancyTheMaximumAccepted=true;
+    }
 
     float globalOccupancy = 0.;
     Cbc *cCbc = pBoard->fModuleVector.at(0)->fCbcVector.at(0); //assumption: one BeBoard has only one type of chips;
@@ -935,7 +940,6 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
             if(localDAC)
             {
                 previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = std::vector<uint8_t>(cCbc->getNumberOfChannels(),0);
-                currentLocalDacListPerBoard [cFe->getModuleId()][cCbc->getCbcId()] = std::vector<uint8_t>(cCbc->getNumberOfChannels(),0);
             }
             else
             {
@@ -950,20 +954,50 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
 
     measureBeBoardOccupancy(pBoard, numberOfEvents, moduleOccupancyPerChannelMapPreviousStep, moduleOccupancyMapPreviousStep, globalOccupancyPreviousStep);
     
+
+
+
     //Determine Occupancy vs DAC proportionality setting all bits to 1
-    if(localDAC)
+    // if(localDAC)
+    // {
+    //     setSameLocalDacBeBoard(pBoard, dacName, (0xFFFF>>(16-numberOfBits)) );//trick to set n bits to 1 without using power of 2
+    // }
+    // else{
+    //     setSameGlobalDacBeBoard(pBoard, dacName, (0xFFFF>>(16-numberOfBits)) );//trick to set n bits to 1 without using power of 2
+    // }
+
+
+    // Starting point: all bits to 0
+    for ( auto cFe : pBoard->fModuleVector )
     {
-        setSameLocalDacBeBoard(pBoard, dacName, (0xFFFF>>(16-numberOfBits)) );//trick to set n bits to 1 without using power of 2
+        for ( auto cCbc : cFe->fCbcVector )
+        {
+            if(localDAC)
+            {
+                currentLocalDacListPerBoard [cFe->getModuleId()][cCbc->getCbcId()] = std::vector<uint8_t>(cCbc->getNumberOfChannels(),0xFFFF>>(16-numberOfBits)); //trick to set n bits to 1 without using power of 2
+            }
+            else
+            {
+                currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = 0xFFFF>>(16-numberOfBits); //trick to set n bits to 1 without using power of 2
+            }
+        }
     }
-    else{
-        setSameGlobalDacBeBoard(pBoard, dacName, (0xFFFF>>(16-numberOfBits)) );//trick to set n bits to 1 without using power of 2
-    }
+    
+    if(localDAC) setAllLocalDacBeBoard(pBoard, dacName, currentLocalDacListPerBoard);
+    else setGlobalDacBeBoard(pBoard, dacName, currentGlobalDacListPerBoard);
+
     measureBeBoardOccupancy(pBoard, numberOfEvents, moduleOccupancyPerChannelMapCurrentStep, moduleOccupancyMapCurrentStep, globalOccupancyCurrentStep);
 
     
     if(dacName.find("Mask",0,4)!=std::string::npos) occupanyDirectlyProportionalToDAC = true;
     else occupanyDirectlyProportionalToDAC = globalOccupancyCurrentStep > globalOccupancyPreviousStep;
   
+    if(!occupanyDirectlyProportionalToDAC)
+    {
+        if(localDAC) previousLocalDacListPerBoard = currentLocalDacListPerBoard;
+        else previousGlobalDacListPerBoard = currentGlobalDacListPerBoard;
+    }
+
 
     for(int iBit = numberOfBits-1; iBit>=0; --iBit)
     {
@@ -977,12 +1011,14 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
                 {
                     for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel)
                     {
-                        currentLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] = previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] + (1<<iBit);
+                        if(occupanyDirectlyProportionalToDAC) currentLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] = previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] + (1<<iBit);
+                        else currentLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] = previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] & (0xFFFF - (1<<iBit));
                     }
                 }
                 else
                 {
-                    currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] + (1<<iBit);
+                    if(occupanyDirectlyProportionalToDAC) currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] + (1<<iBit);
+                    else currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] & (0xFFFF - (1<<iBit));
                 }
             }
         }
@@ -1008,16 +1044,21 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
 
                         
                         if(isOccupancyTheMaximumAccepted){
-                            if( occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] <= targetOccupancy)
+                            if( moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] <= targetOccupancy )
                             {
                                 previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
                                 moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
                             }
-                            else if( !occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] >= targetOccupancy)
-                            {
-                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
-                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
-                            }
+                            // if( occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] <= targetOccupancy)
+                            // {
+                            //     previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
+                            //     moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
+                            // }
+                            // else if( !occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] >= targetOccupancy)
+                            // {
+                            //     previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
+                            //     moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
+                            // }
                         }
                         else{
                             if( abs( ( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] - targetOccupancy))/ (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] - targetOccupancy) ) <= 1. 
@@ -1038,14 +1079,18 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
     
                     // std::cout<<"Current DAC: "<<std::bitset<10>(currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()])<<" Current occupancy: "<<moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()]<<" Previous Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()];
                     if(isOccupancyTheMaximumAccepted){
-                        if(occupanyDirectlyProportionalToDAC && moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()] <= targetOccupancy){
+                        if( moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()] <= targetOccupancy ){
                             previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()];
                             moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()];
                         }
-                        else if(!occupanyDirectlyProportionalToDAC && moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()] >= targetOccupancy){
-                            previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()];
-                            moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()];
-                        }
+                        // if(occupanyDirectlyProportionalToDAC && moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()] <= targetOccupancy){
+                        //     previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()];
+                        //     moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()];
+                        // }
+                        // else if(!occupanyDirectlyProportionalToDAC && moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()] >= targetOccupancy){
+                        //     previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()];
+                        //     moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()];
+                        // }
                     }
                     else{
                         if( abs( (moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()] - targetOccupancy)/(moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()] - targetOccupancy) ) <= 1. ){
