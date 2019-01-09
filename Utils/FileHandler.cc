@@ -45,7 +45,11 @@ FileHandler::~FileHandler()
     //join the thread since the thread function must have returned by now
     //if (fOption == 'w' && fThread.joinable() )
     //fThread.join();
-
+    //wait for writing all the data before closing the file
+    while(!fQueue.empty())
+    {
+        usleep(1000);
+    }
     //close the file
     this->closeFile();
 }
