@@ -227,9 +227,9 @@ void Calibration::FindOffsets()
             {
                 TH1F* cOccHist = static_cast<TH1F*> ( getHist ( cCbc, "Occupancy" ) );
 
-                for ( auto channelOccupancy : backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()])
+                for (int i=0; i<=backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()].size(); ++i)
                 {
-                    cOccHist->Fill(channelOccupancy.first, channelOccupancy.second);
+                    cOccHist->Fill(i, backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()][i]);
                 }
             }
         }

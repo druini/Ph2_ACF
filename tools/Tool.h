@@ -44,8 +44,8 @@ class Tool : public SystemController
     using TestGroupChannelMap =  std::map< int, std::vector<uint8_t> >;
 
   public:
-    using ChannelOccupancyMap                 = std::map<uint8_t,float                        >; //strip        : occupancy
-    using CbcOccupancyPerChannelMap           = std::map<uint8_t,ChannelOccupancyMap          >; //cbc          : { strip  : occupancy }
+    using ChannelOccupancy                    = std::vector<float>; //strip        : occupancy
+    using CbcOccupancyPerChannelMap           = std::map<uint8_t,ChannelOccupancy             >; //cbc          : { strip  : occupancy }
     using ModuleOccupancyPerChannelMap        = std::map<uint8_t,CbcOccupancyPerChannelMap    >; //module       : { cbc    : { strip : occupancy } }
 
     using CbcGlobalOccupancyMap               = std::map<uint8_t,float>; //cbc          : { strip  : occupancy }
@@ -315,7 +315,7 @@ class Tool : public SystemController
     void setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
 
     //Set local DAC list for all CBCs in the BeBoard
-    void setLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::map<uint8_t,uint8_t> > > &dacList);
+    void setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::vector<uint8_t> > > &dacList);
 
     //Set same local DAC list for all CBCs
     void setSameLocalDac(const std::string &dacName, const uint8_t &dacValue);
