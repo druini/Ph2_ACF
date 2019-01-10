@@ -15,6 +15,7 @@
 #include "FrontEndDescription.h"
 #include "Cbc.h"
 #include "MPA.h"
+#include "SSA.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/easylogging++.h"
 #include <vector>

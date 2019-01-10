@@ -1119,6 +1119,37 @@ namespace Ph2_HwInterface {
     	}
     }
 
+    void D19cFWInterface::EncodeReg ( const RegItem& pRegItem,
+                                      uint8_t pCbcId,
+                                      std::vector<uint32_t>& pVecReq,
+                                      bool pReadBack,
+                                      bool pWrite )
+    {
+        //use fBroadcastCBCId for broadcast commands
+        bool pUseMask = false;
+        uint8_t pFeId = 0;
+        pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue);
+    }
+
+    void D19cFWInterface::EncodeReg (const RegItem& pRegItem,
+                                     uint8_t pFeId,
+                                     uint8_t pCbcId,
+                                     std::vector<uint32_t>& pVecReq,
+                                     bool pReadBack,
+                                     bool pWrite )
+    {
+        //use fBroadcastCBCId for broadcast commands
+        bool pUseMask = false;
+	if (fI2CVersion >= 1) {
+		// new command consists of one word if its read command, and of two words if its write. first word is always the same
+		pVecReq.push_back( (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0) );
+		// only for write commands
+		if (pWrite) pVecReq.push_back( (0 << 28) | (1 << 27) | (pRegItem.fValue << 0) );
+	} else {
+		pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
+    	}
+    }
+
     void D19cFWInterface::BCEncodeReg ( const CbcRegItem& pRegItem,
                                         uint8_t pNCbc,
                                         std::vector<uint32_t>& pVecReq,
@@ -1156,6 +1187,45 @@ namespace Ph2_HwInterface {
 	}
 
     }
+
+
+void D19cFWInterface::BCEncodeReg ( const RegItem& pRegItem,
+                                    uint8_t pNCbc,
+                                    std::vector<uint32_t>& pVecReq,
+                                    bool pReadBack,
+                                    bool pWrite )
+{
+    //use fBroadcastCBCId for broadcast commands
+    bool pUseMask = false;
+    pVecReq.push_back ( ( 2 << 28 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
+}
+
+
+void D19cFWInterface::DecodeReg ( RegItem& pRegItem,
+                                  uint8_t& pCbcId,
+                                  uint32_t pWord,
+                                  bool& pRead,
+                                  bool& pFailed )
+{
+    if (fI2CVersion >= 1) {
+        //pFeId    =  ( ( pWord & 0x07800000 ) >> 27) ;
+        pCbcId   =  ( ( pWord & 0x007c0000 ) >> 22) ;
+        pFailed  =  0 ;
+        pRegItem.fPage    =  0 ;
+        pRead    =  true ;
+        pRegItem.fAddress =  ( pWord & 0x00FFFF00 ) >> 8;
+        pRegItem.fValue   =  ( pWord & 0x000000FF );
+    } else {
+        //pFeId    =  ( ( pWord & 0x00f00000 ) >> 24) ;
+        pCbcId   =  ( ( pWord & 0x00f00000 ) >> 20) ;
+        pFailed  =  0 ;
+        pRegItem.fPage    =  ( (pWord & 0x00020000 ) >> 17);
+        pRead    =  (pWord & 0x00010000) >> 16;
+        pRegItem.fAddress =  ( pWord & 0x0000FF00 ) >> 8;
+        pRegItem.fValue   =  ( pWord & 0x000000FF );
+    }
+
+}
 
     bool D19cFWInterface::ReadI2C (  uint32_t pNReplies, std::vector<uint32_t>& pReplies)
     {
@@ -1469,6 +1539,782 @@ namespace Ph2_HwInterface {
             return false;
     }
 
+void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA_v1(float VDDPST , float DVDD , float AVDD , float VBF, float BG, uint8_t mpaid  , uint8_t ssaid  )
+{
 
+    uint32_t read = 1;
+    uint32_t write = 0;
+    uint32_t SLOW = 2;
+    uint32_t i2cmux = 0;
+    uint32_t pcf8574 = 1;
+    uint32_t dac7678 = 4;
+    uint32_t powerenable = 2;
+    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+
+    PSInterfaceBoard_SetSlaveMap();
+    PSInterfaceBoard_ConfigureI2CMaster(1,SLOW);
+    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+
+    float Vc = 0.0003632813;
+
+    LOG(INFO) << "ssa vdd on" ;
+
+    float Vlimit = 1.32;
+    if (VDDPST > Vlimit) VDDPST = Vlimit;
+    float diffvoltage = 1.5 - VDDPST;
+    uint32_t setvoltage = int(round(diffvoltage / Vc));
+    if (setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x33, setvoltage);  // tx to DAC C
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+
+    LOG(INFO) << "ssa vddD on";
+    Vlimit = 1.32;
+    if (DVDD > Vlimit) DVDD = Vlimit;
+    diffvoltage = 1.5 - DVDD;
+    setvoltage = int(round(diffvoltage / Vc));
+    if (setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x31, setvoltage);  // tx to DAC C
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+
+    LOG(INFO) << "ssa vddA on";
+    Vlimit = 1.32;
+    if (AVDD > Vlimit) AVDD = Vlimit;
+    diffvoltage = 1.5 - AVDD;
+    setvoltage = int(round(diffvoltage / Vc));
+    if (setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01) ; // to SCO on PCA9646
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x35, setvoltage) ; // tx to DAC C
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+
+    LOG(INFO) << "ssa BG on";
+    Vlimit = 1.32;
+    if (BG > Vlimit) BG = Vlimit;
+    float Vc2 = 4095/1.5;
+    setvoltage = int(round(BG * Vc2));
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x36, setvoltage);  // tx to DAC C
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+
+    LOG(INFO) << "ssa VBF on";
+    Vlimit = 0.5;
+    if (VBF > Vlimit) VBF = Vlimit;
+    setvoltage = int(round(VBF * Vc2));
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x37, setvoltage);  // tx to DAC C
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+
+    std::string DONE = "no";
+    while (not (DONE == "yes" or DONE == "Yes" or DONE == "YES"))
+	{
+		LOG(INFO) << BOLDBLUE << "Write or read? (W/R)" << RESET;
+		std::string RW;
+		std::cin >> RW;
+		if (RW == "W" or RW == "w")
+		{
+			std::string VALSTRING = "0";
+			LOG (INFO) << BOLDBLUE << "What value are you writing?" << RESET;
+			std::cin >> VALSTRING;
+			uint32_t VAL = std::stoi(VALSTRING);
+			LOG (INFO) << BOLDRED << "writing SSA/MPA byte: " << std::bitset<32>(VAL) << RESET;
+			PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
+			std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+			PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, VAL);  // set reset bit
+		}
+		if (RW == "R" or RW == "r")
+		{
+			uint32_t BYTE;
+			BYTE = PSInterfaceBoard_SendI2CCommand_READ(pcf8574, 0, read, 0, 0);
+			LOG(INFO) << BOLDRED << "reading SSA/MPA byte: " << std::bitset<32>(BYTE) << RESET;
+		}
+		LOG( INFO) << BOLDBLUE << "Are you done?" << RESET;
+		std::cin >> DONE;
+	}
+
+/*  LOG (INFO) << "ssa set address"; FIXME Temporarily switched to user input for probe-tests with Ed B.
+    uint32_t val = (mpaid << 5) + (ssaid << 1);
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);  // to SCO on PCA9646
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, val);  // tx to DAC C
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+
+    LOG(INFO) << "ssa enable";
+    uint32_t val2 = (mpaid << 5) + (ssaid << 1) + 1; // reset bit for MPA
+    LOG (INFO) << RED << val2 << RESET;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);  // route to 2nd PCF8574
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    LOG(INFO) << BOLDBLUE << "ssa enable bit: " << std::bitset<32>(val2) << RESET;
+    PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, val2);  // set reset bit
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+*/
+    // disable the i2c master at the end (first set the mux to the chip)
+ //   PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x04);
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+}
+void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA_v2(float VDDPST , float DVDD , float AVDD , float VBG , uint8_t mpaid  , uint8_t ssaid  )
+{
+
+    uint32_t read = 1;
+    uint32_t write = 0;
+    uint32_t SLOW = 2;
+    uint32_t i2cmux = 0;
+    uint32_t pcf8574 = 1;
+    uint32_t dac7678 = 4;
+    uint32_t powerenable = 2;
+    std::chrono::milliseconds cWait( 1500 );
+}
+
+////// MPA/SSA Methods:
+
+
+// COMS:
+void D19cFWInterface::PSInterfaceBoard_SetSlaveMap()
+    {
+
+    std::vector< std::vector<uint32_t> >  i2c_slave_map;
+    i2c_slave_map.push_back({0b1110000, 0, 1, 1, 0, 1}); //0  PCA9646
+    i2c_slave_map.push_back({0b0100000, 0, 1, 1, 0, 1}); //1  PCF8574
+    i2c_slave_map.push_back({0b0100100, 0, 1, 1, 0, 1}); //2  PCF8574
+    i2c_slave_map.push_back({0b0010100, 0, 2, 3, 0, 1}); //3  LTC2487
+    i2c_slave_map.push_back({0b1001000, 1, 2, 2, 0, 0}); //4  DAC7678
+    i2c_slave_map.push_back({0b1000000, 1, 2, 2, 0, 1}); //5  INA226
+    i2c_slave_map.push_back({0b1000001, 1, 2, 2, 0, 1}); //6  INA226
+    i2c_slave_map.push_back({0b1000010, 1, 2, 2, 0, 1}); //7  INA226
+    i2c_slave_map.push_back({0b1000100, 1, 2, 2, 0, 1}); //8  INA226
+    i2c_slave_map.push_back({0b1000101, 1, 2, 2, 0, 1}); //9  INA226
+    i2c_slave_map.push_back({0b1000110, 1, 2, 2, 0, 1}); //10  INA226
+    i2c_slave_map.push_back({0b1000000, 2, 1, 1, 1, 0}); //11  ????
+    i2c_slave_map.push_back({0b0100000, 2, 1, 1, 1, 0}); //12  ????
+    i2c_slave_map.push_back({0b0000000, 0, 1, 1, 0, 0}); //13  ????
+    i2c_slave_map.push_back({0b0000000, 0, 1, 1, 0, 0}); //14  ????
+    i2c_slave_map.push_back({0b1011111, 1, 1, 1, 1, 0}); //15  CBC3
+
+
+    LOG(INFO) << "Updating the Slave ID Map (mpa ssa board) ";
+
+    for (int ism = 0; ism < 16; ism++)
+        {
+        uint32_t shifted_i2c_address 			= i2c_slave_map[ism][0]<<25;
+        uint32_t shifted_register_address_nbytes 	= i2c_slave_map[ism][1]<<6;
+        uint32_t shifted_data_wr_nbytes 		= i2c_slave_map[ism][2]<<4;
+        uint32_t shifted_data_rd_nbytes 		= i2c_slave_map[ism][3]<<2;
+        uint32_t shifted_stop_for_rd_en 		= i2c_slave_map[ism][4]<<1;
+        uint32_t shifted_nack_en 			= i2c_slave_map[ism][5]<<0;
+        uint32_t final_command 				= shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
+
+        std::string curreg = "fc7_daq_cnfg.mpa_ssa_board_block.slave_"+std::to_string(ism)+"_config";
+        WriteReg(curreg, final_command);
+        }
+
+    }
+
+void D19cFWInterface::PSInterfaceBoard_ConfigureI2CMaster(uint32_t pEnabled = 1, uint32_t pFrequency = 4)
+    {
+    // wait for all commands to be executed
+    std::chrono::milliseconds cWait( 100 );
+    while (!ReadReg("fc7_daq_stat.command_processor_block.i2c.command_fifo.empty")) {
+        std::this_thread::sleep_for( cWait );
+    }
+
+    if( pEnabled > 0) LOG (INFO) << "Enabling the MPA SSA Board I2C master";
+    else LOG (INFO) << "Disabling the MPA SSA Board I2C master";
+
+    // setting the values
+    WriteReg( "fc7_daq_cnfg.physical_interface_block.i2c.master_en", int(not pEnabled) );
+    WriteReg( "fc7_daq_cnfg.mpa_ssa_board_block.i2c_master_en", pEnabled);
+    WriteReg( "fc7_daq_cnfg.mpa_ssa_board_block.i2c_freq", pFrequency);
+
+    std::this_thread::sleep_for( cWait );
+
+    // resetting the fifos and the board
+    WriteReg( "fc7_daq_ctrl.command_processor_block.i2c.control.reset", 1);
+    WriteReg( "fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 1);
+    WriteReg( "fc7_daq_ctrl.mpa_ssa_board_block.reset", 1);
+    std::this_thread::sleep_for( cWait );
+    }
+
+void D19cFWInterface::PSInterfaceBoard_SendI2CCommand(uint32_t slave_id,uint32_t board_id,uint32_t read,uint32_t register_address, uint32_t data)
+    {
+
+    std::chrono::milliseconds cWait( 10 );
+    std::chrono::milliseconds cShort( 1 );
+
+    uint32_t shifted_command_type 	= 1 << 31;
+    uint32_t shifted_word_id_0 	= 0;
+    uint32_t shifted_slave_id 	= slave_id << 21;
+    uint32_t shifted_board_id  	= board_id << 20;
+    uint32_t shifted_read 		= read << 16;
+    uint32_t shifted_register_address = register_address;
+
+    uint32_t shifted_word_id_1 	= 1<<26;
+    uint32_t shifted_data 		= data;
+
+
+    uint32_t word_0 = shifted_command_type + shifted_word_id_0 + shifted_slave_id + shifted_board_id + shifted_read + shifted_register_address;
+    uint32_t word_1 = shifted_command_type + shifted_word_id_1 + shifted_data;
+
+
+    WriteReg( "fc7_daq_ctrl.command_processor_block.i2c.command_fifo", word_0);
+    std::this_thread::sleep_for( cShort );
+    WriteReg( "fc7_daq_ctrl.command_processor_block.i2c.command_fifo", word_1);
+    std::this_thread::sleep_for( cShort );
+
+    int readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
+    while (readempty > 0)
+        {
+        std::this_thread::sleep_for( cShort );
+        readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
+        }
+
+    int reply = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply");
+    int reply_err = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.err");
+    int reply_data = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
+	LOG(INFO) << BOLDGREEN << "reply: "<< std::hex << reply << std::dec <<RESET;
+	LOG(INFO) << BOLDGREEN << "reply err: "<< std::hex << reply_err << std::dec <<RESET;
+	LOG(INFO) << BOLDGREEN << "reply data: "<< std::hex << reply_data << std::dec <<RESET;
+
+    if (reply_err == 1) LOG(ERROR) << "Error code: "<< std::hex << reply_data << std::dec;
+    //	print "ERROR! Error flag is set to 1. The data is treated as the error code."
+    //elif reply_slave_id != slave_id:
+    //	print "ERROR! Slave ID doesn't correspond to the one sent"
+    //elif reply_board_id != board_id:
+    //	print "ERROR! Board ID doesn't correspond to the one sent"
+
+    else
+        {
+        if (read == 1) LOG (INFO) << BOLDBLUE <<  "Data that was read is: "<< reply_data << RESET;
+        else LOG (DEBUG) << BOLDBLUE << "Successful write transaction" <<RESET;
+        }
+    }
+
+uint32_t D19cFWInterface::PSInterfaceBoard_SendI2CCommand_READ(uint32_t slave_id,uint32_t board_id,uint32_t read,uint32_t register_address, uint32_t data)
+    {
+
+    std::chrono::milliseconds cWait( 10 );
+    std::chrono::milliseconds cShort( 1 );
+
+    uint32_t shifted_command_type 	= 1 << 31;
+    uint32_t shifted_word_id_0 	= 0;
+    uint32_t shifted_slave_id 	= slave_id << 21;
+    uint32_t shifted_board_id  	= board_id << 20;
+    uint32_t shifted_read 		= read << 16;
+    uint32_t shifted_register_address = register_address;
+
+    uint32_t shifted_word_id_1 	= 1<<26;
+    uint32_t shifted_data 		= data;
+
+    uint32_t word_0 = shifted_command_type + shifted_word_id_0 + shifted_slave_id + shifted_board_id + shifted_read + shifted_register_address;
+    uint32_t word_1 = shifted_command_type + shifted_word_id_1 + shifted_data;
+
+
+    WriteReg( "fc7_daq_ctrl.command_processor_block.i2c.command_fifo", word_0);
+    std::this_thread::sleep_for( cWait );
+    WriteReg( "fc7_daq_ctrl.command_processor_block.i2c.command_fifo", word_1);
+    std::this_thread::sleep_for( cWait );
+
+    int readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
+    LOG (INFO) << BOLDYELLOW << readempty << RESET;
+    while (readempty > 0)
+        {
+	std::cout << ".";
+        std::this_thread::sleep_for( cShort );
+        readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
+        }
+	std::cout<<std::endl;
+
+    uint32_t reply = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply");
+	LOG (INFO) << BOLDRED << std::hex << reply << std::dec << RESET;
+    uint32_t reply_err = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.err");
+    uint32_t reply_data = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
+
+    if (reply_err == 1) LOG(ERROR) << "Error code: "<< std::hex << reply_data << std::dec;
+    //	print "ERROR! Error flag is set to 1. The data is treated as the error code."
+    //elif reply_slave_id != slave_id:
+    //	print "ERROR! Slave ID doesn't correspond to the one sent"
+    //elif reply_board_id != board_id:
+    //	print "ERROR! Board ID doesn't correspond to the one sent"
+
+    else
+        {
+        if (read == 1){
+		LOG (INFO) << BOLDBLUE <<  "Data that was read is: "<< std::hex << reply_data << std::dec << "   ecode: " << reply_err << RESET;
+		return reply & 0xFFFFFF;		
+			}
+        else LOG (DEBUG) << BOLDBLUE << "Successful write transaction" <<RESET;
+        }
+    }
+
+
+void D19cFWInterface::Pix_write_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
+    {
+    uint8_t cWriteAttempts = 0;
+    bool rep;
+
+    RegItem rowreg =cRegItem;
+    rowreg.fAddress  = ((row & 0x0001f) << 11 ) | ((cRegItem.fAddress & 0x000f) << 7 ) | (pixel & 0xfffffff);
+    rowreg.fValue  = data;
+    std::vector<uint32_t> cVecReq;
+    cVecReq.clear();
+    this->EncodeReg (rowreg, cMPA->getFeId(), cMPA->getMPAId(), cVecReq, false, true);
+    this->WriteCbcBlockReg (cVecReq, cWriteAttempts, false);
+    }
+
+uint32_t D19cFWInterface::Pix_read_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel)
+    {
+    uint8_t cWriteAttempts = 0;
+    uint32_t rep;
+
+    RegItem rowreg =cRegItem;
+    rowreg.fAddress  = ((row & 0x0001f) << 11 ) | ((cRegItem.fAddress & 0x000f) << 7 ) | (pixel & 0xfffffff);
+
+
+
+    std::vector<uint32_t> cVecReq;
+    cVecReq.clear();
+    this->EncodeReg (cRegItem, cMPA->getFeId(), cMPA->getMPAId(), cVecReq, false, false);
+    this->WriteCbcBlockReg (cVecReq,cWriteAttempts, false);
+    std::chrono::milliseconds cShort( 1 );
+    //uint32_t readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
+    //while (readempty == 0)
+    //	{
+    //	std::cout<<"RE:"<<readempty<<std::endl;
+    //	//ReadStatus()
+    //	std::this_thread::sleep_for( cShort );
+    //	readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
+    //	}
+    //uint32_t forcedreply = ReadReg("fc7_daq_ctrl.command_processor_block.i2c.reply_fifo");
+    rep = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
+
+    return rep;
+    }
+
+
+
+std::vector<uint16_t> D19cFWInterface::ReadoutCounters_MPA(uint32_t raw_mode_en)
+    {
+    WriteReg("fc7_daq_cnfg.physical_interface_block.raw_mode_en", raw_mode_en);
+    uint32_t mpa_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.stat_slvs_debug.mpa_counters_ready");
+    std::chrono::milliseconds cWait( 10 );
+    std::vector<uint16_t> count(2040, 0);
+    //std::cout<<"MCR  "<<mpa_counters_ready<<std::endl;
+    PS_Start_counters_read();
+    uint32_t  timeout = 0;
+    while ((mpa_counters_ready == 0) & (timeout < 50))
+        {
+        std::this_thread::sleep_for( cWait );
+        mpa_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.stat_slvs_debug.mpa_counters_ready");
+        //std::cout<<"MCR iwh"<<mpa_counters_ready<<std::endl;
+        timeout += 1;
+        }
+    if (timeout >= 50)
+        {
+        std::cout<<"fail"<<std::endl;
+        return count;
+        }
+
+    if (raw_mode_en == 1)
+        {
+        uint32_t cycle = 0;
+        for (int i=0; i<20000;i++)
+            {
+            uint32_t fifo1_word = ReadReg("fc7_daq_ctrl.physical_interface_block.ctrl_slvs_debug_fifo1_data");
+            uint32_t fifo2_word = ReadReg("fc7_daq_ctrl.physical_interface_block.ctrl_slvs_debug_fifo2_data");
+
+            uint32_t line1 = (fifo1_word&0x0000FF)>>0; //to_number(fifo1_word,8,0)
+            uint32_t line2 = (fifo1_word&0x00FF00)>>8; // to_number(fifo1_word,16,8)
+            uint32_t line3 = (fifo1_word&0xFF0000)>>16; //  to_number(fifo1_word,24,16)
+
+            uint32_t line4 = (fifo2_word&0x0000FF)>>0; //to_number(fifo2_word,8,0)
+            uint32_t line5 = (fifo2_word&0x00FF00)>>8; // to_number(fifo2_word,16,8)
+
+            if (((line1 & 0b10000000) == 128) && ((line4 & 0b10000000) == 128))
+                {
+                uint32_t temp = ((line2 & 0b00100000) << 9) | ((line3 & 0b00100000) << 8) | ((line4 & 0b00100000) << 7) | ((line5 & 0b00100000) << 6) | ((line1 & 0b00010000) << 6) | ((line2 & 0b00010000) << 5) | ((line3 & 0b00010000) << 4) | ((line4 & 0b00010000) << 3) | ((line5 & 0b10000000) >> 1) | ((line1 & 0b01000000) >> 1) | ((line2 & 0b01000000) >> 2) | ((line3 & 0b01000000) >> 3) | ((line4 & 0b01000000) >> 4) | ((line5 & 0b01000000) >> 5) | ((line1 & 0b00100000) >> 5);
+                if (temp != 0) {
+                    count[cycle] = temp - 1;
+                    cycle += 1;
+                    }
+                }
+            }
+        } 
+    else 	{
+        ReadReg("fc7_daq_ctrl.physical_interface_block.ctrl_slvs_debug_fifo2_data");
+        for (int i=0; i<2040;i++)
+            {
+            //std::chrono::milliseconds cWait( 100 );
+            count[i] = ReadReg("fc7_daq_ctrl.physical_interface_block.ctrl_slvs_debug_fifo2_data") - 1;
+            //std::cout<<i<<"     "<<count[i]<<std::endl;
+            }
+        }
+
+    std::this_thread::sleep_for( cWait );
+    mpa_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.stat_slvs_debug.mpa_counters_ready");
+    return count;
+    }
+
+void D19cFWInterface::Compose_fast_command(uint32_t duration ,uint32_t resync_en ,uint32_t l1a_en ,uint32_t cal_pulse_en ,uint32_t bc0_en )
+    {
+    uint32_t encode_resync = resync_en<<16;
+    uint32_t encode_cal_pulse = cal_pulse_en<<17;
+    uint32_t encode_l1a = l1a_en<<18;
+    uint32_t encode_bc0 = bc0_en<<19;
+    uint32_t encode_duration = duration<<28;
+
+    uint32_t final_command = encode_resync + encode_l1a + encode_cal_pulse + encode_bc0 + encode_duration;
+
+    WriteReg("fc7_daq_ctrl.fast_command_block.control", final_command);
+
+    }
+
+void D19cFWInterface::PS_Open_shutter(uint32_t duration )
+    {
+    Compose_fast_command(duration,0,1,0,0);
+    }
+
+void D19cFWInterface::PS_Close_shutter(uint32_t duration )
+    {
+    Compose_fast_command(duration,0,0,0,1);
+    }
+
+void D19cFWInterface::PS_Clear_counters(uint32_t duration )
+    {
+    Compose_fast_command(duration,0,1,0,1);
+    }
+void D19cFWInterface::PS_Start_counters_read(uint32_t duration )
+    {
+    Compose_fast_command(duration,1,0,0,1);
+    }
+
+void D19cFWInterface::KillI2C()
+    {
+    PSInterfaceBoard_SendI2CCommand(0, 0, 0, 0, 0x04);
+    PSInterfaceBoard_ConfigureI2CMaster(0);
+    }
+
+// POWER:
+void D19cFWInterface::PSInterfaceBoard_PowerOn( uint8_t mpaid  , uint8_t ssaid  )
+    {
+
+    uint32_t val = (mpaid << 5) + (ssaid << 1);
+    uint32_t read = 1;
+    uint32_t write = 0;
+    uint32_t SLOW = 2;
+    uint32_t i2cmux = 0;
+    uint32_t pcf8574 = 1;
+    uint32_t dac7678 = 4;
+    uint32_t powerenable = 2;
+
+    PSInterfaceBoard_SetSlaveMap();
+
+    LOG(INFO) << "Interface Board Power ON";
+
+    PSInterfaceBoard_ConfigureI2CMaster(1, SLOW);
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    PSInterfaceBoard_SendI2CCommand(powerenable, 0, write, 0, 0x00); // There is an inverter! Be Careful!
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+
+    }
+
+void D19cFWInterface::PSInterfaceBoard_PowerOff()
+    {
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+
+    uint32_t read = 1;
+    uint32_t write = 0;
+    uint32_t SLOW = 2;
+    uint32_t i2cmux = 0;
+    uint32_t pcf8574 = 1;
+    uint32_t dac7678 = 4;
+    uint32_t powerenable = 2;
+
+    PSInterfaceBoard_SetSlaveMap();
+
+    LOG(INFO) << "Interface Board Power OFF";
+
+    PSInterfaceBoard_ConfigureI2CMaster(1, SLOW);
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    PSInterfaceBoard_SendI2CCommand(powerenable, 0, write, 0, 0x01);
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
+
+    }
+
+void D19cFWInterface::ReadPower_SSA(uint8_t mpaid , uint8_t ssaid)
+{
+
+	uint32_t read = 1;
+	uint32_t write = 0;
+	uint32_t SLOW = 2;
+	uint32_t i2cmux = 0;
+	uint32_t pcf8574 = 1;
+	uint32_t dac7678 = 4;
+	uint32_t ina226_7 = 7;
+	uint32_t ina226_6 = 6;
+	uint32_t ina226_5 = 5;
+
+	LOG (INFO) << BOLDBLUE << "power information:" << RESET;
+	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+	PSInterfaceBoard_SetSlaveMap();
+	PSInterfaceBoard_ConfigureI2CMaster(1,SLOW);
+	
+	LOG (INFO) << BOLDBLUE << " - - - VDD:" << RESET;
+	PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x08);
+	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+	uint32_t dread2 = PSInterfaceBoard_SendI2CCommand_READ(ina226_7, 0, read, 0x02, 0);
+	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+	float vret = float(dread2) * 0.00125;
+	uint32_t dread1 = PSInterfaceBoard_SendI2CCommand_READ(ina226_7, 0, read, 0x01, 0);
+	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+	float iret = float(dread1) * 0.00250 / 0.1;
+	float pret = vret * iret;
+	LOG (INFO) << BOLDGREEN << "V = " << vret << "V, I = " << iret << "mA, P = " << pret << "mW" << RESET;
+
+	LOG (INFO) << BOLDBLUE << " - - - Digital:" << RESET;
+	PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x08);
+	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+	dread2 = PSInterfaceBoard_SendI2CCommand_READ(ina226_6, 0, read, 0x02, 0);
+	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+	vret = float(dread2) * 0.00125;
+	dread1 = PSInterfaceBoard_SendI2CCommand_READ(ina226_6, 0, read, 0x01, 0);
+	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+	iret = float(dread1) * 0.00250 / 0.1;
+	pret = vret * iret;
+	LOG (INFO) << BOLDGREEN << "V = " << vret << "V, I = " << iret << "mA, P = " << pret << "mW" << RESET;
+
+	LOG (INFO) << BOLDBLUE << " - - - Analog:" << RESET;
+	PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x08);
+	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+	dread2 = PSInterfaceBoard_SendI2CCommand_READ(ina226_5, 0, read, 0x02, 0);
+	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+	vret = float(dread2) * 0.00125;
+	dread1 = PSInterfaceBoard_SendI2CCommand_READ(ina226_5, 0, read, 0x01, 0);
+	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+	iret = float(dread1) * 0.00250 / 0.1;
+	pret = vret * iret;
+	LOG (INFO) << BOLDGREEN << "V = " << vret << "V, I = " << iret << "mA, P = " << pret << "mW" << RESET;
+
+	PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x04);
+    	PSInterfaceBoard_ConfigureI2CMaster(0);
+	
+}
+
+void D19cFWInterface::PSInterfaceBoard_PowerOn_MPA(float VDDPST , float DVDD , float AVDD , float VBG , uint8_t mpaid  , uint8_t ssaid  )
+    {
+
+    uint32_t read = 1;
+    uint32_t write = 0;
+    uint32_t SLOW = 2;
+    uint32_t i2cmux = 0;
+    uint32_t pcf8574 = 1;
+    uint32_t dac7678 = 4;
+    uint32_t powerenable = 2;
+    std::chrono::milliseconds cWait( 1500 );
+
+    PSInterfaceBoard_SetSlaveMap();
+    PSInterfaceBoard_ConfigureI2CMaster(1,SLOW);
+
+    float Vc = 0.0003632813;
+
+    LOG(INFO) << "mpa vdd on" ;
+
+    float Vlimit = 1.32;
+    if (VDDPST > Vlimit) VDDPST = Vlimit;
+    float diffvoltage = 1.5 - VDDPST;
+    uint32_t setvoltage = int(round(diffvoltage / Vc));
+    if (setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x33, setvoltage);  // tx to DAC C
+    std::this_thread::sleep_for( cWait );
+
+    LOG(INFO) << "mpa vddD on";
+    Vlimit = 1.2;
+    if (DVDD > Vlimit) DVDD = Vlimit;
+    diffvoltage = 1.5 - DVDD;
+    setvoltage = int(round(diffvoltage / Vc));
+    if (setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x31, setvoltage);  // tx to DAC C
+    std::this_thread::sleep_for( cWait );
+
+    LOG(INFO) << "mpa vddA on";
+    Vlimit = 1.32;
+    if (AVDD > Vlimit) AVDD = Vlimit;
+    diffvoltage = 1.5 - AVDD;
+    setvoltage = int(round(diffvoltage / Vc));
+    if (setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01) ; // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x35, setvoltage) ; // tx to DAC C
+    std::this_thread::sleep_for( cWait );
+
+    LOG(INFO) << "mpa VBG on";
+    Vlimit = 0.5;
+    if (VBG > Vlimit) VBG = Vlimit;
+    float Vc2 = 4095/1.5;
+    setvoltage = int(round(VBG * Vc2));
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x36, setvoltage);  // tx to DAC C
+    std::this_thread::sleep_for( cWait );
+
+
+    LOG(INFO) << "mpa enable";
+    uint32_t val2 = (mpaid << 5) + (ssaid << 1) + 1; // reset bit for MPA
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);  // route to 2nd PCF8574
+    PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, val2);  // set reset bit
+    std::this_thread::sleep_for( cWait );
+
+    // disable the i2c master at the end (first set the mux to the chip
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x04);
+    PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
+    }
+
+void D19cFWInterface::PSInterfaceBoard_PowerOff_SSA_v1(uint8_t mpaid , uint8_t ssaid )
+    {
+    uint32_t write = 0;
+    uint32_t SLOW = 2;
+    uint32_t i2cmux = 0;
+    uint32_t pcf8574 = 1; // MPA and SSA address and reset 8 bit port
+    uint32_t dac7678 = 4;
+    uint32_t powerenable = 2;
+    float Vc = 0.0003632813; // V/Dac step
+    std::chrono::milliseconds cWait( 1500 );
+
+    PSInterfaceBoard_SetSlaveMap();
+    PSInterfaceBoard_ConfigureI2CMaster(1, SLOW);
+
+    LOG(INFO) << "ssa disable";
+    uint32_t val = (mpaid << 5) + (ssaid << 1); // reset bit for MPA
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);  // route to 2nd PCF8574
+    PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, val);  // set reset bit
+    std::this_thread::sleep_for( cWait );
+
+
+    LOG(INFO) << "ssa VBF off";
+    uint32_t setvoltage = 0;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x37, setvoltage);  // tx to DAC C
+    std::this_thread::sleep_for( cWait );
+
+
+    LOG(INFO) << "ssa vddA off";
+    float diffvoltage = 1.5;
+    setvoltage = int(round(diffvoltage / Vc));
+    if (setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x35, 0);  // tx to DAC C
+    std::this_thread::sleep_for( cWait );
+
+    LOG(INFO) << "ssa vddD off";
+    diffvoltage = 1.5;
+    setvoltage = int(round(diffvoltage / Vc));
+    if (setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x31, 0);  // tx to DAC C
+    std::this_thread::sleep_for( cWait );
+
+    LOG(INFO) << "ssa vdd off";
+    diffvoltage = 1.5;
+    setvoltage = int(round(diffvoltage / Vc));
+    if (setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x33, 0);  // tx to DAC C
+    std::this_thread::sleep_for( cWait );
+    }
+
+
+void D19cFWInterface::PSInterfaceBoard_PowerOff_SSA_v2(uint8_t mpaid , uint8_t ssaid )
+    {
+    uint32_t write = 0;
+    uint32_t SLOW = 2;
+    uint32_t i2cmux = 0;
+    uint32_t pcf8574 = 1; // MPA and SSA address and reset 8 bit port
+    uint32_t dac7678 = 4;
+    uint32_t powerenable = 2;
+    float Vc = 0.0003632813; // V/Dac step
+    std::chrono::milliseconds cWait( 1500 );
+    }
+
+void D19cFWInterface::PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid , uint8_t ssaid )
+    {
+    uint32_t write = 0;
+    uint32_t SLOW = 2;
+    uint32_t i2cmux = 0;
+    uint32_t pcf8574 = 1; // MPA and SSA address and reset 8 bit port
+    uint32_t dac7678 = 4;
+    uint32_t powerenable = 2;
+    float Vc = 0.0003632813; // V/Dac step
+    std::chrono::milliseconds cWait( 1000 );
+
+    PSInterfaceBoard_SetSlaveMap();
+    PSInterfaceBoard_ConfigureI2CMaster(1, SLOW);
+
+    LOG(INFO) << "mpa disable";
+    uint32_t val = (mpaid << 5) + (ssaid << 1); // reset bit for MPA
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);  // route to 2nd PCF8574
+    PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, val);  // set reset bit
+    std::this_thread::sleep_for( cWait );
+
+    LOG(INFO) << "mpa VBG off";
+    uint32_t setvoltage = 0;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x36, setvoltage);  // tx to DAC C
+    std::this_thread::sleep_for( cWait );
+
+    LOG(INFO) << "mpa vddA off";
+    float diffvoltage = 1.5;
+    setvoltage = int(round(diffvoltage / Vc));
+    if (setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x32, setvoltage);  // tx to DAC C
+    std::this_thread::sleep_for( cWait );
+
+    LOG(INFO) << "mpa vddA off";
+    diffvoltage = 1.5;
+    setvoltage = int(round(diffvoltage / Vc));
+    if (setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x30, setvoltage);  // tx to DAC C
+    std::this_thread::sleep_for( cWait );
+
+    LOG(INFO) << "mpa vdd off";
+    diffvoltage = 1.5;
+    setvoltage = int(round(diffvoltage / Vc));
+    if (setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x34, setvoltage);  // tx to DAC C
+    std::this_thread::sleep_for( cWait );
+
+    }
 
 }

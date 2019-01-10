@@ -525,6 +525,22 @@ namespace Ph2_HwInterface {
         pRegItem.fValue = pWord & cMask1;
     }
 
+	// MPA/SSA Reg Item Encoder (They do nothing, pending fixes that will remove them completely)
+    void GlibFWInterface::EncodeReg ( const RegItem& pRegItem,
+                                      uint8_t pCbcId,
+                                      std::vector<uint32_t>& pVecReq,
+                                      bool pReadBack,
+                                      bool pWrite )
+    {}
+    void GlibFWInterface::EncodeReg (const RegItem& pRegItem,
+                                     uint8_t pFeId,
+                                     uint8_t pCbcId,
+                                     std::vector<uint32_t>& pVecReq,
+                                     bool pReadBack,
+                                     bool pWrite )
+    {}
+	////////////////////////////////////
+
     bool GlibFWInterface::I2cCmdAckWait ( uint32_t pAckVal, uint8_t pNcount )
     {
         unsigned int cWait ( 100 );

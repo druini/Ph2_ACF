@@ -252,8 +252,14 @@ namespace Ph2_HwInterface {
         */
         void EncodeReg (const CbcRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
         void EncodeReg (const CbcRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
+        void EncodeReg (const RegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
+        void EncodeReg (const RegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
+
         void BCEncodeReg (const CbcRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override;
         void DecodeReg ( CbcRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
+        void BCEncodeReg ( const RegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
+        void DecodeReg ( RegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override; /*!< Decode a word from a read of a register of the MPA/SSA*/
+
 
 
         bool WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
@@ -269,6 +275,44 @@ namespace Ph2_HwInterface {
         void CbcTestPulse();
 
         void CbcTrigger();
+
+
+
+        ///////////////////////////////////////////////////////
+        //      MPA/SSA Methods                             //
+        /////////////////////////////////////////////////////
+
+	// Coms
+	void PSInterfaceBoard_SetSlaveMap();
+    	void PSInterfaceBoard_ConfigureI2CMaster(uint32_t pEnabled, uint32_t pFrequency);
+    	void PSInterfaceBoard_SendI2CCommand(uint32_t slave_id,uint32_t board_id,uint32_t read,uint32_t register_address, uint32_t data);
+    	uint32_t PSInterfaceBoard_SendI2CCommand_READ(uint32_t slave_id,uint32_t board_id,uint32_t read,uint32_t register_address, uint32_t data);
+
+	// Main Power:
+	void PSInterfaceBoard_PowerOn(uint8_t mpaid = 0 , uint8_t ssaid = 0  );
+	void PSInterfaceBoard_PowerOff();
+
+	// MPA power on
+	void PSInterfaceBoard_PowerOn_MPA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, uint8_t mpaid = 0 , uint8_t ssaid = 0);
+	void PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
+	/// SSA power on
+	void PSInterfaceBoard_PowerOn_SSA_v1(float VDDPST = 1.25, float DVDD = 1.25, float AVDD = 1.25, float VBF = 0.3, float BG = 0.0, uint8_t mpaid = 0 , uint8_t ssaid = 0);
+	void PSInterfaceBoard_PowerOff_SSA_v1(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
+	void PSInterfaceBoard_PowerOn_SSA_v2(float VDDPST = 1.2, float DVDD = 1.0, float AVDD = 1.2, float VBG = 0.3, uint8_t mpaid = 0 , uint8_t ssaid = 0);
+	void PSInterfaceBoard_PowerOff_SSA_v2(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
+	void ReadPower_SSA(uint8_t mpaid = 0 , uint8_t ssaid = 0);
+	void KillI2C();
+	///
+
+	void Pix_write_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
+	uint32_t Pix_read_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel);
+	std::vector<uint16_t> ReadoutCounters_MPA(uint32_t raw_mode_en = 0);
+
+	void Compose_fast_command(uint32_t duration = 0,uint32_t resync_en = 0,uint32_t l1a_en = 0,uint32_t cal_pulse_en = 0,uint32_t bc0_en = 0);
+	void PS_Open_shutter(uint32_t duration = 0);
+	void PS_Close_shutter(uint32_t duration = 0);
+	void PS_Clear_counters(uint32_t duration = 0);
+	void PS_Start_counters_read(uint32_t duration = 0);
 
         ///////////////////////////////////////////////////////
         //      FPGA CONFIG                                 //
