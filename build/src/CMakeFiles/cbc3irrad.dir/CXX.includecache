@@ -342,6 +342,14 @@ uhal/uhal.hpp
 ../Utils/easylogging++.h
 ../Utils/easylogging++.h
 
+../HWInterface/SSAInterface.h
+vector
+-
+../HWInterface/D19cFWInterface.h
+../HWInterface/D19cFWInterface.h
+pugixml/pugixml.hpp
+../HWInterface/pugixml/pugixml.hpp
+
 ../System/FileParser.h
 ../HWInterface/BeBoardFWInterface.h
 ../HWInterface/BeBoardFWInterface.h
@@ -391,6 +399,8 @@ FileParser.h
 ../HWInterface/CbcInterface.h
 ../HWInterface/MPAInterface.h
 ../HWInterface/MPAInterface.h
+../HWInterface/SSAInterface.h
+../HWInterface/SSAInterface.h
 ../HWInterface/BeBoardInterface.h
 ../HWInterface/BeBoardInterface.h
 ../HWInterface/BeBoardFWInterface.h

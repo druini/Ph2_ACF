@@ -348,6 +348,7 @@ miniDAQ/CMakeFiles/miniDAQ.dir/SLinkDQMHistogrammer.cc.o: ../HWInterface/ICGlibF
 miniDAQ/CMakeFiles/miniDAQ.dir/SLinkDQMHistogrammer.cc.o: ../HWInterface/MPAGlibFWInterface.h
 miniDAQ/CMakeFiles/miniDAQ.dir/SLinkDQMHistogrammer.cc.o: ../HWInterface/MPAInterface.h
 miniDAQ/CMakeFiles/miniDAQ.dir/SLinkDQMHistogrammer.cc.o: ../HWInterface/RegManager.h
+miniDAQ/CMakeFiles/miniDAQ.dir/SLinkDQMHistogrammer.cc.o: ../HWInterface/SSAInterface.h
 miniDAQ/CMakeFiles/miniDAQ.dir/SLinkDQMHistogrammer.cc.o: ../System/FileParser.h
 miniDAQ/CMakeFiles/miniDAQ.dir/SLinkDQMHistogrammer.cc.o: ../System/SystemController.h
 miniDAQ/CMakeFiles/miniDAQ.dir/SLinkDQMHistogrammer.cc.o: ../Utils/CRCCalculator.h
@@ -1521,6 +1522,7 @@ miniDAQ/CMakeFiles/miniDAQ.dir/miniDAQ.cc.o: ../HWInterface/ICGlibFWInterface.h
 miniDAQ/CMakeFiles/miniDAQ.dir/miniDAQ.cc.o: ../HWInterface/MPAGlibFWInterface.h
 miniDAQ/CMakeFiles/miniDAQ.dir/miniDAQ.cc.o: ../HWInterface/MPAInterface.h
 miniDAQ/CMakeFiles/miniDAQ.dir/miniDAQ.cc.o: ../HWInterface/RegManager.h
+miniDAQ/CMakeFiles/miniDAQ.dir/miniDAQ.cc.o: ../HWInterface/SSAInterface.h
 miniDAQ/CMakeFiles/miniDAQ.dir/miniDAQ.cc.o: ../RootWeb/include/rootweb.hh
 miniDAQ/CMakeFiles/miniDAQ.dir/miniDAQ.cc.o: ../System/FileParser.h
 miniDAQ/CMakeFiles/miniDAQ.dir/miniDAQ.cc.o: ../System/SystemController.h

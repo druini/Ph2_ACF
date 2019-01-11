@@ -22,6 +22,7 @@ src/CMakeFiles/commission.dir/commission.cc.o: ../HWInterface/ICGlibFWInterface.
 src/CMakeFiles/commission.dir/commission.cc.o: ../HWInterface/MPAGlibFWInterface.h
 src/CMakeFiles/commission.dir/commission.cc.o: ../HWInterface/MPAInterface.h
 src/CMakeFiles/commission.dir/commission.cc.o: ../HWInterface/RegManager.h
+src/CMakeFiles/commission.dir/commission.cc.o: ../HWInterface/SSAInterface.h
 src/CMakeFiles/commission.dir/commission.cc.o: ../System/FileParser.h
 src/CMakeFiles/commission.dir/commission.cc.o: ../System/SystemController.h
 src/CMakeFiles/commission.dir/commission.cc.o: ../Utils/CRCCalculator.h

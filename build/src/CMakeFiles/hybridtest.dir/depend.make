@@ -22,6 +22,7 @@ src/CMakeFiles/hybridtest.dir/hybridtest.cc.o: ../HWInterface/ICGlibFWInterface.
 src/CMakeFiles/hybridtest.dir/hybridtest.cc.o: ../HWInterface/MPAGlibFWInterface.h
 src/CMakeFiles/hybridtest.dir/hybridtest.cc.o: ../HWInterface/MPAInterface.h
 src/CMakeFiles/hybridtest.dir/hybridtest.cc.o: ../HWInterface/RegManager.h
+src/CMakeFiles/hybridtest.dir/hybridtest.cc.o: ../HWInterface/SSAInterface.h
 src/CMakeFiles/hybridtest.dir/hybridtest.cc.o: ../System/FileParser.h
 src/CMakeFiles/hybridtest.dir/hybridtest.cc.o: ../System/SystemController.h
 src/CMakeFiles/hybridtest.dir/hybridtest.cc.o: ../Utils/CRCCalculator.h

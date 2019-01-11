@@ -1092,6 +1092,7 @@ System/CMakeFiles/Ph2_System.dir/SystemController.cc.o: ../HWInterface/ICGlibFWI
 System/CMakeFiles/Ph2_System.dir/SystemController.cc.o: ../HWInterface/MPAGlibFWInterface.h
 System/CMakeFiles/Ph2_System.dir/SystemController.cc.o: ../HWInterface/MPAInterface.h
 System/CMakeFiles/Ph2_System.dir/SystemController.cc.o: ../HWInterface/RegManager.h
+System/CMakeFiles/Ph2_System.dir/SystemController.cc.o: ../HWInterface/SSAInterface.h
 System/CMakeFiles/Ph2_System.dir/SystemController.cc.o: ../System/FileParser.h
 System/CMakeFiles/Ph2_System.dir/SystemController.cc.o: ../System/SystemController.cc
 System/CMakeFiles/Ph2_System.dir/SystemController.cc.o: ../System/SystemController.h

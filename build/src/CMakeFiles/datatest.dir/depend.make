@@ -22,6 +22,7 @@ src/CMakeFiles/datatest.dir/datatest.cc.o: ../HWInterface/ICGlibFWInterface.h
 src/CMakeFiles/datatest.dir/datatest.cc.o: ../HWInterface/MPAGlibFWInterface.h
 src/CMakeFiles/datatest.dir/datatest.cc.o: ../HWInterface/MPAInterface.h
 src/CMakeFiles/datatest.dir/datatest.cc.o: ../HWInterface/RegManager.h
+src/CMakeFiles/datatest.dir/datatest.cc.o: ../HWInterface/SSAInterface.h
 src/CMakeFiles/datatest.dir/datatest.cc.o: ../System/FileParser.h
 src/CMakeFiles/datatest.dir/datatest.cc.o: ../System/SystemController.h
 src/CMakeFiles/datatest.dir/datatest.cc.o: ../Utils/CRCCalculator.h

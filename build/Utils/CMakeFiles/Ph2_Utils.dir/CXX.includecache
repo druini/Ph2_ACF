@@ -190,6 +190,22 @@ Event.h
 Event.h
 /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/Event.h
 
+/home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/D19cMPAEvent.cc
+../Utils/D19cMPAEvent.h
+/home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/D19cMPAEvent.h
+
+/home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/D19cMPAEvent.h
+Event.h
+/home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/Event.h
+
+/home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/D19cSSAEvent.cc
+../Utils/D19cSSAEvent.h
+/home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/D19cSSAEvent.h
+
+/home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/D19cSSAEvent.h
+Event.h
+/home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/Event.h
+
 /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/Data.cc
 ../Utils/Data.h
 /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/Data.h
@@ -347,6 +363,14 @@ CRCCalculator.h
 /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
 easylogging++.h
 /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/easylogging++.h
+
+/home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/SSAEvent.cc
+../Utils/SSAEvent.h
+/home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/SSAEvent.h
+
+/home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/SSAEvent.h
+Event.h
+/home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/Event.h
 
 /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/Timer.h
 iostream

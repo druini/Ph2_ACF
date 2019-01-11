@@ -90,6 +90,9 @@ SET(CMAKE_MAKEFILE_PRODUCTS
 SET(CMAKE_DEPEND_INFO_FILES
   "tools/CMakeFiles/Ph2_Tools.dir/DependInfo.cmake"
   "RootWeb/CMakeFiles/RootWeb.dir/DependInfo.cmake"
+  "src/CMakeFiles/MPA_async_test.dir/DependInfo.cmake"
+  "src/CMakeFiles/MPA_sync_test.dir/DependInfo.cmake"
+  "src/CMakeFiles/SSATEST.dir/DependInfo.cmake"
   "src/CMakeFiles/calibrate.dir/DependInfo.cmake"
   "src/CMakeFiles/cbc3irrad.dir/DependInfo.cmake"
   "src/CMakeFiles/cmtest.dir/DependInfo.cmake"

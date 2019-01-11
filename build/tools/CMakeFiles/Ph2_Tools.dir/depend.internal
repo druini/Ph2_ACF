@@ -23,6 +23,7 @@ tools/CMakeFiles/Ph2_Tools.dir/AntennaTester.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
@@ -1209,6 +1210,7 @@ tools/CMakeFiles/Ph2_Tools.dir/BiasSweep.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/ICGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/Cbc2Event.h
@@ -2363,6 +2365,7 @@ tools/CMakeFiles/Ph2_Tools.dir/CMTester.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
@@ -3541,6 +3544,7 @@ tools/CMakeFiles/Ph2_Tools.dir/Calibration.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
@@ -5096,6 +5100,7 @@ tools/CMakeFiles/Ph2_Tools.dir/HybridTester.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
@@ -6263,6 +6268,7 @@ tools/CMakeFiles/Ph2_Tools.dir/LatencyScan.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
@@ -7434,6 +7440,7 @@ tools/CMakeFiles/Ph2_Tools.dir/PedeNoise.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
@@ -8606,6 +8613,7 @@ tools/CMakeFiles/Ph2_Tools.dir/PulseShape.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
@@ -9780,6 +9788,7 @@ tools/CMakeFiles/Ph2_Tools.dir/RegisterTester.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
@@ -10951,6 +10960,7 @@ tools/CMakeFiles/Ph2_Tools.dir/ShortFinder.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
@@ -12129,6 +12139,7 @@ tools/CMakeFiles/Ph2_Tools.dir/SignalScan.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
@@ -13301,6 +13312,7 @@ tools/CMakeFiles/Ph2_Tools.dir/SignalScanFit.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
@@ -14483,6 +14495,7 @@ tools/CMakeFiles/Ph2_Tools.dir/StubSweep.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/ICGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/Cbc2Event.h
@@ -15643,6 +15656,7 @@ tools/CMakeFiles/Ph2_Tools.dir/Tool.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h

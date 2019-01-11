@@ -22,6 +22,7 @@ src/CMakeFiles/integratedtester.dir/integratedtester.cc.o: ../HWInterface/ICGlib
 src/CMakeFiles/integratedtester.dir/integratedtester.cc.o: ../HWInterface/MPAGlibFWInterface.h
 src/CMakeFiles/integratedtester.dir/integratedtester.cc.o: ../HWInterface/MPAInterface.h
 src/CMakeFiles/integratedtester.dir/integratedtester.cc.o: ../HWInterface/RegManager.h
+src/CMakeFiles/integratedtester.dir/integratedtester.cc.o: ../HWInterface/SSAInterface.h
 src/CMakeFiles/integratedtester.dir/integratedtester.cc.o: ../System/FileParser.h
 src/CMakeFiles/integratedtester.dir/integratedtester.cc.o: ../System/SystemController.h
 src/CMakeFiles/integratedtester.dir/integratedtester.cc.o: ../Utils/CRCCalculator.h

@@ -22,6 +22,7 @@ src/CMakeFiles/calibrate.dir/calibrate.cc.o: ../HWInterface/ICGlibFWInterface.h
 src/CMakeFiles/calibrate.dir/calibrate.cc.o: ../HWInterface/MPAGlibFWInterface.h
 src/CMakeFiles/calibrate.dir/calibrate.cc.o: ../HWInterface/MPAInterface.h
 src/CMakeFiles/calibrate.dir/calibrate.cc.o: ../HWInterface/RegManager.h
+src/CMakeFiles/calibrate.dir/calibrate.cc.o: ../HWInterface/SSAInterface.h
 src/CMakeFiles/calibrate.dir/calibrate.cc.o: ../System/FileParser.h
 src/CMakeFiles/calibrate.dir/calibrate.cc.o: ../System/SystemController.h
 src/CMakeFiles/calibrate.dir/calibrate.cc.o: ../Utils/CRCCalculator.h

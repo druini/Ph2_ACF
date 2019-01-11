@@ -235,6 +235,54 @@ D19cCbc3EventZS.cc.s:
 	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f Utils/CMakeFiles/Ph2_Utils.dir/build.make Utils/CMakeFiles/Ph2_Utils.dir/D19cCbc3EventZS.cc.s
 .PHONY : D19cCbc3EventZS.cc.s
 
+D19cMPAEvent.o: D19cMPAEvent.cc.o
+.PHONY : D19cMPAEvent.o
+
+# target to build an object file
+D19cMPAEvent.cc.o:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f Utils/CMakeFiles/Ph2_Utils.dir/build.make Utils/CMakeFiles/Ph2_Utils.dir/D19cMPAEvent.cc.o
+.PHONY : D19cMPAEvent.cc.o
+
+D19cMPAEvent.i: D19cMPAEvent.cc.i
+.PHONY : D19cMPAEvent.i
+
+# target to preprocess a source file
+D19cMPAEvent.cc.i:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f Utils/CMakeFiles/Ph2_Utils.dir/build.make Utils/CMakeFiles/Ph2_Utils.dir/D19cMPAEvent.cc.i
+.PHONY : D19cMPAEvent.cc.i
+
+D19cMPAEvent.s: D19cMPAEvent.cc.s
+.PHONY : D19cMPAEvent.s
+
+# target to generate assembly for a file
+D19cMPAEvent.cc.s:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f Utils/CMakeFiles/Ph2_Utils.dir/build.make Utils/CMakeFiles/Ph2_Utils.dir/D19cMPAEvent.cc.s
+.PHONY : D19cMPAEvent.cc.s
+
+D19cSSAEvent.o: D19cSSAEvent.cc.o
+.PHONY : D19cSSAEvent.o
+
+# target to build an object file
+D19cSSAEvent.cc.o:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f Utils/CMakeFiles/Ph2_Utils.dir/build.make Utils/CMakeFiles/Ph2_Utils.dir/D19cSSAEvent.cc.o
+.PHONY : D19cSSAEvent.cc.o
+
+D19cSSAEvent.i: D19cSSAEvent.cc.i
+.PHONY : D19cSSAEvent.i
+
+# target to preprocess a source file
+D19cSSAEvent.cc.i:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f Utils/CMakeFiles/Ph2_Utils.dir/build.make Utils/CMakeFiles/Ph2_Utils.dir/D19cSSAEvent.cc.i
+.PHONY : D19cSSAEvent.cc.i
+
+D19cSSAEvent.s: D19cSSAEvent.cc.s
+.PHONY : D19cSSAEvent.s
+
+# target to generate assembly for a file
+D19cSSAEvent.cc.s:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f Utils/CMakeFiles/Ph2_Utils.dir/build.make Utils/CMakeFiles/Ph2_Utils.dir/D19cSSAEvent.cc.s
+.PHONY : D19cSSAEvent.cc.s
+
 Data.o: Data.cc.o
 .PHONY : Data.o
 
@@ -378,6 +426,30 @@ SLinkEvent.s: SLinkEvent.cc.s
 SLinkEvent.cc.s:
 	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f Utils/CMakeFiles/Ph2_Utils.dir/build.make Utils/CMakeFiles/Ph2_Utils.dir/SLinkEvent.cc.s
 .PHONY : SLinkEvent.cc.s
+
+SSAEvent.o: SSAEvent.cc.o
+.PHONY : SSAEvent.o
+
+# target to build an object file
+SSAEvent.cc.o:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f Utils/CMakeFiles/Ph2_Utils.dir/build.make Utils/CMakeFiles/Ph2_Utils.dir/SSAEvent.cc.o
+.PHONY : SSAEvent.cc.o
+
+SSAEvent.i: SSAEvent.cc.i
+.PHONY : SSAEvent.i
+
+# target to preprocess a source file
+SSAEvent.cc.i:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f Utils/CMakeFiles/Ph2_Utils.dir/build.make Utils/CMakeFiles/Ph2_Utils.dir/SSAEvent.cc.i
+.PHONY : SSAEvent.cc.i
+
+SSAEvent.s: SSAEvent.cc.s
+.PHONY : SSAEvent.s
+
+# target to generate assembly for a file
+SSAEvent.cc.s:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f Utils/CMakeFiles/Ph2_Utils.dir/build.make Utils/CMakeFiles/Ph2_Utils.dir/SSAEvent.cc.s
+.PHONY : SSAEvent.cc.s
 
 UsbUtilities.o: UsbUtilities.cc.o
 .PHONY : UsbUtilities.o
@@ -547,6 +619,12 @@ help:
 	@echo "... D19cCbc3EventZS.o"
 	@echo "... D19cCbc3EventZS.i"
 	@echo "... D19cCbc3EventZS.s"
+	@echo "... D19cMPAEvent.o"
+	@echo "... D19cMPAEvent.i"
+	@echo "... D19cMPAEvent.s"
+	@echo "... D19cSSAEvent.o"
+	@echo "... D19cSSAEvent.i"
+	@echo "... D19cSSAEvent.s"
 	@echo "... Data.o"
 	@echo "... Data.i"
 	@echo "... Data.s"
@@ -565,6 +643,9 @@ help:
 	@echo "... SLinkEvent.o"
 	@echo "... SLinkEvent.i"
 	@echo "... SLinkEvent.s"
+	@echo "... SSAEvent.o"
+	@echo "... SSAEvent.i"
+	@echo "... SSAEvent.s"
 	@echo "... UsbUtilities.o"
 	@echo "... UsbUtilities.i"
 	@echo "... UsbUtilities.s"

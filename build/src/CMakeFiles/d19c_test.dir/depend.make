@@ -29,6 +29,7 @@ src/CMakeFiles/d19c_test.dir/d19c_test.cc.o: ../HWInterface/ICGlibFWInterface.h
 src/CMakeFiles/d19c_test.dir/d19c_test.cc.o: ../HWInterface/MPAGlibFWInterface.h
 src/CMakeFiles/d19c_test.dir/d19c_test.cc.o: ../HWInterface/MPAInterface.h
 src/CMakeFiles/d19c_test.dir/d19c_test.cc.o: ../HWInterface/RegManager.h
+src/CMakeFiles/d19c_test.dir/d19c_test.cc.o: ../HWInterface/SSAInterface.h
 src/CMakeFiles/d19c_test.dir/d19c_test.cc.o: ../System/FileParser.h
 src/CMakeFiles/d19c_test.dir/d19c_test.cc.o: ../System/SystemController.h
 src/CMakeFiles/d19c_test.dir/d19c_test.cc.o: ../Utils/CRCCalculator.h

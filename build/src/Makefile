@@ -102,6 +102,48 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+src/CMakeFiles/MPA_async_test.dir/rule:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f CMakeFiles/Makefile2 src/CMakeFiles/MPA_async_test.dir/rule
+.PHONY : src/CMakeFiles/MPA_async_test.dir/rule
+
+# Convenience name for target.
+MPA_async_test: src/CMakeFiles/MPA_async_test.dir/rule
+.PHONY : MPA_async_test
+
+# fast build rule for target.
+MPA_async_test/fast:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/MPA_async_test.dir/build.make src/CMakeFiles/MPA_async_test.dir/build
+.PHONY : MPA_async_test/fast
+
+# Convenience name for target.
+src/CMakeFiles/MPA_sync_test.dir/rule:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f CMakeFiles/Makefile2 src/CMakeFiles/MPA_sync_test.dir/rule
+.PHONY : src/CMakeFiles/MPA_sync_test.dir/rule
+
+# Convenience name for target.
+MPA_sync_test: src/CMakeFiles/MPA_sync_test.dir/rule
+.PHONY : MPA_sync_test
+
+# fast build rule for target.
+MPA_sync_test/fast:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/MPA_sync_test.dir/build.make src/CMakeFiles/MPA_sync_test.dir/build
+.PHONY : MPA_sync_test/fast
+
+# Convenience name for target.
+src/CMakeFiles/SSATEST.dir/rule:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f CMakeFiles/Makefile2 src/CMakeFiles/SSATEST.dir/rule
+.PHONY : src/CMakeFiles/SSATEST.dir/rule
+
+# Convenience name for target.
+SSATEST: src/CMakeFiles/SSATEST.dir/rule
+.PHONY : SSATEST
+
+# fast build rule for target.
+SSATEST/fast:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/SSATEST.dir/build.make src/CMakeFiles/SSATEST.dir/build
+.PHONY : SSATEST/fast
+
+# Convenience name for target.
 src/CMakeFiles/calibrate.dir/rule:
 	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f CMakeFiles/Makefile2 src/CMakeFiles/calibrate.dir/rule
 .PHONY : src/CMakeFiles/calibrate.dir/rule
@@ -254,6 +296,78 @@ systemtest: src/CMakeFiles/systemtest.dir/rule
 systemtest/fast:
 	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/systemtest.dir/build.make src/CMakeFiles/systemtest.dir/build
 .PHONY : systemtest/fast
+
+MPA_async_test.o: MPA_async_test.cc.o
+.PHONY : MPA_async_test.o
+
+# target to build an object file
+MPA_async_test.cc.o:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/MPA_async_test.dir/build.make src/CMakeFiles/MPA_async_test.dir/MPA_async_test.cc.o
+.PHONY : MPA_async_test.cc.o
+
+MPA_async_test.i: MPA_async_test.cc.i
+.PHONY : MPA_async_test.i
+
+# target to preprocess a source file
+MPA_async_test.cc.i:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/MPA_async_test.dir/build.make src/CMakeFiles/MPA_async_test.dir/MPA_async_test.cc.i
+.PHONY : MPA_async_test.cc.i
+
+MPA_async_test.s: MPA_async_test.cc.s
+.PHONY : MPA_async_test.s
+
+# target to generate assembly for a file
+MPA_async_test.cc.s:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/MPA_async_test.dir/build.make src/CMakeFiles/MPA_async_test.dir/MPA_async_test.cc.s
+.PHONY : MPA_async_test.cc.s
+
+MPA_sync_test.o: MPA_sync_test.cc.o
+.PHONY : MPA_sync_test.o
+
+# target to build an object file
+MPA_sync_test.cc.o:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/MPA_sync_test.dir/build.make src/CMakeFiles/MPA_sync_test.dir/MPA_sync_test.cc.o
+.PHONY : MPA_sync_test.cc.o
+
+MPA_sync_test.i: MPA_sync_test.cc.i
+.PHONY : MPA_sync_test.i
+
+# target to preprocess a source file
+MPA_sync_test.cc.i:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/MPA_sync_test.dir/build.make src/CMakeFiles/MPA_sync_test.dir/MPA_sync_test.cc.i
+.PHONY : MPA_sync_test.cc.i
+
+MPA_sync_test.s: MPA_sync_test.cc.s
+.PHONY : MPA_sync_test.s
+
+# target to generate assembly for a file
+MPA_sync_test.cc.s:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/MPA_sync_test.dir/build.make src/CMakeFiles/MPA_sync_test.dir/MPA_sync_test.cc.s
+.PHONY : MPA_sync_test.cc.s
+
+SSATEST.o: SSATEST.cc.o
+.PHONY : SSATEST.o
+
+# target to build an object file
+SSATEST.cc.o:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/SSATEST.dir/build.make src/CMakeFiles/SSATEST.dir/SSATEST.cc.o
+.PHONY : SSATEST.cc.o
+
+SSATEST.i: SSATEST.cc.i
+.PHONY : SSATEST.i
+
+# target to preprocess a source file
+SSATEST.cc.i:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/SSATEST.dir/build.make src/CMakeFiles/SSATEST.dir/SSATEST.cc.i
+.PHONY : SSATEST.cc.i
+
+SSATEST.s: SSATEST.cc.s
+.PHONY : SSATEST.s
+
+# target to generate assembly for a file
+SSATEST.cc.s:
+	cd /home/rutca/DEVPH2MERGE/Ph2_ACF/build && $(MAKE) -f src/CMakeFiles/SSATEST.dir/build.make src/CMakeFiles/SSATEST.dir/SSATEST.cc.s
+.PHONY : SSATEST.cc.s
 
 calibrate.o: calibrate.cc.o
 .PHONY : calibrate.o
@@ -525,6 +639,9 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
+	@echo "... MPA_async_test"
+	@echo "... MPA_sync_test"
+	@echo "... SSATEST"
 	@echo "... calibrate"
 	@echo "... cbc3irrad"
 	@echo "... cmtest"
@@ -538,6 +655,15 @@ help:
 	@echo "... monitor"
 	@echo "... rebuild_cache"
 	@echo "... systemtest"
+	@echo "... MPA_async_test.o"
+	@echo "... MPA_async_test.i"
+	@echo "... MPA_async_test.s"
+	@echo "... MPA_sync_test.o"
+	@echo "... MPA_sync_test.i"
+	@echo "... MPA_sync_test.s"
+	@echo "... SSATEST.o"
+	@echo "... SSATEST.i"
+	@echo "... SSATEST.s"
 	@echo "... calibrate.o"
 	@echo "... calibrate.i"
 	@echo "... calibrate.s"

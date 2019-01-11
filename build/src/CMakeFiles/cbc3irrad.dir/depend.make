@@ -22,6 +22,7 @@ src/CMakeFiles/cbc3irrad.dir/cbc3irrad.cc.o: ../HWInterface/ICGlibFWInterface.h
 src/CMakeFiles/cbc3irrad.dir/cbc3irrad.cc.o: ../HWInterface/MPAGlibFWInterface.h
 src/CMakeFiles/cbc3irrad.dir/cbc3irrad.cc.o: ../HWInterface/MPAInterface.h
 src/CMakeFiles/cbc3irrad.dir/cbc3irrad.cc.o: ../HWInterface/RegManager.h
+src/CMakeFiles/cbc3irrad.dir/cbc3irrad.cc.o: ../HWInterface/SSAInterface.h
 src/CMakeFiles/cbc3irrad.dir/cbc3irrad.cc.o: ../System/FileParser.h
 src/CMakeFiles/cbc3irrad.dir/cbc3irrad.cc.o: ../System/SystemController.h
 src/CMakeFiles/cbc3irrad.dir/cbc3irrad.cc.o: ../Utils/CRCCalculator.h

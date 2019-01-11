@@ -1,9 +1,12 @@
+/home/rutca/DEVPH2MERGE/Ph2_ACF/build/src/CMakeFiles/MPA_async_test.dir
+/home/rutca/DEVPH2MERGE/Ph2_ACF/build/src/CMakeFiles/MPA_sync_test.dir
 /home/rutca/DEVPH2MERGE/Ph2_ACF/build/HWDescription/CMakeFiles/Ph2_Description.dir
 /home/rutca/DEVPH2MERGE/Ph2_ACF/build/HWInterface/CMakeFiles/Ph2_Interface.dir
 /home/rutca/DEVPH2MERGE/Ph2_ACF/build/System/CMakeFiles/Ph2_System.dir
 /home/rutca/DEVPH2MERGE/Ph2_ACF/build/tools/CMakeFiles/Ph2_Tools.dir
 /home/rutca/DEVPH2MERGE/Ph2_ACF/build/Utils/CMakeFiles/Ph2_Utils.dir
 /home/rutca/DEVPH2MERGE/Ph2_ACF/build/RootWeb/CMakeFiles/RootWeb.dir
+/home/rutca/DEVPH2MERGE/Ph2_ACF/build/src/CMakeFiles/SSATEST.dir
 /home/rutca/DEVPH2MERGE/Ph2_ACF/build/src/CMakeFiles/calibrate.dir
 /home/rutca/DEVPH2MERGE/Ph2_ACF/build/src/CMakeFiles/cbc3irrad.dir
 /home/rutca/DEVPH2MERGE/Ph2_ACF/build/src/CMakeFiles/cmtest.dir

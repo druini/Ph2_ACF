@@ -540,6 +540,14 @@ uhal/uhal.hpp
 ../Utils/easylogging++.h
 /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/easylogging++.h
 
+/home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
+vector
+-
+../HWInterface/D19cFWInterface.h
+/home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/D19cFWInterface.h
+pugixml/pugixml.hpp
+/home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/pugixml/pugixml.hpp
+
 /home/rutca/DEVPH2MERGE/Ph2_ACF/RootWeb/include/rootweb.hh
 boost/filesystem/exception.hpp
 -
@@ -625,6 +633,8 @@ FileParser.h
 /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/CbcInterface.h
 ../HWInterface/MPAInterface.h
 /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
+../HWInterface/SSAInterface.h
+/home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
 ../HWInterface/BeBoardInterface.h
 /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/BeBoardInterface.h
 ../HWInterface/BeBoardFWInterface.h

@@ -22,6 +22,7 @@ tools/CMakeFiles/Ph2_Tools.dir/AntennaTester.cc.o: ../HWInterface/ICGlibFWInterf
 tools/CMakeFiles/Ph2_Tools.dir/AntennaTester.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/AntennaTester.cc.o: ../HWInterface/MPAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/AntennaTester.cc.o: ../HWInterface/RegManager.h
+tools/CMakeFiles/Ph2_Tools.dir/AntennaTester.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/AntennaTester.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/AntennaTester.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/AntennaTester.cc.o: ../Utils/CRCCalculator.h
@@ -1208,6 +1209,7 @@ tools/CMakeFiles/Ph2_Tools.dir/BiasSweep.cc.o: ../HWInterface/ICFc7FWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/BiasSweep.cc.o: ../HWInterface/ICGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/BiasSweep.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/BiasSweep.cc.o: ../HWInterface/MPAInterface.h
+tools/CMakeFiles/Ph2_Tools.dir/BiasSweep.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/BiasSweep.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/BiasSweep.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/BiasSweep.cc.o: ../Utils/Cbc2Event.h
@@ -2362,6 +2364,7 @@ tools/CMakeFiles/Ph2_Tools.dir/CMTester.cc.o: ../HWInterface/ICGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/CMTester.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/CMTester.cc.o: ../HWInterface/MPAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/CMTester.cc.o: ../HWInterface/RegManager.h
+tools/CMakeFiles/Ph2_Tools.dir/CMTester.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/CMTester.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/CMTester.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/CMTester.cc.o: ../Utils/CRCCalculator.h
@@ -3540,6 +3543,7 @@ tools/CMakeFiles/Ph2_Tools.dir/Calibration.cc.o: ../HWInterface/ICGlibFWInterfac
 tools/CMakeFiles/Ph2_Tools.dir/Calibration.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/Calibration.cc.o: ../HWInterface/MPAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/Calibration.cc.o: ../HWInterface/RegManager.h
+tools/CMakeFiles/Ph2_Tools.dir/Calibration.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/Calibration.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/Calibration.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/Calibration.cc.o: ../Utils/CRCCalculator.h
@@ -5095,6 +5099,7 @@ tools/CMakeFiles/Ph2_Tools.dir/HybridTester.cc.o: ../HWInterface/ICGlibFWInterfa
 tools/CMakeFiles/Ph2_Tools.dir/HybridTester.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/HybridTester.cc.o: ../HWInterface/MPAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/HybridTester.cc.o: ../HWInterface/RegManager.h
+tools/CMakeFiles/Ph2_Tools.dir/HybridTester.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/HybridTester.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/HybridTester.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/HybridTester.cc.o: ../Utils/CRCCalculator.h
@@ -6262,6 +6267,7 @@ tools/CMakeFiles/Ph2_Tools.dir/LatencyScan.cc.o: ../HWInterface/ICGlibFWInterfac
 tools/CMakeFiles/Ph2_Tools.dir/LatencyScan.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/LatencyScan.cc.o: ../HWInterface/MPAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/LatencyScan.cc.o: ../HWInterface/RegManager.h
+tools/CMakeFiles/Ph2_Tools.dir/LatencyScan.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/LatencyScan.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/LatencyScan.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/LatencyScan.cc.o: ../Utils/CRCCalculator.h
@@ -7433,6 +7439,7 @@ tools/CMakeFiles/Ph2_Tools.dir/PedeNoise.cc.o: ../HWInterface/ICGlibFWInterface.
 tools/CMakeFiles/Ph2_Tools.dir/PedeNoise.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/PedeNoise.cc.o: ../HWInterface/MPAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/PedeNoise.cc.o: ../HWInterface/RegManager.h
+tools/CMakeFiles/Ph2_Tools.dir/PedeNoise.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/PedeNoise.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/PedeNoise.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/PedeNoise.cc.o: ../Utils/CRCCalculator.h
@@ -8605,6 +8612,7 @@ tools/CMakeFiles/Ph2_Tools.dir/PulseShape.cc.o: ../HWInterface/ICGlibFWInterface
 tools/CMakeFiles/Ph2_Tools.dir/PulseShape.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/PulseShape.cc.o: ../HWInterface/MPAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/PulseShape.cc.o: ../HWInterface/RegManager.h
+tools/CMakeFiles/Ph2_Tools.dir/PulseShape.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/PulseShape.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/PulseShape.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/PulseShape.cc.o: ../Utils/CRCCalculator.h
@@ -9779,6 +9787,7 @@ tools/CMakeFiles/Ph2_Tools.dir/RegisterTester.cc.o: ../HWInterface/ICGlibFWInter
 tools/CMakeFiles/Ph2_Tools.dir/RegisterTester.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/RegisterTester.cc.o: ../HWInterface/MPAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/RegisterTester.cc.o: ../HWInterface/RegManager.h
+tools/CMakeFiles/Ph2_Tools.dir/RegisterTester.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/RegisterTester.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/RegisterTester.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/RegisterTester.cc.o: ../Utils/CRCCalculator.h
@@ -10950,6 +10959,7 @@ tools/CMakeFiles/Ph2_Tools.dir/ShortFinder.cc.o: ../HWInterface/ICGlibFWInterfac
 tools/CMakeFiles/Ph2_Tools.dir/ShortFinder.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/ShortFinder.cc.o: ../HWInterface/MPAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/ShortFinder.cc.o: ../HWInterface/RegManager.h
+tools/CMakeFiles/Ph2_Tools.dir/ShortFinder.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/ShortFinder.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/ShortFinder.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/ShortFinder.cc.o: ../Utils/CRCCalculator.h
@@ -12128,6 +12138,7 @@ tools/CMakeFiles/Ph2_Tools.dir/SignalScan.cc.o: ../HWInterface/ICGlibFWInterface
 tools/CMakeFiles/Ph2_Tools.dir/SignalScan.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/SignalScan.cc.o: ../HWInterface/MPAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/SignalScan.cc.o: ../HWInterface/RegManager.h
+tools/CMakeFiles/Ph2_Tools.dir/SignalScan.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/SignalScan.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/SignalScan.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/SignalScan.cc.o: ../Utils/CRCCalculator.h
@@ -13300,6 +13311,7 @@ tools/CMakeFiles/Ph2_Tools.dir/SignalScanFit.cc.o: ../HWInterface/ICGlibFWInterf
 tools/CMakeFiles/Ph2_Tools.dir/SignalScanFit.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/SignalScanFit.cc.o: ../HWInterface/MPAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/SignalScanFit.cc.o: ../HWInterface/RegManager.h
+tools/CMakeFiles/Ph2_Tools.dir/SignalScanFit.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/SignalScanFit.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/SignalScanFit.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/SignalScanFit.cc.o: ../Utils/CRCCalculator.h
@@ -14482,6 +14494,7 @@ tools/CMakeFiles/Ph2_Tools.dir/StubSweep.cc.o: ../HWInterface/ICFc7FWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/StubSweep.cc.o: ../HWInterface/ICGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/StubSweep.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/StubSweep.cc.o: ../HWInterface/MPAInterface.h
+tools/CMakeFiles/Ph2_Tools.dir/StubSweep.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/StubSweep.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/StubSweep.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/StubSweep.cc.o: ../Utils/Cbc2Event.h
@@ -15642,6 +15655,7 @@ tools/CMakeFiles/Ph2_Tools.dir/Tool.cc.o: ../HWInterface/ICGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/Tool.cc.o: ../HWInterface/MPAGlibFWInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/Tool.cc.o: ../HWInterface/MPAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/Tool.cc.o: ../HWInterface/RegManager.h
+tools/CMakeFiles/Ph2_Tools.dir/Tool.cc.o: ../HWInterface/SSAInterface.h
 tools/CMakeFiles/Ph2_Tools.dir/Tool.cc.o: ../System/FileParser.h
 tools/CMakeFiles/Ph2_Tools.dir/Tool.cc.o: ../System/SystemController.h
 tools/CMakeFiles/Ph2_Tools.dir/Tool.cc.o: ../Utils/CRCCalculator.h

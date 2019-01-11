@@ -128,6 +128,45 @@ RootWeb/fast:
 .PHONY : RootWeb/fast
 
 #=============================================================================
+# Target rules for targets named MPA_async_test
+
+# Build rule for target.
+MPA_async_test: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 MPA_async_test
+.PHONY : MPA_async_test
+
+# fast build rule for target.
+MPA_async_test/fast:
+	$(MAKE) -f src/CMakeFiles/MPA_async_test.dir/build.make src/CMakeFiles/MPA_async_test.dir/build
+.PHONY : MPA_async_test/fast
+
+#=============================================================================
+# Target rules for targets named MPA_sync_test
+
+# Build rule for target.
+MPA_sync_test: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 MPA_sync_test
+.PHONY : MPA_sync_test
+
+# fast build rule for target.
+MPA_sync_test/fast:
+	$(MAKE) -f src/CMakeFiles/MPA_sync_test.dir/build.make src/CMakeFiles/MPA_sync_test.dir/build
+.PHONY : MPA_sync_test/fast
+
+#=============================================================================
+# Target rules for targets named SSATEST
+
+# Build rule for target.
+SSATEST: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 SSATEST
+.PHONY : SSATEST
+
+# fast build rule for target.
+SSATEST/fast:
+	$(MAKE) -f src/CMakeFiles/SSATEST.dir/build.make src/CMakeFiles/SSATEST.dir/build
+.PHONY : SSATEST/fast
+
+#=============================================================================
 # Target rules for targets named calibrate
 
 # Build rule for target.
@@ -371,6 +410,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... Ph2_Tools"
 	@echo "... RootWeb"
+	@echo "... MPA_async_test"
+	@echo "... MPA_sync_test"
+	@echo "... SSATEST"
 	@echo "... calibrate"
 	@echo "... cbc3irrad"
 	@echo "... cmtest"

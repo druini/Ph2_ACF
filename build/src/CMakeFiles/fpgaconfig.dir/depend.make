@@ -24,6 +24,7 @@ src/CMakeFiles/fpgaconfig.dir/fpgaconfig.cc.o: ../HWInterface/ICGlibFWInterface.
 src/CMakeFiles/fpgaconfig.dir/fpgaconfig.cc.o: ../HWInterface/MPAGlibFWInterface.h
 src/CMakeFiles/fpgaconfig.dir/fpgaconfig.cc.o: ../HWInterface/MPAInterface.h
 src/CMakeFiles/fpgaconfig.dir/fpgaconfig.cc.o: ../HWInterface/RegManager.h
+src/CMakeFiles/fpgaconfig.dir/fpgaconfig.cc.o: ../HWInterface/SSAInterface.h
 src/CMakeFiles/fpgaconfig.dir/fpgaconfig.cc.o: ../System/FileParser.h
 src/CMakeFiles/fpgaconfig.dir/fpgaconfig.cc.o: ../System/SystemController.h
 src/CMakeFiles/fpgaconfig.dir/fpgaconfig.cc.o: ../Utils/CRCCalculator.h

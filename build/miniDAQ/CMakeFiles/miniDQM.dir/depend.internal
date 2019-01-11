@@ -23,6 +23,7 @@ miniDAQ/CMakeFiles/miniDQM.dir/DQMHistogrammer.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/Utils/CRCCalculator.h
@@ -1199,6 +1200,7 @@ miniDAQ/CMakeFiles/miniDQM.dir/miniDQM.cc.o
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAGlibFWInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/MPAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/RegManager.h
+ /home/rutca/DEVPH2MERGE/Ph2_ACF/HWInterface/SSAInterface.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/RootWeb/include/rootweb.hh
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/FileParser.h
  /home/rutca/DEVPH2MERGE/Ph2_ACF/System/SystemController.h

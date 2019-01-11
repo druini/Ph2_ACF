@@ -23,6 +23,7 @@ src/CMakeFiles/cbc3irrad.dir/cbc3irrad.cc.o
  ../HWInterface/MPAGlibFWInterface.h
  ../HWInterface/MPAInterface.h
  ../HWInterface/RegManager.h
+ ../HWInterface/SSAInterface.h
  ../System/FileParser.h
  ../System/SystemController.h
  ../Utils/CRCCalculator.h
