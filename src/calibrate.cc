@@ -126,6 +126,7 @@ int main ( int argc, char* argv[] )
         //second parameter disables stub logic on CBC3
         cPedeNoise.Initialise (cAllChan, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
+        // cPedeNoise.measureNoise(200);
 
         //cPedeNoise.sweepSCurves (225);
         //cPedeNoise.sweepSCurves (205);

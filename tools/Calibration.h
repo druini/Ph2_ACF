@@ -60,11 +60,7 @@ class Calibration : public Tool
 
     // void toggleOffset ( int pTGroup, uint8_t pBit, bool pBegin );
 
-    void measureOccupancy ( uint32_t pNEvents, int pTGroup );
-
     float findCbcOccupancy ( Cbc* pCbc, int pTGroup, int pEventsPerPoint );
-
-    void fillOccupancyHist ( Cbc* pCbc, int pTGroup, const Event* pEvent );
 
     void clearOccupancyHists ( Cbc* pCbc );
 

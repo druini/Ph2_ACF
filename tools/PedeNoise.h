@@ -60,12 +60,8 @@ class PedeNoise : public Tool
     TCanvas* fNoiseCanvas;
     TCanvas* fPedestalCanvas;
     TCanvas* fFeSummaryCanvas;
-    //histogram to divide the Scurves by to get proper binomial errors
-    TH2F*    fNormHist;
-
-    //have a map of thresholds and hit counts
-    std::map<Cbc*, uint16_t> fThresholdMap;
-    std::map<Cbc*, uint32_t> fHitCountMap;
+    // //histogram to divide the Scurves by to get proper binomial errors
+    // TH2F*    fNormHist;
 
     // Counters
     uint32_t fNCbc;
@@ -82,14 +78,7 @@ class PedeNoise : public Tool
     //to hold the original register values
     std::map<Cbc*, uint8_t> fStubLogicValue;
     std::map<Cbc*, uint8_t> fHIPCountValue;
-
-  protected:
-    //handling offsets
-    void saveInitialOffsets();
-    void setInitialOffsets();
-    void enableTestGroupforNoise ( int  pTGrpId );
-    //void setOffset ( uint8_t pOffset, int  pTGrpId );
-
+    
   private:
     void measureSCurves (std::string pHistName,  uint16_t pStartValue = 0 );
     void differentiateHist (Cbc* pCbc, std::string pHistName);
@@ -99,10 +88,8 @@ class PedeNoise : public Tool
 
     // for validation
     void setThresholdtoNSigma (BeBoard* pBoard, uint32_t pNSigma);
-    void fillOccupancyHist (BeBoard* pBoard, const std::vector<Event*>& pEvents);
-
+    
     //helpers for SCurve measurement
-    void measureOccupancy (BeBoard* pBoard, int pTGrpId);
     uint16_t findPedestal (bool forseAllChannels = false);
 };
 
