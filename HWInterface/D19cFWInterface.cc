@@ -202,11 +202,11 @@ namespace Ph2_HwInterface {
                 break;
 
             case 0x2:
-                chip_type = ChipType::UNDEFINED;
+                chip_type = ChipType::MPA;
                 break;
 
 	    case 0x3:
-		chip_type = ChipType::UNDEFINED;
+		chip_type = ChipType::SSA;
 		break;
         }
 
@@ -289,146 +289,163 @@ namespace Ph2_HwInterface {
         return cVersionWord;
     }
 
-    void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
+void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
+{
+    // after firmware loading it seems that CBC3 is not super stable
+    // and it needs fast reset after, so let's be secure and do also the hard one..
+    this->CbcHardReset();
+    this->CbcFastReset();
+    usleep (1);
+
+    WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
+
+    usleep (500);
+
+    // read info about current firmware
+    uint32_t cChipTypeCode = ReadReg ("fc7_daq_stat.general.info.chip_type");
+    std::string cChipName = getChipName (cChipTypeCode);
+    fFirwmareChipType = getChipType (cChipTypeCode);
+    fFWNHybrids = ReadReg ("fc7_daq_stat.general.info.num_hybrids");
+    fFWNChips = ReadReg ("fc7_daq_stat.general.info.num_chips");
+    fCBC3Emulator = (ReadReg ("fc7_daq_stat.general.info.implementation") == 2);
+    fIsDDR3Readout = (ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type") == 1);
+    fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
+    if(fI2CVersion >= 1) this->SetI2CAddressTable();
+
+    fNCbc = 0;
+    std::vector< std::pair<std::string, uint32_t> > cVecReg;
+
+    LOG (INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
+
+    int fNHybrids = 0;
+    uint16_t hybrid_enable = 0;
+    uint8_t* chips_enable = new uint8_t[16];
+
+    for (int i = 0; i < 16; i++) chips_enable[i] = 0;
+    //then loop the HWDescription and find out about our Connected CBCs
+    for (Module* cFe : pBoard->fModuleVector)
     {
-        // after firmware loading it seems that CBC3 is not super stable
-        // and it needs fast reset after, so let's be secure and do also the hard one..
-        this->CbcHardReset();
-        this->CbcFastReset();
-        usleep (1);
+        fNHybrids++;
+        LOG (INFO) << "Enabling Hybrid " << (int) cFe->getFeId();
+        hybrid_enable |= 1 << cFe->getFeId();
 
-        WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
-
-        usleep (500);
-
-        // read info about current firmware
-        uint32_t cChipTypeCode = ReadReg ("fc7_daq_stat.general.info.chip_type");
-        std::string cChipName = getChipName (cChipTypeCode);
-        fFirwmareChipType = getChipType (cChipTypeCode);
-        fFWNHybrids = ReadReg ("fc7_daq_stat.general.info.num_hybrids");
-        fFWNChips = ReadReg ("fc7_daq_stat.general.info.num_chips");
-        fCBC3Emulator = (ReadReg ("fc7_daq_stat.general.info.implementation") == 2);
-        fIsDDR3Readout = (ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type") == 1);
-	fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
-	if(fI2CVersion >= 1) this->SetI2CAddressTable();
-        
-	fNCbc = 0;
-        std::vector< std::pair<std::string, uint32_t> > cVecReg;
-
-        LOG (INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
-
-        int fNHybrids = 0;
-        uint16_t hybrid_enable = 0;
-        uint8_t* chips_enable = new uint8_t[16];
-
-        for (int i = 0; i < 16; i++) chips_enable[i] = 0;
-
-        //then loop the HWDescription and find out about our Connected CBCs
-        for (Module* cFe : pBoard->fModuleVector)
-        {
-            fNHybrids++;
-            LOG (INFO) << "Enabling Hybrid " << (int) cFe->getFeId();
-            hybrid_enable |= 1 << cFe->getFeId();
-
-            //configure the CBCs - preliminary FW only supports 1 CBC but put the rest of the code there and comment
+        if (fFirwmareChipType == ChipType::CBC2 || fFirwmareChipType == ChipType::CBC3) {
             for ( Cbc* cCbc : cFe->fCbcVector)
             {
-                LOG (INFO) << "     Enabling Chip " << (int) cCbc->getCbcId();
+                LOG (INFO) << "     Enabling CBC2 Chip " << (int) cCbc->getCbcId();
                 chips_enable[cFe->getFeId()] |= 1 << cCbc->getCbcId();
                 //need to increment the NCbc counter for I2C controller
                 fNCbc++;
             }
-        }
-
-        // hybrid / chips enabling part
-        cVecReg.push_back ({"fc7_daq_cnfg.global.hybrid_enable", hybrid_enable});
-
-        for (uint32_t i = 0; i < 16; i++)
-        {
-            char name[50];
-            std::sprintf (name, "fc7_daq_cnfg.global.chips_enable_hyb_%02d", i);
-            std::string name_str (name);
-            cVecReg.push_back ({name_str, chips_enable[i]});
-        }
-
-        delete chips_enable;
-        LOG (INFO) << BOLDGREEN << fNHybrids << " hybrid(s) was(were) enabled with the total amount of " << fNCbc << " chip(s)!" << RESET;
-
-        //last, loop over the variable registers from the HWDescription.xml file
-        //this is where I should get all the clocking and FastCommandInterface settings
-        BeBoardRegMap cGlibRegMap = pBoard->getBeBoardRegMap();
-
-        bool dio5_enabled = false;
-
-        for ( auto const& it : cGlibRegMap )
-        {
-            cVecReg.push_back ( {it.first, it.second} );
-
-            if (it.first == "fc7_daq_cnfg.dio5_block.dio5_en") dio5_enabled = (bool) it.second;
-        }
-
-        WriteStackReg ( cVecReg );
-        cVecReg.clear();
-
-        // load trigger configuration
-        WriteReg ("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
-
-        // load dio5 configuration
-        if (dio5_enabled)
-        {
-            PowerOnDIO5();
-            WriteReg ("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
-        }
-
-        // now set event type (ZS or VR)
-        if (pBoard->getEventType() == EventType::ZS) WriteReg ("fc7_daq_cnfg.readout_block.global.zero_suppression_enable", 0x1);
-        else WriteReg ("fc7_daq_cnfg.readout_block.global.zero_suppression_enable", 0x0);
-
-        // resetting hard
-        this->CbcHardReset();
-
-        // ping all cbcs (reads data from registers #0)
-        uint32_t cInit = ( ( (2) << 28 ) | (  (0) << 18 )  | ( (0) << 17 ) | ( (1) << 16 ) | (0 << 8 ) | 0);
-
-        WriteReg ("fc7_daq_ctrl.command_processor_block.i2c.command_fifo", cInit);
-        //read the replies for the pings!
-        std::vector<uint32_t> pReplies;
-        bool cReadSuccess = !ReadI2C (fNCbc, pReplies);
-        bool cWordCorrect = true;
-
-        if (cReadSuccess)
-        {
-            // all the replies will be sorted by hybrid id/chip id: hybrid0: chips(0,2,3,4..), hybrid2: chips(...) - so we can use index k.
-            uint8_t k = 0;
-
-            for (Module* cFe : pBoard->fModuleVector)
+        } else if (fFirwmareChipType == ChipType::MPA) {
+            for ( MPA* cMPA : cFe->fMPAVector)
             {
-                for ( Cbc* cCbc : cFe->fCbcVector)
-                {
-                    uint32_t cWord = pReplies.at (k);
-                    if(fI2CVersion >= 1) cWordCorrect = ( ( ( (cWord & 0x007C0000) >> 18) == cCbc->getCbcId() ) & ( ( (cWord & 0x07800000) >> 23) == cFe->getFeId() ) ) ? true : false;
-                    else cWordCorrect = ( ( ( (cWord & 0x00f00000) >> 20) == cCbc->getCbcId() ) & ( ( (cWord & 0x0f000000) >> 24) == cFe->getFeId() ) ) ? true : false;
+                LOG (INFO) << "     Enabling MPA Chip " << (int) cMPA->getMPAId();
+                chips_enable[cFe->getFeId()] |= 1 << cMPA->getMPAId();
+                //need to increment the counter for I2C controller
+                fNMPA++;
+            }
+        } else if (fFirwmareChipType == ChipType::SSA) {
+	    for (SSA* cSSA : cFe->fSSAVector)
+	    {
+		LOG (INFO) << "     Enabling SSA Chip " << (int) cSSA->getSSAId();
+                chips_enable[cFe->getFeId()] |= 1 << cSSA->getSSAId();
+                //need to increment the counter for I2C controller
+		fNSSA++;
+	    }
+	}
 
-		    k++;
+    }
 
-                    if (!cWordCorrect) break;
-                }
+    // hybrid / chips enabling part
+    cVecReg.push_back ({"fc7_daq_cnfg.global.hybrid_enable", hybrid_enable});
+
+    for (uint32_t i = 0; i < 16; i++)
+    {
+        char name[50];
+        std::sprintf (name, "fc7_daq_cnfg.global.chips_enable_hyb_%02d", i);
+        std::string name_str (name);
+        cVecReg.push_back ({name_str, chips_enable[i]});
+    }
+
+    delete chips_enable;
+    LOG (INFO) << BOLDGREEN << fNHybrids << " hybrid(s) was(were) enabled with the total amount of " << (fNCbc+fNMPA+fNSSA) << " chip(s)!" << RESET;
+
+    //last, loop over the variable registers from the HWDescription.xml file
+    //this is where I should get all the clocking and FastCommandInterface settings
+    BeBoardRegMap cGlibRegMap = pBoard->getBeBoardRegMap();
+
+    bool dio5_enabled = false;
+
+    for ( auto const& it : cGlibRegMap )
+    {
+        cVecReg.push_back ( {it.first, it.second} );
+
+        if (it.first == "fc7_daq_cnfg.dio5_block.dio5_en") dio5_enabled = (bool) it.second;
+    }
+
+    WriteStackReg ( cVecReg );
+    cVecReg.clear();
+
+    // load trigger configuration
+    WriteReg ("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+
+    // load dio5 configuration
+    if (dio5_enabled)
+    {
+        PowerOnDIO5();
+        WriteReg ("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
+    }
+
+    // now set event type (ZS or VR)
+    if (pBoard->getEventType() == EventType::ZS) WriteReg ("fc7_daq_cnfg.readout_block.global.zero_suppression_enable", 0x1);
+    else WriteReg ("fc7_daq_cnfg.readout_block.global.zero_suppression_enable", 0x0);
+
+    // resetting hard
+    this->CbcHardReset();
+
+    // ping all cbcs (reads data from registers #0)
+    uint32_t cInit = ( ( (2) << 28 ) | (  (0) << 18 )  | ( (0) << 17 ) | ( (1) << 16 ) | (0 << 8 ) | 0);
+    std::cout<<cInit<<std::endl;
+    WriteReg ("fc7_daq_ctrl.command_processor_block.i2c.command_fifo", cInit);
+    //read the replies for the pings!
+    std::vector<uint32_t> pReplies;
+    bool cReadSuccess = !ReadI2C (fNCbc+fNMPA+fNSSA, pReplies);
+    bool cWordCorrect = true;
+
+    if (cReadSuccess)
+    {
+        // all the replies will be sorted by hybrid id/chip id: hybrid0: chips(0,2,3,4..), hybrid2: chips(...) - so we can use index k.
+        uint8_t k = 0;
+
+        for (Module* cFe : pBoard->fModuleVector)
+        {
+            for ( Cbc* cCbc : cFe->fCbcVector)
+            {
+                uint32_t cWord = pReplies.at (k);
+                if(fI2CVersion >= 1) cWordCorrect = ( ( ( (cWord & 0x007C0000) >> 18) == cCbc->getCbcId() ) & ( ( (cWord & 0x07800000) >> 23) == cFe->getFeId() ) ) ? true : false;
+                else cWordCorrect = ( ( ( (cWord & 0x00f00000) >> 20) == cCbc->getCbcId() ) & ( ( (cWord & 0x0f000000) >> 24) == cFe->getFeId() ) ) ? true : false;
+
+                k++;
+
+                if (!cWordCorrect) break;
             }
         }
-
-        if (cReadSuccess && cWordCorrect) LOG (INFO) << "Successfully received *Pings* from " << fNCbc << " Cbcs";
-
-        if (!cReadSuccess) LOG (ERROR) << RED << "Did not receive the correct number of *Pings*; expected: " << fNCbc << ", received: " << pReplies.size() << RESET;
-
-        if (!cWordCorrect) LOG (ERROR) << RED << "FE/CBC ids are not correct!" << RESET;
-
-        this->PhaseTuning (pBoard);
-
-        this->ResetReadout();
-        
-	//adding an Orbit reset to align CBC L1A counters
-        this->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset",0x1);
     }
+
+    if (cReadSuccess && cWordCorrect) LOG (INFO) << "Successfully received *Pings* from " << fNCbc+fNMPA+fNSSA << " chips";
+
+    if (!cReadSuccess) LOG (ERROR) << RED << "Did not receive the correct number of *Pings*; expected: " << fNCbc+fNMPA+fNSSA << ", received: " << pReplies.size() << RESET;
+
+    if (!cWordCorrect) LOG (ERROR) << RED << "FEs/Chip ids are not correct!" << RESET;
+
+    this->PhaseTuning (pBoard);
+
+    this->ResetReadout();
+
+    //adding an Orbit reset to align CBC L1A counters
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset",0x1);
+}
 
     void D19cFWInterface::PowerOnDIO5()
     {
@@ -552,7 +569,49 @@ namespace Ph2_HwInterface {
     // set i2c address table depending on the hybrid
     void D19cFWInterface::SetI2CAddressTable() 
     {
-        LOG (INFO) << BOLDGREEN << "Setting the I2C address table" << RESET;
+       
+    LOG (INFO) << BOLDGREEN << "Setting the I2C address table" << RESET;
+
+    // creating the map
+    std::vector< std::vector<uint32_t> > i2c_slave_map;
+
+    // setting the map for different chip types
+    if (fFirwmareChipType == ChipType::CBC2 || fFirwmareChipType == ChipType::CBC3) {
+        // nothing to de done here default addresses are set for CBC
+        // actually FIXME
+        return;
+    } else if (fFirwmareChipType == ChipType::MPA) {
+        for (int id = 0; id < fFWNChips; id++) {
+            // for chip emulator register width is 8 bits, not 16 as for MPA
+            if(!fCBC3Emulator) {
+                i2c_slave_map.push_back({0b1000000 + id, 2, 1, 1, 1, 0});
+            } else {
+                i2c_slave_map.push_back({0b1000000 + id, 1, 1, 1, 1, 0});
+            }
+        }
+    }
+    else if (fFirwmareChipType == ChipType::SSA) // MUST BE IN ORDER! CANNOT DO 0, 1, 4
+	{
+	LOG (INFO) << BOLDRED << "WE ARE HERE!!! WE ARE HERE!!! WE ARE HERE!!!  " << fFWNChips << RESET;
+	for (int id = 0; id < fFWNChips; id++) 
+		{
+		i2c_slave_map.push_back({0b0100000 + id, 2, 1, 1, 1, 0}); // FIXME SSA ??
+		}
+	}
+    for (int ism = 0; ism < i2c_slave_map.size(); ism++) {
+        // setting the params
+        uint32_t shifted_i2c_address = i2c_slave_map[ism][0]<<25;
+        uint32_t shifted_register_address_nbytes = i2c_slave_map[ism][1]<<10;
+        uint32_t shifted_data_wr_nbytes = i2c_slave_map[ism][2]<<5;
+        uint32_t shifted_data_rd_nbytes = i2c_slave_map[ism][3]<<0;
+        uint32_t shifted_stop_for_rd_en = i2c_slave_map[ism][4]<<24;
+        uint32_t shifted_nack_en = i2c_slave_map[ism][5]<<23;
+
+        // writing the item to the firmware
+        uint32_t final_item = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
+        std::string curreg = "fc7_daq_cnfg.command_processor_block.i2c_address_table.slave_" + std::to_string(ism) + "_config";
+        WriteReg(curreg, final_item);
+    }
     }
 
     void D19cFWInterface::Start()

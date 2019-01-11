@@ -51,4 +51,9 @@ int main( int argc, char* argv[] )
 	std::this_thread::sleep_for (std::chrono::milliseconds (1000) ); // Again, may be longer than needed, but we know from the python power-on code that this isn't instantaneous.
 	LOG (INFO) << BOLDRED << "SSA POWERED ON" << RESET;
 
+	cTool.ConfigureHw();
+	cTool.fBeBoardInterface->getBoardInfo(pBoard);
+	std::vector < SSA* > cSSAVector = pBoard->getModule(0)->fSSAVector;
+
+
 }

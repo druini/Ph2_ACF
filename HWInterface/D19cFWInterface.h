@@ -46,6 +46,8 @@ namespace Ph2_HwInterface {
         FileHandler* fFileHandler ;
         uint32_t fBroadcastCbcId;
         uint32_t fNCbc;
+        uint32_t fNMPA;
+        uint32_t fNSSA;
         uint32_t fFMCId;
 
         // number of chips and hybrids defined in firmware (compiled for)
