@@ -18,8 +18,8 @@
 
         <CBC_Files path="./settings/CbcFiles/" />
 
-        <!-- <CBC Id="0" configfile="CBC3_default.txt" /> -->
-        <CBC Id="0" configfile="CBC3_maskedStrips.txt" />
+        <CBC Id="0" configfile="CBC3_default.txt" />
+        <!-- <CBC Id="0" configfile="CBC3_maskedStrips.txt" /> -->
         <!-- <CBC Id="1" configfile="CBC3_maskedStrips.txt" /> -->
         <CBC Id="1" configfile="CBC3_default.txt" />
     </Module>
@@ -142,7 +142,7 @@
     <!-- <Setting name="FitSCurves">0</Setting> -->
 
     <!--[>PedeNoise<]-->
-    <Setting name="SkipMaskedChannels">1</Setting>
+    <Setting name="SkipMaskedChannels">0</Setting>
 
     <!--Signal Scan Fit-->
 	  <Setting name="InitialVcth">0x78</Setting>

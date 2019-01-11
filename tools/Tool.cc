@@ -1248,49 +1248,6 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
     }
 
 
-
-    
-    // for(const auto & group : fTestGroupChannelMap){
-
-    //     if(!fAllChan && group.first >=0){
-    //         if(fMaskChannelsFromOtherGroups){// mask channel not scanned
-    //             for ( auto cFe : pBoard->fModuleVector )
-    //             {
-    //                 for ( auto cCbc : cFe->fCbcVector )
-    //                 {
-    //                     unmaskAllChannels(cCbc);
-    //                     maskChannelFroOtherGroups (cCbc, group.first);
-
-    //                     if(fTestPulse) selectGroupTestPulse(cCbc, group.first);
-    //                 }
-    //             }
-    //         }
-
-    //         measureBeBoardOccupancyPerGroup(group.second, pBoard, numberOfEvents, moduleOccupancyPerChannelMap, moduleNormalizationMap, moduleNumberOfHitsMap);
-    //     }
-
-    //     else if(fAllChan && group.first == -1){
-    //         measureBeBoardOccupancyPerGroup(group.second, pBoard, numberOfEvents, moduleOccupancyPerChannelMap, moduleNormalizationMap, moduleNumberOfHitsMap);
-    //     }
-            
-    // }
-
-    // if(!fAllChan && fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
-    // {
-    //     for ( auto cFe : pBoard->fModuleVector )
-    //     {
-    //         for ( auto cCbc : cFe->fCbcVector )
-    //         {
-    //             fCbcInterface->ConfigureCbcOriginalMask ( cCbc );
-    //         }
-    //     }
-    // }
-
-
-
-
-
-
     //Evaluate module and BeBoard Occupancy
     for ( auto cFe : pBoard->fModuleVector )
     {
@@ -1329,6 +1286,62 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
             }
             CbcOccupancyPerChannelMap *cbcOccupancy = &moduleOccupancyPerChannelMap[cFe->getModuleId()];
             
+            // if(moduleNormalizationMap.find(cFe->getModuleId())==moduleNormalizationMap.end()){
+            //     moduleNormalizationMap[cFe->getModuleId()]=std::map<uint8_t,uint32_t>();
+            //     moduleNumberOfHitsMap[cFe->getModuleId()]=std::map<uint8_t,uint32_t>();
+            // }
+            // std::map<uint8_t,uint32_t> *cbcNormalizationMap = &moduleNormalizationMap[cFe->getModuleId()];
+            // std::map<uint8_t,uint32_t> *cbcNumberOfHitsMap = &moduleNumberOfHitsMap[cFe->getModuleId()];
+
+            for ( auto cCbc : cFe->fCbcVector )
+            {
+                // std::vector<uint8_t> cbcMask;
+                // bool cbcAsMaskedChannels = cCbc->asMaskedChannels();
+                // if(cbcAsMaskedChannels) cbcMask = cCbc->getCbcMask();
+
+                if(cbcOccupancy->find(cCbc->getCbcId())==cbcOccupancy->end()){
+                    (*cbcOccupancy)[cCbc->getCbcId()]=ChannelOccupancy(cCbc->getNumberOfChannels(),0);
+                }
+                ChannelOccupancy *stripOccupancy = &cbcOccupancy->at(cCbc->getCbcId());
+
+                // if(cbcNormalizationMap->find(cCbc->getCbcId())==cbcNormalizationMap->end()){
+                //     (*cbcNormalizationMap)[cCbc->getCbcId()]=0;
+                //     (*cbcNumberOfHitsMap)[cCbc->getCbcId()] =0;
+                // }
+
+
+                for ( auto& cChan : cTestGrpChannelVec )
+                {
+
+                    // bool isChannelEnabled = true;
+                    
+                    // if(fSkipMaskedChannels && cbcAsMaskedChannels){
+                    //     if(!( (cbcMask[cChan>>3]>>(cChan&0x7)) &0x1) ){
+                    //         isChannelEnabled=false;
+                    //     }
+                    // }
+
+                    // if(isChannelEnabled) ++(*cbcNormalizationMap)[cCbc->getCbcId()];
+                    // // if(stripOccupancy->find(cChan)==stripOccupancy->end()){
+                    // //     (*stripOccupancy)[cChan]=0;
+                    // // }
+
+                    if ( ev->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChan) )
+                    {
+                        ++stripOccupancy->at(cChan);
+
+                        // ++(*cbcNumberOfHitsMap)[cCbc->getCbcId()];
+                        // if(isChannelEnabled) ++(*cbcNumberOfHitsMap)[cCbc->getCbcId()];
+                    }
+                }
+            }
+        }
+    }
+
+    for ( auto cFe : pBoard->fModuleVector )
+        {
+            CbcOccupancyPerChannelMap *cbcChannelOccupancy = &moduleOccupancyPerChannelMap[cFe->getModuleId()];
+   
             if(moduleNormalizationMap.find(cFe->getModuleId())==moduleNormalizationMap.end()){
                 moduleNormalizationMap[cFe->getModuleId()]=std::map<uint8_t,uint32_t>();
                 moduleNumberOfHitsMap[cFe->getModuleId()]=std::map<uint8_t,uint32_t>();
@@ -1338,14 +1351,12 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
 
             for ( auto cCbc : cFe->fCbcVector )
             {
+                ChannelOccupancy *channelOccupancy = &cbcChannelOccupancy->at(cCbc->getCbcId());
+                
                 std::vector<uint8_t> cbcMask;
                 bool cbcAsMaskedChannels = cCbc->asMaskedChannels();
                 if(cbcAsMaskedChannels) cbcMask = cCbc->getCbcMask();
 
-                if(cbcOccupancy->find(cCbc->getCbcId())==cbcOccupancy->end()){
-                    (*cbcOccupancy)[cCbc->getCbcId()]=ChannelOccupancy(cCbc->getNumberOfChannels(),0);
-                }
-                ChannelOccupancy *stripOccupancy = &cbcOccupancy->at(cCbc->getCbcId());
 
                 if(cbcNormalizationMap->find(cCbc->getCbcId())==cbcNormalizationMap->end()){
                     (*cbcNormalizationMap)[cCbc->getCbcId()]=0;
@@ -1355,42 +1366,20 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
 
                 for ( auto& cChan : cTestGrpChannelVec )
                 {
-
-                    bool isChannelEnabled = true;
-                    
-                    if(fSkipMaskedChannels && cbcAsMaskedChannels){
-                        if(!( (cbcMask[cChan>>3]>>(cChan&0x7)) &0x1) ){
-                            isChannelEnabled=false;
+                    if(fSkipMaskedChannels && cbcAsMaskedChannels)
+                    {
+                        if(( (cbcMask[cChan>>3]>>(cChan&0x7)) &0x1) )
+                        {
+                            (*cbcNormalizationMap)[cCbc->getCbcId()]+=numberOfEvents;
+                            (*cbcNumberOfHitsMap)[cCbc->getCbcId()]+=channelOccupancy->at(cChan);
                         }
                     }
-
-                    if(isChannelEnabled) ++(*cbcNormalizationMap)[cCbc->getCbcId()];
-                    // if(stripOccupancy->find(cChan)==stripOccupancy->end()){
-                    //     (*stripOccupancy)[cChan]=0;
-                    // }
-
-                    if ( ev->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChan) )
+                    else
                     {
-                        ++stripOccupancy->at(cChan);
-
-                        if(isChannelEnabled) ++(*cbcNumberOfHitsMap)[cCbc->getCbcId()];
+                        (*cbcNormalizationMap)[cCbc->getCbcId()]+=numberOfEvents;
+                        (*cbcNumberOfHitsMap)[cCbc->getCbcId()]+=channelOccupancy->at(cChan);
                     }
-                }
-            }
-        }
-    }
-
-    for ( auto cFe : pBoard->fModuleVector )
-        {
-            CbcOccupancyPerChannelMap *cbcOccupancy = &moduleOccupancyPerChannelMap[cFe->getModuleId()];
-
-            for ( auto cCbc : cFe->fCbcVector )
-            {
-                ChannelOccupancy *stripOccupancy = &cbcOccupancy->at(cCbc->getCbcId());
-
-                for ( auto& cChan : cTestGrpChannelVec )
-                {
-                    stripOccupancy->at(cChan)/=numberOfEvents;
+                    channelOccupancy->at(cChan)/=numberOfEvents;
                 }
             }
         }
