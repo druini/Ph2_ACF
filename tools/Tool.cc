@@ -12,7 +12,8 @@ Tool::Tool() :
     fResultFile (nullptr),
     fSkipMaskedChannels(false),
     fAllChan(false),
-    fMaskChannelsFromOtherGroups(true)
+    fMaskChannelsFromOtherGroups(false),
+    fTestPulse(false)
 {
 #ifdef __HTTP__
     fHttpServer = nullptr;
@@ -32,7 +33,8 @@ Tool::Tool (THttpServer* pHttpServer) :
     fHttpServer (pHttpServer),
     fSkipMaskedChannels(false),
     fAllChan(false),
-    fMaskChannelsFromOtherGroups(true)
+    fMaskChannelsFromOtherGroups(false),
+    fTestPulse(false)
 {
 }
 #endif
@@ -479,9 +481,46 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
                 }
 
                 this->fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+
             }
         }
     }
+}
+
+void Tool::enableTestPulse(bool enableTP)
+{
+
+    for (auto cBoard : this->fBoardVector)
+    {
+        for (auto cFe : cBoard->fModuleVector)
+        {
+            for (auto cCbc : cFe->fCbcVector)
+            {
+                uint8_t cOriginalAmuxValue;
+                cOriginalAmuxValue = cCbc->getReg ("MiscTestPulseCtrl&AnalogMux" );
+                
+                uint8_t cTPRegValue;
+
+                if (enableTP) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
+                else cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
+
+                this->fCbcInterface->WriteCbcReg ( cCbc, "MiscTestPulseCtrl&AnalogMux",  cTPRegValue );
+                
+            }
+        }
+    }
+
+    return;
+}
+
+
+void Tool::selectGroupTestPulse(Cbc* cCbc, uint8_t pTestGroup)
+{
+    
+    uint8_t cRegValue =  to_reg ( 0, pTestGroup );
+    this->fCbcInterface->WriteCbcReg ( cCbc, "TestPulseDel&ChanGroup",  cRegValue );
+    
+    return;
 }
 
 void Tool::setFWTestPulse()
@@ -516,48 +555,42 @@ void Tool::setFWTestPulse()
     }
 }
 
-void Tool::MakeTestGroups ( bool pAllChan )
+void Tool::MakeTestGroups ()
 {
-    if ( !pAllChan )
+    for ( int cGId = 0; cGId < 8; cGId++ )
     {
-        for ( int cGId = 0; cGId < 8; cGId++ )
+        std::vector<uint8_t> tempchannelVec;
+        std::vector<uint8_t> tempGroupMaskVec(32,0x00);
+
+        for ( int idx = 0; idx < 16; idx++ )
         {
-            std::vector<uint8_t> tempchannelVec;
+            int ctemp1 = idx * 16 + cGId * 2;
+            int ctemp2 = ctemp1 + 1;
 
-            for ( int idx = 0; idx < 16; idx++ )
-            {
-                int ctemp1 = idx * 16 + cGId * 2;
-                int ctemp2 = ctemp1 + 1;
-
-                if ( ctemp1 < 254 ) tempchannelVec.push_back ( ctemp1 );
-
-                if ( ctemp2 < 254 )  tempchannelVec.push_back ( ctemp2 );
-
+            if ( ctemp1 < 254 ){
+                tempchannelVec.push_back ( ctemp1 );
+                tempGroupMaskVec[ctemp1>>3] |= (1<<(ctemp1 & 0x7));
             }
 
-            fTestGroupChannelMap[cGId] = tempchannelVec;
+            if ( ctemp2 < 254 ){
+                tempchannelVec.push_back ( ctemp2 );
+                tempGroupMaskVec[ctemp2>>3] |= (1<<(ctemp2 & 0x7));
+            }
 
         }
 
-        int cGId = -1;
-        std::vector<uint8_t> tempchannelVec;
-
-        for ( int idx = 0; idx < 254; idx++ )
-            tempchannelVec.push_back ( idx );
-
         fTestGroupChannelMap[cGId] = tempchannelVec;
-    }
-    else
-    {
-        int cGId = -1;
-        std::vector<uint8_t> tempchannelVec;
-
-        for ( int idx = 0; idx < 254; idx++ )
-            tempchannelVec.push_back ( idx );
-
-        fTestGroupChannelMap[cGId] = tempchannelVec;
+        fMaskForTestGroupChannelMap[cGId] = tempGroupMaskVec;
 
     }
+
+    int cGId = -1;
+    std::vector<uint8_t> tempchannelVec;
+
+    for ( int idx = 0; idx < 254; idx++ )
+        tempchannelVec.push_back ( idx );
+
+    fTestGroupChannelMap[cGId] = tempchannelVec;
 }
 
 void Tool::CreateReport()
@@ -662,25 +695,30 @@ void Tool::SetMaskAllChannels (Cbc* pCbc, bool mask)
 
 
 //method to mask a channel list
-void Tool::unmaskChannelList (Cbc* pCbc, const std::vector<uint8_t> channelsToEnable){
+void Tool::maskChannelFromOtherGroups (Cbc* pCbc, int pTestGroup){
 
-    const uint32_t *cbcMask = pCbc->getCbcmask();
+    std::vector<uint8_t> cbcMask;
+    bool cbcAsMaskedChannels = pCbc->asMaskedChannels();
+    if(cbcAsMaskedChannels) cbcMask = pCbc->getCbcMask();
+
+    const std::vector<uint8_t> &groupMask = fMaskForTestGroupChannelMap[pTestGroup];
 
     RegisterVector cRegVec; 
     cRegVec.clear(); 
 
-    std::map<std::string,uint8_t> maskMap;
-
-    for(const auto & channel : channelsToEnable ){
-        uint8_t maskValue = ( (cbcMask[channel>>5] >> (channel & 0x1F) ) & 0x1 ) << ( channel & 0x7 );
-        if(maskMap.find(fChannelMaskMapCBC3[channel>>3])==maskMap.end() ) maskMap[fChannelMaskMapCBC3[channel>>3]] = 0;
-        maskMap[fChannelMaskMapCBC3[channel>>3]] += maskValue;
+    // std::cout<<pTestGroup<<std::hex<<std::endl;
+    // for(uint8_t i=0; i<cbcMask.size(); ++i){
+    //     std::cout<<(unsigned int)(cbcMask[i])<<" ";
+    // }
+    // std::cout<<std::endl;
+    for(uint8_t i=0; i<cbcMask.size(); ++i){
+        if(cbcAsMaskedChannels) cRegVec.push_back ( {fChannelMaskMapCBC3[i], cbcMask[i] & groupMask[i] } );
+        else cRegVec.push_back ( {fChannelMaskMapCBC3[i], groupMask[i] } );
+        // std::cout<<(unsigned int)(cbcMask[i] & groupMask[i])<<" ";
     }
+    // std::cout<<std::dec<<std::endl;
 
-    for(const auto & reg : maskMap){
-        cRegVec.push_back ( {reg.first, reg.second} );
-    }
-
+    
     fCbcInterface->WriteCbcMultReg ( pCbc , cRegVec );
 
     return;
@@ -1077,7 +1115,7 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
                 else
                 {
     
-                    // std::cout<<"Current DAC: "<<std::bitset<10>(currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()])<<" Current occupancy: "<<moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()]<<" Previous Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()];
+                    // if(cCbc->getCbcId()==0) std::cout<<"Current DAC: "<<std::bitset<10>(currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()])<<" Current occupancy: "<<moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()]<<" Previous Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()];
                     if(isOccupancyTheMaximumAccepted){
                         if( moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()] <= targetOccupancy ){
                             previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()];
@@ -1098,7 +1136,7 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
                             moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()];
                         }
                     }
-                    // std::cout<<" Chosen Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()]<<" DAC: "<<std::bitset<10>(previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()])<<std::endl;
+                    // if(cCbc->getCbcId()==0) std::cout<<" Chosen Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()]<<" DAC: "<<std::bitset<10>(previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()])<<std::endl;
 
                 }
             }
@@ -1121,19 +1159,23 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
 
 
 // set dac and measure occupancy
-void Tool::setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndCbcOccupanyMap)
+void Tool::setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndCbcOccupanyMap, float &globalOccupancy)
 {
 
     for (auto& cBoard : fBoardVector)
     {
         ModuleOccupancyPerChannelMap moduleOccupancyPerChannelMap;
         ModuleGlobalOccupancyMap cbcOccupanyMap;
-        float globalOccupancy = 0.;
+        float globalBeBoardOccupancy = 0.;
         setDacAndMeasureBeBoardOccupancy(cBoard, dacName, dacValue, numberOfEvents, moduleOccupancyPerChannelMap, cbcOccupanyMap, globalOccupancy);
+        globalOccupancy+=globalBeBoardOccupancy;
 
         backEndOccupancyPerChannelMap[cBoard->getBeId()] = moduleOccupancyPerChannelMap;
         backEndCbcOccupanyMap[cBoard->getBeId()] = cbcOccupanyMap;
     }
+
+    globalOccupancy/=fBoardVector.size();
+
     return;
 }
 
@@ -1160,39 +1202,96 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
     std::map<uint8_t, std::map<uint8_t,uint32_t> > moduleNormalizationMap; 
     std::map<uint8_t, std::map<uint8_t,uint32_t> > moduleNumberOfHitsMap;
 
-    for(const auto & group : fTestGroupChannelMap){
+    // std::cout<<fAllChan <<" - "<<fMaskChannelsFromOtherGroups<<std::endl;
 
-        if(!fAllChan && group.first >=0){
-            if(fMaskChannelsFromOtherGroups){// mask channel not scanned
+    if(!fAllChan)
+    {
+        for(const auto & group : fTestGroupChannelMap)
+        {
+            if(group.first == -1) continue;
+
+            if(fMaskChannelsFromOtherGroups || fTestPulse)
+            {
                 for ( auto cFe : pBoard->fModuleVector )
                 {
                     for ( auto cCbc : cFe->fCbcVector )
                     {
-                        maskAllChannels(cCbc);
-                        unmaskChannelList (cCbc, group.second);
+                        if(fMaskChannelsFromOtherGroups)
+                        {
+                            maskChannelFromOtherGroups (cCbc, group.first);
+                        }
+                        if(fTestPulse)
+                        {
+                            selectGroupTestPulse(cCbc, group.first);
+                        }
                     }
                 }
             }
-            measureBeBoardOccupancyPerGroup(group.second, pBoard, numberOfEvents, moduleOccupancyPerChannelMap, moduleNormalizationMap, moduleNumberOfHitsMap);
+
+            measureBeBoardOccupancyPerGroup(group.second, pBoard, numberOfEvents, moduleOccupancyPerChannelMap, moduleNormalizationMap, moduleNumberOfHitsMap);      
         }
 
-        else if(fAllChan && group.first == -1){
-            measureBeBoardOccupancyPerGroup(group.second, pBoard, numberOfEvents, moduleOccupancyPerChannelMap, moduleNormalizationMap, moduleNumberOfHitsMap);
-        }
-            
-    }
-
-    if(!fAllChan && fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
-    {
-        for ( auto cFe : pBoard->fModuleVector )
+        if(fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cFe : pBoard->fModuleVector )
             {
-                fCbcInterface->ConfigureCbcOriginalMask ( cCbc );
+                for ( auto cCbc : cFe->fCbcVector )
+                {
+                    fCbcInterface->ConfigureCbcOriginalMask ( cCbc );
+                }
             }
         }
     }
+    else
+    {
+        measureBeBoardOccupancyPerGroup(fTestGroupChannelMap[-1], pBoard, numberOfEvents, moduleOccupancyPerChannelMap, moduleNormalizationMap, moduleNumberOfHitsMap);
+    }
 
+
+
+    
+    // for(const auto & group : fTestGroupChannelMap){
+
+    //     if(!fAllChan && group.first >=0){
+    //         if(fMaskChannelsFromOtherGroups){// mask channel not scanned
+    //             for ( auto cFe : pBoard->fModuleVector )
+    //             {
+    //                 for ( auto cCbc : cFe->fCbcVector )
+    //                 {
+    //                     unmaskAllChannels(cCbc);
+    //                     maskChannelFroOtherGroups (cCbc, group.first);
+
+    //                     if(fTestPulse) selectGroupTestPulse(cCbc, group.first);
+    //                 }
+    //             }
+    //         }
+
+    //         measureBeBoardOccupancyPerGroup(group.second, pBoard, numberOfEvents, moduleOccupancyPerChannelMap, moduleNormalizationMap, moduleNumberOfHitsMap);
+    //     }
+
+    //     else if(fAllChan && group.first == -1){
+    //         measureBeBoardOccupancyPerGroup(group.second, pBoard, numberOfEvents, moduleOccupancyPerChannelMap, moduleNormalizationMap, moduleNumberOfHitsMap);
+    //     }
+            
+    // }
+
+    // if(!fAllChan && fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
+    // {
+    //     for ( auto cFe : pBoard->fModuleVector )
+    //     {
+    //         for ( auto cCbc : cFe->fCbcVector )
+    //         {
+    //             fCbcInterface->ConfigureCbcOriginalMask ( cCbc );
+    //         }
+    //     }
+    // }
+
+
+
+
+
+
+    //Evaluate module and BeBoard Occupancy
     for ( auto cFe : pBoard->fModuleVector )
     {
 
@@ -1239,7 +1338,9 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
 
             for ( auto cCbc : cFe->fCbcVector )
             {
-                 const uint32_t *cbcMask = cCbc->getCbcmask();
+                std::vector<uint8_t> cbcMask;
+                bool cbcAsMaskedChannels = cCbc->asMaskedChannels();
+                if(cbcAsMaskedChannels) cbcMask = cCbc->getCbcMask();
 
                 if(cbcOccupancy->find(cCbc->getCbcId())==cbcOccupancy->end()){
                     (*cbcOccupancy)[cCbc->getCbcId()]=ChannelOccupancy(cCbc->getNumberOfChannels(),0);
@@ -1251,13 +1352,14 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
                     (*cbcNumberOfHitsMap)[cCbc->getCbcId()] =0;
                 }
 
+
                 for ( auto& cChan : cTestGrpChannelVec )
                 {
 
                     bool isChannelEnabled = true;
                     
-                    if(fSkipMaskedChannels){
-                        if(!( (cbcMask[cChan>>5]>>(cChan&0x1F)) &0x1) ){
+                    if(fSkipMaskedChannels && cbcAsMaskedChannels){
+                        if(!( (cbcMask[cChan>>3]>>(cChan&0x7)) &0x1) ){
                             isChannelEnabled=false;
                         }
                     }

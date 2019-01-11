@@ -87,6 +87,7 @@ namespace Ph2_HwDescription {
             int cLineCounter = 0;
             CbcRegItem fRegItem;
 
+            fAsMaskedChannels = false;
             while ( getline ( file, line ) )
             {
                 if ( line.find_first_not_of ( " \t" ) == std::string::npos )
@@ -114,7 +115,9 @@ namespace Ph2_HwDescription {
                     fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
 
                     if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
-                        fCbcMask[(fRegItem.fAddress - 0x20)>>2] += fRegItem.fValue << (((fRegItem.fAddress - 0x20)&0x3)<<3);
+                        fCbcMask32[(fRegItem.fAddress - 0x20)>>2] += fRegItem.fValue << (((fRegItem.fAddress - 0x20)&0x3)<<3);
+                        fCbcMask[fRegItem.fAddress - 0x20] = fRegItem.fValue;
+                        if(!fAsMaskedChannels && fRegItem.fValue!=0xFF) fAsMaskedChannels=true;
                     }
 
                     fRegMap[fName] = fRegItem;

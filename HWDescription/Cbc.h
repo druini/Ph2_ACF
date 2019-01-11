@@ -137,7 +137,16 @@ namespace Ph2_HwDescription {
 
         const uint32_t* getCbcmask() const 
         {
+            return fCbcMask32;
+        }
+
+        const std::vector<uint8_t>& getCbcMask() const
+        {
             return fCbcMask;
+        }
+        const bool asMaskedChannels() const
+        {
+            return fAsMaskedChannels;
         }
 
         bool isDACLocal(const std::string &dacName){
@@ -157,11 +166,13 @@ namespace Ph2_HwDescription {
 
         uint16_t fNumberOfChannels;
         uint8_t fCbcId;
+        bool fAsMaskedChannels;
 
         // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value
         CbcRegMap fRegMap;
         CommentMap fCommentMap;
-        uint32_t fCbcMask[8]; //mask is stored in 8 uint32
+        std::vector<uint8_t> fCbcMask = std::vector<uint8_t>(32,0);
+        uint32_t fCbcMask32[8]; //mask is stored in 8 uint32
 
     };
 

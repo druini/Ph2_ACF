@@ -23,7 +23,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 {
     fDisableStubLogic = pDisableStubLogic;
     // Initialize the TestGroups
-    this->MakeTestGroups ( pAllChan );
+    this->MakeTestGroups();
     this->fAllChan = pAllChan;
 
     // now read the settings from the map
@@ -39,6 +39,13 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
     fTestPulseAmplitude = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
     cSetting = fSettingsMap.find ( "VerificationLoop" );
     fCheckLoop = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
+    cSetting = fSettingsMap.find ( "MaskChannelsFromOtherGroups" );
+    fMaskChannelsFromOtherGroups = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
+    cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
+    fSkipMaskedChannels = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
+
+    this->SetSkipMaskedChannels( fSkipMaskedChannels );
+
 
     if ( fTestPulseAmplitude == 0 ) fTestPulse = 0;
     else fTestPulse = 1;
@@ -221,20 +228,13 @@ void Calibration::FindOffsets()
             for ( auto cCbc : cFe->fCbcVector )
             {
                 TH1F* cOccHist = static_cast<TH1F*> ( getHist ( cCbc, "Occupancy" ) );
+                TH1I* cOffsetHist = static_cast<TH1I*> ( getHist ( cCbc, "Offsets" ) );
 
-                for (int i=0; i<=backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()].size(); ++i)
+                for ( int cChannel=0; cChannel<254; ++cChannel)
                 {
-                    cOccHist->Fill(i, backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()][i]);
-
-                    TH1I* cOffsetHist = static_cast<TH1I*> ( getHist ( cCbc, "Offsets" ) );
-
-                    for ( int cChannel=0; cChannel<254; ++cChannel)
-                    {
-                        std::string cRegName = Form ( "Channel%03d", cChannel + 1 );
-                        cOffsetHist->Fill ( cChannel, (uint16_t)cCbc->getReg(cRegName) );
-
-                    }
-
+                    cOccHist->Fill(cChannel, backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()][cChannel]);
+                    std::string cRegName = Form ( "Channel%03d", cChannel + 1 );
+                    cOffsetHist->Fill ( cChannel, (uint16_t)cCbc->getReg(cRegName) );
                 }
             }
         }

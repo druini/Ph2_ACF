@@ -73,7 +73,6 @@ class PedeNoise : public Tool
 
     // Settings
     bool fHoleMode;
-    bool fTestPulse;
     bool fFitted;
     uint8_t fTestPulseAmplitude;
     uint32_t fEventsPerPoint;
@@ -92,7 +91,7 @@ class PedeNoise : public Tool
     //void setOffset ( uint8_t pOffset, int  pTGrpId );
 
   private:
-    void measureSCurves ( int  pTGrpId, std::string pHistName,  uint16_t pStartValue = 0 );
+    void measureSCurves (std::string pHistName,  uint16_t pStartValue = 0 );
     void differentiateHist (Cbc* pCbc, std::string pHistName);
     void fitHist (Cbc* pCbc, std::string pHistName);
     void processSCurves (std::string pHistName);
@@ -104,7 +103,7 @@ class PedeNoise : public Tool
 
     //helpers for SCurve measurement
     void measureOccupancy (BeBoard* pBoard, int pTGrpId);
-    uint16_t findPedestal (int pTGrpId);
+    uint16_t findPedestal (bool forseAllChannels = false);
 };
 
 

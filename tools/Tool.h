@@ -57,6 +57,8 @@ class Tool : public SystemController
     ModuleHistogramMap fModuleHistMap;
     ChipType fType;
     TestGroupChannelMap fTestGroupChannelMap;
+    std::map< int, std::vector<uint8_t> > fMaskForTestGroupChannelMap;
+
     std::string fDirectoryName;             /*< the Directoryname for the Root file with results */
     TFile* fResultFile;                /*< the Name for the Root file with results */
     std::string fResultFileName;
@@ -106,11 +108,16 @@ class Tool : public SystemController
     void dumpConfigFiles();
     // general stuff that can be useful
     void setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTPState = false, bool pHoleMode = false );
+    //enable test pulse
+    void enableTestPulse(bool enableTP);
+
     //enable commissioning loops and Test Pulse
     void setFWTestPulse();
     // make test groups for everything Test pulse or Calibration
-    void MakeTestGroups ( bool pAllChan = false );
+    void MakeTestGroups ();
     void SetTestAllChannels( bool pAllChan ) {fAllChan = pAllChan; }
+    void SetTestPulse( bool pTestPulse ) {fTestPulse = pTestPulse; }
+    void SetSkipMaskedChannels( bool pSkipMaskedChannels ) {fSkipMaskedChannels = pSkipMaskedChannels; }
     //for hybrid testing
     void CreateReport();
     void AmmendReport (std::string pString );
@@ -264,8 +271,8 @@ class Tool : public SystemController
     //method to unmask all channels
     void unmaskAllChannels (Cbc* pCbc) {SetMaskAllChannels (pCbc, false); }
 
-    //method to mask a channel list
-    void unmaskChannelList (Cbc* pCbc, const std::vector<uint8_t> channelsToEnable);
+    //method to unmask a channel group
+    void maskChannelFromOtherGroups (Cbc* pCbc, int pTestGroup);
 
 
     // then a method to un-mask pairs of channels on a given CBC
@@ -274,6 +281,8 @@ class Tool : public SystemController
     // and finally a method to un-mask a list of channels on a given CBC
     void unmaskList(Cbc* cCbc , const std::vector<uint8_t> &pList );
 
+    //select the group of channels for injecting the pulse
+    void selectGroupTestPulse(Cbc* cCbc, uint8_t pTestGroup);
 
     // Two dimensional dac scan
     void scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > > &backEndOccupancyPerChannelMap, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > > &backEndCbcOccupanyMap);
@@ -294,7 +303,7 @@ class Tool : public SystemController
     void bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy, bool &isOccupancyTheMaximumAccepted, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap, ModuleGlobalOccupancyMap &moduleOccupancyMap);
     
     // set dac and measure occupancy
-    void setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndCbcOccupanyMap);
+    void setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndCbcOccupanyMap, float &globalOccupancy);
 
     // set dac and measure occupancy per BeBoard
     void setDacAndMeasureBeBoardOccupancy(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap, ModuleGlobalOccupancyMap &cbcOccupanyMap, float &globalOccupancy);
@@ -327,6 +336,7 @@ class Tool : public SystemController
     bool fSkipMaskedChannels;
     bool fAllChan;
     bool fMaskChannelsFromOtherGroups;
+    bool fTestPulse;
 
 
 };

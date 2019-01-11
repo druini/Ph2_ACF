@@ -12,7 +12,6 @@ PedeNoise::PedeNoise() :
     fNCbc (0),
     fNFe (0),
     fHoleMode (false),
-    fTestPulse (false),
     fFitted (false),
     fTestPulseAmplitude (0),
     fEventsPerPoint (0)
@@ -27,11 +26,17 @@ PedeNoise::~PedeNoise()
 void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 {
     fDisableStubLogic = pDisableStubLogic;
-    this->MakeTestGroups ( pAllChan );
+    this->MakeTestGroups();
     fAllChan = pAllChan;
 
-    auto maskSkipSetting = fSettingsMap.find ( "SkipMaskedChannels" );
-    fSkipMaskedChannels = ( maskSkipSetting != std::end ( fSettingsMap ) ) ? maskSkipSetting->second : false;
+    auto cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
+    fSkipMaskedChannels = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : false;
+    cSetting = fSettingsMap.find ( "MaskChannelsFromOtherGroups" );
+    fMaskChannelsFromOtherGroups = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
+    cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
+    fSkipMaskedChannels = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
+
+    this->SetSkipMaskedChannels( fSkipMaskedChannels );
 
 
     //is to be called after system controller::InitialiseHW, InitialiseSettings
@@ -62,6 +67,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 
             for ( auto cCbc : cFe->fCbcVector )
             {
+
                 //if it is a CBC3, disable the stub logic for this procedure
                 if (cCbc->getChipType() == ChipType::CBC3 && fDisableStubLogic)
                 {
@@ -149,7 +155,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     //fFeSummaryCanvas->DivideSquare ( fNFe );
 
     // now read the settings from the map
-    auto cSetting = fSettingsMap.find ( "Nevents" );
+    cSetting = fSettingsMap.find ( "Nevents" );
     fEventsPerPoint = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10;
     cSetting = fSettingsMap.find ( "FitSCurves" );
     fFitted = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
@@ -223,21 +229,28 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 
 std::string PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
 {
-
     uint16_t cStartValue = 0;
+    bool originalAllChannelFlag = this->fAllChan;
 
-    if (pTPAmplitude != 0)
-    {
+    if(pTPAmplitude != 0 && originalAllChannelFlag){
+        this->SetTestAllChannels(false);
+        LOG (INFO) << RED <<  "Cannot inject pulse for all channels, test in groups enabled. " << RESET ;
+    }
+
+
+    if(pTPAmplitude != 0){
+        this->SetTestPulse( true );
         fTestPulseAmplitude = pTPAmplitude;
-        fTestPulse = true;
-        //if the test pulse is enabled, I actually want every group to measure it's own midpoint thus I leave the start value at 0 which will make the measureSCurve method check
+        setFWTestPulse();
+        setSameGlobalDac("TestPulsePotNodeSel",  pTPAmplitude);
+        LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
+        cStartValue = this->findPedestal ();
     }
     else
     {
         fTestPulseAmplitude = pTPAmplitude;
-        fTestPulse = false;
-        //determine the average midpoint globally and then measure the individual groups precisely
-        cStartValue = this->findPedestal (-1);
+        this->SetTestPulse( false );
+        cStartValue = this->findPedestal (true);
     }
 
     // now initialize the Scurve histogram
@@ -255,65 +268,136 @@ std::string PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
 
     }
 
-    saveInitialOffsets();
+    //To be corrected : BEGIN
+    measureSCurves ( cHistogramname, cStartValue );
 
-    // method to measure one final set of SCurves with the final calibration applied to extract the noise
-    // now measure some SCurves
-    for ( auto& cTGrpM : fTestGroupChannelMap )
+
+    //filling histograms
+    for ( auto cBoard : fBoardVector )
     {
-        // if we want to run with test pulses, we'll have to enable commissioning mode and enable the TP for each test group
-        if (fTestPulse && cTGrpM.first != -1)
+        for ( auto cFe : cBoard->fModuleVector )
         {
-            LOG (INFO) << GREEN <<  "Enabling Test Pulse for Test Group " << cTGrpM.first << " with amplitude " << +pTPAmplitude << RESET ;
-            setFWTestPulse();
-            setSystemTestPulse ( fTestPulseAmplitude, cTGrpM.first, true, fHoleMode );
-        }
-        else if (fTestPulse && cTGrpM.first == -1)
-        {
-            fTestPulse = false;
-            LOG (INFO) << RED <<  "Test groups disabled. Can't enable Test Pulse for Test Group " << cTGrpM.first << RESET ;
-        }
-
-        if (cTGrpM.first != -1 || fAllChan)
-        {
-
-            LOG (INFO) << GREEN << "Measuring Test Group...." << cTGrpM.first << RESET ;
-            // this leaves the offset values at the tuned values for cTGrp and disables all other groups
-            enableTestGroupforNoise ( cTGrpM.first );
-
-            // measure the SCurves, the false is indicating that I am sweeping Vcth
-            measureSCurves ( cTGrpM.first, cHistogramname, cStartValue );
-
-            for (auto& cCbc : fHitCountMap)
+            for ( auto cCbc : cFe->fCbcVector )
             {
-                TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (cCbc.first, cHistogramname) );
-                fNoiseCanvas->cd (cCbc.first->getCbcId() + 1);
+               
+                TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (cCbc, cHistogramname) );
+                fNoiseCanvas->cd (cCbc->getCbcId() + 1);
                 double cMean = cSCurveHist->GetMean (2);
                 TH1D* cTmp = cSCurveHist->ProjectionY();
                 cSCurveHist->GetYaxis()->SetRangeUser ( cTmp->GetBinCenter (cTmp->FindFirstBinAbove (0) ) - 10, cTmp->GetBinCenter (cTmp->FindLastBinAbove (0.99) ) + 10 );
                 //cSCurveHist->GetYaxis()->SetRangeUser (cMean - 30, cMean + 30);
                 cSCurveHist->Draw ("colz2");
+
             }
-
-            fNoiseCanvas->Modified();
-            fNoiseCanvas->Update();
-
-        }
-
-        if (fTestPulse)
-        {
-            LOG (INFO) << RED <<  "Disabling Test Pulse for Test Group " << cTGrpM.first << RESET ;
-            setSystemTestPulse ( 0, cTGrpM.first, false, fHoleMode );
-
         }
     }
 
-    //dont forget to apply the original offsets
-    setInitialOffsets();
-    //now I should porcess the SCurves and differentiate the histogram
+    // for (auto& cCbc : fHitCountMap)
+    // {
+    //     TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (cCbc.first, cHistogramname) );
+    //     fNoiseCanvas->cd (cCbc.first->getCbcId() + 1);
+    //     double cMean = cSCurveHist->GetMean (2);
+    //     TH1D* cTmp = cSCurveHist->ProjectionY();
+    //     cSCurveHist->GetYaxis()->SetRangeUser ( cTmp->GetBinCenter (cTmp->FindFirstBinAbove (0) ) - 10, cTmp->GetBinCenter (cTmp->FindLastBinAbove (0.99) ) + 10 );
+    //     //cSCurveHist->GetYaxis()->SetRangeUser (cMean - 30, cMean + 30);
+    //     cSCurveHist->Draw ("colz2");
+    // }
+    //To be corrected : END
+
+
+    fNoiseCanvas->Modified();
+    fNoiseCanvas->Update();
+
+    if(pTPAmplitude != 0 && originalAllChannelFlag){
+        this->SetTestAllChannels(originalAllChannelFlag);
+    }
+    if(pTPAmplitude != 0){
+        this->SetTestPulse( false );
+        setSameGlobalDac("TestPulsePotNodeSel",  0);
+        LOG (INFO) << BLUE <<  "Disabled test pulse. " << RESET ;
+
+    }
+
     processSCurves (cHistogramname);
     LOG (INFO) << BOLDBLUE << "Finished sweeping SCurves..."  << RESET ;
     return cHistogramname;
+
+    //done so far
+
+    // // now initialize the Scurve histogram
+    // std::string cHistogramname = Form ("SCurves_TP%d", fTestPulseAmplitude);
+
+    // for (auto& cCbc : fHitCountMap)
+    // {
+    //     TString cHistname = Form ( "Fe%dCBC%d_Scurves_TP%d", cCbc.first->getFeId(), cCbc.first->getCbcId(), fTestPulseAmplitude );
+    //     TH2F* cHist = new TH2F ( cHistname, cHistname, NCHANNELS, -0.5, 253.5, 1024, -0.5, 1023.5 );
+    //     cHist->Sumw2();
+    //     bookHistogram ( cCbc.first, cHistogramname, cHist );
+
+    //     fNoiseCanvas->cd ( cCbc.first->getCbcId() + 1 );
+    //     cHist->Draw ( "colz2" );
+
+    // }
+
+    // saveInitialOffsets();
+
+    // // method to measure one final set of SCurves with the final calibration applied to extract the noise
+    // // now measure some SCurves
+    // for ( auto& cTGrpM : fTestGroupChannelMap )
+    // {
+    //     // if we want to run with test pulses, we'll have to enable commissioning mode and enable the TP for each test group
+    //     if (fTestPulse && cTGrpM.first != -1)
+    //     {
+    //         LOG (INFO) << GREEN <<  "Enabling Test Pulse for Test Group " << cTGrpM.first << " with amplitude " << +pTPAmplitude << RESET ;
+    //         setFWTestPulse();
+    //         setSystemTestPulse ( fTestPulseAmplitude, cTGrpM.first, true, fHoleMode );
+    //     }
+    //     else if (fTestPulse && cTGrpM.first == -1)
+    //     {
+    //         fTestPulse = false;
+    //         LOG (INFO) << RED <<  "Test groups disabled. Can't enable Test Pulse for Test Group " << cTGrpM.first << RESET ;
+    //     }
+
+    //     if (cTGrpM.first != -1 || fAllChan)
+    //     {
+
+    //         LOG (INFO) << GREEN << "Measuring Test Group...." << cTGrpM.first << RESET ;
+    //         // this leaves the offset values at the tuned values for cTGrp and disables all other groups
+    //         enableTestGroupforNoise ( cTGrpM.first );
+
+    //         // measure the SCurves, the false is indicating that I am sweeping Vcth
+    //         measureSCurves ( cTGrpM.first, cHistogramname, cStartValue );
+
+    //         for (auto& cCbc : fHitCountMap)
+    //         {
+    //             TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (cCbc.first, cHistogramname) );
+    //             fNoiseCanvas->cd (cCbc.first->getCbcId() + 1);
+    //             double cMean = cSCurveHist->GetMean (2);
+    //             TH1D* cTmp = cSCurveHist->ProjectionY();
+    //             cSCurveHist->GetYaxis()->SetRangeUser ( cTmp->GetBinCenter (cTmp->FindFirstBinAbove (0) ) - 10, cTmp->GetBinCenter (cTmp->FindLastBinAbove (0.99) ) + 10 );
+    //             //cSCurveHist->GetYaxis()->SetRangeUser (cMean - 30, cMean + 30);
+    //             cSCurveHist->Draw ("colz2");
+    //         }
+
+    //         fNoiseCanvas->Modified();
+    //         fNoiseCanvas->Update();
+
+    //     }
+
+    //     if (fTestPulse)
+    //     {
+    //         LOG (INFO) << RED <<  "Disabling Test Pulse for Test Group " << cTGrpM.first << RESET ;
+    //         setSystemTestPulse ( 0, cTGrpM.first, false, fHoleMode );
+
+    //     }
+    // }
+
+    // //dont forget to apply the original offsets
+    // setInitialOffsets();
+    // //now I should porcess the SCurves and differentiate the histogram
+    // processSCurves (cHistogramname);
+    // LOG (INFO) << BOLDBLUE << "Finished sweeping SCurves..."  << RESET ;
+    // return cHistogramname;
 }
 
 void PedeNoise::measureNoise (uint8_t pTPAmplitude)
@@ -426,81 +510,47 @@ double PedeNoise::getNoise (Module* pFe)
 
 //////////////////////////////////////      PRIVATE METHODS     /////////////////////////////////////////////
 
-uint16_t PedeNoise::findPedestal (int pTGrpId)
+uint16_t PedeNoise::findPedestal (bool forceAllChannels)
 {
 
-    ThresholdVisitor cThresholdVisitor (fCbcInterface, 0);
-    this->accept (cThresholdVisitor);
+    bool originalAllChannelFlag = this->fAllChan;
+    if(forceAllChannels) this->SetTestAllChannels(true);
+    std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
+    std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
 
-    uint16_t cNbits = (fType == ChipType::CBC2) ? 8 : 10;
+    bitWiseScan("VCth", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
+    if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
+    
+    float cMean = 0.;
+    uint32_t nCbc = 0;
 
-    // now go over the VTh bits for each CBC, start with the MSB, flip it to one and measure the occupancy
-    // VTh is 10 bits on CBC3
-    bool cCloseEnough = false;
-
-    for ( int iBit = cNbits - 1 ; iBit >= 0; iBit-- )
+    for (auto& cBoard : fBoardVector)
     {
-        if (!cCloseEnough)
+        for ( auto cFe : cBoard->fModuleVector )
         {
-            for (auto& cCbc : fThresholdMap)
+            for ( auto cCbc : cFe->fCbcVector )
             {
-                toggleRegBit ( cCbc.second, iBit );
-                cThresholdVisitor.setThreshold (cCbc.second);
-                cCbc.first->accept (cThresholdVisitor);
-                fHitCountMap[cCbc.first] = 0;
-            }
-
-            for ( BeBoard* pBoard : fBoardVector )
-                this->measureOccupancy (pBoard, pTGrpId);
-
-            // now I know how many hits there are with a Threshold of 0
-            for (auto& cCbc : fThresholdMap)
-            {
-                const std::vector<uint8_t>& cTestGrpChannelVec = fTestGroupChannelMap[pTGrpId];
-
-                float cOccupancy = fHitCountMap[cCbc.first] / float (fEventsPerPoint * cTestGrpChannelVec.size() );
-
-                LOG (DEBUG) << "IBIT " << +iBit << " DEBUG Setting VTh for CBC " << +cCbc.first->getCbcId() << " to " << +cCbc.second << " (= 0b" << std::bitset<10> ( cCbc.second ) << ") and occupancy " << cOccupancy ;
-
-                if (fabs (cOccupancy - 0.5) < 0.06 )
-                {
-                    cCloseEnough = true;
-                    break;
-                }
-
-                if (fHoleMode && cOccupancy < 0.45)
-                    toggleRegBit (cCbc.second, iBit);
-                else if (!fHoleMode && cOccupancy > 0.56)
-                    toggleRegBit (cCbc.second, iBit);
-
-                cThresholdVisitor.setThreshold (cCbc.second);
-                cCbc.first->accept (cThresholdVisitor);
+                uint16_t tmpVthr = (cCbc->getReg("VCth1") + (cCbc->getReg("VCth2")<<8));
+                cMean+=tmpVthr;
+                ++nCbc;
             }
         }
     }
 
-    uint16_t cMean = 0;
-
-    for (auto& cCbc : fThresholdMap)
-    {
-        cMean += cCbc.second;
-        //re-set start value to 0 for next iteration
-        cCbc.second = 0x000;
-    }
-
-    cMean /= fThresholdMap.size();
-
-    LOG (INFO) << BOLDBLUE << "Found Pedestals to be around " << BOLDRED << cMean << " (0x" << std::hex << cMean << std::dec << ", 0b" << std::bitset<10> (cMean) << ")" << BOLDBLUE << " for Test Group " << pTGrpId << RESET;
+    cMean /= nCbc;
+    
+    LOG (INFO) << BOLDBLUE << "Found Pedestals to be around " << BOLDRED << cMean << " (0x" << std::hex << cMean << std::dec << ", 0b" << std::bitset<10> (cMean) << ")" << BOLDBLUE << RESET;
 
     return cMean;
+
 }
 
-void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pStartValue)
+void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
 {
-    int cMinBreakCount = 10;
-    const std::vector<uint8_t>& cTestGrpChannelVec = fTestGroupChannelMap[pTGrpId];
 
-    if (pStartValue == 0) pStartValue = this->findPedestal (pTGrpId);
+    int cMinBreakCount = 10;
+
+    // if (pStartValue == 0) pStartValue = this->findPedestal();
 
     bool cAllZero = false;
     bool cAllOne = false;
@@ -509,127 +559,228 @@ void PedeNoise::measureSCurves (int pTGrpId, std::string pHistName, uint16_t pSt
     uint16_t cValue = pStartValue;
     int cSign = 1;
     int cIncrement = 0;
+    uint16_t cMaxValue = (1 << 10) - 1;
 
-    uint16_t cNbits = (fType == ChipType::CBC2) ? 8 : 10;
-    uint16_t cMaxValue = (1 << cNbits) - 1;
 
     //start with the threshold value found above
-    ThresholdVisitor cVisitor (fCbcInterface, cValue);
+    // ThresholdVisitor cVisitor (fCbcInterface, cValue);
 
     while (! (cAllZero && cAllOne) )
     {
 
-        for ( BeBoard* pBoard : fBoardVector )
+        std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
+        std::map<uint16_t, ModuleGlobalOccupancyMap > backEndCbcOccupanyMap;
+        float globalOccupancy=0;
+
+        this->setDacAndMeasureOccupancy("VCth", cValue, fEventsPerPoint, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
+
+
+        //filling histograms
+        for ( auto cBoard : fBoardVector )
         {
-            for (Module* cFe : pBoard->fModuleVector)
+            for ( auto cFe : cBoard->fModuleVector )
             {
-                cVisitor.setThreshold (cValue);
-                cFe->accept (cVisitor);
-            }
-            
-            ReadNEvents ( pBoard, fEventsPerPoint );
-
-            const std::vector<Event*>& events = GetEvents ( pBoard );
-
-            uint32_t cHitCounter = 0;
-            uint32_t cMaxHits=0;
-
-            // Loop over Events from this Acquisition
-            for ( auto& ev : events )
-            {
-                //uint32_t cHitCounter = 0;
-
-                for ( auto cFe : pBoard->fModuleVector )
+                for ( auto cCbc : cFe->fCbcVector )
                 {
-                    for ( auto cCbc : cFe->fCbcVector )
+                    TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (cCbc, pHistName) );
+
+                    for (int cChannel=0; cChannel<=backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()].size(); ++cChannel)
                     {
-                        TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (cCbc, pHistName) );
-                         const uint32_t *cbcMask = cCbc->getCbcmask();
-
-                         // std::cout<< (cbcMask[0]&0x0f) <<std::endl;
-
-                        for ( auto& cChan : cTestGrpChannelVec )
-                        {
-
-                            bool isChannelEnabled = true;
-                            // if(true){
-                            if(fSkipMaskedChannels){
-                                if(!( (cbcMask[cChan>>5]>>(cChan&0x1F)) &0x1) ){
-                                    isChannelEnabled=false;
-                                }
-                            }
-
-                            if(isChannelEnabled) ++cMaxHits;
-
-                            if ( ev->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChan) )
-                            {
-                                //fill the strip number and the current threshold
-                                cSCurveHist->Fill (cChan, cValue);
-                                if(isChannelEnabled) ++cHitCounter;
-                            }
-                        }
+                        cSCurveHist->Fill ( cChannel, cValue, backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()][cChannel] );
+                        // std::cout<<cChannel << " " << cValue << " " << backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()][cChannel] <<std::endl;
                     }
                 }
             }
-
-            Counter cCbcCounter;
-            pBoard->accept ( cCbcCounter );
-            // uint32_t cMaxHits = fEventsPerPoint *   cCbcCounter.getNCbc() * cTestGrpChannelVec.size();
-
-            //now establish if I'm zero or one
-            if (cHitCounter == 0) ++cAllZeroCounter;
-
-            if (cHitCounter > 0.98 * cMaxHits ) ++cAllOneCounter;
-
-            // std::cout<<"Threshold = "<< cValue << " MaxHits = "<< cMaxHits <<" HitCounter = "<<cHitCounter<<std::endl;
-
-            //it will either find one or the other extreme first and thus these will be mutually exclusive
-            //if any of the two conditions is true, just revert the sign and go the opposite direction starting from startvalue+1
-            //check that cAllZero is not yet set, otherwise I'll be reversing signs a lot because once i switch direction, the statement stays true
-            if (!cAllZero && cAllZeroCounter == cMinBreakCount )
-            {
-                cAllZero = true;
-                cSign = fHoleMode ? -1 : 1;
-                cIncrement = 0;
-            }
-
-            if (!cAllOne && cAllOneCounter == cMinBreakCount)
-            {
-                cAllOne = true;
-                cSign = fHoleMode ? 1 : -1;
-                cIncrement = 0;
-            }
-
-            cIncrement++;
-            // following checks if we're not going out of bounds
-            if (cSign == 1 && (pStartValue + (cIncrement * cSign) > cMaxValue) )
-            {
-                std::cout<<"culo1\n";
-                if (fHoleMode) cAllZero = true;
-                else cAllOne = true;
-
-                cIncrement = 1;
-                cSign = -1 * cSign;
-            }
-
-            if (cSign == -1 && (pStartValue + (cIncrement * cSign) < 0) )
-            {
-                std::cout<<"culo2\n";
-                if (fHoleMode) cAllOne = true;
-                else cAllZero = true;
-
-                cIncrement = 1;
-                cSign = -1 * cSign;
-            }
-
-
-            LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Hitcounter: " << cHitCounter << " Max hits: " << cMaxHits;
-            cValue = pStartValue + (cIncrement * cSign);
         }
+
+        //now establish if I'm zero or one
+        if (globalOccupancy == 0) ++cAllZeroCounter;
+
+        if (globalOccupancy > 0.98) ++cAllOneCounter;
+
+        // std::cout<<"Threshold = "<< cValue << " MaxHits = "<< cMaxHits <<" HitCounter = "<<cHitCounter<<std::endl;
+
+        //it will either find one or the other extreme first and thus these will be mutually exclusive
+        //if any of the two conditions is true, just revert the sign and go the opposite direction starting from startvalue+1
+        //check that cAllZero is not yet set, otherwise I'll be reversing signs a lot because once i switch direction, the statement stays true
+        if (!cAllZero && cAllZeroCounter == cMinBreakCount )
+        {
+            cAllZero = true;
+            cSign = fHoleMode ? -1 : 1;
+            cIncrement = 0;
+        }
+
+        if (!cAllOne && cAllOneCounter == cMinBreakCount)
+        {
+            cAllOne = true;
+            cSign = fHoleMode ? 1 : -1;
+            cIncrement = 0;
+        }
+
+        cIncrement++;
+        // following checks if we're not going out of bounds
+        if (cSign == 1 && (pStartValue + (cIncrement * cSign) > cMaxValue) )
+        {
+            if (fHoleMode) cAllZero = true;
+            else cAllOne = true;
+
+            cIncrement = 1;
+            cSign = -1 * cSign;
+        }
+
+        if (cSign == -1 && (pStartValue + (cIncrement * cSign) < 0) )
+        {
+            if (fHoleMode) cAllOne = true;
+            else cAllZero = true;
+
+            cIncrement = 1;
+            cSign = -1 * cSign;
+        }
+
+
+        LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
+        cValue = pStartValue + (cIncrement * cSign);
     }
 
     this->HttpServerProcess();
     LOG (INFO) << YELLOW << "Found minimal and maximal occupancy " << cMinBreakCount << " times, SCurves finished! " << RESET ;
+
+
+    //old
+
+
+
+    // int cMinBreakCount = 10;
+    // const std::vector<uint8_t>& cTestGrpChannelVec = fTestGroupChannelMap[pTGrpId];
+
+    // if (pStartValue == 0) pStartValue = this->findPedestal();
+
+    // bool cAllZero = false;
+    // bool cAllOne = false;
+    // int cAllZeroCounter = 0;
+    // int cAllOneCounter = 0;
+    // uint16_t cValue = pStartValue;
+    // int cSign = 1;
+    // int cIncrement = 0;
+
+    // uint16_t cNbits = (fType == ChipType::CBC2) ? 8 : 10;
+    // uint16_t cMaxValue = (1 << cNbits) - 1;
+
+    // //start with the threshold value found above
+    // ThresholdVisitor cVisitor (fCbcInterface, cValue);
+
+    // while (! (cAllZero && cAllOne) )
+    // {
+
+    //     for ( BeBoard* pBoard : fBoardVector )
+    //     {
+    //         for (Module* cFe : pBoard->fModuleVector)
+    //         {
+    //             cVisitor.setThreshold (cValue);
+    //             cFe->accept (cVisitor);
+    //         }
+            
+    //         ReadNEvents ( pBoard, fEventsPerPoint );
+
+    //         const std::vector<Event*>& events = GetEvents ( pBoard );
+
+    //         uint32_t cHitCounter = 0;
+    //         uint32_t cMaxHits=0;
+
+    //         // Loop over Events from this Acquisition
+    //         for ( auto& ev : events )
+    //         {
+    //             //uint32_t cHitCounter = 0;
+
+    //             for ( auto cFe : pBoard->fModuleVector )
+    //             {
+    //                 for ( auto cCbc : cFe->fCbcVector )
+    //                 {
+    //                     TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (cCbc, pHistName) );
+    //                      const uint32_t *cbcMask = cCbc->getCbcmask();
+
+    //                      // std::cout<< (cbcMask[0]&0x0f) <<std::endl;
+
+    //                     for ( auto& cChan : cTestGrpChannelVec )
+    //                     {
+
+    //                         bool isChannelEnabled = true;
+    //                         // if(true){
+    //                         if(fSkipMaskedChannels){
+    //                             if(!( (cbcMask[cChan>>5]>>(cChan&0x1F)) &0x1) ){
+    //                                 isChannelEnabled=false;
+    //                             }
+    //                         }
+
+    //                         if(isChannelEnabled) ++cMaxHits;
+
+    //                         if ( ev->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChan) )
+    //                         {
+    //                             //fill the strip number and the current threshold
+    //                             cSCurveHist->Fill (cChan, cValue);
+    //                             if(isChannelEnabled) ++cHitCounter;
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+
+    //         Counter cCbcCounter;
+    //         pBoard->accept ( cCbcCounter );
+    //         // uint32_t cMaxHits = fEventsPerPoint *   cCbcCounter.getNCbc() * cTestGrpChannelVec.size();
+
+    //         //now establish if I'm zero or one
+    //         if (cHitCounter == 0) ++cAllZeroCounter;
+
+    //         if (cHitCounter > 0.98 * cMaxHits ) ++cAllOneCounter;
+
+    //         // std::cout<<"Threshold = "<< cValue << " MaxHits = "<< cMaxHits <<" HitCounter = "<<cHitCounter<<std::endl;
+
+    //         //it will either find one or the other extreme first and thus these will be mutually exclusive
+    //         //if any of the two conditions is true, just revert the sign and go the opposite direction starting from startvalue+1
+    //         //check that cAllZero is not yet set, otherwise I'll be reversing signs a lot because once i switch direction, the statement stays true
+    //         if (!cAllZero && cAllZeroCounter == cMinBreakCount )
+    //         {
+    //             cAllZero = true;
+    //             cSign = fHoleMode ? -1 : 1;
+    //             cIncrement = 0;
+    //         }
+
+    //         if (!cAllOne && cAllOneCounter == cMinBreakCount)
+    //         {
+    //             cAllOne = true;
+    //             cSign = fHoleMode ? 1 : -1;
+    //             cIncrement = 0;
+    //         }
+
+    //         cIncrement++;
+    //         // following checks if we're not going out of bounds
+    //         if (cSign == 1 && (pStartValue + (cIncrement * cSign) > cMaxValue) )
+    //         {
+    //             if (fHoleMode) cAllZero = true;
+    //             else cAllOne = true;
+
+    //             cIncrement = 1;
+    //             cSign = -1 * cSign;
+    //         }
+
+    //         if (cSign == -1 && (pStartValue + (cIncrement * cSign) < 0) )
+    //         {
+    //             if (fHoleMode) cAllOne = true;
+    //             else cAllZero = true;
+
+    //             cIncrement = 1;
+    //             cSign = -1 * cSign;
+    //         }
+
+
+    //         LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Hitcounter: " << cHitCounter << " Max hits: " << cMaxHits;
+    //         cValue = pStartValue + (cIncrement * cSign);
+    //     }
+    // }
+
+    // this->HttpServerProcess();
+    // LOG (INFO) << YELLOW << "Found minimal and maximal occupancy " << cMinBreakCount << " times, SCurves finished! " << RESET ;
 }
 
 void PedeNoise::enableTestGroupforNoise ( int  pTGrpId )
@@ -695,22 +846,30 @@ void PedeNoise::enableTestGroupforNoise ( int  pTGrpId )
 
 void PedeNoise::processSCurves (std::string pHistName)
 {
-    for (auto& cCbc : fHitCountMap)
+    //filling histograms
+    for ( auto cBoard : fBoardVector )
     {
-        TH2F* cHist = dynamic_cast<TH2F*> ( getHist ( cCbc.first, pHistName) );
-        //cHist->Scale (1 / double_t (fEventsPerPoint) );
-        //in order to have proper binomial errors
-        cHist->Divide (cHist, fNormHist, 1, 1, "B");
-        //do this in any case!
-        this->differentiateHist (cCbc.first, pHistName);
+        for ( auto cFe : cBoard->fModuleVector )
+        {
+            for ( auto cCbc : cFe->fCbcVector )
+            {
 
-        //only do this if requested
-        if (fFitted)
-            this->fitHist (cCbc.first, pHistName);
+                TH2F* cHist = dynamic_cast<TH2F*> ( getHist ( cCbc, pHistName) );
+                //cHist->Scale (1 / double_t (fEventsPerPoint) );
+                //in order to have proper binomial errors
+                // cHist->Divide (cHist, fNormHist, 1, 1, "B");
+                //do this in any case!
+                this->differentiateHist (cCbc, pHistName);
 
+                //only do this if requested
+                if (fFitted)
+                    this->fitHist (cCbc, pHistName);
+                
+            }
+        }
     }
-
     //end of CBC loop
+
 }
 
 void PedeNoise::differentiateHist (Cbc* pCbc, std::string pHistName)

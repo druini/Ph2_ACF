@@ -102,11 +102,14 @@ namespace Ph2_HwInterface {
 
         //vector to encode all the registers into
         std::vector<uint32_t> cVec;
-        const uint32_t *cbcMask = pCbc->getCbcmask();
+        // const uint32_t *cbcMask32 = pCbc->getCbcmask();
+        const std::vector<uint8_t> cbcMask = pCbc->getCbcMask();
 
         uint8_t maskAddressStartingPoint = 0x20;
         for ( uint8_t address=0; address<=0x1F; ++address){
-            fBoardFW->EncodeReg (CbcRegItem (0x00, maskAddressStartingPoint+address, 0x00, (cbcMask[address>>2] >> ((address & 0x3) *8)) & 0xFF), pCbc->getFeId(), pCbc->getCbcId(), cVec, pVerifLoop, true);
+            // std::cout<<std::hex<<(unsigned int)cbcMask[address]<<std::dec<<std::endl;
+            fBoardFW->EncodeReg (CbcRegItem (0x00, maskAddressStartingPoint+address, 0x00, cbcMask[address]), pCbc->getFeId(), pCbc->getCbcId(), cVec, pVerifLoop, true);
+            // fBoardFW->EncodeReg (CbcRegItem (0x00, maskAddressStartingPoint+address, 0x00, (cbcMask32[address>>2] >> ((address & 0x3) *8)) & 0xFF), pCbc->getFeId(), pCbc->getCbcId(), cVec, pVerifLoop, true);
         
 #ifdef COUNT_FLAG
             fRegisterCount++;
