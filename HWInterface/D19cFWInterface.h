@@ -199,6 +199,7 @@ namespace Ph2_HwInterface {
         ChipType getChipType(uint32_t pChipCode);
 	// set i2c address table depending on the hybrid
 	void SetI2CAddressTable();
+	void Align_out();
 
 
         //template to copy every nth element out of a vector to another vector

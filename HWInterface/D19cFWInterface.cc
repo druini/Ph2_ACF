@@ -28,6 +28,8 @@ namespace Ph2_HwInterface {
         fpgaConfig (nullptr),
         fBroadcastCbcId (0),
         fNCbc (0),
+    	fNMPA (0),
+    	fNSSA (0),
         fFMCId (1)
     {fResetAttempts = 0 ; }
 
@@ -39,6 +41,8 @@ namespace Ph2_HwInterface {
         fpgaConfig (nullptr),
         fBroadcastCbcId (0),
         fNCbc (0),
+    	fNMPA (0),
+    	fNSSA (0),
         fFileHandler ( pFileHandler ),
         fFMCId (1)
     {
@@ -54,6 +58,8 @@ namespace Ph2_HwInterface {
         fpgaConfig ( nullptr ),
         fBroadcastCbcId (0),
         fNCbc (0),
+    	fNMPA (0),
+    	fNSSA (0),
         fFMCId (1)
     {fResetAttempts = 0 ; }
 
@@ -66,6 +72,8 @@ namespace Ph2_HwInterface {
         fpgaConfig ( nullptr ),
         fBroadcastCbcId (0),
         fNCbc (0),
+    	fNMPA (0),
+    	fNSSA (0),
         fFileHandler ( pFileHandler ),
         fFMCId (1)
     {
@@ -846,6 +854,86 @@ void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
         {
             // no timing tuning needed
         }
+
+    else if (fFirwmareChipType == ChipType::MPA)
+    {
+        // first need to set the proper i2c settings of the chip for the phase alignment
+        std::map<MPA*, uint8_t> cReadoutModeMap;
+        std::map<MPA*, uint8_t> cStubModeMap;
+        std::vector<uint32_t> cVecReq;
+
+        cVecReq.clear();
+
+        for (auto cFe : pBoard->fModuleVector)
+        {
+            for (auto cMpa : cFe->fMPAVector)
+            {
+
+                uint8_t cOriginalReadoutMode = cMpa->getReg ("ReadoutMode");
+                uint8_t cOriginalStubMode = cMpa->getReg ("ECM");
+                cReadoutModeMap[cMpa] = cOriginalReadoutMode;
+                cStubModeMap[cMpa] = cOriginalStubMode;
+
+                // sync mode
+                RegItem cRegItem = cMpa->getRegItem ( "ReadoutMode" );
+                cRegItem.fValue = 0x00;
+                this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
+
+                uint8_t cWriteAttempts = 0;
+                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                cVecReq.clear();
+
+                // ps stub mode
+                cRegItem = cMpa->getRegItem ( "ECM" );
+                cRegItem.fValue = 0x08;
+                this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
+
+                cWriteAttempts = 0;
+                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                cVecReq.clear();
+
+            }
+        }
+
+        uint8_t cWriteAttempts = 0;
+        //this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+        std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+
+        // now do phase tuning
+        Align_out();
+
+        //re-enable everything back
+        cVecReq.clear();
+        for (auto cFe : pBoard->fModuleVector)
+        {
+            for (auto cMpa : cFe->fMPAVector)
+            {
+
+                RegItem cRegItem = cMpa->getRegItem ( "ReadoutMode" );
+                cRegItem.fValue = cReadoutModeMap[cMpa];
+                this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
+
+                cWriteAttempts = 0;
+                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                cVecReq.clear();
+
+                cRegItem = cMpa->getRegItem ( "ECM" );
+                cRegItem.fValue = cStubModeMap[cMpa];
+                this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
+
+                cWriteAttempts = 0;
+                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                cVecReq.clear();
+
+            }
+        }
+
+        cWriteAttempts = 0;
+        //this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+
+        LOG (INFO) << GREEN << "MPA Phase tuning finished succesfully" << RESET;
+    }
+
         else
         {
             LOG (INFO) << "No tuning procedure implemented for this chip type.";
@@ -1097,26 +1185,38 @@ void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
 
     /** compute the block size according to the number of CBC's on this board
      * this will have to change with a more generic FW */
-    uint32_t D19cFWInterface::computeEventSize ( BeBoard* pBoard )
+uint32_t D19cFWInterface::computeEventSize ( BeBoard* pBoard )
+{
+    uint32_t cNFe = pBoard->getNFe();
+    uint32_t cNCbc = 0;
+    uint32_t cNMPA = 0;
+    uint32_t cNSSA = 0;
+
+    uint32_t cNEventSize32 = 0;
+
+    for (const auto& cFe : pBoard->fModuleVector)
     {
-        uint32_t cNFe = pBoard->getNFe();
-        uint32_t cNCbc = 0;
-        uint32_t cNEventSize32 = 0;
-
-        for (const auto& cFe : pBoard->fModuleVector)
-            cNCbc += cFe->getNCbc();
-
-        cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNFe * D19C_EVENT_HEADER2_SIZE_32_CBC3 + cNCbc * CBC_EVENT_SIZE_32_CBC3;
-
-        if (fIsDDR3Readout) {
-            uint32_t cNEventSize32_divided_by_8 = ((cNEventSize32 >> 3) << 3);
-            if (!(cNEventSize32_divided_by_8 == cNEventSize32)) {
-                cNEventSize32 = cNEventSize32_divided_by_8 + 8;
-            }
-        }
-
-        return cNEventSize32;
+        cNCbc += cFe->getNCbc();
+        cNMPA += cFe->getNMPA();
+        cNSSA += cFe->getNSSA();
     }
+    if (cNCbc>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNCbc * CBC_EVENT_SIZE_32_CBC3;
+    if (cNMPA>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNMPA * D19C_EVENT_SIZE_32_MPA;
+    if (cNSSA>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNSSA * D19C_EVENT_SIZE_32_SSA;
+    if (cNCbc>0 && cNMPA>0)
+    {
+        LOG(INFO) << "Not configurable for multiple chips";
+        exit (1);
+    }
+    if (fIsDDR3Readout) {
+        uint32_t cNEventSize32_divided_by_8 = ((cNEventSize32 >> 3) << 3);
+        if (!(cNEventSize32_divided_by_8 == cNEventSize32)) {
+            cNEventSize32 = cNEventSize32_divided_by_8 + 8;
+        }
+    }
+
+    return cNEventSize32;
+}
 
     std::vector<uint32_t> D19cFWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize )
     {
@@ -1361,6 +1461,7 @@ void D19cFWInterface::DecodeReg ( RegItem& pRegItem,
             	}
 	    }
         }
+        usleep (20);
 
         cFailed = ReadI2C (  cNReplies, pReplies) ;
 
@@ -1842,9 +1943,9 @@ void D19cFWInterface::PSInterfaceBoard_SendI2CCommand(uint32_t slave_id,uint32_t
     int reply = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply");
     int reply_err = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.err");
     int reply_data = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
-	LOG(INFO) << BOLDGREEN << "reply: "<< std::hex << reply << std::dec <<RESET;
-	LOG(INFO) << BOLDGREEN << "reply err: "<< std::hex << reply_err << std::dec <<RESET;
-	LOG(INFO) << BOLDGREEN << "reply data: "<< std::hex << reply_data << std::dec <<RESET;
+	//LOG(INFO) << BOLDGREEN << "reply: "<< std::hex << reply << std::dec <<RESET;
+	//LOG(INFO) << BOLDGREEN << "reply err: "<< std::hex << reply_err << std::dec <<RESET;
+	//LOG(INFO) << BOLDGREEN << "reply data: "<< std::hex << reply_data << std::dec <<RESET;
 
     if (reply_err == 1) LOG(ERROR) << "Error code: "<< std::hex << reply_data << std::dec;
     //	print "ERROR! Error flag is set to 1. The data is treated as the error code."
@@ -1896,7 +1997,7 @@ uint32_t D19cFWInterface::PSInterfaceBoard_SendI2CCommand_READ(uint32_t slave_id
 	std::cout<<std::endl;
 
     uint32_t reply = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply");
-	LOG (INFO) << BOLDRED << std::hex << reply << std::dec << RESET;
+	//LOG (INFO) << BOLDRED << std::hex << reply << std::dec << RESET;
     uint32_t reply_err = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.err");
     uint32_t reply_data = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
 
@@ -2375,5 +2476,43 @@ void D19cFWInterface::PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid , uint8_t ssai
     std::this_thread::sleep_for( cWait );
 
     }
+
+
+void D19cFWInterface::Align_out()
+{
+    int cCounter = 0;
+    int cMaxAttempts = 10;
+
+    uint32_t hardware_ready = 0;
+
+    while (hardware_ready < 1)
+    {
+        if (cCounter++ > cMaxAttempts)
+        {
+            uint32_t delay5_done_cbc0 = ReadReg ("fc7_daq_stat.physical_interface_block.delay5_done_cbc0");
+            uint32_t serializer_done_cbc0 = ReadReg ("fc7_daq_stat.physical_interface_block.serializer_done_cbc0");
+            uint32_t bitslip_done_cbc0 = ReadReg ("fc7_daq_stat.physical_interface_block.bitslip_done_cbc0");
+
+            uint32_t delay5_done_cbc1 = ReadReg ("fc7_daq_stat.physical_interface_block.delay5_done_cbc1");
+            uint32_t serializer_done_cbc1 = ReadReg ("fc7_daq_stat.physical_interface_block.serializer_done_cbc1");
+            uint32_t bitslip_done_cbc1 = ReadReg ("fc7_daq_stat.physical_interface_block.bitslip_done_cbc1");
+            LOG (INFO) << "Clock Data Timing tuning failed after " << cMaxAttempts << " attempts with value - aborting!";
+            LOG (INFO) << "Debug Info CBC0: delay5 done: " << delay5_done_cbc0 << ", serializer_done: " << serializer_done_cbc0 << ", bitslip_done: " << bitslip_done_cbc0;
+            LOG (INFO) << "Debug Info CBC1: delay5 done: " << delay5_done_cbc1 << ", serializer_done: " << serializer_done_cbc1 << ", bitslip_done: " << bitslip_done_cbc1;
+            uint32_t tuning_state_cbc0 = ReadReg("fc7_daq_stat.physical_interface_block.state_tuning_cbc0");
+            uint32_t tuning_state_cbc1 = ReadReg("fc7_daq_stat.physical_interface_block.state_tuning_cbc1");
+            LOG(INFO) << "tuning state cbc0: " << tuning_state_cbc0 << ", cbc1: " << tuning_state_cbc1;
+            exit (1);
+        }
+
+        this->CbcFastReset();
+        usleep (10);
+        // reset  the timing tuning
+        WriteReg("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
+
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+        hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
+    }
+}
 
 }
