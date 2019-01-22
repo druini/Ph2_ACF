@@ -14,7 +14,7 @@
 #define MPA_h__
 
 #include "FrontEndDescription.h"
-#include "CbcRegItem.h"
+#include "RegItem.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
@@ -25,7 +25,7 @@
 #include <utility>
 #include <set>
 
-// MPA2 Chip HW Description Class
+// MPA Chip HW Description Class
 
 
 /*!
@@ -33,7 +33,9 @@
  * \brief Namespace regrouping all the hardware description
  */
 namespace Ph2_HwDescription {
-
+    using MPARegMap = std::map < std::string, RegItem >;
+    using MPARegPair = std::pair <std::string, RegItem>;
+    using CommentMap = std::map <int, std::string>;
 
     class MPA : public FrontEndDescription
     {
@@ -41,10 +43,10 @@ namespace Ph2_HwDescription {
       public:
 
         // C'tors which take BeId, FMCId, FeID, MPAId
-        MPA ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t pMPASide);
+        MPA ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, const std::string& filename);
 
         // C'tors with object FE Description
-        MPA ( const FrontEndDescription& pFeDesc, uint8_t pMPAId , uint8_t pMPASide);
+        MPA ( const FrontEndDescription& pFeDesc, uint8_t pMPAId );
 
         // Default C'tor
         MPA();
@@ -68,32 +70,56 @@ namespace Ph2_HwDescription {
             fMPAId = pMPAId;
         }
 
-
-
-        uint8_t getMPASide() const
-        {
-            return fMPASide;
-        }
+        void loadfRegMap ( const std::string& filename );
         /*!
-         * \brief Set the MPA Id
-         * \param pMPAId
-         */
-        void setMPASide ( uint8_t pMPASide )
+        * \brief Get any register from the Map
+        * \param pReg
+        * \return The value of the register
+        */
+        uint8_t getReg ( const std::string& pReg ) const;
+        /*!
+        * \brief Set any register of the Map
+        * \param pReg
+        * \param psetValue
+        */
+        void setReg ( const std::string& pReg, uint8_t psetValue );
+       /*!
+        * \brief Get any registeritem of the Map
+        * \param pReg
+        * \return  RegItem
+        */
+        RegItem getRegItem ( const std::string& pReg );
+        /*!
+        * \brief Write the registers of the Map in a file
+        * \param filename
+        */
+        void saveRegMap ( const std::string& filename );
+        /*!
+        * \brief Get the Map of the registers
+        * \return The map of register
+        */
+        MPARegMap& getRegMap()
         {
-            fMPASide = pMPASide;
+            return fRegMap;
         }
-
-
+        const MPARegMap& getRegMap() const
+        {
+            return fRegMap;
+        }
 
       protected:
-
+        MPARegMap fRegMap;
         uint8_t fMPAId;
-        uint8_t fMPASide;
-
+        CommentMap fCommentMap;
 
     };
 
+    struct MPARegItemComparer
+    {
 
+        bool operator() ( const MPARegPair& pRegItem1, const MPARegPair& pRegItem2 ) const;
+
+    };
 }
 
 #endif

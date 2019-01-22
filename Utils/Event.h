@@ -43,10 +43,30 @@ namespace Ph2_HwInterface {
         double getBaricentre();
     };
 
+    class PCluster
+    {
+      public:
+
+        uint8_t fAddress;
+        uint8_t fWidth;
+        uint8_t fZpos;
+        double getBaricentre();
+    };
+
+    class SCluster
+    {
+      public:
+        uint8_t fAddress;
+        uint8_t fMip;
+        uint8_t fWidth;
+        double getBaricentre();
+    };
+
+
     class Stub
     {
       public:
-        Stub (uint8_t pPosition, uint8_t pBend) : fPosition (pPosition), fBend (pBend)
+        Stub (uint8_t pPosition, uint8_t pBend, uint8_t pRow=0) : fPosition (pPosition), fBend (pBend), fRow (pRow)
         {
             //with Strips starting at 0
             fCenter = static_cast<float> ( (pPosition / 2.) - 1);
@@ -59,6 +79,10 @@ namespace Ph2_HwInterface {
         {
             return fBend;
         }
+        uint8_t getRow()
+        {
+            return fRow;
+        }
         float getCenter()
         {
             return fCenter;
@@ -66,10 +90,9 @@ namespace Ph2_HwInterface {
       private:
         uint8_t fPosition;
         uint8_t fBend;
+        uint8_t fRow;
         float fCenter;
     };
-
-
     /*!
      * \class Event
      * \brief Event container to manipulate event flux from the Cbc

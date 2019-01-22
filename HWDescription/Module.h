@@ -15,6 +15,7 @@
 #include "FrontEndDescription.h"
 #include "Cbc.h"
 #include "MPA.h"
+#include "SSA.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/easylogging++.h"
 #include <vector>
@@ -56,6 +57,9 @@ namespace Ph2_HwDescription {
             for ( auto& pMPA : fMPAVector )
                 delete pMPA;
 
+       	    for ( auto& pSSA : fSSAVector )
+            delete pSSA;
+
             fMPAVector.clear();
 
         };
@@ -91,6 +95,10 @@ namespace Ph2_HwDescription {
             return fMPAVector.size();
         }
 
+        uint8_t getNSSA() const
+        {
+            return fSSAVector.size();
+        }
 
         /*!
          * \brief Adding a Cbc to the vector
@@ -166,10 +174,28 @@ namespace Ph2_HwDescription {
          */
         MPA* getMPA ( uint8_t pMPAId ) const;
 
+       /*!
+         * \brief Remove a SSA from the vector
+         * \param pSSAId
+         * \return a bool which indicate if the removing was successful
+         */
+        bool   removeSSA ( uint8_t pSSAId );
+        /*!
+         * \brief Get a SSA from the vector
+         * \param pSSAId
+         * \return a pointer of SSA, so we can manipulate directly the SSA contained in the vector
+         */
+        SSA* getSSA ( uint8_t pSSAId ) const;
+
+
+
         /*!
         * \brief Get the Module Id
         * \return The Module ID
         */
+
+
+
         uint8_t getModuleId() const
         {
             return fModuleId;
@@ -186,7 +212,7 @@ namespace Ph2_HwDescription {
 
         std::vector < Cbc* > fCbcVector;
         std::vector < MPA* > fMPAVector;
-
+        std::vector < SSA* > fSSAVector;
 
       protected:
 

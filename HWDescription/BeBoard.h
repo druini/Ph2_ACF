@@ -202,6 +202,15 @@ namespace Ph2_HwDescription {
             return fEventType;
         }
 
+        void setChipType (const ChipType pChipType)
+        {
+            fChipType = pChipType;
+        }
+        ChipType getChipType() const
+        {
+            return fChipType;
+        }
+
         void addConditionDataSet (ConditionDataSet* pSet)
         {
             if (pSet != nullptr)
@@ -222,7 +231,7 @@ namespace Ph2_HwDescription {
         //uint16_t fNCbcDataSize;
         BoardType fBoardType;
         EventType fEventType;
-
+        ChipType fChipType;
 
         BeBoardRegMap fRegMap;             /*!< Map of BeBoard Register Names vs. Register Values */
         ConditionDataSet* fCondDataSet;

@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "----------"
 export CBCDAQ=$HOME/CBCDAQ
 export KERNELRELEASE=$(uname -r)
 
@@ -9,7 +10,7 @@ export CACTUSINCLUDE=/opt/cactus/include
 
 
 # BOOST
-if [[ $KERNELRELEASE == *"el7"* ]]; then
+if [[ $KERNELRELEASE == *"el6"* ]]; then
     export BOOST_LIB=/opt/cactus/lib
     export BOOST_INCLUDE=/opt/cactus/include
 else
