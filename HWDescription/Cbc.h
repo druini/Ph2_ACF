@@ -133,20 +133,46 @@ namespace Ph2_HwDescription {
             fCbcId = pCbcId;
         }
 
-        const uint32_t * getCbcmask() const 
+        const uint16_t getNumberOfChannels() const { return fNumberOfChannels; }
+
+        const uint32_t* getCbcmask() const 
+        {
+            return fCbcMask32;
+        }
+
+        const std::vector<uint8_t>& getCbcMask() const
         {
             return fCbcMask;
+        }
+        const bool asMaskedChannels() const
+        {
+            return fAsMaskedChannels;
+        }
+
+        bool isDACLocal(const std::string &dacName){
+            if(dacName.find("MaskChannel-",0,12)!=std::string::npos || dacName.find("Channel",0,7)!=std::string::npos ) return true;
+            else return false;
+        }
+
+        uint8_t getNumberOfBits(const std::string &dacName){
+            if(dacName.find("MaskChannel-",0,12)!=std::string::npos) return 1;
+            else if(dacName == "VCth") return 10;
+            else if(dacName == "VCth2") return 2;
+            else return 8;
         }
 
 
       protected:
 
+        uint16_t fNumberOfChannels;
         uint8_t fCbcId;
+        bool fAsMaskedChannels;
 
         // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value
         CbcRegMap fRegMap;
         CommentMap fCommentMap;
-        uint32_t fCbcMask[8]; //mask is stored in 8 uint32
+        std::vector<uint8_t> fCbcMask = std::vector<uint8_t>(32,0);
+        uint32_t fCbcMask32[8]; //mask is stored in 8 uint32
 
     };
 

@@ -54,27 +54,15 @@ class Calibration : public Tool
 
 
   protected:
-    void bitwiseVplus ( int pTGroup );
+    // void bitwiseOffset ( int pTGroup );
 
-    void bitwiseVCth ( int pTGroup );
+    // void setOffset ( uint8_t pOffset, int  pTGroupId);
 
-    void bitwiseOffset ( int pTGroup );
-
-    void setOffset ( uint8_t pOffset, int  pTGroupId, bool pVPlus = false );
-
-    void toggleOffset ( int pTGroup, uint8_t pBit, bool pBegin );
-
-    void measureOccupancy ( uint32_t pNEvents, int pTGroup );
+    // void toggleOffset ( int pTGroup, uint8_t pBit, bool pBegin );
 
     float findCbcOccupancy ( Cbc* pCbc, int pTGroup, int pEventsPerPoint );
 
-    void fillOccupancyHist ( Cbc* pCbc, int pTGroup, const Event* pEvent );
-
     void clearOccupancyHists ( Cbc* pCbc );
-
-    void clearVPlusMap();
-
-    void setRegValues();
 
     void updateHists ( std::string pHistname );
 

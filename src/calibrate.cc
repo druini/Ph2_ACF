@@ -105,8 +105,8 @@ int main ( int argc, char* argv[] )
     Calibration cCalibration;
     cCalibration.Inherit (&cTool);
     //second parameter disables stub logic on CBC3
-    cCalibration.Initialise ( false, true );
-    // cCalibration.Initialise ( cAllChan, true );
+    // cCalibration.Initialise ( false, true );
+    cCalibration.Initialise ( cAllChan, true );
 
     if ( cVplus ) cCalibration.FindVplus();
 
@@ -126,6 +126,7 @@ int main ( int argc, char* argv[] )
         //second parameter disables stub logic on CBC3
         cPedeNoise.Initialise (cAllChan, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
+        // cPedeNoise.measureNoise(200);
 
         //cPedeNoise.sweepSCurves (225);
         //cPedeNoise.sweepSCurves (205);

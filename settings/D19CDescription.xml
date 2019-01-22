@@ -17,8 +17,10 @@
          <CBC Id="1" configfile="FE0CBC1.txt" /-->
 
         <CBC_Files path="./settings/CbcFiles/" />
+
         <CBC Id="0" configfile="CBC3_default.txt" />
         <!-- <CBC Id="0" configfile="CBC3_maskedStrips.txt" /> -->
+        <!-- <CBC Id="1" configfile="CBC3_maskedStrips.txt" /> -->
         <CBC Id="1" configfile="CBC3_default.txt" />
     </Module>
 
@@ -136,16 +138,17 @@
     <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
-    <!-- <Setting name="FitSCurves">0</Setting> -->
+    <Setting name="MaskChannelsFromOtherGroups">1</Setting>
+    <Setting name="FitSCurves">0</Setting>
 
     <!--[>PedeNoise<]-->
-    <Setting name="SkipMaskedChannels">1</Setting>
+    <Setting name="SkipMaskedChannels">0</Setting>
 
     <!--Signal Scan Fit-->
 	  <Setting name="InitialVcth">0x78</Setting>
 	  <Setting name="SignalScanStep">2</Setting>
     <Setting name="FitSignal">0</Setting>
-
+    
 
 </Settings>
 </HwDescription>
