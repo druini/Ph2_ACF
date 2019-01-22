@@ -382,15 +382,8 @@ namespace Ph2_System {
 
             if ( !cFilePrefix.empty() ) os << GREEN << "|" << " " << "|" << "   " << "|" << "----" << "CBC Files Path : " << cFilePrefix << RESET << std::endl;
 
-// <<<<<<< HEAD
             // Iterate the CBC node
             for ( pugi::xml_node pCbcNode = pModuleNode.child ( "CBC" ); pCbcNode; pCbcNode = pCbcNode.next_sibling() )
-// =======
-//             // parse the specific CBC settings so that Registers take precedence
-//             this->parseCbcSettings (cCbcNode, cCbc, os);
-
-//             for ( pugi::xml_node cCbcRegisterNode = cCbcNode.child ( "Register" ); cCbcRegisterNode; cCbcRegisterNode = cCbcRegisterNode.next_sibling() )
-// >>>>>>> 6da5affa7f87de685d8a8a0aca89e472e35a792a
             {
                 this->parseCbc (pCbcNode, cModule, cFilePrefix, os);
             }
