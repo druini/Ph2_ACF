@@ -275,7 +275,7 @@ namespace Ph2_System {
         else if (pBoard->getBoardType() == BoardType::CBC3FC7)
             cNEventSize32 = EVENT_HEADER_TDC_SIZE_32_CBC3 + cNCbc * CBC_EVENT_SIZE_32_CBC3;
         else if (pBoard->getBoardType() == BoardType::D19C)
-            cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNFe * D19C_EVENT_HEADER2_SIZE_32_CBC3 + cNCbc * CBC_EVENT_SIZE_32_CBC3;
+            cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNCbc * D19C_EVENT_SIZE_32_CBC3;
 
         return cNEventSize32;
     }

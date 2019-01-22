@@ -75,10 +75,10 @@
 #define EVENT_HEADER_SIZE_32_CBC3        3  // 5 words for the header
 
 //D19C event header size
-#define D19C_EVENT_HEADER1_SIZE_32_CBC3 5
-#define D19C_EVENT_HEADER2_SIZE_32_CBC3 1
+#define D19C_EVENT_HEADER1_SIZE_32_CBC3 4
+#define D19C_EVENT_SIZE_32_CBC3         16
 // points to bufferoverlow
-#define D19C_OFFSET_ERROR_CBC3          8*32+1
+#define D19C_OFFSET_ERROR_CBC3          2*32+0
 
 
 //Event

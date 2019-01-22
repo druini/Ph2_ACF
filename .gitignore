@@ -9,7 +9,6 @@ html/
 latex/
 logs/
 logs/*
-*.bin
 *.raw
 Results/
 Results/**

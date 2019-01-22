@@ -30,6 +30,7 @@ namespace Ph2_HwInterface {
         uint8_t fMaxHybrids = 8;
 
         fEventSize = 0x0000FFFF & list.at (0);
+        fEventSize *= 4; // block size is in 128 bit words
         //LOG (INFO) << "Block size: " << fEventSize;
 
         if (fEventSize != list.size() || fEventSize != pZSEventSize )
@@ -85,11 +86,7 @@ namespace Ph2_HwInterface {
                 uint8_t header2_size = (0x00FF0000 & list.at (address_offset + 0) ) >> 16;
                 //LOG(INFO) << "FE Data Size: " << +fe_data_size;
 
-                if (header2_size != D19C_EVENT_HEADER2_SIZE_32_CBC3)
-                    LOG (ERROR) << "Header2 size doesnt correspond to the one sent from firmware";
 
-                // iterating through the hybrid words
-                address_offset += D19C_EVENT_HEADER2_SIZE_32_CBC3;
 
                 uint8_t cChipIDPrev = 255; // to be sure that we are starting from new chip everytime
                 uint32_t word_id = address_offset;

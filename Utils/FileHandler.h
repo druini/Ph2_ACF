@@ -12,6 +12,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <thread>
+#include <unistd.h>
 #include "FileHeader.h"
 #include "../Utils/easylogging++.h"
 
