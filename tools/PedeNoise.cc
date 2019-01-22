@@ -150,7 +150,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 
 
     LOG (INFO) << "Created Object Maps and parsed settings:" ;
-    LOG (INFO) << "	Nevents = " << fEventsPerPoint ;
+    LOG (INFO) << " Nevents = " << fEventsPerPoint ;
     LOG (INFO) << " FitSCurves = " << int ( fFitted ) ;
 
     if (fType == ChipType::CBC3)
@@ -500,6 +500,7 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
 
         this->setDacAndMeasureOccupancy("VCth", cValue, fEventsPerPoint, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
 
+
         //filling histograms
         for ( auto cBoard : fBoardVector )
         {
@@ -534,6 +535,13 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
             cIncrement = 0;
         }
 
+        if (!cAllOne && cAllOneCounter == cMinBreakCount)
+        {
+            cAllOne = true;
+            cSign = fHoleMode ? 1 : -1;
+            cIncrement = 0;
+        }
+
         cIncrement++;
         // following checks if we're not going out of bounds
         if (cSign == 1 && (pStartValue + (cIncrement * cSign) > cMaxValue) )
@@ -554,7 +562,6 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
             cSign = -1 * cSign;
         }
 
-            cIncrement++;
 
         LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
         cValue = pStartValue + (cIncrement * cSign);
