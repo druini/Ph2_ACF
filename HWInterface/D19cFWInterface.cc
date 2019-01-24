@@ -23,28 +23,28 @@
 namespace Ph2_HwInterface {
 
     D19cFWInterface::D19cFWInterface ( const char* puHalConfigFileName,
-                                       uint32_t pBoardId ) :
-        BeBoardFWInterface ( puHalConfigFileName, pBoardId ),
-        fpgaConfig (nullptr),
-        fBroadcastCbcId (0),
-        fNCbc (0),
-    	fNMPA (0),
-    	fNSSA (0),
-        fFMCId (1)
+       uint32_t pBoardId ) :
+    BeBoardFWInterface ( puHalConfigFileName, pBoardId ),
+    fpgaConfig (nullptr),
+    fBroadcastCbcId (0),
+    fNCbc (0),
+    fNMPA (0),
+    fNSSA (0),
+    fFMCId (1)
     {fResetAttempts = 0 ; }
 
 
     D19cFWInterface::D19cFWInterface ( const char* puHalConfigFileName,
-                                       uint32_t pBoardId,
-                                       FileHandler* pFileHandler ) :
-        BeBoardFWInterface ( puHalConfigFileName, pBoardId ),
-        fpgaConfig (nullptr),
-        fBroadcastCbcId (0),
-        fNCbc (0),
-    	fNMPA (0),
-    	fNSSA (0),
-        fFileHandler ( pFileHandler ),
-        fFMCId (1)
+       uint32_t pBoardId,
+       FileHandler* pFileHandler ) :
+    BeBoardFWInterface ( puHalConfigFileName, pBoardId ),
+    fpgaConfig (nullptr),
+    fBroadcastCbcId (0),
+    fNCbc (0),
+    fNMPA (0),
+    fNSSA (0),
+    fFileHandler ( pFileHandler ),
+    fFMCId (1)
     {
         if ( fFileHandler == nullptr ) fSaveToFile = false;
         else fSaveToFile = true;
@@ -52,30 +52,30 @@ namespace Ph2_HwInterface {
     }
 
     D19cFWInterface::D19cFWInterface ( const char* pId,
-                                       const char* pUri,
-                                       const char* pAddressTable ) :
-        BeBoardFWInterface ( pId, pUri, pAddressTable ),
-        fpgaConfig ( nullptr ),
-        fBroadcastCbcId (0),
-        fNCbc (0),
-    	fNMPA (0),
-    	fNSSA (0),
-        fFMCId (1)
+       const char* pUri,
+       const char* pAddressTable ) :
+    BeBoardFWInterface ( pId, pUri, pAddressTable ),
+    fpgaConfig ( nullptr ),
+    fBroadcastCbcId (0),
+    fNCbc (0),
+    fNMPA (0),
+    fNSSA (0),
+    fFMCId (1)
     {fResetAttempts = 0 ; }
 
 
     D19cFWInterface::D19cFWInterface ( const char* pId,
-                                       const char* pUri,
-                                       const char* pAddressTable,
-                                       FileHandler* pFileHandler ) :
-        BeBoardFWInterface ( pId, pUri, pAddressTable ),
-        fpgaConfig ( nullptr ),
-        fBroadcastCbcId (0),
-        fNCbc (0),
-    	fNMPA (0),
-    	fNSSA (0),
-        fFileHandler ( pFileHandler ),
-        fFMCId (1)
+       const char* pUri,
+       const char* pAddressTable,
+       FileHandler* pFileHandler ) :
+    BeBoardFWInterface ( pId, pUri, pAddressTable ),
+    fpgaConfig ( nullptr ),
+    fBroadcastCbcId (0),
+    fNCbc (0),
+    fNMPA (0),
+    fNSSA (0),
+    fFileHandler ( pFileHandler ),
+    fFMCId (1)
     {
         if ( fFileHandler == nullptr ) fSaveToFile = false;
         else fSaveToFile = true;
@@ -118,52 +118,52 @@ namespace Ph2_HwInterface {
         switch (id)
         {
             case 0x0:
-                name = "None";
-                break;
+            name = "None";
+            break;
 
             case 0x1:
-                name = "DIO5";
-                break;
+            name = "DIO5";
+            break;
 
             case 0x2:
-                name = "2xCBC2";
-                break;
+            name = "2xCBC2";
+            break;
 
             case 0x3:
-                name = "8xCBC2";
-                break;
+            name = "8xCBC2";
+            break;
 
             case 0x4:
-                name = "2xCBC3";
-                break;
+            name = "2xCBC3";
+            break;
 
             case 0x5:
-                name = "8xCBC3_FMC1";
-                break;
-	    
-	    case 0x6:
-                name = "8xCBC3_FMC2";
-                break;
-	    
-	    case 0x7:
-                name = "FMC_1CBC3";
-                break;
-	    
+            name = "8xCBC3_FMC1";
+            break;
+
+            case 0x6:
+            name = "8xCBC3_FMC2";
+            break;
+
+            case 0x7:
+            name = "FMC_1CBC3";
+            break;
+
             case 0x8:
-                name = "FMC_MPA_SSA_BOARD";
-                break;
-  	    
+            name = "FMC_MPA_SSA_BOARD";
+            break;
+
             case 0x9:
-                name = "FMC_FERMI_TRIGGER_BOARD";
-                break;
+            name = "FMC_FERMI_TRIGGER_BOARD";
+            break;
 
             case 0xe:
-                name = "OPTO_QUAD";
-                break;
+            name = "OPTO_QUAD";
+            break;
 
             case 0xf:
-                name = "UNKNOWN";
-                break;
+            name = "UNKNOWN";
+            break;
         }
 
         return name;
@@ -176,20 +176,20 @@ namespace Ph2_HwInterface {
         switch (pChipCode)
         {
             case 0x0:
-                name = "CBC2";
-                break;
+            name = "CBC2";
+            break;
 
             case 0x1:
-                name = "CBC3";
-                break;
+            name = "CBC3";
+            break;
 
             case 0x2:
-                name = "MPA";
-                break;
+            name = "MPA";
+            break;
 
-	    case 0x3:
-		name = "SSA";
-		break;
+            case 0x3:
+            name = "SSA";
+            break;
         }
 
         return name;
@@ -202,20 +202,20 @@ namespace Ph2_HwInterface {
         switch (pChipCode)
         {
             case 0x0:
-                chip_type = ChipType::CBC2;
-                break;
+            chip_type = ChipType::CBC2;
+            break;
 
             case 0x1:
-                chip_type = ChipType::CBC3;
-                break;
+            chip_type = ChipType::CBC3;
+            break;
 
             case 0x2:
-                chip_type = ChipType::MPA;
-                break;
+            chip_type = ChipType::MPA;
+            break;
 
-	    case 0x3:
-		chip_type = ChipType::SSA;
-		break;
+            case 0x3:
+            chip_type = ChipType::SSA;
+            break;
         }
 
         return chip_type;
@@ -300,204 +300,204 @@ namespace Ph2_HwInterface {
         return cVersionWord;
     }
 
-void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
-{
+    void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
+    {
     // after firmware loading it seems that CBC3 is not super stable
     // and it needs fast reset after, so let's be secure and do also the hard one..
-    this->CbcHardReset();
-    this->CbcFastReset();
-    usleep (1);
+        this->CbcHardReset();
+        this->CbcFastReset();
+        usleep (1);
 
-    WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
+        WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
 
-    usleep (500);
+        usleep (500);
 
     // read info about current firmware
-    uint32_t cChipTypeCode = ReadReg ("fc7_daq_stat.general.info.chip_type");
-    std::string cChipName = getChipName (cChipTypeCode);
-    fFirwmareChipType = getChipType (cChipTypeCode);
-    fFWNHybrids = ReadReg ("fc7_daq_stat.general.info.num_hybrids");
-    fFWNChips = ReadReg ("fc7_daq_stat.general.info.num_chips");
-    fCBC3Emulator = (ReadReg ("fc7_daq_stat.general.info.implementation") == 2);
-    fIsDDR3Readout = (ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type") == 1);
-    fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
-    if(fI2CVersion >= 1) this->SetI2CAddressTable();
+        uint32_t cChipTypeCode = ReadReg ("fc7_daq_stat.general.info.chip_type");
+        std::string cChipName = getChipName (cChipTypeCode);
+        fFirwmareChipType = getChipType (cChipTypeCode);
+        fFWNHybrids = ReadReg ("fc7_daq_stat.general.info.num_hybrids");
+        fFWNChips = ReadReg ("fc7_daq_stat.general.info.num_chips");
+        fCBC3Emulator = (ReadReg ("fc7_daq_stat.general.info.implementation") == 2);
+        fIsDDR3Readout = (ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type") == 1);
+        fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
+        if(fI2CVersion >= 1) this->SetI2CAddressTable();
 
-    fNCbc = 0;
-    std::vector< std::pair<std::string, uint32_t> > cVecReg;
+        fNCbc = 0;
+        std::vector< std::pair<std::string, uint32_t> > cVecReg;
 
-    LOG (INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
+        LOG (INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
 
-    int fNHybrids = 0;
-    uint16_t hybrid_enable = 0;
-    uint8_t* chips_enable = new uint8_t[16];
+        int fNHybrids = 0;
+        uint16_t hybrid_enable = 0;
+        uint8_t* chips_enable = new uint8_t[16];
 
-    for (int i = 0; i < 16; i++) chips_enable[i] = 0;
+        for (int i = 0; i < 16; i++) chips_enable[i] = 0;
     //then loop the HWDescription and find out about our Connected CBCs
-    for (Module* cFe : pBoard->fModuleVector)
-    {
-        fNHybrids++;
-        LOG (INFO) << "Enabling Hybrid " << (int) cFe->getFeId();
-        hybrid_enable |= 1 << cFe->getFeId();
-
-        if (fFirwmareChipType == ChipType::CBC2 || fFirwmareChipType == ChipType::CBC3) {
-            for ( Cbc* cCbc : cFe->fCbcVector)
+            for (Module* cFe : pBoard->fModuleVector)
             {
-                LOG (INFO) << "     Enabling CBC2 Chip " << (int) cCbc->getCbcId();
-                chips_enable[cFe->getFeId()] |= 1 << cCbc->getCbcId();
+                fNHybrids++;
+                LOG (INFO) << "Enabling Hybrid " << (int) cFe->getFeId();
+                hybrid_enable |= 1 << cFe->getFeId();
+
+                if (fFirwmareChipType == ChipType::CBC2 || fFirwmareChipType == ChipType::CBC3) {
+                    for ( Cbc* cCbc : cFe->fCbcVector)
+                    {
+                        LOG (INFO) << "     Enabling CBC2 Chip " << (int) cCbc->getCbcId();
+                        chips_enable[cFe->getFeId()] |= 1 << cCbc->getCbcId();
                 //need to increment the NCbc counter for I2C controller
-                fNCbc++;
-            }
-        } else if (fFirwmareChipType == ChipType::MPA) {
-            for ( MPA* cMPA : cFe->fMPAVector)
-            {
-                LOG (INFO) << "     Enabling MPA Chip " << (int) cMPA->getMPAId();
-                chips_enable[cFe->getFeId()] |= 1 << cMPA->getMPAId();
+                        fNCbc++;
+                    }
+                } else if (fFirwmareChipType == ChipType::MPA) {
+                    for ( MPA* cMPA : cFe->fMPAVector)
+                    {
+                        LOG (INFO) << "     Enabling MPA Chip " << (int) cMPA->getMPAId();
+                        chips_enable[cFe->getFeId()] |= 1 << cMPA->getMPAId();
                 //need to increment the counter for I2C controller
-                fNMPA++;
-            }
-        } else if (fFirwmareChipType == ChipType::SSA) {
-	    for (SSA* cSSA : cFe->fSSAVector)
-	    {
-		LOG (INFO) << "     Enabling SSA Chip " << (int) cSSA->getSSAId();
-                chips_enable[cFe->getFeId()] |= 1 << cSSA->getSSAId();
+                        fNMPA++;
+                    }
+                } else if (fFirwmareChipType == ChipType::SSA) {
+                    for (SSA* cSSA : cFe->fSSAVector)
+                    {
+                        LOG (INFO) << "     Enabling SSA Chip " << (int) cSSA->getSSAId();
+                        chips_enable[cFe->getFeId()] |= 1 << cSSA->getSSAId();
                 //need to increment the counter for I2C controller
-		fNSSA++;
-	    }
-	}
+                        fNSSA++;
+                    }
+                }
 
-    }
+            }
 
     // hybrid / chips enabling part
-    cVecReg.push_back ({"fc7_daq_cnfg.global.hybrid_enable", hybrid_enable});
+            cVecReg.push_back ({"fc7_daq_cnfg.global.hybrid_enable", hybrid_enable});
 
-    for (uint32_t i = 0; i < 16; i++)
-    {
-        char name[50];
-        std::sprintf (name, "fc7_daq_cnfg.global.chips_enable_hyb_%02d", i);
-        std::string name_str (name);
-        cVecReg.push_back ({name_str, chips_enable[i]});
-    }
+            for (uint32_t i = 0; i < 16; i++)
+            {
+                char name[50];
+                std::sprintf (name, "fc7_daq_cnfg.global.chips_enable_hyb_%02d", i);
+                std::string name_str (name);
+                cVecReg.push_back ({name_str, chips_enable[i]});
+            }
 
-    delete chips_enable;
-    LOG (INFO) << BOLDGREEN << fNHybrids << " hybrid(s) was(were) enabled with the total amount of " << (fNCbc+fNMPA+fNSSA) << " chip(s)!" << RESET;
+            delete chips_enable;
+            LOG (INFO) << BOLDGREEN << fNHybrids << " hybrid(s) was(were) enabled with the total amount of " << (fNCbc+fNMPA+fNSSA) << " chip(s)!" << RESET;
 
     //last, loop over the variable registers from the HWDescription.xml file
     //this is where I should get all the clocking and FastCommandInterface settings
-    BeBoardRegMap cGlibRegMap = pBoard->getBeBoardRegMap();
+            BeBoardRegMap cGlibRegMap = pBoard->getBeBoardRegMap();
 
-    bool dio5_enabled = false;
+            bool dio5_enabled = false;
 
-    for ( auto const& it : cGlibRegMap )
-    {
-        cVecReg.push_back ( {it.first, it.second} );
+            for ( auto const& it : cGlibRegMap )
+            {
+                cVecReg.push_back ( {it.first, it.second} );
 
-        if (it.first == "fc7_daq_cnfg.dio5_block.dio5_en") dio5_enabled = (bool) it.second;
-    }
+                if (it.first == "fc7_daq_cnfg.dio5_block.dio5_en") dio5_enabled = (bool) it.second;
+            }
 
-    WriteStackReg ( cVecReg );
-    cVecReg.clear();
+            WriteStackReg ( cVecReg );
+            cVecReg.clear();
 
     // load trigger configuration
-    WriteReg ("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+            WriteReg ("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
 
     // load dio5 configuration
-    if (dio5_enabled)
-    {
-        PowerOnDIO5();
-        WriteReg ("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
-    }
+            if (dio5_enabled)
+            {
+                PowerOnDIO5();
+                WriteReg ("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
+            }
 
     // now set event type (ZS or VR)
-    if (pBoard->getEventType() == EventType::ZS) WriteReg ("fc7_daq_cnfg.readout_block.global.zero_suppression_enable", 0x1);
-    else WriteReg ("fc7_daq_cnfg.readout_block.global.zero_suppression_enable", 0x0);
+            if (pBoard->getEventType() == EventType::ZS) WriteReg ("fc7_daq_cnfg.readout_block.global.zero_suppression_enable", 0x1);
+            else WriteReg ("fc7_daq_cnfg.readout_block.global.zero_suppression_enable", 0x0);
 
     // resetting hard
-    this->CbcHardReset();
+            this->CbcHardReset();
 
     // ping all cbcs (reads data from registers #0)
-    uint32_t cInit = ( ( (2) << 28 ) | (  (0) << 18 )  | ( (0) << 17 ) | ( (1) << 16 ) | (0 << 8 ) | 0);
-    std::cout<<cInit<<std::endl;
-    WriteReg ("fc7_daq_ctrl.command_processor_block.i2c.command_fifo", cInit);
+            uint32_t cInit = ( ( (2) << 28 ) | (  (0) << 18 )  | ( (0) << 17 ) | ( (1) << 16 ) | (0 << 8 ) | 0);
+            std::cout<<cInit<<std::endl;
+            WriteReg ("fc7_daq_ctrl.command_processor_block.i2c.command_fifo", cInit);
     //read the replies for the pings!
-    std::vector<uint32_t> pReplies;
-    bool cReadSuccess = !ReadI2C (fNCbc+fNMPA+fNSSA, pReplies);
-    bool cWordCorrect = true;
+            std::vector<uint32_t> pReplies;
+            bool cReadSuccess = !ReadI2C (fNCbc+fNMPA+fNSSA, pReplies);
+            bool cWordCorrect = true;
 
-    if (cReadSuccess)
-    {
-        // all the replies will be sorted by hybrid id/chip id: hybrid0: chips(0,2,3,4..), hybrid2: chips(...) - so we can use index k.
-        uint8_t k = 0;
-
-        for (Module* cFe : pBoard->fModuleVector)
-        {
-            for ( Cbc* cCbc : cFe->fCbcVector)
+            if (cReadSuccess)
             {
-                uint32_t cWord = pReplies.at (k);
-                if(fI2CVersion >= 1) cWordCorrect = ( ( ( (cWord & 0x007C0000) >> 18) == cCbc->getCbcId() ) & ( ( (cWord & 0x07800000) >> 23) == cFe->getFeId() ) ) ? true : false;
-                else cWordCorrect = ( ( ( (cWord & 0x00f00000) >> 20) == cCbc->getCbcId() ) & ( ( (cWord & 0x0f000000) >> 24) == cFe->getFeId() ) ) ? true : false;
+        // all the replies will be sorted by hybrid id/chip id: hybrid0: chips(0,2,3,4..), hybrid2: chips(...) - so we can use index k.
+                uint8_t k = 0;
 
-                k++;
+                for (Module* cFe : pBoard->fModuleVector)
+                {
+                    for ( Cbc* cCbc : cFe->fCbcVector)
+                    {
+                        uint32_t cWord = pReplies.at (k);
+                        if(fI2CVersion >= 1) cWordCorrect = ( ( ( (cWord & 0x007C0000) >> 18) == cCbc->getCbcId() ) & ( ( (cWord & 0x07800000) >> 23) == cFe->getFeId() ) ) ? true : false;
+                        else cWordCorrect = ( ( ( (cWord & 0x00f00000) >> 20) == cCbc->getCbcId() ) & ( ( (cWord & 0x0f000000) >> 24) == cFe->getFeId() ) ) ? true : false;
 
-                if (!cWordCorrect) break;
+                        k++;
+
+                        if (!cWordCorrect) break;
+                    }
+                }
             }
-        }
-    }
 
-    if (cReadSuccess && cWordCorrect) LOG (INFO) << "Successfully received *Pings* from " << fNCbc+fNMPA+fNSSA << " chips";
+            if (cReadSuccess && cWordCorrect) LOG (INFO) << "Successfully received *Pings* from " << fNCbc+fNMPA+fNSSA << " chips";
 
-    if (!cReadSuccess) LOG (ERROR) << RED << "Did not receive the correct number of *Pings*; expected: " << fNCbc+fNMPA+fNSSA << ", received: " << pReplies.size() << RESET;
+            if (!cReadSuccess) LOG (ERROR) << RED << "Did not receive the correct number of *Pings*; expected: " << fNCbc+fNMPA+fNSSA << ", received: " << pReplies.size() << RESET;
 
-    if (!cWordCorrect) LOG (ERROR) << RED << "FEs/Chip ids are not correct!" << RESET;
+            if (!cWordCorrect) LOG (ERROR) << RED << "FEs/Chip ids are not correct!" << RESET;
 
-    this->PhaseTuning (pBoard);
+            this->PhaseTuning (pBoard);
 
-    this->ResetReadout();
+            this->ResetReadout();
 
     //adding an Orbit reset to align CBC L1A counters
-    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset",0x1);
-}
+            this->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset",0x1);
+        }
 
-    void D19cFWInterface::PowerOnDIO5()
-    {
-        LOG (INFO) << BOLDGREEN << "Powering on DIO5" << RESET;
+        void D19cFWInterface::PowerOnDIO5()
+        {
+            LOG (INFO) << BOLDGREEN << "Powering on DIO5" << RESET;
 
-        uint32_t fmc1_card_type = ReadReg ("fc7_daq_stat.general.info.fmc1_card_type");
-        uint32_t fmc2_card_type = ReadReg ("fc7_daq_stat.general.info.fmc2_card_type");
+            uint32_t fmc1_card_type = ReadReg ("fc7_daq_stat.general.info.fmc1_card_type");
+            uint32_t fmc2_card_type = ReadReg ("fc7_daq_stat.general.info.fmc2_card_type");
 
         //define constants
-        uint8_t i2c_slv   = 0x2f;
-        uint8_t wr = 1;
+            uint8_t i2c_slv   = 0x2f;
+            uint8_t wr = 1;
         //uint8_t rd = 0;
 
-        uint8_t sel_fmc_l8  = 0;
-        uint8_t sel_fmc_l12 = 1;
+            uint8_t sel_fmc_l8  = 0;
+            uint8_t sel_fmc_l12 = 1;
 
         //uint8_t p3v3 = 0xff - 0x09;
-        uint8_t p2v5 = 0xff - 0x2b;
+            uint8_t p2v5 = 0xff - 0x2b;
         //uint8_t p1v8 = 0xff - 0x67;
 
-        if (fmc1_card_type == 0x1)
-        {
-            LOG (INFO) << "Found DIO5 at L12. Configuring";
+            if (fmc1_card_type == 0x1)
+            {
+                LOG (INFO) << "Found DIO5 at L12. Configuring";
 
             // disable power
-            WriteReg ("sysreg.fmc_pwr.l12_pwr_en", 0x0);
+                WriteReg ("sysreg.fmc_pwr.l12_pwr_en", 0x0);
 
             // enable i2c
-            WriteReg ("sysreg.i2c_settings.i2c_bus_select", 0x0);
-            WriteReg ("sysreg.i2c_settings.i2c_prescaler", 1000);
-            WriteReg ("sysreg.i2c_settings.i2c_enable", 0x1);
+                WriteReg ("sysreg.i2c_settings.i2c_bus_select", 0x0);
+                WriteReg ("sysreg.i2c_settings.i2c_prescaler", 1000);
+                WriteReg ("sysreg.i2c_settings.i2c_enable", 0x1);
             //uint32_t i2c_settings_reg_command = (0x1 << 15) | (0x0 << 10) | 1000;
             //WriteReg("sysreg.i2c_settings", i2c_settings_reg_command);
 
             // set value
-            uint8_t reg_addr = (sel_fmc_l12 << 7) + 0x08;
-            uint8_t wrdata = p2v5;
-            uint32_t sys_i2c_command = ( (1 << 24) | (wr << 23) | (i2c_slv << 16) | (reg_addr << 8) | (wrdata) );
+                uint8_t reg_addr = (sel_fmc_l12 << 7) + 0x08;
+                uint8_t wrdata = p2v5;
+                uint32_t sys_i2c_command = ( (1 << 24) | (wr << 23) | (i2c_slv << 16) | (reg_addr << 8) | (wrdata) );
 
-            WriteReg ("sysreg.i2c_command", sys_i2c_command | 0x80000000);
-            WriteReg ("sysreg.i2c_command", sys_i2c_command);
+                WriteReg ("sysreg.i2c_command", sys_i2c_command | 0x80000000);
+                WriteReg ("sysreg.i2c_command", sys_i2c_command);
 
             int status   = 0; // 0 - busy, 1 -done, 2 - error
             int attempts = 0;
@@ -580,84 +580,84 @@ void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
     // set i2c address table depending on the hybrid
     void D19cFWInterface::SetI2CAddressTable() 
     {
-       
-    LOG (INFO) << BOLDGREEN << "Setting the I2C address table" << RESET;
+
+        LOG (INFO) << BOLDGREEN << "Setting the I2C address table" << RESET;
 
     // creating the map
-    std::vector< std::vector<uint32_t> > i2c_slave_map;
+        std::vector< std::vector<uint32_t> > i2c_slave_map;
 
     // setting the map for different chip types
-    if (fFirwmareChipType == ChipType::CBC2 || fFirwmareChipType == ChipType::CBC3) {
+        if (fFirwmareChipType == ChipType::CBC2 || fFirwmareChipType == ChipType::CBC3) {
         // nothing to de done here default addresses are set for CBC
         // actually FIXME
-        return;
-    } else if (fFirwmareChipType == ChipType::MPA) {
-        for (int id = 0; id < fFWNChips; id++) {
+            return;
+        } else if (fFirwmareChipType == ChipType::MPA) {
+            for (int id = 0; id < fFWNChips; id++) {
             // for chip emulator register width is 8 bits, not 16 as for MPA
-            if(!fCBC3Emulator) {
-                i2c_slave_map.push_back({0b1000000 + id, 2, 1, 1, 1, 0});
-            } else {
-                i2c_slave_map.push_back({0b1000000 + id, 1, 1, 1, 1, 0});
+                if(!fCBC3Emulator) {
+                    i2c_slave_map.push_back({0b1000000 + id, 2, 1, 1, 1, 0});
+                } else {
+                    i2c_slave_map.push_back({0b1000000 + id, 1, 1, 1, 1, 0});
+                }
             }
         }
-    }
     else if (fFirwmareChipType == ChipType::SSA) // MUST BE IN ORDER! CANNOT DO 0, 1, 4
-	{
-	LOG (INFO) << BOLDRED << "WE ARE HERE!!! WE ARE HERE!!! WE ARE HERE!!!  " << fFWNChips << RESET;
-	for (int id = 0; id < fFWNChips; id++) 
-		{
-		i2c_slave_map.push_back({0b0100000 + id, 2, 1, 1, 1, 0}); // FIXME SSA ??
-		}
-	}
-    for (int ism = 0; ism < i2c_slave_map.size(); ism++) {
+    {
+        LOG (INFO) << BOLDRED << "WE ARE HERE!!! WE ARE HERE!!! WE ARE HERE!!!  " << fFWNChips << RESET;
+        for (int id = 0; id < fFWNChips; id++) 
+        {
+        i2c_slave_map.push_back({0b0100000 + id, 2, 1, 1, 1, 0}); // FIXME SSA ??
+    }
+}
+for (int ism = 0; ism < i2c_slave_map.size(); ism++) {
         // setting the params
-        uint32_t shifted_i2c_address = i2c_slave_map[ism][0]<<25;
-        uint32_t shifted_register_address_nbytes = i2c_slave_map[ism][1]<<10;
-        uint32_t shifted_data_wr_nbytes = i2c_slave_map[ism][2]<<5;
-        uint32_t shifted_data_rd_nbytes = i2c_slave_map[ism][3]<<0;
-        uint32_t shifted_stop_for_rd_en = i2c_slave_map[ism][4]<<24;
-        uint32_t shifted_nack_en = i2c_slave_map[ism][5]<<23;
+    uint32_t shifted_i2c_address = i2c_slave_map[ism][0]<<25;
+    uint32_t shifted_register_address_nbytes = i2c_slave_map[ism][1]<<10;
+    uint32_t shifted_data_wr_nbytes = i2c_slave_map[ism][2]<<5;
+    uint32_t shifted_data_rd_nbytes = i2c_slave_map[ism][3]<<0;
+    uint32_t shifted_stop_for_rd_en = i2c_slave_map[ism][4]<<24;
+    uint32_t shifted_nack_en = i2c_slave_map[ism][5]<<23;
 
         // writing the item to the firmware
-        uint32_t final_item = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
-        std::string curreg = "fc7_daq_cnfg.command_processor_block.i2c_address_table.slave_" + std::to_string(ism) + "_config";
-        WriteReg(curreg, final_item);
-    }
-    }
+    uint32_t final_item = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
+    std::string curreg = "fc7_daq_cnfg.command_processor_block.i2c_address_table.slave_" + std::to_string(ism) + "_config";
+    WriteReg(curreg, final_item);
+}
+}
 
-    void D19cFWInterface::Start()
-    {
-        this->CbcFastReset();
-        this->ResetReadout();
+void D19cFWInterface::Start()
+{
+    this->CbcFastReset();
+    this->ResetReadout();
 
         //here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to clear the register manually)
-        WriteReg ("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
-        WriteReg ("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
-        std::this_thread::sleep_for (std::chrono::microseconds (10) );
-        
-        WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-        std::this_thread::sleep_for (std::chrono::microseconds (10) );
-    }
+    WriteReg ("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
+    WriteReg ("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
 
-    void D19cFWInterface::Stop()
-    {
+    WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
+}
+
+void D19cFWInterface::Stop()
+{
         //here close the shutter for the stub counter block
-        WriteReg ("fc7_daq_ctrl.stub_counter_block.general.shutter_close", 0x1);
-        WriteReg ("fc7_daq_ctrl.stub_counter_block.general.shutter_close", 0x0);
-        std::this_thread::sleep_for (std::chrono::microseconds (10) );
-        
-        WriteReg ("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-        std::this_thread::sleep_for (std::chrono::microseconds (10) );
+    WriteReg ("fc7_daq_ctrl.stub_counter_block.general.shutter_close", 0x1);
+    WriteReg ("fc7_daq_ctrl.stub_counter_block.general.shutter_close", 0x0);
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
+
+    WriteReg ("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
 
         //here read the stub counters
         /*
-  	uint32_t cBXCounter1s = ReadReg ("fc7_daq_stat.stub_counter_block.bx_counter_ls");
+    uint32_t cBXCounter1s = ReadReg ("fc7_daq_stat.stub_counter_block.bx_counter_ls");
         uint32_t cBXCounterms = ReadReg ("fc7_daq_stat.stub_counter_block.bx_counter_ms");
         uint32_t cStubCounter0 = ReadReg ("fc7_daq_stat.stub_counter_block.counters_hyb0_chip0");
         uint32_t cStubCounter1 = ReadReg ("fc7_daq_stat.stub_counter_block.counters_hyb0_chip1");
-	*/
+    */
         /*
-  	LOG (INFO) << BOLDGREEN << "Reading FW Stub and Error counters at the end of the run: " << RESET;
+    LOG (INFO) << BOLDGREEN << "Reading FW Stub and Error counters at the end of the run: " << RESET;
         LOG (INFO) << BOLDBLUE << "BX Counter 1s: " << RED << cBXCounter1s << RESET;
         LOG (INFO) << BOLDBLUE << "BX Counter ms: " << RED << cBXCounterms << RESET;
         LOG (INFO) << BOLDGREEN << "FE 0 CBC 0:" << RESET;
@@ -666,246 +666,255 @@ void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
         LOG (INFO) << BOLDGREEN << "FE 0 CBC 1:" << RESET;
         LOG (INFO) << BOLDBLUE << " Stub Counter: " << RED << (cStubCounter1 & 0x0000FFFF) << RESET;
         LOG (INFO) << BOLDBLUE << "Error Counter: " << RED << ( (cStubCounter1 & 0xFFFF0000) >> 16) << RESET;
-    	*/
-    }
+        */
+}
 
 
-    void D19cFWInterface::Pause()
-    {
-        LOG (INFO) << BOLDBLUE << "................................ Pausing run ... " << RESET ; 
-        WriteReg ("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-        std::this_thread::sleep_for (std::chrono::microseconds (10) );
-    }
+void D19cFWInterface::Pause()
+{
+    LOG (INFO) << BOLDBLUE << "................................ Pausing run ... " << RESET ; 
+    WriteReg ("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
+}
 
 
-    void D19cFWInterface::Resume()
-    {
-        LOG (INFO) << BOLDBLUE << "Reseting readout before resuming run ... " << RESET ; 
-        this->ResetReadout();
+void D19cFWInterface::Resume()
+{
+    LOG (INFO) << BOLDBLUE << "Reseting readout before resuming run ... " << RESET ; 
+    this->ResetReadout();
     
-        LOG (INFO) << BOLDBLUE << "................................ Resuming run ... " << RESET ; 
-        WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-        std::this_thread::sleep_for (std::chrono::microseconds (10) );
-    }
+    LOG (INFO) << BOLDBLUE << "................................ Resuming run ... " << RESET ; 
+    WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
+}
 
-    void D19cFWInterface::ResetReadout()
-    {
-        WriteReg ("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
-        std::this_thread::sleep_for (std::chrono::microseconds (10) );
+void D19cFWInterface::ResetReadout()
+{
+    WriteReg ("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
 
-        WriteReg ("fc7_daq_ctrl.readout_block.control.readout_reset", 0x0);
-        std::this_thread::sleep_for (std::chrono::microseconds (10) );
-        
-	if (fIsDDR3Readout) {
-            fDDR3Offset = 0;
+    WriteReg ("fc7_daq_ctrl.readout_block.control.readout_reset", 0x0);
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
+
+    if (fIsDDR3Readout) {
+        fDDR3Offset = 0;
+        fDDR3Calibrated = (ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
+        bool i=false;
+        while(!fDDR3Calibrated) {
+            if(i==false) LOG(INFO) << "Waiting for DDR3 to finish initial calibration";
+            i=true;
+            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
             fDDR3Calibrated = (ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
-            bool i=false;
-            while(!fDDR3Calibrated) {
-                if(i==false) LOG(INFO) << "Waiting for DDR3 to finish initial calibration";
-                i=true;
-                std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                fDDR3Calibrated = (ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
-            }
         }
     }
+}
 
-    void D19cFWInterface::DDR3SelfTest()
-    {
-	//opened issue: without this time delay the self-test doesn't examine entire 4Gb address space of the chip(reason not obvious) 
-        std::this_thread::sleep_for (std::chrono::seconds (1) );
-	if (fIsDDR3Readout && fDDR3Calibrated) {
+void D19cFWInterface::DDR3SelfTest()
+{
+    //opened issue: without this time delay the self-test doesn't examine entire 4Gb address space of the chip(reason not obvious) 
+    std::this_thread::sleep_for (std::chrono::seconds (1) );
+    if (fIsDDR3Readout && fDDR3Calibrated) {
                 // trigger the self check
-        	WriteReg ("fc7_daq_ctrl.ddr3_block.control.traffic_str", 0x1);
+        WriteReg ("fc7_daq_ctrl.ddr3_block.control.traffic_str", 0x1);
 
-		bool cDDR3Checked = (ReadReg("fc7_daq_stat.ddr3_block.self_check_done") == 1);
-		bool j=false;
-	        LOG (INFO) << GREEN << "============================" << RESET;
-        	LOG (INFO) << BOLDGREEN << "DDR3 Self-Test" << RESET;
+        bool cDDR3Checked = (ReadReg("fc7_daq_stat.ddr3_block.self_check_done") == 1);
+        bool j=false;
+        LOG (INFO) << GREEN << "============================" << RESET;
+        LOG (INFO) << BOLDGREEN << "DDR3 Self-Test" << RESET;
 
-        	while(!cDDR3Checked) {
-               		if(j==false) LOG(INFO) << "Waiting for DDR3 to finish self-test";
-               		j=true;
-        		std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-               		cDDR3Checked = (ReadReg("fc7_daq_stat.ddr3_block.self_check_done") == 1);
-        	}
+        while(!cDDR3Checked) {
+            if(j==false) LOG(INFO) << "Waiting for DDR3 to finish self-test";
+            j=true;
+            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+            cDDR3Checked = (ReadReg("fc7_daq_stat.ddr3_block.self_check_done") == 1);
+        }
 
-		if(cDDR3Checked) {
-			int num_errors = ReadReg("fc7_daq_stat.ddr3_block.num_errors");
-			int num_words = ReadReg("fc7_daq_stat.ddr3_block.num_words");
-			LOG(DEBUG) << "Number of checked words " << num_words;
-			LOG(DEBUG) << "Number of errors " << num_errors;
-			if(num_errors == 0){
-				LOG(INFO) << "DDR3 self-test ->" << BOLDGREEN << " PASSED" << RESET;
-			}
-				else LOG(ERROR) << "DDR3 self-test ->" << BOLDRED << " FAILED" << RESET;
-		}
-                LOG (INFO) << GREEN << "============================" << RESET;
-	}
+        if(cDDR3Checked) {
+            int num_errors = ReadReg("fc7_daq_stat.ddr3_block.num_errors");
+            int num_words = ReadReg("fc7_daq_stat.ddr3_block.num_words");
+            LOG(DEBUG) << "Number of checked words " << num_words;
+            LOG(DEBUG) << "Number of errors " << num_errors;
+            if(num_errors == 0){
+                LOG(INFO) << "DDR3 self-test ->" << BOLDGREEN << " PASSED" << RESET;
+            }
+            else LOG(ERROR) << "DDR3 self-test ->" << BOLDRED << " FAILED" << RESET;
+        }
+        LOG (INFO) << GREEN << "============================" << RESET;
     }
+}
 
-    void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
-    {
+void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
+{
         // map of the phase tuning statuses
-        std::map<int, std::string> cErrorMap = {{0, "Idle or ResetIDELAYE or WaitResetIDELAYE"},
-                                        {1, "ApplyInitialDelay or CheckInitialDelay"},
-                                        {2, "InitialSampling or ProcessInitialSampling"},
-                                        {3, "ApplyDelay or CheckDelay"},
-                                        {4, "Sampling or ProcessSampling"},
-                                        {5, "WaitGoodDelay"},
-                                        {6, "CheckPattern"},
-                                        {7, "ApplyBitslip or WaitBitslip"},
-                                        {8, "PatternVerification"},
-                                        {9, "FailedInitial"},
-                                        {10, "FailedToApplyDelay"},
-                                        {11, "FailedBitslip"},
-                                        {12, "FailedVerification"},
-                                        {13, "Not Defined"},
-                                        {14, "Tuned"},
-                                        {15, "Unknown"}
-                                       };
+    std::map<int, std::string> cErrorMap = {
+        {0, "Idle or ResetIDELAYE or WaitResetIDELAYE"},
+        {1, "ApplyInitialDelay or CheckInitialDelay"},
+        {2, "InitialSampling or ProcessInitialSampling"},
+        {3, "ApplyDelay or CheckDelay"},
+        {4, "Sampling or ProcessSampling"},
+        {5, "WaitGoodDelay"},
+        {6, "CheckPattern"},
+        {7, "ApplyBitslip or WaitBitslip"},
+        {8, "PatternVerification"},
+        {9, "FailedInitial"},
+        {10, "FailedToApplyDelay"},
+        {11, "FailedBitslip"},
+        {12, "FailedVerification"},
+        {13, "Not Defined"},
+        {14, "Tuned"},
+        {15, "Unknown"}
+    };
 
-        if (fFirwmareChipType == ChipType::CBC3)
+    if (fFirwmareChipType == ChipType::CBC3)
+    {
+        if (!fCBC3Emulator)
         {
-            if (!fCBC3Emulator)
-            {
-                bool cDoAuto = true;
+            bool cDoAuto = true;
 
-                // automatic mode
-                if (cDoAuto) {
+            // automatic mode
+            if (cDoAuto) {
 
-                    std::map<Cbc*, uint8_t> cStubLogictInputMap;
-                    std::map<Cbc*, uint8_t> cHipRegMap;
-                    std::vector<uint32_t> cVecReq;
+                std::map<Cbc*, uint8_t> cStubLogictInputMap;
+                std::map<Cbc*, uint8_t> cHipRegMap;
+                std::vector<uint32_t> cVecReq;
 
-                    cVecReq.clear();
+                cVecReq.clear();
 
-                    for (auto cFe : pBoard->fModuleVector)
+                for (auto cFe : pBoard->fModuleVector)
+                {
+                    for (auto cCbc : cFe->fCbcVector)
                     {
-                        for (auto cCbc : cFe->fCbcVector)
-                        {
 
-                            uint8_t cOriginalStubLogicInput = cCbc->getReg ("Pipe&StubInpSel&Ptwidth");
-                            uint8_t cOriginalHipReg = cCbc->getReg ("HIP&TestMode");
-                            cStubLogictInputMap[cCbc] = cOriginalStubLogicInput;
-                            cHipRegMap[cCbc] = cOriginalHipReg;
+                        uint8_t cOriginalStubLogicInput = cCbc->getReg ("Pipe&StubInpSel&Ptwidth");
+                        uint8_t cOriginalHipReg = cCbc->getReg ("HIP&TestMode");
+                        cStubLogictInputMap[cCbc] = cOriginalStubLogicInput;
+                        cHipRegMap[cCbc] = cOriginalHipReg;
 
 
-                            CbcRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
-                            cRegItem.fValue = (cOriginalStubLogicInput & 0xCF) | (0x20 & 0x30);
-                            this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
+                        CbcRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
+                        cRegItem.fValue = (cOriginalStubLogicInput & 0xCF) | (0x20 & 0x30);
+                        this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
 
-                            cRegItem = cCbc->getRegItem ( "HIP&TestMode" );
-                            cRegItem.fValue = (cOriginalHipReg & ~ (0x1 << 4) );
-                            this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
+                        cRegItem = cCbc->getRegItem ( "HIP&TestMode" );
+                        cRegItem.fValue = (cOriginalHipReg & ~ (0x1 << 4) );
+                        this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
 
-                        }
                     }
-
-                    uint8_t cWriteAttempts = 0;
-                    this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
-                    std::this_thread::sleep_for (std::chrono::milliseconds (10) );
-
-                    int cCounter = 0;
-                    int cMaxAttempts = 10;
-
-                    uint32_t hardware_ready = 0;
-                    while (hardware_ready < 1)
-                    {
-                        if (cCounter++ > cMaxAttempts)
-                        {
-                            uint32_t tuning_state_cbc0 = ReadReg("fc7_daq_stat.physical_interface_block.state_tuning_cbc0");
-                            uint32_t tuning_state_cbc1 = ReadReg("fc7_daq_stat.physical_interface_block.state_tuning_cbc1");
-                            LOG(INFO) << "tuning state cbc0: " << cErrorMap[tuning_state_cbc0] << ", cbc1: " << cErrorMap[tuning_state_cbc1];
-                            exit (1);
-                        }
-
-                        this->CbcFastReset();
-                        usleep (10);
-                        // reset  the timing tuning
-                        WriteReg ("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
-
-                        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                        hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
-                    }
-
-                    //re-enable the stub logic
-                    cVecReq.clear();
-                    for (auto cFe : pBoard->fModuleVector)
-                    {
-                        for (auto cCbc : cFe->fCbcVector)
-                        {
-
-                            CbcRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
-                            cRegItem.fValue = cStubLogictInputMap[cCbc];
-                            //this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
-
-                            cRegItem = cCbc->getRegItem ( "HIP&TestMode" );
-                            cRegItem.fValue = cHipRegMap[cCbc];
-                            this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
-
-                        }
-                    }
-
-                    cWriteAttempts = 0;
-                    this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
-
-                    LOG (INFO) << GREEN << "CBC3 Phase tuning finished succesfully" << RESET;
-
-                } else {
-                    // manual mode apply
-                    uint8_t phase_cbc0[2] = {15, 3}; // delay, bitslip
-                    uint8_t phase_cbc1[2] = {15, 3}; // delay, bitslip
-
-                    // cbc0
-                    for(uint8_t line = 0; line < 6; line++) {
-                        // const
-                        uint32_t hybrid_raw = (0 & 0xF) << 28;
-                        uint32_t chip_raw = (0 & 0xF) << 24;
-                        uint32_t line_raw = (line & 0xF) << 20;
-                        uint32_t command_raw = (2 & 0xF) << 16;
-
-                        // manual mode
-                        uint32_t mode_raw = (2 & 0x3) << 12;
-                        uint32_t delay_raw = (phase_cbc0[0] & 0x1F) << 3;
-                        uint32_t bitslip_raw = (phase_cbc0[1] & 0x7) << 0;
-
-                        // write
-                        uint32_t command_final = command_raw + hybrid_raw + chip_raw + line_raw + mode_raw + delay_raw + bitslip_raw;
-                        WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
-                    }
-
-                    // cbc1
-                    for(uint8_t line = 0; line < 6; line++) {
-                        // const
-                        uint32_t hybrid_raw = (0 & 0xF) << 28;
-                        uint32_t chip_raw = (1 & 0xF) << 24;
-                        uint32_t line_raw = (line & 0xF) << 20;
-                        uint32_t command_raw = (2 & 0xF) << 16;
-
-                        // manual mode
-                        uint32_t mode_raw = (2 & 0x3) << 12;
-                        uint32_t delay_raw = (phase_cbc1[0] & 0x1F) << 3;
-                        uint32_t bitslip_raw = (phase_cbc1[1] & 0x7) << 0;
-
-                        // write
-                        uint32_t command_final = command_raw + hybrid_raw + chip_raw + line_raw + mode_raw + delay_raw + bitslip_raw;
-                        WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
-                    }
-
-                    LOG (INFO) << GREEN << "CBC3 Phase tuning " << RESET << RED << "APPLIED" << RESET << GREEN <<" succesfully" << RESET;
                 }
 
-                // print statuses
-                for (auto cFe : pBoard->fModuleVector)
-                    for (auto cCbc : cFe->fCbcVector)
-                        PhaseTuningGetLineStatus(cFe->getFeId(), cCbc->getCbcId(), 5);
+                uint8_t cWriteAttempts = 0;
+                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                std::this_thread::sleep_for (std::chrono::milliseconds (10) );
 
+                int cCounter = 0;
+                int cMaxAttempts = 10;
+
+                uint32_t hardware_ready = 0;
+                while (hardware_ready < 1)
+                {
+                    if (cCounter++ > cMaxAttempts)
+                    {
+                        uint32_t tuning_state_cbc0 = ReadReg("fc7_daq_stat.physical_interface_block.state_tuning_cbc0");
+                        uint32_t tuning_state_cbc1 = ReadReg("fc7_daq_stat.physical_interface_block.state_tuning_cbc1");
+                        LOG(INFO) << "tuning state cbc0: " << cErrorMap[tuning_state_cbc0] << ", cbc1: " << cErrorMap[tuning_state_cbc1];
+                        exit (1);
+                    }
+
+                    this->CbcFastReset();
+                    usleep (10);
+                        // reset  the timing tuning
+                    WriteReg ("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
+
+                    std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+                    hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
+                }
+
+                    //re-enable the stub logic
+                cVecReq.clear();
+                for (auto cFe : pBoard->fModuleVector)
+                {
+                    for (auto cCbc : cFe->fCbcVector)
+                    {
+
+                        CbcRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
+                        cRegItem.fValue = cStubLogictInputMap[cCbc];
+                            //this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
+
+                        cRegItem = cCbc->getRegItem ( "HIP&TestMode" );
+                        cRegItem.fValue = cHipRegMap[cCbc];
+                        this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
+
+                    }
+                }
+
+                cWriteAttempts = 0;
+                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+
+                LOG (INFO) << GREEN << "CBC3 Phase tuning finished succesfully" << RESET;
+
+            } 
+            else 
+            {
+                // manual mode apply
+                uint8_t phase_cbc0[2] = {15, 3}; // delay, bitslip
+                uint8_t phase_cbc1[2] = {15, 3}; // delay, bitslip
+
+                // cbc0
+                for(uint8_t line = 0; line < 6; line++) 
+                {
+                    // const
+                    uint32_t hybrid_raw = (0 & 0xF) << 28;
+                    uint32_t chip_raw = (0 & 0xF) << 24;
+                    uint32_t line_raw = (line & 0xF) << 20;
+                    uint32_t command_raw = (2 & 0xF) << 16;
+
+                    // manual mode
+                    uint32_t mode_raw = (2 & 0x3) << 12;
+                    uint32_t delay_raw = (phase_cbc0[0] & 0x1F) << 3;
+                    uint32_t bitslip_raw = (phase_cbc0[1] & 0x7) << 0;
+
+                    // write
+                    uint32_t command_final = command_raw + hybrid_raw + chip_raw + line_raw + mode_raw + delay_raw + bitslip_raw;
+                    WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
+                }
+
+                // cbc1
+                for(uint8_t line = 0; line < 6; line++) 
+                {
+                    // const
+                    uint32_t hybrid_raw = (0 & 0xF) << 28;
+                    uint32_t chip_raw = (1 & 0xF) << 24;
+                    uint32_t line_raw = (line & 0xF) << 20;
+                    uint32_t command_raw = (2 & 0xF) << 16;
+
+                    // manual mode
+                    uint32_t mode_raw = (2 & 0x3) << 12;
+                    uint32_t delay_raw = (phase_cbc1[0] & 0x1F) << 3;
+                    uint32_t bitslip_raw = (phase_cbc1[1] & 0x7) << 0;
+
+                    // write
+                    uint32_t command_final = command_raw + hybrid_raw + chip_raw + line_raw + mode_raw + delay_raw + bitslip_raw;
+                    WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
+                }
+
+                LOG (INFO) << GREEN << "CBC3 Phase tuning " << RESET << RED << "APPLIED" << RESET << GREEN <<" succesfully" << RESET;
             }
+
+            // print statuses
+            for (auto cFe : pBoard->fModuleVector)
+            {
+                for (auto cCbc : cFe->fCbcVector)
+                {
+                    PhaseTuningGetLineStatus(cFe->getFeId(), cCbc->getCbcId(), 5);
+                }
+            }
+
         }
-        else if (fFirwmareChipType == ChipType::CBC2)
-        {
-            // no timing tuning needed
-        }
+    }
+    else if (fFirwmareChipType == ChipType::CBC2)
+    {
+    // no timing tuning needed
+    }
 
     else if (fFirwmareChipType == ChipType::MPA)
     {
@@ -926,7 +935,7 @@ void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
                 cReadoutModeMap[cMpa] = cOriginalReadoutMode;
                 cStubModeMap[cMpa] = cOriginalStubMode;
 
-                // sync mode
+        // sync mode
                 RegItem cRegItem = cMpa->getRegItem ( "ReadoutMode" );
                 cRegItem.fValue = 0x00;
                 this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
@@ -935,7 +944,7 @@ void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
                 this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
                 cVecReq.clear();
 
-                // ps stub mode
+        // ps stub mode
                 cRegItem = cMpa->getRegItem ( "ECM" );
                 cRegItem.fValue = 0x08;
                 this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
@@ -986,62 +995,62 @@ void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
         LOG (INFO) << GREEN << "MPA Phase tuning finished succesfully" << RESET;
     }
 
-        else
-        {
-            LOG (INFO) << "No tuning procedure implemented for this chip type.";
-            exit (1);
+    else
+    {
+        LOG (INFO) << "No tuning procedure implemented for this chip type.";
+        exit (1);
+    }
+}
+
+uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
+{
+    uint32_t cEventSize = computeEventSize (pBoard);
+    uint32_t cBoardHeader1Size = D19C_EVENT_HEADER1_SIZE_32_CBC3;
+    uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+    uint32_t data_handshake = ReadReg ("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
+    uint32_t cPackageSize = ReadReg ("fc7_daq_cnfg.readout_block.packet_nbr") + 1;
+
+    bool pFailed = false; 
+    int cCounter = 0 ; 
+    while (cNWords == 0 && !pFailed )
+    {
+        cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+        if(cCounter % 100 == 0 && cCounter > 0) {
+            LOG(INFO) << BOLDRED << "Zero events in FIFO, waiting for the triggers" << RESET;
         }
+        cCounter++;
+
+        if (!pWait) 
+            return 0;
+        else
+            std::this_thread::sleep_for (std::chrono::microseconds (10) );
     }
 
-    uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
+    uint32_t cNEvents = 0;
+    uint32_t cNtriggers = 0; 
+    uint32_t cNtriggers_prev = cNtriggers;
+
+    if (data_handshake == 1 && !pFailed )
     {
-        uint32_t cEventSize = computeEventSize (pBoard);
-        uint32_t cBoardHeader1Size = D19C_EVENT_HEADER1_SIZE_32_CBC3;
-        uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-        uint32_t data_handshake = ReadReg ("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
-	uint32_t cPackageSize = ReadReg ("fc7_daq_cnfg.readout_block.packet_nbr") + 1;
+        cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+        cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter"); 
+        cNtriggers_prev = cNtriggers;
+        uint32_t cNWords_prev = cNWords;
+        uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
 
-        bool pFailed = false; 
-        int cCounter = 0 ; 
-        while (cNWords == 0 && !pFailed )
+        cCounter = 0 ; 
+        while (cReadoutReq == 0 && !pFailed )
         {
-            cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-	    if(cCounter % 100 == 0 && cCounter > 0) {
-	    	LOG(INFO) << BOLDRED << "Zero events in FIFO, waiting for the triggers" << RESET;
-            }
-	    cCounter++;
-
-            if (!pWait) 
+            if (!pWait) {
                 return 0;
-            else
-                std::this_thread::sleep_for (std::chrono::microseconds (10) );
-        }
-        
-        uint32_t cNEvents = 0;
-	uint32_t cNtriggers = 0; 
-        uint32_t cNtriggers_prev = cNtriggers;
-        
-	if (data_handshake == 1 && !pFailed )
-        {
-            cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-            cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter"); 
+            }
+
+            cNWords_prev = cNWords;
             cNtriggers_prev = cNtriggers;
-	    uint32_t cNWords_prev = cNWords;
-            uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
-            
-            cCounter = 0 ; 
-            while (cReadoutReq == 0 && !pFailed )
-            {
-		if (!pWait) {
-			return 0;
-		}
 
-                cNWords_prev = cNWords;
-                cNtriggers_prev = cNtriggers;
-
-                cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
-                cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-                cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
+            cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
+            cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+            cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
 
                 /*if( cNWords == cNWords_prev && cCounter > 100 && cNtriggers != cNtriggers_prev )
                 {
@@ -1050,186 +1059,186 @@ void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
                
                 }
                 else*/
-		if( cNtriggers == cNtriggers_prev && cCounter > 0 )
-                {
-                    if( cCounter % 100 == 0 )
-                        LOG (INFO) << BOLDRED << " ..... waiting for more triggers .... got " << +cNtriggers << " so far." << RESET ;
-
-                }
-                cCounter++;
-                std::this_thread::sleep_for (std::chrono::microseconds (10) );
-            }
-
-            cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-            if (pBoard->getEventType() == EventType::VR)
+            if( cNtriggers == cNtriggers_prev && cCounter > 0 )
             {
-                cNEvents = cNWords / computeEventSize (pBoard);
-                if ( (cNWords % computeEventSize (pBoard) ) != 0) {
-                    pFailed = true;
-                    LOG (ERROR) << "Data amount (in words) is not multiple to EventSize! (" << cNWords << ")";
-                }
+                if( cCounter % 100 == 0 )
+                    LOG (INFO) << BOLDRED << " ..... waiting for more triggers .... got " << +cNtriggers << " so far." << RESET ;
+
             }
-            else
-            {
+            cCounter++;
+            std::this_thread::sleep_for (std::chrono::microseconds (10) );
+        }
+
+        cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+        if (pBoard->getEventType() == EventType::VR)
+        {
+            cNEvents = cNWords / computeEventSize (pBoard);
+            if ( (cNWords % computeEventSize (pBoard) ) != 0) {
+                pFailed = true;
+                LOG (ERROR) << "Data amount (in words) is not multiple to EventSize! (" << cNWords << ")";
+            }
+        }
+        else
+        {
                 // for zs it's impossible to check, so it'll count later during event assignment
-                cNEvents = cPackageSize;
-            }
+            cNEvents = cPackageSize;
+        }
 
             // read all the words
-            if (fIsDDR3Readout) {
-                pData = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNWords, fDDR3Offset);
+        if (fIsDDR3Readout) {
+            pData = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNWords, fDDR3Offset);
                 //in the handshake mode offset is cleared after each handshake
-                fDDR3Offset = 0;
-            }
-            else
-                pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
-
+            fDDR3Offset = 0;
         }
-        else if(!pFailed)
+        else
+            pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
+
+    }
+    else if(!pFailed)
+    {
+        if (pBoard->getEventType() == EventType::ZS)
         {
-            if (pBoard->getEventType() == EventType::ZS)
-            {
-                LOG (ERROR) << "ZS Event only with handshake!!! Exiting...";
-                exit (1);
-            }
-	    cNEvents = 0;
+            LOG (ERROR) << "ZS Event only with handshake!!! Exiting...";
+            exit (1);
+        }
+        cNEvents = 0;
             //while (cNEvents < cPackageSize)
             //{
-                cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-                uint32_t cNEventsAvailable = (uint32_t) cNWords / cEventSize;
+        cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+        uint32_t cNEventsAvailable = (uint32_t) cNWords / cEventSize;
 
-                while (cNEventsAvailable < 1)
-                {
-		    if(!pWait) {
-			return 0;
-		    }
-                    std::this_thread::sleep_for (std::chrono::milliseconds (10) );
-                    cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-                    cNEventsAvailable = (uint32_t) cNWords / cEventSize;                    
-                }                
+        while (cNEventsAvailable < 1)
+        {
+            if(!pWait) {
+                return 0;
+            }
+            std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+            cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+            cNEventsAvailable = (uint32_t) cNWords / cEventSize;                    
+        }                
 
-                std::vector<uint32_t> event_data;
-                if (fIsDDR3Readout) {
+        std::vector<uint32_t> event_data;
+        if (fIsDDR3Readout) {
                     // in the no handshake mode the, wr counter is reset when it reaches the maximal value
                     // therefore offset here also has to be reset
-                    if(fDDR3Offset+cNEventsAvailable*cEventSize > 134217727) fDDR3Offset = 0;
+            if(fDDR3Offset+cNEventsAvailable*cEventSize > 134217727) fDDR3Offset = 0;
                     // read
-                    event_data = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNEventsAvailable*cEventSize, fDDR3Offset);
-                } else {
-                    event_data = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNEventsAvailable*cEventSize);
-                }
-                
-		pData.insert (pData.end(), event_data.begin(), event_data.end() );
-                cNEvents += cNEventsAvailable;
+            event_data = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNEventsAvailable*cEventSize, fDDR3Offset);
+        } else {
+            event_data = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNEventsAvailable*cEventSize);
+        }
+        
+        pData.insert (pData.end(), event_data.begin(), event_data.end() );
+        cNEvents += cNEventsAvailable;
 
             //}
-        }
+    }
 
-        if( pFailed )
-        {
-            pData.clear();
+    if( pFailed )
+    {
+        pData.clear();
 
-	    LOG(INFO) << BOLDRED << "Re-starting the run and resetting the readout" << RESET; 
-            
-            this->Stop();
-            std::this_thread::sleep_for (std::chrono::milliseconds (500) );
-	    LOG(INFO) << BOLDGREEN << " ... Run Stopped, current trigger FSM state: " << +ReadReg ("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
-            
-            this->Start();
-            std::this_thread::sleep_for (std::chrono::milliseconds (500) );
-	    LOG(INFO) << BOLDGREEN << " ... Run Started, current trigger FSM state: " << +ReadReg ("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
+        LOG(INFO) << BOLDRED << "Re-starting the run and resetting the readout" << RESET; 
 
-            LOG (INFO) << BOLDRED << " ... trying to read data again .... " << RESET ; 
-            cNEvents = this->ReadData(pBoard,  pBreakTrigger,  pData, pWait);
-        }
-        if (fSaveToFile)
-            fFileHandler->set (pData);
+        this->Stop();
+        std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+        LOG(INFO) << BOLDGREEN << " ... Run Stopped, current trigger FSM state: " << +ReadReg ("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
+
+        this->Start();
+        std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+        LOG(INFO) << BOLDGREEN << " ... Run Started, current trigger FSM state: " << +ReadReg ("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
+
+        LOG (INFO) << BOLDRED << " ... trying to read data again .... " << RESET ; 
+        cNEvents = this->ReadData(pBoard,  pBreakTrigger,  pData, pWait);
+    }
+    if (fSaveToFile)
+        fFileHandler->set (pData);
 
         //need to return the number of events read
-        return cNEvents;
-    }
+    return cNEvents;
+}
 
 
-    void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )
-    {
+void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )
+{
         // data hadnshake has to be enabled in that mode
-        WriteReg ("fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-1);
-        WriteReg ("fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1);
+    WriteReg ("fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-1);
+    WriteReg ("fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1);
 
         // write the amount of the test pulses to be sent
-        WriteReg ("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents);
-        WriteReg ("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
-        usleep (1);
+    WriteReg ("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents);
+    WriteReg ("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+    usleep (1);
 
         // start triggering machine which will collect N events
-        this->Start();
+    this->Start();
 
         // sta
-        bool pFailed = false;
-        uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
-        uint32_t cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        uint32_t cTimeoutCounter = 0 ;
-        uint32_t cTimeoutValue = 1000;
-        while (cReadoutReq == 0 && !pFailed )
+    bool pFailed = false;
+    uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
+    uint32_t cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
+    uint32_t cTimeoutCounter = 0 ;
+    uint32_t cTimeoutValue = 1000;
+    while (cReadoutReq == 0 && !pFailed )
+    {
+        cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
+        cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
+
+        if( cNtriggers == pNEvents )
         {
-            cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
-            cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
-
-            if( cNtriggers == pNEvents )
-            {
-                if( cTimeoutCounter >= cTimeoutValue ) {
-                    pFailed = true;
-                    LOG(INFO) << "No data in the readout after receiving all triggers. Re-trying the point";
-                }
-                cTimeoutCounter++;
-                std::this_thread::sleep_for (std::chrono::microseconds (10) );
+            if( cTimeoutCounter >= cTimeoutValue ) {
+                pFailed = true;
+                LOG(INFO) << "No data in the readout after receiving all triggers. Re-trying the point";
             }
+            cTimeoutCounter++;
+            std::this_thread::sleep_for (std::chrono::microseconds (10) );
         }
-
-        if (!pFailed) {
-
-            // check the amount of words
-            uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-            if (pBoard->getEventType() == EventType::VR)
-            {
-                if ( (cNWords % computeEventSize (pBoard) ) != 0) {
-                    pFailed = true;
-                    LOG (ERROR) << "Data amount (in words) is not multiple to EventSize! (" << cNWords << ")";
-                }
-            }
-            else
-            {
-                // for zs it's impossible to check, so it'll count later during event assignment
-            }
-
-            // read all the words
-            if (fIsDDR3Readout) {
-                pData = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNWords, fDDR3Offset);
-                //in the handshake mode offset is cleared after each handshake
-                fDDR3Offset = 0;
-            }
-            else
-                pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
-
-        }
-
-        // again check if failed to re-run in case
-        if (pFailed)
-        {
-            pData.clear();
-            this->Stop();
-
-            this->ResetReadout();
-
-            this->ReadNEvents (pBoard, pNEvents, pData);
-        }        
-
-        if (fSaveToFile)
-            fFileHandler->set (pData);
     }
 
-    /** compute the block size according to the number of CBC's on this board
-     * this will have to change with a more generic FW */
+    if (!pFailed) {
+
+            // check the amount of words
+        uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+        if (pBoard->getEventType() == EventType::VR)
+        {
+            if ( (cNWords % computeEventSize (pBoard) ) != 0) {
+                pFailed = true;
+                LOG (ERROR) << "Data amount (in words) is not multiple to EventSize! (" << cNWords << ")";
+            }
+        }
+        else
+        {
+                // for zs it's impossible to check, so it'll count later during event assignment
+        }
+
+            // read all the words
+        if (fIsDDR3Readout) {
+            pData = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNWords, fDDR3Offset);
+                //in the handshake mode offset is cleared after each handshake
+            fDDR3Offset = 0;
+        }
+        else
+            pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
+
+    }
+
+        // again check if failed to re-run in case
+    if (pFailed)
+    {
+        pData.clear();
+        this->Stop();
+
+        this->ResetReadout();
+
+        this->ReadNEvents (pBoard, pNEvents, pData);
+    }        
+
+    if (fSaveToFile)
+        fFileHandler->set (pData);
+}
+
+/** compute the block size according to the number of CBC's on this board
+ * this will have to change with a more generic FW */
 uint32_t D19cFWInterface::computeEventSize ( BeBoard* pBoard )
 {
     uint32_t cNFe = pBoard->getNFe();
@@ -1263,28 +1272,28 @@ uint32_t D19cFWInterface::computeEventSize ( BeBoard* pBoard )
     return cNEventSize32;
 }
 
-    std::vector<uint32_t> D19cFWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize )
-    {
-        uhal::ValVector<uint32_t> valBlock = ReadBlockReg ( pRegNode, pBlocksize );
-        std::vector<uint32_t> vBlock = valBlock.value();
-        return vBlock;
-    }
+std::vector<uint32_t> D19cFWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize )
+{
+    uhal::ValVector<uint32_t> valBlock = ReadBlockReg ( pRegNode, pBlocksize );
+    std::vector<uint32_t> vBlock = valBlock.value();
+    return vBlock;
+}
 
-    std::vector<uint32_t> D19cFWInterface::ReadBlockRegOffsetValue ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
-    {
-        uhal::ValVector<uint32_t> valBlock = ReadBlockRegOffset( pRegNode, pBlocksize, pBlockOffset );
-        std::vector<uint32_t> vBlock = valBlock.value();
-        if (fIsDDR3Readout) {
-            fDDR3Offset += pBlocksize;
-        }
-        return vBlock;
+std::vector<uint32_t> D19cFWInterface::ReadBlockRegOffsetValue ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
+{
+    uhal::ValVector<uint32_t> valBlock = ReadBlockRegOffset( pRegNode, pBlocksize, pBlockOffset );
+    std::vector<uint32_t> vBlock = valBlock.value();
+    if (fIsDDR3Readout) {
+        fDDR3Offset += pBlocksize;
     }
+    return vBlock;
+}
 
-    bool D19cFWInterface::WriteBlockReg ( const std::string& pRegNode, const std::vector< uint32_t >& pValues )
-    {
-        bool cWriteCorr = RegManager::WriteBlockReg ( pRegNode, pValues );
-        return cWriteCorr;
-    }
+bool D19cFWInterface::WriteBlockReg ( const std::string& pRegNode, const std::vector< uint32_t >& pValues )
+{
+    bool cWriteCorr = RegManager::WriteBlockReg ( pRegNode, pValues );
+    return cWriteCorr;
+}
 
     ///////////////////////////////////////////////////////
     //      CBC Methods                                 //
@@ -1292,112 +1301,112 @@ uint32_t D19cFWInterface::computeEventSize ( BeBoard* pBoard )
     //TODO: check what to do with fFMCid and if I need it!
     // this is clearly for addressing individual CBCs, have to see how to deal with broadcast commands
 
-    void D19cFWInterface::EncodeReg ( const CbcRegItem& pRegItem,
-                                      uint8_t pCbcId,
-                                      std::vector<uint32_t>& pVecReq,
-                                      bool pReadBack,
-                                      bool pWrite )
-    {
+void D19cFWInterface::EncodeReg ( const CbcRegItem& pRegItem,
+  uint8_t pCbcId,
+  std::vector<uint32_t>& pVecReq,
+  bool pReadBack,
+  bool pWrite )
+{
         //use fBroadcastCBCId for broadcast commands
-        bool pUseMask = false;
-        uint8_t pFeId = 0;
-        pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue);
-    }
+    bool pUseMask = false;
+    uint8_t pFeId = 0;
+    pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue);
+}
 
-    void D19cFWInterface::EncodeReg (const CbcRegItem& pRegItem,
-                                     uint8_t pFeId,
-                                     uint8_t pCbcId,
-                                     std::vector<uint32_t>& pVecReq,
-                                     bool pReadBack,
-                                     bool pWrite )
-    {
+void D19cFWInterface::EncodeReg (const CbcRegItem& pRegItem,
+ uint8_t pFeId,
+ uint8_t pCbcId,
+ std::vector<uint32_t>& pVecReq,
+ bool pReadBack,
+ bool pWrite )
+{
         //use fBroadcastCBCId for broadcast commands
-        bool pUseMask = false;
-	if (fI2CVersion >= 1) {
-		// new command consists of one word if its read command, and of two words if its write. first word is always the same
-                pVecReq.push_back( (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0) );
-		// only for write commands
-		if (pWrite) pVecReq.push_back( (0 << 28) | (1 << 27) | (pRegItem.fValue << 0) );
-	} else {
-		pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
-    	}
+    bool pUseMask = false;
+    if (fI2CVersion >= 1) {
+        // new command consists of one word if its read command, and of two words if its write. first word is always the same
+        pVecReq.push_back( (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0) );
+        // only for write commands
+        if (pWrite) pVecReq.push_back( (0 << 28) | (1 << 27) | (pRegItem.fValue << 0) );
+    } else {
+        pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
     }
+}
 
-    void D19cFWInterface::EncodeReg ( const RegItem& pRegItem,
-                                      uint8_t pCbcId,
-                                      std::vector<uint32_t>& pVecReq,
-                                      bool pReadBack,
-                                      bool pWrite )
-    {
+void D19cFWInterface::EncodeReg ( const RegItem& pRegItem,
+  uint8_t pCbcId,
+  std::vector<uint32_t>& pVecReq,
+  bool pReadBack,
+  bool pWrite )
+{
         //use fBroadcastCBCId for broadcast commands
-        bool pUseMask = false;
-        uint8_t pFeId = 0;
-        pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue);
-    }
+    bool pUseMask = false;
+    uint8_t pFeId = 0;
+    pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue);
+}
 
-    void D19cFWInterface::EncodeReg (const RegItem& pRegItem,
-                                     uint8_t pFeId,
-                                     uint8_t pCbcId,
-                                     std::vector<uint32_t>& pVecReq,
-                                     bool pReadBack,
-                                     bool pWrite )
-    {
+void D19cFWInterface::EncodeReg (const RegItem& pRegItem,
+ uint8_t pFeId,
+ uint8_t pCbcId,
+ std::vector<uint32_t>& pVecReq,
+ bool pReadBack,
+ bool pWrite )
+{
         //use fBroadcastCBCId for broadcast commands
-        bool pUseMask = false;
-	if (fI2CVersion >= 1) {
-		// new command consists of one word if its read command, and of two words if its write. first word is always the same
-		pVecReq.push_back( (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0) );
-		// only for write commands
-		if (pWrite) pVecReq.push_back( (0 << 28) | (1 << 27) | (pRegItem.fValue << 0) );
-	} else {
-		pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
-    	}
+    bool pUseMask = false;
+    if (fI2CVersion >= 1) {
+        // new command consists of one word if its read command, and of two words if its write. first word is always the same
+        pVecReq.push_back( (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0) );
+        // only for write commands
+        if (pWrite) pVecReq.push_back( (0 << 28) | (1 << 27) | (pRegItem.fValue << 0) );
+    } else {
+        pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
     }
+}
 
-    void D19cFWInterface::BCEncodeReg ( const CbcRegItem& pRegItem,
-                                        uint8_t pNCbc,
-                                        std::vector<uint32_t>& pVecReq,
-                                        bool pReadBack,
-                                        bool pWrite )
-    {
+void D19cFWInterface::BCEncodeReg ( const CbcRegItem& pRegItem,
+    uint8_t pNCbc,
+    std::vector<uint32_t>& pVecReq,
+    bool pReadBack,
+    bool pWrite )
+{
         //use fBroadcastCBCId for broadcast commands
-        bool pUseMask = false;
-        pVecReq.push_back ( ( 2 << 28 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
+    bool pUseMask = false;
+    pVecReq.push_back ( ( 2 << 28 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
+}
+
+
+void D19cFWInterface::DecodeReg ( CbcRegItem& pRegItem,
+  uint8_t& pCbcId,
+  uint32_t pWord,
+  bool& pRead,
+  bool& pFailed )
+{
+    if (fI2CVersion >= 1) {
+        //pFeId    =  ( ( pWord & 0x07800000 ) >> 27) ;
+        pCbcId   =  ( ( pWord & 0x007c0000 ) >> 22) ;
+        pFailed  =  0 ;
+        pRegItem.fPage    =  0 ;
+        pRead    =  true ;
+        pRegItem.fAddress =  ( pWord & 0x0000FF00 ) >> 8;
+        pRegItem.fValue   =  ( pWord & 0x000000FF );
+    } else {
+        //pFeId    =  ( ( pWord & 0x00f00000 ) >> 24) ;
+        pCbcId   =  ( ( pWord & 0x00f00000 ) >> 20) ;
+        pFailed  =  0 ;
+        pRegItem.fPage    =  ( (pWord & 0x00020000 ) >> 17);
+        pRead    =  (pWord & 0x00010000) >> 16;
+        pRegItem.fAddress =  ( pWord & 0x0000FF00 ) >> 8;
+        pRegItem.fValue   =  ( pWord & 0x000000FF );
     }
 
-
-    void D19cFWInterface::DecodeReg ( CbcRegItem& pRegItem,
-                                      uint8_t& pCbcId,
-                                      uint32_t pWord,
-                                      bool& pRead,
-                                      bool& pFailed )
-    {
-	if (fI2CVersion >= 1) {
-		//pFeId    =  ( ( pWord & 0x07800000 ) >> 27) ;
-		pCbcId   =  ( ( pWord & 0x007c0000 ) >> 22) ;
-		pFailed  =  0 ;
-		pRegItem.fPage    =  0 ;
-		pRead    =  true ;
-		pRegItem.fAddress =  ( pWord & 0x0000FF00 ) >> 8;
-		pRegItem.fValue   =  ( pWord & 0x000000FF );
-    	} else {
-		//pFeId    =  ( ( pWord & 0x00f00000 ) >> 24) ;
-		pCbcId   =  ( ( pWord & 0x00f00000 ) >> 20) ;
-		pFailed  =  0 ;
-		pRegItem.fPage    =  ( (pWord & 0x00020000 ) >> 17);
-		pRead    =  (pWord & 0x00010000) >> 16;
-		pRegItem.fAddress =  ( pWord & 0x0000FF00 ) >> 8;
-		pRegItem.fValue   =  ( pWord & 0x000000FF );
-	}
-
-    }
+}
 
 
 void D19cFWInterface::BCEncodeReg ( const RegItem& pRegItem,
-                                    uint8_t pNCbc,
-                                    std::vector<uint32_t>& pVecReq,
-                                    bool pReadBack,
-                                    bool pWrite )
+    uint8_t pNCbc,
+    std::vector<uint32_t>& pVecReq,
+    bool pReadBack,
+    bool pWrite )
 {
     //use fBroadcastCBCId for broadcast commands
     bool pUseMask = false;
@@ -1406,10 +1415,10 @@ void D19cFWInterface::BCEncodeReg ( const RegItem& pRegItem,
 
 
 void D19cFWInterface::DecodeReg ( RegItem& pRegItem,
-                                  uint8_t& pCbcId,
-                                  uint32_t pWord,
-                                  bool& pRead,
-                                  bool& pFailed )
+  uint8_t& pCbcId,
+  uint32_t pWord,
+  bool& pRead,
+  bool& pFailed )
 {
     if (fI2CVersion >= 1) {
         //pFeId    =  ( ( pWord & 0x07800000 ) >> 27) ;
@@ -1431,96 +1440,96 @@ void D19cFWInterface::DecodeReg ( RegItem& pRegItem,
 
 }
 
-    bool D19cFWInterface::ReadI2C (  uint32_t pNReplies, std::vector<uint32_t>& pReplies)
-    {
-        bool cFailed (false);
+bool D19cFWInterface::ReadI2C (  uint32_t pNReplies, std::vector<uint32_t>& pReplies)
+{
+    bool cFailed (false);
 
-        uint32_t single_WaitingTime = SINGLE_I2C_WAIT * pNReplies;
-        uint32_t max_Attempts = 100;
-        uint32_t counter_Attempts = 0;
+    uint32_t single_WaitingTime = SINGLE_I2C_WAIT * pNReplies;
+    uint32_t max_Attempts = 100;
+    uint32_t counter_Attempts = 0;
 
         //read the number of received replies from ndata and use this number to compare with the number of expected replies and to read this number 32-bit words from the reply FIFO
+    usleep (single_WaitingTime);
+    uint32_t cNReplies = ReadReg ("fc7_daq_stat.command_processor_block.i2c.nreplies");
+
+    while (cNReplies != pNReplies)
+    {
+        if (counter_Attempts > max_Attempts)
+        {
+            LOG (INFO) << "Error: Read " << cNReplies << " I2C replies whereas " << pNReplies << " are expected!" ;
+            ReadErrors();
+            cFailed = true;
+            break;
+        }
+
         usleep (single_WaitingTime);
-        uint32_t cNReplies = ReadReg ("fc7_daq_stat.command_processor_block.i2c.nreplies");
+        cNReplies = ReadReg ("fc7_daq_stat.command_processor_block.i2c.nreplies");
+        counter_Attempts++;
+    }
 
-        while (cNReplies != pNReplies)
-        {
-            if (counter_Attempts > max_Attempts)
-            {
-                LOG (INFO) << "Error: Read " << cNReplies << " I2C replies whereas " << pNReplies << " are expected!" ;
-                ReadErrors();
-                cFailed = true;
-            	break;
-            }
-
-            usleep (single_WaitingTime);
-            cNReplies = ReadReg ("fc7_daq_stat.command_processor_block.i2c.nreplies");
-            counter_Attempts++;
-        }
-
-        try
-        {
-            pReplies = ReadBlockRegValue ( "fc7_daq_ctrl.command_processor_block.i2c.reply_fifo", cNReplies );
-	}
-        catch ( Exception& except )
-        {
-            throw except;
-        }
+    try
+    {
+        pReplies = ReadBlockRegValue ( "fc7_daq_ctrl.command_processor_block.i2c.reply_fifo", cNReplies );
+    }
+    catch ( Exception& except )
+    {
+        throw except;
+    }
 
         //reset the i2c controller here?
-        return cFailed;
-    }
+    return cFailed;
+}
 
-    bool D19cFWInterface::WriteI2C ( std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadback, bool pBroadcast )
-    {
-        bool cFailed ( false );
+bool D19cFWInterface::WriteI2C ( std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadback, bool pBroadcast )
+{
+    bool cFailed ( false );
         //reset the I2C controller
-        WriteReg ("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 0x1);
-        usleep (10);
-	
-	try
-        {
-            WriteBlockReg ( "fc7_daq_ctrl.command_processor_block.i2c.command_fifo", pVecSend );
-        }
-        catch ( Exception& except )
-        {
-            throw except;
-        }
+    WriteReg ("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 0x1);
+    usleep (10);
 
-        uint32_t cNReplies = 0;
-
-        for (auto word : pVecSend)
-        {
-            // if read or readback for write == 1, then count
-            if (fI2CVersion >= 1) {
-		if ( (((word & 0x08000000) >> 27) == 0) && (( ( (word & 0x00010000) >> 16) == 1) or ( ( (word & 0x00020000) >> 17) == 1)) )
-            	{
-			if (pBroadcast) cNReplies += fNCbc;
-                	else cNReplies += 1;
-            	}
-	    } else {
-		if ( ( ( (word & 0x00010000) >> 16) == 1) or ( ( (word & 0x00080000) >> 19) == 1) )
-            	{
-			if (pBroadcast) cNReplies += fNCbc;
-                	else cNReplies += 1;
-            	}
-	    }
-        }
-        usleep (20);
-
-        cFailed = ReadI2C (  cNReplies, pReplies) ;
-
-        return cFailed;
+    try
+    {
+        WriteBlockReg ( "fc7_daq_ctrl.command_processor_block.i2c.command_fifo", pVecSend );
+    }
+    catch ( Exception& except )
+    {
+        throw except;
     }
 
+    uint32_t cNReplies = 0;
 
-    bool D19cFWInterface::WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback)
+    for (auto word : pVecSend)
     {
+            // if read or readback for write == 1, then count
+        if (fI2CVersion >= 1) {
+            if ( (((word & 0x08000000) >> 27) == 0) && (( ( (word & 0x00010000) >> 16) == 1) or ( ( (word & 0x00020000) >> 17) == 1)) )
+            {
+                if (pBroadcast) cNReplies += fNCbc;
+                else cNReplies += 1;
+            }
+        } else {
+            if ( ( ( (word & 0x00010000) >> 16) == 1) or ( ( (word & 0x00080000) >> 19) == 1) )
+            {
+                if (pBroadcast) cNReplies += fNCbc;
+                else cNReplies += 1;
+            }
+        }
+    }
+    usleep (20);
 
-        uint8_t cMaxWriteAttempts = 5;
+    cFailed = ReadI2C (  cNReplies, pReplies) ;
+
+    return cFailed;
+}
+
+
+bool D19cFWInterface::WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback)
+{
+
+    uint8_t cMaxWriteAttempts = 5;
         // the actual write & readback command is in the vector
-        std::vector<uint32_t> cReplies;
-        bool cSuccess = !WriteI2C ( pVecReg, cReplies, pReadback, false );
+    std::vector<uint32_t> cReplies;
+    bool cSuccess = !WriteI2C ( pVecReg, cReplies, pReadback, false );
 
         //for (int i = 0; i < pVecReg.size(); i++)
         //{
@@ -1537,10 +1546,10 @@ void D19cFWInterface::DecodeReg ( RegItem& pRegItem,
 
         //here make a distinction: if pReadback is true, compare only the read replies using the binary predicate
         //else, just check that info is 0 and thus the CBC acqnowledged the command if the writeread is 0
-        std::vector<uint32_t> cWriteAgain;
+    std::vector<uint32_t> cWriteAgain;
 
-        if (pReadback)
-        {
+    if (pReadback)
+    {
             //split the reply vector in even and odd replies
             //even is the write reply, odd is the read reply
             //since I am already reading back, might as well forget about the CMD acknowledge from the CBC and directly look at the read back value
@@ -1548,180 +1557,180 @@ void D19cFWInterface::DecodeReg ( RegItem& pRegItem,
             //getOddElements (cReplies, cOdd);
 
             //now use the Template from BeBoardFWInterface to return a vector with all written words that have been read back incorrectly
-            cWriteAgain = get_mismatches (pVecReg.begin(), pVecReg.end(), cReplies.begin(), D19cFWInterface::cmd_reply_comp);
+        cWriteAgain = get_mismatches (pVecReg.begin(), pVecReg.end(), cReplies.begin(), D19cFWInterface::cmd_reply_comp);
 
             // now clear the initial cmd Vec and set the read-back
-            pVecReg.clear();
-            pVecReg = cReplies;
-        }
-        else
-        {
+        pVecReg.clear();
+        pVecReg = cReplies;
+    }
+    else
+    {
             //since I do not read back, I can safely just check that the info bit of the reply is 0 and that it was an actual write reply
             //then i put the replies in pVecReg so I can decode later in CBCInterface
             //cWriteAgain = get_mismatches (pVecReg.begin(), pVecReg.end(), cReplies.begin(), D19cFWInterface::cmd_reply_ack);
-            pVecReg.clear();
-            pVecReg = cReplies;
-        }
-
-        // now check the size of the WriteAgain vector and assert Success or not
-        // also check that the number of write attempts does not exceed cMaxWriteAttempts
-        if (cWriteAgain.empty() ) cSuccess = true;
-        else
-        {
-            cSuccess = false;
-
-            // if the number of errors is greater than 100, give up
-            if (cWriteAgain.size() < 100 && pWriteAttempts < cMaxWriteAttempts )
-            {
-                if (pReadback)  LOG (INFO) << BOLDRED <<  "(WRITE#"  << std::to_string (pWriteAttempts) << ") There were " << cWriteAgain.size() << " Readback Errors -trying again!" << RESET ;
-                else LOG (INFO) << BOLDRED <<  "(WRITE#"  << std::to_string (pWriteAttempts) << ") There were " << cWriteAgain.size() << " CBC CMD acknowledge bits missing -trying again!" << RESET ;
-
-                pWriteAttempts++;
-                this->WriteCbcBlockReg ( cWriteAgain, pWriteAttempts, true);
-            }
-            else if ( pWriteAttempts >= cMaxWriteAttempts )
-            {
-                cSuccess = false;
-                pWriteAttempts = 0 ;
-            }
-            else throw Exception ( "Too many CBC readback errors - no functional I2C communication. Check the Setup" );
-        }
-
-
-        return cSuccess;
-    }
-
-    bool D19cFWInterface::BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback)
-    {
-        std::vector<uint32_t> cReplies;
-        bool cSuccess = !WriteI2C ( pVecReg, cReplies, false, true );
-
-        //just as above, I can check the replies - there will be NCbc * pVecReg.size() write replies and also read replies if I chose to enable readback
-        //this needs to be adapted
-        if (pReadback)
-        {
-            //TODO: actually, i just need to check the read write and the info bit in each reply - if all info bits are 0, this is as good as it gets, else collect the replies that faild for decoding - potentially no iterative retrying
-            //TODO: maybe I can do something with readback here - think about it
-            for (auto& cWord : cReplies)
-            {
-                //it was a write transaction!
-                if ( ( (cWord >> 16) & 0x1) == 0)
-                {
-                    // infor bit is 0 which means that the transaction was acknowledged by the CBC
-                    //if ( ( (cWord >> 20) & 0x1) == 0)
-                    cSuccess = true;
-                    //else cSuccess == false;
-                }
-                else
-                    cSuccess = false;
-
-                //LOG(INFO) << std::bitset<32>(cWord) ;
-            }
-
-            //cWriteAgain = get_mismatches (pVecReg.begin(), pVecReg.end(), cReplies.begin(), Cbc3Fc7FWInterface::cmd_reply_ack);
-            pVecReg.clear();
-            pVecReg = cReplies;
-
-        }
-
-        return cSuccess;
-    }
-
-    void D19cFWInterface::ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg )
-    {
-        std::vector<uint32_t> cReplies;
-        //it sounds weird, but ReadI2C is called inside writeI2c, therefore here I have to write and disable the readback. The actual read command is in the words of the vector, no broadcast, maybe I can get rid of it
-        WriteI2C ( pVecReg, cReplies, false, false);
         pVecReg.clear();
         pVecReg = cReplies;
     }
 
-    void D19cFWInterface::CbcFastReset()
+        // now check the size of the WriteAgain vector and assert Success or not
+        // also check that the number of write attempts does not exceed cMaxWriteAttempts
+    if (cWriteAgain.empty() ) cSuccess = true;
+    else
     {
-        WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_reset", 0x1 );
+        cSuccess = false;
+
+            // if the number of errors is greater than 100, give up
+        if (cWriteAgain.size() < 100 && pWriteAttempts < cMaxWriteAttempts )
+        {
+            if (pReadback)  LOG (INFO) << BOLDRED <<  "(WRITE#"  << std::to_string (pWriteAttempts) << ") There were " << cWriteAgain.size() << " Readback Errors -trying again!" << RESET ;
+            else LOG (INFO) << BOLDRED <<  "(WRITE#"  << std::to_string (pWriteAttempts) << ") There were " << cWriteAgain.size() << " CBC CMD acknowledge bits missing -trying again!" << RESET ;
+
+            pWriteAttempts++;
+            this->WriteCbcBlockReg ( cWriteAgain, pWriteAttempts, true);
+        }
+        else if ( pWriteAttempts >= cMaxWriteAttempts )
+        {
+            cSuccess = false;
+            pWriteAttempts = 0 ;
+        }
+        else throw Exception ( "Too many CBC readback errors - no functional I2C communication. Check the Setup" );
     }
 
-    void D19cFWInterface::CbcI2CRefresh()
+
+    return cSuccess;
+}
+
+bool D19cFWInterface::BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback)
+{
+    std::vector<uint32_t> cReplies;
+    bool cSuccess = !WriteI2C ( pVecReg, cReplies, false, true );
+
+        //just as above, I can check the replies - there will be NCbc * pVecReg.size() write replies and also read replies if I chose to enable readback
+        //this needs to be adapted
+    if (pReadback)
     {
-        WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1 );
+            //TODO: actually, i just need to check the read write and the info bit in each reply - if all info bits are 0, this is as good as it gets, else collect the replies that faild for decoding - potentially no iterative retrying
+            //TODO: maybe I can do something with readback here - think about it
+        for (auto& cWord : cReplies)
+        {
+                //it was a write transaction!
+            if ( ( (cWord >> 16) & 0x1) == 0)
+            {
+                    // infor bit is 0 which means that the transaction was acknowledged by the CBC
+                    //if ( ( (cWord >> 20) & 0x1) == 0)
+                cSuccess = true;
+                    //else cSuccess == false;
+            }
+            else
+                cSuccess = false;
+
+                //LOG(INFO) << std::bitset<32>(cWord) ;
+        }
+
+            //cWriteAgain = get_mismatches (pVecReg.begin(), pVecReg.end(), cReplies.begin(), Cbc3Fc7FWInterface::cmd_reply_ack);
+        pVecReg.clear();
+        pVecReg = cReplies;
+
     }
 
-    void D19cFWInterface::CbcHardReset()
-    {
-        WriteReg ( "fc7_daq_ctrl.physical_interface_block.control.chip_hard_reset", 0x1 );
-        usleep (10);
-    }
+    return cSuccess;
+}
 
-    void D19cFWInterface::CbcTestPulse()
-    {
-        ;
-    }
+void D19cFWInterface::ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg )
+{
+    std::vector<uint32_t> cReplies;
+        //it sounds weird, but ReadI2C is called inside writeI2c, therefore here I have to write and disable the readback. The actual read command is in the words of the vector, no broadcast, maybe I can get rid of it
+    WriteI2C ( pVecReg, cReplies, false, false);
+    pVecReg.clear();
+    pVecReg = cReplies;
+}
 
-    void D19cFWInterface::CbcTrigger()
-    {
-        WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_trigger", 0x1 );
-    }
+void D19cFWInterface::CbcFastReset()
+{
+    WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_reset", 0x1 );
+}
+
+void D19cFWInterface::CbcI2CRefresh()
+{
+    WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1 );
+}
+
+void D19cFWInterface::CbcHardReset()
+{
+    WriteReg ( "fc7_daq_ctrl.physical_interface_block.control.chip_hard_reset", 0x1 );
+    usleep (10);
+}
+
+void D19cFWInterface::CbcTestPulse()
+{
+    ;
+}
+
+void D19cFWInterface::CbcTrigger()
+{
+    WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_trigger", 0x1 );
+}
 
     // line status phase tuning
-    void D19cFWInterface::PhaseTuningGetLineStatus(uint8_t pHybrid, uint8_t pChip, uint8_t pLine)
-    {
+void D19cFWInterface::PhaseTuningGetLineStatus(uint8_t pHybrid, uint8_t pChip, uint8_t pLine)
+{
         // encode the line id's
-        uint32_t hybrid_raw = (pHybrid & 0xF) << 28;
-        uint32_t chip_raw = (pChip & 0xF) << 24;
-        uint32_t line_raw = (pLine & 0xF) << 20;
+    uint32_t hybrid_raw = (pHybrid & 0xF) << 28;
+    uint32_t chip_raw = (pChip & 0xF) << 24;
+    uint32_t line_raw = (pLine & 0xF) << 20;
 
         // print header
-        LOG(INFO) << "\t Hybrid: " << +pHybrid << ", Chip: " << +pChip << ", Line: " << +pLine;
+    LOG(INFO) << "\t Hybrid: " << +pHybrid << ", Chip: " << +pChip << ", Line: " << +pLine;
 
         // encode command type
-        uint32_t command_raw = (0 & 0xF) << 16;
-        uint32_t command_final = hybrid_raw + chip_raw + line_raw + command_raw;
-        WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
+    uint32_t command_raw = (0 & 0xF) << 16;
+    uint32_t command_final = hybrid_raw + chip_raw + line_raw + command_raw;
+    WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
         // sleep a bi
-        usleep(100);
+    usleep(100);
         // get the status back
-        PhaseTuningParseStatus();
+    PhaseTuningParseStatus();
 
         // encode command type
-        command_raw = (1 & 0xF) << 16;
-        command_final = hybrid_raw + chip_raw + line_raw + command_raw;
-        WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
+    command_raw = (1 & 0xF) << 16;
+    command_final = hybrid_raw + chip_raw + line_raw + command_raw;
+    WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
         // sleep a bi
-        usleep(100);
+    usleep(100);
         // get the status back
-        PhaseTuningParseStatus();
+    PhaseTuningParseStatus();
 
 
+}
+
+void D19cFWInterface::PhaseTuningParseStatus() {
+
+    uint32_t reply = ReadReg( "fc7_daq_stat.physical_interface_block.phase_tuning_reply" );
+    uint8_t output_type = (reply >> 24) & 0xF;
+
+    if (output_type == 0) {
+        uint8_t mode = (reply & 0x00003000) >> 12;
+        uint8_t delay = (reply & 0x000000F8) >> 3;
+        uint8_t bitslip = (reply & 0x00000007) >> 0;
+
+        LOG(INFO) << "\t\t Mode: " << +mode;
+        LOG(INFO) << "\t\t Manual Delay: " << +delay << ", Manual Bitslip: " << +bitslip;
+
+    } else if (output_type == 1) {
+        uint8_t delay = (reply & 0x00F80000) >> 19;
+        uint8_t bitslip = (reply & 0x00070000) >> 16;
+        uint8_t done = (reply & 0x00008000) >> 15;
+        uint8_t wa_fsm_state = (reply & 0x00000F00) >> 8;
+        uint8_t pa_fsm_state = (reply & 0x0000000F) >> 0;
+
+        LOG(INFO) << "\t\t Done: " << +done << ", PA FSM: " << +pa_fsm_state << ", WA FSM: " << +wa_fsm_state;
+        LOG(INFO) << "\t\t Delay: " << +delay << ", Bitslip: " << +bitslip;
     }
-
-    void D19cFWInterface::PhaseTuningParseStatus() {
-
-        uint32_t reply = ReadReg( "fc7_daq_stat.physical_interface_block.phase_tuning_reply" );
-        uint8_t output_type = (reply >> 24) & 0xF;
-
-        if (output_type == 0) {
-            uint8_t mode = (reply & 0x00003000) >> 12;
-            uint8_t delay = (reply & 0x000000F8) >> 3;
-            uint8_t bitslip = (reply & 0x00000007) >> 0;
-
-            LOG(INFO) << "\t\t Mode: " << +mode;
-            LOG(INFO) << "\t\t Manual Delay: " << +delay << ", Manual Bitslip: " << +bitslip;
-
-        } else if (output_type == 1) {
-            uint8_t delay = (reply & 0x00F80000) >> 19;
-            uint8_t bitslip = (reply & 0x00070000) >> 16;
-            uint8_t done = (reply & 0x00008000) >> 15;
-            uint8_t wa_fsm_state = (reply & 0x00000F00) >> 8;
-            uint8_t pa_fsm_state = (reply & 0x0000000F) >> 0;
-
-            LOG(INFO) << "\t\t Done: " << +done << ", PA FSM: " << +pa_fsm_state << ", WA FSM: " << +wa_fsm_state;
-            LOG(INFO) << "\t\t Delay: " << +delay << ", Bitslip: " << +bitslip;
-        }
-    }
+}
 
     // measures the occupancy of the 2S chips
-    bool D19cFWInterface::Measure2SOccupancy(uint32_t pNEvents, uint8_t **&pErrorCounters, uint8_t ***&pChannelCounters )
-    {
+bool D19cFWInterface::Measure2SOccupancy(uint32_t pNEvents, uint8_t **&pErrorCounters, uint8_t ***&pChannelCounters )
+{
         // this will anyway be constant
         const int COUNTER_WIDTH_BITS = 8; // we have 8bit counters currently
         const int BIT_MASK = 0xFF; // for counter widht 8
@@ -1849,7 +1858,7 @@ void D19cFWInterface::DecodeReg ( RegItem& pRegItem,
             // deleting all the array
             for(uint32_t h = 0; h < HYBRIDS_TOTAL; h++) {
                 for(uint32_t c = 0; c < NCHIPS_PER_HYBRID_COUNTERS; c++) delete pChannelCounters[h][c];
-                delete pChannelCounters[h];
+                    delete pChannelCounters[h];
                 delete pErrorCounters[h];
             }
             delete pChannelCounters;
@@ -1920,51 +1929,51 @@ void D19cFWInterface::DecodeReg ( RegItem& pRegItem,
         //if ( ( (cWord1 >> 16) & 0x1) == 0 && ( (cWord1 >> 8 ) & 0xFF) == 0) return ( (cWord1 & 0x0F00FFFF) == (cWord2 & 0x0F00FFFF) );
         //else return ( (cWord1 & 0x0F01FFFF) == (cWord2 & 0x0F01FFFF) );
 
-	//TODO: cleanup here the version
-	//if (fI2CVersion >= 1) {
-		return true;
-	//} else {
-	//	return ( (cWord1 & 0x00F2FFFF) == (cWord2 & 0x00F2FFFF) );
-	//}
+    //TODO: cleanup here the version
+    //if (fI2CVersion >= 1) {
+        return true;
+    //} else {
+    //  return ( (cWord1 & 0x00F2FFFF) == (cWord2 & 0x00F2FFFF) );
+    //}
     }
 
     bool D19cFWInterface::cmd_reply_ack (const uint32_t& cWord1, const
-                                         uint32_t& cWord2)
+     uint32_t& cWord2)
     {
         // if it was a write transaction (>>17 == 0) and
         // the CBC id matches it is false
         if (  ( (cWord2 >> 16) & 0x1 ) == 0 &&
-                (cWord1 & 0x00F00000) == (cWord2 & 0x00F00000) ) return true;
-        else
-            return false;
-    }
+            (cWord1 & 0x00F00000) == (cWord2 & 0x00F00000) ) return true;
+            else
+                return false;
+        }
 
-void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA_v1(float VDDPST , float DVDD , float AVDD , float VBF, float BG, uint8_t mpaid  , uint8_t ssaid  )
-{
+        void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA_v1(float VDDPST , float DVDD , float AVDD , float VBF, float BG, uint8_t mpaid  , uint8_t ssaid  )
+        {
 
-    uint32_t read = 1;
-    uint32_t write = 0;
-    uint32_t SLOW = 2;
-    uint32_t i2cmux = 0;
-    uint32_t pcf8574 = 1;
-    uint32_t dac7678 = 4;
-    uint32_t powerenable = 2;
-    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+            uint32_t read = 1;
+            uint32_t write = 0;
+            uint32_t SLOW = 2;
+            uint32_t i2cmux = 0;
+            uint32_t pcf8574 = 1;
+            uint32_t dac7678 = 4;
+            uint32_t powerenable = 2;
+            std::this_thread::sleep_for (std::chrono::milliseconds (750) );
 
-    PSInterfaceBoard_SetSlaveMap();
-    PSInterfaceBoard_ConfigureI2CMaster(1,SLOW);
-    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+            PSInterfaceBoard_SetSlaveMap();
+            PSInterfaceBoard_ConfigureI2CMaster(1,SLOW);
+            std::this_thread::sleep_for (std::chrono::milliseconds (750) );
 
-    float Vc = 0.0003632813;
+            float Vc = 0.0003632813;
 
-    LOG(INFO) << "ssa vdd on" ;
+            LOG(INFO) << "ssa vdd on" ;
 
-    float Vlimit = 1.32;
-    if (VDDPST > Vlimit) VDDPST = Vlimit;
-    float diffvoltage = 1.5 - VDDPST;
-    uint32_t setvoltage = int(round(diffvoltage / Vc));
-    if (setvoltage > 4095) setvoltage = 4095;
-    setvoltage = setvoltage << 4;
+            float Vlimit = 1.32;
+            if (VDDPST > Vlimit) VDDPST = Vlimit;
+            float diffvoltage = 1.5 - VDDPST;
+            uint32_t setvoltage = int(round(diffvoltage / Vc));
+            if (setvoltage > 4095) setvoltage = 4095;
+            setvoltage = setvoltage << 4;
 
     PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
     std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
@@ -2018,30 +2027,30 @@ void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA_v1(float VDDPST , float DVDD 
 
     std::string DONE = "no";
     while (not (DONE == "yes" or DONE == "Yes" or DONE == "YES"))
-	{
-		LOG(INFO) << BOLDBLUE << "Write or read? (W/R)" << RESET;
-		std::string RW;
-		std::cin >> RW;
-		if (RW == "W" or RW == "w")
-		{
-			std::string VALSTRING = "0";
-			LOG (INFO) << BOLDBLUE << "What value are you writing?" << RESET;
-			std::cin >> VALSTRING;
-			uint32_t VAL = std::stoi(VALSTRING);
-			LOG (INFO) << BOLDRED << "writing SSA/MPA byte: " << std::bitset<32>(VAL) << RESET;
-			PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
-			std::this_thread::sleep_for (std::chrono::milliseconds (500) );
-			PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, VAL);  // set reset bit
-		}
-		if (RW == "R" or RW == "r")
-		{
-			uint32_t BYTE;
-			BYTE = PSInterfaceBoard_SendI2CCommand_READ(pcf8574, 0, read, 0, 0);
-			LOG(INFO) << BOLDRED << "reading SSA/MPA byte: " << std::bitset<32>(BYTE) << RESET;
-		}
-		LOG( INFO) << BOLDBLUE << "Are you done?" << RESET;
-		std::cin >> DONE;
-	}
+    {
+        LOG(INFO) << BOLDBLUE << "Write or read? (W/R)" << RESET;
+        std::string RW;
+        std::cin >> RW;
+        if (RW == "W" or RW == "w")
+        {
+            std::string VALSTRING = "0";
+            LOG (INFO) << BOLDBLUE << "What value are you writing?" << RESET;
+            std::cin >> VALSTRING;
+            uint32_t VAL = std::stoi(VALSTRING);
+            LOG (INFO) << BOLDRED << "writing SSA/MPA byte: " << std::bitset<32>(VAL) << RESET;
+            PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
+            std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+            PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, VAL);  // set reset bit
+        }
+        if (RW == "R" or RW == "r")
+        {
+            uint32_t BYTE;
+            BYTE = PSInterfaceBoard_SendI2CCommand_READ(pcf8574, 0, read, 0, 0);
+            LOG(INFO) << BOLDRED << "reading SSA/MPA byte: " << std::bitset<32>(BYTE) << RESET;
+        }
+        LOG( INFO) << BOLDBLUE << "Are you done?" << RESET;
+        std::cin >> DONE;
+    }
 
 /*  LOG (INFO) << "ssa set address"; FIXME Temporarily switched to user input for probe-tests with Ed B.
     uint32_t val = (mpaid << 5) + (ssaid << 1);
@@ -2083,7 +2092,7 @@ void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA_v2(float VDDPST , float DVDD 
 
 // COMS:
 void D19cFWInterface::PSInterfaceBoard_SetSlaveMap()
-    {
+{
 
     std::vector< std::vector<uint32_t> >  i2c_slave_map;
     i2c_slave_map.push_back({0b1110000, 0, 1, 1, 0, 1}); //0  PCA9646
@@ -2107,23 +2116,23 @@ void D19cFWInterface::PSInterfaceBoard_SetSlaveMap()
     LOG(INFO) << "Updating the Slave ID Map (mpa ssa board) ";
 
     for (int ism = 0; ism < 16; ism++)
-        {
-        uint32_t shifted_i2c_address 			= i2c_slave_map[ism][0]<<25;
-        uint32_t shifted_register_address_nbytes 	= i2c_slave_map[ism][1]<<6;
-        uint32_t shifted_data_wr_nbytes 		= i2c_slave_map[ism][2]<<4;
-        uint32_t shifted_data_rd_nbytes 		= i2c_slave_map[ism][3]<<2;
-        uint32_t shifted_stop_for_rd_en 		= i2c_slave_map[ism][4]<<1;
-        uint32_t shifted_nack_en 			= i2c_slave_map[ism][5]<<0;
-        uint32_t final_command 				= shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
+    {
+        uint32_t shifted_i2c_address            = i2c_slave_map[ism][0]<<25;
+        uint32_t shifted_register_address_nbytes    = i2c_slave_map[ism][1]<<6;
+        uint32_t shifted_data_wr_nbytes         = i2c_slave_map[ism][2]<<4;
+        uint32_t shifted_data_rd_nbytes         = i2c_slave_map[ism][3]<<2;
+        uint32_t shifted_stop_for_rd_en         = i2c_slave_map[ism][4]<<1;
+        uint32_t shifted_nack_en            = i2c_slave_map[ism][5]<<0;
+        uint32_t final_command              = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
 
         std::string curreg = "fc7_daq_cnfg.mpa_ssa_board_block.slave_"+std::to_string(ism)+"_config";
         WriteReg(curreg, final_command);
-        }
-
     }
 
+}
+
 void D19cFWInterface::PSInterfaceBoard_ConfigureI2CMaster(uint32_t pEnabled = 1, uint32_t pFrequency = 4)
-    {
+{
     // wait for all commands to be executed
     std::chrono::milliseconds cWait( 100 );
     while (!ReadReg("fc7_daq_stat.command_processor_block.i2c.command_fifo.empty")) {
@@ -2145,23 +2154,23 @@ void D19cFWInterface::PSInterfaceBoard_ConfigureI2CMaster(uint32_t pEnabled = 1,
     WriteReg( "fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 1);
     WriteReg( "fc7_daq_ctrl.mpa_ssa_board_block.reset", 1);
     std::this_thread::sleep_for( cWait );
-    }
+}
 
 void D19cFWInterface::PSInterfaceBoard_SendI2CCommand(uint32_t slave_id,uint32_t board_id,uint32_t read,uint32_t register_address, uint32_t data)
-    {
+{
 
     std::chrono::milliseconds cWait( 10 );
     std::chrono::milliseconds cShort( 1 );
 
-    uint32_t shifted_command_type 	= 1 << 31;
-    uint32_t shifted_word_id_0 	= 0;
-    uint32_t shifted_slave_id 	= slave_id << 21;
-    uint32_t shifted_board_id  	= board_id << 20;
-    uint32_t shifted_read 		= read << 16;
+    uint32_t shifted_command_type   = 1 << 31;
+    uint32_t shifted_word_id_0  = 0;
+    uint32_t shifted_slave_id   = slave_id << 21;
+    uint32_t shifted_board_id   = board_id << 20;
+    uint32_t shifted_read       = read << 16;
     uint32_t shifted_register_address = register_address;
 
-    uint32_t shifted_word_id_1 	= 1<<26;
-    uint32_t shifted_data 		= data;
+    uint32_t shifted_word_id_1  = 1<<26;
+    uint32_t shifted_data       = data;
 
 
     uint32_t word_0 = shifted_command_type + shifted_word_id_0 + shifted_slave_id + shifted_board_id + shifted_read + shifted_register_address;
@@ -2175,47 +2184,47 @@ void D19cFWInterface::PSInterfaceBoard_SendI2CCommand(uint32_t slave_id,uint32_t
 
     int readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
     while (readempty > 0)
-        {
+    {
         std::this_thread::sleep_for( cShort );
         readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
-        }
+    }
 
     int reply = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply");
     int reply_err = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.err");
     int reply_data = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
-	//LOG(INFO) << BOLDGREEN << "reply: "<< std::hex << reply << std::dec <<RESET;
-	//LOG(INFO) << BOLDGREEN << "reply err: "<< std::hex << reply_err << std::dec <<RESET;
-	//LOG(INFO) << BOLDGREEN << "reply data: "<< std::hex << reply_data << std::dec <<RESET;
+    //LOG(INFO) << BOLDGREEN << "reply: "<< std::hex << reply << std::dec <<RESET;
+    //LOG(INFO) << BOLDGREEN << "reply err: "<< std::hex << reply_err << std::dec <<RESET;
+    //LOG(INFO) << BOLDGREEN << "reply data: "<< std::hex << reply_data << std::dec <<RESET;
 
     if (reply_err == 1) LOG(ERROR) << "Error code: "<< std::hex << reply_data << std::dec;
-    //	print "ERROR! Error flag is set to 1. The data is treated as the error code."
+    //  print "ERROR! Error flag is set to 1. The data is treated as the error code."
     //elif reply_slave_id != slave_id:
-    //	print "ERROR! Slave ID doesn't correspond to the one sent"
+    //  print "ERROR! Slave ID doesn't correspond to the one sent"
     //elif reply_board_id != board_id:
-    //	print "ERROR! Board ID doesn't correspond to the one sent"
+    //  print "ERROR! Board ID doesn't correspond to the one sent"
 
     else
-        {
+    {
         if (read == 1) LOG (INFO) << BOLDBLUE <<  "Data that was read is: "<< reply_data << RESET;
         else LOG (DEBUG) << BOLDBLUE << "Successful write transaction" <<RESET;
-        }
     }
+}
 
 uint32_t D19cFWInterface::PSInterfaceBoard_SendI2CCommand_READ(uint32_t slave_id,uint32_t board_id,uint32_t read,uint32_t register_address, uint32_t data)
-    {
+{
 
     std::chrono::milliseconds cWait( 10 );
     std::chrono::milliseconds cShort( 1 );
 
-    uint32_t shifted_command_type 	= 1 << 31;
-    uint32_t shifted_word_id_0 	= 0;
-    uint32_t shifted_slave_id 	= slave_id << 21;
-    uint32_t shifted_board_id  	= board_id << 20;
-    uint32_t shifted_read 		= read << 16;
+    uint32_t shifted_command_type   = 1 << 31;
+    uint32_t shifted_word_id_0  = 0;
+    uint32_t shifted_slave_id   = slave_id << 21;
+    uint32_t shifted_board_id   = board_id << 20;
+    uint32_t shifted_read       = read << 16;
     uint32_t shifted_register_address = register_address;
 
-    uint32_t shifted_word_id_1 	= 1<<26;
-    uint32_t shifted_data 		= data;
+    uint32_t shifted_word_id_1  = 1<<26;
+    uint32_t shifted_data       = data;
 
     uint32_t word_0 = shifted_command_type + shifted_word_id_0 + shifted_slave_id + shifted_board_id + shifted_read + shifted_register_address;
     uint32_t word_1 = shifted_command_type + shifted_word_id_1 + shifted_data;
@@ -2229,38 +2238,40 @@ uint32_t D19cFWInterface::PSInterfaceBoard_SendI2CCommand_READ(uint32_t slave_id
     int readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
     LOG (INFO) << BOLDYELLOW << readempty << RESET;
     while (readempty > 0)
-        {
-	std::cout << ".";
+    {
+        std::cout << ".";
         std::this_thread::sleep_for( cShort );
         readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
-        }
-	std::cout<<std::endl;
+    }
+    std::cout<<std::endl;
 
     uint32_t reply = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply");
-	//LOG (INFO) << BOLDRED << std::hex << reply << std::dec << RESET;
+    //LOG (INFO) << BOLDRED << std::hex << reply << std::dec << RESET;
     uint32_t reply_err = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.err");
     uint32_t reply_data = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
 
     if (reply_err == 1) LOG(ERROR) << "Error code: "<< std::hex << reply_data << std::dec;
-    //	print "ERROR! Error flag is set to 1. The data is treated as the error code."
+    //  print "ERROR! Error flag is set to 1. The data is treated as the error code."
     //elif reply_slave_id != slave_id:
-    //	print "ERROR! Slave ID doesn't correspond to the one sent"
+    //  print "ERROR! Slave ID doesn't correspond to the one sent"
     //elif reply_board_id != board_id:
-    //	print "ERROR! Board ID doesn't correspond to the one sent"
+    //  print "ERROR! Board ID doesn't correspond to the one sent"
 
     else
-        {
+    {
         if (read == 1){
-		LOG (INFO) << BOLDBLUE <<  "Data that was read is: "<< std::hex << reply_data << std::dec << "   ecode: " << reply_err << RESET;
-		return reply & 0xFFFFFF;		
-			}
-        else LOG (DEBUG) << BOLDBLUE << "Successful write transaction" <<RESET;
+            LOG (INFO) << BOLDBLUE <<  "Data that was read is: "<< std::hex << reply_data << std::dec << "   ecode: " << reply_err << RESET;
+            return reply & 0xFFFFFF;        
         }
+        else LOG (DEBUG) << BOLDBLUE << "Successful write transaction" <<RESET;
     }
+
+    return 0;
+}
 
 
 void D19cFWInterface::Pix_write_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
-    {
+{
     uint8_t cWriteAttempts = 0;
     bool rep;
 
@@ -2271,10 +2282,10 @@ void D19cFWInterface::Pix_write_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint
     cVecReq.clear();
     this->EncodeReg (rowreg, cMPA->getFeId(), cMPA->getMPAId(), cVecReq, false, true);
     this->WriteCbcBlockReg (cVecReq, cWriteAttempts, false);
-    }
+}
 
 uint32_t D19cFWInterface::Pix_read_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel)
-    {
+{
     uint8_t cWriteAttempts = 0;
     uint32_t rep;
 
@@ -2290,22 +2301,22 @@ uint32_t D19cFWInterface::Pix_read_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,u
     std::chrono::milliseconds cShort( 1 );
     //uint32_t readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
     //while (readempty == 0)
-    //	{
-    //	std::cout<<"RE:"<<readempty<<std::endl;
-    //	//ReadStatus()
-    //	std::this_thread::sleep_for( cShort );
-    //	readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
-    //	}
+    //  {
+    //  std::cout<<"RE:"<<readempty<<std::endl;
+    //  //ReadStatus()
+    //  std::this_thread::sleep_for( cShort );
+    //  readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
+    //  }
     //uint32_t forcedreply = ReadReg("fc7_daq_ctrl.command_processor_block.i2c.reply_fifo");
     rep = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
 
     return rep;
-    }
+}
 
 
 
 std::vector<uint16_t> D19cFWInterface::ReadoutCounters_MPA(uint32_t raw_mode_en)
-    {
+{
     WriteReg("fc7_daq_cnfg.physical_interface_block.raw_mode_en", raw_mode_en);
     uint32_t mpa_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.stat_slvs_debug.mpa_counters_ready");
     std::chrono::milliseconds cWait( 10 );
@@ -2314,23 +2325,23 @@ std::vector<uint16_t> D19cFWInterface::ReadoutCounters_MPA(uint32_t raw_mode_en)
     PS_Start_counters_read();
     uint32_t  timeout = 0;
     while ((mpa_counters_ready == 0) & (timeout < 50))
-        {
+    {
         std::this_thread::sleep_for( cWait );
         mpa_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.stat_slvs_debug.mpa_counters_ready");
         //std::cout<<"MCR iwh"<<mpa_counters_ready<<std::endl;
         timeout += 1;
-        }
+    }
     if (timeout >= 50)
-        {
+    {
         std::cout<<"fail"<<std::endl;
         return count;
-        }
+    }
 
     if (raw_mode_en == 1)
-        {
+    {
         uint32_t cycle = 0;
         for (int i=0; i<20000;i++)
-            {
+        {
             uint32_t fifo1_word = ReadReg("fc7_daq_ctrl.physical_interface_block.ctrl_slvs_debug_fifo1_data");
             uint32_t fifo2_word = ReadReg("fc7_daq_ctrl.physical_interface_block.ctrl_slvs_debug_fifo2_data");
 
@@ -2342,32 +2353,32 @@ std::vector<uint16_t> D19cFWInterface::ReadoutCounters_MPA(uint32_t raw_mode_en)
             uint32_t line5 = (fifo2_word&0x00FF00)>>8; // to_number(fifo2_word,16,8)
 
             if (((line1 & 0b10000000) == 128) && ((line4 & 0b10000000) == 128))
-                {
+            {
                 uint32_t temp = ((line2 & 0b00100000) << 9) | ((line3 & 0b00100000) << 8) | ((line4 & 0b00100000) << 7) | ((line5 & 0b00100000) << 6) | ((line1 & 0b00010000) << 6) | ((line2 & 0b00010000) << 5) | ((line3 & 0b00010000) << 4) | ((line4 & 0b00010000) << 3) | ((line5 & 0b10000000) >> 1) | ((line1 & 0b01000000) >> 1) | ((line2 & 0b01000000) >> 2) | ((line3 & 0b01000000) >> 3) | ((line4 & 0b01000000) >> 4) | ((line5 & 0b01000000) >> 5) | ((line1 & 0b00100000) >> 5);
                 if (temp != 0) {
                     count[cycle] = temp - 1;
                     cycle += 1;
-                    }
                 }
             }
-        } 
-    else 	{
+        }
+    } 
+    else    {
         ReadReg("fc7_daq_ctrl.physical_interface_block.ctrl_slvs_debug_fifo2_data");
         for (int i=0; i<2040;i++)
-            {
+        {
             //std::chrono::milliseconds cWait( 100 );
             count[i] = ReadReg("fc7_daq_ctrl.physical_interface_block.ctrl_slvs_debug_fifo2_data") - 1;
             //std::cout<<i<<"     "<<count[i]<<std::endl;
-            }
         }
+    }
 
     std::this_thread::sleep_for( cWait );
     mpa_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.stat_slvs_debug.mpa_counters_ready");
     return count;
-    }
+}
 
 void D19cFWInterface::Compose_fast_command(uint32_t duration ,uint32_t resync_en ,uint32_t l1a_en ,uint32_t cal_pulse_en ,uint32_t bc0_en )
-    {
+{
     uint32_t encode_resync = resync_en<<16;
     uint32_t encode_cal_pulse = cal_pulse_en<<17;
     uint32_t encode_l1a = l1a_en<<18;
@@ -2378,36 +2389,36 @@ void D19cFWInterface::Compose_fast_command(uint32_t duration ,uint32_t resync_en
 
     WriteReg("fc7_daq_ctrl.fast_command_block.control", final_command);
 
-    }
+}
 
 void D19cFWInterface::PS_Open_shutter(uint32_t duration )
-    {
+{
     Compose_fast_command(duration,0,1,0,0);
-    }
+}
 
 void D19cFWInterface::PS_Close_shutter(uint32_t duration )
-    {
+{
     Compose_fast_command(duration,0,0,0,1);
-    }
+}
 
 void D19cFWInterface::PS_Clear_counters(uint32_t duration )
-    {
+{
     Compose_fast_command(duration,0,1,0,1);
-    }
+}
 void D19cFWInterface::PS_Start_counters_read(uint32_t duration )
-    {
+{
     Compose_fast_command(duration,1,0,0,1);
-    }
+}
 
 void D19cFWInterface::KillI2C()
-    {
+{
     PSInterfaceBoard_SendI2CCommand(0, 0, 0, 0, 0x04);
     PSInterfaceBoard_ConfigureI2CMaster(0);
-    }
+}
 
 // POWER:
 void D19cFWInterface::PSInterfaceBoard_PowerOn( uint8_t mpaid  , uint8_t ssaid  )
-    {
+{
 
     uint32_t val = (mpaid << 5) + (ssaid << 1);
     uint32_t read = 1;
@@ -2431,10 +2442,10 @@ void D19cFWInterface::PSInterfaceBoard_PowerOn( uint8_t mpaid  , uint8_t ssaid  
     PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
     std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
 
-    }
+}
 
 void D19cFWInterface::PSInterfaceBoard_PowerOff()
-    {
+{
     std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
 
     uint32_t read = 1;
@@ -2456,69 +2467,69 @@ void D19cFWInterface::PSInterfaceBoard_PowerOff()
     std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
     PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
 
-    }
+}
 
 void D19cFWInterface::ReadPower_SSA(uint8_t mpaid , uint8_t ssaid)
 {
 
-	uint32_t read = 1;
-	uint32_t write = 0;
-	uint32_t SLOW = 2;
-	uint32_t i2cmux = 0;
-	uint32_t pcf8574 = 1;
-	uint32_t dac7678 = 4;
-	uint32_t ina226_7 = 7;
-	uint32_t ina226_6 = 6;
-	uint32_t ina226_5 = 5;
+    uint32_t read = 1;
+    uint32_t write = 0;
+    uint32_t SLOW = 2;
+    uint32_t i2cmux = 0;
+    uint32_t pcf8574 = 1;
+    uint32_t dac7678 = 4;
+    uint32_t ina226_7 = 7;
+    uint32_t ina226_6 = 6;
+    uint32_t ina226_5 = 5;
 
-	LOG (INFO) << BOLDBLUE << "power information:" << RESET;
-	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
-	PSInterfaceBoard_SetSlaveMap();
-	PSInterfaceBoard_ConfigureI2CMaster(1,SLOW);
-	
-	LOG (INFO) << BOLDBLUE << " - - - VDD:" << RESET;
-	PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x08);
-	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
-	uint32_t dread2 = PSInterfaceBoard_SendI2CCommand_READ(ina226_7, 0, read, 0x02, 0);
-	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
-	float vret = float(dread2) * 0.00125;
-	uint32_t dread1 = PSInterfaceBoard_SendI2CCommand_READ(ina226_7, 0, read, 0x01, 0);
-	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
-	float iret = float(dread1) * 0.00250 / 0.1;
-	float pret = vret * iret;
-	LOG (INFO) << BOLDGREEN << "V = " << vret << "V, I = " << iret << "mA, P = " << pret << "mW" << RESET;
+    LOG (INFO) << BOLDBLUE << "power information:" << RESET;
+    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+    PSInterfaceBoard_SetSlaveMap();
+    PSInterfaceBoard_ConfigureI2CMaster(1,SLOW);
+    
+    LOG (INFO) << BOLDBLUE << " - - - VDD:" << RESET;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x08);
+    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+    uint32_t dread2 = PSInterfaceBoard_SendI2CCommand_READ(ina226_7, 0, read, 0x02, 0);
+    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+    float vret = float(dread2) * 0.00125;
+    uint32_t dread1 = PSInterfaceBoard_SendI2CCommand_READ(ina226_7, 0, read, 0x01, 0);
+    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+    float iret = float(dread1) * 0.00250 / 0.1;
+    float pret = vret * iret;
+    LOG (INFO) << BOLDGREEN << "V = " << vret << "V, I = " << iret << "mA, P = " << pret << "mW" << RESET;
 
-	LOG (INFO) << BOLDBLUE << " - - - Digital:" << RESET;
-	PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x08);
-	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
-	dread2 = PSInterfaceBoard_SendI2CCommand_READ(ina226_6, 0, read, 0x02, 0);
-	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
-	vret = float(dread2) * 0.00125;
-	dread1 = PSInterfaceBoard_SendI2CCommand_READ(ina226_6, 0, read, 0x01, 0);
-	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
-	iret = float(dread1) * 0.00250 / 0.1;
-	pret = vret * iret;
-	LOG (INFO) << BOLDGREEN << "V = " << vret << "V, I = " << iret << "mA, P = " << pret << "mW" << RESET;
+    LOG (INFO) << BOLDBLUE << " - - - Digital:" << RESET;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x08);
+    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+    dread2 = PSInterfaceBoard_SendI2CCommand_READ(ina226_6, 0, read, 0x02, 0);
+    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+    vret = float(dread2) * 0.00125;
+    dread1 = PSInterfaceBoard_SendI2CCommand_READ(ina226_6, 0, read, 0x01, 0);
+    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+    iret = float(dread1) * 0.00250 / 0.1;
+    pret = vret * iret;
+    LOG (INFO) << BOLDGREEN << "V = " << vret << "V, I = " << iret << "mA, P = " << pret << "mW" << RESET;
 
-	LOG (INFO) << BOLDBLUE << " - - - Analog:" << RESET;
-	PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x08);
-	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
-	dread2 = PSInterfaceBoard_SendI2CCommand_READ(ina226_5, 0, read, 0x02, 0);
-	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
-	vret = float(dread2) * 0.00125;
-	dread1 = PSInterfaceBoard_SendI2CCommand_READ(ina226_5, 0, read, 0x01, 0);
-	std::this_thread::sleep_for (std::chrono::milliseconds (750) );
-	iret = float(dread1) * 0.00250 / 0.1;
-	pret = vret * iret;
-	LOG (INFO) << BOLDGREEN << "V = " << vret << "V, I = " << iret << "mA, P = " << pret << "mW" << RESET;
+    LOG (INFO) << BOLDBLUE << " - - - Analog:" << RESET;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x08);
+    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+    dread2 = PSInterfaceBoard_SendI2CCommand_READ(ina226_5, 0, read, 0x02, 0);
+    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+    vret = float(dread2) * 0.00125;
+    dread1 = PSInterfaceBoard_SendI2CCommand_READ(ina226_5, 0, read, 0x01, 0);
+    std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+    iret = float(dread1) * 0.00250 / 0.1;
+    pret = vret * iret;
+    LOG (INFO) << BOLDGREEN << "V = " << vret << "V, I = " << iret << "mA, P = " << pret << "mW" << RESET;
 
-	PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x04);
-    	PSInterfaceBoard_ConfigureI2CMaster(0);
-	
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x04);
+    PSInterfaceBoard_ConfigureI2CMaster(0);
+    
 }
 
 void D19cFWInterface::PSInterfaceBoard_PowerOn_MPA(float VDDPST , float DVDD , float AVDD , float VBG , uint8_t mpaid  , uint8_t ssaid  )
-    {
+{
 
     uint32_t read = 1;
     uint32_t write = 0;
@@ -2589,10 +2600,10 @@ void D19cFWInterface::PSInterfaceBoard_PowerOn_MPA(float VDDPST , float DVDD , f
     // disable the i2c master at the end (first set the mux to the chip
     PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x04);
     PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
-    }
+}
 
 void D19cFWInterface::PSInterfaceBoard_PowerOff_SSA_v1(uint8_t mpaid , uint8_t ssaid )
-    {
+{
     uint32_t write = 0;
     uint32_t SLOW = 2;
     uint32_t i2cmux = 0;
@@ -2646,11 +2657,11 @@ void D19cFWInterface::PSInterfaceBoard_PowerOff_SSA_v1(uint8_t mpaid , uint8_t s
     PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
     PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x33, 0);  // tx to DAC C
     std::this_thread::sleep_for( cWait );
-    }
+}
 
 
 void D19cFWInterface::PSInterfaceBoard_PowerOff_SSA_v2(uint8_t mpaid , uint8_t ssaid )
-    {
+{
     uint32_t write = 0;
     uint32_t SLOW = 2;
     uint32_t i2cmux = 0;
@@ -2659,10 +2670,10 @@ void D19cFWInterface::PSInterfaceBoard_PowerOff_SSA_v2(uint8_t mpaid , uint8_t s
     uint32_t powerenable = 2;
     float Vc = 0.0003632813; // V/Dac step
     std::chrono::milliseconds cWait( 1500 );
-    }
+}
 
 void D19cFWInterface::PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid , uint8_t ssaid )
-    {
+{
     uint32_t write = 0;
     uint32_t SLOW = 2;
     uint32_t i2cmux = 0;
@@ -2715,7 +2726,7 @@ void D19cFWInterface::PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid , uint8_t ssai
     PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x34, setvoltage);  // tx to DAC C
     std::this_thread::sleep_for( cWait );
 
-    }
+}
 
 
 void D19cFWInterface::Align_out()

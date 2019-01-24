@@ -479,6 +479,8 @@ L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1,bool verbose)
         return formL1data;
     }
     else std::cout<<"Header not found!"<<std::endl;
+    
+    return formL1data;
 }
 
 void MPAInterface::Activate_async(MPA* pMPA)

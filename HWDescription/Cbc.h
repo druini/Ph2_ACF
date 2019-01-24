@@ -133,7 +133,7 @@ namespace Ph2_HwDescription {
             fCbcId = pCbcId;
         }
 
-        const uint16_t getNumberOfChannels() const { return fNumberOfChannels; }
+        const uint16_t getNumberOfChannels() const { return NCHANNELS; }
 
         const uint32_t* getCbcmask() const 
         {
@@ -158,13 +158,14 @@ namespace Ph2_HwDescription {
             if(dacName.find("MaskChannel-",0,12)!=std::string::npos) return 1;
             else if(dacName == "VCth") return 10;
             else if(dacName == "VCth2") return 2;
+            else if(dacName == "TriggerLatency" ) return 9;
             else return 8;
         }
 
 
       protected:
 
-        uint16_t fNumberOfChannels;
+        // uint16_t fNumberOfChannels;
         uint8_t fCbcId;
         bool fAsMaskedChannels;
 

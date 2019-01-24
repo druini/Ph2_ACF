@@ -1395,6 +1395,23 @@ void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, cons
                 }
                 else LOG (ERROR) << "Not a valid chip type!";
             }
+            if(dacName=="TriggerLatency"){
+                if (cCbc->getChipType() == ChipType::CBC3)
+                {
+                    if (dacValue > 511) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
+                    else
+                    {
+                         std::vector<std::pair<std::string, uint8_t> > cRegVec;
+                        // TriggerLatency1 holds bits 0-7 and FeCtrl&TrgLate2 holds 8
+                        uint8_t cLat1 = dacValue & 0x00FF;
+                        uint8_t cLat2 = (cCbc->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
+                        cRegVec.emplace_back ("TriggerLatency1", cLat1);
+                        cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
+                        fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+                    }
+                }
+                else LOG (ERROR) << "Not a valid chip type!";
+            }
             else
             {
                 if(dacValue > 255)  LOG (ERROR) << "Error, DAC "<< dacName <<" for CBC3 can only be 8 bit max (255)!";
@@ -1438,6 +1455,23 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
                         uint8_t cVCth2 = (dacValue & 0x0300) >> 8;
                         cRegVec.emplace_back ("VCth1", cVCth1);
                         cRegVec.emplace_back ("VCth2", cVCth2);
+                        fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+                    }
+                }
+                else LOG (ERROR) << "Not a valid chip type!";
+            }
+            if(dacName=="TriggerLatency"){
+                if (cCbc->getChipType() == ChipType::CBC3)
+                {
+                    if (dacValue > 511) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
+                    else
+                    {
+                         std::vector<std::pair<std::string, uint8_t> > cRegVec;
+                        // TriggerLatency1 holds bits 0-7 and FeCtrl&TrgLate2 holds 8
+                        uint8_t cLat1 = dacValue & 0x00FF;
+                        uint8_t cLat2 = (cCbc->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
+                        cRegVec.emplace_back ("TriggerLatency1", cLat1);
+                        cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
                         fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
                     }
                 }
