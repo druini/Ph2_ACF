@@ -22,8 +22,8 @@
 
 #include "TROOT.h"
 #include "publisher.h"
-#include "DQMEvent.h"
-#include "SLinkDQMHistogrammer.h"
+#include "../DQMUtils/DQMEvent.h"
+#include "../DQMUtils/SLinkDQMHistogrammer.h"
 
 
 using namespace Ph2_HwDescription;

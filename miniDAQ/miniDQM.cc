@@ -18,7 +18,7 @@
 
 #include "TROOT.h"
 #include "publisher.h"
-#include "DQMHistogrammer.h"
+#include "../DQMUtils/DQMHistogrammer.h"
 
 #include <boost/filesystem.hpp>
 

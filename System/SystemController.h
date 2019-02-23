@@ -180,10 +180,14 @@ namespace Ph2_System {
          */
         void ReadData (bool pWait = true);
 
-        void Start();
-        void Stop();
-        void Pause();
-        void Resume();
+        virtual void Start(int currentRun);
+        virtual void Stop();
+        virtual void Pause();
+        virtual void Resume();
+        virtual void ConfigureCalibration();
+        virtual void ConfigureHardware(std::string cHWFile);
+        virtual void Configure(std::string cHWFile);
+
 
         //these start and stop acquistion on a single board
         void Start (BeBoard* pBoard);

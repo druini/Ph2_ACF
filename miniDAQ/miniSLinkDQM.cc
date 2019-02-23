@@ -15,10 +15,10 @@
 
 #include "TROOT.h"
 #include "publisher.h"
-#include "DQMEvent.h"
-#include "SLinkDQMHistogrammer.h"
-
 #include <boost/filesystem.hpp>
+
+#include "../DQMUtils/DQMEvent.h"
+#include "../DQMUtils/SLinkDQMHistogrammer.h"
 
 using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP

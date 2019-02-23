@@ -197,6 +197,8 @@ void Calibration::FindVplus()
         }
     }
 
+    this->HttpServerProcess();
+
     fTargetVcth = static_cast<uint16_t> (cMeanValue / nCbc);
     cThresholdVisitor.setThreshold (fTargetVcth);
     this->accept (cThresholdVisitor);
@@ -242,7 +244,8 @@ void Calibration::FindOffsets()
 
     updateHists ( "Occupancy" );
     updateHists ( "Offsets" );
-
+    
+    this->HttpServerProcess();
 }
 
 
@@ -306,3 +309,38 @@ void Calibration::writeObjects()
     fOccupancyCanvas->Write ( fOccupancyCanvas->GetName(), TObject::kOverwrite );
     fResultFile->Flush();
 }
+
+// State machine control functions
+
+void Calibration::ConfigureCalibration()
+{
+    
+    // second parameter disables stub logic on CBC3
+    // theCalibration_.Initialise ( cAllChan, true );
+    Initialise ( true, true );
+
+}
+
+void Calibration::Start(int currentRun)
+{
+    CreateResultDirectory ( "Results/Run_" + std::to_string(currentRun) +"_Calibration" );
+    InitResultFile ( "CalibrationResults" );
+    FindVplus();
+    FindOffsets();
+    writeObjects();
+    dumpConfigFiles();
+
+}
+
+void Calibration::Stop()
+{
+}
+
+void Calibration::Pause()
+{
+}
+
+void Calibration::Resume()
+{
+}
+

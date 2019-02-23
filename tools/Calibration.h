@@ -52,6 +52,11 @@ class Calibration : public Tool
     void FindOffsets();
     void writeObjects();
 
+    void Start(int currentRun) override;
+    void Stop() override;
+    void ConfigureCalibration() override;
+    void Pause() override;
+    void Resume() override;
 
   protected:
     // void bitwiseOffset ( int pTGroup );

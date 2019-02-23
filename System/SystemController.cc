@@ -280,7 +280,7 @@ namespace Ph2_System {
         return cNEventSize32;
     }
 
-    void SystemController::Start()
+    void SystemController::Start(int currentRun)
     {
         for (auto& cBoard : fBoardVector)
             fBeBoardInterface->Start (cBoard);
@@ -299,6 +299,28 @@ namespace Ph2_System {
     {
         for (auto& cBoard : fBoardVector)
             fBeBoardInterface->Resume (cBoard);
+    }
+
+    void SystemController::ConfigureHardware(std::string cHWFile)
+    {
+
+        std::stringstream outp;
+        InitializeHw ( cHWFile, outp );
+        InitializeSettings ( cHWFile, outp );
+        LOG (INFO) << outp.str();
+        outp.str ("");
+        ConfigureHw();
+
+    }
+
+    void SystemController::ConfigureCalibration()
+    {
+    }
+
+    void SystemController::Configure(std::string cHWFile)
+    {
+        ConfigureHardware(cHWFile);
+        ConfigureCalibration();
     }
 
     void SystemController::Start (BeBoard* pBoard)

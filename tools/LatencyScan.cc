@@ -5,11 +5,18 @@ LatencyScan::LatencyScan() : Tool()
 
 LatencyScan::~LatencyScan() {}
 
-void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange, bool pNoTdc)
+void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange)
 {
     for ( auto& cBoard : fBoardVector )
     {
         uint32_t cBoardId = cBoard->getBeId();
+
+        TH1F* cTriggerTDC = new TH1F ( Form ( "h_BeBoard_triggerTDC_Be%d", cBoardId ), Form ( "Trigger TDC BE%d; Trigger TDC; # of Hits", cBoardId ), fTDCBins, -0.5, fTDCBins-0.5);
+
+        cTriggerTDC->SetFillColor ( 4 );
+        cTriggerTDC->SetFillStyle ( 3001 );
+        bookHistogram ( cBoard, "triggerTDC", cTriggerTDC );
+
 
         for ( auto& cFe : cBoard->fModuleVector )
         {
@@ -28,27 +35,10 @@ void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange, bo
             if ( cObj ) delete cObj;
 
             TH1F* cLatHist = nullptr;
-            if (!pNoTdc)
-            {
-                cLatHist = new TH1F ( cName, Form ( "Latency FE%d; Latency; # of Hits", cFeId ), (pLatencyRange ) * fTDCBins, pStartLatency,  pStartLatency + (pLatencyRange )  * fTDCBins );
-                //modify the axis labels
-                uint32_t pLabel = pStartLatency;
+            
+            cLatHist = new TH1F ( cName, Form ( "Latency FE%d; Latency; # of Hits", cFeId ), (pLatencyRange ) , pStartLatency - 0.5,  pStartLatency + (pLatencyRange ) - 0.5 );
 
-                for (uint32_t cLatency = pStartLatency; cLatency < pStartLatency + pLatencyRange; ++cLatency)
-                {
-                    for (uint32_t cPhase = 0; cPhase < fTDCBins; ++cPhase)
-                    {
-                        int cBin = 1 + cLatHist->GetXaxis()->FindBin( convertLatencyPhase (pStartLatency, cLatency, cPhase) );
-                        if( cBin == 0 )
-                            LOG(INFO) << BOLDRED << "!!!! " << +cLatency << " [latency], " << pStartLatency << " [start latency] " << +cPhase << " [TDC phase] : converted latency " << convertLatencyPhase (pStartLatency, cLatency, cPhase) <<  RESET ; 
-                        cLatHist->GetXaxis()->SetBinLabel (cBin, Form ("%d+%d", cLatency, cPhase) );
-                    }
-                }
-            }
-            else
-                cLatHist = new TH1F ( cName, Form ( "Latency FE%d; Latency; # of Hits", cFeId ), (pLatencyRange ) , pStartLatency - 0.5,  pStartLatency + (pLatencyRange ) - 0.5 );
-
-            cLatHist->GetXaxis()->SetTitle (Form ("Signal timing (reverse time) [TriggerLatency*%d+TDC]", fTDCBins) );
+            cLatHist->GetXaxis()->SetTitle ("Trigger Latency");
             cLatHist->SetFillColor ( 4 );
             cLatHist->SetFillStyle ( 3001 );
             bookHistogram ( cFe, "module_latency", cLatHist );
@@ -62,10 +52,6 @@ void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange, bo
             cStubHist->SetMarkerStyle ( 2 );
             bookHistogram ( cFe, "module_stub_latency", cStubHist );
 
-            cName =  Form ( "h_module_latency_tdc_2D_Fe%d", cFeId );
-            TH2I* cLatHist2D =  new TH2I ( cName, Form ( "Latency FE%d; Latency; # of Hits", cFeId ), pLatencyRange  , pStartLatency - 0.5 ,  pStartLatency + (pLatencyRange ) - 0.5 , fTDCBins , 0 , fTDCBins );
-            bookHistogram ( cFe, "module_latency_tdc_2D", cLatHist2D );
-
             cName =  Form ( "h_module_latency_2D_Fe%d", cFeId );
             TH2D* cLatencyScan2D =  new TH2D ( cName, Form ( "Latency FE%d; Stub Latency; L1 Latency; # of Events w/ no Hits and no Stubs", cFeId ), pLatencyRange  , pStartLatency - 0.5 ,  pStartLatency + (pLatencyRange ) - 0.5 , pLatencyRange  , pStartLatency - 0.5 ,  pStartLatency + (pLatencyRange ) - 0.5 );
             bookHistogram ( cFe, "module_latency_2D", cLatencyScan2D );
@@ -77,66 +63,77 @@ void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange, bo
     LOG (INFO) << "Histograms and Settings initialised." ;
 }
 
-std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uint8_t pLatencyRange, bool pNoTdc )
+
+void LatencyScan::MeasureTriggerTDC()
 {
-    // This is not super clean but should work
-    // Take the default VCth which should correspond to the pedestal and add 8 depending on the mode to exclude noise
-    // ThresholdVisitor in read mode
-    //ThresholdVisitor cThresholdVisitor (fCbcInterface);
-    //this->accept (cThresholdVisitor);
-    //uint16_t cVcth = cThresholdVisitor.getThreshold();
+    LOG (INFO) << "Measuring Trigger TDC ... " ;
 
-    //int cVcthStep = ( fHoleMode == 1 ) ? +10 : -10;
-    //LOG (INFO) << "VCth value from config file is: " << +cVcth << " ;  changing by " << cVcthStep << "  to " << + ( cVcth + cVcthStep ) << " supress noise hits for crude latency scan!" ;
-    //cVcth += cVcthStep;
+    std::map<uint16_t, std::vector<uint16_t> > BeBoardTriggerTDCMap;
+    // Take Data for all Modules
+    for ( BeBoard* pBoard : fBoardVector )
+    {
+        // I need this to normalize the TDC values I get from the Strasbourg FW
+        BeBoardTriggerTDCMap[pBoard->getBeId()] = std::vector<uint16_t>(fTDCBins,0);
 
-    ////  Set that VCth Value on all FEs
-    //cThresholdVisitor.setOption ('w');
-    //cThresholdVisitor.setThreshold (cVcth);
-    //this->accept (cThresholdVisitor);
+        ReadNEvents ( pBoard, fNevents );
 
-    // Now the actual scan
+        const std::vector<Event*>& events = GetEvents ( pBoard );
+
+        for (auto& cEvent : events)
+        {
+
+            uint8_t cTDCVal = cEvent->GetTDC();
+
+            if (pBoard->getBoardType() == BoardType::D19C) {
+                // Fix from Mykyta, ONLY the value of the cTDCShiftValue variable have to be changed, NEVER change the formula
+                uint8_t cTDCShiftValue = 1;
+                // don't touch next two lines (!!!)
+                if ( cTDCVal < cTDCShiftValue ) cTDCVal += (fTDCBins-cTDCShiftValue);
+                else cTDCVal -= cTDCShiftValue;
+            }
+            if (cTDCVal >= fTDCBins ) LOG (INFO) << "ERROR, TDC value not within expected range - normalized value is " << +cTDCVal << " - original Value was " << +cEvent->GetTDC() << "; not considering this Event!" <<  std::endl;
+            else
+            {
+                ++BeBoardTriggerTDCMap[pBoard->getBeId()][cTDCVal];
+            }
+        }
+    }
+
+    for ( BeBoard* pBoard : fBoardVector ){
+        TH1F* cTmpHist = dynamic_cast<TH1F*> ( getHist ( pBoard, "triggerTDC" ) );
+        for(int tdcValue = 0; tdcValue<fTDCBins; ++tdcValue)
+        {
+            cTmpHist->SetBinContent(tdcValue+1, BeBoardTriggerTDCMap[pBoard->getBeId()][tdcValue]);
+        }
+    }
+
+    return;
+}
+
+
+std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uint8_t pLatencyRange)
+{    
+
     LOG (INFO) << "Scanning Latency ... " ;
     uint32_t cIterationCount = 0;
 
     LatencyVisitor cVisitor (fCbcInterface, 0);
-    //fBeBoardInterface->Start(pBoard);
-    //fBeBoardInterface->Pause(pBoard);
-    for ( uint16_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++ )
+ 
+    for ( BeBoard* pBoard : fBoardVector )
     {
-        //  Set a Latency Value on all FEs
-        cVisitor.setLatency (  cLat );
-        this->accept ( cVisitor );
-
-
-        // Take Data for all Modules
-        for ( BeBoard* pBoard : fBoardVector )
+        for ( uint16_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++ )
         {
-            // I need this to normalize the TDC values I get from the Strasbourg FW
-            int cNevents; 
-            fBeBoardInterface->Start(pBoard);
-            do
-            {
-                uint32_t cNeventsReadBack = ReadData( pBoard );
-                if( cNeventsReadBack == 0 )
-                {
-                    LOG (INFO) << BOLDRED << "..... Read back " << +cNeventsReadBack << " events!! Why?!" << RESET ;
-                    continue;
-                }
+            //  Set a Latency Value on all FEs
+            cVisitor.setLatency (  cLat );
+            this->accept ( cVisitor );
 
-                const std::vector<Event*>& events = GetEvents ( pBoard );
-                cNevents += events.size(); 
-                // Loop over Events from this Acquisition
-                countHitsLat ( pBoard, events, "module_latency", cLat, pStartLatency, pNoTdc );
-                // done counting hits for all FE's, now update the Histograms
-                updateHists ( "module_latency", false );
-            }while( cNevents < fNevents );
-            fBeBoardInterface->Stop(pBoard);
+            ReadNEvents ( pBoard, fNevents );
 
-            //ReadNEvents ( pBoard, fNevents );
-            //const std::vector<Event*>& events = GetEvents ( pBoard );
-            //Loop over Events from this Acquisition
-            //countHitsLat ( pBoard, events, "module_latency", cLat, pStartLatency, pNoTdc );
+            const std::vector<Event*>& events = GetEvents ( pBoard );
+            countHitsLat ( pBoard, events, "module_latency", cLat, pStartLatency);
+            // done counting hits for all FE's, now update the Histograms
+            updateHists ( "module_latency", false );
+
         }
 
         // done counting hits for all FE's, now update the Histograms
@@ -148,19 +145,6 @@ std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uin
     // analyze the Histograms
     std::map<Module*, uint8_t> cLatencyMap;
 
-    //LOG(INFO) << "Identified the Latency with the maximum number of Hits at: " ;
-
-    //for ( auto cFe : fModuleHistMap )
-    //{
-    //TH1F* cTmpHist = ( TH1F* ) getHist ( static_cast<Ph2_HwDescription::Module*> ( cFe.first ), "module_latency" );
-    ////the true latency now is the floor(iBin/8)
-    //uint8_t cLatency =  static_cast<uint8_t> ( floor ( (cTmpHist->GetMaximumBin() - 1 ) / 8) );
-    //cLatencyMap[cFe.first] = cLatency;
-    //cWriter.setRegister ( "TriggerLatency", cLatency );
-    //this->accept ( cWriter );
-
-    //LOG(INFO) << "    FE " << +cFe.first->getModuleId()  << ": " << +cLatency << " clock cycles!" ;
-    //}
     updateHists ( "module_latency", true );
 
     return cLatencyMap;
@@ -191,14 +175,14 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
     // Now the actual scan
     LOG (INFO) << "Scanning Stub Latency ... " ;
 
-    for ( uint8_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++ )
+    for ( BeBoard* pBoard : fBoardVector )
     {
-        uint32_t cN = 0;
-        int cNStubs = 0;
-        uint32_t cNevents = 0 ;
-        // Take Data for all Modules
-        for ( BeBoard* pBoard : fBoardVector )
+        for ( uint8_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++ )
         {
+            uint32_t cN = 0;
+            int cNStubs = 0;
+            uint32_t cNevents = 0 ;
+        // Take Data for all Modules
             //here set the stub latency
             for (auto cReg : getStubLatencyName (pBoard->getBoardType() ) )
                 fBeBoardInterface->WriteBoardReg (pBoard, cReg, cLat);
@@ -272,7 +256,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
     return cStubLatencyMap;
 }
 
-void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange, bool pNoTdc )
+void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
 {
     
     LatencyVisitor cVisitor (fCbcInterface, 0);
@@ -428,10 +412,14 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange, bo
 
 //////////////////////////////////////          PRIVATE METHODS             //////////////////////////////////////
 
+// int LatencyScan::countHits ( BeBoard* pBoard,  const std::vector<Event*> pEventVec, std::map<uint8_t, std::map<uint8_t,uint32_t> > numberOfHits, std::map<uint8_t,uint32_t> > numberOfStubs)
+// {
 
-int LatencyScan::countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency, bool pNoTdc)
+// }
+
+int LatencyScan::countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency)
 {
-    BoardType cBoardType = pBoard->getBoardType();
+    
     uint32_t cTotalHits = 0;
 
     for ( auto cFe : pBoard->fModuleVector )
@@ -439,72 +427,27 @@ int LatencyScan::countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEve
         uint32_t cHitSum = 0;
         //  get histogram to fill
         TH1F* cTmpHist = dynamic_cast<TH1F*> ( getHist ( cFe, pHistName ) );
-        TString cName =  Form ( "h_module_latency_tdc_2D_Fe%d", cFe->getFeId() );
-        TH2I* cTmpHist2D = dynamic_cast<TH2I*> ( getHist ( cFe, "module_latency_tdc_2D" ) );
         for (auto& cEvent : pEventVec)
         {
             //first, reset the hit counter - I need separate counters for each event
             int cHitCounter = 0;
-            //get TDC value for this particular event
-            uint8_t cTDCVal = cEvent->GetTDC();
-            //if the TDC value for the GLIB is 4 it belongs to the next clock cycle bin 12
-            //this should ensure that TDC value of 4 never happens
-            uint8_t cFillVal = pParameter;
-
-            if (cTDCVal == 4 && cBoardType == BoardType::GLIB)
-            {
-                cFillVal += 1;
-                cTDCVal = 12;
-            }
-
-            //for Strasbourg FW normalize to sane 3 bit values
-            if (cTDCVal != 0 && cBoardType == BoardType::GLIB) cTDCVal -= 5;
-            else if (cTDCVal != 0 && cBoardType == BoardType::CTA) cTDCVal -= 3;
             
-            if ( !pNoTdc && cBoardType == BoardType::D19C) {
-                // Fix from Mykyta, ONLY the value of the cTDCShiftValue variable have to be changed, NEVER change the formula
-                uint8_t cTDCShiftValue = 1;
-                // don't touch next two lines (!!!)
-                if ( cTDCVal < cTDCShiftValue ) cTDCVal += (8-cTDCShiftValue);
-                else cTDCVal -= cTDCShiftValue;
-            }
-
-            if (!pNoTdc && cTDCVal > 8 ) LOG (INFO) << "ERROR, TDC value not within expected range - normalized value is " << +cTDCVal << " - original Value was " << +cEvent->GetTDC() << "; not considering this Event!" <<  std::endl;
-            else
+            for ( auto cCbc : cFe->fCbcVector )
             {
-                for ( auto cCbc : cFe->fCbcVector )
-                {
-                    //now loop the channels for this particular event and increment a counter
-                    cHitCounter += cEvent->GetNHits (cCbc->getFeId(), cCbc->getCbcId() );
-                }
-
-                //now I have the number of hits in this particular event for all CBCs and the TDC value
-                uint32_t cBin = 0;
-
-                if (pNoTdc)
-                { 
-                    cTmpHist->Fill (pParameter, cHitCounter);
-                }
-                else 
-                {    
-                    cBin = convertLatencyPhase (pStartLatency, cFillVal, cTDCVal);
-                
-                    int cHistBin = 1 + cTmpHist->FindBin (cBin);
-                    float cBinContent = cTmpHist->GetBinContent (cHistBin);
-                    cBinContent += cHitCounter;
-                    cTmpHist->SetBinContent (cHistBin, cBinContent);
-                }
-                //if (cHitCounter != 0 ) std::cout << "Found " << cHitCounter << " Hits in this event!" << std::endl;
-
-                //GA: old, potentially buggy code
-                //cTmpHist->Fill (cBin, cHitCounter);
-
-                if( cHitCounter )
-                    LOG (DEBUG) << BOLDBLUE << "TDC value of " << +cTDCVal << RESET ; 
-                cTmpHist2D->Fill( pParameter , cTDCVal , cHitCounter );
-
-                cHitSum += cHitCounter;
+                //now loop the channels for this particular event and increment a counter
+                cHitCounter += cEvent->GetNHits (cCbc->getFeId(), cCbc->getCbcId() );
             }
+
+            //now I have the number of hits in this particular event for all CBCs and the TDC value
+            
+            cTmpHist->Fill (pParameter, cHitCounter);
+            
+            //if (cHitCounter != 0 ) std::cout << "Found " << cHitCounter << " Hits in this event!" << std::endl;
+
+            //GA: old, potentially buggy code
+            //cTmpHist->Fill (cBin, cHitCounter);
+
+            cHitSum += cHitCounter;
         }
 
         LOG (INFO) << "FE: " << +cFe->getFeId() << "; Latency " << +pParameter << " clock cycles; Hits " << cHitSum  << "; Events " << fNevents ;

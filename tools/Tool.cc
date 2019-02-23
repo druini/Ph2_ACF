@@ -57,6 +57,7 @@ Tool::Tool (const Tool& pTool)
     fCanvasMap = pTool.fCanvasMap;
     fCbcHistMap = pTool.fCbcHistMap;
     fModuleHistMap = pTool.fModuleHistMap;
+    fBeBoardHistMap = pTool.fBeBoardHistMap;
     fTestGroupChannelMap = pTool.fTestGroupChannelMap;
 }
 
@@ -81,6 +82,7 @@ void Tool::Inherit (Tool* pTool)
     fCanvasMap = pTool->fCanvasMap;
     fCbcHistMap = pTool->fCbcHistMap;
     fModuleHistMap = pTool->fModuleHistMap;
+    fBeBoardHistMap = pTool->fBeBoardHistMap;
     fTestGroupChannelMap = pTool->fTestGroupChannelMap;
 }
 
@@ -114,6 +116,7 @@ void Tool::Destroy()
     fCanvasMap.clear();
     fCbcHistMap.clear();
     fModuleHistMap.clear();
+    fBeBoardHistMap.clear();
     fTestGroupChannelMap.clear();
 }
 
@@ -131,6 +134,7 @@ void Tool::SoftDestroy()
     fCanvasMap.clear();
     fCbcHistMap.clear();
     fModuleHistMap.clear();
+    fBeBoardHistMap.clear();
     fTestGroupChannelMap.clear();
 }
 
@@ -188,6 +192,33 @@ void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject 
 #endif
 }
 
+void Tool::bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObject )
+{
+    // find or create map<string,TOBject> for specific CBC
+    auto cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
+
+    if ( cBeBoardHistMap == std::end ( fBeBoardHistMap ) )
+    {
+        LOG (INFO) << "Histo Map for Module " << int ( pBeBoard->getBeId() ) << " does not exist - creating " ;
+        std::map<std::string, TObject*> cTempModuleMap;
+
+        fBeBoardHistMap[pBeBoard] = cTempModuleMap;
+        cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
+    }
+
+    // find histogram with given name: if it exists, delete the object, if not create
+    auto cHisto = cBeBoardHistMap->second.find ( pName );
+
+    if ( cHisto != std::end ( cBeBoardHistMap->second ) ) cBeBoardHistMap->second.erase ( cHisto );
+
+    cBeBoardHistMap->second[pName] = pObject;
+#ifdef __HTTP__
+
+    if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
+
+#endif
+}
+
 TObject* Tool::getHist ( Cbc* pCbc, std::string pName )
 {
     auto cCbcHistMap = fCbcHistMap.find ( pCbc );
@@ -233,8 +264,41 @@ TObject* Tool::getHist ( Module* pModule, std::string pName )
     }
 }
 
+TObject* Tool::getHist ( BeBoard* pBeBoard, std::string pName )
+{
+    auto cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
+
+    if ( cBeBoardHistMap == std::end ( fBeBoardHistMap ) )
+    {
+        LOG (ERROR) << RED << "Error: could not find the Histograms for Module " << int ( pBeBoard->getBeId() ) << RESET ;
+        return nullptr;
+    }
+    else
+    {
+        auto cHisto = cBeBoardHistMap->second.find ( pName );
+
+        if ( cHisto == std::end ( cBeBoardHistMap->second ) )
+        {
+            LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
+            return nullptr;
+        }
+        else return cHisto->second;
+    }
+}
+
 void Tool::SaveResults()
 {
+    for ( const auto& cBeBoard : fBeBoardHistMap )
+    {
+
+        fResultFile->cd();
+
+        for ( const auto& cHist : cBeBoard.second )
+            cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
+
+        fResultFile->cd();
+    }
+
     // Now per FE
     for ( const auto& cFe : fModuleHistMap )
     {

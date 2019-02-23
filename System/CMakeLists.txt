@@ -20,6 +20,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils)
     TARGET_LINK_LIBRARIES(Ph2_System ${LIBS})
 
+
 else()
 
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/uhal/uhal/include)

@@ -77,14 +77,19 @@ endif()
 ####################################
 
 #miniDAQ
-add_executable(miniDAQ miniDAQ.cc publisher.cc publisher.h DQMEvent.h DQMEvent.cc SLinkDQMHistogrammer.cc SLinkDQMHistogrammer.cc)
+add_executable(miniDAQ miniDAQ.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.h ../DQMUtils/DQMEvent.cc ../DQMUtils/SLinkDQMHistogrammer.cc ../DQMUtils/SLinkDQMHistogrammer.cc)
 target_link_libraries(miniDAQ ${LIBS} RootWeb)
 
 #miniDQM
-add_executable(miniDQM miniDQM.cc publisher.cc publisher.h DQMHistogrammer.cc DQMHistogrammer.h)
+add_executable(miniDQM miniDQM.cc publisher.cc publisher.h ../DQMUtils/DQMHistogrammer.cc ../DQMUtils/DQMHistogrammer.h)
 target_link_libraries(miniDQM ${LIBS} Ph2_Tools RootWeb)
 
 #miniSLinkDQM
-add_executable(miniSLinkDQM miniSLinkDQM.cc publisher.cc publisher.h DQMEvent.h DQMEvent.cc SLinkDQMHistogrammer.cc SLinkDQMHistogrammer.h)
+add_executable(miniSLinkDQM miniSLinkDQM.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.h ../DQMUtils/DQMEvent.cc ../DQMUtils/SLinkDQMHistogrammer.cc ../DQMUtils/SLinkDQMHistogrammer.h)
 target_link_libraries(miniSLinkDQM ${LIBS} RootWeb)
+
+#RunController
+add_executable(RunController RunController.cc MiddlewareController.cc)
+target_link_libraries(RunController ${LIBS} Ph2_Tools)
+
 

@@ -43,17 +43,18 @@ class LatencyScan : public Tool
   public:
     LatencyScan();
     ~LatencyScan();
-    void Initialize (uint32_t pStartLatency, uint32_t pLatencyRange, bool pNoTdc = false);
-    std::map<Module*, uint8_t> ScanLatency ( uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20, bool pNoTdc = false );
+    void Initialize (uint32_t pStartLatency, uint32_t pLatencyRange);
+    std::map<Module*, uint8_t> ScanLatency ( uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
     std::map<Module*, uint8_t> ScanStubLatency ( uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20 );
-    void ScanLatency2D(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20, bool pNoTdc = false );
+    void MeasureTriggerTDC();
+    void ScanLatency2D(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
 
     void writeObjects();
     
 
   private:
-    int countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency, bool pNoTdc );
-    int countHits ( Module* pFe,  const Event* pEvent, std::string pHistName, uint8_t pParameter );
+    int countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency);
+    // int countHits ( Module* pFe,  const Event* pEvent, std::string pHistName, uint8_t pParameter );
     int countStubs ( Module* pFe,  const Event* pEvent, std::string pHistName, uint8_t pParameter );
     void updateHists ( std::string pHistName, bool pFinal );
     void parseSettings();

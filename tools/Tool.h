@@ -40,6 +40,8 @@ class Tool : public SystemController
 
     using CbcHistogramMap = std::map<Cbc*, std::map<std::string, TObject*> >;
     using ModuleHistogramMap = std::map<Module*, std::map<std::string, TObject*> >;
+    using BeBoardHistogramMap = std::map<BeBoard*, std::map<std::string, TObject*> >;
+
     using CanvasMap = std::map<Ph2_HwDescription::FrontEndDescription*, TCanvas*>;
     using TestGroupChannelMap =  std::map< int, std::vector<uint8_t> >;
 
@@ -55,6 +57,7 @@ class Tool : public SystemController
     CanvasMap fCanvasMap;
     CbcHistogramMap fCbcHistMap;
     ModuleHistogramMap fModuleHistMap;
+    BeBoardHistogramMap fBeBoardHistMap;
     ChipType fType;
     TestGroupChannelMap fTestGroupChannelMap;
     std::map< int, std::vector<uint8_t> > fMaskForTestGroupChannelMap;
@@ -84,9 +87,13 @@ class Tool : public SystemController
 
     void bookHistogram ( Module* pModule, std::string pName, TObject* pObject );
 
+    void bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObject );
+
     TObject* getHist ( Cbc* pCbc, std::string pName );
 
     TObject* getHist ( Module* pModule, std::string pName );
+    
+    TObject* getHist ( BeBoard* pBeBoard, std::string pName );
 
     void SaveResults();
 
