@@ -329,7 +329,7 @@ namespace Ph2_System {
                                 if (cCbc->getCbcId() != cCbcId) continue;
                                 else if (cCbc->getFeId() == cFeId && cCbc->getCbcId() == cCbcId)
                                 {
-                                    CbcRegItem cRegItem = cCbc->getRegItem ( cRegName );
+                                    ChipRegItem cRegItem = cCbc->getRegItem ( cRegName );
                                     cPage = cRegItem.fPage;
                                     cAddress = cRegItem.fAddress;
                                     cValue = cRegItem.fValue;

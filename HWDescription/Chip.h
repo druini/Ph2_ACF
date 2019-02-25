@@ -1,7 +1,7 @@
 /*!
 
-        \file                   Cbc.h
-        \brief                  Cbc Description class, config of the Cbcs
+        \file                   Chip.h
+        \brief                  Chip Description class, config of the Chips
         \author                 Lorenzo BIDEGAIN
         \version                1.0
         \date                   25/06/14
@@ -10,10 +10,11 @@
  */
 
 
-#ifndef Cbc_h__
-#define Cbc_h__
+#ifndef Chip_h__
+#define Chip_h__
 
 #include "FrontEndDescription.h"
+#include "ChipRegItem.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
 #include <iostream>
@@ -23,9 +24,8 @@
 #include <utility>
 #include <set>
 #include "../Utils/easylogging++.h"
-#include "ChipRegItem.h"
 
-// Cbc2 Chip HW Description Class
+// Chip2 Chip HW Description Class
 
 
 /*!
@@ -34,34 +34,34 @@
  */
 namespace Ph2_HwDescription {
 
-    using CbcRegMap = std::map < std::string, ChipRegItem >;
-    using CbcRegPair = std::pair <std::string, ChipRegItem>;
+    using ChipRegMap = std::map < std::string, ChipRegItem >;
+    using ChipRegPair = std::pair <std::string, ChipRegItem>;
     using CommentMap = std::map <int, std::string>;
 
     /*!
-     * \class Cbc
-     * \brief Read/Write Cbc's registers on a file, contains a register map
+     * \class Chip
+     * \brief Read/Write Chip's registers on a file, contains a register map
      */
-    class Cbc : public FrontEndDescription
+    class Chip : public FrontEndDescription
     {
 
       public:
 
-        // C'tors which take BeId, FMCId, FeID, CbcId
-        Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename );
+        // C'tors which take BeId, FMCId, FeID, ChipId
+        Chip ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, const std::string& filename );
 
         // C'tors with object FE Description
-        Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename );
-        Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename, ChipType pType );
+        Chip ( const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string& filename );
+        Chip ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, const std::string& filename, ChipType pType );
 
         // Default C'tor
-        Cbc();
+        Chip();
 
         // Copy C'tor
-        Cbc ( const Cbc& cbcobj );
+        Chip ( const Chip& cbcobj );
 
         // D'Tor
-        ~Cbc();
+        ~Chip();
 
         /*!
          * \brief acceptor method for HwDescriptionVisitor
@@ -69,7 +69,7 @@ namespace Ph2_HwDescription {
          */
         void accept ( HwDescriptionVisitor& pVisitor )
         {
-            //LOREpVisitor.visit ( *this );
+            pVisitor.visit ( *this );
         }
         // void accept( HwDescriptionVisitor& pVisitor ) const {
         //  pVisitor.visit( *this );
@@ -108,41 +108,41 @@ namespace Ph2_HwDescription {
         * \brief Get the Map of the registers
         * \return The map of register
         */
-        CbcRegMap& getRegMap()
+        ChipRegMap& getRegMap()
         {
             return fRegMap;
         }
-        const CbcRegMap& getRegMap() const
+        const ChipRegMap& getRegMap() const
         {
             return fRegMap;
         }
         /*!
-        * \brief Get the Cbc Id
-        * \return The Cbc ID
+        * \brief Get the Chip Id
+        * \return The Chip ID
         */
-        uint8_t getCbcId() const
+        uint8_t getChipId() const
         {
-            return fCbcId;
+            return fChipId;
         }
         /*!
-         * \brief Set the Cbc Id
-         * \param pCbcId
+         * \brief Set the Chip Id
+         * \param pChipId
          */
-        void setCbcId ( uint8_t pCbcId )
+        void setChipId ( uint8_t pChipId )
         {
-            fCbcId = pCbcId;
+            fChipId = pChipId;
         }
 
         const uint16_t getNumberOfChannels() const { return NCHANNELS; }
 
-        const uint32_t* getCbcmask() const 
+        const uint32_t* getChipmask() const
         {
-            return fCbcMask32;
+            return fChipMask32;
         }
 
-        const std::vector<uint8_t>& getCbcMask() const
+        const std::vector<uint8_t>& getChipMask() const
         {
-            return fCbcMask;
+            return fChipMask;
         }
         const bool asMaskedChannels() const
         {
@@ -166,26 +166,26 @@ namespace Ph2_HwDescription {
       protected:
 
         // uint16_t fNumberOfChannels;
-        uint8_t fCbcId;
+        uint8_t fChipId;
         bool fAsMaskedChannels;
 
         // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value
-        CbcRegMap fRegMap;
+        ChipRegMap fRegMap;
         CommentMap fCommentMap;
-        std::vector<uint8_t> fCbcMask = std::vector<uint8_t>(32,0);
-        uint32_t fCbcMask32[8]; //mask is stored in 8 uint32
+        std::vector<uint8_t> fChipMask = std::vector<uint8_t>(32,0);
+        uint32_t fChipMask32[8]; //mask is stored in 8 uint32
 
     };
 
 
     /*!
-     * \struct CbcComparer
-     * \brief Compare two Cbc by their ID
+     * \struct ChipComparer
+     * \brief Compare two Chip by their ID
      */
-    struct CbcComparer
+    struct ChipComparer
     {
 
-        bool operator() ( const Cbc& cbc1, const Cbc& cbc2 ) const;
+        bool operator() ( const Chip& cbc1, const Chip& cbc2 ) const;
 
     };
 
@@ -193,10 +193,10 @@ namespace Ph2_HwDescription {
      * \struct RegItemComparer
      * \brief Compare two pair of Register Name Versus ChipRegItem by the Page and Adress of the ChipRegItem
      */
-    struct CbcRegItemComparer
+    struct RegItemComparer
     {
 
-        bool operator() ( const CbcRegPair& pRegItem1, const CbcRegPair& pRegItem2 ) const;
+        bool operator() ( const ChipRegPair& pRegItem1, const ChipRegPair& pRegItem2 ) const;
 
     };
 

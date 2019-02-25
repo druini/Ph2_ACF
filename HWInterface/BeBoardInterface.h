@@ -12,7 +12,7 @@
 *
 * \section intro_sec Introduction
 *
-* The ACF middleware users should only use a BeBoardInterface( and a CbcInterface ) object and pass to its functions Hardware Description object pointers( from HWDescription namespace ) as arguments.
+* The ACF middleware users should only use a BeBoardInterface( and a ChipInterface ) object and pass to its functions Hardware Description object pointers( from HWDescription namespace ) as arguments.
 * \image html uml.png
 * \section structure_sec Project structure
 * The project compiles into the 5 following dynamic libraries
@@ -20,12 +20,12 @@
 * \subsection lib1 HWDescription
 * Hardware description of the boards, containing the modules, containing the CBC chips.\n
 * The objects are:
-FrontEndDescription, BeBoard, Cbc, Module
+FrontEndDescription, BeBoard, Chip, Module
 
 * \subsection lib2 HWInterface
 * Hardware interface seen by the ACF middleware users. \n
 * Classes:
-RegManager, BeBoardFWInterface, GlibFWInterface, CbcInterface, BeBoardInterface, FpgaConfig
+RegManager, BeBoardFWInterface, GlibFWInterface, ChipInterface, BeBoardInterface, FpgaConfig
 *
 * \subsection lib3 System
 * Base class derivated by all command line tools from the src directory.\n
@@ -162,26 +162,26 @@ namespace Ph2_HwInterface {
         void ConfigureBoard ( const BeBoard* pBoard );
 
         /*!
-         * \brief Hard reset of all Cbc
-         * \param pCbc
+         * \brief Hard reset of all Chip
+         * \param pChip
          */
-        void CbcHardReset ( const BeBoard* pBoard );
+        void ChipHardReset ( const BeBoard* pBoard );
         /*!
-         * \brief Fast Reset of the Cbc
-         * \param pCbc
+         * \brief Fast Reset of the Chip
+         * \param pChip
          */
-        void CbcFastReset ( const BeBoard* pBoard );
+        void ChipFastReset ( const BeBoard* pBoard );
         /*!
-         * \brief Send Cbc Trigger
-         * \param pCbc
+         * \brief Send Chip Trigger
+         * \param pChip
          */
-        void CbcTrigger ( const BeBoard* pBoard );
+        void ChipTrigger ( const BeBoard* pBoard );
 
         /*!
-         * \brief Send Cbc TestPulse
-         * \param pCbc
+         * \brief Send Chip TestPulse
+         * \param pChip
          */
-        void CbcTestPulse ( const BeBoard* pBoard );
+        void ChipTestPulse ( const BeBoard* pBoard );
 
         /*!
          * \brief Start a DAQ

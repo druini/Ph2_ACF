@@ -205,10 +205,10 @@ namespace Ph2_HwInterface {
         * \param pCbcId : Id of the Cbc to work with
         * \param pVecReq : Vector to stack the encoded words
         */
-        void EncodeReg ( const CbcRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
-        void EncodeReg ( const CbcRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
-        void BCEncodeReg ( const CbcRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) override;
-        void DecodeReg ( CbcRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
+        void EncodeReg ( const ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
+        void EncodeReg ( const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
+        void BCEncodeReg ( const ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) override;
+        void DecodeReg ( ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
 
         //Encode/Decode MPA/SSA values
         void EncodeReg ( const RegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Cbc*/\

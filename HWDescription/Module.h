@@ -13,7 +13,7 @@
 #define Module_h__
 
 #include "FrontEndDescription.h"
-#include "Cbc.h"
+#include "Chip.h"
 #include "MPA.h"
 #include "SSA.h"
 #include "../Utils/Visitor.h"
@@ -32,7 +32,7 @@ namespace Ph2_HwDescription {
 
     /*!
      * \class Module
-     * \brief handles a vector of Cbc which are connected to the Module
+     * \brief handles a vector of Chip which are connected to the Module
      */
     class Module : public FrontEndDescription
     {
@@ -49,10 +49,10 @@ namespace Ph2_HwDescription {
         // D'tor
         ~Module()
         {
-            for ( auto& pCbc : fCbcVector )
-                if (pCbc) delete pCbc;
+            for ( auto& pChip : fChipVector )
+                if (pChip) delete pChip;
 
-            fCbcVector.clear();
+            fChipVector.clear();
 
             for ( auto& pMPA : fMPAVector )
                 delete pMPA;
@@ -72,21 +72,21 @@ namespace Ph2_HwDescription {
         {
             pVisitor.visit ( *this );
 
-            for ( Cbc* cCbc : fCbcVector )
-                cCbc->accept ( pVisitor );
+            for ( Chip* cChip : fChipVector )
+                cChip->accept ( pVisitor );
         }
         // void accept( HwDescriptionVisitor& pVisitor ) const {
         //  pVisitor.visit( *this );
-        //  for ( auto& cCbc : fCbcVector )
-        //      cCbc.accept( pVisitor );
+        //  for ( auto& cChip : fChipVector )
+        //      cChip.accept( pVisitor );
         // }
         /*!
-        * \brief Get the number of Cbc connected to the Module
+        * \brief Get the number of Chip connected to the Module
         * \return The size of the vector
         */
-        uint8_t getNCbc() const
+        uint8_t getNChip() const
         {
-            return fCbcVector.size();
+            return fChipVector.size();
         }
 
 
@@ -101,40 +101,40 @@ namespace Ph2_HwDescription {
         }
 
         /*!
-         * \brief Adding a Cbc to the vector
-         * \param pCbc
+         * \brief Adding a Chip to the vector
+         * \param pChip
          */
-        void addCbc ( Cbc& pCbc )
+        void addChip ( Chip& pChip )
         {
-            //get the ChipType of the Cbc and set the module one accordingly
-            //this is the case when no chip type has been set so get the one from the Cbc
+            //get the ChipType of the Chip and set the module one accordingly
+            //this is the case when no chip type has been set so get the one from the Chip
             if (fType == ChipType::UNDEFINED)
-                fType = pCbc.getChipType();
-            //else, the chip type has already been set - if it is different from another Cbc, rais a warning
+                fType = pChip.getChipType();
+            //else, the chip type has already been set - if it is different from another Chip, rais a warning
             //no different chips should be on a module
-            else if (fType != pCbc.getChipType() )
+            else if (fType != pChip.getChipType() )
             {
                 LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
                 exit (1);
             }
 
-            fCbcVector.push_back ( &pCbc );
+            fChipVector.push_back ( &pChip );
         }
-        void addCbc ( Cbc* pCbc )
+        void addChip ( Chip* pChip )
         {
-            //get the ChipType of the Cbc and set the module one accordingly
-            //this is the case when no chip type has been set so get the one from the Cbc
+            //get the ChipType of the Chip and set the module one accordingly
+            //this is the case when no chip type has been set so get the one from the Chip
             if (fType == ChipType::UNDEFINED)
-                fType = pCbc->getChipType();
-            //else, the chip type has already been set - if it is different from another Cbc, rais a warning
+                fType = pChip->getChipType();
+            //else, the chip type has already been set - if it is different from another Chip, rais a warning
             //no different chips should be on a module
-            else if (fType != pCbc->getChipType() )
+            else if (fType != pChip->getChipType() )
             {
                 LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
                 exit (1);
             }
 
-            fCbcVector.push_back ( pCbc );
+            fChipVector.push_back ( pChip );
         }
 
         void addMPA ( MPA& pMPA )
@@ -148,17 +148,17 @@ namespace Ph2_HwDescription {
 
 
         /*!
-         * \brief Remove a Cbc from the vector
-         * \param pCbcId
+         * \brief Remove a Chip from the vector
+         * \param pChipId
          * \return a bool which indicate if the removing was successful
          */
-        bool   removeCbc ( uint8_t pCbcId );
+        bool   removeChip ( uint8_t pChipId );
         /*!
-         * \brief Get a Cbc from the vector
-         * \param pCbcId
-         * \return a pointer of Cbc, so we can manipulate directly the Cbc contained in the vector
+         * \brief Get a Chip from the vector
+         * \param pChipId
+         * \return a pointer of Chip, so we can manipulate directly the Chip contained in the vector
          */
-        Cbc* getCbc ( uint8_t pCbcId ) const;
+        Chip* getChip ( uint8_t pChipId ) const;
 
 
         /*!
@@ -210,7 +210,7 @@ namespace Ph2_HwDescription {
         };
 
 
-        std::vector < Cbc* > fCbcVector;
+        std::vector < Chip* > fChipVector;
         std::vector < MPA* > fMPAVector;
         std::vector < SSA* > fSSAVector;
 

@@ -22,8 +22,8 @@
 #include "../Utils/easylogging++.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
-#include "../HWDescription/CbcRegItem.h"
-#include "../HWDescription/Cbc.h"
+#include "../HWDescription/ChipRegItem.h"
+#include "../HWDescription/Chip.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
 #include <iostream>
@@ -34,7 +34,7 @@
 using namespace Ph2_HwDescription;
 
 
-//enum class BoardType {GLIB, ICGLIB, CTA, ICFC7, CBC3FC7};
+//enum class BoardType {GLIB, ICGLIB, CTA, ICFC7, Chip3FC7};
 
 /*!
  * \namespace Ph2_HwInterface
@@ -125,90 +125,90 @@ namespace Ph2_HwInterface {
         /*! \brief Delete one Fpga configuration (or firmware image)*/
         virtual void DeleteFpgaConfig ( const std::string& strId ) {}
 
-        //Encode/Decode Cbc values
+        //Encode/Decode Chip values
         /*!
-        * \brief Encode a/several word(s) readable for a Cbc
+        * \brief Encode a/several word(s) readable for a Chip
         * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-        * \param pCbcId : Id of the Cbc to work with
+        * \param pChipId : Id of the Chip to work with
         * \param pVecReq : Vector to stack the encoded words
         */
-        virtual void EncodeReg ( const CbcRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Cbc*/
+        virtual void EncodeReg ( const ChipRegItem& pRegItem, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Chip*/
         /*!
-        * \brief Encode a/several word(s) readable for a Cbc
+        * \brief Encode a/several word(s) readable for a Chip
         * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-        * \param pCbcId : Id of the Cbc to work with
+        * \param pChipId : Id of the Chip to work with
         * \param pVecReq : Vector to stack the encoded words
         */
-        virtual void EncodeReg ( const CbcRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Cbc*/
+        virtual void EncodeReg ( const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Chip*/
         /*!
-        * \brief Encode a/several word(s) for Broadcast write to CBCs
+        * \brief Encode a/several word(s) for Broadcast write to Chips
         * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-        * \param pNCbc : number of CBCs to write to
+        * \param pNChip : number of Chips to write to
         * \param pVecReq : Vector to stack the encoded words
         */
-        virtual void BCEncodeReg ( const CbcRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) = 0; /*!< Encode a/several word(s) readable for a Cbc*/
+        virtual void BCEncodeReg ( const ChipRegItem& pRegItem, uint8_t pNChip, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) = 0; /*!< Encode a/several word(s) readable for a Chip*/
         /*!
-        * \brief Decode a word from a read of a register of the Cbc
+        * \brief Decode a word from a read of a register of the Chip
         * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to read
-        * \param pCbcId : Id of the Cbc to work with
+        * \param pChipId : Id of the Chip to work with
         * \param pWord : variable to put the decoded word
         */
-        virtual void DecodeReg ( CbcRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) = 0; /*!< Decode a word from a read of a register of the Cbc*/
+        virtual void DecodeReg ( ChipRegItem& pRegItem, uint8_t& pChipId, uint32_t pWord, bool& pRead, bool& pFailed ) = 0; /*!< Decode a word from a read of a register of the Chip*/
 
         //Encode/Decode MPA/SSA values
-        virtual void EncodeReg ( const RegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Cbc*/\
-        virtual void EncodeReg ( const RegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Cbc*/	
-        virtual void BCEncodeReg ( const RegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) = 0; /*!< Encode a/several word(s) readable for a Cbc*/
-        virtual void DecodeReg ( RegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) = 0; /*!< Decode a word from a read of a register of the Cbc*/
+        virtual void EncodeReg ( const RegItem& pRegItem, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Chip*/\
+        virtual void EncodeReg ( const RegItem& pRegItem, uint8_t pFeId, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Chip*/	
+        virtual void BCEncodeReg ( const RegItem& pRegItem, uint8_t pNChip, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) = 0; /*!< Encode a/several word(s) readable for a Chip*/
+        virtual void DecodeReg ( RegItem& pRegItem, uint8_t& pChipId, uint32_t pWord, bool& pRead, bool& pFailed ) = 0; /*!< Decode a word from a read of a register of the Chip*/
 
 
         //virtual pure methods which are defined in the proper BoardFWInterface class
-        //r/w the Cbc registers
+        //r/w the Chip registers
         /*!
-        * \brief Write register blocks of a Cbc
+        * \brief Write register blocks of a Chip
         * \param pFeId : FrontEnd to work with
         * \param pVecReq : Block of words to write
         * \param pWriteAttempt : number of tries write was attempted
         */
-        virtual bool WriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts, bool pReadback ) = 0;
-        //r/w the Cbc registers
+        virtual bool WriteChipBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts, bool pReadback ) = 0;
+        //r/w the Chip registers
         /*!
-        * \brief Write register blocks of a Cbc
+        * \brief Write register blocks of a Chip
         * \param pFeId : FrontEnd to work with
         * \param pVecReq : Block of words to write
         */
-        virtual bool BCWriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, bool pReadback ) = 0;
+        virtual bool BCWriteChipBlockReg (  std::vector<uint32_t>& pVecReq, bool pReadback ) = 0;
         /*!
-        * \brief Read register blocks of a Cbc
+        * \brief Read register blocks of a Chip
         * \param pFeId : FrontEnd to work with
         * \param pVecReq : Vector to stack the read words
         */
-        virtual void ReadCbcBlockReg (  std::vector<uint32_t>& pVecReq ) = 0;
+        virtual void ReadChipBlockReg (  std::vector<uint32_t>& pVecReq ) = 0;
         /*!
         * \brief Configure the board with its Config File
         * \param pBoard
         */
         virtual void ConfigureBoard ( const BeBoard* pBoard ) = 0;
         /*!
-         * \brief Send a CBC fast reset
+         * \brief Send a Chip fast reset
          */
-        virtual void CbcHardReset() = 0;
+        virtual void ChipHardReset() = 0;
         /*!
-         * \brief Send a CBC fast reset
+         * \brief Send a Chip fast reset
          */
-        virtual void CbcFastReset() = 0;
+        virtual void ChipFastReset() = 0;
         /*!
-         * \brief Send a CBC trigger
+         * \brief Send a Chip trigger
          */
-        virtual void CbcTrigger() = 0;
+        virtual void ChipTrigger() = 0;
         /*!
-         * \brief Send a CBC trigger
+         * \brief Send a Chip trigger
          */
-        virtual void CbcTestPulse() = 0;
+        virtual void ChipTestPulse() = 0;
         /*!
          * \brief Start an acquisition in a separate thread
          * \param pBoard Board running the acquisition
-         * \param uNbAcq Number of acquisition iterations (each iteration will get CBC_DATA_PACKET_NUMBER + 1 events)
+         * \param uNbAcq Number of acquisition iterations (each iteration will get Chip_DATA_PACKET_NUMBER + 1 events)
          * \param visitor override the visit() method of this object to process each event
          */
         //virtual void StartThread ( BeBoard* pBoard, uint32_t uNbAcq, HwInterfaceVisitor* visitor ) = 0;
@@ -255,8 +255,11 @@ namespace Ph2_HwInterface {
         virtual std::vector<uint32_t> ReadBlockRegValue ( const std::string& pRegNode, const uint32_t& pBlocksize ) = 0;
 
 
-
-
+//LORE
+        virtual bool WriteCbcBlockReg   ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) = 0;
+        virtual bool BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) = 0;
+        virtual void ReadCbcBlockReg (  std::vector<uint32_t>& pVecReq ){;}
+//LORE
 
 
         /*!

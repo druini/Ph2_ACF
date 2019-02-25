@@ -94,27 +94,27 @@ public:
 
 
 
-    void EncodeReg ( const CbcRegItem& pRegItem,
+    void EncodeReg ( const ChipRegItem& pRegItem,
                                         uint8_t pCbcId,
                                         std::vector<uint32_t>& pVecReq,
                                         bool pRead,
                                         bool pWrite ) {};
 
-    void EncodeReg ( const CbcRegItem& pRegItem,
+    void EncodeReg ( const ChipRegItem& pRegItem,
                                         uint8_t pFeId,
                                         uint8_t pCbcId,
                                         std::vector<uint32_t>& pVecReq,
                                         bool pRead,
                                         bool pWrite ) {};
   
-    void BCEncodeReg ( const CbcRegItem& pRegItem,
+    void BCEncodeReg ( const ChipRegItem& pRegItem,
                                           uint8_t pNCbc,
                                           std::vector<uint32_t>& pVecReq,
                                           bool pRead,
                                           bool pWrite ) {};
 
 
-    void DecodeReg ( CbcRegItem& pRegItem,
+    void DecodeReg ( ChipRegItem& pRegItem,
                                         uint8_t& pCbcId,
                                         uint32_t pWord,
                                         bool& pRead,

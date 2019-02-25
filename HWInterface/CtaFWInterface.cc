@@ -487,7 +487,7 @@ namespace Ph2_HwInterface {
     //      CBC Methods                                 //
     /////////////////////////////////////////////////////
 
-    void CtaFWInterface::EncodeReg ( const CbcRegItem& pRegItem,
+    void CtaFWInterface::EncodeReg ( const ChipRegItem& pRegItem,
                                      uint8_t pCbcId,
                                      std::vector<uint32_t>& pVecReq,
                                      bool pRead,
@@ -501,7 +501,7 @@ namespace Ph2_HwInterface {
         pVecReq.push_back ( ( pCbcId + 0x41 ) << 21 | ( pCbcId & 7 ) << 17 | pRegItem.fPage << 16 | pRegItem.fAddress << 8 | uValue );
     }
 
-    void CtaFWInterface::EncodeReg ( const CbcRegItem& pRegItem,
+    void CtaFWInterface::EncodeReg ( const ChipRegItem& pRegItem,
                                      uint8_t pFeId,
                                      uint8_t pCbcId,
                                      std::vector<uint32_t>& pVecReq,
@@ -513,7 +513,7 @@ namespace Ph2_HwInterface {
         pVecReq.push_back ( ( pCbcId + 0x41 ) << 21 | pCbcId << 17 | pRegItem.fPage << 16 | pRegItem.fAddress << 8 | uValue );
     }
 
-    void CtaFWInterface::BCEncodeReg ( const CbcRegItem& pRegItem,
+    void CtaFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
                                        uint8_t pNCbc,
                                        std::vector<uint32_t>& pVecReq,
                                        bool pRead,
@@ -526,7 +526,7 @@ namespace Ph2_HwInterface {
             pVecReq.push_back ( ( cCbcId + 0x41 ) << 21 | ( cCbcId & 7 ) << 17 | pRegItem.fPage << 16 | pRegItem.fAddress << 8 | uValue );
     }
 
-    void CtaFWInterface::DecodeReg ( CbcRegItem& pRegItem,
+    void CtaFWInterface::DecodeReg ( ChipRegItem& pRegItem,
                                      uint8_t& pCbcId,
                                      uint32_t pWord,
                                      bool& pRead,

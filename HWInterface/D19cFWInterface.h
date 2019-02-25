@@ -253,19 +253,19 @@ namespace Ph2_HwInterface {
         * \param pCbcId : Id of the Cbc to work with
         * \param pVecReq : Vector to stack the encoded words
         */
-        void EncodeReg (const CbcRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
-        void EncodeReg (const CbcRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
+        void EncodeReg (const ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
+        void EncodeReg (const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
         void EncodeReg (const RegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
         void EncodeReg (const RegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
 
-        void BCEncodeReg (const CbcRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override;
-        void DecodeReg ( CbcRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
+        void BCEncodeReg (const ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override;
+        void DecodeReg ( ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
         void BCEncodeReg ( const RegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
         void DecodeReg ( RegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override; /*!< Decode a word from a read of a register of the MPA/SSA*/
 
 
 
-        bool WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
+        bool WriteCbcBlockReg   ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
         bool BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
         void ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg );
 

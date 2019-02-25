@@ -179,28 +179,28 @@ namespace Ph2_HwInterface {
         fBoardFW->ReadNEvents ( pBoard, pNEvents, pData, pWait );
     }
 
-    void BeBoardInterface::CbcFastReset ( const BeBoard* pBoard )
+    void BeBoardInterface::ChipFastReset ( const BeBoard* pBoard )
     {
         setBoard ( pBoard->getBeBoardIdentifier() );
-        fBoardFW->CbcFastReset();
+        fBoardFW->ChipFastReset();
     }
 
-    void BeBoardInterface::CbcTrigger ( const BeBoard* pBoard )
+    void BeBoardInterface::ChipTrigger ( const BeBoard* pBoard )
     {
         setBoard ( pBoard->getBeBoardIdentifier() );
-        fBoardFW->CbcTrigger();
+        fBoardFW->ChipTrigger();
     }
 
-    void BeBoardInterface::CbcTestPulse ( const BeBoard* pBoard )
+    void BeBoardInterface::ChipTestPulse ( const BeBoard* pBoard )
     {
         setBoard ( pBoard->getBeBoardIdentifier() );
-        fBoardFW->CbcTestPulse();
+        fBoardFW->ChipTestPulse();
     }
 
-    void BeBoardInterface::CbcHardReset ( const BeBoard* pBoard )
+    void BeBoardInterface::ChipHardReset ( const BeBoard* pBoard )
     {
         setBoard ( pBoard->getBeBoardIdentifier() );
-        fBoardFW->CbcHardReset();
+        fBoardFW->ChipHardReset();
     }
 
     const uhal::Node& BeBoardInterface::getUhalNode ( const BeBoard* pBoard, const std::string& pStrPath )

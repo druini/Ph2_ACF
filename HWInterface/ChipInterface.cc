@@ -1,15 +1,15 @@
-/*
+/*!
 
-        FileName :                     CbcInterface.cc
-        Content :                      User Interface to the Cbcs
-        Programmer :                   Lorenzo BIDEGAIN, Nicolas PIERRE, Georg AUZINGER
-        Version :                      1.0
-        Date of creation :             10/07/14
-        Support :                      mail to : lorenzo.bidegain@gmail.com, nico.pierre@icloud.com
+        \file                                            ChipInterface.h
+        \brief                                           User Interface to the Chip, base class for, CBC, MPA, SSA, RD53
+        \author                                          Fabio RAVERA
+        \version                                         1.0
+        \date                        25/02/19
+        Support :                    mail to : fabio.ravera@cern.ch
 
  */
 
-#include "CbcInterface.h"
+#include "ChipInterface.h"
 #include "../Utils/ConsoleColor.h"
 
 #define DEV_FLAG 0
@@ -17,7 +17,7 @@
 
 namespace Ph2_HwInterface {
 
-    CbcInterface::CbcInterface ( const BeBoardFWMap& pBoardMap ) :
+    ChipInterface::ChipInterface ( const BeBoardFWMap& pBoardMap ) :
         fBoardMap ( pBoardMap ),
         fBoardFW ( nullptr ),
         prevBoardIdentifier ( 65535 ),
@@ -29,18 +29,18 @@ namespace Ph2_HwInterface {
 #endif
     }
 
-    CbcInterface::~CbcInterface()
+    ChipInterface::~ChipInterface()
     {
     }
 
-    void CbcInterface::output()
+    void ChipInterface::output()
     {
 #ifdef COUNT_FLAG
-        LOG (DEBUG) << "This instance of HWInterface::CbcInterface wrote (only write!) " << fRegisterCount << " Registers in " << fTransactionCount << " Transactions (only write!)! " ;
+        LOG (DEBUG) << "This instance of HWInterface::ChipInterface wrote (only write!) " << fRegisterCount << " Registers in " << fTransactionCount << " Transactions (only write!)! " ;
 #endif
     }
 
-    void CbcInterface::setBoard ( uint16_t pBoardIdentifier )
+    void ChipInterface::setBoard ( uint16_t pBoardIdentifier )
     {
         if ( prevBoardIdentifier != pBoardIdentifier )
         {
@@ -57,24 +57,24 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool CbcInterface::ConfigureCbc ( const Cbc* pCbc, bool pVerifLoop, uint32_t pBlockSize )
+    bool ChipInterface::ConfigureChip ( const Chip* pChip, bool pVerifLoop, uint32_t pBlockSize )
     {
         //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pChip->getBeBoardIdentifier() );
 
         //vector to encode all the registers into
         std::vector<uint32_t> cVec;
 
         //Deal with the ChipRegItems and encode them
 
-        CbcRegMap cCbcRegMap = pCbc->getRegMap();
+        ChipRegMap cChipRegMap = pChip->getRegMap();
 
-        for ( auto& cRegItem : cCbcRegMap )
+        for ( auto& cRegItem : cChipRegMap )
         {
-            //this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should be e-fused in the CBC3
+            //this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should be e-fused in the Chip3
             if (cRegItem.first.find ("BandgapFuse") == std::string::npos && cRegItem.first.find ("ChipIDFuse") == std::string::npos)
             {
-                fBoardFW->EncodeReg (cRegItem.second, pCbc->getFeId(), pCbc->getCbcId(), cVec, pVerifLoop, true);
+                fBoardFW->EncodeReg (cRegItem.second, pChip->getFeId(), pChip->getChipId(), cVec, pVerifLoop, true);
 
 #ifdef COUNT_FLAG
                 fRegisterCount++;
@@ -85,7 +85,7 @@ namespace Ph2_HwInterface {
         // write the registers, the answer will be in the same cVec
         // the number of times the write operation has been attempted is given by cWriteAttempts
         uint8_t cWriteAttempts = 0 ;
-        bool cSuccess = fBoardFW->WriteCbcBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+        bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
 
 #ifdef COUNT_FLAG
         fTransactionCount++;
@@ -95,21 +95,21 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool CbcInterface::ConfigureCbcOriginalMask ( const Cbc* pCbc, bool pVerifLoop, uint32_t pBlockSize )
+    bool ChipInterface::ConfigureChipOriginalMask ( const Chip* pChip, bool pVerifLoop, uint32_t pBlockSize )
     {
         //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pChip->getBeBoardIdentifier() );
 
         //vector to encode all the registers into
         std::vector<uint32_t> cVec;
-        // const uint32_t *cbcMask32 = pCbc->getCbcmask();
-        const std::vector<uint8_t> cbcMask = pCbc->getCbcMask();
+        // const uint32_t *ChipMask32 = pChip->getChipmask();
+        const std::vector<uint8_t> ChipMask = pChip->getChipMask();
 
         uint8_t maskAddressStartingPoint = 0x20;
         for ( uint8_t address=0; address<=0x1F; ++address){
-            // std::cout<<std::hex<<(unsigned int)cbcMask[address]<<std::dec<<std::endl;
-            fBoardFW->EncodeReg (ChipRegItem (0x00, maskAddressStartingPoint+address, 0x00, cbcMask[address]), pCbc->getFeId(), pCbc->getCbcId(), cVec, pVerifLoop, true);
-            // fBoardFW->EncodeReg (ChipRegItem (0x00, maskAddressStartingPoint+address, 0x00, (cbcMask32[address>>2] >> ((address & 0x3) *8)) & 0xFF), pCbc->getFeId(), pCbc->getCbcId(), cVec, pVerifLoop, true);
+            // std::cout<<std::hex<<(unsigned int)ChipMask[address]<<std::dec<<std::endl;
+            fBoardFW->EncodeReg (ChipRegItem (0x00, maskAddressStartingPoint+address, 0x00, ChipMask[address]), pChip->getFeId(), pChip->getChipId(), cVec, pVerifLoop, true);
+            // fBoardFW->EncodeReg (ChipRegItem (0x00, maskAddressStartingPoint+address, 0x00, (ChipMask32[address>>2] >> ((address & 0x3) *8)) & 0xFF), pChip->getFeId(), pChip->getChipId(), cVec, pVerifLoop, true);
         
 #ifdef COUNT_FLAG
             fRegisterCount++;
@@ -119,7 +119,7 @@ namespace Ph2_HwInterface {
         // write the registers, the answer will be in the same cVec
         // the number of times the write operation has been attempted is given by cWriteAttempts
         uint8_t cWriteAttempts = 0 ;
-        bool cSuccess = fBoardFW->WriteCbcBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+        bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
 
 #ifdef COUNT_FLAG
         fTransactionCount++;
@@ -129,10 +129,10 @@ namespace Ph2_HwInterface {
     }
 
 
-    void CbcInterface::ReadCbc ( Cbc* pCbc )
+    void ChipInterface::ReadChip ( Chip* pChip )
     {
         //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pChip->getBeBoardIdentifier() );
 
         //vector to encode all the registers into
         std::vector<uint32_t> cVec;
@@ -141,12 +141,12 @@ namespace Ph2_HwInterface {
 
         //Deal with the ChipRegItems and encode them
 
-        CbcRegMap cCbcRegMap = pCbc->getRegMap();
+        ChipRegMap cChipRegMap = pChip->getRegMap();
 
-        for ( auto& cRegItem : cCbcRegMap )
+        for ( auto& cRegItem : cChipRegMap )
         {
             cRegItem.second.fValue = 0x00;
-            fBoardFW->EncodeReg (cRegItem.second, pCbc->getFeId(), pCbc->getCbcId(), cVec, true, false);
+            fBoardFW->EncodeReg (cRegItem.second, pChip->getFeId(), pChip->getChipId(), cVec, true, false);
             //push back the names in cNameVec for latercReg
             cNameVec.push_back (cRegItem.first);
 #ifdef COUNT_FLAG
@@ -155,10 +155,10 @@ namespace Ph2_HwInterface {
         }
 
         // write the registers, the answer will be in the same cVec
-        //bool cSuccess = fBoardFW->WriteCbcBlockReg ( cVec, pVerifLoop);
+        //bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, pVerifLoop);
 
         // write the registers, the answer will be in the same cVec
-        fBoardFW->ReadCbcBlockReg ( cVec);
+        fBoardFW->ReadChipBlockReg ( cVec);
 
 #ifdef COUNT_FLAG
         fTransactionCount++;
@@ -166,7 +166,7 @@ namespace Ph2_HwInterface {
 
         bool cFailed = false;
         bool cRead;
-        uint8_t cCbcId;
+        uint8_t cChipId;
         //update the HWDescription object with the value I just read
         uint32_t idxReadWord = 0;
 
@@ -175,40 +175,40 @@ namespace Ph2_HwInterface {
         {
             ChipRegItem cRegItem;
             std::string cName = cNameVec[idxReadWord++];
-            fBoardFW->DecodeReg ( cRegItem, cCbcId, cReadWord, cRead, cFailed );
+            fBoardFW->DecodeReg ( cRegItem, cChipId, cReadWord, cRead, cFailed );
 
             // here I need to find the string matching to the reg item!
             if (!cFailed)
-                pCbc->setReg ( cName, cRegItem.fValue );
+                pChip->setReg ( cName, cRegItem.fValue );
 
-            //LOG (INFO) << "CBC " << +pCbc->getCbcId() << " " << cName << ": 0x" << std::hex << +cRegItem.fValue << std::dec ;
+            //LOG (INFO) << "Chip " << +pChip->getChipId() << " " << cName << ": 0x" << std::hex << +cRegItem.fValue << std::dec ;
         }
 
     }
 
 
-    bool CbcInterface::WriteCbcReg ( Cbc* pCbc, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop )
+    bool ChipInterface::WriteChipReg ( Chip* pChip, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop )
     {
         //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pChip->getBeBoardIdentifier() );
 
         //next, get the reg item
-        ChipRegItem cRegItem = pCbc->getRegItem ( pRegNode );
+        ChipRegItem cRegItem = pChip->getRegItem ( pRegNode );
         cRegItem.fValue = pValue;
 
         //vector for transaction
         std::vector<uint32_t> cVec;
 
         // encode the reg specific to the FW, pVerifLoop decides if it should be read back, true means to write it
-        fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getCbcId(), cVec, pVerifLoop, true );
+        fBoardFW->EncodeReg ( cRegItem, pChip->getFeId(), pChip->getChipId(), cVec, pVerifLoop, true );
         // write the registers, the answer will be in the same cVec
         // the number of times the write operation has been attempted is given by cWriteAttempts
         uint8_t cWriteAttempts = 0 ;
-        bool cSuccess = fBoardFW->WriteCbcBlockReg (  cVec, cWriteAttempts, pVerifLoop );
+        bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
 
         //update the HWDescription object
         if (cSuccess)
-            pCbc->setReg ( pRegNode, pValue );
+            pChip->setReg ( pRegNode, pValue );
 
 #ifdef COUNT_FLAG
         fRegisterCount++;
@@ -218,10 +218,10 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
-    bool CbcInterface::WriteCbcMultReg ( Cbc* pCbc, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop )
+    bool ChipInterface::WriteChipMultReg ( Chip* pChip, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop )
     {
         //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pChip->getBeBoardIdentifier() );
 
         std::vector<uint32_t> cVec;
 
@@ -230,10 +230,10 @@ namespace Ph2_HwInterface {
 
         for ( const auto& cReg : pVecReq )
         {
-            cRegItem = pCbc->getRegItem ( cReg.first );
+            cRegItem = pChip->getRegItem ( cReg.first );
             cRegItem.fValue = cReg.second;
 
-            fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getCbcId(), cVec, pVerifLoop, true );
+            fBoardFW->EncodeReg ( cRegItem, pChip->getFeId(), pChip->getChipId(), cVec, pVerifLoop, true );
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif
@@ -242,7 +242,7 @@ namespace Ph2_HwInterface {
         // write the registers, the answer will be in the same cVec
         // the number of times the write operation has been attempted is given by cWriteAttempts
         uint8_t cWriteAttempts = 0 ;
-        bool cSuccess = fBoardFW->WriteCbcBlockReg (  cVec, cWriteAttempts, pVerifLoop );
+        bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
 
 #ifdef COUNT_FLAG
         fTransactionCount++;
@@ -253,8 +253,8 @@ namespace Ph2_HwInterface {
         {
             for ( const auto& cReg : pVecReq )
             {
-                cRegItem = pCbc->getRegItem ( cReg.first );
-                pCbc->setReg ( cReg.first, cReg.second );
+                cRegItem = pChip->getRegItem ( cReg.first );
+                pChip->setReg ( cReg.first, cReg.second );
             }
         }
 
@@ -263,33 +263,33 @@ namespace Ph2_HwInterface {
 
 
 
-    uint8_t CbcInterface::ReadCbcReg ( Cbc* pCbc, const std::string& pRegNode )
+    uint8_t ChipInterface::ReadChipReg ( Chip* pChip, const std::string& pRegNode )
     {
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pChip->getBeBoardIdentifier() );
 
-        ChipRegItem cRegItem = pCbc->getRegItem ( pRegNode );
+        ChipRegItem cRegItem = pChip->getRegItem ( pRegNode );
 
         std::vector<uint32_t> cVecReq;
 
-        fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getCbcId(), cVecReq, true, false );
-        fBoardFW->ReadCbcBlockReg (  cVecReq );
+        fBoardFW->EncodeReg ( cRegItem, pChip->getFeId(), pChip->getChipId(), cVecReq, true, false );
+        fBoardFW->ReadChipBlockReg (  cVecReq );
 
         //bools to find the values of failed and read
         bool cFailed = false;
         bool cRead;
-        uint8_t cCbcId;
-        fBoardFW->DecodeReg ( cRegItem, cCbcId, cVecReq[0], cRead, cFailed );
+        uint8_t cChipId;
+        fBoardFW->DecodeReg ( cRegItem, cChipId, cVecReq[0], cRead, cFailed );
 
-        if (!cFailed) pCbc->setReg ( pRegNode, cRegItem.fValue );
+        if (!cFailed) pChip->setReg ( pRegNode, cRegItem.fValue );
 
         return cRegItem.fValue;
     }
 
 
-    void CbcInterface::ReadCbcMultReg ( Cbc* pCbc, const std::vector<std::string>& pVecReg )
+    void ChipInterface::ReadChipMultReg ( Chip* pChip, const std::vector<std::string>& pVecReg )
     {
         //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pChip->getBeBoardIdentifier() );
 
         std::vector<uint32_t> cVec;
 
@@ -298,16 +298,16 @@ namespace Ph2_HwInterface {
 
         for ( const auto& cReg : pVecReg )
         {
-            cRegItem = pCbc->getRegItem ( cReg );
+            cRegItem = pChip->getRegItem ( cReg );
 
-            fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getCbcId(), cVec, true, false );
+            fBoardFW->EncodeReg ( cRegItem, pChip->getFeId(), pChip->getChipId(), cVec, true, false );
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif
         }
 
         // write the registers, the answer will be in the same cVec
-        fBoardFW->ReadCbcBlockReg ( cVec);
+        fBoardFW->ReadChipBlockReg ( cVec);
 
 #ifdef COUNT_FLAG
         fTransactionCount++;
@@ -315,7 +315,7 @@ namespace Ph2_HwInterface {
 
         bool cFailed = false;
         bool cRead;
-        uint8_t cCbcId;
+        uint8_t cChipId;
         //update the HWDescription object with the value I just read
         uint32_t idxReadWord = 0;
 
@@ -323,19 +323,19 @@ namespace Ph2_HwInterface {
             //for ( const auto& cReadWord : cVec )
         {
             uint32_t cReadWord = cVec[idxReadWord++];
-            fBoardFW->DecodeReg ( cRegItem, cCbcId, cReadWord, cRead, cFailed );
+            fBoardFW->DecodeReg ( cRegItem, cChipId, cReadWord, cRead, cFailed );
 
             // here I need to find the string matching to the reg item!
             if (!cFailed)
-                pCbc->setReg ( cReg, cRegItem.fValue );
+                pChip->setReg ( cReg, cRegItem.fValue );
         }
     }
 
 
-    //void CbcInterface::ReadAllCbc ( const Module* pModule )
+    //void ChipInterface::ReadAllChip ( const Module* pModule )
     //{
     //ChipRegItem cRegItem;
-    //uint8_t cCbcId;
+    //uint8_t cChipId;
     //std::vector<uint32_t> cVecReq;
     //std::vector<std::string> cVecRegNode;
 
@@ -343,10 +343,10 @@ namespace Ph2_HwInterface {
 
     //setBoard ( pModule->getBeBoardIdentifier() );
 
-    //for ( uint8_t i = 0; i < pModule->getNCbc(); i++ )
+    //for ( uint8_t i = 0; i < pModule->getNChip(); i++ )
     //{
 
-    //if ( pModule->getCbc ( i + cMissed ) == nullptr )
+    //if ( pModule->getChip ( i + cMissed ) == nullptr )
     //{
     //i--;
     //cMissed++;
@@ -355,47 +355,47 @@ namespace Ph2_HwInterface {
     //else
     //{
 
-    //Cbc* cCbc = pModule->getCbc ( i + cMissed );
+    //Chip* cChip = pModule->getChip ( i + cMissed );
 
-    //const CbcRegMap& cCbcRegMap = cCbc->getRegMap();
+    //const ChipRegMap& cChipRegMap = cChip->getRegMap();
 
-    //for ( auto& it : cCbcRegMap )
+    //for ( auto& it : cChipRegMap )
     //{
-    //EncodeReg ( it.second, cCbc->getCbcId(), cVecReq );
+    //EncodeReg ( it.second, cChip->getChipId(), cVecReq );
     //cVecRegNode.push_back ( it.first );
     //}
 
-    //fBoardFW->ReadCbcBlockReg (  cVecReq );
+    //fBoardFW->ReadChipBlockReg (  cVecReq );
 
     //for ( uint32_t j = 0; j < cVecReq.size(); j++ )
     //{
-    //DecodeReg ( cRegItem, cCbcId, cVecReq[j] );
+    //DecodeReg ( cRegItem, cChipId, cVecReq[j] );
 
-    //cCbc->setReg ( cVecRegNode.at ( j ), cRegItem.fValue );
+    //cChip->setReg ( cVecRegNode.at ( j ), cRegItem.fValue );
     //}
     //}
     //}
     //}
 
 
-    void CbcInterface::WriteBroadcast ( const Module* pModule, const std::string& pRegNode, uint32_t pValue )
+    void ChipInterface::WriteBroadcast ( const Module* pModule, const std::string& pRegNode, uint32_t pValue )
     {
         //first set the correct BeBoard
         setBoard ( pModule->getBeBoardIdentifier() );
 
-        ChipRegItem cRegItem = pModule->fCbcVector.at (0)->getRegItem ( pRegNode );
+        ChipRegItem cRegItem = pModule->fChipVector.at (0)->getRegItem ( pRegNode );
         cRegItem.fValue = pValue;
 
         //vector for transaction
         std::vector<uint32_t> cVec;
 
         // encode the reg specific to the FW, pVerifLoop decides if it should be read back, true means to write it
-        // the 1st boolean could be true if I acually wanted to read back from each CBC but this somehow does not make sense!
-        fBoardFW->BCEncodeReg ( cRegItem, pModule->fCbcVector.size(), cVec, false, true );
+        // the 1st boolean could be true if I acually wanted to read back from each Chip but this somehow does not make sense!
+        fBoardFW->BCEncodeReg ( cRegItem, pModule->fChipVector.size(), cVec, false, true );
 
         //true is the readback bit - the IC FW just checks that the transaction was successful and the
         //Strasbourg FW does nothing
-        bool cSuccess = fBoardFW->BCWriteCbcBlockReg (  cVec, true );
+        bool cSuccess = fBoardFW->BCWriteChipBlockReg (  cVec, true );
 
 #ifdef COUNT_FLAG
         fRegisterCount++;
@@ -404,11 +404,11 @@ namespace Ph2_HwInterface {
 
         //update the HWDescription object -- not sure if the transaction was successfull
         if (cSuccess)
-            for (auto& cCbc : pModule->fCbcVector)
-                cCbc->setReg ( pRegNode, pValue );
+            for (auto& cChip : pModule->fChipVector)
+                cChip->setReg ( pRegNode, pValue );
     }
 
-    void CbcInterface::WriteBroadcastMultReg (const Module* pModule, const std::vector<std::pair<std::string, uint8_t>> pVecReg)
+    void ChipInterface::WriteBroadcastMultReg (const Module* pModule, const std::vector<std::pair<std::string, uint8_t>> pVecReg)
     {
         //first set the correct BeBoard
         setBoard ( pModule->getBeBoardIdentifier() );
@@ -420,28 +420,28 @@ namespace Ph2_HwInterface {
 
         for ( const auto& cReg : pVecReg )
         {
-            cRegItem = pModule->fCbcVector.at (0)->getRegItem ( cReg.first );
+            cRegItem = pModule->fChipVector.at (0)->getRegItem ( cReg.first );
             cRegItem.fValue = cReg.second;
 
-            fBoardFW->BCEncodeReg ( cRegItem, pModule->fCbcVector.size(), cVec, false, true );
+            fBoardFW->BCEncodeReg ( cRegItem, pModule->fChipVector.size(), cVec, false, true );
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif
         }
 
         // write the registerss, the answer will be in the same cVec
-        bool cSuccess = fBoardFW->BCWriteCbcBlockReg ( cVec, true);
+        bool cSuccess = fBoardFW->BCWriteChipBlockReg ( cVec, true);
 
 #ifdef COUNT_FLAG
         fTransactionCount++;
 #endif
 
         if (cSuccess)
-            for (auto& cCbc : pModule->fCbcVector)
+            for (auto& cChip : pModule->fChipVector)
                 for (auto& cReg : pVecReg)
                 {
-                    cRegItem = cCbc->getRegItem ( cReg.first );
-                    cCbc->setReg ( cReg.first, cReg.second );
+                    cRegItem = cChip->getRegItem ( cReg.first );
+                    cChip->setReg ( cReg.first, cReg.second );
                 }
     }
 }

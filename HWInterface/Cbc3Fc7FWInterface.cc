@@ -239,7 +239,7 @@ namespace Ph2_HwInterface {
             {
                 uint8_t cStubLogicInput = cCbc->getReg ("Pipe&StubInpSel&Ptwidth");
                 cStubLogictInputMap[cCbc] = cStubLogicInput;
-                CbcRegItem cRegItem (0, 0x12, 0, ( (cStubLogicInput & 0xCF) | (0x20 & 0x30) ) );
+                ChipRegItem cRegItem (0, 0x12, 0, ( (cStubLogicInput & 0xCF) | (0x20 & 0x30) ) );
                 cVecReq.clear();
                 this->EncodeReg (cRegItem, cFe->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
                 uint8_t cWriteAttempts = 0 ;
@@ -266,7 +266,7 @@ namespace Ph2_HwInterface {
                 uint32_t cStatus = ReadReg ("cbc_system_stat.io.cbc1.slvs5");
                 LOG (DEBUG) << cCounter << " " << std::bitset<32> (cStatus);
                 std::this_thread::sleep_for (std::chrono::microseconds (10) );
-                //CbcRegItem cRegItem (0, 0x1D, 0, 0);
+                //ChipRegItem cRegItem (0, 0x1D, 0, 0);
                 //std::vector<uint32_t> cVecReq;
                 //this->EncodeReg (cRegItem, 0, cVecReq, true, false);
                 //this->ReadCbcBlockReg (cVecReq);
@@ -304,7 +304,7 @@ namespace Ph2_HwInterface {
         for (auto cFe : pBoard->fModuleVector)
             for (auto cCbc : cFe->fCbcVector)
             {
-                CbcRegItem cRegItem (0, 0x12, 0, cStubLogictInputMap[cCbc] );
+                ChipRegItem cRegItem (0, 0x12, 0, cStubLogictInputMap[cCbc] );
                 cVecReq.clear();
                 this->EncodeReg (cRegItem, cFe->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
                 uint8_t cWriteAttempts = 0;
@@ -495,7 +495,7 @@ namespace Ph2_HwInterface {
     //TODO: check what to do with fFMCid and if I need it!
     // this is clearly for addressing individual CBCs, have to see how to deal with broadcast commands
     // for this FW, page values are 1 and 2 so need to increment the 0 and 1 from config file
-    void Cbc3Fc7FWInterface::EncodeReg ( const CbcRegItem& pRegItem,
+    void Cbc3Fc7FWInterface::EncodeReg ( const ChipRegItem& pRegItem,
                                          uint8_t pCbcId,
                                          std::vector<uint32_t>& pVecReq,
                                          bool pRead,
@@ -505,7 +505,7 @@ namespace Ph2_HwInterface {
         //TODO: not sure if thisF fFMCId is really needed here!
         pVecReq.push_back ( ( (fFMCId ) << 29 ) | ( (pCbcId + 1) << 24 ) | (  pRead << 21 ) | (  pWrite << 20 ) | ( (pRegItem.fPage) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
     }
-    void Cbc3Fc7FWInterface::EncodeReg ( const CbcRegItem& pRegItem,
+    void Cbc3Fc7FWInterface::EncodeReg ( const ChipRegItem& pRegItem,
                                          uint8_t pFeId,
                                          uint8_t pCbcId,
                                          std::vector<uint32_t>& pVecReq,
@@ -517,7 +517,7 @@ namespace Ph2_HwInterface {
         pVecReq.push_back  ( ( cGlobalCbcId << 24 ) | (  pRead << 21 ) | (  pWrite << 20 ) | ( (pRegItem.fPage ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
     }
 
-    void Cbc3Fc7FWInterface::BCEncodeReg ( const CbcRegItem& pRegItem,
+    void Cbc3Fc7FWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
                                            uint8_t pNCbc,
                                            std::vector<uint32_t>& pVecReq,
                                            bool pRead,
@@ -527,7 +527,7 @@ namespace Ph2_HwInterface {
         pVecReq.push_back ( ( (fFMCId ) << 29 ) | ( fBroadcastCbcId << 24 ) | (  pRead << 21 ) | (  pWrite << 20 )  | ( (pRegItem.fPage ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
     }
 
-    void Cbc3Fc7FWInterface::DecodeReg ( CbcRegItem& pRegItem,
+    void Cbc3Fc7FWInterface::DecodeReg ( ChipRegItem& pRegItem,
                                          uint8_t& pCbcId,
                                          uint32_t pWord,
                                          bool& pRead,

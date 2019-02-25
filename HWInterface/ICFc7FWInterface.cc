@@ -365,7 +365,7 @@ namespace Ph2_HwInterface {
     /////////////////////////////////////////////////////
 
     // this is clearly for addressing individual CBCs, have to see how to deal with broadcast commands
-    void ICFc7FWInterface::EncodeReg ( const CbcRegItem& pRegItem,
+    void ICFc7FWInterface::EncodeReg ( const ChipRegItem& pRegItem,
                                        uint8_t pCbcId,
                                        std::vector<uint32_t>& pVecReq,
                                        bool pRead,
@@ -374,7 +374,7 @@ namespace Ph2_HwInterface {
         //use fBroadcastCBCId for broadcast commands
         pVecReq.push_back ( ( fFMCId << 28 ) | ( pCbcId << 24 ) | (  pRead << 21 ) | (  pWrite << 20 ) | ( pRegItem.fPage << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
     }
-    void ICFc7FWInterface::EncodeReg ( const CbcRegItem& pRegItem,
+    void ICFc7FWInterface::EncodeReg ( const ChipRegItem& pRegItem,
                                        uint8_t pFeId,
                                        uint8_t pCbcId,
                                        std::vector<uint32_t>& pVecReq,
@@ -385,7 +385,7 @@ namespace Ph2_HwInterface {
         pVecReq.push_back ( ( pFeId << 28 ) | ( pCbcId << 24 ) | (  pRead << 21 ) | (  pWrite << 20 ) | ( pRegItem.fPage << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
     }
 
-    void ICFc7FWInterface::BCEncodeReg ( const CbcRegItem& pRegItem,
+    void ICFc7FWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
                                          uint8_t pNCbc,
                                          std::vector<uint32_t>& pVecReq,
                                          bool pRead,
@@ -395,7 +395,7 @@ namespace Ph2_HwInterface {
         pVecReq.push_back ( ( fFMCId << 28 ) | ( fBroadcastCbcId << 24 ) | (  pRead << 21 ) | (  pWrite << 20 )  | ( pRegItem.fPage << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
     }
 
-    void ICFc7FWInterface::DecodeReg ( CbcRegItem& pRegItem,
+    void ICFc7FWInterface::DecodeReg ( ChipRegItem& pRegItem,
                                        uint8_t& pCbcId,
                                        uint32_t pWord,
                                        bool& pRead,
@@ -443,7 +443,7 @@ namespace Ph2_HwInterface {
         }
 
         //here i create a dummy reg item for decoding so I can find if 1 cFailed
-        CbcRegItem cItem;
+        ChipRegItem cItem;
         //uint8_t cCbcId;
         //bool cRead;
 

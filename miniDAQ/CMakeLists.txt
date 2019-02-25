@@ -92,4 +92,8 @@ target_link_libraries(miniSLinkDQM ${LIBS} RootWeb)
 add_executable(RunController RunController.cc MiddlewareController.cc)
 target_link_libraries(RunController ${LIBS} Ph2_Tools)
 
+#DQMController
+add_executable(DQMController DQMController.cc DQMHistogramController.cc)
+target_link_libraries(DQMController ${LIBS} Ph2_Tools)
+
 

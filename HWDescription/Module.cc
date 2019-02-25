@@ -27,14 +27,14 @@ namespace Ph2_HwDescription {
     }
 
 
-    bool Module::removeCbc ( uint8_t pCbcId )
+    bool Module::removeChip ( uint8_t pChipId )
     {
-        std::vector < Cbc* > :: iterator i;
+        std::vector < Chip* > :: iterator i;
         bool found = false;
 
-        for ( i = fCbcVector.begin(); i != fCbcVector.end(); ++i )
+        for ( i = fChipVector.begin(); i != fChipVector.end(); ++i )
         {
-            if ( (*i)->getCbcId() == pCbcId )
+            if ( (*i)->getChipId() == pChipId )
             {
                 found = true;
                 break;
@@ -43,22 +43,22 @@ namespace Ph2_HwDescription {
 
         if ( found )
         {
-            fCbcVector.erase ( i );
+            fChipVector.erase ( i );
             return true;
         }
         else
         {
-            LOG (INFO) << "Error:The Module " << +fModuleId << " doesn't have the cbc " << +pCbcId ;
+            LOG (INFO) << "Error:The Module " << +fModuleId << " doesn't have the cbc " << +pChipId ;
             return false;
         }
     }
 
-    Cbc* Module::getCbc ( uint8_t pCbcId ) const
+    Chip* Module::getChip ( uint8_t pChipId ) const
     {
 
-        for ( Cbc* c : fCbcVector )
+        for ( Chip* c : fChipVector )
         {
-            if ( c->getCbcId() == pCbcId )
+            if ( c->getChipId() == pChipId )
                 return c;
         }
 

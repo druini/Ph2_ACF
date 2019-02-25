@@ -791,7 +791,7 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
                         cHipRegMap[cCbc] = cOriginalHipReg;
 
 
-                        CbcRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
+                        ChipRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
                         cRegItem.fValue = (cOriginalStubLogicInput & 0xCF) | (0x20 & 0x30);
                         this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
 
@@ -836,7 +836,7 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
                     for (auto cCbc : cFe->fCbcVector)
                     {
 
-                        CbcRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
+                        ChipRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
                         cRegItem.fValue = cStubLogictInputMap[cCbc];
                             //this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
 
@@ -1301,7 +1301,7 @@ bool D19cFWInterface::WriteBlockReg ( const std::string& pRegNode, const std::ve
     //TODO: check what to do with fFMCid and if I need it!
     // this is clearly for addressing individual CBCs, have to see how to deal with broadcast commands
 
-void D19cFWInterface::EncodeReg ( const CbcRegItem& pRegItem,
+void D19cFWInterface::EncodeReg ( const ChipRegItem& pRegItem,
   uint8_t pCbcId,
   std::vector<uint32_t>& pVecReq,
   bool pReadBack,
@@ -1313,7 +1313,7 @@ void D19cFWInterface::EncodeReg ( const CbcRegItem& pRegItem,
     pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue);
 }
 
-void D19cFWInterface::EncodeReg (const CbcRegItem& pRegItem,
+void D19cFWInterface::EncodeReg (const ChipRegItem& pRegItem,
  uint8_t pFeId,
  uint8_t pCbcId,
  std::vector<uint32_t>& pVecReq,
@@ -1363,7 +1363,7 @@ void D19cFWInterface::EncodeReg (const RegItem& pRegItem,
     }
 }
 
-void D19cFWInterface::BCEncodeReg ( const CbcRegItem& pRegItem,
+void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
     uint8_t pNCbc,
     std::vector<uint32_t>& pVecReq,
     bool pReadBack,
@@ -1375,7 +1375,7 @@ void D19cFWInterface::BCEncodeReg ( const CbcRegItem& pRegItem,
 }
 
 
-void D19cFWInterface::DecodeReg ( CbcRegItem& pRegItem,
+void D19cFWInterface::DecodeReg ( ChipRegItem& pRegItem,
   uint8_t& pCbcId,
   uint32_t pWord,
   bool& pRead,

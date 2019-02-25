@@ -186,7 +186,7 @@ namespace Ph2_HwInterface {
         * \param pCbcId : Id of the Cbc to work with
         * \param pVecReq : Vector to stack the encoded words
         */
-        void EncodeReg ( const CbcRegItem& pRegItem,
+        void EncodeReg ( const ChipRegItem& pRegItem,
                          uint8_t pCbcId, std::vector<uint32_t>& pVecReq,
                          bool pRead = false,
                          bool pWrite = false ) override; /*!< Encode a/several word(s) readable for a Cbc*/
@@ -195,7 +195,7 @@ namespace Ph2_HwInterface {
         * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
         * \param pVecReq : Vector to stack the encoded words
         */
-        void BCEncodeReg ( const CbcRegItem& pRegItem,
+        void BCEncodeReg ( const ChipRegItem& pRegItem,
                            uint8_t pNCbc,
                            std::vector<uint32_t>& pVecReq,
                            bool pRead = false,
@@ -206,7 +206,7 @@ namespace Ph2_HwInterface {
         * \param pCbcId : Id of the Cbc to work with
         * \param pVecReq : Vector to stack the encoded words
         */
-        void EncodeReg ( const CbcRegItem& pRegItem,
+        void EncodeReg ( const ChipRegItem& pRegItem,
                          uint8_t pFeId,
                          uint8_t pCbcId,
                          std::vector<uint32_t>& pVecReq,
@@ -218,7 +218,7 @@ namespace Ph2_HwInterface {
         * \param pCbcId : Id of the Cbc to work with
         * \param pWord : variable to put the decoded word
         */
-        void DecodeReg ( CbcRegItem& pRegItem,
+        void DecodeReg ( ChipRegItem& pRegItem,
                          uint8_t& pCbcId,
                          uint32_t pWord,
                          bool& pRead,

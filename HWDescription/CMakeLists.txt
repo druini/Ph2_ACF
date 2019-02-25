@@ -3,7 +3,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 #find source files
 file(GLOB SOURCES *.cc)
-add_library(Ph2_Description SHARED ${SOURCES})
+add_library(Ph2_Description SHARED ${SOURCES} EXCLUDE Cbc.h Cbc.cc)
 
 else()
 
@@ -19,6 +19,7 @@ cet_set_compiler_flags(
  
 cet_make(LIBRARY_NAME Ph2_Description_${Ph2_ACF_Master}
         LIBRARIES
+    	EXCLUDE Cbc.h Cbc.cc
     Ph2_Utils_${Ph2_ACF_Master}
     pthread
         )

@@ -124,7 +124,7 @@ namespace Ph2_HwDescription {
                             if (cCondItem.fCbcId != cCbc->getCbcId() ) continue;
                             else if (cCbc->getFeId() == cCondItem.fFeId && cCbc->getCbcId() == cCondItem.fCbcId)
                             {
-                                CbcRegItem cRegItem = cCbc->getRegItem ( cCondItem.fRegName );
+                                ChipRegItem cRegItem = cCbc->getRegItem ( cCondItem.fRegName );
                                 cCondItem.fValue = cRegItem.fValue;
                             }
                         }

@@ -1,7 +1,7 @@
 /*!
 
-        \file            CbcRegItem.h
-        \brief                   CbcRegItem description, contents of the structure CbcRegItem with is the value of the CbcRegMap
+        \file            ChipRegItem.h
+        \brief                   ChipRegItem description, contents of the structure ChipRegItem with is the value of the CbcRegMap
         \author                  Lorenzo BIDEGAIN
         \version                 1.0
         \date                    25/06/14
@@ -9,21 +9,21 @@
 
  */
 
-#ifndef _CbcRegItem_h__
-#define _CbcRegItem_h__
+#ifndef _ChipRegItem_h__
+#define _ChipRegItem_h__
 
 #include <stdint.h>
 
 namespace Ph2_HwDescription {
 
     /*!
-     * \struct CbcRegItem
+     * \struct ChipRegItem
      * \brief Struct for CbcRegisterItem that is identified by Page, Address, DefaultValue, Value
      */
-    struct CbcRegItem
+    struct ChipRegItem
     {
-        CbcRegItem() {};
-        CbcRegItem (uint8_t pPage, uint8_t pAddress, uint8_t pDefValue, uint8_t pValue) : fPage (pPage), fAddress (pAddress), fDefValue (pDefValue), fValue (pValue) {}
+        ChipRegItem() {};
+        ChipRegItem (uint8_t pPage, uint8_t pAddress, uint8_t pDefValue, uint8_t pValue) : fPage (pPage), fAddress (pAddress), fDefValue (pDefValue), fValue (pValue) {}
 
         uint8_t fPage;
         uint8_t fAddress;

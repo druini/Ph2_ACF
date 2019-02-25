@@ -471,7 +471,7 @@ namespace Ph2_HwInterface {
     //      CBC Methods                                 //
     /////////////////////////////////////////////////////
 
-    void GlibFWInterface::EncodeReg ( const CbcRegItem& pRegItem,
+    void GlibFWInterface::EncodeReg ( const ChipRegItem& pRegItem,
                                       uint8_t pCbcId,
                                       std::vector<uint32_t>& pVecReq,
                                       bool pRead,
@@ -485,7 +485,7 @@ namespace Ph2_HwInterface {
         pVecReq.push_back ( ( pCbcId >> 3 ) << 21 | ( pCbcId & 7 ) << 17 | pRegItem.fPage << 16 | pRegItem.fAddress << 8 | uValue );
     }
 
-    void GlibFWInterface::EncodeReg ( const CbcRegItem& pRegItem,
+    void GlibFWInterface::EncodeReg ( const ChipRegItem& pRegItem,
                                       uint8_t pFeId,
                                       uint8_t pCbcId,
                                       std::vector<uint32_t>& pVecReq,
@@ -497,7 +497,7 @@ namespace Ph2_HwInterface {
         pVecReq.push_back ( pFeId  << 21 | pCbcId << 17 | pRegItem.fPage << 16 | pRegItem.fAddress << 8 | uValue );
     }
 
-    void GlibFWInterface::BCEncodeReg ( const CbcRegItem& pRegItem,
+    void GlibFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
                                         uint8_t pNCbc,
                                         std::vector<uint32_t>& pVecReq,
                                         bool pRead,
@@ -510,7 +510,7 @@ namespace Ph2_HwInterface {
             pVecReq.push_back ( ( cCbcId >> 3 ) << 21 | ( cCbcId & 7 ) << 17 | pRegItem.fPage << 16 | pRegItem.fAddress << 8 | uValue );
     }
 
-    void GlibFWInterface::DecodeReg ( CbcRegItem& pRegItem,
+    void GlibFWInterface::DecodeReg ( ChipRegItem& pRegItem,
                                       uint8_t& pCbcId,
                                       uint32_t pWord,
                                       bool& pRead,
