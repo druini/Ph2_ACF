@@ -330,6 +330,9 @@ void Calibration::Start(int currentRun)
     writeObjects();
     dumpConfigFiles();
 
+    SaveResults();
+    CloseResultFile();
+    Destroy();
 }
 
 void Calibration::Stop()

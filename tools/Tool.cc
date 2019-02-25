@@ -1459,7 +1459,7 @@ void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, cons
                 }
                 else LOG (ERROR) << "Not a valid chip type!";
             }
-            if(dacName=="TriggerLatency"){
+            else if(dacName=="TriggerLatency"){
                 if (cCbc->getChipType() == ChipType::CBC3)
                 {
                     if (dacValue > 511) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
@@ -1524,7 +1524,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
                 }
                 else LOG (ERROR) << "Not a valid chip type!";
             }
-            if(dacName=="TriggerLatency"){
+            else if(dacName=="TriggerLatency"){
                 if (cCbc->getChipType() == ChipType::CBC3)
                 {
                     if (dacValue > 511) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
