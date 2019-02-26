@@ -7,7 +7,7 @@
 #include "pugixml/pugixml.hpp"
 #include <boost/filesystem.hpp>
 
-#include "../HWDescription/Cbc.h"
+#include "../HWDescription/Chip.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWInterface/CbcInterface.h"

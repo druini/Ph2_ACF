@@ -84,8 +84,8 @@ class BiasSweep : public Tool
     ~BiasSweep();
     void Initialize();
     // *******
-    void SweepBias (std::string pBias, Cbc* pCbc);
-    void MeasureMinPower (BeBoard* pBoard, Cbc* pCbc);
+    void SweepBias (std::string pBias, Chip* pCbc);
+    void MeasureMinPower (BeBoard* pBoard, Chip* pCbc);
 
 
 
@@ -94,11 +94,11 @@ class BiasSweep : public Tool
     //std::mutex fHWMutex;
     std::atomic<bool> fDAQrunning;
     void InitializeAmuxMap();
-    uint8_t configureAmux (std::map<std::string, AmuxSetting>::iterator pAmuxValue, Cbc* pCbc, double pSettlingTime_s = 0);
-    void resetAmux (uint8_t pAmuxValue, Cbc* pCbc, double pSettlingTime_s = 0  );
-    void sweep8Bit (std::map<std::string, AmuxSetting>::iterator pAmuxValue, TGraph* pGraph, Cbc* pCbc, bool pCurrent);
-    void measureSingle (std::map<std::string, AmuxSetting>::iterator pAmuxMap, Cbc* pCbc);
-    void sweepVCth (TGraph* pGraph, Cbc* pCbc);
+    uint8_t configureAmux (std::map<std::string, AmuxSetting>::iterator pAmuxValue, Chip* pCbc, double pSettlingTime_s = 0);
+    void resetAmux (uint8_t pAmuxValue, Chip* pCbc, double pSettlingTime_s = 0  );
+    void sweep8Bit (std::map<std::string, AmuxSetting>::iterator pAmuxValue, TGraph* pGraph, Chip* pCbc, bool pCurrent);
+    void measureSingle (std::map<std::string, AmuxSetting>::iterator pAmuxMap, Chip* pCbc);
+    void sweepVCth (TGraph* pGraph, Chip* pCbc);
     void cleanup();
     void DAQloop();
     void StartDAQ();

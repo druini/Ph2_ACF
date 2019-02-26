@@ -30,7 +30,7 @@ using namespace Ph2_System;
 using namespace Ph2_HwInterface;
 using namespace Ph2_HwDescription;
 
-typedef std::map<Cbc*, std::map<std::string, TObject*> >  CbcHistogramMap;
+typedef std::map<Chip*, std::map<std::string, TObject*> >  CbcHistogramMap;
 typedef std::map<Module*, std::map<std::string, TObject*> > ModuleHistogramMap;
 
 /*!

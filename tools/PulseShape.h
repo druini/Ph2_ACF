@@ -35,7 +35,7 @@ using namespace Ph2_HwDescription;
  * \class PulseShape
  * \brief Class to reconstruct pulse shape
  */
-typedef std::map<Cbc*, std::vector<Channel*> > ChannelMap;
+typedef std::map<Chip*, std::vector<Channel*> > ChannelMap;
 
 class PulseShape : public Tool
 {
@@ -103,7 +103,7 @@ class PulseShape : public Tool
     */
     void fitGraph ( int pLow );
 
-    ChannelMap fChannelMap;/*!< Map Cbc vs chennels number */
+    ChannelMap fChannelMap;/*!< Map Chip vs chennels number */
     bool fFitHist;
     uint32_t fNevents; /*!< Number of events */
     uint32_t fHoleMode;/*!< Check if is in hole mode */

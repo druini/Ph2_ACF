@@ -1,6 +1,6 @@
 #include <cstring>
 #include "../Utils/Utilities.h"
-#include "../HWDescription/Cbc.h"
+#include "../HWDescription/Chip.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWInterface/CbcInterface.h"

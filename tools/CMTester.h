@@ -35,8 +35,8 @@ using namespace Ph2_System;
 using namespace Ph2_HwInterface;
 using namespace Ph2_HwDescription;
 
-typedef std::map<Cbc*, std::map<std::string, TObject*> >  CbcHistogramMap;
-// typedef std::map<Cbc*, TCanvas*> CanvasMap;
+typedef std::map<Chip*, std::map<std::string, TObject*> >  CbcHistogramMap;
+// typedef std::map<Chip*, TCanvas*> CanvasMap;
 typedef std::map<Module*, std::map<std::string, TObject*> > ModuleHistogramMap;
 
 
@@ -63,14 +63,14 @@ class CMTester : public Tool
     void parseSettings();
     void analyze ( BeBoard* pBoard, const Event* pEvent );
     bool randHit ( float pProbability );
-    bool isMasked ( Cbc* pCbc, int pChan );
+    bool isMasked ( Chip* pCbc, int pChan );
     bool isMasked ( int pGlobalChannel );
 
     uint32_t fNevents, fDoSimulate, fSimOccupancy;
      std::vector<double> fTotalNoise;
     uint32_t fVcth;
 
-    std::map<Cbc*, std::set<int> > fNoiseStripMap;
+    std::map<Chip*, std::set<int> > fNoiseStripMap;
 
 };
 

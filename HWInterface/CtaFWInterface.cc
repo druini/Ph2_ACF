@@ -1,7 +1,7 @@
 /*
 
         FileName :                    CtaFWInterface.h
-        Content :                     CtaFWInterface init/config of the CTA and its Cbc's
+        Content :                     CtaFWInterface init/config of the CTA and its Chip's
         Programmer :                  Lorenzo BIDEGAIN, Nicolas PIERRE
         Version :                     1.0
         Date of creation :            28/07/14
@@ -130,7 +130,7 @@ namespace Ph2_HwInterface {
         WriteStackReg ( cVecReg );
         cVecReg.clear();
 
-        this->CbcHardReset();
+        this->ChipHardReset();
         usleep (10);
         //cVecReg.push_back ( {"pc_commands.PC_config_ok", 1} );
         //WriteStackReg ( cVecReg );
@@ -396,11 +396,11 @@ namespace Ph2_HwInterface {
         {
             uint32_t fNCbc = 0;
 
-            void visit ( Cbc& pCbc )
+            void visit ( Chip& pCbc )
             {
                 fNCbc++;
             }
-            uint32_t getNCbc()
+            uint32_t getNChip()
             {
                 if ( fNCbc == 2 )
                     // since the 2 CBC FW outputs data for 4 CBCs (beamtest heritage, might have to change in the future)
@@ -418,7 +418,7 @@ namespace Ph2_HwInterface {
         //if ( pBoard->getNCbcDataSize() != 0 )
         //cEvtSize = std::max (pBoard->getNCbcDataSize(), (uint16_t) 4) * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32 ;
         //else
-        cEvtSize = std::max (cCounter.getNCbc(), (uint32_t) 4) * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32;
+        cEvtSize = std::max (cCounter.getNChip(), (uint32_t) 4) * CBC_EVENT_SIZE_32 + EVENT_HEADER_TDC_SIZE_32;
 
         return cEvtSize * fNpackets;
     }
@@ -449,7 +449,7 @@ namespace Ph2_HwInterface {
 
 
 
-    //Methods for Cbc's:
+    //Methods for Chip's:
 
     //void CtaFWInterface::StartThread ( BeBoard* pBoard, uint32_t uNbAcq, HwInterfaceVisitor* visitor )
     //{
@@ -613,7 +613,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool CtaFWInterface::WriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts, bool pReadback)
+    bool CtaFWInterface::WriteChipBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts, bool pReadback)
     {
         int cMaxWriteAttempts = 5;
         bool cSuccess = false;
@@ -667,7 +667,7 @@ namespace Ph2_HwInterface {
                     if (pReadback)  LOG (INFO) << BOLDRED <<  "(WRITE#"  << std::to_string (pWriteAttempts) << ") There were " << cWriteAgain.size() << " Readback Errors -trying again!" << RESET ;
 
                     pWriteAttempts++;
-                    this->WriteCbcBlockReg ( cWriteAgain, pWriteAttempts, true);
+                    this->WriteChipBlockReg ( cWriteAgain, pWriteAttempts, true);
                 }
                 else if ( pWriteAttempts >= cMaxWriteAttempts )
                 {
@@ -684,7 +684,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool CtaFWInterface::BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReq, bool pReadback)
+    bool CtaFWInterface::BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReq, bool pReadback)
     {
         //use the method above for that!
         bool cSuccess = false;
@@ -702,7 +702,7 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
-    void CtaFWInterface::ReadCbcBlockReg (  std::vector<uint32_t>& pVecReq )
+    void CtaFWInterface::ReadChipBlockReg (  std::vector<uint32_t>& pVecReq )
     {
         try
         {
@@ -723,14 +723,14 @@ namespace Ph2_HwInterface {
         }
     }
 
-    void CtaFWInterface::CbcFastReset()
+    void CtaFWInterface::ChipFastReset()
     {
         //WriteReg ( "cbc_fast_reset", 1 );
         //usleep ( 2000 );
         //WriteReg ( "cbc_fast_reset", 0 );
     }
 
-    void CtaFWInterface::CbcHardReset()
+    void CtaFWInterface::ChipHardReset()
     {
         WriteReg ( "cbc_hard_reset", 1 );
 

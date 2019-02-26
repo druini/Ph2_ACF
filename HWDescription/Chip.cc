@@ -27,10 +27,6 @@ namespace Ph2_HwDescription {
 
     {
         loadfRegMap ( filename );
-
-        // determine the chip type by checking for existence of VCth register (CBC2 only, called VCth1 & VCth2 for CBC3)
-        if (fRegMap.find ("VCth2") != std::end (fRegMap) ) this->setChipType ( ChipType::CBC3);
-        else this->setChipType ( ChipType::CBC2);
     }
 
     // C'tors which take BeId, FMCId, FeID, ChipId
@@ -39,28 +35,22 @@ namespace Ph2_HwDescription {
 
     {
         loadfRegMap ( filename );
-
-        // determine the chip type by checking for existence of VCth register (CBC2 only, called VCth1 & VCth2 for CBC3)
-        if (fRegMap.find ("VCth2") != std::end (fRegMap) ) this->setChipType ( ChipType::CBC3);
-        else this->setChipType ( ChipType::CBC2);
     }
 
     Chip::Chip ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, const std::string& filename, ChipType pType ) : FrontEndDescription ( pBeId, pFMCId, pFeId ), fChipId ( pChipId )
 
     {
         loadfRegMap ( filename );
-        // fNumberOfChannels = 254;
-
 
         this->setChipType (pType);
     }
 
     // Copy C'tor
 
-    Chip::Chip ( const Chip& cbcobj ) : FrontEndDescription ( cbcobj ),
-        fChipId ( cbcobj.fChipId ),
-        fRegMap ( cbcobj.fRegMap ),
-        fCommentMap (cbcobj.fCommentMap)
+    Chip::Chip ( const Chip& chipObj ) : FrontEndDescription ( chipObj ),
+        fChipId ( chipObj.fChipId ),
+        fRegMap ( chipObj.fRegMap ),
+        fCommentMap (chipObj.fCommentMap)
     {
     }
 

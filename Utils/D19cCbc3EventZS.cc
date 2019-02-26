@@ -837,9 +837,9 @@ namespace Ph2_HwInterface {
             //TODO
             cStatusPayload.append (this->GetEventCount(), 9);
 
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fChipVector)
             {
-                uint8_t cCbcId = cCbc->getCbcId();
+                uint8_t cCbcId = cCbc->getChipId();
                 uint16_t cKey = encodeId (cFeId, cCbcId);
                 EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 

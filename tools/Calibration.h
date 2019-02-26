@@ -33,9 +33,9 @@ using namespace Ph2_System;
 
 
 // Typedefs for Containers
-//typedef std::map<Cbc*, std::vector<Channel> > CbcChannelMap;
-// typedef std::map<Cbc*, TF1*> FitMap;
-// typedef std::map<Cbc*, TH1F*> HistMap;
+//typedef std::map<Chip*, std::vector<Channel> > CbcChannelMap;
+// typedef std::map<Chip*, TF1*> FitMap;
+// typedef std::map<Chip*, TH1F*> HistMap;
 
 class Calibration : public Tool
 {
@@ -65,9 +65,9 @@ class Calibration : public Tool
 
     // void toggleOffset ( int pTGroup, uint8_t pBit, bool pBegin );
 
-    float findCbcOccupancy ( Cbc* pCbc, int pTGroup, int pEventsPerPoint );
+    float findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint );
 
-    void clearOccupancyHists ( Cbc* pCbc );
+    void clearOccupancyHists ( Chip* pCbc );
 
     void updateHists ( std::string pHistname );
 
@@ -75,8 +75,8 @@ class Calibration : public Tool
 
   private:
     // Containers
-    //static std::map<Cbc*, uint16_t> fVplusMap;
-    std::map<Cbc*, uint16_t> fVplusMap;
+    //static std::map<Chip*, uint16_t> fVplusMap;
+    std::map<Chip*, uint16_t> fVplusMap;
 
     // Canvases
     TCanvas* fVplusCanvas;
@@ -99,8 +99,8 @@ class Calibration : public Tool
     bool fDisableStubLogic;
 
     //to hold the original register values
-    std::map<Cbc*, uint8_t> fStubLogicValue;
-    std::map<Cbc*, uint8_t> fHIPCountValue;
+    std::map<Chip*, uint8_t> fStubLogicValue;
+    std::map<Chip*, uint8_t> fHIPCountValue;
 };
 
 

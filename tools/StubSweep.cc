@@ -47,14 +47,14 @@ void StubSweep::Initialize()
             cFeCount++;
             fType = cFe->getChipType();
 
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fChipVector)
             {
-                uint32_t cCbcId = cCbc->getCbcId();
+                uint32_t cCbcId = cCbc->getChipId();
                 cCbcCount++;
 
                 if ( cCbcId > cCbcIdMax ) cCbcIdMax = cCbcId;
 
-                cName = Form ("StubSweep_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getCbcId() );
+                cName = Form ("StubSweep_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() );
                 cObj = gROOT->FindObject (cName);
 
                 if (cObj) delete cObj;
@@ -74,7 +74,7 @@ void StubSweep::Initialize()
                 bookHistogram ( cCbc, "StubAddresses", cStubSweepHist );
 
                 // bend information
-                cName = Form ("StubBends_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getCbcId() );
+                cName = Form ("StubBends_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() );
                 cObj = gROOT->FindObject (cName);
 
                 if (cObj) delete cObj;
@@ -103,7 +103,7 @@ void StubSweep::Initialize()
     updateHists ( "StubBends" );
 
 }
-void StubSweep::configureTestPulse (Cbc* pCbc, uint8_t pPulseState)
+void StubSweep::configureTestPulse (Chip* pCbc, uint8_t pPulseState)
 {
     // get value of TestPulse control register
     uint8_t cOrigValue = pCbc->getReg ("MiscTestPulseCtrl&AnalogMux" );
@@ -124,9 +124,9 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
         {
             uint32_t cFeId = cFe->getFeId();
 
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fChipVector)
             {
-                uint32_t cCbcId = cCbc->getCbcId();
+                uint32_t cCbcId = cCbc->getChipId();
 
                 // before you do anything else make sure that the test pulse is enabled
                 configureTestPulse (cCbc, 1);
@@ -254,15 +254,15 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
 
     this->writeObjects();
 }
-void StubSweep::fillStubSweepHist ( Cbc* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubPosition )
+void StubSweep::fillStubSweepHist ( Chip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubPosition )
 {
-    // Find the Occupancy histogram for the current Cbc
+    // Find the Occupancy histogram for the current Chip
     TProfile* cTmpProfile = static_cast<TProfile*> ( getHist ( pCbc, "StubAddresses" ) );
     cTmpProfile->Fill ( pChannelPair[1], pStubPosition );
 }
-void StubSweep::fillStubBendHist ( Cbc* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubBend )
+void StubSweep::fillStubBendHist ( Chip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubBend )
 {
-    // Find the Occupancy histogram for the current Cbc
+    // Find the Occupancy histogram for the current Chip
     TProfile* cTmpProfile = static_cast<TProfile*> ( getHist ( pCbc, "StubBends" ) );
     cTmpProfile->Fill ( pChannelPair[1], pStubBend );
 }
@@ -335,7 +335,7 @@ uint8_t StubSweep::getStubPosition (std::vector<Event*> pEvents, uint32_t pFeId,
 
     return cStubPosition;
 }
-void StubSweep::maskAllChannels (Cbc* pCbc)
+void StubSweep::maskAllChannels (Chip* pCbc)
 {
     uint8_t cRegValue ;
     std::string cRegName;
@@ -390,7 +390,7 @@ std::vector<uint8_t> StubSweep::findChannelsInTestGroup ( uint8_t pTestGroup )
 
     return cChannelVector;
 }
-uint8_t StubSweep::getChanelMask ( Cbc* pCbc, uint8_t pChannel )
+uint8_t StubSweep::getChanelMask ( Chip* pCbc, uint8_t pChannel )
 {
     uint8_t cRegisterIndex = (pChannel - 1) / 8;
 
@@ -418,7 +418,7 @@ uint8_t StubSweep::getChanelMask ( Cbc* pCbc, uint8_t pChannel )
         return cReadValue;
     }
 }
-void StubSweep::setCorrelationWinodwOffsets ( Cbc* pCbc, double pOffsetR1, double pOffsetR2, double pOffsetR3, double pOffsetR4)
+void StubSweep::setCorrelationWinodwOffsets ( Chip* pCbc, double pOffsetR1, double pOffsetR2, double pOffsetR3, double pOffsetR4)
 {
 
     uint8_t cOffsetR1 =  fWindowOffsetMapCBC3.find (pOffsetR1)->second;

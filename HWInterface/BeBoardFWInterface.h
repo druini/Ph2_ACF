@@ -170,20 +170,20 @@ namespace Ph2_HwInterface {
         * \param pVecReq : Block of words to write
         * \param pWriteAttempt : number of tries write was attempted
         */
-        virtual bool WriteChipBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts, bool pReadback ) = 0;
+        // virtual bool WriteChipBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts, bool pReadback ) = 0;
         //r/w the Chip registers
         /*!
         * \brief Write register blocks of a Chip
         * \param pFeId : FrontEnd to work with
         * \param pVecReq : Block of words to write
         */
-        virtual bool BCWriteChipBlockReg (  std::vector<uint32_t>& pVecReq, bool pReadback ) = 0;
+        // virtual bool BCWriteChipBlockReg (  std::vector<uint32_t>& pVecReq, bool pReadback ) = 0;
         /*!
         * \brief Read register blocks of a Chip
         * \param pFeId : FrontEnd to work with
         * \param pVecReq : Vector to stack the read words
         */
-        virtual void ReadChipBlockReg (  std::vector<uint32_t>& pVecReq ) = 0;
+        // virtual void ReadChipBlockReg (  std::vector<uint32_t>& pVecReq ) = 0;
         /*!
         * \brief Configure the board with its Config File
         * \param pBoard
@@ -256,9 +256,9 @@ namespace Ph2_HwInterface {
 
 
 //LORE
-        virtual bool WriteCbcBlockReg   ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) = 0;
-        virtual bool BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) = 0;
-        virtual void ReadCbcBlockReg (  std::vector<uint32_t>& pVecReq ){;}
+        virtual bool WriteChipBlockReg   ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) = 0;
+        virtual bool BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) = 0;
+        virtual void ReadChipBlockReg (  std::vector<uint32_t>& pVecReq ){;}
 //LORE
 
 

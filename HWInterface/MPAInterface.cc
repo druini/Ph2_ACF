@@ -114,7 +114,7 @@ bool MPAInterface::ConfigureMPA (const MPA* pMPA, bool pVerifLoop)
     // write the registers, the answer will be in the same cVec
     // the number of times the write operation has been attempted is given by cWriteAttempts
     uint8_t cWriteAttempts = 0 ;
-    bool cSuccess = fBoardFW->WriteCbcBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+    bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
 
 #ifdef COUNT_FLAG
     fTransactionCount++;
@@ -142,7 +142,7 @@ bool MPAInterface::WriteMPAReg ( MPA* pMPA, const std::string& pRegNode, uint8_t
     // write the registers, the answer will be in the same cVec
     // the number of times the write operation has been attempted is given by cWriteAttempts
     uint8_t cWriteAttempts = 0 ;
-    bool cSuccess = fBoardFW->WriteCbcBlockReg (  cVec, cWriteAttempts, pVerifLoop );
+    bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
 
     //update the HWDescription object
     if (cSuccess)
@@ -183,7 +183,7 @@ bool MPAInterface::WriteMPAMultReg ( MPA* pMPA, const std::vector< std::pair<std
     // write the registers, the answer will be in the same cVec
     // the number of times the write operation has been attempted is given by cWriteAttempts
     uint8_t cWriteAttempts = 0 ;
-    bool cSuccess = fBoardFW->WriteCbcBlockReg (  cVec, cWriteAttempts, pVerifLoop );
+    bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
 
 #ifdef COUNT_FLAG
     fTransactionCount++;
@@ -211,7 +211,7 @@ uint8_t MPAInterface::ReadMPAReg ( MPA* pMPA, const std::string& pRegNode )
     std::vector<uint32_t> cVecReq;
 
     fBoardFW->EncodeReg ( cRegItem, pMPA->getFeId(), pMPA->getMPAId(), cVecReq, true, false );
-    fBoardFW->ReadCbcBlockReg (  cVecReq );
+    fBoardFW->ReadChipBlockReg (  cVecReq );
 
     //bools to find the values of failed and read
     bool cFailed = false;
@@ -245,7 +245,7 @@ void MPAInterface::ReadMPAMultReg ( MPA* pMPA, const std::vector<std::string>& p
     }
 
     // write the registers, the answer will be in the same cVec
-    fBoardFW->ReadCbcBlockReg ( cVec);
+    fBoardFW->ReadChipBlockReg ( cVec);
 
 #ifdef COUNT_FLAG
     fTransactionCount++;
@@ -295,10 +295,10 @@ void MPAInterface::ReadMPA ( MPA* pMPA )
     }
 
     // write the registers, the answer will be in the same cVec
-    //bool cSuccess = fBoardFW->WriteCbcBlockReg ( cVec, pVerifLoop);
+    //bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, pVerifLoop);
 
     // write the registers, the answer will be in the same cVec
-    fBoardFW->ReadCbcBlockReg ( cVec);
+    fBoardFW->ReadChipBlockReg ( cVec);
 
 #ifdef COUNT_FLAG
     fTransactionCount++;

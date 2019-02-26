@@ -17,13 +17,13 @@
 //#include "../HWInterface/CbcInterface.h"
 //#include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/GlibFWInterface.h"
-#include "../HWInterface/ICGlibFWInterface.h"
-#include "../HWInterface/CtaFWInterface.h"
-#include "../HWInterface/ICFc7FWInterface.h"
-#include "../HWInterface/Cbc3Fc7FWInterface.h"
+// #include "../HWInterface/GlibFWInterface.h"
+// #include "../HWInterface/ICGlibFWInterface.h"
+// #include "../HWInterface/CtaFWInterface.h"
+// #include "../HWInterface/ICFc7FWInterface.h"
+// #include "../HWInterface/Cbc3Fc7FWInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
-#include "../HWInterface/MPAGlibFWInterface.h"
+// #include "../HWInterface/MPAGlibFWInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/Exception.h"
@@ -113,7 +113,7 @@ namespace Ph2_System {
         void parseSLink (pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ostream& os );
         void parseModule (pugi::xml_node pModuleNode, BeBoard* pBoard, std::ostream& os );
         void parseCbc (pugi::xml_node pModuleNode, Module* cModule, std::string cFilePrefix, std::ostream& os );
-        void parseCbcSettings (pugi::xml_node pCbcNode, Cbc* pCbc, std::ostream& os);
+        void parseCbcSettings (pugi::xml_node pCbcNode, Chip* pCbc, std::ostream& os);
         void parseGlobalCbcSettings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os);
 
         std::map<uint8_t, std::string> ChannelMaskMapCBC2 =

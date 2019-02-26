@@ -628,9 +628,9 @@ namespace Ph2_HwInterface {
             //stub counter per FE
             uint8_t cFeStubCounter = 0;
 
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fChipVector)
             {
-                uint8_t cCbcId = cCbc->getCbcId();
+                uint8_t cCbcId = cCbc->getChipId();
                 uint16_t cKey = encodeId (cFeId, cCbcId);
                 EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 

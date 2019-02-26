@@ -133,12 +133,7 @@ namespace Ph2_HwDescription {
             fChipId = pChipId;
         }
 
-        const uint16_t getNumberOfChannels() const { return NCHANNELS; }
-
-        const uint32_t* getChipmask() const
-        {
-            return fChipMask32;
-        }
+        virtual const uint16_t getNumberOfChannels() const = 0;
 
         const std::vector<uint8_t>& getChipMask() const
         {
@@ -149,19 +144,9 @@ namespace Ph2_HwDescription {
             return fAsMaskedChannels;
         }
 
-        bool isDACLocal(const std::string &dacName){
-            if(dacName.find("MaskChannel-",0,12)!=std::string::npos || dacName.find("Channel",0,7)!=std::string::npos ) return true;
-            else return false;
-        }
+        virtual bool isDACLocal(const std::string &dacName) = 0;
 
-        uint8_t getNumberOfBits(const std::string &dacName){
-            if(dacName.find("MaskChannel-",0,12)!=std::string::npos) return 1;
-            else if(dacName == "VCth") return 10;
-            else if(dacName == "VCth2") return 2;
-            else if(dacName == "TriggerLatency" ) return 9;
-            else return 8;
-        }
-
+        virtual uint8_t getNumberOfBits(const std::string &dacName) = 0;
 
       protected:
 
@@ -173,8 +158,7 @@ namespace Ph2_HwDescription {
         ChipRegMap fRegMap;
         CommentMap fCommentMap;
         std::vector<uint8_t> fChipMask = std::vector<uint8_t>(32,0);
-        uint32_t fChipMask32[8]; //mask is stored in 8 uint32
-
+        
     };
 
 

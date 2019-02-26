@@ -49,9 +49,9 @@ class PedeNoise : public Tool
     void measureNoise (uint8_t pTPAmplitude = 0); //method based on the one below that actually analyzes the scurves and extracts the noise
     std::string sweepSCurves (uint8_t pTPAmplitude); // actual methods to measure SCurves
     void Validate (uint32_t pNoiseStripThreshold = 1, uint32_t pMultiple = 100);
-    double getPedestal (Cbc* pCbc);
+    double getPedestal (Chip* pCbc);
     double getPedestal (Module* pFe);
-    double getNoise (Cbc* pCbc);
+    double getNoise (Chip* pCbc);
     double getNoise (Module* pFe);
     void writeObjects();
 
@@ -76,13 +76,13 @@ class PedeNoise : public Tool
     bool fDisableStubLogic;
 
     //to hold the original register values
-    std::map<Cbc*, uint8_t> fStubLogicValue;
-    std::map<Cbc*, uint8_t> fHIPCountValue;
+    std::map<Chip*, uint8_t> fStubLogicValue;
+    std::map<Chip*, uint8_t> fHIPCountValue;
     
   private:
     void measureSCurves (std::string pHistName,  uint16_t pStartValue = 0 );
-    void differentiateHist (Cbc* pCbc, std::string pHistName);
-    void fitHist (Cbc* pCbc, std::string pHistName);
+    void differentiateHist (Chip* pCbc, std::string pHistName);
+    void fitHist (Chip* pCbc, std::string pHistName);
     void processSCurves (std::string pHistName);
     void extractPedeNoise (std::string pHistName);
 

@@ -9,15 +9,15 @@ struct HistogramFiller  : public HwDescriptionVisitor
 
     HistogramFiller ( TH1F* pBotHist, TH1F* pTopHist, const Event* pEvent ) : fBotHist ( pBotHist ), fTopHist ( pTopHist ), fEvent ( pEvent ) {}
 
-    void visit ( Cbc& pCbc )
+    void visit ( Chip& pCbc )
     {
-        std::vector<bool> cDataBitVector = fEvent->DataBitVector ( pCbc.getFeId(), pCbc.getCbcId() );
+        std::vector<bool> cDataBitVector = fEvent->DataBitVector ( pCbc.getFeId(), pCbc.getChipId() );
 
         for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
         {
             if ( cDataBitVector.at ( cId ) )
             {
-                uint32_t globalChannel = ( pCbc.getCbcId() * 254 ) + cId;
+                uint32_t globalChannel = ( pCbc.getChipId() * 254 ) + cId;
 
                 // find out why histograms are not filling!
                 if ( globalChannel % 2 == 0 )
@@ -60,7 +60,7 @@ void AntennaTester::InitialiseSettings()
     // figure out how many CBCs you're working with
     Counter cCbcCounter;
     accept ( cCbcCounter );
-    fNCbc = cCbcCounter.getNCbc();
+    fNCbc = cCbcCounter.getNChip();
 
     // figure out what the number of events to take is
     cSetting = fSettingsMap.find ( "Nevents" );
@@ -129,29 +129,29 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 {
     for (auto& cBoard : fBoardVector)
     {
-        fBeBoardInterface->CbcHardReset ( cBoard );
+        fBeBoardInterface->ChipHardReset ( cBoard );
 
         for (auto& cFe : cBoard->fModuleVector)
         {
-            for (auto& cCbc : cFe->fCbcVector)
+            for (auto& cCbc : cFe->fChipVector)
             {
                 std::string pRegFile ;
                 char buffer[120];
 
                 if ( pDirectoryName.empty() )
-                    sprintf (buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cCbc->getFeId(), cCbc->getCbcId() );
+                    sprintf (buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cCbc->getFeId(), cCbc->getChipId() );
                 else
-                    sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cCbc->getFeId(), cCbc->getCbcId() );
+                    sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cCbc->getFeId(), cCbc->getChipId() );
 
                 pRegFile = buffer;
                 cCbc->loadfRegMap (pRegFile);
                 fCbcInterface->ConfigureCbc ( cCbc );
-                LOG (INFO)  << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getCbcId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
+                LOG (INFO)  << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
             }
         }
 
-        //CbcFastReset as per recommendation of Mark Raymond
-        fBeBoardInterface->CbcFastReset ( cBoard );
+        //ChipFastReset as per recommendation of Mark Raymond
+        fBeBoardInterface->ChipFastReset ( cBoard );
     }
 }
 

@@ -38,7 +38,7 @@ struct CbcRegWriter : public HwDescriptionVisitor
         fRegValue = pRegValue;
     }
 
-    void visit ( Ph2_HwDescription::Cbc& pCbc )
+    void visit ( Ph2_HwDescription::Chip& pCbc )
     {
         fInterface->WriteCbcReg ( &pCbc, fRegName, fRegValue );
     }
@@ -74,7 +74,7 @@ struct CbcMultiRegWriter : public HwDescriptionVisitor
 
     CbcMultiRegWriter ( CbcInterface* pInterface, std::vector<std::pair<std::string, uint8_t>> pRegVec ) : fInterface ( pInterface ), fRegVec ( pRegVec ) {}
 
-    void visit ( Ph2_HwDescription::Cbc& pCbc )
+    void visit ( Ph2_HwDescription::Chip& pCbc )
     {
         fInterface->WriteCbcMultReg ( &pCbc, fRegVec );
     }
@@ -91,10 +91,10 @@ class Counter : public HwDescriptionVisitor
 
   public:
     Counter() : fNCbc ( 0 ), fNFe ( 0 ), fNBe ( 0 ), fCbcMask ( 0 ) {}
-    void visit ( Ph2_HwDescription::Cbc& pCbc )
+    void visit ( Ph2_HwDescription::Chip& pCbc )
     {
         fNCbc++;
-        fCbcMask |= (1 << pCbc.getCbcId() );
+        fCbcMask |= (1 << pCbc.getChipId() );
     }
     void visit ( Ph2_HwDescription::Module& pModule )
     {
@@ -104,7 +104,7 @@ class Counter : public HwDescriptionVisitor
     {
         fNBe++;
     }
-    uint32_t getNCbc() const
+    uint32_t getNChip() const
     {
         return fNCbc;
     }
@@ -116,7 +116,7 @@ class Counter : public HwDescriptionVisitor
     {
         return fNBe;
     }
-    uint32_t getCbcMask() const
+    uint32_t getChipMask() const
     {
         return fCbcMask;
     }
@@ -135,10 +135,10 @@ class Configurator: public HwDescriptionVisitor
         fBeBoardInterface->ConfigureBoard ( &pBoard );
         LOG (INFO) << "Successfully configured Board " << +pBoard.getBeId();
     }
-    void visit ( Cbc& pCbc )
+    void visit ( Chip& pCbc )
     {
         fCbcInterface->ConfigureCbc ( &pCbc );
-        LOG (INFO) << "Successfully configured Cbc " <<  +pCbc.getCbcId();
+        LOG (INFO) << "Successfully configured Chip " <<  +pCbc.getChipId();
 
     }
 };
@@ -159,13 +159,13 @@ struct CbcRegReader : public HwDescriptionVisitor
     {
         fRegName = pRegName;
     }
-    void visit ( Cbc& pCbc )
+    void visit ( Chip& pCbc )
     {
         fRegValue = pCbc.getReg ( fRegName );
         fInterface->ReadCbcReg ( &pCbc, fRegName );
         fReadRegValue = pCbc.getReg ( fRegName );
 
-        if (fOutput) LOG (INFO) << "Reading Reg " << RED << fRegName << RESET << " on CBC " << +pCbc.getCbcId() << " memory value: " << std::hex << +fRegValue << " read value: " << +fReadRegValue << std::dec ;
+        if (fOutput) LOG (INFO) << "Reading Reg " << RED << fRegName << RESET << " on CBC " << +pCbc.getChipId() << " memory value: " << std::hex << +fRegValue << " read value: " << +fReadRegValue << std::dec ;
     }
     uint8_t getMemoryValue()
     {
@@ -187,7 +187,7 @@ struct CbcIdReader : public HwDescriptionVisitor
     uint32_t fChipId;
     CbcIdReader (CbcInterface* pCbcInterface) : fCbcInterface (pCbcInterface), fChipId (0) {}
 
-    void visit (Cbc& pCbc)
+    void visit (Chip& pCbc)
     {
         if (pCbc.getChipType() != ChipType::CBC3)
             LOG (ERROR) << RED << "The current chip type is not CBC3 and thus no Id can be read!" << RESET;
@@ -205,7 +205,7 @@ struct CbcIdReader : public HwDescriptionVisitor
                 cCounter++;
             }
 
-            LOG (INFO) << BOLDBLUE << "Chip Id for Fe " << +pCbc.getFeId() << " Cbc " << +pCbc.getCbcId() << " read to be " << fChipId << " (0x" << std::hex << fChipId << std::dec << ")" << RESET;
+            LOG (INFO) << BOLDBLUE << "Chip Id for Fe " << +pCbc.getFeId() << " Chip " << +pCbc.getChipId() << " read to be " << fChipId << " (0x" << std::hex << fChipId << std::dec << ")" << RESET;
         }
     }
 };
@@ -225,7 +225,7 @@ struct CbcRegIncrementer : public HwDescriptionVisitor
         fRegIncrement = pRegIncrement;
     }
 
-    void visit ( Ph2_HwDescription::Cbc& pCbc )
+    void visit ( Ph2_HwDescription::Chip& pCbc )
     {
         uint8_t currentValue = pCbc.getReg (fRegName);
         int targetValue = int (currentValue) + fRegIncrement;
@@ -278,7 +278,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
         fThreshold = pThreshold;
     }
 
-    void visit (Ph2_HwDescription::Cbc& pCbc)
+    void visit (Ph2_HwDescription::Chip& pCbc)
     {
 
         if (pCbc.getChipType() == ChipType::CBC2)
@@ -362,7 +362,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
     {
         fLatency = pLatency;
     }
-    void visit (Ph2_HwDescription::Cbc& pCbc)
+    void visit (Ph2_HwDescription::Chip& pCbc)
     {
 
         if (pCbc.getChipType() == ChipType::CBC2)

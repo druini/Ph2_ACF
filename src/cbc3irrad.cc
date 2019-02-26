@@ -243,7 +243,7 @@ int main ( int argc, char* argv[] )
             {
                 for (auto cFe : cBoard->fModuleVector)
                 {
-                    for (auto cCbc : cFe->fCbcVector)
+                    for (auto cCbc : cFe->fChipVector)
                     {
 
                         for (auto cBias : cBiases)

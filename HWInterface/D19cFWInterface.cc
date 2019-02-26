@@ -1,7 +1,7 @@
 /*!
 
         \file                           D19cFWInterface.h
-        \brief                          D19cFWInterface init/config of the FC7 and its Cbc's
+        \brief                          D19cFWInterface init/config of the FC7 and its Chip's
         \author                         G. Auzinger, K. Uchida, M. Haranko
         \version            1.0
         \date                           24.03.2017
@@ -304,8 +304,8 @@ namespace Ph2_HwInterface {
     {
     // after firmware loading it seems that CBC3 is not super stable
     // and it needs fast reset after, so let's be secure and do also the hard one..
-        this->CbcHardReset();
-        this->CbcFastReset();
+        this->ChipHardReset();
+        this->ChipFastReset();
         usleep (1);
 
         WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
@@ -341,10 +341,10 @@ namespace Ph2_HwInterface {
                 hybrid_enable |= 1 << cFe->getFeId();
 
                 if (fFirwmareChipType == ChipType::CBC2 || fFirwmareChipType == ChipType::CBC3) {
-                    for ( Cbc* cCbc : cFe->fCbcVector)
+                    for ( Chip* cCbc : cFe->fChipVector)
                     {
-                        LOG (INFO) << "     Enabling CBC2 Chip " << (int) cCbc->getCbcId();
-                        chips_enable[cFe->getFeId()] |= 1 << cCbc->getCbcId();
+                        LOG (INFO) << "     Enabling CBC2 Chip " << (int) cCbc->getChipId();
+                        chips_enable[cFe->getFeId()] |= 1 << cCbc->getChipId();
                 //need to increment the NCbc counter for I2C controller
                         fNCbc++;
                     }
@@ -413,7 +413,7 @@ namespace Ph2_HwInterface {
             else WriteReg ("fc7_daq_cnfg.readout_block.global.zero_suppression_enable", 0x0);
 
     // resetting hard
-            this->CbcHardReset();
+            this->ChipHardReset();
 
     // ping all cbcs (reads data from registers #0)
             uint32_t cInit = ( ( (2) << 28 ) | (  (0) << 18 )  | ( (0) << 17 ) | ( (1) << 16 ) | (0 << 8 ) | 0);
@@ -431,11 +431,11 @@ namespace Ph2_HwInterface {
 
                 for (Module* cFe : pBoard->fModuleVector)
                 {
-                    for ( Cbc* cCbc : cFe->fCbcVector)
+                    for ( Chip* cCbc : cFe->fChipVector)
                     {
                         uint32_t cWord = pReplies.at (k);
-                        if(fI2CVersion >= 1) cWordCorrect = ( ( ( (cWord & 0x007C0000) >> 18) == cCbc->getCbcId() ) & ( ( (cWord & 0x07800000) >> 23) == cFe->getFeId() ) ) ? true : false;
-                        else cWordCorrect = ( ( ( (cWord & 0x00f00000) >> 20) == cCbc->getCbcId() ) & ( ( (cWord & 0x0f000000) >> 24) == cFe->getFeId() ) ) ? true : false;
+                        if(fI2CVersion >= 1) cWordCorrect = ( ( ( (cWord & 0x007C0000) >> 18) == cCbc->getChipId() ) & ( ( (cWord & 0x07800000) >> 23) == cFe->getFeId() ) ) ? true : false;
+                        else cWordCorrect = ( ( ( (cWord & 0x00f00000) >> 20) == cCbc->getChipId() ) & ( ( (cWord & 0x0f000000) >> 24) == cFe->getFeId() ) ) ? true : false;
 
                         k++;
 
@@ -627,7 +627,7 @@ for (int ism = 0; ism < i2c_slave_map.size(); ism++) {
 
 void D19cFWInterface::Start()
 {
-    this->CbcFastReset();
+    this->ChipFastReset();
     this->ResetReadout();
 
         //here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to clear the register manually)
@@ -774,15 +774,15 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
             // automatic mode
             if (cDoAuto) {
 
-                std::map<Cbc*, uint8_t> cStubLogictInputMap;
-                std::map<Cbc*, uint8_t> cHipRegMap;
+                std::map<Chip*, uint8_t> cStubLogictInputMap;
+                std::map<Chip*, uint8_t> cHipRegMap;
                 std::vector<uint32_t> cVecReq;
 
                 cVecReq.clear();
 
                 for (auto cFe : pBoard->fModuleVector)
                 {
-                    for (auto cCbc : cFe->fCbcVector)
+                    for (auto cCbc : cFe->fChipVector)
                     {
 
                         uint8_t cOriginalStubLogicInput = cCbc->getReg ("Pipe&StubInpSel&Ptwidth");
@@ -793,17 +793,17 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
 
                         ChipRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
                         cRegItem.fValue = (cOriginalStubLogicInput & 0xCF) | (0x20 & 0x30);
-                        this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
+                        this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getChipId(), cVecReq, true, true);
 
                         cRegItem = cCbc->getRegItem ( "HIP&TestMode" );
                         cRegItem.fValue = (cOriginalHipReg & ~ (0x1 << 4) );
-                        this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
+                        this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getChipId(), cVecReq, true, true);
 
                     }
                 }
 
                 uint8_t cWriteAttempts = 0;
-                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
                 std::this_thread::sleep_for (std::chrono::milliseconds (10) );
 
                 int cCounter = 0;
@@ -820,7 +820,7 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
                         exit (1);
                     }
 
-                    this->CbcFastReset();
+                    this->ChipFastReset();
                     usleep (10);
                         // reset  the timing tuning
                     WriteReg ("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
@@ -833,22 +833,22 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
                 cVecReq.clear();
                 for (auto cFe : pBoard->fModuleVector)
                 {
-                    for (auto cCbc : cFe->fCbcVector)
+                    for (auto cCbc : cFe->fChipVector)
                     {
 
                         ChipRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
                         cRegItem.fValue = cStubLogictInputMap[cCbc];
-                            //this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
+                            //this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getChipId(), cVecReq, true, true);
 
                         cRegItem = cCbc->getRegItem ( "HIP&TestMode" );
                         cRegItem.fValue = cHipRegMap[cCbc];
-                        this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
+                        this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getChipId(), cVecReq, true, true);
 
                     }
                 }
 
                 cWriteAttempts = 0;
-                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
 
                 LOG (INFO) << GREEN << "CBC3 Phase tuning finished succesfully" << RESET;
 
@@ -903,9 +903,9 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
             // print statuses
             for (auto cFe : pBoard->fModuleVector)
             {
-                for (auto cCbc : cFe->fCbcVector)
+                for (auto cCbc : cFe->fChipVector)
                 {
-                    PhaseTuningGetLineStatus(cFe->getFeId(), cCbc->getCbcId(), 5);
+                    PhaseTuningGetLineStatus(cFe->getFeId(), cCbc->getChipId(), 5);
                 }
             }
 
@@ -941,7 +941,7 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
                 this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
 
                 uint8_t cWriteAttempts = 0;
-                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
                 cVecReq.clear();
 
         // ps stub mode
@@ -950,14 +950,14 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
                 this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
 
                 cWriteAttempts = 0;
-                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
                 cVecReq.clear();
 
             }
         }
 
         uint8_t cWriteAttempts = 0;
-        //this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+        //this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
         std::this_thread::sleep_for (std::chrono::milliseconds (10) );
 
         // now do phase tuning
@@ -975,7 +975,7 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
                 this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
 
                 cWriteAttempts = 0;
-                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
                 cVecReq.clear();
 
                 cRegItem = cMpa->getRegItem ( "ECM" );
@@ -983,14 +983,14 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
                 this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
 
                 cWriteAttempts = 0;
-                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
                 cVecReq.clear();
 
             }
         }
 
         cWriteAttempts = 0;
-        //this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+        //this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
 
         LOG (INFO) << GREEN << "MPA Phase tuning finished succesfully" << RESET;
     }
@@ -1250,7 +1250,7 @@ uint32_t D19cFWInterface::computeEventSize ( BeBoard* pBoard )
 
     for (const auto& cFe : pBoard->fModuleVector)
     {
-        cNCbc += cFe->getNCbc();
+        cNCbc += cFe->getNChip();
         cNMPA += cFe->getNMPA();
         cNSSA += cFe->getNSSA();
     }
@@ -1523,7 +1523,7 @@ bool D19cFWInterface::WriteI2C ( std::vector<uint32_t>& pVecSend, std::vector<ui
 }
 
 
-bool D19cFWInterface::WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback)
+bool D19cFWInterface::WriteChipBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback)
 {
 
     uint8_t cMaxWriteAttempts = 5;
@@ -1586,7 +1586,7 @@ bool D19cFWInterface::WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t
             else LOG (INFO) << BOLDRED <<  "(WRITE#"  << std::to_string (pWriteAttempts) << ") There were " << cWriteAgain.size() << " CBC CMD acknowledge bits missing -trying again!" << RESET ;
 
             pWriteAttempts++;
-            this->WriteCbcBlockReg ( cWriteAgain, pWriteAttempts, true);
+            this->WriteChipBlockReg ( cWriteAgain, pWriteAttempts, true);
         }
         else if ( pWriteAttempts >= cMaxWriteAttempts )
         {
@@ -1600,7 +1600,7 @@ bool D19cFWInterface::WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t
     return cSuccess;
 }
 
-bool D19cFWInterface::BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback)
+bool D19cFWInterface::BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback)
 {
     std::vector<uint32_t> cReplies;
     bool cSuccess = !WriteI2C ( pVecReg, cReplies, false, true );
@@ -1636,7 +1636,7 @@ bool D19cFWInterface::BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool 
     return cSuccess;
 }
 
-void D19cFWInterface::ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg )
+void D19cFWInterface::ReadChipBlockReg (  std::vector<uint32_t>& pVecReg )
 {
     std::vector<uint32_t> cReplies;
         //it sounds weird, but ReadI2C is called inside writeI2c, therefore here I have to write and disable the readback. The actual read command is in the words of the vector, no broadcast, maybe I can get rid of it
@@ -1645,28 +1645,28 @@ void D19cFWInterface::ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg )
     pVecReg = cReplies;
 }
 
-void D19cFWInterface::CbcFastReset()
+void D19cFWInterface::ChipFastReset()
 {
     WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_reset", 0x1 );
 }
 
-void D19cFWInterface::CbcI2CRefresh()
+void D19cFWInterface::ChipI2CRefresh()
 {
     WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1 );
 }
 
-void D19cFWInterface::CbcHardReset()
+void D19cFWInterface::ChipHardReset()
 {
     WriteReg ( "fc7_daq_ctrl.physical_interface_block.control.chip_hard_reset", 0x1 );
     usleep (10);
 }
 
-void D19cFWInterface::CbcTestPulse()
+void D19cFWInterface::ChipTestPulse()
 {
     ;
 }
 
-void D19cFWInterface::CbcTrigger()
+void D19cFWInterface::ChipTrigger()
 {
     WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_trigger", 0x1 );
 }
@@ -2281,7 +2281,7 @@ void D19cFWInterface::Pix_write_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint
     std::vector<uint32_t> cVecReq;
     cVecReq.clear();
     this->EncodeReg (rowreg, cMPA->getFeId(), cMPA->getMPAId(), cVecReq, false, true);
-    this->WriteCbcBlockReg (cVecReq, cWriteAttempts, false);
+    this->WriteChipBlockReg (cVecReq, cWriteAttempts, false);
 }
 
 uint32_t D19cFWInterface::Pix_read_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel)
@@ -2297,7 +2297,7 @@ uint32_t D19cFWInterface::Pix_read_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,u
     std::vector<uint32_t> cVecReq;
     cVecReq.clear();
     this->EncodeReg (cRegItem, cMPA->getFeId(), cMPA->getMPAId(), cVecReq, false, false);
-    this->WriteCbcBlockReg (cVecReq,cWriteAttempts, false);
+    this->WriteChipBlockReg (cVecReq,cWriteAttempts, false);
     std::chrono::milliseconds cShort( 1 );
     //uint32_t readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
     //while (readempty == 0)
@@ -2756,7 +2756,7 @@ void D19cFWInterface::Align_out()
             exit (1);
         }
 
-        this->CbcFastReset();
+        this->ChipFastReset();
         usleep (10);
         // reset  the timing tuning
         WriteReg("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);

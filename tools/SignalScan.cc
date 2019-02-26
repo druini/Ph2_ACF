@@ -16,7 +16,7 @@ void SignalScan::Initialize ()
         for ( auto& cFe : cBoard->fModuleVector )
         {
             uint32_t cFeId = cFe->getFeId();
-            fNCbc = cFe->getNCbc();
+            fNCbc = cFe->getNChip();
             TCanvas* ctmpCanvas = new TCanvas ( Form ( "c_online_canvas_fe%d", cFeId ), Form ( "FE%d  Online Canvas", cFeId ) );
             // ctmpCanvas->Divide( 2, 2 );
             fCanvasMap[cFe] = ctmpCanvas;
@@ -53,10 +53,10 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
         fBeBoardInterface->Pause(pBoard);
         for (auto cFe : pBoard->fModuleVector)
         {
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fChipVector)
             {
 
-                uint32_t cCbcId = cCbc->getCbcId();
+                uint32_t cCbcId = cCbc->getChipId();
 
                 TString cHistName = Form("Fe%dCbc%d_SignalScan" , +cFe->getFeId() , +cCbcId );
                 TH2D* cSignalScan = ( TH2D* ) ( gROOT->FindObject ( cHistName ) );
@@ -133,19 +133,19 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
                     for (auto& cEvent : events)
                     {
                         
-                        for ( auto cCbc : cFe->fCbcVector )
+                        for ( auto cCbc : cFe->fChipVector )
                         {
                             TString cHistName;
-                            cHistName = Form("Fe%dCbc%d_Clusters_SignalScan" , +cFe->getFeId() ,+cCbc->getCbcId() );
+                            cHistName = Form("Fe%dCbc%d_Clusters_SignalScan" , +cFe->getFeId() ,+cCbc->getChipId() );
                             TH1D* cClustersHisto = ( TH1D* ) ( gROOT->FindObject ( cHistName ) );
 
 
-                            cHistName = Form("Fe%dCbc%d_ClusterWidth_SignalScan" , +cFe->getFeId() , +cCbc->getCbcId() );
+                            cHistName = Form("Fe%dCbc%d_ClusterWidth_SignalScan" , +cFe->getFeId() , +cCbc->getChipId() );
                             TH2D* cClusterWidth = ( TH2D* ) ( gROOT->FindObject ( cHistName ) );
-                            // cHistName = Form("Fe%dCbc%d_ClusterOccupancy" , +cFe->getFeId() , +cCbc->getCbcId() );
+                            // cHistName = Form("Fe%dCbc%d_ClusterOccupancy" , +cFe->getFeId() , +cCbc->getChipId() );
                             // TH2F* cClustersHisto = ( TH2F* ) ( gROOT->FindObject ( cHistName ) );
 
-                            const std::vector<Cluster>& cClusters = cEvent->getClusters( cFe->getFeId(), cCbc->getCbcId() );
+                            const std::vector<Cluster>& cClusters = cEvent->getClusters( cFe->getFeId(), cCbc->getChipId() );
                             cClustersHisto->Fill( cVcth , cClusters.size() );
                             for(auto& cCluster : cClusters)
                             {
@@ -157,13 +157,13 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
                                 }
                             }
                             
-                            cHistName = Form("Fe%dCbc%d_SignalScan" , +cFe->getFeId() , +cCbc->getCbcId() );
+                            cHistName = Form("Fe%dCbc%d_SignalScan" , +cFe->getFeId() , +cCbc->getChipId() );
                             TH2D* cSignalScan = dynamic_cast<TH2D*> ( getHist ( cCbc, cHistName.Data() ) );
 
                             for(int cChan = 0 ; cChan < NCHANNELS ; cChan++ )
                             {
 
-                                int cHits = cEvent->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChan ); 
+                                int cHits = cEvent->DataBit ( cFe->getFeId(), cCbc->getChipId(), cChan ); 
                                 cSignalScan->Fill( cChan,cVcth,  cHits );
                                 cHitCounter += cHits;
                                 cTotalHitCounter += cHits;
@@ -180,9 +180,9 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
                 }while( cContinue ); 
 
                 double cTimeElapsed = t.getCurrentTime();  
-                for ( auto cCbc : cFe->fCbcVector )
+                for ( auto cCbc : cFe->fChipVector )
                 {
-                    TString cHistName = Form("Fe%dCbc%d_Time_SignalScan" , +cFe->getFeId() , +cCbc->getCbcId() );
+                    TString cHistName = Form("Fe%dCbc%d_Time_SignalScan" , +cFe->getFeId() , +cCbc->getChipId() );
                     TH1D* cTime = ( TH1D* ) ( gROOT->FindObject ( cHistName ) );
                     cTime->Fill( cVcth , cTimeElapsed );
                 }
@@ -190,9 +190,9 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
                 t.stop();
 
                 // calculate efficiency and assoc. error for each channel 
-                for ( auto cCbc : cFe->fCbcVector )
+                for ( auto cCbc : cFe->fChipVector )
                 {
-                    TString cHistName = Form("Fe%dCbc%d_SignalScan" , +cFe->getFeId() , +cCbc->getCbcId() );
+                    TString cHistName = Form("Fe%dCbc%d_SignalScan" , +cFe->getFeId() , +cCbc->getChipId() );
                     TH2D* cSignalScan = dynamic_cast<TH2D*> ( getHist ( cCbc, cHistName.Data() ) );
                     int cBinY = cSignalScan->GetYaxis()->FindBin( cVcth );
 
@@ -285,23 +285,23 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
 //                         std::string cDataString;
 //                         std::string cClusterDataString;
 
-//                         for ( auto cCbc : cFe->fCbcVector )
+//                         for ( auto cCbc : cFe->fChipVector )
 //                         {
 //                             //now loop the channels for this particular event and increment a counter
 //                             for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
 //                             {
-//                                 if ( cEvent->DataBit ( cCbc->getFeId(), cCbc->getCbcId(), cId ) )
+//                                 if ( cEvent->DataBit ( cCbc->getFeId(), cCbc->getChipId(), cId ) )
 //                                 {
-//                                     cSignalHist->Fill (cCbc->getCbcId() *NCHANNELS + cId, cVCth );
+//                                     cSignalHist->Fill (cCbc->getChipId() *NCHANNELS + cId, cVCth );
 //                                     cEventHits++;
 //                                 }
 //                             }
 
 //                             //append HexDataString to cDataString
-//                             cDataString += cEvent->DataHexString (cCbc->getFeId(), cCbc->getCbcId() );
+//                             cDataString += cEvent->DataHexString (cCbc->getFeId(), cCbc->getChipId() );
 //                             cDataString += "-";
 
-//                             std::vector<Cluster> cClusters = cEvent->getClusters (cCbc->getFeId(), cCbc->getCbcId() );
+//                             std::vector<Cluster> cClusters = cEvent->getClusters (cCbc->getFeId(), cCbc->getChipId() );
 //                             cEventClusters += cClusters.size();
 
 //                             cClusterDataString += "-";

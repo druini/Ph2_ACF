@@ -1,7 +1,7 @@
 #include "Calibration.h"
 
 //initialize the static member
-//std::map<Cbc*, uint16_t> Calibration::fVplusMap;
+//std::map<Chip*, uint16_t> Calibration::fVplusMap;
 
 Calibration::Calibration() :
     Tool(),
@@ -71,7 +71,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
             cFeCount++;
             fType = cFe->getChipType();
 
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
                 //if it is a CBC3, disable the stub logic for this procedure
                 if (cCbc->getChipType() == ChipType::CBC3 && fDisableStubLogic)
@@ -83,7 +83,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
                     fCbcInterface->WriteCbcReg (cCbc, "HIP&TestMode", 0x08);
                 }
 
-                uint32_t cCbcId = cCbc->getCbcId();
+                uint32_t cCbcId = cCbc->getChipId();
                 cCbcCount++;
 
                 if ( cCbcId > cCbcIdMax ) cCbcIdMax = cCbcId;
@@ -184,13 +184,13 @@ void Calibration::FindVplus()
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
 
                 TH1I* vPlusHist = static_cast<TH1I*> ( getHist ( cCbc, "Vplus" ) );
                 uint16_t tmpVthr = (cCbc->getReg("VCth1") + (cCbc->getReg("VCth2")<<8));
                 vPlusHist->Fill(0.,tmpVthr);
-                LOG (INFO) << GREEN << "VCth value for BeBoard " << cBoard->getBeId() << " Module " << cFe->getModuleId() << " CBC " << cCbc->getCbcId() << " = " << tmpVthr << RESET;
+                LOG (INFO) << GREEN << "VCth value for BeBoard " << cBoard->getBeId() << " Module " << cFe->getModuleId() << " CBC " << cCbc->getChipId() << " = " << tmpVthr << RESET;
                 cMeanValue+=tmpVthr;
                 ++nCbc;
             }
@@ -227,14 +227,14 @@ void Calibration::FindOffsets()
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
                 TH1F* cOccHist = static_cast<TH1F*> ( getHist ( cCbc, "Occupancy" ) );
                 TH1I* cOffsetHist = static_cast<TH1I*> ( getHist ( cCbc, "Offsets" ) );
 
                 for ( int cChannel=0; cChannel<254; ++cChannel)
                 {
-                    cOccHist->Fill(cChannel, backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()][cChannel]);
+                    cOccHist->Fill(cChannel, backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()][cChannel]);
                     std::string cRegName = Form ( "Channel%03d", cChannel + 1 );
                     cOffsetHist->Fill ( cChannel, (uint16_t)cCbc->getReg(cRegName) );
                 }
@@ -249,7 +249,7 @@ void Calibration::FindOffsets()
 }
 
 
-float Calibration::findCbcOccupancy ( Cbc* pCbc, int pTGroup, int pEventsPerPoint )
+float Calibration::findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint )
 {
     TH1F* cOccHist = static_cast<TH1F*> ( getHist ( pCbc, "Occupancy" ) );
     float cOccupancy = cOccHist->GetEntries();
@@ -257,7 +257,7 @@ float Calibration::findCbcOccupancy ( Cbc* pCbc, int pTGroup, int pEventsPerPoin
     return cOccupancy / ( static_cast<float> ( fTestGroupChannelMap[pTGroup].size() * pEventsPerPoint ) );
 }
 
-void Calibration::clearOccupancyHists ( Cbc* pCbc )
+void Calibration::clearOccupancyHists ( Chip* pCbc )
 {
     TH1F* cOccHist = static_cast<TH1F*> ( getHist ( pCbc, "Occupancy" ) );
     cOccHist->Reset ( "ICESM" );
@@ -275,7 +275,7 @@ void Calibration::updateHists ( std::string pHistname )
         {
             if ( pHistname == "Offsets" )
             {
-                fOffsetCanvas->cd ( cCbc.first->getCbcId() + 1 );
+                fOffsetCanvas->cd ( cCbc.first->getChipId() + 1 );
                 TH1F* cTmpHist = static_cast<TH1F*> ( cHist->second );
                 cTmpHist->DrawCopy ("hist");
                 fOffsetCanvas->Update();
@@ -283,7 +283,7 @@ void Calibration::updateHists ( std::string pHistname )
 
             if ( pHistname == "Occupancy" )
             {
-                fOccupancyCanvas->cd ( cCbc.first->getCbcId() + 1 );
+                fOccupancyCanvas->cd ( cCbc.first->getChipId() + 1 );
                 TH1F* cTmpProfile = static_cast<TH1F*> ( cHist->second );
                 cTmpProfile->DrawCopy ();
                 fOccupancyCanvas->Update();

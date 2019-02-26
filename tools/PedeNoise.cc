@@ -62,7 +62,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
             cFeCount++;
             fType = cFe->getChipType();
 
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
 
                 //if it is a CBC3, disable the stub logic for this procedure
@@ -75,7 +75,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
                     fCbcInterface->WriteCbcReg (cCbc, "HIP&TestMode", 0x08);
                 }
 
-                uint32_t cCbcId = cCbc->getCbcId();
+                uint32_t cCbcId = cCbc->getChipId();
                 cCbcCount++;
 
                 if ( cCbcId > cCbcIdMax ) cCbcIdMax = cCbcId;
@@ -83,34 +83,34 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
                 TString cHistname;
                 TH1F* cHist;
 
-                cHistname = Form ( "Fe%dCBC%d_Noise", cFe->getFeId(), cCbc->getCbcId() );
+                cHistname = Form ( "Fe%dCBC%d_Noise", cFe->getFeId(), cCbc->getChipId() );
                 cHist = new TH1F ( cHistname, cHistname, 200, 0, 20 );
                 bookHistogram ( cCbc, "Cbc_Noise", cHist );
 
-                cHistname = Form ( "Fe%dCBC%d_StripNoise", cFe->getFeId(), cCbc->getCbcId() );
+                cHistname = Form ( "Fe%dCBC%d_StripNoise", cFe->getFeId(), cCbc->getChipId() );
                 cHist = new TH1F ( cHistname, cHistname, NCHANNELS, -0.5, 253.5 );
                 cHist->SetMaximum (10);
                 cHist->SetMinimum (0);
                 bookHistogram ( cCbc, "Cbc_Stripnoise", cHist );
 
-                cHistname = Form ( "Fe%dCBC%d_Pedestal", cFe->getFeId(), cCbc->getCbcId() );
+                cHistname = Form ( "Fe%dCBC%d_Pedestal", cFe->getFeId(), cCbc->getChipId() );
                 cHist = new TH1F ( cHistname, cHistname, 2048, -0.5, 1023.5 );
                 bookHistogram ( cCbc, "Cbc_Pedestal", cHist );
 
-                cHistname = Form ( "Fe%dCBC%d_Noise_even", cFe->getFeId(), cCbc->getCbcId() );
+                cHistname = Form ( "Fe%dCBC%d_Noise_even", cFe->getFeId(), cCbc->getChipId() );
                 cHist = new TH1F ( cHistname, cHistname, NCHANNELS / 2, -0.5, 126.5 );
                 cHist->SetMaximum (10);
                 cHist->SetMinimum (0);
                 bookHistogram ( cCbc, "Cbc_Noise_even", cHist );
 
-                cHistname = Form ( "Fe%dCBC%d_Noise_odd", cFe->getFeId(), cCbc->getCbcId() );
+                cHistname = Form ( "Fe%dCBC%d_Noise_odd", cFe->getFeId(), cCbc->getChipId() );
                 cHist = new TH1F ( cHistname, cHistname, NCHANNELS / 2, -0.5, 126.5 );
                 cHist->SetLineColor ( 2 );
                 cHist->SetMaximum (10);
                 cHist->SetMinimum (0);
                 bookHistogram ( cCbc, "Cbc_noise_odd", cHist );
 
-                cHistname = Form ( "Fe%dCBC%d_Occupancy", cFe->getFeId(), cCbc->getCbcId() );
+                cHistname = Form ( "Fe%dCBC%d_Occupancy", cFe->getFeId(), cCbc->getChipId() );
                 cHist = new TH1F ( cHistname, cHistname, NCHANNELS, -0.5, 253.5 );
                 cHist->SetLineColor ( 31 );
                 cHist->SetMaximum (1);
@@ -184,16 +184,16 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
         {
             for ( auto cFe : cBoard->fModuleVector )
             {
-                for ( auto cCbc : cFe->fCbcVector )
+                for ( auto cCbc : cFe->fChipVector )
                 {
                     std::stringstream ss;
-                    float cOccupancy = backEndCbcOccupanyMap[cBoard->getBeId()][cFe->getFMCId()][cCbc->getCbcId()];
+                    float cOccupancy = backEndCbcOccupanyMap[cBoard->getBeId()][cFe->getFMCId()][cCbc->getChipId()];
                     cHoleModeFromOccupancy = (cOccupancy == 0) ? false :  true;
 
                     if (cHoleModeFromOccupancy != cHoleModeFromSettings)
                         ss << BOLDRED << "Be careful: " << RESET << "operation mode from settings does not correspond to the one found by measuring occupancy. Using the one from settings (" << BOLDYELLOW << cMode << RESET << ")";
                     else
-                        ss << BOLDBLUE << "Measuring Occupancy @ Threshold " << BOLDRED << (unsigned int)cCbc->getCbcId() << BOLDBLUE << ": " << BOLDRED << cOccupancy << BOLDBLUE << ", thus assuming " << BOLDYELLOW << cMode << RESET << " (consistent with the settings file)";
+                        ss << BOLDBLUE << "Measuring Occupancy @ Threshold " << BOLDRED << (unsigned int)cCbc->getChipId() << BOLDBLUE << ": " << BOLDRED << cOccupancy << BOLDBLUE << ", thus assuming " << BOLDYELLOW << cMode << RESET << " (consistent with the settings file)";
 
                     LOG (INFO) << ss.str();
                 }
@@ -206,13 +206,13 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
         {
             for ( auto cFe : cBoard->fModuleVector )
             {
-                for ( auto cCbc : cFe->fCbcVector )
+                for ( auto cCbc : cFe->fChipVector )
                 {
-                    float cOccupancy = backEndCbcOccupanyMap[cBoard->getBeId()][cFe->getFMCId()][cCbc->getCbcId()];
+                    float cOccupancy = backEndCbcOccupanyMap[cBoard->getBeId()][cFe->getFMCId()][cCbc->getChipId()];
                     fHoleMode = (cOccupancy == 0) ? false :  true;
                     std::string cMode = (fHoleMode) ? "Hole Mode" : "Electron Mode";
                     std::stringstream ss;
-                    ss << BOLDBLUE << "Measuring Occupancy @ Threshold " << BOLDRED << (unsigned int)cCbc->getCbcId() << BOLDBLUE << ": " << BOLDRED << cOccupancy << BOLDBLUE << ", thus assuming " << BOLDYELLOW << cMode << RESET;
+                    ss << BOLDBLUE << "Measuring Occupancy @ Threshold " << BOLDRED << (unsigned int)cCbc->getChipId() << BOLDBLUE << ": " << BOLDRED << cOccupancy << BOLDBLUE << ", thus assuming " << BOLDYELLOW << cMode << RESET;
                     LOG (INFO) << ss.str();
                 }
             }
@@ -254,14 +254,14 @@ std::string PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
-                TString cHistname = Form ( "Fe%dCBC%d_Scurves_TP%d", cCbc->getFeId(), cCbc->getCbcId(), fTestPulseAmplitude );
+                TString cHistname = Form ( "Fe%dCBC%d_Scurves_TP%d", cCbc->getFeId(), cCbc->getChipId(), fTestPulseAmplitude );
                 TH2F* cHist = new TH2F ( cHistname, cHistname, NCHANNELS, -0.5, 253.5, 1024, -0.5, 1023.5 );
                 cHist->Sumw2();
                 bookHistogram ( cCbc, cHistogramname, cHist );
 
-                fNoiseCanvas->cd ( cCbc->getCbcId() + 1 );
+                fNoiseCanvas->cd ( cCbc->getChipId() + 1 );
                 cHist->Draw ( "colz2" );
             }
         }
@@ -275,11 +275,11 @@ std::string PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
                
                 TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (cCbc, cHistogramname) );
-                fNoiseCanvas->cd (cCbc->getCbcId() + 1);
+                fNoiseCanvas->cd (cCbc->getChipId() + 1);
                 TH1D* cTmp = cSCurveHist->ProjectionY();
                 cSCurveHist->GetYaxis()->SetRangeUser ( cTmp->GetBinCenter (cTmp->FindFirstBinAbove (0) ) - 10, cTmp->GetBinCenter (cTmp->FindLastBinAbove (0.99) ) + 10 );
                 cSCurveHist->Draw ("colz2");
@@ -341,13 +341,13 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
                 //get the histogram for the occupancy
                 TH1F* cHist = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_occupancy" ) );
 
                 for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++){
-                    cHist->SetBinContent(iChan+1,backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getFeId()][cCbc->getCbcId()][iChan]);
+                    cHist->SetBinContent(iChan+1,backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getFeId()][cCbc->getChipId()][iChan]);
                 }
             }
         }
@@ -359,7 +359,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
                 //get the histogram for the occupancy
                 TH1F* cHist = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_occupancy" ) );
@@ -367,7 +367,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
                 TLine* line = new TLine (0, pNoiseStripThreshold * 0.001, NCHANNELS, pNoiseStripThreshold * 0.001);
 
                 //as we are at it, draw the plot
-                fNoiseCanvas->cd ( cCbc->getCbcId() + 1 );
+                fNoiseCanvas->cd ( cCbc->getChipId() + 1 );
                 gPad->SetLogy (1);
                 cHist->DrawCopy();
                 line->Draw ("same");
@@ -385,7 +385,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
                         TString cRegName = Form ( "Channel%03d", iChan + 1 );
                         uint8_t cValue = fHoleMode ? 0x00 : 0xFF;
                         cRegVec.push_back ({cRegName.Data(), cValue });
-                        LOG (INFO) << RED << "Found a noisy channel on CBC " << +cCbc->getCbcId() << " Channel " << iChan  << " with an occupancy of " << cHist->GetBinContent (iChan) << "; setting offset to " << +cValue << RESET ;
+                        LOG (INFO) << RED << "Found a noisy channel on CBC " << +cCbc->getChipId() << " Channel " << iChan  << " with an occupancy of " << cHist->GetBinContent (iChan) << "; setting offset to " << +cValue << RESET ;
                     }
 
                 }
@@ -400,30 +400,30 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     }
 }
 
-double PedeNoise::getPedestal (Cbc* pCbc)
+double PedeNoise::getPedestal (Chip* pCbc)
 {
     TH1F* cPedeHist  = dynamic_cast<TH1F*> ( getHist ( pCbc, "Cbc_Pedestal" ) );
-    LOG (INFO) << "Pedestal on CBC " << +pCbc->getCbcId() << " is " << cPedeHist->GetMean() << " VCth units.";
+    LOG (INFO) << "Pedestal on CBC " << +pCbc->getChipId() << " is " << cPedeHist->GetMean() << " VCth units.";
     return cPedeHist->GetMean();
 }
 double PedeNoise::getPedestal (Module* pFe)
 {
     double cPedestal = 0;
 
-    for (auto cCbc : pFe->fCbcVector)
+    for (auto cCbc : pFe->fChipVector)
     {
         TH1F* cPedeHist  = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_Pedestal" ) );
         cPedestal += cPedeHist->GetMean();
-        LOG (INFO) << "Pedestal on CBC " << +cCbc->getCbcId() << " is " << cPedeHist->GetMean() << " VCth units.";
+        LOG (INFO) << "Pedestal on CBC " << +cCbc->getChipId() << " is " << cPedeHist->GetMean() << " VCth units.";
     }
 
-    cPedestal /= pFe->fCbcVector.size();
+    cPedestal /= pFe->fChipVector.size();
 
     LOG (INFO) << "Pedestal on Module " << +pFe->getFeId() << " is " << cPedestal << " VCth units.";
     return cPedestal;
 }
 
-double PedeNoise::getNoise (Cbc* pCbc)
+double PedeNoise::getNoise (Chip* pCbc)
 {
     TH1F* cNoiseHist = dynamic_cast<TH1F*> ( getHist ( pCbc, "Cbc_Noise" ) );
     return cNoiseHist->GetMean();
@@ -454,7 +454,7 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
                 uint16_t tmpVthr = (cCbc->getReg("VCth1") + (cCbc->getReg("VCth2")<<8));
                 cMean+=tmpVthr;
@@ -506,13 +506,13 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
         {
             for ( auto cFe : cBoard->fModuleVector )
             {
-                for ( auto cCbc : cFe->fCbcVector )
+                for ( auto cCbc : cFe->fChipVector )
                 {
                     TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (cCbc, pHistName) );
 
-                    for (int cChannel=0; cChannel<=backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()].size(); ++cChannel)
+                    for (int cChannel=0; cChannel<=backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()].size(); ++cChannel)
                     {
-                        float tmpOccupancy = backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getCbcId()][cChannel];
+                        float tmpOccupancy = backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()][cChannel];
                         cSCurveHist->SetBinContent ( cChannel+1, cValue+1, tmpOccupancy);
                         cSCurveHist->SetBinError   ( cChannel+1, cValue+1, sqrt(tmpOccupancy*(1.-tmpOccupancy)/fEventsPerPoint));
                     }
@@ -579,7 +579,7 @@ void PedeNoise::processSCurves (std::string pHistName)
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
 
                 // TH2F* cHist = dynamic_cast<TH2F*> ( getHist ( cCbc, pHistName) );
@@ -598,11 +598,11 @@ void PedeNoise::processSCurves (std::string pHistName)
     //end of CBC loop
 }
 
-void PedeNoise::differentiateHist (Cbc* pCbc, std::string pHistName)
+void PedeNoise::differentiateHist (Chip* pCbc, std::string pHistName)
 {
     //first get the SCurveHisto and create a differential histo
     TH2F* cHist = dynamic_cast<TH2F*> ( getHist ( pCbc, pHistName) );
-    TString cHistname = Form ( "Fe%dCBC%d_Differential_TP%d", pCbc->getFeId(), pCbc->getCbcId(), fTestPulseAmplitude );
+    TString cHistname = Form ( "Fe%dCBC%d_Differential_TP%d", pCbc->getFeId(), pCbc->getChipId(), fTestPulseAmplitude );
     TH2F* cDerivative = new TH2F ( cHistname, cHistname, NCHANNELS, -0.5, 253.5, 1024, 0, 1024 );
     cDerivative->Sumw2();
     bookHistogram ( pCbc, pHistName + "_Diff", cDerivative );
@@ -676,14 +676,14 @@ void PedeNoise::differentiateHist (Cbc* pCbc, std::string pHistName)
     //end of CBC loop
 }
 
-void PedeNoise::fitHist (Cbc* pCbc, std::string pHistName)
+void PedeNoise::fitHist (Chip* pCbc, std::string pHistName)
 {
     TH1F* cNoiseHist = dynamic_cast<TH1F*> ( getHist ( pCbc, "Cbc_Noise" ) );
     TH1F* cPedeHist  = dynamic_cast<TH1F*> ( getHist ( pCbc, "Cbc_Pedestal" ) );
     
     //first get the SCurveHisto and create a differential histo
     TH2F* cHist = dynamic_cast<TH2F*> ( getHist ( pCbc, pHistName) );
-    TString cDirName = Form ("FE%dCBC%d/%s_Fits", pCbc->getFeId(), pCbc->getCbcId(), pHistName.c_str() );
+    TString cDirName = Form ("FE%dCBC%d/%s_Fits", pCbc->getFeId(), pCbc->getChipId(), pHistName.c_str() );
     TDirectory* cDir = dynamic_cast<TDirectory*> (gROOT->FindObject (cDirName) );
 
 
@@ -779,9 +779,9 @@ void PedeNoise::extractPedeNoise (std::string pHistName)
             TH1F* cTmpHist = dynamic_cast<TH1F*> ( getHist ( cFe, "Module_noisehist" ) );
             TProfile* cTmpProfile = dynamic_cast<TProfile*> ( getHist ( cFe, "Module_Stripnoise" ) );
 
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
-                uint32_t cCbcId = static_cast<int> ( cCbc->getCbcId() );
+                uint32_t cCbcId = static_cast<int> ( cCbc->getChipId() );
 
                 // here get the per-CBC histograms
                 // first the derivative of the scurves
@@ -799,7 +799,7 @@ void PedeNoise::extractPedeNoise (std::string pHistName)
                     //get a projection to contain the derivative of the scurve
                     TH1D* cProjection = cDerivative->ProjectionY ("_py", cChan + 1, cChan + 1);
 
-                    if ( cProjection->GetRMS() == 0 || cProjection->GetRMS() > 1023 ) LOG (INFO) << RED << "Error, SCurve Fit for Fe " << int ( cCbc->getFeId() ) << " Cbc " << int ( cCbc->getCbcId() ) << " Channel " << cChan << " did not work correctly! Noise " << cProjection->GetRMS() << RESET ;
+                    if ( cProjection->GetRMS() == 0 || cProjection->GetRMS() > 1023 ) LOG (INFO) << RED << "Error, SCurve Fit for Fe " << int ( cCbc->getFeId() ) << " Chip " << int ( cCbc->getChipId() ) << " Channel " << cChan << " did not work correctly! Noise " << cProjection->GetRMS() << RESET ;
 
                     if (!fFitted)
                     {
@@ -816,17 +816,17 @@ void PedeNoise::extractPedeNoise (std::string pHistName)
                     cStripHist->Fill ( cChan, cProjection->GetRMS() );
                 }
 
-                LOG (INFO) << BOLDRED << "Average noise on FE " << +cCbc->getFeId() << " CBC " << +cCbc->getCbcId() << " : " << cNoiseHist->GetMean() << " ; RMS : " << cNoiseHist->GetRMS() << " ; Pedestal : " << cPedeHist->GetMean() << " VCth units." << RESET ;
+                LOG (INFO) << BOLDRED << "Average noise on FE " << +cCbc->getFeId() << " CBC " << +cCbc->getChipId() << " : " << cNoiseHist->GetMean() << " ; RMS : " << cNoiseHist->GetRMS() << " ; Pedestal : " << cPedeHist->GetMean() << " VCth units." << RESET ;
 
-                fNoiseCanvas->cd ( fNCbc + cCbc->getCbcId() + 1 );
+                fNoiseCanvas->cd ( fNCbc + cCbc->getChipId() + 1 );
                 //cStripHist->DrawCopy();
                 cEvenHist->DrawCopy();
                 cOddHist->DrawCopy ( "same" );
 
-                fPedestalCanvas->cd ( cCbc->getCbcId() + 1 );
+                fPedestalCanvas->cd ( cCbc->getChipId() + 1 );
                 cNoiseHist->DrawCopy();
 
-                fPedestalCanvas->cd ( fNCbc + cCbc->getCbcId() + 1 );
+                fPedestalCanvas->cd ( fNCbc + cCbc->getChipId() + 1 );
                 cPedeHist->DrawCopy();
                 fNoiseCanvas->Update();
                 fPedestalCanvas->Update();
@@ -859,9 +859,9 @@ void PedeNoise::setThresholdtoNSigma (BeBoard* pBoard, uint32_t pNSigma)
     {
         uint32_t cFeId = cFe->getFeId();
 
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fChipVector )
         {
-            uint32_t cCbcId = cCbc->getCbcId();
+            uint32_t cCbcId = cCbc->getChipId();
             TH1F* cNoiseHist = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_Noise" ) );
             TH1F* cPedeHist  = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_Pedestal" ) );
 

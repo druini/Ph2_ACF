@@ -30,7 +30,7 @@ namespace Ph2_HwInterface {
 
     /*!
      * \class CbcInterface
-     * \brief Class representing the User Interface to the Cbc on different boards
+     * \brief Class representing the User Interface to the Chip on different boards
      */
     class CbcInterface
     {
@@ -62,44 +62,44 @@ namespace Ph2_HwInterface {
          */
         ~CbcInterface();
         /*!
-         * \brief Configure the Cbc with the Cbc Config File
+         * \brief Configure the Chip with the Chip Config File
          * \param pCbc: pointer to CBC object
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        bool ConfigureCbc ( const Cbc* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 );
+        bool ConfigureCbc ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 );
 
          /*!
          * \brief Reapply the stored mask for the CBC, use it after group masking is applied
          * \param pCbc: pointer to CBC object
          */
-        bool ConfigureCbcOriginalMask ( const Cbc* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 );
+        bool ConfigureCbcOriginalMask ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 );
 
         /*!
          * \brief Read all the I2C parameters from the CBC
          * \param pCbc: pointer to CBC object
          */
-        void ReadCbc ( Cbc* pCbc );
+        void ReadCbc ( Chip* pCbc );
         /*!
-         * \brief Write the designated register in both Cbc and Cbc Config File
+         * \brief Write the designated register in both Chip and Chip Config File
          * \param pCbc
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
         /*!
-         * \brief Write the designated register in both Cbc and Cbc Config File
+         * \brief Write the designated register in both Chip and Chip Config File
          * \param pCbc
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteCbcReg ( Cbc* pCbc, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true );
+        bool WriteCbcReg ( Chip* pCbc, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true );
 
         /*!
-         * \brief Write several registers in both Cbc and Cbc Config File
+         * \brief Write several registers in both Chip and Chip Config File
          * \param pCbc
          * \param pVecReq : Vector of pair: Node of the register to write versus value to write
          */
-        bool WriteCbcMultReg ( Cbc* pCbc, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop = true );
+        bool WriteCbcMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop = true );
         /*!
          * \brief Write same register in all Cbcs and then UpdateCbc
          * \param pModule : Module containing vector of Cbcs
@@ -115,23 +115,23 @@ namespace Ph2_HwInterface {
          */
         void WriteBroadcastMultReg ( const Module* pModule, const std::vector<std::pair<std::string, uint8_t>> pVecReg );
         /*!
-         * \brief Read the designated register in the Cbc
+         * \brief Read the designated register in the Chip
          * \param pCbc
          * \param pRegNode : Node of the register to read
          */
-        uint8_t ReadCbcReg ( Cbc* pCbc, const std::string& pRegNode );
+        uint8_t ReadCbcReg ( Chip* pCbc, const std::string& pRegNode );
         /*!
-         * \brief Read several register in the Cbc
+         * \brief Read several register in the Chip
          * \param pCbc
          * \param pVecReg : Vector of the nodes of the register to read
          */
-        void ReadCbcMultReg ( Cbc* pCbc, const std::vector<std::string>& pVecReg );
+        void ReadCbcMultReg ( Chip* pCbc, const std::vector<std::string>& pVecReg );
         /*!
          * \brief Read all register in all Cbcs and then UpdateCbc
          * \param pModule : Module containing vector of Cbcs
          */
         //void ReadAllCbc ( const Module* pModule );
-        //void CbcCalibrationTrigger(const Cbc* pCbc );
+        //void CbcCalibrationTrigger(const Chip* pCbc );
         void output();
 
     };

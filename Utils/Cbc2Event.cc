@@ -73,7 +73,7 @@ namespace Ph2_HwInterface {
             //}
             // if there is no FWVersion node in the xml, the CBCs will be counted for each module according to the xml file
             // else
-            cNCbc = static_cast<uint32_t> ( pBoard->getModule ( cFeId )->getNCbc() );
+            cNCbc = static_cast<uint32_t> ( pBoard->getModule ( cFeId )->getNChip() );
 
             //now loop the CBCs and encode the IDs in key
             for ( uint8_t cCbcId = 0; cCbcId < cNCbc; cCbcId++ )
@@ -503,9 +503,9 @@ namespace Ph2_HwInterface {
             uint16_t cCbcPresenceWord = 0;
             int cFirstBitFePayload = cPayload.get_current_write_position();
 
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fChipVector)
             {
-                uint8_t cCbcId = cCbc->getCbcId();
+                uint8_t cCbcId = cCbc->getChipId();
                 uint16_t cKey = encodeId (cFeId, cCbcId);
                 EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 

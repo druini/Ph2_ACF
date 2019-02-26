@@ -1,7 +1,7 @@
 #include <cstring>
 #include <fstream>
 #include "../Utils/Utilities.h"
-#include "../HWDescription/Cbc.h"
+#include "../HWDescription/Chip.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWInterface/CbcInterface.h"
@@ -167,9 +167,9 @@ int main ( int argc, char* argv[] )
         pBoard->setEventType (cHeader.fEventType);
         fPlaybackEventSize32 = cHeader.fEventSize32;
 
-        if (cHeader.fNCbc != cCbcCounter.getNCbc() )
+        if (cHeader.fNCbc != cCbcCounter.getNChip() )
         {
-            LOG (ERROR) << "Error, wrong number of CBCs in config file w.r.t. File Header; config file: " << +cCbcCounter.getNCbc() << " - header: " << cHeader.fNCbc << " - aborting!";
+            LOG (ERROR) << "Error, wrong number of CBCs in config file w.r.t. File Header; config file: " << +cCbcCounter.getNChip() << " - header: " << cHeader.fNCbc << " - aborting!";
             exit (1);
         }
     }

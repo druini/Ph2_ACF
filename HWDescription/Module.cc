@@ -48,7 +48,7 @@ namespace Ph2_HwDescription {
         }
         else
         {
-            LOG (INFO) << "Error:The Module " << +fModuleId << " doesn't have the cbc " << +pChipId ;
+            LOG (INFO) << "Error:The Module " << +fModuleId << " doesn't have the chip " << +pChipId ;
             return false;
         }
     }

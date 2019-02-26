@@ -152,7 +152,7 @@ namespace Ph2_System {
         {
             //fBeBoardInterface->CbcHardReset ( cBoard );
             fBeBoardInterface->ConfigureBoard ( cBoard );
-            //fBeBoardInterface->CbcFastReset ( cBoard );
+            //fBeBoardInterface->ChipFastReset ( cBoard );
 
             if ( cCheck && cBoard->getBoardType() == BoardType::GLIB)
             {
@@ -164,18 +164,18 @@ namespace Ph2_System {
 
             for (auto& cFe : cBoard->fModuleVector)
             {
-                for (auto& cCbc : cFe->fCbcVector)
+                for (auto& cCbc : cFe->fChipVector)
                 {
                     if ( !bIgnoreI2c )
                     {
                         fCbcInterface->ConfigureCbc ( cCbc );
-                        LOG (INFO) << GREEN <<  "Successfully configured Cbc " << int ( cCbc->getCbcId() ) << RESET;
+                        LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
                     }
                 }
             }
 
-            //CbcFastReset as per recommendation of Mark Raymond
-            fBeBoardInterface->CbcFastReset ( cBoard );
+            //ChipFastReset as per recommendation of Mark Raymond
+            fBeBoardInterface->ChipFastReset ( cBoard );
         }
     }
 
@@ -191,7 +191,7 @@ namespace Ph2_System {
             uint32_t cNEventSize32 = this->computeEventSize32 (cBoard);
 
             for (const auto& cFe : cBoard->fModuleVector)
-                cNCbc += cFe->getNCbc();
+                cNCbc += cFe->getNChip();
 
             std::string cBoardTypeString;
             BoardType cBoardType = cBoard->getBoardType();
@@ -240,7 +240,7 @@ namespace Ph2_System {
         uint32_t cNFe = pBoard->getNFe();
 
         for (const auto& cFe : pBoard->fModuleVector)
-            cNCbc += cFe->getNCbc();
+            cNCbc += cFe->getNChip();
 
         if (pBoard->getBoardType() == BoardType::GLIB)
         {

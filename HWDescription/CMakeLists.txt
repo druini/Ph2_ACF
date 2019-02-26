@@ -3,7 +3,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 #find source files
 file(GLOB SOURCES *.cc)
-add_library(Ph2_Description SHARED ${SOURCES} EXCLUDE Cbc.h Cbc.cc)
+list(REMOVE_ITEM SOURCES 
+/home/modtest/Programming/otsdaq/srcs/otsdaq_cmsoutertracker/otsdaq-cmsoutertracker/Ph2_ACF/HWDescription/Cbc.cc)
+message(${SOURCES})
+add_library(Ph2_Description SHARED ${SOURCES} )
 
 else()
 

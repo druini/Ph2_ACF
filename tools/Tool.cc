@@ -138,14 +138,14 @@ void Tool::SoftDestroy()
     fTestGroupChannelMap.clear();
 }
 
-void Tool::bookHistogram ( Cbc* pCbc, std::string pName, TObject* pObject )
+void Tool::bookHistogram ( Chip* pCbc, std::string pName, TObject* pObject )
 {
     // find or create map<string,TOBject> for specific CBC
     auto cCbcHistMap = fCbcHistMap.find ( pCbc );
 
     if ( cCbcHistMap == std::end ( fCbcHistMap ) )
     {
-        LOG (INFO) << "Histo Map for CBC " << int ( pCbc->getCbcId() ) <<  " (FE " << int ( pCbc->getFeId() ) << ") does not exist - creating " ;
+        LOG (INFO) << "Histo Map for CBC " << int ( pCbc->getChipId() ) <<  " (FE " << int ( pCbc->getFeId() ) << ") does not exist - creating " ;
         std::map<std::string, TObject*> cTempCbcMap;
 
         fCbcHistMap[pCbc] = cTempCbcMap;
@@ -219,13 +219,13 @@ void Tool::bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObjec
 #endif
 }
 
-TObject* Tool::getHist ( Cbc* pCbc, std::string pName )
+TObject* Tool::getHist ( Chip* pCbc, std::string pName )
 {
     auto cCbcHistMap = fCbcHistMap.find ( pCbc );
 
     if ( cCbcHistMap == std::end ( fCbcHistMap ) )
     {
-        LOG (ERROR) << RED << "Error: could not find the Histograms for CBC " << int ( pCbc->getCbcId() ) <<  " (FE " << int ( pCbc->getFeId() ) << ")" << RESET ;
+        LOG (ERROR) << RED << "Error: could not find the Histograms for CBC " << int ( pCbc->getChipId() ) <<  " (FE " << int ( pCbc->getFeId() ) << ")" << RESET ;
         return nullptr;
     }
     else
@@ -319,7 +319,7 @@ void Tool::SaveResults()
 
     for ( const auto& cCbc : fCbcHistMap )
     {
-        TString cDirName = Form ( "FE%dCBC%d", cCbc.first->getFeId(), cCbc.first->getCbcId() );
+        TString cDirName = Form ( "FE%dCBC%d", cCbc.first->getFeId(), cCbc.first->getChipId() );
         TObject* cObj = gROOT->FindObject ( cDirName );
 
         //if ( cObj ) delete cObj;
@@ -471,17 +471,17 @@ void Tool::HttpServerProcess()
 
 void Tool::dumpConfigFiles()
 {
-    // visitor to call dumpRegFile on each Cbc
+    // visitor to call dumpRegFile on each Chip
     struct RegMapDumper : public HwDescriptionVisitor
     {
         std::string fDirectoryName;
         RegMapDumper ( std::string pDirectoryName ) : fDirectoryName ( pDirectoryName ) {};
-        void visit ( Cbc& pCbc )
+        void visit ( Chip& pCbc )
         {
             if ( !fDirectoryName.empty() )
             {
-                TString cFilename = fDirectoryName + Form ( "/FE%dCBC%d.txt", pCbc.getFeId(), pCbc.getCbcId() );
-                // cFilename += Form( "/FE%dCBC%d.txt", pCbc.getFeId(), pCbc.getCbcId() );
+                TString cFilename = fDirectoryName + Form ( "/FE%dCBC%d.txt", pCbc.getFeId(), pCbc.getChipId() );
+                // cFilename += Form( "/FE%dCBC%d.txt", pCbc.getFeId(), pCbc.getChipId() );
                 pCbc.saveRegMap ( cFilename.Data() );
             }
             else LOG (INFO) << "Error: no results Directory initialized! "  ;
@@ -502,7 +502,7 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
     {
         for (auto cFe : cBoard->fModuleVector)
         {
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fChipVector)
             {
                 //first, get the Amux Value
                 uint8_t cOriginalAmuxValue;
@@ -558,7 +558,7 @@ void Tool::enableTestPulse(bool enableTP)
     {
         for (auto cFe : cBoard->fModuleVector)
         {
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fChipVector)
             {
                 uint8_t cOriginalAmuxValue;
                 cOriginalAmuxValue = cCbc->getReg ("MiscTestPulseCtrl&AnalogMux" );
@@ -578,7 +578,7 @@ void Tool::enableTestPulse(bool enableTP)
 }
 
 
-void Tool::selectGroupTestPulse(Cbc* cCbc, uint8_t pTestGroup)
+void Tool::selectGroupTestPulse(Chip* cCbc, uint8_t pTestGroup)
 {
     
     uint8_t cRegValue =  to_reg ( 0, pTestGroup );
@@ -673,14 +673,14 @@ void Tool::AmmendReport (std::string pString )
 
 
 // decode bend LUT for a given CBC
-std::map<uint8_t, double> Tool::decodeBendLUT(Cbc* pCbc)
+std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pCbc)
 {
 
     std::map<uint8_t, double> cLUT;
 
     double cBend=-7.0; 
     uint8_t cRegAddress = 0x40; 
-    LOG (DEBUG) << BOLDGREEN << "Decoding bend LUT for CBC" << +pCbc->getCbcId() << " ." << RESET; 
+    LOG (DEBUG) << BOLDGREEN << "Decoding bend LUT for CBC" << +pCbc->getChipId() << " ." << RESET; 
     for( int i = 0 ; i <= 14 ; i++ )
     {
         TString cRegName = Form ( "Bend%d", i  );
@@ -710,7 +710,7 @@ std::map<uint8_t, double> Tool::decodeBendLUT(Cbc* pCbc)
 
 
 // first a method to mask all channels in the CBC 
-void Tool::SetMaskAllChannels (Cbc* pCbc, bool mask)
+void Tool::SetMaskAllChannels (Chip* pCbc, bool mask)
 {
     uint8_t cRegValue ;
     std::string cRegName;
@@ -759,11 +759,11 @@ void Tool::SetMaskAllChannels (Cbc* pCbc, bool mask)
 
 
 //method to mask a channel list
-void Tool::maskChannelFromOtherGroups (Cbc* pCbc, int pTestGroup){
+void Tool::maskChannelFromOtherGroups (Chip* pCbc, int pTestGroup){
 
     std::vector<uint8_t> cbcMask;
     bool cbcAsMaskedChannels = pCbc->asMaskedChannels();
-    if(cbcAsMaskedChannels) cbcMask = pCbc->getCbcMask();
+    if(cbcAsMaskedChannels) cbcMask = pCbc->getChipMask();
 
     const std::vector<uint8_t> &groupMask = fMaskForTestGroupChannelMap[pTestGroup];
 
@@ -792,7 +792,7 @@ void Tool::maskChannelFromOtherGroups (Cbc* pCbc, int pTestGroup){
 
 
 // then a method to un-mask pairs of channels on a given CBC
-void Tool::unmaskPair(Cbc* cCbc ,  std::pair<uint8_t,uint8_t> pPair)
+void Tool::unmaskPair(Chip* cCbc ,  std::pair<uint8_t,uint8_t> pPair)
 {
     ChipType cChipType; 
     for ( BeBoard* pBoard : fBoardVector )
@@ -847,7 +847,7 @@ void Tool::unmaskPair(Cbc* cCbc ,  std::pair<uint8_t,uint8_t> pPair)
 
 
 // and finally a method to un-mask a list of channels on a given CBC
-void Tool::unmaskList(Cbc* cCbc , const std::vector<uint8_t> &pList )
+void Tool::unmaskList(Chip* cCbc , const std::vector<uint8_t> &pList )
 {
     ChipType cChipType; 
     for ( BeBoard* pBoard : fBoardVector )
@@ -1011,7 +1011,7 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
     }
 
     float globalOccupancy = 0.;
-    Cbc *cCbc = pBoard->fModuleVector.at(0)->fCbcVector.at(0); //assumption: one BeBoard has only one type of chips;
+    Chip *cCbc = pBoard->fModuleVector.at(0)->fChipVector.at(0); //assumption: one BeBoard has only one type of chips;
     
     bool localDAC = cCbc->isDACLocal(dacName);
     uint8_t numberOfBits = cCbc->getNumberOfBits(dacName);
@@ -1037,15 +1037,15 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
     // Starting point: all bits to 0
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fChipVector )
         {
             if(localDAC)
             {
-                previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = std::vector<uint8_t>(cCbc->getNumberOfChannels(),0);
+                previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = std::vector<uint8_t>(cCbc->getNumberOfChannels(),0);
             }
             else
             {
-                previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = 0;
+                previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = 0;
             }
         }
     }
@@ -1072,15 +1072,15 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
     // Starting point: all bits to 0
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fChipVector )
         {
             if(localDAC)
             {
-                currentLocalDacListPerBoard [cFe->getModuleId()][cCbc->getCbcId()] = std::vector<uint8_t>(cCbc->getNumberOfChannels(),0xFFFF>>(16-numberOfBits)); //trick to set n bits to 1 without using power of 2
+                currentLocalDacListPerBoard [cFe->getModuleId()][cCbc->getChipId()] = std::vector<uint8_t>(cCbc->getNumberOfChannels(),0xFFFF>>(16-numberOfBits)); //trick to set n bits to 1 without using power of 2
             }
             else
             {
-                currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = 0xFFFF>>(16-numberOfBits); //trick to set n bits to 1 without using power of 2
+                currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = 0xFFFF>>(16-numberOfBits); //trick to set n bits to 1 without using power of 2
             }
         }
     }
@@ -1107,20 +1107,20 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
 
         for ( auto cFe : pBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
                 if(localDAC)
                 {
                     for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel)
                     {
-                        if(occupanyDirectlyProportionalToDAC) currentLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] = previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] + (1<<iBit);
-                        else currentLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] = previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()][iChannel] & (0xFFFF - (1<<iBit));
+                        if(occupanyDirectlyProportionalToDAC) currentLocalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()][iChannel] = previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()][iChannel] + (1<<iBit);
+                        else currentLocalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()][iChannel] = previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()][iChannel] & (0xFFFF - (1<<iBit));
                     }
                 }
                 else
                 {
-                    if(occupanyDirectlyProportionalToDAC) currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] + (1<<iBit);
-                    else currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] & (0xFFFF - (1<<iBit));
+                    if(occupanyDirectlyProportionalToDAC) currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] + (1<<iBit);
+                    else currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] & (0xFFFF - (1<<iBit));
                 }
             }
         }
@@ -1133,74 +1133,74 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
         //Determine if it is better or not
         for ( auto cFe : pBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
-                // std::cout<<"CBC "<<(int16_t)cCbc->getCbcId()<<std::endl;
+                // std::cout<<"CBC "<<(int16_t)cCbc->getChipId()<<std::endl;
                 if(localDAC)
                 {
-                    // if(cCbc->getCbcId()==0) std::cout<<"Current DAC: "<<std::bitset<10>(currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(10))
-                    //     <<" Current occupancy: "<<moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(10)
-                    //     <<" Previous Occupancy: "<<moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(10);
+                    // if(cCbc->getChipId()==0) std::cout<<"Current DAC: "<<std::bitset<10>(currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId()).at(10))
+                    //     <<" Current occupancy: "<<moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId()).at(10)
+                    //     <<" Previous Occupancy: "<<moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getChipId()).at(10);
                     for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel)
                     {
 
                         
                         if(isOccupancyTheMaximumAccepted){
-                            if( moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] <= targetOccupancy )
+                            if( moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] <= targetOccupancy )
                             {
-                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
-                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
+                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
+                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
                             }
-                            // if( occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] <= targetOccupancy)
+                            // if( occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] <= targetOccupancy)
                             // {
-                            //     previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
-                            //     moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
+                            //     previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
+                            //     moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
                             // }
-                            // else if( !occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] >= targetOccupancy)
+                            // else if( !occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] >= targetOccupancy)
                             // {
-                            //     previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
-                            //     moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
+                            //     previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
+                            //     moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
                             // }
                         }
                         else{
-                            if( abs( ( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] - targetOccupancy))/ (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] - targetOccupancy) ) <= 1. 
-                                && abs( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] - targetOccupancy)/
-                                    ( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] - moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] ) / (0xFFFF>>(16-iBit)) ) ) < 1.  )
+                            if( abs( ( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] - targetOccupancy))/ (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] - targetOccupancy) ) <= 1. 
+                                && abs( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] - targetOccupancy)/
+                                    ( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] - moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] ) / (0xFFFF>>(16-iBit)) ) ) < 1.  )
                             {
-                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
-                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel];
+                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
+                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
                             }
                         }
 
                     }
-                    // if(cCbc->getCbcId()==0) std::cout<<" Chosen Occupancy: "<<moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(10)
-                    //     <<" DAC: "<<std::bitset<10>(previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getCbcId()).at(10))<<std::endl;
+                    // if(cCbc->getChipId()==0) std::cout<<" Chosen Occupancy: "<<moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getChipId()).at(10)
+                    //     <<" DAC: "<<std::bitset<10>(previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId()).at(10))<<std::endl;
                 }
                 else
                 {
     
-                    // if(cCbc->getCbcId()==0) std::cout<<"Current DAC: "<<std::bitset<10>(currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()])<<" Current occupancy: "<<moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()]<<" Previous Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()];
+                    // if(cCbc->getChipId()==0) std::cout<<"Current DAC: "<<std::bitset<10>(currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()])<<" Current occupancy: "<<moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()]<<" Previous Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()];
                     if(isOccupancyTheMaximumAccepted){
-                        if( moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()] <= targetOccupancy ){
-                            previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()];
-                            moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()];
+                        if( moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()] <= targetOccupancy ){
+                            previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()];
+                            moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()];
                         }
-                        // if(occupanyDirectlyProportionalToDAC && moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()] <= targetOccupancy){
-                        //     previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()];
-                        //     moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()];
+                        // if(occupanyDirectlyProportionalToDAC && moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()] <= targetOccupancy){
+                        //     previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()];
+                        //     moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()];
                         // }
-                        // else if(!occupanyDirectlyProportionalToDAC && moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()] >= targetOccupancy){
-                        //     previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()];
-                        //     moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()];
+                        // else if(!occupanyDirectlyProportionalToDAC && moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()] >= targetOccupancy){
+                        //     previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()];
+                        //     moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()];
                         // }
                     }
                     else{
-                        if( abs( (moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()] - targetOccupancy)/(moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()] - targetOccupancy) ) <= 1. ){
-                            previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()];
-                            moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getCbcId()];
+                        if( abs( (moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()] - targetOccupancy)/(moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()] - targetOccupancy) ) <= 1. ){
+                            previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()];
+                            moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()];
                         }
                     }
-                    // if(cCbc->getCbcId()==0) std::cout<<" Chosen Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getCbcId()]<<" DAC: "<<std::bitset<10>(previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getCbcId()])<<std::endl;
+                    // if(cCbc->getChipId()==0) std::cout<<" Chosen Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()]<<" DAC: "<<std::bitset<10>(previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()])<<std::endl;
 
                 }
             }
@@ -1294,7 +1294,7 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
             {
                 for ( auto cFe : pBoard->fModuleVector )
                 {
-                    for ( auto cCbc : cFe->fCbcVector )
+                    for ( auto cCbc : cFe->fChipVector )
                     {
                         if(fMaskChannelsFromOtherGroups)
                         {
@@ -1315,7 +1315,7 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
         {
             for ( auto cFe : pBoard->fModuleVector )
             {
-                for ( auto cCbc : cFe->fCbcVector )
+                for ( auto cCbc : cFe->fChipVector )
                 {
                     fCbcInterface->ConfigureCbcOriginalMask ( cCbc );
                 }
@@ -1335,16 +1335,16 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
         std::map<uint8_t,float> *cbcNumberOfHitsMap = &cbcOccupanyMap[cFe->getModuleId()];
 
 
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fChipVector )
         {
 
-            ChannelOccupancy *channelOccupancy = &cbcChannelOccupancy->at(cCbc->getCbcId());
+            ChannelOccupancy *channelOccupancy = &cbcChannelOccupancy->at(cCbc->getChipId());
 
-            (*cbcNumberOfHitsMap)[cCbc->getCbcId()] =0;
+            (*cbcNumberOfHitsMap)[cCbc->getChipId()] =0;
             
             std::vector<uint8_t> cbcMask;
             bool cbcAsMaskedChannels = cCbc->asMaskedChannels();
-            if(cbcAsMaskedChannels) cbcMask = cCbc->getCbcMask();
+            if(cbcAsMaskedChannels) cbcMask = cCbc->getChipMask();
 
             for ( uint8_t cChan=0; cChan<cCbc->getNumberOfChannels(); ++cChan)
             {
@@ -1352,12 +1352,12 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
                 {
                     if(( (cbcMask[cChan>>3]>>(cChan&0x7)) &0x1) )
                     {
-                        (*cbcNumberOfHitsMap)[cCbc->getCbcId()]+=channelOccupancy->at(cChan);
+                        (*cbcNumberOfHitsMap)[cCbc->getChipId()]+=channelOccupancy->at(cChan);
                     }
                 }
                 else
                 {
-                    (*cbcNumberOfHitsMap)[cCbc->getCbcId()]+=channelOccupancy->at(cChan);
+                    (*cbcNumberOfHitsMap)[cCbc->getChipId()]+=channelOccupancy->at(cChan);
                 }
                 channelOccupancy->at(cChan)/=numberOfEvents;
             }
@@ -1376,9 +1376,9 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
                 cbcNormalization = numberOfEvents * cCbc->getNumberOfChannels();
             }
 
-            numberOfHits  += (*cbcNumberOfHitsMap)[cCbc->getCbcId()];
+            numberOfHits  += (*cbcNumberOfHitsMap)[cCbc->getChipId()];
             normalization += cbcNormalization;
-            (*cbcNumberOfHitsMap)[cCbc->getCbcId()] /= cbcNormalization;
+            (*cbcNumberOfHitsMap)[cCbc->getChipId()] /= cbcNormalization;
         }
     }
 
@@ -1408,18 +1408,18 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
             }
             CbcOccupancyPerChannelMap *cbcOccupancy = &moduleOccupancyPerChannelMap[cFe->getModuleId()];
  
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
 
-                if(cbcOccupancy->find(cCbc->getCbcId())==cbcOccupancy->end()){
-                    (*cbcOccupancy)[cCbc->getCbcId()]=ChannelOccupancy(cCbc->getNumberOfChannels(),0);
+                if(cbcOccupancy->find(cCbc->getChipId())==cbcOccupancy->end()){
+                    (*cbcOccupancy)[cCbc->getChipId()]=ChannelOccupancy(cCbc->getNumberOfChannels(),0);
                 }
-                ChannelOccupancy *stripOccupancy = &cbcOccupancy->at(cCbc->getCbcId());
+                ChannelOccupancy *stripOccupancy = &cbcOccupancy->at(cCbc->getChipId());
 
                 for ( auto& cChan : cTestGrpChannelVec )
                 {
 
-                    if ( ev->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChan) )
+                    if ( ev->DataBit ( cFe->getFeId(), cCbc->getChipId(), cChan) )
                     {
                         ++stripOccupancy->at(cChan);
                     }
@@ -1439,9 +1439,9 @@ void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, cons
 
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fChipVector )
         {
-            uint16_t dacValue = dacList.at(cFe->getModuleId()).at(cCbc->getCbcId());
+            uint16_t dacValue = dacList.at(cFe->getModuleId()).at(cCbc->getChipId());
             if(dacName=="VCth"){
                 if (cCbc->getChipType() == ChipType::CBC3)
                 {
@@ -1505,7 +1505,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
 
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fChipVector )
         {
             if(dacName=="VCth"){
                 if (cCbc->getChipType() == ChipType::CBC3)
@@ -1568,7 +1568,7 @@ void Tool::setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, co
     
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fChipVector )
         {
             std::vector<std::pair<std::string, uint8_t> > cRegVec;
             std::vector<uint8_t> listOfChannelToUnMask;
@@ -1576,14 +1576,14 @@ void Tool::setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, co
 
             for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel){
                 if(isMask){
-                    if( dacList.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel] ){
+                    if( dacList.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] ){
                         listOfChannelToUnMask.emplace_back(iChannel);
                     }
                 }
                 else {
                     char dacName1[30];
                     sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
-                    cRegVec.emplace_back(dacName1,dacList.at(cFe->getModuleId()).at(cCbc->getCbcId())[iChannel]);
+                    cRegVec.emplace_back(dacName1,dacList.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel]);
                 }
             }
 
@@ -1628,7 +1628,7 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, c
     
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fChipVector )
         {
             std::vector<std::pair<std::string, uint8_t> > cRegVec;
             std::vector<uint8_t> listOfChannelToMask;

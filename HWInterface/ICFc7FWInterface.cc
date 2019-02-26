@@ -1,7 +1,7 @@
 /*!
 
         \file                           ICICICFc7FWInterface.h
-        \brief                          ICICICFc7FWInterface init/config of the Glib and its Cbc's
+        \brief                          ICICICFc7FWInterface init/config of the Glib and its Chip's
         \author                         G. Auzinger, K. Uchida
         \version            1.0
         \date                           25.02.2016
@@ -136,9 +136,9 @@ namespace Ph2_HwInterface {
             if (cfmc1_en) fFMCId = 1;
             else if (cfmc2_en) fFMCId = 2;
 
-            for ( Cbc* cCbc : cFe->fCbcVector)
+            for ( Chip* cCbc : cFe->fChipVector)
             {
-                uint8_t cCbcId = cCbc->getCbcId();
+                uint8_t cCbcId = cCbc->getChipId();
                 sprintf (tmpChar, "cbc_daq_ctrl.cbc_i2c_addr_fmc%d.cbc%d", fFMCId, cCbcId);
                 std::string cRegString (tmpChar);
                 uint32_t cAddress = 0x41 + cCbcId;
@@ -165,7 +165,7 @@ namespace Ph2_HwInterface {
         cVecReg.clear();
 
         //hard reset CBC according to Kirika however, this violates our paradigm....sort of
-        this->CbcHardReset();
+        this->ChipHardReset();
         usleep (10);
         //before I'm done I need to reset all the state machines which loads the configuration
         //all the daq_ctrl registers have to be used with hex values and not with the sub-masks but they are auto clearing after 1 has been written
@@ -506,7 +506,7 @@ namespace Ph2_HwInterface {
 
 
 
-    bool ICFc7FWInterface::WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback)
+    bool ICFc7FWInterface::WriteChipBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback)
     {
 
         uint8_t cMaxWriteAttempts = 5;
@@ -568,7 +568,7 @@ namespace Ph2_HwInterface {
                 else LOG (INFO) << BOLDRED <<  "(WRITE#"  << std::to_string (pWriteAttempts) << ") There were " << cWriteAgain.size() << " CBC CMD acknowledge bits missing -trying again!" << RESET ;
 
                 pWriteAttempts++;
-                this->WriteCbcBlockReg ( cWriteAgain, pWriteAttempts, true);
+                this->WriteChipBlockReg ( cWriteAgain, pWriteAttempts, true);
             }
             else if ( pWriteAttempts >= cMaxWriteAttempts )
             {
@@ -582,7 +582,7 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
-    bool ICFc7FWInterface::BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback)
+    bool ICFc7FWInterface::BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback)
     {
         std::vector<uint32_t> cReplies;
         bool cSuccess = !WriteI2C ( pVecReg, cReplies, false, true );
@@ -618,7 +618,7 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
-    void ICFc7FWInterface::ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg )
+    void ICFc7FWInterface::ReadChipBlockReg (  std::vector<uint32_t>& pVecReg )
     {
         std::vector<uint32_t> cReplies;
         //it sounds weird, but ReadI2C is called inside writeI2c, therefore here I have to write and disable the readback. The actual read command is in the words of the vector, no broadcast, maybe I can get rid of it
@@ -627,12 +627,12 @@ namespace Ph2_HwInterface {
         pVecReg = cReplies;
     }
 
-    void ICFc7FWInterface::CbcFastReset()
+    void ICFc7FWInterface::ChipFastReset()
     {
         WriteReg ( "cbc_daq_ctrl.cbc_ctrl", FAST_RESET );
     }
 
-    void ICFc7FWInterface::CbcHardReset()
+    void ICFc7FWInterface::ChipHardReset()
     {
         WriteReg ( "cbc_daq_ctrl.cbc_ctrl", HARD_RESET );
     }

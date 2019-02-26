@@ -2,7 +2,7 @@
 /*!
 
         \file                           D19cFWInterface.h
-        \brief                          D19cFWInterface init/config of the FC7 and its Cbc's
+        \brief                          D19cFWInterface init/config of the FC7 and its Chip's
         \author                         G. Auzinger, K. Uchida, M. Haranko
         \version            1.0
         \date                           24.03.2017
@@ -35,7 +35,7 @@ namespace Ph2_HwInterface {
     /*!
      * \class Cbc3Fc7FWInterface
      *
-     * \brief init/config of the Fc7 and its Cbc's
+     * \brief init/config of the Fc7 and its Chip's
      */
     class D19cFWInterface : public BeBoardFWInterface
     {
@@ -246,15 +246,15 @@ namespace Ph2_HwInterface {
         //      CBC Methods                                 //
         /////////////////////////////////////////////////////
 
-        //Encode/Decode Cbc values
+        //Encode/Decode Chip values
         /*!
-        * \brief Encode a/several word(s) readable for a Cbc
+        * \brief Encode a/several word(s) readable for a Chip
         * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-        * \param pCbcId : Id of the Cbc to work with
+        * \param pCbcId : Id of the Chip to work with
         * \param pVecReq : Vector to stack the encoded words
         */
-        void EncodeReg (const ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
-        void EncodeReg (const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
+        void EncodeReg (const ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
+        void EncodeReg (const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
         void EncodeReg (const RegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
         void EncodeReg (const RegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
 
@@ -265,19 +265,19 @@ namespace Ph2_HwInterface {
 
 
 
-        bool WriteCbcBlockReg   ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
-        bool BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
-        void ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg );
+        bool WriteChipBlockReg   ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
+        bool BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
+        void ReadChipBlockReg (  std::vector<uint32_t>& pVecReg );
 
-        void CbcHardReset();
+        void ChipHardReset();
 
-        void CbcFastReset();
+        void ChipFastReset();
 
-        void CbcI2CRefresh();
+        void ChipI2CRefresh();
 
-        void CbcTestPulse();
+        void ChipTestPulse();
 
-        void CbcTrigger();
+        void ChipTrigger();
 
         // phase tuning coomands - d19c
         void PhaseTuningGetLineStatus(uint8_t pHybrid, uint8_t pChip, uint8_t pLine);

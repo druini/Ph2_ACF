@@ -28,7 +28,7 @@ void SignalScanFit::Initialize ()
 
             // Make a canvas for the live plot
             uint32_t cFeId = cFe->getFeId();
-            fNCbc = cFe->getNCbc();
+            fNCbc = cFe->getNChip();
 
             TCanvas* ctmpCanvas = new TCanvas ( Form ( "c_online_canvas_fe%d", cFeId ), Form ( "FE%d  Online Canvas", cFeId ) ); 
             fCanvasMap[cFe] = ctmpCanvas;
@@ -50,9 +50,9 @@ void SignalScanFit::Initialize ()
             uint32_t cCbcCount = 0;
             uint32_t cCbcIdMax = 0;
 
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
-                uint32_t cCbcId = cCbc->getCbcId();
+                uint32_t cCbcId = cCbc->getChipId();
                 cCbcCount++;
 
                 if ( cCbcId > cCbcIdMax ) cCbcIdMax = cCbcId;
@@ -154,7 +154,7 @@ void SignalScanFit::ScanSignal (int pSignalScanLength)
                     TH2D* cVcthClusters = static_cast<TH2D*> (getHist ( cFe, "vcth_ClusterSize" ) );
 	                
                     // Loop over the CBCs
-	                  for ( auto cCbc : cFe->fCbcVector )
+	                  for ( auto cCbc : cFe->fChipVector )
                     {
                         TH1D* cHitsEvenHist         = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_even" ) );
                         TH1D* cHitsOddHist          = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_odd" ) );
@@ -171,19 +171,19 @@ void SignalScanFit::ScanSignal (int pSignalScanLength)
                             // Find the hits in an event and fill the hits histos
                             for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                             {
-                                if ( cEvent->DataBit ( cCbc->getFeId(), cCbc->getCbcId(), cId ) )
+                                if ( cEvent->DataBit ( cCbc->getFeId(), cCbc->getChipId(), cId ) )
                                 {
                                     // Check which sensor we are on
                                     if ( ( int (cId) % 2 ) == 0 ) cHitsEvenHist->Fill( cVCth );
 			                              else cHitsOddHist->Fill( cVCth );
 
-                                    cSignalHist->Fill (cCbc->getCbcId() * NCHANNELS + cId, cVCth );
+                                    cSignalHist->Fill (cCbc->getChipId() * NCHANNELS + cId, cVCth );
                                     cEventHits++;
                                 }
                             }
 
                             // Fill the cluster histos, use the middleware clustering
-                            std::vector<Cluster> cClusters = cEvent->getClusters (cCbc->getFeId(), cCbc->getCbcId() ); 
+                            std::vector<Cluster> cClusters = cEvent->getClusters (cCbc->getFeId(), cCbc->getChipId() ); 
                             cEventClusters += cClusters.size();
 
                             // For the TProfiles
@@ -305,7 +305,7 @@ void SignalScanFit::processCurves ( BeBoard *pBoard, std::string pHistName )
 {
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fChipVector )
         {
             // This one is not used yet?
             TProfile* cProf = dynamic_cast<TProfile*> ( getHist ( cCbc, pHistName) );
@@ -340,7 +340,7 @@ void SignalScanFit::processCurves ( BeBoard *pBoard, std::string pHistName )
     }
 }
 
-void SignalScanFit::differentiateHist ( Cbc* pCbc, std::string pHistName )
+void SignalScanFit::differentiateHist ( Chip* pCbc, std::string pHistName )
 {
     TH1D* cHist = dynamic_cast<TH1D*> ( getHist ( pCbc, pHistName) );
     TString cHistname(cHist->GetName());
@@ -383,7 +383,7 @@ void SignalScanFit::differentiateHist ( Cbc* pCbc, std::string pHistName )
     }
 }
 
-void SignalScanFit::fitHist ( Cbc* pCbc, std::string pHistName )
+void SignalScanFit::fitHist ( Chip* pCbc, std::string pHistName )
 {
 
     std::cout << BOLDRED << "WARNING: The fitting precedure is WORK IN PROGRESS and it might not work out of the box therefore the deault is set to disable the automatic fit!" << RESET << std::endl;    

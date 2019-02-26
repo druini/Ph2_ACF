@@ -11,9 +11,9 @@ struct HistogramFillerShort  : public HwDescriptionVisitor
 
     HistogramFillerShort ( TH1F* pBotHist, TH1F* pTopHist, const Event* pEvent ) : fBotHist ( pBotHist ), fTopHist ( pTopHist ), fEvent ( pEvent ) {}
 
-    void visit ( Cbc& pCbc )
+    void visit ( Chip& pCbc )
     {
-        std::vector<bool> cDataBitVector = fEvent->DataBitVector ( pCbc.getFeId(), pCbc.getCbcId() );
+        std::vector<bool> cDataBitVector = fEvent->DataBitVector ( pCbc.getFeId(), pCbc.getChipId() );
 
         for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
         {
@@ -72,11 +72,11 @@ void ShortFinder::ReconfigureRegisters()
 
     for (auto& cBoard : fBoardVector)
     {
-        fBeBoardInterface->CbcHardReset ( cBoard );
+        fBeBoardInterface->ChipHardReset ( cBoard );
 
         for (auto& cFe : cBoard->fModuleVector)
         {
-            for (auto& cCbc : cFe->fCbcVector)
+            for (auto& cCbc : cFe->fChipVector)
             {
                 std::string pRegFile ;
 
@@ -85,18 +85,18 @@ void ShortFinder::ReconfigureRegisters()
                 else
                 {
                     char buffer[120];
-                    sprintf (buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cCbc->getFeId(), cCbc->getCbcId() );
+                    sprintf (buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cCbc->getFeId(), cCbc->getChipId() );
                     pRegFile = buffer;
                 }
 
                 cCbc->loadfRegMap (pRegFile);
                 fCbcInterface->ConfigureCbc ( cCbc );
-                LOG (INFO) << GREEN << "\t\t Successfully (re)configured CBC" << int ( cCbc->getCbcId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
+                LOG (INFO) << GREEN << "\t\t Successfully (re)configured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
             }
         }
 
-        //CbcFastReset as per recommendation of Mark Raymond
-        fBeBoardInterface->CbcFastReset ( cBoard );
+        //ChipFastReset as per recommendation of Mark Raymond
+        fBeBoardInterface->ChipFastReset ( cBoard );
     }
 }
 void ShortFinder::ConfigureVcth (uint16_t pVcth)
@@ -127,7 +127,7 @@ void ShortFinder::InitialiseSettings()
     // figure out how many CBCs you're working with
     Counter cCbcCounter;
     accept ( cCbcCounter );
-    fNCbc = cCbcCounter.getNCbc();
+    fNCbc = cCbcCounter.getNChip();
 
     // figure out what the number of events to take it
     cSetting = fSettingsMap.find ( "Nevents" );
@@ -332,7 +332,7 @@ void ShortFinder::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
 {
     for (auto cFe : pBoard->fModuleVector)
     {
-        for (auto cCbc : cFe->fCbcVector)
+        for (auto cCbc : cFe->fChipVector)
         {
             std::vector<std::pair<std::string, uint8_t>> cRegVec;
             uint8_t cRegValue = this->to_reg ( 0, pTestGroup );

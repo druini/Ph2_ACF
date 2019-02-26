@@ -2,7 +2,7 @@
 /*!
 
         \file                           ICICFc7FWInterface.h
-        \brief                          ICICFc7FWInterface init/config of the Glib and its Cbc's
+        \brief                          ICICFc7FWInterface init/config of the Glib and its Chip's
         \author                         G. Auzinger, K. Uchida
         \version            1.0
         \date                           25.02.2016
@@ -33,7 +33,7 @@ namespace Ph2_HwInterface {
     class CtaFpgaConfig;
     /*!
      * \class ICFc7FWInterface
-     * \brief init/config of the Fc7 and its Cbc's
+     * \brief init/config of the Fc7 and its Chip's
      */
     class ICFc7FWInterface : public BeBoardFWInterface
     {
@@ -198,29 +198,29 @@ namespace Ph2_HwInterface {
         //      CBC Methods                                 //
         /////////////////////////////////////////////////////
 
-        //Encode/Decode Cbc values
+        //Encode/Decode Chip values
         /*!
-        * \brief Encode a/several word(s) readable for a Cbc
+        * \brief Encode a/several word(s) readable for a Chip
         * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-        * \param pCbcId : Id of the Cbc to work with
+        * \param pCbcId : Id of the Chip to work with
         * \param pVecReq : Vector to stack the encoded words
         */
-        void EncodeReg ( const ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
-        void EncodeReg ( const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
+        void EncodeReg ( const ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
+        void EncodeReg ( const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
         void BCEncodeReg ( const ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) override;
         void DecodeReg ( ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
 
         //Encode/Decode MPA/SSA values
-        void EncodeReg ( const RegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Cbc*/\
-        void EncodeReg ( const RegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Cbc*/	
+        void EncodeReg ( const RegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Chip*/\
+        void EncodeReg ( const RegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Chip*/	
 
-        bool WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
-        bool BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
-        void ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg );
+        bool WriteChipBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
+        bool BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
+        void ReadChipBlockReg (  std::vector<uint32_t>& pVecReg );
 
-        void CbcHardReset();
+        void ChipHardReset();
 
-        void CbcFastReset();
+        void ChipFastReset();
 
         void CbcTrigger();
 

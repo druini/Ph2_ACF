@@ -1,7 +1,7 @@
 /*!
 
         \file            ChipRegItem.h
-        \brief                   ChipRegItem description, contents of the structure ChipRegItem with is the value of the CbcRegMap
+        \brief                   ChipRegItem description, contents of the structure ChipRegItem with is the value of the ChipRegMap
         \author                  Lorenzo BIDEGAIN
         \version                 1.0
         \date                    25/06/14

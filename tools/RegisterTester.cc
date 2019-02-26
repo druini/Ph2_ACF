@@ -22,9 +22,9 @@ void RegisterTester::TestRegisters()
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
-                CbcRegMap cMap = cCbc->getRegMap();
+                ChipRegMap cMap = cCbc->getRegMap();
 
                 for ( const auto& cReg : cMap )
                 {
@@ -34,7 +34,7 @@ void RegisterTester::TestRegisters()
                         sprintf (line, "# Writing 0x%.2x to CBC Register %s FAILED.\n", cFirstBitPattern, (cReg.first).c_str()  );
                         LOG (INFO) << BOLDRED << line << RESET ;
                         report << line ;
-                        fBadRegisters[cCbc->getCbcId()] .insert ( cReg.first );
+                        fBadRegisters[cCbc->getChipId()] .insert ( cReg.first );
                         fNBadRegisters++;
                     }
 
@@ -46,7 +46,7 @@ void RegisterTester::TestRegisters()
                         sprintf (line, "# Writing 0x%.2x to CBC Register %s FAILED.\n", cSecondBitPattern, (cReg.first).c_str()  );
                         LOG (INFO) << BOLDRED << line << RESET ;
                         report << line ;
-                        fBadRegisters[cCbc->getCbcId()] .insert ( cReg.first );
+                        fBadRegisters[cCbc->getChipId()] .insert ( cReg.first );
                         fNBadRegisters++;
                     }
 
@@ -54,8 +54,8 @@ void RegisterTester::TestRegisters()
                     std::this_thread::sleep_for (std::chrono::nanoseconds (100) );
                 }
 
-                //CbcFastReset as per recommendation of Mark Raymond
-                fBeBoardInterface->CbcFastReset ( cBoard );
+                //ChipFastReset as per recommendation of Mark Raymond
+                fBeBoardInterface->ChipFastReset ( cBoard );
             }
         }
     }
@@ -90,11 +90,11 @@ void RegisterTester::ReconfigureRegisters (std::string pDirectoryName )
 
     for (auto& cBoard : fBoardVector)
     {
-        fBeBoardInterface->CbcHardReset ( cBoard );
+        fBeBoardInterface->ChipHardReset ( cBoard );
 
         for (auto& cFe : cBoard->fModuleVector)
         {
-            for (auto& cCbc : cFe->fCbcVector)
+            for (auto& cCbc : cFe->fChipVector)
             {
                 std::string pRegFile ;
 
@@ -103,18 +103,18 @@ void RegisterTester::ReconfigureRegisters (std::string pDirectoryName )
                 else
                 {
                     char buffer[120];
-                    sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cCbc->getFeId(), cCbc->getCbcId() );
+                    sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cCbc->getFeId(), cCbc->getChipId() );
                     pRegFile = buffer;
                 }
 
                 cCbc->loadfRegMap (pRegFile);
                 fCbcInterface->ConfigureCbc ( cCbc );
-                LOG (INFO) << GREEN << "\t\t Successfully (re)configured CBC" << int ( cCbc->getCbcId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
+                LOG (INFO) << GREEN << "\t\t Successfully (re)configured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
             }
         }
 
-        //CbcFastReset as per recommendation of Mark Raymond
-        fBeBoardInterface->CbcFastReset ( cBoard );
+        //ChipFastReset as per recommendation of Mark Raymond
+        fBeBoardInterface->ChipFastReset ( cBoard );
     }
 }
 void RegisterTester::PrintTestReport()
@@ -126,11 +126,11 @@ void RegisterTester::PrintTestReport()
 }
 void RegisterTester::PrintTestResults (std::ostream& os )
 {
-    os << "Testing Cbc Registers one-by-one with complimentary bit-patterns (0xAA, 0x55)" << std::endl;
+    os << "Testing Chip Registers one-by-one with complimentary bit-patterns (0xAA, 0x55)" << std::endl;
 
     for ( const auto& cCbc : fBadRegisters )
     {
-        os << "Malfunctioning Registers on Cbc " << cCbc.first << " : " << std::endl;
+        os << "Malfunctioning Registers on Chip " << cCbc.first << " : " << std::endl;
 
         for ( const auto& cReg : cCbc.second ) os << cReg << std::endl;
     }

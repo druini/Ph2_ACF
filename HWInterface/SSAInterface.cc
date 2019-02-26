@@ -146,7 +146,7 @@ void SSAInterface::setFileHandler (FileHandler* pHandler)
 		LOG (INFO) << BOLDBLUE << cRegItem.first << RESET;
 		fBoardFW->EncodeReg (cRegItem.second, pSSA->getFeId(), pSSA->getSSAId(), cVec, pVerifLoop, true);
 		uint8_t cWriteAttempts = 0 ;
-		cSuccess = fBoardFW->WriteCbcBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+		cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
 		if (not cSuccess) {return cSuccess;}
 		cVec.clear();
 	#ifdef COUNT_FLAG
@@ -159,7 +159,7 @@ void SSAInterface::setFileHandler (FileHandler* pHandler)
 	    // uint8_t cWriteAttempts = 0 ;
 	    //std::cout << "BEFORE WRITE: " << std::endl;
 	    //for (auto word : cVec) std::cout << "----- Sent words: " << std::hex << word << std::dec << std::endl;
-	    // bool cSuccess = fBoardFW->WriteCbcBlockReg ( cVec, cWriteAttempts, pVerifLoop); // FIXME!!!! :(
+	    // bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop); // FIXME!!!! :(
 	    // std::cout << "AFTER WRITE: " << std::endl;
 	    // for (auto word : cVec) std::cout << "----- Reply words: " << std::hex << word << std::dec << std::endl;
 
@@ -197,7 +197,7 @@ void SSAInterface::setFileHandler (FileHandler* pHandler)
 	    // write the registers, the answer will be in the same cVec
 	    // the number of times the write operation has been attempted is given by cWriteAttempts
 	    uint8_t cWriteAttempts = 0 ;
-	    bool cSuccess = fBoardFW->WriteCbcBlockReg (  cVec, cWriteAttempts, pVerifLoop );
+	    bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
 
 	    //update the HWDescription object
 	    if (cSuccess)
@@ -219,7 +219,7 @@ void SSAInterface::setFileHandler (FileHandler* pHandler)
 	    std::vector<uint32_t> cVecReq;
 
 	    fBoardFW->EncodeReg ( cRegItem, pSSA->getFeId(), pSSA->getSSAId(), cVecReq, true, false );
-            fBoardFW->ReadCbcBlockReg (  cVecReq );
+            fBoardFW->ReadChipBlockReg (  cVecReq );
 
 	    //bools to find the values of failed and read
 	    bool cFailed = false;

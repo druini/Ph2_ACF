@@ -138,7 +138,7 @@ namespace Ph2_HwDescription {
 
     uint8_t Cbc::getReg ( const std::string& pReg ) const
     {
-        CbcRegMap::const_iterator i = fRegMap.find ( pReg );
+        ChipRegMap::const_iterator i = fRegMap.find ( pReg );
 
         if ( i == fRegMap.end() )
         {
@@ -152,7 +152,7 @@ namespace Ph2_HwDescription {
 
     void Cbc::setReg ( const std::string& pReg, uint8_t psetValue )
     {
-        CbcRegMap::iterator i = fRegMap.find ( pReg );
+        ChipRegMap::iterator i = fRegMap.find ( pReg );
 
         if ( i == fRegMap.end() )
             LOG (INFO) << "The Cbc object: " << +fCbcId << " doesn't have " << pReg ;
@@ -163,7 +163,7 @@ namespace Ph2_HwDescription {
     ChipRegItem Cbc::getRegItem ( const std::string& pReg )
     {
         ChipRegItem cItem;
-        CbcRegMap::iterator i = fRegMap.find ( pReg );
+        ChipRegMap::iterator i = fRegMap.find ( pReg );
 
         if ( i != std::end ( fRegMap ) ) return ( i->second );
         else
@@ -228,7 +228,7 @@ namespace Ph2_HwDescription {
         if ( cbc1.getBeId() != cbc2.getBeId() ) return cbc1.getBeId() < cbc2.getBeId();
         else if ( cbc1.getFMCId() != cbc2.getFMCId() ) return cbc1.getFMCId() < cbc2.getFMCId();
         else if ( cbc1.getFeId() != cbc2.getFeId() ) return cbc1.getFeId() < cbc2.getFeId();
-        else return cbc1.getCbcId() < cbc2.getCbcId();
+        else return cbc1.getChipId() < cbc2.getChipId();
     }
 
 

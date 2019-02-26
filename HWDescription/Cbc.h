@@ -34,7 +34,7 @@
  */
 namespace Ph2_HwDescription {
 
-    using CbcRegMap = std::map < std::string, ChipRegItem >;
+    using ChipRegMap = std::map < std::string, ChipRegItem >;
     using CbcRegPair = std::pair <std::string, ChipRegItem>;
     using CommentMap = std::map <int, std::string>;
 
@@ -42,7 +42,7 @@ namespace Ph2_HwDescription {
      * \class Cbc
      * \brief Read/Write Cbc's registers on a file, contains a register map
      */
-    class Cbc : public FrontEndDescription
+    class Cbc : public Chip
     {
 
       public:
@@ -54,93 +54,9 @@ namespace Ph2_HwDescription {
         Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename );
         Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename, ChipType pType );
 
-        // Default C'tor
-        Cbc();
+        const uint16_t getNumberOfChannels() const override { return NCHANNELS; }
 
-        // Copy C'tor
-        Cbc ( const Cbc& cbcobj );
-
-        // D'Tor
-        ~Cbc();
-
-        /*!
-         * \brief acceptor method for HwDescriptionVisitor
-         * \param pVisitor
-         */
-        void accept ( HwDescriptionVisitor& pVisitor )
-        {
-            //LOREpVisitor.visit ( *this );
-        }
-        // void accept( HwDescriptionVisitor& pVisitor ) const {
-        //  pVisitor.visit( *this );
-        // }
-        /*!
-        * \brief Load RegMap from a file
-        * \param filename
-        */
-        void loadfRegMap ( const std::string& filename );
-
-        /*!
-        * \brief Get any register from the Map
-        * \param pReg
-        * \return The value of the register
-        */
-        uint8_t getReg ( const std::string& pReg ) const;
-        /*!
-        * \brief Set any register of the Map
-        * \param pReg
-        * \param psetValue
-        */
-        void setReg ( const std::string& pReg, uint8_t psetValue );
-        /*!
-        * \brief Get any registeritem of the Map
-        * \param pReg
-        * \return  RegItem
-        */
-        ChipRegItem getRegItem ( const std::string& pReg );
-        /*!
-        * \brief Write the registers of the Map in a file
-        * \param filename
-        */
-        void saveRegMap ( const std::string& filename );
-
-        /*!
-        * \brief Get the Map of the registers
-        * \return The map of register
-        */
-        CbcRegMap& getRegMap()
-        {
-            return fRegMap;
-        }
-        const CbcRegMap& getRegMap() const
-        {
-            return fRegMap;
-        }
-        /*!
-        * \brief Get the Cbc Id
-        * \return The Cbc ID
-        */
-        uint8_t getCbcId() const
-        {
-            return fCbcId;
-        }
-        /*!
-         * \brief Set the Cbc Id
-         * \param pCbcId
-         */
-        void setCbcId ( uint8_t pCbcId )
-        {
-            fCbcId = pCbcId;
-        }
-
-        const uint16_t getNumberOfChannels() const { return NCHANNELS; }
-
-        const uint32_t* getCbcmask() const 
-        {
-            return fCbcMask32;
-        }
-
-        const std::vector<uint8_t>& getCbcMask() const
+        const std::vector<uint8_t>& getChipMask() const
         {
             return fCbcMask;
         }
@@ -149,12 +65,12 @@ namespace Ph2_HwDescription {
             return fAsMaskedChannels;
         }
 
-        bool isDACLocal(const std::string &dacName){
+        bool isDACLocal(const std::string &dacName) override {
             if(dacName.find("MaskChannel-",0,12)!=std::string::npos || dacName.find("Channel",0,7)!=std::string::npos ) return true;
             else return false;
         }
 
-        uint8_t getNumberOfBits(const std::string &dacName){
+        uint8_t getNumberOfBits(const std::string &dacName) override {
             if(dacName.find("MaskChannel-",0,12)!=std::string::npos) return 1;
             else if(dacName == "VCth") return 10;
             else if(dacName == "VCth2") return 2;
@@ -170,11 +86,10 @@ namespace Ph2_HwDescription {
         bool fAsMaskedChannels;
 
         // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value
-        CbcRegMap fRegMap;
+        ChipRegMap fRegMap;
         CommentMap fCommentMap;
         std::vector<uint8_t> fCbcMask = std::vector<uint8_t>(32,0);
-        uint32_t fCbcMask32[8]; //mask is stored in 8 uint32
-
+        
     };
 
 

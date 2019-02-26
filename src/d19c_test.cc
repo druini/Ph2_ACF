@@ -142,7 +142,7 @@ int main ( int argc, char** argv )
             uint32_t cNEventsToCollect = ( cmd.foundOption ( "events" ) ) ? convertAnyInt ( cmd.optionValue ( "events" ).c_str() ) : 10000;
 
             // be careful works only for one hybrid
-            std::vector < Cbc* > cCbcVector = pBoard->getModule(0)->fCbcVector;
+            std::vector < Chip* > cCbcVector = pBoard->getModule(0)->fChipVector;
             uint32_t cNCbc = cCbcVector.size();
 
             Timer t;
@@ -161,7 +161,7 @@ int main ( int argc, char** argv )
                     cN++;
 
                     double cAvgOccupancyHyb0 = 0;
-                    for(auto cCbc: cCbcVector) cAvgOccupancyHyb0 += ev->GetNHits(0,cCbc->getCbcId());
+                    for(auto cCbc: cCbcVector) cAvgOccupancyHyb0 += ev->GetNHits(0,cCbc->getChipId());
                     cAvgOccupancy += (cAvgOccupancyHyb0/cNCbc);
 
                     if ( cmd.foundOption ( "dqm" ) )
@@ -259,7 +259,7 @@ int main ( int argc, char** argv )
                 for (uint32_t cThreshold = cThresholdMin; cThreshold < cThresholdMax; cThreshold++) {
 
                     // set threshold
-                    for(auto& cCbc : cFe0->fCbcVector) {
+                    for(auto& cCbc : cFe0->fChipVector) {
                         cThresholdVisitor.setThreshold(cThreshold);
                         cCbc->accept(cThresholdVisitor);
                     }
@@ -272,10 +272,10 @@ int main ( int argc, char** argv )
                         const std::vector<Event*>& events = cTool.GetEvents ( pBoard );
                         for ( auto& ev : events ) {
                             for(auto& cFe : pBoard->fModuleVector) {
-                                for(auto& cCbc : cFe->fCbcVector) {
+                                for(auto& cCbc : cFe->fChipVector) {
                                     for(uint8_t ch = 0; ch < NCHANNELS; ch++) {
-                                        if (ev->DataBit(cFe->getFeId(), cCbc->getCbcId(), ch))
-                                            cChannelCounters[cFe->getFeId()][cCbc->getCbcId()][ch]++;
+                                        if (ev->DataBit(cFe->getFeId(), cCbc->getChipId(), ch))
+                                            cChannelCounters[cFe->getFeId()][cCbc->getChipId()][ch]++;
                                     }
                                 }
                             }
@@ -290,9 +290,9 @@ int main ( int argc, char** argv )
 
                     // reset the counters
                     for(auto& cFe : pBoard->fModuleVector) {
-                        for(auto& cCbc : cFe->fCbcVector) {
+                        for(auto& cCbc : cFe->fChipVector) {
                             for(uint8_t ch = 0; ch < NCHANNELS; ch++) {
-                                cChannelCounters[cFe->getFeId()][cCbc->getCbcId()][ch] = 0;
+                                cChannelCounters[cFe->getFeId()][cCbc->getChipId()][ch] = 0;
                             }
                         }
                     }

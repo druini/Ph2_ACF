@@ -324,10 +324,10 @@ namespace Ph2_System {
                         {
                             if (cFe->getFeId() != cFeId) continue;
 
-                            for (auto cCbc : cFe->fCbcVector )
+                            for (auto cCbc : cFe->fChipVector )
                             {
-                                if (cCbc->getCbcId() != cCbcId) continue;
-                                else if (cCbc->getFeId() == cFeId && cCbc->getCbcId() == cCbcId)
+                                if (cCbc->getChipId() != cCbcId) continue;
+                                else if (cCbc->getFeId() == cFeId && cCbc->getChipId() == cCbcId)
                                 {
                                     ChipRegItem cRegItem = cCbc->getRegItem ( cRegName );
                                     cPage = cRegItem.fPage;
@@ -335,7 +335,7 @@ namespace Ph2_System {
                                     cValue = cRegItem.fValue;
                                 }
                                 else
-                                    LOG (ERROR) << RED << "SLINK ERROR: no Cbc with Id " << +cCbcId << " on Fe " << +cFeId << " - check your SLink Settings!";
+                                    LOG (ERROR) << RED << "SLINK ERROR: no Chip with Id " << +cCbcId << " on Fe " << +cFeId << " - check your SLink Settings!";
                             }
                         }
                     }
@@ -418,7 +418,7 @@ namespace Ph2_System {
         }
         else cFileName = expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() );
 
-        Cbc* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
+        Chip* cCbc = new Chip ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
 
         // parse the specific CBC settings so that Registers take precedence
         this->parseCbcSettings (pCbcNode, cCbc, os);
@@ -429,7 +429,7 @@ namespace Ph2_System {
             os << BLUE << "|\t|\t|\t|----Register: " << std::string ( cCbcRegisterNode.attribute ( "name" ).value() ) << " : " << RED << std::hex << "0x" <<  convertAnyInt ( cCbcRegisterNode.first_child().value() ) << RESET << std::dec << std::endl;
         }
 
-        cModule->addCbc (cCbc);
+        cModule->addChip (cCbc);
     }
 
 
@@ -447,7 +447,7 @@ namespace Ph2_System {
 
             int cCounter = 0;
 
-            for (auto cCbc : pModule->fCbcVector)
+            for (auto cCbc : pModule->fChipVector)
             {
                 if (cCounter == 0)
                     this->parseCbcSettings (cGlobalCbcSettingsNode, cCbc, os);
@@ -469,7 +469,7 @@ namespace Ph2_System {
                 std::string regname = std::string ( cCbcGlobalNode.attribute ( "name" ).value() );
                 uint32_t regvalue = convertAnyInt ( cCbcGlobalNode.first_child().value() ) ;
 
-                for (auto cCbc : pModule->fCbcVector)
+                for (auto cCbc : pModule->fChipVector)
                     cCbc->setReg ( regname, uint8_t ( regvalue ) ) ;
 
                 os << BOLDGREEN << "|" << "	" << "|" << "	" << "|" << "----" << cCbcGlobalNode.name()
@@ -479,9 +479,9 @@ namespace Ph2_System {
         }
     }
 
-    void FileParser::parseCbcSettings (pugi::xml_node pCbcNode, Cbc* pCbc, std::ostream& os)
+    void FileParser::parseCbcSettings (pugi::xml_node pCbcNode, Chip* pCbc, std::ostream& os)
     {
-        //parse the cbc settings here and put them in the corresponding registers of the Cbc object
+        //parse the cbc settings here and put them in the corresponding registers of the Chip object
         //call this for every CBC, Register nodes should take precedence over specific settings??
         ChipType cType = pCbc->getChipType();
         os << GREEN << "|\t|\t|\t|----ChipType: ";

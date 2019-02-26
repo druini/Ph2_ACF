@@ -1,7 +1,7 @@
 /*!
 
         \file                           MPAGlibFWInterface.h
-        \brief                          MPAGlibFWInterface init/config of the Glib and its Cbc's
+        \brief                          MPAGlibFWInterface init/config of the Glib and its Chip's
         \author                         Lorenzo BIDEGAIN, Nicolas PIERRE
         \version            1.0
         \date                           28/07/14
@@ -34,7 +34,7 @@ namespace Ph2_HwInterface
 class FpgaConfig;
 /*!
  * \class MPAGlibFWInterface
- * \brief init/config of the Glib and its Cbc's
+ * \brief init/config of the Glib and its Chip's
  */
 class MPAGlibFWInterface : public BeBoardFWInterface
 {
@@ -44,7 +44,7 @@ private:
 
     struct timeval fStartVeto;
     std::string fStrSram, fStrSramUserLogic, fStrFull, fStrReadout, fStrOtherSram, fStrOtherSramUserLogic;
-    std::string fCbcStubLat, fCbcI2CCmdAck, fCbcI2CCmdRq, fCbcHardReset, fCbcFastReset;
+    std::string fCbcStubLat, fCbcI2CCmdAck, fCbcI2CCmdRq, fChipHardReset, fCbcFastReset;
     FpgaConfig* fpgaConfig;
     FileHandler* fFileHandler ;
     std::vector<uint32_t>* curData;
@@ -188,7 +188,7 @@ public:
 
     bool WriteBlockReg( const std::string& pRegNode, const std::vector< uint32_t >& pValues ) override;
 
-    //Methods for the Cbc's:
+    //Methods for the Chip's:
 
 
 
@@ -229,13 +229,13 @@ private:
 
 public:
 
-    bool WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts , bool pReadback) {return false;};
+    bool WriteChipBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts , bool pReadback) {return false;};
 
 
-    bool BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) {return false;};
+    bool BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) {return false;};
  
 
-    void ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg ) {};
+    void ReadChipBlockReg (  std::vector<uint32_t>& pVecReg ) {};
 
     BoardType getBoardType() const {return BoardType::GLIB;};
 
@@ -245,10 +245,10 @@ public:
     void SetForceStart ( bool bStart) {};
 
 
-    void CbcFastReset() {};
+    void ChipFastReset() {};
  
 
-    void CbcHardReset() {};
+    void ChipHardReset() {};
 
     void ReadNEvents (BeBoard* pBoard, uint32_t pNEvents ) {};
 

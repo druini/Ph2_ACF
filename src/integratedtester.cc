@@ -12,7 +12,7 @@
 #include <boost/spirit/include/qi_parse.hpp>
 #include <boost/spirit/include/qi_numeric.hpp>
 
-#include "../HWDescription/Cbc.h"
+#include "../HWDescription/Chip.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWInterface/CbcInterface.h"

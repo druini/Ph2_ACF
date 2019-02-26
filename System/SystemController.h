@@ -19,11 +19,11 @@
 #include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/GlibFWInterface.h"
-#include "../HWInterface/ICGlibFWInterface.h"
-#include "../HWInterface/CtaFWInterface.h"
-#include "../HWInterface/ICFc7FWInterface.h"
-#include "../HWInterface/Cbc3Fc7FWInterface.h"
+// #include "../HWInterface/GlibFWInterface.h"
+// #include "../HWInterface/ICGlibFWInterface.h"
+// #include "../HWInterface/CtaFWInterface.h"
+// #include "../HWInterface/ICFc7FWInterface.h"
+// #include "../HWInterface/Cbc3Fc7FWInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/Visitor.h"
@@ -59,9 +59,9 @@ namespace Ph2_System {
     {
       public:
         BeBoardInterface*       fBeBoardInterface;                     /*!< Interface to the BeBoard */
-        CbcInterface*           fCbcInterface;                         /*!< Interface to the Cbc */
-        SSAInterface*           fSSAInterface;                         /*!< Interface to the Cbc */
-        MPAInterface*           fMPAInterface;                         /*!< Interface to the Cbc */
+        CbcInterface*           fCbcInterface;                         /*!< Interface to the CBC */
+        SSAInterface*           fSSAInterface;                         /*!< Interface to the SSA */
+        MPAInterface*           fMPAInterface;                         /*!< Interface to the MPA */
         BeBoardVec              fBoardVector;                          /*!< Vector of Board pointers */
         BeBoardFWMap            fBeBoardFWMap;
         SettingsMap             fSettingsMap;                          /*!< Maps the settings */

@@ -10,15 +10,15 @@ struct HistogramFiller  : public HwDescriptionVisitor
 
     HistogramFiller ( TH1F* pBotHist, TH1F* pTopHist, const Event* pEvent ) : fBotHist ( pBotHist ), fTopHist ( pTopHist ), fEvent ( pEvent ) {}
 
-    void visit ( Cbc& pCbc )
+    void visit ( Chip& pCbc )
     {
-        std::vector<bool> cDataBitVector = fEvent->DataBitVector ( pCbc.getFeId(), pCbc.getCbcId() );
+        std::vector<bool> cDataBitVector = fEvent->DataBitVector ( pCbc.getFeId(), pCbc.getChipId() );
 
         for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
         {
             if ( cDataBitVector.at ( cId ) )
             {
-                uint32_t globalChannel = ( pCbc.getCbcId() * 254 ) + cId;
+                uint32_t globalChannel = ( pCbc.getChipId() * 254 ) + cId;
 
                 //              LOG(INFO) << "Channel " << globalChannel << " VCth " << int(pCbc.getReg( "VCth" )) ;
                 // find out why histograms are not filling!
@@ -61,29 +61,29 @@ void HybridTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 
     for (auto& cBoard : fBoardVector)
     {
-        fBeBoardInterface->CbcHardReset ( cBoard );
+        fBeBoardInterface->ChipHardReset ( cBoard );
 
         for (auto& cFe : cBoard->fModuleVector)
         {
-            for (auto& cCbc : cFe->fCbcVector)
+            for (auto& cCbc : cFe->fChipVector)
             {
                 std::string pRegFile ;
                 char buffer[120];
 
                 if ( pDirectoryName.empty() )
-                    sprintf (buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cCbc->getFeId(), cCbc->getCbcId() );
+                    sprintf (buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cCbc->getFeId(), cCbc->getChipId() );
                 else
-                    sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cCbc->getFeId(), cCbc->getCbcId() );
+                    sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cCbc->getFeId(), cCbc->getChipId() );
 
                 pRegFile = buffer;
                 cCbc->loadfRegMap (pRegFile);
                 fCbcInterface->ConfigureCbc ( cCbc );
-                LOG (INFO) << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getCbcId() ) << "'s regsiters from " << pRegFile << " ." << RESET ;
+                LOG (INFO) << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET ;
             }
         }
 
-        //CbcFastReset as per recommendation of Mark Raymond
-        fBeBoardInterface->CbcFastReset ( cBoard );
+        //ChipFastReset as per recommendation of Mark Raymond
+        fBeBoardInterface->ChipFastReset ( cBoard );
     }
 }
 
@@ -168,17 +168,17 @@ void HybridTester::InitializeHists()
             uint16_t cMaxRange = (cFe->getChipType() == ChipType::CBC2) ? 255 : 1023;
             fType = cFe->getChipType();
 
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
 
-                uint32_t cCbcId = cCbc->getCbcId();
+                uint32_t cCbcId = cCbc->getChipId();
 
                 TString cName = Form ( "SCurve_Fe%d_Cbc%d", cFeId, cCbcId );
                 TObject* cObject = static_cast<TObject*> ( gROOT->FindObject ( cName ) );
 
                 if ( cObject ) delete cObject;
 
-                TH1F* cTmpScurve = new TH1F ( cName, Form ( "Noise Occupancy Cbc%d; VCth; Counts", cCbcId ), cMaxRange, 0, cMaxRange );
+                TH1F* cTmpScurve = new TH1F ( cName, Form ( "Noise Occupancy Chip%d; VCth; Counts", cCbcId ), cMaxRange, 0, cMaxRange );
                 cTmpScurve->SetMarkerStyle ( 8 );
                 bookHistogram ( cCbc, "Scurve", cTmpScurve );
                 fSCurveMap[cCbc] = cTmpScurve;
@@ -220,7 +220,7 @@ void HybridTester::Initialize ( bool pThresholdScan )
     //  special Visito class to count objects
     Counter cCbcCounter;
     accept ( cCbcCounter );
-    fNCbc = cCbcCounter.getNCbc();
+    fNCbc = cCbcCounter.getNChip();
 
     fDataCanvas = new TCanvas ( "fDataCanvas", "SingleStripEfficiency", 10, 0, 500, 500 );
     fDataCanvas->Divide ( 2 );
@@ -251,14 +251,14 @@ uint32_t HybridTester::fillSCurves ( BeBoard* pBoard,  const Event* pEvent, uint
 
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fChipVector )
         {
             // SS
             /*TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
             uint32_t cbcEventCounter = 0;
             for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
             {
-                if ( pEvent->DataBit( cCbc->getFeId(), cCbc->getCbcId(), cId ) )
+                if ( pEvent->DataBit( cCbc->getFeId(), cCbc->getChipId(), cId ) )
                 {
                     sCurveHist->Fill( pValue );
                     cHitCounter++;
@@ -268,12 +268,12 @@ uint32_t HybridTester::fillSCurves ( BeBoard* pBoard,  const Event* pEvent, uint
 
             auto cScurve = fSCurveMap.find ( cCbc );
 
-            if ( cScurve == fSCurveMap.end() ) LOG (INFO) << "Error: could not find an Scurve object for Cbc " << int ( cCbc->getCbcId() ) ;
+            if ( cScurve == fSCurveMap.end() ) LOG (INFO) << "Error: could not find an Scurve object for Chip " << int ( cCbc->getChipId() ) ;
             else
             {
                 //for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                 //{
-                //if ( pEvent->DataBit ( cCbc->getFeId(), cCbc->getCbcId(), cId ) )
+                //if ( pEvent->DataBit ( cCbc->getFeId(), cCbc->getChipId(), cId ) )
                 //{
                 //cScurve->second->Fill ( pValue );
                 //cHitCounter++;
@@ -281,7 +281,7 @@ uint32_t HybridTester::fillSCurves ( BeBoard* pBoard,  const Event* pEvent, uint
                 //}
                 //experimental
 
-                std::vector<uint32_t> cHits = pEvent->GetHits (cCbc->getFeId(), cCbc->getCbcId() );
+                std::vector<uint32_t> cHits = pEvent->GetHits (cCbc->getFeId(), cCbc->getChipId() );
                 cHitCounter += cHits.size();
 
                 for (auto cHit : cHits)
@@ -380,9 +380,9 @@ void HybridTester::ScanThresholds()
     {
         for ( auto cFe : pBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
-                fSCurveCanvas->cd(cCbc->getCbcId()+1);
+                fSCurveCanvas->cd(cCbc->getChipId()+1);
                 TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
                 sCurveHist->Scale(100./(NCHANNELS*fTotalEvents));
                 sCurveHist->GetYaxis()->SetTitle("Occupancy (%)");
@@ -390,7 +390,7 @@ void HybridTester::ScanThresholds()
                 sCurveHist->DrawCopy("P0");
 
                 sCurveHist->Write( sCurveHist->GetName(), TObject::kOverwrite );
-                fSCurveCanvas->cd(cCbc->getCbcId()+1)->Update();
+                fSCurveCanvas->cd(cCbc->getChipId()+1)->Update();
             }
         }
     }*/
@@ -426,7 +426,7 @@ void HybridTester::ScanThreshold()
             continue;
         }
 
-        // Set current Vcth value on all Cbc's
+        // Set current Vcth value on all Chip's
         cVisitor.setThreshold (cVcth);
         accept ( cVisitor );
         uint32_t cN = 1;
@@ -512,7 +512,7 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
 {
     for ( auto cScurve : fSCurveMap )
     {
-        fSCurveCanvas->cd ( cScurve.first->getCbcId() + 1 );
+        fSCurveCanvas->cd ( cScurve.first->getChipId() + 1 );
 
         cScurve.second->Scale ( 1.0 / double_t ( pEventsperVcth * NCHANNELS ) );
         cScurve.second->Draw ( "P" );
@@ -567,7 +567,7 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
         // find the corresponding fit
         auto cFit = fFitMap.find ( cScurve.first );
 
-        if ( cFit == std::end ( fFitMap ) ) LOG (INFO) << "Error: could not find Fit for Cbc " << int ( cScurve.first->getCbcId() ) ;
+        if ( cFit == std::end ( fFitMap ) ) LOG (INFO) << "Error: could not find Fit for Chip " << int ( cScurve.first->getChipId() ) ;
         else
         {
             // Fit
@@ -582,13 +582,13 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
             cFit->second->Write ( cFit->second->GetName(), TObject::kOverwrite );
 
             // TODO
-            // Set new VCth - for the moment each Cbc gets his own Vcth - I shold add a mechanism to take one that works for all!
+            // Set new VCth - for the moment each Chip gets his own Vcth - I shold add a mechanism to take one that works for all!
             double_t pedestal = cFit->second->GetParameter ( 0 );
             double_t noise = cFit->second->GetParameter ( 1 );
 
             uint16_t cThreshold = ceil ( pedestal + fSigmas * fabs ( noise ) );
 
-            LOG (INFO) << "Identified a noise Occupancy of 50% at VCth " << static_cast<int> ( pedestal ) << " -- increasing by " << fSigmas <<  " sigmas (=" << fabs ( noise ) << ") to " << +cThreshold << " for Cbc " << int ( cScurve.first->getCbcId() ) ;
+            LOG (INFO) << "Identified a noise Occupancy of 50% at VCth " << static_cast<int> ( pedestal ) << " -- increasing by " << fSigmas <<  " sigmas (=" << fabs ( noise ) << ") to " << +cThreshold << " for Chip " << int ( cScurve.first->getChipId() ) ;
 
             TLine* cLine = new TLine ( cThreshold, 0, cThreshold, 1 );
             cLine->SetLineWidth ( 3 );
@@ -615,12 +615,12 @@ void HybridTester::updateSCurveCanvas ( BeBoard* pBoard )
 
     /*for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fChipVector )
         {
-            fSCurveCanvas->cd(cCbc->getCbcId()+1);
+            fSCurveCanvas->cd(cCbc->getChipId()+1);
             TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
             sCurveHist->DrawCopy("P0");
-            fSCurveCanvas->cd(cCbc->getCbcId()+1)->Update();
+            fSCurveCanvas->cd(cCbc->getChipId()+1)->Update();
         }
     }*/
 
@@ -629,12 +629,12 @@ void HybridTester::updateSCurveCanvas ( BeBoard* pBoard )
 
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fChipVector )
         {
-            uint32_t cCbcId = cCbc->getCbcId();
+            uint32_t cCbcId = cCbc->getChipId();
             auto cScurve = fSCurveMap.find ( cCbc );
 
-            if ( cScurve == fSCurveMap.end() ) LOG (INFO) << "Error: could not find an Scurve object for Cbc " << int ( cCbc->getCbcId() ) ;
+            if ( cScurve == fSCurveMap.end() ) LOG (INFO) << "Error: could not find an Scurve object for Chip " << int ( cCbc->getChipId() ) ;
             else
             {
                 fSCurveCanvas->cd ( cCbcId + 1 );
@@ -665,29 +665,29 @@ void HybridTester::TestRegisters()
                 fBadRegisters[cCbcIterator] = tempset;
         }
 
-        void visit ( Cbc& pCbc )
+        void visit ( Chip& pCbc )
         {
             uint8_t cFirstBitPattern = 0xAA;
             uint8_t cSecondBitPattern = 0x55;
 
-            CbcRegMap cMap = pCbc.getRegMap();
+            ChipRegMap cMap = pCbc.getRegMap();
 
             for ( const auto& cReg : cMap )
             {
-                if ( !fInterface->WriteCbcReg ( &pCbc, cReg.first, cFirstBitPattern, true ) ) fBadRegisters[pCbc.getCbcId()] .insert ( cReg.first );
+                if ( !fInterface->WriteCbcReg ( &pCbc, cReg.first, cFirstBitPattern, true ) ) fBadRegisters[pCbc.getChipId()] .insert ( cReg.first );
 
-                if ( !fInterface->WriteCbcReg ( &pCbc, cReg.first, cSecondBitPattern, true ) ) fBadRegisters[pCbc.getCbcId()] .insert ( cReg.first );
+                if ( !fInterface->WriteCbcReg ( &pCbc, cReg.first, cSecondBitPattern, true ) ) fBadRegisters[pCbc.getChipId()] .insert ( cReg.first );
             }
         }
 
         void dumpResult ( std::string fDirectoryName )
         {
             std::ofstream report ( fDirectoryName + "/registers_test.txt" ); // Creates a file in the current directory
-            report << "Testing Cbc Registers one-by-one with complimentary bit-patterns (0xAA, 0x55)" << std::endl;
+            report << "Testing Chip Registers one-by-one with complimentary bit-patterns (0xAA, 0x55)" << std::endl;
 
             for ( const auto& cCbc : fBadRegisters )
             {
-                report << "Malfunctioning Registers on Cbc " << cCbc.first << " : " << std::endl;
+                report << "Malfunctioning Registers on Chip " << cCbc.first << " : " << std::endl;
 
                 for ( const auto& cReg : cCbc.second ) report << cReg << std::endl;
 
@@ -924,7 +924,7 @@ void HybridTester::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
 {
     for (auto cFe : pBoard->fModuleVector)
     {
-        for (auto cCbc : cFe->fCbcVector)
+        for (auto cCbc : cFe->fChipVector)
         {
             std::vector<std::pair<std::string, uint8_t>> cRegVec;
             uint8_t cRegValue = this->to_reg ( 0, pTestGroup );

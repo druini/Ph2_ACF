@@ -26,7 +26,7 @@ void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange)
             // ctmpCanvas->Divide( 2, 2 );
             fCanvasMap[cFe] = ctmpCanvas;
 
-            fNCbc = cFe->getNCbc();
+            fNCbc = cFe->getNChip();
 
             // 1D Hist forlatency scan
             TString cName =  Form ( "h_module_latency_Fe%d", cFeId );
@@ -302,10 +302,10 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
                             bool cHitFound = false; 
                             bool cStubFound = false; 
                             //now loop the channels for this particular event and increment a counter
-                            for ( auto cCbc : cFe->fCbcVector )
+                            for ( auto cCbc : cFe->fChipVector )
                             {
-                                int cHitCounter = cEvent->GetNHits (cCbc->getFeId(), cCbc->getCbcId() );
-                                std::vector<Stub> cStubs = cEvent->StubVector (cCbc->getFeId(), cCbc->getCbcId());
+                                int cHitCounter = cEvent->GetNHits (cCbc->getFeId(), cCbc->getChipId() );
+                                std::vector<Stub> cStubs = cEvent->StubVector (cCbc->getFeId(), cCbc->getChipId());
                                 int cStubCounter = cStubs.size(); 
 
                                 if( cHitCounter == 0 )
@@ -432,10 +432,10 @@ int LatencyScan::countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEve
             //first, reset the hit counter - I need separate counters for each event
             int cHitCounter = 0;
             
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto cCbc : cFe->fChipVector )
             {
                 //now loop the channels for this particular event and increment a counter
-                cHitCounter += cEvent->GetNHits (cCbc->getFeId(), cCbc->getCbcId() );
+                cHitCounter += cEvent->GetNHits (cCbc->getFeId(), cCbc->getChipId() );
             }
 
             //now I have the number of hits in this particular event for all CBCs and the TDC value
@@ -465,10 +465,10 @@ int LatencyScan::countStubs ( Module* pFe,  const Event* pEvent, std::string pHi
     //  get histogram to fill
     TH1F* cTmpHist = dynamic_cast<TH1F*> ( getHist ( pFe, pHistName ) );
 
-    for ( auto cCbc : pFe->fCbcVector )
+    for ( auto cCbc : pFe->fChipVector )
     {
-        if ( pEvent->StubBit ( cCbc->getFeId(), cCbc->getCbcId() ) )
-            cStubCounter += pEvent->StubVector ( cCbc->getFeId(), cCbc->getCbcId() ).size();
+        if ( pEvent->StubBit ( cCbc->getFeId(), cCbc->getChipId() ) )
+            cStubCounter += pEvent->StubVector ( cCbc->getFeId(), cCbc->getChipId() ).size();
     }
 
     int cBin = cTmpHist->FindBin (pParameter);

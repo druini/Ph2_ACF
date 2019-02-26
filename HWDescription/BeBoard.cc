@@ -119,10 +119,10 @@ namespace Ph2_HwDescription {
                     {
                         if (cCondItem.fFeId != cFe->getFeId() ) continue;
 
-                        for (auto cCbc : cFe->fCbcVector )
+                        for (auto cCbc : cFe->fChipVector )
                         {
-                            if (cCondItem.fCbcId != cCbc->getCbcId() ) continue;
-                            else if (cCbc->getFeId() == cCondItem.fFeId && cCbc->getCbcId() == cCondItem.fCbcId)
+                            if (cCondItem.fCbcId != cCbc->getChipId() ) continue;
+                            else if (cCbc->getFeId() == cCondItem.fFeId && cCbc->getChipId() == cCondItem.fCbcId)
                             {
                                 ChipRegItem cRegItem = cCbc->getRegItem ( cCondItem.fRegName );
                                 cCondItem.fValue = cRegItem.fValue;

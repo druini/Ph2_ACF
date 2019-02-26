@@ -38,7 +38,7 @@ typedef std::vector<std::pair< std::string, uint8_t> > RegisterVector;
 class Tool : public SystemController
 {
 
-    using CbcHistogramMap = std::map<Cbc*, std::map<std::string, TObject*> >;
+    using CbcHistogramMap = std::map<Chip*, std::map<std::string, TObject*> >;
     using ModuleHistogramMap = std::map<Module*, std::map<std::string, TObject*> >;
     using BeBoardHistogramMap = std::map<BeBoard*, std::map<std::string, TObject*> >;
 
@@ -83,13 +83,13 @@ class Tool : public SystemController
     void SoftDestroy();
 
 
-    void bookHistogram ( Cbc* pCbc, std::string pName, TObject* pObject );
+    void bookHistogram ( Chip* pCbc, std::string pName, TObject* pObject );
 
     void bookHistogram ( Module* pModule, std::string pName, TObject* pObject );
 
     void bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObject );
 
-    TObject* getHist ( Cbc* pCbc, std::string pName );
+    TObject* getHist ( Chip* pCbc, std::string pName );
 
     TObject* getHist ( Module* pModule, std::string pName );
     
@@ -267,29 +267,29 @@ class Tool : public SystemController
     };
 
     // decode bend LUT for a given CBC
-    std::map<uint8_t, double> decodeBendLUT(Cbc* pCbc);
+    std::map<uint8_t, double> decodeBendLUT(Chip* pCbc);
     
     // first a method set mask to all channels in the CBC 
-    void SetMaskAllChannels (Cbc* pCbc, bool mask);
+    void SetMaskAllChannels (Chip* pCbc, bool mask);
 
     //method to mask all channels
-    void maskAllChannels (Cbc* pCbc) {SetMaskAllChannels (pCbc, true); }
+    void maskAllChannels (Chip* pCbc) {SetMaskAllChannels (pCbc, true); }
 
     //method to unmask all channels
-    void unmaskAllChannels (Cbc* pCbc) {SetMaskAllChannels (pCbc, false); }
+    void unmaskAllChannels (Chip* pCbc) {SetMaskAllChannels (pCbc, false); }
 
     //method to unmask a channel group
-    void maskChannelFromOtherGroups (Cbc* pCbc, int pTestGroup);
+    void maskChannelFromOtherGroups (Chip* pCbc, int pTestGroup);
 
 
     // then a method to un-mask pairs of channels on a given CBC
-    void unmaskPair(Cbc* cCbc ,  std::pair<uint8_t,uint8_t> pPair);
+    void unmaskPair(Chip* cCbc ,  std::pair<uint8_t,uint8_t> pPair);
 
     // and finally a method to un-mask a list of channels on a given CBC
-    void unmaskList(Cbc* cCbc , const std::vector<uint8_t> &pList );
+    void unmaskList(Chip* cCbc , const std::vector<uint8_t> &pList );
 
     //select the group of channels for injecting the pulse
-    void selectGroupTestPulse(Cbc* cCbc, uint8_t pTestGroup);
+    void selectGroupTestPulse(Chip* cCbc, uint8_t pTestGroup);
 
     // Two dimensional dac scan
     void scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > > &backEndOccupancyPerChannelMap, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > > &backEndCbcOccupanyMap);

@@ -1,7 +1,7 @@
 /*!
 
         \file                           ICICCbc3Fc7FWInterface.h
-        \brief                          ICICCbc3Fc7FWInterface init/config of the Glib and its Cbc's
+        \brief                          ICICCbc3Fc7FWInterface init/config of the Glib and its Chip's
         \author                         G. Auzinger, K. Uchida
         \version            1.0
         \date                           25.02.2016
@@ -123,12 +123,12 @@ namespace Ph2_HwInterface {
         for (Module* cFe : pBoard->fModuleVector)
         {
             //configure the CBCs - preliminary FW only supports 1 CBC but put the rest of the code there and comment
-            for ( Cbc* cCbc : cFe->fCbcVector)
+            for ( Chip* cCbc : cFe->fChipVector)
             {
-                uint8_t cCbcId = cCbc->getCbcId();
+                uint8_t cCbcId = cCbc->getChipId();
                 uint8_t cFeId = cCbc->getFeId();
-                fIDMap[ (uint16_t (cFe->getFeId() << 8 | cCbc->getCbcId() ) )] = cNCbc + 1;
-                fIDMapReverse[cNCbc + 1] = uint16_t (cFe->getFeId() << 8 | cCbc->getCbcId() );
+                fIDMap[ (uint16_t (cFe->getFeId() << 8 | cCbc->getChipId() ) )] = cNCbc + 1;
+                fIDMapReverse[cNCbc + 1] = uint16_t (cFe->getFeId() << 8 | cCbc->getChipId() );
                 //uint32_t cAddress = 0x5F + cCbcId; //single chip carrier
                 uint32_t cAddress = 0x41 + cCbcId;
                 std::string cRegString = string_format ("cbc_system_cnfg.global.cbc%d.", cNCbc + 1);
@@ -163,7 +163,7 @@ namespace Ph2_HwInterface {
         cVecReg.clear();
 
         //hard reset CBC and the DAQ
-        this->CbcHardReset();
+        this->ChipHardReset();
 
         //OK, now initiaylize the i2c bus manager
         //there is one for each FE so I need to loop FEs
@@ -231,19 +231,19 @@ namespace Ph2_HwInterface {
         //before running the Dctt I need to disable the stub logic so the alignment can be done!
         //could I do this with broadcast?
         //since this procedure runs only once, we do the I2C transaction individually for each CBC in case they are on multiple FEs - this could be changed by removing the cVecReq.clear() call and do ing the write outsiude of the loop
-        std::map<Cbc*, uint8_t> cStubLogictInputMap;
+        std::map<Chip*, uint8_t> cStubLogictInputMap;
         std::vector<uint32_t> cVecReq;
 
         for (auto cFe : pBoard->fModuleVector)
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fChipVector)
             {
                 uint8_t cStubLogicInput = cCbc->getReg ("Pipe&StubInpSel&Ptwidth");
                 cStubLogictInputMap[cCbc] = cStubLogicInput;
                 ChipRegItem cRegItem (0, 0x12, 0, ( (cStubLogicInput & 0xCF) | (0x20 & 0x30) ) );
                 cVecReq.clear();
-                this->EncodeReg (cRegItem, cFe->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
+                this->EncodeReg (cRegItem, cFe->getFeId(), cCbc->getChipId(), cVecReq, true, true);
                 uint8_t cWriteAttempts = 0 ;
-                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
                 std::this_thread::sleep_for (std::chrono::milliseconds (10) );
             }
 
@@ -252,7 +252,7 @@ namespace Ph2_HwInterface {
         WriteReg ("cbc_system_ctrl.fast_signal_manager.stop_trigger", 0x1);
         WriteReg ("cbc_system_ctrl.global.daq_reset", 0x1);
 
-        this->CbcFastReset();
+        this->ChipFastReset();
         //trigger the dctt fsm
         WriteReg ("cbc_system_ctrl.io.data_clock_timing_tune", 1);
         int cCounter = 0;
@@ -269,7 +269,7 @@ namespace Ph2_HwInterface {
                 //ChipRegItem cRegItem (0, 0x1D, 0, 0);
                 //std::vector<uint32_t> cVecReq;
                 //this->EncodeReg (cRegItem, 0, cVecReq, true, false);
-                //this->ReadCbcBlockReg (cVecReq);
+                //this->ReadChipBlockReg (cVecReq);
                 //bool cFailed = false;
                 //bool cRead;
                 //uint8_t cId;
@@ -283,8 +283,8 @@ namespace Ph2_HwInterface {
                 //LOG (DEBUG) << "Sync Lost:           " << ( (cRegItem.fValue >> 2) & 0x1);
                 //LOG (DEBUG) << "Sync Stat:           " << ( (cRegItem.fValue >> 1) & 0x1);
                 //LOG (DEBUG) << "Bad Code:            " << ( (cRegItem.fValue ) & 0x1   );
-                //LOG (INFO) << "sending Cbc fast reset!";
-                //this->CbcFastReset();
+                //LOG (INFO) << "sending Chip fast reset!";
+                //this->ChipFastReset();
                 //}
 
                 cDctt_fsm = ReadReg (string_format ("cbc_system_stat.io.dctt%1d.fsm", cFe->getFeId() + 1 ) );
@@ -302,20 +302,20 @@ namespace Ph2_HwInterface {
 
 
         for (auto cFe : pBoard->fModuleVector)
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fChipVector)
             {
                 ChipRegItem cRegItem (0, 0x12, 0, cStubLogictInputMap[cCbc] );
                 cVecReq.clear();
-                this->EncodeReg (cRegItem, cFe->getFeId(), cCbc->getCbcId(), cVecReq, true, true);
+                this->EncodeReg (cRegItem, cFe->getFeId(), cCbc->getChipId(), cVecReq, true, true);
                 uint8_t cWriteAttempts = 0;
-                this->WriteCbcBlockReg (cVecReq, cWriteAttempts, true);
+                this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
                 std::this_thread::sleep_for (std::chrono::milliseconds (10) );
             }
     }
 
     void Cbc3Fc7FWInterface::Start()
     {
-        this->CbcFastReset();
+        this->ChipFastReset();
         WriteReg ("cbc_system_ctrl.fast_signal_manager.fast_signal_generator_stop", 0x1);
         WriteReg ("cbc_system_ctrl.fast_signal_manager.stop_trigger", 0x1);
         //first reset the DAQ
@@ -459,11 +459,11 @@ namespace Ph2_HwInterface {
         {
             uint32_t fNCbc = 0;
 
-            void visit ( Cbc& pCbc )
+            void visit ( Chip& pCbc )
             {
                 fNCbc++;
             }
-            uint32_t getNCbc()
+            uint32_t getNChip()
             {
                 return fNCbc;
             }
@@ -473,7 +473,7 @@ namespace Ph2_HwInterface {
         pBoard->accept ( cCounter );
 
         //return 3 words header + fNCbc * CBC Event Size  (11 words)
-        return cCounter.getNCbc() * CBC_EVENT_SIZE_32_CBC3 + EVENT_HEADER_TDC_SIZE_32_CBC3;
+        return cCounter.getNChip() * CBC_EVENT_SIZE_32_CBC3 + EVENT_HEADER_TDC_SIZE_32_CBC3;
     }
 
     std::vector<uint32_t> Cbc3Fc7FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize )
@@ -553,7 +553,7 @@ namespace Ph2_HwInterface {
             pCbcId = fIDMapReverse[cGlobalCbcId] & 0x00FF;
         }
         else
-            LOG (ERROR) << "Could not recover IDs from global Cbc Id " << +cGlobalCbcId;
+            LOG (ERROR) << "Could not recover IDs from global Chip Id " << +cGlobalCbcId;
     }
 
     //TODO: restrict myself to read replys from only one reply fifo!!
@@ -619,7 +619,7 @@ namespace Ph2_HwInterface {
 
 
 
-    bool Cbc3Fc7FWInterface::WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback)
+    bool Cbc3Fc7FWInterface::WriteChipBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback)
     {
         if (!pVecReg.empty() )
         {
@@ -682,7 +682,7 @@ namespace Ph2_HwInterface {
                     else LOG (INFO) << BOLDRED <<  "(WRITE#"  << std::to_string (pWriteAttempts) << ") There were " << cWriteAgain.size() << " CBC CMD acknowledge bits missing -trying again!" << RESET ;
 
                     pWriteAttempts++;
-                    this->WriteCbcBlockReg ( cWriteAgain, pWriteAttempts, true);
+                    this->WriteChipBlockReg ( cWriteAgain, pWriteAttempts, true);
                 }
                 else if ( pWriteAttempts >= cMaxWriteAttempts )
                 {
@@ -698,7 +698,7 @@ namespace Ph2_HwInterface {
         else return true;
     }
 
-    bool Cbc3Fc7FWInterface::BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback)
+    bool Cbc3Fc7FWInterface::BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback)
     {
         if (!pVecReg.empty() )
         {
@@ -733,7 +733,7 @@ namespace Ph2_HwInterface {
         else return true;
     }
 
-    void Cbc3Fc7FWInterface::ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg )
+    void Cbc3Fc7FWInterface::ReadChipBlockReg (  std::vector<uint32_t>& pVecReg )
     {
         std::vector<uint32_t> cReplies;
         //it sounds weird, but ReadI2C is called inside writeI2c, therefore here I have to write and disable the readback. The actual read command is in the words of the vector, no broadcast, maybe I can get rid of it
@@ -746,12 +746,12 @@ namespace Ph2_HwInterface {
         pVecReg = cReplies;
     }
 
-    void Cbc3Fc7FWInterface::CbcFastReset()
+    void Cbc3Fc7FWInterface::ChipFastReset()
     {
         WriteReg ( "cbc_system_ctrl.fast_signal_manager.fast_signal_reset", 0x1 );
     }
 
-    void Cbc3Fc7FWInterface::CbcHardReset()
+    void Cbc3Fc7FWInterface::ChipHardReset()
     {
         WriteReg ("cbc_system_ctrl.global.cbc_hard_reset", 0x1);
     }

@@ -1,7 +1,7 @@
 /*!
 
         \file                           CtaFWInterface.h
-        \brief                          CtaFWInterface init/config of the CTA and its Cbc's
+        \brief                          CtaFWInterface init/config of the CTA and its Chip's
         \author                         Lorenzo BIDEGAIN, Nicolas PIERRE
         \version            1.0
         \date                           28/07/14
@@ -32,7 +32,7 @@ namespace Ph2_HwInterface {
 
     /*!
      * \class CtaFWInterface
-     * \brief init/config of the CTA and its Cbc's
+     * \brief init/config of the CTA and its Chip's
      */
     class CtaFWInterface : public BeBoardFWInterface
     {
@@ -40,7 +40,7 @@ namespace Ph2_HwInterface {
       private:
         struct timeval fStartVeto;
         std::string fStrSram, fStrSramUserLogic, fStrFull, fStrReadout, fStrOtherSram, fStrOtherSramUserLogic, fStrEvtCounter;
-        //std::string fCbcStubLat, fCbcI2CCmdAck, fCbcI2CCmdRq, fCbcHardReset, fCbcFastReset;
+        //std::string fCbcStubLat, fCbcI2CCmdAck, fCbcI2CCmdRq, fChipHardReset, fCbcFastReset;
         CtaFpgaConfig* fpgaConfig;
         FileHandler* fFileHandler ;
         uint32_t fNthAcq, fNpackets;
@@ -187,17 +187,17 @@ namespace Ph2_HwInterface {
         //      CBC Methods                                 //
         /////////////////////////////////////////////////////
 
-        //Encode/Decode Cbc values
+        //Encode/Decode Chip values
         /*!
-        * \brief Encode a/several word(s) readable for a Cbc
+        * \brief Encode a/several word(s) readable for a Chip
         * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-        * \param pCbcId : Id of the Cbc to work with
+        * \param pCbcId : Id of the Chip to work with
         * \param pVecReq : Vector to stack the encoded words
         */
         void EncodeReg ( const ChipRegItem& pRegItem,
                          uint8_t pCbcId, std::vector<uint32_t>& pVecReq,
                          bool pRead = false,
-                         bool pWrite = false ); /*!< Encode a/several word(s) readable for a Cbc*/
+                         bool pWrite = false ); /*!< Encode a/several word(s) readable for a Chip*/
         /*!
         * \brief Encode a/several word(s) readable for a Broadcast command
         * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
@@ -207,11 +207,11 @@ namespace Ph2_HwInterface {
                            uint8_t pNCbc,
                            std::vector<uint32_t>& pVecReq,
                            bool pRead = false,
-                           bool pWrite = false ); /*!< Encode a/several word(s) readable for a Cbc*/
+                           bool pWrite = false ); /*!< Encode a/several word(s) readable for a Chip*/
         /*!
-        * \brief Encode a/several word(s) readable for a Cbc
+        * \brief Encode a/several word(s) readable for a Chip
         * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-        * \param pCbcId : Id of the Cbc to work with
+        * \param pCbcId : Id of the Chip to work with
         * \param pVecReq : Vector to stack the encoded words
         */
         void EncodeReg ( const ChipRegItem& pRegItem,
@@ -219,53 +219,53 @@ namespace Ph2_HwInterface {
                          uint8_t pCbcId,
                          std::vector<uint32_t>& pVecReq,
                          bool pRead = false,
-                         bool pWrite = false ) override; /*!< Encode a/several word(s) readable for a Cbc*/
+                         bool pWrite = false ) override; /*!< Encode a/several word(s) readable for a Chip*/
         /*!
-        * \brief Decode a word from a read of a register of the Cbc
+        * \brief Decode a word from a read of a register of the Chip
         * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to read
-        * \param pCbcId : Id of the Cbc to work with
+        * \param pCbcId : Id of the Chip to work with
         * \param pWord : variable to put the decoded word
         */
         void DecodeReg ( ChipRegItem& pRegItem,
                          uint8_t& pCbcId,
                          uint32_t pWord,
                          bool& pRead,
-                         bool& pFailed ) override; /*!< Decode a word from a read of a register of the Cbc*/
-        //r/w the Cbc registers
+                         bool& pFailed ) override; /*!< Decode a word from a read of a register of the Chip*/
+        //r/w the Chip registers
         /*!
-         * \brief Read register blocks of a Cbc
+         * \brief Read register blocks of a Chip
          * \param pFeId : FrontEnd to work with
          * \param pVecReq : Vector to stack the read words
          */
 
         //Encode/Decode MPA/SSA values
-        void EncodeReg ( const RegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Cbc*/\
-        void EncodeReg ( const RegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Cbc*/	
-        void BCEncodeReg ( const RegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) = 0; /*!< Encode a/several word(s) readable for a Cbc*/
-        void DecodeReg ( RegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) = 0; /*!< Decode a word from a read of a register of the Cbc*/
+        void EncodeReg ( const RegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Chip*/\
+        void EncodeReg ( const RegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) = 0; /*!< Encode a/several word(s) readable for a Chip*/	
+        void BCEncodeReg ( const RegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) = 0; /*!< Encode a/several word(s) readable for a Chip*/
+        void DecodeReg ( RegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) = 0; /*!< Decode a word from a read of a register of the Chip*/
 
 
 
-        bool WriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts, bool pReadback ) override;
+        bool WriteChipBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts, bool pReadback ) override;
         /*!
-         * \brief Read register blocks of a Cbc
+         * \brief Read register blocks of a Chip
          * \param pFeId : FrontEnd to work with
          * \param pVecReq : Vector to stack the read words
          */
-        bool BCWriteCbcBlockReg (  std::vector<uint32_t>& pVecReq, bool pReadback ) override;
-        /*! \brief Read register blocks of a Cbc
+        bool BCWriteChipBlockReg (  std::vector<uint32_t>& pVecReq, bool pReadback ) override;
+        /*! \brief Read register blocks of a Chip
          * \param pFeId : FrontEnd to work with
          * \param pVecReq : Vector to stack the read words
          */
-        void ReadCbcBlockReg (  std::vector<uint32_t>& pVecReq ) override;
+        void ReadChipBlockReg (  std::vector<uint32_t>& pVecReq ) override;
 
-        void CbcHardReset();
+        void ChipHardReset();
 
-        void CbcFastReset();
+        void ChipFastReset();
 
-        void CbcTrigger() {}
+        void ChipTrigger() {}
 
-        void CbcTestPulse() {}
+        void ChipTestPulse() {}
 
         void checkIfUploading();
         /*! \brief Upload a firmware (FPGA configuration) from a file in MCS format into a given configuration

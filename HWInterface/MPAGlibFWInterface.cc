@@ -1,7 +1,7 @@
 /*
 
         FileName :                    MPAGlibFWInterface.h
-        Content :                     MPAGlibFWInterface init/config of the Glib and its Cbc's
+        Content :                     MPAGlibFWInterface init/config of the Glib and its Chip's
         Programmer :                  Lorenzo BIDEGAIN, Nicolas PIERRE
         Version :                     1.0
         Date of creation :            28/07/14
@@ -200,7 +200,7 @@ namespace Ph2_HwInterface
 
 
 
-	//Methods for Cbc's:
+	//Methods for Chip's:
 
 	void MPAGlibFWInterface::threadAcquisitionLoop( BeBoard* pBoard, HwInterfaceVisitor* visitor )
 	{

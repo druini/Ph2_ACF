@@ -152,8 +152,8 @@ class HybridTester : public Tool
     bool fThresholdScan; /*!< Flag for SCurve Canvas */
     TCanvas* fSCurveCanvas;   /*!< Canvas for threshold scan */
 
-    std::map<Cbc*, TH1F*> fSCurveMap;  /*!< Histograms for SCurve */
-    std::map<Cbc*, TF1*> fFitMap;   /*!< fits for SCurve*/
+    std::map<Chip*, TH1F*> fSCurveMap;  /*!< Histograms for SCurve */
+    std::map<Chip*, TF1*> fFitMap;   /*!< fits for SCurve*/
 
     // noisy and dead channels on top/bottom sensors
     std::vector<int> fNoisyChannelsTop;
@@ -223,7 +223,7 @@ class HybridTester : public Tool
         this->HttpServerProcess();
     }
 
-    // To measure the occupancy per Cbc
+    // To measure the occupancy per Chip
     uint32_t fillSCurves ( BeBoard* pBoard,  const Event* pEvent, uint16_t pValue );
     void updateSCurveCanvas ( BeBoard* pBoard );
     void processSCurves ( uint32_t pEventsperVcth );

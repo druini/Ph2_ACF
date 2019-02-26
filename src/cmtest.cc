@@ -1,5 +1,5 @@
 #include <cstring>
-#include "../HWDescription/Cbc.h"
+#include "../HWDescription/Chip.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWInterface/CbcInterface.h"
@@ -128,7 +128,7 @@ int main ( int argc, char* argv[] )
     ThresholdVisitor cVisitor (cTool.fCbcInterface, 0);
     Module* cFe = cPedeNoise.fBoardVector.at (0)->fModuleVector.at (0);
     int i = 0;
-    for (auto cCbc : cFe->fCbcVector)
+    for (auto cCbc : cFe->fChipVector)
     {
 	uint16_t cPedestal = round (cPedeNoise.getPedestal (cCbc) );
 	double   cNoise    = cPedeNoise.getNoise (cCbc);
