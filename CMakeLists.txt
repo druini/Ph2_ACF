@@ -89,7 +89,7 @@ if(uhal_boost)
 	    set(BOOST_LIBRARY_DIRS ${BOOST_ROOT}/lib)
 	endif(Boost_NO_SYSTEM_PATHS)
 else(uhal_boost)
-    MESSAGE(STATUS "No boost headers found with uHAL (you are most likely using CC7) - make sure to install boost 1.53 (default version on CC7)")
+    MESSAGE(STATUS "No boost headers found with uHALx (you are most likely using CC7) - make sure to install boost 1.53 (default version on CC7)")
 endif(uhal_boost)
 
 find_package(Boost 1.53 REQUIRED system filesystem thread program_options)

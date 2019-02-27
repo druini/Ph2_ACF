@@ -18,6 +18,7 @@ namespace Ph2_System {
 
     SystemController::SystemController() :
         fBeBoardInterface (nullptr),
+	fRD53Interface    (nullptr),
         fCbcInterface (nullptr),
         fBoardVector(),
         fSettingsMap(),
@@ -35,6 +36,7 @@ namespace Ph2_System {
     void SystemController::Inherit (SystemController* pController)
     {
         fBeBoardInterface = pController->fBeBoardInterface;
+    	fRD53Interface    = pController->fRD53Interface;
         fCbcInterface = pController->fCbcInterface;
         fBoardVector = pController->fBoardVector;
         fBeBoardFWMap = pController->fBeBoardFWMap;
@@ -53,7 +55,8 @@ namespace Ph2_System {
 
         if (fBeBoardInterface) delete fBeBoardInterface;
 
-        if (fCbcInterface) delete fCbcInterface;
+        if (fCbcInterface)  delete fCbcInterface;
+	if (fRD53Interface) delete fRD53Interface;
 
         fBeBoardFWMap.clear();
         fSettingsMap.clear();
@@ -118,8 +121,9 @@ namespace Ph2_System {
         this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, os, pIsFile );
 
         fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
-        fCbcInterface = new CbcInterface ( fBeBoardFWMap );
-        fMPAInterface = new MPAInterface ( fBeBoardFWMap );
+        fRD53Interface    = new RD53Interface    (fBeBoardFWMap);
+        fCbcInterface     = new CbcInterface ( fBeBoardFWMap );
+        fMPAInterface     = new MPAInterface ( fBeBoardFWMap );
 
         if (fWriteHandlerEnabled)
             this->initializeFileHandler();
@@ -150,6 +154,12 @@ namespace Ph2_System {
 
         for (auto& cBoard : fBoardVector)
         {
+	  // ######################################
+	  // # Configuring Outer Tracker hardware #
+	  // ######################################
+	  
+	  if (cBoard->getBoardType() != BoardType::FC7)
+	    {
             //fBeBoardInterface->CbcHardReset ( cBoard );
             fBeBoardInterface->ConfigureBoard ( cBoard );
             //fBeBoardInterface->ChipFastReset ( cBoard );
@@ -176,7 +186,64 @@ namespace Ph2_System {
 
             //ChipFastReset as per recommendation of Mark Raymond
             fBeBoardInterface->ChipFastReset ( cBoard );
-        }
+	  }
+	else
+	  {
+	    // ######################################
+	    // # Configuring Inner Tracker hardware #
+	    // ######################################
+
+	    LOG (INFO) << BOLDYELLOW << "@@@ Found an Inner Tracker board @@@" << RESET;
+
+	    LOG (INFO) << BOLDYELLOW << "Configuring Board " << int (cBoard->getBeId()) << RESET;
+	    fBeBoardInterface->ConfigureBoard (cBoard);
+
+	    for (const auto& cFe : cBoard->fModuleVector)
+	      {
+		unsigned int itTrials = 0;
+		bool isGoodTrial      = false;
+		LOG (INFO) << BOLDYELLOW << "Initializing communication to Module " << int (cFe->getModuleId()) << RESET;
+ 		while ((isGoodTrial == false) && (itTrials <= MAXTRIALS))
+		  {
+		    for (const auto& cRD53 : cFe->fRD53Vector)
+		      {
+			LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << int (cRD53->getRD53Id()) << RESET;
+			fRD53Interface->ResetRD53 (cRD53);
+			fRD53Interface->SyncRD53 (cRD53,NSYNCWORDS);
+			fRD53Interface->InitRD53Aurora (cRD53);
+		      }
+		    
+		    isGoodTrial = fBeBoardInterface->InitChipCommunication(cBoard);
+		    LOG (INFO) << BOLDRED << "Attempt number #" << itTrials+1 << "/" << MAXTRIALS+1 << RESET;
+		    std::cout << std::endl;
+		      
+		    itTrials++;
+		  }
+
+		if (isGoodTrial == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication of all RD53s of Module " << int (cFe->getModuleId()) << RESET;
+		else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication with all RD53s of Module " << int (cFe->getModuleId()) << RESET;
+
+		for (const auto& cRD53 : cFe->fRD53Vector)
+		  {
+		    LOG (INFO) << BOLDYELLOW << "Configuring RD53 " << int (cRD53->getRD53Id()) << RESET;
+		    fRD53Interface->ConfigureRD53 (cRD53);
+		  }
+
+		// @TMP@
+		// while (true)
+		//   {
+		//     this->ReadHitOrCnt (0);
+		//     usleep(1e6);
+		//     this->ReadHitOrCnt (1);
+		//     usleep(1e6);
+		//     this->ReadHitOrCnt (2);
+		//     usleep(1e6);
+		//     this->ReadHitOrCnt (3);
+		//     usleep(1e6);
+		//   }
+	      }
+	  }
+	} 
     }
 
     void SystemController::initializeFileHandler()
@@ -185,38 +252,43 @@ namespace Ph2_System {
         for (const auto& cBoard : fBoardVector)
         {
             uint32_t cBeId = cBoard->getBeId();
-            uint32_t cNCbc = 0;
+            uint32_t cNChip = 0;
 
             //uint32_t cNFe = cBoard->getNFe();
             uint32_t cNEventSize32 = this->computeEventSize32 (cBoard);
 
-            for (const auto& cFe : cBoard->fModuleVector)
-                cNCbc += cFe->getNChip();
-
             std::string cBoardTypeString;
             BoardType cBoardType = cBoard->getBoardType();
 
+            for (const auto& cFe : cBoard->fModuleVector)
+	      {
+		if (cBoardType == BoardType::FC7) cNChip += cFe->getNRD53();
+		else                              cNChip += cFe->getNChip();
+	      }
+
             if (cBoardType == BoardType::GLIB)
-                cBoardTypeString = "GLIB";
+	      cBoardTypeString = "GLIB";
             else if (cBoardType == BoardType::MPAGLIB)
-                cBoardTypeString = "MPAGLIB";
+	      cBoardTypeString = "MPAGLIB";
             else if (cBoardType == BoardType::CTA)
-                cBoardTypeString = "CTA";
+	      cBoardTypeString = "CTA";
             else if (cBoardType == BoardType::ICGLIB)
-                cBoardTypeString = "ICGLIB";
+	      cBoardTypeString = "ICGLIB";
             else if (cBoardType == BoardType::ICFC7)
-                cBoardTypeString = "ICFC7";
+	      cBoardTypeString = "ICFC7";
             else if (cBoardType == BoardType::CBC3FC7)
-                cBoardTypeString = "CBC3FC7";
+	      cBoardTypeString = "CBC3FC7";
             else if (cBoardType == BoardType::D19C)
-                cBoardTypeString = "D19C";
+	      cBoardTypeString = "D19C";
+	    else if (cBoardType == BoardType::FC7)
+	      cBoardTypeString = "FC7";
 
             uint32_t cFWWord = fBeBoardInterface->getBoardInfo (cBoard);
             uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
             uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
 
             //with the above info fill the header
-            FileHeader cHeader (cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNCbc, cNEventSize32, cBoard->getEventType() );
+            FileHeader cHeader (cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType() );
 
             //construct a Handler
             std::stringstream cBeBoardString;
@@ -325,8 +397,22 @@ namespace Ph2_System {
 
     void SystemController::Start (BeBoard* pBoard)
     {
-        fBeBoardInterface->Start (pBoard);
+      if (pBoard->getBoardType() == BoardType::FC7)
+	{
+	  LOG (INFO) << BOLDYELLOW << "Resetting all RD53s" << RESET;
+	  for (const auto& cFe : pBoard->fModuleVector)
+	    {
+	      for (const auto& cRD53 : cFe->fRD53Vector)
+		{
+		  fRD53Interface->ResetRD53 (cRD53);
+		  LOG (INFO) << BOLDGREEN << "\t--> Successfully reset RD53 " << int (cRD53->getRD53Id()) << RESET;
+		}
+	    }
+	}
+
+      fBeBoardInterface->Start (pBoard);
     }
+
     void SystemController::Stop (BeBoard* pBoard)
     {
         fBeBoardInterface->Stop (pBoard);
@@ -407,4 +493,40 @@ namespace Ph2_System {
         for (auto cBoard : fBoardVector)
             this->ReadNEvents (cBoard, pNEvents);
     }
+  void SystemController::ReadHitOrCnt (unsigned int nCnt) const
+  {
+    for (auto& cBoard : fBoardVector)
+      {
+	for (const auto& cFe : cBoard->fModuleVector)
+	  {
+	    for (const auto& cRD53 : cFe->fRD53Vector)
+	      {
+		LOG (INFO) << BOLDYELLOW << "Reading Hit-Or-Cnt #" << nCnt << RESET;
+		switch (nCnt)
+		  {
+		  case 0:
+		    {
+		      fRD53Interface->ReadRD53Reg (cRD53, "HITOR_0_CNT");
+		      break;
+		    }
+		  case 1:
+		    {
+		      fRD53Interface->ReadRD53Reg (cRD53, "HITOR_1_CNT");
+		      break;
+		    }
+		  case 2:
+		    {
+		      fRD53Interface->ReadRD53Reg (cRD53, "HITOR_2_CNT");
+		      break;
+		    }
+		  case 3:
+		    {
+		      fRD53Interface->ReadRD53Reg (cRD53, "HITOR_3_CNT");
+		      break;
+		    }
+		  }
+	      }
+	  }
+      }
+  }
 }

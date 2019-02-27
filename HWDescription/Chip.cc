@@ -27,6 +27,7 @@ namespace Ph2_HwDescription {
 
     {
         loadfRegMap ( filename );
+        this->setChipType ( ChipType::CBC3);
     }
 
     // C'tors which take BeId, FMCId, FeID, ChipId
@@ -35,6 +36,7 @@ namespace Ph2_HwDescription {
 
     {
         loadfRegMap ( filename );
+        this->setChipType ( ChipType::CBC3);
     }
 
     Chip::Chip ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, const std::string& filename, ChipType pType ) : FrontEndDescription ( pBeId, pFMCId, pFeId ), fChipId ( pChipId )
@@ -102,7 +104,6 @@ namespace Ph2_HwDescription {
                     fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
 
                     if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
-                        fChipMask32[(fRegItem.fAddress - 0x20)>>2] += fRegItem.fValue << (((fRegItem.fAddress - 0x20)&0x3)<<3);
                         fChipMask[fRegItem.fAddress - 0x20] = fRegItem.fValue;
                         if(!fAsMaskedChannels && fRegItem.fValue!=0xFF) fAsMaskedChannels=true;
                     }

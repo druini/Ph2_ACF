@@ -14,6 +14,7 @@
 #define __SYSTEMCONTROLLER_H__
 
 #include "FileParser.h"
+#include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/CbcInterface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/SSAInterface.h"
@@ -39,6 +40,13 @@
 #include <string.h>
 
 
+// #################
+// # FC7 CONSTANTS #
+// #################
+#define MAXTRIALS   1 // Maximum number of attempts to program the system
+#define NSYNCWORDS 50 // Number of sync words for chip PLL syncronisation
+
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
@@ -59,6 +67,7 @@ namespace Ph2_System {
     {
       public:
         BeBoardInterface*       fBeBoardInterface;                     /*!< Interface to the BeBoard */
+	RD53Interface*          fRD53Interface;                        /*!< Interface to the RD53 */
         CbcInterface*           fCbcInterface;                         /*!< Interface to the CBC */
         SSAInterface*           fSSAInterface;                         /*!< Interface to the SSA */
         MPAInterface*           fMPAInterface;                         /*!< Interface to the MPA */
@@ -238,6 +247,8 @@ namespace Ph2_System {
         {
             return fData->GetEvents ( pBoard );
         }
+
+	void ReadHitOrCnt (unsigned int nCnt) const;
     };
 }
 

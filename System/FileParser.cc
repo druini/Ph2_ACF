@@ -105,6 +105,8 @@ namespace Ph2_System {
     void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector,  std::ostream& os)
     {
 
+
+
         uint32_t cBeId = pBeBordNode.attribute ( "Id" ).as_int();
         BeBoard* cBeBoard = new BeBoard ( cBeId );
 
@@ -119,20 +121,21 @@ namespace Ph2_System {
         //std::string cBoardType = pBeBordNode.attribute ( "boardType" ).value();
         std::string cBoardType = cBoardTypeAttribute.value();
 
-        if (cBoardType == "GLIB") cBeBoard->setBoardType (BoardType::GLIB);
-        else if (cBoardType == "CTA") cBeBoard->setBoardType (BoardType::CTA);
-        else if (cBoardType == "ICGLIB") cBeBoard->setBoardType (BoardType::ICGLIB);
-        else if (cBoardType == "ICFC7") cBeBoard->setBoardType (BoardType::ICFC7);
+        if (cBoardType == "GLIB")         cBeBoard->setBoardType (BoardType::GLIB);
+        else if (cBoardType == "CTA")     cBeBoard->setBoardType (BoardType::CTA);
+        else if (cBoardType == "ICGLIB")  cBeBoard->setBoardType (BoardType::ICGLIB);
+        else if (cBoardType == "ICFC7")   cBeBoard->setBoardType (BoardType::ICFC7);
         else if (cBoardType == "CBC3FC7") cBeBoard->setBoardType (BoardType::CBC3FC7);
-        else if (cBoardType == "D19C") cBeBoard->setBoardType (BoardType::D19C);
+        else if (cBoardType == "D19C")    cBeBoard->setBoardType (BoardType::D19C);
         else if (cBoardType == "MPAGLIB") cBeBoard->setBoardType (BoardType::MPAGLIB);
+    	else if (cBoardType == "FC7")     cBeBoard->setBoardType (BoardType::FC7);
         else
-        {
+	  {
             LOG (ERROR) << "Error: Unknown Board Type: " << cBoardType << " - aborting!";
             std::string errorstring = "Unknown Board Type " + cBoardType;
             throw Exception (errorstring.c_str() );
             exit (1);
-        }
+	  }
 
         pugi::xml_attribute cEventTypeAttribute = pBeBordNode.attribute ("eventType");
         std::string cEventTypeString;
@@ -161,6 +164,8 @@ namespace Ph2_System {
 
         if (cBeBoard->getBoardType() == BoardType::D19C)
             pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+        else if (cBeBoard->getBoardType() == BoardType::FC7)
+            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()]   =  new FC7FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
         /*else if (cBeBoard->getBoardType() == BoardType::GLIB)
             pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new GlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
         else if (cBeBoard->getBoardType() == BoardType::ICGLIB)
@@ -173,7 +178,7 @@ namespace Ph2_System {
             pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new Cbc3Fc7FWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
         else if (cBeBoard->getBoardType() == BoardType::MPAGLIB)
             pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new MPAGlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-	*/
+    */
 
         os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
 
@@ -362,7 +367,8 @@ namespace Ph2_System {
     }
 
 
-    void FileParser::parseModule (pugi::xml_node pModuleNode, BeBoard* pBoard, std::ostream& os ){
+    void FileParser::parseModule (pugi::xml_node pModuleNode, BeBoard* pBoard, std::ostream& os )
+    {
 
         bool cStatus = pModuleNode.attribute ( "Status" ).as_bool();
 
@@ -377,28 +383,38 @@ namespace Ph2_System {
             Module* cModule = new Module ( pBoard->getBeBoardIdentifier(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId );
             pBoard->addModule ( cModule );
 
-            pugi::xml_node cCbcPathPrefixNode = pModuleNode.child ( "CBC_Files" );
-            std::string cFilePrefix = expandEnvironmentVariables (static_cast<std::string> ( cCbcPathPrefixNode.attribute ( "path" ).value() ) );
-
-            if ( !cFilePrefix.empty() ) os << GREEN << "|" << " " << "|" << "   " << "|" << "----" << "CBC Files Path : " << cFilePrefix << RESET << std::endl;
-
+            pugi::xml_node cChipPathPrefixNode;
             // Iterate the CBC node
-            for ( pugi::xml_node pCbcNode = pModuleNode.child ( "CBC" ); pCbcNode; pCbcNode = pCbcNode.next_sibling() )
+            if (pBoard->getBoardType() == BoardType::FC7)
+                cChipPathPrefixNode = pModuleNode.child ( "RD53_Files" );
+            else
+                cChipPathPrefixNode = pModuleNode.child ( "CBC_Files" );
+
+            std::string cFilePrefix = expandEnvironmentVariables (static_cast<std::string> ( cChipPathPrefixNode.attribute ( "path" ).value() ) );
+
+            if ( !cFilePrefix.empty() ) os << GREEN << "|" << " " << "|" << "   " << "|" << "----" << "Chip Files Path : " << cFilePrefix << RESET << std::endl;
+
+            // Iterate the Chip node
+            if (pBoard->getBoardType() == BoardType::FC7)
             {
-                this->parseCbc (pCbcNode, cModule, cFilePrefix, os);
-            }
-
-            // parse the GlobalCbcSettings so that Global CBC regisers take precedence over Global CBC settings which take precedence over CBC specific settings
-            this->parseGlobalCbcSettings (pModuleNode, cModule, os);
-
-
+                for (pugi::xml_node pRD53Node = pModuleNode.child ("RD53"); pRD53Node, pRD53Node.name() == std::string("RD53"); pRD53Node = pRD53Node.next_sibling())
+                  this->parseRD53 (pRD53Node, cModule, cFilePrefix, os);
+        
+                // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
+                this->parseGlobalRD53Settings (pModuleNode, cModule, os);
+	      }
+            else
+	      {
+                for ( pugi::xml_node pCbcNode = pModuleNode.child ( "CBC" ); pCbcNode; pCbcNode = pCbcNode.next_sibling() )
+		  this->parseCbc  (pCbcNode, cModule, cFilePrefix, os);
+		
+                // parse the GlobalCbcSettings so that Global CBC regisers take precedence over Global CBC settings which take precedence over CBC specific settings
+                this->parseGlobalCbcSettings (pModuleNode, cModule, os);
+	      }
         }
-
+	
         return;
-
     }
-
-
 
     void FileParser::parseCbc (pugi::xml_node pCbcNode, Module* cModule, std::string cFilePrefix, std::ostream& os )
     {
@@ -484,6 +500,7 @@ namespace Ph2_System {
         //parse the cbc settings here and put them in the corresponding registers of the Chip object
         //call this for every CBC, Register nodes should take precedence over specific settings??
         ChipType cType = pCbc->getChipType();
+        os << GREEN << "|\t|\t|\t|----ChipType: ";
         os << GREEN << "|\t|\t|\t|----ChipType: ";
 
         if (cType == ChipType::CBC2)
@@ -729,4 +746,144 @@ namespace Ph2_System {
             }
         }
     }
+
+
+  // ########################
+  // # RD53 specific parser #
+  // ########################
+  void FileParser::parseRD53 (pugi::xml_node pRD53Node, Module* cModule, std::string cFilePrefix, std::ostream& os)
+  {
+    os << BOLDCYAN << "|" << "	" << "|" << "	" << "|" << "----" << pRD53Node.name() << "  "
+       << pRD53Node.first_attribute().name() << ": " << pRD53Node.attribute ("Id").value()
+       << ", File: " << expandEnvironmentVariables (pRD53Node.attribute ("configfile").value() ) << RESET << std::endl;
+
+    std::string cFileName;
+	    
+    if (!cFilePrefix.empty())
+      {
+	if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
+	  cFilePrefix.append ("/");
+		
+	cFileName = cFilePrefix + expandEnvironmentVariables (pRD53Node.attribute ("configfile").value());
+      }
+    else cFileName = expandEnvironmentVariables (pRD53Node.attribute ("configfile").value());
+
+    std::cout<<cFileName<<std::endl;
+        
+    RD53* cRD53 = new RD53 ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pRD53Node.attribute ( "Id" ).as_int(), cFileName );
+std::cout<<cModule->getBeId()<<" " <<cModule->getFMCId()<<" " <<cModule->getFeId()<<" " <<pRD53Node.attribute ( "Id" ).as_int()<<" " <<cFileName <<std::endl;
+        
+    // Parse the specific RD53 settings so that Registers take precedence
+    this->parseRD53Settings (pRD53Node, cRD53, os);
+        
+    for (pugi::xml_node cRD53RegisterNode = pRD53Node.child ("Register"); cRD53RegisterNode; cRD53RegisterNode = cRD53RegisterNode.next_sibling() )
+      {
+    cRD53->setReg (std::string(cRD53RegisterNode.attribute ("name").value() ), convertAnyInt (cRD53RegisterNode.first_child().value()));
+    os << BLUE << "|\t|\t|\t|----Register: " << std::string (cRD53RegisterNode.attribute ("name").value()) << " : " << RED << std::hex << "0x" << convertAnyInt (cRD53RegisterNode.first_child().value()) << RESET << std::dec << std::endl;
+      }
+
+    cModule->addRD53 (cRD53);
+  }
+
+  void FileParser::parseGlobalRD53Settings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os)
+  {
+    pugi::xml_node cGlobalRD53SettingsNode = pModuleNode.child ("Global");
+    
+    if (cGlobalRD53SettingsNode != nullptr)
+      {
+	os << BOLDCYAN << "|\t|\t|----Global RD53 Settings:" << RESET <<  std::endl;
+	
+	int cCounter = 0;
+	
+	for (auto cRD53 : pModule->fRD53Vector)
+	  {
+	    if (cCounter == 0)
+	      this->parseRD53Settings (cGlobalRD53SettingsNode, cRD53, os);
+	    else
+	      {
+		std::ofstream cDummy;
+		this->parseRD53Settings (cGlobalRD53SettingsNode, cRD53, cDummy);
+	      }
+	    
+	    cCounter++;
+	  }
+      }
+    
+    // Now that global has been applied to each RD53, handle the GlobalRD53Registers
+    for (pugi::xml_node cRD53GlobalNode = pModuleNode.child ("Global_RD53_Register"); cRD53GlobalNode != pModuleNode.child ("RD53") && cRD53GlobalNode != pModuleNode.child ("RD53_Files") && cRD53GlobalNode != nullptr; cRD53GlobalNode = cRD53GlobalNode.next_sibling() )
+      {
+	if (cRD53GlobalNode != nullptr)
+	  {
+	    std::string regname = std::string ( cRD53GlobalNode.attribute ( "name" ).value() );
+	    uint32_t regvalue = convertAnyInt ( cRD53GlobalNode.first_child().value() ) ;
+	    
+	    for (auto cRD53 : pModule->fRD53Vector)
+	      cRD53->setReg (regname, uint8_t (regvalue)) ;
+	    
+	    os << BOLDGREEN << "|" << "	" << "|" << "	" << "|" << "----" << cRD53GlobalNode.name()
+	       << "  " << cRD53GlobalNode.first_attribute().name() << " :"
+	       << regname << " =  0x" << std::hex << std::setw (2) << std::setfill ('0') << RED << regvalue << std::dec << RESET << std:: endl;
+	  }
+      }
+  }
+ 
+  void FileParser::parseRD53Settings (pugi::xml_node pRD53Node, RD53* pRD53, std::ostream& os)
+  {
+    // Parse the RD53 settings here and put them in the corresponding registers of the RD53 object
+    os << BOLDBLUE << "|\t|\t|\t|----ChipType: " << RED << "RD53" << RESET << std::endl;
+
+    pugi::xml_node cSettingsChild = pRD53Node.child ("Settings");
+    if (cSettingsChild != nullptr)
+      {
+	uint16_t value = convertAnyInt (cSettingsChild.attribute ("GP_LVDS_ROUTE").value());
+
+    pRD53->setReg("GP_LVDS_ROUTE",value,true);
+	os << GREEN << "|\t|\t|\t|----GP_LVDS_ROUTE: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+
+	value = convertAnyInt (cSettingsChild.attribute ("VTH_SYNC").value());
+	pRD53->setReg("VTH_SYNC",value,true);
+	os << GREEN << "|\t|\t|\t|----VTH_SYNC: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+
+	value = convertAnyInt (cSettingsChild.attribute ("Vthreshold_LIN").value());
+	pRD53->setReg("Vthreshold_LIN",value,true);
+	os << GREEN << "|\t|\t|\t|----Vthreshold_LIN: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+
+	value = convertAnyInt (cSettingsChild.attribute ("VTH1_DIFF").value());
+	pRD53->setReg("VTH1_DIFF",value,true);
+	os << GREEN << "|\t|\t|\t|----VTH1_DIFF: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+
+	value = convertAnyInt (cSettingsChild.attribute ("VTH2_DIFF").value());
+	pRD53->setReg("VTH2_DIFF",value,true);
+	os << GREEN << "|\t|\t|\t|----VTH2_DIFF: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+
+	value = convertAnyInt (cSettingsChild.attribute ("LATENCY_CONFIG").value());
+	pRD53->setReg("LATENCY_CONFIG",value,true);
+	os << GREEN << "|\t|\t|\t|----LATENCY_CONFIG: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+
+	value = convertAnyInt (cSettingsChild.attribute ("MONITOR_SELECT").value());
+	pRD53->setReg("MONITOR_SELECT",value,true);
+	os << GREEN << "|\t|\t|\t|----MONITOR_SELECT: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+
+	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_SYNC").value());
+	pRD53->setReg("EN_CORE_COL_SYNC",value,true);
+	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_SYNC: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+
+	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_LIN_1").value());
+	pRD53->setReg("EN_CORE_COL_LIN_1",value,true);
+	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_LIN_1: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+
+	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_LIN_2").value());
+	pRD53->setReg("EN_CORE_COL_LIN_2",value,true);
+	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_LIN_2: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+
+	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_DIFF_1").value());
+	pRD53->setReg("EN_CORE_COL_DIFF_1",value,true);
+	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_DIFF_1: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+
+	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_DIFF_2").value());
+	pRD53->setReg("EN_CORE_COL_DIFF_2",value,true);
+	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_DIFF_2: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+      }
+  }
+  // ########################
 }

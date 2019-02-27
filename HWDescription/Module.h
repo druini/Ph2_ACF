@@ -13,6 +13,7 @@
 #define Module_h__
 
 #include "FrontEndDescription.h"
+#include "RD53.h"
 #include "Chip.h"
 #include "MPA.h"
 #include "SSA.h"
@@ -61,7 +62,11 @@ namespace Ph2_HwDescription {
             delete pSSA;
 
             fMPAVector.clear();
-
+ 
+	    for ( auto& pRD53 : fRD53Vector )
+	      if (pRD53) delete pRD53;
+	    
+            fRD53Vector.clear();
         };
 
         /*!
@@ -70,10 +75,10 @@ namespace Ph2_HwDescription {
          */
         void accept ( HwDescriptionVisitor& pVisitor )
         {
-            pVisitor.visit ( *this );
-
-            for ( Chip* cChip : fChipVector )
-                cChip->accept ( pVisitor );
+	  pVisitor.visit ( *this );
+	  
+	  for ( Chip* cChip : fChipVector )
+	    cChip->accept ( pVisitor );
         }
         // void accept( HwDescriptionVisitor& pVisitor ) const {
         //  pVisitor.visit( *this );
@@ -188,6 +193,66 @@ namespace Ph2_HwDescription {
         SSA* getSSA ( uint8_t pSSAId ) const;
 
 
+	// #################
+	// # RD53 specific #
+	// #################
+	uint8_t getNRD53() const
+        {
+	  return fRD53Vector.size();
+        }
+	/*!
+	 * \brief Adding a RD53 to the vector
+         * \param pRD53
+         */
+        void addRD53 (RD53& pRD53)
+        {
+	  // Get the ChipType of the RD53 and set the module one accordingly
+	  // This is the case when no chip type has been set so get the one from the RD53
+	  if (fType == ChipType::UNDEFINED)
+	    fType = pRD53.getChipType();
+	  // Else, the chip type has already been set - if it is different from another RD53, rais a warning
+	  // no different chips should be on a module
+	  else if (fType != pRD53.getChipType())
+	    {
+	      LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
+	      exit (1);
+	    }
+	  
+	  fRD53Vector.push_back (&pRD53);
+        }
+	
+        void addRD53 (RD53* pRD53)
+        {
+	  // Get the ChipType of the RD53 and set the module one accordingly
+	  // This is the case when no chip type has been set so get the one from the RD53
+	  if (fType == ChipType::UNDEFINED)
+	    fType = pRD53->getChipType();
+	  // Else, the chip type has already been set - if it is different from another RD53, rais a warning
+	  // No different chips should be on a module
+	  else if (fType != pRD53->getChipType())
+            {
+	      LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
+	      exit (1);
+            }
+	  
+	  fRD53Vector.push_back (pRD53);
+        }
+
+	/*!
+         * \brief Remove a RD53 from the vector
+         * \param pRD53Id
+         * \return a bool which indicate if the removing was successful
+         */
+        bool removeRD53 (uint8_t pRD53Id);
+
+        /*!
+         * \brief Get a RD53 from the vector
+         * \param pRD53Id
+         * \return a pointer of RD53, so we can manipulate directly the RD53 contained in the vector
+         */
+        RD53* getRD53 (uint8_t pRD53Id) const;
+	// #################
+
 
         /*!
         * \brief Get the Module Id
@@ -210,6 +275,7 @@ namespace Ph2_HwDescription {
         };
 
 
+        std::vector < RD53* > fRD53Vector;
         std::vector < Chip* > fChipVector;
         std::vector < MPA* > fMPAVector;
         std::vector < SSA* > fSSAVector;

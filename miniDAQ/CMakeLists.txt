@@ -76,6 +76,10 @@ endif()
 ## EXECUTABLES
 ####################################
 
+#CMSIT_miniDAQ
+add_executable(CMSIT_miniDAQ CMSIT_miniDAQ.cc)
+target_link_libraries(CMSIT_miniDAQ ${LIBS} RootWeb)
+
 #miniDAQ
 add_executable(miniDAQ miniDAQ.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.h ../DQMUtils/DQMEvent.cc ../DQMUtils/SLinkDQMHistogrammer.cc ../DQMUtils/SLinkDQMHistogrammer.cc)
 target_link_libraries(miniDAQ ${LIBS} RootWeb)
@@ -95,5 +99,3 @@ target_link_libraries(RunController ${LIBS} Ph2_Tools)
 #DQMController
 add_executable(DQMController DQMController.cc DQMHistogramController.cc)
 target_link_libraries(DQMController ${LIBS} Ph2_Tools)
-
-
