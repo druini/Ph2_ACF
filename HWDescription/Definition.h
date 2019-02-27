@@ -124,8 +124,8 @@
 #define WIDTH_CBCSTUBDATA              12
 //------------------------------------------------------------------------------
 
-enum class BoardType {GLIB, ICGLIB, CTA, ICFC7, CBC3FC7, D19C, MPAGLIB, SUPERVISOR};
-enum class ChipType {UNDEFINED = 0, CBC2, CBC3, MPA, SSA};
+enum class BoardType {GLIB, ICGLIB, CTA, ICFC7, CBC3FC7, D19C, MPAGLIB, SUPERVISOR, FC7};
+enum class ChipType {UNDEFINED = 0, CBC2, CBC3, MPA, SSA, RD53};
 enum class SLinkDebugMode {SUMMARY = 0, FULL = 1, ERROR = 2};
 enum class EventType {ZS = 1, VR = 2};
 

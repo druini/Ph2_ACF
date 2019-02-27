@@ -286,4 +286,16 @@ namespace Ph2_HwInterface {
     }
 
 
+  // ######################################################################################
+  // # Methods which are defined in the concrete implementation of BeBoardInterface class #
+  // ######################################################################################
+  /*!
+   * \brief Initialize communication with RD53
+   */
+  bool BeBoardInterface::InitChipCommunication (const BeBoard* pBoard)
+  {
+    setBoard (pBoard->getBeBoardIdentifier());
+    return fBoardFW->InitChipCommunication();
+  }
+  // ######################################################################################
 }

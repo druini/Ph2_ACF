@@ -284,8 +284,14 @@ namespace Ph2_HwInterface {
         std::pair<std::vector<uint32_t>, std::vector<uint32_t>>   ReadData( BeBoard* pBoard, int buffernum, int mpa);
 
 
-
-
+    // ######################################################################################
+    // # Methods which are defined in the concrete implementation of BeBoardInterface class #
+    // ######################################################################################
+    /*!
+     * \brief Initialize communication with RD53
+     */
+    bool InitChipCommunication (const BeBoard* pBoard);
+    // ######################################################################################
     };
 }
 
