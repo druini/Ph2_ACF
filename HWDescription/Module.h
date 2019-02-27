@@ -111,13 +111,13 @@ namespace Ph2_HwDescription {
          */
         void addChip ( Chip& pChip )
         {
-            //get the ChipType of the Chip and set the module one accordingly
+            //get the FrontEndType of the Chip and set the module one accordingly
             //this is the case when no chip type has been set so get the one from the Chip
-            if (fType == ChipType::UNDEFINED)
-                fType = pChip.getChipType();
+            if (fType == FrontEndType::UNDEFINED)
+                fType = pChip.getFrontEndType();
             //else, the chip type has already been set - if it is different from another Chip, rais a warning
             //no different chips should be on a module
-            else if (fType != pChip.getChipType() )
+            else if (fType != pChip.getFrontEndType() )
             {
                 LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
                 exit (1);
@@ -127,13 +127,13 @@ namespace Ph2_HwDescription {
         }
         void addChip ( Chip* pChip )
         {
-            //get the ChipType of the Chip and set the module one accordingly
+            //get the FrontEndType of the Chip and set the module one accordingly
             //this is the case when no chip type has been set so get the one from the Chip
-            if (fType == ChipType::UNDEFINED)
-                fType = pChip->getChipType();
+            if (fType == FrontEndType::UNDEFINED)
+                fType = pChip->getFrontEndType();
             //else, the chip type has already been set - if it is different from another Chip, rais a warning
             //no different chips should be on a module
-            else if (fType != pChip->getChipType() )
+            else if (fType != pChip->getFrontEndType() )
             {
                 LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
                 exit (1);
@@ -206,13 +206,13 @@ namespace Ph2_HwDescription {
          */
         void addRD53 (RD53& pRD53)
         {
-	  // Get the ChipType of the RD53 and set the module one accordingly
+	  // Get the FrontEndType of the RD53 and set the module one accordingly
 	  // This is the case when no chip type has been set so get the one from the RD53
-	  if (fType == ChipType::UNDEFINED)
-	    fType = pRD53.getChipType();
+	  if (fType == FrontEndType::UNDEFINED)
+	    fType = pRD53.getFrontEndType();
 	  // Else, the chip type has already been set - if it is different from another RD53, rais a warning
 	  // no different chips should be on a module
-	  else if (fType != pRD53.getChipType())
+	  else if (fType != pRD53.getFrontEndType())
 	    {
 	      LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
 	      exit (1);
@@ -223,13 +223,13 @@ namespace Ph2_HwDescription {
 	
         void addRD53 (RD53* pRD53)
         {
-	  // Get the ChipType of the RD53 and set the module one accordingly
+	  // Get the FrontEndType of the RD53 and set the module one accordingly
 	  // This is the case when no chip type has been set so get the one from the RD53
-	  if (fType == ChipType::UNDEFINED)
-	    fType = pRD53->getChipType();
+	  if (fType == FrontEndType::UNDEFINED)
+	    fType = pRD53->getFrontEndType();
 	  // Else, the chip type has already been set - if it is different from another RD53, rais a warning
 	  // No different chips should be on a module
-	  else if (fType != pRD53->getChipType())
+	  else if (fType != pRD53->getFrontEndType())
             {
 	      LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
 	      exit (1);

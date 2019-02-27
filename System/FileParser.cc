@@ -1,4 +1,5 @@
 #include "FileParser.h"
+#include "../HWDescription/Cbc.h"
 
 
 namespace Ph2_System {
@@ -163,21 +164,21 @@ namespace Ph2_System {
         std::string cAddressTable = expandEnvironmentVariables (cBeBoardConnectionNode.attribute ( "address_table" ).value() );
 
         if (cBeBoard->getBoardType() == BoardType::D19C)
-            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+            pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
         else if (cBeBoard->getBoardType() == BoardType::FC7)
-            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()]   =  new FC7FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+            pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new FC7FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
         /*else if (cBeBoard->getBoardType() == BoardType::GLIB)
-            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new GlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+            pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new GlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
         else if (cBeBoard->getBoardType() == BoardType::ICGLIB)
-            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new ICGlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+            pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new ICGlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
         else if (cBeBoard->getBoardType() == BoardType::CTA)
-            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new CtaFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+            pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new CtaFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
         else if (cBeBoard->getBoardType() == BoardType::ICFC7)
-            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new ICFc7FWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+            pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new ICFc7FWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
         else if (cBeBoard->getBoardType() == BoardType::CBC3FC7)
-            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new Cbc3Fc7FWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+            pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new Cbc3Fc7FWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
         else if (cBeBoard->getBoardType() == BoardType::MPAGLIB)
-            pBeBoardFWMap[cBeBoard->getBeBoardIdentifier()] =  new MPAGlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+            pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new MPAGlibFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
     */
 
         os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
@@ -380,7 +381,7 @@ namespace Ph2_System {
 
             uint32_t cModuleId = pModuleNode.attribute ( "ModuleId" ).as_int();
 
-            Module* cModule = new Module ( pBoard->getBeBoardIdentifier(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId );
+            Module* cModule = new Module ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId );
             pBoard->addModule ( cModule );
 
             pugi::xml_node cChipPathPrefixNode;
@@ -434,7 +435,7 @@ namespace Ph2_System {
         }
         else cFileName = expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() );
 
-        Chip* cCbc = new Chip ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
+        Chip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
 
         // parse the specific CBC settings so that Registers take precedence
         this->parseCbcSettings (pCbcNode, cCbc, os);
@@ -499,13 +500,13 @@ namespace Ph2_System {
     {
         //parse the cbc settings here and put them in the corresponding registers of the Chip object
         //call this for every CBC, Register nodes should take precedence over specific settings??
-        ChipType cType = pCbc->getChipType();
-        os << GREEN << "|\t|\t|\t|----ChipType: ";
-        os << GREEN << "|\t|\t|\t|----ChipType: ";
+        FrontEndType cType = pCbc->getFrontEndType();
+        os << GREEN << "|\t|\t|\t|----FrontEndType: ";
+        os << GREEN << "|\t|\t|\t|----FrontEndType: ";
 
-        if (cType == ChipType::CBC2)
+        if (cType == FrontEndType::CBC2)
             os << RED << "CBC2";
-        else if (cType == ChipType::CBC3)
+        else if (cType == FrontEndType::CBC3)
             os << RED << "CBC3";
 
         os << RESET << std::endl;
@@ -519,12 +520,12 @@ namespace Ph2_System {
             uint16_t cLatency = convertAnyInt (cThresholdNode.attribute ("latency").value() );
 
             //the moment the cbc object is constructed, it knows which chip type it is
-            if (cType == ChipType::CBC2)
+            if (cType == FrontEndType::CBC2)
             {
                 pCbc->setReg ("VCth", uint8_t (cThreshold) );
                 pCbc->setReg ("TriggerLatency", uint8_t (cLatency) );
             }
-            else if (cType == ChipType::CBC3)
+            else if (cType == FrontEndType::CBC3)
             {
                 pCbc->setReg ("VCth1", (cThreshold & 0x00FF) );
                 pCbc->setReg ("VCth2", (cThreshold & 0x0300) >> 8);
@@ -553,7 +554,7 @@ namespace Ph2_System {
             cDelay = convertAnyInt (cTPNode.attribute ("delay").value() );
             cGroundOthers = convertAnyInt (cTPNode.attribute ("groundothers").value() );
 
-            if (cType == ChipType::CBC2)
+            if (cType == FrontEndType::CBC2)
             {
                 pCbc->setReg ("TestPulsePot", cAmplitude );
                 pCbc->setReg ("SelTestPulseDel&ChanGroup", reverseBits ( (cChanGroup & 0x07) << 5 | (cDelay & 0x1F) ) );
@@ -561,7 +562,7 @@ namespace Ph2_System {
                 pCbc->setReg ("MiscTestPulseCtrl&AnalogMux", ( ( (cPolarity & 0x01) << 7) | ( (cEnable & 0x01) << 6) | ( (cGroundOthers & 0x01) << 5) | (cAmuxValue & 0x1F) ) );
 
             }
-            else if (cType == ChipType::CBC3)
+            else if (cType == FrontEndType::CBC3)
             {
                 pCbc->setReg ("TestPulsePotNodeSel", cAmplitude );
                 pCbc->setReg ("TestPulseDel&ChanGroup", reverseBits ( (cChanGroup & 0x07) << 5 | (cDelay & 0x1F) ) );
@@ -589,7 +590,7 @@ namespace Ph2_System {
             cOffset3 = convertAnyInt (cStubNode.attribute ("off3").value() );
             cOffset4 = convertAnyInt (cStubNode.attribute ("off4").value() );
 
-            if (cType == ChipType::CBC2)
+            if (cType == FrontEndType::CBC2)
             {
                 pCbc->setReg ("CwdWindow&Coincid", ( ( (cCluWidth & 0x03) << 6) | (cOffset1 & 0x3F) ) );
                 uint8_t cMiscStubLogic = pCbc->getReg ("MiscStubLogic");
@@ -597,7 +598,7 @@ namespace Ph2_System {
 
                 os << GREEN << "Cluster & Stub Logic: " << " ClusterWidthDiscrimination: " << RED << +cCluWidth << GREEN << ", PtWidth: " << RED << +cPtWidth << GREEN << ", Offset: " << RED << +cOffset1 << RESET << std::endl;
             }
-            else if (cType == ChipType::CBC3)
+            else if (cType == FrontEndType::CBC3)
             {
                 uint8_t cLogicSel = pCbc->getReg ("Pipe&StubInpSel&Ptwidth");
                 pCbc->setReg ("Pipe&StubInpSel&Ptwidth", ( (cLogicSel & 0xF0) | (cPtWidth & 0x0F) ) );
@@ -627,14 +628,14 @@ namespace Ph2_System {
             cTestClock = convertAnyInt (cMiscNode.attribute ("testclock").value() );
             cAmuxValue = convertAnyInt (cMiscNode.attribute ("analogmux").value() );
 
-            if (cType == ChipType::CBC2)
+            if (cType == FrontEndType::CBC2)
             {
                 uint8_t cAmuxRead = pCbc->getReg ("MiscTestPulseCtrl&AnalogMux");
                 pCbc->setReg ("MiscTestPulseCtrl&AnalogMux", ( (cAmuxRead & 0xE0) | (cAmuxValue & 0x1F) ) );
                 os << RED << "|\t|\t|\t|----Other settengs than Amux curerntly not supported for CBC2, please set manually!" << RESET << std::endl;
 
             }
-            else if (cType == ChipType::CBC3)
+            else if (cType == FrontEndType::CBC3)
             {
                 pCbc->setReg ("40MhzClk&Or254", ( ( (cTpgClock & 0x01) << 7) | ( (cOr254 & 0x01) << 6) | (cTestClock & 0x01) << 5 | (cDll & 0x1F) ) );
                 //LOG (DEBUG) << BOLDRED << std::bitset<8> (pCbc->getReg ("40MhzClk&Or254") ) << RESET;
@@ -682,7 +683,7 @@ namespace Ph2_System {
                     //get the original value of the register
                     uint8_t cReadValue;
 
-                    if (cType == ChipType::CBC2)
+                    if (cType == FrontEndType::CBC2)
                     {
                         //get the original value of the register
                         cReadValue = pCbc->getReg (ChannelMaskMapCBC2[cRegisterIndex]);
@@ -692,7 +693,7 @@ namespace Ph2_System {
                         pCbc->setReg (ChannelMaskMapCBC2[cRegisterIndex], cReadValue);
                         LOG (DEBUG) << ChannelMaskMapCBC2[cRegisterIndex] << " " << std::bitset<8> (cReadValue);
                     }
-                    else if (cType == ChipType::CBC3)
+                    else if (cType == FrontEndType::CBC3)
                     {
                         //get the original value of the register
                         cReadValue = pCbc->getReg (ChannelMaskMapCBC3[cRegisterIndex]);
@@ -830,7 +831,7 @@ std::cout<<cModule->getBeId()<<" " <<cModule->getFMCId()<<" " <<cModule->getFeId
   void FileParser::parseRD53Settings (pugi::xml_node pRD53Node, RD53* pRD53, std::ostream& os)
   {
     // Parse the RD53 settings here and put them in the corresponding registers of the RD53 object
-    os << BOLDBLUE << "|\t|\t|\t|----ChipType: " << RED << "RD53" << RESET << std::endl;
+    os << BOLDBLUE << "|\t|\t|\t|----FrontEndType: " << RED << "RD53" << RESET << std::endl;
 
     pugi::xml_node cSettingsChild = pRD53Node.child ("Settings");
     if (cSettingsChild != nullptr)

@@ -14,6 +14,7 @@
 #define Cbc_h__
 
 #include "FrontEndDescription.h"
+#include "Chip.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
 #include <iostream>
@@ -52,18 +53,33 @@ namespace Ph2_HwDescription {
 
         // C'tors with object FE Description
         Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename );
-        Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename, ChipType pType );
+
+
+        /*!
+         * \brief acceptor method for HwDescriptionVisitor
+         * \param pVisitor
+         */
+        virtual void accept ( HwDescriptionVisitor& pVisitor )
+        {
+            pVisitor.visit ( *this );
+        }
+        // void accept( HwDescriptionVisitor& pVisitor ) const {
+        //  pVisitor.visit( *this );
+        // }
+        /*!
+        * \brief Load RegMap from a file
+        * \param filename
+        */
+        void loadfRegMap ( const std::string& filename ) override;
+
+
+        /*!
+        * \brief Write the registers of the Map in a file
+        * \param filename
+        */
+        void saveRegMap ( const std::string& filename );
 
         const uint16_t getNumberOfChannels() const override { return NCHANNELS; }
-
-        const std::vector<uint8_t>& getChipMask() const
-        {
-            return fCbcMask;
-        }
-        const bool asMaskedChannels() const
-        {
-            return fAsMaskedChannels;
-        }
 
         bool isDACLocal(const std::string &dacName) override {
             if(dacName.find("MaskChannel-",0,12)!=std::string::npos || dacName.find("Channel",0,7)!=std::string::npos ) return true;
@@ -80,40 +96,9 @@ namespace Ph2_HwDescription {
 
 
       protected:
-
-        // uint16_t fNumberOfChannels;
-        uint8_t fCbcId;
-        bool fAsMaskedChannels;
-
-        // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value
-        ChipRegMap fRegMap;
-        CommentMap fCommentMap;
-        std::vector<uint8_t> fCbcMask = std::vector<uint8_t>(32,0);
         
     };
 
-
-    /*!
-     * \struct CbcComparer
-     * \brief Compare two Cbc by their ID
-     */
-    struct CbcComparer
-    {
-
-        bool operator() ( const Cbc& cbc1, const Cbc& cbc2 ) const;
-
-    };
-
-    /*!
-     * \struct RegItemComparer
-     * \brief Compare two pair of Register Name Versus ChipRegItem by the Page and Adress of the ChipRegItem
-     */
-    struct CbcRegItemComparer
-    {
-
-        bool operator() ( const CbcRegPair& pRegItem1, const CbcRegPair& pRegItem2 ) const;
-
-    };
 
 }
 

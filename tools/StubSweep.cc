@@ -45,7 +45,7 @@ void StubSweep::Initialize()
         {
             uint32_t cFeId = cFe->getFeId();
             cFeCount++;
-            fType = cFe->getChipType();
+            fType = cFe->getFrontEndType();
 
             for (auto cCbc : cFe->fChipVector)
             {
@@ -181,9 +181,9 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
                         std::string cRegName;
 
                         //LOG (DEBUG) << BLUE << "Un-masking channels " <<  +cChannelPair[0] << " and " << +cChannelPair[1] << RESET ;
-                        if (fType == ChipType::CBC2)
+                        if (fType == FrontEndType::CBC2)
                             cRegName = fChannelMaskMapCBC2[cRegisterIndex];
-                        else if (fType == ChipType::CBC3)
+                        else if (fType == FrontEndType::CBC3)
 
                             cRegName = fChannelMaskMapCBC3[cRegisterIndex];
 
@@ -340,7 +340,7 @@ void StubSweep::maskAllChannels (Chip* pCbc)
     uint8_t cRegValue ;
     std::string cRegName;
 
-    if (fType == ChipType::CBC2)
+    if (fType == FrontEndType::CBC2)
     {
         for ( unsigned int i = 0 ; i < fChannelMaskMapCBC2.size() ; i++ )
         {
@@ -352,7 +352,7 @@ void StubSweep::maskAllChannels (Chip* pCbc)
         }
     }
 
-    if (fType == ChipType::CBC3)
+    if (fType == FrontEndType::CBC3)
     {
         for ( unsigned int i = 0 ; i < fChannelMaskMapCBC3.size() ; i++ )
         {
@@ -404,12 +404,12 @@ uint8_t StubSweep::getChanelMask ( Chip* pCbc, uint8_t pChannel )
         //value of the register
         uint8_t cReadValue;
 
-        if (fType == ChipType::CBC2)
+        if (fType == FrontEndType::CBC2)
         {
             //get the original value of the register
             cReadValue = pCbc->getReg (fChannelMaskMapCBC2[cRegisterIndex]);
         }
-        else if (fType == ChipType::CBC3)
+        else if (fType == FrontEndType::CBC3)
         {
             //get the original value of the register
             cReadValue = pCbc->getReg (fChannelMaskMapCBC3[cRegisterIndex]);

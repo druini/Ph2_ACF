@@ -165,8 +165,8 @@ void HybridTester::InitializeHists()
         for ( auto cFe : cBoard->fModuleVector )
         {
             uint32_t cFeId = cFe->getFeId();
-            uint16_t cMaxRange = (cFe->getChipType() == ChipType::CBC2) ? 255 : 1023;
-            fType = cFe->getChipType();
+            uint16_t cMaxRange = (cFe->getFrontEndType() == FrontEndType::CBC2) ? 255 : 1023;
+            fType = cFe->getFrontEndType();
 
             for ( auto cCbc : cFe->fChipVector )
             {
@@ -299,7 +299,7 @@ void HybridTester::ScanThresholds()
     LOG (INFO) << "Taking data with " << fTotalEvents << " Events!" ;
 
     int cVcthStep = 2;
-    uint16_t cMaxValue = (fType == ChipType::CBC2) ? 0xFF : 0x03FF;
+    uint16_t cMaxValue = (fType == FrontEndType::CBC2) ? 0xFF : 0x03FF;
     uint16_t cVcth = ( fHoleMode ) ?  cMaxValue :  0x00;
     int cStep = ( fHoleMode ) ? (-1 * cVcthStep) : cVcthStep;
 
@@ -409,7 +409,7 @@ void HybridTester::ScanThreshold()
     uint32_t cSlopeZeroCounter = 0;
     uint32_t cOldHitCounter = 0;
     uint16_t  cDoubleVcth;
-    uint16_t cMaxValue = (fType == ChipType::CBC2) ? 0xFF : 0x03FF;
+    uint16_t cMaxValue = (fType == FrontEndType::CBC2) ? 0xFF : 0x03FF;
     uint16_t cVcth = ( fHoleMode ) ?  cMaxValue :  0x00;
     int cStep = ( fHoleMode ) ? -10 : 10;
 
@@ -929,7 +929,7 @@ void HybridTester::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
             std::vector<std::pair<std::string, uint8_t>> cRegVec;
             uint8_t cRegValue = this->to_reg ( 0, pTestGroup );
 
-            if (cCbc->getChipType() == ChipType::CBC3)
+            if (cCbc->getFrontEndType() == FrontEndType::CBC3)
             {
                 //CBC3
                 cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );

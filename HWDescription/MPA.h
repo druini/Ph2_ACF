@@ -108,8 +108,8 @@ namespace Ph2_HwDescription {
         }
 
       protected:
-        MPARegMap fRegMap;
-        uint8_t fMPAId;
+        MPARegMap  fRegMap;
+        uint8_t    fMPAId;
         CommentMap fCommentMap;
 
     };

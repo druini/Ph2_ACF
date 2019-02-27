@@ -58,7 +58,7 @@ class Tool : public SystemController
     CbcHistogramMap fCbcHistMap;
     ModuleHistogramMap fModuleHistMap;
     BeBoardHistogramMap fBeBoardHistMap;
-    ChipType fType;
+    FrontEndType fType;
     TestGroupChannelMap fTestGroupChannelMap;
     std::map< int, std::vector<uint8_t> > fMaskForTestGroupChannelMap;
 

@@ -3,8 +3,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 #find source files
 file(GLOB SOURCES *.cc)
-list(REMOVE_ITEM SOURCES 
-/home/modtest/Programming/tmpPh2_test/Ph2_ACF_Official/HWDescription/Cbc.cc)
+#list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/HWDescription/Cbc.cc)
 message(${SOURCES})
 add_library(Ph2_Description SHARED ${SOURCES} )
 

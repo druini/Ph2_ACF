@@ -69,12 +69,12 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
         {
             uint32_t cFeId = cFe->getFeId();
             cFeCount++;
-            fType = cFe->getChipType();
+            fType = cFe->getFrontEndType();
 
             for ( auto cCbc : cFe->fChipVector )
             {
                 //if it is a CBC3, disable the stub logic for this procedure
-                if (cCbc->getChipType() == ChipType::CBC3 && fDisableStubLogic)
+                if (cCbc->getFrontEndType() == FrontEndType::CBC3 && fDisableStubLogic)
                 {
                     LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning" << RESET ;
                     fStubLogicValue[cCbc] = fCbcInterface->ReadCbcReg (cCbc, "Pipe&StubInpSel&Ptwidth");
@@ -97,8 +97,8 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
                 TString cTitle;
 
-                if (fType == ChipType::CBC2) cTitle = Form ( "Vplus Values for Test Groups FE%d CBC%d; Vplus", cFeId, cCbcId );
-                else if (fType == ChipType::CBC3) cTitle = Form ( "VCth Values for Test Groups FE%d CBC%d; Vth", cFeId, cCbcId );
+                if (fType == FrontEndType::CBC2) cTitle = Form ( "Vplus Values for Test Groups FE%d CBC%d; Vplus", cFeId, cCbcId );
+                else if (fType == FrontEndType::CBC3) cTitle = Form ( "VCth Values for Test Groups FE%d CBC%d; Vth", cFeId, cCbcId );
 
                 TH1I* cHist = new TH1I ( cName, cTitle, 1, 0, 1 );
                 cHist->SetMarkerStyle ( 20 );
@@ -138,7 +138,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
     LOG (INFO) << "Created Object Maps and parsed settings:" ;
 
-    if (fType == ChipType::CBC2)
+    if (fType == FrontEndType::CBC2)
     {
         LOG (INFO) << "	Nevents = " << fEventsPerPoint ;
         LOG (INFO) << "	Hole Mode = " << fHoleMode ;
@@ -146,7 +146,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
         LOG (INFO) << "	TargetOffset = " << int ( fTargetOffset ) ;
         LOG (INFO) << "	TestPulseAmplitude = " << int ( fTestPulseAmplitude ) ;
     }
-    else if (fType == ChipType::CBC3)
+    else if (fType == FrontEndType::CBC3)
     {
         fHoleMode = 0;
         fTargetOffset = 0x80;

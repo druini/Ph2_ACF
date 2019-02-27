@@ -32,6 +32,7 @@
 #include "pugixml/pugixml.hpp"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/easylogging++.h"
+#include "../HWDescription/Chip.h"
 #include <iostream>
 #include <vector>
 #include <map>

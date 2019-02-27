@@ -29,12 +29,12 @@ namespace Ph2_HwDescription {
 
     bool Module::removeChip ( uint8_t pChipId )
     {
-        std::vector < Chip* > :: iterator i;
+        std::vector < Chip* > :: iterator chipIt;
         bool found = false;
 
-        for ( i = fChipVector.begin(); i != fChipVector.end(); ++i )
+        for ( chipIt = fChipVector.begin(); chipIt != fChipVector.end(); chipIt++ )
         {
-            if ( (*i)->getChipId() == pChipId )
+            if ( (*chipIt)->getChipId() == pChipId )
             {
                 found = true;
                 break;
@@ -43,7 +43,7 @@ namespace Ph2_HwDescription {
 
         if ( found )
         {
-            fChipVector.erase ( i );
+            fChipVector.erase ( chipIt );
             return true;
         }
         else
@@ -56,10 +56,10 @@ namespace Ph2_HwDescription {
     Chip* Module::getChip ( uint8_t pChipId ) const
     {
 
-        for ( Chip* c : fChipVector )
+        for ( Chip* chip : fChipVector )
         {
-            if ( c->getChipId() == pChipId )
-                return c;
+            if ( chip->getChipId() == pChipId )
+                return chip;
         }
 
         return nullptr;

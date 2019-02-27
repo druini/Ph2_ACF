@@ -189,7 +189,7 @@ struct CbcIdReader : public HwDescriptionVisitor
 
     void visit (Chip& pCbc)
     {
-        if (pCbc.getChipType() != ChipType::CBC3)
+        if (pCbc.getFrontEndType() != FrontEndType::CBC3)
             LOG (ERROR) << RED << "The current chip type is not CBC3 and thus no Id can be read!" << RESET;
         else
         {
@@ -281,7 +281,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
     void visit (Ph2_HwDescription::Chip& pCbc)
     {
 
-        if (pCbc.getChipType() == ChipType::CBC2)
+        if (pCbc.getFrontEndType() == FrontEndType::CBC2)
         {
 
             if (fOption == 'w')
@@ -301,7 +301,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
             else
                 LOG (ERROR) << "Unknown option " << fOption;
         }
-        else if (pCbc.getChipType() == ChipType::CBC3)
+        else if (pCbc.getFrontEndType() == FrontEndType::CBC3)
         {
 
             if (fOption == 'w')
@@ -365,7 +365,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
     void visit (Ph2_HwDescription::Chip& pCbc)
     {
 
-        if (pCbc.getChipType() == ChipType::CBC2)
+        if (pCbc.getFrontEndType() == FrontEndType::CBC2)
         {
 
             if (fOption == 'w')
@@ -384,7 +384,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
                 fLatency = (pCbc.getReg ("TriggerLatency") ) & 0x00FF;
             }
         }
-        else if (pCbc.getChipType() == ChipType::CBC3)
+        else if (pCbc.getFrontEndType() == FrontEndType::CBC3)
         {
             if (fOption == 'w')
             {

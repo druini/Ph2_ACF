@@ -11,10 +11,10 @@ SLinkEvent::SLinkEvent () :
     fData.clear();
 }
 
-SLinkEvent::SLinkEvent (EventType pEventType, SLinkDebugMode pMode, ChipType pChipType, uint32_t& pLV1Id, uint16_t& pBXId, int pSourceId) :
+SLinkEvent::SLinkEvent (EventType pEventType, SLinkDebugMode pMode, FrontEndType pFrontEndType, uint32_t& pLV1Id, uint16_t& pBXId, int pSourceId) :
     fEventType (pEventType),
     fDebugMode (pMode),
-    fChipType (pChipType),
+    fFrontEndType (pFrontEndType),
     fSize (0),
     fCRCVal (0),
     fCondData (0),

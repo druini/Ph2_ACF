@@ -32,7 +32,7 @@ namespace Ph2_HwDescription {
     MPA::MPA (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, const std::string &filename) : FrontEndDescription ( pBeId, pFMCId, pFeId ), fMPAId ( pMPAId )
     {
         loadfRegMap ( filename );
-        this->setChipType (ChipType::MPA);
+        this->setFrontEndType (FrontEndType::MPA);
     }
 
     // Copy C'tor

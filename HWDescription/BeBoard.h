@@ -155,7 +155,7 @@ namespace Ph2_HwDescription {
         * \brief Get the BeBoardIdentifier
         * \return The BeBoardIdentifier
         */
-        uint32_t getBeBoardIdentifier() const
+        uint32_t getBeBoardId() const
         {
             return fBeId << 8;
         }
@@ -202,13 +202,13 @@ namespace Ph2_HwDescription {
             return fEventType;
         }
 
-        void setChipType (const ChipType pChipType)
+        void setFrontEndType (const FrontEndType pFrontEndType)
         {
-            fChipType = pChipType;
+            fFrontEndType = pFrontEndType;
         }
-        ChipType getChipType() const
+        FrontEndType getFrontEndType() const
         {
-            return fChipType;
+            return fFrontEndType;
         }
 
         void addConditionDataSet (ConditionDataSet* pSet)
@@ -231,7 +231,7 @@ namespace Ph2_HwDescription {
         //uint16_t fNCbcDataSize;
         BoardType fBoardType;
         EventType fEventType;
-        ChipType fChipType;
+        FrontEndType fFrontEndType;
 
         BeBoardRegMap fRegMap;             /*!< Map of BeBoard Register Names vs. Register Values */
         ConditionDataSet* fCondDataSet;

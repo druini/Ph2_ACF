@@ -163,7 +163,7 @@
     - harmonized the use of BoardType: now FWInterfaces and BeBoard classes use the same enum BoardType defined in Definition.h
     - implemented GetNHits() and GetHits() methods in both Cbc2/3Event::print() which is used by the Event friend operator <<
  - 25.11.2016:
-    - introduced a ChipType enum to identify CBC version. Each CBC and Module object has this identifier set and this can be used to adapt commissioning procedures accordingly
+    - introduced a FrontEndType enum to identify CBC version. Each CBC and Module object has this identifier set and this can be used to adapt commissioning procedures accordingly
     - introduces 2 new Visitors (ThresholdVisitor, LatencyVisitor) that take the different behavior of CBC2/3 into account (8 vs 10 bit Vcth register, 8 vs 9 bit Trg Latency)
     - updated commissioning procedures accordingly to use the new Visitors
  - 11.01.2017:

@@ -22,54 +22,21 @@
 namespace Ph2_HwDescription {
     // C'tors with object FE Description
 
-    Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : FrontEndDescription ( pFeDesc ),
-        fCbcId ( pCbcId )
-
-    {
+    Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : Chip ( pFeDesc, pCbcId)
+     {
+        fChipMask = std::vector<uint8_t>(NCHANNELS%8 == 0 ? NCHANNELS/8 : NCHANNELS/8 + 1,0);
         loadfRegMap ( filename );
-
-        // determine the chip type by checking for existence of VCth register (CBC2 only, called VCth1 & VCth2 for CBC3)
-        if (fRegMap.find ("VCth2") != std::end (fRegMap) ) this->setChipType ( ChipType::CBC3);
-        else this->setChipType ( ChipType::CBC2);
+        setFrontEndType ( FrontEndType::CBC3);
     }
 
     // C'tors which take BeId, FMCId, FeID, CbcId
 
-    Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename ) : FrontEndDescription ( pBeId, pFMCId, pFeId ), fCbcId ( pCbcId )
+    Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename ) : Chip ( pBeId, pFMCId, pFeId, pCbcId)
 
     {
+        fChipMask = std::vector<uint8_t>(NCHANNELS%8 == 0 ? NCHANNELS/8 : NCHANNELS/8 + 1,0);
         loadfRegMap ( filename );
-
-        // determine the chip type by checking for existence of VCth register (CBC2 only, called VCth1 & VCth2 for CBC3)
-        if (fRegMap.find ("VCth2") != std::end (fRegMap) ) this->setChipType ( ChipType::CBC3);
-        else this->setChipType ( ChipType::CBC2);
-    }
-
-    Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename, ChipType pType ) : FrontEndDescription ( pBeId, pFMCId, pFeId ), fCbcId ( pCbcId )
-
-    {
-        loadfRegMap ( filename );
-        // fNumberOfChannels = 254;
-
-
-        this->setChipType (pType);
-    }
-
-    // Copy C'tor
-
-    Cbc::Cbc ( const Cbc& cbcobj ) : FrontEndDescription ( cbcobj ),
-        fCbcId ( cbcobj.fCbcId ),
-        fRegMap ( cbcobj.fRegMap ),
-        fCommentMap (cbcobj.fCommentMap)
-    {
-    }
-
-
-    // D'Tor
-
-    Cbc::~Cbc()
-    {
-
+        setFrontEndType ( FrontEndType::CBC3);
     }
 
     //load fRegMap from file
@@ -84,7 +51,7 @@ namespace Ph2_HwDescription {
             int cLineCounter = 0;
             ChipRegItem fRegItem;
 
-            fAsMaskedChannels = false;
+            fhasMaskedChannels = false;
             while ( getline ( file, line ) )
             {
                 if ( line.find_first_not_of ( " \t" ) == std::string::npos )
@@ -112,9 +79,8 @@ namespace Ph2_HwDescription {
                     fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
 
                     if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
-                        fCbcMask32[(fRegItem.fAddress - 0x20)>>2] += fRegItem.fValue << (((fRegItem.fAddress - 0x20)&0x3)<<3);
-                        fCbcMask[fRegItem.fAddress - 0x20] = fRegItem.fValue;
-                        if(!fAsMaskedChannels && fRegItem.fValue!=0xFF) fAsMaskedChannels=true;
+                        fChipMask[fRegItem.fAddress - 0x20] = fRegItem.fValue;
+                        if(!fhasMaskedChannels && fRegItem.fValue!=0xFF) fhasMaskedChannels=true;
                     }
 
                     fRegMap[fName] = fRegItem;
@@ -133,45 +99,6 @@ namespace Ph2_HwDescription {
 
         //for (auto cItem : fRegMap)
         //LOG (DEBUG) << cItem.first;
-    }
-
-
-    uint8_t Cbc::getReg ( const std::string& pReg ) const
-    {
-        ChipRegMap::const_iterator i = fRegMap.find ( pReg );
-
-        if ( i == fRegMap.end() )
-        {
-            LOG (INFO) << "The Cbc object: " << +fCbcId << " doesn't have " << pReg ;
-            return 0;
-        }
-        else
-            return i->second.fValue;
-    }
-
-
-    void Cbc::setReg ( const std::string& pReg, uint8_t psetValue )
-    {
-        ChipRegMap::iterator i = fRegMap.find ( pReg );
-
-        if ( i == fRegMap.end() )
-            LOG (INFO) << "The Cbc object: " << +fCbcId << " doesn't have " << pReg ;
-        else
-            i->second.fValue = psetValue;
-    }
-
-    ChipRegItem Cbc::getRegItem ( const std::string& pReg )
-    {
-        ChipRegItem cItem;
-        ChipRegMap::iterator i = fRegMap.find ( pReg );
-
-        if ( i != std::end ( fRegMap ) ) return ( i->second );
-        else
-        {
-            LOG (ERROR) << "Error, no Register " << pReg << " found in the RegisterMap of CBC " << +fCbcId << "!" ;
-            throw Exception ( "Cbc: no matching register found" );
-            return cItem;
-        }
     }
 
 
@@ -220,23 +147,5 @@ namespace Ph2_HwDescription {
             LOG (ERROR) << "Error opening file" ;
     }
 
-
-
-
-    bool CbcComparer::operator() ( const Cbc& cbc1, const Cbc& cbc2 ) const
-    {
-        if ( cbc1.getBeId() != cbc2.getBeId() ) return cbc1.getBeId() < cbc2.getBeId();
-        else if ( cbc1.getFMCId() != cbc2.getFMCId() ) return cbc1.getFMCId() < cbc2.getFMCId();
-        else if ( cbc1.getFeId() != cbc2.getFeId() ) return cbc1.getFeId() < cbc2.getFeId();
-        else return cbc1.getChipId() < cbc2.getChipId();
-    }
-
-
-    bool RegItemComparer::operator() ( const CbcRegPair& pRegItem1, const CbcRegPair& pRegItem2 ) const
-    {
-        if ( pRegItem1.second.fPage != pRegItem2.second.fPage )
-            return pRegItem1.second.fPage < pRegItem2.second.fPage;
-        else return pRegItem1.second.fAddress < pRegItem2.second.fAddress;
-    }
 
 }

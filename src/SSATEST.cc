@@ -40,7 +40,7 @@ int main( int argc, char* argv[] )
 	cTool.InitializeHw ( cHWFile, outp); 
 	cTool.InitializeSettings ( cHWFile, outp ); 
 	BeBoard* pBoard = cTool.fBoardVector.at(0); 
-	pBoard->setChipType(ChipType::SSA); // FIXME Make sure the board knows that this is an SSA. Unclear why this isn't done automatically.
+	pBoard->setFrontEndType(FrontEndType::SSA); // FIXME Make sure the board knows that this is an SSA. Unclear why this isn't done automatically.
 	SSAInterface* fSSAInterface = cTool.fSSAInterface;
 
 	fSSAInterface->PowerDiagnostic(); // Prints current power consumption.

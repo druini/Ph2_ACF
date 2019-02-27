@@ -512,7 +512,7 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
                 std::vector<std::pair<std::string, uint8_t>> cRegVec;
                 uint8_t cRegValue =  to_reg ( 0, pTestGroup );
 
-                if (cCbc->getChipType() == ChipType::CBC3)
+                if (cCbc->getFrontEndType() == FrontEndType::CBC3)
                 {
                     uint8_t cTPRegValue;
 
@@ -716,18 +716,18 @@ void Tool::SetMaskAllChannels (Chip* pCbc, bool mask)
     std::string cRegName;
     // this doesn't seem like the smartest way to do this .... but ok might work for now 
     // TO-DO : figure out how to do this "properly" 
-    ChipType cChipType; 
+    FrontEndType cFrontEndType; 
     for ( BeBoard* pBoard : fBoardVector )
     {
         for (auto cFe : pBoard->fModuleVector)
         {
-            cChipType = cFe->getChipType();
+            cFrontEndType = cFe->getFrontEndType();
         }
     }
 
     uint8_t maskValue = mask ? 0x0 : 0xFF;
     
-    if (cChipType == ChipType::CBC2)
+    if (cFrontEndType == FrontEndType::CBC2)
     {
         for ( unsigned int i = 0 ; i < fChannelMaskMapCBC2.size() ; i++ )
         {
@@ -738,7 +738,7 @@ void Tool::SetMaskAllChannels (Chip* pCbc, bool mask)
         }
     }
 
-    if (cChipType == ChipType::CBC3)
+    if (cFrontEndType == FrontEndType::CBC3)
     {
         RegisterVector cRegVec; 
         cRegVec.clear(); 
@@ -762,8 +762,8 @@ void Tool::SetMaskAllChannels (Chip* pCbc, bool mask)
 void Tool::maskChannelFromOtherGroups (Chip* pCbc, int pTestGroup){
 
     std::vector<uint8_t> cbcMask;
-    bool cbcAsMaskedChannels = pCbc->asMaskedChannels();
-    if(cbcAsMaskedChannels) cbcMask = pCbc->getChipMask();
+    bool cbchasMaskedChannels = pCbc->hasMaskedChannels();
+    if(cbchasMaskedChannels) cbcMask = pCbc->getChipMask();
 
     const std::vector<uint8_t> &groupMask = fMaskForTestGroupChannelMap[pTestGroup];
 
@@ -776,7 +776,7 @@ void Tool::maskChannelFromOtherGroups (Chip* pCbc, int pTestGroup){
     // }
     // std::cout<<std::endl;
     for(uint8_t i=0; i<cbcMask.size(); ++i){
-        if(cbcAsMaskedChannels) cRegVec.push_back ( {fChannelMaskMapCBC3[i], cbcMask[i] & groupMask[i] } );
+        if(cbchasMaskedChannels) cRegVec.push_back ( {fChannelMaskMapCBC3[i], cbcMask[i] & groupMask[i] } );
         else cRegVec.push_back ( {fChannelMaskMapCBC3[i], groupMask[i] } );
         // std::cout<<(unsigned int)(cbcMask[i] & groupMask[i])<<" ";
     }
@@ -794,12 +794,12 @@ void Tool::maskChannelFromOtherGroups (Chip* pCbc, int pTestGroup){
 // then a method to un-mask pairs of channels on a given CBC
 void Tool::unmaskPair(Chip* cCbc ,  std::pair<uint8_t,uint8_t> pPair)
 {
-    ChipType cChipType; 
+    FrontEndType cFrontEndType; 
     for ( BeBoard* pBoard : fBoardVector )
     {
         for (auto cFe : pBoard->fModuleVector)
         {
-            cChipType = cFe->getChipType();
+            cFrontEndType = cFe->getFrontEndType();
         }
     }
 
@@ -808,11 +808,11 @@ void Tool::unmaskPair(Chip* cCbc ,  std::pair<uint8_t,uint8_t> pPair)
     MaskedChannels cMaskedChannels; cMaskedChannels.clear(); cMaskedChannels.push_back(pPair.first);
     
     uint8_t cRegisterIndex = pPair.first >> 3;
-    std::string cMaskRegName = (cChipType == ChipType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
+    std::string cMaskRegName = (cFrontEndType == FrontEndType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
     cMaskedList.insert ( std::pair<std::string , MaskedChannels>(cMaskRegName.c_str()  ,cMaskedChannels ) );
     
     cRegisterIndex = pPair.second >> 3;
-    cMaskRegName = (cChipType == ChipType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
+    cMaskRegName = (cFrontEndType == FrontEndType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
     auto it = cMaskedList.find(cMaskRegName.c_str() );
     if (it != cMaskedList.end())
     {
@@ -849,12 +849,12 @@ void Tool::unmaskPair(Chip* cCbc ,  std::pair<uint8_t,uint8_t> pPair)
 // and finally a method to un-mask a list of channels on a given CBC
 void Tool::unmaskList(Chip* cCbc , const std::vector<uint8_t> &pList )
 {
-    ChipType cChipType; 
+    FrontEndType cFrontEndType; 
     for ( BeBoard* pBoard : fBoardVector )
     {
         for (auto cFe : pBoard->fModuleVector)
         {
-            cChipType = cFe->getChipType();
+            cFrontEndType = cFe->getFrontEndType();
         }
     }
 
@@ -863,14 +863,14 @@ void Tool::unmaskList(Chip* cCbc , const std::vector<uint8_t> &pList )
     MaskedChannelsList cMaskedList; 
     MaskedChannels cMaskedChannels; cMaskedChannels.clear(); cMaskedChannels.push_back(cChan);
     uint8_t cRegisterIndex = cChan >> 3;
-    std::string cMaskRegName = (cChipType == ChipType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
+    std::string cMaskRegName = (cFrontEndType == FrontEndType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
     cMaskedList.insert ( std::pair<std::string , MaskedChannels>(cMaskRegName.c_str()  , cMaskedChannels ) );
 
     for( unsigned int cIndex = 1 ; cIndex < pList.size(); cIndex ++ )
     {
         cChan = pList[cIndex];
         cRegisterIndex = cChan >> 3;
-        cMaskRegName = (cChipType == ChipType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
+        cMaskRegName = (cFrontEndType == FrontEndType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
         auto it = cMaskedList.find(cMaskRegName.c_str() );
         if (it != cMaskedList.end())
         {
@@ -1343,12 +1343,12 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
             (*cbcNumberOfHitsMap)[cCbc->getChipId()] =0;
             
             std::vector<uint8_t> cbcMask;
-            bool cbcAsMaskedChannels = cCbc->asMaskedChannels();
-            if(cbcAsMaskedChannels) cbcMask = cCbc->getChipMask();
+            bool cbchasMaskedChannels = cCbc->hasMaskedChannels();
+            if(cbchasMaskedChannels) cbcMask = cCbc->getChipMask();
 
             for ( uint8_t cChan=0; cChan<cCbc->getNumberOfChannels(); ++cChan)
             {
-                if(fSkipMaskedChannels && cbcAsMaskedChannels)
+                if(fSkipMaskedChannels && cbchasMaskedChannels)
                 {
                     if(( (cbcMask[cChan>>3]>>(cChan&0x7)) &0x1) )
                     {
@@ -1363,7 +1363,7 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
             }
 
             uint32_t cbcNormalization = 0;
-            if(fSkipMaskedChannels && cbcAsMaskedChannels)
+            if(fSkipMaskedChannels && cbchasMaskedChannels)
             {
                 for(const auto & mask : cbcMask)
                 {
@@ -1443,7 +1443,7 @@ void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, cons
         {
             uint16_t dacValue = dacList.at(cFe->getModuleId()).at(cCbc->getChipId());
             if(dacName=="VCth"){
-                if (cCbc->getChipType() == ChipType::CBC3)
+                if (cCbc->getFrontEndType() == FrontEndType::CBC3)
                 {
                     if (dacValue > 1023) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
                     else
@@ -1460,7 +1460,7 @@ void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, cons
                 else LOG (ERROR) << "Not a valid chip type!";
             }
             else if(dacName=="TriggerLatency"){
-                if (cCbc->getChipType() == ChipType::CBC3)
+                if (cCbc->getFrontEndType() == FrontEndType::CBC3)
                 {
                     if (dacValue > 511) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
                     else
@@ -1508,7 +1508,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
         for ( auto cCbc : cFe->fChipVector )
         {
             if(dacName=="VCth"){
-                if (cCbc->getChipType() == ChipType::CBC3)
+                if (cCbc->getFrontEndType() == FrontEndType::CBC3)
                 {
                     if (dacValue > 1023) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
                     else
@@ -1525,7 +1525,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
                 else LOG (ERROR) << "Not a valid chip type!";
             }
             else if(dacName=="TriggerLatency"){
-                if (cCbc->getChipType() == ChipType::CBC3)
+                if (cCbc->getFrontEndType() == FrontEndType::CBC3)
                 {
                     if (dacValue > 511) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
                     else

@@ -60,13 +60,13 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
         {
             uint32_t cFeId = cFe->getFeId();
             cFeCount++;
-            fType = cFe->getChipType();
+            fType = cFe->getFrontEndType();
 
             for ( auto cCbc : cFe->fChipVector )
             {
 
                 //if it is a CBC3, disable the stub logic for this procedure
-                if (cCbc->getChipType() == ChipType::CBC3 && fDisableStubLogic)
+                if (cCbc->getFrontEndType() == FrontEndType::CBC3 && fDisableStubLogic)
                 {
                     LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning" << RESET ;
                     fStubLogicValue[cCbc] = fCbcInterface->ReadCbcReg (cCbc, "Pipe&StubInpSel&Ptwidth");
@@ -153,7 +153,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     LOG (INFO) << " Nevents = " << fEventsPerPoint ;
     LOG (INFO) << " FitSCurves = " << int ( fFitted ) ;
 
-    if (fType == ChipType::CBC3)
+    if (fType == FrontEndType::CBC3)
         LOG (INFO) << BOLDBLUE << "Chip Type determined to be " << BOLDRED << "CBC3" << RESET;
     else
         LOG (INFO) << BOLDBLUE << "Chip Type determined to be " << BOLDRED << "CBC2" << RESET;

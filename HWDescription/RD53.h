@@ -20,7 +20,7 @@
 
 #include <iomanip>
 #include <bitset>
-
+#include <math.h> 
 
 // ################################
 // # CONSTANTS AND BIT DEFINITION #

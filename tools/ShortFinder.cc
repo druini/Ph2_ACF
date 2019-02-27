@@ -337,7 +337,7 @@ void ShortFinder::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
             std::vector<std::pair<std::string, uint8_t>> cRegVec;
             uint8_t cRegValue = this->to_reg ( 0, pTestGroup );
 
-            if (cCbc->getChipType() == ChipType::CBC3)
+            if (cCbc->getFrontEndType() == FrontEndType::CBC3)
             {
                 //CBC3
                 cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );

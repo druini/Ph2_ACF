@@ -13,14 +13,14 @@ void SignalScanFit::Initialize ()
         for ( auto& cFe : cBoard->fModuleVector )
         {
 
-            fType = cFe->getChipType();
+            fType = cFe->getFrontEndType();
 
             // Handle the binning of the histograms
-            if ( fType == ChipType::CBC2 ) {
+            if ( fType == FrontEndType::CBC2 ) {
                 fVCthNbins = int( (256 / double(fSignalScanStep)) + 1 ); 
                 fVCthMax = double( ( fVCthNbins * fSignalScanStep ) - (double(fSignalScanStep) / 2.) ); //"center" de bins
                 fVCthMin = 0. - ( double(fSignalScanStep) / 2. );
-            } else if ( fType == ChipType::CBC3 ) {
+            } else if ( fType == FrontEndType::CBC3 ) {
                 fVCthNbins = int( (1024 / double(fSignalScanStep)) + 1 ); 
                 fVCthMax = double( ( fVCthNbins * fSignalScanStep ) - (double(fSignalScanStep) / 2.) ); //"center" de bins
                 fVCthMin = 0. - ( double(fSignalScanStep) / 2. );
@@ -408,7 +408,7 @@ void SignalScanFit::fitHist ( Chip* pCbc, std::string pHistName )
     // Not Hole Mode available yet!
     if ( !fHoleMode )
     {
-        if ( fType == ChipType::CBC2 ) 
+        if ( fType == FrontEndType::CBC2 ) 
         {
             cPlateau = 0.01;
             cWidth = 10.;
@@ -422,7 +422,7 @@ void SignalScanFit::fitHist ( Chip* pCbc, std::string pHistName )
             cFit->SetParLimits(2, 0., 20.);
             cFit->SetParLimits(3, 0., 10.);
         } 
-        else if ( fType == ChipType::CBC3 )
+        else if ( fType == FrontEndType::CBC3 )
         {
             cPlateau = 0.01;
             cWidth = 15.;
@@ -475,8 +475,8 @@ void SignalScanFit::fitHist ( Chip* pCbc, std::string pHistName )
 
     // Default values for the fit, these will be customized in the next for-loop.
     double cPlateau = 0., cWidth = 0., cVsignal = 0., cNoise = 1;
-    if ( fType == ChipType::CBC2 ) cPlateau = 0.05, cWidth = 10, cVsignal = 74;
-    else if ( fType == ChipType::CBC3 ) cPlateau = 0.05, cWidth = 20, cVsignal = 120;  
+    if ( fType == FrontEndType::CBC2 ) cPlateau = 0.05, cWidth = 10, cVsignal = 74;
+    else if ( fType == FrontEndType::CBC3 ) cPlateau = 0.05, cWidth = 20, cVsignal = 120;  
     
     // Not Hole Mode
     if ( !fHoleMode )

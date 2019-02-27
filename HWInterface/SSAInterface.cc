@@ -62,7 +62,7 @@ void SSAInterface::SCurves()
 void SSAInterface::checkRegVals(SSA* pSSA, const std::string& pRegNode)
 {
 	LOG (INFO) << RED << "Checking REG value "<< pRegNode << ": " << RESET;
-	setBoard ( pSSA->getBeBoardIdentifier() );
+	setBoard ( pSSA->getBeBoardId() );
 	uint8_t X = ReadSSAReg(pSSA, pRegNode);
 	std::bitset<8> bX(X);
 	LOG (INFO) << BOLDRED << "\t\t"  << bX << RESET;
@@ -130,7 +130,7 @@ void SSAInterface::setFileHandler (FileHandler* pHandler)
 
 	    LOG (INFO) << BOLDRED << "--- Trying to configure one of the SSAs: "<< RESET;
 	    //first, identify the correct BeBoardFWInterface
-	    setBoard ( pSSA->getBeBoardIdentifier() );
+	    setBoard ( pSSA->getBeBoardId() );
 
 	    //vector to encode all the registers into
 	    std::vector<uint32_t> cVec;
@@ -183,7 +183,7 @@ void SSAInterface::setFileHandler (FileHandler* pHandler)
 	bool SSAInterface::WriteSSAReg ( SSA* pSSA, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop )
 	{
 	    //first, identify the correct BeBoardFWInterface
-	    setBoard ( pSSA->getBeBoardIdentifier() );
+	    setBoard ( pSSA->getBeBoardId() );
 
 	    //next, get the reg item
 	    RegItem cRegItem = pSSA->getRegItem ( pRegNode );
@@ -213,7 +213,7 @@ void SSAInterface::setFileHandler (FileHandler* pHandler)
 
 	uint8_t SSAInterface::ReadSSAReg ( SSA* pSSA, const std::string& pRegNode )
 	{
-	    setBoard ( pSSA->getBeBoardIdentifier() );
+	    setBoard ( pSSA->getBeBoardId() );
 
 	    RegItem cRegItem = pSSA->getRegItem ( pRegNode );
 	    std::vector<uint32_t> cVecReq;

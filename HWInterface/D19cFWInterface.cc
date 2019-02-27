@@ -195,26 +195,26 @@ namespace Ph2_HwInterface {
         return name;
     }
 
-    ChipType D19cFWInterface::getChipType (uint32_t pChipCode)
+    FrontEndType D19cFWInterface::getFrontEndType (uint32_t pChipCode)
     {
-        ChipType chip_type = ChipType::UNDEFINED;
+        FrontEndType chip_type = FrontEndType::UNDEFINED;
 
         switch (pChipCode)
         {
             case 0x0:
-            chip_type = ChipType::CBC2;
+            chip_type = FrontEndType::CBC2;
             break;
 
             case 0x1:
-            chip_type = ChipType::CBC3;
+            chip_type = FrontEndType::CBC3;
             break;
 
             case 0x2:
-            chip_type = ChipType::MPA;
+            chip_type = FrontEndType::MPA;
             break;
 
             case 0x3:
-            chip_type = ChipType::SSA;
+            chip_type = FrontEndType::SSA;
             break;
         }
 
@@ -313,9 +313,9 @@ namespace Ph2_HwInterface {
         usleep (500);
 
     // read info about current firmware
-        uint32_t cChipTypeCode = ReadReg ("fc7_daq_stat.general.info.chip_type");
-        std::string cChipName = getChipName (cChipTypeCode);
-        fFirwmareChipType = getChipType (cChipTypeCode);
+        uint32_t cFrontEndTypeCode = ReadReg ("fc7_daq_stat.general.info.chip_type");
+        std::string cChipName = getChipName (cFrontEndTypeCode);
+        fFirwmareFrontEndType = getFrontEndType (cFrontEndTypeCode);
         fFWNHybrids = ReadReg ("fc7_daq_stat.general.info.num_hybrids");
         fFWNChips = ReadReg ("fc7_daq_stat.general.info.num_chips");
         fCBC3Emulator = (ReadReg ("fc7_daq_stat.general.info.implementation") == 2);
@@ -340,7 +340,7 @@ namespace Ph2_HwInterface {
                 LOG (INFO) << "Enabling Hybrid " << (int) cFe->getFeId();
                 hybrid_enable |= 1 << cFe->getFeId();
 
-                if (fFirwmareChipType == ChipType::CBC2 || fFirwmareChipType == ChipType::CBC3) {
+                if (fFirwmareFrontEndType == FrontEndType::CBC2 || fFirwmareFrontEndType == FrontEndType::CBC3) {
                     for ( Chip* cCbc : cFe->fChipVector)
                     {
                         LOG (INFO) << "     Enabling CBC2 Chip " << (int) cCbc->getChipId();
@@ -348,7 +348,7 @@ namespace Ph2_HwInterface {
                 //need to increment the NCbc counter for I2C controller
                         fNCbc++;
                     }
-                } else if (fFirwmareChipType == ChipType::MPA) {
+                } else if (fFirwmareFrontEndType == FrontEndType::MPA) {
                     for ( MPA* cMPA : cFe->fMPAVector)
                     {
                         LOG (INFO) << "     Enabling MPA Chip " << (int) cMPA->getMPAId();
@@ -356,7 +356,7 @@ namespace Ph2_HwInterface {
                 //need to increment the counter for I2C controller
                         fNMPA++;
                     }
-                } else if (fFirwmareChipType == ChipType::SSA) {
+                } else if (fFirwmareFrontEndType == FrontEndType::SSA) {
                     for (SSA* cSSA : cFe->fSSAVector)
                     {
                         LOG (INFO) << "     Enabling SSA Chip " << (int) cSSA->getSSAId();
@@ -587,11 +587,11 @@ namespace Ph2_HwInterface {
         std::vector< std::vector<uint32_t> > i2c_slave_map;
 
     // setting the map for different chip types
-        if (fFirwmareChipType == ChipType::CBC2 || fFirwmareChipType == ChipType::CBC3) {
+        if (fFirwmareFrontEndType == FrontEndType::CBC2 || fFirwmareFrontEndType == FrontEndType::CBC3) {
         // nothing to de done here default addresses are set for CBC
         // actually FIXME
             return;
-        } else if (fFirwmareChipType == ChipType::MPA) {
+        } else if (fFirwmareFrontEndType == FrontEndType::MPA) {
             for (int id = 0; id < fFWNChips; id++) {
             // for chip emulator register width is 8 bits, not 16 as for MPA
                 if(!fCBC3Emulator) {
@@ -601,7 +601,7 @@ namespace Ph2_HwInterface {
                 }
             }
         }
-    else if (fFirwmareChipType == ChipType::SSA) // MUST BE IN ORDER! CANNOT DO 0, 1, 4
+    else if (fFirwmareFrontEndType == FrontEndType::SSA) // MUST BE IN ORDER! CANNOT DO 0, 1, 4
     {
         LOG (INFO) << BOLDRED << "WE ARE HERE!!! WE ARE HERE!!! WE ARE HERE!!!  " << fFWNChips << RESET;
         for (int id = 0; id < fFWNChips; id++) 
@@ -765,7 +765,7 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
         {15, "Unknown"}
     };
 
-    if (fFirwmareChipType == ChipType::CBC3)
+    if (fFirwmareFrontEndType == FrontEndType::CBC3)
     {
         if (!fCBC3Emulator)
         {
@@ -911,12 +911,12 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
 
         }
     }
-    else if (fFirwmareChipType == ChipType::CBC2)
+    else if (fFirwmareFrontEndType == FrontEndType::CBC2)
     {
     // no timing tuning needed
     }
 
-    else if (fFirwmareChipType == ChipType::MPA)
+    else if (fFirwmareFrontEndType == FrontEndType::MPA)
     {
         // first need to set the proper i2c settings of the chip for the phase alignment
         std::map<MPA*, uint8_t> cReadoutModeMap;

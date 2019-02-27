@@ -4,7 +4,7 @@ void BiasSweep::InitializeAmuxMap()
 {
     fAmuxSettings.clear();
 
-    if (fType == ChipType::CBC2)
+    if (fType == FrontEndType::CBC2)
     {
         // key(BiasSweep, reg name, amux code, bit mask, bit shift
         fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("none"), std::make_tuple ("", 0x00, 0x00, 0) );
@@ -25,7 +25,7 @@ void BiasSweep::InitializeAmuxMap()
         fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Vpasf"), std::make_tuple ("", 0x0F, 0x00, 0) );
         fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Vpafb"), std::make_tuple ("Vpafb", 0x10, 0xFF, 0) );
     }
-    else if (fType == ChipType::CBC3)
+    else if (fType == FrontEndType::CBC3)
     {
         // key(BiasSweep, reg name, amux code, bit mask, bit shift
         fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("none"),   std::make_tuple ("", 0x00, 0x00, 0) );
@@ -143,7 +143,7 @@ void BiasSweep::Initialize()
     {
         for (auto cFe : cBoard->fModuleVector)
         {
-            fType = cFe->getChipType();
+            fType = cFe->getFrontEndType();
 
             for (auto cCbc : cFe->fChipVector)
             {

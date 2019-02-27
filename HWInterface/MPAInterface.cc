@@ -94,7 +94,7 @@ void MPAInterface::MainPowerOff()
 bool MPAInterface::ConfigureMPA (const MPA* pMPA, bool pVerifLoop)
 {
     //first, identify the correct BeBoardFWInterface
-    setBoard ( pMPA->getBeBoardIdentifier() );
+    setBoard ( pMPA->getBeBoardId() );
 
     //vector to encode all the registers into
     std::vector<uint32_t> cVec;
@@ -128,7 +128,7 @@ bool MPAInterface::ConfigureMPA (const MPA* pMPA, bool pVerifLoop)
 bool MPAInterface::WriteMPAReg ( MPA* pMPA, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop )
 {
     //first, identify the correct BeBoardFWInterface
-    setBoard ( pMPA->getBeBoardIdentifier() );
+    setBoard ( pMPA->getBeBoardId() );
 
     //next, get the reg item
     RegItem cRegItem = pMPA->getRegItem ( pRegNode );
@@ -162,7 +162,7 @@ bool MPAInterface::WriteMPAReg ( MPA* pMPA, const std::string& pRegNode, uint8_t
 bool MPAInterface::WriteMPAMultReg ( MPA* pMPA, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop )
 {
     //first, identify the correct BeBoardFWInterface
-    setBoard ( pMPA->getBeBoardIdentifier() );
+    setBoard ( pMPA->getBeBoardId() );
 
     std::vector<uint32_t> cVec;
 
@@ -204,7 +204,7 @@ bool MPAInterface::WriteMPAMultReg ( MPA* pMPA, const std::vector< std::pair<std
 
 uint8_t MPAInterface::ReadMPAReg ( MPA* pMPA, const std::string& pRegNode )
 {
-    setBoard ( pMPA->getBeBoardIdentifier() );
+    setBoard ( pMPA->getBeBoardId() );
 
     RegItem cRegItem = pMPA->getRegItem ( pRegNode );
 
@@ -227,7 +227,7 @@ uint8_t MPAInterface::ReadMPAReg ( MPA* pMPA, const std::string& pRegNode )
 void MPAInterface::ReadMPAMultReg ( MPA* pMPA, const std::vector<std::string>& pVecReg )
 {
     //first, identify the correct BeBoardFWInterface
-    setBoard ( pMPA->getBeBoardIdentifier() );
+    setBoard ( pMPA->getBeBoardId() );
 
     std::vector<uint32_t> cVec;
 
@@ -272,7 +272,7 @@ void MPAInterface::ReadMPAMultReg ( MPA* pMPA, const std::vector<std::string>& p
 void MPAInterface::ReadMPA ( MPA* pMPA )
 {
     //first, identify the correct BeBoardFWInterface
-    setBoard ( pMPA->getBeBoardIdentifier() );
+    setBoard ( pMPA->getBeBoardId() );
 
     //vector to encode all the registers into
     std::vector<uint32_t> cVec;

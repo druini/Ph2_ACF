@@ -22,11 +22,11 @@ void PulseShape::Initialize()
         {
             uint32_t cFeId = cFe->getFeId();
             std::cerr << "cFeId = " << cFeId ;
-            fType = cFe->getChipType();
+            fType = cFe->getFrontEndType();
 
             for ( auto& cCbc : cFe->fChipVector )
             {
-                uint16_t cMaxValue = (cCbc->getChipType() == ChipType::CBC2) ? 255 : 1023;
+                uint16_t cMaxValue = (cCbc->getFrontEndType() == FrontEndType::CBC2) ? 255 : 1023;
                 uint32_t cCbcId = cCbc->getChipId();
                 std::cerr << "cCbcId = " << cCbcId ;
                 fNCbc++;
@@ -98,7 +98,7 @@ void PulseShape::ScanVcth ( uint32_t pDelay )
         for ( auto& cChannel : cChannelVector.second )
             cChannel->initializeHist ( pDelay, "Delay" );
 
-    uint16_t cMaxValue = (fType == ChipType::CBC2) ? 0xFF : 0x003F;
+    uint16_t cMaxValue = (fType == FrontEndType::CBC2) ? 0xFF : 0x003F;
     uint16_t cVcth = ( fHoleMode ) ?  cMaxValue :  0x00;
     int cStep = ( fHoleMode ) ? -10 : +10;
     uint32_t cAllOneCounter = 0;

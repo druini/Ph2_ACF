@@ -565,7 +565,7 @@ namespace Ph2_HwInterface {
         uint32_t cEvtCount = this->GetEventCount();
         uint16_t cBunch = static_cast<uint16_t> (this->GetBunch() );
         uint32_t cBeStatus = this->fBeStatus;
-        SLinkEvent cEvent (EventType::VR, pBoard->getConditionDataSet()->getDebugMode(), ChipType::CBC2, cEvtCount, cBunch, SOURCE_ID );
+        SLinkEvent cEvent (EventType::VR, pBoard->getConditionDataSet()->getDebugMode(), FrontEndType::CBC2, cEvtCount, cBunch, SOURCE_ID );
         cEvent.generateTkHeader (cBeStatus, cCbcCounter, cEnabledFe, pBoard->getConditionDataSet()->getCondDataEnabled(), false);  // Be Status, total number CBC, condition data?, fake data?
 
         //generate a vector of uint64_t with the chip status

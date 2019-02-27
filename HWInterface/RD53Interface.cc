@@ -164,7 +164,7 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::WriteRD53Reg (RD53* pRD53, const std::string& pRegNode, const uint16_t data, const std::vector<uint16_t> * dataVec)
   {
-    setBoard (pRD53->getBeBoardIdentifier());
+    setBoard (pRD53->getBeBoardId());
 
     std::vector<std::vector<uint16_t> > symbols; // Useful in case the encodiing is done in the software
     std::vector<uint32_t> serialSymbols;
@@ -233,7 +233,7 @@ namespace Ph2_HwInterface
 
   void RD53Interface::WriteRD53MultReg (RD53* pRD53, const std::vector< std::pair<std::string, uint16_t> >& pVecReg)
   {
-    setBoard (pRD53->getBeBoardIdentifier());
+    setBoard (pRD53->getBeBoardId());
 
     std::vector<std::vector<uint16_t> > symbols; // Useful in case the encodiing is done in the software
     std::vector<uint32_t> serialSymbols;
@@ -255,7 +255,7 @@ namespace Ph2_HwInterface
 
   void RD53Interface::WriteRD53Broadcast (const Module* pModule, const std::string& pRegNode, uint16_t pValue)
   {
-    setBoard (pModule->getBeBoardIdentifier());
+    setBoard (pModule->getBeBoardId());
 
     std::vector<std::vector<uint16_t> > symbols; // Useful in case the encodiing is done in the software
     std::vector<uint32_t> serialSymbols;
@@ -273,7 +273,7 @@ namespace Ph2_HwInterface
   
   void RD53Interface::WriteRD53BroadcastMultReg (const Module* pModule, const std::vector<std::pair<std::string, uint16_t>> pVecReg)
   {
-    setBoard (pModule->getBeBoardIdentifier());
+    setBoard (pModule->getBeBoardId());
 
     std::vector<std::vector<uint16_t> > symbols; // Useful in case the encodiing is done in the software
     std::vector<uint32_t> serialSymbols;
@@ -299,7 +299,7 @@ namespace Ph2_HwInterface
 
   std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53Interface::ReadRD53Reg (RD53* pRD53, const std::string& pRegNode)
   {
-    setBoard (pRD53->getBeBoardIdentifier());
+    setBoard (pRD53->getBeBoardId());
 
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
 

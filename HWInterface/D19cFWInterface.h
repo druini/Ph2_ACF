@@ -53,7 +53,7 @@ namespace Ph2_HwInterface {
         // number of chips and hybrids defined in firmware (compiled for)
         int fFWNHybrids;
         int fFWNChips;
-        ChipType fFirwmareChipType;
+        FrontEndType fFirwmareFrontEndType;
         bool fCBC3Emulator;
         bool fIsDDR3Readout;
         bool fDDR3Calibrated;
@@ -196,7 +196,7 @@ namespace Ph2_HwInterface {
         std::string getFMCCardName (uint32_t id);
         // convert code of the chip from firmware
         std::string getChipName(uint32_t pChipCode);
-        ChipType getChipType(uint32_t pChipCode);
+        FrontEndType getFrontEndType(uint32_t pChipCode);
 	// set i2c address table depending on the hybrid
 	void SetI2CAddressTable();
 	void Align_out();

@@ -60,7 +60,7 @@ namespace Ph2_HwInterface {
     bool CbcInterface::ConfigureCbc ( const Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
     {
         //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pCbc->getBeBoardId() );
 
         //vector to encode all the registers into
         std::vector<uint32_t> cVec;
@@ -98,7 +98,7 @@ namespace Ph2_HwInterface {
     bool CbcInterface::ConfigureCbcOriginalMask ( const Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
     {
         //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pCbc->getBeBoardId() );
 
         //vector to encode all the registers into
         std::vector<uint32_t> cVec;
@@ -132,7 +132,7 @@ namespace Ph2_HwInterface {
     void CbcInterface::ReadCbc ( Chip* pCbc )
     {
         //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pCbc->getBeBoardId() );
 
         //vector to encode all the registers into
         std::vector<uint32_t> cVec;
@@ -190,7 +190,7 @@ namespace Ph2_HwInterface {
     bool CbcInterface::WriteCbcReg ( Chip* pCbc, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop )
     {
         //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pCbc->getBeBoardId() );
 
         //next, get the reg item
         ChipRegItem cRegItem = pCbc->getRegItem ( pRegNode );
@@ -221,7 +221,7 @@ namespace Ph2_HwInterface {
     bool CbcInterface::WriteCbcMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop )
     {
         //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pCbc->getBeBoardId() );
 
         std::vector<uint32_t> cVec;
 
@@ -265,7 +265,7 @@ namespace Ph2_HwInterface {
 
     uint8_t CbcInterface::ReadCbcReg ( Chip* pCbc, const std::string& pRegNode )
     {
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pCbc->getBeBoardId() );
 
         ChipRegItem cRegItem = pCbc->getRegItem ( pRegNode );
 
@@ -289,7 +289,7 @@ namespace Ph2_HwInterface {
     void CbcInterface::ReadCbcMultReg ( Chip* pCbc, const std::vector<std::string>& pVecReg )
     {
         //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardIdentifier() );
+        setBoard ( pCbc->getBeBoardId() );
 
         std::vector<uint32_t> cVec;
 
@@ -341,7 +341,7 @@ namespace Ph2_HwInterface {
 
     //int cMissed = 0;
 
-    //setBoard ( pModule->getBeBoardIdentifier() );
+    //setBoard ( pModule->getBeBoardId() );
 
     //for ( uint8_t i = 0; i < pModule->getNChip(); i++ )
     //{
@@ -381,7 +381,7 @@ namespace Ph2_HwInterface {
     void CbcInterface::WriteBroadcast ( const Module* pModule, const std::string& pRegNode, uint32_t pValue )
     {
         //first set the correct BeBoard
-        setBoard ( pModule->getBeBoardIdentifier() );
+        setBoard ( pModule->getBeBoardId() );
 
         ChipRegItem cRegItem = pModule->fChipVector.at (0)->getRegItem ( pRegNode );
         cRegItem.fValue = pValue;
@@ -411,7 +411,7 @@ namespace Ph2_HwInterface {
     void CbcInterface::WriteBroadcastMultReg (const Module* pModule, const std::vector<std::pair<std::string, uint8_t>> pVecReg)
     {
         //first set the correct BeBoard
-        setBoard ( pModule->getBeBoardIdentifier() );
+        setBoard ( pModule->getBeBoardId() );
 
         std::vector<uint32_t> cVec;
 

@@ -14,7 +14,7 @@ namespace Ph2_HwDescription
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : FrontEndDescription (pBeId, pFMCId, pFeId), fRD53Id (pRD53Id)
   {
     loadfRegMap (filename);
-    this->setChipType (ChipType::RD53);
+    this->setFrontEndType (FrontEndType::RD53);
   }
   RD53::~RD53 () {}
   
