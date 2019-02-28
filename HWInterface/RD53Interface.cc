@@ -194,7 +194,7 @@ namespace Ph2_HwInterface
 	    it++;
 	    if (it > NWRITE_ATTEMPTS) break;
 
-	    if ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (it == 1) || (strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0))
+	    if (( ( strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (it == 1) ) || (strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0))
 	      fBoardFW->WriteChipCommand (serialSymbols);
 
 	    if ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) & (it == 1))

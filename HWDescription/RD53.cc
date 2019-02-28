@@ -376,7 +376,7 @@ namespace Ph2_HwDescription
 	word  = 4 | (pRD53Cmd << NBIT_5BITW);
 	frame = ((data & (this->SetBits<16>(NBIT_DATA).to_ulong() << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
 	  ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                // @TMP@ ID[3..0],D[15]
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (data & (this->SetBits<16>(NBIT_FRAME*3).to_ulong() << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
 	frame = (data & (this->SetBits<16>(NBIT_FRAME*2).to_ulong() << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]

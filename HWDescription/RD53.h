@@ -63,7 +63,7 @@
 #define NBIT_NREGION_CORECOL 1 // Number of NREGION_CORECOL bits
 #define NBIT_NREGION_COREROW 3 // Number of NREGION_COREROW bits
 #define NBIT_NPIX_REGION     1 // Number of NPIX_REGION bits
-#define NBIT_NREGION_CORE NBIT_NREGION_COREROW+NBIT_NREGION_CORECOL // Number of NREGION_CORE bits
+#define NBIT_NREGION_CORE (NBIT_NREGION_COREROW+NBIT_NREGION_CORECOL) // Number of NREGION_CORE bits
 
 #define NBIT_BCID  15 // Number of bunch crossing ID bits
 #define NBIT_TRGTAG 5 // Number of trigger tag bits
