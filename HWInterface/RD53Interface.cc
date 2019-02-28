@@ -261,7 +261,7 @@ namespace Ph2_HwInterface
     // fBoardFW->SerializeSymbols (symbols,serialSymbols);
     fBoardFW->WriteChipCommand (serialSymbols);
 
-    for (auto& cRD53 : pModule->fRD53Vector) cRD53->setReg (pRegNode, pValue);
+    for (auto& cRD53 : pModule->fChipVector) cRD53->setReg (pRegNode, pValue);
   }
   
   void RD53Interface::WriteRD53BroadcastMultReg (const Module* pModule, const std::vector<std::pair<std::string, uint16_t>> pVecReg)
@@ -274,7 +274,7 @@ namespace Ph2_HwInterface
 
     for (const auto& cReg : pVecReg)
       {
-	cRegItem =  pModule->fChipVector.at(0)->getRegItem (cReg.first);
+	cRegItem = pModule->fChipVector.at(0)->getRegItem (cReg.first);
 	cRegItem.fValue = cReg.second;
 	dynamic_cast<RD53*>(pModule->fChipVector.at(0))->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pModule->fChipVector.at(0)->getChipId(), RD53::WriteCmd(), serialSymbols);
 	// pModule->fChipVector.at(0)->EncodeCMD (cRegItem, pModule->fChipVector.at(0)->getChipId(), RD53::WriteCmd(), symbols);
