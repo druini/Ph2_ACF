@@ -11,11 +11,18 @@
 
 namespace Ph2_HwDescription
 {
-  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : FrontEndDescription (pBeId, pFMCId, pFeId), fRD53Id (pRD53Id)
+  RD53::RD53 ( const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename ) : Chip (pFeDesc, pRD53Id)
   {
-    loadfRegMap (filename);
-    this->setFrontEndType (FrontEndType::RD53);
+    loadfRegMap     (filename);
+    setFrontEndType (FrontEndType::RD53);
   }
+
+  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename ) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
+  {
+    loadfRegMap     (filename);
+    setFrontEndType (FrontEndType::RD53);
+  }
+
   RD53::~RD53 () {}
   
   void RD53::loadfRegMap (const std::string& filename)
@@ -29,7 +36,7 @@ namespace Ph2_HwDescription
 	std::string line, fName, fAddress_str, fDefValue_str, fValue_str;
 	bool foundPixelConfig = false;
 	int cLineCounter = 0;
-	RD53RegItem fRegItem;
+	ChipRegItem fRegItem;
 
 	while (getline (file, line))
 	  {
@@ -208,7 +215,7 @@ namespace Ph2_HwDescription
 
   uint16_t RD53::getReg (const std::string& pReg) const
   {
-    RD53RegMap::const_iterator i = fRegMap.find (pReg);
+    ChipRegMap::const_iterator i = fRegMap.find (pReg);
 
     if (i == fRegMap.end())
       {
@@ -221,7 +228,7 @@ namespace Ph2_HwDescription
 
   void RD53::setReg (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg)
   {
-    RD53RegMap::iterator i = fRegMap.find (pReg);
+    ChipRegMap::iterator i = fRegMap.find (pReg);
 
     if (i == fRegMap.end())
       LOG (INFO) << "The RD53 object: " << fRD53Id << " doesn't have " << pReg;
@@ -232,27 +239,13 @@ namespace Ph2_HwDescription
       }
   }
 
-  RD53RegItem RD53::getRegItem (const std::string& pReg)
-  {
-    RD53RegItem cItem;
-    RD53RegMap::iterator i = fRegMap.find (pReg);
-
-    if (i != std::end (fRegMap)) return (i->second);
-    else
-      {
-	LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError, no register " << pReg << " found in the RegisterMap of RD53 " << fRD53Id << RESET;
-	throw Exception ("[RD53::getRegItem]\tno matching register found");
-	return cItem;
-      }
-  }
-
   void RD53::saveRegMap (const std::string& filename)
   {
     std::ofstream file (filename.c_str(), std::ios::out | std::ios::trunc);
 
     if (file)
       {
-	std::vector<RD53RegPair> fSetRegItem;	
+	std::vector<ChipRegPair> fSetRegItem;	
 	for (auto& it : fRegMap)
 	  fSetRegItem.push_back ({it.first, it.second});
 
@@ -372,11 +365,11 @@ namespace Ph2_HwDescription
       }
     else if (pRD53Cmd == (GLOB_PULSE & 0x00FF))
       {
-	  word  = 2 | (pRD53Cmd << NBIT_5BITW);
-	  frame = 0 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP ID[3..0],0
-	  word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2);
-	  frame = 0 | ((data & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);    // @TMP@ D[3..0],0
-	  word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME);
+	word  = 2 | (pRD53Cmd << NBIT_5BITW);
+	frame = 0 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP ID[3..0],0
+	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2);
+	frame = 0 | ((data & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);    // @TMP@ D[3..0],0
+	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME);
       }
     else if (pRD53Cmd == (CAL & 0x00FF))
       {

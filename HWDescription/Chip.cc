@@ -52,31 +52,6 @@ namespace Ph2_HwDescription {
 
     }
 
-
-    uint8_t Chip::getReg ( const std::string& pReg ) const
-    {
-        ChipRegMap::const_iterator i = fRegMap.find ( pReg );
-
-        if ( i == fRegMap.end() )
-        {
-            LOG (INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg ;
-            return 0;
-        }
-        else
-            return i->second.fValue;
-    }
-
-
-    void Chip::setReg ( const std::string& pReg, uint8_t psetValue )
-    {
-        ChipRegMap::iterator i = fRegMap.find ( pReg );
-
-        if ( i == fRegMap.end() )
-            LOG (INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg ;
-        else
-            i->second.fValue = psetValue;
-    }
-
     ChipRegItem Chip::getRegItem ( const std::string& pReg )
     {
         ChipRegItem cItem;

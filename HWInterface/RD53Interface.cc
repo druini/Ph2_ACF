@@ -37,7 +37,7 @@ namespace Ph2_HwInterface
 
   void RD53Interface::ConfigureRD53 (RD53* pRD53)
   {
-    RD53RegMap cRD53RegMap = pRD53->getRegMap();
+    ChipRegMap cRD53RegMap = pRD53->getRegMap();
     for (const auto& cRegItem : cRD53RegMap)
       {
 	// ###############################
@@ -172,18 +172,18 @@ namespace Ph2_HwInterface
     cRegItem.fValue = data;
 
     if (strcmp(pRegNode.c_str(),"GLOBAL_PULSE") == 0)
-      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getRD53Id(), RD53::GlobalPulse(), serialSymbols);
+      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::GlobalPulse(), serialSymbols);
     else if (strcmp(pRegNode.c_str(),"SYNC") == 0)
-      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getRD53Id(), RD53::Sync(),        serialSymbols);
+      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::Sync(),        serialSymbols);
     else if (strcmp(pRegNode.c_str(),"RESET_BCRCTR") == 0)
-      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getRD53Id(), RD53::ResetBcrCtr(), serialSymbols);
+      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetBcrCtr(), serialSymbols);
     else if (strcmp(pRegNode.c_str(),"RESET_EVTCTR") == 0)
-      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getRD53Id(), RD53::ResetEvtCtr(), serialSymbols);
+      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetEvtCtr(), serialSymbols);
     else
       {
 	cRegItem.fAddress = pRD53->getRegItem (pRegNode).fAddress;
-	pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getRD53Id(), RD53::WriteCmd(), serialSymbols, dataVec);
-	// pRD53->EncodeCMD (cRegItem, pRD53->getRD53Id(), RD53::WriteCmd(), symbols);
+	pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::WriteCmd(), serialSymbols, dataVec);
+	// pRD53->EncodeCMD (cRegItem, pRD53->getChipId(), RD53::WriteCmd(), symbols);
 
 	std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
 	unsigned int it    = 0;
@@ -237,14 +237,14 @@ namespace Ph2_HwInterface
 
     std::vector<std::vector<uint16_t> > symbols; // Useful in case the encodiing is done in the software
     std::vector<uint32_t> serialSymbols;
-    RD53RegItem cRegItem;
+    ChipRegItem cRegItem;
 
     for (const auto& cReg : pVecReg)
       {
 	cRegItem = pRD53->getRegItem (cReg.first);
 	cRegItem.fValue = cReg.second;
-	pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getRD53Id(), RD53::WriteCmd(), serialSymbols);
-	// pRD53->EncodeCMD (cRegItem, pRD53->getRD53Id(), RD53::WriteCmd(), symbols);
+	pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::WriteCmd(), serialSymbols);
+	// pRD53->EncodeCMD (cRegItem, pRD53->getChipId(), RD53::WriteCmd(), symbols);
       }
     // fBoardFW->SerializeSymbols (symbols,serialSymbols);
     fBoardFW->WriteChipCommand (serialSymbols);
@@ -259,15 +259,15 @@ namespace Ph2_HwInterface
 
     std::vector<std::vector<uint16_t> > symbols; // Useful in case the encodiing is done in the software
     std::vector<uint32_t> serialSymbols;
-    RD53RegItem cRegItem = pModule->fRD53Vector.at(0)->getRegItem (pRegNode);
+    ChipRegItem cRegItem = pModule->fChipVector.at(0)->getRegItem (pRegNode);
     cRegItem.fValue = pValue;
 
-    pModule->fRD53Vector.at(0)->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pModule->fRD53Vector.at(0)->getRD53Id(), RD53::WriteCmd(), serialSymbols);
-    // pModule->fRD53Vector.at(0)->EncodeCMD (cRegItem, pModule->fRD53Vector.at(0)->getRD53Id(), RD53::WriteCmd(), symbols);
+    dynamic_cast<RD53*>(pModule->fChipVector.at(0))->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pModule->fChipVector.at(0)->getChipId(), RD53::WriteCmd(), serialSymbols);
+    // pModule->fChipVector.at(0)->EncodeCMD (cRegItem, pModule->fChipVector.at(0)->getChipId(), RD53::WriteCmd(), symbols);
     // fBoardFW->SerializeSymbols (symbols,serialSymbols);
     fBoardFW->WriteChipCommand (serialSymbols);
 
-    for (auto& cRD53 : pModule->fRD53Vector)
+    for (auto& cRD53 : pModule->fChipVector)
       cRD53->setReg (pRegNode, pValue);
   }
   
@@ -277,19 +277,19 @@ namespace Ph2_HwInterface
 
     std::vector<std::vector<uint16_t> > symbols; // Useful in case the encodiing is done in the software
     std::vector<uint32_t> serialSymbols;
-    RD53RegItem cRegItem;
+    ChipRegItem cRegItem;
 
     for (const auto& cReg : pVecReg)
       {
-	cRegItem =  pModule->fRD53Vector.at(0)->getRegItem (cReg.first);
+	cRegItem =  pModule->fChipVector.at(0)->getRegItem (cReg.first);
 	cRegItem.fValue = cReg.second;
-	pModule->fRD53Vector.at(0)->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pModule->fRD53Vector.at(0)->getRD53Id(), RD53::WriteCmd(), serialSymbols);
-	// pModule->fRD53Vector.at(0)->EncodeCMD (cRegItem, pModule->fRD53Vector.at(0)->getRD53Id(), RD53::WriteCmd(), symbols);
+	dynamic_cast<RD53*>(pModule->fChipVector.at(0))->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pModule->fChipVector.at(0)->getChipId(), RD53::WriteCmd(), serialSymbols);
+	// pModule->fChipVector.at(0)->EncodeCMD (cRegItem, pModule->fChipVector.at(0)->getChipId(), RD53::WriteCmd(), symbols);
       }
     // fBoardFW->SerializeSymbols (symbols,serialSymbols);
     fBoardFW->WriteChipCommand (serialSymbols);
 
-    for (const auto& cRD53 : pModule->fRD53Vector)
+    for (const auto& cRD53 : pModule->fChipVector)
       for (const auto& cReg : pVecReg)
 	{
 	  cRegItem = cRD53->getRegItem (cReg.first);
@@ -305,10 +305,10 @@ namespace Ph2_HwInterface
 
     std::vector<std::vector<uint16_t> > symbols; // Useful in case the encodiing is done in the software
     std::vector<uint32_t> serialSymbols;
-    RD53RegItem cRegItem = pRD53->getRegItem (pRegNode);
+    ChipRegItem cRegItem = pRD53->getRegItem (pRegNode);
 
-    pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getRD53Id(), RD53::ReadCmd(), serialSymbols);
-    // pRD53->EncodeCMD (cRegItem, pRD53->getRD53Id(), RD53::ReadCmd(), symbols);
+    pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ReadCmd(), serialSymbols);
+    // pRD53->EncodeCMD (cRegItem, pRD53->getChipId(), RD53::ReadCmd(), symbols);
     // fBoardFW->SerializeSymbols (symbols,serialSymbols);
 
     outputDecoded = fBoardFW->ReadChipRegisters (serialSymbols);

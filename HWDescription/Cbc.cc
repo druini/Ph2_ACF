@@ -101,6 +101,32 @@ namespace Ph2_HwDescription {
         //LOG (DEBUG) << cItem.first;
     }
 
+    uint16_t Cbc::getReg ( const std::string& pReg ) const
+    {
+        ChipRegMap::const_iterator i = fRegMap.find ( pReg );
+
+        if ( i == fRegMap.end() )
+        {
+            LOG (INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg ;
+            return 0;
+        }
+        else
+            return i->second.fValue & 0xFF;
+    }
+
+
+    void Cbc::setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg )
+    {
+        ChipRegMap::iterator i = fRegMap.find ( pReg );
+
+        if ( i == fRegMap.end() )
+            LOG (INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg ;
+        if ( psetValue > 0xFF)
+            LOG (ERROR) << "Cbc register are 8 bits, impossible to write " << psetValue << " on registed " << pReg ;
+        else
+            i->second.fValue = psetValue & 0xFF;
+    }
+
 
     //Write RegValues in a file
 

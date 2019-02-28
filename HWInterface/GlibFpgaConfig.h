@@ -9,8 +9,8 @@
 #ifndef _GLIBFPGACONFIG_H_
 #define _GLIBFPGACONFIG_H_
 
-#include "HWDescription/BeBoard.h"
-#include "HWInterface/FpgaConfig.h"
+#include "../HWDescription/BeBoard.h"
+#include "../HWInterface/FpgaConfig.h"
 
 using namespace Ph2_HwDescription;
 namespace Ph2_HwInterface

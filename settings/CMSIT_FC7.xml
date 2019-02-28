@@ -2,7 +2,7 @@
 
 <HwDescription>
   <BeBoard Id="0" boardType="FC7" eventType="VR">
-    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://settings/address_tables/CMSIT_FC7_address_table.xml" />
+    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.0.8:50001" address_table="file://settings/address_tables/CMSIT_FC7_address_table.xml" />
 
 
     <!-- Frontend chip configuration -->

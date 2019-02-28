@@ -10,17 +10,16 @@
 #ifndef _RD53_h_
 #define _RD53_h_
 
-#include "Definition.h"
+#include "Chip.h"
 #include "RD53RegItem.h"
-#include "FrontEndDescription.h"
-#include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 
+#include <math.h>
 #include <iomanip>
 #include <bitset>
-#include <math.h> 
+
 
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
@@ -79,9 +78,6 @@
 
 namespace Ph2_HwDescription
 {
-  using RD53RegMap   = std::map  <std::string, RD53RegItem>;
-  using RD53RegPair  = std::pair <std::string, RD53RegItem>;
-  using CommentMap   = std::map  <int, std::string>;
   using perPixelData = struct _perPixelData
 		       {
 			 std::bitset<NROWS>   Enable;
@@ -89,28 +85,26 @@ namespace Ph2_HwDescription
 			 std::bitset<NROWS>   InjEn;
 			 std::vector<uint8_t> TDAC;
   };
-  
-  class RD53: public FrontEndDescription
+
+  class RD53: public Chip
   {
   protected:
-    RD53RegMap fRegMap;
+    // RD53RegMap fRegMap;
     std::vector<perPixelData> fPixelsConfig;
     CommentMap fCommentMap;
     uint8_t fRD53Id;
  
   public:
-    RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename);
+    RD53  (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename);
+    RD53  (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename);
     ~RD53 ();
 
-    void              loadfRegMap (const std::string& filename);
-    uint16_t          getReg      (const std::string& pReg) const;
-    void              setReg      (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false);
-    RD53RegItem       getRegItem  (const std::string& pReg);
-    std::vector<perPixelData>* getPixelsConfig ()   { return &fPixelsConfig; }
-    void              saveRegMap  (const std::string& filename);
-    const RD53RegMap& getRegMap   () const          { return fRegMap; }
-    uint8_t           getRD53Id   () const          { return fRD53Id; }
-    void              setRD53Id   (uint8_t pRD53Id) { fRD53Id = pRD53Id; }
+    void     loadfRegMap (const std::string& filename)                                         override;
+    void     setReg      (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
+    void     saveRegMap  (const std::string& filename)                                         override;
+    uint16_t getReg      (const std::string& pReg) const                                       override;
+
+    std::vector<perPixelData>* getPixelsConfig () { return &fPixelsConfig; }
 
     void resetMask();
     void enableAllPixels();
@@ -182,6 +176,12 @@ namespace Ph2_HwDescription
       row     = (coreRow > 0 ? (coreRow-1) * NPIXROW_CORE : 0) + regionInCore % NPIXROW_CORE;
       quadCol = (coreCol > 0 ? (coreCol-1) * NPIXCOL_CORE : 0) + NPIXCOL_CORE * (regionInCore / NPIXROW_CORE);
     }
+
+
+    // @TMP@
+    const uint16_t getNumberOfChannels() const          { return 0;     };
+    bool isDACLocal(const std::string &dacName)         { return false; };
+    uint8_t getNumberOfBits(const std::string &dacName) { return 0;     };
 
 
   private:

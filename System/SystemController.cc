@@ -205,12 +205,12 @@ namespace Ph2_System {
 		LOG (INFO) << BOLDYELLOW << "Initializing communication to Module " << int (cFe->getModuleId()) << RESET;
  		while ((isGoodTrial == false) && (itTrials <= MAXTRIALS))
 		  {
-		    for (const auto& cRD53 : cFe->fRD53Vector)
+		    for (const auto& cRD53 : cFe->fChipVector)
 		      {
-			LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << int (cRD53->getRD53Id()) << RESET;
-			fRD53Interface->ResetRD53 (cRD53);
-			fRD53Interface->SyncRD53 (cRD53,NSYNCWORDS);
-			fRD53Interface->InitRD53Aurora (cRD53);
+			LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << int (cRD53->getChipId()) << RESET;
+			fRD53Interface->ResetRD53 (dynamic_cast<RD53*>(cRD53));
+			fRD53Interface->SyncRD53 (dynamic_cast<RD53*>(cRD53),NSYNCWORDS);
+			fRD53Interface->InitRD53Aurora (dynamic_cast<RD53*>(cRD53));
 		      }
 		    
 		    isGoodTrial = fBeBoardInterface->InitChipCommunication(cBoard);
@@ -223,10 +223,10 @@ namespace Ph2_System {
 		if (isGoodTrial == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication of all RD53s of Module " << int (cFe->getModuleId()) << RESET;
 		else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication with all RD53s of Module " << int (cFe->getModuleId()) << RESET;
 
-		for (const auto& cRD53 : cFe->fRD53Vector)
+		for (const auto& cRD53 : cFe->fChipVector)
 		  {
-		    LOG (INFO) << BOLDYELLOW << "Configuring RD53 " << int (cRD53->getRD53Id()) << RESET;
-		    fRD53Interface->ConfigureRD53 (cRD53);
+		    LOG (INFO) << BOLDYELLOW << "Configuring RD53 " << int (cRD53->getChipId()) << RESET;
+		    fRD53Interface->ConfigureRD53 (dynamic_cast<RD53*>(cRD53));
 		  }
 
 		// @TMP@
@@ -260,11 +260,7 @@ namespace Ph2_System {
             std::string cBoardTypeString;
             BoardType cBoardType = cBoard->getBoardType();
 
-            for (const auto& cFe : cBoard->fModuleVector)
-	      {
-		if (cBoardType == BoardType::FC7) cNChip += cFe->getNRD53();
-		else                              cNChip += cFe->getNChip();
-	      }
+            for (const auto& cFe : cBoard->fModuleVector) cNChip += cFe->getNChip();
 
             if (cBoardType == BoardType::GLIB)
 	      cBoardTypeString = "GLIB";
@@ -402,10 +398,10 @@ namespace Ph2_System {
 	  LOG (INFO) << BOLDYELLOW << "Resetting all RD53s" << RESET;
 	  for (const auto& cFe : pBoard->fModuleVector)
 	    {
-	      for (const auto& cRD53 : cFe->fRD53Vector)
+	      for (const auto& cRD53 : cFe->fChipVector)
 		{
-		  fRD53Interface->ResetRD53 (cRD53);
-		  LOG (INFO) << BOLDGREEN << "\t--> Successfully reset RD53 " << int (cRD53->getRD53Id()) << RESET;
+		  fRD53Interface->ResetRD53 (dynamic_cast<RD53*>(cRD53));
+		  LOG (INFO) << BOLDGREEN << "\t--> Successfully reset RD53 " << int (cRD53->getChipId()) << RESET;
 		}
 	    }
 	}
@@ -499,29 +495,29 @@ namespace Ph2_System {
       {
 	for (const auto& cFe : cBoard->fModuleVector)
 	  {
-	    for (const auto& cRD53 : cFe->fRD53Vector)
+	    for (const auto& cRD53 : cFe->fChipVector)
 	      {
 		LOG (INFO) << BOLDYELLOW << "Reading Hit-Or-Cnt #" << nCnt << RESET;
 		switch (nCnt)
 		  {
 		  case 0:
 		    {
-		      fRD53Interface->ReadRD53Reg (cRD53, "HITOR_0_CNT");
+		      fRD53Interface->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_0_CNT");
 		      break;
 		    }
 		  case 1:
 		    {
-		      fRD53Interface->ReadRD53Reg (cRD53, "HITOR_1_CNT");
+		      fRD53Interface->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_1_CNT");
 		      break;
 		    }
 		  case 2:
 		    {
-		      fRD53Interface->ReadRD53Reg (cRD53, "HITOR_2_CNT");
+		      fRD53Interface->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_2_CNT");
 		      break;
 		    }
 		  case 3:
 		    {
-		      fRD53Interface->ReadRD53Reg (cRD53, "HITOR_3_CNT");
+		      fRD53Interface->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_3_CNT");
 		      break;
 		    }
 		  }

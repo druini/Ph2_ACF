@@ -398,8 +398,8 @@ namespace Ph2_System {
             // Iterate the Chip node
             if (pBoard->getBoardType() == BoardType::FC7)
             {
-                for (pugi::xml_node pRD53Node = pModuleNode.child ("RD53"); pRD53Node, pRD53Node.name() == std::string("RD53"); pRD53Node = pRD53Node.next_sibling())
-                  this->parseRD53 (pRD53Node, cModule, cFilePrefix, os);
+                for (pugi::xml_node theChipNode = pModuleNode.child ("RD53"); theChipNode, theChipNode.name() == std::string("RD53"); theChipNode = theChipNode.next_sibling())
+                  this->parseRD53 (theChipNode, cModule, cFilePrefix, os);
         
                 // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
                 this->parseGlobalRD53Settings (pModuleNode, cModule, os);
@@ -752,137 +752,132 @@ namespace Ph2_System {
   // ########################
   // # RD53 specific parser #
   // ########################
-  void FileParser::parseRD53 (pugi::xml_node pRD53Node, Module* cModule, std::string cFilePrefix, std::ostream& os)
+  void FileParser::parseRD53 (pugi::xml_node theChipNode, Module* cModule, std::string cFilePrefix, std::ostream& os)
   {
-    os << BOLDCYAN << "|" << "	" << "|" << "	" << "|" << "----" << pRD53Node.name() << "  "
-       << pRD53Node.first_attribute().name() << ": " << pRD53Node.attribute ("Id").value()
-       << ", File: " << expandEnvironmentVariables (pRD53Node.attribute ("configfile").value() ) << RESET << std::endl;
+    os << BOLDCYAN << "|" << "	" << "|" << "	" << "|" << "----" << theChipNode.name() << "  "
+       << theChipNode.first_attribute().name() << ": " << theChipNode.attribute ("Id").value()
+       << ", File: " << expandEnvironmentVariables (theChipNode.attribute ("configfile").value() ) << RESET << std::endl;
 
     std::string cFileName;
-	    
+
     if (!cFilePrefix.empty())
       {
-	if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
-	  cFilePrefix.append ("/");
-		
-	cFileName = cFilePrefix + expandEnvironmentVariables (pRD53Node.attribute ("configfile").value());
+	if (cFilePrefix.at (cFilePrefix.length() - 1) != '/') cFilePrefix.append ("/");
+	cFileName = cFilePrefix + expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
       }
-    else cFileName = expandEnvironmentVariables (pRD53Node.attribute ("configfile").value());
+    else cFileName = expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
 
-    std::cout<<cFileName<<std::endl;
-        
-    RD53* cRD53 = new RD53 ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pRD53Node.attribute ( "Id" ).as_int(), cFileName );
-std::cout<<cModule->getBeId()<<" " <<cModule->getFMCId()<<" " <<cModule->getFeId()<<" " <<pRD53Node.attribute ( "Id" ).as_int()<<" " <<cFileName <<std::endl;
-        
-    // Parse the specific RD53 settings so that Registers take precedence
-    this->parseRD53Settings (pRD53Node, cRD53, os);
-        
-    for (pugi::xml_node cRD53RegisterNode = pRD53Node.child ("Register"); cRD53RegisterNode; cRD53RegisterNode = cRD53RegisterNode.next_sibling() )
+    Chip* theChip = new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), theChipNode.attribute ( "Id" ).as_int(), cFileName);
+
+    // Parse the specific Chip settings so that Registers take precedence
+    this->parseRD53Settings (theChipNode, theChip, os);
+
+    for (pugi::xml_node theChipRegisterNode = theChipNode.child ("Register"); theChipRegisterNode; theChipRegisterNode = theChipRegisterNode.next_sibling())
       {
-    cRD53->setReg (std::string(cRD53RegisterNode.attribute ("name").value() ), convertAnyInt (cRD53RegisterNode.first_child().value()));
-    os << BLUE << "|\t|\t|\t|----Register: " << std::string (cRD53RegisterNode.attribute ("name").value()) << " : " << RED << std::hex << "0x" << convertAnyInt (cRD53RegisterNode.first_child().value()) << RESET << std::dec << std::endl;
+	theChip->setReg (std::string(theChipRegisterNode.attribute ("name").value() ), convertAnyInt (theChipRegisterNode.first_child().value()));
+	os << BLUE << "|\t|\t|\t|----Register: " << std::string (theChipRegisterNode.attribute ("name").value()) << " : " << RED << std::hex << "0x"
+	   << convertAnyInt (theChipRegisterNode.first_child().value()) << RESET << std::dec << std::endl;
       }
 
-    cModule->addRD53 (cRD53);
+    cModule->addChip (theChip);
   }
 
   void FileParser::parseGlobalRD53Settings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os)
   {
-    pugi::xml_node cGlobalRD53SettingsNode = pModuleNode.child ("Global");
-    
-    if (cGlobalRD53SettingsNode != nullptr)
+    pugi::xml_node cGlobalChipSettingsNode = pModuleNode.child ("Global");
+
+    if (cGlobalChipSettingsNode != nullptr)
       {
 	os << BOLDCYAN << "|\t|\t|----Global RD53 Settings:" << RESET <<  std::endl;
-	
+
 	int cCounter = 0;
-	
-	for (auto cRD53 : pModule->fRD53Vector)
+
+	for (auto theChip : pModule->fChipVector)
 	  {
 	    if (cCounter == 0)
-	      this->parseRD53Settings (cGlobalRD53SettingsNode, cRD53, os);
+	      this->parseRD53Settings (cGlobalChipSettingsNode, theChip, os);
 	    else
 	      {
 		std::ofstream cDummy;
-		this->parseRD53Settings (cGlobalRD53SettingsNode, cRD53, cDummy);
+		this->parseRD53Settings (cGlobalChipSettingsNode, theChip, cDummy);
 	      }
-	    
+
 	    cCounter++;
 	  }
       }
-    
-    // Now that global has been applied to each RD53, handle the GlobalRD53Registers
-    for (pugi::xml_node cRD53GlobalNode = pModuleNode.child ("Global_RD53_Register"); cRD53GlobalNode != pModuleNode.child ("RD53") && cRD53GlobalNode != pModuleNode.child ("RD53_Files") && cRD53GlobalNode != nullptr; cRD53GlobalNode = cRD53GlobalNode.next_sibling() )
+
+    // Now that global has been applied to each Chip, handle the GlobalChipRegisters
+    for (pugi::xml_node theChipGlobalNode = pModuleNode.child ("Global_RD53_Register"); theChipGlobalNode != pModuleNode.child ("RD53") && theChipGlobalNode != pModuleNode.child ("RD53_Files") && theChipGlobalNode != nullptr; theChipGlobalNode = theChipGlobalNode.next_sibling())
       {
-	if (cRD53GlobalNode != nullptr)
+	if (theChipGlobalNode != nullptr)
 	  {
-	    std::string regname = std::string ( cRD53GlobalNode.attribute ( "name" ).value() );
-	    uint32_t regvalue = convertAnyInt ( cRD53GlobalNode.first_child().value() ) ;
-	    
-	    for (auto cRD53 : pModule->fRD53Vector)
-	      cRD53->setReg (regname, uint8_t (regvalue)) ;
-	    
-	    os << BOLDGREEN << "|" << "	" << "|" << "	" << "|" << "----" << cRD53GlobalNode.name()
-	       << "  " << cRD53GlobalNode.first_attribute().name() << " :"
+	    std::string regname = std::string   (theChipGlobalNode.attribute ( "name" ).value());
+	    uint32_t regvalue   = convertAnyInt (theChipGlobalNode.first_child().value());
+
+	    for (auto theChip : pModule->fChipVector) theChip->setReg (regname, uint8_t (regvalue));
+
+	    os << BOLDGREEN << "|" << "	" << "|" << "	" << "|" << "----" << theChipGlobalNode.name()
+	       << "  " << theChipGlobalNode.first_attribute().name() << " :"
 	       << regname << " =  0x" << std::hex << std::setw (2) << std::setfill ('0') << RED << regvalue << std::dec << RESET << std:: endl;
 	  }
       }
   }
- 
-  void FileParser::parseRD53Settings (pugi::xml_node pRD53Node, RD53* pRD53, std::ostream& os)
+
+  void FileParser::parseRD53Settings (pugi::xml_node theChipNode, Chip* theChip, std::ostream& os)
   {
-    // Parse the RD53 settings here and put them in the corresponding registers of the RD53 object
+    // Parse the Chip settings here and put them in the corresponding registers of the Chip object
     os << BOLDBLUE << "|\t|\t|\t|----FrontEndType: " << RED << "RD53" << RESET << std::endl;
 
-    pugi::xml_node cSettingsChild = pRD53Node.child ("Settings");
+    pugi::xml_node cSettingsChild = theChipNode.child ("Settings");
     if (cSettingsChild != nullptr)
       {
 	uint16_t value = convertAnyInt (cSettingsChild.attribute ("GP_LVDS_ROUTE").value());
 
-    pRD53->setReg("GP_LVDS_ROUTE",value,true);
+	theChip->setReg("GP_LVDS_ROUTE",value,true);
 	os << GREEN << "|\t|\t|\t|----GP_LVDS_ROUTE: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
 
 	value = convertAnyInt (cSettingsChild.attribute ("VTH_SYNC").value());
-	pRD53->setReg("VTH_SYNC",value,true);
+	theChip->setReg("VTH_SYNC",value,true);
 	os << GREEN << "|\t|\t|\t|----VTH_SYNC: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
 
 	value = convertAnyInt (cSettingsChild.attribute ("Vthreshold_LIN").value());
-	pRD53->setReg("Vthreshold_LIN",value,true);
+	theChip->setReg("Vthreshold_LIN",value,true);
 	os << GREEN << "|\t|\t|\t|----Vthreshold_LIN: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
 
 	value = convertAnyInt (cSettingsChild.attribute ("VTH1_DIFF").value());
-	pRD53->setReg("VTH1_DIFF",value,true);
+	theChip->setReg("VTH1_DIFF",value,true);
 	os << GREEN << "|\t|\t|\t|----VTH1_DIFF: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
 
 	value = convertAnyInt (cSettingsChild.attribute ("VTH2_DIFF").value());
-	pRD53->setReg("VTH2_DIFF",value,true);
+	theChip->setReg("VTH2_DIFF",value,true);
 	os << GREEN << "|\t|\t|\t|----VTH2_DIFF: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
 
 	value = convertAnyInt (cSettingsChild.attribute ("LATENCY_CONFIG").value());
-	pRD53->setReg("LATENCY_CONFIG",value,true);
+	theChip->setReg("LATENCY_CONFIG",value,true);
 	os << GREEN << "|\t|\t|\t|----LATENCY_CONFIG: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
 
 	value = convertAnyInt (cSettingsChild.attribute ("MONITOR_SELECT").value());
-	pRD53->setReg("MONITOR_SELECT",value,true);
+	theChip->setReg("MONITOR_SELECT",value,true);
 	os << GREEN << "|\t|\t|\t|----MONITOR_SELECT: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
 
 	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_SYNC").value());
-	pRD53->setReg("EN_CORE_COL_SYNC",value,true);
+	theChip->setReg("EN_CORE_COL_SYNC",value,true);
 	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_SYNC: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
 
 	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_LIN_1").value());
-	pRD53->setReg("EN_CORE_COL_LIN_1",value,true);
+	theChip->setReg("EN_CORE_COL_LIN_1",value,true);
 	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_LIN_1: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
 
 	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_LIN_2").value());
-	pRD53->setReg("EN_CORE_COL_LIN_2",value,true);
+	theChip->setReg("EN_CORE_COL_LIN_2",value,true);
 	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_LIN_2: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
 
 	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_DIFF_1").value());
-	pRD53->setReg("EN_CORE_COL_DIFF_1",value,true);
+	theChip->setReg("EN_CORE_COL_DIFF_1",value,true);
 	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_DIFF_1: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
 
 	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_DIFF_2").value());
-	pRD53->setReg("EN_CORE_COL_DIFF_2",value,true);
+	theChip->setReg("EN_CORE_COL_DIFF_2",value,true);
 	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_DIFF_2: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
       }
   }

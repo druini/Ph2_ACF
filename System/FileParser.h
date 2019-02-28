@@ -119,11 +119,11 @@ namespace Ph2_System {
         void parseGlobalCbcSettings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os);
 
 
-    // ########################
-    // # RD53 specific parser #
-    // ########################
-        void parseRD53 (pugi::xml_node pModuleNode, Module* cModule, std::string cFilePrefix, std::ostream& os );
-        void parseRD53Settings (pugi::xml_node pRd53Node, RD53* pRD53, std::ostream& os);
+	// ########################
+	// # RD53 specific parser #
+	// ########################
+        void parseRD53               (pugi::xml_node pModuleNode, Module* cModule, std::string cFilePrefix, std::ostream& os);
+        void parseRD53Settings       (pugi::xml_node pRd53Node,   Chip* pRD53,     std::ostream& os);
         void parseGlobalRD53Settings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os);
 	// ########################
 
