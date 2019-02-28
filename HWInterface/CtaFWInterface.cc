@@ -565,7 +565,7 @@ namespace Ph2_HwInterface {
                 else if (cVal == 0b01)
                     return true;
                 else
-                    throw Exception ( " CbcInterface::I2cCmdAckWait bad acknowledge value" );
+                    throw Exception ( " ChipInterface::I2cCmdAckWait bad acknowledge value" );
             }
             else
             {
@@ -594,12 +594,12 @@ namespace Ph2_HwInterface {
         WriteStackReg ( cVecReg );
 
         if ( I2cCmdAckWait ( true, pVecReq.size() ) == false)
-            throw Exception ( " CbcInterface::I2cCmdAckWait not 0 failed." );
+            throw Exception ( " ChipInterface::I2cCmdAckWait not 0 failed." );
 
         WriteReg ( "cbc_i2c_cmd_rq", 0 );
 
         if ( I2cCmdAckWait ( false, pVecReq.size() ) == false)
-            throw Exception ( " CbcInterface::I2cCmdAckWait 0 failed." );
+            throw Exception ( " ChipInterface::I2cCmdAckWait 0 failed." );
     }
 
     void CtaFWInterface::ReadI2C ( std::vector<uint32_t>& pVecReq )

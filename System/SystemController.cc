@@ -10,6 +10,7 @@
  */
 
 #include "SystemController.h"
+#include "../HWInterface/CbcInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -18,8 +19,8 @@ namespace Ph2_System {
 
     SystemController::SystemController() :
         fBeBoardInterface (nullptr),
-	fRD53Interface    (nullptr),
-        fCbcInterface (nullptr),
+    	fRD53Interface    (nullptr),
+        fChipInterface (nullptr),
         fBoardVector(),
         fSettingsMap(),
         fFileHandler (nullptr),
@@ -37,7 +38,7 @@ namespace Ph2_System {
     {
         fBeBoardInterface = pController->fBeBoardInterface;
     	fRD53Interface    = pController->fRD53Interface;
-        fCbcInterface = pController->fCbcInterface;
+        fChipInterface = pController->fChipInterface;
         fBoardVector = pController->fBoardVector;
         fBeBoardFWMap = pController->fBeBoardFWMap;
         fSettingsMap = pController->fSettingsMap;
@@ -55,7 +56,7 @@ namespace Ph2_System {
 
         if (fBeBoardInterface) delete fBeBoardInterface;
 
-        if (fCbcInterface)  delete fCbcInterface;
+        if (fChipInterface)  delete fChipInterface;
 	if (fRD53Interface) delete fRD53Interface;
 
         fBeBoardFWMap.clear();
@@ -121,9 +122,9 @@ namespace Ph2_System {
         this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, os, pIsFile );
 
         fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
-        fRD53Interface    = new RD53Interface    (fBeBoardFWMap);
-        fCbcInterface     = new CbcInterface ( fBeBoardFWMap );
-        fMPAInterface     = new MPAInterface ( fBeBoardFWMap );
+        fRD53Interface    = new RD53Interface    ( fBeBoardFWMap );
+        fChipInterface    = new CbcInterface     ( fBeBoardFWMap );
+        fMPAInterface     = new MPAInterface     ( fBeBoardFWMap );
 
         if (fWriteHandlerEnabled)
             this->initializeFileHandler();
@@ -178,7 +179,7 @@ namespace Ph2_System {
                 {
                     if ( !bIgnoreI2c )
                     {
-                        fCbcInterface->ConfigureCbc ( cCbc );
+                        fChipInterface->ConfigureChip ( cCbc );
                         LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
                     }
                 }

@@ -117,7 +117,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uin
     LOG (INFO) << "Scanning Latency ... " ;
     uint32_t cIterationCount = 0;
 
-    LatencyVisitor cVisitor (fCbcInterface, 0);
+    LatencyVisitor cVisitor (fChipInterface, 0);
  
     for ( BeBoard* pBoard : fBoardVector )
     {
@@ -155,7 +155,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
     // This is not super clean but should work
     // Take the default VCth which should correspond to the pedestal and add 8 depending on the mode to exclude noise
     // ThresholdVisitor in read mode
-    //ThresholdVisitor cThresholdVisitor (fCbcInterface);
+    //ThresholdVisitor cThresholdVisitor (fChipInterface);
     //this->accept (cThresholdVisitor);
     //uint16_t cVcth = cThresholdVisitor.getThreshold();
 
@@ -259,7 +259,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
 void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
 {
     
-    LatencyVisitor cVisitor (fCbcInterface, 0);
+    LatencyVisitor cVisitor (fChipInterface, 0);
     int cNSteps = 0 ; 
     for ( uint16_t cLatency = pStartLatency; cLatency < pStartLatency + pLatencyRange; cLatency++ )
     {

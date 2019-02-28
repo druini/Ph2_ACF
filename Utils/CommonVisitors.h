@@ -3,7 +3,7 @@
 
 
 #include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/CbcInterface.h"
+#include "../HWInterface/ChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/ConsoleColor.h"
@@ -25,11 +25,11 @@ using namespace Ph2_HwDescription;
 
 struct CbcRegWriter : public HwDescriptionVisitor
 {
-    CbcInterface* fInterface;
+    ChipInterface* fInterface;
     std::string fRegName;
     uint8_t fRegValue;
 
-    CbcRegWriter ( CbcInterface* pInterface, std::string pRegName, uint8_t pRegValue ) : fInterface ( pInterface ), fRegName ( pRegName ), fRegValue ( pRegValue ) {}
+    CbcRegWriter ( ChipInterface* pInterface, std::string pRegName, uint8_t pRegValue ) : fInterface ( pInterface ), fRegName ( pRegName ), fRegValue ( pRegValue ) {}
     CbcRegWriter ( const CbcRegWriter& writer ) : fInterface ( writer.fInterface ), fRegName ( writer.fRegName ), fRegValue ( writer.fRegValue ) {}
 
     void setRegister ( std::string pRegName, uint8_t pRegValue )
@@ -40,7 +40,7 @@ struct CbcRegWriter : public HwDescriptionVisitor
 
     void visit ( Ph2_HwDescription::Chip& pCbc )
     {
-        fInterface->WriteCbcReg ( &pCbc, fRegName, fRegValue );
+        fInterface->WriteChipReg ( &pCbc, fRegName, fRegValue );
     }
 };
 
@@ -69,14 +69,14 @@ struct BeBoardRegWriter : public HwDescriptionVisitor
 //write multi reg
 struct CbcMultiRegWriter : public HwDescriptionVisitor
 {
-    CbcInterface* fInterface;
+    ChipInterface* fInterface;
     std::vector<std::pair<std::string, uint8_t>> fRegVec;
 
-    CbcMultiRegWriter ( CbcInterface* pInterface, std::vector<std::pair<std::string, uint8_t>> pRegVec ) : fInterface ( pInterface ), fRegVec ( pRegVec ) {}
+    CbcMultiRegWriter ( ChipInterface* pInterface, std::vector<std::pair<std::string, uint8_t>> pRegVec ) : fInterface ( pInterface ), fRegVec ( pRegVec ) {}
 
     void visit ( Ph2_HwDescription::Chip& pCbc )
     {
-        fInterface->WriteCbcMultReg ( &pCbc, fRegVec );
+        fInterface->WriteChipMultReg ( &pCbc, fRegVec );
     }
 };
 
@@ -127,9 +127,9 @@ class Configurator: public HwDescriptionVisitor
 {
   private:
     BeBoardInterface* fBeBoardInterface;
-    CbcInterface* fCbcInterface;
+    ChipInterface* fCbcInterface;
   public:
-    Configurator ( BeBoardInterface* pBeBoardInterface, CbcInterface* pCbcInterface ) : fBeBoardInterface ( pBeBoardInterface ), fCbcInterface ( pCbcInterface ) {}
+    Configurator ( BeBoardInterface* pBeBoardInterface, ChipInterface* pCbcInterface ) : fBeBoardInterface ( pBeBoardInterface ), fCbcInterface ( pCbcInterface ) {}
     void visit ( BeBoard& pBoard )
     {
         fBeBoardInterface->ConfigureBoard ( &pBoard );
@@ -137,7 +137,7 @@ class Configurator: public HwDescriptionVisitor
     }
     void visit ( Chip& pCbc )
     {
-        fCbcInterface->ConfigureCbc ( &pCbc );
+        fCbcInterface->ConfigureChip ( &pCbc );
         LOG (INFO) << "Successfully configured Chip " <<  +pCbc.getChipId();
 
     }
@@ -149,10 +149,10 @@ struct CbcRegReader : public HwDescriptionVisitor
     std::string fRegName;
     uint8_t fRegValue;
     uint8_t fReadRegValue;
-    CbcInterface* fInterface;
+    ChipInterface* fInterface;
     bool fOutput;
 
-    CbcRegReader ( CbcInterface* pInterface, std::string pRegName ) : fInterface ( pInterface ), fRegName ( pRegName ), fOutput (true) {}
+    CbcRegReader ( ChipInterface* pInterface, std::string pRegName ) : fInterface ( pInterface ), fRegName ( pRegName ), fOutput (true) {}
     CbcRegReader ( const CbcRegReader& reader ) : fInterface ( reader.fInterface ), fRegName ( reader.fRegName ), fOutput (reader.fOutput) {}
 
     void setRegister ( std::string pRegName )
@@ -162,7 +162,7 @@ struct CbcRegReader : public HwDescriptionVisitor
     void visit ( Chip& pCbc )
     {
         fRegValue = pCbc.getReg ( fRegName );
-        fInterface->ReadCbcReg ( &pCbc, fRegName );
+        fInterface->ReadChipReg ( &pCbc, fRegName );
         fReadRegValue = pCbc.getReg ( fRegName );
 
         if (fOutput) LOG (INFO) << "Reading Reg " << RED << fRegName << RESET << " on CBC " << +pCbc.getChipId() << " memory value: " << std::hex << +fRegValue << " read value: " << +fReadRegValue << std::dec ;
@@ -183,9 +183,9 @@ struct CbcRegReader : public HwDescriptionVisitor
 
 struct CbcIdReader : public HwDescriptionVisitor
 {
-    CbcInterface* fCbcInterface;
+    ChipInterface* fCbcInterface;
     uint32_t fChipId;
-    CbcIdReader (CbcInterface* pCbcInterface) : fCbcInterface (pCbcInterface), fChipId (0) {}
+    CbcIdReader (ChipInterface* pCbcInterface) : fCbcInterface (pCbcInterface), fChipId (0) {}
 
     void visit (Chip& pCbc)
     {
@@ -193,10 +193,10 @@ struct CbcIdReader : public HwDescriptionVisitor
             LOG (ERROR) << RED << "The current chip type is not CBC3 and thus no Id can be read!" << RESET;
         else
         {
-            fCbcInterface->WriteCbcReg (&pCbc, "ChipIDFuse3", 0x08, false);
+            fCbcInterface->WriteChipReg (&pCbc, "ChipIDFuse3", 0x08, false);
             std::vector<std::string> cRegVec{"ChipIDFuse1", "ChipIDFuse2", "ChipIDFuse3"};
             fChipId = 0;
-            fCbcInterface->ReadCbcMultReg ( &pCbc, cRegVec );
+            fCbcInterface->ReadChipMultReg ( &pCbc, cRegVec );
             int cCounter = 0;
 
             for (auto cReg : cRegVec)
@@ -212,11 +212,11 @@ struct CbcIdReader : public HwDescriptionVisitor
 
 struct CbcRegIncrementer : public HwDescriptionVisitor
 {
-    CbcInterface* fInterface;
+    ChipInterface* fInterface;
     std::string fRegName;
     int fRegIncrement;
 
-    CbcRegIncrementer ( CbcInterface* pInterface, std::string pRegName, int pRegIncrement ) : fInterface ( pInterface ), fRegName ( pRegName ), fRegIncrement ( pRegIncrement ) {}
+    CbcRegIncrementer ( ChipInterface* pInterface, std::string pRegName, int pRegIncrement ) : fInterface ( pInterface ), fRegName ( pRegName ), fRegIncrement ( pRegIncrement ) {}
     CbcRegIncrementer ( const CbcRegIncrementer& incrementer ) : fInterface ( incrementer.fInterface ), fRegName ( incrementer.fRegName ), fRegIncrement ( incrementer.fRegIncrement ) {}
 
     void setRegister ( std::string pRegName, int pRegIncrement )
@@ -233,7 +233,7 @@ struct CbcRegIncrementer : public HwDescriptionVisitor
         if (targetValue > 255) LOG (ERROR) << "Error: cannot increment register above 255" << std::endl, targetValue = 255;
         else if (targetValue < 0) LOG (ERROR) << "Error: cannot increment register below 0 " << std::endl, targetValue = 0;
 
-        fInterface->WriteCbcReg ( &pCbc, fRegName, uint8_t (targetValue) );
+        fInterface->WriteChipReg ( &pCbc, fRegName, uint8_t (targetValue) );
     }
 };
 
@@ -241,11 +241,11 @@ struct CbcRegIncrementer : public HwDescriptionVisitor
 struct ThresholdVisitor : public HwDescriptionVisitor
 {
     uint16_t fThreshold;
-    CbcInterface* fInterface;
+    ChipInterface* fInterface;
     char fOption;
 
     // Write constructor
-    ThresholdVisitor (CbcInterface* pInterface, uint16_t pThreshold) : fInterface (pInterface), fThreshold (pThreshold), fOption ('w')
+    ThresholdVisitor (ChipInterface* pInterface, uint16_t pThreshold) : fInterface (pInterface), fThreshold (pThreshold), fOption ('w')
     {
         if (fThreshold > 1023)
         {
@@ -254,7 +254,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
         }
     }
     // Read constructor
-    ThresholdVisitor (CbcInterface* pInterface) : fInterface (pInterface), fOption ('r')
+    ThresholdVisitor (ChipInterface* pInterface) : fInterface (pInterface), fOption ('r')
     {
     }
     // Copy constructor
@@ -290,12 +290,12 @@ struct ThresholdVisitor : public HwDescriptionVisitor
                 else
                 {
                     uint8_t cVCth = fThreshold & 0x00FF;
-                    fInterface->WriteCbcReg ( &pCbc, "VCth", cVCth );
+                    fInterface->WriteChipReg ( &pCbc, "VCth", cVCth );
                 }
             }
             else if (fOption == 'r')
             {
-                fInterface->ReadCbcReg ( &pCbc, "VCth" );
+                fInterface->ReadChipReg ( &pCbc, "VCth" );
                 fThreshold = (pCbc.getReg ("VCth") ) & 0x00FF;
             }
             else
@@ -315,13 +315,13 @@ struct ThresholdVisitor : public HwDescriptionVisitor
                     uint8_t cVCth2 = (fThreshold & 0x0300) >> 8;
                     cRegVec.emplace_back ("VCth1", cVCth1);
                     cRegVec.emplace_back ("VCth2", cVCth2);
-                    fInterface->WriteCbcMultReg (&pCbc, cRegVec);
+                    fInterface->WriteChipMultReg (&pCbc, cRegVec);
                 }
             }
             else if (fOption == 'r')
             {
-                fInterface->ReadCbcReg (&pCbc, "VCth1");
-                fInterface->ReadCbcReg (&pCbc, "VCth2");
+                fInterface->ReadChipReg (&pCbc, "VCth1");
+                fInterface->ReadChipReg (&pCbc, "VCth2");
                 uint8_t cVCth2 = pCbc.getReg ("VCth2");
                 uint8_t cVCth1 = pCbc.getReg ("VCth1");
                 fThreshold = ( ( (cVCth2 & 0x03) << 8) | (cVCth1 & 0xFF) );
@@ -337,13 +337,13 @@ struct ThresholdVisitor : public HwDescriptionVisitor
 struct LatencyVisitor : public HwDescriptionVisitor
 {
     uint16_t fLatency;
-    CbcInterface* fInterface;
+    ChipInterface* fInterface;
     char fOption;
 
     // write constructor
-    LatencyVisitor (CbcInterface* pInterface, uint16_t pLatency) : fInterface (pInterface), fLatency (pLatency), fOption ('w') {}
+    LatencyVisitor (ChipInterface* pInterface, uint16_t pLatency) : fInterface (pInterface), fLatency (pLatency), fOption ('w') {}
     // read constructor
-    LatencyVisitor (CbcInterface* pInterface) : fInterface (pInterface), fOption ('r') {}
+    LatencyVisitor (ChipInterface* pInterface) : fInterface (pInterface), fOption ('r') {}
     // copy constructor
     LatencyVisitor (const LatencyVisitor& pVisitor) : fInterface (pVisitor.fInterface), fLatency (pVisitor.fLatency), fOption (pVisitor.fOption) {}
 
@@ -375,12 +375,12 @@ struct LatencyVisitor : public HwDescriptionVisitor
                 else
                 {
                     uint8_t cLat = fLatency & 0x00FF;
-                    fInterface->WriteCbcReg ( &pCbc, "TriggerLatency", cLat );
+                    fInterface->WriteChipReg ( &pCbc, "TriggerLatency", cLat );
                 }
             }
             else
             {
-                fInterface->ReadCbcReg ( &pCbc, "TriggerLatency" );
+                fInterface->ReadChipReg ( &pCbc, "TriggerLatency" );
                 fLatency = (pCbc.getReg ("TriggerLatency") ) & 0x00FF;
             }
         }
@@ -396,12 +396,12 @@ struct LatencyVisitor : public HwDescriptionVisitor
                 uint8_t cLat2 = presentValue | ( (fLatency & 0x0100) >> 8);
                 cRegVec.emplace_back ("TriggerLatency1", cLat1);
                 cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
-                fInterface->WriteCbcMultReg (&pCbc, cRegVec);
+                fInterface->WriteChipMultReg (&pCbc, cRegVec);
             }
             else
             {
-                fInterface->ReadCbcReg (&pCbc, "TriggerLatency1");
-                fInterface->ReadCbcReg (&pCbc, "FeCtrl&TrgLat2");
+                fInterface->ReadChipReg (&pCbc, "TriggerLatency1");
+                fInterface->ReadChipReg (&pCbc, "FeCtrl&TrgLat2");
                 fLatency = ( (pCbc.getReg ("FeCtrl&TrgLat2") & 0x01) << 8) | (pCbc.getReg ("TriggerLatency1") & 0xFF);
             }
         }

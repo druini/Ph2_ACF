@@ -145,7 +145,7 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 
                 pRegFile = buffer;
                 cCbc->loadfRegMap (pRegFile);
-                fCbcInterface->ConfigureCbc ( cCbc );
+                fChipInterface->ConfigureChip ( cCbc );
                 LOG (INFO)  << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
             }
         }
@@ -178,7 +178,7 @@ void AntennaTester::Measure()
     LOG (INFO)  << "Taking data with " << fTotalEvents << " Events!";
 
     //in read mode like this!
-    ThresholdVisitor cReader ( fCbcInterface );
+    ThresholdVisitor cReader ( fChipInterface );
     accept ( cReader );
 
     InitializeHists();

@@ -14,7 +14,7 @@
 #ifndef __FILEPARSER_H__
 #define __FILEPARSER_H__
 
-//#include "../HWInterface/CbcInterface.h"
+//#include "../HWInterface/ChipInterface.h"
 //#include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/BeBoardFWInterface.h"
 #include "../HWInterface/FC7FWInterface.h"

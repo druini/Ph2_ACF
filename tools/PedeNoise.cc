@@ -69,10 +69,10 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
                 if (cCbc->getFrontEndType() == FrontEndType::CBC3 && fDisableStubLogic)
                 {
                     LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning" << RESET ;
-                    fStubLogicValue[cCbc] = fCbcInterface->ReadCbcReg (cCbc, "Pipe&StubInpSel&Ptwidth");
-                    fHIPCountValue[cCbc] = fCbcInterface->ReadCbcReg (cCbc, "HIP&TestMode");
-                    fCbcInterface->WriteCbcReg (cCbc, "Pipe&StubInpSel&Ptwidth", 0x23);
-                    fCbcInterface->WriteCbcReg (cCbc, "HIP&TestMode", 0x08);
+                    fStubLogicValue[cCbc] = fChipInterface->ReadChipReg (cCbc, "Pipe&StubInpSel&Ptwidth");
+                    fHIPCountValue[cCbc] = fChipInterface->ReadChipReg (cCbc, "HIP&TestMode");
+                    fChipInterface->WriteChipReg (cCbc, "Pipe&StubInpSel&Ptwidth", 0x23);
+                    fChipInterface->WriteChipReg (cCbc, "HIP&TestMode", 0x08);
                 }
 
                 uint32_t cCbcId = cCbc->getChipId();
@@ -293,7 +293,7 @@ std::string PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
                     cRegVec.push_back ({"HIP&TestMode", fHIPCountValue[cCbc]});
                 }
 
-                fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+                fChipInterface->WriteChipMultReg (cCbc, cRegVec);
             }
         }
     }
@@ -391,7 +391,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
                 }
 
                 //Write the changes
-                fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+                fChipInterface->WriteChipMultReg (cCbc, cRegVec);
             }
         }
 
@@ -489,7 +489,7 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
 
 
     //start with the threshold value found above
-    // ThresholdVisitor cVisitor (fCbcInterface, cValue);
+    // ThresholdVisitor cVisitor (fChipInterface, cValue);
 
     while (! (cAllZero && cAllOne) )
     {
@@ -874,7 +874,7 @@ void PedeNoise::setThresholdtoNSigma (BeBoard* pBoard, uint32_t pNSigma)
             if (pNSigma > 0) LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " by " << cDiff << " to " << cPedestal + cDiff << " VCth units to supress noise!" ;
             else LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " back to the pedestal at " << +cPedestal ;
 
-            ThresholdVisitor cThresholdVisitor (fCbcInterface, cValue);
+            ThresholdVisitor cThresholdVisitor (fChipInterface, cValue);
             cCbc->accept (cThresholdVisitor);
         }
     }

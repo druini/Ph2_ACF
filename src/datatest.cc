@@ -4,7 +4,7 @@
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
-#include "../HWInterface/CbcInterface.h"
+#include "../HWInterface/ChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/Timer.h"
@@ -139,7 +139,7 @@ int main ( int argc, char* argv[] )
     if ( cVcth != 0 )
     {
         t.start();
-        ThresholdVisitor cVisitor (cSystemController.fCbcInterface, 0);
+        ThresholdVisitor cVisitor (cSystemController.fChipInterface, 0);
         cVisitor.setThreshold (cVcth);
         cSystemController.accept (cVisitor);
 

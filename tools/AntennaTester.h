@@ -60,7 +60,7 @@ class AntennaTester : public Tool
     // configure only the Vcth value
     void ConfigureVcth ( uint16_t pVcth = 0x0078 )
     {
-        ThresholdVisitor cWriter ( fCbcInterface, pVcth );
+        ThresholdVisitor cWriter ( fChipInterface, pVcth );
         accept ( cWriter );
     };
 

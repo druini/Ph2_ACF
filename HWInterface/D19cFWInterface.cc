@@ -17,7 +17,7 @@
 #include "D19cFWInterface.h"
 #include "CtaFpgaConfig.h"
 
-//#include "CbcInterface.h"
+//#include "ChipInterface.h"
 
 
 namespace Ph2_HwInterface {

@@ -1,4 +1,5 @@
 #include "PulseShape.h"
+#include "../HWInterface/CbcInterface.h"
 
 PulseShape::PulseShape() : Tool()
 {}
@@ -107,7 +108,7 @@ void PulseShape::ScanVcth ( uint32_t pDelay )
     bool cSaturate = false;
     uint16_t cDoubleVcth;
 
-    ThresholdVisitor cVisitor (fCbcInterface, 0);
+    ThresholdVisitor cVisitor (fChipInterface, 0);
 
     // Adaptive VCth loop
     while ( 0x00 <= cVcth && cVcth <= cMaxValue )
@@ -286,12 +287,12 @@ void PulseShape::toggleTestGroup (bool pEnable )
         cRegVec.push_back ( std::make_pair ( cRegName.Data(), cValue ) );
     }
 
-    //CbcMultiRegWriter cWriter ( fCbcInterface, cRegVec );
+    //CbcMultiRegWriter cWriter ( fChipInterface, cRegVec );
     //this->accept ( cWriter );
     for (BeBoard* cBoard : fBoardVector)
     {
         for (Module* cFe : cBoard->fModuleVector)
-            fCbcInterface->WriteBroadcastMultReg (cFe, cRegVec);
+            dynamic_cast<CbcInterface*>(fChipInterface)->WriteBroadcastCbcMultiReg (cFe, cRegVec);
     }
 }
 
@@ -310,7 +311,7 @@ void PulseShape::setDelayAndTesGroup ( uint32_t pDelay )
         fBeBoardInterface->WriteBoardReg (cBoard, getDelAfterTPString (cBoard->getBoardType() ), cCoarseDelay);
     }
 
-    CbcRegWriter cWriter ( fCbcInterface, "SelTestPulseDel&ChanGroup", to_reg ( cFineDelay, fTestGroup ) );
+    CbcRegWriter cWriter ( fChipInterface, "SelTestPulseDel&ChanGroup", to_reg ( cFineDelay, fTestGroup ) );
     this->accept ( cWriter );
 
 }
@@ -415,7 +416,7 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
     cRegVec.push_back ( std::make_pair ( "TestPulsePot", pTPAmplitude ) );
     cRegVec.push_back ( std::make_pair ( "Vplus",  fVplus ) );
 
-    CbcMultiRegWriter cWriter ( fCbcInterface, cRegVec );
+    CbcMultiRegWriter cWriter ( fChipInterface, cRegVec );
     this->accept ( cWriter );
 
     for ( auto& cBoard : fBoardVector )

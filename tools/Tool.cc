@@ -4,7 +4,7 @@
 Tool::Tool() :
     SystemController(),
     fCanvasMap(),
-    fCbcHistMap(),
+    fChipHistMap(),
     fModuleHistMap(),
     fType(),
     fTestGroupChannelMap(),
@@ -24,7 +24,7 @@ Tool::Tool() :
 Tool::Tool (THttpServer* pHttpServer) :
     SystemController(),
     fCanvasMap(),
-    fCbcHistMap(),
+    fChipHistMap(),
     fModuleHistMap(),
     fType(),
     fTestGroupChannelMap(),
@@ -42,7 +42,7 @@ Tool::Tool (THttpServer* pHttpServer) :
 Tool::Tool (const Tool& pTool)
 {
     fBeBoardInterface = pTool.fBeBoardInterface;
-    fCbcInterface = pTool.fCbcInterface;
+    fChipInterface = pTool.fChipInterface;
     fBoardVector = pTool.fBoardVector;
     fBeBoardFWMap = pTool.fBeBoardFWMap;
     fSettingsMap = pTool.fSettingsMap;
@@ -55,7 +55,7 @@ Tool::Tool (const Tool& pTool)
     fHttpServer = pTool.fHttpServer;
 #endif
     fCanvasMap = pTool.fCanvasMap;
-    fCbcHistMap = pTool.fCbcHistMap;
+    fChipHistMap = pTool.fChipHistMap;
     fModuleHistMap = pTool.fModuleHistMap;
     fBeBoardHistMap = pTool.fBeBoardHistMap;
     fTestGroupChannelMap = pTool.fTestGroupChannelMap;
@@ -68,7 +68,7 @@ Tool::~Tool()
 void Tool::Inherit (Tool* pTool)
 {
     fBeBoardInterface = pTool->fBeBoardInterface;
-    fCbcInterface = pTool->fCbcInterface;
+    fChipInterface = pTool->fChipInterface;
     fBoardVector = pTool->fBoardVector;
     fBeBoardFWMap = pTool->fBeBoardFWMap;
     fSettingsMap = pTool->fSettingsMap;
@@ -80,7 +80,7 @@ void Tool::Inherit (Tool* pTool)
     fHttpServer = pTool->fHttpServer;
 #endif
     fCanvasMap = pTool->fCanvasMap;
-    fCbcHistMap = pTool->fCbcHistMap;
+    fChipHistMap = pTool->fChipHistMap;
     fModuleHistMap = pTool->fModuleHistMap;
     fBeBoardHistMap = pTool->fBeBoardHistMap;
     fTestGroupChannelMap = pTool->fTestGroupChannelMap;
@@ -89,7 +89,7 @@ void Tool::Inherit (Tool* pTool)
 void Tool::Inherit (SystemController* pSystemController)
 {
     fBeBoardInterface = pSystemController->fBeBoardInterface;
-    fCbcInterface = pSystemController->fCbcInterface;
+    fChipInterface = pSystemController->fChipInterface;
     fBoardVector = pSystemController->fBoardVector;
     fBeBoardFWMap = pSystemController->fBeBoardFWMap;
     fSettingsMap = pSystemController->fSettingsMap;
@@ -114,7 +114,7 @@ void Tool::Destroy()
     }
 
     fCanvasMap.clear();
-    fCbcHistMap.clear();
+    fChipHistMap.clear();
     fModuleHistMap.clear();
     fBeBoardHistMap.clear();
     fTestGroupChannelMap.clear();
@@ -132,32 +132,33 @@ void Tool::SoftDestroy()
     }
 
     fCanvasMap.clear();
-    fCbcHistMap.clear();
+    fChipHistMap.clear();
     fModuleHistMap.clear();
     fBeBoardHistMap.clear();
     fTestGroupChannelMap.clear();
 }
 
-void Tool::bookHistogram ( Chip* pCbc, std::string pName, TObject* pObject )
+void Tool::bookHistogram ( Chip* pChip, std::string pName, TObject* pObject )
 {
     // find or create map<string,TOBject> for specific CBC
-    auto cCbcHistMap = fCbcHistMap.find ( pCbc );
+    auto cChipHistMap = fChipHistMap.find ( pChip );
 
-    if ( cCbcHistMap == std::end ( fCbcHistMap ) )
+    if ( cChipHistMap == std::end ( fChipHistMap ) )
     {
-        LOG (INFO) << "Histo Map for CBC " << int ( pCbc->getChipId() ) <<  " (FE " << int ( pCbc->getFeId() ) << ") does not exist - creating " ;
-        std::map<std::string, TObject*> cTempCbcMap;
+        //Fabio: CBC specific
+        LOG (INFO) << "Histo Map for CBC " << int ( pChip->getChipId() ) <<  " (FE " << int ( pChip->getFeId() ) << ") does not exist - creating " ;
+        std::map<std::string, TObject*> cTempChipMap;
 
-        fCbcHistMap[pCbc] = cTempCbcMap;
-        cCbcHistMap = fCbcHistMap.find ( pCbc );
+        fChipHistMap[pChip] = cTempChipMap;
+        cChipHistMap = fChipHistMap.find ( pChip );
     }
 
     // find histogram with given name: if it exists, delete the object, if not create
-    auto cHisto = cCbcHistMap->second.find ( pName );
+    auto cHisto = cChipHistMap->second.find ( pName );
 
-    if ( cHisto != std::end ( cCbcHistMap->second ) ) cCbcHistMap->second.erase ( cHisto );
+    if ( cHisto != std::end ( cChipHistMap->second ) ) cChipHistMap->second.erase ( cHisto );
 
-    cCbcHistMap->second[pName] = pObject;
+    cChipHistMap->second[pName] = pObject;
 #ifdef __HTTP__
 
     if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
@@ -219,20 +220,21 @@ void Tool::bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObjec
 #endif
 }
 
-TObject* Tool::getHist ( Chip* pCbc, std::string pName )
+TObject* Tool::getHist ( Chip* pChip, std::string pName )
 {
-    auto cCbcHistMap = fCbcHistMap.find ( pCbc );
+    auto cChipHistMap = fChipHistMap.find ( pChip );
 
-    if ( cCbcHistMap == std::end ( fCbcHistMap ) )
+    if ( cChipHistMap == std::end ( fChipHistMap ) )
     {
-        LOG (ERROR) << RED << "Error: could not find the Histograms for CBC " << int ( pCbc->getChipId() ) <<  " (FE " << int ( pCbc->getFeId() ) << ")" << RESET ;
+        //Fabio: CBC specific
+        LOG (ERROR) << RED << "Error: could not find the Histograms for CBC " << int ( pChip->getChipId() ) <<  " (FE " << int ( pChip->getFeId() ) << ")" << RESET ;
         return nullptr;
     }
     else
     {
-        auto cHisto = cCbcHistMap->second.find ( pName );
+        auto cHisto = cChipHistMap->second.find ( pName );
 
-        if ( cHisto == std::end ( cCbcHistMap->second ) )
+        if ( cHisto == std::end ( cChipHistMap->second ) )
         {
             LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
             return nullptr;
@@ -317,9 +319,10 @@ void Tool::SaveResults()
         fResultFile->cd();
     }
 
-    for ( const auto& cCbc : fCbcHistMap )
+    for ( const auto& cChip : fChipHistMap )
     {
-        TString cDirName = Form ( "FE%dCBC%d", cCbc.first->getFeId(), cCbc.first->getChipId() );
+        //Fabio: CBC specific
+        TString cDirName = Form ( "FE%dCBC%d", cChip.first->getFeId(), cChip.first->getChipId() );
         TObject* cObj = gROOT->FindObject ( cDirName );
 
         //if ( cObj ) delete cObj;
@@ -328,7 +331,7 @@ void Tool::SaveResults()
 
         fResultFile->cd ( cDirName );
 
-        for ( const auto& cHist : cCbc.second )
+        for ( const auto& cHist : cChip.second )
             cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
 
         fResultFile->cd();
@@ -350,6 +353,7 @@ void Tool::SaveResults()
 
 void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool pDate )
 {
+    //Fabio: CBC specific - BEGIN
     bool cCheck;
     bool cHoleMode;
     auto cSetting = fSettingsMap.find ( "HoleMode" );
@@ -367,6 +371,7 @@ void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool
         if ( cHoleMode ) cMode = "_Hole";
         else cMode = "_Electron";
     }
+    //Fabio: CBC specific - END
 
     std::string nDirname = pDirname;
 
@@ -476,13 +481,14 @@ void Tool::dumpConfigFiles()
     {
         std::string fDirectoryName;
         RegMapDumper ( std::string pDirectoryName ) : fDirectoryName ( pDirectoryName ) {};
-        void visit ( Chip& pCbc )
+        void visit ( Chip& pChip )
         {
             if ( !fDirectoryName.empty() )
             {
-                TString cFilename = fDirectoryName + Form ( "/FE%dCBC%d.txt", pCbc.getFeId(), pCbc.getChipId() );
-                // cFilename += Form( "/FE%dCBC%d.txt", pCbc.getFeId(), pCbc.getChipId() );
-                pCbc.saveRegMap ( cFilename.Data() );
+                //Fabio: CBC specific
+                TString cFilename = fDirectoryName + Form ( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
+                // cFilename += Form( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
+                pChip.saveRegMap ( cFilename.Data() );
             }
             else LOG (INFO) << "Error: no results Directory initialized! "  ;
         }
@@ -491,7 +497,7 @@ void Tool::dumpConfigFiles()
     RegMapDumper cDumper ( fDirectoryName );
     accept ( cDumper );
 
-    LOG (INFO) << BOLDBLUE << "Configfiles for all Cbcs written to " << fDirectoryName << RESET ;
+    LOG (INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fDirectoryName << RESET ;
 }
 
 
@@ -502,17 +508,18 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
     {
         for (auto cFe : cBoard->fModuleVector)
         {
-            for (auto cCbc : cFe->fChipVector)
+            for (auto cChip : cFe->fChipVector)
             {
+                //Fabio: CBC specific - BEGIN
                 //first, get the Amux Value
                 uint8_t cOriginalAmuxValue;
-                cOriginalAmuxValue = cCbc->getReg ("MiscTestPulseCtrl&AnalogMux" );
-                //uint8_t cOriginalHitDetectSLVSValue = cCbc->getReg ("HitDetectSLVS" );
+                cOriginalAmuxValue = cChip->getReg ("MiscTestPulseCtrl&AnalogMux" );
+                //uint8_t cOriginalHitDetectSLVSValue = cChip->getReg ("HitDetectSLVS" );
 
                 std::vector<std::pair<std::string, uint8_t>> cRegVec;
                 uint8_t cRegValue =  to_reg ( 0, pTestGroup );
 
-                if (cCbc->getFrontEndType() == FrontEndType::CBC3)
+                if (cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
                     uint8_t cTPRegValue;
 
@@ -544,7 +551,8 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
                     cRegVec.push_back ( std::make_pair ( "TestPulsePot", pTPAmplitude ) );
                 }
 
-                this->fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+                this->fChipInterface->WriteChipMultReg (cChip, cRegVec);
+                //Fabio: CBC specific - END
 
             }
         }
@@ -558,17 +566,19 @@ void Tool::enableTestPulse(bool enableTP)
     {
         for (auto cFe : cBoard->fModuleVector)
         {
-            for (auto cCbc : cFe->fChipVector)
+            for (auto cChip : cFe->fChipVector)
             {
+                //Fabio: CBC specific - BEGIN
                 uint8_t cOriginalAmuxValue;
-                cOriginalAmuxValue = cCbc->getReg ("MiscTestPulseCtrl&AnalogMux" );
+                cOriginalAmuxValue = cChip->getReg ("MiscTestPulseCtrl&AnalogMux" );
                 
                 uint8_t cTPRegValue;
 
                 if (enableTP) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
                 else cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
 
-                this->fCbcInterface->WriteCbcReg ( cCbc, "MiscTestPulseCtrl&AnalogMux",  cTPRegValue );
+                this->fChipInterface->WriteChipReg ( cChip, "MiscTestPulseCtrl&AnalogMux",  cTPRegValue );
+                //Fabio: CBC specific - END
                 
             }
         }
@@ -578,11 +588,12 @@ void Tool::enableTestPulse(bool enableTP)
 }
 
 
-void Tool::selectGroupTestPulse(Chip* cCbc, uint8_t pTestGroup)
+void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
 {
-    
+    //Fabio: CBC specific - BEGIN
     uint8_t cRegValue =  to_reg ( 0, pTestGroup );
-    this->fCbcInterface->WriteCbcReg ( cCbc, "TestPulseDel&ChanGroup",  cRegValue );
+    this->fChipInterface->WriteChipReg ( cChip, "TestPulseDel&ChanGroup",  cRegValue );
+    //Fabio: CBC specific - END
     
     return;
 }
@@ -591,6 +602,7 @@ void Tool::setFWTestPulse()
 {
     for (auto& cBoard : fBoardVector)
     {
+        //Fabio: CBC specific - BEGIN
         std::vector<std::pair<std::string, uint32_t> > cRegVec;
         BoardType cBoardType = cBoard->getBoardType();
 
@@ -616,11 +628,13 @@ void Tool::setFWTestPulse()
         }
 
         fBeBoardInterface->WriteBoardMultReg (cBoard, cRegVec);
+        //Fabio: CBC specific - END
     }
 }
 
 void Tool::MakeTestGroups ()
 {
+    //Fabio: CBC specific - BEGIN
     for ( int cGId = 0; cGId < 8; cGId++ )
     {
         std::vector<uint8_t> tempchannelVec;
@@ -653,6 +667,7 @@ void Tool::MakeTestGroups ()
 
     for ( int idx = 0; idx < 254; idx++ )
         tempchannelVec.push_back ( idx );
+    //Fabio: CBC specific - END
 
     fTestGroupChannelMap[cGId] = tempchannelVec;
 }
@@ -673,18 +688,18 @@ void Tool::AmmendReport (std::string pString )
 
 
 // decode bend LUT for a given CBC
-std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pCbc)
+std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pChip)
 {
+    //Fabio: CBC specific but not used by common scans - BEGIN
 
     std::map<uint8_t, double> cLUT;
 
     double cBend=-7.0; 
-    uint8_t cRegAddress = 0x40; 
-    LOG (DEBUG) << BOLDGREEN << "Decoding bend LUT for CBC" << +pCbc->getChipId() << " ." << RESET; 
+    LOG (DEBUG) << BOLDGREEN << "Decoding bend LUT for CBC" << +pChip->getChipId() << " ." << RESET; 
     for( int i = 0 ; i <= 14 ; i++ )
     {
         TString cRegName = Form ( "Bend%d", i  );
-        uint8_t cRegValue = fCbcInterface->ReadCbcReg (pCbc, cRegName.Data() ); 
+        uint8_t cRegValue = fChipInterface->ReadChipReg (pChip, cRegName.Data() ); 
         //LOG (INFO) << BOLDGREEN << "Reading register " << cRegName.Data() << " - value of 0x" << std::hex <<  +cRegValue << " found [LUT entry for bend of " << cBend << " strips]" <<  RESET;
 
         uint8_t cLUTvalue_0 = (cRegValue >> 0) & 0x0F;
@@ -706,12 +721,15 @@ std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pCbc)
         cBend += 0.5;
     }
     return cLUT;
+    //Fabio: CBC specific but not used by common scans - END
+
 }
 
 
 // first a method to mask all channels in the CBC 
-void Tool::SetMaskAllChannels (Chip* pCbc, bool mask)
+void Tool::SetMaskAllChannels (Chip* pChip, bool mask)
 {
+    //Fabio: CBC specific - BEGIN
     uint8_t cRegValue ;
     std::string cRegName;
     // this doesn't seem like the smartest way to do this .... but ok might work for now 
@@ -731,10 +749,10 @@ void Tool::SetMaskAllChannels (Chip* pCbc, bool mask)
     {
         for ( unsigned int i = 0 ; i < fChannelMaskMapCBC2.size() ; i++ )
         {
-            pCbc->setReg (fChannelMaskMapCBC2[i], maskValue);
-            cRegValue = pCbc->getReg (fChannelMaskMapCBC2[i]);
+            pChip->setReg (fChannelMaskMapCBC2[i], maskValue);
+            cRegValue = pChip->getReg (fChannelMaskMapCBC2[i]);
             cRegName =  fChannelMaskMapCBC2[i];
-            fCbcInterface->WriteCbcReg ( pCbc, cRegName,  cRegValue  );
+            fChipInterface->WriteChipReg ( pChip, cRegName,  cRegValue  );
         }
     }
 
@@ -746,24 +764,27 @@ void Tool::SetMaskAllChannels (Chip* pCbc, bool mask)
         for ( unsigned int i = 0 ; i < fChannelMaskMapCBC3.size() ; i++ )
         {
             cRegVec.push_back ( {fChannelMaskMapCBC3[i] ,maskValue } ); 
-            //pCbc->setReg (fChannelMaskMapCBC3[i], 0);
-            //cRegValue = pCbc->getReg (fChannelMaskMapCBC3[i]);
+            //pChip->setReg (fChannelMaskMapCBC3[i], 0);
+            //cRegValue = pChip->getReg (fChannelMaskMapCBC3[i]);
             //cRegName =  fChannelMaskMapCBC3[i];
-            //fCbcInterface->WriteCbcReg ( pCbc, cRegName,  cRegValue  );
+            //fChipInterface->WriteChipReg ( pChip, cRegName,  cRegValue  );
             LOG (DEBUG) << BOLDBLUE << fChannelMaskMapCBC3[i] << " " << std::bitset<8> (maskValue);
         }
-        fCbcInterface->WriteCbcMultReg ( pCbc , cRegVec );
+        fChipInterface->WriteChipMultReg ( pChip , cRegVec );
 
     }
+    //Fabio: CBC specific - END
 }
 
 
 //method to mask a channel list
-void Tool::maskChannelFromOtherGroups (Chip* pCbc, int pTestGroup){
+void Tool::maskChannelFromOtherGroups (Chip* pChip, int pTestGroup){
+
+    //Fabio: CBC specific - BEGIN
 
     std::vector<uint8_t> cbcMask;
-    bool cbchasMaskedChannels = pCbc->hasMaskedChannels();
-    if(cbchasMaskedChannels) cbcMask = pCbc->getChipMask();
+    bool cbcHasMaskedChannels = pChip->hasMaskedChannels();
+    if(cbcHasMaskedChannels) cbcMask = pChip->getChipMask();
 
     const std::vector<uint8_t> &groupMask = fMaskForTestGroupChannelMap[pTestGroup];
 
@@ -776,14 +797,15 @@ void Tool::maskChannelFromOtherGroups (Chip* pCbc, int pTestGroup){
     // }
     // std::cout<<std::endl;
     for(uint8_t i=0; i<cbcMask.size(); ++i){
-        if(cbchasMaskedChannels) cRegVec.push_back ( {fChannelMaskMapCBC3[i], cbcMask[i] & groupMask[i] } );
+        if(cbcHasMaskedChannels) cRegVec.push_back ( {fChannelMaskMapCBC3[i], cbcMask[i] & groupMask[i] } );
         else cRegVec.push_back ( {fChannelMaskMapCBC3[i], groupMask[i] } );
         // std::cout<<(unsigned int)(cbcMask[i] & groupMask[i])<<" ";
     }
     // std::cout<<std::dec<<std::endl;
 
     
-    fCbcInterface->WriteCbcMultReg ( pCbc , cRegVec );
+    fChipInterface->WriteChipMultReg ( pChip , cRegVec );
+    //Fabio: CBC specific - END
 
     return;
 
@@ -792,8 +814,10 @@ void Tool::maskChannelFromOtherGroups (Chip* pCbc, int pTestGroup){
 
 
 // then a method to un-mask pairs of channels on a given CBC
-void Tool::unmaskPair(Chip* cCbc ,  std::pair<uint8_t,uint8_t> pPair)
+void Tool::unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair)
 {
+    //Fabio: CBC specific but not used by common scans - BEGIN
+
     FrontEndType cFrontEndType; 
     for ( BeBoard* pBoard : fBoardVector )
     {
@@ -828,7 +852,7 @@ void Tool::unmaskPair(Chip* cCbc ,  std::pair<uint8_t,uint8_t> pPair)
     //LOG (INFO) << GREEN << "\t ......... UNMASKing channels : " << RESET ;  
     for( auto cMasked : cMaskedList)
     {
-        uint8_t cRegValue = 0; //cCbc->getReg (cMasked.first);
+        uint8_t cRegValue = 0; //cChip->getReg (cMasked.first);
         std::string cOutput = "";  
         for(auto cMaskedChannel : cMasked.second )
         {
@@ -839,16 +863,19 @@ void Tool::unmaskPair(Chip* cCbc ,  std::pair<uint8_t,uint8_t> pPair)
             cOutput += cOut.Data(); 
         }
         //LOG (INFO) << GREEN << "\t Writing " << std::bitset<8> (cRegValue) <<  " to " << cMasked.first << " to UNMASK channels for stub sweep : " << cOutput.c_str() << RESET ; 
-        fCbcInterface->WriteCbcReg ( cCbc, cMasked.first ,  cRegValue  );
+        fChipInterface->WriteChipReg ( cChip, cMasked.first ,  cRegValue  );
     }
+    //Fabio: CBC specific but not used by common scans - END
 
 }
 
 
 
 // and finally a method to un-mask a list of channels on a given CBC
-void Tool::unmaskList(Chip* cCbc , const std::vector<uint8_t> &pList )
+void Tool::unmaskList(Chip* cChip , const std::vector<uint8_t> &pList )
 {
+    //Fabio: CBC specific - BEGIN
+
     FrontEndType cFrontEndType; 
     for ( BeBoard* pBoard : fBoardVector )
     {
@@ -889,7 +916,7 @@ void Tool::unmaskList(Chip* cCbc , const std::vector<uint8_t> &pList )
     {
         //LOG (INFO) << GREEN << "\t Writing to " << cMasked.first << " to un-mask " <<  (cMasked.second).size() << " channel(s) : " << RESET ; 
         // store original value of registe 
-        uint8_t cRegValue = 0; //cCbc->getReg (cMasked.first);
+        uint8_t cRegValue = 0; //cChip->getReg (cMasked.first);
         std::string cOutput = "";  
         for(auto cMaskedChannel : cMasked.second )
         {
@@ -901,13 +928,14 @@ void Tool::unmaskList(Chip* cCbc , const std::vector<uint8_t> &pList )
             cOutput += cOut.Data(); 
         }
         LOG (DEBUG) << GREEN << "\t Writing " << std::bitset<8> (cRegValue) <<  " to " << cMasked.first << " to UNMASK channels for stub sweep : " << cOutput.c_str() << RESET ; 
-        fCbcInterface->WriteCbcReg ( cCbc, cMasked.first ,  cRegValue  );
+        fChipInterface->WriteChipReg ( cChip, cMasked.first ,  cRegValue  );
     }
+    //Fabio: CBC specific - END
 
 }
 
 // Two dimensional dac scan
-void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > > &backEndOccupancyPerChannelMap, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > > &backEndCbcOccupanyMap)
+void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > > &backEndOccupancyPerChannelMap, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > > &backEndChipOccupanyMap)
 {
 
     for (auto& cBoard : fBoardVector)
@@ -918,7 +946,7 @@ void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &
         scanBeBoardDacDac(cBoard, dac1Name, dac1List, dac2Name, dac2List, numberOfEvents, moduleOccupancyPerChannelMap, moduleGlobalOccupancyMap);
 
         backEndOccupancyPerChannelMap[cBoard->getBeId()] = moduleOccupancyPerChannelMap;
-        backEndCbcOccupanyMap[cBoard->getBeId()] = moduleGlobalOccupancyMap;
+        backEndChipOccupanyMap[cBoard->getBeId()] = moduleGlobalOccupancyMap;
     }
 
     return;
@@ -926,18 +954,18 @@ void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &
 
 
 // Two dimensional dac scan per BeBoard
-void Tool::scanBeBoardDacDac(BeBoard* pBoard, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > &moduleOccupancyPerChannelMap, std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > &backEndCbcOccupanyMap)
+void Tool::scanBeBoardDacDac(BeBoard* pBoard, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > &moduleOccupancyPerChannelMap, std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > &backEndChipOccupanyMap)
 {
 
     for(const auto & dac1Value : dac1List){
         std::map<uint16_t, ModuleOccupancyPerChannelMap> moduleOccupancyPerChannelDac1Map;
-        std::map<uint16_t, ModuleGlobalOccupancyMap > moduleCbcOccupanyDac1Map;
+        std::map<uint16_t, ModuleGlobalOccupancyMap > moduleChipOccupanyDac1Map;
         setSameGlobalDacBeBoard(pBoard, dac1Name, dac1Value);
 
-        scanBeBoardDac(pBoard, dac2Name, dac2List, numberOfEvents, moduleOccupancyPerChannelDac1Map, moduleCbcOccupanyDac1Map);
+        scanBeBoardDac(pBoard, dac2Name, dac2List, numberOfEvents, moduleOccupancyPerChannelDac1Map, moduleChipOccupanyDac1Map);
 
         moduleOccupancyPerChannelMap[dac1Value] = moduleOccupancyPerChannelDac1Map;
-        backEndCbcOccupanyMap[dac1Value] = moduleCbcOccupanyDac1Map;
+        backEndChipOccupanyMap[dac1Value] = moduleChipOccupanyDac1Map;
     }
 
     return;
@@ -945,18 +973,18 @@ void Tool::scanBeBoardDacDac(BeBoard* pBoard, const std::string &dac1Name, const
 
 
 // One dimensional dac scan
-void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > &backEndOccupancyPerChannelMap, std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > &backEndCbcOccupanyMap)
+void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > &backEndOccupancyPerChannelMap, std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > &backEndChipOccupanyMap)
 {
 
     for (auto& cBoard : fBoardVector)
     {
         std::map<uint16_t, ModuleOccupancyPerChannelMap> moduleOccupancyPerChannelMap;
-        std::map<uint16_t, ModuleGlobalOccupancyMap > moduleCbcOccupanyMap;
+        std::map<uint16_t, ModuleGlobalOccupancyMap > moduleChipOccupanyMap;
 
-        scanBeBoardDac(cBoard, dacName, dacList, numberOfEvents, moduleOccupancyPerChannelMap, moduleCbcOccupanyMap);
+        scanBeBoardDac(cBoard, dacName, dacList, numberOfEvents, moduleOccupancyPerChannelMap, moduleChipOccupanyMap);
 
         backEndOccupancyPerChannelMap[cBoard->getBeId()] = moduleOccupancyPerChannelMap;
-        backEndCbcOccupanyMap[cBoard->getBeId()] = moduleCbcOccupanyMap;
+        backEndChipOccupanyMap[cBoard->getBeId()] = moduleChipOccupanyMap;
 
     }
 
@@ -965,7 +993,7 @@ void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacL
 
 
 // One dimensional dac scan per BeBoard
-void Tool::scanBeBoardDac(BeBoard* pBoard, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &moduleOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &moduleCbcOccupanyMap)
+void Tool::scanBeBoardDac(BeBoard* pBoard, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &moduleOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &moduleChipOccupanyMap)
 {
 
     for(const auto & dacValue : dacList){
@@ -976,7 +1004,7 @@ void Tool::scanBeBoardDac(BeBoard* pBoard, const std::string &dacName, const std
         setDacAndMeasureBeBoardOccupancy(pBoard, dacName, dacValue, numberOfEvents, moduleOccupancyDacMap, moduleGlobalOccupancyMap, globalOccupancy);
         
         moduleOccupancyPerChannelMap[dacValue] = moduleOccupancyDacMap;
-        moduleCbcOccupanyMap[dacValue] = moduleGlobalOccupancyMap;
+        moduleChipOccupanyMap[dacValue] = moduleGlobalOccupancyMap;
     }
 
     return;
@@ -1011,10 +1039,10 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
     }
 
     float globalOccupancy = 0.;
-    Chip *cCbc = pBoard->fModuleVector.at(0)->fChipVector.at(0); //assumption: one BeBoard has only one type of chips;
+    Chip *cChip = pBoard->fModuleVector.at(0)->fChipVector.at(0); //assumption: one BeBoard has only one type of chip;
     
-    bool localDAC = cCbc->isDACLocal(dacName);
-    uint8_t numberOfBits = cCbc->getNumberOfBits(dacName);
+    bool localDAC = cChip->isDACLocal(dacName);
+    uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
     bool occupanyDirectlyProportionalToDAC;
 
     //Maps for local DAC scans
@@ -1037,15 +1065,15 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
     // Starting point: all bits to 0
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cChip : cFe->fChipVector )
         {
             if(localDAC)
             {
-                previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = std::vector<uint8_t>(cCbc->getNumberOfChannels(),0);
+                previousLocalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] = std::vector<uint8_t>(cChip->getNumberOfChannels(),0);
             }
             else
             {
-                previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = 0;
+                previousGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] = 0;
             }
         }
     }
@@ -1072,15 +1100,15 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
     // Starting point: all bits to 0
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cChip : cFe->fChipVector )
         {
             if(localDAC)
             {
-                currentLocalDacListPerBoard [cFe->getModuleId()][cCbc->getChipId()] = std::vector<uint8_t>(cCbc->getNumberOfChannels(),0xFFFF>>(16-numberOfBits)); //trick to set n bits to 1 without using power of 2
+                currentLocalDacListPerBoard [cFe->getModuleId()][cChip->getChipId()] = std::vector<uint8_t>(cChip->getNumberOfChannels(),0xFFFF>>(16-numberOfBits)); //trick to set n bits to 1 without using power of 2
             }
             else
             {
-                currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = 0xFFFF>>(16-numberOfBits); //trick to set n bits to 1 without using power of 2
+                currentGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] = 0xFFFF>>(16-numberOfBits); //trick to set n bits to 1 without using power of 2
             }
         }
     }
@@ -1090,9 +1118,10 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
 
     measureBeBoardOccupancy(pBoard, numberOfEvents, moduleOccupancyPerChannelMapCurrentStep, moduleOccupancyMapCurrentStep, globalOccupancyCurrentStep);
 
-    
+    //Fabio: CBC specific - BEGIN
     if(dacName.find("Mask",0,4)!=std::string::npos) occupanyDirectlyProportionalToDAC = true;
     else occupanyDirectlyProportionalToDAC = globalOccupancyCurrentStep > globalOccupancyPreviousStep;
+    //Fabio: CBC specific - BEGIN
   
     if(!occupanyDirectlyProportionalToDAC)
     {
@@ -1107,20 +1136,20 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
 
         for ( auto cFe : pBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cChip : cFe->fChipVector )
             {
                 if(localDAC)
                 {
-                    for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel)
+                    for(uint8_t iChannel=0; iChannel<cChip->getNumberOfChannels(); ++iChannel)
                     {
-                        if(occupanyDirectlyProportionalToDAC) currentLocalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()][iChannel] = previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()][iChannel] + (1<<iBit);
-                        else currentLocalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()][iChannel] = previousLocalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()][iChannel] & (0xFFFF - (1<<iBit));
+                        if(occupanyDirectlyProportionalToDAC) currentLocalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()][iChannel] = previousLocalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()][iChannel] + (1<<iBit);
+                        else currentLocalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()][iChannel] = previousLocalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()][iChannel] & (0xFFFF - (1<<iBit));
                     }
                 }
                 else
                 {
-                    if(occupanyDirectlyProportionalToDAC) currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] + (1<<iBit);
-                    else currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] & (0xFFFF - (1<<iBit));
+                    if(occupanyDirectlyProportionalToDAC) currentGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] = previousGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] + (1<<iBit);
+                    else currentGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] = previousGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] & (0xFFFF - (1<<iBit));
                 }
             }
         }
@@ -1133,74 +1162,74 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
         //Determine if it is better or not
         for ( auto cFe : pBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cChip : cFe->fChipVector )
             {
-                // std::cout<<"CBC "<<(int16_t)cCbc->getChipId()<<std::endl;
+                // std::cout<<"CBC "<<(int16_t)cChip->getChipId()<<std::endl;
                 if(localDAC)
                 {
-                    // if(cCbc->getChipId()==0) std::cout<<"Current DAC: "<<std::bitset<10>(currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId()).at(10))
-                    //     <<" Current occupancy: "<<moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId()).at(10)
-                    //     <<" Previous Occupancy: "<<moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getChipId()).at(10);
-                    for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel)
+                    // if(cChip->getChipId()==0) std::cout<<"Current DAC: "<<std::bitset<10>(currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cChip->getChipId()).at(10))
+                    //     <<" Current occupancy: "<<moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId()).at(10)
+                    //     <<" Previous Occupancy: "<<moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cChip->getChipId()).at(10);
+                    for(uint8_t iChannel=0; iChannel<cChip->getNumberOfChannels(); ++iChannel)
                     {
 
                         
                         if(isOccupancyTheMaximumAccepted){
-                            if( moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] <= targetOccupancy )
+                            if( moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] <= targetOccupancy )
                             {
-                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
-                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
+                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel];
+                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel];
                             }
-                            // if( occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] <= targetOccupancy)
+                            // if( occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] <= targetOccupancy)
                             // {
-                            //     previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
-                            //     moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
+                            //     previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel];
+                            //     moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel];
                             // }
-                            // else if( !occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] >= targetOccupancy)
+                            // else if( !occupanyDirectlyProportionalToDAC && moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] >= targetOccupancy)
                             // {
-                            //     previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
-                            //     moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
+                            //     previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel];
+                            //     moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel];
                             // }
                         }
                         else{
-                            if( abs( ( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] - targetOccupancy))/ (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] - targetOccupancy) ) <= 1. 
-                                && abs( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] - targetOccupancy)/
-                                    ( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] - moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] ) / (0xFFFF>>(16-iBit)) ) ) < 1.  )
+                            if( abs( ( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] - targetOccupancy))/ (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] - targetOccupancy) ) <= 1. 
+                                && abs( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] - targetOccupancy)/
+                                    ( (moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] - moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] ) / (0xFFFF>>(16-iBit)) ) ) < 1.  )
                             {
-                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
-                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel];
+                                previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] = currentLocalDacListPerBoard.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel];
+                                moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] = moduleOccupancyPerChannelMapCurrentStep.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel];
                             }
                         }
 
                     }
-                    // if(cCbc->getChipId()==0) std::cout<<" Chosen Occupancy: "<<moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cCbc->getChipId()).at(10)
-                    //     <<" DAC: "<<std::bitset<10>(previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cCbc->getChipId()).at(10))<<std::endl;
+                    // if(cChip->getChipId()==0) std::cout<<" Chosen Occupancy: "<<moduleOccupancyPerChannelMapPreviousStep.at(cFe->getModuleId()).at(cChip->getChipId()).at(10)
+                    //     <<" DAC: "<<std::bitset<10>(previousLocalDacListPerBoard.at(cFe->getModuleId()).at(cChip->getChipId()).at(10))<<std::endl;
                 }
                 else
                 {
     
-                    // if(cCbc->getChipId()==0) std::cout<<"Current DAC: "<<std::bitset<10>(currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()])<<" Current occupancy: "<<moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()]<<" Previous Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()];
+                    // if(cChip->getChipId()==0) std::cout<<"Current DAC: "<<std::bitset<10>(currentGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()])<<" Current occupancy: "<<moduleOccupancyMapCurrentStep[cFe->getModuleId()][cChip->getChipId()]<<" Previous Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cChip->getChipId()];
                     if(isOccupancyTheMaximumAccepted){
-                        if( moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()] <= targetOccupancy ){
-                            previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()];
-                            moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()];
+                        if( moduleOccupancyMapCurrentStep[cFe->getModuleId()][cChip->getChipId()] <= targetOccupancy ){
+                            previousGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()];
+                            moduleOccupancyMapPreviousStep[cFe->getModuleId()][cChip->getChipId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cChip->getChipId()];
                         }
-                        // if(occupanyDirectlyProportionalToDAC && moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()] <= targetOccupancy){
-                        //     previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()];
-                        //     moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()];
+                        // if(occupanyDirectlyProportionalToDAC && moduleOccupancyMapCurrentStep[cFe->getModuleId()][cChip->getChipId()] <= targetOccupancy){
+                        //     previousGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()];
+                        //     moduleOccupancyMapPreviousStep[cFe->getModuleId()][cChip->getChipId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cChip->getChipId()];
                         // }
-                        // else if(!occupanyDirectlyProportionalToDAC && moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()] >= targetOccupancy){
-                        //     previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()];
-                        //     moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()];
+                        // else if(!occupanyDirectlyProportionalToDAC && moduleOccupancyMapCurrentStep[cFe->getModuleId()][cChip->getChipId()] >= targetOccupancy){
+                        //     previousGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()];
+                        //     moduleOccupancyMapPreviousStep[cFe->getModuleId()][cChip->getChipId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cChip->getChipId()];
                         // }
                     }
                     else{
-                        if( abs( (moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()] - targetOccupancy)/(moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()] - targetOccupancy) ) <= 1. ){
-                            previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()];
-                            moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cCbc->getChipId()];
+                        if( abs( (moduleOccupancyMapCurrentStep[cFe->getModuleId()][cChip->getChipId()] - targetOccupancy)/(moduleOccupancyMapPreviousStep[cFe->getModuleId()][cChip->getChipId()] - targetOccupancy) ) <= 1. ){
+                            previousGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] = currentGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()];
+                            moduleOccupancyMapPreviousStep[cFe->getModuleId()][cChip->getChipId()] = moduleOccupancyMapCurrentStep[cFe->getModuleId()][cChip->getChipId()];
                         }
                     }
-                    // if(cCbc->getChipId()==0) std::cout<<" Chosen Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cCbc->getChipId()]<<" DAC: "<<std::bitset<10>(previousGlobalDacListPerBoard[cFe->getModuleId()][cCbc->getChipId()])<<std::endl;
+                    // if(cChip->getChipId()==0) std::cout<<" Chosen Occupancy: "<<moduleOccupancyMapPreviousStep[cFe->getModuleId()][cChip->getChipId()]<<" DAC: "<<std::bitset<10>(previousGlobalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()])<<std::endl;
 
                 }
             }
@@ -1223,7 +1252,7 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
 
 
 // set dac and measure occupancy
-void Tool::setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndCbcOccupanyMap, float &globalOccupancy)
+void Tool::setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndChipOccupanyMap, float &globalOccupancy)
 {
 
     for (auto& cBoard : fBoardVector)
@@ -1235,7 +1264,7 @@ void Tool::setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t 
         globalOccupancy+=globalBeBoardOccupancy;
 
         backEndOccupancyPerChannelMap[cBoard->getBeId()] = moduleOccupancyPerChannelMap;
-        backEndCbcOccupanyMap[cBoard->getBeId()] = cbcOccupanyMap;
+        backEndChipOccupanyMap[cBoard->getBeId()] = cbcOccupanyMap;
     }
 
     globalOccupancy/=fBoardVector.size();
@@ -1256,7 +1285,7 @@ void Tool::setDacAndMeasureBeBoardOccupancy(BeBoard* pBoard, const std::string &
 }
 
 // measure occupancy
-void Tool::measureOccupancy(const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndCbcOccupanyMap, float &globalOccupancy)
+void Tool::measureOccupancy(const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndChipOccupanyMap, float &globalOccupancy)
 {
 
     for (auto& cBoard : fBoardVector)
@@ -1268,7 +1297,7 @@ void Tool::measureOccupancy(const uint16_t &numberOfEvents, std::map<uint16_t, M
         globalOccupancy+=globalBeBoardOccupancy;
 
         backEndOccupancyPerChannelMap[cBoard->getBeId()] = moduleOccupancyPerChannelMap;
-        backEndCbcOccupanyMap[cBoard->getBeId()] = cbcOccupanyMap;
+        backEndChipOccupanyMap[cBoard->getBeId()] = cbcOccupanyMap;
     }
 
     globalOccupancy/=fBoardVector.size();
@@ -1294,15 +1323,15 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
             {
                 for ( auto cFe : pBoard->fModuleVector )
                 {
-                    for ( auto cCbc : cFe->fChipVector )
+                    for ( auto cChip : cFe->fChipVector )
                     {
                         if(fMaskChannelsFromOtherGroups)
                         {
-                            maskChannelFromOtherGroups (cCbc, group.first);
+                            maskChannelFromOtherGroups (cChip, group.first);
                         }
                         if(fTestPulse)
                         {
-                            selectGroupTestPulse(cCbc, group.first);
+                            selectGroupTestPulse(cChip, group.first);
                         }
                     }
                 }
@@ -1315,9 +1344,9 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
         {
             for ( auto cFe : pBoard->fModuleVector )
             {
-                for ( auto cCbc : cFe->fChipVector )
+                for ( auto cChip : cFe->fChipVector )
                 {
-                    fCbcInterface->ConfigureCbcOriginalMask ( cCbc );
+                    fChipInterface->ConfigureChipOriginalMask ( cChip );
                 }
             }
         }
@@ -1331,39 +1360,39 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
     for ( auto cFe : pBoard->fModuleVector )
     {
 
-        CbcOccupancyPerChannelMap *cbcChannelOccupancy = &moduleOccupancyPerChannelMap[cFe->getModuleId()];
+        ChipOccupancyPerChannelMap *cbcChannelOccupancy = &moduleOccupancyPerChannelMap[cFe->getModuleId()];
         std::map<uint8_t,float> *cbcNumberOfHitsMap = &cbcOccupanyMap[cFe->getModuleId()];
 
 
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cChip : cFe->fChipVector )
         {
 
-            ChannelOccupancy *channelOccupancy = &cbcChannelOccupancy->at(cCbc->getChipId());
+            ChannelOccupancy *channelOccupancy = &cbcChannelOccupancy->at(cChip->getChipId());
 
-            (*cbcNumberOfHitsMap)[cCbc->getChipId()] =0;
+            (*cbcNumberOfHitsMap)[cChip->getChipId()] =0;
             
             std::vector<uint8_t> cbcMask;
-            bool cbchasMaskedChannels = cCbc->hasMaskedChannels();
-            if(cbchasMaskedChannels) cbcMask = cCbc->getChipMask();
+            bool cbcHasMaskedChannels = cChip->hasMaskedChannels();
+            if(cbcHasMaskedChannels) cbcMask = cChip->getChipMask();
 
-            for ( uint8_t cChan=0; cChan<cCbc->getNumberOfChannels(); ++cChan)
+            for ( uint8_t cChan=0; cChan<cChip->getNumberOfChannels(); ++cChan)
             {
-                if(fSkipMaskedChannels && cbchasMaskedChannels)
+                if(fSkipMaskedChannels && cbcHasMaskedChannels)
                 {
-                    if(( (cbcMask[cChan>>3]>>(cChan&0x7)) &0x1) )
+                    if(( (cbcMask[cChan>>3]>>(cChan&0x7)) &0x1) ) //Fabio: CBC specific
                     {
-                        (*cbcNumberOfHitsMap)[cCbc->getChipId()]+=channelOccupancy->at(cChan);
+                        (*cbcNumberOfHitsMap)[cChip->getChipId()]+=channelOccupancy->at(cChan);
                     }
                 }
                 else
                 {
-                    (*cbcNumberOfHitsMap)[cCbc->getChipId()]+=channelOccupancy->at(cChan);
+                    (*cbcNumberOfHitsMap)[cChip->getChipId()]+=channelOccupancy->at(cChan);
                 }
                 channelOccupancy->at(cChan)/=numberOfEvents;
             }
 
             uint32_t cbcNormalization = 0;
-            if(fSkipMaskedChannels && cbchasMaskedChannels)
+            if(fSkipMaskedChannels && cbcHasMaskedChannels)
             {
                 for(const auto & mask : cbcMask)
                 {
@@ -1373,12 +1402,12 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
             }
             else
             {
-                cbcNormalization = numberOfEvents * cCbc->getNumberOfChannels();
+                cbcNormalization = numberOfEvents * cChip->getNumberOfChannels();
             }
 
-            numberOfHits  += (*cbcNumberOfHitsMap)[cCbc->getChipId()];
+            numberOfHits  += (*cbcNumberOfHitsMap)[cChip->getChipId()];
             normalization += cbcNormalization;
-            (*cbcNumberOfHitsMap)[cCbc->getChipId()] /= cbcNormalization;
+            (*cbcNumberOfHitsMap)[cChip->getChipId()] /= cbcNormalization;
         }
     }
 
@@ -1404,22 +1433,22 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
         {
 
             if(moduleOccupancyPerChannelMap.find(cFe->getModuleId())==moduleOccupancyPerChannelMap.end()){
-                moduleOccupancyPerChannelMap[cFe->getModuleId()]=CbcOccupancyPerChannelMap();
+                moduleOccupancyPerChannelMap[cFe->getModuleId()]=ChipOccupancyPerChannelMap();
             }
-            CbcOccupancyPerChannelMap *cbcOccupancy = &moduleOccupancyPerChannelMap[cFe->getModuleId()];
+            ChipOccupancyPerChannelMap *cbcOccupancy = &moduleOccupancyPerChannelMap[cFe->getModuleId()];
  
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cChip : cFe->fChipVector )
             {
 
-                if(cbcOccupancy->find(cCbc->getChipId())==cbcOccupancy->end()){
-                    (*cbcOccupancy)[cCbc->getChipId()]=ChannelOccupancy(cCbc->getNumberOfChannels(),0);
+                if(cbcOccupancy->find(cChip->getChipId())==cbcOccupancy->end()){
+                    (*cbcOccupancy)[cChip->getChipId()]=ChannelOccupancy(cChip->getNumberOfChannels(),0);
                 }
-                ChannelOccupancy *stripOccupancy = &cbcOccupancy->at(cCbc->getChipId());
+                ChannelOccupancy *stripOccupancy = &cbcOccupancy->at(cChip->getChipId());
 
                 for ( auto& cChan : cTestGrpChannelVec )
                 {
 
-                    if ( ev->DataBit ( cFe->getFeId(), cCbc->getChipId(), cChan) )
+                    if ( ev->DataBit ( cFe->getFeId(), cChip->getChipId(), cChan) )
                     {
                         ++stripOccupancy->at(cChan);
                     }
@@ -1439,11 +1468,13 @@ void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, cons
 
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cChip : cFe->fChipVector )
         {
-            uint16_t dacValue = dacList.at(cFe->getModuleId()).at(cCbc->getChipId());
+            //Fabio: CBC specific - BEGIN
+
+            uint16_t dacValue = dacList.at(cFe->getModuleId()).at(cChip->getChipId());
             if(dacName=="VCth"){
-                if (cCbc->getFrontEndType() == FrontEndType::CBC3)
+                if (cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
                     if (dacValue > 1023) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
                     else
@@ -1454,13 +1485,13 @@ void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, cons
                         uint8_t cVCth2 = (dacValue & 0x0300) >> 8;
                         cRegVec.emplace_back ("VCth1", cVCth1);
                         cRegVec.emplace_back ("VCth2", cVCth2);
-                        fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+                        fChipInterface->WriteChipMultReg (cChip, cRegVec);
                     }
                 }
                 else LOG (ERROR) << "Not a valid chip type!";
             }
             else if(dacName=="TriggerLatency"){
-                if (cCbc->getFrontEndType() == FrontEndType::CBC3)
+                if (cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
                     if (dacValue > 511) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
                     else
@@ -1468,10 +1499,10 @@ void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, cons
                          std::vector<std::pair<std::string, uint8_t> > cRegVec;
                         // TriggerLatency1 holds bits 0-7 and FeCtrl&TrgLate2 holds 8
                         uint8_t cLat1 = dacValue & 0x00FF;
-                        uint8_t cLat2 = (cCbc->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
+                        uint8_t cLat2 = (cChip->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
                         cRegVec.emplace_back ("TriggerLatency1", cLat1);
                         cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
-                        fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+                        fChipInterface->WriteChipMultReg (cChip, cRegVec);
                     }
                 }
                 else LOG (ERROR) << "Not a valid chip type!";
@@ -1479,8 +1510,9 @@ void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, cons
             else
             {
                 if(dacValue > 255)  LOG (ERROR) << "Error, DAC "<< dacName <<" for CBC3 can only be 8 bit max (255)!";
-                else fCbcInterface->WriteCbcReg ( cCbc, dacName, dacValue );
+                else fChipInterface->WriteChipReg ( cChip, dacName, dacValue );
             }
+    //Fabio: CBC specific - END
         }
     }
 
@@ -1505,10 +1537,11 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
 
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cChip : cFe->fChipVector )
         {
+    //Fabio: CBC specific - BEGIN
             if(dacName=="VCth"){
-                if (cCbc->getFrontEndType() == FrontEndType::CBC3)
+                if (cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
                     if (dacValue > 1023) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
                     else
@@ -1519,13 +1552,13 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
                         uint8_t cVCth2 = (dacValue & 0x0300) >> 8;
                         cRegVec.emplace_back ("VCth1", cVCth1);
                         cRegVec.emplace_back ("VCth2", cVCth2);
-                        fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+                        fChipInterface->WriteChipMultReg (cChip, cRegVec);
                     }
                 }
                 else LOG (ERROR) << "Not a valid chip type!";
             }
             else if(dacName=="TriggerLatency"){
-                if (cCbc->getFrontEndType() == FrontEndType::CBC3)
+                if (cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
                     if (dacValue > 511) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
                     else
@@ -1533,10 +1566,10 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
                          std::vector<std::pair<std::string, uint8_t> > cRegVec;
                         // TriggerLatency1 holds bits 0-7 and FeCtrl&TrgLate2 holds 8
                         uint8_t cLat1 = dacValue & 0x00FF;
-                        uint8_t cLat2 = (cCbc->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
+                        uint8_t cLat2 = (cChip->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
                         cRegVec.emplace_back ("TriggerLatency1", cLat1);
                         cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
-                        fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+                        fChipInterface->WriteChipMultReg (cChip, cRegVec);
                     }
                 }
                 else LOG (ERROR) << "Not a valid chip type!";
@@ -1544,10 +1577,11 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
             else
             {
                 if(dacValue > 255)  LOG (ERROR) << "Error, DAC "<< dacName <<" for CBC3 can only be 8 bit max (255)!";
-                else fCbcInterface->WriteCbcReg ( cCbc, dacName, dacValue );
+                else fChipInterface->WriteChipReg ( cChip, dacName, dacValue );
             }
         }
     }
+    //Fabio: CBC specific - END
  
     return;
 
@@ -1558,6 +1592,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
 void Tool::setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::vector<uint8_t> > > &dacList)
 {
 
+    //Fabio: CBC specific - BEGIN
 
     std::string dacTemplate;
     bool isMask = false;
@@ -1565,34 +1600,37 @@ void Tool::setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, co
     else if(dacName == "Mask") isMask = true;
     else LOG (ERROR) << "Error, DAC "<< dacName <<" is not a Local DAC";
 
+    //Fabio: CBC specific - END
     
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cChip : cFe->fChipVector )
         {
             std::vector<std::pair<std::string, uint8_t> > cRegVec;
             std::vector<uint8_t> listOfChannelToUnMask;
 
 
-            for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel){
+            for(uint8_t iChannel=0; iChannel<cChip->getNumberOfChannels(); ++iChannel){
                 if(isMask){
-                    if( dacList.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel] ){
+                    if( dacList.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] ){
                         listOfChannelToUnMask.emplace_back(iChannel);
                     }
                 }
                 else {
+    //Fabio: CBC specific - BEGIN
                     char dacName1[30];
                     sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
-                    cRegVec.emplace_back(dacName1,dacList.at(cFe->getModuleId()).at(cCbc->getChipId())[iChannel]);
+                    cRegVec.emplace_back(dacName1,dacList.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel]);
+    //Fabio: CBC specific - END
                 }
             }
 
             if(isMask){
-                maskAllChannels(cCbc);
-                unmaskList(cCbc , listOfChannelToUnMask);
+                maskAllChannels(cChip);
+                unmaskList(cChip , listOfChannelToUnMask);
             }
             else{
-                fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+                fChipInterface->WriteChipMultReg (cChip, cRegVec);
             }
             
         }
@@ -1619,31 +1657,35 @@ void Tool::setSameLocalDac(const std::string &dacName, const uint8_t &dacValue)
 // set same local dac per BeBoard
 void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint8_t &dacValue)
 {
+    //Fabio: CBC specific - BEGIN
     std::string dacTemplate;
     bool isMask = false;
     if(dacName == "ChannelOffset") dacTemplate = "Channel%03d";
     else if(dacName == "Mask") isMask = true;
     else LOG (ERROR) << "Error, DAC "<< dacName <<" is not a Local DAC";
+    //Fabio: CBC specific - END
 
     
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cChip : cFe->fChipVector )
         {
             std::vector<std::pair<std::string, uint8_t> > cRegVec;
             std::vector<uint8_t> listOfChannelToMask;
 
             if(!isMask){
-                for(uint8_t iChannel=0; iChannel<cCbc->getNumberOfChannels(); ++iChannel){
+                for(uint8_t iChannel=0; iChannel<cChip->getNumberOfChannels(); ++iChannel){
                     char dacName1[30];
+    //Fabio: CBC specific - BEGIN
                     sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
+    //Fabio: CBC specific - END
                     cRegVec.emplace_back(dacName1,dacValue);
                 }
-                fCbcInterface->WriteCbcMultReg ( cCbc, cRegVec );
+                fChipInterface->WriteChipMultReg ( cChip, cRegVec );
             }
             else{
-                if(dacValue) unmaskAllChannels(cCbc);
-                else maskAllChannels(cCbc);
+                if(dacValue) unmaskAllChannels(cChip);
+                else maskAllChannels(cChip);
             }  
         }
     }

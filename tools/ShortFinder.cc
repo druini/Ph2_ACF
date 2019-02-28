@@ -90,7 +90,7 @@ void ShortFinder::ReconfigureRegisters()
                 }
 
                 cCbc->loadfRegMap (pRegFile);
-                fCbcInterface->ConfigureCbc ( cCbc );
+                fChipInterface->ConfigureChip ( cCbc );
                 LOG (INFO) << GREEN << "\t\t Successfully (re)configured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
             }
         }
@@ -101,7 +101,7 @@ void ShortFinder::ReconfigureRegisters()
 }
 void ShortFinder::ConfigureVcth (uint16_t pVcth)
 {
-    ThresholdVisitor cWriter ( fCbcInterface, pVcth );
+    ThresholdVisitor cWriter ( fChipInterface, pVcth );
     accept ( cWriter );
 }
 
@@ -300,12 +300,12 @@ void ShortFinder::SetBeBoard (BeBoard* pBoard)
     setSystemTestPulse(fTestPulseAmplitude,0x00,true,fHoleMode);
 
     //edit G.A: in order to be compatible with CBC3 (9 bit trigger latency) the recommended method is this:
-    LatencyVisitor cLatencyVisitor (fCbcInterface, 0x01);
+    LatencyVisitor cLatencyVisitor (fChipInterface, 0x01);
     this->accept (cLatencyVisitor);
 
     // Take the default VCth which should correspond to the pedestal and add 8 depending on the mode to exclude noise
     // ThresholdVisitor in read mode
-    ThresholdVisitor cThresholdVisitor (fCbcInterface);
+    ThresholdVisitor cThresholdVisitor (fChipInterface);
     this->accept (cThresholdVisitor);
     uint16_t cVcth = cThresholdVisitor.getThreshold();
 
@@ -348,7 +348,7 @@ void ShortFinder::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
                 cRegVec.push_back ( std::make_pair ( "SelTestPulseDel&ChanGroup",  cRegValue ) );
             }
 
-            this->fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+            this->fChipInterface->WriteChipMultReg (cCbc, cRegVec);
         }
     }
 }
@@ -381,7 +381,7 @@ void ShortFinder::FindShorts (std::ostream& os )
     ShortsList cGroundedChannelsList;
 
     //in read mode
-    ThresholdVisitor cVisitor (fCbcInterface);
+    ThresholdVisitor cVisitor (fChipInterface);
     accept (cVisitor);
     fHistTop->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
     fHistBottom->GetYaxis()->SetRangeUser ( 0, fTotalEvents );

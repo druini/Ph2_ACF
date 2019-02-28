@@ -226,7 +226,7 @@ void BiasSweep::MeasureMinPower (BeBoard* pBoard, Chip* pCbc)
         cRegVec.push_back (std::make_pair (cRegisters.at (cIndex), cRegSettings.at (cIndex) ) );
     }
 
-    this->fCbcInterface->WriteCbcMultReg (pCbc, cRegVec);
+    this->fChipInterface->WriteChipMultReg (pCbc, cRegVec);
     this->fBeBoardInterface->WriteBoardReg (pBoard, "cbc_system_cnfg.cbc_system_clk", 0);
 
     std::this_thread::sleep_for (std::chrono::milliseconds (800) );
@@ -447,7 +447,7 @@ void BiasSweep::SweepBias (std::string pBias, Chip* pCbc)
 uint8_t BiasSweep::configureAmux (std::map<std::string, AmuxSetting>::iterator pAmuxValue, Chip* pCbc, double pSettlingTime_s  )
 {
     // first read original value in Amux register and save for later
-    uint8_t cOriginalAmuxValue = fCbcInterface->ReadCbcReg (pCbc, "MiscTestPulseCtrl&AnalogMux");
+    uint8_t cOriginalAmuxValue = fChipInterface->ReadChipReg (pCbc, "MiscTestPulseCtrl&AnalogMux");
     LOG (INFO) << "Analog mux originally set to: " << std::hex << (cOriginalAmuxValue & 0x1F) << std::dec << " (full register is 0x" << std::hex << +cOriginalAmuxValue << std::dec << ") (the Test pulse bits are not changed!)";
 
     //ok, now set the Analogmux to the value required to see the bias there
@@ -469,7 +469,7 @@ uint8_t BiasSweep::configureAmux (std::map<std::string, AmuxSetting>::iterator p
 #endif
 
         uint8_t cNewValue = (cOriginalAmuxValue & 0xE0) | (pAmuxValue->second.fAmuxCode & 0x1F);
-        fCbcInterface->WriteCbcReg (pCbc, "MiscTestPulseCtrl&AnalogMux", cNewValue);
+        fChipInterface->WriteChipReg (pCbc, "MiscTestPulseCtrl&AnalogMux", cNewValue);
         LOG (INFO) << "Analog MUX setting modified to connect " <<  pAmuxValue->first << " (setting to 0x" << std::hex << +cNewValue << std::dec << ")";
 
         for ( unsigned int i = 0 ; i < pSettlingTime_s; i++)
@@ -485,7 +485,7 @@ void BiasSweep::resetAmux (uint8_t pAmuxValue, Chip* pCbc, double pSettlingTime_
     LOG (INFO) << "Setting Arduino Nano relay to Amux (default)";
 #endif
     LOG (INFO) << "Reseting Amux settings back to original value of 0x" << std::hex << +pAmuxValue << std::dec;
-    fCbcInterface->WriteCbcReg (pCbc, "MiscTestPulseCtrl&AnalogMux", pAmuxValue);
+    fChipInterface->WriteChipReg (pCbc, "MiscTestPulseCtrl&AnalogMux", pAmuxValue);
 
     for ( unsigned int i = 0 ; i < pSettlingTime_s; i++)
         std::this_thread::sleep_for (std::chrono::milliseconds ( 1000 ) );
@@ -494,7 +494,7 @@ void BiasSweep::resetAmux (uint8_t pAmuxValue, Chip* pCbc, double pSettlingTime_
 void BiasSweep::sweep8Bit (std::map<std::string, AmuxSetting>::iterator pAmuxValue, TGraph* pGraph, Chip* pCbc, bool pCurrent)
 {
 
-    uint8_t cOriginalBiasValue = fCbcInterface->ReadCbcReg (pCbc, pAmuxValue->second.fRegName);
+    uint8_t cOriginalBiasValue = fChipInterface->ReadChipReg (pCbc, pAmuxValue->second.fRegName);
     LOG (INFO) << "Origainal Register Value for bias " << pAmuxValue->first << "(" << pAmuxValue->second.fRegName << ") read to be 0x" << std::hex << +cOriginalBiasValue << std::dec << " - saving for later!";
 
     //take one initial reading on the dmm and save as the inital value in the tree
@@ -541,7 +541,7 @@ void BiasSweep::sweep8Bit (std::map<std::string, AmuxSetting>::iterator pAmuxVal
         //VBG_bias
         if (cBits == 6) cRegValue |= (0x2 << 6);
 
-        fCbcInterface->WriteCbcReg (pCbc, pAmuxValue->second.fRegName, cRegValue );
+        fChipInterface->WriteChipReg (pCbc, pAmuxValue->second.fRegName, cRegValue );
 
         double cReading = -999;
 #ifdef __USBINST__
@@ -598,7 +598,7 @@ void BiasSweep::sweep8Bit (std::map<std::string, AmuxSetting>::iterator pAmuxVal
     }
 
     // set the bias back to the original value
-    fCbcInterface->WriteCbcReg (pCbc, pAmuxValue->second.fRegName, cOriginalBiasValue );
+    fChipInterface->WriteChipReg (pCbc, pAmuxValue->second.fRegName, cOriginalBiasValue );
     LOG (INFO) << "Re-setting " << pAmuxValue->second.fRegName << " to original value of 0x" << std::hex << +cOriginalBiasValue << std::dec;
 }
 
@@ -623,7 +623,7 @@ void BiasSweep::measureSingle (std::map<std::string, AmuxSetting>::iterator pAmu
 
 void BiasSweep::sweepVCth (TGraph* pGraph, Chip* pCbc)
 {
-    ThresholdVisitor cThresholdVisitor (fCbcInterface);
+    ThresholdVisitor cThresholdVisitor (fChipInterface);
     pCbc->accept (cThresholdVisitor);
     uint16_t cOriginalThreshold = cThresholdVisitor.getThreshold();
     LOG (INFO) << "Original threshold set to " << cOriginalThreshold << " (0x" << std::hex << cOriginalThreshold << std::dec << ") - saving for later!";

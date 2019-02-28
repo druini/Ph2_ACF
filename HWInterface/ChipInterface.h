@@ -65,19 +65,19 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        bool ConfigureChip ( const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 );
+        virtual bool ConfigureChip ( const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
 
          /*!
          * \brief Reapply the stored mask for the Chip, use it after group masking is applied
          * \param pChip: pointer to Chip object
          */
-        bool ConfigureChipOriginalMask ( const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 );
+        virtual bool ConfigureChipOriginalMask ( const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
 
         /*!
          * \brief Read all the I2C parameters from the Chip
          * \param pChip: pointer to Chip object
          */
-        void ReadChip ( Chip* pChip );
+        virtual void ReadChip ( Chip* pChip ) = 0;
         /*!
          * \brief Write the designated register in both Chip and Chip Config File
          * \param pChip
@@ -90,40 +90,27 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteChipReg ( Chip* pChip, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true );
+        virtual bool WriteChipReg ( Chip* pChip, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true ) = 0;
 
         /*!
          * \brief Write several registers in both Chip and Chip Config File
          * \param pChip
          * \param pVecReq : Vector of pair: Node of the register to write versus value to write
          */
-        bool WriteChipMultReg ( Chip* pChip, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop = true );
-        /*!
-         * \brief Write same register in all Chips and then UpdateChip
-         * \param pModule : Module containing vector of Chips
-         * \param pRegNode : Node of the register to write
-         * \param pValue : Value to write
-         */
-        void WriteBroadcast ( const Module* pModule, const std::string& pRegNode, uint32_t pValue );
-        /*!
-         * \brief Write same register in all Chips and then UpdateChip
-         * \param pModule : Module containing vector of Chips
-         * \param pRegNode : Node of the register to write
-         * \param pValue : Value to write
-         */
-        void WriteBroadcastMultReg ( const Module* pModule, const std::vector<std::pair<std::string, uint8_t>> pVecReg );
+        virtual bool WriteChipMultReg ( Chip* pChip, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop = true ) = 0;
+        
         /*!
          * \brief Read the designated register in the Chip
          * \param pChip
          * \param pRegNode : Node of the register to read
          */
-        uint8_t ReadChipReg ( Chip* pChip, const std::string& pRegNode );
+        virtual uint8_t ReadChipReg ( Chip* pChip, const std::string& pRegNode ) = 0;
         /*!
          * \brief Read several register in the Chip
          * \param pChip
          * \param pVecReg : Vector of the nodes of the register to read
          */
-        void ReadChipMultReg ( Chip* pChip, const std::vector<std::string>& pVecReg );
+        virtual void ReadChipMultReg ( Chip* pChip, const std::vector<std::string>& pVecReg ) = 0;
         /*!
          * \brief Read all register in all Chips and then UpdateChip
          * \param pModule : Module containing vector of Chips

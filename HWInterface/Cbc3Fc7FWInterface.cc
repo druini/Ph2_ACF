@@ -15,7 +15,7 @@
 #include <uhal/uhal.hpp>
 #include "Cbc3Fc7FWInterface.h"
 #include "CtaFpgaConfig.h"
-//#include "CbcInterface.h"
+//#include "ChipInterface.h"
 
 
 namespace Ph2_HwInterface {
