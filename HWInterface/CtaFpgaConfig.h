@@ -9,8 +9,8 @@
 #ifndef _CTAFPGACONFIG_H_
 #define _CTAFPGACONFIG_H_
 
-#include "HWDescription/BeBoard.h"
-#include "HWInterface/FpgaConfig.h"
+#include "../HWDescription/BeBoard.h"
+#include "../HWInterface/FpgaConfig.h"
 #include "Firmware.h"
 #include "MmcPipeInterface.h"
 

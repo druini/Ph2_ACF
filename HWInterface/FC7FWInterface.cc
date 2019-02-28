@@ -14,8 +14,7 @@ namespace Ph2_HwInterface
   FC7FWInterface::FC7FWInterface (const char* pId,
 				  const char* pUri,
 				  const char* pAddressTable) :
-    BeBoardFWInterface (pId, pUri, pAddressTable),
-    fNthAcq            (0)
+    BeBoardFWInterface (pId, pUri, pAddressTable)
   {
   }
 

@@ -43,10 +43,10 @@ namespace Ph2_HwInterface
   class FC7FWInterface: public BeBoardFWInterface
   {
   private:
-    std::string fStrSram, fStrFull, fStrReadout, fStrOtherSram, fStrSramUserLogic;
+    //    std::string fStrSram, fStrFull, fStrReadout, fStrOtherSram, fStrSramUserLogic;
 
     FileHandler* fFileHandler;
-    uint32_t fNthAcq, fNpackets;
+    //    uint32_t fNthAcq, fNpackets;
 
     bool I2cCmdAckWait (unsigned int cWait, unsigned int trials);
     void WriteI2C (std::vector<uint32_t>& pVecReg);

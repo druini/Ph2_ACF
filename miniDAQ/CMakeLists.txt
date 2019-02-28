@@ -1,3 +1,8 @@
+MESSAGE(STATUS " ") 
+MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}") 
+MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/miniDAQ/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}") 
+MESSAGE(STATUS " ") 
+
 #includes
 include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
 include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
@@ -99,3 +104,19 @@ target_link_libraries(RunController ${LIBS} Ph2_Tools)
 #DQMController
 add_executable(DQMController DQMController.cc DQMHistogramController.cc)
 target_link_libraries(DQMController ${LIBS} Ph2_Tools)
+
+
+file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/miniDAQ *.cc)
+
+message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
+foreach( sourcefile ${BINARIES} )
+    string(REPLACE ".cc" "" name ${sourcefile})
+    message(STATUS "    ${name}")
+endforeach(sourcefile ${BINARIES})
+message("--     ${BoldCyan}#### End ####${Reset}")
+
+MESSAGE(STATUS " ") 
+MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/miniDAQ/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}") 
+MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
+MESSAGE(STATUS " ") 
+

@@ -23,12 +23,13 @@ namespace Ph2_HwDescription {
     struct ChipRegItem
     {
         ChipRegItem() {};
-        ChipRegItem (uint8_t pPage, uint8_t pAddress, uint8_t pDefValue, uint8_t pValue) : fPage (pPage), fAddress (pAddress), fDefValue (pDefValue), fValue (pValue) {}
+        ChipRegItem (uint8_t pPage, uint16_t pAddress, uint16_t pDefValue, uint16_t pValue, bool pPrmptCfg = false) : fPage (pPage), fAddress (pAddress), fDefValue (pDefValue), fValue (pValue), fPrmptCfg (pPrmptCfg) {}
 
         uint8_t fPage;
-        uint8_t fAddress;
-        uint8_t fDefValue;
-        uint8_t fValue;
+        uint16_t fAddress;
+        uint16_t fDefValue;
+        uint16_t fValue;
+        bool fPrmptCfg;
 
     };
 }

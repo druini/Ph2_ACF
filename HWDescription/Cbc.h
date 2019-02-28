@@ -72,6 +72,10 @@ namespace Ph2_HwDescription {
         */
         void loadfRegMap ( const std::string& filename ) override;
 
+        uint16_t getReg ( const std::string& pReg ) const override;
+
+        void setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
+
 
         /*!
         * \brief Write the registers of the Map in a file

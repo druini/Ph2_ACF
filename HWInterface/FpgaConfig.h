@@ -9,7 +9,7 @@
 #ifndef _FPGACONFIG_H_
 #define _FPGACONFIG_H_
 
-#include "HWDescription/BeBoard.h"
+#include "../HWDescription/BeBoard.h"
 using namespace Ph2_HwDescription;
 namespace Ph2_HwInterface {
     class BeBoardFWInterface;

@@ -85,13 +85,13 @@ namespace Ph2_HwDescription {
         * \param pReg
         * \return The value of the register
         */
-        uint8_t getReg ( const std::string& pReg ) const;
+        virtual uint16_t getReg ( const std::string& pReg ) const = 0;
         /*!
         * \brief Set any register of the Map
         * \param pReg
         * \param psetValue
         */
-        void setReg ( const std::string& pReg, uint8_t psetValue );
+        virtual void setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) = 0;
         /*!
         * \brief Get any registeritem of the Map
         * \param pReg
