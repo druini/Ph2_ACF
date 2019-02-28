@@ -17,6 +17,7 @@
 //#include "../HWInterface/CtaFWInterface.h"
 //#include "../HWInterface/ICGlibFWInterface.h"
 #include "BeBoardFWInterface.h"
+#include "ChipInterface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -26,30 +27,12 @@ using namespace Ph2_HwDescription;
  */
 namespace Ph2_HwInterface {
 
-    using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>;    /*!< Map of Board connected */
-
     /*!
      * \class CbcInterface
      * \brief Class representing the User Interface to the Chip on different boards
      */
-    class CbcInterface
+    class CbcInterface : public ChipInterface
     {
-
-      private:
-        BeBoardFWMap fBoardMap;                     /*!< Map of Board connected */
-        BeBoardFWInterface* fBoardFW;                     /*!< Board loaded */
-        uint16_t prevBoardIdentifier;                     /*!< Id of the previous board */
-
-        uint16_t fRegisterCount;                                /*!< Counter for the number of Registers written */
-        uint16_t fTransactionCount;         /*!< Counter for the number of Transactions */
-
-
-      private:
-        /*!
-         * \brief Set the board to talk with
-         * \param pBoardId
-         */
-        void setBoard ( uint16_t pBoardIdentifier );
 
       public:
         /*!
@@ -67,19 +50,19 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        bool ConfigureCbc ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 );
-
+        bool ConfigureChip ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
+        
          /*!
          * \brief Reapply the stored mask for the CBC, use it after group masking is applied
          * \param pCbc: pointer to CBC object
          */
-        bool ConfigureCbcOriginalMask ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 );
+        bool ConfigureChipOriginalMask ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
 
         /*!
          * \brief Read all the I2C parameters from the CBC
          * \param pCbc: pointer to CBC object
          */
-        void ReadCbc ( Chip* pCbc );
+        void ReadChip ( Chip* pCbc ) override;
         /*!
          * \brief Write the designated register in both Chip and Chip Config File
          * \param pCbc
@@ -92,47 +75,46 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteCbcReg ( Chip* pCbc, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true );
+        bool WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true ) override;
 
         /*!
          * \brief Write several registers in both Chip and Chip Config File
          * \param pCbc
          * \param pVecReq : Vector of pair: Node of the register to write versus value to write
          */
-        bool WriteCbcMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop = true );
+        bool WriteChipMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop = true ) override;
         /*!
          * \brief Write same register in all Cbcs and then UpdateCbc
          * \param pModule : Module containing vector of Cbcs
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        void WriteBroadcast ( const Module* pModule, const std::string& pRegNode, uint32_t pValue );
+        void WriteBroadcastCbcReg ( const Module* pModule, const std::string& pRegNode, uint32_t pValue );
         /*!
          * \brief Write same register in all Cbcs and then UpdateCbc
          * \param pModule : Module containing vector of Cbcs
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        void WriteBroadcastMultReg ( const Module* pModule, const std::vector<std::pair<std::string, uint8_t>> pVecReg );
+        void WriteBroadcastCbcMultiReg ( const Module* pModule, const std::vector<std::pair<std::string, uint8_t>> pVecReg );
         /*!
          * \brief Read the designated register in the Chip
          * \param pCbc
          * \param pRegNode : Node of the register to read
          */
-        uint8_t ReadCbcReg ( Chip* pCbc, const std::string& pRegNode );
+        uint8_t ReadChipReg ( Chip* pCbc, const std::string& pRegNode ) override;
         /*!
          * \brief Read several register in the Chip
          * \param pCbc
          * \param pVecReg : Vector of the nodes of the register to read
          */
-        void ReadCbcMultReg ( Chip* pCbc, const std::vector<std::string>& pVecReg );
+        void ReadChipMultReg ( Chip* pCbc, const std::vector<std::string>& pVecReg ) override;
         /*!
          * \brief Read all register in all Cbcs and then UpdateCbc
          * \param pModule : Module containing vector of Cbcs
          */
         //void ReadAllCbc ( const Module* pModule );
         //void CbcCalibrationTrigger(const Chip* pCbc );
-        void output();
 
     };
 }

@@ -105,7 +105,7 @@ void SignalScanFit::ScanSignal (int pSignalScanLength)
     int cVcthDirection = ( fHoleMode == 1 ) ? +1 : -1;
 
     // Reading the current threshold value
-    ThresholdVisitor cVisitor (fCbcInterface);
+    ThresholdVisitor cVisitor (fChipInterface);
     this->accept (cVisitor);
     uint16_t cVCth = cVisitor.getThreshold();
 

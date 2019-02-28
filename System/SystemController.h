@@ -15,7 +15,7 @@
 
 #include "FileParser.h"
 #include "../HWInterface/RD53Interface.h"
-#include "../HWInterface/CbcInterface.h"
+#include "../HWInterface/ChipInterface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
@@ -67,8 +67,8 @@ namespace Ph2_System {
     {
       public:
         BeBoardInterface*       fBeBoardInterface;                     /*!< Interface to the BeBoard */
-	RD53Interface*          fRD53Interface;                        /*!< Interface to the RD53 */
-        CbcInterface*           fCbcInterface;                         /*!< Interface to the CBC */
+    	RD53Interface*          fRD53Interface;                        /*!< Interface to the RD53 */
+        ChipInterface*          fChipInterface;                         /*!< Interface to the CBC */
         SSAInterface*           fSSAInterface;                         /*!< Interface to the SSA */
         MPAInterface*           fMPAInterface;                         /*!< Interface to the MPA */
         BeBoardVec              fBoardVector;                          /*!< Vector of Board pointers */

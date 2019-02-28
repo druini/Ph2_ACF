@@ -57,7 +57,7 @@ int main ( int argc, char** argv )
     {
         cSystemController.ConfigureHw ();
 
-        CbcIdReader cIdReader (cSystemController.fCbcInterface);
+        CbcIdReader cIdReader (cSystemController.fChipInterface);
         cSystemController.accept (cIdReader);
     }
 

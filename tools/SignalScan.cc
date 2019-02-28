@@ -99,7 +99,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
 
             for( int cVcth = cVcthStart ; cVcth >= cVcthStop ; cVcth -= cVcthStep )
             {   
-                ThresholdVisitor cVisitor (fCbcInterface, cVcth);
+                ThresholdVisitor cVisitor (fChipInterface, cVcth);
                 cVisitor.setThreshold (cVcth);
                 this->accept ( cVisitor );
 
@@ -240,7 +240,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
 //     // CBC VCth reader and writer
 
 //     // This is a bit ugly but since I program the same global value to both chips I guess it is ok...
-//     ThresholdVisitor cVisitor (fCbcInterface);
+//     ThresholdVisitor cVisitor (fChipInterface);
 //     this->accept (cVisitor);
 //     uint16_t cVCth = cVisitor.getThreshold();
 

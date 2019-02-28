@@ -2,7 +2,7 @@
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
-#include "../HWInterface/CbcInterface.h"
+#include "../HWInterface/ChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../tools/CMTester.h"
@@ -125,7 +125,7 @@ int main ( int argc, char* argv[] )
     
     // Set Vcth to pedestal, or overload with manual setting
     std::vector<double_t> cNoiseV;
-    ThresholdVisitor cVisitor (cTool.fCbcInterface, 0);
+    ThresholdVisitor cVisitor (cTool.fChipInterface, 0);
     Module* cFe = cPedeNoise.fBoardVector.at (0)->fModuleVector.at (0);
     int i = 0;
     for (auto cCbc : cFe->fChipVector)

@@ -77,10 +77,10 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
                 if (cCbc->getFrontEndType() == FrontEndType::CBC3 && fDisableStubLogic)
                 {
                     LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning" << RESET ;
-                    fStubLogicValue[cCbc] = fCbcInterface->ReadCbcReg (cCbc, "Pipe&StubInpSel&Ptwidth");
-                    fHIPCountValue[cCbc] = fCbcInterface->ReadCbcReg (cCbc, "HIP&TestMode");
-                    fCbcInterface->WriteCbcReg (cCbc, "Pipe&StubInpSel&Ptwidth", 0x23);
-                    fCbcInterface->WriteCbcReg (cCbc, "HIP&TestMode", 0x08);
+                    fStubLogicValue[cCbc] = fChipInterface->ReadChipReg (cCbc, "Pipe&StubInpSel&Ptwidth");
+                    fHIPCountValue[cCbc] = fChipInterface->ReadChipReg (cCbc, "HIP&TestMode");
+                    fChipInterface->WriteChipReg (cCbc, "Pipe&StubInpSel&Ptwidth", 0x23);
+                    fChipInterface->WriteChipReg (cCbc, "HIP&TestMode", 0x08);
                 }
 
                 uint32_t cCbcId = cCbc->getChipId();
@@ -162,7 +162,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 void Calibration::FindVplus()
 {
     // first, set VCth to the target value for each CBC
-    ThresholdVisitor cThresholdVisitor (fCbcInterface, fTargetVcth);
+    ThresholdVisitor cThresholdVisitor (fChipInterface, fTargetVcth);
     this->accept (cThresholdVisitor);
 
 
@@ -212,7 +212,7 @@ void Calibration::FindOffsets()
 {
     
     // just to be sure, configure the correct VCth and VPlus values
-    ThresholdVisitor cThresholdVisitor (fCbcInterface, fTargetVcth);
+    ThresholdVisitor cThresholdVisitor (fChipInterface, fTargetVcth);
     this->accept (cThresholdVisitor);
     // ok, done, all the offsets are at the starting value, VCth & Vplus are written
 
@@ -266,7 +266,7 @@ void Calibration::clearOccupancyHists ( Chip* pCbc )
 void Calibration::updateHists ( std::string pHistname )
 {
     // loop the CBCs
-    for ( const auto& cCbc : fCbcHistMap )
+    for ( const auto& cCbc : fChipHistMap )
     {
         // loop the map of string vs TObject
         auto cHist = cCbc.second.find ( pHistname );

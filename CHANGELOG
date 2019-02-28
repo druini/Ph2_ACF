@@ -30,7 +30,7 @@
     - BeBoard::getReg & BeBoard::setReg use uint32_t instead of uint16_t
     - BeBoardFWInterface::ReadBlockRegValue pure virtual method and GlibFWInterface::ReadBlockRegValue that implements the uHAL bug workaround
 - 24/02/15 : new update (v1-03) with the following changes:
-    - CbcInterface::WriteReg() now return the written Register value
+    - ChipInterface::WriteReg() now return the written Register value
     - writing to the Glib now also takes care of avoiding the 256th word uHAL bug
     - some modifications to HybridTester tool to make it compatible with the GUI
     - added a CMD line option: g for GUI, should only be used by the latter
@@ -116,7 +116,7 @@
     - simplified byte swapping / bit reversal in Data & Event classes
     - added ICFc7FWInterface
     - updated CtaFWInterface (Strasbourg FW)
-    - much cleaner CbcInterface
+    - much cleaner ChipInterface
     - calibration can now automatically perform a noise scan and a noise strip mask procedure!
 - 09.06.2016:
 	- added a threshold scan to commissioning procedures

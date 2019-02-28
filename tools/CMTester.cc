@@ -259,7 +259,7 @@ void CMTester::ScanNoiseChannels()
     }
 
     // done taking data, now iterate over p_noisestrips and find out the bad strips, push them into the fNoiseStripMap, then clear the histogram
-    for ( const auto& cCbc : fCbcHistMap )
+    for ( const auto& cCbc : fChipHistMap )
     {
 
         TProfile* cNoiseStrips = dynamic_cast<TProfile*> ( getHist ( cCbc.first,  "hitprob" ) );
@@ -296,7 +296,7 @@ void CMTester::TakeData()
     std::stringstream outp;
     parseSettings();
 
-    ThresholdVisitor cVisitor (fCbcInterface);
+    ThresholdVisitor cVisitor (fChipInterface);
     this->accept (cVisitor);
     fVcth = cVisitor.getThreshold();
     LOG (INFO) << "Checking threshold on latest CBC that was touched...: "<<fVcth<<std::endl;
@@ -306,7 +306,7 @@ void CMTester::TakeData()
     //    cVcth = cVisitor.getThreshold();
     //    std::cout<<"Now my threshold is: "<<cVcth<<std::endl;
 
-    //CbcRegReader cReader ( fCbcInterface, "VCth" );
+    //CbcRegReader cReader ( fChipInterface, "VCth" );
     // accept( cReader );
 
     for ( BeBoard* pBoard : fBoardVector )
@@ -359,9 +359,9 @@ void CMTester::FinishRun()
     // first CBCs
     LOG (INFO) << "per CBC ..";
 
-    ThresholdVisitor cVisitor (fCbcInterface); // No Vcth given, so default option is 'r'
+    ThresholdVisitor cVisitor (fChipInterface); // No Vcth given, so default option is 'r'
     int iCbc = 0;
-    for ( auto cCbc : fCbcHistMap )
+    for ( auto cCbc : fChipHistMap )
     {
         cCbc.first->accept (cVisitor);
         uint32_t cVcth = cVisitor.getThreshold();
@@ -584,7 +584,7 @@ void CMTester::updateHists ( bool pFinal )
 {
     // method to iterate over the histograms that I want to draw and update the canvases
     int iCbc = 0;
-    for ( auto& cCbc : fCbcHistMap )
+    for ( auto& cCbc : fChipHistMap )
     {
         auto cCanvas = fCanvasMap.find ( cCbc.first );
 
