@@ -247,49 +247,6 @@ namespace Ph2_HwInterface
       pRD53->setReg (cReg.first, cReg.second);
   }
 
-  void RD53Interface::WriteRD53Broadcast (const Module* pModule, const std::string& pRegNode, uint16_t pValue)
-  {
-    setBoard (pModule->getBeBoardId());
-
-    std::vector<std::vector<uint16_t> > symbols; // Useful in case the encoding is done in the software
-    std::vector<uint32_t> serialSymbols;
-    ChipRegItem cRegItem = pModule->fChipVector.at(0)->getRegItem (pRegNode);
-    cRegItem.fValue = pValue;
-
-    dynamic_cast<RD53*>(pModule->fChipVector.at(0))->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pModule->fChipVector.at(0)->getChipId(), RD53::WriteCmd(), serialSymbols);
-    // pModule->fChipVector.at(0)->EncodeCMD (cRegItem, pModule->fChipVector.at(0)->getChipId(), RD53::WriteCmd(), symbols);
-    // fBoardFW->SerializeSymbols (symbols,serialSymbols);
-    fBoardFW->WriteChipCommand (serialSymbols);
-
-    for (auto& cRD53 : pModule->fChipVector) cRD53->setReg (pRegNode, pValue);
-  }
-  
-  void RD53Interface::WriteRD53BroadcastMultReg (const Module* pModule, const std::vector<std::pair<std::string, uint16_t>> pVecReg)
-  {
-    setBoard (pModule->getBeBoardId());
-
-    std::vector<std::vector<uint16_t> > symbols; // Useful in case the encoding is done in the software
-    std::vector<uint32_t> serialSymbols;
-    ChipRegItem cRegItem;
-
-    for (const auto& cReg : pVecReg)
-      {
-	cRegItem = pModule->fChipVector.at(0)->getRegItem (cReg.first);
-	cRegItem.fValue = cReg.second;
-	dynamic_cast<RD53*>(pModule->fChipVector.at(0))->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pModule->fChipVector.at(0)->getChipId(), RD53::WriteCmd(), serialSymbols);
-	// pModule->fChipVector.at(0)->EncodeCMD (cRegItem, pModule->fChipVector.at(0)->getChipId(), RD53::WriteCmd(), symbols);
-      }
-    // fBoardFW->SerializeSymbols (symbols,serialSymbols);
-    fBoardFW->WriteChipCommand (serialSymbols);
-
-    for (const auto& cRD53 : pModule->fChipVector)
-      for (const auto& cReg : pVecReg)
-	{
-	  cRegItem = cRD53->getRegItem (cReg.first);
-	  cRD53->setReg (cReg.first, cReg.second);
-	}
-  }
-
   std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53Interface::ReadRD53Reg (RD53* pRD53, const std::string& pRegNode)
   {
     setBoard (pRD53->getBeBoardId());
@@ -310,8 +267,9 @@ namespace Ph2_HwInterface
       {
 	// Removing bit for pixel portal reading
 	outputDecoded.first[i] = outputDecoded.first[i] & static_cast<uint16_t>(pow(2,NBIT_ADDR)-1);
-	LOG (INFO) << BLUE << "\t--> Address: " << BOLDYELLOW << "0x" << std::hex << unsigned(outputDecoded.first[i])
-	 	   << BLUE << "\tValue: " << BOLDYELLOW << "0x" << unsigned(outputDecoded.second[i]) << std::dec << RESET;
+	// @TMP@
+	// LOG (INFO) << BLUE << "\t--> Address: " << BOLDYELLOW << "0x" << std::hex << unsigned(outputDecoded.first[i])
+	//  	   << BLUE << "\tValue: " << BOLDYELLOW << "0x" << unsigned(outputDecoded.second[i]) << std::dec << RESET;
       }
 
     return outputDecoded;

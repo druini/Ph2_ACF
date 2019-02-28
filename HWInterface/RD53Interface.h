@@ -42,19 +42,17 @@ namespace Ph2_HwInterface
     RD53Interface (const BeBoardFWMap& pBoardMap);
     ~RD53Interface();
 
-    void     ConfigureRD53             (RD53* pRD53);
-    void     InitRD53Aurora            (RD53* pRD53);
-    void     SyncRD53                  (RD53* pRD53, unsigned int nSyncWords = 1);
+    void     ConfigureRD53    (RD53* pRD53);
+    void     InitRD53Aurora   (RD53* pRD53);
+    void     SyncRD53         (RD53* pRD53, unsigned int nSyncWords = 1);
 
-    bool     WriteRD53Reg              (RD53* pRD53, const std::string& pRegNode, const uint16_t data, const std::vector<uint16_t> * dataVec = NULL);
-    void     WriteRD53MultReg          (RD53* pRD53, const std::vector< std::pair<std::string, uint16_t> >& pVecReg);
-    void     WriteRD53Broadcast        (const Module* pModule, const std::string& pRegNode, uint16_t pValue);
-    void     WriteRD53BroadcastMultReg (const Module* pModule, const std::vector<std::pair<std::string, uint16_t>> pVecReg);
+    bool     WriteRD53Reg     (RD53* pRD53, const std::string& pRegNode, const uint16_t data, const std::vector<uint16_t> * dataVec = NULL);
+    void     WriteRD53MultReg (RD53* pRD53, const std::vector< std::pair<std::string, uint16_t> >& pVecReg);
 
-     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadRD53Reg (RD53* pRD53, const std::string& pRegNode);
+    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadRD53Reg (RD53* pRD53, const std::string& pRegNode);
 
-    void     ResetRD53                 (RD53* pRD53);
-    void     SetResetCoreCol           (RD53* pRD53, bool setT_resetF);
+    void     ResetRD53        (RD53* pRD53);
+    void     SetResetCoreCol  (RD53* pRD53, bool setT_resetF);
    };
 }
 

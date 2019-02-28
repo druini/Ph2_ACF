@@ -122,11 +122,11 @@ int main (int argc, char** argv)
       unsigned int BCID         = 0;
       uint16_t coreRowAndRegion = 0;
       uint16_t coreCol          = 0;
-      bool side                 = 0;
+      uint8_t side              = 0;
       uint16_t ToT              = 0;
       unsigned int row          = 0;
       unsigned int quadCol      = 0;
-      LOG (INFO) << BOLDYELLOW << "\n@@@ Read out data @@@" << RESET;
+      LOG (INFO) << BOLDYELLOW << "\n@@@ Readout data @@@" << RESET;
       for (unsigned int i = 0; i < data.size(); i++)
 	{
 	  RD53::DecodeData(data[i],isHeader,trigID,trigTag,BCID,coreRowAndRegion,coreCol,side,ToT);
@@ -137,9 +137,9 @@ int main (int argc, char** argv)
 	  LOG (INFO) << BLUE << "\t--> BCID: "     << BCID     << RESET;
 	  LOG (INFO) << BLUE << "\t--> coreRowAndRegion: "     << unsigned(coreRowAndRegion) << RESET;
 	  LOG (INFO) << BLUE << "\t--> coreCol: "  << unsigned(coreCol) << RESET;
-	  LOG (INFO) << BLUE << "\t--> side: "     << side     << RESET;
-	  LOG (INFO) << BLUE << "\t--> ToT: "      << unsigned(ToT) << RESET;
-	  RD53::ConvertCores2Col4Row (coreCol,coreRowAndRegion,row,quadCol);
+	  LOG (INFO) << BLUE << "\t--> side: "     << unsigned(side)    << RESET;
+	  LOG (INFO) << BLUE << "\t--> ToT: 0x"    << std::hex << unsigned(ToT) << std::dec << RESET;
+	  RD53::ConvertCores2Col4Row (coreCol,coreRowAndRegion,side,row,quadCol);
 	  LOG (INFO) << BLUE << "\t--> row: "      << row      << RESET;
 	  LOG (INFO) << BLUE << "\t--> quad-col: " << quadCol  << RESET;
 	}

@@ -63,7 +63,6 @@
 #define NBIT_NREGION_CORECOL 1 // Number of NREGION_CORECOL bits
 #define NBIT_NREGION_COREROW 3 // Number of NREGION_COREROW bits
 #define NBIT_NPIX_REGION     1 // Number of NPIX_REGION bits
-#define NBIT_NREGION_CORE (NBIT_NREGION_COREROW+NBIT_NREGION_CORECOL) // Number of NREGION_CORE bits
 
 #define NBIT_BCID  15 // Number of bunch crossing ID bits
 #define NBIT_TRGTAG 5 // Number of trigger tag bits
@@ -147,7 +146,7 @@ namespace Ph2_HwDescription
 			    unsigned int& BCID,
 			    uint16_t    & coreRowAndRegion,
 			    uint16_t    & coreCol,
-			    bool        & side,
+			    uint8_t     & side,
 			    uint16_t    & ToT)
     {
       unsigned int header = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID + NBIT_HEADER)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1))) >> (NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID);
@@ -167,15 +166,15 @@ namespace Ph2_HwDescription
 	}
     }
 
-    static void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion,
+    static void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side,
 				      unsigned int& row,
 				      unsigned int& quadCol)
     {
-      uint16_t regionInCore = coreRowAndRegion & static_cast<uint16_t>(pow(2,NBIT_NREGION_CORE)-1);
-      uint16_t coreRow      = (coreRowAndRegion & (static_cast<uint16_t>(pow(2,NBIT_ROW)-1) - static_cast<uint16_t>(pow(2,NBIT_NREGION_CORE)-1))) >> NBIT_NREGION_CORE;
-      std::cout << std::hex << (static_cast<uint16_t>(pow(2,NBIT_ROW)-1) - static_cast<uint16_t>(pow(2,NBIT_NREGION_CORE)-1)) << "\t" << coreRowAndRegion << std::dec << std::endl;
-      row     = (coreRow > 0 ? (coreRow-1) * NPIXROW_CORE : 0) + regionInCore % NPIXROW_CORE;
-      quadCol = (coreCol > 0 ? (coreCol-1) * NPIXCOL_CORE : 0) + NPIXCOL_CORE * (regionInCore / NPIXROW_CORE);
+      uint16_t regionInCore = coreRowAndRegion & static_cast<uint16_t>(pow(2,NBIT_NREGION_COREROW)-1);
+      uint16_t coreRow      = (coreRowAndRegion >> NBIT_NREGION_COREROW) & static_cast<uint16_t>(pow(2,NBIT_NPIXROW_CORE)-1);
+      std::cout << "AAA " << regionInCore << std::endl;
+      row     = (coreRow > 0 ? (coreRow-1) * NPIXROW_CORE : 0) + regionInCore;
+      quadCol = (coreCol > 0 ? (coreCol-1) * NPIXCOL_CORE : 0) + side*(NREGION_CORECOL+NPIX_REGION);
     }
 
 

@@ -30,7 +30,7 @@
 #define WAIT        1000 // [microseconds]
 #define DEEPSLEEP 500000 // [microseconds]
 #define NBIT_FWVER     4 // Number of bits for the firmware version
-#define NBIT_STATUS    4 // Number of bits for the status in the register frame
+#define NBIT_STATUS    2 // Number of bits for the status in the register frame
 #define NBIT_ADDRESS  10 // Number of bits for the address in the register frame
 #define NBIT_VALUE    16 // Number of bits for the value in the register frame
 #define NBIT_AURORAREG 8 // Number of bits for the Aurora registers:lane_up and channel_ip

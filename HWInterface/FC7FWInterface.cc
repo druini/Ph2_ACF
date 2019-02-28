@@ -410,7 +410,7 @@ namespace Ph2_HwInterface
 	    outputDecoded.second.push_back(regFIFO[i] & static_cast<uint32_t>(pow(2,NBIT_VALUE)-1));
 	    uint8_t status = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS)) & static_cast<uint32_t>(pow(2,NBIT_STATUS)-1);
 	    // @TMP@
-	    // LOG (INFO) << BLUE << "\t--> Readback register status: " << BOLDYELLOW << "0x" << std::hex << unsigned(status) << std::dec << RESET;
+ 	    // LOG (INFO) << BLUE << "\t--> Readback register status: " << BOLDYELLOW << "0x" << std::hex << unsigned(status) << std::dec << RESET;
 	  }
       }
     

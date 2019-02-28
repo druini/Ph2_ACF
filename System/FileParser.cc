@@ -52,26 +52,25 @@ namespace Ph2_System {
             throw Exception ("Unable to parse XML source!");
             return;
         }
-
-        os << "\n\n\n";
-
+	
+        os << RESET << "\n\n";
+	
         for ( i = 0; i < 80; i++ )
-            os << "*";
-
+	  os << "*";
+	
         os << "\n";
 
         for ( j = 0; j < 40; j++ )
-            os << " ";
-
-        os << BOLDRED << "HW SUMMARY: " << RESET << std::endl;
-
+	  os << " ";
+	
+        os << BOLDRED << "HW SUMMARY" << RESET << std::endl;
+	
         for ( i = 0; i < 80; i++ )
-            os << "*";
-
-        os << "\n";
+	  os << "*";
+	
         os << "\n";
         const std::string strUhalConfig = expandEnvironmentVariables (doc.child ( "HwDescription" ).child ( "Connections" ).attribute ( "name" ).value() );
-
+	
         // Iterate over the BeBoard Nodes
         for ( pugi::xml_node cBeBoardNode = doc.child ( "HwDescription" ).child ( "BeBoard" ); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling() )
         {
@@ -81,25 +80,20 @@ namespace Ph2_System {
             }
             // cNBeBoard++;
         }
-
-
+	
+	for ( i = 0; i < 80; i++ )
+	  os << "*";
+	
         os << "\n";
-        os << "\n";
-
-        for ( i = 0; i < 80; i++ )
-            os << "*";
-
-        os << "\n";
-
+	
         for ( j = 0; j < 40; j++ )
-            os << " ";
-
-        os << BOLDRED << "END OF HW SUMMARY: " << RESET << std::endl;
-
+	  os << " ";
+	
+        os << BOLDRED << "END OF HW SUMMARY" << RESET << std::endl;
+	
         for ( i = 0; i < 80; i++ )
-            os << "*";
-
-        os << "\n";
+	  os << "*";
+	
         os << "\n";
     }
 
@@ -738,16 +732,16 @@ namespace Ph2_System {
 
         for ( pugi::xml_node nSettings = doc.child ( "HwDescription" ).child ("Settings"); nSettings; nSettings = nSettings.next_sibling() )
         {
-            os << std::endl;
-
-            for ( pugi::xml_node nSetting = nSettings.child ( "Setting" ); nSetting; nSetting = nSetting.next_sibling() )
+	  os << "\n" << std::endl;
+	  
+	  for ( pugi::xml_node nSetting = nSettings.child ( "Setting" ); nSetting; nSetting = nSetting.next_sibling() )
             {
-                pSettingsMap[nSetting.attribute ( "name" ).value()] = convertAnyInt ( nSetting.first_child().value() );
-                os <<  RED << "Setting" << RESET << " --" << BOLDCYAN << nSetting.attribute ( "name" ).value() << RESET << ":" << BOLDYELLOW << convertAnyInt ( nSetting.first_child().value() ) << RESET << std:: endl;
+	      pSettingsMap[nSetting.attribute ( "name" ).value()] = convertAnyInt ( nSetting.first_child().value() );
+	      os << BOLDRED << "Setting" << RESET << " --" << BOLDCYAN << nSetting.attribute ( "name" ).value() << RESET << ":" << BOLDYELLOW << convertAnyInt ( nSetting.first_child().value() ) << RESET << std::endl;
             }
         }
     }
-
+  
 
   // ########################
   // # RD53 specific parser #
