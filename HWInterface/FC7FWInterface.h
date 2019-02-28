@@ -12,7 +12,6 @@
 
 #include "BeBoardFWInterface.h"
 #include "../HWDescription/Module.h"
-#include "../Utils/Visitor.h"
 #include "../Utils/easylogging++.h"
 
 #include <uhal/uhal.hpp>

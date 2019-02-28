@@ -325,8 +325,8 @@ namespace Ph2_HwDescription
   {
     const unsigned int nBits = NBIT_CHIPID + NBIT_ADDR + NBIT_DATA;
     
-    std::bitset<nBits> idANDaddANDdata(pRD53Id           << NBIT_ADDR + NBIT_DATA |
-  				       pRegItem.fAddress << NBIT_DATA             |
+    std::bitset<nBits> idANDaddANDdata(pRD53Id           << (NBIT_ADDR + NBIT_DATA) |
+  				       pRegItem.fAddress << NBIT_DATA               |
   				       pRegItem.fValue);
 
     std::bitset<nBits> mask = this->SetBits<nBits>(NBIT_CHIPID);
@@ -374,9 +374,9 @@ namespace Ph2_HwDescription
       {
 	  word  = 2 | (pRD53Cmd << NBIT_5BITW);
 	  frame = 0 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP ID[3..0],0
-	  word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2);
+	  word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2));
 	  frame = 0 | ((data & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);    // @TMP@ D[3..0],0
-	  word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME);
+	  word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME));
       }
     else if (pRD53Cmd == (CAL & 0x00FF))
       {
@@ -385,37 +385,37 @@ namespace Ph2_HwDescription
 	  ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                // @TMP@ ID[3..0],D[15]
 	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0);
 	frame = (data & (this->SetBits<16>(NBIT_FRAME*3).to_ulong() << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
 	frame = (data & (this->SetBits<16>(NBIT_FRAME*2).to_ulong() << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
 	frame = (data & (this->SetBits<16>(NBIT_FRAME*2).to_ulong() << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
       }
     else if (pRD53Cmd == (READCMD & 0x00FF))
       {
 	word  = 4 | (pRD53Cmd << NBIT_5BITW);
 	frame = 0 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                    // @TMP@ ID[3..0],0
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID; // A[8..4]
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
 	frame = (address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1;                          // @TMP@ A[3..0]
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
 	frame = 0;
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
       }
     else if ((pRD53Cmd == (WRITECMD & 0x00FF)) && (dataVec == NULL))
       {
 	word  = 6 | (pRD53Cmd << NBIT_5BITW);
 	frame = 0 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                      // @TMP@ ID[3..0],0
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;   // A[8..4]
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
 
  	frame = ((data & (this->SetBits<16>(NBIT_DATA).to_ulong() << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
 	  ((address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                // @TMP@ A[3..0],D[15]
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2);       
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));       
 	frame = (data & (this->SetBits<16>(NBIT_FRAME*3).to_ulong() << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
 	pVecReg.push_back(word);
 
 	frame = (data & (this->SetBits<16>(NBIT_FRAME*2).to_ulong() << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]
@@ -435,15 +435,15 @@ namespace Ph2_HwDescription
 
 	word  = 7 | (pRD53Cmd << NBIT_5BITW);
 	frame = 1 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                                    // @TMP@ ID[3..0],0
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;                                 // A[8..4]
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
 
 	tmp   = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(1) << NBIT_DATA*NDATAMAX_PERPIXEL-1)) >> NBIT_FRAME*19;
 	frame = tmp.to_ulong() | ((address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                       // @TMP@ A[3..0],D[95]
-	word  = word | (frame.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2);
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
 	tmp   = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*18)) >> NBIT_FRAME*18;        // D[94..90]
-	word  = word | (tmp.to_ulong() << NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3);
+	word  = word | (tmp.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
 	pVecReg.push_back(word);
 
 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*17)) >> NBIT_FRAME*17;         // D[89..85]

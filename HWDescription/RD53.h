@@ -13,14 +13,13 @@
 #include "Definition.h"
 #include "RD53RegItem.h"
 #include "FrontEndDescription.h"
-#include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 
 #include <iomanip>
 #include <bitset>
-#include <math.h> 
+
 
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
@@ -34,10 +33,11 @@
 #define NBIT_5BITW  3 // Number of 5-bit word counter bits
 #define NBIT_FRAME  5 // Number of frame bits
 
-#define NBIT_PIXEN  1 // Number of pixel enable bits
-#define NBIT_INJEN  1 // Number of injection enable bits
-#define NBIT_HITBUS 1 // Number of hit bust bits
-#define NBIT_TDAC   4 // Number of TDACbits
+#define NBIT_PIXEN  1  // Number of pixel enable bits
+#define NBIT_INJEN  1  // Number of injection enable bits
+#define NBIT_HITBUS 1  // Number of hit bust bits
+#define NBIT_TDAC   4  // Number of TDACbits
+#define HIGHGAIN  0x80 // Set High Gain Linear
 
 #define RESET_ECR  0x5A5A // Event Counter Reset
 #define RESET_BCR  0x5959 // Bunch Counter Reset
@@ -155,18 +155,18 @@ namespace Ph2_HwDescription
 			    bool        & side,
 			    uint16_t    & ToT)
     {
-      unsigned int header = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID + NBIT_HEADER)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1))) >> NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID;
+      unsigned int header = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID + NBIT_HEADER)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1))) >> (NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID);
 
       if (header == HEADER)
 	{
-	  trigID  = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1))) >> NBIT_BCID + NBIT_TRGTAG;
+	  trigID  = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1))) >> (NBIT_BCID + NBIT_TRGTAG);
 	  trigTag = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1)               - static_cast<uint32_t>(pow(2,NBIT_BCID)-1)))               >> NBIT_BCID;
 	  BCID    =  data &  static_cast<uint32_t>(pow(2,NBIT_BCID)-1);
 	}
       else
 	{
-	  coreCol          = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW + NBIT_CCOL)-1) - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1))) >> NBIT_TOT + NBIT_SIDE + NBIT_ROW;
-	  coreRowAndRegion = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1)             - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)))            >> NBIT_TOT + NBIT_SIDE;
+	  coreCol          = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW + NBIT_CCOL)-1) - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1))) >> (NBIT_TOT + NBIT_SIDE + NBIT_ROW);
+	  coreRowAndRegion = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1)             - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)))            >> (NBIT_TOT + NBIT_SIDE);
 	  side             = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)                        - static_cast<uint32_t>(pow(2,NBIT_TOT)-1)))                        >> NBIT_TOT;
 	  ToT              =  data &  static_cast<uint32_t>(pow(2,NBIT_TOT)-1);
 	}
