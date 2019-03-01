@@ -19,7 +19,6 @@ namespace Ph2_System {
 
     SystemController::SystemController() :
         fBeBoardInterface (nullptr),
-    	fRD53Interface    (nullptr),
         fChipInterface (nullptr),
         fBoardVector(),
         fSettingsMap(),
@@ -37,7 +36,6 @@ namespace Ph2_System {
     void SystemController::Inherit (SystemController* pController)
     {
         fBeBoardInterface = pController->fBeBoardInterface;
-    	fRD53Interface    = pController->fRD53Interface;
         fChipInterface = pController->fChipInterface;
         fBoardVector = pController->fBoardVector;
         fBeBoardFWMap = pController->fBeBoardFWMap;
@@ -57,7 +55,6 @@ namespace Ph2_System {
         if (fBeBoardInterface) delete fBeBoardInterface;
 
         if (fChipInterface)  delete fChipInterface;
-	if (fRD53Interface) delete fRD53Interface;
 
         fBeBoardFWMap.clear();
         fSettingsMap.clear();
@@ -122,8 +119,10 @@ namespace Ph2_System {
         this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, os, pIsFile );
 
         fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
-        fRD53Interface    = new RD53Interface    ( fBeBoardFWMap );
-        fChipInterface    = new CbcInterface     ( fBeBoardFWMap );
+	if (fBoardVector[0]->getBoardType() != BoardType::FC7)
+	  fChipInterface  = new CbcInterface     ( fBeBoardFWMap );
+	else 
+	  fChipInterface  = new RD53Interface    ( fBeBoardFWMap );
         fMPAInterface     = new MPAInterface     ( fBeBoardFWMap );
 
         if (fWriteHandlerEnabled)
@@ -193,6 +192,7 @@ namespace Ph2_System {
 	    // ######################################
 	    // # Configuring Inner Tracker hardware #
 	    // ######################################
+	    RD53Interface* fRD53Interface = dynamic_cast<RD53Interface*>(fChipInterface);
 
 	    LOG (INFO) << BOLDYELLOW << "@@@ Found an Inner Tracker board @@@" << RESET;
 
@@ -227,7 +227,7 @@ namespace Ph2_System {
 		for (const auto& cRD53 : cFe->fChipVector)
 		  {
 		    LOG (INFO) << BOLDYELLOW << "Configuring RD53 " << int (cRD53->getChipId()) << RESET;
-		    fRD53Interface->ConfigureRD53 (dynamic_cast<RD53*>(cRD53));
+		    fRD53Interface->ConfigureChip (dynamic_cast<RD53*>(cRD53));
 		  }
 
 		// @TMP@
@@ -401,7 +401,7 @@ namespace Ph2_System {
 	    {
 	      for (const auto& cRD53 : cFe->fChipVector)
 		{
-		  fRD53Interface->ResetRD53 (dynamic_cast<RD53*>(cRD53));
+		  dynamic_cast<RD53Interface*>(fChipInterface)->ResetRD53 (dynamic_cast<RD53*>(cRD53));
 		  LOG (INFO) << BOLDGREEN << "\t--> Successfully reset RD53 " << int (cRD53->getChipId()) << RESET;
 		}
 	    }
@@ -490,6 +490,7 @@ namespace Ph2_System {
         for (auto cBoard : fBoardVector)
             this->ReadNEvents (cBoard, pNEvents);
     }
+  
   void SystemController::ReadHitOrCnt (unsigned int nCnt) const
   {
     for (auto& cBoard : fBoardVector)
@@ -503,22 +504,22 @@ namespace Ph2_System {
 		  {
 		  case 0:
 		    {
-		      fRD53Interface->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_0_CNT");
+		      dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_0_CNT");
 		      break;
 		    }
 		  case 1:
 		    {
-		      fRD53Interface->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_1_CNT");
+		      dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_1_CNT");
 		      break;
 		    }
 		  case 2:
 		    {
-		      fRD53Interface->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_2_CNT");
+		      dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_2_CNT");
 		      break;
 		    }
 		  case 3:
 		    {
-		      fRD53Interface->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_3_CNT");
+		      dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_3_CNT");
 		      break;
 		    }
 		  }

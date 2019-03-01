@@ -27,12 +27,12 @@ struct CbcRegWriter : public HwDescriptionVisitor
 {
     ChipInterface* fInterface;
     std::string fRegName;
-    uint8_t fRegValue;
+    uint16_t fRegValue;
 
-    CbcRegWriter ( ChipInterface* pInterface, std::string pRegName, uint8_t pRegValue ) : fInterface ( pInterface ), fRegName ( pRegName ), fRegValue ( pRegValue ) {}
+    CbcRegWriter ( ChipInterface* pInterface, std::string pRegName, uint16_t pRegValue ) : fInterface ( pInterface ), fRegName ( pRegName ), fRegValue ( pRegValue ) {}
     CbcRegWriter ( const CbcRegWriter& writer ) : fInterface ( writer.fInterface ), fRegName ( writer.fRegName ), fRegValue ( writer.fRegValue ) {}
 
-    void setRegister ( std::string pRegName, uint8_t pRegValue )
+    void setRegister ( std::string pRegName, uint16_t pRegValue )
     {
         fRegName = pRegName;
         fRegValue = pRegValue;
@@ -54,7 +54,7 @@ struct BeBoardRegWriter : public HwDescriptionVisitor
 
     BeBoardRegWriter ( const BeBoardRegWriter& writer ) : fInterface ( writer.fInterface ), fRegName ( writer.fRegName ), fRegValue ( writer.fRegValue ) {}
 
-    void setRegister ( std::string pRegName, uint8_t pRegValue )
+    void setRegister ( std::string pRegName, uint16_t pRegValue )
     {
         fRegName = pRegName;
         fRegValue = pRegValue;
@@ -70,9 +70,9 @@ struct BeBoardRegWriter : public HwDescriptionVisitor
 struct CbcMultiRegWriter : public HwDescriptionVisitor
 {
     ChipInterface* fInterface;
-    std::vector<std::pair<std::string, uint8_t>> fRegVec;
+    std::vector<std::pair<std::string, uint16_t>> fRegVec;
 
-    CbcMultiRegWriter ( ChipInterface* pInterface, std::vector<std::pair<std::string, uint8_t>> pRegVec ) : fInterface ( pInterface ), fRegVec ( pRegVec ) {}
+    CbcMultiRegWriter ( ChipInterface* pInterface, std::vector<std::pair<std::string, uint16_t>> pRegVec ) : fInterface ( pInterface ), fRegVec ( pRegVec ) {}
 
     void visit ( Ph2_HwDescription::Chip& pCbc )
     {
@@ -147,8 +147,8 @@ class Configurator: public HwDescriptionVisitor
 struct CbcRegReader : public HwDescriptionVisitor
 {
     std::string fRegName;
-    uint8_t fRegValue;
-    uint8_t fReadRegValue;
+    uint16_t fRegValue;
+    uint16_t fReadRegValue;
     ChipInterface* fInterface;
     bool fOutput;
 
@@ -167,11 +167,11 @@ struct CbcRegReader : public HwDescriptionVisitor
 
         if (fOutput) LOG (INFO) << "Reading Reg " << RED << fRegName << RESET << " on CBC " << +pCbc.getChipId() << " memory value: " << std::hex << +fRegValue << " read value: " << +fReadRegValue << std::dec ;
     }
-    uint8_t getMemoryValue()
+    uint16_t getMemoryValue()
     {
         return fRegValue;
     }
-    uint8_t getHWValue()
+    uint16_t getHWValue()
     {
         return fReadRegValue;
     }
@@ -227,13 +227,13 @@ struct CbcRegIncrementer : public HwDescriptionVisitor
 
     void visit ( Ph2_HwDescription::Chip& pCbc )
     {
-        uint8_t currentValue = pCbc.getReg (fRegName);
+        uint16_t currentValue = pCbc.getReg (fRegName);
         int targetValue = int (currentValue) + fRegIncrement;
 
         if (targetValue > 255) LOG (ERROR) << "Error: cannot increment register above 255" << std::endl, targetValue = 255;
         else if (targetValue < 0) LOG (ERROR) << "Error: cannot increment register below 0 " << std::endl, targetValue = 0;
 
-        fInterface->WriteChipReg ( &pCbc, fRegName, uint8_t (targetValue) );
+        fInterface->WriteChipReg ( &pCbc, fRegName, uint16_t (targetValue) );
     }
 };
 
@@ -289,7 +289,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
                 if (fThreshold > 255) LOG (ERROR) << "Error, Threshold for CBC2 can only be 8 bit max (255)!";
                 else
                 {
-                    uint8_t cVCth = fThreshold & 0x00FF;
+                    uint16_t cVCth = fThreshold & 0x00FF;
                     fInterface->WriteChipReg ( &pCbc, "VCth", cVCth );
                 }
             }
@@ -309,10 +309,10 @@ struct ThresholdVisitor : public HwDescriptionVisitor
                 if (fThreshold > 1023) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!"; //h
                 else
                 {
-                    std::vector<std::pair<std::string, uint8_t>> cRegVec;
+                    std::vector<std::pair<std::string, uint16_t>> cRegVec;
                     // VCth1 holds bits 0-7 and VCth2 holds 8-9
-                    uint8_t cVCth1 = fThreshold & 0x00FF;
-                    uint8_t cVCth2 = (fThreshold & 0x0300) >> 8;
+                    uint16_t cVCth1 = fThreshold & 0x00FF;
+                    uint16_t cVCth2 = (fThreshold & 0x0300) >> 8;
                     cRegVec.emplace_back ("VCth1", cVCth1);
                     cRegVec.emplace_back ("VCth2", cVCth2);
                     fInterface->WriteChipMultReg (&pCbc, cRegVec);
@@ -322,8 +322,8 @@ struct ThresholdVisitor : public HwDescriptionVisitor
             {
                 fInterface->ReadChipReg (&pCbc, "VCth1");
                 fInterface->ReadChipReg (&pCbc, "VCth2");
-                uint8_t cVCth2 = pCbc.getReg ("VCth2");
-                uint8_t cVCth1 = pCbc.getReg ("VCth1");
+                uint16_t cVCth2 = pCbc.getReg ("VCth2");
+                uint16_t cVCth1 = pCbc.getReg ("VCth1");
                 fThreshold = ( ( (cVCth2 & 0x03) << 8) | (cVCth1 & 0xFF) );
             }
             else
@@ -374,7 +374,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
                 if (fLatency > 255) LOG (ERROR) << "Error, Latency for CBC2 can only be 8 bit max (255)!";
                 else
                 {
-                    uint8_t cLat = fLatency & 0x00FF;
+                    uint16_t cLat = fLatency & 0x00FF;
                     fInterface->WriteChipReg ( &pCbc, "TriggerLatency", cLat );
                 }
             }
@@ -388,12 +388,12 @@ struct LatencyVisitor : public HwDescriptionVisitor
         {
             if (fOption == 'w')
             {
-                std::vector<std::pair<std::string, uint8_t>> cRegVec;
+                std::vector<std::pair<std::string, uint16_t>> cRegVec;
                 // TriggerLatency1 holds bits 0-7 and FeCtrl&TrgLate2 holds 8
-                uint8_t cLat1 = fLatency & 0x00FF;
+                uint16_t cLat1 = fLatency & 0x00FF;
                 //in order to not mess with the other settings in FrontEndControl&TriggerLatency2, I have to read the reg
-                uint8_t presentValue = pCbc.getReg ("FeCtrl&TrgLat2") & 0xFE;
-                uint8_t cLat2 = presentValue | ( (fLatency & 0x0100) >> 8);
+                uint16_t presentValue = pCbc.getReg ("FeCtrl&TrgLat2") & 0xFE;
+                uint16_t cLat2 = presentValue | ( (fLatency & 0x0100) >> 8);
                 cRegVec.emplace_back ("TriggerLatency1", cLat1);
                 cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
                 fInterface->WriteChipMultReg (&pCbc, cRegVec);

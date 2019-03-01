@@ -402,7 +402,7 @@ void PulseShape::parseSettings()
 void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
 {
 
-    std::vector<std::pair<std::string, uint8_t>> cRegVec;
+    std::vector<std::pair<std::string, uint16_t>> cRegVec;
     fChannelVector = findChannelsInTestGroup ( fTestGroup );
     uint8_t cRegValue =  to_reg ( 0, fTestGroup );
     cRegVec.push_back ( std::make_pair ( "SelTestPulseDel&ChanGroup",  cRegValue ) );

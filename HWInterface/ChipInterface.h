@@ -90,21 +90,21 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        virtual bool WriteChipReg ( Chip* pChip, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true ) = 0;
+        virtual bool WriteChipReg ( Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true ) = 0;
 
         /*!
          * \brief Write several registers in both Chip and Chip Config File
          * \param pChip
          * \param pVecReq : Vector of pair: Node of the register to write versus value to write
          */
-        virtual bool WriteChipMultReg ( Chip* pChip, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop = true ) = 0;
+        virtual bool WriteChipMultReg ( Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true ) = 0;
         
         /*!
          * \brief Read the designated register in the Chip
          * \param pChip
          * \param pRegNode : Node of the register to read
          */
-        virtual uint8_t ReadChipReg ( Chip* pChip, const std::string& pRegNode ) = 0;
+        virtual uint16_t ReadChipReg ( Chip* pChip, const std::string& pRegNode ) = 0;
         /*!
          * \brief Read several register in the Chip
          * \param pChip

@@ -334,7 +334,7 @@ void ShortFinder::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
     {
         for (auto cCbc : cFe->fChipVector)
         {
-            std::vector<std::pair<std::string, uint8_t>> cRegVec;
+            std::vector<std::pair<std::string, uint16_t>> cRegVec;
             uint8_t cRegValue = this->to_reg ( 0, pTestGroup );
 
             if (cCbc->getFrontEndType() == FrontEndType::CBC3)

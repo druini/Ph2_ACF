@@ -179,9 +179,9 @@ namespace Ph2_HwDescription
 
 
     // @TMP@
-    const uint16_t getNumberOfChannels() const          { return 0;     };
-    bool isDACLocal(const std::string &dacName)         { return false; };
-    uint8_t getNumberOfBits(const std::string &dacName) { return 0;     };
+    const uint16_t getNumberOfChannels () const          { return 0;     };
+    bool isDACLocal (const std::string& dacName)         { return false; };
+    uint8_t getNumberOfBits (const std::string& dacName) { return 0;     };
 
 
   private:

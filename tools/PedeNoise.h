@@ -38,7 +38,7 @@ using namespace Ph2_System;
 class PedeNoise : public Tool
 {
 
-    using RegisterVector =  std::vector<std::pair< std::string, uint8_t> >;
+    //using RegisterVector =  std::vector<std::pair< std::string, uint16_t> >;
     //using TestGroupChannelMap std::map< int, std::vector<uint8_t> >;
 
   public:

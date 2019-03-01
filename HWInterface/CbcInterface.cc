@@ -156,14 +156,20 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop )
+    bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop )
     {
+        if ( pValue > 0xFF){
+            LOG (ERROR) << "Cbc register are 8 bits, impossible to write " << pValue << " on registed " << pRegNode ;
+            return false;
+        }
+        
+
         //first, identify the correct BeBoardFWInterface
         setBoard ( pCbc->getBeBoardId() );
 
         //next, get the reg item
         ChipRegItem cRegItem = pCbc->getRegItem ( pRegNode );
-        cRegItem.fValue = pValue;
+        cRegItem.fValue = pValue & 0xFF;
 
         //vector for transaction
         std::vector<uint32_t> cVec;
@@ -187,7 +193,7 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
-    bool CbcInterface::WriteChipMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop )
+    bool CbcInterface::WriteChipMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop )
     {
         //first, identify the correct BeBoardFWInterface
         setBoard ( pCbc->getBeBoardId() );
@@ -199,6 +205,11 @@ namespace Ph2_HwInterface {
 
         for ( const auto& cReg : pVecReq )
         {
+            if ( cReg.second > 0xFF){
+                LOG (ERROR) << "Cbc register are 8 bits, impossible to write " << cReg.second << " on registed " << cReg.first ;
+                continue;
+            }
+        
             cRegItem = pCbc->getRegItem ( cReg.first );
             cRegItem.fValue = cReg.second;
 
@@ -232,7 +243,7 @@ namespace Ph2_HwInterface {
 
 
 
-    uint8_t CbcInterface::ReadChipReg ( Chip* pCbc, const std::string& pRegNode )
+    uint16_t CbcInterface::ReadChipReg ( Chip* pCbc, const std::string& pRegNode )
     {
         setBoard ( pCbc->getBeBoardId() );
 
@@ -251,7 +262,7 @@ namespace Ph2_HwInterface {
 
         if (!cFailed) pCbc->setReg ( pRegNode, cRegItem.fValue );
 
-        return cRegItem.fValue;
+        return cRegItem.fValue & 0xFF;
     }
 
 

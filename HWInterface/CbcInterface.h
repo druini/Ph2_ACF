@@ -75,14 +75,14 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true ) override;
+        bool WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true ) override;
 
         /*!
          * \brief Write several registers in both Chip and Chip Config File
          * \param pCbc
          * \param pVecReq : Vector of pair: Node of the register to write versus value to write
          */
-        bool WriteChipMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop = true ) override;
+        bool WriteChipMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true ) override;
         /*!
          * \brief Write same register in all Cbcs and then UpdateCbc
          * \param pModule : Module containing vector of Cbcs
@@ -102,7 +102,7 @@ namespace Ph2_HwInterface {
          * \param pCbc
          * \param pRegNode : Node of the register to read
          */
-        uint8_t ReadChipReg ( Chip* pCbc, const std::string& pRegNode ) override;
+        uint16_t ReadChipReg ( Chip* pCbc, const std::string& pRegNode ) override;
         /*!
          * \brief Read several register in the Chip
          * \param pCbc

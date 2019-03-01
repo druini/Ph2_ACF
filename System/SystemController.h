@@ -67,7 +67,6 @@ namespace Ph2_System {
     {
       public:
         BeBoardInterface*       fBeBoardInterface;                     /*!< Interface to the BeBoard */
-    	RD53Interface*          fRD53Interface;                        /*!< Interface to the RD53 */
         ChipInterface*          fChipInterface;                         /*!< Interface to the CBC */
         SSAInterface*           fSSAInterface;                         /*!< Interface to the SSA */
         MPAInterface*           fMPAInterface;                         /*!< Interface to the MPA */

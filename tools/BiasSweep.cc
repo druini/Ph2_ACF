@@ -218,7 +218,7 @@ void BiasSweep::MeasureMinPower (BeBoard* pBoard, Chip* pCbc)
 #endif
     //here need to 1st turn off all the biases, then 2nd set the fc7 to external clock, red the digital current and then power cycle the CBC with the LV
     //and re-configure
-    std::vector<std::pair<std::string, uint8_t>> cRegVec;
+    std::vector<std::pair<std::string, uint16_t>> cRegVec;
 
     for (size_t cIndex = 0; cIndex < cRegisters.size(); cIndex++)
     {

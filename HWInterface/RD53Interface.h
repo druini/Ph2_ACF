@@ -11,6 +11,7 @@
 #define _RD53INTERFACE_H_
 
 #include "BeBoardFWInterface.h"
+#include "ChipInterface.h"
 #include "../Utils/ConsoleColor.h"
 
 #include <vector>
@@ -27,32 +28,31 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-  using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board connected */
-  
-  class RD53Interface
+  class RD53Interface: public ChipInterface
   {
-  private:
-    BeBoardFWMap fBoardMap;       /*!< Map of Board connected */
-    BeBoardFWInterface* fBoardFW; /*!< Board loaded */
-    uint16_t prevBoardIdentifier; /*!< Id of the previous board */
-
-    void setBoard (uint16_t pBoardIdentifier);
-
   public:
     RD53Interface (const BeBoardFWMap& pBoardMap);
     ~RD53Interface();
 
-    void     ConfigureRD53    (RD53* pRD53);
-    void     InitRD53Aurora   (RD53* pRD53);
-    void     SyncRD53         (RD53* pRD53, unsigned int nSyncWords = 1);
+    bool ConfigureChip    (const Chip* cRD53, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                override;
+    bool WriteChipReg     (Chip* cRD53, const std::string& pRegNode, const uint16_t data, bool pVerifLoop = true)               override;
+    bool WriteChipMultReg (Chip* pRD53, const std::vector< std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop = true) override;
 
-    bool     WriteRD53Reg     (RD53* pRD53, const std::string& pRegNode, const uint16_t data, const std::vector<uint16_t> * dataVec = NULL);
-    void     WriteRD53MultReg (RD53* pRD53, const std::vector< std::pair<std::string, uint16_t> >& pVecReg);
+    bool WriteRD53Reg     (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec);
+    void InitRD53Aurora   (RD53* pRD53);
+    void SyncRD53         (RD53* pRD53, unsigned int nSyncWords = 1);
 
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadRD53Reg (RD53* pRD53, const std::string& pRegNode);
 
-    void     ResetRD53        (RD53* pRD53);
-    void     SetResetCoreCol  (RD53* pRD53, bool setT_resetF);
+    void ResetRD53        (RD53* pRD53);
+    void SetResetCoreCol  (RD53* pRD53, bool setT_resetF);
+
+
+    // @TMP@
+    uint16_t ReadChipReg           (Chip* pChip, const std::string& pRegNode)                             { return 0;    };
+    void ReadChipMultReg           (Chip* pChip, const std::vector<std::string>& pVecReg)                 {              };
+    bool ConfigureChipOriginalMask (const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) { return true; };
+    void ReadChip                  (Chip* pChip)                                                          {              };
    };
 }
 

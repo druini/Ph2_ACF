@@ -516,7 +516,7 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
                 cOriginalAmuxValue = cChip->getReg ("MiscTestPulseCtrl&AnalogMux" );
                 //uint8_t cOriginalHitDetectSLVSValue = cChip->getReg ("HitDetectSLVS" );
 
-                std::vector<std::pair<std::string, uint8_t>> cRegVec;
+                std::vector<std::pair<std::string, uint16_t>> cRegVec;
                 uint8_t cRegValue =  to_reg ( 0, pTestGroup );
 
                 if (cChip->getFrontEndType() == FrontEndType::CBC3)
@@ -1048,8 +1048,8 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
     //Maps for local DAC scans
     ModuleOccupancyPerChannelMap moduleOccupancyPerChannelMapPreviousStep;
     ModuleOccupancyPerChannelMap moduleOccupancyPerChannelMapCurrentStep;
-    std::map<uint8_t, std::map<uint8_t, std::vector<uint8_t> > > previousLocalDacListPerBoard;
-    std::map<uint8_t, std::map<uint8_t, std::vector<uint8_t> > > currentLocalDacListPerBoard;
+    std::map<uint8_t, std::map<uint8_t, std::vector<uint16_t> > > previousLocalDacListPerBoard;
+    std::map<uint8_t, std::map<uint8_t, std::vector<uint16_t> > > currentLocalDacListPerBoard;
     
     //Maps for global DAC scans
     ModuleGlobalOccupancyMap moduleOccupancyMapPreviousStep;
@@ -1069,7 +1069,7 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
         {
             if(localDAC)
             {
-                previousLocalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] = std::vector<uint8_t>(cChip->getNumberOfChannels(),0);
+                previousLocalDacListPerBoard[cFe->getModuleId()][cChip->getChipId()] = std::vector<uint16_t>(cChip->getNumberOfChannels(),0);
             }
             else
             {
@@ -1104,7 +1104,7 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
         {
             if(localDAC)
             {
-                currentLocalDacListPerBoard [cFe->getModuleId()][cChip->getChipId()] = std::vector<uint8_t>(cChip->getNumberOfChannels(),0xFFFF>>(16-numberOfBits)); //trick to set n bits to 1 without using power of 2
+                currentLocalDacListPerBoard [cFe->getModuleId()][cChip->getChipId()] = std::vector<uint16_t>(cChip->getNumberOfChannels(),0xFFFF>>(16-numberOfBits)); //trick to set n bits to 1 without using power of 2
             }
             else
             {
@@ -1479,10 +1479,10 @@ void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, cons
                     if (dacValue > 1023) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
                     else
                     {
-                        std::vector<std::pair<std::string, uint8_t> > cRegVec;
+                        std::vector<std::pair<std::string, uint16_t> > cRegVec;
                         // VCth1 holds bits 0-7 and VCth2 holds 8-9
-                        uint8_t cVCth1 = dacValue & 0x00FF;
-                        uint8_t cVCth2 = (dacValue & 0x0300) >> 8;
+                        uint16_t cVCth1 = dacValue & 0x00FF;
+                        uint16_t cVCth2 = (dacValue & 0x0300) >> 8;
                         cRegVec.emplace_back ("VCth1", cVCth1);
                         cRegVec.emplace_back ("VCth2", cVCth2);
                         fChipInterface->WriteChipMultReg (cChip, cRegVec);
@@ -1496,10 +1496,10 @@ void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, cons
                     if (dacValue > 511) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
                     else
                     {
-                         std::vector<std::pair<std::string, uint8_t> > cRegVec;
+                         std::vector<std::pair<std::string, uint16_t> > cRegVec;
                         // TriggerLatency1 holds bits 0-7 and FeCtrl&TrgLate2 holds 8
-                        uint8_t cLat1 = dacValue & 0x00FF;
-                        uint8_t cLat2 = (cChip->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
+                        uint16_t cLat1 = dacValue & 0x00FF;
+                        uint16_t cLat2 = (cChip->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
                         cRegVec.emplace_back ("TriggerLatency1", cLat1);
                         cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
                         fChipInterface->WriteChipMultReg (cChip, cRegVec);
@@ -1546,10 +1546,10 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
                     if (dacValue > 1023) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
                     else
                     {
-                        std::vector<std::pair<std::string, uint8_t> > cRegVec;
+                        std::vector<std::pair<std::string, uint16_t> > cRegVec;
                         // VCth1 holds bits 0-7 and VCth2 holds 8-9
-                        uint8_t cVCth1 = dacValue & 0x00FF;
-                        uint8_t cVCth2 = (dacValue & 0x0300) >> 8;
+                        uint16_t cVCth1 = dacValue & 0x00FF;
+                        uint16_t cVCth2 = (dacValue & 0x0300) >> 8;
                         cRegVec.emplace_back ("VCth1", cVCth1);
                         cRegVec.emplace_back ("VCth2", cVCth2);
                         fChipInterface->WriteChipMultReg (cChip, cRegVec);
@@ -1563,10 +1563,10 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
                     if (dacValue > 511) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
                     else
                     {
-                         std::vector<std::pair<std::string, uint8_t> > cRegVec;
+                         std::vector<std::pair<std::string, uint16_t> > cRegVec;
                         // TriggerLatency1 holds bits 0-7 and FeCtrl&TrgLate2 holds 8
-                        uint8_t cLat1 = dacValue & 0x00FF;
-                        uint8_t cLat2 = (cChip->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
+                        uint16_t cLat1 = dacValue & 0x00FF;
+                        uint16_t cLat2 = (cChip->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
                         cRegVec.emplace_back ("TriggerLatency1", cLat1);
                         cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
                         fChipInterface->WriteChipMultReg (cChip, cRegVec);
@@ -1589,7 +1589,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
 
 
 // set local dac per BeBoard
-void Tool::setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::vector<uint8_t> > > &dacList)
+void Tool::setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::vector<uint16_t> > > &dacList)
 {
 
     //Fabio: CBC specific - BEGIN
@@ -1606,7 +1606,7 @@ void Tool::setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, co
     {
         for ( auto cChip : cFe->fChipVector )
         {
-            std::vector<std::pair<std::string, uint8_t> > cRegVec;
+            std::vector<std::pair<std::string, uint16_t> > cRegVec;
             std::vector<uint8_t> listOfChannelToUnMask;
 
 
@@ -1642,7 +1642,7 @@ void Tool::setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, co
 
 
 // set same local dac for all BeBoard
-void Tool::setSameLocalDac(const std::string &dacName, const uint8_t &dacValue)
+void Tool::setSameLocalDac(const std::string &dacName, const uint16_t &dacValue)
 {
 
     for (auto& cBoard : fBoardVector)
@@ -1655,7 +1655,7 @@ void Tool::setSameLocalDac(const std::string &dacName, const uint8_t &dacValue)
 
 
 // set same local dac per BeBoard
-void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint8_t &dacValue)
+void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue)
 {
     //Fabio: CBC specific - BEGIN
     std::string dacTemplate;
@@ -1670,7 +1670,7 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, c
     {
         for ( auto cChip : cFe->fChipVector )
         {
-            std::vector<std::pair<std::string, uint8_t> > cRegVec;
+            std::vector<std::pair<std::string, uint16_t> > cRegVec;
             std::vector<uint8_t> listOfChannelToMask;
 
             if(!isMask){

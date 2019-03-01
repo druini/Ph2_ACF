@@ -29,7 +29,7 @@ using namespace Ph2_System;
 
 typedef std::vector<uint16_t> MaskedChannels ;
 typedef std::map<std::string , MaskedChannels> MaskedChannelsList ; 
-typedef std::vector<std::pair< std::string, uint8_t> > RegisterVector;
+typedef std::vector<std::pair< std::string, uint16_t> > RegisterVector;
 
 /*!
  * \class Tool
@@ -334,13 +334,13 @@ class Tool : public SystemController
     void setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
 
     //Set local DAC list for all CBCs in the BeBoard
-    void setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::vector<uint8_t> > > &dacList);
+    void setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::vector<uint16_t> > > &dacList);
 
     //Set same local DAC list for all CBCs
-    void setSameLocalDac(const std::string &dacName, const uint8_t &dacValue);
+    void setSameLocalDac(const std::string &dacName, const uint16_t &dacValue);
 
     //Set same local DAC list for all CBCs in the BeBoard
-    void setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint8_t &dacValue);
+    void setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
 
   protected:
     bool fSkipMaskedChannels;
