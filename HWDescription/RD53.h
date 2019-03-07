@@ -58,8 +58,6 @@
 #define NPIX_REGION       2 // Number of pixels per region
 #define NDATAMAX_PERPIXEL 6 // Number of data-bit packets used to program the pixel
 
-#define NBIT_NPIXCOL_CORE    6 // Number of NPIXCOL_CORE bits
-#define NBIT_NPIXROW_CORE    6 // Number of NPIXROW_CORE bits
 #define NBIT_NREGION_CORECOL 1 // Number of NREGION_CORECOL bits
 #define NBIT_NREGION_COREROW 3 // Number of NREGION_COREROW bits
 #define NBIT_NPIX_REGION     1 // Number of NPIX_REGION bits
@@ -130,14 +128,14 @@ namespace Ph2_HwDescription
 			      uint16_t& pixelRegion,
 			      uint16_t& regionCoreRow);
 
-    static uint16_t ResetEvtCtr() { return RESET_ECR; }
-    static uint16_t ResetBcrCtr() { return RESET_BCR; }
+    static uint16_t ResetEvtCtr() { return RESET_ECR;  }
+    static uint16_t ResetBcrCtr() { return RESET_BCR;  }
     static uint16_t GlobalPulse() { return GLOB_PULSE; }
-    static uint16_t Calibration() { return CAL; }
-    static uint16_t WriteCmd()    { return WRITECMD; }
-    static uint16_t ReadCmd()     { return READCMD; }
-    static uint16_t NoOperation() { return NOOP; }
-    static uint16_t Sync()        { return SYNC; }
+    static uint16_t Calibration() { return CAL;        }
+    static uint16_t WriteCmd()    { return WRITECMD;   }
+    static uint16_t ReadCmd()     { return READCMD;    }
+    static uint16_t NoOperation() { return NOOP;       }
+    static uint16_t Sync()        { return SYNC;       }
 
     static void DecodeData (uint32_t data,
 			    bool        & isHeader,
@@ -170,11 +168,8 @@ namespace Ph2_HwDescription
 				      unsigned int& row,
 				      unsigned int& quadCol)
     {
-      uint16_t regionInCore = coreRowAndRegion & static_cast<uint16_t>(pow(2,NBIT_NREGION_COREROW)-1);
-      uint16_t coreRow      = (coreRowAndRegion >> NBIT_NREGION_COREROW) & static_cast<uint16_t>(pow(2,NBIT_NPIXROW_CORE)-1);
-      std::cout << "AAA " << regionInCore << std::endl;
-      row     = (coreRow > 0 ? (coreRow-1) * NPIXROW_CORE : 0) + regionInCore;
-      quadCol = (coreCol > 0 ? (coreCol-1) * NPIXCOL_CORE : 0) + side*(NREGION_CORECOL+NPIX_REGION);
+      row     = coreRowAndRegion;
+      quadCol = (coreCol << NBIT_SIDE) | side;
     }
 
 

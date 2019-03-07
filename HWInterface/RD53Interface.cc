@@ -51,7 +51,7 @@ namespace Ph2_HwInterface
     // bit[2]: broadcast to SYNC FE
     // bit[1]: broadcast to LIN FE
     // bit[0]: broadcast to DIFF FE
-    this->WriteChipReg(pRD53,"PIX_MODE",0x8);
+    this->WriteChipReg(pRD53,"PIX_MODE",0x0);
 
     // @TMP@
     pRD53->resetMask();
@@ -69,7 +69,7 @@ namespace Ph2_HwInterface
 
     // @TMP@
     // for (unsigned int i = 0; i < NCOLS; i+=2)
-    for (unsigned int i = 144; i < 152; i+=2)
+    for (unsigned int i = 128; i < 263; i+=2)
       {
 	pRD53->ConvertRowCol2Cores (0,i,coreCol,coreRow,regionCoreCol,pixelRegion,regionCoreRow);
 	data = pixelRegion | (regionCoreCol << NBIT_NPIX_REGION) | (coreCol << (NBIT_NPIX_REGION+NBIT_NREGION_CORECOL));
@@ -79,10 +79,10 @@ namespace Ph2_HwInterface
 	for (unsigned int j = 0; j < NROWS; j++)
 	  {
 	    // @TMP@
-	    // LOG (INFO) << BLUE << "\nConfiguring row #" << j << RESET;
-	    // pRD53->ConvertRowCol2Cores (j,i,coreCol,coreRow,regionCoreCol,pixelRegion,regionCoreRow);
-	    // data = regionCoreRow | (coreRow << NBIT_NREGION_COREROW);
-	    // this->WriteChipReg(pRD53,"REGION_ROW",data);
+	    // LOG (INFO) << BLUE << "Configuring row #" << j << RESET;
+	    pRD53->ConvertRowCol2Cores (j,i,coreCol,coreRow,regionCoreCol,pixelRegion,regionCoreRow);
+	    data = regionCoreRow | (coreRow << NBIT_NREGION_COREROW);
+	    this->WriteChipReg(pRD53,"REGION_ROW",data);
 
 	    data =
 	      HIGHGAIN                                                                                       |
@@ -98,12 +98,12 @@ namespace Ph2_HwInterface
 		(static_cast<uint16_t>((*pRD53->getPixelsConfig())[i+1].TDAC  [j]) << (NBIT_PIXEN + NBIT_INJEN + NBIT_HITBUS))) << (NBIT_CMD/2));
 
 	    // @TMP@
-	    // this->WriteChipReg(pRD53,"PIX_PORTAL",data);
+	    this->WriteChipReg(pRD53,"PIX_PORTAL",data);
 
 	    dataVec.push_back(data);
 	    if ((j % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
 	      {
-		this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec);
+		// this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec);
 		dataVec.clear();
 	      }
 	  }
@@ -180,7 +180,7 @@ namespace Ph2_HwInterface
 	    it++;
 	    if (it > NWRITE_ATTEMPTS) break;
 
-	    if (( ( strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (it == 1) ) || (strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0))
+	    if (((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (it == 1)) || (strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0))
 	      fBoardFW->WriteChipCommand (serialSymbols);
 
 	    if ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) & (it == 1))

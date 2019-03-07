@@ -104,6 +104,7 @@ int main (int argc, char** argv)
   // #####################
   // # Start data taking #
   // #####################
+  std::cout << std::endl;
   LOG(INFO) << BOLDYELLOW << "@@@ Starting data-taking @@@" << RESET;
   BeBoard* pBoard = cSystemController.fBoardVector.at(0);
   cSystemController.Start(pBoard);
@@ -126,7 +127,7 @@ int main (int argc, char** argv)
       uint16_t ToT              = 0;
       unsigned int row          = 0;
       unsigned int quadCol      = 0;
-      LOG (INFO) << BOLDYELLOW << "\n@@@ Readout data @@@" << RESET;
+      LOG (INFO) << BOLDYELLOW << "@@@ Readout data @@@" << RESET;
       for (unsigned int i = 0; i < data.size(); i++)
 	{
 	  RD53::DecodeData(data[i],isHeader,trigID,trigTag,BCID,coreRowAndRegion,coreCol,side,ToT);

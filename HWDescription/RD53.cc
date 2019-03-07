@@ -494,7 +494,7 @@ namespace Ph2_HwDescription
     coreCol       = floor(col / NPIXCOL_CORE);
     coreRow       = floor(row / NPIXROW_CORE);
     regionCoreCol = (col % NPIXCOL_CORE < (NREGION_CORECOL*NPIX_REGION) ? 0 : 1); 
-    pixelRegion   = (col % (NREGION_CORECOL*NPIX_REGION) < NPIX_REGION ? 0 : 1);
+    pixelRegion   = (col % (NREGION_CORECOL*NPIX_REGION) < NPIX_REGION  ? 0 : 1);
     regionCoreRow = row % NPIXROW_CORE;
   }
 

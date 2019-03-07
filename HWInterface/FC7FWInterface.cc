@@ -408,12 +408,14 @@ namespace Ph2_HwInterface
 	  {
 	    outputDecoded.first .push_back((regFIFO[i] >> NBIT_VALUE) & static_cast<uint32_t>(pow(2,NBIT_ADDRESS)-1));
 	    outputDecoded.second.push_back(regFIFO[i] & static_cast<uint32_t>(pow(2,NBIT_VALUE)-1));
-	    uint8_t status = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS)) & static_cast<uint32_t>(pow(2,NBIT_STATUS)-1);
+	    uint8_t status = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS))               & static_cast<uint32_t>(pow(2,NBIT_STATUS)-1);
+	    uint8_t id     = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS + NBIT_STATUS)) & static_cast<uint32_t>(pow(2,NBIT_ID)-1);
 	    // @TMP@
- 	    // LOG (INFO) << BLUE << "\t--> Readback register status: " << BOLDYELLOW << "0x" << std::hex << unsigned(status) << std::dec << RESET;
+ 	    // LOG (INFO) << BLUE << std::hex << "\t--> Readback register status: " << BOLDYELLOW << "0x" << unsigned(status)
+	    // 	       << BLUE << " Readback chip ID: " << BOLDYELLOW << "0x" << unsigned(id) << std::dec << RESET;
 	  }
       }
-    
+
     return outputDecoded;
   }
 

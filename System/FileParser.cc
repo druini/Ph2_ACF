@@ -149,7 +149,7 @@ namespace Ph2_System {
             else cBeBoard->setEventType (EventType::VR);
         }
 
-        os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << " :" << BOLDBLUE << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << " BoardType: " << BOLDBLUE << cBoardType << BOLDCYAN << " EventType: " << BOLDRED << cEventTypeString << RESET << std:: endl;
+        os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << ": " << BOLDBLUE << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << " BoardType: " << BOLDBLUE << cBoardType << BOLDCYAN << " EventType: " << BOLDRED << cEventTypeString << RESET << std:: endl;
 
         pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child ("connection");
 
@@ -370,8 +370,8 @@ namespace Ph2_System {
         //LOG(INFO) << cStatus ;
         if ( cStatus )
         {
-            os << BOLDCYAN << "|" << "  " << "|" << "----" << pModuleNode.name() << "  "
-               << pModuleNode.first_attribute().name() << " :" << pModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
+            os << BOLDCYAN << "|" << "       " << "|" << "----" << pModuleNode.name() << "       "
+               << pModuleNode.first_attribute().name() << ": " << BOLDBLUE << pModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
 
             uint32_t cModuleId = pModuleNode.attribute ( "ModuleId" ).as_int();
 
@@ -387,7 +387,7 @@ namespace Ph2_System {
 
             std::string cFilePrefix = expandEnvironmentVariables (static_cast<std::string> ( cChipPathPrefixNode.attribute ( "path" ).value() ) );
 
-            if ( !cFilePrefix.empty() ) os << GREEN << "|" << " " << "|" << "   " << "|" << "----" << "Chip Files Path : " << cFilePrefix << RESET << std::endl;
+            if ( !cFilePrefix.empty() ) os << BOLDBLUE << "|" << "       " << "|" << "       " << "|" << "----" << "Chip Files Path: " << BOLDYELLOW << cFilePrefix << RESET << std::endl;
 
             // Iterate the Chip node
             if (pBoard->getBoardType() == BoardType::FC7)
