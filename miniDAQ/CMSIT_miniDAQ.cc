@@ -5,8 +5,8 @@
 // ##################
 // # Default values #
 // ##################
-#define NEVENTS   10
-#define RUNNUMBER  0
+#define NEVENTS  10
+#define RUNNUMBER 0
 
 
 using namespace Ph2_System;
@@ -52,9 +52,9 @@ int main (int argc, char** argv)
     }
 
   // Query the parser results
-  std::string cHWFile = cmd.foundOption("file")      == true ? cmd.optionValue("file") : "settings/CMSIT_FC7.xml";
-  bool cConfigure     = cmd.foundOption("configure") == true ? true : false;
-  int pEventsperVcth  = cmd.foundOption("events")    == true ? convertAnyInt(cmd.optionValue("events").c_str()) : NEVENTS;
+  std::string cHWFile  = cmd.foundOption("file")      == true ? cmd.optionValue("file") : "settings/CMSIT_FC7.xml";
+  bool cConfigure      = cmd.foundOption("configure") == true ? true : false;
+  unsigned int nEvents = cmd.foundOption("events")    == true ? convertAnyInt(cmd.optionValue("events").c_str()) : NEVENTS;
 
 
   // ##################################
@@ -110,8 +110,8 @@ int main (int argc, char** argv)
   cSystemController.Start(pBoard);
   
   std::vector<uint32_t> data;
-  uint32_t cN = 1;
-  while (cN <= pEventsperVcth)
+  unsigned int cN = 1;
+  while (cN <= nEvents)
     {
       uint32_t cPacketSize = cSystemController.ReadData(pBoard,data,4);
 
@@ -123,10 +123,10 @@ int main (int argc, char** argv)
       unsigned int BCID         = 0;
       uint16_t coreRowAndRegion = 0;
       uint16_t coreCol          = 0;
-      uint8_t side              = 0;
+      uint8_t  side             = 0;
       uint16_t ToT              = 0;
       unsigned int row          = 0;
-      unsigned int quadCol      = 0;
+      unsigned int colQuad      = 0;
       LOG (INFO) << BOLDYELLOW << "@@@ Readout data @@@" << RESET;
       for (unsigned int i = 0; i < data.size(); i++)
 	{
@@ -140,13 +140,13 @@ int main (int argc, char** argv)
 	  LOG (INFO) << BLUE << "\t--> coreCol: "  << unsigned(coreCol) << RESET;
 	  LOG (INFO) << BLUE << "\t--> side: "     << unsigned(side)    << RESET;
 	  LOG (INFO) << BLUE << "\t--> ToT: 0x"    << std::hex << unsigned(ToT) << std::dec << RESET;
-	  RD53::ConvertCores2Col4Row (coreCol,coreRowAndRegion,side,row,quadCol);
+	  RD53::ConvertCores2Col4Row (coreCol,coreRowAndRegion,side,row,colQuad);
 	  LOG (INFO) << BLUE << "\t--> row: "      << row      << RESET;
-	  LOG (INFO) << BLUE << "\t--> quad-col: " << quadCol  << RESET;
+	  LOG (INFO) << BLUE << "\t--> quad-col: " << colQuad  << RESET;
 	}
 
 
-      // if (cN + cPacketSize >= pEventsperVcth)
+      // if (cN + cPacketSize >= nEvents)
       // cSystemController.Stop(pBoard);
       // const std::vector<Event*>& events = cSystemController.GetEvents(pBoard);
       
@@ -156,10 +156,10 @@ int main (int argc, char** argv)
       cN++;
       //   }
     }
-
+  
   cSystemController.Stop(pBoard);
   cSystemController.Destroy();
   LOG(INFO) << BOLDBLUE << "@@@ End of CMSIT miniDAQ @@@" << RESET;
-  
+
   return 0;
 }

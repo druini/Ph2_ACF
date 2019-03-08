@@ -33,34 +33,27 @@
 #define NBIT_5BITW  3 // Number of 5-bit word counter bits
 #define NBIT_FRAME  5 // Number of frame bits
 
-#define NBIT_PIXEN  1  // Number of pixel enable bits
-#define NBIT_INJEN  1  // Number of injection enable bits
-#define NBIT_HITBUS 1  // Number of hit bust bits
-#define NBIT_TDAC   4  // Number of TDACbits
-#define HIGHGAIN  0x80 // Set High Gain Linear
+#define NBIT_PIXEN  1 // Number of pixel enable bits
+#define NBIT_INJEN  1 // Number of injection enable bits
+#define NBIT_HITBUS 1 // Number of hit bust bits
+#define NBIT_TDAC   4 // Number of TDACbits
+#define HIGHGAIN 0x80 // Set High Gain Linear FE
 
-#define RESET_ECR  0x5A5A // Event Counter Reset
-#define RESET_BCR  0x5959 // Bunch Counter Reset
-#define GLOB_PULSE 0x5C5C // Global pulse
-#define CAL        0x6363 // Calibration
-#define WRITECMD   0x6666 // Write command
-#define READCMD    0x6565 // Read command
-#define NOOP       0x6969 // No operation
+#define RESET_ECR  0x5A5A // Event Counter Reset word
+#define RESET_BCR  0x5959 // Bunch Counter Reset word
+#define GLOB_PULSE 0x5C5C // Global pulse word
+#define CAL        0x6363 // Calibration word
+#define WRITECMD   0x6666 // Write command word
+#define READCMD    0x6565 // Read command word
+#define NOOP       0x6969 // No operation word
 #define SYNC       0x817E // Synchronization word
+#define HEADER        0x1 // Data header word
 
 #define NCOLS 400 // Total number of columns
 #define NROWS 192 // Total number of rows
 
-#define NPIXCOL_CORE      8 // Number of pixel columns per core
-#define NPIXROW_CORE      8 // Number of pixel rows per core
-#define NREGION_CORECOL   2 // Number of regions per core column
-#define NREGION_COREROW   8 // Number of regions per core row
-#define NPIX_REGION       2 // Number of pixels per region
+#define NPIXCOL_PROG      2 // Number of pixel columns to program
 #define NDATAMAX_PERPIXEL 6 // Number of data-bit packets used to program the pixel
-
-#define NBIT_NREGION_CORECOL 1 // Number of NREGION_CORECOL bits
-#define NBIT_NREGION_COREROW 3 // Number of NREGION_COREROW bits
-#define NBIT_NPIX_REGION     1 // Number of NPIX_REGION bits
 
 #define NBIT_BCID  15 // Number of bunch crossing ID bits
 #define NBIT_TRGTAG 5 // Number of trigger tag bits
@@ -70,8 +63,6 @@
 #define NBIT_SIDE   1 // Number of "side" bits
 #define NBIT_ROW    9 // Number of row bits
 #define NBIT_CCOL   6 // Number of core column bits
-
-#define HEADER 1 // Data header word
 
 
 namespace Ph2_HwDescription
@@ -121,12 +112,7 @@ namespace Ph2_HwDescription
 		    std::vector<uint32_t>       & pVecReg,
 		    const std::vector<uint16_t> * dataVec = NULL);
 
-    void ConvertRowCol2Cores (unsigned int row, unsigned int col,
-			      uint16_t& coreCol,
-			      uint16_t& coreRow,
-			      uint16_t& regionCoreCol,
-			      uint16_t& pixelRegion,
-			      uint16_t& regionCoreRow);
+    void ConvertRowCol2Cores (unsigned int _row, unsigned int col, uint16_t& colPair, uint16_t& row);
 
     static uint16_t ResetEvtCtr() { return RESET_ECR;  }
     static uint16_t ResetBcrCtr() { return RESET_BCR;  }

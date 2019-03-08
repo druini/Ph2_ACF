@@ -29,6 +29,7 @@
 
 #define WAIT         100 // [microseconds]
 #define DEEPSLEEP 500000 // [microseconds]
+
 #define NBIT_FWVER     4 // Number of bits for the firmware version
 #define NBIT_ID        2 // Number of bits for the ID      in the register frame
 #define NBIT_STATUS    2 // Number of bits for the status  in the register frame

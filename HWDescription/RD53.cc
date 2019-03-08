@@ -484,20 +484,12 @@ namespace Ph2_HwDescription
     pVecReg.push_back(word);
   }
 
-  void RD53::ConvertRowCol2Cores (unsigned int row, unsigned int col,
-				  uint16_t& coreCol,
-				  uint16_t& coreRow,
-				  uint16_t& regionCoreCol,
-				  uint16_t& pixelRegion,
-				  uint16_t& regionCoreRow)
+  void RD53::ConvertRowCol2Cores (unsigned int _row, unsigned int col, uint16_t& colPair, uint16_t& row)
   {
-    coreCol       = floor(col / NPIXCOL_CORE);
-    coreRow       = floor(row / NPIXROW_CORE);
-    regionCoreCol = (col % NPIXCOL_CORE < (NREGION_CORECOL*NPIX_REGION) ? 0 : 1); 
-    pixelRegion   = (col % (NREGION_CORECOL*NPIX_REGION) < NPIX_REGION  ? 0 : 1);
-    regionCoreRow = row % NPIXROW_CORE;
+    colPair = col >> (NPIXCOL_PROG/2);
+    row     = _row;
   }
-
+  
   template<int NBITS>
   std::bitset<NBITS> RD53::SetBits(unsigned int nBit2Set)
   {

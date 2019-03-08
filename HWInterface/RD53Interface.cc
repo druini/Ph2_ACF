@@ -58,21 +58,17 @@ namespace Ph2_HwInterface
     pRD53->enablePixel(50,148);
     // pRD53->enableAllPixels();
 
-    uint16_t coreCol;
-    uint16_t coreRow;
-    uint16_t regionCoreCol;
-    uint16_t pixelRegion;
-    uint16_t regionCoreRow;
-
     std::vector<uint16_t> dataVec;
     uint16_t data;
+    uint16_t row;
+    uint16_t colPair;
 
     // @TMP@
     // for (unsigned int i = 0; i < NCOLS; i+=2)
     for (unsigned int i = 128; i < 263; i+=2)
       {
-	pRD53->ConvertRowCol2Cores (0,i,coreCol,coreRow,regionCoreCol,pixelRegion,regionCoreRow);
-	data = pixelRegion | (regionCoreCol << NBIT_NPIX_REGION) | (coreCol << (NBIT_NPIX_REGION+NBIT_NREGION_CORECOL));
+	pRD53->ConvertRowCol2Cores (0,i,colPair,row);
+	data = colPair;
 	this->WriteChipReg(pRD53,"REGION_COL",data);
 	this->WriteChipReg(pRD53,"REGION_ROW",0x0);
 
@@ -80,8 +76,8 @@ namespace Ph2_HwInterface
 	  {
 	    // @TMP@
 	    // LOG (INFO) << BLUE << "Configuring row #" << j << RESET;
-	    pRD53->ConvertRowCol2Cores (j,i,coreCol,coreRow,regionCoreCol,pixelRegion,regionCoreRow);
-	    data = regionCoreRow | (coreRow << NBIT_NREGION_COREROW);
+	    pRD53->ConvertRowCol2Cores (j,i,colPair,row);
+	    data = row;
 	    this->WriteChipReg(pRD53,"REGION_ROW",data);
 
 	    data =
