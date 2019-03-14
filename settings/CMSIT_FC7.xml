@@ -12,21 +12,24 @@
       <Global>
 	<!-- Overwrite .txt configuration file settings -->
         <Settings
-	    EN_CORE_COL_SYNC   = "65535"
+	    EN_CORE_COL_SYNC   = "0"
 	    EN_CORE_COL_LIN_1  = "65535"
 	    EN_CORE_COL_LIN_2  =     "1"
-	    EN_CORE_COL_DIFF_1 = "65535"
-	    EN_CORE_COL_DIFF_2 =     "1"
+	    EN_CORE_COL_DIFF_1 = "0"
+	    EN_CORE_COL_DIFF_2 =     "0"
 
-	    GP_LVDS_ROUTE  =    "0"
-	    VTH_SYNC       =  "300"
-	    Vthreshold_LIN =  "150"
-	    VTH1_DIFF      =  "400"
+	    GP_LVDS_ROUTE  =    "1"
+	    VTH_SYNC       =  "65535"
+	    Vthreshold_LIN =  "450"
+	    VTH1_DIFF      =  "65535"
 	    VTH2_DIFF      =   "50"
 	    LATENCY_CONFIG =  "500"
 	    MONITOR_SELECT = "8203"
 	    />
-	    <!-- MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux) -->
+	    <!--
+		EN_CORE_COL_LIN_1 = "65535"
+		MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
+	    -->
       </Global>
     </Module>
 

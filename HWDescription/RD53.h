@@ -151,8 +151,7 @@ namespace Ph2_HwDescription
     }
 
     static void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side,
-				      unsigned int& row,
-				      unsigned int& quadCol)
+				      unsigned int& row, unsigned int& quadCol)
     {
       row     = coreRowAndRegion;
       quadCol = (coreCol << NBIT_SIDE) | side;
@@ -161,8 +160,8 @@ namespace Ph2_HwDescription
 
     // @TMP@
     const uint16_t getNumberOfChannels () const          { return 0;     };
-    bool isDACLocal (const std::string& dacName)         { return false; };
     uint8_t getNumberOfBits (const std::string& dacName) { return 0;     };
+    bool isDACLocal (const std::string& dacName)         { return false; };
 
 
   private:

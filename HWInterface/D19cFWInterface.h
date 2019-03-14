@@ -269,9 +269,9 @@ namespace Ph2_HwInterface {
         bool BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
         void ReadChipBlockReg (  std::vector<uint32_t>& pVecReg );
 
-        void ChipHardReset();
+        void ChipReSync() override;
 
-        void ChipFastReset();
+        void ChipReset() override;
 
         void ChipI2CRefresh();
 

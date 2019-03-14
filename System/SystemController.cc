@@ -184,8 +184,7 @@ namespace Ph2_System {
                 }
             }
 
-            //ChipFastReset as per recommendation of Mark Raymond
-            fBeBoardInterface->ChipFastReset ( cBoard );
+            fBeBoardInterface->ChipReset ( cBoard );
 	  }
 	else
 	  {
@@ -228,20 +227,21 @@ namespace Ph2_System {
 		  {
 		    LOG (INFO) << BOLDYELLOW << "Configuring RD53 " << int (cRD53->getChipId()) << RESET;
 		    fRD53Interface->ConfigureChip (dynamic_cast<RD53*>(cRD53));
+		    fRD53Interface->ResetHitOrCnt (dynamic_cast<RD53*>(cRD53));
 		  }
 
 		// @TMP@
-		// while (true)
-		//   {
-		//     this->ReadHitOrCnt (0);
-		//     usleep(1e6);
-		//     this->ReadHitOrCnt (1);
-		//     usleep(1e6);
-		//     this->ReadHitOrCnt (2);
-		//     usleep(1e6);
-		//     this->ReadHitOrCnt (3);
-		//     usleep(1e6);
-		//   }
+		while (true)
+		  {
+		    this->ReadHitOrCnt (0);
+		    usleep(1e6);
+		    this->ReadHitOrCnt (1);
+		    usleep(1e6);
+		    this->ReadHitOrCnt (2);
+		    usleep(1e6);
+		    this->ReadHitOrCnt (3);
+		    usleep(1e6);
+		  }
 	      }
 	  }
 	} 
@@ -493,6 +493,8 @@ namespace Ph2_System {
   
   void SystemController::ReadHitOrCnt (unsigned int nCnt) const
   {
+    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
+
     for (auto& cBoard : fBoardVector)
       {
 	for (const auto& cFe : cBoard->fModuleVector)
@@ -504,26 +506,28 @@ namespace Ph2_System {
 		  {
 		  case 0:
 		    {
-		      dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_0_CNT");
+		      outputDecoded = dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_0_CNT");
 		      break;
 		    }
 		  case 1:
 		    {
-		      dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_1_CNT");
+		      outputDecoded = dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_1_CNT");
 		      break;
 		    }
 		  case 2:
 		    {
-		      dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_2_CNT");
+		      outputDecoded = dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_2_CNT");
 		      break;
 		    }
 		  case 3:
 		    {
-		      dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_3_CNT");
+		      outputDecoded = dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_3_CNT");
 		      break;
 		    }
 		  }
 	      }
+
+	    std::cout << "Hit-Or-Cnt value: " << outputDecoded.second[0] << std::endl;
 	  }
       }
   }

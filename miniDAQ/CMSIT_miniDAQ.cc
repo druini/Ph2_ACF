@@ -113,10 +113,9 @@ int main (int argc, char** argv)
   unsigned int cN = 1;
   while (cN <= nEvents)
     {
+      // @TMP@
       uint32_t cPacketSize = cSystemController.ReadData(pBoard,data,4);
 
-
-      // @TMP@
       bool         isHeader     = 0;
       unsigned int trigID       = 0;
       unsigned int trigTag      = 0;
@@ -127,6 +126,7 @@ int main (int argc, char** argv)
       uint16_t ToT              = 0;
       unsigned int row          = 0;
       unsigned int colQuad      = 0;
+
       LOG (INFO) << BOLDYELLOW << "@@@ Readout data @@@" << RESET;
       for (unsigned int i = 0; i < data.size(); i++)
 	{

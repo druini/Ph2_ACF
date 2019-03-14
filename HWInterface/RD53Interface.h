@@ -46,13 +46,13 @@ namespace Ph2_HwInterface
 
     void ResetRD53        (RD53* pRD53);
     void SetResetCoreCol  (RD53* pRD53, bool setT_resetF);
-
+    void ResetHitOrCnt    (RD53* pRD53);
 
     // @TMP@
+    void ReadChip                  (Chip* pChip)                                                          {              };
     uint16_t ReadChipReg           (Chip* pChip, const std::string& pRegNode)                             { return 0;    };
     void ReadChipMultReg           (Chip* pChip, const std::vector<std::string>& pVecReg)                 {              };
     bool ConfigureChipOriginalMask (const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) { return true; };
-    void ReadChip                  (Chip* pChip)                                                          {              };
    };
 }
 

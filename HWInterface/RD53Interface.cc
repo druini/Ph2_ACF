@@ -65,7 +65,8 @@ namespace Ph2_HwInterface
 
     // @TMP@
     // for (unsigned int i = 0; i < NCOLS; i+=2)
-    for (unsigned int i = 128; i < 263; i+=2)
+    // for (unsigned int i = 128; i < 263; i+=2)
+    for (unsigned int i = 144; i < 152; i+=2)
       {
 	pRD53->ConvertRowCol2Cores (0,i,colPair,row);
 	data = colPair;
@@ -170,6 +171,7 @@ namespace Ph2_HwInterface
 
 	std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
 	unsigned int it      = 0;
+	unsigned int row     = 0;
 	unsigned int pixMode = 0;
 	do
 	  {
@@ -183,16 +185,23 @@ namespace Ph2_HwInterface
 	      {
 		outputDecoded = this->ReadRD53Reg (pRD53, "PIX_MODE");
     		pixMode = outputDecoded.second[0];
+
+		outputDecoded = this->ReadRD53Reg (pRD53, "REGION_ROW");
+    		row = outputDecoded.second[0];
 	      }
 
 	    if (pixMode == 0)
 	      outputDecoded = this->ReadRD53Reg (pRD53, pRegNode);
+
 	  }
-	while ((pixMode == 0) && (outputDecoded.first[0] != cRegItem.fAddress) && (outputDecoded.second[0] != cRegItem.fValue));
+	while ((pixMode == 0) &&
+	       (((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded.first[0] != cRegItem.fAddress)) ||
+		((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded.first[0] != row))               ||
+	        (outputDecoded.second[0] != cRegItem.fValue)));
 
 	if (it > NWRITE_ATTEMPTS)
 	  {
-	    LOG (INFO) << BOLDRED << "Error while writing into RD53: reached the maximum number of attempts" << RESET;
+	    LOG (INFO) << BOLDRED << "Error while writing into RD53: reached the maximum number of attempts (" << NWRITE_ATTEMPTS << ")" << RESET;
 	    return false;
 	  }
 	else
@@ -203,17 +212,6 @@ namespace Ph2_HwInterface
       }
 
     // fBoardFW->SerializeSymbols (symbols,serialSymbols);
-    fBoardFW->WriteChipCommand (serialSymbols);
-    return true;
-  }
-
-  bool RD53Interface::WriteRD53Reg (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec)
-  {
-    setBoard (pRD53->getBeBoardId());
-
-    std::vector<uint32_t> serialSymbols;
-    pRD53->EncodeCMD (pRD53->getRegItem (pRegNode).fAddress, pRD53->getRegItem (pRegNode).fValue, pRD53->getChipId(), RD53::WriteCmd(), serialSymbols, dataVec);
-
     fBoardFW->WriteChipCommand (serialSymbols);
     return true;
   }
@@ -238,6 +236,17 @@ namespace Ph2_HwInterface
     for (const auto& cReg : pVecReg) pRD53->setReg (cReg.first, cReg.second);
   }
   
+  bool RD53Interface::WriteRD53Reg (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec)
+  {
+    setBoard (pRD53->getBeBoardId());
+    
+    std::vector<uint32_t> serialSymbols;
+    pRD53->EncodeCMD (pRD53->getRegItem (pRegNode).fAddress, pRD53->getRegItem (pRegNode).fValue, pRD53->getChipId(), RD53::WriteCmd(), serialSymbols, dataVec);
+
+    fBoardFW->WriteChipCommand (serialSymbols);
+    return true;
+  }
+
   std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53Interface::ReadRD53Reg (RD53* pRD53, const std::string& pRegNode)
   {
     setBoard (pRD53->getBeBoardId());
@@ -255,7 +264,7 @@ namespace Ph2_HwInterface
 	outputDecoded.first[i] = outputDecoded.first[i] & static_cast<uint16_t>(pow(2,NBIT_ADDR)-1);
 	// @TMP@
 	// LOG (INFO) << BLUE << "\t--> Address: " << BOLDYELLOW << "0x" << std::hex << unsigned(outputDecoded.first[i])
-	//	   << BLUE << "\tValue: " << BOLDYELLOW << "0x" << unsigned(outputDecoded.second[i]) << std::dec << RESET;
+	// 	   << BLUE << "\tValue: " << BOLDYELLOW << "0x" << unsigned(outputDecoded.second[i]) << std::dec << RESET;
       }
 
     return outputDecoded;
@@ -276,5 +285,13 @@ namespace Ph2_HwInterface
 
     this->WriteChipReg(pRD53,"EN_CORE_COL_DIFF_1",(setT_resetF == true ? 0xFFFF : 0x0));
     this->WriteChipReg(pRD53,"EN_CORE_COL_DIFF_2",(setT_resetF == true ? 0x1    : 0x0));
+  }
+
+  void RD53Interface::ResetHitOrCnt (RD53* pRD53)
+  {
+    this->WriteChipReg(pRD53,"HITOR_0_CNT",0x0);
+    this->WriteChipReg(pRD53,"HITOR_1_CNT",0x0);
+    this->WriteChipReg(pRD53,"HITOR_2_CNT",0x0);
+    this->WriteChipReg(pRD53,"HITOR_3_CNT",0x0);
   }
 }

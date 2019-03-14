@@ -54,8 +54,7 @@ void RegisterTester::TestRegisters()
                     std::this_thread::sleep_for (std::chrono::nanoseconds (100) );
                 }
 
-                //ChipFastReset as per recommendation of Mark Raymond
-                fBeBoardInterface->ChipFastReset ( cBoard );
+                fBeBoardInterface->ChipReset ( cBoard );
             }
         }
     }
@@ -90,7 +89,7 @@ void RegisterTester::ReconfigureRegisters (std::string pDirectoryName )
 
     for (auto& cBoard : fBoardVector)
     {
-        fBeBoardInterface->ChipHardReset ( cBoard );
+        fBeBoardInterface->ChipReSync ( cBoard );
 
         for (auto& cFe : cBoard->fModuleVector)
         {
@@ -113,8 +112,7 @@ void RegisterTester::ReconfigureRegisters (std::string pDirectoryName )
             }
         }
 
-        //ChipFastReset as per recommendation of Mark Raymond
-        fBeBoardInterface->ChipFastReset ( cBoard );
+        fBeBoardInterface->ChipReset ( cBoard );
     }
 }
 void RegisterTester::PrintTestReport()

@@ -129,7 +129,7 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 {
     for (auto& cBoard : fBoardVector)
     {
-        fBeBoardInterface->ChipHardReset ( cBoard );
+        fBeBoardInterface->ChipReSync ( cBoard );
 
         for (auto& cFe : cBoard->fModuleVector)
         {
@@ -150,8 +150,7 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
             }
         }
 
-        //ChipFastReset as per recommendation of Mark Raymond
-        fBeBoardInterface->ChipFastReset ( cBoard );
+        fBeBoardInterface->ChipReset ( cBoard );
     }
 }
 
