@@ -23,7 +23,7 @@ PedeNoise::~PedeNoise()
 void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 {
     fDisableStubLogic = pDisableStubLogic;
-    this->MakeTestGroups();
+    this->MakeTestGroups(FrontEndType::CBC3);
     fAllChan = pAllChan;
 
     auto cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
@@ -335,7 +335,11 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     std::map<uint16_t, ModuleGlobalOccupancyMap > backEndCbcOccupanyMap;
     float globalOccupancy=0;
 
+    bool originalAllChannelFlag = this->fAllChan;
+
+    this->SetTestAllChannels(true);
     this->measureOccupancy(fEventsPerPoint*pMultiple, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
+    this->SetTestAllChannels(originalAllChannelFlag);
 
     for ( auto cBoard : fBoardVector )
     {
@@ -363,7 +367,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
             {
                 //get the histogram for the occupancy
                 TH1F* cHist = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_occupancy" ) );
-                cHist->Scale (1 / (fEventsPerPoint * 100.) );
+                cHist->Scale (1.);
                 TLine* line = new TLine (0, pNoiseStripThreshold * 0.001, NCHANNELS, pNoiseStripThreshold * 0.001);
 
                 //as we are at it, draw the plot

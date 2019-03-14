@@ -144,6 +144,8 @@ namespace Ph2_HwDescription {
             return fhasMaskedChannels;
         }
 
+        virtual const bool IsChannelUnMasked(uint32_t cChan) const = 0;
+
         virtual bool isDACLocal(const std::string &dacName)  = 0;
 
         virtual uint8_t getNumberOfBits(const std::string &dacName) = 0;

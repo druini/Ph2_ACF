@@ -117,6 +117,15 @@ std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uin
     LOG (INFO) << "Scanning Latency ... " ;
     uint32_t cIterationCount = 0;
 
+    // //Fabio - clean BEGIN
+    // MakeTestGroups (FrontEndType::CBC3);
+    // setFWTestPulse();
+    // setSystemTestPulse ( 200, 1, true, false );
+    // setSystemTestPulse ( 200, 0, true, false );
+    // selectGroupTestPulse(fBoardVector.at(0)->fModuleVector.at(0)->fChipVector.at(0),1);
+
+    // //Fabio - clean END
+
     LatencyVisitor cVisitor (fChipInterface, 0);
  
     for ( BeBoard* pBoard : fBoardVector )

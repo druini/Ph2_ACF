@@ -182,6 +182,7 @@ namespace Ph2_HwDescription
     const uint16_t getNumberOfChannels () const          { return 0;     };
     bool isDACLocal (const std::string& dacName)         { return false; };
     uint8_t getNumberOfBits (const std::string& dacName) { return 0;     };
+    const bool IsChannelUnMasked(uint32_t cChan) const override {return false; };
 
 
   private:
