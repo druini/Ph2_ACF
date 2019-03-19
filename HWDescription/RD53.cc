@@ -269,8 +269,8 @@ namespace Ph2_HwDescription
 	      file << " ";
 	    file.seekp (-v.first.size(), std::ios_base::cur);
 	    file << "0x"       << std::setfill ('0') << std::setw (2) << std::hex << std::uppercase << int (v.second.fAddress)
-		 << "\t0x"     << std::setfill ('0') << std::setw (2) << std::hex << std::uppercase << int (v.second.fDefValue)
-		 << "\t\t\t0x" << std::setfill ('0') << std::setw (2) << std::hex << std::uppercase << int (v.second.fValue) << std::endl;
+		 << "\t0x"     << std::setfill ('0') << std::setw (4) << std::hex << std::uppercase << int (v.second.fDefValue)
+		 << "\t\t\t0x" << std::setfill ('0') << std::setw (4) << std::hex << std::uppercase << int (v.second.fValue) << std::endl;
 
 	    cLineCounter++;
 	  }
