@@ -212,11 +212,11 @@ namespace Ph2_System {
 			fRD53Interface->SyncRD53 (dynamic_cast<RD53*>(cRD53),NSYNCWORDS);
 			fRD53Interface->InitRD53Aurora (dynamic_cast<RD53*>(cRD53));
 		      }
-		    
+
 		    isGoodTrial = fBeBoardInterface->InitChipCommunication(cBoard);
 		    LOG (INFO) << BOLDRED << "Attempt number #" << itTrials+1 << "/" << MAXTRIALS+1 << RESET;
 		    std::cout << std::endl;
-		      
+
 		    itTrials++;
 		  }
 
@@ -231,17 +231,17 @@ namespace Ph2_System {
 		  }
 
 		// @TMP@
-		while (true)
-		  {
-		    this->ReadHitOrCnt (0);
-		    usleep(1e6);
-		    this->ReadHitOrCnt (1);
-		    usleep(1e6);
-		    this->ReadHitOrCnt (2);
-		    usleep(1e6);
-		    this->ReadHitOrCnt (3);
-		    usleep(1e6);
-		  }
+		// while (true)
+		//   {
+		//     this->ReadHitOrCnt (0);
+		//     usleep(1e6);
+		//     this->ReadHitOrCnt (1);
+		//     usleep(1e6);
+		//     this->ReadHitOrCnt (2);
+		//     usleep(1e6);
+		//     this->ReadHitOrCnt (3);
+		//     usleep(1e6);
+		//   }
 	      }
 	  }
 	} 

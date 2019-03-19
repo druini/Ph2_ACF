@@ -198,6 +198,8 @@ namespace Ph2_HwDescription
 		fDefValue_str.erase(0,2);
 		fRegItem.fDefValue = strtoul (fDefValue_str.c_str(), 0, baseType);
 
+		fRegItem.fPage = 0;
+
 		fRegMap[fName] = fRegItem;
 	      }
 
@@ -241,13 +243,15 @@ namespace Ph2_HwDescription
 
   void RD53::saveRegMap (const std::string& filename)
   {
+    const int Nspaces = 40;
+
     std::ofstream file (filename.c_str(), std::ios::out | std::ios::trunc);
 
     if (file)
       {
-	std::vector<ChipRegPair> fSetRegItem;	
+	std::set<ChipRegPair, RegItemComparer> fSetRegItem;
 	for (auto& it : fRegMap)
-	  fSetRegItem.push_back ({it.first, it.second});
+	  fSetRegItem.insert ({it.first, it.second});
 
 	int cLineCounter = 0;	
 	for (const auto& v : fSetRegItem)
@@ -261,7 +265,7 @@ namespace Ph2_HwDescription
 	      }
 
 	    file << v.first;
-	    for (int j = 0; j < 48; j++)
+	    for (int j = 0; j < Nspaces; j++)
 	      file << " ";
 	    file.seekp (-v.first.size(), std::ios_base::cur);
 	    file << "0x"       << std::setfill ('0') << std::setw (2) << std::hex << std::uppercase << int (v.second.fAddress)
@@ -269,6 +273,37 @@ namespace Ph2_HwDescription
 		 << "\t\t\t0x" << std::setfill ('0') << std::setw (2) << std::hex << std::uppercase << int (v.second.fValue) << std::endl;
 
 	    cLineCounter++;
+	  }
+
+	file << std::dec << std::endl;
+	file << "*------------------------------------------------------------------------------------------" << std::endl;
+	file << "PIXELCONFIGURATION" << std::endl;
+	file << "*------------------------------------------------------------------------------------------" << std::endl;
+	for (unsigned int i = 0; i < fPixelsConfig.size(); i++)
+	  {
+	    file << "COL					" << std::setfill ('0') << std::setw (3) << i << std::endl;
+
+	    file << "ENABLE " << fPixelsConfig[i].Enable[0];
+	    for (unsigned int j = 1; j < fPixelsConfig[i].Enable.size(); j++)
+	      file << "," << fPixelsConfig[i].Enable[j];
+	    file << std::endl;
+
+	    file << "HITBUS " << fPixelsConfig[i].HitBus[0];
+	    for (unsigned int j = 1; j < fPixelsConfig[i].HitBus.size(); j++)
+	      file << "," << fPixelsConfig[i].HitBus[j];
+	    file << std::endl;
+
+	    file << "INJEN  " << fPixelsConfig[i].InjEn[0];
+	    for (unsigned int j = 1; j < fPixelsConfig[i].InjEn.size(); j++)
+	      file << "," << fPixelsConfig[i].InjEn[j];
+	    file << std::endl;
+
+	    file << "TDAC   " << unsigned(fPixelsConfig[i].TDAC[0]);
+	    for (unsigned int j = 1; j < fPixelsConfig[i].TDAC.size(); j++)
+	      file << "," << unsigned(fPixelsConfig[i].TDAC[j]);
+	    file << std::endl;
+
+	    file << std::endl;
 	  }
 
 	file.close();
@@ -347,6 +382,7 @@ namespace Ph2_HwDescription
 			const uint16_t                data,
   			const uint8_t                 pRD53Id,
   			const uint8_t                 pRD53Cmd,
+			const bool                    isBroadcast,
   			std::vector<uint32_t>       & pVecReg,
 			const std::vector<uint16_t> * dataVec)
   {
@@ -366,9 +402,9 @@ namespace Ph2_HwDescription
     else if (pRD53Cmd == (GLOB_PULSE & 0x00FF))
       {
 	word  = 2 | (pRD53Cmd << NBIT_5BITW);
-	frame = 0 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP ID[3..0],0
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2));
-	frame = 0 | ((data & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);    // @TMP@ D[3..0],0
+	frame = 0 | ((data & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                        // @TMP@ D[3..0],0
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME));
       }
     else if (pRD53Cmd == (CAL & 0x00FF))
@@ -387,11 +423,11 @@ namespace Ph2_HwDescription
     else if (pRD53Cmd == (READCMD & 0x00FF))
       {
 	word  = 4 | (pRD53Cmd << NBIT_5BITW);
-	frame = 0 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                    // @TMP@ ID[3..0],0
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID; // A[8..4]
+	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;  // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
-	frame = (address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1;                          // @TMP@ A[3..0]
+	frame = (address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1;                           // @TMP@ A[3..0]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
 	frame = 0;
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
@@ -399,7 +435,7 @@ namespace Ph2_HwDescription
     else if ((pRD53Cmd == (WRITECMD & 0x00FF)) && (dataVec == NULL))
       {
 	word  = 6 | (pRD53Cmd << NBIT_5BITW);
-	frame = 0 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                      // @TMP@ ID[3..0],0
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);  // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;   // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
@@ -427,7 +463,7 @@ namespace Ph2_HwDescription
 	  }
 
 	word  = 7 | (pRD53Cmd << NBIT_5BITW);
-	frame = 1 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                                    // @TMP@ ID[3..0],0
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;                                 // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));

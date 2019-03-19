@@ -393,11 +393,11 @@ namespace Ph2_HwInterface
     unsigned int auroraReg = ReadReg ("user.stat_regs.aurora.gtx_lock");
     LOG (INFO) << BOLDBLUE << "Aurora PLL locking status: " << BOLDYELLOW << auroraReg << RESET;
 
-    auroraReg = ReadReg ("user.stat_regs.aurora.n_ch");
-    LOG (INFO) << BOLDBLUE << "Aurora number of channels: " << BOLDYELLOW << auroraReg << RESET;
-
     auroraReg = ReadReg ("user.stat_regs.aurora.speed");
     LOG (INFO) << BOLDBLUE << "Aurora speed: " << BOLDYELLOW << (auroraReg == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
+
+    auroraReg = ReadReg ("user.stat_regs.aurora.n_ch");
+    LOG (INFO) << BOLDBLUE << "Aurora number of channels: " << BOLDYELLOW << auroraReg << RESET;
 
     std::bitset<NBIT_AURORAREG> bitReg = static_cast<uint8_t>(ReadReg ("user.stat_regs.aurora.lane_up"));
     LOG (INFO) << BOLDBLUE << "Aurora lane up status: " << BOLDYELLOW << bitReg.count() << RESET;
