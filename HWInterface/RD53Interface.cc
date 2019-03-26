@@ -150,7 +150,7 @@ namespace Ph2_HwInterface
 
     RD53* pRD53 = dynamic_cast<RD53*>(cRD53);
 
-    std::vector<std::vector<uint16_t> > symbols; // Useful in case the encoding is done in the software
+    // std::vector<std::vector<uint16_t> > symbols; // Useful in case the encoding is done in the software
     std::vector<uint32_t> serialSymbols;
     RD53RegItem cRegItem(0,0,0);
     cRegItem.fValue = data;
@@ -229,13 +229,26 @@ namespace Ph2_HwInterface
       {
 	cRegItem = pRD53->getRegItem (cReg.first);
 	cRegItem.fValue = cReg.second;
-	pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols);
-      }
-    fBoardFW->WriteChipCommand (serialSymbols);
 
-    for (const auto& cReg : pVecReg) pRD53->setReg (cReg.first, cReg.second);
+	if (strcmp(cReg.first.c_str(),"GLOBAL_PULSE") == 0)
+	  pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::GlobalPulse(), false, serialSymbols);
+	else if (strcmp(cReg.first.c_str(),"SYNC") == 0)
+	  pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::Sync(),        false, serialSymbols);
+	else if (strcmp(cReg.first.c_str(),"RESET_BCRCTR") == 0)
+	  pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetBcrCtr(), false, serialSymbols);
+	else if (strcmp(cReg.first.c_str(),"RESET_EVTCTR") == 0)
+	  pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetEvtCtr(), false, serialSymbols);
+	else
+	  {
+	    pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols);
+	    pRD53->setReg (cReg.first, cReg.second);
+	  }
+      }
+
+    fBoardFW->WriteChipCommand (serialSymbols);
+    return true;
   }
-  
+
   bool RD53Interface::WriteRD53Reg (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec)
   {
     setBoard (pRD53->getBeBoardId());
