@@ -17,6 +17,8 @@
 #include "../Utils/Visitor.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/Utilities.h"
+#include "BeBoardFWInterface.h"
+
 #ifdef __ANTENNA__
 #include "Antenna.h"
 #endif
@@ -46,9 +48,9 @@ class AntennaTester : public Tool
     ~AntennaTester();
 
     void Initialize();
+    void EnableAntenna( bool pAntennaEnable, uint8_t pDigiPotentiometer);
 
-    void Measure();
-
+    void Measure(uint8_t pDigiPotentiometer);
     void SetDecisionThreshold (double pDecisionThreshold)
     {
         fDecisionThreshold = pDecisionThreshold;
@@ -103,6 +105,7 @@ class AntennaTester : public Tool
     uint32_t fNCbc;
     // booleans
     bool fHoleMode;
+       uint32_t trigSource;
 
     /*!< Decision Threshold for channels occupancy based tests, values from 1 to 100 as % */
     double fDecisionThreshold ;

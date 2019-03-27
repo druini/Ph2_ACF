@@ -26,6 +26,7 @@
 #include "TF1.h"
 #include "TH2F.h"
 #include <math.h>
+#include "TMath.h"
 
 using namespace Ph2_System;
 using namespace Ph2_HwInterface;
@@ -51,7 +52,7 @@ class PulseShape : public Tool
     * \scan the Vcth with the correspondent delay
     * \param pDelay: initialize the hist whith the pDelay
     */
-    void ScanVcth ( uint32_t pDelay );
+    void ScanVcth ( uint32_t pDelay, int cLow );
 
     /*!
     * \Scan the test pulse delay
@@ -135,5 +136,6 @@ class PulseShape : public Tool
 * \return the point of the fitting function
 */
 double pulseshape ( double* x, double* par );
+double pulseshape2 ( double* x, double* par );
 
 #endif

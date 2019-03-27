@@ -281,6 +281,7 @@ namespace Ph2_HwInterface {
 
         // phase tuning coomands - d19c
         void PhaseTuningGetLineStatus(uint8_t pHybrid, uint8_t pChip, uint8_t pLine);
+        void PhaseTuningGetDefaultFSMState();
         void PhaseTuningParseStatus();
 
         // measures the occupancy of the 2S chips

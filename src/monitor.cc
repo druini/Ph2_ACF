@@ -330,7 +330,7 @@ int main ( int argc, char* argv[] )
 
     //THttpServer running, log file open, Graphs initialized, all ok - now just initialize the Antenna and get things ready
     //then start the workloop and keep the main thread listening for commands
-    gAntenna.initializeAntenna();
+    gAntenna.initializeAntenna(5);
     StartMonitoring ();
 
     workloop_local();

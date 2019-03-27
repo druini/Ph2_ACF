@@ -395,7 +395,7 @@ void perform_AntennaOccupancyMeasurement (Tool* pTool )
     cAntennaTester.ConfigureVcth (0x78);
 
     // measure occupancy
-    cAntennaTester.Measure();
+    cAntennaTester.Measure(10);
 
     // save results
     cAntennaTester.writeObjects();

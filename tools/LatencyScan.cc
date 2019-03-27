@@ -63,7 +63,6 @@ void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange)
     LOG (INFO) << "Histograms and Settings initialised." ;
 }
 
-
 void LatencyScan::MeasureTriggerTDC()
 {
     LOG (INFO) << "Measuring Trigger TDC ... " ;
@@ -540,6 +539,10 @@ void LatencyScan::parseSettings()
 
     if ( cSetting != std::end ( fSettingsMap ) )  fHoleMode = cSetting->second;
     else fHoleMode = 1;
+
+         cSetting = fSettingsMap.find ( "TriggerSource" );
+         if ( cSetting != std::end ( fSettingsMap ) ) trigSource = cSetting->second;
+         LOG (INFO)  <<int (trigSource);
 
     //cSetting = fSettingsMap.find ( "TestPulsePotentiometer" );
     //fTestPulseAmplitude = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0x7F;
