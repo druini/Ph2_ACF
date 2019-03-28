@@ -49,10 +49,14 @@ namespace Ph2_HwInterface
 
 
     // @TMP@
-    uint16_t ReadChipReg           (Chip* pChip, const std::string& pRegNode)                             { return 0;    };
-    void ReadChipMultReg           (Chip* pChip, const std::vector<std::string>& pVecReg)                 {              };
-    bool ConfigureChipOriginalMask (const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) { return true; };
-    void ReadChip                  (Chip* pChip)                                                          {              };
+    uint16_t ReadChipReg           (Chip* pChip, const std::string& pRegNode)                                                        { return 0;    };
+    void ReadChipMultReg           (Chip* pChip, const std::vector<std::string>& pVecReg)                                            {              };
+    bool ConfigureChipOriginalMask (const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                            { return true; };
+    void ReadChip                  (Chip* pChip)                                                                                     {              };
+    bool WriteChipAllLocalReg      (Chip* pChip, const std::string& dacName, std::vector<uint16_t>& pValue, bool pVerifLoop = true ) { return true; };
+    bool MaskAllChannels           (Chip* pChip, bool mask, bool pVerifLoop = true)                                                  { return true; };
+    bool UnmaskChannelList         (Chip* pChip, const std::vector<uint32_t> &channelList, bool pVerifLoop = true)                   { return true; };
+
    };
 }
 

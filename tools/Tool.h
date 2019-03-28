@@ -269,24 +269,11 @@ class Tool : public SystemController
     // decode bend LUT for a given CBC
     std::map<uint8_t, double> decodeBendLUT(Chip* pChip);
     
-    // first a method set mask to all channels in the CBC 
-    void SetMaskAllChannels (Chip* pChip, bool mask);
-
-    //method to mask all channels
-    void maskAllChannels (Chip* pChip) {SetMaskAllChannels (pChip, true); }
-
-    //method to unmask all channels
-    void unmaskAllChannels (Chip* pChip) {SetMaskAllChannels (pChip, false); }
-
     //method to unmask a channel group
     void maskChannelFromOtherGroups (Chip* pChip, int pTestGroup);
 
-
     // then a method to un-mask pairs of channels on a given CBC
     void unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair);
-
-    // and finally a method to un-mask a list of channels on a given CBC
-    void unmaskList(Chip* cChip , const std::vector<uint32_t> &pList );
 
     //select the group of channels for injecting the pulse
     void selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup);

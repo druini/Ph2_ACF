@@ -11,14 +11,15 @@
 class TCPNetworkServer
 {
 public:
-	TCPNetworkServer(int serverPort, int bufferSize = 0x10000);
+	TCPNetworkServer(int serverPort, int bufferSize = 0x10000, bool pushOnly = false);
 	virtual ~TCPNetworkServer(void);
 
-	void                initialize     (int bufferSize = 0x10000);
-	void                receive        (int fdClientSocket);
-	virtual std::string readMessage    (const std::string& buffer){return "";}
-	int                 send           (int fdClientSocket, const uint8_t* data, size_t size);
-	int                 send           (int fdClientSocket, const std::string& buffer);
+	void                 initialize     (int bufferSize = 0x10000);
+	void                 connect        (int fdClientSocket);
+	virtual std::string& readMessage    (const std::string& buffer){std::string emptyString(""); return emptyString;}
+	virtual std::string& sendMessage    ()                         {std::string emptyString(""); return emptyString;}
+	int                  send           (int fdClientSocket, const uint8_t* data, size_t size);
+	int                  send           (int fdClientSocket, const std::string& buffer);
 
 	//what to do with this
 	int                 accept         (unsigned int timeoutSeconds = 1, unsigned int timeoutUSeconds = 0);
@@ -31,6 +32,7 @@ protected:
 
 	//unused. where is it needed?
 	mutable std::mutex  socketMutex_;
+	bool pushOnly_;
 
 };
 

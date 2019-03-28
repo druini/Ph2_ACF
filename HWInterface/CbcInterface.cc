@@ -97,6 +97,43 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
+    bool CbcInterface::MaskAllChannels ( Chip* pCbc, bool mask, bool pVerifLoop )
+    {
+        uint8_t maskValue = mask ? 0x0 : 0xFF;
+        std::vector<std::pair<std::string, uint16_t> >  cRegVec; 
+        cRegVec.clear(); 
+
+        for ( unsigned int i = 0 ; i < fChannelMaskMapCBC3.size() ; i++ )
+        {
+            cRegVec.push_back ( {fChannelMaskMapCBC3[i] ,maskValue } ); 
+            LOG (DEBUG) << BOLDBLUE << fChannelMaskMapCBC3[i] << " " << std::bitset<8> (maskValue);
+        }
+        return WriteChipMultReg ( pCbc, cRegVec, pVerifLoop );
+    }
+
+    bool CbcInterface::UnmaskChannelList ( Chip* pCbc, const std::vector<uint32_t> &channelList, bool pVerifLoop )
+    {
+        std::vector<uint8_t> chipMask;
+        bool chipHasMaskedChannels = pCbc->hasMaskedChannels();
+        if(chipHasMaskedChannels) chipMask = pCbc->getChipMask();
+
+        std::vector<std::pair<std::string, uint16_t> > cRegVec; 
+        cRegVec.clear(); 
+
+        for(const auto & channel :  channelList)
+        {
+            if(channel>=pCbc->getNumberOfChannels()) LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Channel "<< channel << " does not exist, skipping" << RESET;
+            else
+            {
+                uint8_t channelRegisted = channel >> 8;
+                if(chipHasMaskedChannels) cRegVec.push_back ( {fChannelMaskMapCBC3[channelRegisted], chipMask[channelRegisted] & (channel & 0xFF) } );
+                else cRegVec.push_back ( {fChannelMaskMapCBC3[channelRegisted], channel & 0xFF } );
+            }
+        }
+
+        return WriteChipMultReg ( pCbc, cRegVec, pVerifLoop );
+    }
+
 
     void CbcInterface::ReadChip ( Chip* pCbc )
     {
@@ -155,9 +192,54 @@ namespace Ph2_HwInterface {
 
     }
 
-
-    bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop )
+    bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop )
     {
+        if(dacName=="VCth"){
+            if (pCbc->getFrontEndType() == FrontEndType::CBC3)
+            {
+                if (dacValue > 1023) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
+                else
+                {
+                    std::vector<std::pair<std::string, uint16_t> > cRegVec;
+                    // VCth1 holds bits 0-7 and VCth2 holds 8-9
+                    uint16_t cVCth1 = dacValue & 0x00FF;
+                    uint16_t cVCth2 = (dacValue & 0x0300) >> 8;
+                    cRegVec.emplace_back ("VCth1", cVCth1);
+                    cRegVec.emplace_back ("VCth2", cVCth2);
+                    return WriteChipMultReg (pCbc, cRegVec, pVerifLoop);
+                }
+            }
+            else LOG (ERROR) << "Not a valid chip type!";
+        }
+        else if(dacName=="TriggerLatency"){
+            if (pCbc->getFrontEndType() == FrontEndType::CBC3)
+            {
+                if (dacValue > 511) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
+                else
+                {
+                     std::vector<std::pair<std::string, uint16_t> > cRegVec;
+                    // TriggerLatency1 holds bits 0-7 and FeCtrl&TrgLate2 holds 8
+                    uint16_t cLat1 = dacValue & 0x00FF;
+                    uint16_t cLat2 = (pCbc->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
+                    cRegVec.emplace_back ("TriggerLatency1", cLat1);
+                    cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
+                    return WriteChipMultReg (pCbc, cRegVec, pVerifLoop);
+                }
+            }
+            else LOG (ERROR) << "Not a valid chip type!";
+        }
+        else
+        {
+            if(dacValue > 255)  LOG (ERROR) << "Error, DAC "<< dacName <<" for CBC3 can only be 8 bit max (255)!";
+            else return WriteChipSingleReg ( pCbc, dacName, dacValue , pVerifLoop);
+        }
+        return false;
+    }
+
+
+    bool CbcInterface::WriteChipSingleReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop )
+    {
+
         if ( pValue > 0xFF){
             LOG (ERROR) << "Cbc register are 8 bits, impossible to write " << pValue << " on registed " << pRegNode ;
             return false;
@@ -241,6 +323,43 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
+    bool CbcInterface::WriteChipAllLocalReg ( Chip* pCbc, const std::string& dacName, std::vector<uint16_t>& localRegValues, bool pVerifLoop )
+    {
+        assert(localRegValues.size()==pCbc->getNumberOfChannels());
+        std::string dacTemplate;
+        bool isMask = false;
+    
+        if(dacName == "ChannelOffset") dacTemplate = "Channel%03d";
+        else if(dacName == "Mask") isMask = true;
+        else LOG (ERROR) << "Error, DAC "<< dacName <<" is not a Local DAC";
+
+        std::vector<std::pair<std::string, uint16_t> > cRegVec;
+        std::vector<uint32_t> listOfChannelToUnMask;
+
+        for(uint32_t iChannel=0; iChannel<pCbc->getNumberOfChannels(); ++iChannel){
+            if(isMask){
+                if( localRegValues[iChannel] ){
+                    listOfChannelToUnMask.emplace_back(iChannel);
+                }
+            }
+            else {
+                char dacName1[20];
+                sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
+                cRegVec.emplace_back(dacName1,localRegValues[iChannel]);
+            }
+        }
+
+        if(isMask){
+            bool maskingDone;
+            maskingDone = MaskAllChannels(pCbc,true);
+            maskingDone = maskingDone && UnmaskChannelList(pCbc , listOfChannelToUnMask);
+            return maskingDone;
+        }
+        else{
+            return WriteChipMultReg (pCbc, cRegVec, pVerifLoop);
+        }
+            
+    }
 
 
     uint16_t CbcInterface::ReadChipReg ( Chip* pCbc, const std::string& pRegNode )

@@ -761,42 +761,6 @@ std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pChip)
 }
 
 
-// first a method to mask all channels in the CBC 
-void Tool::SetMaskAllChannels (Chip* pChip, bool mask)
-{
-    switch(pChip->getFrontEndType())
-    {
-
-        case FrontEndType::CBC3 :
-        {
-            uint8_t maskValue = mask ? 0x0 : 0xFF;
-            RegisterVector cRegVec; 
-            cRegVec.clear(); 
-
-            for ( unsigned int i = 0 ; i < fChannelMaskMapCBC3.size() ; i++ )
-            {
-                cRegVec.push_back ( {fChannelMaskMapCBC3[i] ,maskValue } ); 
-                LOG (DEBUG) << BOLDBLUE << fChannelMaskMapCBC3[i] << " " << std::bitset<8> (maskValue);
-            }
-            fChipInterface->WriteChipMultReg ( pChip , cRegVec );
-
-            break;
-        }
-
-        default :
-        {
-            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord "<< 
-                pChip->getBeId() << " Module " << pChip->getFeId() << " Chip " << pChip->getChipId() << ", aborting" << RESET;
-            throw ("[Tool::SetMaskAllChannels]\tError, FrontEnd type not found");
-            break;
-        }
-
-    }
-
-    return;
-}
-
-
 //method to mask a channel list
 void Tool::maskChannelFromOtherGroups (Chip* pChip, int pTestGroup){
 
@@ -891,50 +855,6 @@ void Tool::unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair)
 
 }
 
-
-
-// and finally a method to un-mask a list of channels on a given Chip
-void Tool::unmaskList(Chip* pChip , const std::vector<uint32_t> &channelList )
-{
-
-    std::vector<uint8_t> chipMask;
-    bool chipHasMaskedChannels = pChip->hasMaskedChannels();
-    if(chipHasMaskedChannels) chipMask = pChip->getChipMask();
-
-    RegisterVector cRegVec; 
-    cRegVec.clear(); 
-    
-    switch(pChip->getFrontEndType())
-    {
-        case FrontEndType::CBC3 :
-        {   
-            for(const auto & channel :  channelList)
-            {
-                if(channel>=NCHANNELS) LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Channel "<< channel << " does not exist, skipping" << RESET;
-                else
-                {
-                    uint8_t channelRegisted = channel >> 8;
-                    if(chipHasMaskedChannels) cRegVec.push_back ( {fChannelMaskMapCBC3[channelRegisted], chipMask[channelRegisted] & (channel & 0xFF) } );
-                    else cRegVec.push_back ( {fChannelMaskMapCBC3[channelRegisted], channel & 0xFF } );
-                }
-            }
-            break;
-        }
-
-        default :
-        {
-            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord "<< 
-                pChip->getBeId() << " Module " << pChip->getFeId() << " Chip " << pChip->getChipId() << ", aborting" << RESET;
-            throw ("[Tool::SetMaskAllChannels]\tError, FrontEnd type not found");
-            break;
-        }
-    }
-
-    fChipInterface->WriteChipMultReg ( pChip , cRegVec );
-
-    return;
-
-}
 
 // Two dimensional dac scan
 void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > > &backEndOccupancyPerChannelMap, std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > > &backEndChipOccupanyMap)
@@ -1463,70 +1383,14 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
 //Set global DAC for all CBCs in the BeBoard
 void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, uint16_t> > &dacList)
 {
-
-
     for ( auto cFe : pBoard->fModuleVector )
     {
         for ( auto cChip : cFe->fChipVector )
         {
-
-            uint16_t dacValue = dacList.at(cFe->getModuleId()).at(cChip->getChipId());
-
-            switch(cChip->getFrontEndType()) //Check Chip flavor
-            {
-                case FrontEndType::CBC3 :
-                {
-                    if(dacName=="VCth")
-                    {
-                        if (dacValue > 1023) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
-                        else
-                        {
-                            std::vector<std::pair<std::string, uint16_t> > cRegVec;
-                            // VCth1 holds bits 0-7 and VCth2 holds 8-9
-                            uint16_t cVCth1 = dacValue & 0x00FF;
-                            uint16_t cVCth2 = (dacValue & 0x0300) >> 8;
-                            cRegVec.emplace_back ("VCth1", cVCth1);
-                            cRegVec.emplace_back ("VCth2", cVCth2);
-                            fChipInterface->WriteChipMultReg (cChip, cRegVec);
-                        }
-                    }
-                    else if(dacName=="TriggerLatency")
-                    {
-                        if (dacValue > 511) LOG (ERROR) << "Error, TriggerLatency for CBC3 can only be 9 bit max (511)!";
-                        else
-                        {
-                             std::vector<std::pair<std::string, uint16_t> > cRegVec;
-                            // TriggerLatency1 holds bits 0-7 and FeCtrl&TrgLate2 holds 8
-                            uint16_t cLat1 = dacValue & 0x00FF;
-                            uint16_t cLat2 = (cChip->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
-                            cRegVec.emplace_back ("TriggerLatency1", cLat1);
-                            cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
-                            fChipInterface->WriteChipMultReg (cChip, cRegVec);
-                        }
-                    }
-                    else
-                    {
-                        if(dacValue > 255)  LOG (ERROR) << "Error, DAC "<< dacName <<" for CBC3 can only be 8 bit max (255)!";
-                        else fChipInterface->WriteChipReg ( cChip, dacName, dacValue );
-                    }
-
-                    break;
-                }
-
-                default :
-                {
-                    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord "<< 
-                        pBoard->getBeId() << " Module " << cFe->getModuleId() << " Chip " << cChip->getChipId() << ", aborting" << RESET;
-                    throw ("[Tool::setGlobalDacBeBoard]\tError, FrontEnd type not found");
-                    break;
-                }
-
-            }
+            fChipInterface->WriteChipReg ( cChip, dacName, dacList.at(cFe->getModuleId()).at(cChip->getChipId()) );
         }
     }
-
     return;
-
 }
 
 //Set same global DAC for all CBCs
@@ -1542,142 +1406,31 @@ void Tool::setSameGlobalDac(const std::string &dacName, const uint16_t &dacValue
 
 
 //Set same global DAC for all CBCs in the BeBoard
-void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue){
-
+void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue)
+{
     for ( auto cFe : pBoard->fModuleVector )
     {
         for ( auto cChip : cFe->fChipVector )
         {
-            switch(cChip->getFrontEndType()) //Check Chip flavor
-            {
-                case FrontEndType::CBC3 :
-                {
-                    if(dacName=="VCth"){
-                        if (cChip->getFrontEndType() == FrontEndType::CBC3)
-                        {
-                            if (dacValue > 1023) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
-                            else
-                            {
-                                std::vector<std::pair<std::string, uint16_t> > cRegVec;
-                                // VCth1 holds bits 0-7 and VCth2 holds 8-9
-                                uint16_t cVCth1 = dacValue & 0x00FF;
-                                uint16_t cVCth2 = (dacValue & 0x0300) >> 8;
-                                cRegVec.emplace_back ("VCth1", cVCth1);
-                                cRegVec.emplace_back ("VCth2", cVCth2);
-                                fChipInterface->WriteChipMultReg (cChip, cRegVec);
-                            }
-                        }
-                        else LOG (ERROR) << "Not a valid chip type!";
-                    }
-                    else if(dacName=="TriggerLatency"){
-                        if (cChip->getFrontEndType() == FrontEndType::CBC3)
-                        {
-                            if (dacValue > 511) LOG (ERROR) << "Error, Threshold for CBC3 can only be 10 bit max (1023)!";
-                            else
-                            {
-                                 std::vector<std::pair<std::string, uint16_t> > cRegVec;
-                                // TriggerLatency1 holds bits 0-7 and FeCtrl&TrgLate2 holds 8
-                                uint16_t cLat1 = dacValue & 0x00FF;
-                                uint16_t cLat2 = (cChip->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
-                                cRegVec.emplace_back ("TriggerLatency1", cLat1);
-                                cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
-                                fChipInterface->WriteChipMultReg (cChip, cRegVec);
-                            }
-                        }
-                        else LOG (ERROR) << "Not a valid chip type!";
-                    }
-                    else
-                    {
-                        if(dacValue > 255)  LOG (ERROR) << "Error, DAC "<< dacName <<" for CBC3 can only be 8 bit max (255)!";
-                        else fChipInterface->WriteChipReg ( cChip, dacName, dacValue );
-                    }
-                    break;
-                }
-
-                default :
-                {
-                    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord "<< 
-                        pBoard->getBeId() << " Module " << cFe->getModuleId() << " Chip " << cChip->getChipId() << ", aborting" << RESET;
-                    throw ("[Tool::setSameGlobalDacBeBoard]\tError, FrontEnd type not found");
-                    break;
-                }
-            }
+            fChipInterface->WriteChipReg ( cChip, dacName, dacValue );
         }
     }
- 
     return;
-
 }
 
 
 // set local dac per BeBoard
 void Tool::setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::vector<uint16_t> > > &dacList)
-{
-
-    std::string dacTemplate;
-    bool isMask = false;
-    FrontEndType chipType = pBoard->fModuleVector.at(0)->fChipVector.at(0)->getFrontEndType();
-
-     //Assumption: 1 BeBoard has only 1 chip flavor:
-    switch(chipType)
-    {
-        case FrontEndType::CBC3 :
-        {
-            if(dacName == "ChannelOffset") dacTemplate = "Channel%03d";
-            else if(dacName == "Mask") isMask = true;
-            else LOG (ERROR) << "Error, DAC "<< dacName <<" is not a Local DAC";
-            break;
-        }
-
-        default :
-        {
-            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized , aborting" << RESET;
-            throw ("[Tool::setAllLocalDacBeBoard]\tError, FrontEnd type not found");
-            break;
-        }
-
-    }
-    
+{   
     for ( auto cFe : pBoard->fModuleVector )
     {
         for ( auto cChip : cFe->fChipVector )
         {
-            std::vector<std::pair<std::string, uint16_t> > cRegVec;
-            std::vector<uint32_t> listOfChannelToUnMask;
-
-
-            for(uint32_t iChannel=0; iChannel<cChip->getNumberOfChannels(); ++iChannel){
-                if(isMask){
-                    if( dacList.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel] ){
-                        listOfChannelToUnMask.emplace_back(iChannel);
-                    }
-                }
-                else {
-                    if(chipType != FrontEndType::CBC3) //!!!--If it works for you, put your chip in or with the others to make sure that everybody check if it is fine
-                    {
-                        std::cout<< __PRETTY_FUNCTION__ << " This method may not work for your chip!!! Please Check" << std::endl;
-                    }
-    //Fabio: CBC specific - BEGIN
-                    char dacName1[30];
-                    sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
-                    cRegVec.emplace_back(dacName1,dacList.at(cFe->getModuleId()).at(cChip->getChipId())[iChannel]);
-    //Fabio: CBC specific - END
-                }
-            }
-
-            if(isMask){
-                maskAllChannels(cChip);
-                unmaskList(cChip , listOfChannelToUnMask);
-            }
-            else{
-                fChipInterface->WriteChipMultReg (cChip, cRegVec);
-            }
-            
+            std::vector<uint16_t> dacVector = dacList.at(cFe->getModuleId()).at(cChip->getChipId());
+            fChipInterface->WriteChipAllLocalReg ( cChip, dacName, dacVector);
         }
-    }
- 
+    } 
     return;
-
 }
 
 
@@ -1697,61 +1450,15 @@ void Tool::setSameLocalDac(const std::string &dacName, const uint16_t &dacValue)
 // set same local dac per BeBoard
 void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue)
 {
-
-    std::string dacTemplate;
-    bool isMask = false;
-    FrontEndType chipType = pBoard->fModuleVector.at(0)->fChipVector.at(0)->getFrontEndType();
-
-     //Assumption: 1 BeBoard has only 1 chip flavor:
-    switch(chipType)
-    {
-        case FrontEndType::CBC3 :
-        {
-            if(dacName == "ChannelOffset") dacTemplate = "Channel%03d";
-            else if(dacName == "Mask") isMask = true;
-            else LOG (ERROR) << "Error, DAC "<< dacName <<" is not a Local DAC";
-            break;
-        }
-
-        default :
-        {
-            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized , aborting" << RESET;
-            throw ("[Tool::setAllLocalDacBeBoard]\tError, FrontEnd type not found");
-            break;
-        }
-
-    }
-    
     for ( auto cFe : pBoard->fModuleVector )
     {
         for ( auto cChip : cFe->fChipVector )
         {
-            std::vector<std::pair<std::string, uint16_t> > cRegVec;
-            std::vector<uint8_t> listOfChannelToMask;
-
-            if(!isMask){
-                for(uint8_t iChannel=0; iChannel<cChip->getNumberOfChannels(); ++iChannel){
-                    if(chipType != FrontEndType::CBC3) //!!!--If it works for you, put your chip in or with the others to make sure that everybody check if it is fine
-                    {
-                        std::cout<< __PRETTY_FUNCTION__ << " This method may not work for your chip!!! Please Check" << std::endl;
-                    }
-    //Fabio: CBC specific - BEGIN
-                    char dacName1[30];
-                    sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
-                    cRegVec.emplace_back(dacName1,dacValue);
-    //Fabio: CBC specific - END
-                }
-                fChipInterface->WriteChipMultReg ( cChip, cRegVec );
-            }
-            else{
-                if(dacValue) unmaskAllChannels(cChip);
-                else maskAllChannels(cChip);
-            }  
+            std::vector<uint16_t> dacVector(cChip->getNumberOfChannels(),dacValue);
+            fChipInterface->WriteChipAllLocalReg ( cChip, dacName, dacVector);
         }
-    }
-
+    } 
     return;
-
 }
 
 void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue)

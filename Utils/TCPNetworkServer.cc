@@ -29,9 +29,10 @@
 #define MAXPACKETSIZE 200
 
 //========================================================================================================================
-TCPNetworkServer::TCPNetworkServer(int serverPort, int bufferSize )
+TCPNetworkServer::TCPNetworkServer(int serverPort, int bufferSize, bool pushOnly )
 : serverPort_    (serverPort)
 , fdServerSocket_(-1)
+, pushOnly_(pushOnly)
 {
 	std::cout<< "New server socket to be used. "<<std::endl;
 	initialize(bufferSize);
@@ -109,7 +110,7 @@ int TCPNetworkServer::send(int fdClientSocket, const std::string& buffer)
 
 //========================================================================================================================
 //time out or protection for this receive method?
-void TCPNetworkServer::receive(int fdClientSocket)
+void TCPNetworkServer::connect(int fdClientSocket)
 {
 	char msg[MAXPACKETSIZE];
 	int n;
@@ -125,19 +126,25 @@ void TCPNetworkServer::receive(int fdClientSocket)
 			close(fdClientSocket);
 			break;
 		}
-		if( n<0 )
+		if( n<0 && !pushOnly_)
 		{
 			std::cout<< "incorrect close from socket  #: " << fdClientSocket << " errno: " << strerror(errno) << std::endl;
 			close(fdClientSocket);
 			break;
 		}
+		else if(!pushOnly_)
+		{
+			msg[n] = 0;
+			std::cout << "New socket  #: " << fdClientSocket  << " Message: " << msg << " length: " << n << std::endl;
+			std::string messageToClient = readMessage(msg);
 
-		msg[n] = 0;
-		std::cout << "New socket  #: " << fdClientSocket  << " Message: " << msg << " length: " << n << std::endl;
-		std::string messageToClient = readMessage(msg);
-
-		if( messageToClient != "" )
-			send(fdClientSocket, messageToClient);
+			if( messageToClient != "" )
+				send(fdClientSocket, messageToClient);
+		}
+		else
+		{
+			send(fdClientSocket, sendMessage());
+		}
 
 		std::cout << "after message sent now checking for more..." << std::endl;
 
@@ -165,9 +172,9 @@ int TCPNetworkServer::accept(unsigned int timeoutSeconds, unsigned int timeoutUS
 	{
 		struct sockaddr_in clientAddress;
 		socklen_t socketSize = sizeof(clientAddress);
-		std::cout << "In receive function:" << " waiting for connection" << std::endl;
-		int newSocketFD = ::accept(fdServerSocket_,(struct sockaddr*)&clientAddress,&socketSize);
-		std::thread thread(&TCPNetworkServer::receive, this, newSocketFD);
+		std::cout << "In connect function:" << " waiting for connection" << std::endl;
+		int newSocketFD = ::accept4(fdServerSocket_,(struct sockaddr*)&clientAddress,&socketSize, (pushOnly_ ? SOCK_NONBLOCK : 0));
+		std::thread thread(&TCPNetworkServer::connect, this, newSocketFD);
 		thread.detach();
 		return 1;
 	}
