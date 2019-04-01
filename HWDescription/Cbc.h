@@ -83,7 +83,7 @@ namespace Ph2_HwDescription {
         */
         void saveRegMap ( const std::string& filename );
 
-        const uint16_t getNumberOfChannels() const override { return NCHANNELS; }
+        uint16_t getNumberOfChannels() const override { return NCHANNELS; }
 
         bool isDACLocal(const std::string &dacName) override {
             if(dacName.find("MaskChannel-",0,12)!=std::string::npos || dacName.find("Channel",0,7)!=std::string::npos ) return true;

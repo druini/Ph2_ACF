@@ -98,64 +98,6 @@ namespace Ph2_HwInterface {
     }
 
 
-    void CbcInterface::ReadChip ( Chip* pCbc )
-    {
-        //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardId() );
-
-        //vector to encode all the registers into
-        std::vector<uint32_t> cVec;
-        //helper vector to store the register names in the same order as the RegItems
-        std::vector<std::string> cNameVec;
-
-        //Deal with the ChipRegItems and encode them
-
-        ChipRegMap cCbcRegMap = pCbc->getRegMap();
-
-        for ( auto& cRegItem : cCbcRegMap )
-        {
-            cRegItem.second.fValue = 0x00;
-            fBoardFW->EncodeReg (cRegItem.second, pCbc->getFeId(), pCbc->getChipId(), cVec, true, false);
-            //push back the names in cNameVec for latercReg
-            cNameVec.push_back (cRegItem.first);
-#ifdef COUNT_FLAG
-            fRegisterCount++;
-#endif
-        }
-
-        // write the registers, the answer will be in the same cVec
-        //bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, pVerifLoop);
-
-        // write the registers, the answer will be in the same cVec
-        fBoardFW->ReadChipBlockReg ( cVec);
-
-#ifdef COUNT_FLAG
-        fTransactionCount++;
-#endif
-
-        bool cFailed = false;
-        bool cRead;
-        uint8_t cCbcId;
-        //update the HWDescription object with the value I just read
-        uint32_t idxReadWord = 0;
-
-        //for ( const auto& cReg : cVec )
-        for ( const auto& cReadWord : cVec )
-        {
-            ChipRegItem cRegItem;
-            std::string cName = cNameVec[idxReadWord++];
-            fBoardFW->DecodeReg ( cRegItem, cCbcId, cReadWord, cRead, cFailed );
-
-            // here I need to find the string matching to the reg item!
-            if (!cFailed)
-                pCbc->setReg ( cName, cRegItem.fValue );
-
-            //LOG (INFO) << "CBC " << +pCbc->getChipId() << " " << cName << ": 0x" << std::hex << +cRegItem.fValue << std::dec ;
-        }
-
-    }
-
-
     bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop )
     {
         if ( pValue > 0xFF){
@@ -242,7 +184,6 @@ namespace Ph2_HwInterface {
     }
 
 
-
     uint16_t CbcInterface::ReadChipReg ( Chip* pCbc, const std::string& pRegNode )
     {
         setBoard ( pCbc->getBeBoardId() );
@@ -264,98 +205,6 @@ namespace Ph2_HwInterface {
 
         return cRegItem.fValue & 0xFF;
     }
-
-
-    void CbcInterface::ReadChipMultReg ( Chip* pCbc, const std::vector<std::string>& pVecReg )
-    {
-        //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardId() );
-
-        std::vector<uint32_t> cVec;
-
-        //Deal with the ChipRegItems and encode them
-        ChipRegItem cRegItem;
-
-        for ( const auto& cReg : pVecReg )
-        {
-            cRegItem = pCbc->getRegItem ( cReg );
-
-            fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getChipId(), cVec, true, false );
-#ifdef COUNT_FLAG
-            fRegisterCount++;
-#endif
-        }
-
-        // write the registers, the answer will be in the same cVec
-        fBoardFW->ReadChipBlockReg ( cVec);
-
-#ifdef COUNT_FLAG
-        fTransactionCount++;
-#endif
-
-        bool cFailed = false;
-        bool cRead;
-        uint8_t cCbcId;
-        //update the HWDescription object with the value I just read
-        uint32_t idxReadWord = 0;
-
-        for ( const auto& cReg : pVecReg )
-            //for ( const auto& cReadWord : cVec )
-        {
-            uint32_t cReadWord = cVec[idxReadWord++];
-            fBoardFW->DecodeReg ( cRegItem, cCbcId, cReadWord, cRead, cFailed );
-
-            // here I need to find the string matching to the reg item!
-            if (!cFailed)
-                pCbc->setReg ( cReg, cRegItem.fValue );
-        }
-    }
-
-
-    //void CbcInterface::ReadAllCbc ( const Module* pModule )
-    //{
-    //ChipRegItem cRegItem;
-    //uint8_t cCbcId;
-    //std::vector<uint32_t> cVecReq;
-    //std::vector<std::string> cVecRegNode;
-
-    //int cMissed = 0;
-
-    //setBoard ( pModule->getBeBoardId() );
-
-    //for ( uint8_t i = 0; i < pModule->getNChip(); i++ )
-    //{
-
-    //if ( pModule->getCbc ( i + cMissed ) == nullptr )
-    //{
-    //i--;
-    //cMissed++;
-    //}
-
-    //else
-    //{
-
-    //Chip* cCbc = pModule->getCbc ( i + cMissed );
-
-    //const ChipRegMap& cCbcRegMap = cCbc->getRegMap();
-
-    //for ( auto& it : cCbcRegMap )
-    //{
-    //EncodeReg ( it.second, cCbc->getChipId(), cVecReq );
-    //cVecRegNode.push_back ( it.first );
-    //}
-
-    //fBoardFW->ReadChipBlockReg (  cVecReq );
-
-    //for ( uint32_t j = 0; j < cVecReq.size(); j++ )
-    //{
-    //DecodeReg ( cRegItem, cCbcId, cVecReq[j] );
-
-    //cCbc->setReg ( cVecRegNode.at ( j ), cRegItem.fValue );
-    //}
-    //}
-    //}
-    //}
 
 
     void CbcInterface::WriteBroadcastCbcReg ( const Module* pModule, const std::string& pRegNode, uint32_t pValue )

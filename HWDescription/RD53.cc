@@ -37,6 +37,7 @@ namespace Ph2_HwDescription
 	bool foundPixelConfig = false;
 	int cLineCounter = 0;
 	ChipRegItem fRegItem;
+	fhasMaskedChannels = false;
 
 	while (getline (file, line))
 	  {
@@ -75,6 +76,7 @@ namespace Ph2_HwDescription
 			  {
 			    pixData.Enable[it] = atoi(readWord.c_str());
 			    it++;
+			    if (pixData.Enable[it] == 0) fhasMaskedChannels = true;
 			  }
 		      }
 
@@ -206,6 +208,7 @@ namespace Ph2_HwDescription
 	    cLineCounter++;
 	  }
 
+	fPixelsConfigDefault = fPixelsConfig;
 	file.close();
       }
     else
@@ -532,5 +535,333 @@ namespace Ph2_HwDescription
     std::bitset<NBITS> output(0);
     for (unsigned int i = 0; i < nBit2Set; i++) output[i] = 1;
     return output;
+  }
+
+  uint16_t RD53::getNumberOfChannels () const
+  {
+    return NCOLS * NROWS;
+  }
+
+  bool RD53::isDACLocal (const std::string& dacName)
+  {
+    if (dacName != "PIX_PORTAL") return false;
+    return true;
+  }
+
+  uint8_t RD53::getNumberOfBits (const std::string& dacName)
+  {
+    // #################
+    // # Pixel Section #
+    // #################
+    if (dacName == "PIX_PORTAL")
+	  return 16;
+    if (dacName == "REGION_COL")
+	  return 8;
+    if (dacName == "REGION_ROW")
+      return 8;
+    if (dacName == "PIX_MODE")
+      return 6;
+    if (dacName == "PIX_DEFAULT_CONFIG")
+      return 16;
+
+    // #########################
+    // # Synchronous Front End #
+    // #########################
+    if (dacName == "IBIASP1_SYNC")
+      return 9;
+    if (dacName == "IBIASP2_SYNC")
+      return 9;
+    if (dacName == "IBIAS_SF_SYNC")
+      return 9;
+    if (dacName == "IBIAS_KRUM_SYNC")
+      return 9;
+    if (dacName == "IBIAS_DISC_SYNC")
+      return 9;
+    if (dacName == "ICTRL_SYNCT_SYNC")
+      return 10;
+    if (dacName == "VBL_SYNC")
+      return 10;
+    if (dacName == "VTH_SYNC")
+      return 10;
+    if (dacName == "VREF_KRUM_SYNC")
+      return 10;
+
+    // ####################
+    // # Linear Front End #
+    // ####################
+    if (dacName == "PA_IN_BIAS_LIN")
+      return 9;
+    if (dacName == "FC_BIAS_LIN")
+      return 8;
+    if (dacName == "KRUM_CURR_LIN")
+      return 9;
+    if (dacName == "LDAC_LIN")
+      return 10;
+    if (dacName == "COMP_LIN")
+      return 9;
+    if (dacName == "REF_KRUM_LIN")
+      return 10;
+    if (dacName == "Vthreshold_LIN")
+      return 10;
+
+    // ##########################
+    // # Differential Front End #
+    // ##########################
+    if (dacName == "PRMP_DIFF")
+      return 10;
+    if (dacName == "FOL_DIFF")
+      return 10;
+    if (dacName == "PRECOMP_DIFF")
+      return 10;
+    if (dacName == "COMP_DIFF")
+      return 10;
+    if (dacName == "VFF_DIFF")
+      return 10;
+    if (dacName == "VTH1_DIFF")
+      return 10;
+    if (dacName == "VTH2_DIFF")
+      return 10;
+    if (dacName == "LCC_DIFF")
+      return 10;
+
+    // #######################
+    // # Auxiliary Registers #
+    // #######################
+    if (dacName == "CONF_FE_SYNC")
+      return 5;
+    if (dacName == "CONF_FE_DIFF")
+      return 2;
+    if (dacName == "VOLTAGE_TRIM")
+      return 10;
+
+    // ##################
+    // # Digital Matrix #
+    // ##################
+    if (dacName == "EN_CORE_COL_SYNC")
+      return 16;
+    if (dacName == "EN_CORE_COL_LIN_1")
+      return 16;
+    if (dacName == "EN_CORE_COL_LIN_2")
+      return 1;
+    if (dacName == "EN_CORE_COL_DIFF_1")
+      return 16;
+    if (dacName == "EN_CORE_COL_DIFF_2")
+      return 1;
+    if (dacName == "LATENCY_CONFIG")
+      return 9;
+    if (dacName == "WR_SYNC_DELAY_SYNC")
+      return 5;
+
+    // #############
+    // # Injection #
+    // #############
+    if (dacName == "INJECTION_SELECT")
+      return 6;
+    if (dacName == "CLK_DATA_DELAY")
+      return 9;
+    if (dacName == "VCAL_HIGH")
+      return 12;
+    if (dacName == "VCAL_MED")
+      return 12;
+    if (dacName == "CH_SYNC_CONF")
+      return 12;
+    if (dacName == "GLOBAL_PULSE_ROUTE")
+      return 16;
+    if (dacName == "MONITOR_FRAME_SKIP")
+      return 8;
+    if (dacName == "EN_MACRO_COL_CAL_SYNC_1")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_SYNC_2")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_SYNC_3")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_SYNC_4")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_1")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_2")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_3")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_4")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_5")
+      return 4;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_1")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_2")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_3")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_4")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_5")
+      return 4;
+
+    // #######
+    // # I/O #
+    // #######
+    if (dacName == "DEBUG_CONFIG")
+      return 2;
+    if (dacName == "OUTPUT_CONFIG")
+      return 9;
+    if (dacName == "OUT_PAD_CONFIG")
+      return 14;
+    if (dacName == "GP_LVDS_ROUTE")
+      return 16;
+    if (dacName == "CDR_CONFIG")
+      return 14;
+    if (dacName == "CDR_VCO_BUFF_BIAS")
+      return 10;
+    if (dacName == "CDR_CP_IBIAS")
+      return 10;
+    if (dacName == "CDR_VCO_IBIAS")
+      return 10;
+    if (dacName == "SER_SEL_OUT")
+      return 8;    
+    if (dacName == "CML_CONFIG")
+      return 8;
+    if (dacName == "CML_TAP0_BIAS")
+      return 10;
+    if (dacName == "CML_TAP1_BIAS")
+      return 10;
+    if (dacName == "CML_TAP2_BIAS")
+      return 10;
+    if (dacName == "AURORA_CC_CONFIG")
+      return 8;
+    if (dacName == "AURORA_CB_CONFIG0")
+      return 8;
+    if (dacName == "AURORA_CB_CONFIG1")
+      return 16;
+    if (dacName == "AURORA_INIT_WAIT")
+      return 11;
+
+    // #################################
+    // # Test and Monitoring Functions #
+    // #################################
+    if (dacName == "MONITOR_SELECT")
+      return 14;
+    if (dacName == "HITOR_0_MASK_SYNC")
+      return 16;
+    if (dacName == "HITOR_1_MASK_SYNC")
+      return 16;
+    if (dacName == "HITOR_2_MASK_SYNC")
+      return 16;
+    if (dacName == "HITOR_3_MASK_SYNC")
+      return 16;
+    if (dacName == "HITOR_0_MASK_LIN_0")
+      return 16;
+    if (dacName == "HITOR_0_MASK_LIN_1")
+      return 1;
+    if (dacName == "HITOR_1_MASK_LIN_0")
+      return 16;
+    if (dacName == "HITOR_1_MASK_LIN_1")
+      return 1;
+    if (dacName == "HITOR_2_MASK_LIN_0")
+      return 16;
+    if (dacName == "HITOR_2_MASK_LIN_1")
+      return 1;
+    if (dacName == "HITOR_3_MASK_LIN_0")
+      return 16;
+    if (dacName == "HITOR_3_MASK_LIN_1")
+      return 1;
+    if (dacName == "HITOR_0_MASK_DIFF_0")
+      return 16;
+    if (dacName == "HITOR_0_MASK_DIFF_1")
+      return 1;
+    if (dacName == "HITOR_1_MASK_DIFF_0")
+      return 16;
+    if (dacName == "HITOR_1_MASK_DIFF_1")
+      return 1;
+    if (dacName == "HITOR_2_MASK_DIFF_0")
+      return 16;
+    if (dacName == "HITOR_2_MASK_DIFF_1")
+      return 1;
+    if (dacName == "HITOR_3_MASK_DIFF_0")
+      return 16;
+    if (dacName == "HITOR_3_MASK_DIFF_1")
+      return 1;
+    if (dacName == "MONITOR_CONFIG")
+      return 11;
+    if (dacName == "SENSOR_CONFIG_0")
+      return 12;
+    if (dacName == "SENSOR_CONFIG_1")
+      return 12;
+    if (dacName == "AUTO_READ_0")
+      return 9;
+    if (dacName == "AUTO_READ_1")
+      return 9;
+    if (dacName == "AUTO_READ_2")
+      return 9;
+    if (dacName == "AUTO_READ_3")
+      return 9;
+    if (dacName == "AUTO_READ_4")
+      return 9;
+    if (dacName == "AUTO_READ_5")
+      return 9;
+    if (dacName == "AUTO_READ_6")
+      return 9;
+    if (dacName == "AUTO_READ_7")
+      return 9;
+    if (dacName == "RING_OSC_ENABLE")
+      return 8;
+    if (dacName == "RING_OSC_0")
+      return 16;
+    if (dacName == "RING_OSC_1")
+      return 16;
+    if (dacName == "RING_OSC_2")
+      return 16;
+    if (dacName == "RING_OSC_3")
+      return 16;
+    if (dacName == "RING_OSC_4")
+      return 16;
+    if (dacName == "RING_OSC_5")
+      return 16;
+    if (dacName == "RING_OSC_6")
+      return 16;
+    if (dacName == "RING_OSC_7")
+      return 16;
+    if (dacName == "BCID_CNT")
+      return 16;
+    if (dacName == "TRIG_CNT")
+      return 16;
+    if (dacName == "LOCKLOSS_CNT")
+      return 16;
+    if (dacName == "BITFLIP_WNG_CNT")
+      return 16;
+    if (dacName == "BITFLIP_ERR_CNT")
+      return 16;
+    if (dacName == "CMDERR_CNT")
+      return 16;
+    if (dacName == "WNGFIFO_FULL_CNT_0")
+      return 16;
+    if (dacName == "WNGFIFO_FULL_CNT_1")
+      return 16;
+    if (dacName == "WNGFIFO_FULL_CNT_2")
+      return 16;
+    if (dacName == "WNGFIFO_FULL_CNT_3")
+      return 16;
+    if (dacName == "AI_REGION_COL")
+      return 8;
+    if (dacName == "AI_REGION_ROW")
+      return 9;
+    if (dacName == "HITOR_0_CNT")
+      return 16;
+    if (dacName == "HITOR_1_CNT")
+      return 16;
+    if (dacName == "HITOR_2_CNT")
+      return 16;
+    if (dacName == "HITOR_3_CNT")
+      return 16;
+    if (dacName == "SKIPPED_TRIGGER_CNT")
+      return 16;
+    if (dacName == "ERRWNG_MASK")
+      return 14;
+    if (dacName == "MONITORING_DATA_ADC")
+      return 12;
+    if (dacName == "SELF_TRIGGER_ENABLE")
+      return 4;
+
+    return 0;
   }
 }

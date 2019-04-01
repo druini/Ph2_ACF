@@ -74,17 +74,6 @@ namespace Ph2_HwInterface {
         virtual bool ConfigureChipOriginalMask ( const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
 
         /*!
-         * \brief Read all the I2C parameters from the Chip
-         * \param pChip: pointer to Chip object
-         */
-        virtual void ReadChip ( Chip* pChip ) = 0;
-        /*!
-         * \brief Write the designated register in both Chip and Chip Config File
-         * \param pChip
-         * \param pRegNode : Node of the register to write
-         * \param pValue : Value to write
-         */
-        /*!
          * \brief Write the designated register in both Chip and Chip Config File
          * \param pChip
          * \param pRegNode : Node of the register to write
@@ -105,18 +94,7 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to read
          */
         virtual uint16_t ReadChipReg ( Chip* pChip, const std::string& pRegNode ) = 0;
-        /*!
-         * \brief Read several register in the Chip
-         * \param pChip
-         * \param pVecReg : Vector of the nodes of the register to read
-         */
-        virtual void ReadChipMultReg ( Chip* pChip, const std::vector<std::string>& pVecReg ) = 0;
-        /*!
-         * \brief Read all register in all Chips and then UpdateChip
-         * \param pModule : Module containing vector of Chips
-         */
-        //void ReadAllChip ( const Module* pModule );
-        //void ChipCalibrationTrigger(const Chip* pChip );
+
         void output();
 
     };

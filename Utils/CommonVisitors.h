@@ -181,34 +181,6 @@ struct CbcRegReader : public HwDescriptionVisitor
     }
 };
 
-struct CbcIdReader : public HwDescriptionVisitor
-{
-    ChipInterface* fCbcInterface;
-    uint32_t fChipId;
-    CbcIdReader (ChipInterface* pCbcInterface) : fCbcInterface (pCbcInterface), fChipId (0) {}
-
-    void visit (Chip& pCbc)
-    {
-        if (pCbc.getFrontEndType() != FrontEndType::CBC3)
-            LOG (ERROR) << RED << "The current chip type is not CBC3 and thus no Id can be read!" << RESET;
-        else
-        {
-            fCbcInterface->WriteChipReg (&pCbc, "ChipIDFuse3", 0x08, false);
-            std::vector<std::string> cRegVec{"ChipIDFuse1", "ChipIDFuse2", "ChipIDFuse3"};
-            fChipId = 0;
-            fCbcInterface->ReadChipMultReg ( &pCbc, cRegVec );
-            int cCounter = 0;
-
-            for (auto cReg : cRegVec)
-            {
-                fChipId |= pCbc.getReg (cReg) << cCounter * 8;
-                cCounter++;
-            }
-
-            LOG (INFO) << BOLDBLUE << "Chip Id for Fe " << +pCbc.getFeId() << " Chip " << +pCbc.getChipId() << " read to be " << fChipId << " (0x" << std::hex << fChipId << std::dec << ")" << RESET;
-        }
-    }
-};
 
 struct CbcRegIncrementer : public HwDescriptionVisitor
 {

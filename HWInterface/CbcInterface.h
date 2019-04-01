@@ -59,17 +59,6 @@ namespace Ph2_HwInterface {
         bool ConfigureChipOriginalMask ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
 
         /*!
-         * \brief Read all the I2C parameters from the CBC
-         * \param pCbc: pointer to CBC object
-         */
-        void ReadChip ( Chip* pCbc ) override;
-        /*!
-         * \brief Write the designated register in both Chip and Chip Config File
-         * \param pCbc
-         * \param pRegNode : Node of the register to write
-         * \param pValue : Value to write
-         */
-        /*!
          * \brief Write the designated register in both Chip and Chip Config File
          * \param pCbc
          * \param pRegNode : Node of the register to write
@@ -103,19 +92,6 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to read
          */
         uint16_t ReadChipReg ( Chip* pCbc, const std::string& pRegNode ) override;
-        /*!
-         * \brief Read several register in the Chip
-         * \param pCbc
-         * \param pVecReg : Vector of the nodes of the register to read
-         */
-        void ReadChipMultReg ( Chip* pCbc, const std::vector<std::string>& pVecReg ) override;
-        /*!
-         * \brief Read all register in all Cbcs and then UpdateCbc
-         * \param pModule : Module containing vector of Cbcs
-         */
-        //void ReadAllCbc ( const Module* pModule );
-        //void CbcCalibrationTrigger(const Chip* pCbc );
-
     };
 }
 

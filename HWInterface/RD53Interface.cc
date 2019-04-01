@@ -307,4 +307,59 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53,"HITOR_2_CNT",0x0);
     this->WriteChipReg(pRD53,"HITOR_3_CNT",0x0);
   }
+
+  uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode)
+  {
+    return this->ReadRD53Reg(dynamic_cast<RD53*>(pChip), pRegNode).second[0];
+  }
+
+  bool RD53Interface::ConfigureChipOriginalMask (const Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+  {
+    RD53* pRD53 = dynamic_cast<RD53*>(const_cast<Chip*>(pChip));
+
+    this->WriteChipReg(pRD53,"PIX_DEFAULT_CONFIG",0x0);
+    this->WriteChipReg(pRD53,"PIX_MODE",0x0);
+
+    std::vector<uint16_t> dataVec;
+    uint16_t data;
+    uint16_t row;
+    uint16_t colPair;
+
+    for (unsigned int i = 0; i < NCOLS; i+=2)
+      {
+	pRD53->ConvertRowCol2Cores (0,i,colPair,row);
+	data = colPair;
+	this->WriteChipReg(pRD53,"REGION_COL",data);
+	this->WriteChipReg(pRD53,"REGION_ROW",0x0);
+
+	for (unsigned int j = 0; j < NROWS; j++)
+	  {
+	    pRD53->ConvertRowCol2Cores (j,i,colPair,row);
+	    data = row;
+	    this->WriteChipReg(pRD53,"REGION_ROW",data);
+
+	    data =
+	      HIGHGAIN                                                                                       |
+	      static_cast<uint16_t>((*pRD53->getPixelsConfigDefault()) [i].Enable[j])                               |
+	      (static_cast<uint16_t>((*pRD53->getPixelsConfigDefault())[i].InjEn [j]) << NBIT_PIXEN)                |
+	      (static_cast<uint16_t>((*pRD53->getPixelsConfigDefault())[i].HitBus[j]) << (NBIT_PIXEN + NBIT_INJEN)) |
+	      (static_cast<uint16_t>((*pRD53->getPixelsConfigDefault())[i].TDAC  [j]) << (NBIT_PIXEN + NBIT_INJEN + NBIT_HITBUS));
+	    data = data                                                                                          |
+	      ((HIGHGAIN                                                                                         |
+		static_cast<uint16_t>((*pRD53->getPixelsConfigDefault()) [i+1].Enable[j])                               |
+		(static_cast<uint16_t>((*pRD53->getPixelsConfigDefault())[i+1].InjEn [j]) << NBIT_PIXEN)                |
+		(static_cast<uint16_t>((*pRD53->getPixelsConfigDefault())[i+1].HitBus[j]) << (NBIT_PIXEN + NBIT_INJEN)) |
+		(static_cast<uint16_t>((*pRD53->getPixelsConfigDefault())[i+1].TDAC  [j]) << (NBIT_PIXEN + NBIT_INJEN + NBIT_HITBUS))) << (NBIT_CMD/2));
+
+	    dataVec.push_back(data);
+	    if ((j % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
+	      {
+		this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec);
+		dataVec.clear();
+	      }
+	  }
+      }
+    
+    return true;
+  }
 }

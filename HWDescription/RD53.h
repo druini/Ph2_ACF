@@ -79,6 +79,7 @@ namespace Ph2_HwDescription
   {
   protected:
     std::vector<perPixelData> fPixelsConfig;
+    std::vector<perPixelData> fPixelsConfigDefault;
     CommentMap fCommentMap;
     uint8_t fRD53Id;
  
@@ -87,12 +88,22 @@ namespace Ph2_HwDescription
     RD53  (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename);
     ~RD53 ();
 
-    void     loadfRegMap (const std::string& filename)                                         override;
-    void     setReg      (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
-    void     saveRegMap  (const std::string& filename)                                         override;
-    uint16_t getReg      (const std::string& pReg) const                                       override;
+    void     loadfRegMap         (const std::string& filename)                                         override;
+    void     setReg              (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
+    void     saveRegMap          (const std::string& filename)                                         override;
+    uint16_t getReg              (const std::string& pReg) const                                       override;
+    uint16_t getNumberOfChannels () const                                                              override;
+    bool     isDACLocal          (const std::string& dacName)                                          override;
+    uint8_t  getNumberOfBits     (const std::string& dacName)                                          override;
+    bool     IsChannelUnMasked   (uint32_t cChan) const
+    {
+      // @TMP@
+      /* return fPixelsConfig[col].Enable[row]; */
+      return true;
+    }
 
-    std::vector<perPixelData>* getPixelsConfig () { return &fPixelsConfig; }
+    std::vector<perPixelData>* getPixelsConfig        () { return &fPixelsConfig;        }
+    std::vector<perPixelData>* getPixelsConfigDefault () { return &fPixelsConfigDefault; }
 
     void resetMask();
     void enableAllPixels();
@@ -156,12 +167,6 @@ namespace Ph2_HwDescription
       row     = coreRowAndRegion;
       quadCol = (coreCol << NBIT_SIDE) | side;
     }
-
-
-    // @TMP@
-    const uint16_t getNumberOfChannels () const          { return 0;     };
-    uint8_t getNumberOfBits (const std::string& dacName) { return 0;     };
-    bool isDACLocal (const std::string& dacName)         { return false; };
 
 
   private:
