@@ -114,7 +114,7 @@ class HybridTester : public Tool
     /*!
     * \brief Measure the single strip efficiency
     */
-    void AntennaScan();
+    void AntennaScan(uint8_t pDigiPotentiometer);
     /*!
     * \brief Save the results of channels testing performed with antenna scan
     */
@@ -167,6 +167,7 @@ class HybridTester : public Tool
     uint8_t fVcth;
     uint8_t fTestPulseAmplitude;
     double fDecisionThreshold = 10.0;   /*!< Decision Threshold for channels occupancy based tests, values from 1 to 100 as % */
+       uint32_t trigSource;
 
     void SetBeBoardForShortsFinding (BeBoard* pBoard);
     void SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup);

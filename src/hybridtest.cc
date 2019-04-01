@@ -53,7 +53,7 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "batch", "b" );
 
-    cmd.defineOption ( "antenna", "Run the antenna testing routine", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "antenna", "Run the antenna testing routine", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative ( "antenna", "a" );
 
     cmd.defineOption ( "id", "Hybrid's ID . Default value: -1", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
@@ -76,6 +76,8 @@ int main ( int argc, char* argv[] )
     bool cShorts = ( cmd.foundOption ( "shorts" ) ) ? true : false;
     bool cScan = ( cmd.foundOption ( "scan" ) ) ? true : false;
     bool cAntenna = ( cmd.foundOption ( "antenna" ) ) ? true : false;
+    uint8_t cAntennaPotential = ( cmd.foundOption ( "antenna" ) )   ?  convertAnyInt ( cmd.optionValue ( "antenna" ).c_str() ) :  0;
+
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
     cDirectory += "HybridTest";
 
@@ -106,7 +108,7 @@ int main ( int argc, char* argv[] )
 #ifdef __ANTENNA__
         //cHybridTester.Initialize( cScan );
         //cHybridTester.Initialize( cScan );
-        cHybridTester.AntennaScan();
+        cHybridTester.AntennaScan(cAntennaPotential);
         cHybridTester.SaveTestingResults ( cHybridId );
 #else
         LOG (INFO) << "This feature is only available if the CMSPh2_AntennaDriver package is installed. It requires a recent version of libusb -devel and can be downloaded from: 'https://github.com/gauzinge/CMSPh2_AntennaDriver.git'" ;

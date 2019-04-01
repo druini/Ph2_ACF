@@ -137,12 +137,15 @@ namespace Ph2_HwDescription {
 
         const std::vector<uint8_t>& getChipMask() const
         {
-            return fChipMask;
+	  return fChipMask;
         }
-        const bool hasMaskedChannels() const
+	
+        bool hasMaskedChannels() const
         {
-            return fhasMaskedChannels;
+	  return fhasMaskedChannels;
         }
+	
+        virtual bool IsChannelUnMasked(uint32_t cChan) const = 0;
 
         virtual bool isDACLocal(const std::string &dacName)  = 0;
 

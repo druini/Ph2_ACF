@@ -121,7 +121,7 @@ class Tool : public SystemController
     //enable commissioning loops and Test Pulse
     void setFWTestPulse();
     // make test groups for everything Test pulse or Calibration
-    void MakeTestGroups ();
+    void MakeTestGroups (FrontEndType theFrontEndType);
     void SetTestAllChannels( bool pAllChan ) {fAllChan = pAllChan; }
     void SetTestPulse( bool pTestPulse ) {fTestPulse = pTestPulse; }
     void SetSkipMaskedChannels( bool pSkipMaskedChannels ) {fSkipMaskedChannels = pSkipMaskedChannels; }
@@ -168,7 +168,7 @@ class Tool : public SystemController
     * \param pGroup: the actual group number
     * \return the reversed endianness
     */
-    uint8_t to_reg ( uint8_t pDelay, uint8_t pGroup )
+    inline uint8_t to_reg ( uint8_t pDelay, uint8_t pGroup )
     {
 
         uint8_t cValue = ( ( reverse ( pDelay ) ) & 0xF8 ) |
@@ -182,7 +182,7 @@ class Tool : public SystemController
     * \param n:the number to be reversed
     * \return the reversed number
     */
-    uint8_t reverse ( uint8_t n )
+    inline uint8_t reverse ( uint8_t n )
     {
         // Reverse the top and bottom nibble then swap them.
         return ( fLookup[n & 0xF] << 4 ) | fLookup[n >> 4];
@@ -269,24 +269,11 @@ class Tool : public SystemController
     // decode bend LUT for a given CBC
     std::map<uint8_t, double> decodeBendLUT(Chip* pChip);
     
-    // first a method set mask to all channels in the CBC 
-    void SetMaskAllChannels (Chip* pChip, bool mask);
-
-    //method to mask all channels
-    void maskAllChannels (Chip* pChip) {SetMaskAllChannels (pChip, true); }
-
-    //method to unmask all channels
-    void unmaskAllChannels (Chip* pChip) {SetMaskAllChannels (pChip, false); }
-
     //method to unmask a channel group
     void maskChannelFromOtherGroups (Chip* pChip, int pTestGroup);
 
-
     // then a method to un-mask pairs of channels on a given CBC
     void unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair);
-
-    // and finally a method to un-mask a list of channels on a given CBC
-    void unmaskList(Chip* cChip , const std::vector<uint8_t> &pList );
 
     //select the group of channels for injecting the pulse
     void selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup);
@@ -324,23 +311,29 @@ class Tool : public SystemController
     // measure occupancy per group
     void measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpChannelVec, BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap);
 
-    //Set global DAC for all CBCs in the BeBoard
+    //Set global DAC for all Chips in the BeBoard
     void setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, uint16_t> > &dacList);
 
-    //Set same global DAC for all CBCs
+    //Set same global DAC for all Chips
     void setSameGlobalDac(const std::string &dacName, const uint16_t &dacValue);
 
-    //Set same global DAC for all CBCs in the BeBoard
+    //Set same global DAC for all Chips in the BeBoard
     void setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
 
-    //Set local DAC list for all CBCs in the BeBoard
+    //Set local DAC list for all Chips in the BeBoard
     void setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::vector<uint16_t> > > &dacList);
 
-    //Set same local DAC list for all CBCs
+    //Set same local DAC list for all Chips
     void setSameLocalDac(const std::string &dacName, const uint16_t &dacValue);
 
-    //Set same local DAC list for all CBCs in the BeBoard
+    //Set same local DAC for all Chips in the BeBoard
     void setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
+
+    //Set same DAC for all Chips in the BeBoard (it is able to recognize if the dac is local or global)
+    void setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
+
+    //Set same DAC list for all Chips (it is able to recognize if the dac is local or global)
+    void setSameDac(const std::string &dacName, const uint16_t &dacValue);
 
   protected:
     bool fSkipMaskedChannels;

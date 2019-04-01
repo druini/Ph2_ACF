@@ -95,7 +95,7 @@ namespace Ph2_HwDescription
     uint16_t getNumberOfChannels () const                                                              override;
     bool     isDACLocal          (const std::string& dacName)                                          override;
     uint8_t  getNumberOfBits     (const std::string& dacName)                                          override;
-    bool     IsChannelUnMasked   (uint32_t cChan) const
+    bool     IsChannelUnMasked   (uint32_t cChan) const                                                override
     {
       // @TMP@
       /* return fPixelsConfig[col].Enable[row]; */

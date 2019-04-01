@@ -63,6 +63,11 @@ void HybridTester::ReconfigureCBCRegisters (std::string pDirectoryName )
     {
         fBeBoardInterface->ChipReSync ( cBoard );
 
+        trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
+         LOG (INFO)  <<int (trigSource);
+
+
+
         for (auto& cFe : cBoard->fModuleVector)
         {
             for (auto& cCbc : cFe->fChipVector)
@@ -207,7 +212,17 @@ void HybridTester::InitialiseSettings()
     cSetting = fSettingsMap.find ( "TestPulsePotentiometer" );
     fTestPulseAmplitude = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0x7F;
 
-    // LOG(INFO) << "Read the following Settings: " ;
+        // cSetting = fSettingsMap.find ( "TriggerSource" );
+        // if ( cSetting != std::end ( fSettingsMap ) ) trigSource = cSetting->second;
+        // LOG (INFO)  <<int (trigSource);
+
+    for (auto& cBoard : fBoardVector)
+    {
+
+        trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
+         LOG (INFO)  <<int (trigSource);
+    }
+    // LOG(INFO) << "Read the f llowing Settings: " ;
     // LOG(INFO) << "Hole Mode: " << fHoleMode << std::endl << "NEvents: " << fTotalEvents << std::endl << "NSigmas: " << fSigmas ;
 }
 
@@ -1183,7 +1198,7 @@ void HybridTester::DisplayDeadChannels (std::ostream& os)
 
     os << line << std::endl;
 }
-void HybridTester::AntennaScan()
+void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
 {
 #ifdef __ANTENNA__
     LOG (INFO) << "Mesuring Efficiency per Strip ... " ;
@@ -1194,12 +1209,22 @@ void HybridTester::AntennaScan()
 
     Antenna cAntenna;
     uint8_t cADCChipSlave = 4;
-    cAntenna.initializeAntenna(); //initialize USB communication
-    cAntenna.ConfigureADC (cADCChipSlave); //initialize SPI communication for ADC
-    cAntenna.ConfigureClockGenerator (3, 8); //configure clock for trigger generator
-    cAntenna.ConfigureDigitalPotentiometer (2, 125); //configure bias for antenna pull-up
     sleep ( 0.1 );
     //cAntenna.TurnOnAnalogSwitchChannel (from 1 to 4); //put the signal on a given antenna strip
+
+         cAntenna.initializeAntenna(trigSource); //initialize USB communication
+         cAntenna.ConfigureADC (cADCChipSlave); //initialize SPI communication for ADC
+         if(trigSource==5){
+         cAntenna.ConfigureClockGenerator (3, 8); //initialize SPI communication for ADC
+         }
+         else if (trigSource==7){
+         }
+         else{
+           LOG (INFO)  << "ERROR, wrong trig source set " << int(trigSource);
+         }
+
+         cAntenna.ConfigureDigitalPotentiometer (2,pDigiPotentiometer); //configure bias for antenna pull-up
+
 
     fHistTop->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
     fHistBottom->GetYaxis()->SetRangeUser ( 0, fTotalEvents );

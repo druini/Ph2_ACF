@@ -90,7 +90,7 @@ class PedeNoise : public Tool
     void setThresholdtoNSigma (BeBoard* pBoard, uint32_t pNSigma);
     
     //helpers for SCurve measurement
-    uint16_t findPedestal (bool forseAllChannels = false);
+    uint16_t findPedestal (bool forceAllChannels = false);
 };
 
 

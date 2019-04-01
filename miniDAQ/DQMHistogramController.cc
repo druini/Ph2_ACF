@@ -19,7 +19,7 @@ DQMHistogramController::~DQMHistogramController(void)
 //========================================================================================================================
 // virtual function to interpret messages
 // interacting with theBurninBoxController_ using theBeagleBoneConfiguration_ as helper class
-std::string DQMHistogramController::readMessage(const std::string& buffer)
+std::string& DQMHistogramController::readMessage(const std::string& buffer)
 {
 
 	std::cout << "Received: " << buffer << std::endl;
@@ -66,7 +66,8 @@ std::string DQMHistogramController::readMessage(const std::string& buffer)
 
 	}
 
-	return "";
+	std::string emptyString(""); 
+	return emptyString;
 
 }
 

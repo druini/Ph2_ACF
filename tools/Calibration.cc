@@ -23,7 +23,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 {
     fDisableStubLogic = pDisableStubLogic;
     // Initialize the TestGroups
-    this->MakeTestGroups();
+    this->MakeTestGroups(FrontEndType::CBC3);
     this->fAllChan = pAllChan;
 
     // now read the settings from the map
