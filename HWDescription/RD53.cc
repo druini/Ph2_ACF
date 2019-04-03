@@ -397,7 +397,7 @@ namespace Ph2_HwDescription
 	(pRD53Cmd == (NOOP      & 0x00FF)))
       {
 	word = 0 | (pRD53Cmd << NBIT_5BITW);
-      }    
+      }
     else if (pRD53Cmd == (SYNC & 0x00FF))
       {
 	word = 0 | (pRD53Cmd << NBIT_5BITW);	

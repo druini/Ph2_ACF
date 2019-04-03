@@ -17,8 +17,11 @@
             <node id="cmd_rst"              mask="0x00000020"       permission="rw"      description="CMD processor reset." />
             <node id="scc_rst"              mask="0x00000040"       permission="rw"      description="SCC reset. NOT CONNECTED!" />
             <node id="aurora_pma_rst"       mask="0x00000100"       permission="rw"      description="Aurora frame counter reset" />
+            <node id="readout_block_rst"    mask="0x00000200"       permission="rw"      description="Readout Block reset" />
+            <node id="ddr3_test_en"         mask="0x00000400"       permission="rw"      description="ddr3 readout test" />        
         </node>
 
+        <!-- Fast Commands Block -->
         <node id="fast_cmd_reg_1"        address="0x00000001"    permission="rw"      description="Control registers associated with fast commands block">
             <node id="cmd_strobe"           mask="0x00000001"       permission="rw"      description="must be asserted to send load configuration, reset and start/stop triggering commands." />
             <node id="ipb_reset"            mask="0x00000002"       permission="rw"      description="Fast Commands block reset." />
@@ -63,8 +66,8 @@
         </node>
 
         <node id="fast_cmd_reg_6"       address="0x00000006"    permission="rw"      description="Config registers associated with fast cmds block (Test Pulse FSM)">
-            <node id="delay_after_autozero"     mask="0x000FFFFF"       permission="rw"      description="Delay after autozero (when trigger source = 2)." />
-            <node id="delay_before_next_pulse"  mask="0xFFF00000"       permission="rw"      description="Delay before next pulse (when trigger source =2)." />
+            <node id="delay_after_autozero"     mask="0x00000FFF"       permission="rw"      description="Delay after autozero (when trigger source = 2)." />
+            <node id="delay_before_next_pulse"  mask="0x00FFF000"       permission="rw"      description="Delay before next pulse (when trigger source =2)." />
         </node>
 
         <node id="fast_cmd_reg_7"       address="0x00000007"    permission="rw"      description="Config registers associated with fast cmds block (Auto-Zero process).">
@@ -72,6 +75,37 @@
             <node id="autozero_freq"        mask="0x003FFC00"       permission="rw"      description="Frequency of the Auto-Zero process (in 10MHz clk cyles)." />
             <node id="veto_after_autozero"  mask="0x07C00000"       permission="rw"      description="Veto duration after auto zero has finished (in 40MHz clk cycles)." />
         </node>
+
+        <!-- Ext TLU and DIO5 -->
+        <node id="ext_tlu_reg1"       address="0x00000008"    permission="rw"      description="Config registers when using external trigger source and/or tlu (Trigger source = 4 or 5) ">
+            <node id="dio5_en"              mask="0x00000001"       permission="rw"      description="Enable for the dio5 card" />
+            <node id="dio5_ch_out_en"       mask="0x0000003E"       permission="rw"      description="DIO5, Output enable for channels 5(MSb) to 1(LSb)" />
+            <node id="dio5_term_50ohm_en"   mask="0x000007C0"       permission="rw"      description="DIO5, 50 Ohm termination enable for channels 5(MSb) to 1(LSb)" />
+            <node id="dio5_ch1_thr"         mask="0x0007E000"       permission="rw"      description="DIO5, Voltage threshold for channel 1" />
+            <node id="dio5_ch2_thr"         mask="0x07F80000"       permission="rw"      description="DIO5, Voltage threshold for channel 2" />
+        </node>
+
+        <node id="ext_tlu_reg2"       address="0x00000009"    permission="rw"      description="Config registers when using external trigger source and/or tlu (Trigger source = 4 or 5) ">
+            <node id="dio5_ch3_thr"         mask="0x000000FF"       permission="rw"      description="DIO5, Voltage threshold for channel 3" />
+            <node id="dio5_ch4_thr"         mask="0x0000FF00"       permission="rw"      description="DIO5, Voltage threshold for channel 4" />
+            <node id="dio5_ch5_thr"         mask="0x00FF0000"       permission="rw"      description="DIO5, Voltage threshold for channel 5" />
+            <node id="dio5_load_config"     mask="0x01000000"       permission="rw"      description="DIO5, load configuration settings" />
+            <node id="tlu_en"               mask="0x02000000"       permission="rw"      description="Enable for the tlu module" />
+            <node id="tlu_handshake_mode"   mask="0x0C000000"       permission="rw"      description="Handshake mode for tlu, 0 = no handshake, 1 = simple handshake, 2 = data handshake" />
+        </node>
+
+        <!-- Readout Block -->
+        <node id="readout_block"        address="0x0000000A"    permission="rw"      description="">
+            <node id="data_handshake_en"    mask="0x00000001"       permission="rw"      description="" />
+            <node id="l1a_timeout_value"    mask="0x00001FFE"       permission="rw"      description="" />
+            <node id="ddr3_traffic_str"     mask="0x00002000"       permission="rw"      description="" />
+        </node>	
+
+        <node id="Hybrid1"              address="0x0000000B"    permission="rw"      description="">
+            <node id="Hybrid_en"            mask="0x00000001"       permission="rw"      description="" />
+            <node id="Chips_en"             mask="0x000001FE"       permission="rw"      description="" />
+        </node>	
+
 
     </node>
 
@@ -125,9 +159,39 @@
         <node id="stat_reg_11"       address="0x0000000B"        permission="r"> </node>
         <node id="stat_reg_12"       address="0x0000000C"        permission="r"> </node>
 
+        <!-- DIO5 -->
+        <node id="stat_dio5"           address="0x0000000D"    permission="r"      description="Status Registers from DIO5 card.">
+            <node id="dio5_not_ready"       mask="0x00000001"       permission="r"      description="Still configuring the dio5 thresholds." />
+            <node id="dio5_error"           mask="0x00000002"       permission="r"      description="Error when configuring dio5 thresholds via i2c" />
+        </node>
+
+        <!-- Readout -->
+        <node id="readout4"             address="0x00000011"    permission="r"      description="">
+            <node id="ddr3_initial_calibration_done"   mask="0x00000001"       permission="r"      description="" />
+            <node id="ddr3_self_check_done"            mask="0x00000002"       permission="r"      description="" />
+            <node id="readout_req"                      mask="0x00000004"       permission="r"      description="" />
+            <node id="fsm_status"                      mask="0x000007F8"       permission="r"      description="" />
+        </node>
+
+        <node id="words_to_read"       address="0x0000000E"    permission="r"      description=""> </node>
+
+        <node id="readout5"             address="0x0000000F"    permission="r"      description="">
+            <node id="event_cntr"           mask="0x00FFFFFF"       permission="r"      description="" />
+            <node id="event_cntr_buf_empty" mask="0x01000000"       permission="r"      description="" />
+            <node id="trig_data_buf_empty"  mask="0x02000000"       permission="r"      description="" />
+        </node>
+
+	    <node id="rate_measurement_bx_counter" address="0x00000010"    permission="r"      description=""> </node>
+
+        <!-- <node id="ddr3"                address="0x00000011"    permission="r"      description="">
+            <node id="initial_calibration_done"   mask="0x00000001"       permission="r"      description="" />
+            <node id="self_check_done"            mask="0x00000002"       permission="r"      description="" />
+        </node> -->
+
+	<node id="ddr3_num_errors"     address="0x00000012"    permission="r"      description=""> </node>
+	<node id="ddr3_num_words"      address="0x00000013"    permission="r"      description=""> </node>
 
         <!-- AURORA -->
-
         <node id="aurora"				address="0x00000014"    permission="r"      description="Aurora">
             <node id="n_ch"					mask="0x0000000f"       permission="r"      description="Number of CHIPS" />
             <node id="gtx_lock"             mask="0x00000ff0"       permission="r"      description="Aurora GTX PLL status. 1 = locked." />
@@ -224,7 +288,9 @@
     <!-- ================================================ -->
     <!-- ============== READOUT REGISTERS =============== -->
     <!-- ================================================ -->
-
+	
+    <!--<node id="fc7_daq_ddr3"     address="0x00000600" size="134217728" mode="incremental" permission="r"/> -->
+    
     <node id="readout0"         address="0x00000100"    permission="rw"     description="Register Readout." >
     	<node id="sel"							address="0x00000000"    permission="rw"      description="Select weather register or data frames are read out. 0x2: Register readout 0x1: Data readout - else: 0xffffffff"> </node>
     	<node id="reg_mask"						address="0x00000001"    permission="rw"      description="Set filter for register readback. 0: cmd only 1: auto 2nd only 2: auto 1st only 3: auto 1st and 2nd"> </node>
@@ -251,6 +317,6 @@
         <node id="reg_mask"						address="0x00000001"    permission="rw"      description="Set filter for register readback. 0: cmd only 1: auto 2nd only 2: auto 1st only 3: auto 1st and 2nd"> </node>
         <node id="dat_read"                 	address="0x00000004"    permission="r"      description="Enable read fifo."     mode="non-incremental" size="512"> </node>
 		<node id="reg_read"                 	address="0x00000008"    permission="r"      description="Enable read fifo."     mode="non-incremental" size="512"> </node>
-    </node>
+    </node> 
 
 </node>
