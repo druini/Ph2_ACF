@@ -7,24 +7,25 @@
 
     <!-- Frontend chip configuration -->
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
-      <RD53_Files path="${HOME}/Ph2_ACF/settings/RD53Files/" />
+      <RD53_Files path="./settings/RD53Files/" />
       <RD53 Id="0" configfile="CMSIT_RD53.txt" />
       <Global>
 	<!-- Overwrite .txt configuration file settings -->
         <Settings
-	    EN_CORE_COL_SYNC   = "0"
-	    EN_CORE_COL_LIN_1  = "65535"
-	    EN_CORE_COL_LIN_2  =     "1"
-	    EN_CORE_COL_DIFF_1 = "0"
-	    EN_CORE_COL_DIFF_2 =     "0"
+          EN_CORE_COL_SYNC   = "0"
+          EN_CORE_COL_LIN_1  = "65535"
+          EN_CORE_COL_LIN_2  =     "0"
+          EN_CORE_COL_DIFF_1 = "0"
+          EN_CORE_COL_DIFF_2 =     "0"
 
-	    GP_LVDS_ROUTE  =    "1"
-	    VTH_SYNC       =  "65535"
-	    Vthreshold_LIN =  "450"
-	    VTH1_DIFF      =  "65535"
-	    VTH2_DIFF      =   "50"
-	    LATENCY_CONFIG =  "500"
-	    MONITOR_SELECT = "8203"
+          GP_LVDS_ROUTE  =    "1"
+          VTH_SYNC       =  "300"
+          REF_KRUM_LIN = "300"
+          Vthreshold_LIN = "310"
+          VTH1_DIFF      =  "400"
+          VTH2_DIFF      =   "50"
+          LATENCY_CONFIG =  "500"
+          MONITOR_SELECT = "8203"
 	    />
 	    <!--
 		EN_CORE_COL_LIN_1 = "65535"

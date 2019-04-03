@@ -207,10 +207,10 @@ namespace Ph2_System {
 		  {
 		    for (const auto& cRD53 : cFe->fChipVector)
 		      {
-			LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << int (cRD53->getChipId()) << RESET;
-			fRD53Interface->ResetRD53 (dynamic_cast<RD53*>(cRD53));
-			fRD53Interface->SyncRD53 (dynamic_cast<RD53*>(cRD53),NSYNCWORDS);
-			fRD53Interface->InitRD53Aurora (dynamic_cast<RD53*>(cRD53));
+                LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << int (cRD53->getChipId()) << RESET;
+                fRD53Interface->ResetRD53 (dynamic_cast<RD53*>(cRD53));
+                // fRD53Interface->SyncRD53 (dynamic_cast<RD53*>(cRD53),NSYNCWORDS);
+                fRD53Interface->InitRD53Aurora (dynamic_cast<RD53*>(cRD53));
 		      }
 
 		    isGoodTrial = fBeBoardInterface->InitChipCommunication(cBoard);

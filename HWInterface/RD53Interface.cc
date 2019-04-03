@@ -28,13 +28,6 @@ namespace Ph2_HwInterface
 	if (cRegItem.second.fPrmptCfg == true) this->WriteChipReg(pRD53,cRegItem.first,cRegItem.second.fValue);
       }
 
-    // ###############################################################
-    // # Enable monitoring (needed for AutoRead register monitoring) #
-    // ###############################################################
-    // @TMP@
-    this->WriteChipReg(pRD53,"GLOBAL_PULSE_ROUTE",0x100); // 0x100 = start monitoring
-    this->WriteChipReg(pRD53,"GLOBAL_PULSE",0x4);
-
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
@@ -59,16 +52,22 @@ namespace Ph2_HwInterface
     // # CML_CONFIG    = 0b00001111 #
     // ##############################
 
-    this->WriteChipReg(pRD53,"OUTPUT_CONFIG",0x4);
+    this->WriteChipReg(pRD53,"OUTPUT_CONFIG",0x4, 0);
     // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode on lane 0
-    this->WriteChipReg(pRD53,"CML_CONFIG",0x1); // Default: 00_11_1111
-    this->WriteChipReg(pRD53,"AURORA_CB_CONFIG0",0xF1);
-    this->WriteChipReg(pRD53,"AURORA_CB_CONFIG1",0xF);
-    this->WriteChipReg(pRD53,"GLOBAL_PULSE_ROUTE",0x30); // 0x30 = reset Aurora AND reset serializer
-    this->WriteChipReg(pRD53,"GLOBAL_PULSE",0x1);
+    this->WriteChipReg(pRD53,"CML_CONFIG",0x1, 0); // Default: 00_11_1111
+    this->WriteChipReg(pRD53,"AURORA_CB_CONFIG0",0xF1, 0);
+    this->WriteChipReg(pRD53,"AURORA_CB_CONFIG1",0xF, 0);
+    this->WriteChipReg(pRD53,"GLOBAL_PULSE_ROUTE",0x30, 0); // 0x30 = reset Aurora AND reset serializer
+    this->WriteChipReg(pRD53,"GLOBAL_PULSE",0x1, 0);
+ 
+    // ###############################################################
+    // # Enable monitoring (needed for AutoRead register monitoring) #
+    // ###############################################################
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100, 0); // 0x100 = start monitoring
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE", 0x4, 0);
 
     usleep(DEEPSLEEP);
   }
@@ -78,7 +77,7 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53,"SYNC",0x0);
   }
 
-  bool RD53Interface::WriteChipReg (Chip* cRD53, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
+  bool RD53Interface::WriteChipReg (Chip* cRD53, const std::string& pRegNode, const uint16_t data, bool pVerifyLoop)
   {
     setBoard (cRD53->getBeBoardId());
 
@@ -89,6 +88,8 @@ namespace Ph2_HwInterface
     RD53RegItem cRegItem(0,0,0);
     cRegItem.fValue = data;
 
+    LOG(INFO) << BOLDRED << pRegNode << " <- " << data << RESET;
+
     if (strcmp(pRegNode.c_str(),"GLOBAL_PULSE") == 0)
       pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::GlobalPulse(), false, serialSymbols);
     else if (strcmp(pRegNode.c_str(),"SYNC") == 0)
@@ -98,52 +99,54 @@ namespace Ph2_HwInterface
     else if (strcmp(pRegNode.c_str(),"RESET_EVTCTR") == 0)
       pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetEvtCtr(), false, serialSymbols);
     else
-      {
-	cRegItem.fAddress = pRD53->getRegItem (pRegNode).fAddress;
-	pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols);
-	// pRD53->EncodeCMD (cRegItem, pRD53->getChipId(), RD53::WriteCmd(), symbols);
+    {
+      cRegItem.fAddress = pRD53->getRegItem (pRegNode).fAddress;
+      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols);
+      // pRD53->EncodeCMD (cRegItem, pRD53->getChipId(), RD53::WriteCmd(), symbols);
 
-	std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
-	unsigned int it      = 0;
-	unsigned int row     = 0;
-	unsigned int pixMode = 0;
-	do
-	  {
-	    it++;
-	    if (it > NWRITE_ATTEMPTS) break;
+      if (pVerifyLoop) {
+        std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
+        unsigned int it      = 0;
+        unsigned int row     = 0;
+        unsigned int pixMode = 0;
+        do
+        {
+          it++;
+          if (it > NWRITE_ATTEMPTS) break;
 
-	    if (((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (it == 1)) || (strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0))
-	      fBoardFW->WriteChipCommand (serialSymbols);
+          if (((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (it == 1)) || (strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0))
+            fBoardFW->WriteChipCommand (serialSymbols);
 
-	    if ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) & (it == 1))
-	      {
-		outputDecoded = this->ReadRD53Reg (pRD53, "PIX_MODE");
-    		pixMode = outputDecoded.second[0];
+          if ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) & (it == 1))
+          {
+            outputDecoded = this->ReadRD53Reg (pRD53, "PIX_MODE");
+            pixMode = outputDecoded.second[0];
 
-		outputDecoded = this->ReadRD53Reg (pRD53, "REGION_ROW");
-    		row = outputDecoded.second[0];
-	      }
+            outputDecoded = this->ReadRD53Reg (pRD53, "REGION_ROW");
+            row = outputDecoded.second[0];
+          }
 
-	    if (pixMode == 0)
-	      outputDecoded = this->ReadRD53Reg (pRD53, pRegNode);
+          if (pixMode == 0)
+            outputDecoded = this->ReadRD53Reg (pRD53, pRegNode);
 
-	  }
-	while ((pixMode == 0) &&
-	       (((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded.first[0] != cRegItem.fAddress)) ||
-		((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded.first[0] != row))               ||
-	        (outputDecoded.second[0] != cRegItem.fValue)));
+        }
+        while ((pixMode == 0) &&
+              (((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded.first[0] != cRegItem.fAddress)) ||
+          ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded.first[0] != row))               ||
+                (outputDecoded.second[0] != cRegItem.fValue)));
 
-	if (it > NWRITE_ATTEMPTS)
-	  {
-	    LOG (INFO) << BOLDRED << "Error while writing into RD53: reached the maximum number of attempts (" << NWRITE_ATTEMPTS << ")" << RESET;
-	    return false;
-	  }
-	else
-	  {
-	    pRD53->setReg (pRegNode, cRegItem.fValue);
-	    return true;
-	  }
+        if (it > NWRITE_ATTEMPTS)
+        {
+          LOG (INFO) << BOLDRED << "Error while writing into RD53: reached the maximum number of attempts (" << NWRITE_ATTEMPTS << ")" << RESET;
+          return false;
+        }
+        else
+        {
+          pRD53->setReg (pRegNode, cRegItem.fValue);
+          return true;
+        }
       }
+    }
 
     // fBoardFW->SerializeSymbols (symbols,serialSymbols);
     fBoardFW->WriteChipCommand (serialSymbols);

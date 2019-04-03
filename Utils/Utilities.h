@@ -29,6 +29,9 @@
 #include <memory>
 #include <sys/stat.h>
 
+#include <tuple> // new
+
+
 template<typename ... Args>
 std::string string_format ( const std::string& format, Args ... args )
 {
@@ -98,4 +101,7 @@ std::string expandEnvironmentVariables ( std::string s ) ;
 
 // get run number from file
 void getRunNumber (const std::string& pPath, int& pRunNumber, bool pIncrement = true);
+
+
+
 #endif
