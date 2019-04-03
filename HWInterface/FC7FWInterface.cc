@@ -64,6 +64,11 @@ namespace Ph2_HwInterface
     // this->ChipReset();
     // this->ChipReSync();
 
+    // Wait for user to reset power to the chip
+    // LOG(INFO) << BOLDMAGENTA << "Powercycle SCC and press any key to continue:" << RESET;
+
+    // system("read");
+
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
 
     BeBoardRegMap cFC7RegMap = pBoard->getBeBoardRegMap();
@@ -404,107 +409,153 @@ namespace Ph2_HwInterface
 
     bitReg = static_cast<uint8_t>(ReadReg ("user.stat_regs.aurora.channel_up"));
     if (bitReg.count() == auroraReg)
-      {
-	LOG (INFO) << BOLDGREEN << "\t--> Aurora channels up number as expected: " << BOLDYELLOW << bitReg.count() << RESET;
-	return true;
-      }
+    {
+      LOG (INFO) << BOLDGREEN << "\t--> Aurora channels up number as expected: " << BOLDYELLOW << bitReg.count() << RESET;
+
+      // // Reset Readout
+      // WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",1);
+      // // usleep(WAIT);
+      // WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",0);
+      // // usleep(WAIT);
+
+      // LOG (INFO) << YELLOW << "Waiting for DDR3 calibration" << RESET;
+      // while (!ReadReg("user.stat_regs.readout4.ddr3_initial_calibration_done").value()) {
+      //     usleep(WAIT);
+      // }
+      // LOG (INFO) << GREEN << "DDR3 calibration done." << RESET;
+
+      // // ConfigureReadout
+      // WriteStackReg({
+      //       {"user.ctrl_regs.readout_block.data_handshake_en", HANDSHAKE_EN},
+      //       {"user.ctrl_regs.readout_block.l1a_timeout_value", 4000},
+      //       {"user.ctrl_regs.Hybrid1.Hybrid_en", HYBRID_EN},
+      //       {"user.ctrl_regs.Hybrid1.Chips_en", READOUT_CHIP_MASK}
+      //   });
+        
+      return true;
+    }
     LOG (INFO) << BOLDRED << "\t--> Aurora channels up number less than expected: " << BOLDYELLOW << bitReg.count() << RESET;
     return false;
   }
 
   void FC7FWInterface::Start()
   {
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_2.trigger_source",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_2.autozero_source",3);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay",0);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_2.backpressure_en",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_2.veto_en",1);
-    usleep(WAIT);
+    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
 
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",0);
-    usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_2.trigger_source",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_2.autozero_source",3);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay",0);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_2.backpressure_en",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_2.veto_en",1);
+    // usleep(WAIT);
 
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_7.autozero_freq",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",10);
-    usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",0);
+    // usleep(WAIT);
 
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.start_trigger",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.start_trigger",0);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
-    usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_7.autozero_freq",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",10);
+    // usleep(WAIT);
+
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.start_trigger",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.start_trigger",0);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
+    // usleep(WAIT);
   }
 
   void FC7FWInterface::Stop()
   {
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.stop_trigger",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.stop_trigger",0);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
-    usleep(WAIT);
+    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.stop_trigger");
+
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.stop_trigger",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.stop_trigger",0);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
+    // usleep(WAIT);
   }
 
   void FC7FWInterface::Pause()
   {
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.stop_trigger",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.stop_trigger",0);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
-    usleep(WAIT);
+    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.stop_trigger");
+
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.stop_trigger",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.stop_trigger",0);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
+    // usleep(WAIT);
   }
 
   void FC7FWInterface::Resume()
   {
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.start_trigger",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.start_trigger",0);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
-    usleep(WAIT);
+    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
+
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.start_trigger",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.start_trigger",0);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
+    // usleep(WAIT);
   }
 
   uint32_t FC7FWInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
   {
-    std::stringstream myString;
-    unsigned int nodeBlocks  = fBoard->getNode("user.readout0.dat_read").getSize();
-    unsigned int nActiveChns = ReadReg ("user.stat_regs.aurora.n_ch");
-    std::vector<uint32_t> dataFIFO;
 
-    for (unsigned int i = 0; i < nActiveChns; i++)
-      {
-	myString.clear(); myString.str("");
-	myString << "user.readout" << i << ".sel";
-	WriteReg (myString.str().c_str(), 1);
+    
 
-	myString.clear(); myString.str("");
-	myString << "user.readout" << i << ".dat_read";
-	
-	dataFIFO = ReadBlockRegValue(myString.str().c_str(), 1);
-	pData.insert(pData.end(), dataFIFO.begin(), dataFIFO.end());
+    uint32_t  cNWords     = ReadReg("user.stat_regs.words_to_read").value(),
+              handshake   = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value(),
+              cNtriggers  = ReadReg("user.stat_regs.trigger_cntr").value();
+    
+    LOG (INFO) << GREEN << "cNWords = " << cNWords << RESET;
+    LOG (INFO) << GREEN << "handshake = " << handshake << RESET;
+    LOG (INFO) << GREEN << "cNtriggers = " << cNtriggers << RESET;
 
-	// ##################
-	// # Flush the FIFO #
-	// ##################
-	myString.clear(); myString.str("");
-	myString << "user.readout" << i << ".dat_read";
-	ReadBlockRegValue(myString.str().c_str(), nodeBlocks);
-      }
+    if (!pWait && !cNWords)
+        return 0;
+
+    while (cNWords == 0) {
+        usleep(10000);
+        cNWords = ReadReg("user.stat_regs.words_to_read").value();
+    }
+    
+    if (handshake) {
+        // wait for handshake
+        uint32_t cReadoutReq = ReadReg("user.stat_regs.readout4.readout_req").value();
+        while (cReadoutReq == 0) {
+            uint32_t fsm_status = ReadReg("user.stat_regs.readout4.fsm_status").value();
+            LOG(INFO) << BOLDRED << "Waiting for readout request, FSM status: " << fsm_status << RESET;
+            
+            usleep(SLEEP);
+            
+            cReadoutReq = ReadReg("user.stat_regs.readout4.readout_req");
+        }
+
+        // update values
+        cNWords = ReadReg("user.stat_regs.words_to_read").value();
+        cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
+    }
+
+    // read data
+    uhal::ValVector<uint32_t> values = ReadBlockReg("ddr3.fc7_daq_ddr3", cNWords);
+    for (const auto& val : values) {
+        pData.push_back(val);
+    }
 
     if (fSaveToFile) fFileHandler->set(pData);
 
@@ -556,62 +607,76 @@ namespace Ph2_HwInterface
     // # Set #
     // #######
     WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",0);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",0);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.global_rst",1);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.clk_gen_rst",1);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.fmc_pll_rst",0);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",1);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.i2c_rst",1);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
 
     // #########
     // # Reset #
     // #########
     WriteReg ("user.ctrl_regs.reset_reg.global_rst",0);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",0);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.fmc_pll_rst",1);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",0);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.i2c_rst",0);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",1);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",1);
-    usleep(DEEPSLEEP);
+    usleep(SLEEP);
   }
   
   void FC7FWInterface::ResetIPbus()
   {
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_reset",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_reset",0);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
-    usleep(WAIT);
+    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset");
+
+      // Reset Readout
+    WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",1);
+    // usleep(WAIT);
+    WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",0);
+    // usleep(WAIT);
+
+    while (!ReadReg("user.stat_regs.readout4.ddr3_initial_calibration_done").value()) {
+        LOG (INFO) << YELLOW << "Waiting for DDR3 calibration" << RESET;
+        usleep(WAIT);
+    }
+    LOG (INFO) << GREEN << "DDR3 calibration done." << RESET;
+
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_reset",1);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_reset",0);
+    // usleep(WAIT);
+    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
+    // usleep(WAIT);
   }
 
   void FC7FWInterface::ChipReset()
@@ -621,17 +686,149 @@ namespace Ph2_HwInterface
     WriteReg ("user.ctrl_regs.reset_reg.scc_rst",0);
     usleep(WAIT);
 
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ecr",1);
+    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",1);
     usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ecr",0);
+    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",0);
     usleep(WAIT);
   }
 
   void FC7FWInterface::ChipReSync()
   {
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.bcr",1);
+    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",1);
     usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.bcr",0);
+    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0);
     usleep(WAIT);
   }
+
+  std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents(const std::vector<uint32_t>& data) {
+    // find events
+    std::vector<size_t> event_start;
+    for (size_t i = 0; i < data.size(); i += 4) {
+      if (data[i] >> NBIT_BLOCKSIZE == EVT_HEADER) {
+        event_start.push_back(i);
+      }
+    }
+
+    std::vector<FC7FWInterface::Event> events;
+    events.reserve(event_start.size());
+
+    for (size_t i = 0; i < event_start.size(); i++) {
+      const size_t start = event_start[i];
+      const size_t end = (i == event_start.size() - 1) ? data.size() : event_start[i + 1];
+      events.emplace_back(data.begin() + start, end - start);
+    }
+
+    return events;
+  }
+
+  template <class It>
+  FC7FWInterface::Event::Event(const It& data, size_t n) {
+    // std::cout << "Decoding event. size = " << n << std::endl;
+
+    std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
+
+    if (block_size * 4 != n) {
+      LOG (ERROR) << BOLDRED << "Invalid event block size: " << block_size << " instead of " << (n / 4) << RESET;
+      return;
+    }
+
+    std::tie(tlu_trigger_id, data_format_ver, std::ignore) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
+    std::tie(tdc, l1a_counter) = unpack_bits<NBIT_TDC, NBIT_L1ACNT>(data[2]);
+    bx_counter = data[3];
+
+    std::vector<size_t> chip_start;
+    for (size_t i = 4; i < n; i += 4) {
+      if (data[i] >> (NBIT_ERR + NBIT_HYBRID + NBIT_CHIPID + NBIT_L1ASIZE) == CHIP_HEADER) {
+        chip_start.push_back(i);
+      }
+    }
+    // std::cout << "chips found: " << chip_start.size() << std::endl;
+
+    chip_data.reserve(chip_start.size());
+    for (size_t i = 0; i < chip_start.size(); i++) {
+      const size_t start = chip_start[i];
+      const size_t end = (i == chip_start.size() - 1) ? n : chip_start[i + 1];
+      chip_data.emplace_back(data + start, end - start);
+    }
+  }
+
+  template <class It>
+  FC7FWInterface::ChipData::ChipData(const It& data, size_t n)
+    : chip_event_header(data[2])
+  {
+    uint16_t header;
+    std::tie(header, error_code, hybrid_id, chip_id, l1a_data_size) = 
+      unpack_bits<NBIT_CHIPHEAD, NBIT_ERR, NBIT_HYBRID, NBIT_CHIPID, NBIT_L1ASIZE>(data[0]);
+
+    if (l1a_data_size * 4 != n) {
+      LOG (ERROR) << "Invalid chip L1A Data Size." << RESET;
+      // return;
+    }
+
+    std::tie(chip_type, frame_delay) = unpack_bits<NBIT_CHIPTYPE, NBIT_FRAME>(data[1]);
+
+    for (size_t i = 3; i < n; i++) {
+      if (data[i])
+        hit_data.emplace_back(data[i]);
+    }
+  }
+
+
+  void FC7FWInterface::SendBoardCommand(const std::string& cmd_reg) {
+    WriteStackReg({}); // dispatch any previous commands
+    WriteStackReg({
+      {cmd_reg, 1},
+      {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 1},
+      {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0},
+      {cmd_reg, 0}
+    });
+  };
+
+  void FC7FWInterface::ConfigureFastCommands(const FastCommandsConfig& config) {
+      WriteStackReg({
+          {"user.ctrl_regs.fast_cmd_reg_2.trigger_source", (uint32_t)config.trigger_source},
+          {"user.ctrl_regs.fast_cmd_reg_2.autozero_source", (uint32_t)config.autozero_source},
+          {"user.ctrl_regs.fast_cmd_reg_2.backpressure_en", (uint32_t)config.backpressure_en},
+          {"user.ctrl_regs.fast_cmd_reg_2.init_ecr_en", (uint32_t)config.initial_ecr_en},
+          {"user.ctrl_regs.fast_cmd_reg_2.veto_en", (uint32_t)config.veto_en},
+          {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_ecr_en", (uint32_t)config.test_fsm.ecr_en},
+          {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_test_pulse_en", (uint32_t)config.test_fsm.first_cal_en},
+          {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en", (uint32_t)config.test_fsm.second_cal_en},
+          {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en", (uint32_t)config.test_fsm.trigger_en},
+          {"user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", (uint32_t)config.n_triggers},
+          {"user.ctrl_regs.fast_cmd_reg_3.delay_after_ecr", (uint32_t)config.test_fsm.delay_after_ecr},
+          {"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime", (uint32_t)config.test_fsm.first_cal_data},
+          {"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse", (uint32_t)config.test_fsm.delay_after_first_cal},
+          {"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject", (uint32_t)config.test_fsm.second_cal_data},
+          {"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)config.test_fsm.delay_after_second_cal},
+          {"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero", (uint32_t)config.test_fsm.delay_after_autozero},
+          {"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse", (uint32_t)config.test_fsm.delay_loop},
+          {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)config.test_fsm.glb_pulse_data},
+          {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq", (uint32_t)config.autozero_freq},
+          {"user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero", (uint32_t)config.veto_after_autozero}
+      });
+
+      SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
+
+    
+
+    // ConfigureReadout
+    WriteStackReg({
+          {"user.ctrl_regs.readout_block.data_handshake_en", HANDSHAKE_EN},
+          {"user.ctrl_regs.readout_block.l1a_timeout_value", 4000},
+          {"user.ctrl_regs.Hybrid1.Hybrid_en", HYBRID_EN},
+          {"user.ctrl_regs.Hybrid1.Chips_en", READOUT_CHIP_MASK}
+    });
+    usleep(WAIT);
+
+      // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.load_config", 1);
+      // usleep(WAIT);
+      // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 1);
+      // usleep(WAIT);
+
+      // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0);
+      // usleep(WAIT);
+      // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.load_config", 0);
+      // usleep(WAIT);
+    }
 }

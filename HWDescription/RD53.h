@@ -16,6 +16,8 @@
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 
+#include "../Utils/Utilities.h"
+
 #include <math.h>
 #include <iomanip>
 #include <bitset>
@@ -63,6 +65,10 @@
 #define NBIT_SIDE   1 // Number of "side" bits
 #define NBIT_ROW    9 // Number of row bits
 #define NBIT_CCOL   6 // Number of core column bits
+
+#define N_REGION		4	// Number of pixels in a region (1x4)
+
+
 
 
 namespace Ph2_HwDescription
@@ -223,6 +229,25 @@ namespace Ph2_HwDescription
     
     template<int NBITS>
       std::bitset<NBITS> SetBits(unsigned int nBit2Set);
+
+
+public:		
+		struct EventHeader {
+			EventHeader(const uint32_t data);
+
+			uint16_t trigger_id;
+			uint16_t trigger_tag;
+			uint16_t bc_id;
+		};
+
+		struct HitData {
+        HitData(const uint32_t data);
+
+        uint16_t row;
+        uint16_t col;
+        uint8_t tots[N_REGION];
+    };
+	
   };
 }
 

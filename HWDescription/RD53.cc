@@ -9,6 +9,7 @@
 
 #include "RD53.h"
 
+
 namespace Ph2_HwDescription
 {
   RD53::RD53 ( const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename ) : Chip (pFeDesc, pRD53Id)
@@ -533,4 +534,25 @@ namespace Ph2_HwDescription
     for (unsigned int i = 0; i < nBit2Set; i++) output[i] = 1;
     return output;
   }
+
+
+	RD53::EventHeader::EventHeader(const uint32_t data) {
+		// mypause();
+		uint32_t header;
+		std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(data);
+		if (header != 1) {
+			LOG (ERROR) << "Invalid RD53 Event Header." << RESET;
+		}
+	}
+
+
+	RD53::HitData::HitData(const uint32_t data) {
+		uint32_t core_col, side, all_tots;
+		std::tie(core_col, row, side, all_tots) = unpack_bits<NBIT_CCOL, NBIT_ROW, NBIT_SIDE, NBIT_TOT>(data);
+
+		unpack_array<NBIT_TOT / N_REGION>(tots, all_tots);
+
+		col = 4 * pack_bits<NBIT_CCOL, NBIT_SIDE>(core_col, side);
+	}
+
 }
