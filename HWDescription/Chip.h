@@ -135,11 +135,8 @@ namespace Ph2_HwDescription {
 
         virtual uint16_t getNumberOfChannels() const  = 0;
 
-        const std::vector<uint8_t>& getChipMask() const
-        {
-	  return fChipMask;
-        }
-	
+        virtual std::vector<uint8_t>& getChipMask() = 0;
+
         bool hasMaskedChannels() const
         {
 	  return fhasMaskedChannels;

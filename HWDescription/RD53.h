@@ -101,6 +101,7 @@ namespace Ph2_HwDescription
     bool     isDACLocal          (const std::string& dacName)                                          override;
     uint8_t  getNumberOfBits     (const std::string& dacName)                                          override;
     bool     IsChannelUnMasked   (uint32_t cChan) const                                                override;
+    std::vector<uint8_t>& getChipMask()                                                                override;
 
     std::vector<perPixelData>* getPixelsConfig        () { return &fPixelsConfig;        }
     std::vector<perPixelData>* getPixelsConfigDefault () { return &fPixelsConfigDefault; }
@@ -109,6 +110,7 @@ namespace Ph2_HwDescription
     void enableAllPixels();
     void enablePixel(unsigned int row, unsigned int col);
     void injectAllPixels();
+    void injectPixel(unsigned int row, unsigned int col);
 
     void EncodeCMD (const RD53RegItem                   & pRegItem,
 		    const uint8_t                         pRD53Id,
@@ -191,6 +193,25 @@ namespace Ph2_HwDescription
     };
 
 
+    // ############################################################################
+    // # Converter of channel representation from vector to matrix and vice versa #
+    // ############################################################################
+    // The matrix
+    // |1 2|
+    // |3 4|
+    // is linearized into |1 2 3 4|
+
+    static void fromVec2Matrix(const uint32_t vec, unsigned int& row, unsigned int& col)
+    {
+      row = vec / NCOLS;
+      col = vec % NCOLS;
+    }
+    
+    static uint32_t fromMatrix2Vec(const unsigned int row, const unsigned int col)
+    {
+      return NCOLS*row + col;
+    }
+    
   private:
     std::vector<uint8_t> cmd_data_map =
       {
@@ -250,26 +271,6 @@ namespace Ph2_HwDescription
     
     template<int NBITS>
       std::bitset<NBITS> SetBits(unsigned int nBit2Set);
-
-
-    // ############################################################################
-    // # Converter of channel representation from vector to matrix and vice versa #
-    // ############################################################################
-    // The matrix
-    // |1 2|
-    // |3 4|
-    // is linearized into |1 2 3 4|
-
-    static void fromVec2Matrix(const uint32_t vec, int& row, int& col)
-      {
-	row = vec / NCOLS;
-	col = vec % NCOLS;
-      }
-
-    static uint32_t fromMatrix2Vec(const int row, const int col)
-    {
-      return NCOLS*row + col;
-    }
   };
 }
 

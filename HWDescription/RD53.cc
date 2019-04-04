@@ -350,6 +350,11 @@ namespace Ph2_HwDescription
       }
   }
 
+  void RD53::injectPixel(unsigned int row, unsigned int col)
+  {
+    fPixelsConfig[col].InjEn[row] = 1;
+  }
+
   void RD53::EncodeCMD (const RD53RegItem                   & pRegItem,
   			const uint8_t                         pRD53Id,
   			const uint16_t                        pRD53Cmd,
@@ -868,7 +873,7 @@ namespace Ph2_HwDescription
 
   bool RD53::IsChannelUnMasked (uint32_t cChan) const
   {
-    int row, col;
+    unsigned int row, col;
     RD53::fromVec2Matrix(cChan,row,col);
     return fPixelsConfig[col].Enable[row];
   }
@@ -891,5 +896,20 @@ namespace Ph2_HwDescription
     unpack_array<NBIT_TOT / N_REGION>(tots, all_tots);
     
     col = 4 * pack_bits<NBIT_CCOL, NBIT_SIDE>(core_col, side);
+  }
+
+  std::vector<uint8_t>& RD53::getChipMask()
+  {
+    fChipMask.clear();
+    std::vector<uint8_t> vec(NCOLS*NROWS, 0);
+    fChipMask = vec;
+    uint32_t chn;
+
+    for (unsigned int col = 0; col < fPixelsConfig.size(); col++)
+      for (unsigned int row = 0; row < fPixelsConfig[col].Enable.size(); row++)
+	{
+	  chn = RD53::fromMatrix2Vec(row,col);
+	  fChipMask[chn] = fPixelsConfig[col].Enable[row];
+	}
   }
 }

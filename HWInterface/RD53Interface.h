@@ -40,10 +40,8 @@ namespace Ph2_HwInterface
     uint16_t ReadChipReg               (Chip* pChip, const std::string& pRegNode)                                                            override;
     bool     ConfigureChipOriginalMask (Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                      override;
     bool     MaskAllChannels           (Chip* pChip, bool mask, bool pVerifLoop = true)                                                      override;
-    
-    // @TMP@
-    bool     UnmaskChannelList         (Chip* pChip, const std::vector<uint32_t>& channelList, bool pVerifLoop = true)                   { return true; }
-    bool     WriteChipAllLocalReg      (Chip* pChip, const std::string& dacName, std::vector<uint16_t>& pValue, bool pVerifLoop = true)  { return true; }
+    bool     UnmaskChannelList         (Chip* pChip, const std::vector<uint32_t>& channelList, bool pVerifLoop = true)                       override;
+    bool     WriteChipAllLocalReg      (Chip* pChip, const std::string& dacName, std::vector<uint16_t>& pValue, bool pVerifLoop = true)      override;
 
     bool WriteRD53Mask    (RD53* pRD53, bool defaultT_currentF);
     bool WriteRD53Reg     (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec);

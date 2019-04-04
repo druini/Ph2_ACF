@@ -99,7 +99,8 @@ namespace Ph2_HwDescription {
             else if(dacName == "TriggerLatency" ) return 9;
             else return 8;
         }
-
+	
+        std::vector<uint8_t>& getChipMask() { return fChipMask; }
 
       protected:
         
