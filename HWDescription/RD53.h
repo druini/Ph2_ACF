@@ -70,8 +70,6 @@
 #define N_REGION		4	// Number of pixels in a region (1x4)
 
 
-
-
 namespace Ph2_HwDescription
 {
   using perPixelData = struct _perPixelData
@@ -102,12 +100,7 @@ namespace Ph2_HwDescription
     uint16_t getNumberOfChannels () const                                                              override;
     bool     isDACLocal          (const std::string& dacName)                                          override;
     uint8_t  getNumberOfBits     (const std::string& dacName)                                          override;
-    bool     IsChannelUnMasked   (uint32_t cChan) const                                                override
-    {
-      // @TMP@
-      /* return fPixelsConfig[col].Enable[row]; */
-      return true;
-    }
+    bool     IsChannelUnMasked   (uint32_t cChan) const                                                override;
 
     std::vector<perPixelData>* getPixelsConfig        () { return &fPixelsConfig;        }
     std::vector<perPixelData>* getPixelsConfigDefault () { return &fPixelsConfigDefault; }
@@ -175,6 +168,28 @@ namespace Ph2_HwDescription
       quadCol = (coreCol << NBIT_SIDE) | side;
     }
 
+    
+    // ##################
+    // # Data structure #
+    // ##################
+    struct EventHeader
+    {
+      EventHeader(const uint32_t data);
+      
+      uint16_t trigger_id;
+      uint16_t trigger_tag;
+      uint16_t bc_id;
+    };
+    
+    struct HitData
+    {
+      HitData(const uint32_t data);
+      
+      uint16_t row;
+      uint16_t col;
+      uint8_t tots[N_REGION];
+    };
+
 
   private:
     std::vector<uint8_t> cmd_data_map =
@@ -237,23 +252,24 @@ namespace Ph2_HwDescription
       std::bitset<NBITS> SetBits(unsigned int nBit2Set);
 
 
-public:		
-		struct EventHeader {
-			EventHeader(const uint32_t data);
+    // ############################################################################
+    // # Converter of channel representation from vector to matrix and vice versa #
+    // ############################################################################
+    // The matrix
+    // |1 2|
+    // |3 4|
+    // is linearized into |1 2 3 4|
 
-			uint16_t trigger_id;
-			uint16_t trigger_tag;
-			uint16_t bc_id;
-		};
+    static void fromVec2Matrix(const uint32_t vec, int& row, int& col)
+      {
+	row = vec / NCOLS;
+	col = vec % NCOLS;
+      }
 
-		struct HitData {
-        HitData(const uint32_t data);
-
-        uint16_t row;
-        uint16_t col;
-        uint8_t tots[N_REGION];
-    };
-	
+    static uint32_t fromMatrix2Vec(const int row, const int col)
+    {
+      return NCOLS*row + col;
+    }
   };
 }
 

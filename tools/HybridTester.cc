@@ -61,7 +61,7 @@ void HybridTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 
     for (auto& cBoard : fBoardVector)
     {
-        fBeBoardInterface->ChipReSync ( cBoard );
+        fBeBoardInterface->ChipReset ( cBoard );
 
         trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
          LOG (INFO)  <<int (trigSource);
@@ -87,7 +87,7 @@ void HybridTester::ReconfigureCBCRegisters (std::string pDirectoryName )
             }
         }
 
-        fBeBoardInterface->ChipReset ( cBoard );
+        fBeBoardInterface->ChipReSync ( cBoard );
     }
 }
 

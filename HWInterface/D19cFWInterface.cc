@@ -304,8 +304,8 @@ namespace Ph2_HwInterface {
     {
     // after firmware loading it seems that CBC3 is not super stable
     // and it needs fast reset after, so let's be secure and do also the hard one..
-        this->ChipReSync();
         this->ChipReset();
+        this->ChipReSync();
         usleep (1);
 
         WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
@@ -413,7 +413,7 @@ namespace Ph2_HwInterface {
             else WriteReg ("fc7_daq_cnfg.readout_block.global.zero_suppression_enable", 0x0);
 
     // resetting hard
-            this->ChipReSync();
+            this->ChipReset();
 
     // ping all cbcs (reads data from registers #0)
             uint32_t cInit = ( ( (2) << 28 ) | (  (0) << 18 )  | ( (0) << 17 ) | ( (1) << 16 ) | (0 << 8 ) | 0);
@@ -627,7 +627,7 @@ namespace Ph2_HwInterface {
 
   void D19cFWInterface::Start()
   {
-    this->ChipReset();
+    this->ChipReSync();
     this->ResetReadout();
     
         //here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to clear the register manually)
@@ -807,7 +807,7 @@ namespace Ph2_HwInterface {
                             exit (1);
                         }
 
-			this->ChipReset();
+			this->ChipReSync();
 			usleep (10);
                         // reset  the timing tuning
                         WriteReg ("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
@@ -1633,7 +1633,7 @@ namespace Ph2_HwInterface {
         pVecReg = cReplies;
     }
 
-  void D19cFWInterface::ChipReset()
+  void D19cFWInterface::ChipReSync()
   {
     WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_reset", 0x1 );
   }
@@ -1643,7 +1643,7 @@ namespace Ph2_HwInterface {
     WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1 );
   }
   
-  void D19cFWInterface::ChipReSync()
+  void D19cFWInterface::ChipReset()
   {
     WriteReg ( "fc7_daq_ctrl.physical_interface_block.control.chip_hard_reset", 0x1 );
     usleep (10);
@@ -2793,7 +2793,7 @@ namespace Ph2_HwInterface {
                 exit (1);
             }
 
-        this->ChipReset();
+        this->ChipReSync();
         usleep (10);
         // reset  the timing tuning
 	WriteReg("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);

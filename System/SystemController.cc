@@ -184,7 +184,7 @@ namespace Ph2_System {
                 }
             }
 
-            fBeBoardInterface->ChipReset ( cBoard );
+            fBeBoardInterface->ChipReSync ( cBoard );
 	  }
 	else
 	  {

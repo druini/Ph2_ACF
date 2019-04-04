@@ -18,7 +18,7 @@ namespace Ph2_HwInterface
   {
     ChipRegMap pRD53RegMap = pChip->getRegMap();
 
-    RD53* pRD53 = dynamic_cast<RD53*>(const_cast<Chip*>(pChip));
+    RD53* pRD53 = static_cast<RD53*>(const_cast<Chip*>(pChip));
 
     for (const auto& cRegItem : pRD53RegMap)
       {
@@ -81,7 +81,7 @@ namespace Ph2_HwInterface
   {
     setBoard (cRD53->getBeBoardId());
 
-    RD53* pRD53 = dynamic_cast<RD53*>(cRD53);
+    RD53* pRD53 = static_cast<RD53*>(cRD53);
 
     // std::vector<std::vector<uint16_t> > symbols; // Useful in case the encoding is done in the software
     std::vector<uint32_t> serialSymbols;
@@ -157,7 +157,7 @@ namespace Ph2_HwInterface
   {
     setBoard (cRD53->getBeBoardId());
 
-    RD53* pRD53 = dynamic_cast<RD53*>(cRD53);
+    RD53* pRD53 = static_cast<RD53*>(cRD53);
 
     std::vector<uint32_t> serialSymbols;
     ChipRegItem cRegItem;
@@ -323,18 +323,18 @@ namespace Ph2_HwInterface
 
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode)
   {
-    return this->ReadRD53Reg(dynamic_cast<RD53*>(pChip), pRegNode).second[0];
+    return this->ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode).second[0];
   }
   
   bool RD53Interface::ConfigureChipOriginalMask (Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
-    RD53* pRD53 = dynamic_cast<RD53*>(pChip);
+    RD53* pRD53 = static_cast<RD53*>(pChip);
     this->WriteRD53Mask(pRD53, true);
   }
   
   bool RD53Interface::MaskAllChannels (Chip* pChip, bool mask, bool pVerifLoop)
   {
-    RD53* pRD53 = dynamic_cast<RD53*>(pChip);
+    RD53* pRD53 = static_cast<RD53*>(pChip);
 
     if (mask == true) pRD53->resetMask();
     else

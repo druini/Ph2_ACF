@@ -866,8 +866,15 @@ namespace Ph2_HwDescription
     return 0;
   }
 
+  bool RD53::IsChannelUnMasked (uint32_t cChan) const
+  {
+    int row, col;
+    RD53::fromVec2Matrix(cChan,row,col);
+    return fPixelsConfig[col].Enable[row];
+  }
 
-  RD53::EventHeader::EventHeader(const uint32_t data) {
+  RD53::EventHeader::EventHeader(const uint32_t data)
+  {
     // mypause();
     uint32_t header;
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(data);
@@ -875,9 +882,9 @@ namespace Ph2_HwDescription
       LOG (ERROR) << "Invalid RD53 Event Header." << RESET;
     }
   }
-  
-  
-  RD53::HitData::HitData(const uint32_t data) {
+    
+  RD53::HitData::HitData(const uint32_t data)
+  {
     uint32_t core_col, side, all_tots;
     std::tie(core_col, row, side, all_tots) = unpack_bits<NBIT_CCOL, NBIT_ROW, NBIT_SIDE, NBIT_TOT>(data);
     
