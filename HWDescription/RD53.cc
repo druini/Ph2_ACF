@@ -535,14 +535,6 @@ namespace Ph2_HwDescription
     row     = _row;
   }
   
-  template<int NBITS>
-  std::bitset<NBITS> RD53::SetBits(unsigned int nBit2Set)
-  {
-    std::bitset<NBITS> output(0);
-    for (unsigned int i = 0; i < nBit2Set; i++) output[i] = 1;
-    return output;
-  }
-
   uint16_t RD53::getNumberOfChannels () const
   {
     return NCOLS * NROWS;
@@ -893,7 +885,7 @@ namespace Ph2_HwDescription
     uint32_t core_col, side, all_tots;
     std::tie(core_col, row, side, all_tots) = unpack_bits<NBIT_CCOL, NBIT_ROW, NBIT_SIDE, NBIT_TOT>(data);
     
-    unpack_array<NBIT_TOT / N_REGION>(tots, all_tots);
+    unpack_array<NBIT_TOT / NPIX_REGION>(tots, all_tots);
     
     col = 4 * pack_bits<NBIT_CCOL, NBIT_SIDE>(core_col, side);
   }
@@ -901,7 +893,7 @@ namespace Ph2_HwDescription
   std::vector<uint8_t>& RD53::getChipMask()
   {
     fChipMask.clear();
-    std::vector<uint8_t> vec(NCOLS*NROWS, 0);
+    std::vector<uint8_t> vec(NCOLS*NROWS/8, 0);
     fChipMask = vec;
     uint32_t chn;
 
@@ -909,7 +901,15 @@ namespace Ph2_HwDescription
       for (unsigned int row = 0; row < fPixelsConfig[col].Enable.size(); row++)
 	{
 	  chn = RD53::fromMatrix2Vec(row,col);
-	  fChipMask[chn] = fPixelsConfig[col].Enable[row];
+	  fChipMask[chn/8] = fChipMask[chn/8] | (fPixelsConfig[col].Enable[row] << (chn % 8));
 	}
+  }
+
+  template<int NBITS>
+  std::bitset<NBITS> RD53::SetBits(unsigned int nBit2Set)
+  {
+    std::bitset<NBITS> output(0);
+    for (unsigned int i = 0; i < nBit2Set; i++) output[i] = 1;
+    return output;
   }
 }

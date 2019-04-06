@@ -57,6 +57,7 @@
 
 #define NPIXCOL_PROG      2 // Number of pixel columns to program
 #define NDATAMAX_PERPIXEL 6 // Number of data-bit packets used to program the pixel
+#define NPIX_REGION       4 // Number of pixels in a region (1x4)
 
 #define NBIT_BCID  15 // Number of bunch crossing ID bits
 #define NBIT_TRGTAG 5 // Number of trigger tag bits
@@ -66,8 +67,6 @@
 #define NBIT_SIDE   1 // Number of "side" bits
 #define NBIT_ROW    9 // Number of row bits
 #define NBIT_CCOL   6 // Number of core column bits
-
-#define N_REGION		4	// Number of pixels in a region (1x4)
 
 
 namespace Ph2_HwDescription
@@ -189,7 +188,7 @@ namespace Ph2_HwDescription
       
       uint16_t row;
       uint16_t col;
-      uint8_t tots[N_REGION];
+      uint8_t tots[NPIX_REGION];
     };
 
 
