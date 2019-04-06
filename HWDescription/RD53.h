@@ -124,7 +124,8 @@ namespace Ph2_HwDescription
 		    std::vector<uint32_t>       & pVecReg,
 		    const std::vector<uint16_t> * dataVec = NULL);
 
-    void ConvertRowCol2Cores (unsigned int _row, unsigned int col, uint16_t& colPair, uint16_t& row);
+    void ConvertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& colPair, uint16_t& row);
+    void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& quadCol);
 
     static uint16_t ResetEvtCtr() { return RESET_ECR;  }
     static uint16_t ResetBcrCtr() { return RESET_BCR;  }
@@ -135,41 +136,34 @@ namespace Ph2_HwDescription
     static uint16_t NoOperation() { return NOOP;       }
     static uint16_t Sync()        { return SYNC;       }
 
-    static void DecodeData (uint32_t data,
-			    bool        & isHeader,
-			    unsigned int& trigID,
-			    unsigned int& trigTag,
-			    unsigned int& BCID,
-			    uint16_t    & coreRowAndRegion,
-			    uint16_t    & coreCol,
-			    uint8_t     & side,
-			    uint16_t    & ToT)
-    {
-      unsigned int header = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID + NBIT_HEADER)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1))) >> (NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID);
+    /* static void DecodeData (uint32_t data, */
+    /* 			    bool        & isHeader, */
+    /* 			    unsigned int& trigID, */
+    /* 			    unsigned int& trigTag, */
+    /* 			    unsigned int& BCID, */
+    /* 			    uint16_t    & coreRowAndRegion, */
+    /* 			    uint16_t    & coreCol, */
+    /* 			    uint8_t     & side, */
+    /* 			    uint16_t    & ToT) */
+    /* { */
+    /*   unsigned int header = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID + NBIT_HEADER)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1))) >> (NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID); */
 
-      if (header == HEADER)
-	{
-	  trigID  = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1))) >> (NBIT_BCID + NBIT_TRGTAG);
-	  trigTag = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1)               - static_cast<uint32_t>(pow(2,NBIT_BCID)-1)))               >> NBIT_BCID;
-	  BCID    =  data &  static_cast<uint32_t>(pow(2,NBIT_BCID)-1);
-	}
-      else
-	{
-	  coreCol          = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW + NBIT_CCOL)-1) - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1))) >> (NBIT_TOT + NBIT_SIDE + NBIT_ROW);
-	  coreRowAndRegion = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1)             - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)))            >> (NBIT_TOT + NBIT_SIDE);
-	  side             = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)                        - static_cast<uint32_t>(pow(2,NBIT_TOT)-1)))                        >> NBIT_TOT;
-	  ToT              =  data &  static_cast<uint32_t>(pow(2,NBIT_TOT)-1);
-	}
-    }
+    /*   if (header == HEADER) */
+    /* 	{ */
+    /* 	  trigID  = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1))) >> (NBIT_BCID + NBIT_TRGTAG); */
+    /* 	  trigTag = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1)               - static_cast<uint32_t>(pow(2,NBIT_BCID)-1)))               >> NBIT_BCID; */
+    /* 	  BCID    =  data &  static_cast<uint32_t>(pow(2,NBIT_BCID)-1); */
+    /* 	} */
+    /*   else */
+    /* 	{ */
+    /* 	  coreCol          = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW + NBIT_CCOL)-1) - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1))) >> (NBIT_TOT + NBIT_SIDE + NBIT_ROW); */
+    /* 	  coreRowAndRegion = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1)             - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)))            >> (NBIT_TOT + NBIT_SIDE); */
+    /* 	  side             = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)                        - static_cast<uint32_t>(pow(2,NBIT_TOT)-1)))                        >> NBIT_TOT; */
+    /* 	  ToT              =  data &  static_cast<uint32_t>(pow(2,NBIT_TOT)-1); */
+    /* 	} */
+    /* } */
 
-    static void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side,
-				      unsigned int& row, unsigned int& quadCol)
-    {
-      row     = coreRowAndRegion;
-      quadCol = (coreCol << NBIT_SIDE) | side;
-    }
 
-    
     // ##################
     // # Data structure #
     // ##################

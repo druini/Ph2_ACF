@@ -535,6 +535,13 @@ namespace Ph2_HwDescription
     row     = _row;
   }
   
+  void RD53::ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side,
+				   unsigned int& row, unsigned int& quadCol)
+  {
+    row     = coreRowAndRegion;
+    quadCol = (coreCol << NBIT_SIDE) | side;
+  }
+  
   uint16_t RD53::getNumberOfChannels () const
   {
     return NCOLS * NROWS;

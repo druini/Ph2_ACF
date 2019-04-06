@@ -16,6 +16,47 @@ using namespace std;
 INITIALIZE_EASYLOGGINGPP
 
 
+void PrintEvents(std::vector<FC7FWInterface::Event>& events, int limit)
+{
+  for (int i = 0; i < limit; i++)
+    {
+      auto& evt = events[i];
+      LOG (INFO) << BOLDGREEN << "Event " << i << RESET;
+      LOG (INFO) << BOLDGREEN << "block_size = " << evt.block_size << RESET;
+      LOG (INFO) << BOLDGREEN << "trigger_id = " << evt.tlu_trigger_id << RESET;
+      LOG (INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
+      LOG (INFO) << BOLDGREEN << "tdc = " << evt.tdc << RESET;
+      LOG (INFO) << BOLDGREEN << "l1a_counter = " << evt.l1a_counter << RESET;
+      LOG (INFO) << BOLDGREEN << "bx_counter = " << evt.bx_counter << RESET;
+
+      for (auto& chip_data : evt.chip_data)
+	{
+	  LOG (INFO) << CYAN << "Chip Header: " << RESET;
+	  LOG (INFO) << CYAN << "error_code = " << chip_data.error_code << RESET;
+	  LOG (INFO) << CYAN << "hybrid_id = " << chip_data.hybrid_id << RESET;
+	  LOG (INFO) << CYAN << "chip_id = " << chip_data.chip_id << RESET;
+	  LOG (INFO) << CYAN << "l1a_data_size = " << chip_data.l1a_data_size << RESET;
+	  LOG (INFO) << CYAN << "chip_type = " << chip_data.chip_type << RESET;
+	  LOG (INFO) << CYAN << "frame_delay = " << chip_data.frame_delay << RESET;
+
+	  LOG (INFO) << CYAN << "trigger_id = " << chip_data.chip_event_header.trigger_id << RESET;
+	  LOG (INFO) << CYAN << "trigger_tag = " << chip_data.chip_event_header.trigger_tag << RESET;
+	  LOG (INFO) << CYAN << "bc_id = " << chip_data.chip_event_header.bc_id << RESET;
+
+	  LOG (INFO) << BOLDYELLOW << "Region Data (" << chip_data.hit_data.size() << " words): " << RESET;
+
+	  for (const auto& region_data : chip_data.hit_data)
+	    {
+	      LOG(INFO)   << "Column: " << region_data.col 
+			  << ", Row: " << region_data.row 
+			  << ", ToTs: [" << +region_data.tots[0] << "," << +region_data.tots[1] << "," << +region_data.tots[2] << "," << +region_data.tots[3] << "]"
+			  << RESET;
+            }
+        }
+    }
+}
+
+
 int main (int argc, char** argv)
 {
   // Configure the logger
@@ -107,44 +148,36 @@ int main (int argc, char** argv)
   std::cout << std::endl;
   LOG(INFO) << BOLDYELLOW << "@@@ Starting data-taking @@@" << RESET;
   BeBoard* pBoard = cSystemController.fBoardVector.at(0);
+  auto RD53Board = static_cast<FC7FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
+
+
+  // ###############
+  // # Configuring #
+  // ###############
+  FC7FWInterface::FastCommandsConfig cfg;
+  cfg.trigger_source = FC7FWInterface::TriggerSource::TestFSM;
+  cfg.n_triggers = nEvents;
+  cfg.test_fsm.delay_loop = 8;
+
+  LOG(INFO) << BOLDBLUE << "ConfigureFastCommands" << RESET;
+  RD53Board->ConfigureFastCommands(cfg);
+
+  LOG(INFO) << BOLDBLUE << "SendFastECR" << RESET;
+  RD53Board->ChipReset();
+
+  LOG(INFO) << BOLDBLUE << "SendFastBCR" << RESET;
+  RD53Board->ChipReSync();
+
+
   cSystemController.Start(pBoard);
   
   std::vector<uint32_t> data;
   unsigned int cN = 1;
-  while (cN <= nEvents)
-    {
+  // while (cN <= nEvents)
+  //   {
       // @TMP@
-      uint32_t cPacketSize = cSystemController.ReadData(pBoard,data,4);
-
-      bool         isHeader     = 0;
-      unsigned int trigID       = 0;
-      unsigned int trigTag      = 0;
-      unsigned int BCID         = 0;
-      uint16_t coreRowAndRegion = 0;
-      uint16_t coreCol          = 0;
-      uint8_t  side             = 0;
-      uint16_t ToT              = 0;
-      unsigned int row          = 0;
-      unsigned int colQuad      = 0;
-
-      LOG (INFO) << BOLDYELLOW << "@@@ Readout data @@@" << RESET;
-      for (unsigned int i = 0; i < data.size(); i++)
-	{
-	  RD53::DecodeData(data[i],isHeader,trigID,trigTag,BCID,coreRowAndRegion,coreCol,side,ToT);
-	  LOG (INFO) << BLUE << "\n\t--> Word: "   << std::hex << data[i] << std::dec << RESET;
-	  LOG (INFO) << BLUE << "\t--> Header: "   << isHeader << RESET;
-	  LOG (INFO) << BLUE << "\t--> trigID: "   << trigID   << RESET;
-	  LOG (INFO) << BLUE << "\t--> trigTag: "  << trigTag  << RESET;
-	  LOG (INFO) << BLUE << "\t--> BCID: "     << BCID     << RESET;
-	  LOG (INFO) << BLUE << "\t--> coreRowAndRegion: "     << unsigned(coreRowAndRegion) << RESET;
-	  LOG (INFO) << BLUE << "\t--> coreCol: "  << unsigned(coreCol) << RESET;
-	  LOG (INFO) << BLUE << "\t--> side: "     << unsigned(side)    << RESET;
-	  LOG (INFO) << BLUE << "\t--> ToT: 0x"    << std::hex << unsigned(ToT) << std::dec << RESET;
-	  RD53::ConvertCores2Col4Row (coreCol,coreRowAndRegion,side,row,colQuad);
-	  LOG (INFO) << BLUE << "\t--> row: "      << row      << RESET;
-	  LOG (INFO) << BLUE << "\t--> quad-col: " << colQuad  << RESET;
-	}
-
+      RD53Board->ReadData(pBoard, 0, data, 0);
+      auto events = FC7FWInterface::DecodeEvents(data);
 
       // if (cN + cPacketSize >= nEvents)
       // cSystemController.Stop(pBoard);
@@ -155,8 +188,11 @@ int main (int argc, char** argv)
       if (cN % 10  == 0) LOG (INFO) << GREEN << "\t--> Recorded " << cN << " events" << RESET;
       cN++;
       //   }
-    }
+    // }
   
+  // @TMP@
+  PrintEvents(events,15);
+
   cSystemController.Stop(pBoard);
   cSystemController.Destroy();
   LOG(INFO) << BOLDBLUE << "@@@ End of CMSIT miniDAQ @@@" << RESET;

@@ -246,8 +246,6 @@ namespace Ph2_System {
         {
             return fData->GetEvents ( pBoard );
         }
-
-	void ReadHitOrCnt (unsigned int nCnt) const;
     };
 }
 

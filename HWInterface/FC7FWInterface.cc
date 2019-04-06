@@ -11,12 +11,8 @@
 
 namespace Ph2_HwInterface
 {
-  FC7FWInterface::FC7FWInterface (const char* pId,
-				  const char* pUri,
-				  const char* pAddressTable) :
-    BeBoardFWInterface (pId, pUri, pAddressTable)
-  {
-  }
+  FC7FWInterface::FC7FWInterface (const char* pId, const char* pUri, const char* pAddressTable) :
+    BeBoardFWInterface (pId, pUri, pAddressTable) {}
 
   void FC7FWInterface::setFileHandler (FileHandler* pHandler)
   {
@@ -59,7 +55,7 @@ namespace Ph2_HwInterface
     // @TMP@
     // this->TurnOffFMC();
     // this->TurnOnFMC();
-    // this->ResetIPbus();
+    this->ResetIPbus();
     // this->ResetBoard();
     // this->ChipReset();
     // this->ChipReSync();
@@ -541,7 +537,7 @@ namespace Ph2_HwInterface
             uint32_t fsm_status = ReadReg("user.stat_regs.readout4.fsm_status").value();
             LOG(INFO) << BOLDRED << "Waiting for readout request, FSM status: " << fsm_status << RESET;
             
-            usleep(SLEEP);
+            usleep(DEEPSLEEP);
             
             cReadoutReq = ReadReg("user.stat_regs.readout4.readout_req");
         }
@@ -607,50 +603,50 @@ namespace Ph2_HwInterface
     // # Set #
     // #######
     WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",0);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",0);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.global_rst",1);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.clk_gen_rst",1);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.fmc_pll_rst",0);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",1);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.i2c_rst",1);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
 
     // #########
     // # Reset #
     // #########
     WriteReg ("user.ctrl_regs.reset_reg.global_rst",0);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",0);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.fmc_pll_rst",1);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",0);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.i2c_rst",0);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",1);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",1);
-    usleep(SLEEP);
+    usleep(DEEPSLEEP);
   }
   
   void FC7FWInterface::ResetIPbus()
@@ -684,12 +680,12 @@ namespace Ph2_HwInterface
     WriteReg ("user.ctrl_regs.reset_reg.scc_rst",1);
     usleep(WAIT);
     WriteReg ("user.ctrl_regs.reset_reg.scc_rst",0);
-    usleep(WAIT);
+    usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",1);
     usleep(WAIT);
     WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",0);
-    usleep(WAIT);
+    usleep(DEEPSLEEP);
   }
 
   void FC7FWInterface::ChipReSync()
@@ -697,7 +693,7 @@ namespace Ph2_HwInterface
     WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",1);
     usleep(WAIT);
     WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0);
-    usleep(WAIT);
+    usleep(DEEPSLEEP);
   }
 
   std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents(const std::vector<uint32_t>& data) {
@@ -782,7 +778,7 @@ namespace Ph2_HwInterface
       {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0},
       {cmd_reg, 0}
     });
-  };
+  }
 
   void FC7FWInterface::ConfigureFastCommands(const FastCommandsConfig& config) {
       WriteStackReg({
@@ -819,7 +815,7 @@ namespace Ph2_HwInterface
           {"user.ctrl_regs.Hybrid1.Hybrid_en", HYBRID_EN},
           {"user.ctrl_regs.Hybrid1.Chips_en", READOUT_CHIP_MASK}
     });
-    usleep(WAIT);
+    usleep(DEEPSLEEP);
 
       // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.load_config", 1);
       // usleep(WAIT);

@@ -136,117 +136,102 @@ namespace Ph2_System {
 
     void SystemController::ConfigureHw ( bool bIgnoreI2c )
     {
-        LOG (INFO) << BOLDBLUE << "Configuring HW parsed from .xml file: " << RESET;
+      LOG (INFO) << BOLDBLUE << "Configuring HW parsed from .xml file: " << RESET;
 
-        bool cHoleMode = false;
-        bool cCheck = false;
+      bool cHoleMode = false;
+      bool cCheck = false;
 
-        if ( !fSettingsMap.empty() )
+      if ( !fSettingsMap.empty() )
         {
-            SettingsMap::iterator cSetting = fSettingsMap.find ( "HoleMode" );
+	  SettingsMap::iterator cSetting = fSettingsMap.find ( "HoleMode" );
 
-            if ( cSetting != fSettingsMap.end() )
-                cHoleMode = cSetting->second;
+	  if ( cSetting != fSettingsMap.end() )
+	    cHoleMode = cSetting->second;
 
-            cCheck = true;
+	  cCheck = true;
         }
-        else cCheck = false;
+      else cCheck = false;
 
-        for (auto& cBoard : fBoardVector)
-        {
+      for (auto& cBoard : fBoardVector)
+	{
 	  // ######################################
 	  // # Configuring Outer Tracker hardware #
 	  // ######################################
 	  
 	  if (cBoard->getBoardType() != BoardType::FC7)
 	    {
-            //fBeBoardInterface->CbcHardReset ( cBoard );
-            fBeBoardInterface->ConfigureBoard ( cBoard );
-            //fBeBoardInterface->ChipFastReset ( cBoard );
+	      fBeBoardInterface->ConfigureBoard ( cBoard );
 
-            if ( cCheck && cBoard->getBoardType() == BoardType::GLIB)
-            {
-                fBeBoardInterface->WriteBoardReg ( cBoard, "pc_commands2.negative_logic_CBC", ( ( cHoleMode ) ? 0 : 1 ) );
-                LOG (INFO) << GREEN << "Overriding GLIB register values for signal polarity with value from settings node!" << RESET;
-            }
+	      if ( cCheck && cBoard->getBoardType() == BoardType::GLIB)
+		{
+		  fBeBoardInterface->WriteBoardReg ( cBoard, "pc_commands2.negative_logic_CBC", ( ( cHoleMode ) ? 0 : 1 ) );
+		  LOG (INFO) << GREEN << "Overriding GLIB register values for signal polarity with value from settings node!" << RESET;
+		}
 
-            LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
+	      LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
 
-            for (auto& cFe : cBoard->fModuleVector)
-            {
-                for (auto& cCbc : cFe->fChipVector)
-                {
-                    if ( !bIgnoreI2c )
-                    {
-                        fChipInterface->ConfigureChip ( cCbc );
-                        LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
-                    }
-                }
-            }
+	      for (auto& cFe : cBoard->fModuleVector)
+		{
+		  for (auto& cCbc : cFe->fChipVector)
+		    {
+		      if ( !bIgnoreI2c )
+			{
+			  fChipInterface->ConfigureChip ( cCbc );
+			  LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
+			}
+		    }
+		}
 
-            fBeBoardInterface->ChipReSync ( cBoard );
-	  }
-	else
-	  {
-	    // ######################################
-	    // # Configuring Inner Tracker hardware #
-	    // ######################################
-	    RD53Interface* fRD53Interface = dynamic_cast<RD53Interface*>(fChipInterface);
+	      fBeBoardInterface->ChipReSync ( cBoard );
+	    }
+	  else
+	    {
+	      // ######################################
+	      // # Configuring Inner Tracker hardware #
+	      // ######################################
+	      RD53Interface* fRD53Interface = dynamic_cast<RD53Interface*>(fChipInterface);
 
-	    LOG (INFO) << BOLDYELLOW << "@@@ Found an Inner Tracker board @@@" << RESET;
+	      LOG (INFO) << BOLDYELLOW << "@@@ Found an Inner Tracker board @@@" << RESET;
 
-	    LOG (INFO) << BOLDYELLOW << "Configuring Board " << int (cBoard->getBeId()) << RESET;
-	    fBeBoardInterface->ConfigureBoard (cBoard);
+	      LOG (INFO) << BOLDYELLOW << "Configuring Board " << int (cBoard->getBeId()) << RESET;
+	      fBeBoardInterface->ConfigureBoard (cBoard);
 
-	    for (const auto& cFe : cBoard->fModuleVector)
-	      {
-		unsigned int itTrials = 0;
-		bool isGoodTrial      = false;
-		LOG (INFO) << BOLDYELLOW << "Initializing communication to Module " << int (cFe->getModuleId()) << RESET;
- 		while ((isGoodTrial == false) && (itTrials <= MAXTRIALS))
-		  {
-		    for (const auto& cRD53 : cFe->fChipVector)
-		      {
-                LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << int (cRD53->getChipId()) << RESET;
-                fRD53Interface->ResetRD53 (dynamic_cast<RD53*>(cRD53));
-                // fRD53Interface->SyncRD53 (dynamic_cast<RD53*>(cRD53),NSYNCWORDS);
-                fRD53Interface->InitRD53Aurora (dynamic_cast<RD53*>(cRD53));
-		      }
+	      for (const auto& cFe : cBoard->fModuleVector)
+		{
+		  unsigned int itTrials = 0;
+		  bool isGoodTrial      = false;
+		  LOG (INFO) << BOLDYELLOW << "Initializing communication to Module " << int (cFe->getModuleId()) << RESET;
+		  while ((isGoodTrial == false) && (itTrials <= MAXTRIALS))
+		    {
+		      for (const auto& cRD53 : cFe->fChipVector)
+			{
+			  LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << int (cRD53->getChipId()) << RESET;
+			  fRD53Interface->ResetRD53 (static_cast<RD53*>(cRD53));
+			  // fRD53Interface->SyncRD53 (dynamic_cast<RD53*>(cRD53),NSYNCWORDS);
+			  fRD53Interface->InitRD53Aurora (static_cast<RD53*>(cRD53));
+			}
 
-		    isGoodTrial = fBeBoardInterface->InitChipCommunication(cBoard);
-		    LOG (INFO) << BOLDRED << "Attempt number #" << itTrials+1 << "/" << MAXTRIALS+1 << RESET;
-		    std::cout << std::endl;
+		      isGoodTrial = fBeBoardInterface->InitChipCommunication(cBoard);
+		      LOG (INFO) << BOLDRED << "Attempt number #" << itTrials+1 << "/" << MAXTRIALS+1 << RESET;
+		      std::cout << std::endl;
 
-		    itTrials++;
-		  }
+		      itTrials++;
+		    }
 
-		if (isGoodTrial == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication of all RD53s of Module " << int (cFe->getModuleId()) << RESET;
-		else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication with all RD53s of Module " << int (cFe->getModuleId()) << RESET;
+		  if (isGoodTrial == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication of all RD53s of Module " << int (cFe->getModuleId()) << RESET;
+		  else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication with all RD53s of Module " << int (cFe->getModuleId()) << RESET;
 
-		for (const auto& cRD53 : cFe->fChipVector)
-		  {
-		    LOG (INFO) << BOLDYELLOW << "Configuring RD53 " << int (cRD53->getChipId()) << RESET;
-		    fRD53Interface->ConfigureChip (dynamic_cast<RD53*>(cRD53));
-		    fRD53Interface->ResetHitOrCnt (dynamic_cast<RD53*>(cRD53));
-		  }
-
-		// @TMP@
-		// while (true)
-		//   {
-		//     this->ReadHitOrCnt (0);
-		//     usleep(1e6);
-		//     this->ReadHitOrCnt (1);
-		//     usleep(1e6);
-		//     this->ReadHitOrCnt (2);
-		//     usleep(1e6);
-		//     this->ReadHitOrCnt (3);
-		//     usleep(1e6);
-		//   }
-	      }
-	  }
+		  for (const auto& cRD53 : cFe->fChipVector)
+		    {
+		      LOG (INFO) << BOLDYELLOW << "Configuring RD53 " << int (cRD53->getChipId()) << RESET;
+		      fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));
+		      fRD53Interface->ResetHitOrCnt (static_cast<RD53*>(cRD53));
+		    }
+		}
+	    }
 	} 
     }
-
+  
     void SystemController::initializeFileHandler()
     {
         // here would be the ideal position to fill the file Header and call openFile when in read mode
@@ -490,45 +475,4 @@ namespace Ph2_System {
         for (auto cBoard : fBoardVector)
             this->ReadNEvents (cBoard, pNEvents);
     }
-  
-  void SystemController::ReadHitOrCnt (unsigned int nCnt) const
-  {
-    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
-
-    for (auto& cBoard : fBoardVector)
-      {
-	for (const auto& cFe : cBoard->fModuleVector)
-	  {
-	    for (const auto& cRD53 : cFe->fChipVector)
-	      {
-		LOG (INFO) << BOLDYELLOW << "Reading Hit-Or-Cnt #" << nCnt << RESET;
-		switch (nCnt)
-		  {
-		  case 0:
-		    {
-		      outputDecoded = dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_0_CNT");
-		      break;
-		    }
-		  case 1:
-		    {
-		      outputDecoded = dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_1_CNT");
-		      break;
-		    }
-		  case 2:
-		    {
-		      outputDecoded = dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_2_CNT");
-		      break;
-		    }
-		  case 3:
-		    {
-		      outputDecoded = dynamic_cast<RD53Interface*>(fChipInterface)->ReadRD53Reg (dynamic_cast<RD53*>(cRD53), "HITOR_3_CNT");
-		      break;
-		    }
-		  }
-	      }
-
-	    std::cout << "Hit-Or-Cnt value: " << outputDecoded.second[0] << std::endl;
-	  }
-      }
-  }
 }

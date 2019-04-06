@@ -43,16 +43,16 @@ namespace Ph2_HwInterface
     bool     UnmaskChannelList         (Chip* pChip, const std::vector<uint32_t>& channelList, bool pVerifLoop = true)                       override;
     bool     WriteChipAllLocalReg      (Chip* pChip, const std::string& dacName, std::vector<uint16_t>& pValue, bool pVerifLoop = true)      override;
 
-    bool WriteRD53Mask    (RD53* pRD53, bool defaultT_currentF);
-    bool WriteRD53Reg     (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec);
-    void InitRD53Aurora   (RD53* pRD53);
-    void SyncRD53         (RD53* pRD53, unsigned int nSyncWords = 1);
+    bool WriteRD53Mask                 (RD53* pRD53, bool defaultT_currentF);
+    bool WriteRD53Reg                  (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec);
+    void InitRD53Aurora                (RD53* pRD53);
+    void SyncRD53                      (RD53* pRD53, unsigned int nSyncWords = 1);
 
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadRD53Reg (RD53* pRD53, const std::string& pRegNode);
 
-    void ResetRD53        (RD53* pRD53);
-    void SetResetCoreCol  (RD53* pRD53, bool setT_resetF);
-    void ResetHitOrCnt    (RD53* pRD53);
+    void ResetRD53                     (RD53* pRD53);
+    void SetResetCoreCol               (RD53* pRD53, bool setT_resetF);
+    void ResetHitOrCnt                 (RD53* pRD53);
    };
 }
 
