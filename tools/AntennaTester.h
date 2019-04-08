@@ -17,7 +17,7 @@
 #include "../Utils/Visitor.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/Utilities.h"
-#include "BeBoardFWInterface.h"
+#include "../HWInterface/BeBoardFWInterface.h"
 
 #ifdef __ANTENNA__
 #include "Antenna.h"

@@ -240,6 +240,7 @@ namespace Ph2_HwInterface
     fBoardFW->WriteChipCommand (serialSymbols);
 
     for (const auto& cReg : pVecReg) pRD53->setReg (cReg.first, cReg.second);
+    return true;
   }
   
   std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53Interface::ReadRD53Reg (RD53* pRD53, const std::string& pRegNode)
