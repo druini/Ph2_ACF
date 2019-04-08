@@ -12,9 +12,12 @@
 
 #include "Chip.h"
 #include "RD53RegItem.h"
+
 #include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
+#include "../Utils/Utilities.h"
+#include "../Utils/RD53Event.h"
 
 #include <math.h>
 #include <iomanip>
@@ -33,36 +36,28 @@
 #define NBIT_5BITW  3 // Number of 5-bit word counter bits
 #define NBIT_FRAME  5 // Number of frame bits
 
-#define NBIT_PIXEN  1  // Number of pixel enable bits
-#define NBIT_INJEN  1  // Number of injection enable bits
-#define NBIT_HITBUS 1  // Number of hit bust bits
-#define NBIT_TDAC   4  // Number of TDACbits
-#define HIGHGAIN  0x80 // Set High Gain Linear
+#define NBIT_PIXEN  1 // Number of pixel enable bits
+#define NBIT_INJEN  1 // Number of injection enable bits
+#define NBIT_HITBUS 1 // Number of hit bust bits
+#define NBIT_TDAC   4 // Number of TDACbits
+#define HIGHGAIN 0x80 // Set High Gain Linear FE
 
-#define RESET_ECR  0x5A5A // Event Counter Reset
-#define RESET_BCR  0x5959 // Bunch Counter Reset
-#define GLOB_PULSE 0x5C5C // Global pulse
-#define CAL        0x6363 // Calibration
-#define WRITECMD   0x6666 // Write command
-#define READCMD    0x6565 // Read command
-#define NOOP       0x6969 // No operation
+#define RESET_ECR  0x5A5A // Event Counter Reset word
+#define RESET_BCR  0x5959 // Bunch Counter Reset word
+#define GLOB_PULSE 0x5C5C // Global pulse word
+#define CAL        0x6363 // Calibration word
+#define WRITECMD   0x6666 // Write command word
+#define READCMD    0x6565 // Read command word
+#define NOOP       0x6969 // No operation word
 #define SYNC       0x817E // Synchronization word
+#define HEADER        0x1 // Data header word
 
 #define NCOLS 400 // Total number of columns
 #define NROWS 192 // Total number of rows
 
-#define NPIXCOL_CORE      8 // Number of pixel columns per core
-#define NPIXROW_CORE      8 // Number of pixel rows per core
-#define NREGION_CORECOL   2 // Number of regions per core column
-#define NREGION_COREROW   8 // Number of regions per core row
-#define NPIX_REGION       2 // Number of pixels per region
+#define NPIXCOL_PROG      2 // Number of pixel columns to program
 #define NDATAMAX_PERPIXEL 6 // Number of data-bit packets used to program the pixel
-
-#define NBIT_NPIXCOL_CORE    6 // Number of NPIXCOL_CORE bits
-#define NBIT_NPIXROW_CORE    6 // Number of NPIXROW_CORE bits
-#define NBIT_NREGION_CORECOL 1 // Number of NREGION_CORECOL bits
-#define NBIT_NREGION_COREROW 3 // Number of NREGION_COREROW bits
-#define NBIT_NPIX_REGION     1 // Number of NPIX_REGION bits
+#define NPIX_REGION       4 // Number of pixels in a region (1x4)
 
 #define NBIT_BCID  15 // Number of bunch crossing ID bits
 #define NBIT_TRGTAG 5 // Number of trigger tag bits
@@ -72,8 +67,6 @@
 #define NBIT_SIDE   1 // Number of "side" bits
 #define NBIT_ROW    9 // Number of row bits
 #define NBIT_CCOL   6 // Number of core column bits
-
-#define HEADER 1 // Data header word
 
 
 namespace Ph2_HwDescription
@@ -89,8 +82,8 @@ namespace Ph2_HwDescription
   class RD53: public Chip
   {
   protected:
-    // RD53RegMap fRegMap;
     std::vector<perPixelData> fPixelsConfig;
+    std::vector<perPixelData> fPixelsConfigDefault;
     CommentMap fCommentMap;
     uint8_t fRD53Id;
  
@@ -99,17 +92,24 @@ namespace Ph2_HwDescription
     RD53  (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename);
     ~RD53 ();
 
-    void     loadfRegMap (const std::string& filename)                                         override;
-    void     setReg      (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
-    void     saveRegMap  (const std::string& filename)                                         override;
-    uint16_t getReg      (const std::string& pReg) const                                       override;
+    void     loadfRegMap         (const std::string& filename)                                         override;
+    void     setReg              (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
+    void     saveRegMap          (const std::string& filename)                                         override;
+    uint16_t getReg              (const std::string& pReg) const                                       override;
+    uint16_t getNumberOfChannels () const                                                              override;
+    bool     isDACLocal          (const std::string& dacName)                                          override;
+    uint8_t  getNumberOfBits     (const std::string& dacName)                                          override;
+    bool     IsChannelUnMasked   (uint32_t cChan) const                                                override;
+    std::vector<uint8_t>& getChipMask()                                                                override;
 
-    std::vector<perPixelData>* getPixelsConfig () { return &fPixelsConfig; }
+    std::vector<perPixelData>* getPixelsConfig        () { return &fPixelsConfig;        }
+    std::vector<perPixelData>* getPixelsConfigDefault () { return &fPixelsConfigDefault; }
 
     void resetMask();
     void enableAllPixels();
     void enablePixel(unsigned int row, unsigned int col);
     void injectAllPixels();
+    void injectPixel(unsigned int row, unsigned int col);
 
     void EncodeCMD (const RD53RegItem                   & pRegItem,
 		    const uint8_t                         pRD53Id,
@@ -120,71 +120,91 @@ namespace Ph2_HwDescription
 		    const uint16_t                data,
 		    const uint8_t                 pRD53Id,
 		    const uint8_t                 pRD53Cmd,
+		    const bool                    isBroadcast,
 		    std::vector<uint32_t>       & pVecReg,
 		    const std::vector<uint16_t> * dataVec = NULL);
 
-    void ConvertRowCol2Cores (unsigned int row, unsigned int col,
-			      uint16_t& coreCol,
-			      uint16_t& coreRow,
-			      uint16_t& regionCoreCol,
-			      uint16_t& pixelRegion,
-			      uint16_t& regionCoreRow);
+    void ConvertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& colPair, uint16_t& row);
+    void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& quadCol);
 
-    static uint16_t ResetEvtCtr() { return RESET_ECR; }
-    static uint16_t ResetBcrCtr() { return RESET_BCR; }
+    static uint16_t ResetEvtCtr() { return RESET_ECR;  }
+    static uint16_t ResetBcrCtr() { return RESET_BCR;  }
     static uint16_t GlobalPulse() { return GLOB_PULSE; }
-    static uint16_t Calibration() { return CAL; }
-    static uint16_t WriteCmd()    { return WRITECMD; }
-    static uint16_t ReadCmd()     { return READCMD; }
-    static uint16_t NoOperation() { return NOOP; }
-    static uint16_t Sync()        { return SYNC; }
+    static uint16_t Calibration() { return CAL;        }
+    static uint16_t WriteCmd()    { return WRITECMD;   }
+    static uint16_t ReadCmd()     { return READCMD;    }
+    static uint16_t NoOperation() { return NOOP;       }
+    static uint16_t Sync()        { return SYNC;       }
 
-    static void DecodeData (uint32_t data,
-			    bool        & isHeader,
-			    unsigned int& trigID,
-			    unsigned int& trigTag,
-			    unsigned int& BCID,
-			    uint16_t    & coreRowAndRegion,
-			    uint16_t    & coreCol,
-			    uint8_t     & side,
-			    uint16_t    & ToT)
+    /* static void DecodeData (uint32_t data, */
+    /* 			    bool        & isHeader, */
+    /* 			    unsigned int& trigID, */
+    /* 			    unsigned int& trigTag, */
+    /* 			    unsigned int& BCID, */
+    /* 			    uint16_t    & coreRowAndRegion, */
+    /* 			    uint16_t    & coreCol, */
+    /* 			    uint8_t     & side, */
+    /* 			    uint16_t    & ToT) */
+    /* { */
+    /*   unsigned int header = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID + NBIT_HEADER)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1))) >> (NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID); */
+
+    /*   if (header == HEADER) */
+    /* 	{ */
+    /* 	  trigID  = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1))) >> (NBIT_BCID + NBIT_TRGTAG); */
+    /* 	  trigTag = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1)               - static_cast<uint32_t>(pow(2,NBIT_BCID)-1)))               >> NBIT_BCID; */
+    /* 	  BCID    =  data &  static_cast<uint32_t>(pow(2,NBIT_BCID)-1); */
+    /* 	} */
+    /*   else */
+    /* 	{ */
+    /* 	  coreCol          = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW + NBIT_CCOL)-1) - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1))) >> (NBIT_TOT + NBIT_SIDE + NBIT_ROW); */
+    /* 	  coreRowAndRegion = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1)             - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)))            >> (NBIT_TOT + NBIT_SIDE); */
+    /* 	  side             = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)                        - static_cast<uint32_t>(pow(2,NBIT_TOT)-1)))                        >> NBIT_TOT; */
+    /* 	  ToT              =  data &  static_cast<uint32_t>(pow(2,NBIT_TOT)-1); */
+    /* 	} */
+    /* } */
+
+
+    // ##################
+    // # Data structure #
+    // ##################
+    struct EventHeader
     {
-      unsigned int header = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID + NBIT_HEADER)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1))) >> (NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID);
-
-      if (header == HEADER)
-	{
-	  trigID  = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1))) >> (NBIT_BCID + NBIT_TRGTAG);
-	  trigTag = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1)               - static_cast<uint32_t>(pow(2,NBIT_BCID)-1)))               >> NBIT_BCID;
-	  BCID    =  data &  static_cast<uint32_t>(pow(2,NBIT_BCID)-1);
-	}
-      else
-	{
-	  coreCol          = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW + NBIT_CCOL)-1) - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1))) >> (NBIT_TOT + NBIT_SIDE + NBIT_ROW);
-	  coreRowAndRegion = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1)             - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)))            >> (NBIT_TOT + NBIT_SIDE);
-	  side             = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)                        - static_cast<uint32_t>(pow(2,NBIT_TOT)-1)))                        >> NBIT_TOT;
-	  ToT              =  data &  static_cast<uint32_t>(pow(2,NBIT_TOT)-1);
-	}
-    }
-
-    static void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side,
-				      unsigned int& row,
-				      unsigned int& quadCol)
+      EventHeader(const uint32_t data);
+      
+      uint16_t trigger_id;
+      uint16_t trigger_tag;
+      uint16_t bc_id;
+    };
+    
+    struct HitData
     {
-      uint16_t regionInCore = coreRowAndRegion & static_cast<uint16_t>(pow(2,NBIT_NREGION_COREROW)-1);
-      uint16_t coreRow      = (coreRowAndRegion >> NBIT_NREGION_COREROW) & static_cast<uint16_t>(pow(2,NBIT_NPIXROW_CORE)-1);
-      std::cout << "AAA " << regionInCore << std::endl;
-      row     = (coreRow > 0 ? (coreRow-1) * NPIXROW_CORE : 0) + regionInCore;
-      quadCol = (coreCol > 0 ? (coreCol-1) * NPIXCOL_CORE : 0) + side*(NREGION_CORECOL+NPIX_REGION);
+      HitData(const uint32_t data);
+      
+      uint16_t row;
+      uint16_t col;
+      uint8_t tots[NPIX_REGION];
+    };
+
+
+    // ############################################################################
+    // # Converter of channel representation from vector to matrix and vice versa #
+    // ############################################################################
+    // The matrix
+    // |1 2|
+    // |3 4|
+    // is linearized into |1 2 3 4|
+
+    static void fromVec2Matrix(const uint32_t vec, unsigned int& row, unsigned int& col)
+    {
+      row = vec / NCOLS;
+      col = vec % NCOLS;
     }
-
-
-    // @TMP@
-    const uint16_t getNumberOfChannels () const          { return 0;     };
-    bool isDACLocal (const std::string& dacName)         { return false; };
-    uint8_t getNumberOfBits (const std::string& dacName) { return 0;     };
-    const bool IsChannelUnMasked(uint32_t cChan) const override {return false; };
-
-
+    
+    static uint32_t fromMatrix2Vec(const unsigned int row, const unsigned int col)
+    {
+      return NCOLS*row + col;
+    }
+    
   private:
     std::vector<uint8_t> cmd_data_map =
       {

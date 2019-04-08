@@ -165,12 +165,12 @@ namespace Ph2_HwInterface {
          * \brief Hard reset of all Chip
          * \param pChip
          */
-        void ChipHardReset ( const BeBoard* pBoard );
+        void ChipReSync ( const BeBoard* pBoard );
         /*!
          * \brief Fast Reset of the Chip
          * \param pChip
          */
-        void ChipFastReset ( const BeBoard* pBoard );
+        void ChipReset ( const BeBoard* pBoard );
         /*!
          * \brief Send Chip Trigger
          * \param pChip

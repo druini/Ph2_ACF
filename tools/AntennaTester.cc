@@ -181,7 +181,7 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 {
     for (auto& cBoard : fBoardVector)
     {
-        fBeBoardInterface->ChipHardReset ( cBoard );
+        fBeBoardInterface->ChipReset ( cBoard );
 
         trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
          LOG (INFO)  <<int (trigSource);
@@ -205,8 +205,7 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
             }
         }
 
-        //ChipFastReset as per recommendation of Mark Raymond
-        fBeBoardInterface->ChipFastReset ( cBoard );
+        fBeBoardInterface->ChipReSync ( cBoard );
     }
 }
 

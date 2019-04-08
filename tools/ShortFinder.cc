@@ -72,7 +72,7 @@ void ShortFinder::ReconfigureRegisters()
 
     for (auto& cBoard : fBoardVector)
     {
-        fBeBoardInterface->ChipHardReset ( cBoard );
+        fBeBoardInterface->ChipReset ( cBoard );
 
         for (auto& cFe : cBoard->fModuleVector)
         {
@@ -95,8 +95,7 @@ void ShortFinder::ReconfigureRegisters()
             }
         }
 
-        //ChipFastReset as per recommendation of Mark Raymond
-        fBeBoardInterface->ChipFastReset ( cBoard );
+        fBeBoardInterface->ChipReSync ( cBoard );
     }
 }
 void ShortFinder::ConfigureVcth (uint16_t pVcth)

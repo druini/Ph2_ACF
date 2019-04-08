@@ -149,7 +149,7 @@ namespace Ph2_System {
             else cBeBoard->setEventType (EventType::VR);
         }
 
-        os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << " :" << BOLDBLUE << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << " BoardType: " << BOLDBLUE << cBoardType << BOLDCYAN << " EventType: " << BOLDRED << cEventTypeString << RESET << std:: endl;
+        os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << ": " << BOLDBLUE << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << " BoardType: " << BOLDBLUE << cBoardType << BOLDCYAN << " EventType: " << BOLDRED << cEventTypeString << RESET << std:: endl;
 
         pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child ("connection");
 
@@ -370,8 +370,8 @@ namespace Ph2_System {
         //LOG(INFO) << cStatus ;
         if ( cStatus )
         {
-            os << BOLDCYAN << "|" << "  " << "|" << "----" << pModuleNode.name() << "  "
-               << pModuleNode.first_attribute().name() << " :" << pModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
+            os << BOLDCYAN << "|" << "       " << "|" << "----" << pModuleNode.name() << "       "
+               << pModuleNode.first_attribute().name() << ": " << BOLDBLUE << pModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
 
             uint32_t cModuleId = pModuleNode.attribute ( "ModuleId" ).as_int();
 
@@ -387,7 +387,7 @@ namespace Ph2_System {
 
             std::string cFilePrefix = expandEnvironmentVariables (static_cast<std::string> ( cChipPathPrefixNode.attribute ( "path" ).value() ) );
 
-            if ( !cFilePrefix.empty() ) os << GREEN << "|" << " " << "|" << "   " << "|" << "----" << "Chip Files Path : " << cFilePrefix << RESET << std::endl;
+            if ( !cFilePrefix.empty() ) os << BOLDBLUE << "|" << "       " << "|" << "       " << "|" << "----" << "Chip Files Path: " << BOLDYELLOW << cFilePrefix << RESET << std::endl;
 
             // Iterate the Chip node
             if (pBoard->getBoardType() == BoardType::FC7)
@@ -821,59 +821,16 @@ namespace Ph2_System {
   {
     // Parse the Chip settings here and put them in the corresponding registers of the Chip object
     os << BOLDBLUE << "|\t|\t|\t|----FrontEndType: " << RED << "RD53" << RESET << std::endl;
-
+    
     pugi::xml_node cSettingsChild = theChipNode.child ("Settings");
     if (cSettingsChild != nullptr)
-      {
-	uint16_t value = convertAnyInt (cSettingsChild.attribute ("GP_LVDS_ROUTE").value());
-
-	theChip->setReg("GP_LVDS_ROUTE",value,true);
-	os << GREEN << "|\t|\t|\t|----GP_LVDS_ROUTE: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
-
-	value = convertAnyInt (cSettingsChild.attribute ("VTH_SYNC").value());
-	theChip->setReg("VTH_SYNC",value,true);
-	os << GREEN << "|\t|\t|\t|----VTH_SYNC: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
-
-	value = convertAnyInt (cSettingsChild.attribute ("Vthreshold_LIN").value());
-	theChip->setReg("Vthreshold_LIN",value,true);
-	os << GREEN << "|\t|\t|\t|----Vthreshold_LIN: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
-
-	value = convertAnyInt (cSettingsChild.attribute ("VTH1_DIFF").value());
-	theChip->setReg("VTH1_DIFF",value,true);
-	os << GREEN << "|\t|\t|\t|----VTH1_DIFF: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
-
-	value = convertAnyInt (cSettingsChild.attribute ("VTH2_DIFF").value());
-	theChip->setReg("VTH2_DIFF",value,true);
-	os << GREEN << "|\t|\t|\t|----VTH2_DIFF: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
-
-	value = convertAnyInt (cSettingsChild.attribute ("LATENCY_CONFIG").value());
-	theChip->setReg("LATENCY_CONFIG",value,true);
-	os << GREEN << "|\t|\t|\t|----LATENCY_CONFIG: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
-
-	value = convertAnyInt (cSettingsChild.attribute ("MONITOR_SELECT").value());
-	theChip->setReg("MONITOR_SELECT",value,true);
-	os << GREEN << "|\t|\t|\t|----MONITOR_SELECT: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
-
-	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_SYNC").value());
-	theChip->setReg("EN_CORE_COL_SYNC",value,true);
-	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_SYNC: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
-
-	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_LIN_1").value());
-	theChip->setReg("EN_CORE_COL_LIN_1",value,true);
-	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_LIN_1: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
-
-	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_LIN_2").value());
-	theChip->setReg("EN_CORE_COL_LIN_2",value,true);
-	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_LIN_2: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
-
-	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_DIFF_1").value());
-	theChip->setReg("EN_CORE_COL_DIFF_1",value,true);
-	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_DIFF_1: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
-
-	value = convertAnyInt (cSettingsChild.attribute ("EN_CORE_COL_DIFF_2").value());
-	theChip->setReg("EN_CORE_COL_DIFF_2",value,true);
-	os << GREEN << "|\t|\t|\t|----EN_CORE_COL_DIFF_2: " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
-      }
+    {
+        for (const pugi::xml_attribute& attr : cSettingsChild.attributes()) {
+            uint16_t value = convertAnyInt (attr.value());
+            theChip->setReg(attr.name() ,value,true);
+            os << GREEN << "|\t|\t|\t|----" << attr.name() << ": " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+        }
+    }
   }
   // ########################
 }

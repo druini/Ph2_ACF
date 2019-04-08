@@ -33,17 +33,18 @@ namespace Ph2_HwInterface {
      */
     class CbcInterface : public ChipInterface
     {
-
       public:
         /*!
          * \brief Constructor of the CBCInterface Class
          * \param pBoardMap
          */
         CbcInterface ( const BeBoardFWMap& pBoardMap );
+
         /*!
          * \brief Destructor of the CBCInterface Class
          */
         ~CbcInterface();
+
         /*!
          * \brief Configure the Chip with the Chip Config File
          * \param pCbc: pointer to CBC object
@@ -56,7 +57,7 @@ namespace Ph2_HwInterface {
          * \brief Reapply the stored mask for the CBC, use it after group masking is applied
          * \param pCbc: pointer to CBC object
          */
-        bool ConfigureChipOriginalMask ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
+        bool ConfigureChipOriginalMask (Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
 
          /*!
          * \brief Mask all channels of the chip
@@ -77,19 +78,7 @@ namespace Ph2_HwInterface {
         virtual bool UnmaskChannelList ( Chip* pCbc, const std::vector<uint32_t> &channelList, bool pVerifLoop = true ) override;
 
         /*!
-         * \brief Read all the I2C parameters from the CBC
-         * \param pCbc: pointer to CBC object
-         */
-
-        void ReadChip ( Chip* pCbc ) override;
-        /*!
          * \brief Write the designated register in both Chip and Chip Config File
-         * \param pCbc
-         * \param pRegNode : Node of the register to write
-         * \param pValue : Value to write
-         */
-        /*!
-         * \brief Write the designated register in both Chip and Chip Config File (able to recognize parameters split over multiple registers such us Vcth)
          * \param pCbc
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
@@ -103,13 +92,14 @@ namespace Ph2_HwInterface {
          * \param pValue : Value to write
          */
         bool WriteChipSingleReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true );
+
         /*!
          * \brief Write several registers in both Chip and Chip Config File
          * \param pCbc
          * \param pVecReq : Vector of pair: Node of the register to write versus value to write
          */
-
         bool WriteChipMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true ) override;
+
         /*!
          * \brief Write same register in all Cbcs and then UpdateCbc
          * \param pModule : Module containing vector of Cbcs
@@ -117,6 +107,7 @@ namespace Ph2_HwInterface {
          * \param pValue : Value to write
          */
         void WriteBroadcastCbcReg ( const Module* pModule, const std::string& pRegNode, uint32_t pValue );
+
         /*!
          * \brief Write same register in all Cbcs and then UpdateCbc
          * \param pModule : Module containing vector of Cbcs
@@ -133,24 +124,12 @@ namespace Ph2_HwInterface {
          */
         bool WriteChipAllLocalReg ( Chip* pCbc, const std::string& dacName, std::vector<uint16_t>& pValue, bool pVerifLoop = true ) override;
 
-        /*!
+	/*!
          * \brief Read the designated register in the Chip
          * \param pCbc
          * \param pRegNode : Node of the register to read
          */
         uint16_t ReadChipReg ( Chip* pCbc, const std::string& pRegNode ) override;
-        /*!
-         * \brief Read several register in the Chip
-         * \param pCbc
-         * \param pVecReg : Vector of the nodes of the register to read
-         */
-        void ReadChipMultReg ( Chip* pCbc, const std::vector<std::string>& pVecReg ) override;
-        /*!
-         * \brief Read all register in all Cbcs and then UpdateCbc
-         * \param pModule : Module containing vector of Cbcs
-         */
-        //void ReadAllCbc ( const Module* pModule );
-        //void CbcCalibrationTrigger(const Chip* pCbc );
 
     private:
 
@@ -189,8 +168,6 @@ namespace Ph2_HwInterface {
         {30, "MaskChannel-248-to-241" },
         {31, "MaskChannel-254-to-249" }
     };
-
-
     };
 }
 
