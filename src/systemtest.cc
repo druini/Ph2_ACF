@@ -56,9 +56,6 @@ int main ( int argc, char** argv )
     if ( cConfigure )
     {
         cSystemController.ConfigureHw ();
-
-        CbcIdReader cIdReader (cSystemController.fChipInterface);
-        cSystemController.accept (cIdReader);
     }
 
     LOG (INFO) << "*** End of the System test ***" ;

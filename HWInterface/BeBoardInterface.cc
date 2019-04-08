@@ -179,10 +179,10 @@ namespace Ph2_HwInterface {
         fBoardFW->ReadNEvents ( pBoard, pNEvents, pData, pWait );
     }
 
-    void BeBoardInterface::ChipFastReset ( const BeBoard* pBoard )
+    void BeBoardInterface::ChipReset ( const BeBoard* pBoard )
     {
         setBoard ( pBoard->getBeBoardId() );
-        fBoardFW->ChipFastReset();
+        fBoardFW->ChipReset();
     }
 
     void BeBoardInterface::ChipTrigger ( const BeBoard* pBoard )
@@ -197,10 +197,10 @@ namespace Ph2_HwInterface {
         fBoardFW->ChipTestPulse();
     }
 
-    void BeBoardInterface::ChipHardReset ( const BeBoard* pBoard )
+    void BeBoardInterface::ChipReSync ( const BeBoard* pBoard )
     {
         setBoard ( pBoard->getBeBoardId() );
-        fBoardFW->ChipHardReset();
+        fBoardFW->ChipReSync();
     }
 
     const uhal::Node& BeBoardInterface::getUhalNode ( const BeBoard* pBoard, const std::string& pStrPath )

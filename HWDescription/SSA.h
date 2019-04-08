@@ -99,6 +99,7 @@ namespace Ph2_HwDescription {
         * \param filename
         */
 	void CheckRegVals();
+	
       protected:
 
         SSARegMap fRegMap;

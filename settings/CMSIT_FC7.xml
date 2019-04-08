@@ -2,31 +2,35 @@
 
 <HwDescription>
   <BeBoard Id="0" boardType="FC7" eventType="VR">
-    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.0.8:50001" address_table="file://settings/address_tables/CMSIT_FC7_address_table.xml" />
+    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://settings/address_tables/CMSIT_FC7_address_table.xml" />
 
 
     <!-- Frontend chip configuration -->
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
-      <RD53_Files path="${HOME}/Programming/tmpPh2_test/Ph2_ACF_Official/settings/RD53Files/" />
+      <RD53_Files path="./settings/RD53Files/" />
       <RD53 Id="0" configfile="CMSIT_RD53.txt" />
       <Global>
 	<!-- Overwrite .txt configuration file settings -->
         <Settings
-	    EN_CORE_COL_SYNC   = "65535"
-	    EN_CORE_COL_LIN_1  = "65535"
-	    EN_CORE_COL_LIN_2  =     "1"
-	    EN_CORE_COL_DIFF_1 = "65535"
-	    EN_CORE_COL_DIFF_2 =     "1"
+          EN_CORE_COL_SYNC   = "0"
+          EN_CORE_COL_LIN_1  = "65535"
+          EN_CORE_COL_LIN_2  =     "0"
+          EN_CORE_COL_DIFF_1 = "0"
+          EN_CORE_COL_DIFF_2 =     "0"
 
-	    GP_LVDS_ROUTE  =    "0"
-	    VTH_SYNC       =  "300"
-	    Vthreshold_LIN =  "150"
-	    VTH1_DIFF      =  "400"
-	    VTH2_DIFF      =   "50"
-	    LATENCY_CONFIG =  "500"
-	    MONITOR_SELECT = "8203"
+          GP_LVDS_ROUTE  =    "1"
+          VTH_SYNC       =  "300"
+          REF_KRUM_LIN = "300"
+          Vthreshold_LIN = "310"
+          VTH1_DIFF      =  "400"
+          VTH2_DIFF      =   "50"
+          LATENCY_CONFIG =  "500"
+          MONITOR_SELECT = "8203"
 	    />
-	    <!-- MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux) -->
+	    <!--
+		EN_CORE_COL_LIN_1 = "65535"
+		MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
+	    -->
       </Global>
     </Module>
 

@@ -9,6 +9,7 @@
 
 #include "RD53.h"
 
+
 namespace Ph2_HwDescription
 {
   RD53::RD53 ( const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename ) : Chip (pFeDesc, pRD53Id)
@@ -37,6 +38,7 @@ namespace Ph2_HwDescription
 	bool foundPixelConfig = false;
 	int cLineCounter = 0;
 	ChipRegItem fRegItem;
+	fhasMaskedChannels = false;
 
 	while (getline (file, line))
 	  {
@@ -75,6 +77,7 @@ namespace Ph2_HwDescription
 			  {
 			    pixData.Enable[it] = atoi(readWord.c_str());
 			    it++;
+			    if (pixData.Enable[it] == 0) fhasMaskedChannels = true;
 			  }
 		      }
 
@@ -198,12 +201,15 @@ namespace Ph2_HwDescription
 		fDefValue_str.erase(0,2);
 		fRegItem.fDefValue = strtoul (fDefValue_str.c_str(), 0, baseType);
 
+		fRegItem.fPage = 0;
+
 		fRegMap[fName] = fRegItem;
 	      }
 
 	    cLineCounter++;
 	  }
 
+	fPixelsConfigDefault = fPixelsConfig;
 	file.close();
       }
     else
@@ -241,13 +247,15 @@ namespace Ph2_HwDescription
 
   void RD53::saveRegMap (const std::string& filename)
   {
+    const int Nspaces = 40;
+
     std::ofstream file (filename.c_str(), std::ios::out | std::ios::trunc);
 
     if (file)
       {
-	std::vector<ChipRegPair> fSetRegItem;	
+	std::set<ChipRegPair, RegItemComparer> fSetRegItem;
 	for (auto& it : fRegMap)
-	  fSetRegItem.push_back ({it.first, it.second});
+	  fSetRegItem.insert ({it.first, it.second});
 
 	int cLineCounter = 0;	
 	for (const auto& v : fSetRegItem)
@@ -261,14 +269,45 @@ namespace Ph2_HwDescription
 	      }
 
 	    file << v.first;
-	    for (int j = 0; j < 48; j++)
+	    for (int j = 0; j < Nspaces; j++)
 	      file << " ";
 	    file.seekp (-v.first.size(), std::ios_base::cur);
 	    file << "0x"       << std::setfill ('0') << std::setw (2) << std::hex << std::uppercase << int (v.second.fAddress)
-		 << "\t0x"     << std::setfill ('0') << std::setw (2) << std::hex << std::uppercase << int (v.second.fDefValue)
-		 << "\t\t\t0x" << std::setfill ('0') << std::setw (2) << std::hex << std::uppercase << int (v.second.fValue) << std::endl;
+		 << "\t0x"     << std::setfill ('0') << std::setw (4) << std::hex << std::uppercase << int (v.second.fDefValue)
+		 << "\t\t\t0x" << std::setfill ('0') << std::setw (4) << std::hex << std::uppercase << int (v.second.fValue) << std::endl;
 
 	    cLineCounter++;
+	  }
+
+	file << std::dec << std::endl;
+	file << "*------------------------------------------------------------------------------------------" << std::endl;
+	file << "PIXELCONFIGURATION" << std::endl;
+	file << "*------------------------------------------------------------------------------------------" << std::endl;
+	for (unsigned int i = 0; i < fPixelsConfig.size(); i++)
+	  {
+	    file << "COL					" << std::setfill ('0') << std::setw (3) << i << std::endl;
+
+	    file << "ENABLE " << fPixelsConfig[i].Enable[0];
+	    for (unsigned int j = 1; j < fPixelsConfig[i].Enable.size(); j++)
+	      file << "," << fPixelsConfig[i].Enable[j];
+	    file << std::endl;
+
+	    file << "HITBUS " << fPixelsConfig[i].HitBus[0];
+	    for (unsigned int j = 1; j < fPixelsConfig[i].HitBus.size(); j++)
+	      file << "," << fPixelsConfig[i].HitBus[j];
+	    file << std::endl;
+
+	    file << "INJEN  " << fPixelsConfig[i].InjEn[0];
+	    for (unsigned int j = 1; j < fPixelsConfig[i].InjEn.size(); j++)
+	      file << "," << fPixelsConfig[i].InjEn[j];
+	    file << std::endl;
+
+	    file << "TDAC   " << unsigned(fPixelsConfig[i].TDAC[0]);
+	    for (unsigned int j = 1; j < fPixelsConfig[i].TDAC.size(); j++)
+	      file << "," << unsigned(fPixelsConfig[i].TDAC[j]);
+	    file << std::endl;
+
+	    file << std::endl;
 	  }
 
 	file.close();
@@ -311,6 +350,11 @@ namespace Ph2_HwDescription
       }
   }
 
+  void RD53::injectPixel(unsigned int row, unsigned int col)
+  {
+    fPixelsConfig[col].InjEn[row] = 1;
+  }
+
   void RD53::EncodeCMD (const RD53RegItem                   & pRegItem,
   			const uint8_t                         pRD53Id,
   			const uint16_t                        pRD53Cmd,
@@ -347,6 +391,7 @@ namespace Ph2_HwDescription
 			const uint16_t                data,
   			const uint8_t                 pRD53Id,
   			const uint8_t                 pRD53Cmd,
+			const bool                    isBroadcast,
   			std::vector<uint32_t>       & pVecReg,
 			const std::vector<uint16_t> * dataVec)
   {
@@ -358,7 +403,7 @@ namespace Ph2_HwDescription
 	(pRD53Cmd == (NOOP      & 0x00FF)))
       {
 	word = 0 | (pRD53Cmd << NBIT_5BITW);
-      }    
+      }
     else if (pRD53Cmd == (SYNC & 0x00FF))
       {
 	word = 0 | (pRD53Cmd << NBIT_5BITW);	
@@ -366,9 +411,9 @@ namespace Ph2_HwDescription
     else if (pRD53Cmd == (GLOB_PULSE & 0x00FF))
       {
 	word  = 2 | (pRD53Cmd << NBIT_5BITW);
-	frame = 0 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP ID[3..0],0
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2));
-	frame = 0 | ((data & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);    // @TMP@ D[3..0],0
+	frame = 0 | ((data & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                        // @TMP@ D[3..0],0
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME));
       }
     else if (pRD53Cmd == (CAL & 0x00FF))
@@ -387,11 +432,11 @@ namespace Ph2_HwDescription
     else if (pRD53Cmd == (READCMD & 0x00FF))
       {
 	word  = 4 | (pRD53Cmd << NBIT_5BITW);
-	frame = 0 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                    // @TMP@ ID[3..0],0
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID; // A[8..4]
+	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;  // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
-	frame = (address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1;                          // @TMP@ A[3..0]
+	frame = (address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1;                           // @TMP@ A[3..0]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
 	frame = 0;
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
@@ -399,7 +444,7 @@ namespace Ph2_HwDescription
     else if ((pRD53Cmd == (WRITECMD & 0x00FF)) && (dataVec == NULL))
       {
 	word  = 6 | (pRD53Cmd << NBIT_5BITW);
-	frame = 0 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                      // @TMP@ ID[3..0],0
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);  // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;   // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
@@ -427,7 +472,7 @@ namespace Ph2_HwDescription
 	  }
 
 	word  = 7 | (pRD53Cmd << NBIT_5BITW);
-	frame = 1 | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                                    // @TMP@ ID[3..0],0
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;                                 // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
@@ -484,18 +529,387 @@ namespace Ph2_HwDescription
     pVecReg.push_back(word);
   }
 
-  void RD53::ConvertRowCol2Cores (unsigned int row, unsigned int col,
-				  uint16_t& coreCol,
-				  uint16_t& coreRow,
-				  uint16_t& regionCoreCol,
-				  uint16_t& pixelRegion,
-				  uint16_t& regionCoreRow)
+  void RD53::ConvertRowCol2Cores (unsigned int _row, unsigned int col, uint16_t& colPair, uint16_t& row)
   {
-    coreCol       = floor(col / NPIXCOL_CORE);
-    coreRow       = floor(row / NPIXROW_CORE);
-    regionCoreCol = (col % NPIXCOL_CORE < (NREGION_CORECOL*NPIX_REGION) ? 0 : 1); 
-    pixelRegion   = (col % (NREGION_CORECOL*NPIX_REGION) < NPIX_REGION ? 0 : 1);
-    regionCoreRow = row % NPIXROW_CORE;
+    colPair = col >> (NPIXCOL_PROG/2);
+    row     = _row;
+  }
+  
+  void RD53::ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side,
+				   unsigned int& row, unsigned int& quadCol)
+  {
+    row     = coreRowAndRegion;
+    quadCol = (coreCol << NBIT_SIDE) | side;
+  }
+  
+  uint16_t RD53::getNumberOfChannels () const
+  {
+    return NCOLS * NROWS;
+  }
+
+  bool RD53::isDACLocal (const std::string& dacName)
+  {
+    if (dacName != "PIX_PORTAL") return false;
+    return true;
+  }
+
+  uint8_t RD53::getNumberOfBits (const std::string& dacName)
+  {
+    // #################
+    // # Pixel Section #
+    // #################
+    if (dacName == "PIX_PORTAL")
+	  return 16;
+    if (dacName == "REGION_COL")
+	  return 8;
+    if (dacName == "REGION_ROW")
+      return 8;
+    if (dacName == "PIX_MODE")
+      return 6;
+    if (dacName == "PIX_DEFAULT_CONFIG")
+      return 16;
+
+    // #########################
+    // # Synchronous Front End #
+    // #########################
+    if (dacName == "IBIASP1_SYNC")
+      return 9;
+    if (dacName == "IBIASP2_SYNC")
+      return 9;
+    if (dacName == "IBIAS_SF_SYNC")
+      return 9;
+    if (dacName == "IBIAS_KRUM_SYNC")
+      return 9;
+    if (dacName == "IBIAS_DISC_SYNC")
+      return 9;
+    if (dacName == "ICTRL_SYNCT_SYNC")
+      return 10;
+    if (dacName == "VBL_SYNC")
+      return 10;
+    if (dacName == "VTH_SYNC")
+      return 10;
+    if (dacName == "VREF_KRUM_SYNC")
+      return 10;
+
+    // ####################
+    // # Linear Front End #
+    // ####################
+    if (dacName == "PA_IN_BIAS_LIN")
+      return 9;
+    if (dacName == "FC_BIAS_LIN")
+      return 8;
+    if (dacName == "KRUM_CURR_LIN")
+      return 9;
+    if (dacName == "LDAC_LIN")
+      return 10;
+    if (dacName == "COMP_LIN")
+      return 9;
+    if (dacName == "REF_KRUM_LIN")
+      return 10;
+    if (dacName == "Vthreshold_LIN")
+      return 10;
+
+    // ##########################
+    // # Differential Front End #
+    // ##########################
+    if (dacName == "PRMP_DIFF")
+      return 10;
+    if (dacName == "FOL_DIFF")
+      return 10;
+    if (dacName == "PRECOMP_DIFF")
+      return 10;
+    if (dacName == "COMP_DIFF")
+      return 10;
+    if (dacName == "VFF_DIFF")
+      return 10;
+    if (dacName == "VTH1_DIFF")
+      return 10;
+    if (dacName == "VTH2_DIFF")
+      return 10;
+    if (dacName == "LCC_DIFF")
+      return 10;
+
+    // #######################
+    // # Auxiliary Registers #
+    // #######################
+    if (dacName == "CONF_FE_SYNC")
+      return 5;
+    if (dacName == "CONF_FE_DIFF")
+      return 2;
+    if (dacName == "VOLTAGE_TRIM")
+      return 10;
+
+    // ##################
+    // # Digital Matrix #
+    // ##################
+    if (dacName == "EN_CORE_COL_SYNC")
+      return 16;
+    if (dacName == "EN_CORE_COL_LIN_1")
+      return 16;
+    if (dacName == "EN_CORE_COL_LIN_2")
+      return 1;
+    if (dacName == "EN_CORE_COL_DIFF_1")
+      return 16;
+    if (dacName == "EN_CORE_COL_DIFF_2")
+      return 1;
+    if (dacName == "LATENCY_CONFIG")
+      return 9;
+    if (dacName == "WR_SYNC_DELAY_SYNC")
+      return 5;
+
+    // #############
+    // # Injection #
+    // #############
+    if (dacName == "INJECTION_SELECT")
+      return 6;
+    if (dacName == "CLK_DATA_DELAY")
+      return 9;
+    if (dacName == "VCAL_HIGH")
+      return 12;
+    if (dacName == "VCAL_MED")
+      return 12;
+    if (dacName == "CH_SYNC_CONF")
+      return 12;
+    if (dacName == "GLOBAL_PULSE_ROUTE")
+      return 16;
+    if (dacName == "MONITOR_FRAME_SKIP")
+      return 8;
+    if (dacName == "EN_MACRO_COL_CAL_SYNC_1")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_SYNC_2")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_SYNC_3")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_SYNC_4")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_1")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_2")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_3")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_4")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_5")
+      return 4;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_1")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_2")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_3")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_4")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_5")
+      return 4;
+
+    // #######
+    // # I/O #
+    // #######
+    if (dacName == "DEBUG_CONFIG")
+      return 2;
+    if (dacName == "OUTPUT_CONFIG")
+      return 9;
+    if (dacName == "OUT_PAD_CONFIG")
+      return 14;
+    if (dacName == "GP_LVDS_ROUTE")
+      return 16;
+    if (dacName == "CDR_CONFIG")
+      return 14;
+    if (dacName == "CDR_VCO_BUFF_BIAS")
+      return 10;
+    if (dacName == "CDR_CP_IBIAS")
+      return 10;
+    if (dacName == "CDR_VCO_IBIAS")
+      return 10;
+    if (dacName == "SER_SEL_OUT")
+      return 8;    
+    if (dacName == "CML_CONFIG")
+      return 8;
+    if (dacName == "CML_TAP0_BIAS")
+      return 10;
+    if (dacName == "CML_TAP1_BIAS")
+      return 10;
+    if (dacName == "CML_TAP2_BIAS")
+      return 10;
+    if (dacName == "AURORA_CC_CONFIG")
+      return 8;
+    if (dacName == "AURORA_CB_CONFIG0")
+      return 8;
+    if (dacName == "AURORA_CB_CONFIG1")
+      return 16;
+    if (dacName == "AURORA_INIT_WAIT")
+      return 11;
+
+    // #################################
+    // # Test and Monitoring Functions #
+    // #################################
+    if (dacName == "MONITOR_SELECT")
+      return 14;
+    if (dacName == "HITOR_0_MASK_SYNC")
+      return 16;
+    if (dacName == "HITOR_1_MASK_SYNC")
+      return 16;
+    if (dacName == "HITOR_2_MASK_SYNC")
+      return 16;
+    if (dacName == "HITOR_3_MASK_SYNC")
+      return 16;
+    if (dacName == "HITOR_0_MASK_LIN_0")
+      return 16;
+    if (dacName == "HITOR_0_MASK_LIN_1")
+      return 1;
+    if (dacName == "HITOR_1_MASK_LIN_0")
+      return 16;
+    if (dacName == "HITOR_1_MASK_LIN_1")
+      return 1;
+    if (dacName == "HITOR_2_MASK_LIN_0")
+      return 16;
+    if (dacName == "HITOR_2_MASK_LIN_1")
+      return 1;
+    if (dacName == "HITOR_3_MASK_LIN_0")
+      return 16;
+    if (dacName == "HITOR_3_MASK_LIN_1")
+      return 1;
+    if (dacName == "HITOR_0_MASK_DIFF_0")
+      return 16;
+    if (dacName == "HITOR_0_MASK_DIFF_1")
+      return 1;
+    if (dacName == "HITOR_1_MASK_DIFF_0")
+      return 16;
+    if (dacName == "HITOR_1_MASK_DIFF_1")
+      return 1;
+    if (dacName == "HITOR_2_MASK_DIFF_0")
+      return 16;
+    if (dacName == "HITOR_2_MASK_DIFF_1")
+      return 1;
+    if (dacName == "HITOR_3_MASK_DIFF_0")
+      return 16;
+    if (dacName == "HITOR_3_MASK_DIFF_1")
+      return 1;
+    if (dacName == "MONITOR_CONFIG")
+      return 11;
+    if (dacName == "SENSOR_CONFIG_0")
+      return 12;
+    if (dacName == "SENSOR_CONFIG_1")
+      return 12;
+    if (dacName == "AUTO_READ_0")
+      return 9;
+    if (dacName == "AUTO_READ_1")
+      return 9;
+    if (dacName == "AUTO_READ_2")
+      return 9;
+    if (dacName == "AUTO_READ_3")
+      return 9;
+    if (dacName == "AUTO_READ_4")
+      return 9;
+    if (dacName == "AUTO_READ_5")
+      return 9;
+    if (dacName == "AUTO_READ_6")
+      return 9;
+    if (dacName == "AUTO_READ_7")
+      return 9;
+    if (dacName == "RING_OSC_ENABLE")
+      return 8;
+    if (dacName == "RING_OSC_0")
+      return 16;
+    if (dacName == "RING_OSC_1")
+      return 16;
+    if (dacName == "RING_OSC_2")
+      return 16;
+    if (dacName == "RING_OSC_3")
+      return 16;
+    if (dacName == "RING_OSC_4")
+      return 16;
+    if (dacName == "RING_OSC_5")
+      return 16;
+    if (dacName == "RING_OSC_6")
+      return 16;
+    if (dacName == "RING_OSC_7")
+      return 16;
+    if (dacName == "BCID_CNT")
+      return 16;
+    if (dacName == "TRIG_CNT")
+      return 16;
+    if (dacName == "LOCKLOSS_CNT")
+      return 16;
+    if (dacName == "BITFLIP_WNG_CNT")
+      return 16;
+    if (dacName == "BITFLIP_ERR_CNT")
+      return 16;
+    if (dacName == "CMDERR_CNT")
+      return 16;
+    if (dacName == "WNGFIFO_FULL_CNT_0")
+      return 16;
+    if (dacName == "WNGFIFO_FULL_CNT_1")
+      return 16;
+    if (dacName == "WNGFIFO_FULL_CNT_2")
+      return 16;
+    if (dacName == "WNGFIFO_FULL_CNT_3")
+      return 16;
+    if (dacName == "AI_REGION_COL")
+      return 8;
+    if (dacName == "AI_REGION_ROW")
+      return 9;
+    if (dacName == "HITOR_0_CNT")
+      return 16;
+    if (dacName == "HITOR_1_CNT")
+      return 16;
+    if (dacName == "HITOR_2_CNT")
+      return 16;
+    if (dacName == "HITOR_3_CNT")
+      return 16;
+    if (dacName == "SKIPPED_TRIGGER_CNT")
+      return 16;
+    if (dacName == "ERRWNG_MASK")
+      return 14;
+    if (dacName == "MONITORING_DATA_ADC")
+      return 12;
+    if (dacName == "SELF_TRIGGER_ENABLE")
+      return 4;
+
+    return 0;
+  }
+
+  bool RD53::IsChannelUnMasked (uint32_t cChan) const
+  {
+    unsigned int row, col;
+    RD53::fromVec2Matrix(cChan,row,col);
+    return fPixelsConfig[col].Enable[row];
+  }
+
+  RD53::EventHeader::EventHeader(const uint32_t data)
+  {
+    // mypause();
+    uint32_t header;
+    std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(data);
+    if (header != 1) {
+      LOG (ERROR) << "Invalid RD53 Event Header." << RESET;
+    }
+  }
+    
+  RD53::HitData::HitData(const uint32_t data)
+  {
+    uint32_t core_col, side, all_tots;
+    std::tie(core_col, row, side, all_tots) = unpack_bits<NBIT_CCOL, NBIT_ROW, NBIT_SIDE, NBIT_TOT>(data);
+    
+    unpack_array<NBIT_TOT / NPIX_REGION>(tots, all_tots);
+    
+    col = 4 * pack_bits<NBIT_CCOL, NBIT_SIDE>(core_col, side);
+  }
+
+  std::vector<uint8_t>& RD53::getChipMask()
+  {
+    fChipMask.clear();
+    std::vector<uint8_t> vec(NCOLS*NROWS/8, 0);
+    fChipMask = vec;
+    uint32_t chn;
+
+    for (unsigned int col = 0; col < fPixelsConfig.size(); col++)
+      for (unsigned int row = 0; row < fPixelsConfig[col].Enable.size(); row++)
+	{
+	  chn = RD53::fromMatrix2Vec(row,col);
+	  fChipMask[chn/8] = fChipMask[chn/8] | (fPixelsConfig[col].Enable[row] << (chn % 8));
+	}
   }
 
   template<int NBITS>

@@ -83,9 +83,9 @@ namespace Ph2_HwDescription {
         */
         void saveRegMap ( const std::string& filename );
 
-        const uint16_t getNumberOfChannels() const override { return NCHANNELS; }
+        uint16_t getNumberOfChannels() const override { return NCHANNELS; }
 
-        const bool IsChannelUnMasked(uint32_t cChan) const override {return ( fChipMask[cChan>>3]>>(cChan&0x7)) & 0x1; };
+        bool IsChannelUnMasked(uint32_t cChan) const override {return ( fChipMask[cChan>>3]>>(cChan&0x7)) & 0x1; };
 
         bool isDACLocal(const std::string &dacName) override {
             if(dacName.find("MaskChannel-",0,12)!=std::string::npos || dacName.find("Channel",0,7)!=std::string::npos ) return true;
@@ -99,7 +99,8 @@ namespace Ph2_HwDescription {
             else if(dacName == "TriggerLatency" ) return 9;
             else return 8;
         }
-
+	
+        std::vector<uint8_t>& getChipMask() { return fChipMask; }
 
       protected:
         

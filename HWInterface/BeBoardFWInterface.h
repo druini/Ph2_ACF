@@ -222,20 +222,17 @@ namespace Ph2_HwInterface {
 * \param pBoard
 */
         virtual void ConfigureBoard ( const BeBoard* pBoard ) = 0;
+
 /*!
-* \brief Send a Chip fast reset
+* \brief Send a Chip reset
 */
-        virtual void ChipHardReset() 
-        {
-            LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-        }
+        virtual void ChipReset() = 0;
+
 /*!
-* \brief Send a Chip fast reset
+* \brief Send a Chip re-sync
 */
-        virtual void ChipFastReset() 
-        {
-            LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-        }
+        virtual void ChipReSync() = 0;
+
 /*!
 * \brief Send a Chip trigger
 */

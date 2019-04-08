@@ -14,8 +14,8 @@
 #define __SYSTEMCONTROLLER_H__
 
 #include "FileParser.h"
-#include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/ChipInterface.h"
+#include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
@@ -246,8 +246,6 @@ namespace Ph2_System {
         {
             return fData->GetEvents ( pBoard );
         }
-
-	void ReadHitOrCnt (unsigned int nCnt) const;
     };
 }
 

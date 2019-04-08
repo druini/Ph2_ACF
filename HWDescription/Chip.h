@@ -133,18 +133,16 @@ namespace Ph2_HwDescription {
             fChipId = pChipId;
         }
 
-        virtual const uint16_t getNumberOfChannels() const  = 0;
+        virtual uint16_t getNumberOfChannels() const  = 0;
 
-        const std::vector<uint8_t>& getChipMask() const
-        {
-            return fChipMask;
-        }
-        const bool hasMaskedChannels() const
-        {
-            return fhasMaskedChannels;
-        }
+        virtual std::vector<uint8_t>& getChipMask() = 0;
 
-        virtual const bool IsChannelUnMasked(uint32_t cChan) const = 0;
+        bool hasMaskedChannels() const
+        {
+	  return fhasMaskedChannels;
+        }
+	
+        virtual bool IsChannelUnMasked(uint32_t cChan) const = 0;
 
         virtual bool isDACLocal(const std::string &dacName)  = 0;
 
