@@ -536,10 +536,10 @@ namespace Ph2_HwDescription
   }
   
   void RD53::ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side,
-				   unsigned int& row, unsigned int& quadCol)
+				   unsigned int& row, unsigned int& col)
   {
-    row     = coreRowAndRegion;
-    quadCol = 4 * (coreCol << NBIT_SIDE) | side;
+    row = coreRowAndRegion;
+    col = 4 * ((coreCol << NBIT_SIDE) | side);
   }
   
   uint16_t RD53::getNumberOfChannels () const
@@ -879,14 +879,14 @@ namespace Ph2_HwDescription
 
   RD53::EventHeader::EventHeader(const uint32_t data)
   {
-    // mypause();
     uint32_t header;
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(data);
-    if (header != 1) {
-      LOG (ERROR) << "Invalid RD53 Event Header." << RESET;
-    }
+    if (header != 1)
+      {
+	LOG (ERROR) << "Invalid RD53 event header" << RESET;
+      }
   }
-    
+  
   RD53::HitData::HitData(const uint32_t data)
   {
     uint32_t core_col, side, all_tots;

@@ -88,9 +88,6 @@ namespace Ph2_HwInterface
     RD53RegItem cRegItem(0,0,0);
     cRegItem.fValue = data;
 
-     // @TMP@
-    // LOG(INFO) << BOLDRED << pRegNode << " <- " << data << RESET;
-
     if (strcmp(pRegNode.c_str(),"GLOBAL_PULSE") == 0)
       pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::GlobalPulse(), false, serialSymbols);
     else if (strcmp(pRegNode.c_str(),"SYNC") == 0)
@@ -214,8 +211,8 @@ namespace Ph2_HwInterface
 	// Removing bit for pixel portal reading
 	outputDecoded.first[i] = outputDecoded.first[i] & static_cast<uint16_t>(pow(2,NBIT_ADDR)-1);
 	// @TMP@
-//	  LOG (INFO) << BLUE << "\t--> Address: " << BOLDYELLOW << "0x" << std::hex << unsigned(outputDecoded.first[i])
-//	    << BLUE << "\tValue: " << BOLDYELLOW << "0x" << unsigned(outputDecoded.second[i]) << std::dec << RESET;
+	// LOG (INFO) << BLUE << "\t--> Address: " << BOLDYELLOW << "0x" << std::hex << unsigned(outputDecoded.first[i])
+	// 	   << BLUE << "\tValue: " << BOLDYELLOW << "0x" << unsigned(outputDecoded.second[i]) << std::dec << RESET;
       }
 
     return outputDecoded;
@@ -243,8 +240,7 @@ namespace Ph2_HwInterface
 
     // @TMP@
     pRD53->resetMask();
-    for (unsigned i = 0; i < 192; i++)
-      pRD53->enablePixel(i,148);
+    pRD53->enablePixel(50,148);
     // pRD53->enableAllPixels();
 
     std::vector<uint16_t> dataVec;
@@ -263,8 +259,6 @@ namespace Ph2_HwInterface
 
 	for (unsigned int j = 0; j < NROWS; j++)
 	  {
-	    // @TMP@
-	    // LOG (INFO) << BLUE << "Configuring row #" << j << RESET;
 	    pRD53->ConvertRowCol2Cores (j,i,colPair,row);
 	    data = row;
 	    this->WriteChipReg(pRD53,"REGION_ROW",data);

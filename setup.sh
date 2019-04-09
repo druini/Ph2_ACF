@@ -1,15 +1,16 @@
 #!/bin/bash
-echo "----------"
-export CBCDAQ=$HOME/CBCDAQ
-export KERNELRELEASE=$(uname -r)
 
-#CACTUS
+##########
+# CACTUS #
+##########
 export CACTUSBIN=/opt/cactus/bin
 export CACTUSLIB=/opt/cactus/lib
 export CACTUSINCLUDE=/opt/cactus/include
 
-
-# BOOST
+#########
+# BOOST #
+#########
+export KERNELRELEASE=$(uname -r)
 if [[ $KERNELRELEASE == *"el6"* ]]; then
     export BOOST_LIB=/opt/cactus/lib
     export BOOST_INCLUDE=/opt/cactus/include
@@ -18,37 +19,49 @@ else
     export BOOST_LIB=/usr/lib64
 fi
 
-
-#ROOT
-#source /usr/local/bin/thisroot.shs
+########
+# ROOT #
+########
 #source /opt/local/root/bin/thisroot.sh
-#export ROOTLIB=/usr/local/lib/root
 export ROOTLIB=$ROOTSYS/myBuild/lib
-#export ROOTSYS=/usr/local/lib/root
 
-#ZMQ
+#######
+# ZMQ #
+#######
 export ZMQ_HEADER_PATH=/usr/include/zmq.hpp
 
-#Ph2_ACF
+###########
+# Ph2_ACF #
+###########
 export BASE_DIR=$(pwd)
 
-#External Plugins
+####################
+# External Plugins #
+####################
 export ANTENNADIR=$BASE_DIR/CMSPh2_AntennaDriver
 export AMC13DIR=/opt/cactus/include/amc13
-#won't link properly if I don't use this [SS]
 export USBINSTDIR=~/Ph2_USBInstDriver
 export USBINSTDIR=$BASE_DIR/../Ph2_USBInstDriver
 
-#ANTENNA
+###########
+# ANTENNA #
+###########
 export ANTENNALIB=$ANTENNADIR/lib
-#HMP4040
+
+###########
+# HMP4040 #
+###########
 export USBINSTLIB=$USBINSTDIR/lib
 
-
+##########
+# System #
+##########
 export PATH=$BASE_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:${LD_LIBRARY_PATH}
 
-
+#########
+# Flags #
+#########
 export HttpFlag='-D__HTTP__'
 export ZmqFlag='-D__ZMQ__'
 export USBINSTFlag='-D__USBINST__'
@@ -57,3 +70,5 @@ export AntennaFlag='-D__ANTENNA__'
 export DevFlags='-D__DEV__'
 export Root5Flag='-D__ROOT5__'
 export Root6Flag='-D__ROOT6__'
+
+echo "---DONE---"

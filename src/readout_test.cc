@@ -47,8 +47,8 @@ void print_data(Stream& s, It begin, It end) {
 
 void readout(FC7FWInterface* board_interface, RD53Interface* chip_interface, BeBoard* pBoard) {
     
-    std::cout << "ResetIPbus" << std::endl;
-    board_interface->ResetIPbus();
+    std::cout << "ResetReadout" << std::endl;
+    board_interface->ResetReadout();
     usleep(10000);
 
     // std::cout << "ResetReadout" << std::endl;

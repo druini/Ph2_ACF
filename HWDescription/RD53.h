@@ -125,7 +125,7 @@ namespace Ph2_HwDescription
 		    const std::vector<uint16_t> * dataVec = NULL);
 
     void ConvertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& colPair, uint16_t& row);
-    void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& quadCol);
+    void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& col);
 
     static uint16_t ResetEvtCtr() { return RESET_ECR;  }
     static uint16_t ResetBcrCtr() { return RESET_BCR;  }
