@@ -112,9 +112,8 @@ namespace Ph2_HwInterface
     void ChipReSync() override;
 
     // new
-    struct ChipData {
-      template <class It>
-      ChipData(const It& data, size_t n);
+    struct ChipFrame {
+      ChipFrame(const uint32_t data0, const uint32_t data1);
 
       uint16_t error_code;
       uint16_t hybrid_id;
@@ -122,16 +121,11 @@ namespace Ph2_HwInterface
       uint16_t l1a_data_size;
       uint16_t chip_type;
       uint16_t frame_delay;
-
-      RD53::EventHeader chip_event_header;
-
-      std::vector<RD53::HitData> hit_data;
     };
 
     // new
     struct Event {
-        template <class It>
-        Event(const It& data, size_t n);
+        Event(const uint32_t* data, size_t n);
 
         uint16_t block_size;
         uint16_t tlu_trigger_id;
@@ -140,7 +134,8 @@ namespace Ph2_HwInterface
         uint16_t l1a_counter;
         uint32_t bx_counter;
 
-        std::vector<ChipData> chip_data;
+        std::vector<ChipFrame> chip_frames;
+        std::vector<RD53::Event> chip_events;
     };
 
     // new

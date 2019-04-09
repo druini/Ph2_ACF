@@ -877,13 +877,15 @@ namespace Ph2_HwDescription
     return fPixelsConfig[col].Enable[row];
   }
 
-  RD53::EventHeader::EventHeader(const uint32_t data)
+  RD53::Event::Event(const uint32_t* data, size_t n)
   {
-    // mypause();
     uint32_t header;
-    std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(data);
+    std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(*data);
     if (header != 1) {
       LOG (ERROR) << "Invalid RD53 Event Header." << RESET;
+    }
+    for (size_t i = 1; i < n; i++) {
+      this->data.emplace_back(data[i]);
     }
   }
     

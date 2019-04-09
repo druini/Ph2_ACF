@@ -17,7 +17,8 @@
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Utilities.h"
-#include "../Utils/RD53Event.h"
+
+#include "../Utils/bit_packing.h"
 
 #include <math.h>
 #include <iomanip>
@@ -136,18 +137,6 @@ namespace Ph2_HwDescription
     static uint16_t NoOperation() { return NOOP;       }
     static uint16_t Sync()        { return SYNC;       }
 
-
-    // ##################
-    // # Data structure #
-    // ##################
-    struct EventHeader
-    {
-      EventHeader(const uint32_t data);
-      
-      uint16_t trigger_id;
-      uint16_t trigger_tag;
-      uint16_t bc_id;
-    };
     
     struct HitData
     {
@@ -156,6 +145,27 @@ namespace Ph2_HwDescription
       uint16_t row;
       uint16_t col;
       uint8_t tots[NPIX_REGION];
+    };
+
+    struct Event {
+      Event(const uint32_t* data, size_t n);
+
+      // Event(const EventHeader& header, const std::vector<HitData>& data)
+      //   : header(header)
+      //   , data(data)
+      // {}
+
+      // Event(const EventHeader& header, std::vector<HitData>&& data)
+      //   : header(header)
+      //   , data(data)
+      // {}
+
+      // header
+      uint16_t trigger_id;
+      uint16_t trigger_tag;
+      uint16_t bc_id;
+
+      std::vector<HitData> data;
     };
 
 
