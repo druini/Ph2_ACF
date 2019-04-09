@@ -407,27 +407,6 @@ namespace Ph2_HwInterface
     if (bitReg.count() == auroraReg)
     {
       LOG (INFO) << BOLDGREEN << "\t--> Aurora channels up number as expected: " << BOLDYELLOW << bitReg.count() << RESET;
-
-      // // Reset Readout
-      // WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",1);
-      // // usleep(WAIT);
-      // WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",0);
-      // // usleep(WAIT);
-
-      // LOG (INFO) << YELLOW << "Waiting for DDR3 calibration" << RESET;
-      // while (!ReadReg("user.stat_regs.readout4.ddr3_initial_calibration_done").value()) {
-      //     usleep(WAIT);
-      // }
-      // LOG (INFO) << GREEN << "DDR3 calibration done." << RESET;
-
-      // // ConfigureReadout
-      // WriteStackReg({
-      //       {"user.ctrl_regs.readout_block.data_handshake_en", HANDSHAKE_EN},
-      //       {"user.ctrl_regs.readout_block.l1a_timeout_value", 4000},
-      //       {"user.ctrl_regs.Hybrid1.Hybrid_en", HYBRID_EN},
-      //       {"user.ctrl_regs.Hybrid1.Chips_en", READOUT_CHIP_MASK}
-      //   });
-        
       return true;
     }
     LOG (INFO) << BOLDRED << "\t--> Aurora channels up number less than expected: " << BOLDYELLOW << bitReg.count() << RESET;
@@ -437,76 +416,21 @@ namespace Ph2_HwInterface
   void FC7FWInterface::Start()
   {
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
-
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_2.trigger_source",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_2.autozero_source",3);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay",0);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_2.backpressure_en",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_2.veto_en",1);
-    // usleep(WAIT);
-
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",0);
-    // usleep(WAIT);
-
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_7.autozero_freq",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",10);
-    // usleep(WAIT);
-
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.start_trigger",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.start_trigger",0);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
-    // usleep(WAIT);
   }
 
   void FC7FWInterface::Stop()
   {
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.stop_trigger");
-
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.stop_trigger",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.stop_trigger",0);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
-    // usleep(WAIT);
   }
 
   void FC7FWInterface::Pause()
   {
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.stop_trigger");
-
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.stop_trigger",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.stop_trigger",0);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
-    // usleep(WAIT);
   }
 
   void FC7FWInterface::Resume()
   {
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
-
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.start_trigger",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.start_trigger",0);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
-    // usleep(WAIT);
   }
 
   uint32_t FC7FWInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
@@ -655,24 +579,12 @@ namespace Ph2_HwInterface
 
       // Reset Readout
     WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",1);
-    // usleep(WAIT);
     WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",0);
-    // usleep(WAIT);
-
     while (!ReadReg("user.stat_regs.readout4.ddr3_initial_calibration_done").value()) {
         LOG (INFO) << YELLOW << "Waiting for DDR3 calibration" << RESET;
         usleep(WAIT);
     }
     LOG (INFO) << GREEN << "DDR3 calibration done." << RESET;
-
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_reset",1);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_reset",0);
-    // usleep(WAIT);
-    // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe",0);
-    // usleep(WAIT);
   }
 
   void FC7FWInterface::ChipReset()
@@ -805,9 +717,7 @@ namespace Ph2_HwInterface
       });
 
       SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
-
-    
-
+      
     // ConfigureReadout
     WriteStackReg({
           {"user.ctrl_regs.readout_block.data_handshake_en", HANDSHAKE_EN},
@@ -816,15 +726,5 @@ namespace Ph2_HwInterface
           {"user.ctrl_regs.Hybrid1.Chips_en", READOUT_CHIP_MASK}
     });
     usleep(DEEPSLEEP);
-
-      // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.load_config", 1);
-      // usleep(WAIT);
-      // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 1);
-      // usleep(WAIT);
-
-      // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0);
-      // usleep(WAIT);
-      // WriteReg ("user.ctrl_regs.fast_cmd_reg_1.load_config", 0);
-      // usleep(WAIT);
     }
 }

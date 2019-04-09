@@ -136,33 +136,6 @@ namespace Ph2_HwDescription
     static uint16_t NoOperation() { return NOOP;       }
     static uint16_t Sync()        { return SYNC;       }
 
-    /* static void DecodeData (uint32_t data, */
-    /* 			    bool        & isHeader, */
-    /* 			    unsigned int& trigID, */
-    /* 			    unsigned int& trigTag, */
-    /* 			    unsigned int& BCID, */
-    /* 			    uint16_t    & coreRowAndRegion, */
-    /* 			    uint16_t    & coreCol, */
-    /* 			    uint8_t     & side, */
-    /* 			    uint16_t    & ToT) */
-    /* { */
-    /*   unsigned int header = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID + NBIT_HEADER)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1))) >> (NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID); */
-
-    /*   if (header == HEADER) */
-    /* 	{ */
-    /* 	  trigID  = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1))) >> (NBIT_BCID + NBIT_TRGTAG); */
-    /* 	  trigTag = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1)               - static_cast<uint32_t>(pow(2,NBIT_BCID)-1)))               >> NBIT_BCID; */
-    /* 	  BCID    =  data &  static_cast<uint32_t>(pow(2,NBIT_BCID)-1); */
-    /* 	} */
-    /*   else */
-    /* 	{ */
-    /* 	  coreCol          = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW + NBIT_CCOL)-1) - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1))) >> (NBIT_TOT + NBIT_SIDE + NBIT_ROW); */
-    /* 	  coreRowAndRegion = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1)             - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)))            >> (NBIT_TOT + NBIT_SIDE); */
-    /* 	  side             = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)                        - static_cast<uint32_t>(pow(2,NBIT_TOT)-1)))                        >> NBIT_TOT; */
-    /* 	  ToT              =  data &  static_cast<uint32_t>(pow(2,NBIT_TOT)-1); */
-    /* 	} */
-    /* } */
-
 
     // ##################
     // # Data structure #

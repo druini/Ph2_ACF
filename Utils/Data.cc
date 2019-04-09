@@ -40,6 +40,15 @@ namespace Ph2_HwInterface {
     {
         Reset();
 
+        // if (/*FC7*/) {
+        //     auto fc7_events = FC7FWInterface::DecodeEvents(pData);
+        //     for (const auto& evt : fc7_events) {
+        //         for (const auto& chip_data : evt.chip_data)
+        //             fEventList.push_back(new RD53Event(chip_data.chip_event_header, chip_data.hit_data));
+        //     }
+        // }
+        // else 
+        {
         fNevents = static_cast<uint32_t> ( pNevents );
         // be aware that eventsize is not constant for the zs event, so we are not using it
         fEventSize = static_cast<uint32_t> ( (pData.size() ) / fNevents );
@@ -143,6 +152,7 @@ namespace Ph2_HwInterface {
             cSwapIndex++;
             cZSWordIndex++;
 
+        }
         }
     }
 

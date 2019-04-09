@@ -16,9 +16,9 @@ using namespace std;
 INITIALIZE_EASYLOGGINGPP
 
 
-void PrintEvents(std::vector<FC7FWInterface::Event>& events, int limit)
+void PrintEvents(std::vector<FC7FWInterface::Event>& events)
 {
-  for (int i = 0; i < limit; i++)
+  for (int i = 0; i < events.size(); i++)
     {
       auto& evt = events[i];
       LOG (INFO) << BOLDGREEN << "Event " << i << RESET;
@@ -51,11 +51,12 @@ void PrintEvents(std::vector<FC7FWInterface::Event>& events, int limit)
 			  << ", Row: " << region_data.row 
 			  << ", ToTs: [" << +region_data.tots[0] << "," << +region_data.tots[1] << "," << +region_data.tots[2] << "," << +region_data.tots[3] << "]"
 			  << RESET;
-            }
+            
         }
     }
-}
+} 
 
+}
 
 int main (int argc, char** argv)
 {
@@ -114,6 +115,7 @@ int main (int argc, char** argv)
   // ##############################################
   // # Initialize DAQ and readback FC7 FW version #
   // ##############################################
+  // sys.ConfigureHardware(argv[1]); same as below ...
   LOG(INFO) << BOLDYELLOW << "@@@ Initializing the software @@@" << RESET;
   std::stringstream outp;
   outp.clear(); outp.str("");
@@ -191,9 +193,9 @@ int main (int argc, char** argv)
     // }
   
   // @TMP@
-  PrintEvents(events,15);
+  PrintEvents(events);
 
-  cSystemController.Stop(pBoard);
+  cSystemController.Stop(pBoard); // Not needed ... try
   cSystemController.Destroy();
   LOG(INFO) << BOLDBLUE << "@@@ End of CMSIT miniDAQ @@@" << RESET;
 

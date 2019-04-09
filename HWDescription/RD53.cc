@@ -539,7 +539,7 @@ namespace Ph2_HwDescription
 				   unsigned int& row, unsigned int& quadCol)
   {
     row     = coreRowAndRegion;
-    quadCol = (coreCol << NBIT_SIDE) | side;
+    quadCol = 4 * (coreCol << NBIT_SIDE) | side;
   }
   
   uint16_t RD53::getNumberOfChannels () const

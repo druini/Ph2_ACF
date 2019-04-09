@@ -162,7 +162,7 @@ namespace Ph2_HwInterface
       uint32_t delay_after_autozero = 0;
       uint32_t delay_after_first_cal = 0;
       uint32_t delay_after_second_cal = 0;
-      uint16_t delay_loop = 0;
+      uint16_t delay_loop = 10;
     };
 
     enum class TriggerSource : uint32_t {
