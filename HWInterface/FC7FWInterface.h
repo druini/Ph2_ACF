@@ -150,7 +150,7 @@ namespace Ph2_HwInterface
       std::vector<ChipData> chip_data;
     };
     
-    struct TestFSMConfig
+    struct FastCmdFSMConfig
     {
       bool ecr_en        = false;
       bool first_cal_en  = false;
@@ -202,7 +202,7 @@ namespace Ph2_HwInterface
       uint32_t autozero_freq       = 0; // Used when autozero_source == AutozeroSource::UserDefined
       uint32_t veto_after_autozero = 0; // Used when autozero_source == AutozeroSource::UserDefined
       
-      TestFSMConfig test_fsm;
+      FastCmdFSMConfig fast_cmd_fsm;
     };
 
     static std::vector<Event> DecodeEvents (const std::vector<uint32_t>& data); 

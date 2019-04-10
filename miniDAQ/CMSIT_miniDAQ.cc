@@ -51,10 +51,9 @@ void PrintEvents(std::vector<FC7FWInterface::Event>& events)
 			  << ", Row: " << region_data.row 
 			  << ", ToTs: [" << +region_data.tots[0] << "," << +region_data.tots[1] << "," << +region_data.tots[2] << "," << +region_data.tots[3] << "]"
 			  << RESET;
-            
-        }
-    }
-} 
+	    }
+	}
+    } 
 
 }
 
@@ -116,31 +115,31 @@ int main (int argc, char** argv)
   // # Initialize DAQ and readback FC7 FW version #
   // ##############################################
   // sys.ConfigureHardware(argv[1]); same as below ...
-  LOG(INFO) << BOLDYELLOW << "@@@ Initializing the software @@@" << RESET;
+  LOG (INFO) << BOLDYELLOW << "@@@ Initializing the software @@@" << RESET;
   std::stringstream outp;
   outp.clear(); outp.str("");
   cSystemController.InitializeHw(cHWFile,outp);
-  LOG(INFO) << BOLDBLUE << "Output from file parsing (if any): " << outp.str() << RESET;
+  LOG (INFO) << BOLDBLUE << "Output from file parsing (if any): " << outp.str() << RESET;
 
 
   // #############################
   // # Parse configuration files #
   // #############################
-  LOG(INFO) << BOLDYELLOW << "@@@ Initializing accessory setting @@@" << RESET;
+  LOG (INFO) << BOLDYELLOW << "@@@ Initializing accessory setting @@@" << RESET;
   outp.clear(); outp.str("");
   cSystemController.InitializeSettings(cHWFile,outp);
-  LOG(INFO) << BOLDBLUE << "Output from file parsing (if any): " << outp.str() << RESET;
+  LOG (INFO) << BOLDBLUE << "Output from file parsing (if any): " << outp.str() << RESET;
 
   if (cConfigure == true)
     {
-      LOG(INFO) << BOLDYELLOW << "@@@ Initializing the hardware @@@" << RESET;
+      LOG (INFO) << BOLDYELLOW << "@@@ Initializing the hardware @@@" << RESET;
 
       // #####################################
       // # Initialize both FC7 and RD53 ROCs #
       // #####################################
       cSystemController.ConfigureHw();
 
-      LOG(INFO) << BOLDBLUE << "@@@ Hardware initialization done @@@" << RESET;
+      LOG (INFO) << BOLDBLUE << "@@@ Hardware initialization done @@@" << RESET;
     }
   
   
@@ -148,7 +147,7 @@ int main (int argc, char** argv)
   // # Start data taking #
   // #####################
   std::cout << std::endl;
-  LOG(INFO) << BOLDYELLOW << "@@@ Starting data-taking @@@" << RESET;
+  LOG (INFO) << BOLDYELLOW << "@@@ Starting data-taking @@@" << RESET;
   BeBoard* pBoard = cSystemController.fBoardVector.at(0);
   auto RD53Board = static_cast<FC7FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
 
@@ -159,45 +158,32 @@ int main (int argc, char** argv)
   FC7FWInterface::FastCommandsConfig cfg;
   cfg.trigger_source = FC7FWInterface::TriggerSource::TestFSM;
   cfg.n_triggers = nEvents;
-  cfg.test_fsm.delay_loop = 8;
 
-  LOG(INFO) << BOLDBLUE << "ConfigureFastCommands" << RESET;
+  LOG (INFO) << BOLDBLUE << "ConfigureFastCommands" << RESET;
   RD53Board->ConfigureFastCommands(cfg);
 
-  LOG(INFO) << BOLDBLUE << "SendFastECR" << RESET;
+  LOG (INFO) << BOLDBLUE << "SendFastECR" << RESET;
   RD53Board->ChipReset();
 
-  LOG(INFO) << BOLDBLUE << "SendFastBCR" << RESET;
+  LOG (INFO) << BOLDBLUE << "SendFastBCR" << RESET;
   RD53Board->ChipReSync();
 
 
+  // ###########
+  // # Running #
+  // ###########
   cSystemController.Start(pBoard);
   
   std::vector<uint32_t> data;
-  unsigned int cN = 1;
-  // while (cN <= nEvents)
-  //   {
-      // @TMP@
-      RD53Board->ReadData(pBoard, 0, data, 0);
-      auto events = FC7FWInterface::DecodeEvents(data);
-
-      // if (cN + cPacketSize >= nEvents)
-      // cSystemController.Stop(pBoard);
-      // const std::vector<Event*>& events = cSystemController.GetEvents(pBoard);
-      
-      // for (auto& ev : events)
-      //   {
-      if (cN % 10  == 0) LOG (INFO) << GREEN << "\t--> Recorded " << cN << " events" << RESET;
-      cN++;
-      //   }
-    // }
-  
-  // @TMP@
+  RD53Board->ReadData(pBoard, 0, data, 0);
+  auto events = FC7FWInterface::DecodeEvents(data);
+  // const std::vector<Event*>& events = cSystemController.GetEvents(pBoard);
   PrintEvents(events);
 
-  cSystemController.Stop(pBoard); // Not needed ... try
+
+  cSystemController.Stop(pBoard);
   cSystemController.Destroy();
-  LOG(INFO) << BOLDBLUE << "@@@ End of CMSIT miniDAQ @@@" << RESET;
+  LOG (INFO) << BOLDBLUE << "@@@ End of CMSIT miniDAQ @@@" << RESET;
 
   return 0;
 }

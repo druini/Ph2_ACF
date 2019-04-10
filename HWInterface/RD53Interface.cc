@@ -31,7 +31,7 @@ namespace Ph2_HwInterface
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    this->WriteRD53Mask (pRD53, false);
+    // this->WriteRD53Mask (pRD53, false);
 
     return true;
   }
@@ -102,48 +102,49 @@ namespace Ph2_HwInterface
 	pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols);
 	// pRD53->EncodeCMD (cRegItem, pRD53->getChipId(), RD53::WriteCmd(), symbols);
 
-	if (pVerifyLoop) {
-	  std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
-	  unsigned int it      = 0;
-	  unsigned int row     = 0;
-	  unsigned int pixMode = 0;
-	  do
-	    {
-	      it++;
-	      if (it > NWRITE_ATTEMPTS) break;
+	if (pVerifyLoop == true)
+	  {
+	    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
+	    unsigned int it      = 0;
+	    unsigned int row     = 0;
+	    unsigned int pixMode = 0;
+	    do
+	      {
+		it++;
+		if (it > NWRITE_ATTEMPTS) break;
+		
+		if (((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (it == 1)) || (strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0))
+		  fBoardFW->WriteChipCommand (serialSymbols);
+		
+		if ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) & (it == 1))
+		  {
+		    outputDecoded = this->ReadRD53Reg (pRD53, "PIX_MODE");
+		    pixMode = outputDecoded.second[0];
 
-	      if (((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (it == 1)) || (strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0))
-		fBoardFW->WriteChipCommand (serialSymbols);
+		    outputDecoded = this->ReadRD53Reg (pRD53, "REGION_ROW");
+		    row = outputDecoded.second[0];
+		  }
 
-	      if ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) & (it == 1))
-		{
-		  outputDecoded = this->ReadRD53Reg (pRD53, "PIX_MODE");
-		  pixMode = outputDecoded.second[0];
+		if (pixMode == 0)
+		  outputDecoded = this->ReadRD53Reg (pRD53, pRegNode);
 
-		  outputDecoded = this->ReadRD53Reg (pRD53, "REGION_ROW");
-		  row = outputDecoded.second[0];
-		}
+	      }
+	    while ((pixMode == 0) &&
+		   (((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded.first[0] != cRegItem.fAddress)) ||
+		    ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded.first[0] != row))               ||
+		    (outputDecoded.second[0] != cRegItem.fValue)));
 
-	      if (pixMode == 0)
-		outputDecoded = this->ReadRD53Reg (pRD53, pRegNode);
-
-	    }
-	  while ((pixMode == 0) &&
-		 (((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded.first[0] != cRegItem.fAddress)) ||
-		  ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded.first[0] != row))               ||
-		  (outputDecoded.second[0] != cRegItem.fValue)));
-
-	  if (it > NWRITE_ATTEMPTS)
-	    {
-	      LOG (INFO) << BOLDRED << "Error while writing into RD53: reached the maximum number of attempts (" << NWRITE_ATTEMPTS << ")" << RESET;
-	      return false;
-	    }
-	  else
-	    {
-	      pRD53->setReg (pRegNode, cRegItem.fValue);
-	      return true;
-	    }
-	}
+	    if (it > NWRITE_ATTEMPTS)
+	      {
+		LOG (INFO) << BOLDRED << "Error while writing into RD53 reg. " << pRegNode << ": reached the maximum number of attempts (" << NWRITE_ATTEMPTS << ")" << RESET;
+		return false;
+	      }
+	    else
+	      {
+		pRD53->setReg (pRegNode, cRegItem.fValue);
+		return true;
+	      }
+	  }
       }
 
     // fBoardFW->SerializeSymbols (symbols,serialSymbols);

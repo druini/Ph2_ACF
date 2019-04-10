@@ -555,7 +555,7 @@ namespace Ph2_HwInterface
     WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",1);
     WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",0);
 
-    while (!ReadReg("user.stat_regs.readout4.ddr3_initial_calibration_done").value())
+    while (!ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done").value())
       {
         LOG (INFO) << YELLOW << "Waiting for DDR3 calibration" << RESET;
         usleep(DEEPSLEEP);
@@ -668,18 +668,18 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.fast_cmd_reg_2.veto_en",                  (uint32_t)config.veto_en},
 	{"user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",       (uint32_t)config.n_triggers},
 
-	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_ecr_en",            (uint32_t)config.test_fsm.ecr_en},
-	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_test_pulse_en",     (uint32_t)config.test_fsm.first_cal_en},
-	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en",   (uint32_t)config.test_fsm.second_cal_en},
-	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en",        (uint32_t)config.test_fsm.trigger_en},
-	{"user.ctrl_regs.fast_cmd_reg_3.delay_after_ecr",          (uint32_t)config.test_fsm.delay_after_ecr},
-	{"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime",           (uint32_t)config.test_fsm.first_cal_data},
-	{"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse",  (uint32_t)config.test_fsm.delay_after_first_cal},
-	{"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject",          (uint32_t)config.test_fsm.second_cal_data},
-	{"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)config.test_fsm.delay_after_second_cal},
-	{"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero",     (uint32_t)config.test_fsm.delay_after_autozero},
-	{"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse",  (uint32_t)config.test_fsm.delay_loop},
-	{"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",           (uint32_t)config.test_fsm.glb_pulse_data},
+	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_ecr_en",            (uint32_t)config.fast_cmd_fsm.ecr_en},
+	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_test_pulse_en",     (uint32_t)config.fast_cmd_fsm.first_cal_en},
+	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en",   (uint32_t)config.fast_cmd_fsm.second_cal_en},
+	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en",        (uint32_t)config.fast_cmd_fsm.trigger_en},
+	{"user.ctrl_regs.fast_cmd_reg_3.delay_after_ecr",          (uint32_t)config.fast_cmd_fsm.delay_after_ecr},
+	{"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime",           (uint32_t)config.fast_cmd_fsm.first_cal_data},
+	{"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse",  (uint32_t)config.fast_cmd_fsm.delay_after_first_cal},
+	{"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject",          (uint32_t)config.fast_cmd_fsm.second_cal_data},
+	{"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)config.fast_cmd_fsm.delay_after_second_cal},
+	{"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero",     (uint32_t)config.fast_cmd_fsm.delay_after_autozero},
+	{"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse",  (uint32_t)config.fast_cmd_fsm.delay_loop},
+	{"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",           (uint32_t)config.fast_cmd_fsm.glb_pulse_data},
 
 	{"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",            (uint32_t)config.autozero_freq},
 	{"user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",      (uint32_t)config.veto_after_autozero}
