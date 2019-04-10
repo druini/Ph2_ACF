@@ -57,7 +57,7 @@ void readout(FC7FWInterface* board_interface, RD53Interface* chip_interface, BeB
 
 
     FC7FWInterface::FastCommandsConfig cfg;
-    cfg.trigger_source = FC7FWInterface::TriggerSource::TestFSM;
+    cfg.trigger_source = FC7FWInterface::TriggerSource::FastCMDFSM;
     cfg.n_triggers = 2;
     cfg.fast_cmd_fsm.delay_loop = 8;
     // cfg.test_fsm.first_cal_data = 65535;

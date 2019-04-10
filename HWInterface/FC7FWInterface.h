@@ -150,28 +150,10 @@ namespace Ph2_HwInterface
       std::vector<ChipData> chip_data;
     };
     
-    struct FastCmdFSMConfig
-    {
-      bool ecr_en        = false;
-      bool first_cal_en  = false;
-      bool second_cal_en = false;
-      bool trigger_en    = true;
-      
-      uint32_t first_cal_data  = 0;
-      uint32_t second_cal_data = 0;
-      uint32_t glb_pulse_data  = 0;
-      
-      uint32_t delay_after_ecr        = 0;
-      uint32_t delay_after_autozero   = 0;
-      uint32_t delay_after_first_cal  = 0;
-      uint32_t delay_after_second_cal = 0;
-      uint16_t delay_loop             = 10;
-    };
-    
     enum class TriggerSource : uint32_t
     {
       IPBus = 1,
-      TestFSM,
+      FastCMDFSM,
       TTC,
       TLU,
       External,
@@ -183,26 +165,50 @@ namespace Ph2_HwInterface
     enum class AutozeroSource : uint32_t
     {
       IPBus = 1,
-      TestFSM,
-      UserDefined,
+      FastCMDFSM,
+      FreeRunning,
       Disabled = 0
+    };
+    
+    struct FastCmdFSMConfig
+    {
+      bool ecr_en        = false;
+      bool first_cal_en  = false;
+      bool second_cal_en = false;
+      bool trigger_en    = false;
+      
+      uint32_t first_cal_data  = 0;
+      uint32_t second_cal_data = 0;
+      
+      uint32_t delay_after_ecr        =  1;
+      uint32_t delay_after_autozero   = 10;
+      uint32_t delay_after_first_cal  =  1;
+      uint32_t delay_after_second_cal =  1;
+      uint16_t delay_loop             = 20;
+    };
+    
+    struct Autozero
+    {
+      AutozeroSource autozero_source = AutozeroSource::FastCMDFSM;
+
+      uint32_t glb_pulse_data      = 0;
+      uint32_t autozero_freq       = 0; // Used when autozero_source == AutozeroSource::UserDefined
+      uint32_t veto_after_autozero = 0; // Used when autozero_source == AutozeroSource::UserDefined      
     };
     
     struct FastCommandsConfig
     {
-      TriggerSource trigger_source   = TriggerSource::IPBus;
-      AutozeroSource autozero_source = AutozeroSource::IPBus;
+      TriggerSource trigger_source = TriggerSource::FastCMDFSM;
       
       bool initial_ecr_en  = false;
       bool backpressure_en = false;
       bool veto_en         = false;
 
-      uint32_t n_triggers          = 0;
-      uint32_t ext_trigger_delay   = 0; // Used when trigger_source  == TriggerSource::External
-      uint32_t autozero_freq       = 0; // Used when autozero_source == AutozeroSource::UserDefined
-      uint32_t veto_after_autozero = 0; // Used when autozero_source == AutozeroSource::UserDefined
+      uint32_t n_triggers        = 0;
+      uint32_t ext_trigger_delay = 0; // Used when trigger_source == TriggerSource::External
       
       FastCmdFSMConfig fast_cmd_fsm;
+      Autozero         autozero;
     };
 
     static std::vector<Event> DecodeEvents (const std::vector<uint32_t>& data); 

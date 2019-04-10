@@ -148,16 +148,51 @@ int main (int argc, char** argv)
   // #####################
   std::cout << std::endl;
   LOG (INFO) << BOLDYELLOW << "@@@ Starting data-taking @@@" << RESET;
-  BeBoard* pBoard = cSystemController.fBoardVector.at(0);
+  auto pBoard  = cSystemController.fBoardVector.at(0);
+  auto pModule = pBoard->fModuleVector.at(0);
+  auto pChip   =  pModule->fChipVector.at(0);
   auto RD53Board = static_cast<FC7FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
 
 
   // ###############
   // # Configuring #
   // ###############
+  RD53::CalCmd calcmd;
   FC7FWInterface::FastCommandsConfig cfg;
-  cfg.trigger_source = FC7FWInterface::TriggerSource::TestFSM;
-  cfg.n_triggers = nEvents;
+
+  cfg.trigger_source = FC7FWInterface::TriggerSource::FastCMDFSM;
+  cfg.n_triggers     = nEvents;
+  uint8_t chipID     = pChip->getChipId();
+
+  calcmd.cal_edge_mode  = 1;
+  calcmd.cal_edge_delay = 0;
+  calcmd.cal_edge_width = 4;
+  calcmd.cal_aux_mode   = 0;
+  calcmd.cal_aux_delay  = 0;
+  cfg.fast_cmd_fsm.first_cal_data  = pack_bits<NBIT_CHIPID,NBIT_CAL_EDGE_MODE,NBIT_CAL_EDGE_DELAY,NBIT_CAL_EDGE_WIDTH,NBIT_CAL_AUX_MODE,NBIT_CAL_AUX_DELAY>(chipID,
+																			    calcmd.cal_edge_mode,
+																			    calcmd.cal_edge_delay,
+																			    calcmd.cal_edge_width,
+																			    calcmd.cal_aux_mode,
+																			    calcmd.cal_aux_delay);
+
+  calcmd.cal_edge_mode  = 0;
+  calcmd.cal_edge_delay = 0;
+  calcmd.cal_edge_width = 1;
+  calcmd.cal_aux_mode   = 0;
+  calcmd.cal_aux_delay  = 0;
+  cfg.fast_cmd_fsm.second_cal_data = pack_bits<NBIT_CHIPID,NBIT_CAL_EDGE_MODE,NBIT_CAL_EDGE_DELAY,NBIT_CAL_EDGE_WIDTH,NBIT_CAL_AUX_MODE,NBIT_CAL_AUX_DELAY>(chipID,
+																			    calcmd.cal_edge_mode,
+																			    calcmd.cal_edge_delay,
+																			    calcmd.cal_edge_width,
+																			    calcmd.cal_aux_mode,
+																			    calcmd.cal_aux_delay);
+
+  cfg.fast_cmd_fsm.ecr_en        = true;
+  cfg.fast_cmd_fsm.first_cal_en  = true;
+  cfg.fast_cmd_fsm.second_cal_en = true;
+  cfg.fast_cmd_fsm.trigger_en    = true;
+
 
   LOG (INFO) << BOLDBLUE << "ConfigureFastCommands" << RESET;
   RD53Board->ConfigureFastCommands(cfg);

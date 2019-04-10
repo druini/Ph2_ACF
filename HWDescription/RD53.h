@@ -39,7 +39,7 @@
 #define NBIT_PIXEN  1 // Number of pixel enable bits
 #define NBIT_INJEN  1 // Number of injection enable bits
 #define NBIT_HITBUS 1 // Number of hit bust bits
-#define NBIT_TDAC   4 // Number of TDACbits
+#define NBIT_TDAC   4 // Number of TDAC bits
 #define HIGHGAIN 0x80 // Set High Gain Linear FE
 
 #define RESET_ECR  0x5A5A // Event Counter Reset word
@@ -67,6 +67,12 @@
 #define NBIT_SIDE   1 // Number of "side" bits
 #define NBIT_ROW    9 // Number of row bits
 #define NBIT_CCOL   6 // Number of core column bits
+
+#define NBIT_CAL_EDGE_MODE  1 // Number of cal_edge_mode bits
+#define NBIT_CAL_EDGE_DELAY 3 // Number of cal_edge_delaybits
+#define NBIT_CAL_EDGE_WIDTH 6 // Number of cal_edge_width bits
+#define NBIT_CAL_AUX_MODE   1 // Number of cal_aux_mode bits
+#define NBIT_CAL_AUX_DELAY  5 // Number of cal_aux_mode bits
 
 
 namespace Ph2_HwDescription
@@ -156,6 +162,15 @@ namespace Ph2_HwDescription
       uint16_t row;
       uint16_t col;
       uint8_t tots[NPIX_REGION];
+    };
+
+    struct CalCmd
+    {
+      uint8_t cal_edge_mode  = 0;
+      uint8_t cal_edge_delay = 0;
+      uint8_t cal_edge_width = 0;
+      uint8_t cal_aux_mode   = 0;
+      uint8_t cal_aux_delay  = 0;
     };
 
 

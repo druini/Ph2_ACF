@@ -72,7 +72,7 @@ namespace Ph2_HwInterface
 
     for (const auto& it : cFC7RegMap)
       {
-	LOG (INFO) << BOLDBLUE << "\t--> " << it.first << " = " << it.second << RESET;
+	LOG (INFO) << BOLDBLUE << "\t--> " << it.first << " = " << BOLDYELLOW << it.second << RESET;
 	cVecReg.push_back ({it.first, it.second});
       }
     if (cVecReg.size() != 0) WriteStackReg (cVecReg);
@@ -236,7 +236,6 @@ namespace Ph2_HwInterface
   void FC7FWInterface::WriteChipCommand (std::vector<uint32_t> & data, unsigned int repetition)
   {
     std::vector< std::pair<std::string, uint32_t> > stackRegisters;
-
     
     switch (data.size())
       {
@@ -363,7 +362,7 @@ namespace Ph2_HwInterface
     // # Check status registers associated wih fast command block #
     // ############################################################
     unsigned int fastCMDReg = ReadReg ("user.stat_regs.fast_cmd_1.trigger_source_o");
-    LOG (INFO) << BOLDBLUE << "Fast CMD block trigger source: " << BOLDYELLOW << fastCMDReg << RESET;
+    LOG (INFO) << BOLDBLUE << "Fast CMD block trigger source: " << BOLDYELLOW << fastCMDReg << BOLDBLUE << " (1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency)" << RESET;
 
     fastCMDReg = ReadReg ("user.stat_regs.fast_cmd_1.trigger_state");
     LOG (INFO) << BOLDBLUE << "Fast CMD block trigger state: " << BOLDYELLOW << fastCMDReg << RESET;
@@ -383,6 +382,25 @@ namespace Ph2_HwInterface
 
     trigReg = ReadReg ("user.stat_regs.trigger_tag");
     LOG (INFO) << BOLDBLUE << "Trigger tag: " << BOLDYELLOW << trigReg << RESET;
+    
+    
+    // ##############
+    // # Clock rate #
+    // ##############
+    unsigned int clkRate = ReadReg ("user.stat_regs.clk_rate_1");
+    LOG (INFO) << BOLDBLUE << "Clock rate 1: " << BOLDYELLOW << clkRate << RESET;
+
+    clkRate = ReadReg ("user.stat_regs.clk_rate_2");
+    LOG (INFO) << BOLDBLUE << "Clock rate 2: " << BOLDYELLOW << clkRate << RESET;
+
+    clkRate = ReadReg ("user.stat_regs.clk_rate_3");
+    LOG (INFO) << BOLDBLUE << "Clock rate 3: " << BOLDYELLOW << clkRate << RESET;
+
+    clkRate = ReadReg ("user.stat_regs.clk_rate_4");
+    LOG (INFO) << BOLDBLUE << "Clock rate 4: " << BOLDYELLOW << clkRate << RESET;
+
+    clkRate = ReadReg ("user.stat_regs.clk_rate_5");
+    LOG (INFO) << BOLDBLUE << "Clock rate 5: " << BOLDYELLOW << clkRate << RESET;
 
 
     // ###############################
@@ -661,17 +679,24 @@ namespace Ph2_HwInterface
   void FC7FWInterface::ConfigureFastCommands(const FastCommandsConfig& config)
   {
     WriteStackReg({
+	  // ############################
+	  // # General data for trigger #
+	  // ############################
 	{"user.ctrl_regs.fast_cmd_reg_2.trigger_source",           (uint32_t)config.trigger_source},
-        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",          (uint32_t)config.autozero_source},
 	{"user.ctrl_regs.fast_cmd_reg_2.backpressure_en",          (uint32_t)config.backpressure_en},
 	{"user.ctrl_regs.fast_cmd_reg_2.init_ecr_en",              (uint32_t)config.initial_ecr_en},
 	{"user.ctrl_regs.fast_cmd_reg_2.veto_en",                  (uint32_t)config.veto_en},
+	{"user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay",           (uint32_t)config.ext_trigger_delay},
 	{"user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",       (uint32_t)config.n_triggers},
 
+	  // ##############################
+	  // # Fast command configuration #
+	  // ##############################
 	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_ecr_en",            (uint32_t)config.fast_cmd_fsm.ecr_en},
 	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_test_pulse_en",     (uint32_t)config.fast_cmd_fsm.first_cal_en},
 	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en",   (uint32_t)config.fast_cmd_fsm.second_cal_en},
 	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en",        (uint32_t)config.fast_cmd_fsm.trigger_en},
+
 	{"user.ctrl_regs.fast_cmd_reg_3.delay_after_ecr",          (uint32_t)config.fast_cmd_fsm.delay_after_ecr},
 	{"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime",           (uint32_t)config.fast_cmd_fsm.first_cal_data},
 	{"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse",  (uint32_t)config.fast_cmd_fsm.delay_after_first_cal},
@@ -679,10 +704,14 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)config.fast_cmd_fsm.delay_after_second_cal},
 	{"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero",     (uint32_t)config.fast_cmd_fsm.delay_after_autozero},
 	{"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse",  (uint32_t)config.fast_cmd_fsm.delay_loop},
-	{"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",           (uint32_t)config.fast_cmd_fsm.glb_pulse_data},
 
-	{"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",            (uint32_t)config.autozero_freq},
-	{"user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",      (uint32_t)config.veto_after_autozero}
+	  // ##########################
+	  // # Autozero configuration #
+	  // ##########################
+        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",          (uint32_t)config.autozero.autozero_source},
+	{"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",           (uint32_t)config.autozero.glb_pulse_data},
+	{"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",            (uint32_t)config.autozero.autozero_freq},
+	{"user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",      (uint32_t)config.autozero.veto_after_autozero}
       });
     
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");

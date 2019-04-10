@@ -241,7 +241,7 @@ namespace Ph2_HwInterface
 
     // @TMP@
     pRD53->resetMask();
-    pRD53->enablePixel(50,148);
+    pRD53->enablePixel(50,129);
     // pRD53->enableAllPixels();
 
     std::vector<uint16_t> dataVec;
@@ -251,7 +251,8 @@ namespace Ph2_HwInterface
 
     // @TMP@
     // for (unsigned int i = 0; i < NCOLS; i+=2)
-    for (unsigned int i = 128; i < 263; i+=2)
+    // for (unsigned int i = 128; i < 263; i+=2)
+    for (unsigned int i = 128; i < 131; i+=2)
       {
 	pRD53->ConvertRowCol2Cores (0,i,colPair,row);
 	data = colPair;
