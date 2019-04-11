@@ -157,36 +157,17 @@ int main (int argc, char** argv)
   // ###############
   // # Configuring #
   // ###############
-  RD53::CalCmd calcmd;
   FC7FWInterface::FastCommandsConfig cfg;
 
   cfg.trigger_source = FC7FWInterface::TriggerSource::FastCMDFSM;
   cfg.n_triggers     = nEvents;
-  uint8_t chipID     = pChip->getChipId();
+  uint8_t chipId     = pChip->getChipId();
 
-  calcmd.cal_edge_mode  = 1;
-  calcmd.cal_edge_delay = 0;
-  calcmd.cal_edge_width = 4;
-  calcmd.cal_aux_mode   = 0;
-  calcmd.cal_aux_delay  = 0;
-  cfg.fast_cmd_fsm.first_cal_data  = pack_bits<NBIT_CHIPID,NBIT_CAL_EDGE_MODE,NBIT_CAL_EDGE_DELAY,NBIT_CAL_EDGE_WIDTH,NBIT_CAL_AUX_MODE,NBIT_CAL_AUX_DELAY>(chipID,
-																			    calcmd.cal_edge_mode,
-																			    calcmd.cal_edge_delay,
-																			    calcmd.cal_edge_width,
-																			    calcmd.cal_aux_mode,
-																			    calcmd.cal_aux_delay);
+  RD53::CalCmd calcmd(1,0,4,0,0);
+  cfg.fast_cmd_fsm.first_cal_data = calcmd.getCalCmd(chipId);
 
-  calcmd.cal_edge_mode  = 0;
-  calcmd.cal_edge_delay = 0;
-  calcmd.cal_edge_width = 1;
-  calcmd.cal_aux_mode   = 0;
-  calcmd.cal_aux_delay  = 0;
-  cfg.fast_cmd_fsm.second_cal_data = pack_bits<NBIT_CHIPID,NBIT_CAL_EDGE_MODE,NBIT_CAL_EDGE_DELAY,NBIT_CAL_EDGE_WIDTH,NBIT_CAL_AUX_MODE,NBIT_CAL_AUX_DELAY>(chipID,
-																			    calcmd.cal_edge_mode,
-																			    calcmd.cal_edge_delay,
-																			    calcmd.cal_edge_width,
-																			    calcmd.cal_aux_mode,
-																			    calcmd.cal_aux_delay);
+  calcmd.setCalCmd(0,0,1,0,0);
+  cfg.fast_cmd_fsm.second_cal_data = calcmd.getCalCmd(chipId);
 
   cfg.fast_cmd_fsm.ecr_en        = true;
   cfg.fast_cmd_fsm.first_cal_en  = true;

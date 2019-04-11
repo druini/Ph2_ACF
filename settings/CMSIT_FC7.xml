@@ -13,17 +13,22 @@
 	<!-- Overwrite .txt configuration file settings -->
         <Settings
             EN_CORE_COL_SYNC   = "0"
-            EN_CORE_COL_LIN_1  = "65535"
+            EN_CORE_COL_LIN_1  = "1"
             EN_CORE_COL_LIN_2  =     "0"
             EN_CORE_COL_DIFF_1 = "0"
             EN_CORE_COL_DIFF_2 =     "0"
 	    
             GP_LVDS_ROUTE  =    "1"
+
             VTH_SYNC       =  "300"
             REF_KRUM_LIN   =  "300"
             Vthreshold_LIN =  "310"
             VTH1_DIFF      =  "400"
             VTH2_DIFF      =   "50"
+
+	    VCAL_HIGH      =  "900" 	    
+	    VCAL_MED       =  "100"
+
             LATENCY_CONFIG =  "500"
             MONITOR_SELECT = "8203"
 	    />

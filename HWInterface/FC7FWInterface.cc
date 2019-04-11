@@ -656,7 +656,7 @@ namespace Ph2_HwInterface
     uint16_t header;
     std::tie(header, error_code, hybrid_id, chip_id, l1a_data_size) = unpack_bits<NBIT_CHIPHEAD, NBIT_ERR, NBIT_HYBRID, NBIT_CHIPID, NBIT_L1ASIZE>(data[0]);
 
-    if (l1a_data_size * 4 != n) LOG (ERROR) << BOLDRED << "Invalid chip L1A Data Size: " << l1a_data_size << " instead of " << (n / 4) << RESET;
+    if (l1a_data_size * 4 != n) LOG (ERROR) << BOLDRED << "Invalid chip L1A data size: " << l1a_data_size << " instead of " << (n / 4) << RESET;
 
     std::tie(chip_type, frame_delay) = unpack_bits<NBIT_CHIPTYPE, NBIT_FRAME>(data[1]);
 

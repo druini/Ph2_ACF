@@ -148,7 +148,7 @@ namespace Ph2_HwDescription
     // ##################
     struct EventHeader
     {
-      EventHeader(const uint32_t data);
+      EventHeader (const uint32_t data);
       
       uint16_t trigger_id;
       uint16_t trigger_tag;
@@ -157,7 +157,7 @@ namespace Ph2_HwDescription
     
     struct HitData
     {
-      HitData(const uint32_t data);
+      HitData (const uint32_t data);
       
       uint16_t row;
       uint16_t col;
@@ -166,11 +166,25 @@ namespace Ph2_HwDescription
 
     struct CalCmd
     {
-      uint8_t cal_edge_mode  = 0;
-      uint8_t cal_edge_delay = 0;
-      uint8_t cal_edge_width = 0;
-      uint8_t cal_aux_mode   = 0;
-      uint8_t cal_aux_delay  = 0;
+      CalCmd (const uint8_t& _cal_edge_mode,
+	      const uint8_t& _cal_edge_delay,
+	      const uint8_t& _cal_edge_width,
+	      const uint8_t& _cal_aux_mode,
+	      const uint8_t& _cal_aux_delay);
+
+      void setCalCmd (const uint8_t& _cal_edge_mode,
+		      const uint8_t& _cal_edge_delay,
+		      const uint8_t& _cal_edge_width,
+		      const uint8_t& _cal_aux_mode,
+		      const uint8_t& _cal_aux_delay);
+      
+      uint32_t getCalCmd (const uint8_t& chipId);
+      
+      uint8_t cal_edge_mode;
+      uint8_t cal_edge_delay;
+      uint8_t cal_edge_width;
+      uint8_t cal_aux_mode;
+      uint8_t cal_aux_delay;
     };
 
 
@@ -182,13 +196,13 @@ namespace Ph2_HwDescription
     // |3 4|
     // is linearized into |1 2 3 4|
 
-    static void fromVec2Matrix(const uint32_t vec, unsigned int& row, unsigned int& col)
+    static void fromVec2Matrix (const uint32_t vec, unsigned int& row, unsigned int& col)
     {
       row = vec / NCOLS;
       col = vec % NCOLS;
     }
     
-    static uint32_t fromMatrix2Vec(const unsigned int row, const unsigned int col)
+    static uint32_t fromMatrix2Vec (const unsigned int row, const unsigned int col)
     {
       return NCOLS*row + col;
     }
@@ -251,7 +265,7 @@ namespace Ph2_HwDescription
       };
     
     template<int NBITS>
-      std::bitset<NBITS> SetBits(unsigned int nBit2Set);
+      std::bitset<NBITS> SetBits (unsigned int nBit2Set);
   };
 }
 

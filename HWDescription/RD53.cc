@@ -12,13 +12,13 @@
 
 namespace Ph2_HwDescription
 {
-  RD53::RD53 ( const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename ) : Chip (pFeDesc, pRD53Id)
+  RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename) : Chip (pFeDesc, pRD53Id)
   {
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
   }
 
-  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename ) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
+  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
   {
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
@@ -336,7 +336,7 @@ namespace Ph2_HwDescription
       }
   }
 
-  void RD53::enablePixel(unsigned int row, unsigned int col)
+  void RD53::enablePixel (unsigned int row, unsigned int col)
   {
     fPixelsConfig[col].Enable[row] = 1;
     fPixelsConfig[col].HitBus[row] = 1;
@@ -350,7 +350,7 @@ namespace Ph2_HwDescription
       }
   }
 
-  void RD53::injectPixel(unsigned int row, unsigned int col)
+  void RD53::injectPixel (unsigned int row, unsigned int col)
   {
     fPixelsConfig[col].InjEn[row] = 1;
   }
@@ -877,7 +877,7 @@ namespace Ph2_HwDescription
     return fPixelsConfig[col].Enable[row];
   }
 
-  RD53::EventHeader::EventHeader(const uint32_t data)
+  RD53::EventHeader::EventHeader (const uint32_t data)
   {
     uint32_t header;
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(data);
@@ -887,7 +887,7 @@ namespace Ph2_HwDescription
       }
   }
   
-  RD53::HitData::HitData(const uint32_t data)
+  RD53::HitData::HitData (const uint32_t data)
   {
     uint32_t core_col, side, all_tots;
     std::tie(core_col, row, side, all_tots) = unpack_bits<NBIT_CCOL, NBIT_ROW, NBIT_SIDE, NBIT_TOT>(data);
@@ -895,6 +895,41 @@ namespace Ph2_HwDescription
     unpack_array<NBIT_TOT / NPIX_REGION>(tots, all_tots);
     
     col = 4 * pack_bits<NBIT_CCOL, NBIT_SIDE>(core_col, side);
+  }
+  
+  RD53::CalCmd::CalCmd (const uint8_t& _cal_edge_mode,
+			const uint8_t& _cal_edge_delay,
+			const uint8_t& _cal_edge_width,
+			const uint8_t& _cal_aux_mode,
+			const uint8_t& _cal_aux_delay) :
+    cal_edge_mode(_cal_edge_mode),
+    cal_edge_delay(_cal_edge_delay),
+    cal_edge_width(_cal_edge_width),
+    cal_aux_mode(_cal_aux_mode),
+    cal_aux_delay(_cal_aux_delay)
+  {}
+  
+  void RD53::CalCmd::setCalCmd (const uint8_t& _cal_edge_mode,
+				const uint8_t& _cal_edge_delay,
+				const uint8_t& _cal_edge_width,
+				const uint8_t& _cal_aux_mode,
+				const uint8_t& _cal_aux_delay)
+  {
+    cal_edge_mode  = _cal_edge_mode;
+    cal_edge_delay = _cal_edge_delay;
+    cal_edge_width = _cal_edge_width;
+    cal_aux_mode   = _cal_aux_mode;
+    cal_aux_delay  = _cal_aux_delay;
+  }
+
+  uint32_t RD53::CalCmd::getCalCmd (const uint8_t& chipId)
+  {
+    return  pack_bits<NBIT_CHIPID,NBIT_CAL_EDGE_MODE,NBIT_CAL_EDGE_DELAY,NBIT_CAL_EDGE_WIDTH,NBIT_CAL_AUX_MODE,NBIT_CAL_AUX_DELAY>(chipId,
+																   cal_edge_mode,
+																   cal_edge_delay,
+																   cal_edge_width,
+																   cal_aux_mode,
+																   cal_aux_delay);
   }
 
   std::vector<uint8_t>& RD53::getChipMask()
@@ -913,7 +948,7 @@ namespace Ph2_HwDescription
   }
 
   template<int NBITS>
-  std::bitset<NBITS> RD53::SetBits(unsigned int nBit2Set)
+  std::bitset<NBITS> RD53::SetBits (unsigned int nBit2Set)
   {
     std::bitset<NBITS> output(0);
     for (unsigned int i = 0; i < nBit2Set; i++) output[i] = 1;
