@@ -330,6 +330,7 @@ namespace Ph2_HwInterface
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
     this->WriteRD53Mask(pRD53, true);
+    return true;
   }
   
   bool RD53Interface::MaskAllChannels (Chip* pChip, bool mask, bool pVerifLoop)

@@ -19,25 +19,32 @@ namespace Ph2_HwDescription {
 
     // Constructors
 
-    BeBoard::BeBoard() :
-        fBeId ( 0 ),
-        fEventType (EventType::VR),
-        fCondDataSet (nullptr)
-    {}
-
-    BeBoard::BeBoard ( uint8_t pBeId ) :
-        fBeId ( pBeId ),
-        fEventType (EventType::VR),
-        fCondDataSet (nullptr)
+    BeBoard::BeBoard()
+    : BoardContainer(0)
+	, fBeId         (0)
+    , fEventType    (EventType::VR)
+    , fCondDataSet  (nullptr)
     {
+        std::cout << __PRETTY_FUNCTION__ << "EMPTY p:" << this << std::endl;
     }
 
-    BeBoard::BeBoard ( uint8_t pBeId, const std::string& filename ) :
-        fBeId ( pBeId ),
-        fEventType (EventType::VR),
-        fCondDataSet (nullptr)
+    BeBoard::BeBoard ( uint8_t pBeId )
+    : BoardContainer(pBeId)
+    , fBeId         (pBeId)
+    , fEventType    (EventType::VR)
+    , fCondDataSet  (nullptr)
     {
-        loadConfigFile ( filename );
+        std::cout << __PRETTY_FUNCTION__ << "p:" << this << std::endl;
+    }
+
+    BeBoard::BeBoard ( uint8_t pBeId, const std::string& filename )
+    : BoardContainer(pBeId)
+    , fBeId ( pBeId )
+    , fEventType (EventType::VR)
+    , fCondDataSet (nullptr)
+    {
+       std::cout << __PRETTY_FUNCTION__ << "NEVER USED p:" << this << std::endl;
+       loadConfigFile ( filename );
     }
 
     // Public Members:
@@ -56,11 +63,26 @@ namespace Ph2_HwDescription {
 
     void BeBoard::setReg ( const std::string& pReg, uint32_t psetValue )
     {
-        BeBoardRegMap::iterator i = fRegMap.find ( pReg );
+        // BeBoardRegMap::iterator i = fRegMap.find ( pReg );
+        
+        // if ( i == fRegMap.end() )
+        // {
+        //     fRegMap.insert ( {pReg, psetValue} );
+        // }
+        // else
+        // {
+        //     i->second = psetValue;
+        // }
+        
 
-        if ( i == fRegMap.end() )
-            fRegMap.insert ( {pReg, psetValue} );
-        else i->second = psetValue;
+        // std::cout<< __PRETTY_FUNCTION__ << " culo1" << std::endl;
+        // std::cout<<fRegMap.size()<<std::endl;
+        // std::cout<<&fRegMap<<std::endl;
+        // for(const auto & element : fRegMap) std::cout<<element.first<<" "<<element.second<<std::endl;
+        // std::cout<< __PRETTY_FUNCTION__ << " culo2" << std::endl;
+        fRegMap[pReg] = psetValue;
+        // std::cout<< __PRETTY_FUNCTION__ << " culo3" << std::endl;
+
     }
 
     bool BeBoard::removeModule ( uint8_t pModuleId )

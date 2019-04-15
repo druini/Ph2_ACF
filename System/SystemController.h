@@ -33,6 +33,7 @@
 #include "../Utils/FileHandler.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/easylogging++.h"
+#include "../Utils/Container.h"
 #include <iostream>
 #include <vector>
 #include <map>
@@ -66,13 +67,15 @@ namespace Ph2_System {
     class SystemController
     {
       public:
-        BeBoardInterface*       fBeBoardInterface;                     /*!< Interface to the BeBoard */
-        ChipInterface*          fChipInterface;                         /*!< Interface to the CBC */
-        SSAInterface*           fSSAInterface;                         /*!< Interface to the SSA */
-        MPAInterface*           fMPAInterface;                         /*!< Interface to the MPA */
-        BeBoardVec              fBoardVector;                          /*!< Vector of Board pointers */
+    	BeBoardInterface*       fBeBoardInterface;           //!< Interface to the BeBoard
+        ChipInterface*          fChipInterface;              //!< Interface to the CBC
+        SSAInterface*           fSSAInterface;               //!< Interface to the SSA
+        MPAInterface*           fMPAInterface;               //!< Interface to the MPA
+
+        DetectorContainer       fDetectorContainer;          //Detector Container
+        BeBoardVec              fBoardVector;                //!< Vector of Board pointers
         BeBoardFWMap            fBeBoardFWMap;
-        SettingsMap             fSettingsMap;                          /*!< Maps the settings */
+        SettingsMap             fSettingsMap;                //!< Maps the settings
         //for reading single files
         FileHandler*            fFileHandler;
         //for writing 1 file for each FED

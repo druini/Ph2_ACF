@@ -910,6 +910,7 @@ namespace Ph2_HwDescription
 	  chn = RD53::fromMatrix2Vec(row,col);
 	  fChipMask[chn/8] = fChipMask[chn/8] | (fPixelsConfig[col].Enable[row] << (chn % 8));
 	}
+    return fChipMask;
   }
 
   template<int NBITS>

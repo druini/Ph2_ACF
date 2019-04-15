@@ -4,13 +4,13 @@
 //std::map<Chip*, uint16_t> Calibration::fVplusMap;
 
 Calibration::Calibration() :
-    Tool(),
-    fVplusMap(),
-    fVplusCanvas (nullptr),
-    fOffsetCanvas (nullptr),
-    fOccupancyCanvas (nullptr),
-    fNCbc (0),
-    fNFe (0)
+    Tool            (),
+    fVplusMap       (),
+    fVplusCanvas    (nullptr),
+    fOffsetCanvas   (nullptr),
+    fOccupancyCanvas(nullptr),
+    fNCbc           (0),
+    fNFe            (0)
 {
 }
 
@@ -52,7 +52,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
     // Canvases
     //fVplusCanvas = new TCanvas ( "VPlus", "VPlus", 515, 0, 500, 500 );
-    fOffsetCanvas = new TCanvas ( "Offset", "Offset", 10, 0, 500, 500 );
+    fOffsetCanvas    = new TCanvas ( "Offset", "Offset", 10, 0, 500, 500 );
     fOccupancyCanvas = new TCanvas ( "Occupancy", "Occupancy", 10, 525, 500, 500 );
 
     // count FEs & CBCs

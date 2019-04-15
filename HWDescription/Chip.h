@@ -24,6 +24,7 @@
 #include <utility>
 #include <set>
 #include "../Utils/easylogging++.h"
+#include "../Utils/Container.h"
 
 // Chip2 Chip HW Description Class
 
@@ -42,7 +43,7 @@ namespace Ph2_HwDescription {
      * \class Chip
      * \brief Read/Write Chip's registers on a file, contains a register map
      */
-    class Chip : public FrontEndDescription
+    class Chip : public FrontEndDescription, public ChipContainer
     {
 
       public:

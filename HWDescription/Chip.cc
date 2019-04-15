@@ -19,28 +19,33 @@
 #include "Definition.h"
 
 
-namespace Ph2_HwDescription {
+namespace Ph2_HwDescription
+{
     // C'tors with object FE Description
 
-    Chip::Chip ( const FrontEndDescription& pFeDesc, uint8_t pChipId) : FrontEndDescription ( pFeDesc ),
-        fChipId ( pChipId )
-
+    Chip::Chip (const FrontEndDescription& pFeDesc, uint8_t pChipId)
+    : FrontEndDescription(pFeDesc)
+    , ChipContainer      (pChipId)
+    , fChipId            (pChipId)
     {
     }
 
     // C'tors which take BeId, FMCId, FeID, ChipId
 
-    Chip::Chip ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId) : FrontEndDescription ( pBeId, pFMCId, pFeId ), fChipId ( pChipId )
-
+    Chip::Chip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId)
+    : FrontEndDescription(pBeId, pFMCId, pFeId)
+    , ChipContainer      (pChipId)
+    , fChipId            (pChipId )
     {
     }
 
     // Copy C'tor
-
-    Chip::Chip ( const Chip& chipObj ) : FrontEndDescription ( chipObj ),
-        fChipId ( chipObj.fChipId ),
-        fRegMap ( chipObj.fRegMap ),
-        fCommentMap (chipObj.fCommentMap)
+    Chip::Chip (const Chip& chipObj)
+    : FrontEndDescription(chipObj)
+    , ChipContainer      (chipObj.fChipId)
+    , fChipId            (chipObj.fChipId)
+    , fRegMap            (chipObj.fRegMap)
+    ,fCommentMap         (chipObj.fCommentMap)
     {
     }
 

@@ -20,7 +20,7 @@
 #include <vector>
 #include <map>
 #include <stdint.h>
-
+#include "../Utils/Container.h"
 
 /*!
  * \namespace Ph2_HwDescription
@@ -34,7 +34,7 @@ namespace Ph2_HwDescription {
      * \class BeBoard
      * \brief Read/Write BeBoard's registers on a file, handles a register map and handles a vector of Module which are connected to the BeBoard
      */
-    class BeBoard
+    class BeBoard: public BoardContainer
     {
 
       public:
@@ -225,6 +225,7 @@ namespace Ph2_HwDescription {
         // Vector of FEModules, each module is supposed to know which FMC slot it is connected to...
         std::vector< Module* > fModuleVector;
 
+        int dummyValue_ = 1989;
       protected:
         //Connection Members
         uint8_t fBeId;

@@ -21,6 +21,7 @@
 #include "../Utils/easylogging++.h"
 #include <vector>
 #include <stdint.h>
+#include "../Utils/Container.h"
 
 // FE Hybrid HW Description Class
 
@@ -35,14 +36,14 @@ namespace Ph2_HwDescription {
      * \class Module
      * \brief handles a vector of Chip which are connected to the Module
      */
-    class Module : public FrontEndDescription
+    class Module : public FrontEndDescription, public ModuleContainer
     {
 
       public:
 
         // C'tors take FrontEndDescription or hierachy of connection
-        Module ( const FrontEndDescription& pFeDesc, uint8_t pModuleId );
-        Module ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId );
+        Module (const FrontEndDescription& pFeDesc, uint8_t pModuleId );
+        Module (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId );
 
         // Default C'tor
         Module();

@@ -19,6 +19,7 @@
 #include "TFile.h"
 #include "TObject.h"
 #include "TCanvas.h"
+#include "../Utils/Container.h"
 
 #ifdef __HTTP__
 #include "THttpServer.h"
@@ -54,9 +55,10 @@ class Tool : public SystemController
     using ModuleGlobalOccupancyMap            = std::map<uint8_t,ChipGlobalOccupancyMap    >; //module       : { cbc    : { strip : occupancy } }
         // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyPerChannelMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
 
-    CanvasMap fCanvasMap;
-    ChipHistogramMap fChipHistMap;
-    ModuleHistogramMap fModuleHistMap;
+    DetectorContainer*  fOccupancyContainer;
+    CanvasMap           fCanvasMap;
+    ChipHistogramMap    fChipHistMap;
+    ModuleHistogramMap  fModuleHistMap;
     BeBoardHistogramMap fBeBoardHistMap;
     FrontEndType fType;
     TestGroupChannelMap fTestGroupChannelMap;
@@ -310,6 +312,13 @@ class Tool : public SystemController
 
     // measure occupancy per group
     void measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpChannelVec, BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap);
+
+    // measure occupancy
+    void measureOccupancy(const uint16_t &numberOfEvents);
+    // measure occupancy
+    void measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numberOfEvents);
+    // measure occupancy per group
+    void measureBeBoardOccupancyPerGroup(unsigned int boardIndex, const uint16_t numberOfEvents, const std::vector<uint8_t> &cTestGrpChannelVec);
 
     //Set global DAC for all Chips in the BeBoard
     void setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, uint16_t> > &dacList);

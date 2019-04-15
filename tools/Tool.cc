@@ -41,6 +41,7 @@ Tool::Tool (THttpServer* pHttpServer)
 
 Tool::Tool (const Tool& pTool)
 {
+	fDetectorContainer   = pTool.fDetectorContainer;
     fBeBoardInterface    = pTool.fBeBoardInterface;
     fChipInterface       = pTool.fChipInterface;
     fBoardVector         = pTool.fBoardVector;
@@ -67,7 +68,8 @@ Tool::~Tool()
 
 void Tool::Inherit (Tool* pTool)
 {
-    fBeBoardInterface    = pTool->fBeBoardInterface;
+	fDetectorContainer   = pTool->fDetectorContainer;//IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
+	fBeBoardInterface    = pTool->fBeBoardInterface;
     fChipInterface       = pTool->fChipInterface;
     fBoardVector         = pTool->fBoardVector;
     fBeBoardFWMap        = pTool->fBeBoardFWMap;
@@ -88,12 +90,13 @@ void Tool::Inherit (Tool* pTool)
 
 void Tool::Inherit (SystemController* pSystemController)
 {
-    fBeBoardInterface = pSystemController->fBeBoardInterface;
-    fChipInterface    = pSystemController->fChipInterface;
-    fBoardVector      = pSystemController->fBoardVector;
-    fBeBoardFWMap     = pSystemController->fBeBoardFWMap;
-    fSettingsMap      = pSystemController->fSettingsMap;
-    fFileHandler      = pSystemController->fFileHandler;
+	fDetectorContainer = pSystemController->fDetectorContainer; //IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
+    fBeBoardInterface  = pSystemController->fBeBoardInterface;
+    fChipInterface     = pSystemController->fChipInterface;
+    fBoardVector       = pSystemController->fBoardVector;
+    fBeBoardFWMap      = pSystemController->fBeBoardFWMap;
+    fSettingsMap       = pSystemController->fSettingsMap;
+    fFileHandler       = pSystemController->fFileHandler;
 }
 
 void Tool::Destroy()
@@ -1377,6 +1380,131 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
     return;
 }
 
+// measure occupancy
+void Tool::measureOccupancy(const uint16_t &numberOfEvents)
+{
+	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer.size(); boardIndex++)
+        measureBeBoardOccupancy(boardIndex, numberOfEvents);
+
+}
+// measure occupancy
+void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numberOfEvents)
+{
+
+    uint32_t normalization=0;
+    uint32_t numberOfHits=0;
+
+    if(!fAllChan)
+    {
+        for(const auto & group : fTestGroupChannelMap)
+        {
+            if(group.first == -1) continue;
+
+            if(fMaskChannelsFromOtherGroups || fTestPulse)
+            {
+                for ( auto cFe : *(fDetectorContainer.at(boardIndex)))
+                {
+                    for ( auto cChip : *cFe )
+                    {
+                        if(fMaskChannelsFromOtherGroups)
+                        {
+                            maskChannelFromOtherGroups (static_cast<Chip*>(cChip), group.first);//FIX MAYBE NO NEED TO STATIC CAST
+                        }
+                        if(fTestPulse)
+                        {
+                            selectGroupTestPulse(static_cast<Chip*>(cChip), group.first); // check
+                        }
+                    }
+                }
+            }
+
+            measureBeBoardOccupancyPerGroup(boardIndex, numberOfEvents, group.second);
+        }
+
+        if(fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
+        {
+            for ( auto cFe : *(fDetectorContainer.at(boardIndex)) )
+            {
+                for ( auto cChip : *cFe )
+                {
+                    fChipInterface->ConfigureChipOriginalMask ( static_cast<Chip*>(cChip) );
+                }
+            }
+        }
+    }
+    else
+    {
+    	measureBeBoardOccupancyPerGroup(boardIndex, numberOfEvents, fTestGroupChannelMap[-1]);
+    }
+/*
+    //Evaluate module and BeBoard Occupancy
+    for ( auto cFe : pBoard->fModuleVector )
+    {
+
+        ChipOccupancyPerChannelMap *chipChannelOccupancy = &moduleOccupancyPerChannelMap[cFe->getModuleId()];
+        std::map<uint8_t,float> *chipNumberOfHitsMap = &chipOccupanyMap[cFe->getModuleId()];
+
+
+        for ( auto cChip : cFe->fChipVector )
+        {
+
+            ChannelOccupancy *channelOccupancy = &chipChannelOccupancy->at(cChip->getChipId());
+
+            (*chipNumberOfHitsMap)[cChip->getChipId()] =0;
+
+            std::vector<uint8_t> chipMask;
+            bool chipHasMaskedChannels = cChip->hasMaskedChannels();
+            if(chipHasMaskedChannels) chipMask = cChip->getChipMask();
+
+            for ( uint8_t cChan=0; cChan<cChip->getNumberOfChannels(); ++cChan)
+            {
+                if(fSkipMaskedChannels && chipHasMaskedChannels)
+                {
+                    if(cChip->IsChannelUnMasked(cChan))
+                    {
+                        (*chipNumberOfHitsMap)[cChip->getChipId()]+=channelOccupancy->at(cChan);
+                    }
+                }
+                else
+                {
+                    (*chipNumberOfHitsMap)[cChip->getChipId()]+=channelOccupancy->at(cChan);
+                }
+                channelOccupancy->at(cChan)/=numberOfEvents;
+            }
+
+            uint32_t chipNormalization = 0;
+            if(fSkipMaskedChannels && chipHasMaskedChannels)
+            {
+                for(const auto & mask : cChip->getChipMask())
+                {
+                    chipNormalization += mask;
+                }
+                chipNormalization *= numberOfEvents;
+            }
+            else
+            {
+                chipNormalization = numberOfEvents * cChip->getNumberOfChannels();
+            }
+
+            numberOfHits  += (*chipNumberOfHitsMap)[cChip->getChipId()];
+            normalization += chipNormalization;
+            (*chipNumberOfHitsMap)[cChip->getChipId()] /= chipNormalization;
+        }
+    }
+
+    globalOccupancy = (float)numberOfHits/normalization;
+*/
+}
+
+void Tool::measureBeBoardOccupancyPerGroup(unsigned int boardIndex, const uint16_t numberOfEvents, const std::vector<uint8_t> &cTestGrpChannelVec)
+{
+    ReadNEvents ( static_cast<BeBoard*>(fDetectorContainer.at(boardIndex)), numberOfEvents );
+    // Loop over Events from this Acquisition
+    const std::vector<Event*>& events = GetEvents ( static_cast<BeBoard*>(fDetectorContainer.at(boardIndex)) );
+    for ( auto& event : events )
+    	event->fillOccupancy((fOccupancyContainer->at(boardIndex)));
+
+}
 
 //Set global DAC for all CBCs in the BeBoard
 void Tool::setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, uint16_t> > &dacList)

@@ -10,6 +10,7 @@
  */
 
 #include "../Utils/D19cCbc3Event.h"
+#include "../Utils/Container.h"
 
 using namespace Ph2_HwDescription;
 
@@ -35,6 +36,22 @@ namespace Ph2_HwInterface {
     //{
 
     //}
+
+    void D19cCbc3Event::fillOccupancy(BoardContainer* boardContainer)
+    {
+    	for(auto module: *boardContainer)
+    	{
+    		for(auto chip: *module)
+    		{
+				unsigned int i = 0;
+    			for(ChannelContainer<Occupancy>::iterator channel =  chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
+				{
+					channel->fOccupancy  += (float)DataBit ( module->getId(), chip->getId(), i);
+				}
+    		}
+    	}
+
+    }
 
     void D19cCbc3Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {

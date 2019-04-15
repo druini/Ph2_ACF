@@ -21,10 +21,10 @@ fi
 
 #ROOT
 #source /usr/local/bin/thisroot.shs
-#source /opt/local/root/bin/thisroot.sh
+source /opt/local/root/bin/thisroot.sh
 #export ROOTLIB=/usr/local/lib/root
-export ROOTLIB=$ROOTSYS/myBuild/lib
-#export ROOTSYS=/usr/local/lib/root
+#export ROOTLIB=$ROOTSYS/myBuild/lib
+export ROOTSYS=/usr/local/lib/root
 
 #ZMQ
 export ZMQ_HEADER_PATH=/usr/include/zmq.hpp
