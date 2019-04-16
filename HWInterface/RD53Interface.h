@@ -52,7 +52,8 @@ namespace Ph2_HwInterface
 
     void ResetRD53                     (RD53* pRD53);
     void SetResetCoreCol               (RD53* pRD53, bool setT_resetF);
-    void ResetHitOrCnt                 (RD53* pRD53);
+    void ResetHitOrCnt                 (RD53* pRD53); // @TMP@
+    void ReadHitOrCnt                  (RD53* pRD53); // @TMP@
    };
 }
 

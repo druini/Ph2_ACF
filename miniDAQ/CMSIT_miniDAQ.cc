@@ -148,9 +148,9 @@ int main (int argc, char** argv)
   // #####################
   std::cout << std::endl;
   LOG (INFO) << BOLDYELLOW << "@@@ Starting data-taking @@@" << RESET;
-  auto pBoard  = cSystemController.fBoardVector.at(0);
-  auto pModule = pBoard->fModuleVector.at(0);
-  auto pChip   =  pModule->fChipVector.at(0);
+  auto pBoard    = cSystemController.fBoardVector.at(0);
+  auto pModule   = pBoard->fModuleVector.at(0);
+  auto pChip     = pModule->fChipVector.at(0);
   auto RD53Board = static_cast<FC7FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
 
 
@@ -165,11 +165,12 @@ int main (int argc, char** argv)
 
   RD53::CalCmd calcmd(1,0,4,0,0);
   cfg.fast_cmd_fsm.first_cal_data = calcmd.getCalCmd(chipId);
+  std::cout << "[main]\tprime_cal_data = 0x" << std::hex << unsigned(cfg.fast_cmd_fsm.first_cal_data) << std::dec << std::endl;
 
-  calcmd.setCalCmd(0,0,1,0,0);
+  calcmd.setCalCmd(1,0,1,0,0);
   cfg.fast_cmd_fsm.second_cal_data = calcmd.getCalCmd(chipId);
+  std::cout << "[main]\tinject_cal_data = 0x" << std::hex << unsigned(cfg.fast_cmd_fsm.second_cal_data) << std::dec << std::endl;
 
-  cfg.fast_cmd_fsm.ecr_en        = true;
   cfg.fast_cmd_fsm.first_cal_en  = true;
   cfg.fast_cmd_fsm.second_cal_en = true;
   cfg.fast_cmd_fsm.trigger_en    = true;
@@ -185,16 +186,30 @@ int main (int argc, char** argv)
   RD53Board->ChipReSync();
 
 
+  auto RD53Chip = static_cast<RD53Interface*>(cSystemController.fChipInterface);
+  usleep(10000);
+  RD53Chip->ResetHitOrCnt (static_cast<RD53*>(pChip));
+  usleep(10000);
+  RD53Chip->ReadHitOrCnt (static_cast<RD53*>(pChip));
+  usleep(10000);
+
+
   // ###########
   // # Running #
   // ###########
   cSystemController.Start(pBoard);
   
   std::vector<uint32_t> data;
-  RD53Board->ReadData(pBoard, 0, data, 0);
+  RD53Board->ReadData(pBoard, false, data, false);
   auto events = FC7FWInterface::DecodeEvents(data);
   // const std::vector<Event*>& events = cSystemController.GetEvents(pBoard);
   PrintEvents(events);
+
+
+  usleep(10000);
+  RD53Board->SendTriggers(nEvents);
+  usleep(10000);
+  RD53Chip->ReadHitOrCnt (static_cast<RD53*>(pChip));
 
 
   cSystemController.Stop(pBoard);

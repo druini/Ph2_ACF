@@ -22,12 +22,6 @@
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
-#define I2CcmdAckGOOD 0x01
-#define I2CcmdAckBAD  0x02
-#define I2CwriteREQ   0x01
-#define I2CreadREQ    0x03
-
-#define WAIT          10 // [microseconds]
 #define DEEPSLEEP 500000 // [microseconds]
 
 #define NBIT_FWVER     4 // Number of bits for the firmware version
@@ -81,11 +75,6 @@ namespace Ph2_HwInterface
   private:
     FileHandler* fFileHandler;
 
-    bool I2cCmdAckWait (unsigned int cWait, unsigned int trials);
-    void WriteI2C      (std::vector<uint32_t>& pVecReg);
-    void ReadI2C       (std::vector<uint32_t>& pVecReg);
-    void ConfigureClockSi5324();
-
   public:
     FC7FWInterface (const char* pId, const char* pUri, const char* pAddressTable);
     virtual ~FC7FWInterface() { if (fFileHandler) delete fFileHandler; }
@@ -102,7 +91,7 @@ namespace Ph2_HwInterface
     void Resume()                 override;
     bool InitChipCommunication () override;
 
-    void     ReadNEvents  (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)   {}
+    void     ReadNEvents  (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)   {} // @TMP@
     uint32_t ReadData     (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)  override;
     void SerializeSymbols (std::vector<std::vector<uint16_t> > & data, std::vector<uint32_t> & serialData) override;
 
@@ -117,6 +106,7 @@ namespace Ph2_HwInterface
     void TurnOnFMC();
     void ResetBoard();
     void ResetReadout();
+    void SendTriggers(unsigned int n);
 
     struct ChipData
     {
@@ -180,13 +170,13 @@ namespace Ph2_HwInterface
       uint32_t first_cal_data  = 0;
       uint32_t second_cal_data = 0;
       
-      uint32_t delay_after_ecr        =  1;
-      uint32_t delay_after_autozero   = 10;
-      uint32_t delay_after_first_cal  =  1;
-      uint32_t delay_after_second_cal =  1;
-      uint16_t delay_loop             = 20;
+      uint32_t delay_after_ecr        =  20;
+      uint32_t delay_after_autozero   =  20;
+      uint32_t delay_after_first_cal  =  20;
+      uint32_t delay_after_second_cal = 480;
+      uint16_t delay_loop             = 600;
     };
-    
+
     struct Autozero
     {
       AutozeroSource autozero_source = AutozeroSource::FastCMDFSM;

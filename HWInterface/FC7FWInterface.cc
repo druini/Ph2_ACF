@@ -76,153 +76,6 @@ namespace Ph2_HwInterface
 	cVecReg.push_back ({it.first, it.second});
       }
     if (cVecReg.size() != 0) WriteStackReg (cVecReg);
-
-    // this->ConfigureClockSi5324();
-  }
-
-  bool FC7FWInterface::I2cCmdAckWait (unsigned int cWait, unsigned int trials)
-  {
-    uint32_t cLoop = 0;
-    
-    while (++cLoop < trials)
-      {
-	uint32_t status = ReadReg ("STAT.BOARD.i2c_ack");
-
-	if      (status == 0)             usleep (cWait);
-	else if (status == I2CcmdAckGOOD) return true;
-	else if (status == I2CcmdAckBAD)  return false;
-	else                              usleep(cWait);
-      }
-    return false;
-  }
-
-  void FC7FWInterface::WriteI2C (std::vector<uint32_t>& pVecReg)
-  {
-    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
-    usleep(WAIT);
-    WriteReg ("CTRL.BOARD.i2c_reset",1);
-    usleep(WAIT);
-    WriteReg ("CTRL.BOARD.i2c_reset",0);
-    usleep(WAIT);
-    WriteReg ("CTRL.BOARD.i2c_fifo_rx_dsel",1);
-    usleep(WAIT);
-    WriteReg ("CTRL.BOARD.i2c_req",I2CwriteREQ);
-    usleep(WAIT);
-
-    /* bool outcome = */ RegManager::WriteBlockReg ("CTRL.BOARD.i2c_fifo_tx", pVecReg);
-    usleep(WAIT);
-
-    if (I2cCmdAckWait (WAIT,20) == false)
-      throw Exception ("[FC7FWInterface::WriteI2C]\tI2C transaction error");
-
-    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
-    usleep(WAIT);
-  }
-
-  void FC7FWInterface::ReadI2C (std::vector<uint32_t>& pVecReg)
-  {
-    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
-    usleep(WAIT);
-    WriteReg ("CTRL.BOARD.i2c_reset",1);
-    usleep(WAIT);
-    WriteReg ("CTRL.BOARD.i2c_reset",0);
-    usleep(WAIT);
-    WriteReg ("CTRL.BOARD.i2c_fifo_rx_dsel",1);
-    usleep(WAIT);
-    WriteReg ("CTRL.BOARD.i2c_req",I2CreadREQ);
-    usleep(WAIT);
-
-    uint32_t sizeI2Cfifo = ReadReg("STAT.BOARD.i2c_fifo_rx_dcnt");
-    usleep(WAIT);
-
-    int size2read = 0;
-    if (sizeI2Cfifo > pVecReg.size())
-      {
-	size2read = pVecReg.size();
-	LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tWarning, I2C FIFO contains more data than the vector size" << RESET;
-      }
-    else
-      size2read = sizeI2Cfifo;
-
-    pVecReg = ReadBlockRegValue ("CTRL.BOARD.i2c_fifo_rx", size2read);
-    usleep(WAIT);
-
-    if (I2cCmdAckWait (WAIT,20) == false)
-      throw Exception ("[FC7FWInterface::ReadI2C]\tI2C transaction error");
-
-    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
-  }
-  
-  void FC7FWInterface::ConfigureClockSi5324()
-  {
-    // ###########################################################
-    // # The Si5324 chip is meant to reduce the FC7 clock jitter #
-    // ###########################################################
-    
-    uint8_t start_wr     = 0x90;
-    uint8_t stop_wr      = 0x50;
-    uint8_t stop_rd_nack = 0x68;
-    uint8_t rd_incr      = 0x20;
-    uint8_t wr_incr      = 0x10;
-
-    uint8_t enable_i2cmux  = 1;
-    uint8_t disable_i2cmux = 0;
-
-    uint8_t i2cmux_addr_wr = 0xe8;
-    uint8_t i2cmux_addr_rd = 0xe9;
-      
-    uint8_t si5324_pos     = 7;
-    uint8_t si5324_addr_wr = 0xd0;
-    uint8_t si5324_addr_rd = 0xd1;
-
-    uint32_t word;
-    std::vector<uint32_t> data;
-
-    // ###########################################
-    // # Program Si5324 for 160MHz precise clock #
-    // ###########################################
-    std::vector< std::pair<uint8_t,uint8_t> > si5324Program;
-    si5324Program.push_back({0x00,0x54});
-    si5324Program.push_back({0x0B,0x41});
-    si5324Program.push_back({0x06,0x0F});
-    si5324Program.push_back({0x15,0xFE});
-    si5324Program.push_back({0x03,0x55});
-    si5324Program.push_back({0x02,0x22});
-    si5324Program.push_back({0x19,0x80});
-    si5324Program.push_back({0x1F,0x00});
-    si5324Program.push_back({0x20,0x00});
-    si5324Program.push_back({0x21,0x03});
-    si5324Program.push_back({0x28,0xC1});
-    si5324Program.push_back({0x29,0x8F});
-    si5324Program.push_back({0x2A,0xFF});
-    si5324Program.push_back({0x2E,0x00});
-    si5324Program.push_back({0x2F,0x59});
-    si5324Program.push_back({0x30,0x48});
-    si5324Program.push_back({0x89,0x01});
-    si5324Program.push_back({0x88,0x40});
-    // ###########################################
-
-    word = (i2cmux_addr_wr << 8) | start_wr;
-    data.push_back(word);
-    word = (enable_i2cmux << si5324_pos) << 8 | stop_wr;
-    data.push_back(word);
-
-    for (unsigned int i = 0; i < si5324Program.size(); i++)
-      {
-	word = (si5324_addr_wr << 8) | start_wr;
-	data.push_back(word);
-	word = (si5324Program[i].first << 8) | wr_incr;
-	data.push_back(word);
-	word = (si5324Program[i].second << 8) | stop_wr;
-	data.push_back(word);
-      }
-
-    word = (i2cmux_addr_wr << 8) | start_wr;
-    data.push_back(word);
-    word = (disable_i2cmux << si5324_pos) << 8 | stop_wr;
-    data.push_back(word);
-   
-    WriteI2C(data);
   }
 
   void FC7FWInterface::SerializeSymbols (std::vector<std::vector<uint16_t> > & data,
@@ -268,7 +121,6 @@ namespace Ph2_HwInterface
       }
 
     for (unsigned int i = 0; i < repetition; i++) WriteStackReg (stackRegisters);
-    usleep(WAIT);
   }
 
   std::pair< std::vector<uint16_t>,std::vector<uint16_t> > FC7FWInterface::ReadChipRegisters (std::vector<uint32_t> & data, unsigned int nBlocks2Read)
@@ -500,17 +352,16 @@ namespace Ph2_HwInterface
 
   void FC7FWInterface::TurnOffFMC()
   {
-    WriteReg ("system.ctrl_2.fmc_pg_c2m",0);
-    WriteReg ("system.ctrl_2.fmc_l8_pwr_en",0);
-    WriteReg ("system.ctrl_2.fmc_l12_pwr_en",0);
+    WriteStackReg({{"system.ctrl_2.fmc_pg_c2m",0},
+	           {"system.ctrl_2.fmc_l8_pwr_en",0},
+		   {"system.ctrl_2.fmc_l12_pwr_en",0}});
   }
 
   void FC7FWInterface::TurnOnFMC()
   {
-    WriteReg ("system.ctrl_2.fmc_l12_pwr_en",1);
-    WriteReg ("system.ctrl_2.fmc_l8_pwr_en",1);
-    WriteReg ("system.ctrl_2.fmc_pg_c2m",1);
-
+    WriteStackReg({{"system.ctrl_2.fmc_l12_pwr_en",1},
+	           {"system.ctrl_2.fmc_l8_pwr_en",1},
+		   {"system.ctrl_2.fmc_pg_c2m",1}});
     usleep(DEEPSLEEP);
   }
 
@@ -569,7 +420,7 @@ namespace Ph2_HwInterface
   void FC7FWInterface::ResetReadout()
   {
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset");
-
+    
     WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",1);
     WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",0);
 
@@ -579,27 +430,27 @@ namespace Ph2_HwInterface
         usleep(DEEPSLEEP);
       }
 
-    LOG (INFO) << GREEN << "DDR3 calibration done" << RESET;
+    LOG (INFO) << BOLDGREEN << "\t--> DDR3 calibration done" << RESET;
   }
 
   void FC7FWInterface::ChipReset()
   {
-    WriteReg ("user.ctrl_regs.reset_reg.scc_rst",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.reset_reg.scc_rst",0);
+    WriteStackReg({
+	{"user.ctrl_regs.reset_reg.scc_rst",1},
+	{"user.ctrl_regs.reset_reg.scc_rst",0}});
     usleep(DEEPSLEEP);
 
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",0);
+    WriteStackReg({
+	{"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",1},
+	{"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",0}});
     usleep(DEEPSLEEP);
   }
 
   void FC7FWInterface::ChipReSync()
   {
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",1);
-    usleep(WAIT);
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0);
+    WriteStackReg({
+	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",1},
+	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0}});
     usleep(DEEPSLEEP);
   }
 
@@ -724,5 +575,14 @@ namespace Ph2_HwInterface
       });
 
     usleep(DEEPSLEEP);
+  }
+  
+  void FC7FWInterface::SendTriggers(unsigned int n)
+  {
+    for (unsigned int i = 0; i < n; i++)
+      {
+	WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_trigger", 1);
+	usleep(1000);
+      }
   }
 }

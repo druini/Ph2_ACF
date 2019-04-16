@@ -828,7 +828,7 @@ namespace Ph2_System {
         for (const pugi::xml_attribute& attr : cSettingsChild.attributes())
 	  {
 	    uint16_t value = convertAnyInt (attr.value());
-            theChip->setReg(attr.name() ,value,true);
+            theChip->setReg(attr.name(),value,true);
             os << GREEN << "|\t|\t|\t|----" << attr.name() << ": " << BOLDRED << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
 	  }
       }
