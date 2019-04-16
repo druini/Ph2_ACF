@@ -576,7 +576,32 @@ namespace Ph2_HwInterface
 
     usleep(DEEPSLEEP);
   }
-  
+
+  void FC7FWInterface::ConfigureDIO5 (const DIO5Config& config)
+  {
+    bool ext_clk_en;
+    std::tie(ext_clk_en, std::ignore, std::ignore, std::ignore, std::ignore) = unpack_bits<1,1,1,1,1>(config.ch_out_en);
+
+    WriteStackReg({
+	{"user.ctrl_regs.ext_tlu_reg1.dio5_en",            (uint32_t)config.enable},
+	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en",     (uint32_t)config.ch_out_en},
+	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr",       (uint32_t)config.ch1_thr},
+	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr",       (uint32_t)config.ch2_thr},
+	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr",       (uint32_t)config.ch3_thr},
+	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch4_thr",       (uint32_t)config.ch4_thr},
+	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr",       (uint32_t)config.ch5_thr},
+	{"user.ctrl_regs.ext_tlu_reg2.tlu_en",             (uint32_t)config.tlu_en},
+	{"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)config.tlu_handshake_mode},
+
+	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   1},
+        {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   0}
+
+	// {"user.ctrl_regs.ext_tlu_reg2.ext_clk_en",         (uint32_t)ext_clk_en}
+      });
+    
+    usleep(DEEPSLEEP);
+  }
+
   void FC7FWInterface::SendTriggers(unsigned int n)
   {
     for (unsigned int i = 0; i < n; i++)

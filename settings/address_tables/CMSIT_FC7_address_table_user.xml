@@ -82,7 +82,7 @@
       <node id="dio5_en"              mask="0x00000001"       permission="rw"      description="Enable for the dio5 card" />
       <node id="dio5_ch_out_en"       mask="0x0000003E"       permission="rw"      description="DIO5, Output enable for channels 5(MSb) to 1(LSb)" />
       <node id="dio5_term_50ohm_en"   mask="0x000007C0"       permission="rw"      description="DIO5, 50 Ohm termination enable for channels 5(MSb) to 1(LSb)" />
-      <node id="dio5_ch1_thr"         mask="0x0007E000"       permission="rw"      description="DIO5, Voltage threshold for channel 1" />
+      <node id="dio5_ch1_thr"         mask="0x0007F800"       permission="rw"      description="DIO5, Voltage threshold for channel 1" />
       <node id="dio5_ch2_thr"         mask="0x07F80000"       permission="rw"      description="DIO5, Voltage threshold for channel 2" />
     </node>
 

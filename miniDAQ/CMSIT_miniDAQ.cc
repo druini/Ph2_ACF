@@ -154,30 +154,30 @@ int main (int argc, char** argv)
   auto RD53Board = static_cast<FC7FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
 
 
-  // ###############
-  // # Configuring #
-  // ###############
-  FC7FWInterface::FastCommandsConfig cfg;
+  // #############################
+  // # Configuring FastCmd block #
+  // #############################
+  FC7FWInterface::FastCommandsConfig cfgFastCmd;
 
-  cfg.trigger_source = FC7FWInterface::TriggerSource::FastCMDFSM;
-  cfg.n_triggers     = nEvents;
-  uint8_t chipId     = pChip->getChipId();
+  cfgFastCmd.trigger_source = FC7FWInterface::TriggerSource::FastCMDFSM;
+  cfgFastCmd.n_triggers     = nEvents;
+  uint8_t chipId            = pChip->getChipId();
 
   RD53::CalCmd calcmd(1,0,4,0,0);
-  cfg.fast_cmd_fsm.first_cal_data = calcmd.getCalCmd(chipId);
-  std::cout << "[main]\tprime_cal_data = 0x" << std::hex << unsigned(cfg.fast_cmd_fsm.first_cal_data) << std::dec << std::endl;
+  cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd.getCalCmd(chipId);
+  std::cout << "[main]\tprime_cal_data = 0x" << std::hex << unsigned(cfgFastCmd.fast_cmd_fsm.first_cal_data) << std::dec << std::endl;
 
   calcmd.setCalCmd(1,0,1,0,0);
-  cfg.fast_cmd_fsm.second_cal_data = calcmd.getCalCmd(chipId);
-  std::cout << "[main]\tinject_cal_data = 0x" << std::hex << unsigned(cfg.fast_cmd_fsm.second_cal_data) << std::dec << std::endl;
+  cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd.getCalCmd(chipId);
+  std::cout << "[main]\tinject_cal_data = 0x" << std::hex << unsigned(cfgFastCmd.fast_cmd_fsm.second_cal_data) << std::dec << std::endl;
 
-  cfg.fast_cmd_fsm.first_cal_en  = true;
-  cfg.fast_cmd_fsm.second_cal_en = true;
-  cfg.fast_cmd_fsm.trigger_en    = true;
+  cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
+  cfgFastCmd.fast_cmd_fsm.second_cal_en = true;
+  cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
 
 
   LOG (INFO) << BOLDBLUE << "ConfigureFastCommands" << RESET;
-  RD53Board->ConfigureFastCommands(cfg);
+  RD53Board->ConfigureFastCommands(cfgFastCmd);
 
   LOG (INFO) << BOLDBLUE << "SendFastECR" << RESET;
   RD53Board->ChipReset();
@@ -210,6 +210,18 @@ int main (int argc, char** argv)
   RD53Board->SendTriggers(nEvents);
   usleep(10000);
   RD53Chip->ReadHitOrCnt (static_cast<RD53*>(pChip));
+
+
+  // ####################
+  // # Configuring DIO5 #
+  // ####################
+  FC7FWInterface::DIO5Config cfgDIO5;
+
+  cfgDIO5.enable    = true;
+  cfgDIO5.ch_out_en = 0b10010;
+
+  LOG (INFO) << BOLDBLUE << "Configuring DIO5" << RESET;
+  RD53Board->ConfigureDIO5(cfgDIO5);
 
 
   cSystemController.Stop(pBoard);
