@@ -65,7 +65,7 @@ class Calibration : public Tool
 
     // void toggleOffset ( int pTGroup, uint8_t pBit, bool pBegin );
 
-    float findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint );
+    // float findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint );
 
     void clearOccupancyHists ( Chip* pCbc );
 

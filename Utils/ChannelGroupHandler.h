@@ -4,95 +4,95 @@
 #include <map>
 
 
-class ChannelGroupHandler
+class ChannelGroupBase
 {
-
 public:
+    ChannelGroupBase(){};
+    virtual ~ChannelGroupBase(){;}
+    virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfColsPerCluster, uint16_t numberOfRowsPerCluster=1) const = 0 ;
+    uint32_t getNumberOfEnabledChannels() const {return numberOfEnabledChannels_;}
 
-    class ChannelGroupBase
+protected:
+    uint32_t numberOfEnabledChannels_;
+};
+
+
+template< int C, int R >
+class ChannelGroup : public ChannelGroupBase
+{
+public:
+    ChannelGroup()
+    : numberOfRows_(R)
+    , numberOfCols_(C)
+    , customPatternSet_(false)
     {
-    public:
-        ChannelGroupBase(){};
-        virtual ~ChannelGroupBase(){;}
-        virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfColsPerCluster, uint16_t numberOfRowsPerCluster=1) const = 0 ;
-        uint32_t getNumberOfEnabledChannels() const {return numberOfEnabledChannels_;}
+        enableAllChannels();
+        numberOfEnabledChannels_=numberOfRows_*numberOfCols_;
 
-    protected:
-        uint32_t numberOfEnabledChannels_;
     };
+    virtual ~ChannelGroup(){;}
+    
+    inline bool isChannelEnabled  (uint16_t col, uint16_t row = 1       ) const { return channelsBitset_[col+numberOfCols_*row]; }
+    inline void enableChannel     (uint16_t col, uint16_t row = 1       )       { channelsBitset_[col+numberOfCols_*row] = true; }
+    inline void disableAllChannels(void                                 )       { channelsBitset_.reset()                      ; }
+    inline void enableAllChannels (void                                 )       { channelsBitset_.set()                        ; }
+    // virtual std::string getBitset (void                                 ) const { return channelsBitset_.to_string()           ; }
+    inline void setCustomPattern  (std::bitset<R*C> customChannelsBitset)       
+    { 
+        channelsBitset_          = customChannelsBitset   ; 
+        customPatternSet_        = true                   ;
+        numberOfEnabledChannels_ = channelsBitset_.count();
+    }
 
-
-    template< int C, int R >
-    class ChannelGroup : public ChannelGroupBase
+    virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfColsPerCluster, uint16_t numberOfRowsPerCluster=1) const override
     {
-    public:
-        ChannelGroup()
-        : numberOfRows_(R)
-        , numberOfCols_(C)
-        , customPatternSet_(false)
+        if(customPatternSet_ && (numberOfColsPerCluster>1 || numberOfRowsPerCluster>1))  
+            std::cout<<"Warning, automatic group creation may not work when a custom pattern is set\n";
+        if(numberOfClustersPerGroup*numberOfRowsPerCluster*numberOfColsPerCluster >= numberOfEnabledChannels_)
         {
-            enableAllChannels();
-            numberOfEnabledChannels_=numberOfRows_*numberOfCols_;
-
-        };
-        virtual ~ChannelGroup(){;}
-        
-        inline bool isChannelEnabled  (uint16_t col, uint16_t row = 1       ) const { return channelsBitset_[col+numberOfCols_*row]; }
-        inline void enableChannel     (uint16_t col, uint16_t row = 1       )       { channelsBitset_[col+numberOfCols_*row] = true; }
-        inline void disableAllChannels(void                                 )       { channelsBitset_.reset()                      ; }
-        inline void enableAllChannels (void                                 )       { channelsBitset_.set()                        ; }
-        // virtual std::string getBitset (void                                 ) const { return channelsBitset_.to_string()           ; }
-        inline void setCustomPattern  (std::bitset<R*C> customChannelsBitset)       
-        { 
-            channelsBitset_          = customChannelsBitset   ; 
-            customPatternSet_        = true                   ;
-            numberOfEnabledChannels_ = channelsBitset_.count();
+            static_cast<ChannelGroup*>(currentChannelGroup)->setCustomPattern(channelsBitset_);
+            return;
         }
+        static_cast<ChannelGroup*>(currentChannelGroup)->disableAllChannels();
 
-        virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfColsPerCluster, uint16_t numberOfRowsPerCluster=1) const override
+        uint32_t numberOfClusterToSkip = (numberOfEnabledChannels_/(numberOfColsPerCluster*numberOfRowsPerCluster))/numberOfClustersPerGroup;
+        uint32_t clusterSkipped = numberOfClusterToSkip - groupNumber;
+        for(uint16_t row = 0; row<numberOfRows_; row+=numberOfRowsPerCluster)
         {
-            if(customPatternSet_ && (numberOfColsPerCluster>1 || numberOfRowsPerCluster>1))  
-                std::cout<<"Warning, automatic group creation may not work when a custom pattern is set\n";
-            if(numberOfClustersPerGroup*numberOfRowsPerCluster*numberOfColsPerCluster >= numberOfEnabledChannels_)
+            for(uint16_t col = 0; col<numberOfCols_; col+=numberOfColsPerCluster)
             {
-                static_cast<ChannelGroup*>(currentChannelGroup)->setCustomPattern(channelsBitset_);
-                return;
-            }
-            static_cast<ChannelGroup*>(currentChannelGroup)->disableAllChannels();
-
-            uint32_t numberOfClusterToSkip = (numberOfEnabledChannels_/(numberOfColsPerCluster*numberOfRowsPerCluster))/numberOfClustersPerGroup;
-            uint32_t clusterSkipped = numberOfClusterToSkip - groupNumber;
-            for(uint16_t row = 0; row<numberOfRows_; row+=numberOfRowsPerCluster)
-            {
-                for(uint16_t col = 0; col<numberOfCols_; col+=numberOfColsPerCluster)
+                if(clusterSkipped == numberOfClusterToSkip) clusterSkipped = 0;
+                else
                 {
-                    if(clusterSkipped == numberOfClusterToSkip) clusterSkipped = 0;
-                    else
+                    ++clusterSkipped;
+                    continue;
+                }
+                if(isChannelEnabled(col,row))
+                {
+                    for(uint16_t clusterCol = 0; clusterCol<numberOfColsPerCluster; ++clusterCol)
                     {
-                        ++clusterSkipped;
-                        continue;
-                    }
-                    if(isChannelEnabled(col,row))
-                    {
-                        for(uint16_t clusterCol = 0; clusterCol<numberOfColsPerCluster; ++clusterCol)
+                        for(uint16_t clusterRow = 0; clusterRow<numberOfRowsPerCluster; ++clusterRow)
                         {
-                            for(uint16_t clusterRow = 0; clusterRow<numberOfRowsPerCluster; ++clusterRow)
-                            {
-                                static_cast<ChannelGroup*>(currentChannelGroup)->enableChannel(col+clusterCol,row+clusterRow);
-                            }
+                            static_cast<ChannelGroup*>(currentChannelGroup)->enableChannel(col+clusterCol,row+clusterRow);
                         }
                     }
                 }
             }
         }
+    }
 
-    protected:
-        std::bitset<R*C> channelsBitset_         ;
-        uint16_t         numberOfRows_           ;
-        uint16_t         numberOfCols_           ;
-        bool             customPatternSet_       ;
-    };
+protected:
+    std::bitset<R*C> channelsBitset_         ;
+    uint16_t         numberOfRows_           ;
+    uint16_t         numberOfCols_           ;
+    bool             customPatternSet_       ;
+};
 
+
+class ChannelGroupHandler
+{
+
+public:
 
     class ChannelGroupIterator : public std::iterator<std::output_iterator_tag,uint32_t>
     {

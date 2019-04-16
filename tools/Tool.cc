@@ -1,6 +1,7 @@
 #include "Tool.h"
 #include <TSystem.h>
 #include "../Utils/ObjectStreamer.h"
+#include "../Utils/ChannelGroupHandler.h"
 
 Tool::Tool() :
     SystemController(),
@@ -14,7 +15,8 @@ Tool::Tool() :
     fSkipMaskedChannels(false),
     fAllChan(false),
     fMaskChannelsFromOtherGroups(false),
-    fTestPulse(false)
+    fTestPulse(false),
+    fChannelGroupHandler(nullptr)
 {
 #ifdef __HTTP__
     fHttpServer = nullptr;
@@ -1404,10 +1406,9 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
 
     if(!fAllChan)
     {
-        for(const auto & group : fTestGroupChannelMap)
+        for(auto group : *fChannelGroupHandler)
         {
-            if(group.first == -1) continue;
-
+            
             if(fMaskChannelsFromOtherGroups || fTestPulse)
             {
                 for ( auto cFe : *(fDetectorContainer.at(boardIndex)))
@@ -1416,17 +1417,19 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
                     {
                         if(fMaskChannelsFromOtherGroups)
                         {
-                            maskChannelFromOtherGroups (static_cast<Chip*>(cChip), group.first);//FIX MAYBE NO NEED TO STATIC CAST
+                            std::cout << __PRETTY_FUNCTION__ << " NOT IMPLEMENTED!!!";
+                            // maskChannelFromOtherGroups (static_cast<Chip*>(cChip), group.first);//FIX MAYBE NO NEED TO STATIC CAST
                         }
                         if(fTestPulse)
                         {
-                            selectGroupTestPulse(static_cast<Chip*>(cChip), group.first); // check
+                            std::cout << __PRETTY_FUNCTION__ << " NOT IMPLEMENTED!!!";
+                            // selectGroupTestPulse(static_cast<Chip*>(cChip), group.first); // check
                         }
                     }
                 }
             }
 
-            measureBeBoardOccupancyPerGroup(boardIndex, numberOfEvents, group.second);
+            measureBeBoardOccupancyPerGroup(boardIndex, numberOfEvents, group);
         }
 
         if(fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
@@ -1442,7 +1445,7 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
     }
     else
     {
-    	measureBeBoardOccupancyPerGroup(boardIndex, numberOfEvents, fTestGroupChannelMap[-1]);
+    	measureBeBoardOccupancyPerGroup(boardIndex, numberOfEvents, fChannelGroupHandler->allChannelGroup());
     }
 /*
     //Evaluate module and BeBoard Occupancy
@@ -1504,13 +1507,13 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
 */
 }
 
-void Tool::measureBeBoardOccupancyPerGroup(unsigned int boardIndex, const uint16_t numberOfEvents, const std::vector<uint8_t> &cTestGrpChannelVec)
+void Tool::measureBeBoardOccupancyPerGroup(unsigned int boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup)
 {
     ReadNEvents ( static_cast<BeBoard*>(fDetectorContainer.at(boardIndex)), numberOfEvents );
     // Loop over Events from this Acquisition
     const std::vector<Event*>& events = GetEvents ( static_cast<BeBoard*>(fDetectorContainer.at(boardIndex)) );
     for ( auto& event : events )
-    	event->fillOccupancy((fDetectorDataContainer->at(boardIndex)));
+    	event->fillOccupancy((fDetectorDataContainer->at(boardIndex)), cTestChannelGroup);
 
 }
 

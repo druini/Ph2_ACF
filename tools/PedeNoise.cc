@@ -22,12 +22,14 @@ PedeNoise::PedeNoise() :
 
 PedeNoise::~PedeNoise()
 {
+    delete fChannelGroupHandler;
 }
 
 void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 {
     fDisableStubLogic = pDisableStubLogic;
     this->MakeTestGroups(FrontEndType::CBC3);
+    fChannelGroupHandler = new CBCChannelGroupHandler();
     fAllChan = pAllChan;
 
     auto cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
