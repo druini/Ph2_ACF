@@ -11,6 +11,7 @@
 
 #include "../Utils/D19cCbc3Event.h"
 #include "../Utils/Container.h"
+#include "../Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 

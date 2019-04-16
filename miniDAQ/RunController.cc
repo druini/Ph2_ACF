@@ -2,7 +2,7 @@
 
 INITIALIZE_EASYLOGGINGPP
 
-#define PORT 5000        // The destination port of the datastream
+#define PORT 5000 // The server listening port
 
 //MAIN
 int main(int argc, char **argv)

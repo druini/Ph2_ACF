@@ -155,7 +155,7 @@ void TCPNetworkServer::connect(int fdClientSocket)
 }
 
 //========================================================================================================================
-int TCPNetworkServer::accept(unsigned int timeoutSeconds, unsigned int timeoutUSeconds)
+bool TCPNetworkServer::accept(unsigned int timeoutSeconds, unsigned int timeoutUSeconds)
 {
 	struct timeval timeout;
 	timeout.tv_sec = timeoutSeconds;
@@ -176,10 +176,10 @@ int TCPNetworkServer::accept(unsigned int timeoutSeconds, unsigned int timeoutUS
 		int newSocketFD = ::accept4(fdServerSocket_,(struct sockaddr*)&clientAddress,&socketSize, (pushOnly_ ? SOCK_NONBLOCK : 0));
 		std::thread thread(&TCPNetworkServer::connect, this, newSocketFD);
 		thread.detach();
-		return 1;
+		return true;
 	}
 
-	return -1;
+	return false;
 }
 
 //========================================================================================================================

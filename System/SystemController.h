@@ -34,6 +34,7 @@
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/easylogging++.h"
 #include "../Utils/Container.h"
+#include "../Utils/TCPNetworkServer.h"
 #include <iostream>
 #include <vector>
 #include <map>
@@ -81,6 +82,7 @@ namespace Ph2_System {
         //for writing 1 file for each FED
         std::string             fRawFileName;
         bool                    fWriteHandlerEnabled;
+        TCPNetworkServer*       fNetworkStreamer;
 
       private:
         FileParser fParser;

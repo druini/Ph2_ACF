@@ -19,7 +19,13 @@
 #include "TFile.h"
 #include "TObject.h"
 #include "TCanvas.h"
-#include "../Utils/Container.h"
+//#include "../Utils/Container.h"
+
+
+class DetectorContainer;
+class VObjectStreamBase;
+
+
 
 #ifdef __HTTP__
 #include "THttpServer.h"
@@ -55,7 +61,8 @@ class Tool : public SystemController
     using ModuleGlobalOccupancyMap            = std::map<uint8_t,ChipGlobalOccupancyMap    >; //module       : { cbc    : { strip : occupancy } }
         // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyPerChannelMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
 
-    DetectorContainer*  fOccupancyContainer;
+    DetectorContainer*  fDetectorDataContainer;
+    VObjectStreamBase*  fObjectStream;
     CanvasMap           fCanvasMap;
     ChipHistogramMap    fChipHistMap;
     ModuleHistogramMap  fModuleHistMap;

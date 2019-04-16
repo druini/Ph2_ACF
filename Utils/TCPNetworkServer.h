@@ -17,12 +17,12 @@ public:
 	void                 initialize     (int bufferSize = 0x10000);
 	void                 connect        (int fdClientSocket);
 	virtual std::string& readMessage    (const std::string& buffer){std::string emptyString(""); return emptyString;}
-	virtual std::string& sendMessage    ()                         {std::string emptyString(""); return emptyString;}
+	virtual std::string& sendMessage    (std::string message = "") {return message;}
 	int                  send           (int fdClientSocket, const uint8_t* data, size_t size);
 	int                  send           (int fdClientSocket, const std::string& buffer);
 
 	//what to do with this
-	int                 accept         (unsigned int timeoutSeconds = 1, unsigned int timeoutUSeconds = 0);
+	bool                 accept         (unsigned int timeoutSeconds = 1, unsigned int timeoutUSeconds = 0);
 
 protected:
 	int                 TCPListen  (int port, int rcvbuf);

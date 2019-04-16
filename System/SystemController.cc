@@ -17,16 +17,24 @@ using namespace Ph2_HwInterface;
 
 namespace Ph2_System {
 
-    SystemController::SystemController() :
-        fBeBoardInterface (nullptr),
-        fChipInterface (nullptr),
-        fBoardVector(),
-        fSettingsMap(),
-        fFileHandler (nullptr),
-        fRawFileName (""),
-        fWriteHandlerEnabled (false),
-        fData (nullptr)
+    SystemController::SystemController()
+    : fBeBoardInterface   (nullptr)
+    , fChipInterface      (nullptr)
+    , fBoardVector        ()
+    , fSettingsMap        ()
+    , fFileHandler        (nullptr)
+    , fRawFileName        ("")
+    , fWriteHandlerEnabled(false)
+    , fData               (nullptr)
+    , fNetworkStreamer    (new TCPNetworkServer(6000,0x10000,true))//This is the server listening port
     {
+    	bool fStreamData = true;
+    	if(fStreamData && !fNetworkStreamer->accept(10, 0))
+    	{
+    		std::cout << "NOBODY IS LISTENING FOR MY OCCUPANCY DATA!!!!!!!! CRASHING!" << std::endl;
+    		abort();
+    	}
+
     }
 
     SystemController::~SystemController()

@@ -65,75 +65,6 @@ protected:
 	V* object_;
 };
 
-
-
-//class Event
-//{
-//
-//};
-
-class ChannelBase
-{
-public:
-	ChannelBase(){;}
-	virtual ~ChannelBase(){;}
-	virtual void print(void) = 0;
-};
-
-class Occupancy// : public ChannelBase
-{
-public:
-	Occupancy()
-	: fOccupancy(0)
-	{;}
-	~Occupancy(){;}
-	void print(void){;}//{std::cout << __PRETTY_FUNCTION__ << std::endl;}// = 0;
-	float fOccupancy;
-};
-
-//class RD53 : public ChannelBase
-//{
-//public:
-//	RD53(){;}
-//	void print(void){;}//{std::cout << __PRETTY_FUNCTION__ << std::endl;}// = 0;
-//	float occupancy;
-//	float pulseHeight;
-//	float pulseHeightVariation;
-//};
-
-//class Plot : public ChannelBase
-//{
-//public:
-//	void print(void){;}//{std::cout << __PRETTY_FUNCTION__ << std::endl;}// = 0;
-//
-//private:
-//};
-
-class TrimAndMask// : public ChannelBase
-{
-public:
-  TrimAndMask(){;}
-  ~TrimAndMask(){}
-	void print(void){std::cout << __PRETTY_FUNCTION__ << "Mask: " << mask << " Trim: " << trim << " trim2: " << trim2 << std::endl;}// = 0;
-
-	float trim = 1;
-	int   mask = 0;
-	float trim2 = 1;
-	float trim3 = 1;
-	float trim4 = 1;
-	float trim5 = 1;
-	float trim6 = 1;
-	float trim7 = 1;
-	float trim8 = 1;
-	friend std::ostream& operator<<(std::ostream& os, const TrimAndMask& channel)
-	{
-   		 os << channel.trim << channel.mask << '\n';
-    	return os;
-	}
-
-
-};
-
 class ChannelContainerBase
 {
 public:
@@ -218,6 +149,8 @@ public:
 	{
 			return static_cast<ChannelContainer<T>*>(container_)->getChannel(channel);
 	}
+	template <typename T>
+	T* getChannelContainer() {return static_cast<T*>(container_);}
 
 private:
 	unsigned int nOfRows_;
@@ -235,7 +168,6 @@ public:
 private:
 };
 
-//template<class T>
 class BoardContainer : public Container<ModuleContainer>
 {
 public:
@@ -248,13 +180,7 @@ public:
 private:
 };
 
-//class DetectorBase
-//{
-//
-//};
-
-//template<class T>
-class DetectorContainer : public Container<BoardContainer> //, public DetectorBase
+class DetectorContainer : public Container<BoardContainer>
 {
 public:
 	DetectorContainer(int id=-1) : Container<BoardContainer>(id){}
@@ -265,191 +191,4 @@ private:
 };
 
 
-/*
-class Tool
-{
-public:
-	Tool(){;}
-	void inherit(Tool& tool)
-	{
-
-	}
-	void measureOccupancy();
-protected:
-
-};
-
-
-class PedeNoise : public Tool
-{
-	PedeNoise(){;}
-};
-*/
-
-class DetectorFactory
-{
-public:
-	DetectorFactory(){;}
-	~DetectorFactory(){;}
-
-	//template <class T>
-	void buildDetectorUsingFile(DetectorContainer& detector)
-	{
-		std::cout << __PRETTY_FUNCTION__ << std::endl;
-		detector.addBoardContainer(1);
-		//for(auto& board : theStripDetector)
-		for(std::vector<BoardContainer*>::iterator board = detector.begin(); board != detector.end(); board++)
-		{
-			(*board)->addModuleContainer(12);
-			std::cout << "Board" << std::endl;
-			for(ModuleContainer* module : **board)
-			{
-				std::cout << "Module" << std::endl;
-				module->addChipContainer(7, 10);
-				for(ChipContainer* chip : *module)
-				{
-					chip->initialize<TrimAndMask>();
-					std::cout << "Chip" << std::endl;
-					int i = 0;
-					for(ChannelContainer<TrimAndMask>::iterator channel =  chip->begin<TrimAndMask>(); channel != chip->end<TrimAndMask>(); channel++, i++)
-					//TrimAndMask& trim = *(chip.begin<TrimAndMask>());
-					//for(auto& channel : chip)
-					{
-						channel->trim  = i*0.1;
-						channel->mask  = i;
-						channel->trim2 = i*0.2;
-						channel->print();
-					}
-				}
-			}
-		}
-	}
-//	void buildDetectorUsingFile(Detector& detector)
-//	{
-//		std::cout << __PRETTY_FUNCTION__ << std::endl;
-//		detector.addBoard(1);
-//		//for(auto& board : theStripDetector)
-//		for(std::vector<Board>::iterator board = detector.begin(); board != detector.end(); board++)
-//		{
-//			(*board).addModule(12);
-//			std::cout << "Board" << std::endl;
-//			for(Module& module : (*board))
-//			{
-//				module.addChip<Chip>(7, 6);
-//				std::cout << "Module" << std::endl;
-//				for(Chip* chip : module)
-//				{
-//					std::cout << "Chip" << std::endl;
-//				}
-//			}
-//		}
-//	}
-
-	template <typename T>
-	void print(DetectorContainer& detector)
-	{
-		std::cout << __PRETTY_FUNCTION__ << std::endl;
-		for(std::vector<BoardContainer*>::iterator board = detector.begin(); board != detector.end(); board++)
-		{
-			std::cout << "Board" << std::endl;
-			for(ModuleContainer* module : **board)
-			{
-				std::cout << "Module" << std::endl;
-				for(ChipContainer* chip : *module)
-				{
-					std::cout << "Chip" << std::endl;
-					for(typename ChannelContainer<T>::iterator channel=chip->begin<T>(); channel!=chip->end<T>(); channel++)
-					//for(ChannelBase& channel : chip)
-					{
-						//T& c = static_cast<T&>(*channel);
-						channel->print();
-						std::cout << *channel << std::endl;
-						//std::cout << "channel: " << *channel << std::endl;
-					}
-				}
-			}
-		}
-	}
-
-	void copyStructure(DetectorContainer& original, DetectorContainer& copy)
-	{
-		std::cout << __PRETTY_FUNCTION__ << std::endl;
-		for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
-		{
-			BoardContainer* copyBoard = copy.addBoardContainer((*board)->getId());
-			for(ModuleContainer* module : **board)
-			{
-				std::cout << "Module" << std::endl;
-				ModuleContainer* copyModule = copyBoard->addModuleContainer(module->getId());
-				for(ChipContainer* chip : *module)
-				{
-					std::cout << "Chip" << std::endl;
-					copyModule->addChipContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
-					//copyModule.back().initialize<T>();
-				}
-			}
-		}
-	}
-	template<typename T>
-	void copyAndInitStructure(DetectorContainer& original, DetectorContainer& copy)
-	{
-		std::cout << __PRETTY_FUNCTION__  << &original  <<  " " << &copy << std::endl;
-		for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
-		{
-			BoardContainer* copyBoard = copy.addBoardContainer((*board)->getId());
-			std::cout << __PRETTY_FUNCTION__  << copyBoard << std::endl;
-			for(ModuleContainer* module : **board)
-			{
-				std::cout << "Module" << std::endl;
-				ModuleContainer* copyModule = copyBoard->addModuleContainer(module->getId());
-				for(ChipContainer* chip : *module)
-				{
-					std::cout << "Chip" << std::endl;
-					copyModule->addChipContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
-					copyModule->back()->initialize<T>();
-				}
-			}
-		}
-	}
-
-};
-
-/*
-class Chip: public ChipContainer
-{
-
-
-};
-*/
 #endif
-
-/*
-int main()
-{
-	DetectorFactory   theDetectorFactory;
-	DetectorContainer theDetectorStructure;
-
-	theDetectorFactory.buildDetectorUsingFile(theDetectorStructure);
-	std::cout << "PRINT" << std::endl;
-	theDetectorFactory.print<TrimAndMask>(theDetectorStructure);
-	std::cout << "Done!" << std::endl;
-	std::cout<<"Press Enter...\n";
-	std::cin.get();
-return 1;
-
-	//Copy doesn't copy!!!!!!!
-	DetectorContainer theCopy;
-	theDetectorFactory.copyStructure(theDetectorStructure, theCopy);
-
-	std::cout<<"Press Enter...\n";
-	std::cin.get();
-//	Detector theStripDetector;
-//	theDetectorFactory.buildDetectorUsingFile<int>(theStripDetector);
-//	theDetectorFactory.print<int>(theStripDetector);
-//	Detector theBoolDetector;
-//	theDetectorFactory.buildDetectorUsingFile<EmptyValue>(theBoolDetector);
-	//theDetectorFactory.print<int>(theStripDetector);
-
-	return 1;
-}
-*/

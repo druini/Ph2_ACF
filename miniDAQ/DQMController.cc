@@ -1,18 +1,13 @@
 #include "DQMHistogramController.h"
+#include "../Utils/easylogging++.h"
 
 INITIALIZE_EASYLOGGINGPP
-
-#define PORT 40000        // The destination port of the datastream
 
 //MAIN
 int main(int argc, char **argv)
 {
-	DQMHistogramController theDQMHistogramController(PORT);
-
-	while(1) //listen to port BEAGLEBONE_PORT
-	{
-		theDQMHistogramController.accept(1, 0);
-	}
+	DQMHistogramController theDQMHistogramController("192.168.1.100",6000);
+	theDQMHistogramController.readMessage();
 
 	return 0;
 }

@@ -1,5 +1,8 @@
 #include "PedeNoise.h"
 #include "../Utils/Container.h"
+#include "../Utils/ContainerFactory.h"
+#include "../Utils/Occupancy.h"
+#include "../Utils/OccupancyStream.h"
 #include <math.h>
 
 PedeNoise::PedeNoise() :
@@ -331,10 +334,13 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
         //increase threshold to supress noise
         setThresholdtoNSigma (cBoard, 5);
     }
-	DetectorContainer theOccupancyContainer;
-	fOccupancyContainer = &theOccupancyContainer;
-    DetectorFactory   theDetectorFactory;
-	theDetectorFactory.copyAndInitStructure<Occupancy>(fDetectorContainer, theOccupancyContainer);
+	DetectorContainer         theOccupancyContainer;
+	fDetectorDataContainer = &theOccupancyContainer;
+	OccupancyStream           theOccupancyStream;
+	fObjectStream          = &theOccupancyStream;
+
+    ContainerFactory   theDetectorFactory;
+	theDetectorFactory.copyAndInitStructure<Occupancy>(fDetectorContainer, *fDetectorDataContainer);
     std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
     std::map<uint16_t, ModuleGlobalOccupancyMap>     backEndCbcOccupanyMap;
     float globalOccupancy=0;
@@ -343,7 +349,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
 
     this->SetTestAllChannels(true);
 
-    Tool::fOccupancyContainer = &theOccupancyContainer;
+    //Tool::fDetectorDataContainer = &theOccupancyContainer;
     //this->measureOccupancy(fEventsPerPoint*pMultiple, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
     this->measureOccupancy(fEventsPerPoint*pMultiple);
     this->SetTestAllChannels(originalAllChannelFlag);

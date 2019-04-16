@@ -1,5 +1,6 @@
 #include "Tool.h"
 #include <TSystem.h>
+#include "../Utils/ObjectStreamer.h"
 
 Tool::Tool() :
     SystemController(),
@@ -57,6 +58,7 @@ Tool::Tool (const Tool& pTool)
     fModuleHistMap       = pTool.fModuleHistMap;
     fBeBoardHistMap      = pTool.fBeBoardHistMap;
     fTestGroupChannelMap = pTool.fTestGroupChannelMap;
+
 #ifdef __HTTP__
     fHttpServer          = pTool.fHttpServer;
 #endif
@@ -83,6 +85,7 @@ void Tool::Inherit (Tool* pTool)
     fModuleHistMap       = pTool->fModuleHistMap;
     fBeBoardHistMap      = pTool->fBeBoardHistMap;
     fTestGroupChannelMap = pTool->fTestGroupChannelMap;
+    fNetworkStreamer     = pTool->fNetworkStreamer;
 #ifdef __HTTP__
     fHttpServer          = pTool->fHttpServer;
 #endif
@@ -97,6 +100,7 @@ void Tool::Inherit (SystemController* pSystemController)
     fBeBoardFWMap      = pSystemController->fBeBoardFWMap;
     fSettingsMap       = pSystemController->fSettingsMap;
     fFileHandler       = pSystemController->fFileHandler;
+    fNetworkStreamer   = pSystemController->fNetworkStreamer;
 }
 
 void Tool::Destroy()
@@ -1384,8 +1388,12 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
 void Tool::measureOccupancy(const uint16_t &numberOfEvents)
 {
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer.size(); boardIndex++)
+	{
         measureBeBoardOccupancy(boardIndex, numberOfEvents);
-
+        fObjectStream->streamBoard(fDetectorDataContainer->at(boardIndex));
+        //sendstuff
+        fNetworkStreamer->sendMessage(fObjectStream->encodeStringStream());
+	}
 }
 // measure occupancy
 void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numberOfEvents)
@@ -1502,7 +1510,7 @@ void Tool::measureBeBoardOccupancyPerGroup(unsigned int boardIndex, const uint16
     // Loop over Events from this Acquisition
     const std::vector<Event*>& events = GetEvents ( static_cast<BeBoard*>(fDetectorContainer.at(boardIndex)) );
     for ( auto& event : events )
-    	event->fillOccupancy((fOccupancyContainer->at(boardIndex)));
+    	event->fillOccupancy((fDetectorDataContainer->at(boardIndex)));
 
 }
 
