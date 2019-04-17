@@ -83,7 +83,7 @@ namespace Ph2_HwInterface
     uint32_t  getBoardInfo   ()                      override;
     BoardType getBoardType   () const { return BoardType::FC7; };
 
-    void ConfigureBoard (const BeBoard* pBoard) override;
+    void ConfigureBoard      (const BeBoard* pBoard) override;
 
     void Start()                  override;
     void Stop()                   override;
@@ -207,11 +207,11 @@ namespace Ph2_HwInterface
     {
       bool     enable             = false;
       uint32_t ch_out_en          = 0; // chn-1 = TLU clk input, chn-2 = ext. trigger, chn-3 = TLU busy, chn-4 = TLU reset, chn-5 = ext. clk
-      uint32_t ch1_thr            = 0xFF;
-      uint32_t ch2_thr            = 0xFF;
-      uint32_t ch3_thr            = 0xFF;
-      uint32_t ch4_thr            = 0xFF;
-      uint32_t ch5_thr            = 0xFF;
+      uint32_t ch1_thr            = 0x7F; // [thr/256*3.3V]
+      uint32_t ch2_thr            = 0x7F;
+      uint32_t ch3_thr            = 0x7F;
+      uint32_t ch4_thr            = 0x7F;
+      uint32_t ch5_thr            = 0x7F;
       bool     tlu_en             = false;
       uint32_t tlu_handshake_mode = 0; // 0 = no handshake, 1 = simple handshake, 2 = data handshake
     };

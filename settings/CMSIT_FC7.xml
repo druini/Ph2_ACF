@@ -17,7 +17,13 @@
             EN_CORE_COL_LIN_2  =     "1"
             EN_CORE_COL_DIFF_1 = "0"
             EN_CORE_COL_DIFF_2 =     "0"
-	    
+
+            EN_MACRO_COL_CAL_LIN_1 = "65535"
+            EN_MACRO_COL_CAL_LIN_2 = "65535"
+            EN_MACRO_COL_CAL_LIN_3 = "65535"
+            EN_MACRO_COL_CAL_LIN_4 = "65535"
+            EN_MACRO_COL_CAL_LIN_5 = "15"
+
             GP_LVDS_ROUTE    =    "1"
 
             VTH_SYNC         =  "300"
@@ -26,7 +32,7 @@
             VTH1_DIFF        =  "400"
             VTH2_DIFF        =   "50"
 
-	    VCAL_HIGH        =  "900" 	    
+	    VCAL_HIGH        =  "900"
 	    VCAL_MED         =  "100"
 	    INJECTION_SELECT =   "16"
 
