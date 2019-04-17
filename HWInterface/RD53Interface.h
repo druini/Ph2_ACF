@@ -53,6 +53,11 @@ namespace Ph2_HwInterface
     void ResetRD53                     (RD53* pRD53);
     void SetResetCoreCol               (RD53* pRD53, bool setT_resetF);
     void ResetHitOrCnt                 (RD53* pRD53);
+
+    //TMP: implement them!!!
+    bool setInjectionSchema (Chip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override {return true;}
+    bool maskChannelsGroup  (Chip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override {return true;}
+
    };
 }
 

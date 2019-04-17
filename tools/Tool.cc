@@ -1417,13 +1417,11 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
                     {
                         if(fMaskChannelsFromOtherGroups)
                         {
-                            std::cout << __PRETTY_FUNCTION__ << " NOT IMPLEMENTED!!!";
-                            // maskChannelFromOtherGroups (static_cast<Chip*>(cChip), group.first);//FIX MAYBE NO NEED TO STATIC CAST
+                            fChipInterface->maskChannelsGroup(static_cast<Chip*>(cChip), group);
                         }
                         if(fTestPulse)
                         {
-                            std::cout << __PRETTY_FUNCTION__ << " NOT IMPLEMENTED!!!";
-                            // selectGroupTestPulse(static_cast<Chip*>(cChip), group.first); // check
+                            fChipInterface->setInjectionSchema(static_cast<Chip*>(cChip), group);
                         }
                     }
                 }
