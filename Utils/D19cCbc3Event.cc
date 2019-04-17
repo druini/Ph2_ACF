@@ -42,15 +42,14 @@ namespace Ph2_HwInterface {
 
     void D19cCbc3Event::fillOccupancy(BoardContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
     {
-        const ChannelGroup<NCHANNELS,1> *channelGroupUnderTest = static_cast<const ChannelGroup<NCHANNELS,1>*>(cTestChannelGroup);
-    	for(auto module: *boardContainer)
+        for(auto module: *boardContainer)
     	{
     		for(auto chip: *module)
     		{
 				unsigned int i = 0;
     			for(ChannelContainer<Occupancy>::iterator channel =  chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
 				{
-                    if(channelGroupUnderTest->isChannelEnabled(i))
+                    if(cTestChannelGroup->isChannelEnabled(i))
                     {
     					channel->fOccupancy  += (float)DataBit ( module->getId(), chip->getId(), i);
                     }

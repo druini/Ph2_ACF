@@ -3,6 +3,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/OccupancyStream.h"
+#include "../Utils/CBCChannelGroupHandler.h"
 #include <math.h>
 
 PedeNoise::PedeNoise() :

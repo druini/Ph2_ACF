@@ -17,6 +17,7 @@
 #include <string.h>
 #include <iomanip>
 #include "Definition.h"
+#include "../Utils/ChannelGroupHandler.h"
 
 
 namespace Ph2_HwDescription
@@ -51,10 +52,9 @@ namespace Ph2_HwDescription
 
 
     // D'Tor
-
     Chip::~Chip()
     {
-
+        delete fChipOriginalMask;
     }
 
     ChipRegItem Chip::getRegItem ( const std::string& pReg )

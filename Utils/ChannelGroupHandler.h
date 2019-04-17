@@ -8,11 +8,22 @@ class ChannelGroupBase
 {
 public:
     ChannelGroupBase(){};
+    ChannelGroupBase(uint16_t numberOfCols_, uint16_t numberOfRows_)
+    : numberOfCols_(numberOfCols_)
+    , numberOfRows_(numberOfRows_)
+    {};
     virtual ~ChannelGroupBase(){;}
     virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfColsPerCluster, uint16_t numberOfRowsPerCluster=1) const = 0 ;
     uint32_t getNumberOfEnabledChannels() const {return numberOfEnabledChannels_;}
-
+    virtual inline bool isChannelEnabled  (uint16_t col, uint16_t row = 1       ) const = 0;
+    virtual inline void enableChannel     (uint16_t col, uint16_t row = 1       )       = 0;
+    virtual inline void disableChannel    (uint16_t col, uint16_t row = 1       )       = 0;
+    virtual inline void disableAllChannels(void                                 )       = 0;
+    virtual inline void enableAllChannels (void                                 )       = 0;
+    
 protected:
+    uint16_t         numberOfCols_           ;
+    uint16_t         numberOfRows_           ;
     uint32_t numberOfEnabledChannels_;
 };
 
@@ -21,9 +32,8 @@ template< int C, int R >
 class ChannelGroup : public ChannelGroupBase
 {
 public:
-    ChannelGroup()
-    : numberOfRows_(R)
-    , numberOfCols_(C)
+    ChannelGroup() 
+    : ChannelGroupBase(C,R)
     , customPatternSet_(false)
     {
         enableAllChannels();
@@ -32,10 +42,11 @@ public:
     };
     virtual ~ChannelGroup(){;}
     
-    inline bool isChannelEnabled  (uint16_t col, uint16_t row = 1       ) const { return channelsBitset_[col+numberOfCols_*row]; }
-    inline void enableChannel     (uint16_t col, uint16_t row = 1       )       { channelsBitset_[col+numberOfCols_*row] = true; }
-    inline void disableAllChannels(void                                 )       { channelsBitset_.reset()                      ; }
-    inline void enableAllChannels (void                                 )       { channelsBitset_.set()                        ; }
+    inline bool isChannelEnabled  (uint16_t col, uint16_t row = 1       ) const override { return channelsBitset_[col+numberOfCols_*row] ; }
+    inline void enableChannel     (uint16_t col, uint16_t row = 1       )       override { channelsBitset_[col+numberOfCols_*row] = true ; }
+    inline void disableChannel    (uint16_t col, uint16_t row = 1       )       override { channelsBitset_[col+numberOfCols_*row] = false; }
+    inline void disableAllChannels(void                                 )       override { channelsBitset_.reset()                       ; }
+    inline void enableAllChannels (void                                 )       override { channelsBitset_.set()                         ; }
     // virtual std::string getBitset (void                                 ) const { return channelsBitset_.to_string()           ; }
     inline void setCustomPattern  (std::bitset<R*C> customChannelsBitset)       
     { 
@@ -83,8 +94,6 @@ public:
 
 protected:
     std::bitset<R*C> channelsBitset_         ;
-    uint16_t         numberOfRows_           ;
-    uint16_t         numberOfCols_           ;
     bool             customPatternSet_       ;
 };
 

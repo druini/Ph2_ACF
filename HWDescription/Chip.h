@@ -26,6 +26,7 @@
 #include "../Utils/easylogging++.h"
 #include "../Utils/Container.h"
 
+class ChannelGroupBase;
 // Chip2 Chip HW Description Class
 
 
@@ -62,7 +63,7 @@ namespace Ph2_HwDescription {
         Chip ( const Chip& cbcobj );
 
         // D'Tor
-        ~Chip();
+        virtual ~Chip();
 
         /*!
          * \brief acceptor method for HwDescriptionVisitor
@@ -138,6 +139,8 @@ namespace Ph2_HwDescription {
 
         virtual std::vector<uint8_t>& getChipMask() = 0;
 
+        ChannelGroupBase* getChipOriginalMask() {return fChipOriginalMask;}
+
         bool hasMaskedChannels() const
         {
 	  return fhasMaskedChannels;
@@ -160,6 +163,7 @@ namespace Ph2_HwDescription {
         ChipRegMap fRegMap;
         CommentMap fCommentMap;
         std::vector<uint8_t> fChipMask;
+        ChannelGroupBase*     fChipOriginalMask;
         
     };
 
