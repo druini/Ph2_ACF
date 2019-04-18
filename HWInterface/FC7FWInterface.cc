@@ -481,7 +481,8 @@ namespace Ph2_HwInterface
     return events;
   }
 
-  FC7FWInterface::Event::Event(const uint32_t* data, size_t n) {
+  FC7FWInterface::Event::Event(const uint32_t* data, size_t n)
+  {
     std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
     
     if (block_size * 4 != n) LOG (ERROR) << BOLDRED << "Invalid event block size: " << block_size << " instead of " << (n / 4) << RESET;
@@ -495,33 +496,30 @@ namespace Ph2_HwInterface
       {
 	if (data[i] >> (NBIT_ERR + NBIT_HYBRID + NBIT_CHIPID + NBIT_L1ASIZE) == CHIP_HEADER) chip_start.push_back(i);
       }
-
+    
     chip_frames.reserve(chip_start.size());
     chip_events.reserve(chip_start.size());
-    for (size_t i = 0; i < chip_start.size(); i++) {
-      const size_t start = chip_start[i];
-      const size_t end = (i == chip_start.size() - 1) ? n : chip_start[i + 1];
-      chip_frames.emplace_back(data[start], data[1]);
-      chip_events.emplace_back(data + start + 2, end - start - 2);
-
-      if (chip_frames[i].l1a_data_size * 4 != n) {
-        LOG (ERROR) << "Invalid chip L1A Data Size." << RESET;
+    for (size_t i = 0; i < chip_start.size(); i++)
+      {
+	const size_t start = chip_start[i];
+	const size_t end = (i == chip_start.size() - 1) ? n : chip_start[i + 1];
+	chip_frames.emplace_back(data[start], data[1]);
+	chip_events.emplace_back(data + start + 2, end - start - 2);
+	
+	// if (chip_frames[i].l1a_data_size * 4 != n) LOG (ERROR) << "Invalid chip L1A data size" << RESET; // @TMP@
       }
-    }
   }
-
+  
   FC7FWInterface::ChipFrame::ChipFrame(const uint32_t data0, const uint32_t data1)
   {
     std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = 
       unpack_bits<NBIT_ERR, NBIT_HYBRID, NBIT_CHIPID, NBIT_L1ASIZE>(data0);
-
+    
     std::tie(chip_type, frame_delay) = unpack_bits<NBIT_CHIPTYPE, NBIT_FRAME>(data1);
   }
   
   void FC7FWInterface::SendBoardCommand(const std::string& cmd_reg)
   {
-    WriteStackReg({}); // Dispatch any previous commands @TMP@
-
     WriteStackReg({
 	{cmd_reg, 1},
 	{"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 1},
@@ -583,7 +581,7 @@ namespace Ph2_HwInterface
   void FC7FWInterface::ConfigureDIO5 (const DIO5Config& config)
   {
     bool ext_clk_en;
-    std::tie(ext_clk_en, std::ignore, std::ignore, std::ignore, std::ignore) = unpack_bits<1,1,1,1,1>(config.ch_out_en);
+    std::tie(ext_clk_en, std::ignore) = unpack_bits<1,4>(config.ch_out_en);
 
     WriteStackReg({
 	{"user.ctrl_regs.ext_tlu_reg1.dio5_en",            (uint32_t)config.enable},
@@ -599,18 +597,9 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   1},
         {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   0}
 
-	// {"user.ctrl_regs.ext_tlu_reg2.ext_clk_en",         (uint32_t)ext_clk_en}
+	// {"user.ctrl_regs.ext_tlu_reg2.ext_clk_en",         (uint32_t)ext_clk_en} // @TMP@
       });
     
     usleep(DEEPSLEEP);
-  }
-
-  void FC7FWInterface::SendTriggers(unsigned int n)
-  {
-    for (unsigned int i = 0; i < n; i++)
-      {
-	WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_trigger", 1);
-	usleep(1000);
-      }
   }
 }

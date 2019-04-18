@@ -25,13 +25,13 @@ namespace Ph2_HwInterface
 	// ###############################
 	// # Programmig global registers #
 	// ###############################
-	if (cRegItem.second.fPrmptCfg == true) this->WriteChipReg(pRD53,cRegItem.first,cRegItem.second.fValue);
+	if (cRegItem.second.fPrmptCfg == true) this->WriteChipReg(pRD53, cRegItem.first, cRegItem.second.fValue);
       }
 
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    // this->WriteRD53Mask (pRD53, false);
+    this->WriteRD53Mask (pRD53, false);
 
     return true;
   }
@@ -77,11 +77,11 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53, "SYNC", 0x0);
   }
 
-  bool RD53Interface::WriteChipReg (Chip* cRD53, const std::string& pRegNode, const uint16_t data, bool pVerifyLoop)
+  bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifyLoop)
   {
-    setBoard (cRD53->getBeBoardId());
+    setBoard (pChip->getBeBoardId());
 
-    RD53* pRD53 = static_cast<RD53*>(cRD53);
+    RD53* pRD53 = static_cast<RD53*>(pChip);
 
     // std::vector<std::vector<uint16_t> > symbols; // Useful in case the encoding is done in the software
     std::vector<uint32_t> serialSymbols;
@@ -152,11 +152,11 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::WriteChipMultReg (Chip* cRD53, const std::vector< std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop)
+  bool RD53Interface::WriteChipMultReg (Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop)
   {
-    setBoard (cRD53->getBeBoardId());
+    setBoard (pChip->getBeBoardId());
 
-    RD53* pRD53 = static_cast<RD53*>(cRD53);
+    RD53* pRD53 = static_cast<RD53*>(pChip);
 
     std::vector<uint32_t> serialSymbols;
     ChipRegItem cRegItem;
@@ -242,10 +242,12 @@ namespace Ph2_HwInterface
     // @TMP@
     pRD53->resetMask();
     // pRD53->enableAllPixels();
+    // pRD53->enablePixel(50,129);
+    // pRD53->injectPixel(50,129);
     for (unsigned int i = 0; i < NROWS; i++)
       {
-	pRD53->enablePixel(i,129);
-	// pRD53->injectPixel(50,129);
+    	pRD53->enablePixel(i,129);
+    	pRD53->injectPixel(i,129);
       }
 
     std::vector<uint16_t> dataVec;
@@ -256,7 +258,7 @@ namespace Ph2_HwInterface
     // @TMP@
     // for (unsigned int i = 0; i < NCOLS; i+=2)
     // for (unsigned int i = 128; i < 263; i+=2)
-    for (unsigned int i = 128; i < 131; i+=2)
+    for (unsigned int i = 128; i < 135; i+=2)
       {
 	pRD53->ConvertRowCol2Cores (0,i,colPair,row);
 	data = colPair;

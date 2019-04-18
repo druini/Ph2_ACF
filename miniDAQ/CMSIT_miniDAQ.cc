@@ -44,7 +44,7 @@ public:
     uint32_t fEventsPerPoint = 10;
     float globalOccupancy    =  0;
 
-    this->SetTestAllChannels(true);
+    this->SetTestAllChannels(false);
     this->measureOccupancy(fEventsPerPoint, backEndOccupancyPerChannelMap, backEndRD53OccupanyMap, globalOccupancy);
     this->SetTestAllChannels(false);
 
@@ -76,45 +76,59 @@ private:
 */
 
 
-void PrintEvents(const std::vector<FC7FWInterface::Event>& events)
+unsigned int AnalyzeEvents(const std::vector<FC7FWInterface::Event>& events, bool print = false)
 {
+  unsigned int nEvts = 0;
+
   for (int i = 0; i < events.size(); i++)
     {
       auto& evt = events[i];
-      LOG (INFO) << BOLDGREEN << "Event " << i << RESET;
-      LOG (INFO) << BOLDGREEN << "block_size = " << evt.block_size << RESET;
-      LOG (INFO) << BOLDGREEN << "trigger_id = " << evt.tlu_trigger_id << RESET;
-      LOG (INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
-      LOG (INFO) << BOLDGREEN << "tdc = " << evt.tdc << RESET;
-      LOG (INFO) << BOLDGREEN << "l1a_counter = " << evt.l1a_counter << RESET;
-      LOG (INFO) << BOLDGREEN << "bx_counter = " << evt.bx_counter << RESET;
+      if (print == true)
+	{
+	  LOG (INFO) << BOLDGREEN << "Event " << i << RESET;
+	  LOG (INFO) << BOLDGREEN << "block_size = " << evt.block_size << RESET;
+	  LOG (INFO) << BOLDGREEN << "trigger_id = " << evt.tlu_trigger_id << RESET;
+	  LOG (INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
+	  LOG (INFO) << BOLDGREEN << "tdc = " << evt.tdc << RESET;
+	  LOG (INFO) << BOLDGREEN << "l1a_counter = " << evt.l1a_counter << RESET;
+	  LOG (INFO) << BOLDGREEN << "bx_counter = " << evt.bx_counter << RESET;
+	}
 
       for (size_t j = 0; j < evt.chip_events.size(); j++)
 	{
-	  LOG (INFO) << CYAN << "Chip Header: " << RESET;
-	  LOG (INFO) << CYAN << "error_code = " << evt.chip_frames[i].error_code << RESET;
-	  LOG (INFO) << CYAN << "hybrid_id = " << evt.chip_frames[i].hybrid_id << RESET;
-	  LOG (INFO) << CYAN << "chip_id = " << evt.chip_frames[i].chip_id << RESET;
-	  LOG (INFO) << CYAN << "l1a_data_size = " << evt.chip_frames[i].l1a_data_size << RESET;
-	  LOG (INFO) << CYAN << "chip_type = " << evt.chip_frames[i].chip_type << RESET;
-	  LOG (INFO) << CYAN << "frame_delay = " << evt.chip_frames[i].frame_delay << RESET;
-
-	  LOG (INFO) << CYAN << "trigger_id = " << evt.chip_events[i].trigger_id << RESET;
-	  LOG (INFO) << CYAN << "trigger_tag = " << evt.chip_events[i].trigger_tag << RESET;
-	  LOG (INFO) << CYAN << "bc_id = " << evt.chip_events[i].bc_id << RESET;
-
-	  LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[i].data.size() << " words): " << RESET;
-
-	  for (const auto& region_data : evt.chip_events[i].data)
+	  if (print == true)
 	    {
-	      LOG(INFO)   << "Column: " << region_data.col 
-			  << ", Row: " << region_data.row 
-			  << ", ToTs: [" << +region_data.tots[0] << "," << +region_data.tots[1] << "," << +region_data.tots[2] << "," << +region_data.tots[3] << "]"
-			  << RESET;
+	      LOG (INFO) << CYAN << "Chip Header: " << RESET;
+	      LOG (INFO) << CYAN << "error_code = " << evt.chip_frames[j].error_code << RESET;
+	      LOG (INFO) << CYAN << "hybrid_id = " << evt.chip_frames[j].hybrid_id << RESET;
+	      LOG (INFO) << CYAN << "chip_id = " << evt.chip_frames[j].chip_id << RESET;
+	      LOG (INFO) << CYAN << "l1a_data_size = " << evt.chip_frames[j].l1a_data_size << RESET;
+	      LOG (INFO) << CYAN << "chip_type = " << evt.chip_frames[j].chip_type << RESET;
+	      LOG (INFO) << CYAN << "frame_delay = " << evt.chip_frames[j].frame_delay << RESET;
+	      
+	      LOG (INFO) << CYAN << "trigger_id = " << evt.chip_events[j].trigger_id << RESET;
+	      LOG (INFO) << CYAN << "trigger_tag = " << evt.chip_events[j].trigger_tag << RESET;
+	      LOG (INFO) << CYAN << "bc_id = " << evt.chip_events[j].bc_id << RESET;
+	      
+	      LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
+	    }
+
+	  if (evt.chip_events[j].data.size() != 0) nEvts++;
+
+	  for (const auto& region_data : evt.chip_events[j].data)
+	    {
+	      if (print == true)
+		{
+		  LOG(INFO)   << "Column: " << region_data.col 
+			      << ", Row: " << region_data.row 
+			      << ", ToTs: [" << +region_data.tots[0] << "," << +region_data.tots[1] << "," << +region_data.tots[2] << "," << +region_data.tots[3] << "]"
+			      << RESET;
+		}
 	    }
 	}
-    } 
+    }
 
+  return nEvts;
 }
 
 
@@ -247,30 +261,32 @@ int main (int argc, char** argv)
   RD53Board->ChipReSync();
 
 
-  auto RD53Chip = static_cast<RD53Interface*>(cSystemController.fChipInterface);
-  usleep(10000);
-  RD53Chip->ResetHitOrCnt (static_cast<RD53*>(pChip));
-  usleep(10000);
-  RD53Chip->ReadHitOrCnt (static_cast<RD53*>(pChip));
-  usleep(10000);
-
-
   // ###########
   // # Running #
   // ###########
-  cSystemController.Start(pBoard);
-  
+  auto RD53Chip = static_cast<RD53Interface*>(cSystemController.fChipInterface);
+  RD53Chip->ResetHitOrCnt (static_cast<RD53*>(pChip));
+  RD53Chip->ReadHitOrCnt  (static_cast<RD53*>(pChip));
+
   std::vector<uint32_t> data;
-  RD53Board->ReadData(pBoard, false, data, false);
-  auto events = FC7FWInterface::DecodeEvents(data);
-  // const std::vector<Event*>& events = cSystemController.GetEvents(pBoard);
-  PrintEvents(events);
+  for (unsigned int lt = 0; lt < 512; lt++)
+    {
+      unsigned int nEvts;
+      LOG (INFO) << BOLDBLUE << "\n\t--> Latency = " << BOLDYELLOW << lt << RESET;
+      RD53Chip->WriteChipReg(pChip, "LATENCY_CONFIG", lt);
 
+      cSystemController.Start(pBoard);
+      usleep(1000);
+      cSystemController.Stop(pBoard);
 
-  usleep(10000);
-  RD53Board->SendTriggers(nEvents);
-  usleep(10000);
-  RD53Chip->ReadHitOrCnt (static_cast<RD53*>(pChip));
+      RD53Board->ReadData(pBoard, false, data, false);
+      auto events = FC7FWInterface::DecodeEvents(data);
+      // const std::vector<Event*>& events = cSystemController.GetEvents(pBoard);
+      nEvts = AnalyzeEvents(events);
+      assert ((nEvts == 0) && "Found some events!");
+
+      RD53Chip->ReadHitOrCnt (static_cast<RD53*>(pChip));
+    }
 
 
   // ####################
@@ -291,10 +307,9 @@ int main (int argc, char** argv)
   // #######################
   // # Run PixelAlive scan #
   // #######################
-  /*
-  PixelAlive pa;
-  pa.Run();
-  */
+  // PixelAlive pa;
+  // pa.Inherit(cSystemController);
+  // pa.Run();
 
 
   cSystemController.Destroy();

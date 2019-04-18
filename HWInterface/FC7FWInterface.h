@@ -106,11 +106,11 @@ namespace Ph2_HwInterface
     void TurnOnFMC();
     void ResetBoard();
     void ResetReadout();
-    void SendTriggers(unsigned int n);
 
-    struct ChipFrame {
+    struct ChipFrame
+    {
       ChipFrame(const uint32_t data0, const uint32_t data1);
-
+      
       uint16_t error_code;
       uint16_t hybrid_id;
       uint16_t chip_id;
@@ -119,58 +119,41 @@ namespace Ph2_HwInterface
       uint16_t frame_delay;
     };
 
-    struct Event {
-        Event(const uint32_t* data, size_t n);
-
-        uint16_t block_size;
-        uint16_t tlu_trigger_id;
-        uint16_t data_format_ver;
-        uint16_t tdc;
-        uint16_t l1a_counter;
-        uint32_t bx_counter;
-
-        std::vector<ChipFrame> chip_frames;
-        std::vector<RD53::Event> chip_events;
+    struct Event
+    {
+      Event(const uint32_t* data, size_t n);
+      
+      uint16_t block_size;
+      uint16_t tlu_trigger_id;
+      uint16_t data_format_ver;
+      uint16_t tdc;
+      uint16_t l1a_counter;
+      uint32_t bx_counter;
+      
+      std::vector<ChipFrame> chip_frames;
+      std::vector<RD53::Event> chip_events;
     };
-
+    
     static std::vector<Event> DecodeEvents(const std::vector<uint32_t>& data); 
-
-    // Fast Commands Block
-    struct TestFSMConfig {
-      bool ecr_en = false;
-      bool first_cal_en = false;
-      bool second_cal_en = false;
-      bool trigger_en = true;
-
-      uint32_t first_cal_data = 0;
-      uint32_t second_cal_data = 0;
-      uint32_t glb_pulse_data = 0;
-
-      uint32_t delay_after_ecr = 0;
-      uint32_t delay_after_autozero = 0;
-      uint32_t delay_after_first_cal = 0;
-      uint32_t delay_after_second_cal = 0;
-      uint16_t delay_loop = 10;
-    };
     
     enum class TriggerSource : uint32_t
     {
       IPBus = 1,
-      FastCMDFSM,
-      TTC,
-      TLU,
-      External,
-      HitOr,
-      UserDefined,
-      Undefined = 0
+	FastCMDFSM,
+	TTC,
+	TLU,
+	External,
+	HitOr,
+	UserDefined,
+	Undefined = 0
     };
     
     enum class AutozeroSource : uint32_t
     {
       IPBus = 1,
-      FastCMDFSM,
-      FreeRunning,
-      Disabled = 0
+	FastCMDFSM,
+	FreeRunning,
+	Disabled = 0
     };
     
     struct FastCmdFSMConfig
@@ -219,14 +202,14 @@ namespace Ph2_HwInterface
     struct DIO5Config
     {
       bool     enable             = false;
-      uint32_t ch_out_en          = 0; // chn-1 = TLU clk input, chn-2 = ext. trigger, chn-3 = TLU busy, chn-4 = TLU reset, chn-5 = ext. clk
+      uint32_t ch_out_en          = 0;    // chn-1 = TLU clk input, chn-2 = ext. trigger, chn-3 = TLU busy, chn-4 = TLU reset, chn-5 = ext. clk
       uint32_t ch1_thr            = 0x7F; // [thr/256*3.3V]
       uint32_t ch2_thr            = 0x7F;
       uint32_t ch3_thr            = 0x7F;
       uint32_t ch4_thr            = 0x7F;
       uint32_t ch5_thr            = 0x7F;
       bool     tlu_en             = false;
-      uint32_t tlu_handshake_mode = 0; // 0 = no handshake, 1 = simple handshake, 2 = data handshake
+      uint32_t tlu_handshake_mode = 0;    // 0 = no handshake, 1 = simple handshake, 2 = data handshake
     };
 
     void ConfigureDIO5 (const DIO5Config& config);

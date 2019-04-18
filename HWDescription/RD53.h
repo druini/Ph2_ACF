@@ -152,17 +152,18 @@ namespace Ph2_HwDescription
       std::array<uint8_t, NPIX_REGION> tots;
     };
 
-    struct Event {
+    struct Event
+    {
       Event(const uint32_t* data, size_t n);
-
-      // header
+      
+      // Header
       uint16_t trigger_id;
       uint16_t trigger_tag;
       uint16_t bc_id;
-
+      
       std::vector<HitData> data;
     };
-
+    
     struct CalCmd
     {
       CalCmd (const uint8_t& _cal_edge_mode,

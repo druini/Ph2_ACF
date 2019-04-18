@@ -554,191 +554,188 @@ namespace Ph2_HwDescription
     return true;
   }
 
-  // this information could be added to ChipRegItem since we already have a map of those
-    uint8_t RD53::getNumberOfBits (const std::string& dacName)
-    {
-        static const std::unordered_map<std::string, uint8_t> reg_length_map = {
-            // #################
-            // # Pixel Section #
-            // #################
-            {"PIX_PORTAL", 16},
-            {"REGION_COL", 8},
-            {"REGION_ROW", 8},
-            {"PIX_MODE", 6},
-            {"PIX_DEFAULT_CONFIG", 16},
+  uint8_t RD53::getNumberOfBits (const std::string& dacName)
+  {
+    static const std::unordered_map<std::string, uint8_t> reg_length_map = {
+      // #################
+      // # Pixel Section #
+      // #################
+      {"PIX_PORTAL", 16},
+      {"REGION_COL", 8},
+      {"REGION_ROW", 8},
+      {"PIX_MODE", 6},
+      {"PIX_DEFAULT_CONFIG", 16},
 
-            // #########################
-            // # Synchronous Front End #
-            // #########################
-            {"IBIASP1_SYNC", 9},
-            {"IBIASP2_SYNC", 9},
-            {"IBIAS_SF_SYNC", 9},
-            {"IBIAS_KRUM_SYNC", 9},
-            {"IBIAS_DISC_SYNC", 9},
-            {"ICTRL_SYNCT_SYNC", 10},
-            {"VBL_SYNC", 10},
-            {"VTH_SYNC", 10},
-            {"VREF_KRUM_SYNC", 10},
+      // #########################
+      // # Synchronous Front End #
+      // #########################
+      {"IBIASP1_SYNC", 9},
+      {"IBIASP2_SYNC", 9},
+      {"IBIAS_SF_SYNC", 9},
+      {"IBIAS_KRUM_SYNC", 9},
+      {"IBIAS_DISC_SYNC", 9},
+      {"ICTRL_SYNCT_SYNC", 10},
+      {"VBL_SYNC", 10},
+      {"VTH_SYNC", 10},
+      {"VREF_KRUM_SYNC", 10},
 
-                // ####################
-                // # Linear Front End #
-                // ####################
-            {"PA_IN_BIAS_LIN", 9},
-            {"FC_BIAS_LIN", 8},
-            {"KRUM_CURR_LIN", 9},
-            {"LDAC_LIN", 10},
-            {"COMP_LIN", 9},
-            {"REF_KRUM_LIN", 10},
-            {"Vthreshold_LIN", 10},
+      // ####################
+      // # Linear Front End #
+      // ####################
+      {"PA_IN_BIAS_LIN", 9},
+      {"FC_BIAS_LIN", 8},
+      {"KRUM_CURR_LIN", 9},
+      {"LDAC_LIN", 10},
+      {"COMP_LIN", 9},
+      {"REF_KRUM_LIN", 10},
+      {"Vthreshold_LIN", 10},
 
-                // ##########################
-                // # Differential Front End #
-                // ##########################
-            {"PRMP_DIFF", 10},
-            {"FOL_DIFF", 10},
-            {"PRECOMP_DIFF", 10},
-            {"COMP_DIFF", 10},
-            {"VFF_DIFF", 10},
-            {"VTH1_DIFF", 10},
-            {"VTH2_DIFF", 10},
-            {"LCC_DIFF", 10},
+      // ##########################
+      // # Differential Front End #
+      // ##########################
+      {"PRMP_DIFF", 10},
+      {"FOL_DIFF", 10},
+      {"PRECOMP_DIFF", 10},
+      {"COMP_DIFF", 10},
+      {"VFF_DIFF", 10},
+      {"VTH1_DIFF", 10},
+      {"VTH2_DIFF", 10},
+      {"LCC_DIFF", 10},
 
-                // #######################
-                // # Auxiliary Registers #
-                // #######################
-            {"CONF_FE_SYNC", 5},
-            {"CONF_FE_DIFF", 2},
-            {"VOLTAGE_TRIM", 10},
+      // #######################
+      // # Auxiliary Registers #
+      // #######################
+      {"CONF_FE_SYNC", 5},
+      {"CONF_FE_DIFF", 2},
+      {"VOLTAGE_TRIM", 10},
 
-                // ##################
-                // # Digital Matrix #
-                // ##################
-            {"EN_CORE_COL_SYNC", 16},
-            {"EN_CORE_COL_LIN_1", 16},
-            {"EN_CORE_COL_LIN_2", 1},
-            {"EN_CORE_COL_DIFF_1", 16},
-            {"EN_CORE_COL_DIFF_2", 1},
-            {"LATENCY_CONFIG", 9},
-            {"WR_SYNC_DELAY_SYNC", 5},
+      // ##################
+      // # Digital Matrix #
+      // ##################
+      {"EN_CORE_COL_SYNC", 16},
+      {"EN_CORE_COL_LIN_1", 16},
+      {"EN_CORE_COL_LIN_2", 1},
+      {"EN_CORE_COL_DIFF_1", 16},
+      {"EN_CORE_COL_DIFF_2", 1},
+      {"LATENCY_CONFIG", 9},
+      {"WR_SYNC_DELAY_SYNC", 5},
 
-                // #############
-                // # Injection #
-                // #############
-            {"INJECTION_SELECT", 6},
-            {"CLK_DATA_DELAY", 9},
-            {"VCAL_HIGH", 12},
-            {"VCAL_MED", 12},
-            {"CH_SYNC_CONF", 12},
-            {"GLOBAL_PULSE_ROUTE", 16},
-            {"MONITOR_FRAME_SKIP", 8},
-            {"EN_MACRO_COL_CAL_SYNC_1", 16},
-            {"EN_MACRO_COL_CAL_SYNC_2", 16},
-            {"EN_MACRO_COL_CAL_SYNC_3", 16},
-            {"EN_MACRO_COL_CAL_SYNC_4", 16},
-            {"EN_MACRO_COL_CAL_LIN_1", 16},
-            {"EN_MACRO_COL_CAL_LIN_2", 16},
-            {"EN_MACRO_COL_CAL_LIN_3", 16},
-            {"EN_MACRO_COL_CAL_LIN_4", 16},
-            {"EN_MACRO_COL_CAL_LIN_5", 4},
-            {"EN_MACRO_COL_CAL_DIFF_1", 16},
-            {"EN_MACRO_COL_CAL_DIFF_2", 16},
-            {"EN_MACRO_COL_CAL_DIFF_3", 16},
-            {"EN_MACRO_COL_CAL_DIFF_4", 16},
-            {"EN_MACRO_COL_CAL_DIFF_5", 4},
+      // #############
+      // # Injection #
+      // #############
+      {"INJECTION_SELECT", 6},
+      {"CLK_DATA_DELAY", 9},
+      {"VCAL_HIGH", 12},
+      {"VCAL_MED", 12},
+      {"CH_SYNC_CONF", 12},
+      {"GLOBAL_PULSE_ROUTE", 16},
+      {"MONITOR_FRAME_SKIP", 8},
+      {"EN_MACRO_COL_CAL_SYNC_1", 16},
+      {"EN_MACRO_COL_CAL_SYNC_2", 16},
+      {"EN_MACRO_COL_CAL_SYNC_3", 16},
+      {"EN_MACRO_COL_CAL_SYNC_4", 16},
+      {"EN_MACRO_COL_CAL_LIN_1", 16},
+      {"EN_MACRO_COL_CAL_LIN_2", 16},
+      {"EN_MACRO_COL_CAL_LIN_3", 16},
+      {"EN_MACRO_COL_CAL_LIN_4", 16},
+      {"EN_MACRO_COL_CAL_LIN_5", 4},
+      {"EN_MACRO_COL_CAL_DIFF_1", 16},
+      {"EN_MACRO_COL_CAL_DIFF_2", 16},
+      {"EN_MACRO_COL_CAL_DIFF_3", 16},
+      {"EN_MACRO_COL_CAL_DIFF_4", 16},
+      {"EN_MACRO_COL_CAL_DIFF_5", 4},
 
-                // #######
-                // # I/O #
-                // #######
-            {"DEBUG_CONFIG", 2},
-            {"OUTPUT_CONFIG", 9},
-            {"OUT_PAD_CONFIG", 14},
-            {"GP_LVDS_ROUTE", 16},
-            {"CDR_CONFIG", 14},
-            {"CDR_VCO_BUFF_BIAS", 10},
-            {"CDR_CP_IBIAS", 10},
-            {"CDR_VCO_IBIAS", 10},
-            {"SER_SEL_OUT", 8},    
-            {"CML_CONFIG", 8},
-            {"CML_TAP0_BIAS", 10},
-            {"CML_TAP1_BIAS", 10},
-            {"CML_TAP2_BIAS", 10},
-            {"AURORA_CC_CONFIG", 8},
-            {"AURORA_CB_CONFIG0", 8},
-            {"AURORA_CB_CONFIG1", 16},
-            {"AURORA_INIT_WAIT", 11},
+      // #######
+      // # I/O #
+      // #######
+      {"DEBUG_CONFIG", 2},
+      {"OUTPUT_CONFIG", 9},
+      {"OUT_PAD_CONFIG", 14},
+      {"GP_LVDS_ROUTE", 16},
+      {"CDR_CONFIG", 14},
+      {"CDR_VCO_BUFF_BIAS", 10},
+      {"CDR_CP_IBIAS", 10},
+      {"CDR_VCO_IBIAS", 10},
+      {"SER_SEL_OUT", 8},    
+      {"CML_CONFIG", 8},
+      {"CML_TAP0_BIAS", 10},
+      {"CML_TAP1_BIAS", 10},
+      {"CML_TAP2_BIAS", 10},
+      {"AURORA_CC_CONFIG", 8},
+      {"AURORA_CB_CONFIG0", 8},
+      {"AURORA_CB_CONFIG1", 16},
+      {"AURORA_INIT_WAIT", 11},
 
-                // #################################
-                // # Test and Monitoring Functions #
-                // #################################
-            {"MONITOR_SELECT", 14},
-            {"HITOR_0_MASK_SYNC", 16},
-            {"HITOR_1_MASK_SYNC", 16},
-            {"HITOR_2_MASK_SYNC", 16},
-            {"HITOR_3_MASK_SYNC", 16},
-            {"HITOR_0_MASK_LIN_0", 16},
-            {"HITOR_0_MASK_LIN_1", 1},
-            {"HITOR_1_MASK_LIN_0", 16},
-            {"HITOR_1_MASK_LIN_1", 1},
-            {"HITOR_2_MASK_LIN_0", 16},
-            {"HITOR_2_MASK_LIN_1", 1},
-            {"HITOR_3_MASK_LIN_0", 16},
-            {"HITOR_3_MASK_LIN_1", 1},
-            {"HITOR_0_MASK_DIFF_0", 16},
-            {"HITOR_0_MASK_DIFF_1", 1},
-            {"HITOR_1_MASK_DIFF_0", 16},
-            {"HITOR_1_MASK_DIFF_1", 1},
-            {"HITOR_2_MASK_DIFF_0", 16},
-            {"HITOR_2_MASK_DIFF_1", 1},
-            {"HITOR_3_MASK_DIFF_0", 16},
-            {"HITOR_3_MASK_DIFF_1", 1},
-            {"MONITOR_CONFIG", 11},
-            {"SENSOR_CONFIG_0", 12},
-            {"SENSOR_CONFIG_1", 12},
-            {"AUTO_READ_0", 9},
-            {"AUTO_READ_1", 9},
-            {"AUTO_READ_2", 9},
-            {"AUTO_READ_3", 9},
-            {"AUTO_READ_4", 9},
-            {"AUTO_READ_5", 9},
-            {"AUTO_READ_6", 9},
-            {"AUTO_READ_7", 9},
-            {"RING_OSC_ENABLE", 8},
-            {"RING_OSC_0", 16},
-            {"RING_OSC_1", 16},
-            {"RING_OSC_2", 16},
-            {"RING_OSC_3", 16},
-            {"RING_OSC_4", 16},
-            {"RING_OSC_5", 16},
-            {"RING_OSC_6", 16},
-            {"RING_OSC_7", 16},
-            {"BCID_CNT", 16},
-            {"TRIG_CNT", 16},
-            {"LOCKLOSS_CNT", 16},
-            {"BITFLIP_WNG_CNT", 16},
-            {"BITFLIP_ERR_CNT", 16},
-            {"CMDERR_CNT", 16},
-            {"WNGFIFO_FULL_CNT_0", 16},
-            {"WNGFIFO_FULL_CNT_1", 16},
-            {"WNGFIFO_FULL_CNT_2", 16},
-            {"WNGFIFO_FULL_CNT_3", 16},
-            {"AI_REGION_COL", 8},
-            {"AI_REGION_ROW", 9},
-            {"HITOR_0_CNT", 16},
-            {"HITOR_1_CNT", 16},
-            {"HITOR_2_CNT", 16},
-            {"HITOR_3_CNT", 16},
-            {"SKIPPED_TRIGGER_CNT", 16},
-            {"ERRWNG_MASK", 14},
-            {"MONITORING_DATA_ADC", 12},
-            {"SELF_TRIGGER_ENABLE", 4}
-        };
+      // #################################
+      // # Test and Monitoring Functions #
+      // #################################
+      {"MONITOR_SELECT", 14},
+      {"HITOR_0_MASK_SYNC", 16},
+      {"HITOR_1_MASK_SYNC", 16},
+      {"HITOR_2_MASK_SYNC", 16},
+      {"HITOR_3_MASK_SYNC", 16},
+      {"HITOR_0_MASK_LIN_0", 16},
+      {"HITOR_0_MASK_LIN_1", 1},
+      {"HITOR_1_MASK_LIN_0", 16},
+      {"HITOR_1_MASK_LIN_1", 1},
+      {"HITOR_2_MASK_LIN_0", 16},
+      {"HITOR_2_MASK_LIN_1", 1},
+      {"HITOR_3_MASK_LIN_0", 16},
+      {"HITOR_3_MASK_LIN_1", 1},
+      {"HITOR_0_MASK_DIFF_0", 16},
+      {"HITOR_0_MASK_DIFF_1", 1},
+      {"HITOR_1_MASK_DIFF_0", 16},
+      {"HITOR_1_MASK_DIFF_1", 1},
+      {"HITOR_2_MASK_DIFF_0", 16},
+      {"HITOR_2_MASK_DIFF_1", 1},
+      {"HITOR_3_MASK_DIFF_0", 16},
+      {"HITOR_3_MASK_DIFF_1", 1},
+      {"MONITOR_CONFIG", 11},
+      {"SENSOR_CONFIG_0", 12},
+      {"SENSOR_CONFIG_1", 12},
+      {"AUTO_READ_0", 9},
+      {"AUTO_READ_1", 9},
+      {"AUTO_READ_2", 9},
+      {"AUTO_READ_3", 9},
+      {"AUTO_READ_4", 9},
+      {"AUTO_READ_5", 9},
+      {"AUTO_READ_6", 9},
+      {"AUTO_READ_7", 9},
+      {"RING_OSC_ENABLE", 8},
+      {"RING_OSC_0", 16},
+      {"RING_OSC_1", 16},
+      {"RING_OSC_2", 16},
+      {"RING_OSC_3", 16},
+      {"RING_OSC_4", 16},
+      {"RING_OSC_5", 16},
+      {"RING_OSC_6", 16},
+      {"RING_OSC_7", 16},
+      {"BCID_CNT", 16},
+      {"TRIG_CNT", 16},
+      {"LOCKLOSS_CNT", 16},
+      {"BITFLIP_WNG_CNT", 16},
+      {"BITFLIP_ERR_CNT", 16},
+      {"CMDERR_CNT", 16},
+      {"WNGFIFO_FULL_CNT_0", 16},
+      {"WNGFIFO_FULL_CNT_1", 16},
+      {"WNGFIFO_FULL_CNT_2", 16},
+      {"WNGFIFO_FULL_CNT_3", 16},
+      {"AI_REGION_COL", 8},
+      {"AI_REGION_ROW", 9},
+      {"HITOR_0_CNT", 16},
+      {"HITOR_1_CNT", 16},
+      {"HITOR_2_CNT", 16},
+      {"HITOR_3_CNT", 16},
+      {"SKIPPED_TRIGGER_CNT", 16},
+      {"ERRWNG_MASK", 14},
+      {"MONITORING_DATA_ADC", 12},
+      {"SELF_TRIGGER_ENABLE", 4}
+    };
 
-        auto it = reg_length_map.find(dacName);
-        if (it != reg_length_map.end()) {
-            return it->second;
-        }
-        return 0;
-    }
+    auto it = reg_length_map.find(dacName);
+    if (it != reg_length_map.end()) return it->second;
+    return 0;
+  }
 
   bool RD53::IsChannelUnMasked (uint32_t cChan) const
   {
@@ -751,13 +748,9 @@ namespace Ph2_HwDescription
   {
     uint32_t header;
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(*data);
-    if (header != 1) {
-      LOG (ERROR) << "Invalid RD53 Event Header." << RESET;
-    }
-    for (size_t i = 1; i < n; i++) {
-      if (data[i])
-        this->data.emplace_back(data[i]);
-    }
+    if (header != 1) LOG (ERROR) << "Invalid RD53 event header" << RESET;
+    for (size_t i = 1; i < n; i++)
+      if (data[i]) this->data.emplace_back(data[i]);
   }
   
   RD53::HitData::HitData (const uint32_t data)

@@ -383,20 +383,7 @@ namespace Ph2_System {
 
     void SystemController::Start (BeBoard* pBoard)
     {
-      if (pBoard->getBoardType() == BoardType::FC7)
-	{
-	  LOG (INFO) << BOLDYELLOW << "Resetting all RD53s" << RESET;
-	  for (const auto& cFe : pBoard->fModuleVector)
-	    {
-	      for (const auto& cRD53 : cFe->fChipVector)
-		{
-		  static_cast<RD53Interface*>(fChipInterface)->ResetRD53 (static_cast<RD53*>(cRD53));
-		  LOG (INFO) << BOLDGREEN << "\t--> Successfully reset RD53 " << int (cRD53->getChipId()) << RESET;
-		}
-	    }
-	}
-
-      fBeBoardInterface->Start (pBoard);
+        fBeBoardInterface->Start (pBoard);
     }
 
     void SystemController::Stop (BeBoard* pBoard)

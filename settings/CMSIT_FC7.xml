@@ -13,8 +13,8 @@
 	<!-- Overwrite .txt configuration file settings -->
         <Settings
             EN_CORE_COL_SYNC   = "0"
-            EN_CORE_COL_LIN_1  = "65535"
-            EN_CORE_COL_LIN_2  =     "1"
+            EN_CORE_COL_LIN_1  = "1"
+            EN_CORE_COL_LIN_2  =     "0"
             EN_CORE_COL_DIFF_1 = "0"
             EN_CORE_COL_DIFF_2 =     "0"
 
@@ -27,20 +27,28 @@
             GP_LVDS_ROUTE    =    "1"
 
             VTH_SYNC         =  "300"
-            REF_KRUM_LIN     =  "250"
-            Vthreshold_LIN   =  "260"
+            REF_KRUM_LIN     =  "300"
+            Vthreshold_LIN   =  "400"
             VTH1_DIFF        =  "400"
             VTH2_DIFF        =   "50"
 
 	    VCAL_HIGH        =  "900"
 	    VCAL_MED         =  "100"
-	    INJECTION_SELECT =   "16"
 
+	    INJECTION_SELECT =   "32"
             LATENCY_CONFIG   =  "500"
             MONITOR_SELECT   = "8203"
 	    />
 	<!--
-	    EN_CORE_COL_LIN_1 = "65535"
+	    HITOR_0_MASK_LIN_0 = "0"
+	    HITOR_0_MASK_LIN_1 =     "0"
+	    HITOR_1_MASK_LIN_0 = "0"
+	    HITOR_1_MASK_LIN_1 =     "0"
+	    HITOR_2_MASK_LIN_0 = "0"
+	    HITOR_2_MASK_LIN_1 =     "0"
+	    HITOR_3_MASK_LIN_0 = "0"
+	    HITOR_3_MASK_LIN_1 =     "0"
+
 	    MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
 	-->
       </Global>
