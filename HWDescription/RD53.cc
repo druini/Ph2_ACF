@@ -9,7 +9,6 @@
 
 #include "RD53.h"
 
-#include <unordered_map>
 
 namespace Ph2_HwDescription
 {
@@ -356,179 +355,179 @@ namespace Ph2_HwDescription
     fPixelsConfig[col].InjEn[row] = 1;
   }
 
-//   void RD53::EncodeCMD (const RD53RegItem                   & pRegItem,
-//   			const uint8_t                         pRD53Id,
-//   			const uint16_t                        pRD53Cmd,
-//   			std::vector<std::vector<uint16_t> > & pVecReg)
-//   {
-//     const unsigned int nBits = NBIT_CHIPID + NBIT_ADDR + NBIT_DATA;
+  void RD53::EncodeCMD (const RD53RegItem                   & pRegItem,
+  			const uint8_t                         pRD53Id,
+  			const uint16_t                        pRD53Cmd,
+  			std::vector<std::vector<uint16_t> > & pVecReg)
+  {
+    const unsigned int nBits = NBIT_CHIPID + NBIT_ADDR + NBIT_DATA;
     
-//     std::bitset<nBits> idANDaddANDdata(pRD53Id           << (NBIT_ADDR + NBIT_DATA) |
-//   				       pRegItem.fAddress << NBIT_DATA               |
-//   				       pRegItem.fValue);
+    std::bitset<nBits> idANDaddANDdata(pRD53Id           << (NBIT_ADDR + NBIT_DATA) |
+  				       pRegItem.fAddress << NBIT_DATA               |
+  				       pRegItem.fValue);
 
-//     std::bitset<nBits> mask = this->SetBits<nBits>(NBIT_CHIPID);
-//     std::vector<uint16_t> frame;
+    std::bitset<nBits> mask = this->SetBits<nBits>(NBIT_CHIPID);
+    std::vector<uint16_t> frame;
 
-//     frame.push_back(pRD53Cmd);
-//     frame.push_back(pRD53Cmd);
+    frame.push_back(pRD53Cmd);
+    frame.push_back(pRD53Cmd);
     
-//     std::bitset<nBits> tmp;
-//     for (int i = nBits/NBIT_DATA-1; i >= 0; i-=2)
-//       {
-//   	tmp = (idANDaddANDdata & (mask << NBIT_CHIPID*i)) >> NBIT_CHIPID*i;
-//   	unsigned long long data1 = tmp.to_ullong();
+    std::bitset<nBits> tmp;
+    for (int i = nBits/NBIT_DATA-1; i >= 0; i-=2)
+      {
+  	tmp = (idANDaddANDdata & (mask << NBIT_CHIPID*i)) >> NBIT_CHIPID*i;
+  	unsigned long long data1 = tmp.to_ullong();
 	
-//   	tmp = (idANDaddANDdata & (mask << NBIT_CHIPID*(i-1))) >> NBIT_CHIPID*(i-1);
-//   	unsigned long long data2 = tmp.to_ullong();
+  	tmp = (idANDaddANDdata & (mask << NBIT_CHIPID*(i-1))) >> NBIT_CHIPID*(i-1);
+  	unsigned long long data2 = tmp.to_ullong();
 	
-//   	frame.push_back(cmd_data_map[data1] << NBIT_SYMBOL | cmd_data_map[data1]);
-//       }
+  	frame.push_back(cmd_data_map[data1] << NBIT_SYMBOL | cmd_data_map[data1]);
+      }
     
-//     pVecReg.push_back(frame);
-//   }
+    pVecReg.push_back(frame);
+  }
 
-//   void RD53::EncodeCMD (const uint16_t                address,
-// 			const uint16_t                data,
-//   			const uint8_t                 pRD53Id,
-//   			const uint8_t                 pRD53Cmd,
-// 			const bool                    isBroadcast,
-//   			std::vector<uint32_t>       & pVecReg,
-// 			const std::vector<uint16_t> * dataVec)
-//   {
-//     uint32_t word = 0;
-//     std::bitset<NBIT_FRAME> frame(0);
+  void RD53::EncodeCMD (const uint16_t                address,
+			const uint16_t                data,
+  			const uint8_t                 pRD53Id,
+  			const uint8_t                 pRD53Cmd,
+			const bool                    isBroadcast,
+  			std::vector<uint32_t>       & pVecReg,
+			const std::vector<uint16_t> * dataVec)
+  {
+    uint32_t word = 0;
+    std::bitset<NBIT_FRAME> frame(0);
 
-//     if ((pRD53Cmd == (RESET_ECR & 0x00FF)) ||
-// 	(pRD53Cmd == (RESET_BCR & 0x00FF)) ||
-// 	(pRD53Cmd == (NOOP      & 0x00FF)))
-//       {
-// 	word = 0 | (pRD53Cmd << NBIT_5BITW);
-//       }
-//     else if (pRD53Cmd == (SYNC & 0x00FF))
-//       {
-// 	word = 0 | (pRD53Cmd << NBIT_5BITW);	
-//       }
-//     else if (pRD53Cmd == (GLOB_PULSE & 0x00FF))
-//       {
-// 	word  = 2 | (pRD53Cmd << NBIT_5BITW);
-// 	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP ID[3..0],isBroadcast
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2));
-// 	frame = 0 | ((data & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                        // @TMP@ D[3..0],0
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME));
-//       }
-//     else if (pRD53Cmd == (CAL & 0x00FF))
-//       {
-// 	word  = 4 | (pRD53Cmd << NBIT_5BITW);
-// 	frame = ((data & (this->SetBits<16>(NBIT_DATA).to_ulong() << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
-// 	  ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                // @TMP@ ID[3..0],D[15]
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-// 	frame = (data & (this->SetBits<16>(NBIT_FRAME*3).to_ulong() << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
-// 	frame = (data & (this->SetBits<16>(NBIT_FRAME*2).to_ulong() << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
-// 	frame = (data & (this->SetBits<16>(NBIT_FRAME*2).to_ulong() << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
-//       }
-//     else if (pRD53Cmd == (READCMD & 0x00FF))
-//       {
-// 	word  = 4 | (pRD53Cmd << NBIT_5BITW);
-// 	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP@ ID[3..0],isBroadcast
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-// 	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;  // A[8..4]
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
-// 	frame = (address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1;                           // @TMP@ A[3..0]
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
-// 	frame = 0;
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
-//       }
-//     else if ((pRD53Cmd == (WRITECMD & 0x00FF)) && (dataVec == NULL))
-//       {
-// 	word  = 6 | (pRD53Cmd << NBIT_5BITW);
-// 	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);  // @TMP@ ID[3..0],isBroadcast
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-// 	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;   // A[8..4]
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
+    if ((pRD53Cmd == (RESET_ECR & 0x00FF)) ||
+	(pRD53Cmd == (RESET_BCR & 0x00FF)) ||
+	(pRD53Cmd == (NOOP      & 0x00FF)))
+      {
+	word = 0 | (pRD53Cmd << NBIT_5BITW);
+      }
+    else if (pRD53Cmd == (SYNC & 0x00FF))
+      {
+	word = 0 | (pRD53Cmd << NBIT_5BITW);	
+      }
+    else if (pRD53Cmd == (GLOB_PULSE & 0x00FF))
+      {
+	word  = 2 | (pRD53Cmd << NBIT_5BITW);
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP ID[3..0],isBroadcast
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2));
+	frame = 0 | ((data & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                        // @TMP@ D[3..0],0
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME));
+      }
+    else if (pRD53Cmd == (CAL & 0x00FF))
+      {
+	word  = 4 | (pRD53Cmd << NBIT_5BITW);
+	frame = ((data & (this->SetBits<16>(NBIT_DATA).to_ulong() << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
+	  ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                // @TMP@ ID[3..0],D[15]
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
+	frame = (data & (this->SetBits<16>(NBIT_FRAME*3).to_ulong() << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
+	frame = (data & (this->SetBits<16>(NBIT_FRAME*2).to_ulong() << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
+	frame = (data & (this->SetBits<16>(NBIT_FRAME*2).to_ulong() << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
+      }
+    else if (pRD53Cmd == (READCMD & 0x00FF))
+      {
+	word  = 4 | (pRD53Cmd << NBIT_5BITW);
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1); // @TMP@ ID[3..0],isBroadcast
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
+	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;  // A[8..4]
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
+	frame = (address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1;                           // @TMP@ A[3..0]
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
+	frame = 0;
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
+      }
+    else if ((pRD53Cmd == (WRITECMD & 0x00FF)) && (dataVec == NULL))
+      {
+	word  = 6 | (pRD53Cmd << NBIT_5BITW);
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);  // @TMP@ ID[3..0],isBroadcast
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
+	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;   // A[8..4]
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
 
-//  	frame = ((data & (this->SetBits<16>(NBIT_DATA).to_ulong() << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
-// 	  ((address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                // @TMP@ A[3..0],D[15]
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));       
-// 	frame = (data & (this->SetBits<16>(NBIT_FRAME*3).to_ulong() << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
-// 	pVecReg.push_back(word);
+ 	frame = ((data & (this->SetBits<16>(NBIT_DATA).to_ulong() << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
+	  ((address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                // @TMP@ A[3..0],D[15]
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));       
+	frame = (data & (this->SetBits<16>(NBIT_FRAME*3).to_ulong() << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
+	pVecReg.push_back(word);
 
-// 	frame = (data & (this->SetBits<16>(NBIT_FRAME*2).to_ulong() << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]
-// 	word  = frame.to_ulong() << NBIT_FRAME*0;
-// 	frame = (data & (this->SetBits<16>(NBIT_FRAME*1).to_ulong() << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
-// 	word  = word | (frame.to_ulong() << NBIT_FRAME*1);
-//       }
-//     else if ((pRD53Cmd == (WRITECMD & 0x00FF)) && (dataVec != NULL) && (dataVec->size() == NDATAMAX_PERPIXEL))
-//       {
-// 	std::bitset<NBIT_DATA*NDATAMAX_PERPIXEL> dataBitStream(0);
-// 	std::bitset<NBIT_DATA*NDATAMAX_PERPIXEL> tmp(0);
-// 	for (unsigned int i = 0; i < NDATAMAX_PERPIXEL; i++)
-// 	  {
-// 	    tmp = (*dataVec)[i];
-// 	    dataBitStream |= (tmp << NBIT_DATA*i);
-// 	  }
+	frame = (data & (this->SetBits<16>(NBIT_FRAME*2).to_ulong() << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]
+	word  = frame.to_ulong() << NBIT_FRAME*0;
+	frame = (data & (this->SetBits<16>(NBIT_FRAME*1).to_ulong() << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
+	word  = word | (frame.to_ulong() << NBIT_FRAME*1);
+      }
+    else if ((pRD53Cmd == (WRITECMD & 0x00FF)) && (dataVec != NULL) && (dataVec->size() == NDATAMAX_PERPIXEL))
+      {
+	std::bitset<NBIT_DATA*NDATAMAX_PERPIXEL> dataBitStream(0);
+	std::bitset<NBIT_DATA*NDATAMAX_PERPIXEL> tmp(0);
+	for (unsigned int i = 0; i < NDATAMAX_PERPIXEL; i++)
+	  {
+	    tmp = (*dataVec)[i];
+	    dataBitStream |= (tmp << NBIT_DATA*i);
+	  }
 
-// 	word  = 7 | (pRD53Cmd << NBIT_5BITW);
-// 	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                // @TMP@ ID[3..0],isBroadcast
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-// 	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;                                 // A[8..4]
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
+	word  = 7 | (pRD53Cmd << NBIT_5BITW);
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                // @TMP@ ID[3..0],isBroadcast
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
+	frame = (address & (this->SetBits<16>(NBIT_ADDR).to_ulong() << NBIT_CHIPID)) >> NBIT_CHIPID;                                 // A[8..4]
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
 
-// 	tmp   = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(1) << NBIT_DATA*NDATAMAX_PERPIXEL-1)) >> NBIT_FRAME*19;
-// 	frame = tmp.to_ulong() | ((address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                       // @TMP@ A[3..0],D[95]
-// 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
-// 	tmp   = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*18)) >> NBIT_FRAME*18;        // D[94..90]
-// 	word  = word | (tmp.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
-// 	pVecReg.push_back(word);
+	tmp   = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(1) << NBIT_DATA*NDATAMAX_PERPIXEL-1)) >> NBIT_FRAME*19;
+	frame = tmp.to_ulong() | ((address & this->SetBits<16>(NBIT_CHIPID).to_ulong()) << 1);                                       // @TMP@ A[3..0],D[95]
+	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
+	tmp   = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*18)) >> NBIT_FRAME*18;        // D[94..90]
+	word  = word | (tmp.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
+	pVecReg.push_back(word);
 
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*17)) >> NBIT_FRAME*17;         // D[89..85]
-// 	word = tmp.to_ulong() << NBIT_FRAME*0;
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*16)) >> NBIT_FRAME*16;         // D[84..80]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*1);
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*15)) >> NBIT_FRAME*15;         // D[79..75]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*2);
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*14)) >> NBIT_FRAME*14;         // D[74..70]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*3);
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*13)) >> NBIT_FRAME*13;         // D[69..65]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*4);
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*12)) >> NBIT_FRAME*12;         // D[64..60]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*5);
-// 	pVecReg.push_back(word);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*17)) >> NBIT_FRAME*17;         // D[89..85]
+	word = tmp.to_ulong() << NBIT_FRAME*0;
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*16)) >> NBIT_FRAME*16;         // D[84..80]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*1);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*15)) >> NBIT_FRAME*15;         // D[79..75]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*2);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*14)) >> NBIT_FRAME*14;         // D[74..70]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*3);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*13)) >> NBIT_FRAME*13;         // D[69..65]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*4);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*12)) >> NBIT_FRAME*12;         // D[64..60]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*5);
+	pVecReg.push_back(word);
 
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*11)) >> NBIT_FRAME*11;         // D[59..55]
-// 	word = tmp.to_ulong() << NBIT_FRAME*0;
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*10)) >> NBIT_FRAME*10;         // D[54..50]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*1);
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*9)) >> NBIT_FRAME*9;           // D[49..45]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*2);
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*8)) >> NBIT_FRAME*8;           // D[44..40]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*3);
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*7)) >> NBIT_FRAME*7;           // D[39..35]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*4);
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*6)) >> NBIT_FRAME*6;           // D[34..30]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*5);
-// 	pVecReg.push_back(word);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*11)) >> NBIT_FRAME*11;         // D[59..55]
+	word = tmp.to_ulong() << NBIT_FRAME*0;
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*10)) >> NBIT_FRAME*10;         // D[54..50]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*1);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*9)) >> NBIT_FRAME*9;           // D[49..45]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*2);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*8)) >> NBIT_FRAME*8;           // D[44..40]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*3);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*7)) >> NBIT_FRAME*7;           // D[39..35]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*4);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*6)) >> NBIT_FRAME*6;           // D[34..30]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*5);
+	pVecReg.push_back(word);
 
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*5)) >> NBIT_FRAME*5;           // D[29..25]
-// 	word = tmp.to_ulong() << NBIT_FRAME*0;
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*4)) >> NBIT_FRAME*4;           // D[24..20]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*1);
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*3)) >> NBIT_FRAME*3;           // D[19..15]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*2);
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*2)) >> NBIT_FRAME*2;           // D[14..10]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*3);
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*1)) >> NBIT_FRAME*1;           // D[9..5]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*4);
-// 	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*0)) >> NBIT_FRAME*0;           // D[4..0]
-// 	word = word | (tmp.to_ulong() << NBIT_FRAME*5);
-//       }
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*5)) >> NBIT_FRAME*5;           // D[29..25]
+	word = tmp.to_ulong() << NBIT_FRAME*0;
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*4)) >> NBIT_FRAME*4;           // D[24..20]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*1);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*3)) >> NBIT_FRAME*3;           // D[19..15]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*2);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*2)) >> NBIT_FRAME*2;           // D[14..10]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*3);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*1)) >> NBIT_FRAME*1;           // D[9..5]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*4);
+	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*0)) >> NBIT_FRAME*0;           // D[4..0]
+	word = word | (tmp.to_ulong() << NBIT_FRAME*5);
+      }
 
-//     pVecReg.push_back(word);
-//   }
+    pVecReg.push_back(word);
+  }
 
   void RD53::ConvertRowCol2Cores (unsigned int _row, unsigned int col, uint16_t& colPair, uint16_t& row)
   {
@@ -554,25 +553,339 @@ namespace Ph2_HwDescription
     return true;
   }
 
-      bool RD53::IsChannelUnMasked (uint32_t cChan) const
+  uint8_t RD53::getNumberOfBits (const std::string& dacName)
+  {
+    // #################
+    // # Pixel Section #
+    // #################
+    if (dacName == "PIX_PORTAL")
+	  return 16;
+    if (dacName == "REGION_COL")
+	  return 8;
+    if (dacName == "REGION_ROW")
+      return 8;
+    if (dacName == "PIX_MODE")
+      return 6;
+    if (dacName == "PIX_DEFAULT_CONFIG")
+      return 16;
+
+    // #########################
+    // # Synchronous Front End #
+    // #########################
+    if (dacName == "IBIASP1_SYNC")
+      return 9;
+    if (dacName == "IBIASP2_SYNC")
+      return 9;
+    if (dacName == "IBIAS_SF_SYNC")
+      return 9;
+    if (dacName == "IBIAS_KRUM_SYNC")
+      return 9;
+    if (dacName == "IBIAS_DISC_SYNC")
+      return 9;
+    if (dacName == "ICTRL_SYNCT_SYNC")
+      return 10;
+    if (dacName == "VBL_SYNC")
+      return 10;
+    if (dacName == "VTH_SYNC")
+      return 10;
+    if (dacName == "VREF_KRUM_SYNC")
+      return 10;
+
+    // ####################
+    // # Linear Front End #
+    // ####################
+    if (dacName == "PA_IN_BIAS_LIN")
+      return 9;
+    if (dacName == "FC_BIAS_LIN")
+      return 8;
+    if (dacName == "KRUM_CURR_LIN")
+      return 9;
+    if (dacName == "LDAC_LIN")
+      return 10;
+    if (dacName == "COMP_LIN")
+      return 9;
+    if (dacName == "REF_KRUM_LIN")
+      return 10;
+    if (dacName == "Vthreshold_LIN")
+      return 10;
+
+    // ##########################
+    // # Differential Front End #
+    // ##########################
+    if (dacName == "PRMP_DIFF")
+      return 10;
+    if (dacName == "FOL_DIFF")
+      return 10;
+    if (dacName == "PRECOMP_DIFF")
+      return 10;
+    if (dacName == "COMP_DIFF")
+      return 10;
+    if (dacName == "VFF_DIFF")
+      return 10;
+    if (dacName == "VTH1_DIFF")
+      return 10;
+    if (dacName == "VTH2_DIFF")
+      return 10;
+    if (dacName == "LCC_DIFF")
+      return 10;
+
+    // #######################
+    // # Auxiliary Registers #
+    // #######################
+    if (dacName == "CONF_FE_SYNC")
+      return 5;
+    if (dacName == "CONF_FE_DIFF")
+      return 2;
+    if (dacName == "VOLTAGE_TRIM")
+      return 10;
+
+    // ##################
+    // # Digital Matrix #
+    // ##################
+    if (dacName == "EN_CORE_COL_SYNC")
+      return 16;
+    if (dacName == "EN_CORE_COL_LIN_1")
+      return 16;
+    if (dacName == "EN_CORE_COL_LIN_2")
+      return 1;
+    if (dacName == "EN_CORE_COL_DIFF_1")
+      return 16;
+    if (dacName == "EN_CORE_COL_DIFF_2")
+      return 1;
+    if (dacName == "LATENCY_CONFIG")
+      return 9;
+    if (dacName == "WR_SYNC_DELAY_SYNC")
+      return 5;
+
+    // #############
+    // # Injection #
+    // #############
+    if (dacName == "INJECTION_SELECT")
+      return 6;
+    if (dacName == "CLK_DATA_DELAY")
+      return 9;
+    if (dacName == "VCAL_HIGH")
+      return 12;
+    if (dacName == "VCAL_MED")
+      return 12;
+    if (dacName == "CH_SYNC_CONF")
+      return 12;
+    if (dacName == "GLOBAL_PULSE_ROUTE")
+      return 16;
+    if (dacName == "MONITOR_FRAME_SKIP")
+      return 8;
+    if (dacName == "EN_MACRO_COL_CAL_SYNC_1")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_SYNC_2")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_SYNC_3")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_SYNC_4")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_1")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_2")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_3")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_4")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_LIN_5")
+      return 4;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_1")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_2")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_3")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_4")
+      return 16;
+    if (dacName == "EN_MACRO_COL_CAL_DIFF_5")
+      return 4;
+
+    // #######
+    // # I/O #
+    // #######
+    if (dacName == "DEBUG_CONFIG")
+      return 2;
+    if (dacName == "OUTPUT_CONFIG")
+      return 9;
+    if (dacName == "OUT_PAD_CONFIG")
+      return 14;
+    if (dacName == "GP_LVDS_ROUTE")
+      return 16;
+    if (dacName == "CDR_CONFIG")
+      return 14;
+    if (dacName == "CDR_VCO_BUFF_BIAS")
+      return 10;
+    if (dacName == "CDR_CP_IBIAS")
+      return 10;
+    if (dacName == "CDR_VCO_IBIAS")
+      return 10;
+    if (dacName == "SER_SEL_OUT")
+      return 8;    
+    if (dacName == "CML_CONFIG")
+      return 8;
+    if (dacName == "CML_TAP0_BIAS")
+      return 10;
+    if (dacName == "CML_TAP1_BIAS")
+      return 10;
+    if (dacName == "CML_TAP2_BIAS")
+      return 10;
+    if (dacName == "AURORA_CC_CONFIG")
+      return 8;
+    if (dacName == "AURORA_CB_CONFIG0")
+      return 8;
+    if (dacName == "AURORA_CB_CONFIG1")
+      return 16;
+    if (dacName == "AURORA_INIT_WAIT")
+      return 11;
+
+    // #################################
+    // # Test and Monitoring Functions #
+    // #################################
+    if (dacName == "MONITOR_SELECT")
+      return 14;
+    if (dacName == "HITOR_0_MASK_SYNC")
+      return 16;
+    if (dacName == "HITOR_1_MASK_SYNC")
+      return 16;
+    if (dacName == "HITOR_2_MASK_SYNC")
+      return 16;
+    if (dacName == "HITOR_3_MASK_SYNC")
+      return 16;
+    if (dacName == "HITOR_0_MASK_LIN_0")
+      return 16;
+    if (dacName == "HITOR_0_MASK_LIN_1")
+      return 1;
+    if (dacName == "HITOR_1_MASK_LIN_0")
+      return 16;
+    if (dacName == "HITOR_1_MASK_LIN_1")
+      return 1;
+    if (dacName == "HITOR_2_MASK_LIN_0")
+      return 16;
+    if (dacName == "HITOR_2_MASK_LIN_1")
+      return 1;
+    if (dacName == "HITOR_3_MASK_LIN_0")
+      return 16;
+    if (dacName == "HITOR_3_MASK_LIN_1")
+      return 1;
+    if (dacName == "HITOR_0_MASK_DIFF_0")
+      return 16;
+    if (dacName == "HITOR_0_MASK_DIFF_1")
+      return 1;
+    if (dacName == "HITOR_1_MASK_DIFF_0")
+      return 16;
+    if (dacName == "HITOR_1_MASK_DIFF_1")
+      return 1;
+    if (dacName == "HITOR_2_MASK_DIFF_0")
+      return 16;
+    if (dacName == "HITOR_2_MASK_DIFF_1")
+      return 1;
+    if (dacName == "HITOR_3_MASK_DIFF_0")
+      return 16;
+    if (dacName == "HITOR_3_MASK_DIFF_1")
+      return 1;
+    if (dacName == "MONITOR_CONFIG")
+      return 11;
+    if (dacName == "SENSOR_CONFIG_0")
+      return 12;
+    if (dacName == "SENSOR_CONFIG_1")
+      return 12;
+    if (dacName == "AUTO_READ_0")
+      return 9;
+    if (dacName == "AUTO_READ_1")
+      return 9;
+    if (dacName == "AUTO_READ_2")
+      return 9;
+    if (dacName == "AUTO_READ_3")
+      return 9;
+    if (dacName == "AUTO_READ_4")
+      return 9;
+    if (dacName == "AUTO_READ_5")
+      return 9;
+    if (dacName == "AUTO_READ_6")
+      return 9;
+    if (dacName == "AUTO_READ_7")
+      return 9;
+    if (dacName == "RING_OSC_ENABLE")
+      return 8;
+    if (dacName == "RING_OSC_0")
+      return 16;
+    if (dacName == "RING_OSC_1")
+      return 16;
+    if (dacName == "RING_OSC_2")
+      return 16;
+    if (dacName == "RING_OSC_3")
+      return 16;
+    if (dacName == "RING_OSC_4")
+      return 16;
+    if (dacName == "RING_OSC_5")
+      return 16;
+    if (dacName == "RING_OSC_6")
+      return 16;
+    if (dacName == "RING_OSC_7")
+      return 16;
+    if (dacName == "BCID_CNT")
+      return 16;
+    if (dacName == "TRIG_CNT")
+      return 16;
+    if (dacName == "LOCKLOSS_CNT")
+      return 16;
+    if (dacName == "BITFLIP_WNG_CNT")
+      return 16;
+    if (dacName == "BITFLIP_ERR_CNT")
+      return 16;
+    if (dacName == "CMDERR_CNT")
+      return 16;
+    if (dacName == "WNGFIFO_FULL_CNT_0")
+      return 16;
+    if (dacName == "WNGFIFO_FULL_CNT_1")
+      return 16;
+    if (dacName == "WNGFIFO_FULL_CNT_2")
+      return 16;
+    if (dacName == "WNGFIFO_FULL_CNT_3")
+      return 16;
+    if (dacName == "AI_REGION_COL")
+      return 8;
+    if (dacName == "AI_REGION_ROW")
+      return 9;
+    if (dacName == "HITOR_0_CNT")
+      return 16;
+    if (dacName == "HITOR_1_CNT")
+      return 16;
+    if (dacName == "HITOR_2_CNT")
+      return 16;
+    if (dacName == "HITOR_3_CNT")
+      return 16;
+    if (dacName == "SKIPPED_TRIGGER_CNT")
+      return 16;
+    if (dacName == "ERRWNG_MASK")
+      return 14;
+    if (dacName == "MONITORING_DATA_ADC")
+      return 12;
+    if (dacName == "SELF_TRIGGER_ENABLE")
+      return 4;
+
+    return 0;
+  }
+
+  bool RD53::IsChannelUnMasked (uint32_t cChan) const
   {
     unsigned int row, col;
     RD53::fromVec2Matrix(cChan,row,col);
     return fPixelsConfig[col].Enable[row];
   }
 
-
   RD53::Event::Event(const uint32_t* data, size_t n)
   {
-    std::cout << "RD53::Event: " << n << std::endl;
     uint32_t header;
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(*data);
     if (header != 1) {
       LOG (ERROR) << "Invalid RD53 Event Header." << RESET;
     }
     for (size_t i = 1; i < n; i++) {
-        if (data[i])
-            this->data.emplace_back(data[i]);
+      this->data.emplace_back(data[i]);
     }
   }
     
@@ -580,8 +893,6 @@ namespace Ph2_HwDescription
   {
     uint32_t core_col, side, all_tots;
     std::tie(core_col, row, side, all_tots) = unpack_bits<NBIT_CCOL, NBIT_ROW, NBIT_SIDE, NBIT_TOT>(data);
-
-    std::cout << "all_tots = " << all_tots << std::endl;
     
     unpack_array<NBIT_TOT / NPIX_REGION>(tots, all_tots);
     
@@ -610,248 +921,4 @@ namespace Ph2_HwDescription
     for (unsigned int i = 0; i < nBit2Set; i++) output[i] = 1;
     return output;
   }
-
-
-    // this information could be added to ChipRegItem since we already have a map of those
-    uint8_t RD53::getNumberOfBits (const std::string& dacName)
-    {
-        static const std::unordered_map<std::string, uint8_t> reg_length_map = {
-            // #################
-            // # Pixel Section #
-            // #################
-            {"PIX_PORTAL", 16},
-            {"REGION_COL", 8},
-            {"REGION_ROW", 8},
-            {"PIX_MODE", 6},
-            {"PIX_DEFAULT_CONFIG", 16},
-
-            // #########################
-            // # Synchronous Front End #
-            // #########################
-            {"IBIASP1_SYNC", 9},
-            {"IBIASP2_SYNC", 9},
-            {"IBIAS_SF_SYNC", 9},
-            {"IBIAS_KRUM_SYNC", 9},
-            {"IBIAS_DISC_SYNC", 9},
-            {"ICTRL_SYNCT_SYNC", 10},
-            {"VBL_SYNC", 10},
-            {"VTH_SYNC", 10},
-            {"VREF_KRUM_SYNC", 10},
-
-                // ####################
-                // # Linear Front End #
-                // ####################
-            {"PA_IN_BIAS_LIN", 9},
-            {"FC_BIAS_LIN", 8},
-            {"KRUM_CURR_LIN", 9},
-            {"LDAC_LIN", 10},
-            {"COMP_LIN", 9},
-            {"REF_KRUM_LIN", 10},
-            {"Vthreshold_LIN", 10},
-
-                // ##########################
-                // # Differential Front End #
-                // ##########################
-            {"PRMP_DIFF", 10},
-            {"FOL_DIFF", 10},
-            {"PRECOMP_DIFF", 10},
-            {"COMP_DIFF", 10},
-            {"VFF_DIFF", 10},
-            {"VTH1_DIFF", 10},
-            {"VTH2_DIFF", 10},
-            {"LCC_DIFF", 10},
-
-                // #######################
-                // # Auxiliary Registers #
-                // #######################
-            {"CONF_FE_SYNC", 5},
-            {"CONF_FE_DIFF", 2},
-            {"VOLTAGE_TRIM", 10},
-
-                // ##################
-                // # Digital Matrix #
-                // ##################
-            {"EN_CORE_COL_SYNC", 16},
-            {"EN_CORE_COL_LIN_1", 16},
-            {"EN_CORE_COL_LIN_2", 1},
-            {"EN_CORE_COL_DIFF_1", 16},
-            {"EN_CORE_COL_DIFF_2", 1},
-            {"LATENCY_CONFIG", 9},
-            {"WR_SYNC_DELAY_SYNC", 5},
-
-                // #############
-                // # Injection #
-                // #############
-            {"INJECTION_SELECT", 6},
-            {"CLK_DATA_DELAY", 9},
-            {"VCAL_HIGH", 12},
-            {"VCAL_MED", 12},
-            {"CH_SYNC_CONF", 12},
-            {"GLOBAL_PULSE_ROUTE", 16},
-            {"MONITOR_FRAME_SKIP", 8},
-            {"EN_MACRO_COL_CAL_SYNC_1", 16},
-            {"EN_MACRO_COL_CAL_SYNC_2", 16},
-            {"EN_MACRO_COL_CAL_SYNC_3", 16},
-            {"EN_MACRO_COL_CAL_SYNC_4", 16},
-            {"EN_MACRO_COL_CAL_LIN_1", 16},
-            {"EN_MACRO_COL_CAL_LIN_2", 16},
-            {"EN_MACRO_COL_CAL_LIN_3", 16},
-            {"EN_MACRO_COL_CAL_LIN_4", 16},
-            {"EN_MACRO_COL_CAL_LIN_5", 4},
-            {"EN_MACRO_COL_CAL_DIFF_1", 16},
-            {"EN_MACRO_COL_CAL_DIFF_2", 16},
-            {"EN_MACRO_COL_CAL_DIFF_3", 16},
-            {"EN_MACRO_COL_CAL_DIFF_4", 16},
-            {"EN_MACRO_COL_CAL_DIFF_5", 4},
-
-                // #######
-                // # I/O #
-                // #######
-            {"DEBUG_CONFIG", 2},
-            {"OUTPUT_CONFIG", 9},
-            {"OUT_PAD_CONFIG", 14},
-            {"GP_LVDS_ROUTE", 16},
-            {"CDR_CONFIG", 14},
-            {"CDR_VCO_BUFF_BIAS", 10},
-            {"CDR_CP_IBIAS", 10},
-            {"CDR_VCO_IBIAS", 10},
-            {"SER_SEL_OUT", 8},    
-            {"CML_CONFIG", 8},
-            {"CML_TAP0_BIAS", 10},
-            {"CML_TAP1_BIAS", 10},
-            {"CML_TAP2_BIAS", 10},
-            {"AURORA_CC_CONFIG", 8},
-            {"AURORA_CB_CONFIG0", 8},
-            {"AURORA_CB_CONFIG1", 16},
-            {"AURORA_INIT_WAIT", 11},
-
-                // #################################
-                // # Test and Monitoring Functions #
-                // #################################
-            {"MONITOR_SELECT", 14},
-            {"HITOR_0_MASK_SYNC", 16},
-            {"HITOR_1_MASK_SYNC", 16},
-            {"HITOR_2_MASK_SYNC", 16},
-            {"HITOR_3_MASK_SYNC", 16},
-            {"HITOR_0_MASK_LIN_0", 16},
-            {"HITOR_0_MASK_LIN_1", 1},
-            {"HITOR_1_MASK_LIN_0", 16},
-            {"HITOR_1_MASK_LIN_1", 1},
-            {"HITOR_2_MASK_LIN_0", 16},
-            {"HITOR_2_MASK_LIN_1", 1},
-            {"HITOR_3_MASK_LIN_0", 16},
-            {"HITOR_3_MASK_LIN_1", 1},
-            {"HITOR_0_MASK_DIFF_0", 16},
-            {"HITOR_0_MASK_DIFF_1", 1},
-            {"HITOR_1_MASK_DIFF_0", 16},
-            {"HITOR_1_MASK_DIFF_1", 1},
-            {"HITOR_2_MASK_DIFF_0", 16},
-            {"HITOR_2_MASK_DIFF_1", 1},
-            {"HITOR_3_MASK_DIFF_0", 16},
-            {"HITOR_3_MASK_DIFF_1", 1},
-            {"MONITOR_CONFIG", 11},
-            {"SENSOR_CONFIG_0", 12},
-            {"SENSOR_CONFIG_1", 12},
-            {"AUTO_READ_0", 9},
-            {"AUTO_READ_1", 9},
-            {"AUTO_READ_2", 9},
-            {"AUTO_READ_3", 9},
-            {"AUTO_READ_4", 9},
-            {"AUTO_READ_5", 9},
-            {"AUTO_READ_6", 9},
-            {"AUTO_READ_7", 9},
-            {"RING_OSC_ENABLE", 8},
-            {"RING_OSC_0", 16},
-            {"RING_OSC_1", 16},
-            {"RING_OSC_2", 16},
-            {"RING_OSC_3", 16},
-            {"RING_OSC_4", 16},
-            {"RING_OSC_5", 16},
-            {"RING_OSC_6", 16},
-            {"RING_OSC_7", 16},
-            {"BCID_CNT", 16},
-            {"TRIG_CNT", 16},
-            {"LOCKLOSS_CNT", 16},
-            {"BITFLIP_WNG_CNT", 16},
-            {"BITFLIP_ERR_CNT", 16},
-            {"CMDERR_CNT", 16},
-            {"WNGFIFO_FULL_CNT_0", 16},
-            {"WNGFIFO_FULL_CNT_1", 16},
-            {"WNGFIFO_FULL_CNT_2", 16},
-            {"WNGFIFO_FULL_CNT_3", 16},
-            {"AI_REGION_COL", 8},
-            {"AI_REGION_ROW", 9},
-            {"HITOR_0_CNT", 16},
-            {"HITOR_1_CNT", 16},
-            {"HITOR_2_CNT", 16},
-            {"HITOR_3_CNT", 16},
-            {"SKIPPED_TRIGGER_CNT", 16},
-            {"ERRWNG_MASK", 14},
-            {"MONITORING_DATA_ADC", 12},
-            {"SELF_TRIGGER_ENABLE", 4}
-        };
-
-        auto it = reg_length_map.find(dacName);
-        if (it != reg_length_map.end()) {
-            return it->second;
-        }
-        return 0;
-    }
-
-    const std::vector<uint8_t> RD53::trigger_map =
-    {
-        0x2B, // 00
-        0x2B, // 01
-        0x2D, // 02
-        0x2E, // 03
-        0x33, // 04
-        0x35, // 05
-        0x36, // 06
-        0x39, // 07
-        0x3A, // 08
-        0x3C, // 09
-        0x4B, // 10
-        0x4D, // 11
-        0x4E, // 12
-        0x53, // 13
-        0x55, // 14
-        0x56  // 15
-    };
-
-    const std::vector<uint8_t> RD53::cmd_data_map =
-    {
-        0x6A, // 00
-        0x6C, // 01
-        0x71, // 02
-        0x72, // 03
-        0x74, // 04
-        0x8B, // 05
-        0x8D, // 06
-        0x8E, // 07
-        0x93, // 08
-        0x95, // 09
-        0x96, // 10
-        0x99, // 11
-        0x9A, // 12
-        0x9C, // 13
-        0x23, // 14
-        0xA5, // 15
-        0xA6, // 16
-        0xA9, // 17
-        0xAA, // 18
-        0xAC, // 19
-        0xB1, // 20
-        0xB2, // 21
-        0xB4, // 22
-        0xC3, // 23
-        0xC5, // 24
-        0xC6, // 25
-        0xC9, // 26
-        0xCA, // 27
-        0xCC, // 28
-        0xD1, // 29
-        0xD2, // 30
-        0xD4  // 31
-    };
-
 }
