@@ -31,7 +31,7 @@ namespace Ph2_HwInterface
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    this->WriteRD53Mask (pRD53, false);
+    // this->WriteRD53Mask (pRD53, false);
 
     return true;
   }
@@ -89,7 +89,7 @@ namespace Ph2_HwInterface
     cRegItem.fValue = data;
 
      // @TMP@
-    // LOG(INFO) << BOLDRED << pRegNode << " <- " << data << RESET;
+    LOG(INFO) << BOLDRED << pRegNode << " <- " << data << RESET;
 
     if (strcmp(pRegNode.c_str(),"GLOBAL_PULSE") == 0)
       pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::GlobalPulse(), false, serialSymbols);

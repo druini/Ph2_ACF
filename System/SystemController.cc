@@ -56,7 +56,12 @@ namespace Ph2_System {
 
         if (fChipInterface)  delete fChipInterface;
 
-        fBeBoardFWMap.clear();
+        // fBeBoardFWMap.clear();
+        for (auto& it : fBeBoardFWMap) {
+            if (it.second)
+                delete it.second;
+        }
+
         fSettingsMap.clear();
 
         for ( auto& el : fBoardVector )

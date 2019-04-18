@@ -144,21 +144,11 @@ namespace Ph2_HwDescription
       
       uint16_t row;
       uint16_t col;
-      uint8_t tots[NPIX_REGION];
+      std::array<uint8_t, NPIX_REGION> tots;
     };
 
     struct Event {
       Event(const uint32_t* data, size_t n);
-
-      // Event(const EventHeader& header, const std::vector<HitData>& data)
-      //   : header(header)
-      //   , data(data)
-      // {}
-
-      // Event(const EventHeader& header, std::vector<HitData>&& data)
-      //   : header(header)
-      //   , data(data)
-      // {}
 
       // header
       uint16_t trigger_id;

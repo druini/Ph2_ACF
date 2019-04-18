@@ -111,7 +111,6 @@ namespace Ph2_HwInterface
     void ChipReset()  override;
     void ChipReSync() override;
 
-    // new
     struct ChipFrame {
       ChipFrame(const uint32_t data0, const uint32_t data1);
 
@@ -123,7 +122,6 @@ namespace Ph2_HwInterface
       uint16_t frame_delay;
     };
 
-    // new
     struct Event {
         Event(const uint32_t* data, size_t n);
 
@@ -138,8 +136,8 @@ namespace Ph2_HwInterface
         std::vector<RD53::Event> chip_events;
     };
 
-    // new
     static std::vector<Event> DecodeEvents(const std::vector<uint32_t>& data); 
+
 
     // Fast Commands Block
 

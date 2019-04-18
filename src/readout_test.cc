@@ -46,29 +46,29 @@ void PrintEvents(const std::vector<FC7FWInterface::Event>& events)
 
         for (size_t j = 0; j < evt.chip_events.size(); j++)
         {
-        LOG (INFO) << CYAN << "Chip Header: " << RESET;
-        LOG (INFO) << CYAN << "error_code = " << evt.chip_frames[i].error_code << RESET;
-        LOG (INFO) << CYAN << "hybrid_id = " << evt.chip_frames[i].hybrid_id << RESET;
-        LOG (INFO) << CYAN << "chip_id = " << evt.chip_frames[i].chip_id << RESET;
-        LOG (INFO) << CYAN << "l1a_data_size = " << evt.chip_frames[i].l1a_data_size << RESET;
-        LOG (INFO) << CYAN << "chip_type = " << evt.chip_frames[i].chip_type << RESET;
-        LOG (INFO) << CYAN << "frame_delay = " << evt.chip_frames[i].frame_delay << RESET;
+            LOG (INFO) << CYAN << "Chip Header: " << RESET;
+            LOG (INFO) << CYAN << "error_code = " << evt.chip_frames[j].error_code << RESET;
+            LOG (INFO) << CYAN << "hybrid_id = " << evt.chip_frames[j].hybrid_id << RESET;
+            LOG (INFO) << CYAN << "chip_id = " << evt.chip_frames[j].chip_id << RESET;
+            LOG (INFO) << CYAN << "l1a_data_size = " << evt.chip_frames[j].l1a_data_size << RESET;
+            LOG (INFO) << CYAN << "chip_type = " << evt.chip_frames[j].chip_type << RESET;
+            LOG (INFO) << CYAN << "frame_delay = " << evt.chip_frames[j].frame_delay << RESET;
 
-        LOG (INFO) << CYAN << "trigger_id = " << evt.chip_events[i].trigger_id << RESET;
-        LOG (INFO) << CYAN << "trigger_tag = " << evt.chip_events[i].trigger_tag << RESET;
-        LOG (INFO) << CYAN << "bc_id = " << evt.chip_events[i].bc_id << RESET;
+            LOG (INFO) << CYAN << "trigger_id = " << evt.chip_events[j].trigger_id << RESET;
+            LOG (INFO) << CYAN << "trigger_tag = " << evt.chip_events[j].trigger_tag << RESET;
+            LOG (INFO) << CYAN << "bc_id = " << evt.chip_events[j].bc_id << RESET;
 
-        LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[i].data.size() << " words): " << RESET;
+            LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
 
-        for (const auto& region_data : evt.chip_events[i].data)
-        {
-            LOG(INFO)   << "Column: " << region_data.col 
-                << ", Row: " << region_data.row 
-                << ", ToTs: [" << +region_data.tots[0] << "," << +region_data.tots[1] << "," << +region_data.tots[2] << "," << +region_data.tots[3] << "]"
-                << RESET;
-            
+            for (const auto& region_data : evt.chip_events[j].data)
+            {
+                LOG(INFO)   << "Column: " << region_data.col 
+                    << ", Row: " << region_data.row 
+                    << ", ToTs: [" << +region_data.tots[0] << "," << +region_data.tots[1] << "," << +region_data.tots[2] << "," << +region_data.tots[3] << "]"
+                    << RESET;
+                
+                }
             }
-        }
     } 
 }
 
@@ -76,13 +76,13 @@ void PrintEvents(const std::vector<FC7FWInterface::Event>& events)
 template <class Stream, class It>
 void print_data(Stream& s, It begin, It end) {
     int i = 0;
-    s << std::dec << i << ":\t";
     for (It it = begin; it != end; it++) {
-        s << std::hex << setfill('0') << setw(8) << *it << "\t";
-        if (!(++i & 3)) {
+        if ((i++ % 4) == 0) {
             s << std::dec << "\n" << i << ":\t";
         }
+        s << std::hex << setfill('0') << setw(8) << *it << "\t";
     }
+    s << std::endl;
 }
 
 
@@ -100,7 +100,7 @@ void readout(FC7FWInterface* board_interface, RD53Interface* chip_interface, BeB
     FC7FWInterface::FastCommandsConfig cfg;
     cfg.trigger_source = FC7FWInterface::TriggerSource::TestFSM;
     cfg.n_triggers = 2;
-    cfg.test_fsm.delay_loop = 8;
+    cfg.test_fsm.delay_loop = 20;    
     // cfg.test_fsm.first_cal_data = 65535;
     // cfg.test_fsm.delay_after_first_cal = 1;
     // cfg.test_fsm.second_cal_data = 170;
@@ -125,7 +125,7 @@ void readout(FC7FWInterface* board_interface, RD53Interface* chip_interface, BeB
 
     std::cout << "Start Triggering" << std::endl;
     board_interface->Start();
-    // usleep(1000);
+    usleep(100000);
 
 
     std::vector<uint32_t> data;
@@ -135,11 +135,11 @@ void readout(FC7FWInterface* board_interface, RD53Interface* chip_interface, BeB
     auto events = FC7FWInterface::DecodeEvents(data);
 
 
-    LOG (INFO) << BOLDYELLOW << "Got " << events.size() << "." << RESET;
+    LOG (INFO) << BOLDYELLOW << "Got " << events.size() << " events." << RESET;
 
+    print_data(std::cout, data.begin(), data.end());
 
     PrintEvents(events);
-
 
     fstream data_log;
     data_log.open("data_log.txt", std::fstream::out);
