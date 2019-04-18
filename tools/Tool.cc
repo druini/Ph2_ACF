@@ -21,44 +21,44 @@ Tool::Tool() :
 }
 
 #ifdef __HTTP__
-Tool::Tool (THttpServer* pHttpServer) :
-    SystemController(),
-    fCanvasMap(),
-    fChipHistMap(),
-    fModuleHistMap(),
-    fType(),
-    fTestGroupChannelMap(),
-    fDirectoryName (""),
-    fResultFile (nullptr),
-    fHttpServer (pHttpServer),
-    fSkipMaskedChannels(false),
-    fAllChan(false),
-    fMaskChannelsFromOtherGroups(false),
-    fTestPulse(false)
+Tool::Tool (THttpServer* pHttpServer)
+: SystemController            ()
+, fCanvasMap                  ()
+, fChipHistMap                ()
+, fModuleHistMap              ()
+, fType                       ()
+, fTestGroupChannelMap        ()
+, fDirectoryName              ("")
+, fResultFile                 (nullptr)
+, fHttpServer                 (pHttpServer)
+, fSkipMaskedChannels         (false)
+, fAllChan                    (false)
+, fMaskChannelsFromOtherGroups(false)
+, fTestPulse                  (false)
 {
 }
 #endif
 
 Tool::Tool (const Tool& pTool)
 {
-    fBeBoardInterface = pTool.fBeBoardInterface;
-    fChipInterface = pTool.fChipInterface;
-    fBoardVector = pTool.fBoardVector;
-    fBeBoardFWMap = pTool.fBeBoardFWMap;
-    fSettingsMap = pTool.fSettingsMap;
-    fFileHandler = pTool.fFileHandler;
+    fBeBoardInterface    = pTool.fBeBoardInterface;
+    fChipInterface       = pTool.fChipInterface;
+    fBoardVector         = pTool.fBoardVector;
+    fBeBoardFWMap        = pTool.fBeBoardFWMap;
+    fSettingsMap         = pTool.fSettingsMap;
+    fFileHandler         = pTool.fFileHandler;
 
-    fDirectoryName = pTool.fDirectoryName;             /*< the Directoryname for the Root file with results */
-    fResultFile = pTool.fResultFile;                /*< the Name for the Root file with results */
-    fType = pTool.fType;
-#ifdef __HTTP__
-    fHttpServer = pTool.fHttpServer;
-#endif
-    fCanvasMap = pTool.fCanvasMap;
-    fChipHistMap = pTool.fChipHistMap;
-    fModuleHistMap = pTool.fModuleHistMap;
-    fBeBoardHistMap = pTool.fBeBoardHistMap;
+    fDirectoryName       = pTool.fDirectoryName;             /*< the Directoryname for the Root file with results */
+    fResultFile          = pTool.fResultFile;                /*< the Name for the Root file with results */
+    fType                = pTool.fType;
+    fCanvasMap           = pTool.fCanvasMap;
+    fChipHistMap         = pTool.fChipHistMap;
+    fModuleHistMap       = pTool.fModuleHistMap;
+    fBeBoardHistMap      = pTool.fBeBoardHistMap;
     fTestGroupChannelMap = pTool.fTestGroupChannelMap;
+#ifdef __HTTP__
+    fHttpServer          = pTool.fHttpServer;
+#endif
 }
 
 Tool::~Tool()
@@ -67,33 +67,33 @@ Tool::~Tool()
 
 void Tool::Inherit (Tool* pTool)
 {
-    fBeBoardInterface = pTool->fBeBoardInterface;
-    fChipInterface = pTool->fChipInterface;
-    fBoardVector = pTool->fBoardVector;
-    fBeBoardFWMap = pTool->fBeBoardFWMap;
-    fSettingsMap = pTool->fSettingsMap;
-    fFileHandler = pTool->fFileHandler;
-    fDirectoryName = pTool->fDirectoryName;
-    fResultFile = pTool->fResultFile;
-    fType = pTool->fType;
-#ifdef __HTTP__
-    fHttpServer = pTool->fHttpServer;
-#endif
-    fCanvasMap = pTool->fCanvasMap;
-    fChipHistMap = pTool->fChipHistMap;
-    fModuleHistMap = pTool->fModuleHistMap;
-    fBeBoardHistMap = pTool->fBeBoardHistMap;
+    fBeBoardInterface    = pTool->fBeBoardInterface;
+    fChipInterface       = pTool->fChipInterface;
+    fBoardVector         = pTool->fBoardVector;
+    fBeBoardFWMap        = pTool->fBeBoardFWMap;
+    fSettingsMap         = pTool->fSettingsMap;
+    fFileHandler         = pTool->fFileHandler;
+    fDirectoryName       = pTool->fDirectoryName;
+    fResultFile          = pTool->fResultFile;
+    fType                = pTool->fType;
+    fCanvasMap           = pTool->fCanvasMap;
+    fChipHistMap         = pTool->fChipHistMap;
+    fModuleHistMap       = pTool->fModuleHistMap;
+    fBeBoardHistMap      = pTool->fBeBoardHistMap;
     fTestGroupChannelMap = pTool->fTestGroupChannelMap;
+#ifdef __HTTP__
+    fHttpServer          = pTool->fHttpServer;
+#endif
 }
 
 void Tool::Inherit (SystemController* pSystemController)
 {
     fBeBoardInterface = pSystemController->fBeBoardInterface;
-    fChipInterface = pSystemController->fChipInterface;
-    fBoardVector = pSystemController->fBoardVector;
-    fBeBoardFWMap = pSystemController->fBeBoardFWMap;
-    fSettingsMap = pSystemController->fSettingsMap;
-    fFileHandler = pSystemController->fFileHandler;
+    fChipInterface    = pSystemController->fChipInterface;
+    fBoardVector      = pSystemController->fBoardVector;
+    fBeBoardFWMap     = pSystemController->fBeBoardFWMap;
+    fSettingsMap      = pSystemController->fSettingsMap;
+    fFileHandler      = pSystemController->fFileHandler;
 }
 
 void Tool::Destroy()
@@ -1174,16 +1174,14 @@ void Tool::bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const
 void Tool::setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndChipOccupanyMap, float &globalOccupancy)
 {
 
+    float globalBeBoardOccupancy = 0.;
     for (auto& cBoard : fBoardVector)
     {
-        ModuleOccupancyPerChannelMap moduleOccupancyPerChannelMap;
-        ModuleGlobalOccupancyMap cbcOccupanyMap;
-        float globalBeBoardOccupancy = 0.;
-        setDacAndMeasureBeBoardOccupancy(cBoard, dacName, dacValue, numberOfEvents, moduleOccupancyPerChannelMap, cbcOccupanyMap, globalOccupancy);
-        globalOccupancy+=globalBeBoardOccupancy;
-
-        backEndOccupancyPerChannelMap[cBoard->getBeId()] = moduleOccupancyPerChannelMap;
-        backEndChipOccupanyMap[cBoard->getBeId()] = cbcOccupanyMap;
+    	globalBeBoardOccupancy = 0.;
+    	backEndOccupancyPerChannelMap[cBoard->getBeId()] = ModuleOccupancyPerChannelMap();
+        backEndChipOccupanyMap       [cBoard->getBeId()] = ModuleGlobalOccupancyMap();
+        setDacAndMeasureBeBoardOccupancy(cBoard, dacName, dacValue, numberOfEvents, backEndOccupancyPerChannelMap[cBoard->getBeId()], backEndChipOccupanyMap[cBoard->getBeId()], globalOccupancy);
+        globalOccupancy += globalBeBoardOccupancy;
     }
 
     globalOccupancy/=fBoardVector.size();
@@ -1207,19 +1205,18 @@ void Tool::setDacAndMeasureBeBoardOccupancy(BeBoard* pBoard, const std::string &
 void Tool::measureOccupancy(const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndChipOccupanyMap, float &globalOccupancy)
 {
 
+    float globalBeBoardOccupancy = 0.;
     for (auto& cBoard : fBoardVector)
     {
-        ModuleOccupancyPerChannelMap moduleOccupancyPerChannelMap;
-        ModuleGlobalOccupancyMap cbcOccupanyMap;
-        float globalBeBoardOccupancy = 0.;
-        measureBeBoardOccupancy(cBoard, numberOfEvents, moduleOccupancyPerChannelMap, cbcOccupanyMap, globalOccupancy);
-        globalOccupancy+=globalBeBoardOccupancy;
+    	globalBeBoardOccupancy = 0.;
+        backEndOccupancyPerChannelMap[cBoard->getBeId()] = ModuleOccupancyPerChannelMap();
+        backEndChipOccupanyMap       [cBoard->getBeId()] = ModuleGlobalOccupancyMap();
+        measureBeBoardOccupancy(cBoard, numberOfEvents, backEndOccupancyPerChannelMap[cBoard->getBeId()], backEndChipOccupanyMap[cBoard->getBeId()], globalOccupancy);
+        globalOccupancy += globalBeBoardOccupancy;
 
-        backEndOccupancyPerChannelMap[cBoard->getBeId()] = moduleOccupancyPerChannelMap;
-        backEndChipOccupanyMap[cBoard->getBeId()] = cbcOccupanyMap;
     }
 
-    globalOccupancy/=fBoardVector.size();
+    globalOccupancy /= fBoardVector.size();
 
     return;
 }
@@ -1250,7 +1247,7 @@ void Tool::measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEven
                         }
                         if(fTestPulse)
                         {
-                            selectGroupTestPulse(cChip, group.first);
+                            selectGroupTestPulse(cChip, group.first); // check
                         }
                     }
                 }
@@ -1351,7 +1348,8 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
         for ( auto cFe : pBoard->fModuleVector )
         {
 
-            if(moduleOccupancyPerChannelMap.find(cFe->getModuleId())==moduleOccupancyPerChannelMap.end()){
+            if(moduleOccupancyPerChannelMap.find(cFe->getModuleId())==moduleOccupancyPerChannelMap.end())
+            {
                 moduleOccupancyPerChannelMap[cFe->getModuleId()]=ChipOccupancyPerChannelMap();
             }
             ChipOccupancyPerChannelMap *chipOccupancy = &moduleOccupancyPerChannelMap[cFe->getModuleId()];

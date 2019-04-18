@@ -332,7 +332,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     }
 
     std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
-    std::map<uint16_t, ModuleGlobalOccupancyMap > backEndCbcOccupanyMap;
+    std::map<uint16_t, ModuleGlobalOccupancyMap>     backEndCbcOccupanyMap;
     float globalOccupancy=0;
 
     bool originalAllChannelFlag = this->fAllChan;
