@@ -16,6 +16,8 @@
 
 #include <vector>
 
+#include "FC7FWInterface.h"
+
 
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
@@ -44,11 +46,18 @@ namespace Ph2_HwInterface
     bool     WriteChipAllLocalReg      (Chip* pChip, const std::string& dacName, std::vector<uint16_t>& pValue, bool pVerifLoop = true)      override;
 
     bool WriteRD53Mask                 (RD53* pRD53, bool defaultT_currentF);
-    bool WriteRD53Reg                  (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec);
+    // bool WriteRD53Reg                  (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec);
     void InitRD53Aurora                (RD53* pRD53);
     void SyncRD53                      (RD53* pRD53, unsigned int nSyncWords = 1);
 
-    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadRD53Reg (RD53* pRD53, const std::string& pRegNode);
+    std::vector< std::pair<uint16_t, uint16_t> > ReadRD53Reg (RD53* pRD53, const std::string& pRegNode);
+
+    // new
+    template <class Cmd>
+    void WriteChipCommand(RD53* pRD53, const Cmd& cmd) {
+        setBoard (pRD53->getBeBoardId());
+        static_cast<FC7FWInterface*>(fBoardFW)->WriteRD53Command(pRD53->getChipId(), cmd);
+    }
 
     void ResetRD53                     (RD53* pRD53);
     void SetResetCoreCol               (RD53* pRD53, bool setT_resetF);

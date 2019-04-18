@@ -23,6 +23,7 @@ namespace Ph2_HwInterface {
     //StackWriteTimeOut();
     //} ),
     //fDeactiveThread ( false )
+     : log_file("./logs/ipb_log.txt")
     {
         // Loging settings
         uhal::disableLogging();
@@ -46,10 +47,11 @@ namespace Ph2_HwInterface {
         //StackWriteTimeOut();
         //} ),
         //fDeactiveThread ( false )
+        , log_file("./logs/ipb_log.txt")
     {
         // Loging settings
         uhal::disableLogging();
-        //uhal::setLogLevelTo (uhal::Debug() ); //Raise the log level
+        // uhal::setLogLevelTo (uhal::Info() ); //Raise the log level
 
         if (fBoard == nullptr) delete fBoard;
 
@@ -62,12 +64,15 @@ namespace Ph2_HwInterface {
     RegManager::~RegManager()
     {
         //fDeactiveThread = true;
+        // std::cout << "~RegManager" << std::endl;
 
         if ( fBoard ) delete fBoard;
     }
 
     bool RegManager::WriteReg ( const std::string& pRegNode, const uint32_t& pVal )
     {
+        log_file << pRegNode << " = " << pVal << std::endl;
+
         //std::lock_guard<std::mutex> cGuard (fBoardMutex);
         fBoard->getNode ( pRegNode ).write ( pVal );
         fBoard->dispatch();
@@ -101,8 +106,10 @@ namespace Ph2_HwInterface {
 
         for ( auto const& v : pVecReg )
         {
-            fBoard->getNode ( v.first ).write ( v.second );
+            log_file << v.first << " = " << v.second << std::endl;
             //LOG (DEBUG) << "Write: " <<  v.first << ": " << v.second;
+
+            fBoard->getNode ( v.first ).write ( v.second );
         }
 
         try

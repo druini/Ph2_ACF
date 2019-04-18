@@ -31,7 +31,7 @@ namespace Ph2_HwInterface
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    this->WriteRD53Mask (pRD53, false);
+    // this->WriteRD53Mask (pRD53, false);
 
     return true;
   }
@@ -61,164 +61,222 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53,"AURORA_CB_CONFIG0",0xF1, 0);
     this->WriteChipReg(pRD53,"AURORA_CB_CONFIG1",0xF, 0);
     this->WriteChipReg(pRD53,"GLOBAL_PULSE_ROUTE",0x30, 0); // 0x30 = reset Aurora AND reset serializer
-    this->WriteChipReg(pRD53,"GLOBAL_PULSE",0x1, 0);
+    WriteChipCommand(pRD53, RD53Cmd::GlbPulse{1});
+    // this->WriteChipReg(pRD53,"GLOBAL_PULSE",0x1, 0);
  
     // ###############################################################
     // # Enable monitoring (needed for AutoRead register monitoring) #
     // ###############################################################
     this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100, 0); // 0x100 = start monitoring
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE", 0x4, 0);
+    WriteChipCommand(pRD53, RD53Cmd::GlbPulse{4});
+    // this->WriteChipReg(pRD53, "GLOBAL_PULSE", 0x4, 0);
 
     usleep(DEEPSLEEP);
   }
 
   void RD53Interface::SyncRD53 (RD53* pRD53, unsigned int nSyncWords)
   {
-    this->WriteChipReg(pRD53,"SYNC",0x0);
+    // this->WriteChipReg(pRD53,"SYNC",0x0);
+    WriteChipCommand(pRD53, RD53Cmd::Sync{});
   }
 
-  bool RD53Interface::WriteChipReg (Chip* cRD53, const std::string& pRegNode, const uint16_t data, bool pVerifyLoop)
+  bool RD53Interface::WriteChipReg (Chip* cRD53, const std::string& pRegNode, const uint16_t value, bool pVerifyLoop)
   {
     setBoard (cRD53->getBeBoardId());
 
     RD53* pRD53 = static_cast<RD53*>(cRD53);
+    uint16_t chip_id = pRD53->getChipId();
+    uint16_t address = pRD53->getRegItem (pRegNode).fAddress;
+    uint16_t row = address = 0 ? pRD53->getReg("REGION_ROW") : 0;  // avoid map lookup if not needed
 
-    // std::vector<std::vector<uint16_t> > symbols; // Useful in case the encoding is done in the software
-    std::vector<uint32_t> serialSymbols;
-    RD53RegItem cRegItem(0,0,0);
-    cRegItem.fValue = data;
+    static_cast<FC7FWInterface*>(fBoardFW)->WriteRD53Command(chip_id, RD53Cmd::WrReg{address, value});
 
-     // @TMP@
-    // LOG(INFO) << BOLDRED << pRegNode << " <- " << data << RESET;
+    if (pVerifyLoop) {
 
-    if (strcmp(pRegNode.c_str(),"GLOBAL_PULSE") == 0)
-      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::GlobalPulse(), false, serialSymbols);
-    else if (strcmp(pRegNode.c_str(),"SYNC") == 0)
-      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::Sync(),        false, serialSymbols);
-    else if (strcmp(pRegNode.c_str(),"RESET_BCRCTR") == 0)
-      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetBcrCtr(), false, serialSymbols);
-    else if (strcmp(pRegNode.c_str(),"RESET_EVTCTR") == 0)
-      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetEvtCtr(), false, serialSymbols);
-    else
-      {
-	cRegItem.fAddress = pRD53->getRegItem (pRegNode).fAddress;
-	pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols);
-	// pRD53->EncodeCMD (cRegItem, pRD53->getChipId(), RD53::WriteCmd(), symbols);
+        bool verified = false;
 
-	if (pVerifyLoop) {
-	  std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
-	  unsigned int it      = 0;
-	  unsigned int row     = 0;
-	  unsigned int pixMode = 0;
-	  do
-	    {
-	      it++;
-	      if (it > NWRITE_ATTEMPTS) break;
+        for (size_t i = 0; i < NWRITE_ATTEMPTS; i++) {
+            // read register
+            auto results = static_cast<FC7FWInterface*>(fBoardFW)->ReadChipRegister(chip_id, address); // returns register frames that match the given address
+            
+            // check that all frames have the correct value
+            bool all_correct = true;    
+            for (const auto& item : results) {
+                if (item.first == address || (address == 0 && (item.first & 0x1ff) == row)) {
+                    if (item.second != value) {
+                        all_correct = false;
+                        // break;
+                    }
+                }
+                else {
+                    LOG (INFO) << BOLDRED << "Unexpected register frame: { address: " << item.first << ", value: " << item.second << "}" << RESET;
+                }
+            }
+            if (all_correct) {
+                verified = true;
+                break;   
+            }
+        }
+        if (!verified)
+            return false;
+    }
 
-	      if (((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (it == 1)) || (strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0))
-		fBoardFW->WriteChipCommand (serialSymbols);
+    pRD53->setReg (pRegNode, value);
 
-	      if ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) & (it == 1))
-		{
-		  outputDecoded = this->ReadRD53Reg (pRD53, "PIX_MODE");
-		  pixMode = outputDecoded.second[0];
-
-		  outputDecoded = this->ReadRD53Reg (pRD53, "REGION_ROW");
-		  row = outputDecoded.second[0];
-		}
-
-	      if (pixMode == 0)
-		outputDecoded = this->ReadRD53Reg (pRD53, pRegNode);
-
-	    }
-	  while ((pixMode == 0) &&
-		 (((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded.first[0] != cRegItem.fAddress)) ||
-		  ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded.first[0] != row))               ||
-		  (outputDecoded.second[0] != cRegItem.fValue)));
-
-	  if (it > NWRITE_ATTEMPTS)
-	    {
-	      LOG (INFO) << BOLDRED << "Error while writing into RD53: reached the maximum number of attempts (" << NWRITE_ATTEMPTS << ")" << RESET;
-	      return false;
-	    }
-	  else
-	    {
-	      pRD53->setReg (pRegNode, cRegItem.fValue);
-	      return true;
-	    }
-	}
-      }
-
-    // fBoardFW->SerializeSymbols (symbols,serialSymbols);
-    fBoardFW->WriteChipCommand (serialSymbols);
     return true;
   }
+
+//   bool RD53Interface::WriteChipReg (Chip* cRD53, const std::string& pRegNode, const uint16_t data, bool pVerifyLoop)
+//   {
+//     setBoard (cRD53->getBeBoardId());
+
+//     RD53* pRD53 = static_cast<RD53*>(cRD53);
+
+//     // std::vector<std::vector<uint16_t> > symbols; // Useful in case the encoding is done in the software
+//     std::vector<uint32_t> serialSymbols;
+//     RD53RegItem cRegItem(0,0,0);
+//     cRegItem.fValue = data;
+
+//      // @TMP@
+//     // LOG(INFO) << BOLDRED << pRegNode << " <- " << data << RESET;
+
+//     if (strcmp(pRegNode.c_str(),"GLOBAL_PULSE") == 0)
+//       pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::GlobalPulse(), false, serialSymbols);
+//     else if (strcmp(pRegNode.c_str(),"SYNC") == 0)
+//       pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::Sync(),        false, serialSymbols);
+//     else if (strcmp(pRegNode.c_str(),"RESET_BCRCTR") == 0)
+//       pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetBcrCtr(), false, serialSymbols);
+//     else if (strcmp(pRegNode.c_str(),"RESET_EVTCTR") == 0)
+//       pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetEvtCtr(), false, serialSymbols);
+//     else
+//       {
+// 	cRegItem.fAddress = pRD53->getRegItem (pRegNode).fAddress;
+// 	pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols);
+// 	// pRD53->EncodeCMD (cRegItem, pRD53->getChipId(), RD53::WriteCmd(), symbols);
+
+// 	if (pVerifyLoop) {
+// 	  std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
+// 	  unsigned int it      = 0;
+// 	  unsigned int row     = 0;
+// 	  unsigned int pixMode = 0;
+// 	  do
+// 	    {
+// 	      it++;
+// 	      if (it > NWRITE_ATTEMPTS) break;
+
+// 	      if (((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (it == 1)) || (strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0))
+// 		fBoardFW->WriteChipCommand (serialSymbols);
+
+// 	      if ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) & (it == 1))
+// 		{
+// 		  outputDecoded = this->ReadRD53Reg (pRD53, "PIX_MODE");
+// 		  pixMode = outputDecoded.second[0];
+
+// 		  outputDecoded = this->ReadRD53Reg (pRD53, "REGION_ROW");
+// 		  row = outputDecoded.second[0];
+// 		}
+
+// 	      if (pixMode == 0)
+// 		outputDecoded = this->ReadRD53Reg (pRD53, pRegNode);
+
+// 	    }
+// 	  while ((pixMode == 0) &&
+// 		 (((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded.first[0] != cRegItem.fAddress)) ||
+// 		  ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded.first[0] != row))               ||
+// 		  (outputDecoded.second[0] != cRegItem.fValue)));
+
+// 	  if (it > NWRITE_ATTEMPTS)
+// 	    {
+// 	      LOG (INFO) << BOLDRED << "Error while writing into RD53: reached the maximum number of attempts (" << NWRITE_ATTEMPTS << ")" << RESET;
+// 	      return false;
+// 	    }
+// 	  else
+// 	    {
+// 	      pRD53->setReg (pRegNode, cRegItem.fValue);
+// 	      return true;
+// 	    }
+// 	}
+//       }
+
+//     // fBoardFW->SerializeSymbols (symbols,serialSymbols);
+//     fBoardFW->WriteChipCommand (serialSymbols);
+//     return true;
+//   }
 
   bool RD53Interface::WriteChipMultReg (Chip* cRD53, const std::vector< std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop)
   {
-    setBoard (cRD53->getBeBoardId());
-
-    RD53* pRD53 = static_cast<RD53*>(cRD53);
-
-    std::vector<uint32_t> serialSymbols;
-    ChipRegItem cRegItem;
-
-    for (const auto& cReg : pVecReg)
-      {
-	cRegItem = pRD53->getRegItem (cReg.first);
-	cRegItem.fValue = cReg.second;
-
-	if (strcmp(cReg.first.c_str(),"GLOBAL_PULSE") == 0)
-	  pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::GlobalPulse(), false, serialSymbols);
-	else if (strcmp(cReg.first.c_str(),"SYNC") == 0)
-	  pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::Sync(),        false, serialSymbols);
-	else if (strcmp(cReg.first.c_str(),"RESET_BCRCTR") == 0)
-	  pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetBcrCtr(), false, serialSymbols);
-	else if (strcmp(cReg.first.c_str(),"RESET_EVTCTR") == 0)
-	  pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetEvtCtr(), false, serialSymbols);
-	else
-	  {
-	    pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols);
-	    pRD53->setReg (cReg.first, cReg.second);
-	  }
+      for (const auto& item : pVecReg) {
+          if (!WriteChipReg(cRD53, item.first, item.second, pVerifLoop))
+            return false;
       }
+      return true;
+      
+    // setBoard (cRD53->getBeBoardId());
 
-    fBoardFW->WriteChipCommand (serialSymbols);
-    return true;
+    // RD53* pRD53 = static_cast<RD53*>(cRD53);
+
+    // std::vector<uint32_t> serialSymbols;
+    // ChipRegItem cRegItem;
+
+    // for (const auto& cReg : pVecReg)
+    //   {
+	// cRegItem = pRD53->getRegItem (cReg.first);
+	// cRegItem.fValue = cReg.second;
+
+	// if (strcmp(cReg.first.c_str(),"GLOBAL_PULSE") == 0)
+	//   pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::GlobalPulse(), false, serialSymbols);
+	// else if (strcmp(cReg.first.c_str(),"SYNC") == 0)
+	//   pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::Sync(),        false, serialSymbols);
+	// else if (strcmp(cReg.first.c_str(),"RESET_BCRCTR") == 0)
+	//   pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetBcrCtr(), false, serialSymbols);
+	// else if (strcmp(cReg.first.c_str(),"RESET_EVTCTR") == 0)
+	//   pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetEvtCtr(), false, serialSymbols);
+	// else
+	//   {
+	//     pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols);
+	//     pRD53->setReg (cReg.first, cReg.second);
+	//   }
+    //   }
+
+    // fBoardFW->WriteChipCommand (serialSymbols);
+    // return true;
   }
 
-  bool RD53Interface::WriteRD53Reg (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec)
-  {
-    setBoard (pRD53->getBeBoardId());
+//   bool RD53Interface::WriteRD53Reg (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec)
+//   {
+//     setBoard (pRD53->getBeBoardId());
     
-    std::vector<uint32_t> serialSymbols;
-    pRD53->EncodeCMD (pRD53->getRegItem (pRegNode).fAddress, pRD53->getRegItem (pRegNode).fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols, dataVec);
+//     std::vector<uint32_t> serialSymbols;
+//     pRD53->EncodeCMD (pRD53->getRegItem (pRegNode).fAddress, pRD53->getRegItem (pRegNode).fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols, dataVec);
 
-    fBoardFW->WriteChipCommand (serialSymbols);
-    return true;
-  }
+//     fBoardFW->WriteChipCommand (serialSymbols);
+//     return true;
+//   }
 
-  std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53Interface::ReadRD53Reg (RD53* pRD53, const std::string& pRegNode)
+//   std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53Interface::ReadRD53Reg (RD53* pRD53, const std::string& pRegNode)
+  std::vector< std::pair<uint16_t, uint16_t> > RD53Interface::ReadRD53Reg (RD53* pRD53, const std::string& pRegNode)
   {
     setBoard (pRD53->getBeBoardId());
 
-    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
-    std::vector<uint32_t> serialSymbols;
-    ChipRegItem cRegItem = pRD53->getRegItem (pRegNode);
+    return static_cast<FC7FWInterface*>(fBoardFW)->ReadChipRegister(pRD53->getChipId(), pRD53->getRegItem(pRegNode).fAddress);
+    
+//     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
+//     std::vector<uint32_t> serialSymbols;
+//     ChipRegItem cRegItem = pRD53->getRegItem (pRegNode);
 
-    pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ReadCmd(), false, serialSymbols);
-    outputDecoded = fBoardFW->ReadChipRegisters (serialSymbols);
+//     pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ReadCmd(), false, serialSymbols);
+//     outputDecoded = fBoardFW->ReadChipRegisters (serialSymbols);
 
-    for (unsigned int i = 0; i < outputDecoded.first.size(); i++)
-      {
-	// Removing bit for pixel portal reading
-	outputDecoded.first[i] = outputDecoded.first[i] & static_cast<uint16_t>(pow(2,NBIT_ADDR)-1);
-	// @TMP@
-//	  LOG (INFO) << BLUE << "\t--> Address: " << BOLDYELLOW << "0x" << std::hex << unsigned(outputDecoded.first[i])
-//	    << BLUE << "\tValue: " << BOLDYELLOW << "0x" << unsigned(outputDecoded.second[i]) << std::dec << RESET;
-      }
+//     for (unsigned int i = 0; i < outputDecoded.first.size(); i++)
+//       {
+// 	// Removing bit for pixel portal reading
+// 	outputDecoded.first[i] = outputDecoded.first[i] & static_cast<uint16_t>(pow(2,NBIT_ADDR)-1);
+// 	// @TMP@
+// //	  LOG (INFO) << BLUE << "\t--> Address: " << BOLDYELLOW << "0x" << std::hex << unsigned(outputDecoded.first[i])
+// //	    << BLUE << "\tValue: " << BOLDYELLOW << "0x" << unsigned(outputDecoded.second[i]) << std::dec << RESET;
+//       }
 
-    return outputDecoded;
+//     return outputDecoded;
   }
   
   bool RD53Interface::WriteRD53Mask (RD53* pRD53, bool defaultT_currentF)
@@ -299,8 +357,10 @@ namespace Ph2_HwInterface
 
   void RD53Interface::ResetRD53 (RD53* pRD53)
   {
-    this->WriteChipReg(pRD53,"RESET_EVTCTR",0x0);
-    this->WriteChipReg(pRD53,"RESET_BCRCTR",0x0);
+    WriteChipCommand(pRD53, RD53Cmd::ResetECR{});
+    WriteChipCommand(pRD53, RD53Cmd::ResetBCR{});
+    // this->WriteChipReg(pRD53,"RESET_EVTCTR",0x0);
+    // this->WriteChipReg(pRD53,"RESET_BCRCTR",0x0);
   }
 
   void RD53Interface::SetResetCoreCol (RD53* pRD53, bool setT_resetF)
@@ -324,7 +384,7 @@ namespace Ph2_HwInterface
 
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode)
   {
-    return this->ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode).second[0];
+    return this->ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode)[0].second;
   }
   
   bool RD53Interface::ConfigureChipOriginalMask (Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
