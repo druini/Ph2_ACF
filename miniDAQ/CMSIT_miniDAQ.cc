@@ -1,5 +1,7 @@
 #include "../System/SystemController.h"
 #include "../Utils/argvparser.h"
+#include "../tools/Tool.h"
+#include "TH2F.h"
 
 
 // ##################
@@ -9,11 +11,69 @@
 #define RUNNUMBER 0
 
 
-using namespace Ph2_System;
 using namespace CommandLineProcessing;
+using namespace Ph2_System;
 using namespace std;
 
 INITIALIZE_EASYLOGGINGPP
+
+
+// #########################
+// # PixelAlive test suite #
+// #########################
+/*
+class PixelAlive : public Tool
+{
+public:
+  PixelAlive() : Tool()
+  {
+    theCanvas      = new TCanvas("RD53canvas","RD53canvas",0,0,700,500);
+    histoOccupancy = new TH2F("histoOccupancy","histoOccupancy",NROWS,0,NROWS,NCOLS,0,NCOLS);
+  }
+
+  ~PixelAlive()
+  {
+    delete histoOccupancy;
+    delete theCanvas;
+  }
+  
+  void Run()
+  {
+    std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
+    std::map<uint16_t, ModuleGlobalOccupancyMap >    backEndRD53OccupanyMap;
+    uint32_t fEventsPerPoint = 10;
+    float globalOccupancy    =  0;
+
+    this->SetTestAllChannels(true);
+    this->measureOccupancy(fEventsPerPoint, backEndOccupancyPerChannelMap, backEndRD53OccupanyMap, globalOccupancy);
+    this->SetTestAllChannels(false);
+
+    // #########################
+    // # Filling the histogram #
+    // #########################
+    unsigned int row;
+    unsigned int col;
+    for (auto cBoard : fBoardVector)
+      for (auto cFe : cBoard->fModuleVector)
+	for (auto cChip : cFe->fChipVector)
+	  for (uint32_t iChan = 0; iChan < NROWS*NCOLS; iChan++)
+	    {
+	      RD53::fromVec2Matrix(backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getFeId()][cChip->getChipId()][iChan],row,col);
+	      histoOccupancy->SetBinContent(iChan+1,row,col);
+	    }
+
+    theCanvas->cd();
+    histoOccupancy->Draw();
+    theCanvas->Modified();
+    theCanvas->Update();
+    theCanvas->Write("PixelAlive.root");
+  }
+
+private:
+  TCanvas* theCanvas;
+  TH2F*    histoOccupancy;
+};
+*/
 
 
 void PrintEvents(std::vector<FC7FWInterface::Event>& events)
@@ -56,6 +116,7 @@ void PrintEvents(std::vector<FC7FWInterface::Event>& events)
     } 
 
 }
+
 
 int main (int argc, char** argv)
 {
@@ -225,6 +286,17 @@ int main (int argc, char** argv)
 
 
   cSystemController.Stop(pBoard);
+
+
+  // #######################
+  // # Run PixelAlive scan #
+  // #######################
+  /*
+  PixelAlive pa;
+  pa.Run();
+  */
+
+
   cSystemController.Destroy();
   LOG (INFO) << BOLDBLUE << "@@@ End of CMSIT miniDAQ @@@" << RESET;
 
