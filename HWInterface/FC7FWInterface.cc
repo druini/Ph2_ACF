@@ -322,7 +322,7 @@ namespace Ph2_HwInterface
 	    outputDecoded.first .push_back((regFIFO[i] >> NBIT_VALUE) & static_cast<uint32_t>(pow(2,NBIT_ADDRESS)-1));
 	    outputDecoded.second.push_back(regFIFO[i] & static_cast<uint32_t>(pow(2,NBIT_VALUE)-1));
 	    uint8_t status = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS))               & static_cast<uint32_t>(pow(2,NBIT_STATUS)-1);
-	    uint8_t id     = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS + NBIT_STATUS)) & static_cast<uint32_t>(pow(2,NBIT_HEADER)-1);
+	    uint8_t id     = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS + NBIT_STATUS)) & static_cast<uint32_t>(pow(2,NBIT_ID)-1);
 	    // @TMP@
  	    // LOG (INFO) << BLUE << std::hex << "\t--> Readback register status: " << BOLDYELLOW << "0x" << unsigned(status)
 	    // 	       << BLUE << " Readback chip ID: " << BOLDYELLOW << "0x" << unsigned(id) << std::dec << RESET;
@@ -649,14 +649,14 @@ namespace Ph2_HwInterface
         chip_start.push_back(i);
       }
     }
-    std::cout << "chips found: " << chip_start.size() << std::endl;
+    // std::cout << "chips found: " << chip_start.size() << std::endl;
 
     chip_frames.reserve(chip_start.size());
     chip_events.reserve(chip_start.size());
     for (size_t i = 0; i < chip_start.size(); i++) {
       const size_t start = chip_start[i];
       const size_t end = (i == chip_start.size() - 1) ? n : chip_start[i + 1];
-      chip_frames.emplace_back(data[start], data[start + 1]);
+      chip_frames.emplace_back(data[start], data[1]);
       chip_events.emplace_back(data + start + 2, end - start - 2);
 
       if (chip_frames[i].l1a_data_size * 4 != n) {
@@ -719,115 +719,4 @@ namespace Ph2_HwInterface
     });
     usleep(DEEPSLEEP);
     }
-
-
-    template <class Cmd>
-    void FC7FWInterface::WriteRD53Command(uint8_t chip_id, const Cmd& cmd, unsigned int repetition) {
-        auto cmd_data = encode_chip_command(chip_id, cmd);  // encode command into array of words
-
-        std::vector< std::pair<std::string, uint32_t> > stackRegisters;
-        stackRegisters.reserve(cmd_data.size());
-
-        stackRegisters.emplace_back("user.cmd_regs.ctrl_reg", cmd_data[0]);
-
-        for (size_t i = 1; i < cmd_data.size(); i++)
-            stackRegisters.emplace_back("user.cmd_regs.data" + std::to_string(i-1) + "_reg", cmd_data[i]);
-
-        for (size_t i = 0; i < repetition; i++) 
-            WriteStackReg (stackRegisters);
-    }
-
-
-    std::vector<std::pair<uint16_t, uint16_t> > FC7FWInterface::ReadChipRegister(size_t chip_id, uint16_t address) {
-        uint32_t block_size = fBoard->getNode("user.readout0.dat_read").getSize();
-        uint32_t n_ch = ReadReg("user.stat_regs.aurora.n_ch");
-        
-        // flush FIFO
-        for (size_t i = 0; i < n_ch; i++) {
-            std::string readout_reg = "user.readout" + std::to_string(i);
-            WriteStackReg({
-                {readout_reg + ".reg_mask", 0},
-                {readout_reg + ".sel", 2}
-            });
-            ReadBlockRegValue(readout_reg + ".reg_read", block_size);
-        }
-
-        WriteRD53Command(chip_id, RD53Cmd::RdReg{address});
-
-        std::vector<std::pair<uint16_t, uint16_t> > result;
-
-        for (size_t i = 0; i < n_ch; i++) {
-            std::vector<uint32_t> reg_data = ReadBlockRegValue("user.readout" + std::to_string(i) + ".reg_read", block_size);
-            for (uint32_t word : reg_data) {
-                uint16_t header, status, read_address, data;
-                std::tie(header, status, read_address, data) = unpack_bits<NBIT_HEADER, NBIT_STATUS, NBIT_ADDRESS, NBIT_VALUE>(word);
-
-                if (header != 6) {
-                    std::cout << "read_chip_register: invalid header: " << header << std::endl;
-                }
-
-                if (status) {
-                    std::cout << "read_chip_register: error status: " << status << std::endl;
-                }
-
-                // if (address == read_address || (address == 0 && read_address >= 512))
-                    result.emplace_back(read_address, data);
-            }
-        }
-        if (result.size() == 0) {
-            LOG (ERROR) << BOLDRED << "Could not read chip register: " << address << RESET;
-            return {{0, 0}};
-        }
-        return result;
-    }
-
-
-    // encode commands without fields
-    template <
-        class Cmd, 
-        typename std::enable_if<Cmd::n_fields == 0, int>::type
-    >
-    std::array<uint32_t, 1> FC7FWInterface::encode_chip_command(uint8_t chip_id, const Cmd& cmd) {
-        return { 
-            pack_bits<NBIT_SYMBOL, NBIT_5BITW>(Cmd::op_code, 0) 
-        };
-    }
-
-    // encode commands with fields
-    template <
-        class Cmd, size_t N,
-        size_t M,
-        typename std::enable_if<(Cmd::n_fields > 0), int>::type
-    >
-    std::array<uint32_t, M> FC7FWInterface::encode_chip_command(uint8_t chip_id, const Cmd& cmd) {
-        using ctrl_reg_packer = BitPacker<4 * NBIT_FRAME, NBIT_SYMBOL, NBIT_5BITW>;
-        using fields_packer = ArrayPacker<NBIT_FRAME>;
-
-        std::array<uint32_t, M> result;
-
-        const auto fields = cmd.encode_fields(chip_id);
-
-        result[0] = ctrl_reg_packer::pack(fields_packer::pack_reverse<4>(fields), Cmd::op_code, N > 6 ? 7 : N);
-
-        for (size_t i = 1; i < M; i++) {
-            result[i] = fields_packer::pack_reverse<6>(&fields[i]);
-        }
-        return result;
-    }
-
-    // template instantiations
-    template void FC7FWInterface::WriteRD53Command<RD53Cmd::ResetECR>(uint8_t, const RD53Cmd::ResetECR&, unsigned int);
-    template void FC7FWInterface::WriteRD53Command<RD53Cmd::ResetBCR>(uint8_t, const RD53Cmd::ResetBCR&, unsigned int);
-    template void FC7FWInterface::WriteRD53Command<RD53Cmd::GlbPulse>(uint8_t, const RD53Cmd::GlbPulse&, unsigned int);
-    template void FC7FWInterface::WriteRD53Command<RD53Cmd::Cal>(uint8_t, const RD53Cmd::Cal&, unsigned int);
-    template void FC7FWInterface::WriteRD53Command<RD53Cmd::WrReg>(uint8_t, const RD53Cmd::WrReg&, unsigned int);
-    template void FC7FWInterface::WriteRD53Command<RD53Cmd::WrRegLong>(uint8_t, const RD53Cmd::WrRegLong&, unsigned int);
-    template void FC7FWInterface::WriteRD53Command<RD53Cmd::RdReg>(uint8_t, const RD53Cmd::RdReg&, unsigned int);
-    template void FC7FWInterface::WriteRD53Command<RD53Cmd::Noop>(uint8_t, const RD53Cmd::Noop&, unsigned int);
-
-    template <>
-    void FC7FWInterface::WriteRD53Command<RD53Cmd::Sync>(uint8_t, const RD53Cmd::Sync&, unsigned int) {
-        LOG (ERROR) << "Sync command not supported." << RESET;
-    }
-
 }

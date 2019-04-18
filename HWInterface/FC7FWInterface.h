@@ -31,7 +31,7 @@
 #define DEEPSLEEP 500000 // [microseconds]
 
 #define NBIT_FWVER     4 // Number of bits for the firmware version
-#define NBIT_HEADER    4 // Number of bits for the header  in the register frame
+#define NBIT_ID        2 // Number of bits for the ID      in the register frame
 #define NBIT_STATUS    2 // Number of bits for the status  in the register frame
 #define NBIT_ADDRESS  10 // Number of bits for the address in the register frame
 #define NBIT_VALUE    16 // Number of bits for the value   in the register frame
@@ -112,43 +112,18 @@ namespace Ph2_HwInterface
     void ChipReSync() override;
 
     // new
-    template <class Cmd>
-    void WriteRD53Command(uint8_t chip_id, const Cmd& cmd, unsigned int repetition = 1);
-
-    // new
-    std::vector<std::pair<uint16_t, uint16_t> > ReadChipRegister(size_t chip_id, uint16_t address);
-    
-    // new
-    // encode commands without fields
-    template <
-        class Cmd, 
-        typename std::enable_if<Cmd::n_fields == 0, int>::type = 0 
-    >
-    static std::array<uint32_t, 1> encode_chip_command(uint8_t chip_id, const Cmd& cmd);
-
-    // new
-    // encode commands with fields
-    template <
-        class Cmd, size_t N = Cmd::n_fields,
-        size_t M = 1 + (N + 1) / 6,  // number of IPBus registers required
-        typename std::enable_if<(Cmd::n_fields > 0), int>::type = 0 
-    >
-    static std::array<uint32_t, M> encode_chip_command(uint8_t chip_id, const Cmd& cmd);
-
-
-    // Event data
-
     struct ChipFrame {
-        ChipFrame(const uint32_t data0, const uint32_t data1);
+      ChipFrame(const uint32_t data0, const uint32_t data1);
 
-        uint16_t error_code;
-        uint16_t hybrid_id;
-        uint16_t chip_id;
-        uint16_t l1a_data_size;
-        uint16_t chip_type;
-        uint16_t frame_delay;
+      uint16_t error_code;
+      uint16_t hybrid_id;
+      uint16_t chip_id;
+      uint16_t l1a_data_size;
+      uint16_t chip_type;
+      uint16_t frame_delay;
     };
 
+    // new
     struct Event {
         Event(const uint32_t* data, size_t n);
 
@@ -163,65 +138,65 @@ namespace Ph2_HwInterface
         std::vector<RD53::Event> chip_events;
     };
 
+    // new
     static std::vector<Event> DecodeEvents(const std::vector<uint32_t>& data); 
-
 
     // Fast Commands Block
 
     struct TestFSMConfig {
-        bool ecr_en = false;
-        bool first_cal_en = false;
-        bool second_cal_en = false;
-        bool trigger_en = true;
+      bool ecr_en = false;
+      bool first_cal_en = false;
+      bool second_cal_en = false;
+      bool trigger_en = true;
 
-        uint32_t first_cal_data = 0;
-        uint32_t second_cal_data = 0;
-        uint32_t glb_pulse_data = 0;
+      uint32_t first_cal_data = 0;
+      uint32_t second_cal_data = 0;
+      uint32_t glb_pulse_data = 0;
 
-        uint32_t delay_after_ecr = 0;
-        uint32_t delay_after_autozero = 0;
-        uint32_t delay_after_first_cal = 0;
-        uint32_t delay_after_second_cal = 0;
-        uint16_t delay_loop = 10;
+      uint32_t delay_after_ecr = 0;
+      uint32_t delay_after_autozero = 0;
+      uint32_t delay_after_first_cal = 0;
+      uint32_t delay_after_second_cal = 0;
+      uint16_t delay_loop = 10;
     };
 
     enum class TriggerSource : uint32_t {
-        IPBus = 1,
-        TestFSM,
-        TTC,
-        TLU,
-        External,
-        HitOr,
-        UserDefined,
-        Undefined = 0
+      IPBus = 1,
+      TestFSM,
+      TTC,
+      TLU,
+      External,
+      HitOr,
+      UserDefined,
+      Undefined = 0
     };
 
     enum class AutozeroSource : uint32_t {
-        IPBus = 1,
-        TestFSM,
-        UserDefined,
-        Disabled = 0
+      IPBus = 1,
+      TestFSM,
+      UserDefined,
+      Disabled = 0
     };
 
     struct FastCommandsConfig {
-        TriggerSource trigger_source = TriggerSource::IPBus;
-        AutozeroSource autozero_source = AutozeroSource::IPBus;
+      TriggerSource trigger_source = TriggerSource::IPBus;
+      AutozeroSource autozero_source = AutozeroSource::IPBus;
 
-        bool initial_ecr_en = false;
-        bool backpressure_en = false;
-        bool veto_en = false;
+      bool initial_ecr_en = false;
+      bool backpressure_en = false;
+      bool veto_en = false;
 
-        uint32_t n_triggers = 0;
-        uint32_t ext_trigger_delay = 0; // when trigger_source == TriggerSource::External
-        uint32_t autozero_freq = 0; // when autozero_source == AutozeroSource::UserDefined
-        uint32_t veto_after_autozero = 0; // when autozero_source == AutozeroSource::UserDefined
-        
-        TestFSMConfig test_fsm;
+      uint32_t n_triggers = 0;
+      uint32_t ext_trigger_delay = 0; // when trigger_source == TriggerSource::External
+      uint32_t autozero_freq = 0; // when autozero_source == AutozeroSource::UserDefined
+      uint32_t veto_after_autozero = 0; // when autozero_source == AutozeroSource::UserDefined
+      
+      TestFSMConfig test_fsm;
     };
 
     void ConfigureFastCommands(const FastCommandsConfig&); // new
 
-    private:
+  private:
     // new
     void SendBoardCommand(const std::string& cmd_reg);
   };

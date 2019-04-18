@@ -7,8 +7,6 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#pragma once
-
 #ifndef _RD53_h_
 #define _RD53_h_
 
@@ -114,18 +112,18 @@ namespace Ph2_HwDescription
     void injectAllPixels();
     void injectPixel(unsigned int row, unsigned int col);
 
-    // void EncodeCMD (const RD53RegItem                   & pRegItem,
-	// 	    const uint8_t                         pRD53Id,
-	// 	    const uint16_t                        pRD53Cmd,
-	// 	    std::vector<std::vector<uint16_t> > & pVecReg);
+    void EncodeCMD (const RD53RegItem                   & pRegItem,
+		    const uint8_t                         pRD53Id,
+		    const uint16_t                        pRD53Cmd,
+		    std::vector<std::vector<uint16_t> > & pVecReg);
 
-    // void EncodeCMD (const uint16_t                address,
-	// 	    const uint16_t                data,
-	// 	    const uint8_t                 pRD53Id,
-	// 	    const uint8_t                 pRD53Cmd,
-	// 	    const bool                    isBroadcast,
-	// 	    std::vector<uint32_t>       & pVecReg,
-	// 	    const std::vector<uint16_t> * dataVec = NULL);
+    void EncodeCMD (const uint16_t                address,
+		    const uint16_t                data,
+		    const uint8_t                 pRD53Id,
+		    const uint8_t                 pRD53Cmd,
+		    const bool                    isBroadcast,
+		    std::vector<uint32_t>       & pVecReg,
+		    const std::vector<uint16_t> * dataVec = NULL);
 
     void ConvertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& colPair, uint16_t& row);
     void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& quadCol);
@@ -139,18 +137,28 @@ namespace Ph2_HwDescription
     static uint16_t NoOperation() { return NOOP;       }
     static uint16_t Sync()        { return SYNC;       }
 
-
+    
     struct HitData
     {
       HitData(const uint32_t data);
       
       uint16_t row;
       uint16_t col;
-      std::array<uint8_t, NPIX_REGION> tots;
+      uint8_t tots[NPIX_REGION];
     };
 
     struct Event {
       Event(const uint32_t* data, size_t n);
+
+      // Event(const EventHeader& header, const std::vector<HitData>& data)
+      //   : header(header)
+      //   , data(data)
+      // {}
+
+      // Event(const EventHeader& header, std::vector<HitData>&& data)
+      //   : header(header)
+      //   , data(data)
+      // {}
 
       // header
       uint16_t trigger_id;
@@ -181,179 +189,65 @@ namespace Ph2_HwDescription
     }
     
   private:
-    static const std::vector<uint8_t> cmd_data_map;
+    std::vector<uint8_t> cmd_data_map =
+      {
+	0x6A, // 00
+	0x6C, // 01
+	0x71, // 02
+	0x72, // 03
+	0x74, // 04
+	0x8B, // 05
+	0x8D, // 06
+	0x8E, // 07
+	0x93, // 08
+	0x95, // 09
+	0x96, // 10
+	0x99, // 11
+	0x9A, // 12
+	0x9C, // 13
+	0x23, // 14
+	0xA5, // 15
+	0xA6, // 16
+	0xA9, // 17
+	0xAA, // 18
+	0xAC, // 19
+	0xB1, // 20
+	0xB2, // 21
+	0xB4, // 22
+	0xC3, // 23
+	0xC5, // 24
+	0xC6, // 25
+	0xC9, // 26
+	0xCA, // 27
+	0xCC, // 28
+	0xD1, // 29
+	0xD2, // 30
+	0xD4  // 31
+      };
 
-    static const std::vector<uint8_t> trigger_map;
+    std::vector<uint8_t> trigger_map =
+      {
+	0x2B, // 00
+	0x2B, // 01
+	0x2D, // 02
+	0x2E, // 03
+	0x33, // 04
+	0x35, // 05
+	0x36, // 06
+	0x39, // 07
+	0x3A, // 08
+	0x3C, // 09
+	0x4B, // 10
+	0x4D, // 11
+	0x4E, // 12
+	0x53, // 13
+	0x55, // 14
+	0x56  // 15
+      };
     
     template<int NBITS>
       std::bitset<NBITS> SetBits(unsigned int nBit2Set);
   };
-
-    namespace RD53Cmd {
-        /*
-        RD53Command concept:
-
-            Notation:
-
-            Cmd:    a type that is a model of RD53Command
-            c:      an object of type Cmd
-
-            Valid Expressions:
-
-            Expression          Valid when              Description
-
-            Cmd::op_code        always                  The identifier of the command
-            Cmd::n_fields       always                  The number of fields this command uses.
-            c.encode_fields()   Cmd::n_fields > 0       Returns the encoded fields as an array.
-        */
-
-        struct ResetECR {
-            static constexpr uint16_t op_code = 0x5a5a;
-            static constexpr size_t n_fields = 0;
-        };
-
-        struct ResetBCR {
-            static constexpr uint16_t op_code = 0x5959;
-            static constexpr size_t n_fields = 0;
-        };
-
-        struct GlbPulse {
-            static constexpr uint16_t op_code = 0x5c5c;
-            static constexpr size_t n_fields = 2;
-
-            uint16_t address;
-            uint8_t data;
-            
-            std::array<uint8_t, n_fields> encode_fields(uint8_t chip_id) const {
-                return {
-                    pack_bits<4, 1>(chip_id, 0), 
-                    pack_bits<4, 1>(data, 0)
-                };
-            }
-        };
-
-        struct Cal {
-            static constexpr uint16_t op_code = 0x6363;
-            static constexpr size_t n_fields = 4;
-
-            bool mode;
-            uint8_t edge_delay;
-            uint8_t edge_width;
-            bool aux_mode;
-            uint8_t aux_delay;
-
-            std::array<uint8_t, n_fields> encode_fields(uint8_t chip_id) const {
-                uint8_t edge_width_5_4, edge_width_3_0;
-                std::tie(edge_width_5_4, edge_width_3_0) = unpack_bits<2, 4>(edge_width);
-                return {
-                    pack_bits<4, 1>(chip_id, mode),
-                    pack_bits<3, 2>(edge_delay, edge_width_5_4),
-                    pack_bits<4, 1>(edge_width_3_0, aux_mode),
-                    aux_delay
-                };
-            }
-        };
-
-        struct WrReg {
-            static constexpr uint16_t op_code = 0x6666;
-            static constexpr size_t n_fields = 6;
-
-            uint16_t address;
-            uint16_t data;
-            
-            std::array<uint8_t, n_fields> encode_fields(uint8_t chip_id) const {
-                // unpack address
-                uint8_t address_8_4, address_3_0;
-                std::tie(address_8_4, address_3_0) = unpack_bits<5, 4>(address);
-
-                // unpack data
-                uint8_t data_15, data_14_10, data_9_5, data_4_0;
-                std::tie(data_15, data_14_10, data_9_5, data_4_0) = unpack_bits<1, 5, 5, 5>(data);
-
-                return {
-                    pack_bits<4, 1>(chip_id, 0),
-                    address_8_4,
-                    pack_bits<4, 1>(address_3_0, data_15),
-                    data_14_10,
-                    data_9_5,
-                    data_4_0
-                };
-            }
-        };
-
-        struct WrRegLong {
-            static constexpr uint16_t op_code = 0x6666;
-            static constexpr size_t n_fields = 22;
-
-            uint16_t address;
-            uint16_t data[6];
-            
-            std::array<uint8_t, n_fields> encode_fields(uint8_t chip_id) const {
-                std::array<uint8_t, n_fields> fields;
-
-                // unpack address
-                uint8_t address_8_4, address_3_0;
-                std::tie(address_8_4, address_3_0) = unpack_bits<5, 4>(address);
-
-                // unpack first data word (16 bits)
-                uint8_t data_15, data_14_10, data_9_5, data_4_0;
-                std::tie(data_15, data_14_10, data_9_5, data_4_0) = unpack_bits<1, 5, 5, 5>(data[0]);
-
-                // pack first 6 fields
-                fields[0] = pack_bits<4, 1>(chip_id, 1);
-                fields[1] = address_8_4;
-                fields[2] = pack_bits<4, 1>(address_3_0, data_15);
-                fields[3] = data_14_10;
-                fields[4] = data_9_5;
-                fields[5] = data_4_0;
-                
-                // pack remaining 16 fields
-                size_t bits_done = 0;
-                for (size_t i = 6; i < 22; i++) {
-                    size_t index = 1 + bits_done / 16;
-                    size_t offset = bits_done % 16;
-                    if (offset <= 11)
-                        fields[i] = (data[index] >> (16 - 5 - offset)) & 0x1f;
-                    else
-                        fields[i] = data[index] << (5 - (16 - offset)) | data[index + 1] >> (16 - (5 - (16 - offset)));
-                    bits_done += 5;
-                }
-
-                return fields;
-            }
-        };
-
-        struct RdReg {
-            static constexpr uint16_t op_code = 0x6565;
-            static constexpr size_t n_fields = 4;
-
-            uint16_t address;
-            
-            std::array<uint8_t, n_fields> encode_fields(uint8_t chip_id) const {
-                // unpack address
-                uint8_t address_8_4, address_3_0;
-                std::tie(address_8_4, address_3_0) = unpack_bits<5, 4>(address);
-
-                return {
-                    pack_bits<4, 1>(chip_id, 0),
-                    address_8_4,
-                    pack_bits<4, 1>(address_3_0, 0),
-                    0
-                };
-            }
-        };
-        
-        struct Noop {
-            static constexpr uint16_t op_code = 0x6969;
-            static constexpr size_t n_fields = 0;
-        };
-        
-        struct Sync {
-            static constexpr uint16_t op_code = 0x817E;
-            static constexpr size_t n_fields = 0;
-        };
-    }
-
 }
 
 #endif
