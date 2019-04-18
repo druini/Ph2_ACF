@@ -90,9 +90,11 @@ namespace Ph2_HwInterface
   {
     std::vector< std::pair<std::string, uint32_t> > stackRegisters;
 
-    // @TMP@
-    // if (ReadReg ("user.stat_regs.cmd_proc.fifo_full") == true)
-    //   LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: command processor fifo full" << RESET;
+    if (ReadReg ("user.stat_regs.cmd_proc.fifo_empty") == false)
+      LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: command processor FIFO NOT empty before sending new commands" << RESET;
+
+    if (ReadReg ("user.stat_regs.cmd_proc.fifo_full") == true)
+      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: command processor FIFO full" << RESET;
 
     switch (data.size())
       {
@@ -143,13 +145,6 @@ namespace Ph2_HwInterface
     unsigned int nActiveChns = ReadReg ("user.stat_regs.aurora.n_ch");
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
     std::vector<uint32_t> regFIFO;
-
-    // @TMP@
-    // if (ReadReg ("user.stat_regs.cmd_proc.fifo_empty") == true)
-    //   {
-    // 	LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: command processor fifo empty" << RESET;
-    // 	return outputDecoded;
-    //   }
 
     for (unsigned int i = 0; i < nActiveChns; i++)
       {
