@@ -12,6 +12,8 @@
 #include "../Utils/Data.h"
 #include <iostream>
 
+#include "../HWInterface/FC7FWInterface.h"
+
 namespace Ph2_HwInterface {
     //Data Class
 
@@ -40,14 +42,17 @@ namespace Ph2_HwInterface {
     {
         Reset();
 
-        // if (/*FC7*/) {
-        //     auto fc7_events = FC7FWInterface::DecodeEvents(pData);
-        //     for (const auto& evt : fc7_events) {
-        //         for (const auto& chip_data : evt.chip_data)
-        //             fEventList.push_back(new RD53Event(chip_data.chip_event_header, chip_data.hit_data));
-        //     }
-        // }
-        // else 
+        if (pType == BoardType::FC7) {
+            auto fc7_events = FC7FWInterface::DecodeEvents(pData);
+            for (const auto& evt : fc7_events) {
+                std::vector<size_t> chip_id_vec;
+                for (const auto& chip_frame : evt.chip_frames) {
+                    chip_id_vec.push_back(chip_frame.chip_id);
+                }
+                fEventList.push_back(new RD53Event(chip_id_vec, std::move(evt.chip_events)));
+            }
+        }
+        else 
         {
         fNevents = static_cast<uint32_t> ( pNevents );
         // be aware that eventsize is not constant for the zs event, so we are not using it

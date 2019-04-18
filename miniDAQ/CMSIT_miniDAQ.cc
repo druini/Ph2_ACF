@@ -76,7 +76,7 @@ private:
 */
 
 
-void PrintEvents(std::vector<FC7FWInterface::Event>& events)
+void PrintEvents(const std::vector<FC7FWInterface::Event>& events)
 {
   for (int i = 0; i < events.size(); i++)
     {
@@ -89,23 +89,23 @@ void PrintEvents(std::vector<FC7FWInterface::Event>& events)
       LOG (INFO) << BOLDGREEN << "l1a_counter = " << evt.l1a_counter << RESET;
       LOG (INFO) << BOLDGREEN << "bx_counter = " << evt.bx_counter << RESET;
 
-      for (auto& chip_data : evt.chip_data)
+      for (size_t j = 0; j < evt.chip_events.size(); j++)
 	{
 	  LOG (INFO) << CYAN << "Chip Header: " << RESET;
-	  LOG (INFO) << CYAN << "error_code = " << chip_data.error_code << RESET;
-	  LOG (INFO) << CYAN << "hybrid_id = " << chip_data.hybrid_id << RESET;
-	  LOG (INFO) << CYAN << "chip_id = " << chip_data.chip_id << RESET;
-	  LOG (INFO) << CYAN << "l1a_data_size = " << chip_data.l1a_data_size << RESET;
-	  LOG (INFO) << CYAN << "chip_type = " << chip_data.chip_type << RESET;
-	  LOG (INFO) << CYAN << "frame_delay = " << chip_data.frame_delay << RESET;
+	  LOG (INFO) << CYAN << "error_code = " << evt.chip_frames[i].error_code << RESET;
+	  LOG (INFO) << CYAN << "hybrid_id = " << evt.chip_frames[i].hybrid_id << RESET;
+	  LOG (INFO) << CYAN << "chip_id = " << evt.chip_frames[i].chip_id << RESET;
+	  LOG (INFO) << CYAN << "l1a_data_size = " << evt.chip_frames[i].l1a_data_size << RESET;
+	  LOG (INFO) << CYAN << "chip_type = " << evt.chip_frames[i].chip_type << RESET;
+	  LOG (INFO) << CYAN << "frame_delay = " << evt.chip_frames[i].frame_delay << RESET;
 
-	  LOG (INFO) << CYAN << "trigger_id = " << chip_data.chip_event_header.trigger_id << RESET;
-	  LOG (INFO) << CYAN << "trigger_tag = " << chip_data.chip_event_header.trigger_tag << RESET;
-	  LOG (INFO) << CYAN << "bc_id = " << chip_data.chip_event_header.bc_id << RESET;
+	  LOG (INFO) << CYAN << "trigger_id = " << evt.chip_events[i].trigger_id << RESET;
+	  LOG (INFO) << CYAN << "trigger_tag = " << evt.chip_events[i].trigger_tag << RESET;
+	  LOG (INFO) << CYAN << "bc_id = " << evt.chip_events[i].bc_id << RESET;
 
-	  LOG (INFO) << BOLDYELLOW << "Region Data (" << chip_data.hit_data.size() << " words): " << RESET;
+	  LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[i].data.size() << " words): " << RESET;
 
-	  for (const auto& region_data : chip_data.hit_data)
+	  for (const auto& region_data : evt.chip_events[i].data)
 	    {
 	      LOG(INFO)   << "Column: " << region_data.col 
 			  << ", Row: " << region_data.row 

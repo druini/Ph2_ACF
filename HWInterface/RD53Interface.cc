@@ -31,7 +31,7 @@ namespace Ph2_HwInterface
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    this->WriteRD53Mask (pRD53, false);
+    // this->WriteRD53Mask (pRD53, false);
 
     return true;
   }

@@ -108,36 +108,49 @@ namespace Ph2_HwInterface
     void ResetReadout();
     void SendTriggers(unsigned int n);
 
-    struct ChipData
-    {
-      template <class It>
-      ChipData(const It& data, size_t n);
-      
+    struct ChipFrame {
+      ChipFrame(const uint32_t data0, const uint32_t data1);
+
       uint16_t error_code;
       uint16_t hybrid_id;
       uint16_t chip_id;
       uint16_t l1a_data_size;
       uint16_t chip_type;
       uint16_t frame_delay;
-      
-      RD53::EventHeader chip_event_header;
-      
-      std::vector<RD53::HitData> hit_data;
     };
 
-    struct Event
-    {
-      template <class It>
-      Event(const It& data, size_t n);
-      
-      uint16_t block_size;
-      uint16_t tlu_trigger_id;
-      uint16_t data_format_ver;
-      uint16_t tdc;
-      uint16_t l1a_counter;
-      uint32_t bx_counter;
-      
-      std::vector<ChipData> chip_data;
+    struct Event {
+        Event(const uint32_t* data, size_t n);
+
+        uint16_t block_size;
+        uint16_t tlu_trigger_id;
+        uint16_t data_format_ver;
+        uint16_t tdc;
+        uint16_t l1a_counter;
+        uint32_t bx_counter;
+
+        std::vector<ChipFrame> chip_frames;
+        std::vector<RD53::Event> chip_events;
+    };
+
+    static std::vector<Event> DecodeEvents(const std::vector<uint32_t>& data); 
+
+    // Fast Commands Block
+    struct TestFSMConfig {
+      bool ecr_en = false;
+      bool first_cal_en = false;
+      bool second_cal_en = false;
+      bool trigger_en = true;
+
+      uint32_t first_cal_data = 0;
+      uint32_t second_cal_data = 0;
+      uint32_t glb_pulse_data = 0;
+
+      uint32_t delay_after_ecr = 0;
+      uint32_t delay_after_autozero = 0;
+      uint32_t delay_after_first_cal = 0;
+      uint32_t delay_after_second_cal = 0;
+      uint16_t delay_loop = 10;
     };
     
     enum class TriggerSource : uint32_t
@@ -217,8 +230,6 @@ namespace Ph2_HwInterface
     };
 
     void ConfigureDIO5 (const DIO5Config& config);
-
-    static std::vector<Event> DecodeEvents (const std::vector<uint32_t>& data); 
 
   private:
     void SendBoardCommand(const std::string& cmd_reg);
