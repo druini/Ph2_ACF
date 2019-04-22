@@ -56,7 +56,6 @@ namespace Ph2_HwInterface {
 				}
     		}
     	}
-
     }
 
     void D19cCbc3Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )

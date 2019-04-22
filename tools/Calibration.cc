@@ -25,6 +25,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
     fDisableStubLogic = pDisableStubLogic;
     // Initialize the TestGroups
     fChannelGroupHandler = new CBCChannelGroupHandler();
+    fChannelGroupHandler->setChannelGroupParameters(16, 2);
     this->MakeTestGroups(FrontEndType::CBC3);
     this->fAllChan = pAllChan;
 

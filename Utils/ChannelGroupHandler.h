@@ -15,9 +15,9 @@ public:
     virtual ~ChannelGroupBase(){;}
     virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfColsPerCluster, uint16_t numberOfRowsPerCluster=1) const = 0 ;
     uint32_t getNumberOfEnabledChannels() const {return numberOfEnabledChannels_;}
-    virtual inline bool isChannelEnabled     (uint16_t col, uint16_t row = 1) const = 0;
-    virtual inline void enableChannel        (uint16_t col, uint16_t row = 1)       = 0;
-    virtual inline void disableChannel       (uint16_t col, uint16_t row = 1)       = 0;
+    virtual inline bool isChannelEnabled     (uint16_t col, uint16_t row = 0) const = 0;
+    virtual inline void enableChannel        (uint16_t col, uint16_t row = 0)       = 0;
+    virtual inline void disableChannel       (uint16_t col, uint16_t row = 0)       = 0;
     virtual inline void disableAllChannels   (void                          )       = 0;
     virtual inline void enableAllChannels    (void                          )       = 0;
     virtual inline void flipAllChannels      (void                          )       = 0;
@@ -44,9 +44,9 @@ public:
     };
     virtual ~ChannelGroup(){;}
     
-    inline bool isChannelEnabled     (uint16_t col, uint16_t row = 1) const override { return channelsBitset_[col+numberOfCols_*row] ; }
-    inline void enableChannel        (uint16_t col, uint16_t row = 1)       override { channelsBitset_[col+numberOfCols_*row] = true ; }
-    inline void disableChannel       (uint16_t col, uint16_t row = 1)       override { channelsBitset_[col+numberOfCols_*row] = false; }
+    inline bool isChannelEnabled     (uint16_t col, uint16_t row = 0) const override { return channelsBitset_[col+numberOfCols_*row] ; }
+    inline void enableChannel        (uint16_t col, uint16_t row = 0)       override { channelsBitset_[col+numberOfCols_*row] = true ; }
+    inline void disableChannel       (uint16_t col, uint16_t row = 0)       override { channelsBitset_[col+numberOfCols_*row] = false; }
     inline void disableAllChannels   (void                          )       override { channelsBitset_.reset()                       ; }
     inline void enableAllChannels    (void                          )       override { channelsBitset_.set()                         ; }
     inline void flipAllChannels      (void                          )       override { channelsBitset_.flip()                        ; }

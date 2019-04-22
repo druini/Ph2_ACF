@@ -1414,6 +1414,7 @@ void Tool::measureOccupancy(const uint16_t &numberOfEvents)
 
 	}
 }
+#include "../HWDescription/Definition.h"
 
 // measure occupancy
 void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numberOfEvents)
@@ -1444,7 +1445,6 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
                     }
                 }
             }
-
             measureBeBoardOccupancyPerGroup(boardIndex, numberOfEvents, group);
         }
 
@@ -1461,7 +1461,7 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
     }
     else
     {
-    	measureBeBoardOccupancyPerGroup(boardIndex, numberOfEvents, fChannelGroupHandler->allChannelGroup());
+        measureBeBoardOccupancyPerGroup(boardIndex, numberOfEvents, fChannelGroupHandler->allChannelGroup());
     }
 /*
     //Evaluate module and BeBoard Occupancy

@@ -31,6 +31,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     fDisableStubLogic = pDisableStubLogic;
     this->MakeTestGroups(FrontEndType::CBC3);
     fChannelGroupHandler = new CBCChannelGroupHandler();
+    fChannelGroupHandler->setChannelGroupParameters(16, 2);
     fAllChan = pAllChan;
 
     auto cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
@@ -352,8 +353,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
 
     this->SetTestAllChannels(true);
 
-    //Tool::fDetectorDataContainer = &theOccupancyContainer;
-    //this->measureOccupancy(fEventsPerPoint*pMultiple, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
+    // this->measureOccupancy(fEventsPerPoint*pMultiple, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
     this->measureOccupancy(fEventsPerPoint*pMultiple);
     this->SetTestAllChannels(originalAllChannelFlag);
     for ( auto cBoard : fBoardVector )
@@ -369,13 +369,9 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
             			<< "  "<< (unsigned int)(cFe->getFeId())
             			<< "  "<< (unsigned int)(cCbc->getChipId())
 						<< std::endl;
-//            	std::cout << __PRETTY_FUNCTION__ << (unsigned int)(cFe->getFeId()) << std::endl;
-//            	std::cout << __PRETTY_FUNCTION__ << (unsigned int)(cCbc->getChipId()) << std::endl;
                 for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
                 {
-                	//std::cout << __PRETTY_FUNCTION__ << (unsigned int)(cBoard->getBeId()) << std::endl;
-                    //cHist->SetBinContent(iChan+1,backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getFeId()][cCbc->getChipId()][iChan]);
-                	//std::cout << theOccupancyContainer[cBoard->getBeId()][cFe->getFeId()] << std::endl;
+                    // cHist->SetBinContent(iChan+1,backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getFeId()][cCbc->getChipId()][iChan]);
 
                     cHist->SetBinContent(iChan+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->getChannel<Occupancy>(iChan).fOccupancy);
                 }
