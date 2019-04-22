@@ -56,7 +56,12 @@ namespace Ph2_System {
 
         if (fChipInterface)  delete fChipInterface;
 
-        fBeBoardFWMap.clear();
+        // fBeBoardFWMap.clear();
+        for (auto& it : fBeBoardFWMap) {
+            if (it.second)
+                delete it.second;
+        }
+
         fSettingsMap.clear();
 
         for ( auto& el : fBoardVector )
@@ -189,7 +194,7 @@ namespace Ph2_System {
 	      // ######################################
 	      // # Configuring Inner Tracker hardware #
 	      // ######################################
-	      RD53Interface* fRD53Interface = dynamic_cast<RD53Interface*>(fChipInterface);
+	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fChipInterface);
 
 	      LOG (INFO) << BOLDYELLOW << "@@@ Found an Inner Tracker board @@@" << RESET;
 
@@ -207,7 +212,6 @@ namespace Ph2_System {
 			{
 			  LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << int (cRD53->getChipId()) << RESET;
 			  fRD53Interface->ResetRD53 (static_cast<RD53*>(cRD53));
-			  // fRD53Interface->SyncRD53 (dynamic_cast<RD53*>(cRD53),NSYNCWORDS);
 			  fRD53Interface->InitRD53Aurora (static_cast<RD53*>(cRD53));
 			}
 
@@ -379,20 +383,7 @@ namespace Ph2_System {
 
     void SystemController::Start (BeBoard* pBoard)
     {
-      if (pBoard->getBoardType() == BoardType::FC7)
-	{
-	  LOG (INFO) << BOLDYELLOW << "Resetting all RD53s" << RESET;
-	  for (const auto& cFe : pBoard->fModuleVector)
-	    {
-	      for (const auto& cRD53 : cFe->fChipVector)
-		{
-		  dynamic_cast<RD53Interface*>(fChipInterface)->ResetRD53 (dynamic_cast<RD53*>(cRD53));
-		  LOG (INFO) << BOLDGREEN << "\t--> Successfully reset RD53 " << int (cRD53->getChipId()) << RESET;
-		}
-	    }
-	}
-
-      fBeBoardInterface->Start (pBoard);
+        fBeBoardInterface->Start (pBoard);
     }
 
     void SystemController::Stop (BeBoard* pBoard)

@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <numeric>  // for std::accumulate
 #include "../Utils/Utilities.h"
 #include "../HWDescription/SSA.h"
 #include "../HWDescription/Module.h"

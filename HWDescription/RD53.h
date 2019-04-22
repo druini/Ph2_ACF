@@ -17,7 +17,8 @@
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Utilities.h"
-#include "../Utils/RD53Event.h"
+
+#include "../Utils/bit_packing.h"
 
 #include <math.h>
 #include <iomanip>
@@ -39,7 +40,7 @@
 #define NBIT_PIXEN  1 // Number of pixel enable bits
 #define NBIT_INJEN  1 // Number of injection enable bits
 #define NBIT_HITBUS 1 // Number of hit bust bits
-#define NBIT_TDAC   4 // Number of TDACbits
+#define NBIT_TDAC   4 // Number of TDAC bits
 #define HIGHGAIN 0x80 // Set High Gain Linear FE
 
 #define RESET_ECR  0x5A5A // Event Counter Reset word
@@ -67,6 +68,12 @@
 #define NBIT_SIDE   1 // Number of "side" bits
 #define NBIT_ROW    9 // Number of row bits
 #define NBIT_CCOL   6 // Number of core column bits
+
+#define NBIT_CAL_EDGE_MODE  1 // Number of cal_edge_mode bits
+#define NBIT_CAL_EDGE_DELAY 3 // Number of cal_edge_delaybits
+#define NBIT_CAL_EDGE_WIDTH 6 // Number of cal_edge_width bits
+#define NBIT_CAL_AUX_MODE   1 // Number of cal_aux_mode bits
+#define NBIT_CAL_AUX_DELAY  5 // Number of cal_aux_mode bits
 
 
 namespace Ph2_HwDescription
@@ -125,7 +132,7 @@ namespace Ph2_HwDescription
 		    const std::vector<uint16_t> * dataVec = NULL);
 
     void ConvertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& colPair, uint16_t& row);
-    void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& quadCol);
+    void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& col);
 
     static uint16_t ResetEvtCtr() { return RESET_ECR;  }
     static uint16_t ResetBcrCtr() { return RESET_BCR;  }
@@ -135,54 +142,49 @@ namespace Ph2_HwDescription
     static uint16_t ReadCmd()     { return READCMD;    }
     static uint16_t NoOperation() { return NOOP;       }
     static uint16_t Sync()        { return SYNC;       }
-
-    /* static void DecodeData (uint32_t data, */
-    /* 			    bool        & isHeader, */
-    /* 			    unsigned int& trigID, */
-    /* 			    unsigned int& trigTag, */
-    /* 			    unsigned int& BCID, */
-    /* 			    uint16_t    & coreRowAndRegion, */
-    /* 			    uint16_t    & coreCol, */
-    /* 			    uint8_t     & side, */
-    /* 			    uint16_t    & ToT) */
-    /* { */
-    /*   unsigned int header = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID + NBIT_HEADER)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1))) >> (NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID); */
-
-    /*   if (header == HEADER) */
-    /* 	{ */
-    /* 	  trigID  = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG + NBIT_TRIGID)-1) - static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1))) >> (NBIT_BCID + NBIT_TRGTAG); */
-    /* 	  trigTag = (data & (static_cast<uint32_t>(pow(2,NBIT_BCID + NBIT_TRGTAG)-1)               - static_cast<uint32_t>(pow(2,NBIT_BCID)-1)))               >> NBIT_BCID; */
-    /* 	  BCID    =  data &  static_cast<uint32_t>(pow(2,NBIT_BCID)-1); */
-    /* 	} */
-    /*   else */
-    /* 	{ */
-    /* 	  coreCol          = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW + NBIT_CCOL)-1) - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1))) >> (NBIT_TOT + NBIT_SIDE + NBIT_ROW); */
-    /* 	  coreRowAndRegion = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE + NBIT_ROW)-1)             - static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)))            >> (NBIT_TOT + NBIT_SIDE); */
-    /* 	  side             = (data & (static_cast<uint32_t>(pow(2,NBIT_TOT + NBIT_SIDE)-1)                        - static_cast<uint32_t>(pow(2,NBIT_TOT)-1)))                        >> NBIT_TOT; */
-    /* 	  ToT              =  data &  static_cast<uint32_t>(pow(2,NBIT_TOT)-1); */
-    /* 	} */
-    /* } */
-
-
-    // ##################
-    // # Data structure #
-    // ##################
-    struct EventHeader
-    {
-      EventHeader(const uint32_t data);
-      
-      uint16_t trigger_id;
-      uint16_t trigger_tag;
-      uint16_t bc_id;
-    };
     
     struct HitData
     {
-      HitData(const uint32_t data);
+      HitData (const uint32_t data);
       
       uint16_t row;
       uint16_t col;
-      uint8_t tots[NPIX_REGION];
+      std::array<uint8_t, NPIX_REGION> tots;
+    };
+
+    struct Event
+    {
+      Event(const uint32_t* data, size_t n);
+      
+      // Header
+      uint16_t trigger_id;
+      uint16_t trigger_tag;
+      uint16_t bc_id;
+      
+      std::vector<HitData> data;
+    };
+    
+    struct CalCmd
+    {
+      CalCmd (const uint8_t& _cal_edge_mode,
+	      const uint8_t& _cal_edge_delay,
+	      const uint8_t& _cal_edge_width,
+	      const uint8_t& _cal_aux_mode,
+	      const uint8_t& _cal_aux_delay);
+
+      void setCalCmd (const uint8_t& _cal_edge_mode,
+		      const uint8_t& _cal_edge_delay,
+		      const uint8_t& _cal_edge_width,
+		      const uint8_t& _cal_aux_mode,
+		      const uint8_t& _cal_aux_delay);
+      
+      uint32_t getCalCmd (const uint8_t& chipId);
+      
+      uint8_t cal_edge_mode;
+      uint8_t cal_edge_delay;
+      uint8_t cal_edge_width;
+      uint8_t cal_aux_mode;
+      uint8_t cal_aux_delay;
     };
 
 
@@ -194,17 +196,17 @@ namespace Ph2_HwDescription
     // |3 4|
     // is linearized into |1 2 3 4|
 
-    static void fromVec2Matrix(const uint32_t vec, unsigned int& row, unsigned int& col)
+    static void fromVec2Matrix (const uint32_t vec, unsigned int& row, unsigned int& col)
     {
       row = vec / NCOLS;
       col = vec % NCOLS;
     }
     
-    static uint32_t fromMatrix2Vec(const unsigned int row, const unsigned int col)
+    static uint32_t fromMatrix2Vec (const unsigned int row, const unsigned int col)
     {
       return NCOLS*row + col;
     }
-    
+
   private:
     std::vector<uint8_t> cmd_data_map =
       {
@@ -263,7 +265,7 @@ namespace Ph2_HwDescription
       };
     
     template<int NBITS>
-      std::bitset<NBITS> SetBits(unsigned int nBit2Set);
+      std::bitset<NBITS> SetBits (unsigned int nBit2Set);
   };
 }
 

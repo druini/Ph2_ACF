@@ -126,7 +126,7 @@ class FileHeader
         if (fEventType == EventType::VR) cEventTypeString = "EventType::VR" ;
         else cEventTypeString = "EventType::ZS";
 
-        LOG (INFO) << "Board Type: " << fType << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << "Event Type: " << cEventTypeString << " BeId " << fBeId << " fNCbc " << fNCbc << " EventSize32  " << fEventSize32 << " valid: " << fValid ;
+        LOG (INFO) << "Board Type: " << fType << " -- FWMajor: " << fVersionMajor << " -- FWMinor: " << fVersionMinor << " -- Event Type: " << cEventTypeString << " -- BeId: " << fBeId << " -- fNChip: " << fNCbc << " -- EventSize32: " << fEventSize32 << " -- Valid: " << fValid;
         return cVec;
     }
 
@@ -169,12 +169,12 @@ class FileHeader
             if (fEventType == EventType::VR) cEventTypeString = "EventType::VR" ;
             else cEventTypeString = "EventType::ZS";
 
-            LOG (INFO) << "Sucess, this is a valid header!" ;
-            LOG (INFO) << "Board Type: " << fType << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << " Event Type: " << cEventTypeString << " BeId " << fBeId << " fNCbc " << fNCbc << " EventSize32  " << fEventSize32 << " valid: " << fValid ;
+            LOG (INFO) << "Sucess, this is a valid header!";
+            LOG (INFO) << "Board Type: " << fType << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << " Event Type: " << cEventTypeString << " BeId " << fBeId << " fNCbc " << fNCbc << " EventSize32  " << fEventSize32 << " valid: " << fValid;
         }
         else
         {
-            LOG (INFO) << "Error, this is not a valid header!" ;
+            LOG (INFO) << "Error, this is not a valid header!";
             fValid = false;
         }
     }
