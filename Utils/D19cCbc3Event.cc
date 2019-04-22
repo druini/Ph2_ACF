@@ -12,6 +12,8 @@
 #include "../Utils/D19cCbc3Event.h"
 #include "../Utils/Container.h"
 #include "../Utils/Occupancy.h"
+#include "../Utils/ChannelGroupHandler.h"
+#include "../HWDescription/Definition.h"
 
 using namespace Ph2_HwDescription;
 
@@ -38,16 +40,19 @@ namespace Ph2_HwInterface {
 
     //}
 
-    void D19cCbc3Event::fillOccupancy(BoardContainer* boardContainer)
+    void D19cCbc3Event::fillOccupancy(BoardContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
     {
-    	for(auto module: *boardContainer)
+        for(auto module: *boardContainer)
     	{
     		for(auto chip: *module)
     		{
 				unsigned int i = 0;
     			for(ChannelContainer<Occupancy>::iterator channel =  chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
 				{
-					channel->fOccupancy  += (float)DataBit ( module->getId(), chip->getId(), i);
+                    if(cTestChannelGroup->isChannelEnabled(i))
+                    {
+    					channel->fOccupancy  += (float)DataBit ( module->getId(), chip->getId(), i);
+                    }
 				}
     		}
     	}

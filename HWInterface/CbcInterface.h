@@ -53,6 +53,10 @@ namespace Ph2_HwInterface {
          */
         bool ConfigureChip ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
         
+        bool setInjectionSchema (Chip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
+
+        bool maskChannelsGroup  (Chip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
+
          /*!
          * \brief Reapply the stored mask for the CBC, use it after group masking is applied
          * \param pCbc: pointer to CBC object
@@ -75,7 +79,7 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        virtual bool UnmaskChannelList ( Chip* pCbc, const std::vector<uint32_t> &channelList, bool pVerifLoop = true ) override;
+        bool UnmaskChannelList ( Chip* pCbc, const std::vector<uint32_t> &channelList, bool pVerifLoop = true ) override;
 
         /*!
          * \brief Write the designated register in both Chip and Chip Config File

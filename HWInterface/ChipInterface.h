@@ -67,6 +67,20 @@ namespace Ph2_HwInterface {
          */
         virtual bool ConfigureChip ( const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
 
+        /*!
+         * \brief setChannels fo be injected
+         * \param pChip: pointer to Chip object
+         * \param group: group of channels under test
+         * \param pVerifLoop: perform a readback check
+         */
+        virtual bool setInjectionSchema (Chip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true ) = 0;
+        /*!
+         * \brief Mask the channels not belonging to the group under test
+         * \param pChip: pointer to Chip object
+         * \param group: group of channels under test
+         * \param pVerifLoop: perform a readback check
+         */
+        virtual bool maskChannelsGroup (Chip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true ) = 0;
          /*!
          * \brief Reapply the stored mask for the Chip, use it after group masking is applied
          * \param pChip: pointer to Chip object

@@ -25,6 +25,7 @@
 
 
 class BoardContainer;
+class ChannelGroupBase;
 
 using namespace Ph2_HwDescription;
 
@@ -417,7 +418,7 @@ namespace Ph2_HwInterface {
 
         virtual std::vector<Cluster> getClusters ( uint8_t pFeId, uint8_t pCbcId) const = 0;
 
-        virtual void fillOccupancy(BoardContainer* boardContainer){;}// = 0;
+        virtual void fillOccupancy(BoardContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup){;}// = 0;
 
       protected:
         virtual void print (std::ostream& out) const = 0;

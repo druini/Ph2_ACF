@@ -8,6 +8,7 @@
 */
 
 #include "RD53.h"
+#include "../Utils/ChannelGroupHandler.h"
 
 
 namespace Ph2_HwDescription
@@ -16,12 +17,14 @@ namespace Ph2_HwDescription
   {
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
+    fChipOriginalMask = new ChannelGroup<NCOLS, NROWS>;
   }
 
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename ) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
   {
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
+    fChipOriginalMask = new ChannelGroup<NCOLS, NROWS>;
   }
 
   RD53::~RD53 () {}

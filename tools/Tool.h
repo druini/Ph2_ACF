@@ -24,7 +24,8 @@
 
 class DetectorContainer;
 class VObjectStreamBase;
-
+class ChannelGroupHandler;
+class ChannelGroupBase;
 
 
 #ifdef __HTTP__
@@ -61,14 +62,16 @@ class Tool : public SystemController
     using ModuleGlobalOccupancyMap            = std::map<uint8_t,ChipGlobalOccupancyMap    >; //module       : { cbc    : { strip : occupancy } }
         // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyPerChannelMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
 
-    DetectorContainer*  fDetectorDataContainer;
-    VObjectStreamBase*  fObjectStream;
-    CanvasMap           fCanvasMap;
-    ChipHistogramMap    fChipHistMap;
-    ModuleHistogramMap  fModuleHistMap;
-    BeBoardHistogramMap fBeBoardHistMap;
-    FrontEndType fType;
-    TestGroupChannelMap fTestGroupChannelMap;
+    DetectorContainer*   fDetectorDataContainer;
+    VObjectStreamBase*   fObjectStream;
+    ChannelGroupHandler* fChannelGroupHandler;
+    CanvasMap            fCanvasMap;
+    ChipHistogramMap     fChipHistMap;
+    ModuleHistogramMap   fModuleHistMap;
+    BeBoardHistogramMap  fBeBoardHistMap;
+    FrontEndType         fType;
+    TestGroupChannelMap  fTestGroupChannelMap;
+
     std::map< int, std::vector<uint8_t> > fMaskForTestGroupChannelMap;
 
     std::string fDirectoryName;             /*< the Directoryname for the Root file with results */
@@ -325,7 +328,7 @@ class Tool : public SystemController
     // measure occupancy
     void measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numberOfEvents);
     // measure occupancy per group
-    void measureBeBoardOccupancyPerGroup(unsigned int boardIndex, const uint16_t numberOfEvents, const std::vector<uint8_t> &cTestGrpChannelVec);
+    void measureBeBoardOccupancyPerGroup(unsigned int boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup);
 
     //Set global DAC for all Chips in the BeBoard
     void setGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, uint16_t> > &dacList);

@@ -1,4 +1,5 @@
 #include "Calibration.h"
+#include "../Utils/CBCChannelGroupHandler.h"
 
 //initialize the static member
 //std::map<Chip*, uint16_t> Calibration::fVplusMap;
@@ -16,13 +17,14 @@ Calibration::Calibration() :
 
 Calibration::~Calibration()
 {
-
+    delete fChannelGroupHandler;
 }
 
 void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 {
     fDisableStubLogic = pDisableStubLogic;
     // Initialize the TestGroups
+    fChannelGroupHandler = new CBCChannelGroupHandler();
     this->MakeTestGroups(FrontEndType::CBC3);
     this->fAllChan = pAllChan;
 
@@ -249,13 +251,13 @@ void Calibration::FindOffsets()
 }
 
 
-float Calibration::findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint )
-{
-    TH1F* cOccHist = static_cast<TH1F*> ( getHist ( pCbc, "Occupancy" ) );
-    float cOccupancy = cOccHist->GetEntries();
-    // return the hitcount divided by the the number of channels and events
-    return cOccupancy / ( static_cast<float> ( fTestGroupChannelMap[pTGroup].size() * pEventsPerPoint ) );
-}
+// float Calibration::findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint )
+// {
+//     TH1F* cOccHist = static_cast<TH1F*> ( getHist ( pCbc, "Occupancy" ) );
+//     float cOccupancy = cOccHist->GetEntries();
+//     // return the hitcount divided by the the number of channels and events
+//     return cOccupancy / ( static_cast<float> ( fTestGroupChannelMap[pTGroup].size() * pEventsPerPoint ) );
+// }
 
 void Calibration::clearOccupancyHists ( Chip* pCbc )
 {
