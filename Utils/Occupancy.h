@@ -22,7 +22,7 @@ public:
 	{;}
 	~Occupancy(){;}
 	void print(void){ std::cout << fOccupancy << std::endl;}
-	float fOccupancy;
+	uint32_t fOccupancy;
 };
 
 #endif

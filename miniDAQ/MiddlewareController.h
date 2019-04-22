@@ -16,7 +16,7 @@ public:
 	MiddlewareController(int serverPort, int bufferSize = 0x10000);
 	virtual ~MiddlewareController(void);
 
-	std::string& readMessage(const std::string& buffer);
+	std::string readMessage(const std::string& buffer);
 
 protected:
 

@@ -155,7 +155,7 @@ namespace Ph2_System {
          * \param pFilename : HW Description file
          *\param os : ostream to dump output
          */
-        void InitializeHw ( const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true );
+        void InitializeHw ( const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = true );
 
         /*!
          * \brief Initialize the settings

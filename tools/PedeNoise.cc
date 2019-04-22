@@ -337,7 +337,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
 	DetectorContainer         theOccupancyContainer;
 	fDetectorDataContainer = &theOccupancyContainer;
 	OccupancyStream           theOccupancyStream;
-	fObjectStream          = &theOccupancyStream;
+    fObjectStream          = &theOccupancyStream;
 
     ContainerFactory   theDetectorFactory;
 	theDetectorFactory.copyAndInitStructure<Occupancy>(fDetectorContainer, *fDetectorDataContainer);
@@ -353,7 +353,6 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     //this->measureOccupancy(fEventsPerPoint*pMultiple, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
     this->measureOccupancy(fEventsPerPoint*pMultiple);
     this->SetTestAllChannels(originalAllChannelFlag);
-
     for ( auto cBoard : fBoardVector )
     {
         for ( auto cFe : cBoard->fModuleVector )
@@ -426,6 +425,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
         setThresholdtoNSigma (cBoard, 0);
         this->HttpServerProcess();
     }
+
 }
 
 double PedeNoise::getPedestal (Chip* pCbc)

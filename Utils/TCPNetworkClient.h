@@ -29,6 +29,7 @@ public:
 
 	int  receive          (std::string& buffer,           uint32_t timeoutSeconds = 1, uint32_t timeoutUSeconds = 0);
 	int  receive          (uint8_t*     buffer,           uint32_t timeoutSeconds = 1, uint32_t timeoutUSeconds = 0);
+	int  receive          (std::vector<char>&     buffer, uint32_t timeoutSeconds = 1, uint32_t timeoutUSeconds = 0);
 	int  receive          (std::vector<uint16_t>& buffer, uint32_t timeoutSeconds = 1, uint32_t timeoutUSeconds = 0);
 
 	//are these non necessary ???

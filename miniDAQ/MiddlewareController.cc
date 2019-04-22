@@ -24,7 +24,7 @@ MiddlewareController::~MiddlewareController(void)
 //========================================================================================================================
 // virtual function to interpret messages
 // interacting with theBurninBoxController_ using theBeagleBoneConfiguration_ as helper class
-std::string& MiddlewareController::readMessage(const std::string& buffer)
+std::string MiddlewareController::readMessage(const std::string& buffer)
 {
 
 	std::cout << "Received: " << buffer << std::endl;

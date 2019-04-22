@@ -157,10 +157,23 @@ int TCPNetworkClient::receive(uint8_t* buffer, unsigned int timeoutSeconds, unsi
 int TCPNetworkClient::receive(std::string& buffer, unsigned int timeoutSeconds, unsigned int timeoutUSeconds)
 {
 	buffer.resize(MAXPACKETSIZE);
-	auto status = receive(reinterpret_cast<uint8_t*>(&buffer[0]), timeoutSeconds, timeoutUSeconds);
-	if (status > 0)
+	int size = receive(reinterpret_cast<uint8_t*>(&buffer[0]), timeoutSeconds, timeoutUSeconds);
+	if (size > 0)
 	{
-		buffer.resize(status);
+		buffer.resize(size);
+		return 0;
+	}
+	return -1;
+}
+
+//========================================================================================================================
+int TCPNetworkClient::receive(std::vector<char>& buffer, unsigned int timeoutSeconds, unsigned int timeoutUSeconds)
+{
+	buffer.resize(MAXPACKETSIZE);
+	int size = receive(reinterpret_cast<uint8_t*>(&buffer[0]), timeoutSeconds, timeoutUSeconds);
+	if (size > 0)
+	{
+		buffer.resize(size);
 		return 0;
 	}
 	return -1;
@@ -205,10 +218,10 @@ int TCPNetworkClient::receive(std::vector<uint16_t>& buffer, uint32_t timeoutSec
 		status = ::recv ( fdClientSocket_, buf, recvSize, 0 );
 		bytesReceived += recvSize;
 
-		if ( status == -1 ) std::cout << "status == -1   errno == " << errno << "  in Socket::recv\n" << std::endl;
+		if      ( status == -1 ) std::cout << "status == -1   errno == " << errno << "  in Socket::recv\n" << std::endl;
 		else if ( status == 0 )  std::cout << "status == 0  errno == " << errno << "  in Socket::recv\n" << std::endl;
-		else {
-
+		else
+		{
 			uint16_t val = buf[1] << 8 | buf[0];
 			buffer.push_back(val);
 		}
@@ -223,14 +236,14 @@ int TCPNetworkClient::receive(std::vector<uint16_t>& buffer, uint32_t timeoutSec
 //protected
 int TCPNetworkClient::resolveServer(std::string serverIP, int serverPort, sockaddr_in& serverSocketAddress)
 {
-	std::string     resolvedIP;
-	int             resolvedPort;
+	std::string     resolvedIP = serverIP;
+	int             resolvedPort = serverPort;
 	struct hostent* hostent_sp;
 	std::smatch     mm;
 
 	//  Note: the regex expression used by regex_match has an implied ^ and $
 	//        at the beginning and end respectively.
-
+	/*
 	if (regex_match(serverIP, mm, std::regex("([^:]+):(\\d+)")))
 	{
 		resolvedIP   = mm[1].str();
@@ -251,6 +264,8 @@ int TCPNetworkClient::resolveServer(std::string serverIP, int serverPort, sockad
 		resolvedIP   = std::string("127.0.0.1");
 		resolvedPort = serverPort;
 	}
+	*/
+
 	std::cout << "Resolving server " << resolvedIP << ", on port " << resolvedPort << std::endl;
 
 	if (resolvedIP == "localhost") resolvedIP = "127.0.0.1";
@@ -259,18 +274,18 @@ int TCPNetworkClient::resolveServer(std::string serverIP, int serverPort, sockad
 	serverSocketAddress.sin_family = AF_INET;
 	serverSocketAddress.sin_port = htons(resolvedPort); // just a guess at an open port
 
-	if (regex_match(resolvedIP, mm, std::regex("\\d+(\\.\\d+){3}")))
+	//if (regex_match(resolvedIP, mm, std::regex("\\d+(\\.\\d+){3}")))
 		inet_aton(resolvedIP.c_str(), &serverSocketAddress.sin_addr);
-	else
-	{
-		hostent_sp = gethostbyname(resolvedIP.c_str());
-		if (!hostent_sp)
-		{
-			perror("gethostbyname");
-			return (-1);
-		}
-		serverSocketAddress.sin_addr = *(struct in_addr *)(hostent_sp->h_addr_list[0]);
-	}
+//	else
+//	{
+//		hostent_sp = gethostbyname(resolvedIP.c_str());
+//		if (!hostent_sp)
+//		{
+//			perror("gethostbyname");
+//			return (-1);
+//		}
+//		serverSocketAddress.sin_addr = *(struct in_addr *)(hostent_sp->h_addr_list[0]);
+//	}
 	return 0;
 }
 

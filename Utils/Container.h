@@ -15,6 +15,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include "../Utils/Exception.h"
 
 class IdContainer
 {
@@ -39,6 +40,11 @@ public:
 		//	delete object;
 		//this->clear();
 		//idObjectMap_.clear();
+	}
+	T* getObject(int id)
+	{
+		if(idObjectMap_.find(id) == idObjectMap_.end()) throw Ph2_HwDescription::Exception("T* getObject(int id) : Object Id not found");
+		return idObjectMap_[id];
 	}
 
 protected:
@@ -74,7 +80,7 @@ public:
 	//typedef ChannelContainerBase::const_iterator const_iterator;
 
 	virtual void print(void) = 0;
-	virtual unsigned int size(void) = 0;
+	//virtual unsigned int size(void) = 0;
 	//virtual ChannelBase& getChannel(unsigned int channel) = 0;
 	//virtual iterator begin() = 0;
 	//virtual iterator end  () = 0;
@@ -93,7 +99,7 @@ public:
 		for(auto& channel: *this)
 			channel.print();
 	}
-	unsigned int size(void){return this->size();}
+	//unsigned int size(void){return std::vector<T>::size();}
 	T& getChannel(unsigned int channel) {return this->at(channel);}
 	//std::vector<ChannelBase>::iterator begin() override {return this->begin();}
 	//std::vector<ChannelBase>::iterator end  () override {return this->end();}
@@ -151,6 +157,8 @@ public:
 	}
 	template <typename T>
 	T* getChannelContainer() {return static_cast<T*>(container_);}
+	template <typename T>
+	void setChannelContainer(T* container) {container_ = container;}
 
 private:
 	unsigned int nOfRows_;

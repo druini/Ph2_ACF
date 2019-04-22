@@ -1384,17 +1384,35 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
     return;
 }
 
+#include "../Utils/Occupancy.h"
+#include "../Utils/OccupancyStream.h"
 // measure occupancy
 void Tool::measureOccupancy(const uint16_t &numberOfEvents)
 {
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer.size(); boardIndex++)
 	{
         measureBeBoardOccupancy(boardIndex, numberOfEvents);
-        fObjectStream->streamBoard(fDetectorDataContainer->at(boardIndex));
-        //sendstuff
-        fNetworkStreamer->sendMessage(fObjectStream->encodeStringStream());
+
+
+        for(auto module: *(fDetectorDataContainer->at(boardIndex)))
+        {
+            for(auto chip: *module)
+            {
+                fObjectStream   ->streamChip(fDetectorDataContainer->at(boardIndex)->getId(), module->getId(), chip);
+                const std::vector<char>& tmp = fObjectStream->encodeStream();
+                fNetworkStreamer->sendMessage(tmp);
+                // fNetworkStreamer->sendMessage(fObjectStream->encodeStringStream());
+                for(auto channel : *chip->getChannelContainer<ChannelContainer<Occupancy>>())
+                    std::cout<<channel.fOccupancy<<" ";
+                std::cout<<std::endl;
+                OccupancyStream::MyDump(&tmp.at(0),tmp.size());
+                break;
+            }
+        }
+
 	}
 }
+
 // measure occupancy
 void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numberOfEvents)
 {

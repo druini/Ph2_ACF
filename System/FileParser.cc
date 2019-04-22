@@ -18,11 +18,9 @@ void FileParser::parseHW ( const std::string& pFilename, BeBoardFWMap& pBeBoardF
 
 void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer& pDetectorContainer, std::ostream& os, bool pIsFile)
 {
-std::cout<<"culo1\n";
 	//FIXME-FR
 	if (pIsFile && pFilename.find ( ".xml" ) != std::string::npos )
 	{
-std::cout<<"culo1.1\n";
 		parseHWxml ( pFilename, pBeBoardFWMap, pBoardVector, pDetectorContainer, os, pIsFile );
 	}
 	else if (!pIsFile)
@@ -120,7 +118,6 @@ void FileParser::parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoa
 {
 	// uint32_t cNBeBoard = 0;
 	int i, j;
-std::cout<<"culo2\n";
 
 	pugi::xml_document doc;
 	pugi::xml_parse_result result;
@@ -129,7 +126,6 @@ std::cout<<"culo2\n";
 		result = doc.load_file ( pFilename.c_str() );
 	else
 		result = doc.load (pFilename.c_str() );
-std::cout<<"culo3\n";
 
 
 	if ( !result )
@@ -142,7 +138,6 @@ std::cout<<"culo3\n";
 		throw Exception ("Unable to parse XML source!");
 		return;
 	}
-std::cout<<"culo4\n";
 
 	os << RESET << "\n\n";
 
@@ -161,15 +156,12 @@ std::cout<<"culo4\n";
 
 	os << "\n";
 	const std::string strUhalConfig = expandEnvironmentVariables (doc.child ( "HwDescription" ).child ( "Connections" ).attribute ( "name" ).value() );
-std::cout<<"culo5\n";
 
 	// Iterate over the BeBoard Nodes
 	for ( pugi::xml_node cBeBoardNode = doc.child ( "HwDescription" ).child ( "BeBoard" ); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling() )
 	{
-std::cout<<"culo6\n";
 		if (static_cast<std::string> (cBeBoardNode.name() ) == "BeBoard")
 		{
-std::cout<<"culo7\n";
 			this->parseBeBoard (cBeBoardNode, pBeBoardFWMap, pBoardVector, pDetectorContainer, os);
 		}
 		// cNBeBoard++;
@@ -288,11 +280,9 @@ void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoar
 void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer& pDetectorContainer, std::ostream& os )
 {
 
-std::cout<<"culo8\n";
 
 	uint32_t cBeId = pBeBordNode.attribute ( "Id" ).as_int();
 	BeBoard* cBeBoard = pDetectorContainer.addBoardContainer(cBeId, new BeBoard ( cBeId ));//FIX Change it to Reference!!!!
-	std::cout << __PRETTY_FUNCTION__ << "P: " << cBeBoard << std::endl;
 	pBoardVector.emplace_back ( cBeBoard );
 
 	pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute ("boardType");
@@ -315,21 +305,18 @@ std::cout<<"culo8\n";
 		throw Exception (errorstring.c_str() );
 		exit (1);
 	}
-std::cout<<"culo10\n";
 
 	pugi::xml_attribute cEventTypeAttribute = pBeBordNode.attribute ("eventType");
 	std::string cEventTypeString;
 
 	if (cEventTypeAttribute == nullptr)
 	{
-std::cout<<"culo10.1\n";
 		//the HWDescription object does not have and EventType node, so assume EventType::VR
 		cBeBoard->setEventType (EventType::VR);
 		cEventTypeString = "VR";
 	}
 	else
 	{
-std::cout<<"culo10.2\n";
 		cEventTypeString = cEventTypeAttribute.value();
 
 		if (cEventTypeString == "ZS") cBeBoard->setEventType (EventType::ZS);
@@ -343,38 +330,30 @@ std::cout<<"culo10.2\n";
 	std::string cId = cBeBoardConnectionNode.attribute ( "id" ).value();
 	std::string cUri = cBeBoardConnectionNode.attribute ( "uri" ).value();
 	std::string cAddressTable = expandEnvironmentVariables (cBeBoardConnectionNode.attribute ( "address_table" ).value() );
-std::cout<<"culo11\n";
 
 	if (cBeBoard->getBoardType() == BoardType::D19C)
 	{
 		pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-std::cout<<"culo11.1\n";
 	}
 	else if (cBeBoard->getBoardType() == BoardType::FC7)
 	{
 		pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new FC7FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
-std::cout<<"culo11.2\n";
 	}
 
-std::cout<<"culo11.3\n";
 	os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
 
 	// Iterate over the BeBoardRegister Nodes
 	for ( pugi::xml_node cBeBoardRegNode = pBeBordNode.child ( "Register" ); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling() )
 	{
-std::cout<<"culo11.4\n";
 		if (std::string (cBeBoardRegNode.name() ) == "Register")
 		{
-std::cout<<"culo11.5\n";
 			std::string cNameString;
 			uint32_t cValue;
 			this->parseRegister (cBeBoardRegNode, cNameString, cValue, cBeBoard, os);
-std::cout<<"culo11.6\n";
 		}
 	}
 
 	os << BLUE <<  "|\t|" << RESET << std::endl;
-std::cout<<"culo12\n";
 
 	// Iterate the module node
 	for ( pugi::xml_node pModuleNode = pBeBordNode.child ( "Module" ); pModuleNode; pModuleNode = pModuleNode.next_sibling() )
@@ -384,14 +363,12 @@ std::cout<<"culo12\n";
 			this->parseModuleContainer (pModuleNode, cBeBoard, os );
 		}
 	}
-std::cout<<"culo13\n";
 
 	//here parse the Slink Node
 	pugi::xml_node cSLinkNode = pBeBordNode.child ("SLink");
 	this->parseSLink (cSLinkNode, cBeBoard, os);
 
 	// pBoardVector.emplace_back( cBeBoard );
-std::cout<<"culo14\n";
 
 	return;
 
@@ -400,9 +377,6 @@ std::cout<<"culo14\n";
 
 void FileParser::parseRegister (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os)
 {
-std::cout<<"culo11.5.1\n";
-std::cout<<pBoard<<std::endl;
-
 	if (std::string (pRegisterNode.name() ) == "Register")
 	{
 		if (std::string (pRegisterNode.first_child().value() ).empty() ) // the node has no value associated and thus is just a container
@@ -415,7 +389,6 @@ std::cout<<pBoard<<std::endl;
 			for ( pugi::xml_node cNode = pRegisterNode.child ( "Register" ); cNode; cNode = cNode.next_sibling() )
 			{
 				std::string cAttributeString = pAttributeString;
-std::cout<<"culo11.5.2\n";
 				this->parseRegister (cNode, cAttributeString, pValue, pBoard, os);
 			}
 		}

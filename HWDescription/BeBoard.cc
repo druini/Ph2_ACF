@@ -25,7 +25,6 @@ namespace Ph2_HwDescription {
     , fEventType    (EventType::VR)
     , fCondDataSet  (nullptr)
     {
-        std::cout << __PRETTY_FUNCTION__ << "EMPTY p:" << this << std::endl;
     }
 
     BeBoard::BeBoard ( uint8_t pBeId )
@@ -34,7 +33,6 @@ namespace Ph2_HwDescription {
     , fEventType    (EventType::VR)
     , fCondDataSet  (nullptr)
     {
-        std::cout << __PRETTY_FUNCTION__ << "p:" << this << std::endl;
     }
 
     BeBoard::BeBoard ( uint8_t pBeId, const std::string& filename )
@@ -43,7 +41,6 @@ namespace Ph2_HwDescription {
     , fEventType (EventType::VR)
     , fCondDataSet (nullptr)
     {
-       std::cout << __PRETTY_FUNCTION__ << "NEVER USED p:" << this << std::endl;
        loadConfigFile ( filename );
     }
 
@@ -75,13 +72,10 @@ namespace Ph2_HwDescription {
         // }
         
 
-        // std::cout<< __PRETTY_FUNCTION__ << " culo1" << std::endl;
         // std::cout<<fRegMap.size()<<std::endl;
         // std::cout<<&fRegMap<<std::endl;
         // for(const auto & element : fRegMap) std::cout<<element.first<<" "<<element.second<<std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " culo2" << std::endl;
         fRegMap[pReg] = psetValue;
-        // std::cout<< __PRETTY_FUNCTION__ << " culo3" << std::endl;
 
     }
 
