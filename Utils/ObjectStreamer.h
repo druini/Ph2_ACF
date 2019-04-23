@@ -85,11 +85,6 @@ public:
 	virtual const std::vector<char>& encodeStream(void) = 0;
 	virtual       void               streamChip  (uint16_t boardId, uint16_t moduleId, ChipContainer* chip  ) = 0;
 public:
-	std::string getObjectName(void)
-	{
-		int32_t status;
-		return abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
-	}
 };
 
 
@@ -115,7 +110,12 @@ private:
             memcpy(fObjectName, &bufferBegin->at(sizeof(fObjectNameLength)), fObjectNameLength);
         }
 
-        uint32_t size() const
+        static uint32_t size(const std::string& objectName)
+        {
+            return sizeof(fObjectNameLength) + objectName.size();
+        }
+
+        uint32_t size(void) const
         {
             return sizeof(fObjectNameLength) + fObjectNameLength;
         }
@@ -201,29 +201,31 @@ public:
     {
     	if(fTheStream == nullptr)
     	{
-            setMetadataName(getObjectName());
-    		fTheStream = new std::vector<char>(fMetadataStream.size() + fHeaderStream.size() + fDataStream.size());
-    		memcpy(&fTheStream->at(0), &fMetadataStream.fObjectNameLength, fMetadataStream.size());
+            //setMetadataName(getObjectName());
+    		fTheStream = new std::vector<char>(Metadata::size(getObjectName()) + fHeaderStream.size() + fDataStream.size());
+            fMetadataStream = reinterpret_cast<Metadata*>(&fTheStream->at(0));
+            fMetadataStream->setObjectName(getObjectName());
+    		//memcpy(&fTheStream->at(0), &fMetadataStream.fObjectNameLength, fMetadataStream.size());
     		//memcpy(&fTheStream->at(0),                                         &fMetadataStream.fObjectNameLength, sizeof(fMetadataStream.fObjectNameLength));
     		//memcpy(&fTheStream->at(sizeof(fMetadataStream.fObjectNameLength)), &fMetadataStream.fObjectName.at(0), fMetadataStream.fObjectNameLength);
     	}
     	else
-    		fTheStream->resize(fMetadataStream.size() + fHeaderStream.size() + fDataStream.size());
+    		fTheStream->resize(fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
 
-        fHeaderStream.copyToStream(&fTheStream->at(fMetadataStream.size()));
-        fDataStream  .copyToStream(&fTheStream->at(fMetadataStream.size()+ fHeaderStream.size()));
+        fHeaderStream.copyToStream(&fTheStream->at(fMetadataStream->size()));
+        fDataStream  .copyToStream(&fTheStream->at(fMetadataStream->size()+ fHeaderStream.size()));
         return *fTheStream;
     }
 
 	bool attachBuffer(std::vector<char>* bufferBegin)
 	{
 		fTheStream = bufferBegin;
-        Metadata* tmpMetadata = reinterpret_cast<Metadata*>(&bufferBegin->at(0));
+		fMetadataStream = reinterpret_cast<Metadata*>(&bufferBegin->at(0));
         std::string objectName = getObjectName();
-		if(tmpMetadata->fObjectNameLength == objectName.size() &&  std::string(tmpMetadata->fObjectName).substr(0,tmpMetadata->fObjectNameLength) == objectName)
+		if(fMetadataStream->fObjectNameLength == objectName.size() &&  std::string(fMetadataStream->fObjectName).substr(0,fMetadataStream->fObjectNameLength) == objectName)
 		{
-	        fHeaderStream.copyFromStream(&fTheStream->at(tmpMetadata->size()));
-	        fDataStream  .copyFromStream(&fTheStream->at(tmpMetadata->size() + fHeaderStream.size()));
+	        fHeaderStream.copyFromStream(&fTheStream->at(fMetadataStream->size()));
+	        fDataStream  .copyFromStream(&fTheStream->at(fMetadataStream->size() + fHeaderStream.size()));
 	    	fTheStream = nullptr;
 			return true;
 		}
@@ -231,15 +233,15 @@ public:
     	return false;
 	}
 
-	bool isMetadataMatching(const std::string& objectName)
-	{
-		if(fMetadataStream.fObjectNameLength == objectName.size() &&  std::string(fMetadataStream.fObjectName).substr(0,fMetadataStream.fObjectNameLength) == objectName)
-		{
-			//fMetadataStream.fObjectName.resize(fMetadataStream.fObjectNameLength);
-			return true;
-		}
-		return false;
-	}
+//	bool isMetadataMatching(const std::string& objectName)
+//	{
+//		if(fMetadataStream.fObjectNameLength == objectName.size() &&  std::string(fMetadataStream.fObjectName).substr(0,fMetadataStream.fObjectNameLength) == objectName)
+//		{
+//			//fMetadataStream.fObjectName.resize(fMetadataStream.fObjectNameLength);
+//			return true;
+//		}
+//		return false;
+//	}
 
 	// char* getBeginBuffer()
 	// {
@@ -283,6 +285,12 @@ protected:
 	H                  fHeaderStream;
 	D                  fDataStream;
 	std::vector<char>* fTheStream;
+	std::string getObjectName(void)
+	{
+		int32_t status;
+		return abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
+	}
+
 };
 
 /*
