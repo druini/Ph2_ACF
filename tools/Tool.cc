@@ -1407,7 +1407,7 @@ void Tool::measureOccupancy(const uint16_t &numberOfEvents)
                 for(auto channel : *chip->getChannelContainer<ChannelContainer<Occupancy>>())
                     std::cout<<channel.fOccupancy<<" ";
                 std::cout<<std::endl;
-                OccupancyStream::MyDump(&tmp.at(0),tmp.size());
+                MyDump(&tmp.at(0),tmp.size());
                 break;
             }
         }

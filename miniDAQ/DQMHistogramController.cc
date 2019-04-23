@@ -31,7 +31,7 @@ bool DQMHistogramController::readMessage(DetectorContainer &theDetectorDataConta
 		{
 			std::cout << "Got Something" << std::endl;
 			OccupancyStream theOccupancy;
-			theOccupancy.MyDump(&configBuffer.at(0),configBuffer.size());
+			MyDump(&configBuffer.at(0),configBuffer.size());
 			bool matchingStream = theOccupancy.attachBuffer(&configBuffer);
  			if(matchingStream)
  			{
