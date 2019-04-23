@@ -19,7 +19,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <cstdint>
-
+#include <cmath>
 
 // template<class T>
 // class VTableInfo
@@ -104,10 +104,16 @@ private:
 		Metadata() : fObjectNameLength(0) {}
 		~Metadata() {};
 
-		const std::string& getObjectName(void) const
-		{
-			return fObjectName;
-		};
+//		const std::string& getObjectName(void) const
+//		{
+//			return fObjectName;
+//		};
+
+        void decodeMetadataName(const std::vector<char>* bufferBegin)
+        {
+            fObjectNameLength = bufferBegin->at(0);
+            memcpy(fObjectName, &bufferBegin->at(sizeof(fObjectNameLength)), fObjectNameLength);
+        }
 
         uint32_t size() const
         {
@@ -117,12 +123,12 @@ private:
 	private:
 		void setObjectName(const std::string& objectName)
 		{
-			fObjectName       = objectName;
+            strcpy(fObjectName, objectName.c_str());
 			fObjectNameLength = objectName.size();
 		}
 
 		uint8_t     fObjectNameLength;
-		std::string fObjectName;
+        char        fObjectName[size_t(pow(2,(sizeof(fObjectNameLength)*8)))];
 	};
 
 public:
@@ -195,9 +201,11 @@ public:
     {
     	if(fTheStream == nullptr)
     	{
+            setMetadataName(getObjectName());
     		fTheStream = new std::vector<char>(fMetadataStream.size() + fHeaderStream.size() + fDataStream.size());
-    		memcpy(&fTheStream->at(0),                                         &fMetadataStream.fObjectNameLength, sizeof(fMetadataStream.fObjectNameLength));
-    		memcpy(&fTheStream->at(sizeof(fMetadataStream.fObjectNameLength)), &fMetadataStream.fObjectName.at(0), fMetadataStream.fObjectNameLength);
+    		memcpy(&fTheStream->at(0), &fMetadataStream.fObjectNameLength, fMetadataStream.size());
+    		//memcpy(&fTheStream->at(0),                                         &fMetadataStream.fObjectNameLength, sizeof(fMetadataStream.fObjectNameLength));
+    		//memcpy(&fTheStream->at(sizeof(fMetadataStream.fObjectNameLength)), &fMetadataStream.fObjectName.at(0), fMetadataStream.fObjectNameLength);
     	}
     	else
     		fTheStream->resize(fMetadataStream.size() + fHeaderStream.size() + fDataStream.size());
@@ -210,22 +218,24 @@ public:
 	bool attachBuffer(std::vector<char>* bufferBegin)
 	{
 		fTheStream = bufferBegin;
-        if(!setMetadata(getObjectName()))
+        Metadata* tmpMetadata = reinterpret_cast<Metadata*>(&bufferBegin->at(0));
+        std::string objectName = getObjectName();
+		if(tmpMetadata->fObjectNameLength == objectName.size() &&  std::string(tmpMetadata->fObjectName).substr(0,tmpMetadata->fObjectNameLength) == objectName)
 		{
-        	fTheStream = nullptr;
-        	return false;
+	        fHeaderStream.copyFromStream(&fTheStream->at(tmpMetadata->size()));
+	        fDataStream  .copyFromStream(&fTheStream->at(tmpMetadata->size() + fHeaderStream.size()));
+	    	fTheStream = nullptr;
+			return true;
 		}
-        fHeaderStream.copyFromStream(&fTheStream->at(fMetadataStream.size()));
-        fDataStream  .copyFromStream(&fTheStream->at(fMetadataStream.size() + fHeaderStream.size()));
     	fTheStream = nullptr;
-		return true;
+    	return false;
 	}
 
-	bool setMetadata(const std::string& objectName)
+	bool isMetadataMatching(const std::string& objectName)
 	{
-        if(fMetadataStream.fObjectNameLength == objectName.size() &&  fMetadataStream.fObjectName.substr(0,fMetadataStream.fObjectNameLength) == objectName)
+		if(fMetadataStream.fObjectNameLength == objectName.size() &&  std::string(fMetadataStream.fObjectName).substr(0,fMetadataStream.fObjectNameLength) == objectName)
 		{
-			fMetadataStream.fObjectName.resize(fMetadataStream.fObjectNameLength);
+			//fMetadataStream.fObjectName.resize(fMetadataStream.fObjectNameLength);
 			return true;
 		}
 		return false;
@@ -269,7 +279,7 @@ public:
 
 
 protected:
-	Metadata           fMetadataStream;
+	Metadata*          fMetadataStream;
 	H                  fHeaderStream;
 	D                  fDataStream;
 	std::vector<char>* fTheStream;

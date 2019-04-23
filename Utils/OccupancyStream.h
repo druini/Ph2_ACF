@@ -72,7 +72,6 @@ class OccupancyStream : public ObjectStream<HeaderStreamOccupancy,DataStreamOccu
 public:
 	OccupancyStream()
 	{
-        setMetadataName(getObjectName());
     }
 	~OccupancyStream(){;}
 
