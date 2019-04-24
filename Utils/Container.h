@@ -17,37 +17,14 @@
 #include <map>
 #include "../Utils/Exception.h"
 
-
-class SummaryContainerBase
-{
-public:
-	SummaryContainerBase() {;}
-	virtual ~SummaryContainerBase() {;}
-};
-
-
-template <class T>
-class SummaryContainer : public SummaryContainerBase
-{
-public:
-	SummaryContainer() {;}
-	~SummaryContainer() {;}
-};
-
 class IdContainer
 {
 public:
 	IdContainer(int id=-1) : id_(id){;}
 	int getId(void) {return id_;}
-	template <typename T>
-	virtual void initialize()
-	{
-		summaryContainer_ = new SummaryContainer<T>();
-	}
 private:
 	int id_;
 
-	SummaryContainerBase *summaryContainer_;
 };
 
 template <class T>
@@ -82,6 +59,22 @@ protected:
 	std::map<int, T*> idObjectMap_;
 };
 
+
+class SummaryContainerBase
+{
+public:
+	SummaryContainerBase() {;}
+	virtual ~SummaryContainerBase() {;}
+};
+
+
+template <class T>
+class SummaryContainer : public SummaryContainerBase
+{
+public:
+	SummaryContainer() {;}
+	~SummaryContainer() {;}
+};
 
 
 class ChannelContainerBase
@@ -150,9 +143,8 @@ public:
 	//ChannelContainerBase::iterator begin(){return container_->begin();}
 	//ChannelContainerBase::iterator end  (){return container_->end();}
 	template <typename T>
-	void initialize() override
-	{	
-		summaryContainer_ = new SummaryContainer<T>();
+	void initialize()
+	{
 		container_ = static_cast<ChannelContainerBase*>(new ChannelContainer<T>(nOfRows_*nOfCols_));
 	}
 	virtual ~ChipContainer(){if(container_ != nullptr) delete container_;}
