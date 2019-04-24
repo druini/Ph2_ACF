@@ -25,6 +25,19 @@ public:
 	uint32_t fOccupancy;
 };
 
+
+class OccupancySummary //: public streammable
+{
+public:
+    OccupancySummary()
+    : fOccupancySummary(0)
+    {;}
+    ~OccupancySummary(){;}
+    void print(void){ std::cout << fOccupancySummary << std::endl;}
+    uint32_t fOccupancySummary;
+};
+
+
 #endif
 
 //class RD53 : public ChannelBase

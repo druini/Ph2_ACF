@@ -15,6 +15,7 @@
 #include "../Utils/ObjectStreamer.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/Container.h"
+#include "../Utils/TCPNetworkServer.h"
 #include "../HWDescription/Chip.h"
 #include <iostream>
 
@@ -24,10 +25,10 @@ class HeaderStreamOccupancy : public DataStreamBase
 {
 public:
 	HeaderStreamOccupancy()
-	: boardId (0)
-	, moduleId(0)
-	, fChipId (0)
-	{};
+: boardId (0)
+, moduleId(0)
+, fChipId (0)
+{};
 	~HeaderStreamOccupancy() {};
 
 	uint32_t size(void) override
@@ -80,26 +81,37 @@ public:
 //};
 
 
-class OccupancyStream: public ObjectStream<HeaderStreamOccupancy,DataStreamOccupancy>
+class OccupancyBoardStream: public ObjectStream<HeaderStreamOccupancy,DataStreamOccupancy>, public VContainerStreamBase
 {
 public:
-	OccupancyStream()
+	OccupancyBoardStream()
 {
 }
-	~OccupancyStream(){;}
+	~OccupancyBoardStream(){;}
 
-	void streamChip (uint16_t boardId, uint16_t moduleId, ChipContainer* chip  ) override
+	void streamAndSendBoard(BoardContainer* board, TCPNetworkServer* networkStreamer)
+	{
+		for(auto module: *board)
+		{
+			for(auto chip: *module)
+			{
+				streamChip(board->getId(), module->getId(), chip);
+				const std::vector<char>& tmp = encodeStream();
+				networkStreamer->sendMessage(tmp);
+			}
+		}
+	}
+	void streamChip (uint16_t boardId, uint16_t moduleId, ChipContainer* chip  )
 	{
 		retrieveChipData(boardId, moduleId, chip);
 	}
 
-	void decodeChipData(DetectorContainer& theDetectorDataContainer)
+	void decodeChipData(DetectorContainer& detectorContainer)
 	{
-		theDetectorDataContainer
-		.getObject(fHeaderStream.boardId)
-		->getObject(fHeaderStream.moduleId)
-		->getObject(fHeaderStream.fChipId)
-		->setChannelContainer<ChannelContainer<Occupancy>>(fDataStream.fChannelOccupancy);
+		detectorContainer.getObject(fHeaderStream.boardId)
+						->getObject(fHeaderStream.moduleId)
+						->getObject(fHeaderStream.fChipId)
+						->setChannelContainer<ChannelContainer<Occupancy>>(fDataStream.fChannelOccupancy);
 		fDataStream.fChannelOccupancy = nullptr;
 	}
 
@@ -111,6 +123,7 @@ public:
 		fHeaderStream.fChipId         = chip->getId()                                                ;
 		fDataStream.fChannelOccupancy = chip->getChannelContainer<ChannelContainer<Occupancy>>();
 	}
+
 };
 
 #endif

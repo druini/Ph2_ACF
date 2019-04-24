@@ -60,16 +60,22 @@ protected:
 };
 
 
-template <class T, class V>
-class SummaryContainer : public Container<T>
+class SummaryContainerBase
 {
 public:
-	SummaryContainer(V* object)
-	: object_(object)
-	{}
-protected:
-	V* object_;
+	SummaryContainerBase() {;}
+	virtual ~SummaryContainerBase() {;}
 };
+
+
+template <class T>
+class SummaryContainer : public SummaryContainerBase
+{
+public:
+	SummaryContainer() {;}
+	~SummaryContainer() {;}
+};
+
 
 class ChannelContainerBase
 {

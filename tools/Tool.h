@@ -23,7 +23,7 @@
 
 
 class DetectorContainer;
-class VObjectStreamBase;
+class VContainerStreamBase;
 class ChannelGroupHandler;
 class ChannelGroupBase;
 
@@ -62,15 +62,15 @@ class Tool : public SystemController
     using ModuleGlobalOccupancyMap            = std::map<uint8_t,ChipGlobalOccupancyMap    >; //module       : { cbc    : { strip : occupancy } }
         // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyPerChannelMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
 
-    DetectorContainer*   fDetectorDataContainer;
-    VObjectStreamBase*   fObjectStream;
-    ChannelGroupHandler* fChannelGroupHandler;
-    CanvasMap            fCanvasMap;
-    ChipHistogramMap     fChipHistMap;
-    ModuleHistogramMap   fModuleHistMap;
-    BeBoardHistogramMap  fBeBoardHistMap;
-    FrontEndType         fType;
-    TestGroupChannelMap  fTestGroupChannelMap;
+    DetectorContainer*    fDetectorDataContainer;
+    VContainerStreamBase* fObjectStream;
+    ChannelGroupHandler*  fChannelGroupHandler;
+    CanvasMap             fCanvasMap;
+    ChipHistogramMap      fChipHistMap;
+    ModuleHistogramMap    fModuleHistMap;
+    BeBoardHistogramMap   fBeBoardHistMap;
+    FrontEndType          fType;
+    TestGroupChannelMap   fTestGroupChannelMap;
 
     std::map< int, std::vector<uint8_t> > fMaskForTestGroupChannelMap;
 

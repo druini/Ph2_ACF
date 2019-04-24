@@ -58,8 +58,8 @@ class DataStreamBase
 {
 public:
 	DataStreamBase()
-	: fDataSize(0)
-	{;}
+: fDataSize(0)
+{;}
 	virtual ~DataStreamBase()
 	{;}
 
@@ -80,23 +80,8 @@ protected:
 }__attribute__((packed));
 
 
-class BoardContainer;
-class ChipContainer;
-
-class VObjectStreamBase
-{
-public:
-	VObjectStreamBase(){;}
-	virtual ~VObjectStreamBase(){;}
-	virtual bool                     attachBuffer(std::vector<char>* bufferBegin) = 0;
-	virtual const std::vector<char>& encodeStream(void) = 0;
-	virtual       void               streamChip  (uint16_t boardId, uint16_t moduleId, ChipContainer* chip  ) = 0;
-public:
-};
-
-
 template <class H, class D>
-class ObjectStream : public VObjectStreamBase
+class ObjectStream
 {
 private:
 	class Metadata
@@ -144,7 +129,7 @@ public:
 
 	//Creates the buffer to stream copying the object metadata, header and data into it
 	const std::vector<char>& encodeStream(void)
-    				{
+    						{
 		if(fTheStream == nullptr)
 		{
 			fTheStream = new std::vector<char>(Metadata::size(getObjectName()) + fHeaderStream.size() + fDataStream.size());
@@ -157,16 +142,17 @@ public:
 		fHeaderStream.copyToStream(&fTheStream->at(fMetadataStream->size()));
 		fDataStream  .copyToStream(&fTheStream->at(fMetadataStream->size()+ fHeaderStream.size()));
 		return *fTheStream;
-    				}
+    }
 
 	//First checks if the buffer has the right metadata and, if so, copies the header and data
-	bool attachBuffer(std::vector<char>* bufferBegin)
+	unsigned int attachBuffer(std::vector<char>* bufferBegin)
 	{
 		fMetadataStream = reinterpret_cast<Metadata*>(&bufferBegin->at(0));
 		if(fMetadataStream->fObjectNameLength == getObjectName().size() &&  std::string(fMetadataStream->fObjectName).substr(0,fMetadataStream->fObjectNameLength) == getObjectName())
 		{
 			fHeaderStream.copyFromStream(&bufferBegin->at(fMetadataStream->size()));
 			fDataStream  .copyFromStream(&bufferBegin->at(fMetadataStream->size() + fHeaderStream.size()));
+			bufferBegin->erase(bufferBegin->begin(),bufferBegin->begin() + fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
 			fMetadataStream = nullptr;
 			return true;
 		}
@@ -201,6 +187,18 @@ protected:
 		return fObjectName;
 	}
 
+};
+
+class TCPNetworkServer;
+class BoardContainer;
+
+class VContainerStreamBase
+{
+public:
+	VContainerStreamBase(){;}
+	virtual ~VContainerStreamBase(){;}
+	virtual void streamAndSendBoard(BoardContainer* board, TCPNetworkServer* networkStreamer) = 0;
+public:
 };
 
 #endif
