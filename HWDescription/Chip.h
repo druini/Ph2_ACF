@@ -139,7 +139,7 @@ namespace Ph2_HwDescription {
 
         virtual std::vector<uint8_t>& getChipMask() = 0;
 
-        const ChannelGroupBase* getChipOriginalMask() const {return fChipOriginalMask;}
+        const ChannelGroupBase* getChipOriginalMask() const override {return fChipOriginalMask;}
 
         bool hasMaskedChannels() const
         {

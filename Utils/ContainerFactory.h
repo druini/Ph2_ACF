@@ -110,8 +110,6 @@ public:
 		copyAndInitStructure<T,SC,SC,SC,SC>(original, copy);
 	}
 
-	void normalizeAndAverageContainer(DetectorContainer& theDetector, DetectorContainer& theDetectorData, uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup);
-
 	//EXAMPLES
 	//	void buildDetectorUsingFile(DetectorContainer& detector)
 	//	{

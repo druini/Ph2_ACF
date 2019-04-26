@@ -16,6 +16,7 @@
 #include <vector>
 #include <map>
 #include "../Utils/Exception.h"
+#include "../Utils/ChannelGroupHandler.h"
 
 class ChannelContainerBase;
 template <typename T>
@@ -68,30 +69,33 @@ public:
 		std::vector<C> tmpSummaryVector;
 		for(auto summary : *tmpSummaryContainer) tmpSummaryVector.emplace_back(static_cast<Summary<S,C>*>(summary)->theSummary_);
 		theSummary_.makeAverage(&tmpSummaryVector,theNumberOfEnabledChannelsList);
-		// theSummary_.makeAverage(static_cast<const std::vector<C*>*>(static_cast<const SummaryContainer<C>*>(theSummaryList)),theNumberOfEnabledChannelsList);
 	}
 
 	S theSummary_;
 };
 
 
-class IdContainer
+class BaseContainer
 {
 public:
-	IdContainer(int id=-1) : id_(id){;}
+	BaseContainer(int id=-1) : id_(id){;}
 	int getId(void) {return id_;}
 	virtual void initialize() {;}
-	SummaryBase *summary_;
+    virtual void setNumberOfTestedAndUnmaskedChannels(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup) = 0;
+    virtual void normalizeAndAverageContainers(uint16_t numberOfEvents) = 0;
+
+    SummaryBase *summary_;
+    uint32_t theNumberOfEnabledChannels_;
 	
 private:
 	int id_;
 };
 
 template <class T>
-class Container : public std::vector<T*> , public IdContainer
+class Container : public std::vector<T*> , public BaseContainer
 {
 public:
-	Container(int id) : IdContainer(id) {}
+	Container(int id) : BaseContainer(id) {}
 	Container(unsigned int size) : std::vector<T*>(size) {}
 	virtual ~Container()
 	{
@@ -117,14 +121,33 @@ public:
 		for(auto container : *this) SummaryContainerList->emplace_back(container->summary_);
 		return SummaryContainerList;
 	}
+    void setNumberOfTestedAndUnmaskedChannels(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup) override
+    {
+        theNumberOfEnabledChannels_ = 0;
+        int index = 0;
+        for(auto container : *this)
+        {
+            container->setNumberOfTestedAndUnmaskedChannels(static_cast<const Container<T>*>(theContainer)->at(index++),cTestChannelGroup);
+            theNumberOfEnabledChannels_+=container->theNumberOfEnabledChannels_;
+        }
+    }
+    void normalizeAndAverageContainers(uint16_t numberOfEvents) override
+    {
+        std::vector<uint32_t> theNumberOfEnabledChannelsList;
+        for(auto container : *this)
+        {
+            container->normalizeAndAverageContainers(numberOfEvents);
+            theNumberOfEnabledChannelsList.emplace_back(container->theNumberOfEnabledChannels_);
+        }
+        summary_->makeSummary(getAllObjectSummaryContainers(),theNumberOfEnabledChannelsList);//sum of chip container needed!!!
+    }
+
 
 protected:
 	virtual T* addObject(int objectId, T* object)
 	{
-		//std::cout << __PRETTY_FUNCTION__ << "P: " << object << std::endl;
 		std::vector<T*>::push_back(object);
 		Container::idObjectMap_[objectId] = this->back();
-		//std::cout << __PRETTY_FUNCTION__ << "P: " << Container::idObjectMap_[objectId] << std::endl;
 		return this->back();
 	}
 	std::map<int, T*> idObjectMap_;
@@ -138,16 +161,8 @@ public:
 	ChannelContainerBase(){;}
 	virtual ~ChannelContainerBase(){;}
 	virtual void normalize(uint16_t numberOfEvents) = 0;
-	//typedef std::vector<ChannelBase>::iterator iterator;
-	//typedef ChannelContainerBase::const_iterator const_iterator;
-
+	
 	virtual void print(void) = 0;
-	//virtual unsigned int size(void) = 0;
-	//virtual ChannelBase& getChannel(unsigned int channel) = 0;
-	//virtual iterator begin() = 0;
-	//virtual iterator end  () = 0;
-private:
-    //virtual void dummy(){};
 };
 
 template <typename T>
@@ -166,13 +181,10 @@ public:
 		for(auto& channel : *this) channel.normalize(numberOfEvents);
 	}
 
-	//unsigned int size(void){return std::vector<T>::size();}
-	T& getChannel(unsigned int channel) {return this->at(channel);}
-	//std::vector<ChannelBase>::iterator begin() override {return this->begin();}
-	//std::vector<ChannelBase>::iterator end  () override {return this->end();}
-	//typename std::vector<T>::iterator begin() {return this->begin();}
-	//typename std::vector<T>::iterator end  () {return this->end();}
-	friend std::ostream& operator<<(std::ostream& os, const ChannelContainer& channelContainer)
+	
+    T& getChannel(unsigned int channel) {return this->at(channel);}
+	
+    friend std::ostream& operator<<(std::ostream& os, const ChannelContainer& channelContainer)
 	{
 		for(auto& channel: channelContainer)
 			os << channel;
@@ -181,17 +193,17 @@ public:
 };
 
 
-class ChipContainer : public IdContainer//: public Container<void*>//, public ChipContainerBase
+class ChipContainer : public BaseContainer
 {
 public:
 	ChipContainer(int id)
-	: IdContainer(id)
+	: BaseContainer(id)
 	, nOfRows_  (0)
 	, nOfCols_  (1)
 	,container_ (nullptr)
 	{}
 	ChipContainer(int id, unsigned int numberOfRows, unsigned int numberOfCols=1)
-	: IdContainer(id)
+	: BaseContainer(id)
 	, nOfRows_  (numberOfRows)
 	, nOfCols_  (numberOfCols)
 	, container_(nullptr)
@@ -201,9 +213,8 @@ public:
 	typename ChannelContainer<T>::iterator begin(){return static_cast<ChannelContainer<T>*>(container_)->begin();}
 	template <typename T>
 	typename ChannelContainer<T>::iterator end  (){return static_cast<ChannelContainer<T>*>(container_)->end();}
-	//ChannelContainerBase::iterator begin(){return container_->begin();}
-	//ChannelContainerBase::iterator end  (){return container_->end();}
-	template <typename S, typename V>
+	
+    template <typename S, typename V>
 	void initialize() override
 	{	
 		summary_ = new Summary<S,V>();
@@ -211,14 +222,13 @@ public:
 	}
 	virtual ~ChipContainer(){if(container_ != nullptr) delete container_;}
 	void setNumberOfChannels(unsigned int numberOfRows, unsigned int numberOfCols=1){nOfRows_ = numberOfRows; nOfCols_ = numberOfCols;}
+    virtual const ChannelGroupBase* getChipOriginalMask() const {return nullptr;};
 
 	unsigned int size(void){return nOfRows_*nOfCols_;}
 	unsigned int getNumberOfRows(){return nOfRows_;}
 	unsigned int getNumberOfCols(){return nOfCols_;}
-    //int& operator[] (int x) {
-    //    return a[x];
-    //}
-	template <class T>
+    
+    template <class T>
 	T& getChannel(unsigned int channel)
 	{
 			return static_cast<ChannelContainer<T>*>(container_)->getChannel(channel);
@@ -227,6 +237,16 @@ public:
 	T* getChannelContainer() {return static_cast<T*>(container_);}
 	template <typename T>
 	void setChannelContainer(T* container) {container_ = container;}
+
+    void setNumberOfTestedAndUnmaskedChannels(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup) override
+    {
+        theNumberOfEnabledChannels_ = cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask());
+    }
+    void normalizeAndAverageContainers(uint16_t numberOfEvents) override
+    {
+        container_->normalize(numberOfEvents);
+        summary_->makeSummary(container_,theNumberOfEnabledChannels_);
+    }
 
 	ChannelContainerBase* container_;
 private:
@@ -248,8 +268,6 @@ class BoardContainer : public Container<ModuleContainer>
 {
 public:
 	BoardContainer(int id) : Container<ModuleContainer>(id){}
-	//void addObject(int id){addModule(id);}
-	//void fillFast(const Ph2_HwInterface::Event* event);
 	template <class T>
 	T*               addModuleContainer(int id, T* module){return static_cast<T*>(Container<ModuleContainer>::addObject(id, module));}
 	ModuleContainer* addModuleContainer(int id)                 {return Container<ModuleContainer>::addObject(id, new ModuleContainer(id));}

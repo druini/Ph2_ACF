@@ -179,6 +179,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     this->SetTestAllChannels(false);
 
     this->setDacAndMeasureOccupancy("VCth", cStartValue, fEventsPerPoint);
+
     // this->setDacAndMeasureOccupancy("VCth", cStartValue, fEventsPerPoint, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
     
     this->SetTestAllChannels(originalAllChannelFlag);
@@ -201,6 +202,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
                 for ( auto cCbc : cFe->fChipVector )
                 {
                     std::stringstream ss;
+                    
                     float cOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->summary_)->theSummary_.fOccupancy;
                     // float cOccupancy = backEndCbcOccupanyMap[cBoard->getBeId()][cFe->getFMCId()][cCbc->getChipId()];
                     cHoleModeFromOccupancy = (cOccupancy == 0) ? false :  true;

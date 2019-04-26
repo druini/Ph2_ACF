@@ -1,3 +1,17 @@
+/*
+
+        \file                          Container.h
+        \brief                         containers for DAQ
+        \author                        Fabio Ravera, Lorenzo Uplegger
+        \version                       1.0
+        \date                          26/04/19
+        Support :                      mail to : fabio.ravera@cern.ch
+
+ */
+
+#ifndef __CHANNELGROUPBASE_H__
+#define __CHANNELGROUPBASE_H__
+
 #include <iostream>
 #include <vector>
 #include <bitset>
@@ -269,5 +283,7 @@ protected:
 
 //     return 0;
 // }
+
+#endif
 
 
