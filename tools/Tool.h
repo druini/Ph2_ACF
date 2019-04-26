@@ -323,6 +323,11 @@ class Tool : public SystemController
     // measure occupancy per group
     void measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpChannelVec, BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap);
 
+
+    // set dac and measure occupancy
+    void setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents);
+    // set dac and measure occupancy per BeBoard
+    void setDacAndMeasureBeBoardOccupancy(unsigned int boardIndex, const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents);
     // measure occupancy
     void measureOccupancy(const uint16_t &numberOfEvents);
     // measure occupancy

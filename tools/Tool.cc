@@ -1,7 +1,9 @@
 #include "Tool.h"
 #include <TSystem.h>
+#include "../HWDescription/Chip.h"
 #include "../Utils/ObjectStreamer.h"
 #include "../Utils/ChannelGroupHandler.h"
+#include "../Utils/ContainerFactory.h"
 
 Tool::Tool() :
     SystemController(),
@@ -1386,8 +1388,28 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
     return;
 }
 
-#include "../Utils/Occupancy.h"
-#include "../Utils/OccupancyStream.h"
+
+// set dac and measure occupancy
+void Tool::setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents)
+{
+
+    for(unsigned int boardIndex=0; boardIndex<fDetectorContainer.size(); boardIndex++)
+    {
+        setDacAndMeasureBeBoardOccupancy(boardIndex, dacName, dacValue, numberOfEvents);
+    }
+
+    return;
+}
+
+
+// set dac and measure occupancy per BeBoard
+void Tool::setDacAndMeasureBeBoardOccupancy(unsigned int boardIndex, const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents)
+{
+    setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer.at(boardIndex)), dacName, dacValue);
+    measureBeBoardOccupancy(boardIndex, numberOfEvents);
+    return;
+}
+
 // measure occupancy
 void Tool::measureOccupancy(const uint16_t &numberOfEvents)
 {
@@ -1398,7 +1420,7 @@ void Tool::measureOccupancy(const uint16_t &numberOfEvents)
 	}
 
 }
-#include "../HWDescription/Definition.h"
+
 
 // measure occupancy
 void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numberOfEvents)
@@ -1429,6 +1451,7 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
                     }
                 }
             }
+
             measureBeBoardOccupancyPerGroup(boardIndex, numberOfEvents, group);
         }
 
@@ -1447,6 +1470,12 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
     {
         measureBeBoardOccupancyPerGroup(boardIndex, numberOfEvents, fChannelGroupHandler->allChannelGroup());
     }
+
+    //fDataContainer->SetGroupAndDetector()
+    //It need to be moved into the place the loop on boards is done
+    ContainerFactory   theDetectorFactory;
+    theDetectorFactory.normalizeAndAverageContainer(fDetectorContainer, *fDetectorDataContainer, numberOfEvents, fChannelGroupHandler->allChannelGroup());
+    
 /*
     //Evaluate module and BeBoard Occupancy
     for ( auto cFe : pBoard->fModuleVector )

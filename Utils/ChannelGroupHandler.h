@@ -14,14 +14,15 @@ public:
     {};
     virtual ~ChannelGroupBase(){;}
     virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfColsPerCluster, uint16_t numberOfRowsPerCluster=1) const = 0 ;
-    uint32_t getNumberOfEnabledChannels() const {return numberOfEnabledChannels_;}
-    virtual inline bool isChannelEnabled     (uint16_t col, uint16_t row = 0) const = 0;
-    virtual inline void enableChannel        (uint16_t col, uint16_t row = 0)       = 0;
-    virtual inline void disableChannel       (uint16_t col, uint16_t row = 0)       = 0;
-    virtual inline void disableAllChannels   (void                          )       = 0;
-    virtual inline void enableAllChannels    (void                          )       = 0;
-    virtual inline void flipAllChannels      (void                          )       = 0;
-    virtual inline bool areAllChannelsEnabled(void                          ) const = 0;
+    inline         uint32_t          getNumberOfEnabledChannels   (void                          ) const {return numberOfEnabledChannels_;}
+    virtual inline uint32_t          getNumberOfEnabledChannels   (const ChannelGroupBase* mask  ) const = 0;
+    virtual inline bool              isChannelEnabled             (uint16_t col, uint16_t row = 0) const = 0;
+    virtual inline void              enableChannel                (uint16_t col, uint16_t row = 0)       = 0;
+    virtual inline void              disableChannel               (uint16_t col, uint16_t row = 0)       = 0;
+    virtual inline void              disableAllChannels           (void                          )       = 0;
+    virtual inline void              enableAllChannels            (void                          )       = 0;
+    virtual inline void              flipAllChannels              (void                          )       = 0;
+    virtual inline bool              areAllChannelsEnabled        (void                          ) const = 0;
     
 protected:
     uint16_t         numberOfCols_           ;
@@ -51,6 +52,13 @@ public:
     inline void enableAllChannels    (void                          )       override { channelsBitset_.set()                         ; }
     inline void flipAllChannels      (void                          )       override { channelsBitset_.flip()                        ; }
     inline bool areAllChannelsEnabled(void                          ) const override { return channelsBitset_.all()                  ; }
+
+    inline uint32_t  getNumberOfEnabledChannels(const ChannelGroupBase* mask ) const
+    {
+        std::bitset<R*C> tmpBitset;
+        tmpBitset = this->channelsBitset_ & static_cast<const ChannelGroup<C,R>*>(mask)->channelsBitset_;
+        return tmpBitset.count();
+    }
 
     inline std::bitset<R*C> getBitset(void                          ) const          { return channelsBitset_                        ; }
     inline void setCustomPattern  (std::bitset<R*C> customChannelsBitset)       

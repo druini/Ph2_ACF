@@ -166,14 +166,20 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     else
         LOG (INFO) << BOLDBLUE << "Chip Type determined to be " << BOLDRED << "CBC2" << RESET;
 
-    std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
-    std::map<uint16_t, ModuleGlobalOccupancyMap > backEndCbcOccupanyMap;
-    float globalOccupancy=0;
+    DetectorContainer         theOccupancyContainer;
+    fDetectorDataContainer = &theOccupancyContainer;
+    ContainerFactory   theDetectorFactory;
+    theDetectorFactory.copyAndInitStructure<Occupancy>(fDetectorContainer, *fDetectorDataContainer);
 
+    // std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
+    // std::map<uint16_t, ModuleGlobalOccupancyMap > backEndCbcOccupanyMap;
+    // float globalOccupancy=0;
+    
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(false);
 
-    this->setDacAndMeasureOccupancy("VCth", cStartValue, fEventsPerPoint, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
+    this->setDacAndMeasureOccupancy("VCth", cStartValue, fEventsPerPoint);
+    // this->setDacAndMeasureOccupancy("VCth", cStartValue, fEventsPerPoint, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
     
     this->SetTestAllChannels(originalAllChannelFlag);
 
@@ -195,7 +201,8 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
                 for ( auto cCbc : cFe->fChipVector )
                 {
                     std::stringstream ss;
-                    float cOccupancy = backEndCbcOccupanyMap[cBoard->getBeId()][cFe->getFMCId()][cCbc->getChipId()];
+                    float cOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->summary_)->theSummary_.fOccupancy;
+                    // float cOccupancy = backEndCbcOccupanyMap[cBoard->getBeId()][cFe->getFMCId()][cCbc->getChipId()];
                     cHoleModeFromOccupancy = (cOccupancy == 0) ? false :  true;
 
                     if (cHoleModeFromOccupancy != cHoleModeFromSettings)
@@ -216,7 +223,8 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
             {
                 for ( auto cCbc : cFe->fChipVector )
                 {
-                    float cOccupancy = backEndCbcOccupanyMap[cBoard->getBeId()][cFe->getFMCId()][cCbc->getChipId()];
+                    float cOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->summary_)->theSummary_.fOccupancy;
+                    // float cOccupancy = backEndCbcOccupanyMap[cBoard->getBeId()][cFe->getFMCId()][cCbc->getChipId()];
                     fHoleMode = (cOccupancy == 0) ? false :  true;
                     std::string cMode = (fHoleMode) ? "Hole Mode" : "Electron Mode";
                     std::stringstream ss;
@@ -505,15 +513,14 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
 
     // if (pStartValue == 0) pStartValue = this->findPedestal();
 
-    bool cAllZero = false;
-    bool cAllOne = false;
-    int cAllZeroCounter = 0;
-    int cAllOneCounter = 0;
-    uint16_t cValue = pStartValue;
-    int cSign = 1;
-    int cIncrement = 0;
-    uint16_t cMaxValue = (1 << 10) - 1;
-
+    bool     cAllZero        = false;
+    bool     cAllOne         = false;
+    int      cAllZeroCounter = 0;
+    int      cAllOneCounter  = 0;
+    uint16_t cValue          = pStartValue;
+    int      cSign           = 1;
+    int      cIncrement      = 0;
+    uint16_t cMaxValue       = (1 << 10) - 1;
 
     //start with the threshold value found above
     // ThresholdVisitor cVisitor (fChipInterface, cValue);
@@ -521,25 +528,38 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
     while (! (cAllZero && cAllOne) )
     {
 
-        std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
-        std::map<uint16_t, ModuleGlobalOccupancyMap > backEndCbcOccupanyMap;
-        float globalOccupancy=0;
+        // std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
+        // std::map<uint16_t, ModuleGlobalOccupancyMap > backEndCbcOccupanyMap;
+        // float globalOccupancy=0;
 
-        this->setDacAndMeasureOccupancy("VCth", cValue, fEventsPerPoint, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
+        // this->setDacAndMeasureOccupancy("VCth", cValue, fEventsPerPoint, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
+        
+
+        DetectorContainer         theOccupancyContainer;
+        fDetectorDataContainer = &theOccupancyContainer;
+        ContainerFactory   theDetectorFactory;
+        theDetectorFactory.copyAndInitStructure<Occupancy>(fDetectorContainer, *fDetectorDataContainer);
+
+        this->setDacAndMeasureOccupancy("VCth", cValue, fEventsPerPoint);
 
 
         //filling histograms
         for ( auto cBoard : fBoardVector )
         {
+             // std::cout << "Board occupancy = " << static_cast<Summary<Occupancy,Occupancy>*>(theOccupancyContainer.at(cBoard->getBeId())->summary_)->theSummary_.fOccupancy << std::endl;
+
             for ( auto cFe : cBoard->fModuleVector )
             {
+                 // std::cout << "Module occupancy = " << static_cast<Summary<Occupancy,Occupancy>*>(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->summary_)->theSummary_.fOccupancy << std::endl;
                 for ( auto cCbc : cFe->fChipVector )
                 {
+                    // std::cout << "Chip occupancy = " << static_cast<Summary<Occupancy,Occupancy>*>(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->summary_)->theSummary_.fOccupancy << std::endl;
                     TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (cCbc, pHistName) );
-
-                    for (int cChannel=0; cChannel<=backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()].size(); ++cChannel)
+                    for (uint32_t cChannel = 0; cChannel < NCHANNELS; cChannel++)
+                    // for (int cChannel=0; cChannel<=backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()].size(); ++cChannel)
                     {
-                        float tmpOccupancy = backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()][cChannel];
+                        float tmpOccupancy = theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->getChannel<Occupancy>(cChannel).fOccupancy;
+                        // float tmpOccupancy = backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()][cChannel];
                         cSCurveHist->SetBinContent ( cChannel+1, cValue+1, tmpOccupancy);
                         cSCurveHist->SetBinError   ( cChannel+1, cValue+1, sqrt(tmpOccupancy*(1.-tmpOccupancy)/fEventsPerPoint));
                     }
@@ -547,6 +567,8 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
             }
         }
 
+        float globalOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(theOccupancyContainer.summary_)->theSummary_.fOccupancy;
+        // std::cout<<globalOccupancy<<std::endl;
         //now establish if I'm zero or one
         if (globalOccupancy == 0) ++cAllZeroCounter;
 

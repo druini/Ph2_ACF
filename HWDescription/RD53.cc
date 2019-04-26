@@ -545,7 +545,7 @@ namespace Ph2_HwDescription
     quadCol = (coreCol << NBIT_SIDE) | side;
   }
   
-  uint16_t RD53::getNumberOfChannels () const
+  uint32_t RD53::getNumberOfChannels () const
   {
     return NCOLS * NROWS;
   }

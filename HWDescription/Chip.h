@@ -135,7 +135,7 @@ namespace Ph2_HwDescription {
             fChipId = pChipId;
         }
 
-        virtual uint16_t getNumberOfChannels() const  = 0;
+        virtual uint32_t getNumberOfChannels() const  = 0;
 
         virtual std::vector<uint8_t>& getChipMask() = 0;
 

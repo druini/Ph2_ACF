@@ -17,14 +17,74 @@
 #include <map>
 #include "../Utils/Exception.h"
 
+class ChannelContainerBase;
+template <typename T>
+class ChannelContainer;
+class SummaryContainerBase;
+
+class SummaryBase
+{
+public:
+	SummaryBase() {;}
+	virtual ~SummaryBase() {;}
+	virtual void makeSummary(const ChannelContainerBase* theChannelList, const uint32_t numberOfEnabledChannels) = 0;
+	virtual void makeSummary(const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList) = 0;
+};
+
+class SummaryContainerBase 
+{
+public:
+	SummaryContainerBase() {;}
+	~SummaryContainerBase() {;}
+	virtual void emplace_back(SummaryBase* theSummary) = 0;
+};
+
+template <typename T>
+class SummaryContainer : public std::vector<T*>, public SummaryContainerBase
+{
+public:
+	SummaryContainer() {;}
+	~SummaryContainer() {;}
+	void emplace_back(SummaryBase* theSummary) override
+	{
+		std::vector<T*>::emplace_back(theSummary);
+	}
+};
+
+
+template <class S, class C>
+class Summary : public SummaryBase
+{
+public:
+	Summary() {;}
+	~Summary() {;}
+	void makeSummary(const ChannelContainerBase* theChannelList, const uint32_t numberOfEnabledChannels) override
+	{
+		theSummary_.makeAverage(static_cast<const ChannelContainer<C>*>(theChannelList), numberOfEnabledChannels);
+	}
+	void makeSummary(const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList) override
+	{
+		const SummaryContainer<SummaryBase>* tmpSummaryContainer = static_cast<const SummaryContainer<SummaryBase>*>(theSummaryList);
+		std::vector<C> tmpSummaryVector;
+		for(auto summary : *tmpSummaryContainer) tmpSummaryVector.emplace_back(static_cast<Summary<S,C>*>(summary)->theSummary_);
+		theSummary_.makeAverage(&tmpSummaryVector,theNumberOfEnabledChannelsList);
+		// theSummary_.makeAverage(static_cast<const std::vector<C*>*>(static_cast<const SummaryContainer<C>*>(theSummaryList)),theNumberOfEnabledChannelsList);
+	}
+
+	S theSummary_;
+};
+
+
 class IdContainer
 {
 public:
 	IdContainer(int id=-1) : id_(id){;}
 	int getId(void) {return id_;}
+	virtual void initialize() {;}
+	SummaryBase *summary_;
+	
 private:
 	int id_;
-
 };
 
 template <class T>
@@ -46,6 +106,17 @@ public:
 		if(idObjectMap_.find(id) == idObjectMap_.end()) throw Ph2_HwDescription::Exception("T* getObject(int id) : Object Id not found");
 		return idObjectMap_[id];
 	}
+	template <typename S, typename V>
+	void initialize() override
+	{	
+		summary_ = new Summary<S,V>();
+	}
+	SummaryContainerBase* getAllObjectSummaryContainers() const
+	{
+		SummaryContainerBase *SummaryContainerList = new SummaryContainer<SummaryBase>;
+		for(auto container : *this) SummaryContainerList->emplace_back(container->summary_);
+		return SummaryContainerList;
+	}
 
 protected:
 	virtual T* addObject(int objectId, T* object)
@@ -60,28 +131,13 @@ protected:
 };
 
 
-class SummaryContainerBase
-{
-public:
-	SummaryContainerBase() {;}
-	virtual ~SummaryContainerBase() {;}
-};
-
-
-template <class T>
-class SummaryContainer : public SummaryContainerBase
-{
-public:
-	SummaryContainer() {;}
-	~SummaryContainer() {;}
-};
-
 
 class ChannelContainerBase
 {
 public:
 	ChannelContainerBase(){;}
 	virtual ~ChannelContainerBase(){;}
+	virtual void normalize(uint16_t numberOfEvents) = 0;
 	//typedef std::vector<ChannelBase>::iterator iterator;
 	//typedef ChannelContainerBase::const_iterator const_iterator;
 
@@ -105,6 +161,11 @@ public:
 		for(auto& channel: *this)
 			channel.print();
 	}
+	void normalize(uint16_t numberOfEvents) override
+	{
+		for(auto& channel : *this) channel.normalize(numberOfEvents);
+	}
+
 	//unsigned int size(void){return std::vector<T>::size();}
 	T& getChannel(unsigned int channel) {return this->at(channel);}
 	//std::vector<ChannelBase>::iterator begin() override {return this->begin();}
@@ -142,10 +203,11 @@ public:
 	typename ChannelContainer<T>::iterator end  (){return static_cast<ChannelContainer<T>*>(container_)->end();}
 	//ChannelContainerBase::iterator begin(){return container_->begin();}
 	//ChannelContainerBase::iterator end  (){return container_->end();}
-	template <typename T>
-	void initialize()
-	{
-		container_ = static_cast<ChannelContainerBase*>(new ChannelContainer<T>(nOfRows_*nOfCols_));
+	template <typename S, typename V>
+	void initialize() override
+	{	
+		summary_ = new Summary<S,V>();
+		container_ = static_cast<ChannelContainerBase*>(new ChannelContainer<V>(nOfRows_*nOfCols_));
 	}
 	virtual ~ChipContainer(){if(container_ != nullptr) delete container_;}
 	void setNumberOfChannels(unsigned int numberOfRows, unsigned int numberOfCols=1){nOfRows_ = numberOfRows; nOfCols_ = numberOfCols;}
@@ -166,10 +228,10 @@ public:
 	template <typename T>
 	void setChannelContainer(T* container) {container_ = container;}
 
+	ChannelContainerBase* container_;
 private:
 	unsigned int nOfRows_;
 	unsigned int nOfCols_;
-	ChannelContainerBase* container_;
 };
 
 class ModuleContainer : public Container<ChipContainer>

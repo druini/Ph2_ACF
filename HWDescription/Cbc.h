@@ -83,7 +83,7 @@ namespace Ph2_HwDescription {
         */
         void saveRegMap ( const std::string& filename );
 
-        uint16_t getNumberOfChannels() const override { return NCHANNELS; }
+        uint32_t getNumberOfChannels() const override { return NCHANNELS; }
 
         bool IsChannelUnMasked(uint32_t cChan) const override {return ( fChipMask[cChan>>3]>>(cChan&0x7)) & 0x1; };
 

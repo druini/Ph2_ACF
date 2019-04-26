@@ -13,6 +13,7 @@
 #define __OCCUPANCY_H__
 
 #include <iostream>
+#include "../Utils/Container.h"
 
 class Occupancy //: public streammable
 {
@@ -22,19 +23,38 @@ public:
 	{;}
 	~Occupancy(){;}
 	void print(void){ std::cout << fOccupancy << std::endl;}
-	uint32_t fOccupancy;
-};
+    void makeAverage(const std::vector<Occupancy>* theOccupancyVector, const uint32_t numberOfEnabledChannels)
+    {
+        for(auto occupancy : *theOccupancyVector) 
+        {
+            // std::cout<<occupancy.fOccupancy<<std::endl;
+            fOccupancy+=occupancy.fOccupancy;
+        }
+        fOccupancy/=float(numberOfEnabledChannels);
+    }
+    void makeAverage(const std::vector<Occupancy>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList)
+    {
+        if(theOccupancyVector->size()!=theNumberOfEnabledChannelsList.size()) 
+        {
+            std::cout << __PRETTY_FUNCTION__ << "theOccupancyVector size = " << theOccupancyVector->size() 
+            << " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
+            abort();
+        }
+        float totalNumberOfEnableChannels = 0;
+        for(size_t iContainer = 0; iContainer<theOccupancyVector->size(); ++iContainer)
+        {
+            // std::cout<<theOccupancyVector->at(iContainer)->fOccupancy<<std::endl;
+            fOccupancy+=(theOccupancyVector->at(iContainer).fOccupancy*float(theNumberOfEnabledChannelsList[iContainer]));
+            totalNumberOfEnableChannels+=theNumberOfEnabledChannelsList[iContainer];
+        }
+        fOccupancy/=float(totalNumberOfEnableChannels);
+    }
+    void normalize(uint16_t numberOfEvents) 
+    {
+        fOccupancy/=float(numberOfEvents);
+    }
 
-
-class OccupancySummary //: public streammable
-{
-public:
-    OccupancySummary()
-    : fOccupancySummary(0)
-    {;}
-    ~OccupancySummary(){;}
-    void print(void){ std::cout << fOccupancySummary << std::endl;}
-    uint32_t fOccupancySummary;
+	float  fOccupancy;
 };
 
 

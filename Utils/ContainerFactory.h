@@ -17,6 +17,7 @@
 #include <vector>
 #include <map>
 
+class ChannelGroupBase;
 
 class ContainerFactory
 {
@@ -53,27 +54,64 @@ public:
 		}
 	}
 
-	template<typename T>
+	// template<typename T>
+	// void copyAndInitStructure(DetectorContainer& original, DetectorContainer& copy)
+	// {
+	// 	copy.initialize<T>();
+	// 	for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
+	// 	{
+	// 		BoardContainer* copyBoard = copy.addBoardContainer((*board)->getId());
+	// 		copy.back()->initialize<T>();
+	// 		for(ModuleContainer* module : **board)
+	// 		{
+	// 			ModuleContainer* copyModule = copyBoard->addModuleContainer(module->getId());
+	// 			copyBoard->back()->initialize<T>();
+	// 			for(ChipContainer* chip : *module)
+	// 			{
+	// 				copyModule->addChipContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
+	// 				copyModule->back()->initialize<T>();
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+
+	template<typename T, typename SC, typename SM, typename SB, typename SD>
 	void copyAndInitStructure(DetectorContainer& original, DetectorContainer& copy)
 	{
-		std::cout << __PRETTY_FUNCTION__  << &original  <<  " " << &copy << std::endl;
+		copy.initialize<SD,SB>();
 		for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
 		{
 			BoardContainer* copyBoard = copy.addBoardContainer((*board)->getId());
-			std::cout << __PRETTY_FUNCTION__  << copyBoard << std::endl;
+			copy.back()->initialize<SB,SM>();
 			for(ModuleContainer* module : **board)
 			{
-				std::cout << "Module" << std::endl;
 				ModuleContainer* copyModule = copyBoard->addModuleContainer(module->getId());
+				copyBoard->back()->initialize<SM,SC>();
 				for(ChipContainer* chip : *module)
 				{
-					std::cout << "Chip" << std::endl;
 					copyModule->addChipContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
-					copyModule->back()->initialize<T>();
+					copyModule->back()->initialize<SC,T>();
 				}
 			}
 		}
 	}
+
+	template<typename T>
+	void copyAndInitStructure(DetectorContainer& original, DetectorContainer& copy)
+	{
+		copyAndInitStructure<T,T,T,T,T>(original, copy);
+	}
+
+
+	template<typename T, typename SC>
+	void copyAndInitStructure(DetectorContainer& original, DetectorContainer& copy)
+	{
+		copyAndInitStructure<T,SC,SC,SC,SC>(original, copy);
+	}
+
+	void normalizeAndAverageContainer(DetectorContainer& theDetector, DetectorContainer& theDetectorData, uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup);
+
 	//EXAMPLES
 	//	void buildDetectorUsingFile(DetectorContainer& detector)
 	//	{
