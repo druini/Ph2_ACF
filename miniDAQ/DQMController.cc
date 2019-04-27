@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     DetectorContainer         theOccupancyContainer;
     
     ContainerFactory   theDetectorFactory;
-    theDetectorFactory.copyAndInitStructure<Occupancy>(cTool.fDetectorContainer, theOccupancyContainer);
+    theDetectorFactory.copyAndInitStructure<Occupancy>(*cTool.fDetectorContainer, theOccupancyContainer);
     
 	DQMHistogramController theDQMHistogramController("127.0.0.1",6000);
 //	DQMHistogramController theDQMHistogramController("192.168.0.100",6000);

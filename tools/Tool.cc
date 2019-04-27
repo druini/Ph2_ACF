@@ -1391,7 +1391,7 @@ void Tool::measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpC
 // set dac and measure occupancy
 void Tool::setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents)
 {
-    for(unsigned int boardIndex=0; boardIndex<fDetectorContainer.size(); boardIndex++)
+    for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
     {
         setDacAndMeasureBeBoardOccupancy(boardIndex, dacName, dacValue, numberOfEvents);
     }
@@ -1403,7 +1403,7 @@ void Tool::setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t 
 // set dac and measure occupancy per BeBoard
 void Tool::setDacAndMeasureBeBoardOccupancy(unsigned int boardIndex, const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents)
 {
-    setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer.at(boardIndex)), dacName, dacValue);
+    setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)), dacName, dacValue);
     measureBeBoardOccupancy(boardIndex, numberOfEvents);
     return;
 }
@@ -1411,7 +1411,7 @@ void Tool::setDacAndMeasureBeBoardOccupancy(unsigned int boardIndex, const std::
 // measure occupancy
 void Tool::measureOccupancy(const uint16_t &numberOfEvents)
 {
-	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer.size(); boardIndex++)
+	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
         measureBeBoardOccupancy(boardIndex, numberOfEvents);
     	fObjectStream->streamAndSendBoard(fDetectorDataContainer->at(boardIndex), fNetworkStreamer);
@@ -1433,7 +1433,7 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
             
             if(fMaskChannelsFromOtherGroups || fTestPulse)
             {
-                for ( auto cFe : *(fDetectorContainer.at(boardIndex)))
+                for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
                 {
                     for ( auto cChip : *cFe )
                     {
@@ -1454,7 +1454,7 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
 
         if(fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
         {
-            for ( auto cFe : *(fDetectorContainer.at(boardIndex)) )
+            for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
             {
                 for ( auto cChip : *cFe )
                 {
@@ -1469,7 +1469,7 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
     }
 
     //It need to be moved into the place the loop on boards is done
-    fDetectorDataContainer->setNumberOfTestedAndUnmaskedChannels(&fDetectorContainer,fChannelGroupHandler->allChannelGroup());
+    fDetectorDataContainer->setNumberOfTestedAndUnmaskedChannels(fDetectorContainer,fChannelGroupHandler->allChannelGroup());
     fDetectorDataContainer->normalizeAndAverageContainers(numberOfEvents);
     
 /*
@@ -1534,9 +1534,9 @@ void Tool::measureBeBoardOccupancy(unsigned int boardIndex, const uint16_t numbe
 
 void Tool::measureBeBoardOccupancyPerGroup(unsigned int boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup)
 {
-    ReadNEvents ( static_cast<BeBoard*>(fDetectorContainer.at(boardIndex)), numberOfEvents );
+    ReadNEvents ( static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)), numberOfEvents );
     // Loop over Events from this Acquisition
-    const std::vector<Event*>& events = GetEvents ( static_cast<BeBoard*>(fDetectorContainer.at(boardIndex)) );
+    const std::vector<Event*>& events = GetEvents ( static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)) );
     for ( auto& event : events )
     	event->fillOccupancy((fDetectorDataContainer->at(boardIndex)), cTestChannelGroup);
 

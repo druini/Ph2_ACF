@@ -51,18 +51,18 @@ namespace Ph2_HwDescription {
         // D'tor
         ~Module()
         {
-            for ( auto& pChip : fChipVector )
-                if (pChip) delete pChip;
+            // for ( auto& pChip : fChipVector )
+            //     if (pChip) delete pChip;
 
-            fChipVector.clear();
+            // fChipVector.clear();
 
-            for ( auto& pMPA : fMPAVector )
-                delete pMPA;
+            // for ( auto& pMPA : fMPAVector )
+            //     delete pMPA;
 
-       	    for ( auto& pSSA : fSSAVector )
-            delete pSSA;
+       	    // for ( auto& pSSA : fSSAVector )
+            // delete pSSA;
 
-            fMPAVector.clear();
+            // fMPAVector.clear();
  
 	    // for ( auto& pRD53 : fRD53Vector )
 	    //   if (pRD53) delete pRD53;

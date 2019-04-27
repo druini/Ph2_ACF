@@ -63,14 +63,14 @@ void SystemController::Destroy()
 	if (fBeBoardInterface) delete fBeBoardInterface;
 
 	if (fChipInterface)  delete fChipInterface;
+	if(fDetectorContainer) delete fDetectorContainer;
 
 	fBeBoardFWMap.clear();
 	fSettingsMap.clear();
+	// for ( auto& el : fBoardVector )
+	// 	if (el) delete el;
 
-	for ( auto& el : fBoardVector )
-		if (el) delete el;
-
-	fBoardVector.clear();
+	// fBoardVector.clear();
 
 	if (fData) delete fData;
 }
@@ -134,6 +134,7 @@ void SystemController::InitializeHw ( const std::string& pFilename, std::ostream
 		}
 	}
 	// this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, os, pIsFile );
+	fDetectorContainer = new DetectorContainer;
 	this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile );
 
 	fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );

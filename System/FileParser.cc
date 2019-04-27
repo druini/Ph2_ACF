@@ -16,7 +16,7 @@ void FileParser::parseHW ( const std::string& pFilename, BeBoardFWMap& pBeBoardF
 		LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xml!" ;
 }
 
-void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer& pDetectorContainer, std::ostream& os, bool pIsFile)
+void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
 {
 	//FIXME-FR
 	if (pIsFile && pFilename.find ( ".xml" ) != std::string::npos )
@@ -114,7 +114,7 @@ void FileParser::parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoa
 	os << "\n";
 }
 
-void FileParser::parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer& pDetectorContainer, std::ostream& os, bool pIsFile )
+void FileParser::parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile )
 {
 	// uint32_t cNBeBoard = 0;
 	int i, j;
@@ -277,12 +277,12 @@ void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoar
 
 }
 
-void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer& pDetectorContainer, std::ostream& os )
+void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os )
 {
 
 
 	uint32_t cBeId = pBeBordNode.attribute ( "Id" ).as_int();
-	BeBoard* cBeBoard = pDetectorContainer.addBoardContainer(cBeId, new BeBoard ( cBeId ));//FIX Change it to Reference!!!!
+	BeBoard* cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard ( cBeId ));//FIX Change it to Reference!!!!
 	pBoardVector.emplace_back ( cBeBoard );
 
 	pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute ("boardType");

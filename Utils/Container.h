@@ -69,6 +69,7 @@ public:
 		std::vector<C> tmpSummaryVector;
 		for(auto summary : *tmpSummaryContainer) tmpSummaryVector.emplace_back(static_cast<Summary<S,C>*>(summary)->theSummary_);
 		theSummary_.makeAverage(&tmpSummaryVector,theNumberOfEnabledChannelsList);
+        delete theSummaryList;
 	}
 
 	S theSummary_;
@@ -78,12 +79,23 @@ public:
 class BaseContainer
 {
 public:
-	BaseContainer(int id=-1) : id_(id){;}
+	BaseContainer(int id=-1) 
+    : summary_(nullptr)
+    , theNumberOfEnabledChannels_(-1)
+    , id_(id){;}
+    virtual ~BaseContainer()
+    {
+        if(summary_ != nullptr) 
+        {
+            delete summary_;
+            summary_ = nullptr;
+        }
+    }
 	int getId(void) {return id_;}
 	virtual void initialize() {;}
     virtual void setNumberOfTestedAndUnmaskedChannels(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup) = 0;
     virtual void normalizeAndAverageContainers(uint16_t numberOfEvents) = 0;
-
+    
     SummaryBase *summary_;
     uint32_t theNumberOfEnabledChannels_;
 	
@@ -95,16 +107,24 @@ template <class T>
 class Container : public std::vector<T*> , public BaseContainer
 {
 public:
-	Container(int id) : BaseContainer(id) {}
-	Container(unsigned int size) : std::vector<T*>(size) {}
-	virtual ~Container()
+	Container(int id) : BaseContainer(id)
 	{
-		//FIX REMEBER TO DESTROY!!!!!!!!!!!!!!!!!!!!!!
-		//for(auto object : *this)
-		//	delete object;
-		//this->clear();
-		//idObjectMap_.clear();
 	}
+	Container(unsigned int size) : std::vector<T*>(size) {}
+	virtual ~Container() 
+    {
+        reset();
+    }
+    void reset()
+    {
+        for(auto object : *this)
+        {
+            delete object;
+        }
+        this->clear();
+        idObjectMap_.clear(); 
+    }
+
 	T* getObject(int id)
 	{
 		if(idObjectMap_.find(id) == idObjectMap_.end()) throw Ph2_HwDescription::Exception("T* getObject(int id) : Object Id not found");
@@ -209,6 +229,11 @@ public:
 	, container_(nullptr)
 	{
 	}
+	virtual ~ChipContainer()
+    {
+        reset();
+    }
+
 	template <typename T>
 	typename ChannelContainer<T>::iterator begin(){return static_cast<ChannelContainer<T>*>(container_)->begin();}
 	template <typename T>
@@ -220,7 +245,6 @@ public:
 		summary_ = new Summary<S,V>();
 		container_ = static_cast<ChannelContainerBase*>(new ChannelContainer<V>(nOfRows_*nOfCols_));
 	}
-	virtual ~ChipContainer(){if(container_ != nullptr) delete container_;}
 	void setNumberOfChannels(unsigned int numberOfRows, unsigned int numberOfCols=1){nOfRows_ = numberOfRows; nOfCols_ = numberOfCols;}
     virtual const ChannelGroupBase* getChipOriginalMask() const {return nullptr;};
 
@@ -246,6 +270,14 @@ public:
     {
         container_->normalize(numberOfEvents);
         summary_->makeSummary(container_,theNumberOfEnabledChannels_);
+    }
+    void reset()
+    {
+        if(container_ != nullptr) 
+        {
+            delete container_;
+            container_ = nullptr;
+        }
     }
 
 	ChannelContainerBase* container_;

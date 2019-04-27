@@ -73,7 +73,7 @@ namespace Ph2_System {
         SSAInterface*           fSSAInterface;               //!< Interface to the SSA
         MPAInterface*           fMPAInterface;               //!< Interface to the MPA
 
-        DetectorContainer       fDetectorContainer;          //Detector Container
+        DetectorContainer*      fDetectorContainer;          //Detector Container
         BeBoardVec              fBoardVector;                //!< Vector of Board pointers
         BeBoardFWMap            fBeBoardFWMap;
         SettingsMap             fSettingsMap;                //!< Maps the settings

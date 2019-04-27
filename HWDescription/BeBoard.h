@@ -62,10 +62,10 @@ namespace Ph2_HwDescription {
         */
         ~BeBoard()
         {
-            for ( auto& pModule : fModuleVector )
-                if (pModule) delete pModule;
+            // for ( auto& pModule : fModuleVector )
+            //     if (pModule) delete pModule;
 
-            fModuleVector.clear();
+            // fModuleVector.clear();
         }
 
         // Public Methods

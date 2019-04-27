@@ -169,7 +169,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     DetectorContainer         theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory   theDetectorFactory;
-    theDetectorFactory.copyAndInitStructure<Occupancy>(fDetectorContainer, *fDetectorDataContainer);
+    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
     // std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
     // std::map<uint16_t, ModuleGlobalOccupancyMap > backEndCbcOccupanyMap;
@@ -354,7 +354,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     fObjectStream          = &theOccupancyStream;
 
     ContainerFactory   theDetectorFactory;
-	theDetectorFactory.copyAndInitStructure<Occupancy>(fDetectorContainer, *fDetectorDataContainer);
+	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 	std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
     std::map<uint16_t, ModuleGlobalOccupancyMap>     backEndCbcOccupanyMap;
     float globalOccupancy=0;
@@ -540,7 +540,7 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
         DetectorContainer         theOccupancyContainer;
         fDetectorDataContainer = &theOccupancyContainer;
         ContainerFactory   theDetectorFactory;
-        theDetectorFactory.copyAndInitStructure<Occupancy>(fDetectorContainer, *fDetectorDataContainer);
+        theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
         this->setDacAndMeasureOccupancy("VCth", cValue, fEventsPerPoint);
 
