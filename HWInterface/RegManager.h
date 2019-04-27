@@ -42,6 +42,7 @@ namespace Ph2_HwInterface {
         const char* fUri;
         const char* fAddressTable;
         const char* fId;
+        std::ofstream log_file;
 
       public:
         // Connection w uHal

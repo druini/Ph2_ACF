@@ -10,17 +10,18 @@
 #include "RD53.h"
 #include "../Utils/ChannelGroupHandler.h"
 
+#include <unordered_map>
 
 namespace Ph2_HwDescription
 {
-  RD53::RD53 ( const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename ) : Chip (pFeDesc, pRD53Id)
+  RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename) : Chip (pFeDesc, pRD53Id)
   {
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
     fChipOriginalMask = new ChannelGroup<NCOLS, NROWS>;
   }
 
-  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename ) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
+  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
   {
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
@@ -339,7 +340,7 @@ namespace Ph2_HwDescription
       }
   }
 
-  void RD53::enablePixel(unsigned int row, unsigned int col)
+  void RD53::enablePixel (unsigned int row, unsigned int col)
   {
     fPixelsConfig[col].Enable[row] = 1;
     fPixelsConfig[col].HitBus[row] = 1;
@@ -353,7 +354,7 @@ namespace Ph2_HwDescription
       }
   }
 
-  void RD53::injectPixel(unsigned int row, unsigned int col)
+  void RD53::injectPixel (unsigned int row, unsigned int col)
   {
     fPixelsConfig[col].InjEn[row] = 1;
   }
@@ -539,10 +540,10 @@ namespace Ph2_HwDescription
   }
   
   void RD53::ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side,
-				   unsigned int& row, unsigned int& quadCol)
+				   unsigned int& row, unsigned int& col)
   {
-    row     = coreRowAndRegion;
-    quadCol = (coreCol << NBIT_SIDE) | side;
+    row = coreRowAndRegion;
+    col = 4 * ((coreCol << NBIT_SIDE) | side);
   }
   
   uint32_t RD53::getNumberOfChannels () const
@@ -558,318 +559,184 @@ namespace Ph2_HwDescription
 
   uint8_t RD53::getNumberOfBits (const std::string& dacName)
   {
-    // #################
-    // # Pixel Section #
-    // #################
-    if (dacName == "PIX_PORTAL")
-	  return 16;
-    if (dacName == "REGION_COL")
-	  return 8;
-    if (dacName == "REGION_ROW")
-      return 8;
-    if (dacName == "PIX_MODE")
-      return 6;
-    if (dacName == "PIX_DEFAULT_CONFIG")
-      return 16;
+    static const std::unordered_map<std::string, uint8_t> reg_length_map = {
+      // #################
+      // # Pixel Section #
+      // #################
+      {"PIX_PORTAL", 16},
+      {"REGION_COL", 8},
+      {"REGION_ROW", 8},
+      {"PIX_MODE", 6},
+      {"PIX_DEFAULT_CONFIG", 16},
 
-    // #########################
-    // # Synchronous Front End #
-    // #########################
-    if (dacName == "IBIASP1_SYNC")
-      return 9;
-    if (dacName == "IBIASP2_SYNC")
-      return 9;
-    if (dacName == "IBIAS_SF_SYNC")
-      return 9;
-    if (dacName == "IBIAS_KRUM_SYNC")
-      return 9;
-    if (dacName == "IBIAS_DISC_SYNC")
-      return 9;
-    if (dacName == "ICTRL_SYNCT_SYNC")
-      return 10;
-    if (dacName == "VBL_SYNC")
-      return 10;
-    if (dacName == "VTH_SYNC")
-      return 10;
-    if (dacName == "VREF_KRUM_SYNC")
-      return 10;
+      // #########################
+      // # Synchronous Front End #
+      // #########################
+      {"IBIASP1_SYNC", 9},
+      {"IBIASP2_SYNC", 9},
+      {"IBIAS_SF_SYNC", 9},
+      {"IBIAS_KRUM_SYNC", 9},
+      {"IBIAS_DISC_SYNC", 9},
+      {"ICTRL_SYNCT_SYNC", 10},
+      {"VBL_SYNC", 10},
+      {"VTH_SYNC", 10},
+      {"VREF_KRUM_SYNC", 10},
 
-    // ####################
-    // # Linear Front End #
-    // ####################
-    if (dacName == "PA_IN_BIAS_LIN")
-      return 9;
-    if (dacName == "FC_BIAS_LIN")
-      return 8;
-    if (dacName == "KRUM_CURR_LIN")
-      return 9;
-    if (dacName == "LDAC_LIN")
-      return 10;
-    if (dacName == "COMP_LIN")
-      return 9;
-    if (dacName == "REF_KRUM_LIN")
-      return 10;
-    if (dacName == "Vthreshold_LIN")
-      return 10;
+      // ####################
+      // # Linear Front End #
+      // ####################
+      {"PA_IN_BIAS_LIN", 9},
+      {"FC_BIAS_LIN", 8},
+      {"KRUM_CURR_LIN", 9},
+      {"LDAC_LIN", 10},
+      {"COMP_LIN", 9},
+      {"REF_KRUM_LIN", 10},
+      {"Vthreshold_LIN", 10},
 
-    // ##########################
-    // # Differential Front End #
-    // ##########################
-    if (dacName == "PRMP_DIFF")
-      return 10;
-    if (dacName == "FOL_DIFF")
-      return 10;
-    if (dacName == "PRECOMP_DIFF")
-      return 10;
-    if (dacName == "COMP_DIFF")
-      return 10;
-    if (dacName == "VFF_DIFF")
-      return 10;
-    if (dacName == "VTH1_DIFF")
-      return 10;
-    if (dacName == "VTH2_DIFF")
-      return 10;
-    if (dacName == "LCC_DIFF")
-      return 10;
+      // ##########################
+      // # Differential Front End #
+      // ##########################
+      {"PRMP_DIFF", 10},
+      {"FOL_DIFF", 10},
+      {"PRECOMP_DIFF", 10},
+      {"COMP_DIFF", 10},
+      {"VFF_DIFF", 10},
+      {"VTH1_DIFF", 10},
+      {"VTH2_DIFF", 10},
+      {"LCC_DIFF", 10},
 
-    // #######################
-    // # Auxiliary Registers #
-    // #######################
-    if (dacName == "CONF_FE_SYNC")
-      return 5;
-    if (dacName == "CONF_FE_DIFF")
-      return 2;
-    if (dacName == "VOLTAGE_TRIM")
-      return 10;
+      // #######################
+      // # Auxiliary Registers #
+      // #######################
+      {"CONF_FE_SYNC", 5},
+      {"CONF_FE_DIFF", 2},
+      {"VOLTAGE_TRIM", 10},
 
-    // ##################
-    // # Digital Matrix #
-    // ##################
-    if (dacName == "EN_CORE_COL_SYNC")
-      return 16;
-    if (dacName == "EN_CORE_COL_LIN_1")
-      return 16;
-    if (dacName == "EN_CORE_COL_LIN_2")
-      return 1;
-    if (dacName == "EN_CORE_COL_DIFF_1")
-      return 16;
-    if (dacName == "EN_CORE_COL_DIFF_2")
-      return 1;
-    if (dacName == "LATENCY_CONFIG")
-      return 9;
-    if (dacName == "WR_SYNC_DELAY_SYNC")
-      return 5;
+      // ##################
+      // # Digital Matrix #
+      // ##################
+      {"EN_CORE_COL_SYNC", 16},
+      {"EN_CORE_COL_LIN_1", 16},
+      {"EN_CORE_COL_LIN_2", 1},
+      {"EN_CORE_COL_DIFF_1", 16},
+      {"EN_CORE_COL_DIFF_2", 1},
+      {"LATENCY_CONFIG", 9},
+      {"WR_SYNC_DELAY_SYNC", 5},
 
-    // #############
-    // # Injection #
-    // #############
-    if (dacName == "INJECTION_SELECT")
-      return 6;
-    if (dacName == "CLK_DATA_DELAY")
-      return 9;
-    if (dacName == "VCAL_HIGH")
-      return 12;
-    if (dacName == "VCAL_MED")
-      return 12;
-    if (dacName == "CH_SYNC_CONF")
-      return 12;
-    if (dacName == "GLOBAL_PULSE_ROUTE")
-      return 16;
-    if (dacName == "MONITOR_FRAME_SKIP")
-      return 8;
-    if (dacName == "EN_MACRO_COL_CAL_SYNC_1")
-      return 16;
-    if (dacName == "EN_MACRO_COL_CAL_SYNC_2")
-      return 16;
-    if (dacName == "EN_MACRO_COL_CAL_SYNC_3")
-      return 16;
-    if (dacName == "EN_MACRO_COL_CAL_SYNC_4")
-      return 16;
-    if (dacName == "EN_MACRO_COL_CAL_LIN_1")
-      return 16;
-    if (dacName == "EN_MACRO_COL_CAL_LIN_2")
-      return 16;
-    if (dacName == "EN_MACRO_COL_CAL_LIN_3")
-      return 16;
-    if (dacName == "EN_MACRO_COL_CAL_LIN_4")
-      return 16;
-    if (dacName == "EN_MACRO_COL_CAL_LIN_5")
-      return 4;
-    if (dacName == "EN_MACRO_COL_CAL_DIFF_1")
-      return 16;
-    if (dacName == "EN_MACRO_COL_CAL_DIFF_2")
-      return 16;
-    if (dacName == "EN_MACRO_COL_CAL_DIFF_3")
-      return 16;
-    if (dacName == "EN_MACRO_COL_CAL_DIFF_4")
-      return 16;
-    if (dacName == "EN_MACRO_COL_CAL_DIFF_5")
-      return 4;
+      // #############
+      // # Injection #
+      // #############
+      {"INJECTION_SELECT", 6},
+      {"CLK_DATA_DELAY", 9},
+      {"VCAL_HIGH", 12},
+      {"VCAL_MED", 12},
+      {"CH_SYNC_CONF", 12},
+      {"GLOBAL_PULSE_ROUTE", 16},
+      {"MONITOR_FRAME_SKIP", 8},
+      {"EN_MACRO_COL_CAL_SYNC_1", 16},
+      {"EN_MACRO_COL_CAL_SYNC_2", 16},
+      {"EN_MACRO_COL_CAL_SYNC_3", 16},
+      {"EN_MACRO_COL_CAL_SYNC_4", 16},
+      {"EN_MACRO_COL_CAL_LIN_1", 16},
+      {"EN_MACRO_COL_CAL_LIN_2", 16},
+      {"EN_MACRO_COL_CAL_LIN_3", 16},
+      {"EN_MACRO_COL_CAL_LIN_4", 16},
+      {"EN_MACRO_COL_CAL_LIN_5", 4},
+      {"EN_MACRO_COL_CAL_DIFF_1", 16},
+      {"EN_MACRO_COL_CAL_DIFF_2", 16},
+      {"EN_MACRO_COL_CAL_DIFF_3", 16},
+      {"EN_MACRO_COL_CAL_DIFF_4", 16},
+      {"EN_MACRO_COL_CAL_DIFF_5", 4},
 
-    // #######
-    // # I/O #
-    // #######
-    if (dacName == "DEBUG_CONFIG")
-      return 2;
-    if (dacName == "OUTPUT_CONFIG")
-      return 9;
-    if (dacName == "OUT_PAD_CONFIG")
-      return 14;
-    if (dacName == "GP_LVDS_ROUTE")
-      return 16;
-    if (dacName == "CDR_CONFIG")
-      return 14;
-    if (dacName == "CDR_VCO_BUFF_BIAS")
-      return 10;
-    if (dacName == "CDR_CP_IBIAS")
-      return 10;
-    if (dacName == "CDR_VCO_IBIAS")
-      return 10;
-    if (dacName == "SER_SEL_OUT")
-      return 8;    
-    if (dacName == "CML_CONFIG")
-      return 8;
-    if (dacName == "CML_TAP0_BIAS")
-      return 10;
-    if (dacName == "CML_TAP1_BIAS")
-      return 10;
-    if (dacName == "CML_TAP2_BIAS")
-      return 10;
-    if (dacName == "AURORA_CC_CONFIG")
-      return 8;
-    if (dacName == "AURORA_CB_CONFIG0")
-      return 8;
-    if (dacName == "AURORA_CB_CONFIG1")
-      return 16;
-    if (dacName == "AURORA_INIT_WAIT")
-      return 11;
+      // #######
+      // # I/O #
+      // #######
+      {"DEBUG_CONFIG", 2},
+      {"OUTPUT_CONFIG", 9},
+      {"OUT_PAD_CONFIG", 14},
+      {"GP_LVDS_ROUTE", 16},
+      {"CDR_CONFIG", 14},
+      {"CDR_VCO_BUFF_BIAS", 10},
+      {"CDR_CP_IBIAS", 10},
+      {"CDR_VCO_IBIAS", 10},
+      {"SER_SEL_OUT", 8},    
+      {"CML_CONFIG", 8},
+      {"CML_TAP0_BIAS", 10},
+      {"CML_TAP1_BIAS", 10},
+      {"CML_TAP2_BIAS", 10},
+      {"AURORA_CC_CONFIG", 8},
+      {"AURORA_CB_CONFIG0", 8},
+      {"AURORA_CB_CONFIG1", 16},
+      {"AURORA_INIT_WAIT", 11},
 
-    // #################################
-    // # Test and Monitoring Functions #
-    // #################################
-    if (dacName == "MONITOR_SELECT")
-      return 14;
-    if (dacName == "HITOR_0_MASK_SYNC")
-      return 16;
-    if (dacName == "HITOR_1_MASK_SYNC")
-      return 16;
-    if (dacName == "HITOR_2_MASK_SYNC")
-      return 16;
-    if (dacName == "HITOR_3_MASK_SYNC")
-      return 16;
-    if (dacName == "HITOR_0_MASK_LIN_0")
-      return 16;
-    if (dacName == "HITOR_0_MASK_LIN_1")
-      return 1;
-    if (dacName == "HITOR_1_MASK_LIN_0")
-      return 16;
-    if (dacName == "HITOR_1_MASK_LIN_1")
-      return 1;
-    if (dacName == "HITOR_2_MASK_LIN_0")
-      return 16;
-    if (dacName == "HITOR_2_MASK_LIN_1")
-      return 1;
-    if (dacName == "HITOR_3_MASK_LIN_0")
-      return 16;
-    if (dacName == "HITOR_3_MASK_LIN_1")
-      return 1;
-    if (dacName == "HITOR_0_MASK_DIFF_0")
-      return 16;
-    if (dacName == "HITOR_0_MASK_DIFF_1")
-      return 1;
-    if (dacName == "HITOR_1_MASK_DIFF_0")
-      return 16;
-    if (dacName == "HITOR_1_MASK_DIFF_1")
-      return 1;
-    if (dacName == "HITOR_2_MASK_DIFF_0")
-      return 16;
-    if (dacName == "HITOR_2_MASK_DIFF_1")
-      return 1;
-    if (dacName == "HITOR_3_MASK_DIFF_0")
-      return 16;
-    if (dacName == "HITOR_3_MASK_DIFF_1")
-      return 1;
-    if (dacName == "MONITOR_CONFIG")
-      return 11;
-    if (dacName == "SENSOR_CONFIG_0")
-      return 12;
-    if (dacName == "SENSOR_CONFIG_1")
-      return 12;
-    if (dacName == "AUTO_READ_0")
-      return 9;
-    if (dacName == "AUTO_READ_1")
-      return 9;
-    if (dacName == "AUTO_READ_2")
-      return 9;
-    if (dacName == "AUTO_READ_3")
-      return 9;
-    if (dacName == "AUTO_READ_4")
-      return 9;
-    if (dacName == "AUTO_READ_5")
-      return 9;
-    if (dacName == "AUTO_READ_6")
-      return 9;
-    if (dacName == "AUTO_READ_7")
-      return 9;
-    if (dacName == "RING_OSC_ENABLE")
-      return 8;
-    if (dacName == "RING_OSC_0")
-      return 16;
-    if (dacName == "RING_OSC_1")
-      return 16;
-    if (dacName == "RING_OSC_2")
-      return 16;
-    if (dacName == "RING_OSC_3")
-      return 16;
-    if (dacName == "RING_OSC_4")
-      return 16;
-    if (dacName == "RING_OSC_5")
-      return 16;
-    if (dacName == "RING_OSC_6")
-      return 16;
-    if (dacName == "RING_OSC_7")
-      return 16;
-    if (dacName == "BCID_CNT")
-      return 16;
-    if (dacName == "TRIG_CNT")
-      return 16;
-    if (dacName == "LOCKLOSS_CNT")
-      return 16;
-    if (dacName == "BITFLIP_WNG_CNT")
-      return 16;
-    if (dacName == "BITFLIP_ERR_CNT")
-      return 16;
-    if (dacName == "CMDERR_CNT")
-      return 16;
-    if (dacName == "WNGFIFO_FULL_CNT_0")
-      return 16;
-    if (dacName == "WNGFIFO_FULL_CNT_1")
-      return 16;
-    if (dacName == "WNGFIFO_FULL_CNT_2")
-      return 16;
-    if (dacName == "WNGFIFO_FULL_CNT_3")
-      return 16;
-    if (dacName == "AI_REGION_COL")
-      return 8;
-    if (dacName == "AI_REGION_ROW")
-      return 9;
-    if (dacName == "HITOR_0_CNT")
-      return 16;
-    if (dacName == "HITOR_1_CNT")
-      return 16;
-    if (dacName == "HITOR_2_CNT")
-      return 16;
-    if (dacName == "HITOR_3_CNT")
-      return 16;
-    if (dacName == "SKIPPED_TRIGGER_CNT")
-      return 16;
-    if (dacName == "ERRWNG_MASK")
-      return 14;
-    if (dacName == "MONITORING_DATA_ADC")
-      return 12;
-    if (dacName == "SELF_TRIGGER_ENABLE")
-      return 4;
+      // #################################
+      // # Test and Monitoring Functions #
+      // #################################
+      {"MONITOR_SELECT", 14},
+      {"HITOR_0_MASK_SYNC", 16},
+      {"HITOR_1_MASK_SYNC", 16},
+      {"HITOR_2_MASK_SYNC", 16},
+      {"HITOR_3_MASK_SYNC", 16},
+      {"HITOR_0_MASK_LIN_0", 16},
+      {"HITOR_0_MASK_LIN_1", 1},
+      {"HITOR_1_MASK_LIN_0", 16},
+      {"HITOR_1_MASK_LIN_1", 1},
+      {"HITOR_2_MASK_LIN_0", 16},
+      {"HITOR_2_MASK_LIN_1", 1},
+      {"HITOR_3_MASK_LIN_0", 16},
+      {"HITOR_3_MASK_LIN_1", 1},
+      {"HITOR_0_MASK_DIFF_0", 16},
+      {"HITOR_0_MASK_DIFF_1", 1},
+      {"HITOR_1_MASK_DIFF_0", 16},
+      {"HITOR_1_MASK_DIFF_1", 1},
+      {"HITOR_2_MASK_DIFF_0", 16},
+      {"HITOR_2_MASK_DIFF_1", 1},
+      {"HITOR_3_MASK_DIFF_0", 16},
+      {"HITOR_3_MASK_DIFF_1", 1},
+      {"MONITOR_CONFIG", 11},
+      {"SENSOR_CONFIG_0", 12},
+      {"SENSOR_CONFIG_1", 12},
+      {"AUTO_READ_0", 9},
+      {"AUTO_READ_1", 9},
+      {"AUTO_READ_2", 9},
+      {"AUTO_READ_3", 9},
+      {"AUTO_READ_4", 9},
+      {"AUTO_READ_5", 9},
+      {"AUTO_READ_6", 9},
+      {"AUTO_READ_7", 9},
+      {"RING_OSC_ENABLE", 8},
+      {"RING_OSC_0", 16},
+      {"RING_OSC_1", 16},
+      {"RING_OSC_2", 16},
+      {"RING_OSC_3", 16},
+      {"RING_OSC_4", 16},
+      {"RING_OSC_5", 16},
+      {"RING_OSC_6", 16},
+      {"RING_OSC_7", 16},
+      {"BCID_CNT", 16},
+      {"TRIG_CNT", 16},
+      {"LOCKLOSS_CNT", 16},
+      {"BITFLIP_WNG_CNT", 16},
+      {"BITFLIP_ERR_CNT", 16},
+      {"CMDERR_CNT", 16},
+      {"WNGFIFO_FULL_CNT_0", 16},
+      {"WNGFIFO_FULL_CNT_1", 16},
+      {"WNGFIFO_FULL_CNT_2", 16},
+      {"WNGFIFO_FULL_CNT_3", 16},
+      {"AI_REGION_COL", 8},
+      {"AI_REGION_ROW", 9},
+      {"HITOR_0_CNT", 16},
+      {"HITOR_1_CNT", 16},
+      {"HITOR_2_CNT", 16},
+      {"HITOR_3_CNT", 16},
+      {"SKIPPED_TRIGGER_CNT", 16},
+      {"ERRWNG_MASK", 14},
+      {"MONITORING_DATA_ADC", 12},
+      {"SELF_TRIGGER_ENABLE", 4}
+    };
 
+    auto it = reg_length_map.find(dacName);
+    if (it != reg_length_map.end()) return it->second;
     return 0;
   }
 
@@ -880,17 +747,16 @@ namespace Ph2_HwDescription
     return fPixelsConfig[col].Enable[row];
   }
 
-  RD53::EventHeader::EventHeader(const uint32_t data)
+  RD53::Event::Event(const uint32_t* data, size_t n)
   {
-    // mypause();
     uint32_t header;
-    std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(data);
-    if (header != 1) {
-      LOG (ERROR) << "Invalid RD53 Event Header." << RESET;
-    }
+    std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(*data);
+    if (header != 1) LOG (ERROR) << "Invalid RD53 event header" << RESET;
+    for (size_t i = 1; i < n; i++)
+      if (data[i]) this->data.emplace_back(data[i]);
   }
-    
-  RD53::HitData::HitData(const uint32_t data)
+  
+  RD53::HitData::HitData (const uint32_t data)
   {
     uint32_t core_col, side, all_tots;
     std::tie(core_col, row, side, all_tots) = unpack_bits<NBIT_CCOL, NBIT_ROW, NBIT_SIDE, NBIT_TOT>(data);
@@ -898,6 +764,41 @@ namespace Ph2_HwDescription
     unpack_array<NBIT_TOT / NPIX_REGION>(tots, all_tots);
     
     col = 4 * pack_bits<NBIT_CCOL, NBIT_SIDE>(core_col, side);
+  }
+  
+  RD53::CalCmd::CalCmd (const uint8_t& _cal_edge_mode,
+			const uint8_t& _cal_edge_delay,
+			const uint8_t& _cal_edge_width,
+			const uint8_t& _cal_aux_mode,
+			const uint8_t& _cal_aux_delay) :
+    cal_edge_mode(_cal_edge_mode),
+    cal_edge_delay(_cal_edge_delay),
+    cal_edge_width(_cal_edge_width),
+    cal_aux_mode(_cal_aux_mode),
+    cal_aux_delay(_cal_aux_delay)
+  {}
+  
+  void RD53::CalCmd::setCalCmd (const uint8_t& _cal_edge_mode,
+				const uint8_t& _cal_edge_delay,
+				const uint8_t& _cal_edge_width,
+				const uint8_t& _cal_aux_mode,
+				const uint8_t& _cal_aux_delay)
+  {
+    cal_edge_mode  = _cal_edge_mode;
+    cal_edge_delay = _cal_edge_delay;
+    cal_edge_width = _cal_edge_width;
+    cal_aux_mode   = _cal_aux_mode;
+    cal_aux_delay  = _cal_aux_delay;
+  }
+
+  uint32_t RD53::CalCmd::getCalCmd (const uint8_t& chipId)
+  {
+    return  pack_bits<NBIT_CHIPID,NBIT_CAL_EDGE_MODE,NBIT_CAL_EDGE_DELAY,NBIT_CAL_EDGE_WIDTH,NBIT_CAL_AUX_MODE,NBIT_CAL_AUX_DELAY>(chipId,
+																   cal_edge_mode,
+																   cal_edge_delay,
+																   cal_edge_width,
+																   cal_aux_mode,
+																   cal_aux_delay);
   }
 
   std::vector<uint8_t>& RD53::getChipMask()
@@ -917,7 +818,7 @@ namespace Ph2_HwDescription
   }
 
   template<int NBITS>
-  std::bitset<NBITS> RD53::SetBits(unsigned int nBit2Set)
+  std::bitset<NBITS> RD53::SetBits (unsigned int nBit2Set)
   {
     std::bitset<NBITS> output(0);
     for (unsigned int i = 0; i < nBit2Set; i++) output[i] = 1;
