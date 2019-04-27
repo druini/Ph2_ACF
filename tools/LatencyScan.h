@@ -85,15 +85,7 @@ class LatencyScan : public Tool
     {
         std::vector<std::string> cRegVec;
 
-        if (pBoardType == BoardType::GLIB) cRegVec.push_back ("cbc_stubdata_latency_adjust_fe1");
-        else if (pBoardType == BoardType::CTA) cRegVec.push_back ( "cbc.STUBDATA_LATENCY_MODE");
-        else if (pBoardType == BoardType::ICGLIB || pBoardType == BoardType::ICFC7) cRegVec.push_back ( "cbc_daq_ctrl.latencies.stub_latency");
-        else if (pBoardType == BoardType::CBC3FC7)
-        {
-            cRegVec.push_back ( "cbc_system_cnfg.cbc_data_processors.cbc1.latencies.trig_data");
-            cRegVec.push_back ( "cbc_system_cnfg.cbc_data_processors.cbc2.latencies.trig_data");
-        }
-        else if (pBoardType == BoardType::D19C) cRegVec.push_back ( "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
+        if (pBoardType == BoardType::D19C) cRegVec.push_back ( "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
         else cRegVec.push_back ( "not recognized");
 
         return cRegVec;

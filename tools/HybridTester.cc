@@ -169,7 +169,7 @@ void HybridTester::InitializeHists()
         for ( auto cFe : cBoard->fModuleVector )
         {
             uint32_t cFeId = cFe->getFeId();
-            uint16_t cMaxRange = (cFe->getFrontEndType() == FrontEndType::CBC2) ? 255 : 1023;
+            uint16_t cMaxRange = 1023;
             fType = cFe->getFrontEndType();
 
             for ( auto cCbc : cFe->fChipVector )
@@ -313,7 +313,7 @@ void HybridTester::ScanThresholds()
     LOG (INFO) << "Taking data with " << fTotalEvents << " Events!" ;
 
     int cVcthStep = 2;
-    uint16_t cMaxValue = (fType == FrontEndType::CBC2) ? 0xFF : 0x03FF;
+    uint16_t cMaxValue = 0x03FF;
     uint16_t cVcth = ( fHoleMode ) ?  cMaxValue :  0x00;
     int cStep = ( fHoleMode ) ? (-1 * cVcthStep) : cVcthStep;
 
@@ -423,7 +423,7 @@ void HybridTester::ScanThreshold()
     uint32_t cSlopeZeroCounter = 0;
     uint32_t cOldHitCounter = 0;
     uint16_t  cDoubleVcth;
-    uint16_t cMaxValue = (fType == FrontEndType::CBC2) ? 0xFF : 0x03FF;
+    uint16_t cMaxValue = 0x03FF;
     uint16_t cVcth = ( fHoleMode ) ?  cMaxValue :  0x00;
     int cStep = ( fHoleMode ) ? -10 : 10;
 
@@ -907,8 +907,7 @@ void HybridTester::ReconstructShorts (std::array<std::vector<std::array<int, 5>>
 
 void HybridTester::SetBeBoardForShortsFinding (BeBoard* pBoard)
 {
-    if (pBoard->getBoardType() == BoardType::GLIB || pBoard->getBoardType() == BoardType::CTA) fBeBoardInterface->WriteBoardReg (pBoard, "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE", 2 );
-    else if(pBoard->getBoardType() == BoardType::D19C) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 1);
+    if(pBoard->getBoardType() == BoardType::D19C) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 1);
     setFWTestPulse();
 
     // (potential, group, enable test pulse, hole mode)
@@ -943,17 +942,8 @@ void HybridTester::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
             std::vector<std::pair<std::string, uint16_t>> cRegVec;
             uint16_t cRegValue = this->to_reg ( 0, pTestGroup );
 
-            if (cCbc->getFrontEndType() == FrontEndType::CBC3)
-            {
-                //CBC3
-                cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );
-            }
-            else
-            {
-                //CBC2
-                cRegVec.push_back ( std::make_pair ( "SelTestPulseDel&ChanGroup",  cRegValue ) );
-            }
-
+            cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );
+            
             this->fChipInterface->WriteChipMultReg (cCbc, cRegVec);
         }
     }

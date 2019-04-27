@@ -752,9 +752,7 @@ void FileParser::parseCbcSettings (pugi::xml_node pCbcNode, Chip* pCbc, std::ost
 	os << GREEN << "|\t|\t|\t|----FrontEndType: ";
 	os << GREEN << "|\t|\t|\t|----FrontEndType: ";
 
-	if (cType == FrontEndType::CBC2)
-		os << RED << "CBC2";
-	else if (cType == FrontEndType::CBC3)
+	if (cType == FrontEndType::CBC3)
 		os << RED << "CBC3";
 
 	os << RESET << std::endl;
@@ -768,12 +766,7 @@ void FileParser::parseCbcSettings (pugi::xml_node pCbcNode, Chip* pCbc, std::ost
 		uint16_t cLatency = convertAnyInt (cThresholdNode.attribute ("latency").value() );
 
 		//the moment the cbc object is constructed, it knows which chip type it is
-		if (cType == FrontEndType::CBC2)
-		{
-			pCbc->setReg ("VCth", uint8_t (cThreshold) );
-			pCbc->setReg ("TriggerLatency", uint8_t (cLatency) );
-		}
-		else if (cType == FrontEndType::CBC3)
+		if (cType == FrontEndType::CBC3)
 		{
 			pCbc->setReg ("VCth1", (cThreshold & 0x00FF) );
 			pCbc->setReg ("VCth2", (cThreshold & 0x0300) >> 8);
@@ -802,15 +795,7 @@ void FileParser::parseCbcSettings (pugi::xml_node pCbcNode, Chip* pCbc, std::ost
 		cDelay = convertAnyInt (cTPNode.attribute ("delay").value() );
 		cGroundOthers = convertAnyInt (cTPNode.attribute ("groundothers").value() );
 
-		if (cType == FrontEndType::CBC2)
-		{
-			pCbc->setReg ("TestPulsePot", cAmplitude );
-			pCbc->setReg ("SelTestPulseDel&ChanGroup", reverseBits ( (cChanGroup & 0x07) << 5 | (cDelay & 0x1F) ) );
-			uint8_t cAmuxValue = pCbc->getReg ("MiscTestPulseCtrl&AnalogMux");
-			pCbc->setReg ("MiscTestPulseCtrl&AnalogMux", ( ( (cPolarity & 0x01) << 7) | ( (cEnable & 0x01) << 6) | ( (cGroundOthers & 0x01) << 5) | (cAmuxValue & 0x1F) ) );
-
-		}
-		else if (cType == FrontEndType::CBC3)
+		if (cType == FrontEndType::CBC3)
 		{
 			pCbc->setReg ("TestPulsePotNodeSel", cAmplitude );
 			pCbc->setReg ("TestPulseDel&ChanGroup", reverseBits ( (cChanGroup & 0x07) << 5 | (cDelay & 0x1F) ) );
@@ -838,15 +823,7 @@ void FileParser::parseCbcSettings (pugi::xml_node pCbcNode, Chip* pCbc, std::ost
 		cOffset3 = convertAnyInt (cStubNode.attribute ("off3").value() );
 		cOffset4 = convertAnyInt (cStubNode.attribute ("off4").value() );
 
-		if (cType == FrontEndType::CBC2)
-		{
-			pCbc->setReg ("CwdWindow&Coincid", ( ( (cCluWidth & 0x03) << 6) | (cOffset1 & 0x3F) ) );
-			uint8_t cMiscStubLogic = pCbc->getReg ("MiscStubLogic");
-			pCbc->setReg ("MiscStubLogic", ( (cPtWidth & 0x0F) << 4 | (cMiscStubLogic & 0x0F) ) );
-
-			os << GREEN << "Cluster & Stub Logic: " << " ClusterWidthDiscrimination: " << RED << +cCluWidth << GREEN << ", PtWidth: " << RED << +cPtWidth << GREEN << ", Offset: " << RED << +cOffset1 << RESET << std::endl;
-		}
-		else if (cType == FrontEndType::CBC3)
+		if (cType == FrontEndType::CBC3)
 		{
 			uint8_t cLogicSel = pCbc->getReg ("Pipe&StubInpSel&Ptwidth");
 			pCbc->setReg ("Pipe&StubInpSel&Ptwidth", ( (cLogicSel & 0xF0) | (cPtWidth & 0x0F) ) );
@@ -876,14 +853,7 @@ void FileParser::parseCbcSettings (pugi::xml_node pCbcNode, Chip* pCbc, std::ost
 		cTestClock = convertAnyInt (cMiscNode.attribute ("testclock").value() );
 		cAmuxValue = convertAnyInt (cMiscNode.attribute ("analogmux").value() );
 
-		if (cType == FrontEndType::CBC2)
-		{
-			uint8_t cAmuxRead = pCbc->getReg ("MiscTestPulseCtrl&AnalogMux");
-			pCbc->setReg ("MiscTestPulseCtrl&AnalogMux", ( (cAmuxRead & 0xE0) | (cAmuxValue & 0x1F) ) );
-			os << RED << "|\t|\t|\t|----Other settengs than Amux curerntly not supported for CBC2, please set manually!" << RESET << std::endl;
-
-		}
-		else if (cType == FrontEndType::CBC3)
+		if (cType == FrontEndType::CBC3)
 		{
 			pCbc->setReg ("40MhzClk&Or254", ( ( (cTpgClock & 0x01) << 7) | ( (cOr254 & 0x01) << 6) | (cTestClock & 0x01) << 5 | (cDll & 0x1F) ) );
 			//LOG (DEBUG) << BOLDRED << std::bitset<8> (pCbc->getReg ("40MhzClk&Or254") ) << RESET;
@@ -931,17 +901,7 @@ void FileParser::parseCbcSettings (pugi::xml_node pCbcNode, Chip* pCbc, std::ost
 				//get the original value of the register
 				uint8_t cReadValue;
 
-				if (cType == FrontEndType::CBC2)
-				{
-					//get the original value of the register
-					cReadValue = pCbc->getReg (ChannelMaskMapCBC2[cRegisterIndex]);
-					//clear bit cBitShift
-					cReadValue &= ~ (1 << cBitShift);
-					//write the new value
-					pCbc->setReg (ChannelMaskMapCBC2[cRegisterIndex], cReadValue);
-					LOG (DEBUG) << ChannelMaskMapCBC2[cRegisterIndex] << " " << std::bitset<8> (cReadValue);
-				}
-				else if (cType == FrontEndType::CBC3)
+				if (cType == FrontEndType::CBC3)
 				{
 					//get the original value of the register
 					cReadValue = pCbc->getReg (ChannelMaskMapCBC3[cRegisterIndex]);

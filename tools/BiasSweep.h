@@ -1,7 +1,7 @@
 /*!
 
         \file                   BiasSweep.h
-        \brief                  Class to sweep one of the CBC2/3 biases and perform an analog measurement via the AnalogMux and Ke2110 DMM
+        \brief                  Class to sweep one of the CBC3 biases and perform an analog measurement via the AnalogMux and Ke2110 DMM
         \author                 Georg AUZINGER
         \version                1.0
         \date                   31/10/16

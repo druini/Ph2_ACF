@@ -15,7 +15,8 @@
 #include <chrono>
 #include <uhal/uhal.hpp>
 #include "D19cFWInterface.h"
-#include "CtaFpgaConfig.h"
+#include "D19cFpgaConfig.h"
+#include "../HWDescription/Module.h"
 
 //#include "ChipInterface.h"
 
@@ -201,10 +202,6 @@ namespace Ph2_HwInterface {
 
         switch (pChipCode)
         {
-            case 0x0:
-            chip_type = FrontEndType::CBC2;
-            break;
-
             case 0x1:
             chip_type = FrontEndType::CBC3;
             break;
@@ -340,10 +337,10 @@ namespace Ph2_HwInterface {
                 LOG (INFO) << "Enabling Hybrid " << (int) cFe->getFeId();
                 hybrid_enable |= 1 << cFe->getFeId();
 
-                if (fFirwmareFrontEndType == FrontEndType::CBC2 || fFirwmareFrontEndType == FrontEndType::CBC3) {
+                if (fFirwmareFrontEndType == FrontEndType::CBC3) {
                     for ( Chip* cCbc : cFe->fChipVector)
                     {
-                        LOG (INFO) << "     Enabling CBC2 Chip " << (int) cCbc->getChipId();
+                        LOG (INFO) << "     Enabling CBC3 Chip " << (int) cCbc->getChipId();
                         chips_enable[cFe->getFeId()] |= 1 << cCbc->getChipId();
                 //need to increment the NCbc counter for I2C controller
                         fNCbc++;
@@ -587,7 +584,7 @@ namespace Ph2_HwInterface {
         std::vector< std::vector<uint32_t> > i2c_slave_map;
 
     // setting the map for different chip types
-        if (fFirwmareFrontEndType == FrontEndType::CBC2 || fFirwmareFrontEndType == FrontEndType::CBC3) {
+        if (fFirwmareFrontEndType == FrontEndType::CBC3) {
         // nothing to de done here default addresses are set for CBC
         // actually FIXME
             return;
@@ -898,11 +895,7 @@ namespace Ph2_HwInterface {
 
             }
         }
-        else if (fFirwmareFrontEndType == FrontEndType::CBC2)
-        {
-                // no timing tuning needed
-        }
-
+        
         else if (fFirwmareFrontEndType == FrontEndType::MPA)
         {
                 // first need to set the proper i2c settings of the chip for the phase alignment
@@ -1941,13 +1934,13 @@ namespace Ph2_HwInterface {
             throw Exception ( "This board is uploading an FPGA configuration" );
 
         if ( !fpgaConfig )
-            fpgaConfig = new CtaFpgaConfig ( this );
+            fpgaConfig = new D19cFpgaConfig ( this );
     }
 
     void D19cFWInterface::RebootBoard()
     {
         if ( !fpgaConfig )
-            fpgaConfig = new CtaFpgaConfig ( this );
+            fpgaConfig = new D19cFpgaConfig ( this );
 
         fpgaConfig->resetBoard();
     }

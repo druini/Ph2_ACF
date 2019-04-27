@@ -102,8 +102,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
                 TString cTitle;
 
-                if (fType == FrontEndType::CBC2) cTitle = Form ( "Vplus Values for Test Groups FE%d CBC%d; Vplus", cFeId, cCbcId );
-                else if (fType == FrontEndType::CBC3) cTitle = Form ( "VCth Values for Test Groups FE%d CBC%d; Vth", cFeId, cCbcId );
+                if (fType == FrontEndType::CBC3) cTitle = Form ( "VCth Values for Test Groups FE%d CBC%d; Vth", cFeId, cCbcId );
 
                 TH1I* cHist = new TH1I ( cName, cTitle, 1, 0, 1 );
                 cHist->SetMarkerStyle ( 20 );
@@ -142,16 +141,8 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
 
     LOG (INFO) << "Created Object Maps and parsed settings:" ;
-
-    if (fType == FrontEndType::CBC2)
-    {
-        LOG (INFO) << "	Nevents = " << fEventsPerPoint ;
-        LOG (INFO) << "	Hole Mode = " << fHoleMode ;
-        LOG (INFO) << "	TargetVcth = " << int ( fTargetVcth ) ;
-        LOG (INFO) << "	TargetOffset = " << int ( fTargetOffset ) ;
-        LOG (INFO) << "	TestPulseAmplitude = " << int ( fTestPulseAmplitude ) ;
-    }
-    else if (fType == FrontEndType::CBC3)
+    
+    if (fType == FrontEndType::CBC3)
     {
         fHoleMode = 0;
         fTargetOffset = 0x80;

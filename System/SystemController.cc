@@ -183,12 +183,6 @@ void SystemController::ConfigureHw ( bool bIgnoreI2c )
 		{
 			fBeBoardInterface->ConfigureBoard ( cBoard );
 
-			if ( cCheck && cBoard->getBoardType() == BoardType::GLIB)
-			{
-				fBeBoardInterface->WriteBoardReg ( cBoard, "pc_commands2.negative_logic_CBC", ( ( cHoleMode ) ? 0 : 1 ) );
-				LOG (INFO) << GREEN << "Overriding GLIB register values for signal polarity with value from settings node!" << RESET;
-			}
-
 			LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
 
 			for (auto& cFe : cBoard->fModuleVector)
@@ -269,19 +263,7 @@ void SystemController::initializeFileHandler()
 
 		for (const auto& cFe : cBoard->fModuleVector) cNChip += cFe->getNChip();
 
-		if (cBoardType == BoardType::GLIB)
-			cBoardTypeString = "GLIB";
-		else if (cBoardType == BoardType::MPAGLIB)
-			cBoardTypeString = "MPAGLIB";
-		else if (cBoardType == BoardType::CTA)
-			cBoardTypeString = "CTA";
-		else if (cBoardType == BoardType::ICGLIB)
-			cBoardTypeString = "ICGLIB";
-		else if (cBoardType == BoardType::ICFC7)
-			cBoardTypeString = "ICFC7";
-		else if (cBoardType == BoardType::CBC3FC7)
-			cBoardTypeString = "CBC3FC7";
-		else if (cBoardType == BoardType::D19C)
+		if (cBoardType == BoardType::D19C)
 			cBoardTypeString = "D19C";
 		else if (cBoardType == BoardType::FC7)
 			cBoardTypeString = "FC7";
@@ -316,40 +298,7 @@ uint32_t SystemController::computeEventSize32 (BeBoard* pBoard)
 
 	for (const auto& cFe : pBoard->fModuleVector)
 		cNCbc += cFe->getNChip();
-
-	if (pBoard->getBoardType() == BoardType::GLIB)
-	{
-		//this is legacy as the fNCbcDataSize is not used any more
-		//cNEventSize32 = (cBoard->getNCbcDataSize() == 0 ) ? EVENT_HEADER_TDC_SIZE_32 + cNCbc * CBC_EVENT_SIZE_32 : EVENT_HEADER_TDC_SIZE_32 + cBoard->getNCbcDataSize() * CBC_EVENT_SIZE_32;
-		if (cNCbc <= 4)
-			cNEventSize32 = EVENT_HEADER_TDC_SIZE_32 + 4 * CBC_EVENT_SIZE_32;
-		else if (cNCbc > 4 && cNCbc <= 8)
-			cNEventSize32 = EVENT_HEADER_TDC_SIZE_32 + 8 * CBC_EVENT_SIZE_32;
-		else if (cNCbc > 8 && cNCbc <= 16)
-			cNEventSize32 = EVENT_HEADER_SIZE_32 + 16 * CBC_EVENT_SIZE_32;
-	}
-
-	if (pBoard->getBoardType() == BoardType::MPAGLIB)
-		cNEventSize32 = MPA_HEADER_SIZE_32 + 6 * MPA_EVENT_SIZE_32;
-
-	else if (pBoard->getBoardType() == BoardType::CTA)
-	{
-		//this is legacy as the fNCbcDataSize is not used any more
-		//cNEventSize32 = (cBoard->getNCbcDataSize() == 0 ) ? EVENT_HEADER_TDC_SIZE_32 + cNCbc * CBC_EVENT_SIZE_32 : EVENT_HEADER_TDC_SIZE_32 + cBoard->getNCbcDataSize() * CBC_EVENT_SIZE_32;
-		if (cNCbc <= 4)
-			cNEventSize32 = EVENT_HEADER_TDC_SIZE_32 + 4 * CBC_EVENT_SIZE_32;
-		else if (cNCbc > 4 && cNCbc <= 8)
-			cNEventSize32 = EVENT_HEADER_TDC_SIZE_32 + 8 * CBC_EVENT_SIZE_32;
-		else if (cNCbc > 8 && cNCbc <= 16)
-			cNEventSize32 = EVENT_HEADER_SIZE_32 + 16 * CBC_EVENT_SIZE_32;
-	}
-	else if (pBoard->getBoardType() == BoardType::ICGLIB)
-		cNEventSize32 = EVENT_HEADER_TDC_SIZE_32 + cNCbc * CBC_EVENT_SIZE_32;
-	else if (pBoard->getBoardType() == BoardType::ICFC7)
-		cNEventSize32 = EVENT_HEADER_TDC_SIZE_32 + cNCbc * CBC_EVENT_SIZE_32;
-	else if (pBoard->getBoardType() == BoardType::CBC3FC7)
-		cNEventSize32 = EVENT_HEADER_TDC_SIZE_32_CBC3 + cNCbc * CBC_EVENT_SIZE_32_CBC3;
-	else if (pBoard->getBoardType() == BoardType::D19C)
+	if (pBoard->getBoardType() == BoardType::D19C)
 		cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNCbc * D19C_EVENT_SIZE_32_CBC3;
 
 	return cNEventSize32;

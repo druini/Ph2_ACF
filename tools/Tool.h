@@ -206,42 +206,6 @@ class Tool : public SystemController
         0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf,
     }; /*!< Lookup table for reverce the endianness */
 
-    std::map<uint8_t, std::string> fChannelMaskMapCBC2 =
-    {
-        { 0, "MaskChannelFrom008downto001" },
-        { 1, "MaskChannelFrom016downto009" },
-        { 2, "MaskChannelFrom024downto017" },
-        { 3, "MaskChannelFrom032downto025" },
-        { 4, "MaskChannelFrom040downto033" },
-        { 5, "MaskChannelFrom048downto041" },
-        { 6, "MaskChannelFrom056downto049" },
-        { 7, "MaskChannelFrom064downto057" },
-        { 8, "MaskChannelFrom072downto065" },
-        { 9, "MaskChannelFrom080downto073" },
-        {10, "MaskChannelFrom088downto081" },
-        {11, "MaskChannelFrom096downto089" },
-        {12, "MaskChannelFrom104downto097" },
-        {13, "MaskChannelFrom112downto105" },
-        {14, "MaskChannelFrom120downto113" },
-        {15, "MaskChannelFrom128downto121" },
-        {16, "MaskChannelFrom136downto129" },
-        {17, "MaskChannelFrom144downto137" },
-        {18, "MaskChannelFrom152downto145" },
-        {19, "MaskChannelFrom160downto153" },
-        {20, "MaskChannelFrom168downto161" },
-        {21, "MaskChannelFrom176downto169" },
-        {22, "MaskChannelFrom184downto177" },
-        {23, "MaskChannelFrom192downto185" },
-        {24, "MaskChannelFrom200downto193" },
-        {25, "MaskChannelFrom208downto201" },
-        {26, "MaskChannelFrom216downto209" },
-        {27, "MaskChannelFrom224downto217" },
-        {28, "MaskChannelFrom232downto225" },
-        {29, "MaskChannelFrom240downto233" },
-        {30, "MaskChannelFrom248downto241" },
-        {31, "MaskChannelFrom254downto249" }
-    };
-
     std::map<uint8_t, std::string> fChannelMaskMapCBC3 =
     {
         { 0, "MaskChannel-008-to-001" },

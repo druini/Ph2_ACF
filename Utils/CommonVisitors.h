@@ -253,27 +253,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
     void visit (Ph2_HwDescription::Chip& pCbc)
     {
 
-        if (pCbc.getFrontEndType() == FrontEndType::CBC2)
-        {
-
-            if (fOption == 'w')
-            {
-                if (fThreshold > 255) LOG (ERROR) << "Error, Threshold for CBC2 can only be 8 bit max (255)!";
-                else
-                {
-                    uint16_t cVCth = fThreshold & 0x00FF;
-                    fInterface->WriteChipReg ( &pCbc, "VCth", cVCth );
-                }
-            }
-            else if (fOption == 'r')
-            {
-                fInterface->ReadChipReg ( &pCbc, "VCth" );
-                fThreshold = (pCbc.getReg ("VCth") ) & 0x00FF;
-            }
-            else
-                LOG (ERROR) << "Unknown option " << fOption;
-        }
-        else if (pCbc.getFrontEndType() == FrontEndType::CBC3)
+        if (pCbc.getFrontEndType() == FrontEndType::CBC3)
         {
 
             if (fOption == 'w')
@@ -337,26 +317,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
     void visit (Ph2_HwDescription::Chip& pCbc)
     {
 
-        if (pCbc.getFrontEndType() == FrontEndType::CBC2)
-        {
-
-            if (fOption == 'w')
-            {
-
-                if (fLatency > 255) LOG (ERROR) << "Error, Latency for CBC2 can only be 8 bit max (255)!";
-                else
-                {
-                    uint16_t cLat = fLatency & 0x00FF;
-                    fInterface->WriteChipReg ( &pCbc, "TriggerLatency", cLat );
-                }
-            }
-            else
-            {
-                fInterface->ReadChipReg ( &pCbc, "TriggerLatency" );
-                fLatency = (pCbc.getReg ("TriggerLatency") ) & 0x00FF;
-            }
-        }
-        else if (pCbc.getFrontEndType() == FrontEndType::CBC3)
+        if (pCbc.getFrontEndType() == FrontEndType::CBC3)
         {
             if (fOption == 'w')
             {

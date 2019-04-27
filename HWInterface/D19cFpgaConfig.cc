@@ -10,7 +10,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-   FileName :       CtaFpgaConfig.cc
+   FileName :       D19cFpgaConfig.cc
    Content :        FPGA configuration
    Programmer :     Christian Bonnin
    Version :
@@ -23,7 +23,7 @@
 #include <boost/format.hpp>
 #include <boost/thread.hpp>
 #include "BeBoardFWInterface.h"
-#include "CtaFpgaConfig.h"
+#include "D19cFpgaConfig.h"
 
 using namespace std;
 
@@ -32,21 +32,21 @@ using namespace std;
 
 namespace Ph2_HwInterface {
 
-    CtaFpgaConfig::CtaFpgaConfig (BeBoardFWInterface* pbbi) :
+    D19cFpgaConfig::D19cFpgaConfig (BeBoardFWInterface* pbbi) :
         FpgaConfig (pbbi),
         lNode (dynamic_cast< const fc7::MmcPipeInterface& > (fwManager->getUhalNode ( "buf_cta" ) ) )
     {
     }
 
-    void CtaFpgaConfig::runUpload (const std::string& strImage, const char* szFile) throw (std::string)
+    void D19cFpgaConfig::runUpload (const std::string& strImage, const char* szFile) throw (std::string)
     {
         numUploadingFpga = 1;
         progressValue = 0;
         progressString = "Starting upload";
-        boost::thread (&CtaFpgaConfig::dumpFromFileIntoSD, this, strImage, szFile);
+        boost::thread (&D19cFpgaConfig::dumpFromFileIntoSD, this, strImage, szFile);
     }
 
-    void CtaFpgaConfig::dumpFromFileIntoSD (const std::string& strImage, const char* pstrFile)
+    void D19cFpgaConfig::dumpFromFileIntoSD (const std::string& strImage, const char* pstrFile)
     {
         if (string (pstrFile).compare (string (pstrFile).length() - 4, 4, ".bit") == 0)
         {
@@ -63,12 +63,12 @@ namespace Ph2_HwInterface {
         lNode.RebootFPGA (strImage, SECURE_MODE_PASSWORD);
     }
 
-    void CtaFpgaConfig::jumpToImage ( const std::string& strImage)
+    void D19cFpgaConfig::jumpToImage ( const std::string& strImage)
     {
         lNode.RebootFPGA (strImage, SECURE_MODE_PASSWORD);
     }
 
-    void CtaFpgaConfig::runDownload (const std::string& strImage, const char* szFile) throw (std::string)
+    void D19cFpgaConfig::runDownload (const std::string& strImage, const char* szFile) throw (std::string)
     {
         vector<string> lstNames = lNode.ListFilesOnSD();
 
@@ -82,10 +82,10 @@ namespace Ph2_HwInterface {
 
         progressValue = 0;
         progressString = "Downloading configuration";
-        boost::thread (&CtaFpgaConfig::downloadImage, this, strImage, szFile);
+        boost::thread (&D19cFpgaConfig::downloadImage, this, strImage, szFile);
     }
 
-    void CtaFpgaConfig::downloadImage ( const std::string& strImage, const std::string& strDestFile)
+    void D19cFpgaConfig::downloadImage ( const std::string& strImage, const std::string& strDestFile)
     {
         fc7::Firmware bitStream1 = lNode.FileFromSD (strImage, &progressValue, 0);
         progressString = "Checking download";
@@ -120,18 +120,18 @@ namespace Ph2_HwInterface {
         progressValue = 100;
     }
 
-    std::vector<std::string>  CtaFpgaConfig::getFirmwareImageNames()
+    std::vector<std::string>  D19cFpgaConfig::getFirmwareImageNames()
     {
         return lNode.ListFilesOnSD ();
 
     }
 
-    void CtaFpgaConfig::deleteFirmwareImage (const std::string& strId)
+    void D19cFpgaConfig::deleteFirmwareImage (const std::string& strId)
     {
         lNode.DeleteFromSD (strId, SECURE_MODE_PASSWORD);
     }
 
-    void CtaFpgaConfig::resetBoard()
+    void D19cFpgaConfig::resetBoard()
     {
         lNode.BoardHardReset (SECURE_MODE_PASSWORD);
     }

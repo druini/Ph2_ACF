@@ -561,23 +561,7 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
                     cRegVec.push_back ( std::make_pair ( "TestPulsePotNodeSel", pTPAmplitude ) );
                     LOG (DEBUG) << BOLDBLUE << "Read original Amux Value to be: " << std::bitset<8> (cOriginalAmuxValue) << " and changed to " << std::bitset<8> (cTPRegValue) << " - the TP is bit 6!" RESET;
                 }
-                else
-                {
-                    //CBC2
-                    cRegVec.push_back ( std::make_pair ( "SelTestPulseDel&ChanGroup",  cRegValue ) );
-
-                    uint8_t cTPRegValue;
-
-                    if (pTPState) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
-                    else if (!pTPState) cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
-
-                    //uint8_t cHitDetectSLVSValue = (cOriginalHitDetectSLVSValue & ~(0x1 << 6));
-
-                    //cRegVec.push_back ( std::make_pair ( "HitDetectSLVS", cHitDetectSLVSValue ) );
-                    cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux", cTPRegValue ) );
-                    cRegVec.push_back ( std::make_pair ( "TestPulsePot", pTPAmplitude ) );
-                }
-
+                
                 this->fChipInterface->WriteChipMultReg (cChip, cRegVec);
                 //Fabio: CBC specific but not used by common scans - END
 
@@ -845,11 +829,11 @@ void Tool::unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair)
     MaskedChannels cMaskedChannels; cMaskedChannels.clear(); cMaskedChannels.push_back(pPair.first);
     
     uint8_t cRegisterIndex = pPair.first >> 3;
-    std::string cMaskRegName = (cFrontEndType == FrontEndType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
+    std::string cMaskRegName = fChannelMaskMapCBC3[cRegisterIndex];
     cMaskedList.insert ( std::pair<std::string , MaskedChannels>(cMaskRegName.c_str()  ,cMaskedChannels ) );
     
     cRegisterIndex = pPair.second >> 3;
-    cMaskRegName = (cFrontEndType == FrontEndType::CBC2) ? fChannelMaskMapCBC2[cRegisterIndex] : fChannelMaskMapCBC3[cRegisterIndex];
+    cMaskRegName = fChannelMaskMapCBC3[cRegisterIndex];
     auto it = cMaskedList.find(cMaskRegName.c_str() );
     if (it != cMaskedList.end())
     {

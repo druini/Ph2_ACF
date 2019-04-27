@@ -34,7 +34,7 @@ void PulseShape::Initialize()
 
             for ( auto& cCbc : cFe->fChipVector )
             {
-                uint16_t cMaxValue = (cCbc->getFrontEndType() == FrontEndType::CBC2) ? 255 : 1023;
+                uint16_t cMaxValue = 1023;
                 uint32_t cCbcId = cCbc->getChipId();
                 std::cerr << "cCbcId = " << cCbcId ;
                 fNCbc++;
@@ -112,7 +112,7 @@ void PulseShape::ScanVcth ( uint32_t pDelay , int cLow)
         for ( auto& cChannel : cChannelVector.second )
             cChannel->initializeHist ( pDelay, "Delay" );
 
-    uint16_t cMaxValue = (fType == FrontEndType::CBC2) ? 0xFF : 0x003F;
+    uint16_t cMaxValue = 0x003FF;
     uint16_t cVcth = ( fHoleMode ) ?  cMaxValue :  0x00;
     int cStep = ( fHoleMode ) ? -10 : +10;
     uint32_t cAllOneCounter = 0;
@@ -471,9 +471,7 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
     fChannelVector = findChannelsInTestGroup ( fTestGroup );
     uint8_t cRegValue =  to_reg ( 0, fTestGroup );
-    if ( fType == FrontEndType::CBC2){
-    cRegVec.push_back ( std::make_pair ( "SelTestPulseDel&ChanGroup",  cRegValue ) );
-
+    
     //set the value of test pulsepot registrer and MiscTestPulseCtrl&AnalogMux register
     if ( fHoleMode )
         cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux", 0xC1 ) );
@@ -529,13 +527,11 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
     cRegVec.push_back ( std::make_pair ( "MaskChannelFrom248downto241",  0xff ) );
     cRegVec.push_back ( std::make_pair ( "MaskChannelFrom254downto249",  0xff ) );
 */
-    }
-    else {
 
-      cRegVec.push_back ( std::make_pair ( "TestPulsePotNodeSel", pTPAmplitude ) );
-      cRegVec.push_back ( std::make_pair ( "Vplus1&2",  fVplus ) );
-      cRegVec.push_back ( std::make_pair ( "Pipe&StubInpSel&Ptwidth",0x03)); //select the hit detect pipeline logic, def is sampled (variable) mode (0x03), 0xc3 for fixed with mode, 0x43 for OR mode, 0x83 for HIP supp
-    }
+    cRegVec.push_back ( std::make_pair ( "TestPulsePotNodeSel", pTPAmplitude ) );
+    cRegVec.push_back ( std::make_pair ( "Vplus1&2",  fVplus ) );
+    cRegVec.push_back ( std::make_pair ( "Pipe&StubInpSel&Ptwidth",0x03)); //select the hit detect pipeline logic, def is sampled (variable) mode (0x03), 0xc3 for fixed with mode, 0x43 for OR mode, 0x83 for HIP supp
+
     CbcMultiRegWriter cWriter ( fChipInterface, cRegVec );
 
     this->accept ( cWriter );
