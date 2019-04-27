@@ -116,24 +116,12 @@ void Tool::Destroy()
 
 #endif
 
-    if (fResultFile != nullptr)
-    {
-        if (fResultFile->IsOpen() ) fResultFile->Close();
-
-        if (fResultFile) delete fResultFile;
-    }
-
-    fCanvasMap.clear();
-    fChipHistMap.clear();
-    fModuleHistMap.clear();
-    fBeBoardHistMap.clear();
-    fTestGroupChannelMap.clear();
+    SoftDestroy();
 }
 
 void Tool::SoftDestroy()
 {
-    LOG (INFO) << BOLDRED << "Destroying only tool memory objects" << RESET;
-
+    
     if (fResultFile != nullptr)
     {
         if (fResultFile->IsOpen() ) fResultFile->Close();
@@ -141,9 +129,38 @@ void Tool::SoftDestroy()
         if (fResultFile) delete fResultFile;
     }
 
+    for(auto canvas : fCanvasMap)
+    {
+        delete canvas.second;
+        canvas.second = nullptr;
+    }
     fCanvasMap.clear();
+    for(auto chip : fChipHistMap)
+    {
+        for(auto hist : chip.second)
+        {
+            delete hist.second;
+            hist.second = nullptr;
+        }
+    }
     fChipHistMap.clear();
+    for(auto chip : fModuleHistMap)
+    {
+        for(auto hist : chip.second)
+        {
+            delete hist.second;
+            hist.second = nullptr;
+        }
+    }
     fModuleHistMap.clear();
+    for(auto chip : fBeBoardHistMap)
+    {
+        for(auto hist : chip.second)
+        {
+            delete hist.second;
+            hist.second = nullptr;
+        }
+    }
     fBeBoardHistMap.clear();
     fTestGroupChannelMap.clear();
 }

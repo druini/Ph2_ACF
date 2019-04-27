@@ -18,6 +18,8 @@ Calibration::Calibration() :
 Calibration::~Calibration()
 {
     delete fChannelGroupHandler;
+    // delete fOffsetCanvas;
+    // delete fOccupancyCanvas;
 }
 
 void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
@@ -28,7 +30,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
     this->MakeTestGroups(FrontEndType::CBC3);
     this->fAllChan = pAllChan;
-
+    
     // now read the settings from the map
     auto cSetting = fSettingsMap.find ( "HoleMode" );
     fHoleMode = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;

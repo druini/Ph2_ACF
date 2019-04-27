@@ -57,22 +57,24 @@ void SystemController::Destroy()
 	{
 		if (fFileHandler->file_open() ) fFileHandler->closeFile();
 
-		if (fFileHandler) delete fFileHandler;
+		if (fFileHandler!=nullptr) delete fFileHandler;
 	}
 
-	if (fBeBoardInterface) delete fBeBoardInterface;
+	if (fBeBoardInterface!=nullptr) delete fBeBoardInterface;
 
-	if (fChipInterface)  delete fChipInterface;
-	if(fDetectorContainer) delete fDetectorContainer;
+	if (fChipInterface!=nullptr)  delete fChipInterface;
+	if (fMPAInterface!=nullptr)  delete fMPAInterface;
+	if(fDetectorContainer!=nullptr) delete fDetectorContainer;
 
 	fBeBoardFWMap.clear();
 	fSettingsMap.clear();
+	if(fNetworkStreamer!=nullptr) delete fNetworkStreamer;
 	// for ( auto& el : fBoardVector )
 	// 	if (el) delete el;
 
 	// fBoardVector.clear();
 
-	if (fData) delete fData;
+	if (fData!=nullptr) delete fData;
 }
 
 void SystemController::addFileHandler ( const std::string& pFilename, char pOption )
@@ -113,7 +115,7 @@ void SystemController::readFile ( std::vector<uint32_t>& pVec, uint32_t pNWords3
 void SystemController::setData (BeBoard* pBoard, std::vector<uint32_t>& pData, uint32_t pNEvents)
 {
 	//reset the data object
-	if (fData) delete fData;
+	if (fData!=nullptr) delete fData;
 
 	fData = new Data();
 
@@ -208,7 +210,7 @@ void SystemController::ConfigureHw ( bool bIgnoreI2c )
 			// ######################################
 			// # Configuring Inner Tracker hardware #
 			// ######################################
-			RD53Interface* fRD53Interface = dynamic_cast<RD53Interface*>(fChipInterface);
+			RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fChipInterface);
 
 			LOG (INFO) << BOLDYELLOW << "@@@ Found an Inner Tracker board @@@" << RESET;
 

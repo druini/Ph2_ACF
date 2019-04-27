@@ -24,6 +24,8 @@ PedeNoise::PedeNoise() :
 PedeNoise::~PedeNoise()
 {
     delete fChannelGroupHandler;
+    // delete fPedestalCanvas;
+    // delete fNoiseCanvas;
 }
 
 void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
@@ -410,6 +412,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
                 fNoiseCanvas->Modified();
                 fNoiseCanvas->Update();
                 RegisterVector cRegVec;
+                delete line;
 
                 for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
                 {
