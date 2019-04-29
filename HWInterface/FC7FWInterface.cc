@@ -443,13 +443,9 @@ namespace Ph2_HwInterface
   {
     WriteStackReg({
 	{"user.ctrl_regs.reset_reg.scc_rst",1},
-	{"user.ctrl_regs.reset_reg.scc_rst",0}});
-    usleep(DEEPSLEEP);
-
-    WriteStackReg({
+	{"user.ctrl_regs.reset_reg.scc_rst",0},
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",1},
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",0}});
-    usleep(DEEPSLEEP);
   }
 
   void FC7FWInterface::ChipReSync()
@@ -457,7 +453,6 @@ namespace Ph2_HwInterface
     WriteStackReg({
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",1},
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0}});
-    usleep(DEEPSLEEP);
   }
 
   std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents(const std::vector<uint32_t>& data)
@@ -539,6 +534,7 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.fast_cmd_reg_2.init_ecr_en",              (uint32_t)config.initial_ecr_en},
 	{"user.ctrl_regs.fast_cmd_reg_2.veto_en",                  (uint32_t)config.veto_en},
 	{"user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay",           (uint32_t)config.ext_trigger_delay},
+	{"user.ctrl_regs.fast_cmd_reg_2.trigger_duration",         (uint32_t)config.trigger_duration},
 	{"user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",       (uint32_t)config.n_triggers},
 
 	  // ##############################
@@ -574,8 +570,6 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.Hybrid1.Hybrid_en",               HYBRID_EN},
 	{"user.ctrl_regs.Hybrid1.Chips_en",                READOUT_CHIP_MASK}
       });
-
-    usleep(DEEPSLEEP);
   }
 
   void FC7FWInterface::ConfigureDIO5 (const DIO5Config& config)
@@ -595,11 +589,9 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)config.tlu_handshake_mode},
 
 	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   1},
-        {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   0}
+	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   0},
 
-	// {"user.ctrl_regs.ext_tlu_reg2.ext_clk_en",         (uint32_t)ext_clk_en} // @TMP@
+	{"user.ctrl_regs.ext_tlu_reg2.ext_clk_en",         (uint32_t)ext_clk_en}
       });
-    
-    usleep(DEEPSLEEP);
   }
 }

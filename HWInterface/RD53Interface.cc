@@ -96,6 +96,8 @@ namespace Ph2_HwInterface
       pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetBcrCtr(), false, serialSymbols);
     else if (strcmp(pRegNode.c_str(),"RESET_EVTCTR") == 0)
       pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetEvtCtr(), false, serialSymbols);
+    else if (strcmp(pRegNode.c_str(),"CAL") == 0)
+      pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::Calibration(), false, serialSymbols);
     else
       {
 	cRegItem.fAddress = pRD53->getRegItem (pRegNode).fAddress;

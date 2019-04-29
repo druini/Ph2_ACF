@@ -238,7 +238,7 @@ int main (int argc, char** argv)
   cfgFastCmd.n_triggers     = nEvents;
   uint8_t chipId            = pChip->getChipId();
 
-  RD53::CalCmd calcmd(1,0,4,0,0);
+  RD53::CalCmd calcmd(1,10,2,0,0);
   cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd.getCalCmd(chipId);
   std::cout << "[main]\tprime_cal_data = 0x" << std::hex << unsigned(cfgFastCmd.fast_cmd_fsm.first_cal_data) << std::dec << std::endl;
 
@@ -247,18 +247,8 @@ int main (int argc, char** argv)
   std::cout << "[main]\tinject_cal_data = 0x" << std::hex << unsigned(cfgFastCmd.fast_cmd_fsm.second_cal_data) << std::dec << std::endl;
 
   cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
-  cfgFastCmd.fast_cmd_fsm.second_cal_en = true;
+  cfgFastCmd.fast_cmd_fsm.second_cal_en = false;
   cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
-
-
-  LOG (INFO) << BOLDBLUE << "ConfigureFastCommands" << RESET;
-  RD53Board->ConfigureFastCommands(cfgFastCmd);
-
-  LOG (INFO) << BOLDBLUE << "SendFastECR" << RESET;
-  RD53Board->ChipReset();
-
-  LOG (INFO) << BOLDBLUE << "SendFastBCR" << RESET;
-  RD53Board->ChipReSync();
 
 
   // ###########
@@ -271,6 +261,14 @@ int main (int argc, char** argv)
   std::vector<uint32_t> data;
   for (unsigned int lt = 0; lt < 512; lt++)
     {
+      data.clear();
+
+      LOG (INFO) << BOLDBLUE << "Resetting/ Configuring/ ECR/ BCRk" << RESET;
+      RD53Board->ResetReadout();
+      RD53Board->ConfigureFastCommands(cfgFastCmd);
+      RD53Board->ChipReset();
+      RD53Board->ChipReSync();
+
       unsigned int nEvts;
       LOG (INFO) << BOLDBLUE << "\n\t--> Latency = " << BOLDYELLOW << lt << RESET;
       RD53Chip->WriteChipReg(pChip, "LATENCY_CONFIG", lt);
