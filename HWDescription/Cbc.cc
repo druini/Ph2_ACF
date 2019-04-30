@@ -54,7 +54,7 @@ namespace Ph2_HwDescription {
             int cLineCounter = 0;
             ChipRegItem fRegItem;
             
-            fhasMaskedChannels = false;
+            // fhasMaskedChannels = false;
             while ( getline ( file, line ) )
             {
                 if ( line.find_first_not_of ( " \t" ) == std::string::npos )
@@ -83,7 +83,7 @@ namespace Ph2_HwDescription {
 
                     if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
                         fChipMask[fRegItem.fAddress - 0x20] = fRegItem.fValue;
-                        if(!fhasMaskedChannels && fRegItem.fValue!=0xFF) fhasMaskedChannels=true;
+                        // if(!fhasMaskedChannels && fRegItem.fValue!=0xFF) fhasMaskedChannels=true;
                         //disable masked channels only
                         if(fRegItem.fValue!=0xFF)
                         {

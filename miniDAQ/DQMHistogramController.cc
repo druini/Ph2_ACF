@@ -40,7 +40,7 @@ bool DQMHistogramController::readMessage(DetectorContainer &theDetectorDataConta
 		{
 			std::cout << "Got Something" << std::endl;
 			configBuffer.insert(configBuffer.end(), tmpConfigBuffer.begin(), tmpConfigBuffer.end());
-			MyDump(&configBuffer.at(0),configBuffer.size());
+			MyDump(&*configBuffer.begin(),configBuffer.size());
 		}
 		else
 		{

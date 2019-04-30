@@ -777,41 +777,41 @@ std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pChip)
 }
 
 
-//method to mask a channel list
-void Tool::maskChannelFromOtherGroups (Chip* pChip, int pTestGroup){
+// //method to mask a channel list
+// void Tool::maskChannelFromOtherGroups (Chip* pChip, int pTestGroup){
 
-    std::vector<uint8_t> chipMask;
-    bool chipHasMaskedChannels = pChip->hasMaskedChannels();
-    if(chipHasMaskedChannels) chipMask = pChip->getChipMask();
-    const std::vector<uint8_t> &groupMask = fMaskForTestGroupChannelMap[pTestGroup];
+//     std::vector<uint8_t> chipMask;
+//     bool chipHasMaskedChannels = pChip->hasMaskedChannels();
+//     if(chipHasMaskedChannels) chipMask = pChip->getChipMask();
+//     const std::vector<uint8_t> &groupMask = fMaskForTestGroupChannelMap[pTestGroup];
 
-    RegisterVector cRegVec; 
-    cRegVec.clear(); 
+//     RegisterVector cRegVec; 
+//     cRegVec.clear(); 
     
-    switch(pChip->getFrontEndType())
-    {
-        case FrontEndType::CBC3 :
-        {   
-            for(uint8_t i=0; i<chipMask.size(); ++i){
-                if(chipHasMaskedChannels) cRegVec.push_back ( {fChannelMaskMapCBC3[i], chipMask[i] & groupMask[i] } );
-                else cRegVec.push_back ( {fChannelMaskMapCBC3[i], groupMask[i] } );
-            }
-            break;
-        }
+//     switch(pChip->getFrontEndType())
+//     {
+//         case FrontEndType::CBC3 :
+//         {   
+//             for(uint8_t i=0; i<chipMask.size(); ++i){
+//                 if(chipHasMaskedChannels) cRegVec.push_back ( {fChannelMaskMapCBC3[i], chipMask[i] & groupMask[i] } );
+//                 else cRegVec.push_back ( {fChannelMaskMapCBC3[i], groupMask[i] } );
+//             }
+//             break;
+//         }
 
-        default :
-        {
-            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord "<< 
-                pChip->getBeId() << " Module " << pChip->getFeId() << " Chip " << pChip->getChipId() << ", aborting" << RESET;
-            throw ("[Tool::SetMaskAllChannels]\tError, FrontEnd type not found");
-            break;
-        }
-    }
+//         default :
+//         {
+//             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord "<< 
+//                 pChip->getBeId() << " Module " << pChip->getFeId() << " Chip " << pChip->getChipId() << ", aborting" << RESET;
+//             throw ("[Tool::SetMaskAllChannels]\tError, FrontEnd type not found");
+//             break;
+//         }
+//     }
 
-    fChipInterface->WriteChipMultReg ( pChip , cRegVec );
+//     fChipInterface->WriteChipMultReg ( pChip , cRegVec );
 
-    return;
-}
+//     return;
+// }
 
 
 

@@ -137,16 +137,16 @@ namespace Ph2_HwDescription {
 
         virtual uint32_t getNumberOfChannels() const  = 0;
 
-        virtual std::vector<uint8_t>& getChipMask() = 0;
+        // virtual std::vector<uint8_t>& getChipMask() = 0;
 
         const ChannelGroupBase* getChipOriginalMask() const override {return fChipOriginalMask;}
 
-        bool hasMaskedChannels() const
-        {
-	  return fhasMaskedChannels;
-        }
+   //      bool hasMaskedChannels() const
+   //      {
+	  // return fhasMaskedChannels;
+   //      }
 	
-        virtual bool IsChannelUnMasked(uint32_t cChan) const = 0;
+        // virtual bool IsChannelUnMasked(uint32_t cChan) const = 0;
 
         virtual bool isDACLocal(const std::string &dacName)  = 0;
 
@@ -157,7 +157,7 @@ namespace Ph2_HwDescription {
         // uint16_t fNumberOfChannels;
         //Chip Description
         uint8_t fChipId;
-        bool fhasMaskedChannels;
+        // bool fhasMaskedChannels;
 
         // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value
         ChipRegMap fRegMap;

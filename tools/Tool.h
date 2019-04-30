@@ -246,7 +246,7 @@ class Tool : public SystemController
     std::map<uint8_t, double> decodeBendLUT(Chip* pChip);
     
     //method to unmask a channel group
-    void maskChannelFromOtherGroups (Chip* pChip, int pTestGroup);
+    // void maskChannelFromOtherGroups (Chip* pChip, int pTestGroup);
 
     // then a method to un-mask pairs of channels on a given CBC
     void unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair);
