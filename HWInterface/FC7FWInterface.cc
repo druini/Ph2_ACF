@@ -55,7 +55,7 @@ namespace Ph2_HwInterface
     // @TMP@
     // this->TurnOffFMC();
     // this->TurnOnFMC();
-    this->ResetReadout();
+    // this->ResetReadout();
     // this->ResetBoard();
     // this->ChipReset();
     // this->ChipReSync();
@@ -425,10 +425,10 @@ namespace Ph2_HwInterface
   
   void FC7FWInterface::ResetReadout()
   {
-    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset");
-    
+    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset"); // Resets the fast command block --> which should be reprogrammed
+
     WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",1);
-    WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",0);
+    WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",0); // Resets the readout block --> which should be reprogrammed
 
     while (!ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done").value())
       {
@@ -525,6 +525,9 @@ namespace Ph2_HwInterface
   
   void FC7FWInterface::ConfigureFastCommands(const FastCommandsConfig& config)
   {
+    // ##################################
+    // # Configuring fast command block #
+    // ##################################
     WriteStackReg({
 	  // ############################
 	  // # General data for trigger #
@@ -563,7 +566,10 @@ namespace Ph2_HwInterface
       });
     
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
-      
+
+    // #############################
+    // # Configuring readout block #
+    // #############################
     WriteStackReg({
 	{"user.ctrl_regs.readout_block.data_handshake_en", HANDSHAKE_EN},
         {"user.ctrl_regs.readout_block.l1a_timeout_value", L1A_TIMEOUT},

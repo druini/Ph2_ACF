@@ -790,12 +790,12 @@ namespace Ph2_HwDescription
 
   uint32_t RD53::CalCmd::getCalCmd (const uint8_t& chipId)
   {
-    return  pack_bits<NBIT_CHIPID,NBIT_CAL_EDGE_MODE,NBIT_CAL_EDGE_DELAY,NBIT_CAL_EDGE_WIDTH,NBIT_CAL_AUX_MODE,NBIT_CAL_AUX_DELAY>(chipId,
-																   cal_edge_mode,
-																   cal_edge_delay,
-																   cal_edge_width,
-																   cal_aux_mode,
-																   cal_aux_delay);
+    return pack_bits<NBIT_CHIPID,NBIT_CAL_EDGE_MODE,NBIT_CAL_EDGE_DELAY,NBIT_CAL_EDGE_WIDTH,NBIT_CAL_AUX_MODE,NBIT_CAL_AUX_DELAY>(chipId,
+																  cal_edge_mode,
+																  cal_edge_delay,
+																  cal_edge_width,
+																  cal_aux_mode,
+																  cal_aux_delay);
   }
 
   std::vector<uint8_t>& RD53::getChipMask()

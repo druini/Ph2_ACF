@@ -254,9 +254,15 @@ int main (int argc, char** argv)
   // ###########
   // # Running #
   // ###########
-  auto RD53Chip = static_cast<RD53Interface*>(cSystemController.fChipInterface);
-  RD53Chip->ResetHitOrCnt (static_cast<RD53*>(pChip));
-  RD53Chip->ReadHitOrCnt  (static_cast<RD53*>(pChip));
+  auto RD53ChipInterface = static_cast<RD53Interface*>(cSystemController.fChipInterface);
+  RD53ChipInterface->ResetHitOrCnt (static_cast<RD53*>(pChip));
+  RD53ChipInterface->ReadHitOrCnt  (static_cast<RD53*>(pChip));
+
+  std::vector<uint32_t> serialSymbols;
+  auto RD53Chip = static_cast<RD53*>(pChip);
+  RD53Chip->EncodeCMD(0x0,calcmd.getCalCmd(chipId),chipId,RD53::Calibration(),false,serialSymbols);
+  LOG (INFO) << "Plane CAL: " << calcmd.getCalCmd(chipId) << "\tEncoded CAL: " << std::hex << serialSymbols[0] << std::dec << RESET;
+  //  RD53ChipInterface->WriteChipReg(pChip,"CAL",calcmd.getCalCmd(chipId));
 
   std::vector<uint32_t> data;
   for (unsigned int lt = 0; lt < 512; lt++)
@@ -271,10 +277,10 @@ int main (int argc, char** argv)
 
       unsigned int nEvts;
       LOG (INFO) << BOLDBLUE << "\n\t--> Latency = " << BOLDYELLOW << lt << RESET;
-      RD53Chip->WriteChipReg(pChip, "LATENCY_CONFIG", lt);
+      RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt);
 
       cSystemController.Start(pBoard);
-      usleep(1000);
+      usleep(100);
       cSystemController.Stop(pBoard);
 
       RD53Board->ReadData(pBoard, false, data, false);
@@ -283,7 +289,7 @@ int main (int argc, char** argv)
       nEvts = AnalyzeEvents(events);
       assert ((nEvts == 0) && "Found some events!");
 
-      RD53Chip->ReadHitOrCnt (static_cast<RD53*>(pChip));
+      RD53ChipInterface->ReadHitOrCnt (static_cast<RD53*>(pChip));
     }
 
 
