@@ -12,6 +12,8 @@
 #include "CbcInterface.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/ChannelGroupHandler.h"
+#include "../Utils/Container.h"
+#include "../Utils/RegisterValue.h"
 #include <bitset>
 
 #define DEV_FLAG 0
@@ -269,7 +271,7 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
-    bool CbcInterface::WriteChipAllLocalReg ( Chip* pCbc, const std::string& dacName, std::vector<uint16_t>& localRegValues, bool pVerifLoop )
+    bool CbcInterface::WriteChipAllLocalReg ( Chip* pCbc, const std::string& dacName, ChannelContainer<RegisterValue>& localRegValues, bool pVerifLoop )
     {
         assert(localRegValues.size()==pCbc->getNumberOfChannels());
         std::string dacTemplate;
@@ -285,7 +287,7 @@ namespace Ph2_HwInterface {
 
         for(uint8_t iChannel=0; iChannel<pCbc->getNumberOfChannels(); ++iChannel){
             if(isMask){
-                if( localRegValues[iChannel] ){
+                if( localRegValues[iChannel].fRegisterValue ){
                     channelToEnable.enableChannel(iChannel);
                     // listOfChannelToUnMask.emplace_back(iChannel);
                 }
@@ -293,7 +295,7 @@ namespace Ph2_HwInterface {
             else {
                 char dacName1[20];
                 sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
-                cRegVec.emplace_back(dacName1,localRegValues[iChannel]);
+                cRegVec.emplace_back(dacName1,localRegValues[iChannel].fRegisterValue);
             }
         }
 

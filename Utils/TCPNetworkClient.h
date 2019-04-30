@@ -18,7 +18,7 @@ public:
 	virtual ~TCPNetworkClient(void);
 
 	void setupServerInfo  (std::string serverIP, int serverPort);
-	void connectClient    (std::string serverIP="", int serverPort=-1);
+	int  connectClient    (std::string serverIP="", int serverPort=-1);
 	void closeConnection  (void);
 	bool isConnected      (void) { return fdClientSocket_ > 0; };
 
@@ -35,6 +35,8 @@ public:
 	//are these non necessary ???
 	bool select           (uint32_t timeoutSeconds = 1, uint32_t timeoutUSeconds = 0);// in this case receive no timeout
 	void setNonBlocking   (const bool no_block);
+
+	int  sendAndReceive   (const std::string& sendBuffer, std::string& receiveBuffer, uint32_t timeoutSeconds = 1, uint32_t timeoutUSeconds = 0);
 
 
 protected:

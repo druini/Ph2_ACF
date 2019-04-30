@@ -37,7 +37,7 @@ namespace Ph2_HwInterface
     bool     ConfigureChip             (const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                override;
     bool     WriteChipReg              (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop = true)               override;
     bool     WriteChipMultReg          (Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop = true) override;
-    bool     WriteChipAllLocalReg      (Chip* pChip, const std::string& dacName, std::vector<uint16_t>& pValue, bool pVerifLoop = true)      override;
+    bool     WriteChipAllLocalReg      (Chip* pChip, const std::string& dacName, ChannelContainer<RegisterValue>& pValue, bool pVerifLoop = true)      override;
     uint16_t ReadChipReg               (Chip* pChip, const std::string& pRegNode)                                                            override;
     bool     ConfigureChipOriginalMask (Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                      override;
     bool     MaskAllChannels           (Chip* pChip, bool mask, bool pVerifLoop = true)                                                      override;

@@ -20,6 +20,10 @@
 
 using namespace Ph2_HwDescription;
 
+template <typename T>
+class ChannelContainer;
+class RegisterValue;
+
 /*!
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
@@ -128,7 +132,7 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        virtual bool WriteChipAllLocalReg ( Chip* pChip, const std::string& dacName, std::vector<uint16_t>& pValue, bool pVerifLoop = true ) = 0;
+        virtual bool WriteChipAllLocalReg ( Chip* pChip, const std::string& dacName, ChannelContainer<RegisterValue>& pValue, bool pVerifLoop = true ) = 0;
 
         /*!
          * \brief Read the designated register in the Chip

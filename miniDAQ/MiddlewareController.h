@@ -28,9 +28,6 @@ protected:
 			end = buffer.size()-1;
 		return buffer.substr(begin,end-begin);
 	}
-
-	//BurninBoxController&    theBurninBoxController_;
-	//BeagleBoneConfiguration theBeagleBoneConfiguration_;
 	std::string             currentRun_= "0";
 	bool                    running_   = false;
 	bool                    paused_    = false;

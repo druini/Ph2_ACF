@@ -110,6 +110,42 @@ public:
 		copyAndInitStructure<T,SC,SC,SC,SC>(original, copy);
 	}
 
+
+
+	template<typename T, typename SC, typename SM, typename SB, typename SD>
+	void copyAndInitStructure(DetectorContainer& original, DetectorContainer& copy, T& channel, SC& chipSummay, SM& moduleSummary, SB& boardSummary, SD& detectorSummary)
+	{
+		static_cast<DetectorContainer&>(copy).initialize<SD,SB>(detectorSummary);
+		for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
+		{
+			BoardContainer* copyBoard = copy.addBoardContainer((*board)->getId());
+			static_cast<BoardContainer*>(copy.back())->initialize<SB,SM>(boardSummary);
+			for(ModuleContainer* module : **board)
+			{
+				ModuleContainer* copyModule = copyBoard->addModuleContainer(module->getId());
+				static_cast<ModuleContainer*>(copyBoard->back())->initialize<SM,SC>(moduleSummary);
+				for(ChipContainer* chip : *module)
+				{
+					copyModule->addChipContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
+					static_cast<ChipContainer*>(copyModule->back())->initialize<SC,T>(chipSummay,channel);
+				}
+			}
+		}
+	}
+
+	template<typename T>
+	void copyAndInitStructure(DetectorContainer& original, DetectorContainer& copy, T& channel)
+	{
+		copyAndInitStructure<T,T,T,T,T>(original, copy, channel, channel, channel, channel, channel);
+	}
+
+
+	template<typename T, typename S>
+	void copyAndInitStructure(DetectorContainer& original, DetectorContainer& copy, T& channel, S& summay)
+	{
+		copyAndInitStructure<T,S,S,S,S>(original, copy, channel, summay, summay, summay, summay);
+	}
+
 	//EXAMPLES
 	//	void buildDetectorUsingFile(DetectorContainer& detector)
 	//	{

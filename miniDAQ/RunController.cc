@@ -9,10 +9,10 @@ int main(int argc, char **argv)
 {
 	MiddlewareController theMiddlewareController(PORT);
 
-	while(1) //listen to port BEAGLEBONE_PORT
+	while(1)
 	{
 		theMiddlewareController.accept(1, 0);
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }

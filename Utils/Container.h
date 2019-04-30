@@ -57,7 +57,8 @@ template <class S, class C>
 class Summary : public SummaryBase
 {
 public:
-	Summary() {;}
+    Summary() {;}
+	Summary(S theSummary) {theSummary_ = theSummary;}
 	~Summary() {;}
 	void makeSummary(const ChannelContainerBase* theChannelList, const uint32_t numberOfEnabledChannels) override
 	{
@@ -66,7 +67,7 @@ public:
 	void makeSummary(const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList) override
 	{
 		const SummaryContainer<SummaryBase>* tmpSummaryContainer = static_cast<const SummaryContainer<SummaryBase>*>(theSummaryList);
-		std::vector<C> tmpSummaryVector;
+		std::vector<S> tmpSummaryVector;
 		for(auto summary : *tmpSummaryContainer) tmpSummaryVector.emplace_back(static_cast<Summary<S,C>*>(summary)->theSummary_);
 		theSummary_.makeAverage(&tmpSummaryVector,theNumberOfEnabledChannelsList);
         delete theSummaryList;
@@ -135,6 +136,11 @@ public:
 	{	
 		summary_ = new Summary<S,V>();
 	}
+    template <typename S, typename V>
+    void initialize(S& theSummary)
+    {   
+        summary_ = new Summary<S,V>(theSummary);
+    }
 	SummaryContainerBase* getAllObjectSummaryContainers() const
 	{
 		SummaryContainerBase *SummaryContainerList = new SummaryContainer<SummaryBase>;
@@ -189,7 +195,8 @@ template <typename T>
 class ChannelContainer: public std::vector<T>, public ChannelContainerBase
 {
 public:
-	ChannelContainer(int size) : std::vector<T>(size) {}
+    ChannelContainer(int size) : std::vector<T>(size) {}
+	ChannelContainer(int size, T initialValue) : std::vector<T>(size, initialValue) {}
 	ChannelContainer(){}
 	void print(void)
 	{
@@ -245,6 +252,12 @@ public:
 		summary_ = new Summary<S,V>();
 		container_ = static_cast<ChannelContainerBase*>(new ChannelContainer<V>(nOfRows_*nOfCols_));
 	}
+    template <typename S, typename V>
+    void initialize(S& theSummary, V& initialValue)
+    {   
+        summary_ = new Summary<S,V>(theSummary);
+        container_ = static_cast<ChannelContainerBase*>(new ChannelContainer<V>(nOfRows_*nOfCols_, initialValue));
+    }
 	void setNumberOfChannels(unsigned int numberOfRows, unsigned int numberOfCols=1){nOfRows_ = numberOfRows; nOfCols_ = numberOfCols;}
     virtual const ChannelGroupBase* getChipOriginalMask() const {return nullptr;};
 

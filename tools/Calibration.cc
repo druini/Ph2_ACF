@@ -1,5 +1,7 @@
 #include "Calibration.h"
 #include "../Utils/CBCChannelGroupHandler.h"
+#include "../Utils/ContainerFactory.h"
+#include "../Utils/Occupancy.h"
 
 //initialize the static member
 //std::map<Chip*, uint16_t> Calibration::fVplusMap;
@@ -161,16 +163,21 @@ void Calibration::FindVplus()
     ThresholdVisitor cThresholdVisitor (fChipInterface, fTargetVcth);
     this->accept (cThresholdVisitor);
 
-
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(true);
-    std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
-    std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
+    // std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
+    // std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
 
     setSameLocalDac("ChannelOffset", fTargetOffset);
     
-    bitWiseScan("VCth", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
+    // bitWiseScan("VCth", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
     
+    DetectorContainer         theOccupancyContainer;
+    fDetectorDataContainer = &theOccupancyContainer;
+    ContainerFactory   theDetectorFactory;
+    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
+
     setSameLocalDac("ChannelOffset", ( fHoleMode ) ? 0x00 : 0xFF);
     
     float cMeanValue = 0.;
@@ -212,11 +219,25 @@ void Calibration::FindOffsets()
     this->accept (cThresholdVisitor);
     // ok, done, all the offsets are at the starting value, VCth & Vplus are written
 
-    std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
-    std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
+    // std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
+    // std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
 
-    bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
+    // bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
     
+
+    DetectorContainer         theOccupancyContainer;
+    fDetectorDataContainer = &theOccupancyContainer;
+    ContainerFactory   theDetectorFactory;
+    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56);
+
+    // std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
+    // std::map<uint16_t, ModuleGlobalOccupancyMap > backEndCbcOccupanyMap;
+    // float globalOccupancy=0;
+    
+
+
+
     // setSameLocalDac("ChannelOffset", ( fHoleMode ) ? 0x00 : 0xFF);
 
     for ( auto cBoard : fBoardVector )
@@ -230,7 +251,8 @@ void Calibration::FindOffsets()
 
                 for ( int cChannel=0; cChannel<254; ++cChannel)
                 {
-                    cOccHist->Fill(cChannel, backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()][cChannel]);
+                    cOccHist->Fill(cChannel, theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->getChannel<Occupancy>(cChannel).fOccupancy);
+                    // cOccHist->Fill(cChannel, backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()][cChannel]);
                     std::string cRegName = Form ( "Channel%03d", cChannel + 1 );
                     cOffsetHist->Fill ( cChannel, (uint16_t)cCbc->getReg(cRegName) );
                 }

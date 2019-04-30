@@ -69,7 +69,7 @@ void TCPNetworkClient::closeConnection()
 }
 
 //========================================================================================================================
-void TCPNetworkClient::connectClient(std::string serverIP, int serverPort)
+int TCPNetworkClient::connectClient(std::string serverIP, int serverPort)
 {
 	if(serverIP != "" && serverPort != -1)
 	{
@@ -79,11 +79,10 @@ void TCPNetworkClient::connectClient(std::string serverIP, int serverPort)
 	if(serverIP_ == "" ||  serverPort_ == -1)
 	{
 		std::cout << "Error, serverIP and serverPort are not defined. ServerIP: " << serverIP_ << " ServerPort: " << serverPort_ << std::endl;
-		return;
+		return -1;
 	}
 	std::cout << "Connecting Client socket to serverIP " << serverIP_ << " serverPort: " << serverPort_ << std::endl;
-	if(TCPConnect(serverIP_, serverPort_, O_NONBLOCK, 0) < 0)
-		std::cout << "Error, can't connect to serverIP and serverPort. ServerIP: " << serverIP_ << " ServerPort: " << serverPort_ << std::endl;
+	return TCPConnect(serverIP_, serverPort_, O_NONBLOCK, 0);
 }
 
 //========================================================================================================================
@@ -91,8 +90,7 @@ int TCPNetworkClient::send(const uint8_t* buffer, size_t bufferSize)
 {
 	std::unique_lock<std::mutex> lock(socketMutex_);
 
-	if (fdClientSocket_ == -1)
-		connectClient();
+	if (fdClientSocket_ == -1 && connectClient()) return fdClientSocket_;
 
 	if (DEBUG) std::cout << "Sending buffer: " << buffer << std::endl;
 	int status = ::send(fdClientSocket_, buffer, bufferSize, 0);
@@ -130,7 +128,7 @@ int TCPNetworkClient::receive(uint8_t* buffer, unsigned int timeoutSeconds, unsi
     //if (fdClientSocket_ == -1) recover connection?
 
 	struct timeval timeout;
-	timeout.tv_sec = timeoutSeconds;
+	timeout.tv_sec  = timeoutSeconds;
 	timeout.tv_usec = timeoutUSeconds;
 
 	fd_set fdSet;
@@ -143,7 +141,7 @@ int TCPNetworkClient::receive(uint8_t* buffer, unsigned int timeoutSeconds, unsi
 		ssize_t bufferLength = -1;
 		if ((bufferLength = ::read(fdClientSocket_, buffer, MAXPACKETSIZE)) == -1)
 		{
-			std::cout << "Error reading buffer from." << std::endl;
+			std::cout << "Error reading buffer from socket: " << fdClientSocket_ << std::endl;
 			return -1;
 		}
 
@@ -159,11 +157,10 @@ int TCPNetworkClient::receive(std::string& buffer, unsigned int timeoutSeconds, 
 	buffer.resize(MAXPACKETSIZE);
 	int size = receive(reinterpret_cast<uint8_t*>(&buffer[0]), timeoutSeconds, timeoutUSeconds);
 	if (size > 0)
-	{
 		buffer.resize(size);
-		return 0;
-	}
-	return -1;
+	else
+		buffer.resize(0);
+	return size;
 }
 
 //========================================================================================================================
@@ -172,11 +169,18 @@ int TCPNetworkClient::receive(std::vector<char>& buffer, unsigned int timeoutSec
 	buffer.resize(MAXPACKETSIZE);
 	int size = receive(reinterpret_cast<uint8_t*>(&buffer[0]), timeoutSeconds, timeoutUSeconds);
 	if (size > 0)
-	{
 		buffer.resize(size);
-		return 0;
-	}
-	return -1;
+	else
+		buffer.resize(0);
+	return size;
+}
+
+//========================================================================================================================
+int TCPNetworkClient::sendAndReceive(const std::string& sendBuffer, std::string& receiveBuffer, uint32_t timeoutSeconds, uint32_t timeoutUSeconds)
+{
+	if(send(sendBuffer) < 0)
+		return -1;
+	return receive(receiveBuffer, timeoutSeconds, timeoutUSeconds);
 }
 
 //========================================================================================================================

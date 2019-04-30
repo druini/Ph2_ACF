@@ -180,7 +180,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(false);
 
-    this->setDacAndMeasureOccupancy("VCth", cStartValue, fEventsPerPoint);
+    this->setDacAndMeasureData("VCth", cStartValue, fEventsPerPoint);
 
     // this->setDacAndMeasureOccupancy("VCth", cStartValue, fEventsPerPoint, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
     
@@ -366,7 +366,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     this->SetTestAllChannels(true);
 
     // this->measureOccupancy(fEventsPerPoint*pMultiple, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
-    this->measureOccupancy(fEventsPerPoint*pMultiple);
+    this->measureData(fEventsPerPoint*pMultiple);
     this->SetTestAllChannels(originalAllChannelFlag);
     for ( auto cBoard : fBoardVector )
     {
@@ -481,10 +481,17 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
 
     bool originalAllChannelFlag = this->fAllChan;
     if(forceAllChannels) this->SetTestAllChannels(true);
-    std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
-    std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
+    // std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
+    // std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
 
-    bitWiseScan("VCth", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
+    // bitWiseScan("VCth", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
+
+    DetectorContainer         theOccupancyContainer;
+    fDetectorDataContainer = &theOccupancyContainer;
+    ContainerFactory   theDetectorFactory;
+    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
+
     if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
     
     float cMean = 0.;
@@ -545,7 +552,7 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
         ContainerFactory   theDetectorFactory;
         theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
-        this->setDacAndMeasureOccupancy("VCth", cValue, fEventsPerPoint);
+        this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
 
 
         //filling histograms

@@ -27,42 +27,47 @@ MiddlewareController::~MiddlewareController(void)
 std::string MiddlewareController::readMessage(const std::string& buffer)
 {
 
-	std::cout << "Received: " << buffer << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "RECEIVED: " << buffer << std::endl;
 
-	if (buffer.substr(0,5) == "START") //changing the status changes the mode in threadMain (BBC) function.
+	if (buffer == "Initialize") //changing the status changes the mode in threadMain (BBC) function.
+	{
+		sendMessage("InitializeDone");
+	}
+	if (buffer.substr(0,5) == "Start") //changing the status changes the mode in threadMain (BBC) function.
 	{
 		currentRun_ = getVariableValue("RunNumber", buffer);
 		theSystemController_->Start(stoi(currentRun_));
 		
 	}
-	else if (buffer.substr(0,4) == "STOP")
+	else if (buffer.substr(0,4) == "Stop")
 	{
 		//We need to think :)
 	    theSystemController_->Stop();
 		std::cout << "Run " << currentRun_ << " stopped!" << std::endl;
 	}
-	else if (buffer == "PAUSE")
+	else if (buffer == "Pause")
 	{
 		//We need to think :)
 		std::cout << "Paused" << std::endl;
 	}
-	else if (buffer == "RESUME")
+	else if (buffer == "Resume")
 	{
 		//We need to think :)
 		std::cout << "Resume" << std::endl;
 	}
 	//CONFIGURE
-	else if (buffer.substr(0,9) == "CONFIGURE")
+	else if (buffer.substr(0,9) == "Configure")
 	{
 
 		std::cout << "We are in the configuration submodule" << std::endl;
 		theSystemController_ = new Calibration();
+		std::cout << "sys created" << std::endl;
 		// quick (idiot) idea "CONFIGURE:ThresholdCalibration"
 		// if(buffer.substr(10,20) == "ThresholdCalibration") theSystemController_ = new Calibration();
 		// if(buffer.substr(10,7)  == "Physics")              theSystemController_ = new Physics                ();
 	    theSystemController_->Configure("/home/modtest/Programming/otsdaq/srcs/otsdaq_cmsoutertracker/otsdaq-cmsoutertracker/Ph2_ACF/settings/D19CDescription.xml");
 		std::cout << "Out of configuration submodule" << std::endl;
-
+		sendMessage("ConfigureDone");
 	}
 
 	if(running_||paused_) //we go through here after start and resume or pause: sending back current status

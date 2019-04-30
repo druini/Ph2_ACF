@@ -22,6 +22,12 @@ bool DQMHistogramController::readMessage(DetectorContainer &theDetectorDataConta
 {
 	//This can be done in the configure or start stage
 	std::cout << __PRETTY_FUNCTION__ << std::endl;
+	while(TCPNetworkClient::connectClient() < 0)
+	{
+		//ADD A TIMEOUT
+		std::cout << __PRETTY_FUNCTION__ << "Trying to connect!" << std::endl;
+	}
+	std::cout << __PRETTY_FUNCTION__ << "DQM CONNECTED" << std::endl;
 	send("send me the configuration");
 
 	std::vector<char> configBuffer;
