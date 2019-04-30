@@ -66,10 +66,11 @@ namespace Ph2_System {
         if (fMPAInterface!=nullptr)  delete fMPAInterface;
         if(fDetectorContainer!=nullptr) delete fDetectorContainer;
 
-        for (auto& it : fBeBoardFWMap) {
-            if (it.second)
-                delete it.second;
-        }
+        // It crash if I try to delete them !!!!!!!!!!
+        // for (auto& it : fBeBoardFWMap) {
+        //     if (it.second)
+        //         delete it.second;
+        // }
         fBeBoardFWMap.clear();
 
         fSettingsMap.clear();
@@ -131,6 +132,7 @@ namespace Ph2_System {
 
     void SystemController::InitializeHw ( const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
     {
+        // streamData = false;
         if(streamData)
         {
             fNetworkStreamer = new TCPNetworkServer(6000,0x10000,false);
