@@ -1186,7 +1186,7 @@ void Tool::measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t number
     // Loop over Events from this Acquisition
     const std::vector<Event*>& events = GetEvents ( static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)) );
     for ( auto& event : events )
-    	event->fillOccupancy((fDetectorDataContainer->at(boardIndex)), cTestChannelGroup);
+    	event->fillDataContainer((fDetectorDataContainer->at(boardIndex)), cTestChannelGroup);
 
 }
 

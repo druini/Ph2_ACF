@@ -274,6 +274,16 @@ public:
 	T* getChannelContainer() {return static_cast<T*>(container_);}
 	template <typename T>
 	void setChannelContainer(T* container) {container_ = container;}
+    template<typename T>
+    bool isChannelContainerType()
+    {
+        ChannelContainer<T>* tmpChannelContainer = dynamic_cast<ChannelContainer<T>*>(container_);
+        if (tmpChannelContainer == nullptr)
+        {
+            return false;
+        }
+        else return true;
+    }
 
     void setNumberOfTestedAndUnmaskedChannels(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup) override
     {

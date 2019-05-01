@@ -76,6 +76,13 @@ namespace Ph2_HwInterface
     virtual SLinkEvent GetSLinkEvent         (BeBoard* pBoard)               const {}
     virtual std::vector<Cluster> getClusters (uint8_t pFeId, uint8_t pCbcId) const {}
 
+    //@TMP
+    void fillDataContainer(BoardContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup) override
+    {
+        std::cout<< __PRETTY_FUNCTION__ << " YOU NEED TO IMPLEMENT ME!!!!";
+        abort();
+    }
+
   protected:
     virtual void print (std::ostream& out) const {};    
   };
