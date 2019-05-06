@@ -303,17 +303,6 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53, "RESET_BCRCTR", 0x0);
   }
 
-  void RD53Interface::SetResetCoreCol (RD53* pRD53, bool setT_resetF)
-  {
-    this->WriteChipReg(pRD53, "EN_CORE_COL_SYNC", (setT_resetF == true   ? 0xFFFF : 0x0));
-
-    this->WriteChipReg(pRD53, "EN_CORE_COL_LIN_1", (setT_resetF == true  ? 0xFFFF : 0x0));
-    this->WriteChipReg(pRD53, "EN_CORE_COL_LIN_2", (setT_resetF == true  ? 0x1    : 0x0));
-
-    this->WriteChipReg(pRD53, "EN_CORE_COL_DIFF_1", (setT_resetF == true ? 0xFFFF : 0x0));
-    this->WriteChipReg(pRD53, "EN_CORE_COL_DIFF_2", (setT_resetF == true ? 0x1    : 0x0));
-  }
-
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode)
   {
     return this->ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode).second[0];
@@ -371,35 +360,5 @@ namespace Ph2_HwInterface
     this->WriteRD53Mask(pRD53, false);
     
     return true;
-  }
-  
-  void RD53Interface::ResetHitOrCnt (RD53* pRD53)
-  {
-    this->WriteChipReg(pRD53, "HITOR_0_CNT", 0x0);
-    this->WriteChipReg(pRD53, "HITOR_1_CNT", 0x0);
-    this->WriteChipReg(pRD53, "HITOR_2_CNT", 0x0);
-    this->WriteChipReg(pRD53, "HITOR_3_CNT", 0x0);
-  }
-
-  void RD53Interface::ReadHitOrCnt (RD53* pRD53)
-  {
-    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
-    uint16_t cnt;
-    
-    outputDecoded = this->ReadRD53Reg (pRD53, "HITOR_0_CNT");
-    cnt = outputDecoded.second[0];
-    std::cout << "Hit-OR-CNT-0: " << cnt << std::endl;
-
-    outputDecoded = this->ReadRD53Reg (pRD53, "HITOR_1_CNT");
-    cnt = outputDecoded.second[0];
-    std::cout << "Hit-OR-CNT-1: " << cnt << std::endl;
-
-    outputDecoded = this->ReadRD53Reg (pRD53, "HITOR_2_CNT");
-    cnt = outputDecoded.second[0];
-    std::cout << "Hit-OR-CNT-2: " << cnt << std::endl;
-
-    outputDecoded = this->ReadRD53Reg (pRD53, "HITOR_3_CNT");
-    cnt = outputDecoded.second[0];
-    std::cout << "Hit-OR-CNT-3: " << cnt << std::endl;
   }
 }

@@ -229,7 +229,6 @@ namespace Ph2_System {
 		    {
 		      LOG (INFO) << BOLDYELLOW << "Configuring RD53 " << int (cRD53->getChipId()) << RESET;
 		      fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));
-		      fRD53Interface->ResetHitOrCnt (static_cast<RD53*>(cRD53));
 		    }
 		}
 	    }
