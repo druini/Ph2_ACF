@@ -52,22 +52,22 @@ namespace Ph2_HwInterface
     // # CML_CONFIG    = 0b00001111 #
     // ##############################
 
-    this->WriteChipReg(pRD53, "OUTPUT_CONFIG", 0x4);
+    this->WriteChipReg(pRD53, "OUTPUT_CONFIG",      0x4);
     // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
     this->WriteChipReg(pRD53, "CML_CONFIG", 0x1); // Default: 00_11_1111
-    this->WriteChipReg(pRD53, "AURORA_CB_CONFIG0", 0xF1);
-    this->WriteChipReg(pRD53, "AURORA_CB_CONFIG1", 0xF);
+    this->WriteChipReg(pRD53, "AURORA_CB_CONFIG0",  0xF1);
+    this->WriteChipReg(pRD53, "AURORA_CB_CONFIG1",  0xF);
     this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x30); // 0x30 = reset Aurora AND reset serializer
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE", 0x1);
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x1);
  
     // ###############################################################
     // # Enable monitoring (needed for AutoRead register monitoring) #
     // ###############################################################
     this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100); // 0x100 = start monitoring
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE", 0x4);
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x4);
 
     usleep(DEEPSLEEP);
   }
@@ -176,6 +176,8 @@ namespace Ph2_HwInterface
 	  pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetBcrCtr(), false, serialSymbols);
 	else if (strcmp(cReg.first.c_str(),"RESET_EVTCTR") == 0)
 	  pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::ResetEvtCtr(), false, serialSymbols);
+	else if (strcmp(cReg.first.c_str(),"CAL") == 0)
+	  pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::Calibration(), false, serialSymbols);
 	else
 	  {
 	    pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols);
@@ -243,14 +245,8 @@ namespace Ph2_HwInterface
 
     // @TMP@
     pRD53->resetMask();
-    // pRD53->enableAllPixels();
-    // pRD53->enablePixel(50,129);
-    // pRD53->injectPixel(50,129);
-    for (unsigned int i = 0; i < NROWS; i++)
-      {
-    	pRD53->enablePixel(i,129);
-    	pRD53->injectPixel(i,129);
-      }
+    pRD53->enablePixel(50,130);
+    pRD53->injectPixel(50,130);
 
     std::vector<uint16_t> dataVec;
     uint16_t data;

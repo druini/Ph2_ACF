@@ -427,8 +427,11 @@ namespace Ph2_HwInterface
   {
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset"); // Resets the fast command block --> which should be reprogrammed
 
-    WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",1);
-    WriteReg ("user.ctrl_regs.reset_reg.readout_block_rst",0); // Resets the readout block --> which should be reprogrammed
+    WriteStackReg({
+	{"user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBFASTDURATION},
+
+	{"user.ctrl_regs.reset_reg.readout_block_rst",1},
+	{"user.ctrl_regs.reset_reg.readout_block_rst",0}}); // Resets the readout block --> which should be reprogrammed
 
     while (!ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done").value())
       {
@@ -453,6 +456,7 @@ namespace Ph2_HwInterface
     WriteStackReg({
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",1},
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0}});
+    usleep(DEEPSLEEP); // @TMP@ 10000 [us]
   }
 
   std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents(const std::vector<uint32_t>& data)
@@ -474,6 +478,61 @@ namespace Ph2_HwInterface
       }
 
     return events;
+  }
+
+  unsigned int FC7FWInterface::AnalyzeEvents(const std::vector<FC7FWInterface::Event>& events, bool print)
+  {
+    unsigned int nEvts = 0;
+
+    for (int i = 0; i < events.size(); i++)
+      {
+	auto& evt = events[i];
+	if (print == true)
+	  {
+	    LOG (INFO) << BOLDGREEN << "Event "             << i << RESET;
+	    LOG (INFO) << BOLDGREEN << "block_size = "      << evt.block_size << RESET;
+	    LOG (INFO) << BOLDGREEN << "trigger_id = "      << evt.tlu_trigger_id << RESET;
+	    LOG (INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
+	    LOG (INFO) << BOLDGREEN << "tdc = "             << evt.tdc << RESET;
+	    LOG (INFO) << BOLDGREEN << "l1a_counter = "     << evt.l1a_counter << RESET;
+	    LOG (INFO) << BOLDGREEN << "bx_counter = "      << evt.bx_counter << RESET;
+	  }
+
+	for (size_t j = 0; j < evt.chip_events.size(); j++)
+	  {
+	    if (print == true)
+	      {
+		LOG (INFO) << CYAN << "Chip Header: "    << RESET;
+		LOG (INFO) << CYAN << "error_code = "    << evt.chip_frames[j].error_code << RESET;
+		LOG (INFO) << CYAN << "hybrid_id = "     << evt.chip_frames[j].hybrid_id << RESET;
+		LOG (INFO) << CYAN << "chip_id = "       << evt.chip_frames[j].chip_id << RESET;
+		LOG (INFO) << CYAN << "l1a_data_size = " << evt.chip_frames[j].l1a_data_size << RESET;
+		LOG (INFO) << CYAN << "chip_type = "     << evt.chip_frames[j].chip_type << RESET;
+		LOG (INFO) << CYAN << "frame_delay = "   << evt.chip_frames[j].frame_delay << RESET;
+	      
+		LOG (INFO) << CYAN << "trigger_id = "    << evt.chip_events[j].trigger_id << RESET;
+		LOG (INFO) << CYAN << "trigger_tag = "   << evt.chip_events[j].trigger_tag << RESET;
+		LOG (INFO) << CYAN << "bc_id = "         << evt.chip_events[j].bc_id << RESET;
+	      
+		LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
+	      }
+
+	    if (evt.chip_events[j].data.size() != 0) nEvts++;
+
+	    for (const auto& region_data : evt.chip_events[j].data)
+	      {
+		if (print == true)
+		  {
+		    LOG(INFO)   << "Column: " << region_data.col 
+				<< ", Row: "  << region_data.row 
+				<< ", ToTs: [" << +region_data.tots[3] << "," << +region_data.tots[2] << "," << +region_data.tots[1] << "," << +region_data.tots[0] << "]"
+				<< RESET;
+		  }
+	      }
+	  }
+      }
+
+    return nEvts;
   }
 
   FC7FWInterface::Event::Event(const uint32_t* data, size_t n)

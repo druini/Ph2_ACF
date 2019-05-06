@@ -75,63 +75,6 @@ private:
 };
 */
 
-
-unsigned int AnalyzeEvents(const std::vector<FC7FWInterface::Event>& events, bool print = false)
-{
-  unsigned int nEvts = 0;
-
-  for (int i = 0; i < events.size(); i++)
-    {
-      auto& evt = events[i];
-      if (print == true)
-	{
-	  LOG (INFO) << BOLDGREEN << "Event " << i << RESET;
-	  LOG (INFO) << BOLDGREEN << "block_size = " << evt.block_size << RESET;
-	  LOG (INFO) << BOLDGREEN << "trigger_id = " << evt.tlu_trigger_id << RESET;
-	  LOG (INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
-	  LOG (INFO) << BOLDGREEN << "tdc = " << evt.tdc << RESET;
-	  LOG (INFO) << BOLDGREEN << "l1a_counter = " << evt.l1a_counter << RESET;
-	  LOG (INFO) << BOLDGREEN << "bx_counter = " << evt.bx_counter << RESET;
-	}
-
-      for (size_t j = 0; j < evt.chip_events.size(); j++)
-	{
-	  if (print == true)
-	    {
-	      LOG (INFO) << CYAN << "Chip Header: " << RESET;
-	      LOG (INFO) << CYAN << "error_code = " << evt.chip_frames[j].error_code << RESET;
-	      LOG (INFO) << CYAN << "hybrid_id = " << evt.chip_frames[j].hybrid_id << RESET;
-	      LOG (INFO) << CYAN << "chip_id = " << evt.chip_frames[j].chip_id << RESET;
-	      LOG (INFO) << CYAN << "l1a_data_size = " << evt.chip_frames[j].l1a_data_size << RESET;
-	      LOG (INFO) << CYAN << "chip_type = " << evt.chip_frames[j].chip_type << RESET;
-	      LOG (INFO) << CYAN << "frame_delay = " << evt.chip_frames[j].frame_delay << RESET;
-	      
-	      LOG (INFO) << CYAN << "trigger_id = " << evt.chip_events[j].trigger_id << RESET;
-	      LOG (INFO) << CYAN << "trigger_tag = " << evt.chip_events[j].trigger_tag << RESET;
-	      LOG (INFO) << CYAN << "bc_id = " << evt.chip_events[j].bc_id << RESET;
-	      
-	      LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
-	    }
-
-	  if (evt.chip_events[j].data.size() != 0) nEvts++;
-
-	  for (const auto& region_data : evt.chip_events[j].data)
-	    {
-	      if (print == true)
-		{
-		  LOG(INFO)   << "Column: " << region_data.col 
-			      << ", Row: " << region_data.row 
-			      << ", ToTs: [" << +region_data.tots[0] << "," << +region_data.tots[1] << "," << +region_data.tots[2] << "," << +region_data.tots[3] << "]"
-			      << RESET;
-		}
-	    }
-	}
-    }
-
-  return nEvts;
-}
-
-
 int main (int argc, char** argv)
 {
   // Configure the logger
@@ -223,10 +166,11 @@ int main (int argc, char** argv)
   // #####################
   std::cout << std::endl;
   LOG (INFO) << BOLDYELLOW << "@@@ Starting data-taking @@@" << RESET;
-  auto pBoard    = cSystemController.fBoardVector.at(0);
-  auto pModule   = pBoard->fModuleVector.at(0);
-  auto pChip     = pModule->fChipVector.at(0);
-  auto RD53Board = static_cast<FC7FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
+  auto pBoard            = cSystemController.fBoardVector.at(0);
+  auto pModule           = pBoard->fModuleVector.at(0);
+  auto pChip             = pModule->fChipVector.at(0);
+  auto RD53Board         = static_cast<FC7FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
+  auto RD53ChipInterface = static_cast<RD53Interface*>(cSystemController.fChipInterface);
 
 
   // #############################
@@ -234,42 +178,49 @@ int main (int argc, char** argv)
   // #############################
   FC7FWInterface::FastCommandsConfig cfgFastCmd;
 
-  cfgFastCmd.trigger_source = FC7FWInterface::TriggerSource::FastCMDFSM;
-  cfgFastCmd.n_triggers     = nEvents;
-  uint8_t chipId            = pChip->getChipId();
+  cfgFastCmd.trigger_source   = FC7FWInterface::TriggerSource::FastCMDFSM;
+  cfgFastCmd.n_triggers       = nEvents;
+  cfgFastCmd.trigger_duration = 0;
+  uint8_t chipId              = pChip->getChipId();
 
-  RD53::CalCmd calcmd(1,10,2,0,0);
+
+  // #######################################
+  // # Configuration for digital injection #
+  // #######################################
+  // RD53::CalCmd calcmd(1,2,10,0,0);
+  // cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd.getCalCmd(chipId);
+ 
+  // cfgFastCmd.fast_cmd_fsm.delay_after_first_cal = 30;
+  
+  // cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
+  // cfgFastCmd.fast_cmd_fsm.second_cal_en = false;
+  // cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
+
+
+  // ######################################
+  // # Configuration for analog injection #
+  // ######################################
+  RD53::CalCmd calcmd(0,0,1,0,0);
   cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd.getCalCmd(chipId);
-  std::cout << "[main]\tprime_cal_data = 0x" << std::hex << unsigned(cfgFastCmd.fast_cmd_fsm.first_cal_data) << std::dec << std::endl;
-
-  calcmd.setCalCmd(1,0,1,0,0);
+  calcmd.setCalCmd(1,0,0,0,0);
   cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd.getCalCmd(chipId);
-  std::cout << "[main]\tinject_cal_data = 0x" << std::hex << unsigned(cfgFastCmd.fast_cmd_fsm.second_cal_data) << std::dec << std::endl;
+
+  cfgFastCmd.fast_cmd_fsm.delay_after_first_cal = 30;
 
   cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
-  cfgFastCmd.fast_cmd_fsm.second_cal_en = false;
+  cfgFastCmd.fast_cmd_fsm.second_cal_en = true;
   cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
 
 
   // ###########
   // # Running #
   // ###########
-  auto RD53ChipInterface = static_cast<RD53Interface*>(cSystemController.fChipInterface);
-  RD53ChipInterface->ResetHitOrCnt (static_cast<RD53*>(pChip));
-  RD53ChipInterface->ReadHitOrCnt  (static_cast<RD53*>(pChip));
-
-  std::vector<uint32_t> serialSymbols;
-  auto RD53Chip = static_cast<RD53*>(pChip);
-  RD53Chip->EncodeCMD(0x0,calcmd.getCalCmd(chipId),chipId,RD53::Calibration(),false,serialSymbols);
-  LOG (INFO) << "Plane CAL: " << calcmd.getCalCmd(chipId) << "\tEncoded CAL: " << std::hex << serialSymbols[0] << std::dec << RESET;
-  //  RD53ChipInterface->WriteChipReg(pChip,"CAL",calcmd.getCalCmd(chipId));
-
   std::vector<uint32_t> data;
-  for (unsigned int lt = 0; lt < 512; lt++)
+  for (auto lt = 15; lt < 55; lt++)
     {
       data.clear();
 
-      LOG (INFO) << BOLDBLUE << "Resetting/ Configuring/ ECR/ BCRk" << RESET;
+      LOG (INFO) << BOLDBLUE << "Resetting/ Configuring/ ECR/ BCR" << RESET;
       RD53Board->ResetReadout();
       RD53Board->ConfigureFastCommands(cfgFastCmd);
       RD53Board->ChipReset();
@@ -280,16 +231,12 @@ int main (int argc, char** argv)
       RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt);
 
       cSystemController.Start(pBoard);
-      usleep(100);
-      cSystemController.Stop(pBoard);
 
       RD53Board->ReadData(pBoard, false, data, false);
       auto events = FC7FWInterface::DecodeEvents(data);
       // const std::vector<Event*>& events = cSystemController.GetEvents(pBoard);
-      nEvts = AnalyzeEvents(events);
+      nEvts = FC7FWInterface::AnalyzeEvents(events,true);
       assert ((nEvts == 0) && "Found some events!");
-
-      RD53ChipInterface->ReadHitOrCnt (static_cast<RD53*>(pChip));
     }
 
 
@@ -301,8 +248,8 @@ int main (int argc, char** argv)
   cfgDIO5.enable    = true;
   cfgDIO5.ch_out_en = 0b10010;
 
-  LOG (INFO) << BOLDBLUE << "Configuring DIO5" << RESET;
-  RD53Board->ConfigureDIO5(cfgDIO5);
+  // LOG (INFO) << BOLDBLUE << "Configuring DIO5" << RESET;
+  // RD53Board->ConfigureDIO5(cfgDIO5);
 
 
   cSystemController.Stop(pBoard);

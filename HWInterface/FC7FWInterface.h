@@ -22,14 +22,16 @@
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
-#define DEEPSLEEP 500000 // [microseconds]
+#define DEEPSLEEP  500000 // [microseconds]
 
-#define NBIT_FWVER     4 // Number of bits for the firmware version
-#define NBIT_ID        2 // Number of bits for the ID      in the register frame
-#define NBIT_STATUS    2 // Number of bits for the status  in the register frame
-#define NBIT_ADDRESS  10 // Number of bits for the address in the register frame
-#define NBIT_VALUE    16 // Number of bits for the value   in the register frame
-#define NBIT_AURORAREG 8 // Number of bits for the Aurora registers:lane_up and channel_ip
+#define IPBFASTDURATION 1 // Duration of a fast command in terms of 40MHz clk cycles
+
+#define NBIT_FWVER      4 // Number of bits for the firmware version
+#define NBIT_ID         2 // Number of bits for the ID      in the register frame
+#define NBIT_STATUS     2 // Number of bits for the status  in the register frame
+#define NBIT_ADDRESS   10 // Number of bits for the address in the register frame
+#define NBIT_VALUE     16 // Number of bits for the value   in the register frame
+#define NBIT_AURORAREG  8 // Number of bits for the Aurora registers:lane_up and channel_ip
 
 
 // #################
@@ -134,8 +136,9 @@ namespace Ph2_HwInterface
       std::vector<RD53::Event> chip_events;
     };
     
-    static std::vector<Event> DecodeEvents(const std::vector<uint32_t>& data); 
-    
+    static std::vector<Event> DecodeEvents(const std::vector<uint32_t>& data);
+    static unsigned int AnalyzeEvents(const std::vector<FC7FWInterface::Event>& events, bool print = false);
+
     enum class TriggerSource : uint32_t
     {
       IPBus = 1,
@@ -166,11 +169,11 @@ namespace Ph2_HwInterface
       uint32_t first_cal_data  = 0;
       uint32_t second_cal_data = 0;
       
-      uint32_t delay_after_ecr        =  20;
-      uint32_t delay_after_autozero   =  20;
-      uint32_t delay_after_first_cal  =  20;
-      uint32_t delay_after_second_cal = 480;
-      uint16_t delay_loop             = 600;
+      uint32_t delay_after_ecr        =  0;
+      uint32_t delay_after_autozero   =  0;
+      uint32_t delay_after_first_cal  =  0;
+      uint32_t delay_after_second_cal =  0;
+      uint16_t delay_loop             =  0;
     };
 
     struct Autozero
