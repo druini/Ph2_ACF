@@ -218,7 +218,7 @@ int main ( int argc, char* argv[] )
     		switch(interfaceStatus)
     		{
     		case 1:
-				theInterface.configure();
+				theInterface.configure(cmd.optionValue("calibration"), baseDir + cmd.optionValue("file"));
 				interfaceStatus = 2;
 				break;
 			case 2:

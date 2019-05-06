@@ -55,6 +55,12 @@ class PedeNoise : public Tool
     double getNoise (Module* pFe);
     void writeObjects();
 
+    void Start(int currentRun) override;
+    void Stop() override;
+    void ConfigureCalibration() override;
+    void Pause() override;
+    void Resume() override;
+
   private:
     // Canvases for Pede/Noise Plots
     TCanvas* fNoiseCanvas;

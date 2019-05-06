@@ -25,7 +25,7 @@ protected:
 		size_t begin = buffer.find(variable)+variable.size()+1;
 		size_t end   = buffer.find(',', begin);
 		if(end == std::string::npos)
-			end = buffer.size()-1;
+			end = buffer.size();
 		return buffer.substr(begin,end-begin);
 	}
 	std::string             currentRun_= "0";

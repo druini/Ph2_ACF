@@ -331,30 +331,26 @@ void Calibration::writeObjects()
 // State machine control functions
 
 void Calibration::ConfigureCalibration()
-{
-    
-    // second parameter disables stub logic on CBC3
-    // theCalibration_.Initialise ( cAllChan, true );
-    Initialise ( true, true );
-
+{  
+    CreateResultDirectory ( "Results/Run_Calibration" );
+    InitResultFile ( "CalibrationResults" );
 }
 
 void Calibration::Start(int currentRun)
 {
-    CreateResultDirectory ( "Results/Run_" + std::to_string(currentRun) +"_Calibration" );
-    InitResultFile ( "CalibrationResults" );
+    Initialise ( true, true );
     FindVplus();
     FindOffsets();
+}
+
+void Calibration::Stop()
+{
     writeObjects();
     dumpConfigFiles();
 
     SaveResults();
     CloseResultFile();
     Destroy();
-}
-
-void Calibration::Stop()
-{
 }
 
 void Calibration::Pause()

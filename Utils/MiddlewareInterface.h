@@ -11,7 +11,7 @@ public:
 	MiddlewareInterface(std::string serverIP, int serverPort);
 	virtual ~MiddlewareInterface(void);
 	void initialize       (void);
-	void configure        (void);
+	void configure        (std::string calibrationName, std::string configurationFilePath);
 	void halt             (void);
 	void pause            (void);
 	void resume           (void);

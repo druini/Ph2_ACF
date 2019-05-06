@@ -954,3 +954,35 @@ void PedeNoise::writeObjects()
     //fFeSummaryCanvas->Write ( fFeSummaryCanvas->GetName(), TObject::kOverwrite );
     fResultFile->Flush();
 }
+
+
+void PedeNoise::ConfigureCalibration()
+{
+    CreateResultDirectory ( "Results/Run_PedeNoise" );
+    InitResultFile ( "PedeNoiseResults" );
+}
+
+void PedeNoise::Start(int currentRun)
+{
+    Initialise ( true, true );
+    measureNoise();
+    Validate();
+}
+
+void PedeNoise::Stop()
+{
+    writeObjects();
+    dumpConfigFiles();
+    SaveResults();
+    CloseResultFile();
+    Destroy();
+}
+
+void PedeNoise::Pause()
+{
+}
+
+void PedeNoise::Resume()
+{
+}
+
