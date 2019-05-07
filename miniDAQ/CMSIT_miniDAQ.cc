@@ -246,7 +246,7 @@ int main (int argc, char** argv)
       auto events = FC7FWInterface::DecodeEvents(data);
       // const std::vector<Event*>& events = cSystemController.GetEvents(pBoard);
       nEvts = FC7FWInterface::AnalyzeEvents(events,true);
-      // assert ((nEvts == 0) && "Found some events!");
+      assert ((nEvts == 0) && "Found some events!");
     }
 
 
