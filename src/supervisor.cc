@@ -120,12 +120,12 @@ int main ( int argc, char* argv[] )
 
 
 	pid_t  runControllerPid = -1;
-	pid_t  dqmControllerPid = 10;
+	pid_t  dqmControllerPid = -1;
 	int ret = 1;
 	int runControllerStatus;
 	int dqmControllerStatus;
 
-	std::cout << "forking run" << std::endl;
+	std::cout << "Forking RunController" << std::endl;
 	runControllerPid   = fork();
 	if (runControllerPid == -1)// pid == -1 means error occured
 	{

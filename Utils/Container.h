@@ -266,9 +266,9 @@ public:
 	unsigned int getNumberOfCols(){return nOfCols_;}
     
     template <class T>
-	T& getChannel(unsigned int channel)
+	T& getChannel(unsigned int row, unsigned int col=0)
 	{
-			return static_cast<ChannelContainer<T>*>(container_)->getChannel(channel);
+			return static_cast<ChannelContainer<T>*>(container_)->getChannel(row+col*nOfRows_);
 	}
 	template <typename T>
 	T* getChannelContainer() {return static_cast<T*>(container_);}
