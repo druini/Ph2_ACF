@@ -7,7 +7,7 @@
 #include "../tools/Tool.h"
 #include "../tools/Calibration.h"
 #include "../tools/PedeNoise.h"
-#include "../CombinedCalibrations/CalibrationAndPedeNoise.h"
+#include "../tools/CombinedCalibration.h"
 
 //#include "BurninBoxController.h"
 
