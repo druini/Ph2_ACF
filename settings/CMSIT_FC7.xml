@@ -8,7 +8,7 @@
     <connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://settings/address_tables/CMSIT_FC7_address_table.xml" />
 
     <!-- Frontend chip configuration -->
-    <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
+    <Module Id="0" FMCId="0" ModuleId="0" Status="1">
       <RD53_Files path="./settings/RD53Files/" />
       <RD53 Id="0" configfile="CMSIT_RD53.txt" />
       <Global>
@@ -34,7 +34,7 @@
             VTH1_DIFF        =  "400"
             VTH2_DIFF        =   "50"
 
-	    VCAL_HIGH        =  "900"
+	    VCAL_HIGH        =  "1500"
 	    VCAL_MED         =  "100"
 
 	    INJECTION_SELECT =    "0"

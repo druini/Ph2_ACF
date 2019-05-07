@@ -173,7 +173,7 @@ namespace Ph2_System {
 		  LOG (INFO) << GREEN << "Overriding GLIB register values for signal polarity with value from settings node!" << RESET;
 		}
 
-	      LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
+	      LOG (INFO) << GREEN << "Successfully configured Board " << BOLDYELLOW << int ( cBoard->getBeId() ) << RESET;
 
 	      for (auto& cFe : cBoard->fModuleVector)
 		{
@@ -182,7 +182,7 @@ namespace Ph2_System {
 		      if ( !bIgnoreI2c )
 			{
 			  fChipInterface->ConfigureChip ( cCbc );
-			  LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
+			  LOG (INFO) << GREEN <<  "Successfully configured Chip " << BOLDYELLOW << int ( cCbc->getChipId() ) << RESET;
 			}
 		    }
 		}
@@ -198,19 +198,19 @@ namespace Ph2_System {
 
 	      LOG (INFO) << BOLDYELLOW << "@@@ Found an Inner Tracker board @@@" << RESET;
 
-	      LOG (INFO) << BOLDYELLOW << "Configuring Board " << int (cBoard->getBeId()) << RESET;
+	      LOG (INFO) << BOLDYELLOW << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;
 	      fBeBoardInterface->ConfigureBoard (cBoard);
 
 	      for (const auto& cFe : cBoard->fModuleVector)
 		{
 		  unsigned int itTrials = 0;
 		  bool isGoodTrial      = false;
-		  LOG (INFO) << BOLDYELLOW << "Initializing communication to Module " << int (cFe->getModuleId()) << RESET;
+		  LOG (INFO) << BOLDYELLOW << "Initializing communication to Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
 		  while ((isGoodTrial == false) && (itTrials <= MAXTRIALS))
 		    {
 		      for (const auto& cRD53 : cFe->fChipVector)
 			{
-			  LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << int (cRD53->getChipId()) << RESET;
+			  LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
 			  fRD53Interface->ResetRD53 (static_cast<RD53*>(cRD53));
 			  fRD53Interface->InitRD53Aurora (static_cast<RD53*>(cRD53));
 			}
@@ -222,8 +222,8 @@ namespace Ph2_System {
 		      itTrials++;
 		    }
 
-		  if (isGoodTrial == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication of all RD53s of Module " << int (cFe->getModuleId()) << RESET;
-		  else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication with all RD53s of Module " << int (cFe->getModuleId()) << RESET;
+		  if (isGoodTrial == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication of all RD53s of Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
+		  else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication with all RD53s of Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
 
 		  for (const auto& cRD53 : cFe->fChipVector)
 		    {

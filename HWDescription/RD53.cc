@@ -750,7 +750,7 @@ namespace Ph2_HwDescription
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(*data);
     if (header != 1) LOG (ERROR) << "Invalid RD53 event header" << RESET;
     for (size_t i = 1; i < n; i++)
-      if (data[i]) this->data.emplace_back(data[i]);
+      if (data[i] != 0) this->data.emplace_back(data[i]);
   }
   
   RD53::HitData::HitData (const uint32_t data)

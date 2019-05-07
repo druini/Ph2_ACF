@@ -313,11 +313,11 @@ namespace Ph2_HwInterface
              cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
 
     // @TMP@
-    LOG (INFO) << GREEN << "cNWords = " << cNWords << RESET;
-    LOG (INFO) << GREEN << "handshake = " << handshake << RESET;
-    LOG (INFO) << GREEN << "cNtriggers = " << cNtriggers << RESET;
+    LOG (INFO) << GREEN << "cNWords         = " << cNWords    << RESET;
+    LOG (INFO) << GREEN << "handshake       = " << handshake  << RESET;
+    LOG (INFO) << GREEN << "cNtriggers      = " << cNtriggers << RESET;
 
-    if (!pWait && !cNWords) return 0;
+    if (!cNWords) return 0;
 
     while (cNWords == 0)
       {
@@ -432,7 +432,10 @@ namespace Ph2_HwInterface
 
 	{"user.ctrl_regs.reset_reg.readout_block_rst",1},
 	{"user.ctrl_regs.reset_reg.readout_block_rst",0}}); // Resets the readout block --> which should be reprogrammed
+  }
 
+  void FC7FWInterface::ResetDDR3()
+  {
     while (!ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done").value())
       {
         LOG (INFO) << YELLOW << "Waiting for DDR3 calibration" << RESET;
@@ -462,7 +465,7 @@ namespace Ph2_HwInterface
   std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents(const std::vector<uint32_t>& data)
   {
     std::vector<size_t> event_start;
-    for (size_t i = 0; i < data.size(); i += 4)
+    for (size_t i = 0; i < data.size(); i++)
       {
 	if (data[i] >> NBIT_BLOCKSIZE == EVT_HEADER) event_start.push_back(i);
       }
@@ -473,7 +476,7 @@ namespace Ph2_HwInterface
     for (size_t i = 0; i < event_start.size(); i++)
       {
 	const size_t start = event_start[i];
-	const size_t end = (i == event_start.size() - 1) ? data.size() : event_start[i + 1];
+	const size_t end   = (i == event_start.size() - 1) ? data.size() : event_start[i + 1];
 	events.emplace_back(&data[start], end - start);
       }
 
@@ -489,30 +492,30 @@ namespace Ph2_HwInterface
 	auto& evt = events[i];
 	if (print == true)
 	  {
-	    LOG (INFO) << BOLDGREEN << "Event "             << i << RESET;
-	    LOG (INFO) << BOLDGREEN << "block_size = "      << evt.block_size << RESET;
-	    LOG (INFO) << BOLDGREEN << "trigger_id = "      << evt.tlu_trigger_id << RESET;
+	    LOG (INFO) << BOLDGREEN << "Event           = " << i                   << RESET;
+	    LOG (INFO) << BOLDGREEN << "block_size      = " << evt.block_size      << RESET;
+	    LOG (INFO) << BOLDGREEN << "trigger_id      = " << evt.tlu_trigger_id  << RESET;
 	    LOG (INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
-	    LOG (INFO) << BOLDGREEN << "tdc = "             << evt.tdc << RESET;
-	    LOG (INFO) << BOLDGREEN << "l1a_counter = "     << evt.l1a_counter << RESET;
-	    LOG (INFO) << BOLDGREEN << "bx_counter = "      << evt.bx_counter << RESET;
+	    LOG (INFO) << BOLDGREEN << "tdc             = " << evt.tdc             << RESET;
+	    LOG (INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter     << RESET;
+	    LOG (INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter      << RESET;
 	  }
 
 	for (size_t j = 0; j < evt.chip_events.size(); j++)
 	  {
 	    if (print == true)
 	      {
-		LOG (INFO) << CYAN << "Chip Header: "    << RESET;
-		LOG (INFO) << CYAN << "error_code = "    << evt.chip_frames[j].error_code << RESET;
-		LOG (INFO) << CYAN << "hybrid_id = "     << evt.chip_frames[j].hybrid_id << RESET;
-		LOG (INFO) << CYAN << "chip_id = "       << evt.chip_frames[j].chip_id << RESET;
-		LOG (INFO) << CYAN << "l1a_data_size = " << evt.chip_frames[j].l1a_data_size << RESET;
-		LOG (INFO) << CYAN << "chip_type = "     << evt.chip_frames[j].chip_type << RESET;
-		LOG (INFO) << CYAN << "frame_delay = "   << evt.chip_frames[j].frame_delay << RESET;
+		LOG (INFO) << CYAN << "Chip Header:"                                         << RESET;
+		LOG (INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code    << RESET;
+		LOG (INFO) << CYAN << "hybrid_id       = " << evt.chip_frames[j].hybrid_id     << RESET;
+		LOG (INFO) << CYAN << "chip_id         = " << evt.chip_frames[j].chip_id       << RESET;
+		LOG (INFO) << CYAN << "l1a_data_size   = " << evt.chip_frames[j].l1a_data_size << RESET;
+		LOG (INFO) << CYAN << "chip_type       = " << evt.chip_frames[j].chip_type     << RESET;
+		LOG (INFO) << CYAN << "frame_delay     = " << evt.chip_frames[j].frame_delay   << RESET;
 	      
-		LOG (INFO) << CYAN << "trigger_id = "    << evt.chip_events[j].trigger_id << RESET;
-		LOG (INFO) << CYAN << "trigger_tag = "   << evt.chip_events[j].trigger_tag << RESET;
-		LOG (INFO) << CYAN << "bc_id = "         << evt.chip_events[j].bc_id << RESET;
+		LOG (INFO) << CYAN << "trigger_id      = " << evt.chip_events[j].trigger_id    << RESET;
+		LOG (INFO) << CYAN << "trigger_tag     = " << evt.chip_events[j].trigger_tag   << RESET;
+		LOG (INFO) << CYAN << "bc_id           = " << evt.chip_events[j].bc_id         << RESET;
 	      
 		LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
 	      }
@@ -534,7 +537,7 @@ namespace Ph2_HwInterface
 
     return nEvts;
   }
-
+  
   FC7FWInterface::Event::Event(const uint32_t* data, size_t n)
   {
     std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
@@ -556,9 +559,9 @@ namespace Ph2_HwInterface
     for (size_t i = 0; i < chip_start.size(); i++)
       {
 	const size_t start = chip_start[i];
-	const size_t end = (i == chip_start.size() - 1) ? n : chip_start[i + 1];
-	chip_frames.emplace_back(data[start], data[1]);
-	chip_events.emplace_back(data + start + 2, end - start - 2);
+	const size_t end   = (i == chip_start.size() - 1) ? n : chip_start[i + 1];
+	chip_frames.emplace_back(data[start], data[start + 1]);
+	chip_events.emplace_back(&data[start + 2], end - start - 2);
 	
 	// if (chip_frames[i].l1a_data_size * 4 != n) LOG (ERROR) << "Invalid chip L1A data size" << RESET; // @TMP@
       }

@@ -179,6 +179,7 @@ int main (int argc, char** argv)
   FC7FWInterface::FastCommandsConfig cfgFastCmd;
 
   cfgFastCmd.trigger_source   = FC7FWInterface::TriggerSource::FastCMDFSM;
+  cfgFastCmd.initial_ecr_en   = false;
   cfgFastCmd.n_triggers       = nEvents;
   cfgFastCmd.trigger_duration = 0;
   uint8_t chipId              = pChip->getChipId();
@@ -189,7 +190,7 @@ int main (int argc, char** argv)
   // #######################################
   // RD53::CalCmd calcmd(1,2,10,0,0);
   // cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd.getCalCmd(chipId);
- 
+
   // cfgFastCmd.fast_cmd_fsm.delay_after_first_cal = 30;
   
   // cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
@@ -201,10 +202,11 @@ int main (int argc, char** argv)
   // # Configuration for analog injection #
   // ######################################
   RD53::CalCmd calcmd(0,0,1,0,0);
-  cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd.getCalCmd(chipId);
+  cfgFastCmd.fast_cmd_fsm.first_cal_data  = calcmd.getCalCmd(chipId);
   calcmd.setCalCmd(1,0,0,0,0);
   cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd.getCalCmd(chipId);
 
+  // cfgFastCmd.fast_cmd_fsm.delay_after_ecr       = 500;
   cfgFastCmd.fast_cmd_fsm.delay_after_first_cal = 30;
 
   cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
@@ -212,31 +214,39 @@ int main (int argc, char** argv)
   cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
 
 
+  RD53Board->ResetReadout();
+  RD53Board->ResetDDR3();
+  RD53Board->ConfigureFastCommands(cfgFastCmd);
+
+
   // ###########
   // # Running #
   // ###########
   std::vector<uint32_t> data;
-  for (auto lt = 15; lt < 55; lt++)
+  for (auto lt = 20; lt < 35; lt++)
     {
       data.clear();
 
-      LOG (INFO) << BOLDBLUE << "Resetting/ Configuring/ ECR/ BCR" << RESET;
+      std::cout << std::endl;
+      LOG (INFO) << BOLDBLUE << "Resetting/ ConfiguringFSM/ ECR/ BCR" << RESET;
       RD53Board->ResetReadout();
+      RD53Board->ResetDDR3();
       RD53Board->ConfigureFastCommands(cfgFastCmd);
       RD53Board->ChipReset();
-      RD53Board->ChipReSync();
+      // RD53Board->ChipReSync();
 
       unsigned int nEvts;
-      LOG (INFO) << BOLDBLUE << "\n\t--> Latency = " << BOLDYELLOW << lt << RESET;
+      LOG (INFO) << BOLDBLUE << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
       RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt);
 
       cSystemController.Start(pBoard);
+      usleep(100);
 
-      RD53Board->ReadData(pBoard, false, data, false);
+      RD53Board->ReadData(pBoard, false, data);
       auto events = FC7FWInterface::DecodeEvents(data);
       // const std::vector<Event*>& events = cSystemController.GetEvents(pBoard);
       nEvts = FC7FWInterface::AnalyzeEvents(events,true);
-      assert ((nEvts == 0) && "Found some events!");
+      // assert ((nEvts == 0) && "Found some events!");
     }
 
 

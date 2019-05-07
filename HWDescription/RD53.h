@@ -156,7 +156,6 @@ namespace Ph2_HwDescription
     {
       Event(const uint32_t* data, size_t n);
       
-      // Header
       uint16_t trigger_id;
       uint16_t trigger_tag;
       uint16_t bc_id;
