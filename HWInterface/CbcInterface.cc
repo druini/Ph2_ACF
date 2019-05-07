@@ -135,12 +135,6 @@ namespace Ph2_HwInterface {
         return WriteChipMultReg ( pCbc, cRegVec, pVerifLoop );
     }
 
-    bool CbcInterface::UnmaskChannelList ( Chip* pCbc, const std::vector<uint32_t> &channelList, bool pVerifLoop )
-    {
-         LOG (ERROR) << __PRETTY_FUNCTION__ << " This function should not be used\n";
-         return false;
-    }
-
     bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop )
     {
         if(dacName=="VCth"){

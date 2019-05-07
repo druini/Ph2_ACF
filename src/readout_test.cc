@@ -112,7 +112,7 @@ void readout(FC7FWInterface* board_interface, RD53Interface* chip_interface, BeB
     // cfg.veto_after_autozero = 10;
 
     std::cout << "ConfigureFastCommands" << std::endl;
-    board_interface->ConfigureFastCommands(cfg);
+    board_interface->ConfigureFastCommands(&cfg);
     usleep(10000);
 
     std::cout << "SendFastECR" << std::endl;

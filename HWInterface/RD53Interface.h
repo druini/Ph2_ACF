@@ -41,19 +41,16 @@ namespace Ph2_HwInterface
     uint16_t ReadChipReg               (Chip* pChip, const std::string& pRegNode)                                                                 override;
     bool     ConfigureChipOriginalMask (Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                           override;
     bool     MaskAllChannels           (Chip* pChip, bool mask, bool pVerifLoop = true)                                                           override;
-    bool     UnmaskChannelList         (Chip* pChip, const std::vector<uint32_t>& channelList, bool pVerifLoop = true)                            override;
+    bool     setInjectionSchema        (Chip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true)                                       override;
+    bool     maskChannelsGroup         (Chip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true)                                       override;
 
-    bool WriteRD53Mask                 (RD53* pRD53, bool defaultT_currentF);
+    bool WriteRD53Mask                 (RD53* pRD53, bool defaultT_currentF = false);
     bool WriteRD53Reg                  (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec);
     void InitRD53Aurora                (RD53* pRD53);
     void SyncRD53                      (RD53* pRD53, unsigned int nSyncWords = 1);
     void ResetRD53                     (RD53* pRD53);
 
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadRD53Reg (RD53* pRD53, const std::string& pRegNode);
-
-    // @TMP@
-    bool setInjectionSchema (Chip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override {return true;}
-    bool maskChannelsGroup  (Chip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override {return true;}
    };
 }
 

@@ -106,8 +106,6 @@ namespace Ph2_HwDescription
     uint32_t getNumberOfChannels () const                                                              override;
     bool     isDACLocal          (const std::string& dacName)                                          override;
     uint8_t  getNumberOfBits     (const std::string& dacName)                                          override;
-    // bool     IsChannelUnMasked   (uint32_t cChan) const                                                override;
-    // std::vector<uint8_t>& getChipMask()                                                                override;
 
     std::vector<perPixelData>* getPixelsConfig        () { return &fPixelsConfig;        }
     std::vector<perPixelData>* getPixelsConfigDefault () { return &fPixelsConfigDefault; }
@@ -185,27 +183,7 @@ namespace Ph2_HwDescription
       uint8_t cal_aux_mode;
       uint8_t cal_aux_delay;
     };
-
-
-    // ############################################################################
-    // # Converter of channel representation from vector to matrix and vice versa #
-    // ############################################################################
-    // The matrix
-    // |1 2|
-    // |3 4|
-    // is linearized into |1 2 3 4|
-
-    static void fromVec2Matrix (const uint32_t vec, unsigned int& row, unsigned int& col)
-    {
-      row = vec / NCOLS;
-      col = vec % NCOLS;
-    }
-    
-    static uint32_t fromMatrix2Vec (const unsigned int row, const unsigned int col)
-    {
-      return NCOLS*row + col;
-    }
-
+  
   private:
     std::vector<uint8_t> cmd_data_map =
       {

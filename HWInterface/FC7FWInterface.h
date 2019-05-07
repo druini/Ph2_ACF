@@ -93,7 +93,7 @@ namespace Ph2_HwInterface
     void Resume()                 override;
     bool InitChipCommunication () override;
 
-    void     ReadNEvents  (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = false)   {} // @TMP@
+    void     ReadNEvents  (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = false)   override;
     uint32_t ReadData     (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = false)  override;
     void SerializeSymbols (std::vector<std::vector<uint16_t> > & data, std::vector<uint32_t> & serialData)         override;
 
@@ -202,7 +202,7 @@ namespace Ph2_HwInterface
       Autozero         autozero;
     };
 
-    void ConfigureFastCommands (const FastCommandsConfig& config);
+    void ConfigureFastCommands (const FastCommandsConfig* config = nullptr);
 
     struct DIO5Config
     {
@@ -217,10 +217,11 @@ namespace Ph2_HwInterface
       uint32_t tlu_handshake_mode = 0;    // 0 = no handshake, 1 = simple handshake, 2 = data handshake
     };
 
-    void ConfigureDIO5 (const DIO5Config& config);
+    void ConfigureDIO5 (const DIO5Config* config);
 
   private:
     void SendBoardCommand(const std::string& cmd_reg);
+    FastCommandsConfig localCfgFastCmd;
   };
 }
 

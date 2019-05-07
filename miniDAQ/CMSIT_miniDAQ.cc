@@ -1,6 +1,12 @@
 #include "../System/SystemController.h"
 #include "../Utils/argvparser.h"
 #include "../tools/Tool.h"
+
+#include "../Utils/Container.h"
+#include "../Utils/ContainerFactory.h"
+#include "../Utils/Occupancy.h"
+#include "../Utils/RD53ChannelGroupHandler.h"
+
 #include "TH2F.h"
 
 
@@ -21,46 +27,51 @@ INITIALIZE_EASYLOGGINGPP
 // #########################
 // # PixelAlive test suite #
 // #########################
-/*
+
 class PixelAlive : public Tool
 {
 public:
   PixelAlive() : Tool()
   {
+    this->MakeTestGroups(FrontEndType::RD53);
+    fChannelGroupHandler = new RD53ChannelGroupHandler();
+    fChannelGroupHandler->setChannelGroupParameters(1, 1, 1);
+
     theCanvas      = new TCanvas("RD53canvas","RD53canvas",0,0,700,500);
     histoOccupancy = new TH2F("histoOccupancy","histoOccupancy",NROWS,0,NROWS,NCOLS,0,NCOLS);
   }
 
   ~PixelAlive()
   {
+    delete fChannelGroupHandler;
+
     delete histoOccupancy;
     delete theCanvas;
   }
   
   void Run()
   {
-    std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
-    std::map<uint16_t, ModuleGlobalOccupancyMap >    backEndRD53OccupanyMap;
-    uint32_t fEventsPerPoint = 10;
-    float globalOccupancy    =  0;
+    DetectorContainer         theOccupancyContainer;
+    fDetectorDataContainer = &theOccupancyContainer;
+    ContainerFactory          theDetectorFactory;
+    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
-    this->SetTestAllChannels(false);
-    this->measureOccupancy(fEventsPerPoint, backEndOccupancyPerChannelMap, backEndRD53OccupanyMap, globalOccupancy);
-    this->SetTestAllChannels(false);
+    uint32_t nTriggers = 10;
+    // this->SetTestAllChannels(false);
+    this->measureData(nTriggers);
+
 
     // #########################
     // # Filling the histogram #
     // #########################
-    unsigned int row;
-    unsigned int col;
     for (auto cBoard : fBoardVector)
       for (auto cFe : cBoard->fModuleVector)
 	for (auto cChip : cFe->fChipVector)
-	  for (uint32_t iChan = 0; iChan < NROWS*NCOLS; iChan++)
-	    {
-	      RD53::fromVec2Matrix(backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getFeId()][cChip->getChipId()][iChan],row,col);
-	      histoOccupancy->SetBinContent(iChan+1,row,col);
-	    }
+	  for (auto row = 0; row < NROWS; row++)
+	    for (auto col = 0; col < NCOLS; col++)
+	      {
+		histoOccupancy->SetBinContent(row+1,col+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row).fOccupancy);
+	      }
 
     theCanvas->cd();
     histoOccupancy->Draw();
@@ -73,7 +84,7 @@ private:
   TCanvas* theCanvas;
   TH2F*    histoOccupancy;
 };
-*/
+
 
 int main (int argc, char** argv)
 {
@@ -216,7 +227,7 @@ int main (int argc, char** argv)
 
   RD53Board->ResetReadout();
   RD53Board->ResetDDR3();
-  RD53Board->ConfigureFastCommands(cfgFastCmd);
+  RD53Board->ConfigureFastCommands(&cfgFastCmd);
 
 
   // ###########
@@ -231,7 +242,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDBLUE << "Resetting/ ConfiguringFSM/ ECR/ BCR" << RESET;
       RD53Board->ResetReadout();
       RD53Board->ResetDDR3();
-      RD53Board->ConfigureFastCommands(cfgFastCmd);
+      RD53Board->ConfigureFastCommands(&cfgFastCmd);
       RD53Board->ChipReset();
       // RD53Board->ChipReSync();
 
@@ -259,7 +270,7 @@ int main (int argc, char** argv)
   cfgDIO5.ch_out_en = 0b10010;
 
   // LOG (INFO) << BOLDBLUE << "Configuring DIO5" << RESET;
-  // RD53Board->ConfigureDIO5(cfgDIO5);
+  // RD53Board->ConfigureDIO5(&cfgDIO5);
 
 
   cSystemController.Stop(pBoard);

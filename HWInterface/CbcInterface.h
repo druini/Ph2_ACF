@@ -73,15 +73,6 @@ namespace Ph2_HwInterface {
         bool MaskAllChannels ( Chip* pCbc, bool mask, bool pVerifLoop = true ) override;
         
         /*!
-         * \brief Unmask list of channels for the Cbc
-         * \param pCbc: pointer to Cbc object
-         * \param channelList: vector of channels to unmask
-         * \param pVerifLoop: perform a readback check
-         * \param pBlockSize: the number of registers to be written at once, default is 310
-         */
-        bool UnmaskChannelList ( Chip* pCbc, const std::vector<uint32_t> &channelList, bool pVerifLoop = true ) override;
-
-        /*!
          * \brief Write the designated register in both Chip and Chip Config File
          * \param pCbc
          * \param pRegNode : Node of the register to write

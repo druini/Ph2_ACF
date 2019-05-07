@@ -323,7 +323,7 @@ namespace Ph2_System {
             else cBeBoard->setEventType (EventType::VR);
         }
 
-        os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << ": " << BOLDBLUE << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << " BoardType: " << BOLDBLUE << cBoardType << BOLDCYAN << " EventType: " << BOLDRED << cEventTypeString << RESET << std:: endl;
+        os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDCYAN << ", EventType: " << BOLDYELLOW << cEventTypeString << RESET << std:: endl;
 
         pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child ("connection");
 
@@ -582,8 +582,8 @@ namespace Ph2_System {
     //LOG(INFO) << cStatus ;
         if ( cStatus )
         {
-            os << BOLDCYAN << "|" << "       " << "|" << "----" << pModuleNode.name() << "       "
-            << pModuleNode.first_attribute().name() << ": " << BOLDBLUE << pModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
+            os << BOLDCYAN << "|" << "       " << "|" << "----" << pModuleNode.name() << "  "
+            << pModuleNode.first_attribute().name() << ": " << BOLDYELLOW << pModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
 
             uint32_t cModuleId = pModuleNode.attribute ( "ModuleId" ).as_int();
 
@@ -974,9 +974,13 @@ namespace Ph2_System {
 	cFileName = cFilePrefix + expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
       }
     else cFileName = expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
-    
-    Chip* theChip = new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), theChipNode.attribute ( "Id" ).as_int(), cFileName);
-    
+
+    // @TMP@
+    // Chip* theChip = new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), theChipNode.attribute ( "Id" ).as_int(), cFileName);
+    uint32_t cChipId = theChipNode.attribute ("Id").as_int();
+    Chip* theChip    = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName));
+    theChip->setNumberOfChannels(NROWS,NCOLS);
+
     // Parse the specific Chip settings so that Registers take precedence
     this->parseRD53Settings (theChipNode, theChip, os);
     
@@ -986,10 +990,10 @@ namespace Ph2_System {
 	os << BLUE << "|\t|\t|\t|----Register: " << std::string (theChipRegisterNode.attribute ("name").value()) << " : " << BOLDYELLOW << std::hex << "0x"
 	   << convertAnyInt (theChipRegisterNode.first_child().value()) << RESET << std::dec << std::endl;
       }
-    
-    cModule->addChip (theChip);
+
+    cModule->addChip(theChip);
   }
-  
+
   void FileParser::parseGlobalRD53Settings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os)
   {
     pugi::xml_node cGlobalChipSettingsNode = pModuleNode.child ("Global");

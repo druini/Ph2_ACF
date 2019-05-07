@@ -32,7 +32,7 @@ namespace Ph2_HwInterface
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    this->WriteRD53Mask (pRD53, false);
+    this->WriteRD53Mask (pRD53);
 
     return true;
   }
@@ -327,40 +327,41 @@ namespace Ph2_HwInterface
 	pRD53->injectAllPixels();
       }
 
-    this->WriteRD53Mask(pRD53, false);
+    this->WriteRD53Mask(pRD53);
 
     return true;
   }
 
-  bool RD53Interface::UnmaskChannelList (Chip* pChip, const std::vector<uint32_t>& channelList, bool pVerifLoop)
+  bool RD53Interface::setInjectionSchema (Chip* pChip, const ChannelGroupBase* group, bool pVerifLoop)
   {
-    unsigned int row, col;
+    // Disabilitare le altre
+    return true;
+  }
+  
+  bool RD53Interface::maskChannelsGroup (Chip* pChip, const ChannelGroupBase* group, bool pVerifLoop)
+  {
     RD53* pRD53 = static_cast<RD53*>(pChip);
+    
+    for (auto row = 0; row < NROWS; row++)
+      for (auto col = 0; col < NCOLS; col++)
+	// (*pRD53->getPixelsConfig())[col].Enable[row] = group.getChannel(row).fRegisterValue; // @TMP@
 
-    for (const auto& chn : channelList)
-      {
-	RD53::fromVec2Matrix(chn,row,col);
-	pRD53->enablePixel(row,col);
-      }
-
-    this->WriteRD53Mask(pRD53, false);
+    this->WriteRD53Mask(pRD53);
 
     return true;
   }
-
+  
   bool RD53Interface::WriteChipAllLocalReg (Chip* pChip, const std::string& dacName, ChannelContainer<RegisterValue>& pValue, bool pVerifLoop)
   {
-    unsigned int row, col;
     RD53* pRD53 = static_cast<RD53*>(pChip);
-
-    for (unsigned int i = 0; i < pValue.size(); i++)
-      {
-	RD53::fromVec2Matrix(i,row,col);
-	(*pRD53->getPixelsConfig())[col].TDAC[row] = pValue[i].fRegisterValue;
-      }
-
-    this->WriteRD53Mask(pRD53, false);
     
+    for (auto row = 0; row < NROWS; row++)
+      for (auto col = 0; col < NCOLS; col++)
+	(*pRD53->getPixelsConfig())[col].TDAC[row] = pValue.getChannel(row).fRegisterValue; // @TMP@
+	// (*pRD53->getPixelsConfig())[col].TDAC[row] = pValue->getChannel(row,col).fRegisterValue;
+
+    this->WriteRD53Mask(pRD53);
+
     return true;
   }
 }

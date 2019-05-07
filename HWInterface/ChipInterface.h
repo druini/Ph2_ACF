@@ -103,15 +103,6 @@ namespace Ph2_HwInterface {
         virtual bool MaskAllChannels ( Chip* pChip, bool mask, bool pVerifLoop = true ) = 0;
         
         /*!
-         * \brief Unmask list of channels for the chip
-         * \param pChip: pointer to Chip object
-         * \param channelList: vector of channels to unmask
-         * \param pVerifLoop: perform a readback check
-         * \param pBlockSize: the number of registers to be written at once, default is 310
-         */
-        virtual bool UnmaskChannelList ( Chip* pChip, const std::vector<uint32_t>& channelList, bool pVerifLoop = true ) = 0;
-
-        /*!
          * \brief Write the designated register in both Chip and Chip Config File
          * \param pChip
          * \param pRegNode : Node of the register to write
