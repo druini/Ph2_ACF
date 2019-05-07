@@ -49,6 +49,7 @@ namespace Ph2_System {
         fBeBoardFWMap = pController->fBeBoardFWMap;
         fSettingsMap = pController->fSettingsMap;
         fFileHandler = pController->fFileHandler;
+        fStreamerEnabled = pController->fStreamerEnabled;
     }
 
     void SystemController::Destroy()
@@ -132,7 +133,7 @@ namespace Ph2_System {
 
     void SystemController::InitializeHw ( const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
     {
-        // streamData = false;
+        fStreamerEnabled = streamData;
         if(streamData)
         {
             fNetworkStreamer = new TCPNetworkServer(6000,0x10000,false);
@@ -330,11 +331,11 @@ namespace Ph2_System {
             fBeBoardInterface->Resume (cBoard);
     }
 
-    void SystemController::ConfigureHardware(std::string cHWFile)
+    void SystemController::ConfigureHardware(std::string cHWFile, bool enableStream)
     {
 
         std::stringstream outp;
-        InitializeHw ( cHWFile, outp );
+        InitializeHw ( cHWFile, outp, true, enableStream );
         InitializeSettings ( cHWFile, outp );
         LOG (INFO) << outp.str();
         outp.str ("");
@@ -346,9 +347,9 @@ namespace Ph2_System {
     {
     }
 
-    void SystemController::Configure(std::string cHWFile)
+    void SystemController::Configure(std::string cHWFile, bool enableStream)
     {
-        ConfigureHardware(cHWFile);
+        ConfigureHardware(cHWFile, enableStream);
         ConfigureCalibration();
     }
 

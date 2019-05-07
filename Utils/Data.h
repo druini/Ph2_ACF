@@ -106,10 +106,7 @@ namespace Ph2_HwInterface {
          */
         ~Data()
         {
-            for ( auto pevt : fEventList )
-                if (pevt) delete pevt;
-
-            fEventList.clear();
+            Reset();
         }
         /*!
          * \brief Set the data in the data map

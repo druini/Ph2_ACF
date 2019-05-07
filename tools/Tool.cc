@@ -94,6 +94,8 @@ void Tool::Inherit (Tool* pTool)
     fBeBoardHistMap      = pTool->fBeBoardHistMap;
     fTestGroupChannelMap = pTool->fTestGroupChannelMap;
     fNetworkStreamer     = pTool->fNetworkStreamer;
+    fStreamerEnabled     = pTool->fStreamerEnabled;
+
 #ifdef __HTTP__
     fHttpServer          = pTool->fHttpServer;
 #endif
@@ -324,7 +326,6 @@ void Tool::SaveResults()
 {
     for ( const auto& cBeBoard : fBeBoardHistMap )
     {
-
         fResultFile->cd();
 
         for ( const auto& cHist : cBeBoard.second )
@@ -1120,7 +1121,7 @@ void Tool::measureData(const uint16_t &numberOfEvents)
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
         measureBeBoardData(boardIndex, numberOfEvents);
-    	fObjectStream->streamAndSendBoard(fDetectorDataContainer->at(boardIndex), fNetworkStreamer);
+    	if(fStreamerEnabled) fObjectStream->streamAndSendBoard(fDetectorDataContainer->at(boardIndex), fNetworkStreamer);
 	}
 
 }

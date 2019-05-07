@@ -357,9 +357,9 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
 
     ContainerFactory   theDetectorFactory;
 	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-	std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
-    std::map<uint16_t, ModuleGlobalOccupancyMap>     backEndCbcOccupanyMap;
-    float globalOccupancy=0;
+	// std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
+ //    std::map<uint16_t, ModuleGlobalOccupancyMap>     backEndCbcOccupanyMap;
+ //    float globalOccupancy=0;
 
     bool originalAllChannelFlag = this->fAllChan;
 
@@ -954,3 +954,35 @@ void PedeNoise::writeObjects()
     //fFeSummaryCanvas->Write ( fFeSummaryCanvas->GetName(), TObject::kOverwrite );
     fResultFile->Flush();
 }
+
+
+void PedeNoise::ConfigureCalibration()
+{
+    CreateResultDirectory ( "Results/Run_PedeNoise" );
+    InitResultFile ( "PedeNoiseResults" );
+}
+
+void PedeNoise::Start(int currentRun)
+{
+    Initialise ( true, true );
+    measureNoise();
+    Validate();
+}
+
+void PedeNoise::Stop()
+{
+    writeObjects();
+    dumpConfigFiles();
+    SaveResults();
+    CloseResultFile();
+    Destroy();
+}
+
+void PedeNoise::Pause()
+{
+}
+
+void PedeNoise::Resume()
+{
+}
+

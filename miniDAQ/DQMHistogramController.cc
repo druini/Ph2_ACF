@@ -25,6 +25,7 @@ bool DQMHistogramController::readMessage(DetectorContainer &theDetectorDataConta
 	while(TCPNetworkClient::connectClient() < 0)
 	{
 		//ADD A TIMEOUT
+		usleep(200000);
 		std::cout << __PRETTY_FUNCTION__ << "Trying to connect!" << std::endl;
 	}
 	std::cout << __PRETTY_FUNCTION__ << "DQM CONNECTED" << std::endl;
@@ -36,7 +37,7 @@ bool DQMHistogramController::readMessage(DetectorContainer &theDetectorDataConta
 		// if(receive(configBuffer, 1) != -1)
 		// if(receive(*reinterpret_cast<std::vector<char>*>(*configBuffer.end()), 1) != -1)
 		std::vector<char> tmpConfigBuffer;
-		if(receive(tmpConfigBuffer, 1) != -1)
+		if(receive(tmpConfigBuffer, 1) > 0)
 		{
 			std::cout << "Got Something" << std::endl;
 			configBuffer.insert(configBuffer.end(), tmpConfigBuffer.begin(), tmpConfigBuffer.end());

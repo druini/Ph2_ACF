@@ -27,10 +27,10 @@ void MiddlewareInterface::initialize(void)
 }
 
 //========================================================================================================================
-void MiddlewareInterface::configure(void)
+void MiddlewareInterface::configure(std::string calibrationName, std::string configurationFilePath)
 {
 	std::string readBuffer="";
-	TCPNetworkClient::sendAndReceive("Configure",readBuffer,10);
+	TCPNetworkClient::sendAndReceive("Configure,Calibration:" + calibrationName + ",ConfigurationFile:" + configurationFilePath,readBuffer,10);
 	std::cout << __PRETTY_FUNCTION__ << "DONE WITH Configure-" << readBuffer << "-"<< std::endl;
 }
 
