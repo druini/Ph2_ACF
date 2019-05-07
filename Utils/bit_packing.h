@@ -1,3 +1,13 @@
+/*!
+  \file                  bit_packing.h
+  \brief                 Tools to pack and unpack sequence of bits
+  \author                Alkiviadis Papadopoulos
+  \version               1.0
+  \date                  01/04/19
+  Support:               email to alkiviadis.papadopoulos@cern.ch
+  Support:               email to mauro.dinardo@cern.ch
+*/
+
 #pragma once
 
 #include <cstdint>
