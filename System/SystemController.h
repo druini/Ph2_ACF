@@ -82,6 +82,7 @@ namespace Ph2_System {
         //for writing 1 file for each FED
         std::string             fRawFileName;
         bool                    fWriteHandlerEnabled;
+        bool                    fStreamerEnabled;
         TCPNetworkServer*       fNetworkStreamer;
 
       private:
@@ -155,7 +156,7 @@ namespace Ph2_System {
          * \param pFilename : HW Description file
          *\param os : ostream to dump output
          */
-        void InitializeHw ( const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = true );
+        void InitializeHw ( const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = false );
 
         /*!
          * \brief Initialize the settings
@@ -198,8 +199,8 @@ namespace Ph2_System {
         virtual void Pause();
         virtual void Resume();
         virtual void ConfigureCalibration();
-        virtual void ConfigureHardware(std::string cHWFile);
-        virtual void Configure(std::string cHWFile);
+        virtual void ConfigureHardware(std::string cHWFile, bool enableStream = false);
+        virtual void Configure(std::string cHWFile, bool enableStream = false);
 
 
         //these start and stop acquistion on a single board

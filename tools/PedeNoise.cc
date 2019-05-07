@@ -357,9 +357,9 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
 
     ContainerFactory   theDetectorFactory;
 	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-	std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
-    std::map<uint16_t, ModuleGlobalOccupancyMap>     backEndCbcOccupanyMap;
-    float globalOccupancy=0;
+	// std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
+ //    std::map<uint16_t, ModuleGlobalOccupancyMap>     backEndCbcOccupanyMap;
+ //    float globalOccupancy=0;
 
     bool originalAllChannelFlag = this->fAllChan;
 
