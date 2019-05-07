@@ -143,6 +143,5 @@ int main ( int argc, char* argv[] )
     cTool.Destroy();
 
     if ( !batchMode ) cApp.Run();
-
     return 0;
 }

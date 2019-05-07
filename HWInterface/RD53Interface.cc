@@ -8,6 +8,7 @@
 */
 
 #include "RD53Interface.h"
+#include "../Utils/RegisterValue.h"
 
 namespace Ph2_HwInterface
 {
@@ -312,6 +313,7 @@ namespace Ph2_HwInterface
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
     this->WriteRD53Mask(pRD53, true);
+    return true;
   }
   
   bool RD53Interface::MaskAllChannels (Chip* pChip, bool mask, bool pVerifLoop)
@@ -346,7 +348,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::WriteChipAllLocalReg (Chip* pChip, const std::string& dacName, std::vector<uint16_t>& pValue, bool pVerifLoop)
+  bool RD53Interface::WriteChipAllLocalReg (Chip* pChip, const std::string& dacName, ChannelContainer<RegisterValue>& pValue, bool pVerifLoop)
   {
     unsigned int row, col;
     RD53* pRD53 = static_cast<RD53*>(pChip);
@@ -354,7 +356,7 @@ namespace Ph2_HwInterface
     for (unsigned int i = 0; i < pValue.size(); i++)
       {
 	RD53::fromVec2Matrix(i,row,col);
-	(*pRD53->getPixelsConfig())[col].TDAC[row] = pValue[i];
+	(*pRD53->getPixelsConfig())[col].TDAC[row] = pValue[i].fRegisterValue;
       }
 
     this->WriteRD53Mask(pRD53, false);

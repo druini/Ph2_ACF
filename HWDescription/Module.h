@@ -21,6 +21,7 @@
 #include "../Utils/easylogging++.h"
 #include <vector>
 #include <stdint.h>
+#include "../Utils/Container.h"
 
 // FE Hybrid HW Description Class
 
@@ -35,14 +36,14 @@ namespace Ph2_HwDescription {
      * \class Module
      * \brief handles a vector of Chip which are connected to the Module
      */
-    class Module : public FrontEndDescription
+    class Module : public FrontEndDescription, public ModuleContainer
     {
 
       public:
 
         // C'tors take FrontEndDescription or hierachy of connection
-        Module ( const FrontEndDescription& pFeDesc, uint8_t pModuleId );
-        Module ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId );
+        Module (const FrontEndDescription& pFeDesc, uint8_t pModuleId );
+        Module (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId );
 
         // Default C'tor
         Module();
@@ -50,18 +51,18 @@ namespace Ph2_HwDescription {
         // D'tor
         ~Module()
         {
-            for ( auto& pChip : fChipVector )
-                if (pChip) delete pChip;
+            // for ( auto& pChip : fChipVector )
+            //     if (pChip) delete pChip;
 
-            fChipVector.clear();
+            // fChipVector.clear();
 
-            for ( auto& pMPA : fMPAVector )
-                delete pMPA;
+            // for ( auto& pMPA : fMPAVector )
+            //     delete pMPA;
 
-       	    for ( auto& pSSA : fSSAVector )
-            delete pSSA;
+       	    // for ( auto& pSSA : fSSAVector )
+            // delete pSSA;
 
-            fMPAVector.clear();
+            // fMPAVector.clear();
  
 	    // for ( auto& pRD53 : fRD53Vector )
 	    //   if (pRD53) delete pRD53;

@@ -16,7 +16,7 @@ public:
 	MiddlewareController(int serverPort, int bufferSize = 0x10000);
 	virtual ~MiddlewareController(void);
 
-	std::string& readMessage(const std::string& buffer);
+	std::string readMessage(const std::string& buffer);
 
 protected:
 
@@ -28,9 +28,6 @@ protected:
 			end = buffer.size()-1;
 		return buffer.substr(begin,end-begin);
 	}
-
-	//BurninBoxController&    theBurninBoxController_;
-	//BeagleBoneConfiguration theBeagleBoneConfiguration_;
 	std::string             currentRun_= "0";
 	bool                    running_   = false;
 	bool                    paused_    = false;

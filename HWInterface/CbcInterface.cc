@@ -11,6 +11,10 @@
 
 #include "CbcInterface.h"
 #include "../Utils/ConsoleColor.h"
+#include "../Utils/ChannelGroupHandler.h"
+#include "../Utils/Container.h"
+#include "../Utils/RegisterValue.h"
+#include <bitset>
 
 #define DEV_FLAG 0
 // #define COUNT_FLAG 0
@@ -63,39 +67,59 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
+    bool CbcInterface::setInjectionSchema (Chip* pCbc, const ChannelGroupBase *group, bool pVerifLoop)
+    {
+        uint8_t testPulseDel  = pCbc->getReg ("TestPulseDel&ChanGroup") & 0xF8;
+        std::bitset<NCHANNELS> baseInjectionChannel (std::string("00000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011"));
+        uint8_t channelGroup = 0;
+        for(; channelGroup<=8; ++channelGroup)
+        {
+            if(static_cast<const ChannelGroup<NCHANNELS,1>*>(group)->getBitset() == baseInjectionChannel)
+            {
+                break;
+            }
+        }
+        if(channelGroup == 8)
+            throw Exception( "bool CbcInterface::setInjectionSchema (Chip* pCbc, const ChannelGroupBase *group, bool pVerifLoop): CBC is not able to inject the channel pattern" );
+        uint8_t cRegValue = testPulseDel & 3;
+        return WriteChipReg ( pCbc, "TestPulseDel&ChanGroup",  cRegValue );
+    }
+
+    bool CbcInterface::maskChannelsGroup (Chip* pCbc, const ChannelGroupBase *group, bool pVerifLoop)
+    {
+        const ChannelGroup<NCHANNELS,1>* originalMask     = static_cast<const ChannelGroup<NCHANNELS,1>*>(pCbc->getChipOriginalMask());
+        const ChannelGroup<NCHANNELS,1>* currentGroupMask = static_cast<const ChannelGroup<NCHANNELS,1>*>(group                       );
+        std::bitset<NCHANNELS> maskToBeSet = originalMask->getBitset() & currentGroupMask->getBitset();
+
+        std::vector< std::pair<std::string, uint16_t> > cRegVec; 
+        cRegVec.clear(); 
+        
+        for(uint8_t maskGroup=0; maskGroup<32; ++maskGroup)
+        {
+            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)((maskToBeSet>>(maskGroup<<3)).to_ulong() & 0xFF)));
+        }
+
+        return WriteChipMultReg ( pCbc , cRegVec, pVerifLoop );
+
+    }
+
 
     bool CbcInterface::ConfigureChipOriginalMask (Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
     {
-        //first, identify the correct BeBoardFWInterface
-        setBoard ( pCbc->getBeBoardId() );
-
-        //vector to encode all the registers into
-        std::vector<uint32_t> cVec;
-        // const uint32_t *cbcMask32 = pCbc->getCbcmask();
-        const std::vector<uint8_t> cbcMask = pCbc->getChipMask();
-
-        uint8_t maskAddressStartingPoint = 0x20;
-        for ( uint8_t address=0; address<=0x1F; ++address){
-            // std::cout<<std::hex<<(unsigned int)cbcMask[address]<<std::dec<<std::endl;
-            fBoardFW->EncodeReg (ChipRegItem (0x00, maskAddressStartingPoint+address, 0x00, cbcMask[address]), pCbc->getFeId(), pCbc->getChipId(), cVec, pVerifLoop, true);
-            // fBoardFW->EncodeReg (ChipRegItem (0x00, maskAddressStartingPoint+address, 0x00, (cbcMask32[address>>2] >> ((address & 0x3) *8)) & 0xFF), pCbc->getFeId(), pCbc->getChipId(), cVec, pVerifLoop, true);
         
-#ifdef COUNT_FLAG
-            fRegisterCount++;
-#endif
+        const ChannelGroup<NCHANNELS,1>* originalMask = static_cast<const ChannelGroup<NCHANNELS,1>*>(pCbc->getChipOriginalMask());
+        
+        std::vector< std::pair<std::string, uint16_t> > cRegVec; 
+        cRegVec.clear(); 
+        
+        for(uint8_t maskGroup=0; maskGroup<32; ++maskGroup)
+        {
+            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)((originalMask->getBitset()>>(maskGroup<<3)).to_ulong() & 0xFF)));
         }
 
-        // write the registers, the answer will be in the same cVec
-        // the number of times the write operation has been attempted is given by cWriteAttempts
-        uint8_t cWriteAttempts = 0 ;
-        bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
-
-#ifdef COUNT_FLAG
-        fTransactionCount++;
-#endif
-
-        return cSuccess;
+        return WriteChipMultReg ( pCbc , cRegVec, pVerifLoop );
     }
+
 
     bool CbcInterface::MaskAllChannels ( Chip* pCbc, bool mask, bool pVerifLoop )
     {
@@ -113,25 +137,8 @@ namespace Ph2_HwInterface {
 
     bool CbcInterface::UnmaskChannelList ( Chip* pCbc, const std::vector<uint32_t> &channelList, bool pVerifLoop )
     {
-        std::vector<uint8_t> chipMask;
-        bool chipHasMaskedChannels = pCbc->hasMaskedChannels();
-        if(chipHasMaskedChannels) chipMask = pCbc->getChipMask();
-
-        std::vector<std::pair<std::string, uint16_t> > cRegVec; 
-        cRegVec.clear(); 
-
-        for(const auto & channel :  channelList)
-        {
-            if(channel>=pCbc->getNumberOfChannels()) LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Channel "<< channel << " does not exist, skipping" << RESET;
-            else
-            {
-                uint8_t channelRegisted = channel >> 8;
-                if(chipHasMaskedChannels) cRegVec.push_back ( {fChannelMaskMapCBC3[channelRegisted], chipMask[channelRegisted] & (channel & 0xFF) } );
-                else cRegVec.push_back ( {fChannelMaskMapCBC3[channelRegisted], channel & 0xFF } );
-            }
-        }
-
-        return WriteChipMultReg ( pCbc, cRegVec, pVerifLoop );
+         LOG (ERROR) << __PRETTY_FUNCTION__ << " This function should not be used\n";
+         return false;
     }
 
     bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop )
@@ -264,7 +271,7 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
-    bool CbcInterface::WriteChipAllLocalReg ( Chip* pCbc, const std::string& dacName, std::vector<uint16_t>& localRegValues, bool pVerifLoop )
+    bool CbcInterface::WriteChipAllLocalReg ( Chip* pCbc, const std::string& dacName, ChannelContainer<RegisterValue>& localRegValues, bool pVerifLoop )
     {
         assert(localRegValues.size()==pCbc->getNumberOfChannels());
         std::string dacTemplate;
@@ -275,28 +282,29 @@ namespace Ph2_HwInterface {
         else LOG (ERROR) << "Error, DAC "<< dacName <<" is not a Local DAC";
 
         std::vector<std::pair<std::string, uint16_t> > cRegVec;
-        std::vector<uint32_t> listOfChannelToUnMask;
+        // std::vector<uint32_t> listOfChannelToUnMask;
+        ChannelGroup<NCHANNELS,1> channelToEnable;
 
-        for(uint32_t iChannel=0; iChannel<pCbc->getNumberOfChannels(); ++iChannel){
+        for(uint8_t iChannel=0; iChannel<pCbc->getNumberOfChannels(); ++iChannel){
             if(isMask){
-                if( localRegValues[iChannel] ){
-                    listOfChannelToUnMask.emplace_back(iChannel);
+                if( localRegValues[iChannel].fRegisterValue ){
+                    channelToEnable.enableChannel(iChannel);
+                    // listOfChannelToUnMask.emplace_back(iChannel);
                 }
             }
             else {
                 char dacName1[20];
                 sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
-                cRegVec.emplace_back(dacName1,localRegValues[iChannel]);
+                cRegVec.emplace_back(dacName1,localRegValues[iChannel].fRegisterValue);
             }
         }
 
-        if(isMask){
-            bool maskingDone;
-            maskingDone = MaskAllChannels(pCbc,true);
-            maskingDone = maskingDone && UnmaskChannelList(pCbc , listOfChannelToUnMask);
-            return maskingDone;
+        if(isMask)
+        {
+            return maskChannelsGroup (pCbc, &channelToEnable, pVerifLoop);
         }
-        else{
+        else
+        {
             return WriteChipMultReg (pCbc, cRegVec, pVerifLoop);
         }
             

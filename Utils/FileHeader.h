@@ -69,19 +69,7 @@ class FileHeader
 
     BoardType getBoardType()
     {
-        if (fType == "GLIB")
-            return BoardType::GLIB;
-        else if (fType == "MPAGLIB")
-            return BoardType::MPAGLIB;
-        else if (fType == "CTA")
-            return BoardType::CTA;
-        else if (fType == "ICGLIB")
-            return BoardType::ICGLIB;
-        else if (fType == "ICFC7")
-            return BoardType::ICFC7;
-        else if (fType == "CBC3FC7")
-            return BoardType::CBC3FC7;
-        else if (fType == "D19C")
+        if (fType == "D19C")
             return BoardType::D19C;
         else//LORE ADDED default to D19C
         	return BoardType::D19C;

@@ -90,8 +90,8 @@ add_executable(miniDAQ miniDAQ.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.
 target_link_libraries(miniDAQ ${LIBS} RootWeb)
 
 #miniDQM
-add_executable(miniDQM miniDQM.cc publisher.cc publisher.h ../DQMUtils/DQMHistogrammer.cc ../DQMUtils/DQMHistogrammer.h)
-target_link_libraries(miniDQM ${LIBS} Ph2_Tools RootWeb)
+#add_executable(miniDQM miniDQM.cc publisher.cc publisher.h ../DQMUtils/DQMHistogrammer.cc ../DQMUtils/DQMHistogrammer.h)
+#target_link_libraries(miniDQM ${LIBS} Ph2_Tools RootWeb)
 
 #miniSLinkDQM
 add_executable(miniSLinkDQM miniSLinkDQM.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.h ../DQMUtils/DQMEvent.cc ../DQMUtils/SLinkDQMHistogrammer.cc ../DQMUtils/SLinkDQMHistogrammer.h)

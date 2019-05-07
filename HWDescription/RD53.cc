@@ -8,6 +8,7 @@
 */
 
 #include "RD53.h"
+#include "../Utils/ChannelGroupHandler.h"
 
 #include <unordered_map>
 
@@ -17,12 +18,14 @@ namespace Ph2_HwDescription
   {
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
+    fChipOriginalMask = new ChannelGroup<NCOLS, NROWS>;
   }
 
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
   {
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
+    fChipOriginalMask = new ChannelGroup<NCOLS, NROWS>;
   }
 
   RD53::~RD53 () {}
@@ -39,7 +42,7 @@ namespace Ph2_HwDescription
 	bool foundPixelConfig = false;
 	int cLineCounter = 0;
 	ChipRegItem fRegItem;
-	fhasMaskedChannels = false;
+	// fhasMaskedChannels = false;
 
 	while (getline (file, line))
 	  {
@@ -78,7 +81,7 @@ namespace Ph2_HwDescription
 			  {
 			    pixData.Enable[it] = atoi(readWord.c_str());
 			    it++;
-			    if (pixData.Enable[it] == 0) fhasMaskedChannels = true;
+			    // if (pixData.Enable[it] == 0) fhasMaskedChannels = true;
 			  }
 		      }
 
@@ -543,7 +546,7 @@ namespace Ph2_HwDescription
     col = 4 * ((coreCol << NBIT_SIDE) | side);
   }
   
-  uint16_t RD53::getNumberOfChannels () const
+  uint32_t RD53::getNumberOfChannels () const
   {
     return NCOLS * NROWS;
   }
@@ -737,12 +740,12 @@ namespace Ph2_HwDescription
     return 0;
   }
 
-  bool RD53::IsChannelUnMasked (uint32_t cChan) const
-  {
-    unsigned int row, col;
-    RD53::fromVec2Matrix(cChan,row,col);
-    return fPixelsConfig[col].Enable[row];
-  }
+  // bool RD53::IsChannelUnMasked (uint32_t cChan) const
+  // {
+  //   unsigned int row, col;
+  //   RD53::fromVec2Matrix(cChan,row,col);
+  //   return fPixelsConfig[col].Enable[row];
+  // }
 
   RD53::Event::Event(const uint32_t* data, size_t n)
   {
@@ -798,20 +801,21 @@ namespace Ph2_HwDescription
 																  cal_aux_delay);
   }
 
-  std::vector<uint8_t>& RD53::getChipMask()
-  {
-    fChipMask.clear();
-    std::vector<uint8_t> vec(NCOLS*NROWS/8, 0);
-    fChipMask = vec;
-    uint32_t chn;
+ //  std::vector<uint8_t>& RD53::getChipMask()
+ //  {
+ //    fChipMask.clear();
+ //    std::vector<uint8_t> vec(NCOLS*NROWS/8, 0);
+ //    fChipMask = vec;
+ //    uint32_t chn;
 
-    for (unsigned int col = 0; col < fPixelsConfig.size(); col++)
-      for (unsigned int row = 0; row < fPixelsConfig[col].Enable.size(); row++)
-	{
-	  chn = RD53::fromMatrix2Vec(row,col);
-	  fChipMask[chn/8] = fChipMask[chn/8] | (fPixelsConfig[col].Enable[row] << (chn % 8));
-	}
-  }
+ //    for (unsigned int col = 0; col < fPixelsConfig.size(); col++)
+ //      for (unsigned int row = 0; row < fPixelsConfig[col].Enable.size(); row++)
+	// {
+	//   chn = RD53::fromMatrix2Vec(row,col);
+	//   fChipMask[chn/8] = fChipMask[chn/8] | (fPixelsConfig[col].Enable[row] << (chn % 8));
+	// }
+ //    return fChipMask;
+ //  }
 
   template<int NBITS>
   std::bitset<NBITS> RD53::SetBits (unsigned int nBit2Set)

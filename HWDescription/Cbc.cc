@@ -17,6 +17,7 @@
 #include <string.h>
 #include <iomanip>
 #include "Definition.h"
+#include "../Utils/ChannelGroupHandler.h"
 
 
 namespace Ph2_HwDescription {
@@ -27,6 +28,7 @@ namespace Ph2_HwDescription {
         fChipMask = std::vector<uint8_t>(NCHANNELS%8 == 0 ? NCHANNELS/8 : NCHANNELS/8 + 1,0);
         loadfRegMap ( filename );
         setFrontEndType ( FrontEndType::CBC3);
+        fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
     }
 
     // C'tors which take BeId, FMCId, FeID, CbcId
@@ -37,6 +39,7 @@ namespace Ph2_HwDescription {
         fChipMask = std::vector<uint8_t>(NCHANNELS%8 == 0 ? NCHANNELS/8 : NCHANNELS/8 + 1,0);
         loadfRegMap ( filename );
         setFrontEndType ( FrontEndType::CBC3);
+        fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
     }
 
     //load fRegMap from file
@@ -50,8 +53,8 @@ namespace Ph2_HwDescription {
             std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
             int cLineCounter = 0;
             ChipRegItem fRegItem;
-
-            fhasMaskedChannels = false;
+            
+            // fhasMaskedChannels = false;
             while ( getline ( file, line ) )
             {
                 if ( line.find_first_not_of ( " \t" ) == std::string::npos )
@@ -80,7 +83,18 @@ namespace Ph2_HwDescription {
 
                     if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
                         fChipMask[fRegItem.fAddress - 0x20] = fRegItem.fValue;
-                        if(!fhasMaskedChannels && fRegItem.fValue!=0xFF) fhasMaskedChannels=true;
+                        // if(!fhasMaskedChannels && fRegItem.fValue!=0xFF) fhasMaskedChannels=true;
+                        //disable masked channels only
+                        if(fRegItem.fValue!=0xFF)
+                        {
+                            for(uint8_t channel=0; channel<8; ++channel)
+                            {
+                                if((fRegItem.fValue && (0x1<<channel)) == 0)
+                                {
+                                    fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20)*8 + channel);
+                                }
+                            }
+                        }
                     }
 
                     fRegMap[fName] = fRegItem;

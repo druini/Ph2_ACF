@@ -8,7 +8,6 @@
 #include "../Utils/argvparser.h"
 #include "../Utils/Timer.h"
 #include "../tools/Tool.h"
-#include "CtaFpgaConfig.h"
 #include "TROOT.h"
 #include "TApplication.h"
 

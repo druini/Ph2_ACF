@@ -118,15 +118,6 @@ class PulseShape : public Tool
     uint32_t fStepSize; /*!< Step size */
     std::vector<uint32_t> fChannelVector;  /*!< Channels in the test group */
 
-
-    const std::string getDelAfterTPString (BoardType pBoardType)
-    {
-
-        if (pBoardType == BoardType::GLIB || pBoardType == BoardType::CTA) return "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE";
-        else if (pBoardType == BoardType::ICGLIB || pBoardType == BoardType::ICFC7) return "cbc_daq_ctrl.commissioning_cycle.test_pulse_count";
-        else return "not recognized";
-    }
-
 };
 
 /*!

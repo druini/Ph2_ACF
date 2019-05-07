@@ -19,11 +19,12 @@ else
     export BOOST_LIB=/usr/lib64
 fi
 
-########
-# ROOT #
-########
-#source /opt/local/root/bin/thisroot.sh
-export ROOTLIB=$ROOTSYS/myBuild/lib
+#ROOT
+#source /usr/local/bin/thisroot.shs
+source /opt/local/root/bin/thisroot.sh
+#export ROOTLIB=/usr/local/lib/root
+#export ROOTLIB=$ROOTSYS/myBuild/lib
+export ROOTSYS=/usr/local/lib/root
 
 #######
 # ZMQ #

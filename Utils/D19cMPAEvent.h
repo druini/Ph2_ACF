@@ -271,6 +271,12 @@ namespace Ph2_HwInterface {
             }
         }
 
+        void fillDataContainer(BoardContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup) override
+        {
+            std::cout<< __PRETTY_FUNCTION__ << " YOU NEED TO IMPLEMENT ME!!!!";
+            abort();
+        }
+        
         void printMPAHeader (std::ostream& os, uint8_t pFeId, uint8_t pMPAId) const;
 
         SLinkEvent GetSLinkEvent ( BeBoard* pBoard) const override;

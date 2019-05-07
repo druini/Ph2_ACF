@@ -24,7 +24,9 @@
 #include <utility>
 #include <set>
 #include "../Utils/easylogging++.h"
+#include "../Utils/Container.h"
 
+class ChannelGroupBase;
 // Chip2 Chip HW Description Class
 
 
@@ -42,7 +44,7 @@ namespace Ph2_HwDescription {
      * \class Chip
      * \brief Read/Write Chip's registers on a file, contains a register map
      */
-    class Chip : public FrontEndDescription
+    class Chip : public FrontEndDescription, public ChipContainer
     {
 
       public:
@@ -61,7 +63,7 @@ namespace Ph2_HwDescription {
         Chip ( const Chip& cbcobj );
 
         // D'Tor
-        ~Chip();
+        virtual ~Chip();
 
         /*!
          * \brief acceptor method for HwDescriptionVisitor
@@ -133,16 +135,18 @@ namespace Ph2_HwDescription {
             fChipId = pChipId;
         }
 
-        virtual uint16_t getNumberOfChannels() const  = 0;
+        virtual uint32_t getNumberOfChannels() const  = 0;
 
-        virtual std::vector<uint8_t>& getChipMask() = 0;
+        // virtual std::vector<uint8_t>& getChipMask() = 0;
 
-        bool hasMaskedChannels() const
-        {
-	  return fhasMaskedChannels;
-        }
+        const ChannelGroupBase* getChipOriginalMask() const override {return fChipOriginalMask;}
+
+   //      bool hasMaskedChannels() const
+   //      {
+	  // return fhasMaskedChannels;
+   //      }
 	
-        virtual bool IsChannelUnMasked(uint32_t cChan) const = 0;
+        // virtual bool IsChannelUnMasked(uint32_t cChan) const = 0;
 
         virtual bool isDACLocal(const std::string &dacName)  = 0;
 
@@ -153,12 +157,13 @@ namespace Ph2_HwDescription {
         // uint16_t fNumberOfChannels;
         //Chip Description
         uint8_t fChipId;
-        bool fhasMaskedChannels;
+        // bool fhasMaskedChannels;
 
         // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value
         ChipRegMap fRegMap;
         CommentMap fCommentMap;
         std::vector<uint8_t> fChipMask;
+        ChannelGroupBase*     fChipOriginalMask;
         
     };
 

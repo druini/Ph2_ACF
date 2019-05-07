@@ -16,11 +16,7 @@ void SignalScanFit::Initialize ()
             fType = cFe->getFrontEndType();
 
             // Handle the binning of the histograms
-            if ( fType == FrontEndType::CBC2 ) {
-                fVCthNbins = int( (256 / double(fSignalScanStep)) + 1 ); 
-                fVCthMax = double( ( fVCthNbins * fSignalScanStep ) - (double(fSignalScanStep) / 2.) ); //"center" de bins
-                fVCthMin = 0. - ( double(fSignalScanStep) / 2. );
-            } else if ( fType == FrontEndType::CBC3 ) {
+            if ( fType == FrontEndType::CBC3 ) {
                 fVCthNbins = int( (1024 / double(fSignalScanStep)) + 1 ); 
                 fVCthMax = double( ( fVCthNbins * fSignalScanStep ) - (double(fSignalScanStep) / 2.) ); //"center" de bins
                 fVCthMin = 0. - ( double(fSignalScanStep) / 2. );
@@ -408,21 +404,7 @@ void SignalScanFit::fitHist ( Chip* pCbc, std::string pHistName )
     // Not Hole Mode available yet!
     if ( !fHoleMode )
     {
-        if ( fType == FrontEndType::CBC2 ) 
-        {
-            cPlateau = 0.01;
-            cWidth = 10.;
-            cVsignal = 72.;
-            cNoise = 2.;
-            cMin = 0;
-            cMax = 95;
-            cFit = new TF1 ("MyGammaSignal", MyGammaSignal, cMin, cMax, 4);
-            cFit->SetParLimits(0, 0., 50.);
-            cFit->SetParLimits(1, 65., 85.);
-            cFit->SetParLimits(2, 0., 20.);
-            cFit->SetParLimits(3, 0., 10.);
-        } 
-        else if ( fType == FrontEndType::CBC3 )
+        if ( fType == FrontEndType::CBC3 )
         {
             cPlateau = 0.01;
             cWidth = 15.;

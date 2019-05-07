@@ -19,14 +19,8 @@
 //-----------------------------------------------------------------------------
 //Glib Config Files
 
-#define XML_DESCRIPTION_FILE_2CBC "settings/ICDescription.xml"
-#define XML_DESCRIPTION_FILE_4CBC "settings/HWDescription_2CBC.xml"
-#define XML_DESCRIPTION_FILE_8CBC "settings/HWDescription_8CBC.xml"
-#define XML_DESCRIPTION_FILE_16CBC "settings/Beamtest_Nov15.xml"
-
-
 //Time out for stack writing
-#define TIME_OUT         5
+// #define TIME_OUT         5
 
 
 //------------------------------------------------------------------------------
@@ -124,8 +118,8 @@
 #define WIDTH_CBCSTUBDATA              12
 //------------------------------------------------------------------------------
 
-enum class BoardType {GLIB, ICGLIB, CTA, ICFC7, CBC3FC7, D19C, MPAGLIB, SUPERVISOR, FC7};
-enum class FrontEndType {UNDEFINED = 0, MODULE, CBC2, CBC3, MPA, SSA, RD53};
+enum class BoardType {D19C, FC7};
+enum class FrontEndType {UNDEFINED = 0, MODULE, CBC3, MPA, SSA, RD53};
 enum class SLinkDebugMode {SUMMARY = 0, FULL = 1, ERROR = 2};
 enum class EventType {ZS = 1, VR = 2};
 

@@ -103,11 +103,11 @@ namespace Ph2_HwDescription
     void     setReg              (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
     void     saveRegMap          (const std::string& filename)                                         override;
     uint16_t getReg              (const std::string& pReg) const                                       override;
-    uint16_t getNumberOfChannels () const                                                              override;
+    uint32_t getNumberOfChannels () const                                                              override;
     bool     isDACLocal          (const std::string& dacName)                                          override;
     uint8_t  getNumberOfBits     (const std::string& dacName)                                          override;
-    bool     IsChannelUnMasked   (uint32_t cChan) const                                                override;
-    std::vector<uint8_t>& getChipMask()                                                                override;
+    // bool     IsChannelUnMasked   (uint32_t cChan) const                                                override;
+    // std::vector<uint8_t>& getChipMask()                                                                override;
 
     std::vector<perPixelData>* getPixelsConfig        () { return &fPixelsConfig;        }
     std::vector<perPixelData>* getPixelsConfigDefault () { return &fPixelsConfigDefault; }

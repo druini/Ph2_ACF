@@ -10,11 +10,33 @@
  */
 
 #include "../Utils/D19cCbc3EventZS.h"
+#include "../Utils/Container.h"
+#include "../Utils/Occupancy.h"
+#include "../Utils/ChannelGroupHandler.h"
 
 using namespace Ph2_HwDescription;
 
 
 namespace Ph2_HwInterface {
+
+
+    void D19cCbc3EventZS::fillDataContainer(BoardContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
+    {
+        for(auto module: *boardContainer)
+        {
+            for(auto chip: *module)
+            {
+                unsigned int i = 0;
+                for(ChannelContainer<Occupancy>::iterator channel =  chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
+                {
+                    if(cTestChannelGroup->isChannelEnabled(i))
+                    {
+                        channel->fOccupancy  += (float)DataBit ( module->getId(), chip->getId(), i);
+                    }
+                }
+            }
+        }
+    }
 
     // Event implementation
     D19cCbc3EventZS::D19cCbc3EventZS ( const BeBoard* pBoard,  uint32_t pZSEventSize, const std::vector<uint32_t>& list )

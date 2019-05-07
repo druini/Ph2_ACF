@@ -1,16 +1,15 @@
-#include <stdio.h>
-#include <string.h>
 #include <iostream>
+#include <string>
 #include <unistd.h>
 
-#include "DQMHistogramController.h"
-#include "../tools/Tool.h"
-#include "../tools/Calibration.h"
+#include "../miniDAQ/DQMHistogramController.h"
+#include "../Utils/OccupancyStream.h"
 
 //========================================================================================================================
-DQMHistogramController::DQMHistogramController(int serverPort, int bufferSize)
-: TCPNetworkServer      (serverPort, bufferSize)
+DQMHistogramController::DQMHistogramController(std::string serverIP, int serverPort)
+: TCPNetworkClient(serverIP, serverPort)
 {
+	std::cout << __PRETTY_FUNCTION__ << std::endl;
 }
 //========================================================================================================================
 DQMHistogramController::~DQMHistogramController(void)
@@ -19,56 +18,63 @@ DQMHistogramController::~DQMHistogramController(void)
 //========================================================================================================================
 // virtual function to interpret messages
 // interacting with theBurninBoxController_ using theBeagleBoneConfiguration_ as helper class
-std::string& DQMHistogramController::readMessage(const std::string& buffer)
+bool DQMHistogramController::readMessage(DetectorContainer &theDetectorDataContainer)
 {
-
-	std::cout << "Received: " << buffer << std::endl;
-
-	if (buffer.substr(0,5) == "START") //changing the status changes the mode in threadMain (BBC) function.
+	//This can be done in the configure or start stage
+	std::cout << __PRETTY_FUNCTION__ << std::endl;
+	while(TCPNetworkClient::connectClient() < 0)
 	{
-		currentRun_ = getVariableValue("RunNumber", buffer);
-		theSystemController_->Start(stoi(currentRun_));
-		
+		//ADD A TIMEOUT
+		std::cout << __PRETTY_FUNCTION__ << "Trying to connect!" << std::endl;
 	}
-	else if (buffer.substr(0,4) == "STOP")
+	std::cout << __PRETTY_FUNCTION__ << "DQM CONNECTED" << std::endl;
+	send("send me the configuration");
+
+	std::vector<char> configBuffer;
+	while(1)
 	{
-		//We need to think :)
-	    theSystemController_->Stop();
-		std::cout << "Run " << currentRun_ << " stopped!" << std::endl;
+		// if(receive(configBuffer, 1) != -1)
+		// if(receive(*reinterpret_cast<std::vector<char>*>(*configBuffer.end()), 1) != -1)
+		std::vector<char> tmpConfigBuffer;
+		if(receive(tmpConfigBuffer, 1) != -1)
+		{
+			std::cout << "Got Something" << std::endl;
+			configBuffer.insert(configBuffer.end(), tmpConfigBuffer.begin(), tmpConfigBuffer.end());
+			MyDump(&*configBuffer.begin(),configBuffer.size());
+		}
+		else
+		{
+			std::cout << "Got Nada" << std::endl;
+			usleep(1000000);
+		}
+
+		if(configBuffer.size()>0)
+		{
+			std::cout<<configBuffer.size()<<std::endl;
+			OccupancyBoardStream theOccupancy;
+ 			if(theOccupancy.attachBuffer(&configBuffer))
+ 			{
+ 				std::cout<<"Matched!!!!!\n";
+				theOccupancy.decodeChipData(theDetectorDataContainer);
+				for(auto board : theDetectorDataContainer)
+				{
+
+			        for(auto module: *board)
+			        {
+			            for(auto chip: *module)
+			            {
+			                for(auto channel : *chip->getChannelContainer<ChannelContainer<Occupancy>>())
+			                    std::cout<<channel.fOccupancy<<" ";
+			                std::cout<<std::endl;
+			            }
+			        }
+
+				}
+ 			}
+		}
+
 	}
-	else if (buffer == "PAUSE")
-	{
-		//We need to think :)
-		std::cout << "Paused" << std::endl;
-	}
-	else if (buffer == "RESUME")
-	{
-		//We need to think :)
-		std::cout << "Resume" << std::endl;
-	}
-	//CONFIGURE
-	else if (buffer.substr(0,9) == "CONFIGURE")
-	{
 
-		std::cout << "We are in the configuration submodule" << std::endl;
-		theSystemController_ = new Calibration();
-		// quick (idiot) idea "CONFIGURE:ThresholdCalibration"
-		// if(buffer.substr(10,20) == "ThresholdCalibration") theSystemController_ = new Calibration();
-		// if(buffer.substr(10,7)  == "Physics")              theSystemController_ = new Physics                ();
-	    theSystemController_->Configure("/home/modtest/Programming/otsdaq/srcs/otsdaq_cmsoutertracker/otsdaq-cmsoutertracker/Ph2_ACF/settings/D19CDescription.xml");
-		std::cout << "Out of configuration submodule" << std::endl;
-
-	}
-
-	if(running_||paused_) //we go through here after start and resume or pause: sending back current status
-	{
-		std::cout << "getting time and status here" << std::endl;
-
-	}
-
-	std::string emptyString(""); 
-	return emptyString;
-
+	return true;
 }
-
 

@@ -67,9 +67,7 @@ namespace Ph2_HwInterface {
             if (fEventType == EventType::ZS) fNCbc = 0;
             else fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
         }
-        else if (pType == BoardType::CBC3FC7) fNCbc = (fEventSize - (EVENT_HEADER_SIZE_32_CBC3) ) / (CBC_EVENT_SIZE_32_CBC3);
-        else fNCbc = ( fEventSize - ( EVENT_HEADER_TDC_SIZE_32 ) ) / ( CBC_EVENT_SIZE_32 );
-
+        
         // to fill fEventList
         std::vector<uint32_t> lvec;
 
@@ -85,14 +83,6 @@ namespace Ph2_HwInterface {
         {
             //if the SwapIndex is greater than 0 and a multiple of the event size in 32 bit words, reset SwapIndex to 0
             if (cSwapIndex > 0 && cSwapIndex % fEventSize == 0) cSwapIndex = 0;
-
-            if (pType == BoardType::ICGLIB || pType == BoardType::ICFC7)
-                this->setIC (word, cWordIndex, cSwapIndex);
-            else if (pType == BoardType::SUPERVISOR)
-                this->setStrasbourgSupervisor (word);
-
-            //else if (pType == BoardType::CBC3FC7)
-            //this->setCbc3Fc7 (word);
 
 #ifdef __CBCDAQ_DEV__
             //TODO
@@ -112,9 +102,7 @@ namespace Ph2_HwInterface {
                     //LOG(INFO) << "Packing event # " << fEventList.size() << ", Event size is " << fZSEventSize << " words";
                     if (pType == BoardType::D19C)
                         fEventList.push_back ( new D19cCbc3EventZS ( pBoard, fZSEventSize, lvec ) );
-                    else
-                        fEventList.push_back ( new D19cCbc3EventZS ( pBoard, fZSEventSize, lvec ) );
-
+                    
                     lvec.clear();
 
                     if (fEventList.size() >= fNevents) break;
@@ -125,8 +113,7 @@ namespace Ph2_HwInterface {
                     cZSWordIndex = 0;
 
                     if (pType == BoardType::D19C) fZSEventSize = (0x0000FFFF & word);
-                    else fZSEventSize = fEventSize;
-
+                    
                     if (fZSEventSize > pData.size() )
                     {
                         LOG (ERROR) << "Missaligned data, not accepted";
@@ -142,11 +129,7 @@ namespace Ph2_HwInterface {
                 {
                     if (pType == BoardType::D19C)
                         fEventList.push_back ( new D19cCbc3Event ( pBoard, fNCbc, lvec ) );
-                    else if (pType == BoardType::CBC3FC7)
-                        fEventList.push_back ( new Cbc3Event ( pBoard, fNCbc, lvec ) );
-                    else
-                        fEventList.push_back ( new Cbc2Event ( pBoard, fNCbc, lvec ) );
-
+                    
                     lvec.clear();
 
                     if (fEventList.size() >= fNevents) break;

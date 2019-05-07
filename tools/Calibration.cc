@@ -1,31 +1,38 @@
 #include "Calibration.h"
+#include "../Utils/CBCChannelGroupHandler.h"
+#include "../Utils/ContainerFactory.h"
+#include "../Utils/Occupancy.h"
 
 //initialize the static member
 //std::map<Chip*, uint16_t> Calibration::fVplusMap;
 
 Calibration::Calibration() :
-    Tool(),
-    fVplusMap(),
-    fVplusCanvas (nullptr),
-    fOffsetCanvas (nullptr),
-    fOccupancyCanvas (nullptr),
-    fNCbc (0),
-    fNFe (0)
+    Tool            (),
+    fVplusMap       (),
+    fVplusCanvas    (nullptr),
+    fOffsetCanvas   (nullptr),
+    fOccupancyCanvas(nullptr),
+    fNCbc           (0),
+    fNFe            (0)
 {
 }
 
 Calibration::~Calibration()
 {
-
+    delete fChannelGroupHandler;
+    // delete fOffsetCanvas;
+    // delete fOccupancyCanvas;
 }
 
 void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 {
     fDisableStubLogic = pDisableStubLogic;
     // Initialize the TestGroups
+    fChannelGroupHandler = new CBCChannelGroupHandler();
+    fChannelGroupHandler->setChannelGroupParameters(16, 2);
     this->MakeTestGroups(FrontEndType::CBC3);
     this->fAllChan = pAllChan;
-
+    
     // now read the settings from the map
     auto cSetting = fSettingsMap.find ( "HoleMode" );
     fHoleMode = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
@@ -52,7 +59,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
     // Canvases
     //fVplusCanvas = new TCanvas ( "VPlus", "VPlus", 515, 0, 500, 500 );
-    fOffsetCanvas = new TCanvas ( "Offset", "Offset", 10, 0, 500, 500 );
+    fOffsetCanvas    = new TCanvas ( "Offset", "Offset", 10, 0, 500, 500 );
     fOccupancyCanvas = new TCanvas ( "Occupancy", "Occupancy", 10, 525, 500, 500 );
 
     // count FEs & CBCs
@@ -97,8 +104,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
                 TString cTitle;
 
-                if (fType == FrontEndType::CBC2) cTitle = Form ( "Vplus Values for Test Groups FE%d CBC%d; Vplus", cFeId, cCbcId );
-                else if (fType == FrontEndType::CBC3) cTitle = Form ( "VCth Values for Test Groups FE%d CBC%d; Vth", cFeId, cCbcId );
+                if (fType == FrontEndType::CBC3) cTitle = Form ( "VCth Values for Test Groups FE%d CBC%d; Vth", cFeId, cCbcId );
 
                 TH1I* cHist = new TH1I ( cName, cTitle, 1, 0, 1 );
                 cHist->SetMarkerStyle ( 20 );
@@ -137,16 +143,8 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
 
     LOG (INFO) << "Created Object Maps and parsed settings:" ;
-
-    if (fType == FrontEndType::CBC2)
-    {
-        LOG (INFO) << "	Nevents = " << fEventsPerPoint ;
-        LOG (INFO) << "	Hole Mode = " << fHoleMode ;
-        LOG (INFO) << "	TargetVcth = " << int ( fTargetVcth ) ;
-        LOG (INFO) << "	TargetOffset = " << int ( fTargetOffset ) ;
-        LOG (INFO) << "	TestPulseAmplitude = " << int ( fTestPulseAmplitude ) ;
-    }
-    else if (fType == FrontEndType::CBC3)
+    
+    if (fType == FrontEndType::CBC3)
     {
         fHoleMode = 0;
         fTargetOffset = 0x80;
@@ -165,16 +163,21 @@ void Calibration::FindVplus()
     ThresholdVisitor cThresholdVisitor (fChipInterface, fTargetVcth);
     this->accept (cThresholdVisitor);
 
-
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(true);
-    std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
-    std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
+    // std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
+    // std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
 
     setSameLocalDac("ChannelOffset", fTargetOffset);
     
-    bitWiseScan("VCth", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
+    // bitWiseScan("VCth", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
     
+    DetectorContainer         theOccupancyContainer;
+    fDetectorDataContainer = &theOccupancyContainer;
+    ContainerFactory   theDetectorFactory;
+    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
+
     setSameLocalDac("ChannelOffset", ( fHoleMode ) ? 0x00 : 0xFF);
     
     float cMeanValue = 0.;
@@ -216,11 +219,25 @@ void Calibration::FindOffsets()
     this->accept (cThresholdVisitor);
     // ok, done, all the offsets are at the starting value, VCth & Vplus are written
 
-    std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
-    std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
+    // std::map<uint16_t, Tool::ModuleOccupancyPerChannelMap> backEndOccupanyPerChannelAtTargetMap;
+    // std::map<uint16_t, Tool::ModuleGlobalOccupancyMap> backEndOccupanyAtTargetMap;
 
-    bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
+    // bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
     
+
+    DetectorContainer         theOccupancyContainer;
+    fDetectorDataContainer = &theOccupancyContainer;
+    ContainerFactory   theDetectorFactory;
+    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56);
+
+    // std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
+    // std::map<uint16_t, ModuleGlobalOccupancyMap > backEndCbcOccupanyMap;
+    // float globalOccupancy=0;
+    
+
+
+
     // setSameLocalDac("ChannelOffset", ( fHoleMode ) ? 0x00 : 0xFF);
 
     for ( auto cBoard : fBoardVector )
@@ -234,7 +251,8 @@ void Calibration::FindOffsets()
 
                 for ( int cChannel=0; cChannel<254; ++cChannel)
                 {
-                    cOccHist->Fill(cChannel, backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()][cChannel]);
+                    cOccHist->Fill(cChannel, theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->getChannel<Occupancy>(cChannel).fOccupancy);
+                    // cOccHist->Fill(cChannel, backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()][cChannel]);
                     std::string cRegName = Form ( "Channel%03d", cChannel + 1 );
                     cOffsetHist->Fill ( cChannel, (uint16_t)cCbc->getReg(cRegName) );
                 }
@@ -249,13 +267,13 @@ void Calibration::FindOffsets()
 }
 
 
-float Calibration::findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint )
-{
-    TH1F* cOccHist = static_cast<TH1F*> ( getHist ( pCbc, "Occupancy" ) );
-    float cOccupancy = cOccHist->GetEntries();
-    // return the hitcount divided by the the number of channels and events
-    return cOccupancy / ( static_cast<float> ( fTestGroupChannelMap[pTGroup].size() * pEventsPerPoint ) );
-}
+// float Calibration::findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint )
+// {
+//     TH1F* cOccHist = static_cast<TH1F*> ( getHist ( pCbc, "Occupancy" ) );
+//     float cOccupancy = cOccHist->GetEntries();
+//     // return the hitcount divided by the the number of channels and events
+//     return cOccupancy / ( static_cast<float> ( fTestGroupChannelMap[pTGroup].size() * pEventsPerPoint ) );
+// }
 
 void Calibration::clearOccupancyHists ( Chip* pCbc )
 {

@@ -104,8 +104,15 @@ int TCPNetworkServer::send(int fdClientSocket, const uint8_t* data, size_t size)
 //========================================================================================================================
 int TCPNetworkServer::send(int fdClientSocket, const std::string& buffer)
 {
-	std::cout << "Sending message: " << buffer << std::endl;
-	return send(fdClientSocket, reinterpret_cast<const uint8_t*>(buffer.c_str()), buffer.size());
+	//std::cout << "Sending message: " << buffer << std::endl;
+	return send(fdClientSocket, reinterpret_cast<const uint8_t*>(&buffer.at(0)), buffer.size());
+}
+
+//========================================================================================================================
+int TCPNetworkServer::send(int fdClientSocket, const std::vector<char>& buffer)
+{
+	//std::cout << "Sending message: " << buffer << std::endl;
+	return send(fdClientSocket, reinterpret_cast<const uint8_t*>(&buffer.at(0)), buffer.size());
 }
 
 //========================================================================================================================
@@ -124,26 +131,25 @@ void TCPNetworkServer::connect(int fdClientSocket)
 		{
 			std::cout << "closing the new socket  #: " << fdClientSocket << " : " << serverPort_ << std::endl;
 			close(fdClientSocket);
+			removeConnectedSocket(fdClientSocket);
 			break;
 		}
-		if( n<0 && !pushOnly_)
+		if( n<0 )
 		{
 			std::cout<< "incorrect close from socket  #: " << fdClientSocket << " errno: " << strerror(errno) << std::endl;
 			close(fdClientSocket);
+			removeConnectedSocket(fdClientSocket);
 			break;
 		}
-		else if(!pushOnly_)
+		else
 		{
 			msg[n] = 0;
 			std::cout << "New socket  #: " << fdClientSocket  << " Message: " << msg << " length: " << n << std::endl;
 			std::string messageToClient = readMessage(msg);
+			std::cout << "New socket  #: " << fdClientSocket  << " Sending back message: " << messageToClient << std::endl;
 
 			if( messageToClient != "" )
 				send(fdClientSocket, messageToClient);
-		}
-		else
-		{
-			send(fdClientSocket, sendMessage());
 		}
 
 		std::cout << "after message sent now checking for more..." << std::endl;
@@ -155,7 +161,7 @@ void TCPNetworkServer::connect(int fdClientSocket)
 }
 
 //========================================================================================================================
-int TCPNetworkServer::accept(unsigned int timeoutSeconds, unsigned int timeoutUSeconds)
+bool TCPNetworkServer::accept(unsigned int timeoutSeconds, unsigned int timeoutUSeconds)
 {
 	struct timeval timeout;
 	timeout.tv_sec = timeoutSeconds;
@@ -173,13 +179,15 @@ int TCPNetworkServer::accept(unsigned int timeoutSeconds, unsigned int timeoutUS
 		struct sockaddr_in clientAddress;
 		socklen_t socketSize = sizeof(clientAddress);
 		std::cout << "In connect function:" << " waiting for connection" << std::endl;
-		int newSocketFD = ::accept4(fdServerSocket_,(struct sockaddr*)&clientAddress,&socketSize, (pushOnly_ ? SOCK_NONBLOCK : 0));
+		//int newSocketFD = ::accept4(fdServerSocket_,(struct sockaddr*)&clientAddress,&socketSize, (pushOnly_ ? SOCK_NONBLOCK : 0));
+		int newSocketFD = ::accept4(fdServerSocket_,(struct sockaddr*)&clientAddress,&socketSize, 0);
+		connectedClients_.insert(newSocketFD);
 		std::thread thread(&TCPNetworkServer::connect, this, newSocketFD);
 		thread.detach();
-		return 1;
+		return true;
 	}
 
-	return -1;
+	return false;
 }
 
 //========================================================================================================================
@@ -250,5 +258,27 @@ int TCPNetworkServer::TCPListen(int port, int rcvbuf)
 	}
 
 	return (listenerFd);
+}
+
+//========================================================================================================================
+void TCPNetworkServer::removeConnectedSocket(int socket)
+{
+	if(connectedClients_.find(socket) != connectedClients_.end())
+		connectedClients_.erase(connectedClients_.find(socket));
+}
+
+//========================================================================================================================
+void TCPNetworkServer::sendMessage(const std::string& message)
+{
+	for(auto& socket : connectedClients_)
+		send(socket, message);
+
+}
+//========================================================================================================================
+void TCPNetworkServer::sendMessage(const std::vector<char>& message)
+{
+	for(auto& socket : connectedClients_)
+		send(socket, message);
+
 }
 
