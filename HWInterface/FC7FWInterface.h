@@ -22,14 +22,16 @@
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
-#define DEEPSLEEP 500000 // [microseconds]
+#define DEEPSLEEP  500000 // [microseconds]
 
-#define NBIT_FWVER     4 // Number of bits for the firmware version
-#define NBIT_ID        2 // Number of bits for the ID      in the register frame
-#define NBIT_STATUS    2 // Number of bits for the status  in the register frame
-#define NBIT_ADDRESS  10 // Number of bits for the address in the register frame
-#define NBIT_VALUE    16 // Number of bits for the value   in the register frame
-#define NBIT_AURORAREG 8 // Number of bits for the Aurora registers:lane_up and channel_ip
+#define IPBFASTDURATION 1 // Duration of a fast command in terms of 40MHz clk cycles
+
+#define NBIT_FWVER      4 // Number of bits for the firmware version
+#define NBIT_ID         2 // Number of bits for the ID      in the register frame
+#define NBIT_STATUS     2 // Number of bits for the status  in the register frame
+#define NBIT_ADDRESS   10 // Number of bits for the address in the register frame
+#define NBIT_VALUE     16 // Number of bits for the value   in the register frame
+#define NBIT_AURORAREG  8 // Number of bits for the Aurora registers:lane_up and channel_ip
 
 
 // #################
@@ -91,9 +93,9 @@ namespace Ph2_HwInterface
     void Resume()                 override;
     bool InitChipCommunication () override;
 
-    void     ReadNEvents  (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)   {} // @TMP@
-    uint32_t ReadData     (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)  override;
-    void SerializeSymbols (std::vector<std::vector<uint16_t> > & data, std::vector<uint32_t> & serialData) override;
+    void     ReadNEvents  (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = false)   {} // @TMP@
+    uint32_t ReadData     (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = false)  override;
+    void SerializeSymbols (std::vector<std::vector<uint16_t> > & data, std::vector<uint32_t> & serialData)         override;
 
     void WriteChipCommand (std::vector<uint32_t> & data, unsigned int repetition = 1)                                                        override;
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadChipRegisters (std::vector<uint32_t> & data, unsigned int nBlocks2Read = 1) override;
@@ -106,6 +108,7 @@ namespace Ph2_HwInterface
     void TurnOnFMC();
     void ResetBoard();
     void ResetReadout();
+    void ResetDDR3();
 
     struct ChipFrame
     {
@@ -134,8 +137,9 @@ namespace Ph2_HwInterface
       std::vector<RD53::Event> chip_events;
     };
     
-    static std::vector<Event> DecodeEvents(const std::vector<uint32_t>& data); 
-    
+    static std::vector<Event> DecodeEvents(const std::vector<uint32_t>& data);
+    static unsigned int AnalyzeEvents(const std::vector<FC7FWInterface::Event>& events, bool print = false);
+
     enum class TriggerSource : uint32_t
     {
       IPBus = 1,
@@ -166,11 +170,11 @@ namespace Ph2_HwInterface
       uint32_t first_cal_data  = 0;
       uint32_t second_cal_data = 0;
       
-      uint32_t delay_after_ecr        =  20;
-      uint32_t delay_after_autozero   =  20;
-      uint32_t delay_after_first_cal  =  20;
-      uint32_t delay_after_second_cal = 480;
-      uint16_t delay_loop             = 600;
+      uint32_t delay_after_ecr        =  0;
+      uint32_t delay_after_autozero   =  0;
+      uint32_t delay_after_first_cal  =  0;
+      uint32_t delay_after_second_cal =  0;
+      uint16_t delay_loop             =  0;
     };
 
     struct Autozero
@@ -192,7 +196,8 @@ namespace Ph2_HwInterface
 
       uint32_t n_triggers        = 0;
       uint32_t ext_trigger_delay = 0; // Used when trigger_source == TriggerSource::External
-      
+      uint32_t trigger_duration  = 0; // Number of triggers on top of the L1A (maximum value is 31)
+
       FastCmdFSMConfig fast_cmd_fsm;
       Autozero         autozero;
     };
