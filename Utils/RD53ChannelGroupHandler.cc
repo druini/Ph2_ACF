@@ -3,8 +3,8 @@
 
 RD53ChannelGroupHandler::RD53ChannelGroupHandler()
 {
-    allChannelGroup_     = new ChannelGroup<NCOLS,NROWS>();
-    currentChannelGroup_ = new ChannelGroup<NCOLS,NROWS>();
+    allChannelGroup_     = new ChannelGroup<NROWS,NCOLS>();
+    currentChannelGroup_ = new ChannelGroup<NROWS,NCOLS>();
 }
 
 RD53ChannelGroupHandler::~RD53ChannelGroupHandler()
