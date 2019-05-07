@@ -348,7 +348,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::WriteChipAllLocalReg (Chip* pChip, const std::string& dacName, ChannelContainer<RegisterValue>& pValue, bool pVerifLoop)
+  bool RD53Interface::WriteChipAllLocalReg (Chip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop)
   {
     unsigned int row, col;
     RD53* pRD53 = static_cast<RD53*>(pChip);
@@ -356,7 +356,7 @@ namespace Ph2_HwInterface
     for (unsigned int i = 0; i < pValue.size(); i++)
       {
 	RD53::fromVec2Matrix(i,row,col);
-	(*pRD53->getPixelsConfig())[col].TDAC[row] = pValue[i].fRegisterValue;
+	(*pRD53->getPixelsConfig())[col].TDAC[row] = pValue.getChannel<RegisterValue>(i).fRegisterValue;
       }
 
     this->WriteRD53Mask(pRD53, false);

@@ -126,7 +126,7 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteChipAllLocalReg ( Chip* pCbc, const std::string& dacName, ChannelContainer<RegisterValue>& pValue, bool pVerifLoop = true ) override;
+        bool WriteChipAllLocalReg ( Chip* pCbc, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true ) override;
 
 	/*!
          * \brief Read the designated register in the Chip
