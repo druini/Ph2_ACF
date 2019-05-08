@@ -8,7 +8,7 @@
 */
 
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../HWDescription/RD53.h"
+
 
 RD53ChannelGroupHandler::RD53ChannelGroupHandler()
 {

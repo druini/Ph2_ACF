@@ -20,21 +20,17 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-  /*!
-   * \class Cbc3Event
-   * \brief Event container to manipulate event flux from the Cbc2
-   */
   class RD53Event : public Event
   {
   public:
 
-  RD53Event(const std::vector<size_t>& chip_id, const std::vector<RD53::Event>& events)
-    : chip_id_vec(chip_id), chip_events(events) {}
+  RD53Event(const std::vector<size_t>& module_id, const std::vector<size_t>& chip_id, const std::vector<RD53::Event>& events)
+    : module_id_vec(module_id), chip_id_vec(chip_id), chip_events(events) {}
    
-  bool DataBit           (uint8_t /*module_id*/, uint8_t chip_id, uint32_t channel_id) const         override;
   void fillDataContainer (BoardContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
 
   // @TMP@ not implemented yet
+  bool DataBit                     (uint8_t /*module_id*/, uint8_t chip_id, uint32_t channel_id) const         {}
   void SetEvent                    (const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list) {}
   std::string HexString            () const {}
   uint32_t GetEventCountCBC        () const {}
@@ -53,13 +49,16 @@ namespace Ph2_HwInterface
   std::vector<uint32_t> GetHits    (uint8_t pFeId, uint8_t pCbcId) const {}
   SLinkEvent GetSLinkEvent         (BeBoard* pBoard)               const {}
   std::vector<Cluster> getClusters (uint8_t pFeId, uint8_t pCbcId) const {}
-
+  
   private:
-    std::vector<RD53::Event> chip_events;
-    std::vector<size_t>      chip_id_vec;
+  bool isThereAnHit (uint8_t module_id, uint8_t chip_id, uint32_t row, uint32_t col) const;
 
+  std::vector<size_t>       module_id_vec;
+  std::vector<size_t>       chip_id_vec;
+  std::vector<RD53::Event>  chip_events;
+  
   protected:
-    void print (std::ostream& out) const {};
+  void print (std::ostream& out) const {};
   };
 }
 

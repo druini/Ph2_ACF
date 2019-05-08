@@ -112,6 +112,7 @@ namespace Ph2_HwDescription
 
     void resetMask();
     void enableAllPixels();
+    void disableAllPixels();
     void enablePixel(unsigned int row, unsigned int col);
     void injectAllPixels();
     void injectPixel(unsigned int row, unsigned int col);

@@ -320,12 +320,8 @@ namespace Ph2_HwInterface
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
-    if (mask == true) pRD53->resetMask();
-    else
-      {
-	pRD53->enableAllPixels();
-	pRD53->injectAllPixels();
-      }
+    if (mask == true) pRD53->disableAllPixels();
+    else              pRD53->enableAllPixels();
 
     this->WriteRD53Mask(pRD53);
 

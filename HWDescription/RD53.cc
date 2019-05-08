@@ -16,16 +16,16 @@ namespace Ph2_HwDescription
 {
   RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename) : Chip (pFeDesc, pRD53Id)
   {
+    fChipOriginalMask = new ChannelGroup<NROWS, NCOLS>;
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
-    fChipOriginalMask = new ChannelGroup<NCOLS, NROWS>;
   }
 
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
   {
+    fChipOriginalMask = new ChannelGroup<NROWS, NCOLS>;
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
-    fChipOriginalMask = new ChannelGroup<NCOLS, NROWS>;
   }
 
   RD53::~RD53 () {}
@@ -40,8 +40,8 @@ namespace Ph2_HwDescription
       {
 	std::string line, fName, fAddress_str, fDefValue_str, fValue_str;
 	bool foundPixelConfig = false;
-	int cLineCounter = 0;
-	unsigned int col = 0;
+	int cLineCounter      = 0;
+	unsigned int col      = 0;
 	ChipRegItem fRegItem;
 
 	while (getline (file, line))
@@ -339,6 +339,15 @@ namespace Ph2_HwDescription
       {
 	fPixelsConfig[i].Enable.set();
 	fPixelsConfig[i].HitBus.set();
+      }
+  }
+
+  void RD53::disableAllPixels()
+  {
+    for (unsigned int i = 0; i < fPixelsConfig.size(); i++)
+      {
+	fPixelsConfig[i].Enable.reset();
+	fPixelsConfig[i].HitBus.reset();
       }
   }
 
