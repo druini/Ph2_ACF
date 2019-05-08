@@ -25,8 +25,21 @@ namespace Ph2_HwInterface
 		  } 
 	      }
 	  }
-      }
-    
+      }    
     return false;
+  }
+  
+  void RD53Event::fillDataContainer(BoardContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+  {
+    for (auto module : *boardContainer)
+      for (auto chip : *module)
+	{
+	  unsigned int i = 0;
+	  for (ChannelContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
+	    {
+	      if (cTestChannelGroup->isChannelEnabled(i))
+		channel->fOccupancy += (float)this->DataBit(module->getId(), chip->getId(), i);
+	    }
+	}
   }
 }

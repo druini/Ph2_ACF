@@ -357,9 +357,8 @@ namespace Ph2_HwInterface
     
     for (auto row = 0; row < NROWS; row++)
       for (auto col = 0; col < NCOLS; col++)
-	(*pRD53->getPixelsConfig())[col].TDAC[row] = pValue.getChannel(row).fRegisterValue; // @TMP@
-	// (*pRD53->getPixelsConfig())[col].TDAC[row] = pValue->getChannel(row,col).fRegisterValue;
-
+	// (*pRD53->getPixelsConfig())[col].TDAC[row] = pValue.getChannel(row,col).fRegisterValue; // @TMP@
+    
     this->WriteRD53Mask(pRD53);
 
     return true;

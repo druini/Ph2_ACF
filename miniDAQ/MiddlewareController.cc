@@ -65,13 +65,13 @@ std::string MiddlewareController::readMessage(const std::string& buffer)
 	{
 
 		std::cout << "We are in the configuration submodule" << std::endl;
-		if(getVariableValue("Calibration",buffer) == "calibration") theSystemController_ = new Calibration();
-		else if(getVariableValue("Calibration",buffer) == "pedenoise") theSystemController_ = new PedeNoise();
-		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoise") theSystemController_ = new CombinedCalibration<Calibration,PedeNoise>();
+		if     (getVariableValue("Calibration",buffer) == "calibration")                  theSystemController_ = new Calibration();
+		else if(getVariableValue("Calibration",buffer) == "pedenoise")                    theSystemController_ = new PedeNoise();
+		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoise")      theSystemController_ = new CombinedCalibration<Calibration,PedeNoise>();
 		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoisenoise") theSystemController_ = new CombinedCalibration<Calibration,PedeNoise,PedeNoise>();
 		else
 		{
-			std::cout << "Calibration type " <<  getVariableValue("Calibration",buffer) << " not found, Aborting" << std::endl;
+			std::cout << __PRETTY_FUNCTION__ << "Calibration type " <<  getVariableValue("Calibration",buffer) << " not found, Aborting" << std::endl;
 			abort();
 		}
 

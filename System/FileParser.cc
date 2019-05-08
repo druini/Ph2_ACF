@@ -976,10 +976,10 @@ namespace Ph2_System {
     else cFileName = expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
 
     // @TMP@
-    // Chip* theChip = new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), theChipNode.attribute ( "Id" ).as_int(), cFileName);
-    uint32_t cChipId = theChipNode.attribute ("Id").as_int();
-    Chip* theChip    = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName));
-    theChip->setNumberOfChannels(NROWS,NCOLS);
+    // uint32_t cChipId = theChipNode.attribute ("Id").as_int();
+    // Chip* theChip    = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName));
+    // theChip->setNumberOfChannels(NROWS,NCOLS);
+    Chip* theChip = new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), theChipNode.attribute ( "Id" ).as_int(), cFileName);
 
     // Parse the specific Chip settings so that Registers take precedence
     this->parseRD53Settings (theChipNode, theChip, os);

@@ -11,6 +11,7 @@
 #define _RD53Event_h_
 
 #include "../HWDescription/RD53.h"
+#include "../Utils/Occupancy.h"
 #include "Event.h"
 
 
@@ -30,14 +31,10 @@ namespace Ph2_HwInterface
   RD53Event(const std::vector<size_t>& chip_id, const std::vector<RD53::Event>& events)
     : chip_id_vec(chip_id), chip_events(events) {}
    
-  bool DataBit (uint8_t /*module_id*/, uint8_t chip_id, uint32_t channel_id) const;
+  bool DataBit           (uint8_t /*module_id*/, uint8_t chip_id, uint32_t channel_id) const         override;
+  void fillDataContainer (BoardContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
 
-  void fillDataContainer(BoardContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup) override
-  {
-    std::cout<< __PRETTY_FUNCTION__ << " YOU NEED TO IMPLEMENT ME!!!!";
-    abort();
-  }
-
+  // @TMP@ not implemented yet
   void SetEvent                    (const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list) {}
   std::string HexString            () const {}
   uint32_t GetEventCountCBC        () const {}

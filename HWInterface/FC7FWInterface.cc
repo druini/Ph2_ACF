@@ -373,16 +373,16 @@ namespace Ph2_HwInterface
 
   void FC7FWInterface::TurnOffFMC()
   {
-    WriteStackReg({{"system.ctrl_2.fmc_pg_c2m",0},
-	           {"system.ctrl_2.fmc_l8_pwr_en",0},
+    WriteStackReg({{"system.ctrl_2.fmc_pg_c2m",    0},
+	           {"system.ctrl_2.fmc_l8_pwr_en", 0},
 		   {"system.ctrl_2.fmc_l12_pwr_en",0}});
   }
 
   void FC7FWInterface::TurnOnFMC()
   {
     WriteStackReg({{"system.ctrl_2.fmc_l12_pwr_en",1},
-	           {"system.ctrl_2.fmc_l8_pwr_en",1},
-		   {"system.ctrl_2.fmc_pg_c2m",1}});
+	           {"system.ctrl_2.fmc_l8_pwr_en", 1},
+		   {"system.ctrl_2.fmc_pg_c2m",    1}});
     usleep(DEEPSLEEP);
   }
 
@@ -558,8 +558,9 @@ namespace Ph2_HwInterface
     std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
     
     if (block_size * 4 != n) LOG (ERROR) << BOLDRED << "Invalid event block size: " << block_size << " instead of " << (n / 4) << RESET;
-    
-    std::tie(tlu_trigger_id, data_format_ver, std::ignore) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
+
+    bool dummy_size;
+    std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
     std::tie(tdc, l1a_counter) = unpack_bits<NBIT_TDC, NBIT_L1ACNT>(data[2]);
     bx_counter = data[3];
     
@@ -575,13 +576,17 @@ namespace Ph2_HwInterface
       {
 	const size_t start = chip_start[i];
 	const size_t end   = (i == chip_start.size() - 1) ? n : chip_start[i + 1];
+
 	chip_frames.emplace_back(data[start], data[start + 1]);
-	chip_events.emplace_back(&data[start + 2], end - start - 2);
+
+	const size_t size = dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start;
+
+	chip_events.emplace_back(&data[start + 2], size - 2);
 	
-	// if (chip_frames[i].l1a_data_size * 4 != n) LOG (ERROR) << "Invalid chip L1A data size" << RESET; // @TMP@
+	if ((chip_frames[i].l1a_data_size * 4) != (n-1-dummy_size)) LOG (ERROR) << "Invalid chip L1A data size" << RESET;
       }
   }
-  
+
   FC7FWInterface::ChipFrame::ChipFrame(const uint32_t data0, const uint32_t data1)
   {
     std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = 
