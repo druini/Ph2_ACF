@@ -1,11 +1,11 @@
 #include "../System/SystemController.h"
 #include "../Utils/argvparser.h"
-#include "../tools/Tool.h"
-
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+#include "../tools/Tool.h"
+
 
 #include "TH2F.h"
 
@@ -27,24 +27,22 @@ INITIALIZE_EASYLOGGINGPP
 // #########################
 // # PixelAlive test suite #
 // #########################
-
 class PixelAlive : public Tool
 {
 public:
-  PixelAlive() : Tool()
+  PixelAlive(uint32_t nTrig) : nTriggers(nTrig), Tool()
   {
-    this->MakeTestGroups(FrontEndType::RD53);
     fChannelGroupHandler = new RD53ChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(1, 1, 1);
-
+    fChannelGroupHandler->setChannelGroupParameters(100, 1, 1);
+    
     theCanvas      = new TCanvas("RD53canvas","RD53canvas",0,0,700,500);
     histoOccupancy = new TH2F("histoOccupancy","histoOccupancy",NROWS,0,NROWS,NCOLS,0,NCOLS);
   }
-
+  
   ~PixelAlive()
   {
     delete fChannelGroupHandler;
-
+    
     delete histoOccupancy;
     delete theCanvas;
   }
@@ -56,7 +54,6 @@ public:
     ContainerFactory          theDetectorFactory;
     theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
-    uint32_t nTriggers = 10;
     this->SetTestAllChannels(false);
     this->measureData(nTriggers);
 
@@ -81,6 +78,8 @@ public:
   }
 
 private:
+  uint32_t nTriggers;
+
   TCanvas* theCanvas;
   TH2F*    histoOccupancy;
 };
@@ -268,7 +267,7 @@ int main (int argc, char** argv)
       RD53Board->localCfgFastCmd.fast_cmd_fsm.second_cal_en = false;
       RD53Board->localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
 
-      PixelAlive pa;
+      PixelAlive pa(nEvents);
       pa.Inherit(&cSystemController);
       pa.Run();
     }
