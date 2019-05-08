@@ -1214,7 +1214,7 @@ void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName
         for ( auto cChip : *cFe )
         {
             std::vector<uint16_t> dacVector ;//= dacList.at(cFe->getModuleId()).at(cChip->getChipId());
-            fChipInterface->WriteChipAllLocalReg ( static_cast<Chip*>(cChip), dacName, *globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannelContainer<ChannelContainer<RegisterValue>>());
+            fChipInterface->WriteChipAllLocalReg ( static_cast<Chip*>(cChip), dacName, *globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId()));
         }
     } 
     return;
@@ -1265,8 +1265,11 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, c
     {
         for ( auto cChip : cFe->fChipVector )
         {
-            ChannelContainer<RegisterValue> dacVector(cChip->getNumberOfChannels(),RegisterValue(dacValue));
-            fChipInterface->WriteChipAllLocalReg ( cChip, dacName, dacVector);
+            ChannelContainer<RegisterValue>* dacVector = new ChannelContainer<RegisterValue>(cChip->getNumberOfChannels(),RegisterValue(dacValue));
+            ChipContainer theChipContainer(cChip->getId(),cChip->getNumberOfRows(),cChip->getNumberOfCols());
+            theChipContainer.setChannelContainer(dacVector);
+
+            fChipInterface->WriteChipAllLocalReg ( cChip, dacName, theChipContainer);
         }
     } 
     return;

@@ -148,7 +148,6 @@ int main (int argc, char** argv)
   std::stringstream outp;
   outp.clear(); outp.str("");
   cSystemController.InitializeHw(cHWFile,outp);
-  LOG (INFO) << BOLDBLUE << "Output from file parsing (if any): " << outp.str() << RESET;
 
 
   // #############################

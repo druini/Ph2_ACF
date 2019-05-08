@@ -33,13 +33,11 @@ namespace Ph2_HwInterface
   {
     for (auto module : *boardContainer)
       for (auto chip : *module)
-	{
-	  unsigned int i = 0;
-	  for (ChannelContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
+	for (auto row = 0; row < NROWS; row++)
+	  for (auto col = 0; col < NCOLS; col++)
 	    {
-	      if (cTestChannelGroup->isChannelEnabled(i))
-		channel->fOccupancy += (float)this->DataBit(module->getId(), chip->getId(), i);
+	      if (cTestChannelGroup->isChannelEnabled(row,col))
+		chip->getChannel<Occupancy>(row,col).fOccupancy += (float)this->DataBit(module->getId(),chip->getId(),row);
 	    }
-	}
   }
 }

@@ -265,7 +265,7 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
-    bool CbcInterface::WriteChipAllLocalReg ( Chip* pCbc, const std::string& dacName, ChannelContainer<RegisterValue>& localRegValues, bool pVerifLoop )
+    bool CbcInterface::WriteChipAllLocalReg ( Chip* pCbc, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop )
     {
         assert(localRegValues.size()==pCbc->getNumberOfChannels());
         std::string dacTemplate;
@@ -281,7 +281,7 @@ namespace Ph2_HwInterface {
 
         for(uint8_t iChannel=0; iChannel<pCbc->getNumberOfChannels(); ++iChannel){
             if(isMask){
-                if( localRegValues[iChannel].fRegisterValue ){
+                if( localRegValues.getChannel<RegisterValue>(iChannel).fRegisterValue ){
                     channelToEnable.enableChannel(iChannel);
                     // listOfChannelToUnMask.emplace_back(iChannel);
                 }
@@ -289,7 +289,7 @@ namespace Ph2_HwInterface {
             else {
                 char dacName1[20];
                 sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
-                cRegVec.emplace_back(dacName1,localRegValues[iChannel].fRegisterValue);
+                cRegVec.emplace_back(dacName1,localRegValues.getChannel<RegisterValue>(iChannel).fRegisterValue);
             }
         }
 
