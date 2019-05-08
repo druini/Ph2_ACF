@@ -40,16 +40,23 @@ namespace Ph2_HwInterface {
 
     void Data::privateSet (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
     {
-        Reset();
+      Reset();
+      
+      if (pType == BoardType::FC7)
+	{
+	  auto fc7_events = FC7FWInterface::DecodeEvents(pData);
 
-        if (pType == BoardType::FC7) {
-            auto fc7_events = FC7FWInterface::DecodeEvents(pData);
-            for (const auto& evt : fc7_events) {
-                std::vector<size_t> chip_id_vec;
-                for (const auto& chip_frame : evt.chip_frames) {
-                    chip_id_vec.push_back(chip_frame.chip_id);
+	  for (const auto& evt : fc7_events)
+	    {
+	      std::vector<size_t> chip_id_vec;
+	      std::vector<size_t> module_id_vec;
+	      for (const auto& chip_frame : evt.chip_frames)
+		{
+		  chip_id_vec.push_back(chip_frame.chip_id);
+		  module_id_vec.push_back(chip_frame.hybrid_id);
                 }
-                fEventList.push_back(new RD53Event(chip_id_vec, std::move(evt.chip_events)));
+	      
+	      fEventList.push_back(new RD53Event(module_id_vec, chip_id_vec, std::move(evt.chip_events)));
             }
         }
         else 

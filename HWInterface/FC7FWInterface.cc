@@ -349,6 +349,21 @@ namespace Ph2_HwInterface
 
     return pData.size();
   }
+  
+  void FC7FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
+  {
+    this->localCfgFastCmd.n_triggers = pNEvents;
+
+    this->ResetReadout();
+    this->ResetDDR3();
+    this->ConfigureFastCommands();
+    this->ChipReset();
+
+    this->Start();
+    usleep(100);
+
+    this->ReadData(pBoard, false, pData);
+  }
 
   std::vector<uint32_t> FC7FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
   {
@@ -358,16 +373,16 @@ namespace Ph2_HwInterface
 
   void FC7FWInterface::TurnOffFMC()
   {
-    WriteStackReg({{"system.ctrl_2.fmc_pg_c2m",0},
-	           {"system.ctrl_2.fmc_l8_pwr_en",0},
+    WriteStackReg({{"system.ctrl_2.fmc_pg_c2m",    0},
+	           {"system.ctrl_2.fmc_l8_pwr_en", 0},
 		   {"system.ctrl_2.fmc_l12_pwr_en",0}});
   }
 
   void FC7FWInterface::TurnOnFMC()
   {
     WriteStackReg({{"system.ctrl_2.fmc_l12_pwr_en",1},
-	           {"system.ctrl_2.fmc_l8_pwr_en",1},
-		   {"system.ctrl_2.fmc_pg_c2m",1}});
+	           {"system.ctrl_2.fmc_l8_pwr_en", 1},
+		   {"system.ctrl_2.fmc_pg_c2m",    1}});
     usleep(DEEPSLEEP);
   }
 
@@ -543,8 +558,9 @@ namespace Ph2_HwInterface
     std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
     
     if (block_size * 4 != n) LOG (ERROR) << BOLDRED << "Invalid event block size: " << block_size << " instead of " << (n / 4) << RESET;
-    
-    std::tie(tlu_trigger_id, data_format_ver, std::ignore) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
+
+    bool dummy_size;
+    std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
     std::tie(tdc, l1a_counter) = unpack_bits<NBIT_TDC, NBIT_L1ACNT>(data[2]);
     bx_counter = data[3];
     
@@ -560,13 +576,17 @@ namespace Ph2_HwInterface
       {
 	const size_t start = chip_start[i];
 	const size_t end   = (i == chip_start.size() - 1) ? n : chip_start[i + 1];
+
 	chip_frames.emplace_back(data[start], data[start + 1]);
-	chip_events.emplace_back(&data[start + 2], end - start - 2);
+
+	const size_t size = dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start;
+
+	chip_events.emplace_back(&data[start + 2], size - 2);
 	
-	// if (chip_frames[i].l1a_data_size * 4 != n) LOG (ERROR) << "Invalid chip L1A data size" << RESET; // @TMP@
+	if ((chip_frames[i].l1a_data_size * 4) != (n-1-dummy_size)) LOG (ERROR) << "Invalid chip L1A data size" << RESET;
       }
   }
-  
+
   FC7FWInterface::ChipFrame::ChipFrame(const uint32_t data0, const uint32_t data1)
   {
     std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = 
@@ -585,8 +605,10 @@ namespace Ph2_HwInterface
       });
   }
   
-  void FC7FWInterface::ConfigureFastCommands(const FastCommandsConfig& config)
+  void FC7FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
   {
+    if (cfg == nullptr) cfg = &localCfgFastCmd;
+
     // ##################################
     // # Configuring fast command block #
     // ##################################
@@ -594,37 +616,37 @@ namespace Ph2_HwInterface
 	  // ############################
 	  // # General data for trigger #
 	  // ############################
-	{"user.ctrl_regs.fast_cmd_reg_2.trigger_source",           (uint32_t)config.trigger_source},
-	{"user.ctrl_regs.fast_cmd_reg_2.backpressure_en",          (uint32_t)config.backpressure_en},
-	{"user.ctrl_regs.fast_cmd_reg_2.init_ecr_en",              (uint32_t)config.initial_ecr_en},
-	{"user.ctrl_regs.fast_cmd_reg_2.veto_en",                  (uint32_t)config.veto_en},
-	{"user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay",           (uint32_t)config.ext_trigger_delay},
-	{"user.ctrl_regs.fast_cmd_reg_2.trigger_duration",         (uint32_t)config.trigger_duration},
-	{"user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",       (uint32_t)config.n_triggers},
+	{"user.ctrl_regs.fast_cmd_reg_2.trigger_source",           (uint32_t)cfg->trigger_source},
+	{"user.ctrl_regs.fast_cmd_reg_2.backpressure_en",          (uint32_t)cfg->backpressure_en},
+	{"user.ctrl_regs.fast_cmd_reg_2.init_ecr_en",              (uint32_t)cfg->initial_ecr_en},
+	{"user.ctrl_regs.fast_cmd_reg_2.veto_en",                  (uint32_t)cfg->veto_en},
+	{"user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay",           (uint32_t)cfg->ext_trigger_delay},
+	{"user.ctrl_regs.fast_cmd_reg_2.trigger_duration",         (uint32_t)cfg->trigger_duration},
+	{"user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",       (uint32_t)cfg->n_triggers},
 
 	  // ##############################
 	  // # Fast command configuration #
 	  // ##############################
-	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_ecr_en",            (uint32_t)config.fast_cmd_fsm.ecr_en},
-	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_test_pulse_en",     (uint32_t)config.fast_cmd_fsm.first_cal_en},
-	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en",   (uint32_t)config.fast_cmd_fsm.second_cal_en},
-	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en",        (uint32_t)config.fast_cmd_fsm.trigger_en},
+	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_ecr_en",            (uint32_t)cfg->fast_cmd_fsm.ecr_en},
+	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_test_pulse_en",     (uint32_t)cfg->fast_cmd_fsm.first_cal_en},
+	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en",   (uint32_t)cfg->fast_cmd_fsm.second_cal_en},
+	{"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en",        (uint32_t)cfg->fast_cmd_fsm.trigger_en},
 
-	{"user.ctrl_regs.fast_cmd_reg_3.delay_after_ecr",          (uint32_t)config.fast_cmd_fsm.delay_after_ecr},
-	{"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime",           (uint32_t)config.fast_cmd_fsm.first_cal_data},
-	{"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse",  (uint32_t)config.fast_cmd_fsm.delay_after_first_cal},
-	{"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject",          (uint32_t)config.fast_cmd_fsm.second_cal_data},
-	{"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)config.fast_cmd_fsm.delay_after_second_cal},
-	{"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero",     (uint32_t)config.fast_cmd_fsm.delay_after_autozero},
-	{"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse",  (uint32_t)config.fast_cmd_fsm.delay_loop},
+	{"user.ctrl_regs.fast_cmd_reg_3.delay_after_ecr",          (uint32_t)cfg->fast_cmd_fsm.delay_after_ecr},
+	{"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime",           (uint32_t)cfg->fast_cmd_fsm.first_cal_data},
+	{"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse",  (uint32_t)cfg->fast_cmd_fsm.delay_after_first_cal},
+	{"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject",          (uint32_t)cfg->fast_cmd_fsm.second_cal_data},
+	{"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_second_cal},
+	{"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero",     (uint32_t)cfg->fast_cmd_fsm.delay_after_autozero},
+	{"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse",  (uint32_t)cfg->fast_cmd_fsm.delay_loop},
 
 	  // ##########################
 	  // # Autozero configuration #
 	  // ##########################
-        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",          (uint32_t)config.autozero.autozero_source},
-	{"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",           (uint32_t)config.autozero.glb_pulse_data},
-	{"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",            (uint32_t)config.autozero.autozero_freq},
-	{"user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",      (uint32_t)config.autozero.veto_after_autozero}
+        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",          (uint32_t)cfg->autozero.autozero_source},
+	{"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",           (uint32_t)cfg->autozero.glb_pulse_data},
+	{"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",            (uint32_t)cfg->autozero.autozero_freq},
+	{"user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",      (uint32_t)cfg->autozero.veto_after_autozero}
       });
     
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
@@ -640,21 +662,21 @@ namespace Ph2_HwInterface
       });
   }
 
-  void FC7FWInterface::ConfigureDIO5 (const DIO5Config& config)
+  void FC7FWInterface::ConfigureDIO5 (const DIO5Config* cfg)
   {
     bool ext_clk_en;
-    std::tie(ext_clk_en, std::ignore) = unpack_bits<1,4>(config.ch_out_en);
+    std::tie(ext_clk_en, std::ignore) = unpack_bits<1,4>(cfg->ch_out_en);
 
     WriteStackReg({
-	{"user.ctrl_regs.ext_tlu_reg1.dio5_en",            (uint32_t)config.enable},
-	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en",     (uint32_t)config.ch_out_en},
-	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr",       (uint32_t)config.ch1_thr},
-	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr",       (uint32_t)config.ch2_thr},
-	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr",       (uint32_t)config.ch3_thr},
-	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch4_thr",       (uint32_t)config.ch4_thr},
-	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr",       (uint32_t)config.ch5_thr},
-	{"user.ctrl_regs.ext_tlu_reg2.tlu_en",             (uint32_t)config.tlu_en},
-	{"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)config.tlu_handshake_mode},
+	{"user.ctrl_regs.ext_tlu_reg1.dio5_en",            (uint32_t)cfg->enable},
+	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en",     (uint32_t)cfg->ch_out_en},
+	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr",       (uint32_t)cfg->ch1_thr},
+	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr",       (uint32_t)cfg->ch2_thr},
+	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr",       (uint32_t)cfg->ch3_thr},
+	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch4_thr",       (uint32_t)cfg->ch4_thr},
+	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr",       (uint32_t)cfg->ch5_thr},
+	{"user.ctrl_regs.ext_tlu_reg2.tlu_en",             (uint32_t)cfg->tlu_en},
+	{"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)cfg->tlu_handshake_mode},
 
 	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   1},
 	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   0},

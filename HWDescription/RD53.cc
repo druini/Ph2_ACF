@@ -16,16 +16,16 @@ namespace Ph2_HwDescription
 {
   RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename) : Chip (pFeDesc, pRD53Id)
   {
+    fChipOriginalMask = new ChannelGroup<NROWS, NCOLS>;
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
-    fChipOriginalMask = new ChannelGroup<NCOLS, NROWS>;
   }
 
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
   {
+    fChipOriginalMask = new ChannelGroup<NROWS, NCOLS>;
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
-    fChipOriginalMask = new ChannelGroup<NCOLS, NROWS>;
   }
 
   RD53::~RD53 () {}
@@ -40,9 +40,9 @@ namespace Ph2_HwDescription
       {
 	std::string line, fName, fAddress_str, fDefValue_str, fValue_str;
 	bool foundPixelConfig = false;
-	int cLineCounter = 0;
+	int cLineCounter      = 0;
+	unsigned int col      = 0;
 	ChipRegItem fRegItem;
-	// fhasMaskedChannels = false;
 
 	while (getline (file, line))
 	  {
@@ -71,7 +71,7 @@ namespace Ph2_HwDescription
 		    line.erase(line.find("ENABLE"),6);
 		    myString.str(""); myString.clear();
 		    myString << line;
-		    unsigned int it = 0;
+		    unsigned int row = 0;
 		    std::string readWord;
 
 		    while (getline(myString,readWord,','))
@@ -79,25 +79,27 @@ namespace Ph2_HwDescription
 			readWord.erase(std::remove_if(readWord.begin(), readWord.end(), isspace), readWord.end());
 			if (std::all_of(readWord.begin(), readWord.end(), isdigit))
 			  {
-			    pixData.Enable[it] = atoi(readWord.c_str());
-			    it++;
-			    // if (pixData.Enable[it] == 0) fhasMaskedChannels = true;
+			    pixData.Enable[row] = atoi(readWord.c_str());
+			    row++;
+			    if (pixData.Enable[row] == 0) fChipOriginalMask->disableChannel(row,col);
 			  }
 		      }
-
-		    if (it < NROWS)
+		    
+		    if (row < NROWS)
 		      {
 			myString.str(""); myString.clear();
-			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << it << ") for column " << fPixelsConfig.size();
+			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsConfig.size();
 			throw Exception (myString.str().c_str());
 		      }
+		    
+		    col++;
 		  }
 		else if (line.find("HITBUS") != std::string::npos)
 		  {
 		    line.erase(line.find("HITBUS"),6);
 		    myString.str(""); myString.clear();
 		    myString << line;
-		    unsigned int it = 0;
+		    unsigned int row = 0;
 		    std::string readWord;
 
 		    while (getline(myString,readWord,','))
@@ -105,15 +107,15 @@ namespace Ph2_HwDescription
 			readWord.erase(std::remove_if(readWord.begin(), readWord.end(), isspace), readWord.end());
 			if (std::all_of(readWord.begin(), readWord.end(), isdigit))
 			  {
-			    pixData.HitBus[it] = atoi(readWord.c_str());
-			    it++;
+			    pixData.HitBus[row] = atoi(readWord.c_str());
+			    row++;
 			  }
 		      }
 
-		    if (it < NROWS)
+		    if (row < NROWS)
 		      {
 			myString.str(""); myString.clear();
-			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << it << ") for column " << fPixelsConfig.size();
+			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsConfig.size();
 			throw Exception (myString.str().c_str());
 		      }
 		  }
@@ -122,7 +124,7 @@ namespace Ph2_HwDescription
 		    line.erase(line.find("INJEN"),5);
 		    myString.str(""); myString.clear();
 		    myString << line;
-		    unsigned int it = 0;
+		    unsigned int row = 0;
 		    std::string readWord;
 
 		    while (getline(myString,readWord,','))
@@ -130,15 +132,15 @@ namespace Ph2_HwDescription
 			readWord.erase(std::remove_if(readWord.begin(), readWord.end(), isspace), readWord.end());
 			if (std::all_of(readWord.begin(), readWord.end(), isdigit))
 			  {
-			    pixData.InjEn[it] = atoi(readWord.c_str());
-			    it++;
+			    pixData.InjEn[row] = atoi(readWord.c_str());
+			    row++;
 			  }
 		      }
 
-		    if (it < NROWS)
+		    if (row < NROWS)
 		      {
 			myString.str(""); myString.clear();
-			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << it << ") for column " << fPixelsConfig.size();
+			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsConfig.size();
 			throw Exception (myString.str().c_str());
 		      }
 		  }
@@ -147,7 +149,7 @@ namespace Ph2_HwDescription
 		    line.erase(line.find("TDAC"),4);
 		    myString.str(""); myString.clear();
 		    myString << line;
-		    unsigned int it = 0;
+		    unsigned int row = 0;
 		    std::string readWord;
 
 		    while (getline(myString,readWord,','))
@@ -156,14 +158,14 @@ namespace Ph2_HwDescription
 			if (std::all_of(readWord.begin(), readWord.end(), isdigit))
 			  {
 			    pixData.TDAC.push_back(atoi(readWord.c_str()));
-			    it++;
+			    row++;
 			  }
 		      }
 
-		    if (it < NROWS)
+		    if (row < NROWS)
 		      {
 			myString.str(""); myString.clear();
-			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << it << ") for column " << fPixelsConfig.size();
+			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsConfig.size();
 			throw Exception (myString.str().c_str());
 		      }
 
@@ -337,6 +339,15 @@ namespace Ph2_HwDescription
       {
 	fPixelsConfig[i].Enable.set();
 	fPixelsConfig[i].HitBus.set();
+      }
+  }
+
+  void RD53::disableAllPixels()
+  {
+    for (unsigned int i = 0; i < fPixelsConfig.size(); i++)
+      {
+	fPixelsConfig[i].Enable.reset();
+	fPixelsConfig[i].HitBus.reset();
       }
   }
 
@@ -740,13 +751,6 @@ namespace Ph2_HwDescription
     return 0;
   }
 
-  // bool RD53::IsChannelUnMasked (uint32_t cChan) const
-  // {
-  //   unsigned int row, col;
-  //   RD53::fromVec2Matrix(cChan,row,col);
-  //   return fPixelsConfig[col].Enable[row];
-  // }
-
   RD53::Event::Event(const uint32_t* data, size_t n)
   {
     uint32_t header;
@@ -760,7 +764,7 @@ namespace Ph2_HwDescription
   {
     uint32_t core_col, side, all_tots;
     std::tie(core_col, row, side, all_tots) = unpack_bits<NBIT_CCOL, NBIT_ROW, NBIT_SIDE, NBIT_TOT>(data);
-    
+
     unpack_array<NBIT_TOT / NPIX_REGION>(tots, all_tots);
     
     col = 4 * pack_bits<NBIT_CCOL, NBIT_SIDE>(core_col, side);
@@ -800,23 +804,7 @@ namespace Ph2_HwDescription
 																  cal_aux_mode,
 																  cal_aux_delay);
   }
-
- //  std::vector<uint8_t>& RD53::getChipMask()
- //  {
- //    fChipMask.clear();
- //    std::vector<uint8_t> vec(NCOLS*NROWS/8, 0);
- //    fChipMask = vec;
- //    uint32_t chn;
-
- //    for (unsigned int col = 0; col < fPixelsConfig.size(); col++)
- //      for (unsigned int row = 0; row < fPixelsConfig[col].Enable.size(); row++)
-	// {
-	//   chn = RD53::fromMatrix2Vec(row,col);
-	//   fChipMask[chn/8] = fChipMask[chn/8] | (fPixelsConfig[col].Enable[row] << (chn % 8));
-	// }
- //    return fChipMask;
- //  }
-
+  
   template<int NBITS>
   std::bitset<NBITS> RD53::SetBits (unsigned int nBit2Set)
   {
