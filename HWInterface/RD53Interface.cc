@@ -330,17 +330,24 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::setInjectionSchema (Chip* pChip, const ChannelGroupBase* group, bool pVerifLoop)
   {
-    // Disabilitare le altre
+    RD53* pRD53 = static_cast<RD53*>(pChip);
+    
+    for (auto row = 0; row < NROWS; row++)
+      for (auto col = 0; col < NCOLS; col++)
+	(*pRD53->getPixelsConfig())[col].InjEn[row] = group->isChannelEnabled(row,col);
+
+    this->WriteRD53Mask(pRD53);
+
     return true;
   }
-  
+
   bool RD53Interface::maskChannelsGroup (Chip* pChip, const ChannelGroupBase* group, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
     
     for (auto row = 0; row < NROWS; row++)
       for (auto col = 0; col < NCOLS; col++)
-	// (*pRD53->getPixelsConfig())[col].Enable[row] = group.getChannel(row).fRegisterValue; // @TMP@
+	(*pRD53->getPixelsConfig())[col].Enable[row] = group->isChannelEnabled(row,col);
 
     this->WriteRD53Mask(pRD53);
 

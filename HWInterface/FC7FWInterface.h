@@ -219,9 +219,10 @@ namespace Ph2_HwInterface
 
     void ConfigureDIO5 (const DIO5Config* config);
 
+    FastCommandsConfig localCfgFastCmd; // @TMP@
+
   private:
     void SendBoardCommand(const std::string& cmd_reg);
-    FastCommandsConfig localCfgFastCmd;
   };
 }
 
