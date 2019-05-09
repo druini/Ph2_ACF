@@ -16,7 +16,7 @@ namespace Ph2_HwDescription
 {
   RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename) : Chip (pFeDesc, pRD53Id)
   {
-    fChipOriginalMask = new ChannelGroup<RD53::nRows, RD53::nCols>;
+    fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
     fRD53Id           = pRD53Id;
@@ -24,7 +24,7 @@ namespace Ph2_HwDescription
 
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
   {
-    fChipOriginalMask = new ChannelGroup<RD53::nRows, RD53::nCols>;
+    fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
     fRD53Id           = pRD53Id;

@@ -977,7 +977,7 @@ namespace Ph2_System {
 
     uint32_t cChipId = theChipNode.attribute ("Id").as_int();
     Chip* theChip    = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName));
-    theChip->setNumberOfChannels(NROWS,NCOLS);
+    theChip->setNumberOfChannels(RD53::nRows,RD53::nCols);
     
     // Parse the specific Chip settings so that Registers take precedence
     this->parseRD53Settings (theChipNode, theChip, os);

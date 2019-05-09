@@ -31,7 +31,7 @@ namespace Ph2_HwInterface {
 
     void Data::Set (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
     {
-        if (pData.size() != 0)
+        // if (pData.size() != 0) // @TMP@
             fFuture = std::async (&Data::privateSet, this, pBoard, pData, pNevents, pType);
 
         //fFuture.share();

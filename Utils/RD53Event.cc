@@ -9,6 +9,7 @@
 
 #include "../Utils/RD53Event.h"
 
+
 namespace Ph2_HwInterface
 {
   bool RD53Event::isThereAnHit (uint8_t module_id, uint8_t chip_id, uint32_t row, uint32_t col) const
@@ -43,8 +44,8 @@ namespace Ph2_HwInterface
   {
     for (auto module : *boardContainer)
       for (auto chip : *module)
-	for (auto row = 0; row < NROWS; row++)
-	  for (auto col = 0; col < NCOLS; col++)
+	for (auto row = 0; row < RD53::nRows; row++)
+	  for (auto col = 0; col < RD53::nCols; col++)
 	    {
 	      if (cTestChannelGroup->isChannelEnabled(row,col))
 		chip->getChannel<Occupancy>(row,col).fOccupancy += (float)this->isThereAnHit(module->getId(),chip->getId(),row,col);

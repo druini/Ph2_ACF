@@ -35,7 +35,7 @@ public:
     fChannelGroupHandler->setChannelGroupParameters(100, 1, 1);
     
     theCanvas      = new TCanvas("RD53canvas","RD53canvas",0,0,700,500);
-    histoOccupancy = new TH2F("histoOccupancy","histoOccupancy",NROWS,0,NROWS,NCOLS,0,NCOLS);
+    histoOccupancy = new TH2F("histoOccupancy","histoOccupancy",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
   }
   
   ~PixelAlive()
@@ -63,17 +63,15 @@ public:
     for (auto cBoard : fBoardVector)
       for (auto cFe : cBoard->fModuleVector)
 	for (auto cChip : cFe->fChipVector)
-	  for (auto row = 0; row < NROWS; row++)
-	    for (auto col = 0; col < NCOLS; col++)
-	      {
-		histoOccupancy->SetBinContent(row+1,col+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row).fOccupancy);
-	      }
+	  for (auto row = 0; row < RD53::nRows; row++)
+	    for (auto col = 0; col < RD53::nCols; col++)
+	      histoOccupancy->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row).fOccupancy);
 
     theCanvas->cd();
     histoOccupancy->Draw();
     theCanvas->Modified();
     theCanvas->Update();
-    theCanvas->Write("PixelAlive.root");
+    theCanvas->Print("PixelAlive.root");
   }
 
 private:
