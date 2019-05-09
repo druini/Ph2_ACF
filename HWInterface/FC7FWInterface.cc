@@ -563,7 +563,7 @@ namespace Ph2_HwInterface
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
     std::tie(tdc, l1a_counter) = unpack_bits<NBIT_TDC, NBIT_L1ACNT>(data[2]);
     bx_counter = data[3];
-    
+
     std::vector<size_t> chip_start;
     for (size_t i = 4; i < n; i += 4)
       {
@@ -583,7 +583,7 @@ namespace Ph2_HwInterface
 
 	chip_events.emplace_back(&data[start + 2], size - 2);
 	
-	if ((chip_frames[i].l1a_data_size * 4) != (n-1-dummy_size)) LOG (ERROR) << "Invalid chip L1A data size" << RESET;
+	if ((chip_frames[i].l1a_data_size+1+dummy_size) * 4 != n) LOG (ERROR) << "Invalid chip L1A data size" << RESET;
       }
   }
 
