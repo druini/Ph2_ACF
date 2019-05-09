@@ -9,7 +9,6 @@
 
 #include "../Utils/RD53Event.h"
 
-
 namespace Ph2_HwInterface
 {
   bool RD53Event::isThereAnHit (uint8_t module_id, uint8_t chip_id, uint32_t row, uint32_t col) const

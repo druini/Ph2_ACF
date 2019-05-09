@@ -9,7 +9,6 @@
 
 #include "../Utils/RD53ChannelGroupHandler.h"
 
-
 RD53ChannelGroupHandler::RD53ChannelGroupHandler()
 {
   allChannelGroup_     = new ChannelGroup<RD53::nCols,RD53::nRows>();

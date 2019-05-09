@@ -30,21 +30,21 @@ namespace Ph2_HwInterface
     uint32_t cIDuserLogic2 = ReadReg ("user.stat_regs.usr_id.usr_id_char2");
     uint32_t cIDuserLogic3 = ReadReg ("user.stat_regs.usr_id.usr_id_char3");
     uint32_t cIDuserLogic4 = ReadReg ("user.stat_regs.usr_id.usr_id_char4");
-    LOG (INFO) << __PRETTY_FUNCTION__ << "\tID user logic 1st : " << cIDuserLogic1;
-    LOG (INFO) << __PRETTY_FUNCTION__ << "\tID user logic 2nd : " << cIDuserLogic2;
-    LOG (INFO) << __PRETTY_FUNCTION__ << "\tID user logic 3rd : " << cIDuserLogic3;
-    LOG (INFO) << __PRETTY_FUNCTION__ << "\tID user logic 4th : " << cIDuserLogic4;
+    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tID user logic 1st : " << cIDuserLogic1;
+    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tID user logic 2nd : " << cIDuserLogic2;
+    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tID user logic 3rd : " << cIDuserLogic3;
+    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tID user logic 4th : " << cIDuserLogic4;
 
     uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
     uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
     uint32_t cVersionBuild = ReadReg ("user.stat_regs.usr_ver.usr_ver_build");
-    LOG (INFO) << __PRETTY_FUNCTION__ << "\tFW version : " << cVersionMajor << "." << cVersionMinor;
-    LOG (INFO) << __PRETTY_FUNCTION__ << "\tBuild version : " << cVersionBuild;
+    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tFW version : " << cVersionMajor << "." << cVersionMinor;
+    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tBuild version : " << cVersionBuild;
 
     uint32_t cFWyear  = ReadReg ("user.stat_regs.usr_ver.usr_firmware_yy");
     uint32_t cFWmonth = ReadReg ("user.stat_regs.usr_ver.usr_firmware_mm");
     uint32_t cFWday   = ReadReg ("user.stat_regs.usr_ver.usr_firmware_dd");
-    LOG (INFO) << __PRETTY_FUNCTION__ << "\tFirmware date (yyyy/mm/dd) : " << cFWyear << "/" << cFWmonth << "/" << cFWday;
+    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tFirmware date (yyyy/mm/dd) : " << cFWyear << "/" << cFWmonth << "/" << cFWday;
 
     uint32_t cVersionWord = ((cVersionMajor << NBIT_FWVER) | cVersionMinor);
     return cVersionWord;
@@ -61,8 +61,7 @@ namespace Ph2_HwInterface
     // this->ChipReSync();
 
     // Wait for user to reset power to the chip
-    // LOG (INFO) << BOLDMAGENTA << "Powercycle SCC and press any key to continue:" << RESET;
-
+    // LOG (INFO) << BOLDMAGENTA << "Powercycle SCC and press any key to continue: " << RESET;
     // system("read");
 
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
@@ -363,6 +362,10 @@ namespace Ph2_HwInterface
     usleep(100);
 
     this->ReadData(pBoard, false, pData);
+
+    // @TMP@
+    auto events = this->DecodeEvents(pData);
+    this->AnalyzeEvents(events,true);
   }
 
   std::vector<uint32_t> FC7FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
@@ -557,7 +560,7 @@ namespace Ph2_HwInterface
   {
     std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
     
-    if (block_size * 4 != n) LOG (ERROR) << BOLDRED << "Invalid event block size: " << block_size << " instead of " << (n / 4) << RESET;
+    if (block_size * 4 != n) LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tInvalid event block size: " << block_size << " instead of " << (n / 4) << RESET;
 
     bool dummy_size;
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
@@ -583,7 +586,7 @@ namespace Ph2_HwInterface
 
 	chip_events.emplace_back(&data[start + 2], size - 2);
 	
-	if ((chip_frames[i].l1a_data_size+1+dummy_size) * 4 != n) LOG (ERROR) << "Invalid chip L1A data size" << RESET;
+	if ((chip_frames[i].l1a_data_size+1+dummy_size) * 4 != n) LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tInvalid chip L1A data size" << RESET;
       }
   }
 

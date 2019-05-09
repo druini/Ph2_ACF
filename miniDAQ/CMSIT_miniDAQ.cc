@@ -65,7 +65,7 @@ public:
 	for (auto cChip : cFe->fChipVector)
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      histoOccupancy->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row).fOccupancy);
+	      histoOccupancy->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy);
 
     theCanvas->cd();
     histoOccupancy->Draw();
@@ -212,7 +212,6 @@ int main (int argc, char** argv)
 
 	  /*
 	  RD53Board->getLoaclCfgFastCmd()->trigger_source   = FC7FWInterface::TriggerSource::FastCMDFSM;
-	  RD53Board->getLoaclCfgFastCmd()->initial_ecr_en   = false;
 	  RD53Board->getLoaclCfgFastCmd()->n_triggers       = nEvents;
 	  RD53Board->getLoaclCfgFastCmd()->trigger_duration = 0;
 	  
@@ -231,8 +230,7 @@ int main (int argc, char** argv)
 
 	  RD53Board->ReadNEvents(pBoard,nEvents,data);
 	  */
-
-	  	  
+	  
 	  LOG (INFO) << BOLDBLUE << "Resetting/ ConfiguringFSM/ ECR/ BCR" << RESET;
 	  RD53Board->ResetReadout();
 	  RD53Board->ResetDDR3();
@@ -251,7 +249,6 @@ int main (int argc, char** argv)
 	  
 
 	  auto events = FC7FWInterface::DecodeEvents(data);
-	  // const std::vector<Event*>& events = cSystemController.GetEvents(pBoard);
 	  nEvts = FC7FWInterface::AnalyzeEvents(events,true);
 	  assert ((nEvts == 0) && "Found some events!");
 	}
@@ -269,13 +266,12 @@ int main (int argc, char** argv)
       // RD53Board->ConfigureDIO5(&cfgDIO5);
     }
   else
-    {  
+    {
       // #######################
       // # Run PixelAlive scan #
       // #######################
 
       RD53Board->getLoaclCfgFastCmd()->trigger_source   = FC7FWInterface::TriggerSource::FastCMDFSM;
-      RD53Board->getLoaclCfgFastCmd()->initial_ecr_en   = false;
       RD53Board->getLoaclCfgFastCmd()->n_triggers       = nEvents;
       RD53Board->getLoaclCfgFastCmd()->trigger_duration = 0;
 
