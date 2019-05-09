@@ -17,12 +17,14 @@
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Utilities.h"
+#include "../Utils/ChannelGroupHandler.h"
 
 #include "../Utils/bit_packing.h"
 
-#include <math.h>
+#include <unordered_map>
 #include <iomanip>
 #include <bitset>
+#include <cmath>
 
 
 // ################################
@@ -53,8 +55,8 @@
 #define SYNC       0x817E // Synchronization word
 #define HEADER        0x1 // Data header word
 
-#define NCOLS 400 // Total number of columns
 #define NROWS 192 // Total number of rows
+#define NCOLS 400 // Total number of columns
 
 #define NPIXCOL_PROG      2 // Number of pixel columns to program
 #define NDATAMAX_PERPIXEL 6 // Number of data-bit packets used to program the pixel
@@ -89,12 +91,12 @@ namespace Ph2_HwDescription
   class RD53: public Chip
   {
   protected:
-    std::vector<perPixelData> fPixelsConfig;
-    std::vector<perPixelData> fPixelsConfigDefault;
-    CommentMap fCommentMap;
     uint8_t fRD53Id;
  
   public:
+    static constexpr size_t nRows = NROWS;
+    static constexpr size_t nCols = NCOLS;
+
     RD53  (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename);
     RD53  (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename);
     ~RD53 ();
@@ -110,12 +112,12 @@ namespace Ph2_HwDescription
     std::vector<perPixelData>* getPixelsConfig        () { return &fPixelsConfig;        }
     std::vector<perPixelData>* getPixelsConfigDefault () { return &fPixelsConfigDefault; }
 
-    void resetMask();
-    void enableAllPixels();
-    void disableAllPixels();
-    void enablePixel(unsigned int row, unsigned int col);
-    void injectAllPixels();
-    void injectPixel(unsigned int row, unsigned int col);
+    void resetMask        ();
+    void enableAllPixels  ();
+    void disableAllPixels ();
+    void enablePixel      (unsigned int row, unsigned int col, bool enable);
+    void injectPixel      (unsigned int row, unsigned int col, bool inject);
+    void setTDAC          (unsigned int row, unsigned int col, uint8_t TDAC);
 
     void EncodeCMD (const RD53RegItem                   & pRegItem,
 		    const uint8_t                         pRD53Id,
@@ -186,6 +188,10 @@ namespace Ph2_HwDescription
     };
   
   private:
+    std::vector<perPixelData> fPixelsConfig;
+    std::vector<perPixelData> fPixelsConfigDefault;
+    CommentMap fCommentMap;
+
     std::vector<uint8_t> cmd_data_map =
       {
 	0x6A, // 00
@@ -242,8 +248,8 @@ namespace Ph2_HwDescription
 	0x56  // 15
       };
     
-    template<int NBITS>
-      std::bitset<NBITS> SetBits (unsigned int nBit2Set);
+    template<size_t NBITS>
+      std::bitset<NBITS> SetBits (size_t nBit2Set);
   };
 }
 

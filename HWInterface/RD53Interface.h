@@ -45,11 +45,11 @@ namespace Ph2_HwInterface
     bool     setInjectionSchema        (Chip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true)                                       override;
     bool     maskChannelsGroup         (Chip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true)                                       override;
 
-    bool WriteRD53Mask                 (RD53* pRD53, bool defaultT_currentF = false);
-    bool WriteRD53Reg                  (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec);
-    void InitRD53Aurora                (RD53* pRD53);
-    void SyncRD53                      (RD53* pRD53, unsigned int nSyncWords = 1);
-    void ResetRD53                     (RD53* pRD53);
+    bool     WriteRD53Mask             (RD53* pRD53, bool defaultT_currentF = false);
+    bool     WriteRD53Reg              (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec);
+    void     InitRD53Aurora            (RD53* pRD53);
+    void     SyncRD53                  (RD53* pRD53, unsigned int nSyncWords = 1);
+    void     ResetRD53                 (RD53* pRD53);
 
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadRD53Reg (RD53* pRD53, const std::string& pRegNode);
    };

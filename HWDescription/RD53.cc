@@ -8,24 +8,23 @@
 */
 
 #include "RD53.h"
-#include "../Utils/ChannelGroupHandler.h"
-
-#include <unordered_map>
 
 namespace Ph2_HwDescription
 {
   RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename) : Chip (pFeDesc, pRD53Id)
   {
-    fChipOriginalMask = new ChannelGroup<NROWS, NCOLS>;
+    fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
+    fRD53Id           = pRD53Id;
   }
 
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
   {
-    fChipOriginalMask = new ChannelGroup<NROWS, NCOLS>;
+    fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     loadfRegMap     (filename);
     setFrontEndType (FrontEndType::RD53);
+    fRD53Id           = pRD53Id;
   }
 
   RD53::~RD53 () {}
@@ -85,7 +84,7 @@ namespace Ph2_HwDescription
 			  }
 		      }
 		    
-		    if (row < NROWS)
+		    if (row < nRows)
 		      {
 			myString.str(""); myString.clear();
 			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsConfig.size();
@@ -112,7 +111,7 @@ namespace Ph2_HwDescription
 			  }
 		      }
 
-		    if (row < NROWS)
+		    if (row < nRows)
 		      {
 			myString.str(""); myString.clear();
 			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsConfig.size();
@@ -137,7 +136,7 @@ namespace Ph2_HwDescription
 			  }
 		      }
 
-		    if (row < NROWS)
+		    if (row < nRows)
 		      {
 			myString.str(""); myString.clear();
 			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsConfig.size();
@@ -162,7 +161,7 @@ namespace Ph2_HwDescription
 			  }
 		      }
 
-		    if (row < NROWS)
+		    if (row < nRows)
 		      {
 			myString.str(""); myString.clear();
 			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsConfig.size();
@@ -351,23 +350,20 @@ namespace Ph2_HwDescription
       }
   }
 
-  void RD53::enablePixel (unsigned int row, unsigned int col)
+  void RD53::enablePixel (unsigned int row, unsigned int col, bool enable)
   {
-    fPixelsConfig[col].Enable[row] = 1;
-    fPixelsConfig[col].HitBus[row] = 1;
+    fPixelsConfig[col].Enable[row] = enable;
+    fPixelsConfig[col].HitBus[row] = enable;
   }
 
-  void RD53::injectAllPixels()
+  void RD53::injectPixel (unsigned int row, unsigned int col, bool inject)
   {
-    for (unsigned int i = 0; i < fPixelsConfig.size(); i++)
-      {
-	fPixelsConfig[i].InjEn.set();
-      }
+    fPixelsConfig[col].InjEn[row] = inject;
   }
 
-  void RD53::injectPixel (unsigned int row, unsigned int col)
+  void RD53::setTDAC (unsigned int row, unsigned int col, uint8_t TDAC)
   {
-    fPixelsConfig[col].InjEn[row] = 1;
+    fPixelsConfig[col].TDAC[row] = TDAC;
   }
 
   void RD53::EncodeCMD (const RD53RegItem                   & pRegItem,
@@ -559,7 +555,7 @@ namespace Ph2_HwDescription
   
   uint32_t RD53::getNumberOfChannels () const
   {
-    return NCOLS * NROWS;
+    return nRows * nCols;
   }
 
   bool RD53::isDACLocal (const std::string& dacName)
@@ -574,7 +570,7 @@ namespace Ph2_HwDescription
       // #################
       // # Pixel Section #
       // #################
-      {"PIX_PORTAL", 16},
+      {"PIX_PORTAL", 4}, // 4 bits instead of 16 bits because needed only for TDAC scan
       {"REGION_COL", 8},
       {"REGION_ROW", 8},
       {"PIX_MODE", 6},
@@ -805,11 +801,11 @@ namespace Ph2_HwDescription
 																  cal_aux_delay);
   }
   
-  template<int NBITS>
-  std::bitset<NBITS> RD53::SetBits (unsigned int nBit2Set)
+  template<size_t NBITS>
+  std::bitset<NBITS> RD53::SetBits (size_t nBit2Set)
   {
     std::bitset<NBITS> output(0);
-    for (unsigned int i = 0; i < nBit2Set; i++) output[i] = 1;
+    for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
     return output;
   }
 }

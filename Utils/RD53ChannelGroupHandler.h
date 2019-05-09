@@ -11,6 +11,8 @@
 #include "../HWDescription/RD53.h"
 
 
+using namespace Ph2_HwDescription;
+
 class RD53ChannelGroupHandler : public ChannelGroupHandler
 {
  public:

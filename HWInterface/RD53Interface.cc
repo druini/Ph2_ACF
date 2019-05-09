@@ -8,12 +8,11 @@
 */
 
 #include "RD53Interface.h"
-#include "../Utils/RegisterValue.h"
 
 namespace Ph2_HwInterface
 {
   RD53Interface::RD53Interface  (const BeBoardFWMap& pBoardMap) : ChipInterface (pBoardMap) {}
-  RD53Interface::~RD53Interface () {}
+  RD53Interface::~RD53Interface ()                                                          {}
 
   bool RD53Interface::ConfigureChip (const Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
@@ -213,13 +212,8 @@ namespace Ph2_HwInterface
     outputDecoded = fBoardFW->ReadChipRegisters (serialSymbols);
 
     for (unsigned int i = 0; i < outputDecoded.first.size(); i++)
-      {
-	// Removing bit for PIX_PORTAL reading
-	outputDecoded.first[i] = outputDecoded.first[i] & static_cast<uint16_t>(pow(2,NBIT_ADDR)-1);
-	// @TMP@
-	// LOG (INFO) << BLUE << "\t--> Address: " << BOLDYELLOW << "0x" << std::hex << unsigned(outputDecoded.first[i])
-	// 	   << BLUE << "\tValue: " << BOLDYELLOW << "0x" << unsigned(outputDecoded.second[i]) << std::dec << RESET;
-      }
+      // Removing bit for PIX_PORTAL reading
+      outputDecoded.first[i] = outputDecoded.first[i] & static_cast<uint16_t>(pow(2,NBIT_ADDR)-1);
 
     return outputDecoded;
   }
@@ -246,8 +240,8 @@ namespace Ph2_HwInterface
 
     // @TMP@
     pRD53->resetMask();
-    pRD53->enablePixel(50,130);
-    pRD53->injectPixel(50,130);
+    pRD53->enablePixel(50,129,true);
+    pRD53->injectPixel(50,129,true);
 
     std::vector<uint16_t> dataVec;
     uint16_t data;
@@ -255,8 +249,7 @@ namespace Ph2_HwInterface
     uint16_t colPair;
 
     // @TMP@
-    // for (unsigned int i = 0; i < NCOLS; i+=2)
-    // for (unsigned int i = 128; i < 263; i+=2)
+    // for (unsigned int i = 0; i < RD53::nCols; i+=2)
     for (unsigned int i = 128; i < 135; i+=2)
       {
 	pRD53->ConvertRowCol2Cores (0,i,colPair,row);
@@ -264,7 +257,7 @@ namespace Ph2_HwInterface
 	this->WriteChipReg(pRD53, "REGION_COL", data);
 	this->WriteChipReg(pRD53, "REGION_ROW", 0x0);
 
-	for (unsigned int j = 0; j < NROWS; j++)
+	for (unsigned int j = 0; j < RD53::nRows; j++)
 	  {
 	    pRD53->ConvertRowCol2Cores (j,i,colPair,row);
 	    data = row;
@@ -312,7 +305,9 @@ namespace Ph2_HwInterface
   bool RD53Interface::ConfigureChipOriginalMask (Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
+
     this->WriteRD53Mask(pRD53, true);
+
     return true;
   }
   
@@ -331,11 +326,11 @@ namespace Ph2_HwInterface
   bool RD53Interface::setInjectionSchema (Chip* pChip, const ChannelGroupBase* group, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
-    
-    for (auto row = 0; row < NROWS; row++)
-      for (auto col = 0; col < NCOLS; col++)
-	(*pRD53->getPixelsConfig())[col].InjEn[row] = group->isChannelEnabled(row,col);
 
+    for (auto row = 0; row < RD53::nRows; row++)
+      for (auto col = 0; col < RD53::nCols; col++)
+	pRD53->injectPixel(row,col,group->isChannelEnabled(row,col));
+    
     this->WriteRD53Mask(pRD53);
 
     return true;
@@ -345,10 +340,11 @@ namespace Ph2_HwInterface
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
     
-    for (auto row = 0; row < NROWS; row++)
-      for (auto col = 0; col < NCOLS; col++)
-	(*pRD53->getPixelsConfig())[col].Enable[row] = group->isChannelEnabled(row,col);
-
+    bool test;
+    for (auto row = 0; row < RD53::nRows; row++)
+      for (auto col = 0; col < RD53::nCols; col++)
+	pRD53->enablePixel(row,col,group->isChannelEnabled(row,col));
+    
     this->WriteRD53Mask(pRD53);
 
     return true;
@@ -358,9 +354,9 @@ namespace Ph2_HwInterface
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
     
-    for (auto row = 0; row < NROWS; row++)
-      for (auto col = 0; col < NCOLS; col++)
-	(*pRD53->getPixelsConfig())[col].TDAC[row] = pValue.getChannel<RegisterValue>(row,col).fRegisterValue;
+    for (auto row = 0; row < RD53::nRows; row++)
+      for (auto col = 0; col < RD53::nCols; col++)
+	pRD53->setTDAC(row,col,pValue.getChannel<RegisterValue>(row,col).fRegisterValue);
     
     this->WriteRD53Mask(pRD53);
     
