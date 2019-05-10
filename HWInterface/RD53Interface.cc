@@ -239,9 +239,9 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53, "PIX_MODE", 0x0);
 
     // @TMP@
-    pRD53->resetMask();
-    pRD53->enablePixel(50,129,true);
-    pRD53->injectPixel(50,129,true);
+    // pRD53->resetMask();
+    // pRD53->enablePixel(50,129,true);
+    // pRD53->injectPixel(50,129,true);
 
     std::vector<uint16_t> dataVec;
     uint16_t data;
@@ -249,7 +249,7 @@ namespace Ph2_HwInterface
     uint16_t colPair;
 
     // @TMP@
-    // for (unsigned int i = 0; i < RD53::nCols; i+=2)
+    // for (unsigned int i = 0; i < RD53::nCols-1; i+=2)
     for (unsigned int i = 128; i < 135; i+=2)
       {
 	pRD53->ConvertRowCol2Cores (0,i,colPair,row);
@@ -277,12 +277,12 @@ namespace Ph2_HwInterface
 		(static_cast<uint16_t>((*mask)[i+1].TDAC  [j]) << (NBIT_PIXEN + NBIT_INJEN + NBIT_HITBUS))) << (NBIT_CMD/2));
 
 	    // @TMP@
-	    this->WriteChipReg(pRD53, "PIX_PORTAL", data);
+	    // this->WriteChipReg(pRD53, "PIX_PORTAL", data);
 
 	    dataVec.push_back(data);
 	    if ((j % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
 	      {
-		// this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec);
+		this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec);
 		dataVec.clear();
 	      }
 	  }

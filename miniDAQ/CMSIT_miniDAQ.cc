@@ -53,7 +53,8 @@ public:
     ContainerFactory          theDetectorFactory;
     theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
-    this->SetTestAllChannels(false);
+    this->SetTestPulse(true);
+    this->fMaskChannelsFromOtherGroups = true;
     this->measureData(nTriggers);
 
 
