@@ -964,9 +964,11 @@ void PedeNoise::ConfigureCalibration()
 
 void PedeNoise::Start(int currentRun)
 {
-    Initialise ( true, true );
+	LOG (INFO) << "Starting noise measurement";
+	Initialise ( true, true );
     measureNoise();
     Validate();
+	LOG (INFO) << "Done with noise";
 }
 
 void PedeNoise::Stop()

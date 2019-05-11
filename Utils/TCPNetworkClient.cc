@@ -62,10 +62,11 @@ void TCPNetworkClient::setupServerInfo(std::string serverIP, int serverPort)
 //========================================================================================================================
 void TCPNetworkClient::closeConnection()
 {
-	std::cout << "Closing TCPSocket #" << fdClientSocket_ << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "Closing TCPSocket #" << fdClientSocket_ << std::endl;
 	if (fdClientSocket_ != -1)
 		close(fdClientSocket_);
 	fdClientSocket_ = -1;
+	std::cout << __PRETTY_FUNCTION__ << "TCPSocket #" << fdClientSocket_ << " closed." << std::endl;
 }
 
 //========================================================================================================================
@@ -78,10 +79,10 @@ int TCPNetworkClient::connectClient(std::string serverIP, int serverPort)
 	}
 	if(serverIP_ == "" ||  serverPort_ == -1)
 	{
-		std::cout << "Error, serverIP and serverPort are not defined. ServerIP: " << serverIP_ << " ServerPort: " << serverPort_ << std::endl;
+		std::cout << __PRETTY_FUNCTION__ << "Error, serverIP and serverPort are not defined. ServerIP: " << serverIP_ << " ServerPort: " << serverPort_ << std::endl;
 		return -1;
 	}
-	std::cout << "Connecting Client socket to serverIP " << serverIP_ << " serverPort: " << serverPort_ << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "Connecting Client socket to serverIP " << serverIP_ << " serverPort: " << serverPort_ << std::endl;
 	return TCPConnect(serverIP_, serverPort_, O_NONBLOCK, 0);
 }
 
@@ -96,7 +97,7 @@ int TCPNetworkClient::send(const uint8_t* buffer, size_t bufferSize)
 	int status = ::send(fdClientSocket_, buffer, bufferSize, 0);
 
 	if (status <= 0)
-		std::cout << "Error writing buffer for socket " << fdClientSocket_ << ": " << strerror(errno) << std::endl;
+		std::cout << __PRETTY_FUNCTION__ << "Error writing buffer for socket " << fdClientSocket_ << ": " << strerror(errno) << std::endl;
 
 	return status;
 }
@@ -141,7 +142,7 @@ int TCPNetworkClient::receive(uint8_t* buffer, unsigned int timeoutSeconds, unsi
 		ssize_t bufferLength = -1;
 		if ((bufferLength = ::read(fdClientSocket_, buffer, MAXPACKETSIZE)) == -1)
 		{
-			std::cout << "Error reading buffer from socket: " << fdClientSocket_ << std::endl;
+			std::cout << __PRETTY_FUNCTION__ << "Error reading buffer from socket: " << fdClientSocket_ << std::endl;
 			return -1;
 		}
 
@@ -222,8 +223,8 @@ int TCPNetworkClient::receive(std::vector<uint16_t>& buffer, uint32_t timeoutSec
 		status = ::recv ( fdClientSocket_, buf, recvSize, 0 );
 		bytesReceived += recvSize;
 
-		if      ( status == -1 ) std::cout << "status == -1   errno == " << errno << "  in Socket::recv\n" << std::endl;
-		else if ( status == 0 )  std::cout << "status == 0  errno == " << errno << "  in Socket::recv\n" << std::endl;
+		if      ( status == -1 ) std::cout << __PRETTY_FUNCTION__ << "status == -1   errno == " << errno << "  in Socket::recv\n" << std::endl;
+		else if ( status == 0 )  std::cout << __PRETTY_FUNCTION__ << "status == 0  errno == " << errno << "  in Socket::recv\n" << std::endl;
 		else
 		{
 			uint16_t val = buf[1] << 8 | buf[0];
@@ -270,7 +271,7 @@ int TCPNetworkClient::resolveServer(std::string serverIP, int serverPort, sockad
 	}
 	*/
 
-	std::cout << "Resolving server " << resolvedIP << ", on port " << resolvedPort << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "Resolving server " << resolvedIP << ", on port " << resolvedPort << std::endl;
 
 	if (resolvedIP == "localhost") resolvedIP = "127.0.0.1";
 
@@ -296,7 +297,7 @@ int TCPNetworkClient::resolveServer(std::string serverIP, int serverPort, sockad
 //========================================================================================================================
 int TCPNetworkClient::TCPConnect(std::string serverIP, int serverPort, long flags, int sendBufferSize)
 {
-	std::cout << "--FLAGS  " << flags << "  --BUFSIZE  " << sendBufferSize << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "--FLAGS  " << flags << "  --BUFSIZE  " << sendBufferSize << std::endl;
 	int status;
 	struct sockaddr_in serverSocketAddress;
 	fdClientSocket_ = socket(PF_INET, SOCK_STREAM/*|SOCK_NONBLOCK*/, 0); // man socket,man TCP(7P)
@@ -326,7 +327,7 @@ int TCPNetworkClient::TCPConnect(std::string serverIP, int serverPort, long flag
 	if (flags)
 	{
 		status = fcntl(fdClientSocket_, 0, flags);
-		std::cout << "TCPConnect fcntl(fd=" << fdClientSocket_ << ",flags=0x" << std::hex << flags << std::dec << ") =" << status << std::endl;
+		std::cout << __PRETTY_FUNCTION__ << "TCPConnect fcntl(fd=" << fdClientSocket_ << ",flags=0x" << std::hex << flags << std::dec << ") =" << status << std::endl;
 	}
 
 	if (sendBufferSize > 0)
@@ -339,13 +340,13 @@ int TCPNetworkClient::TCPConnect(std::string serverIP, int serverPort, long flag
 		socketLength = sendBufferSize;
 		status = setsockopt(fdClientSocket_, SOL_SOCKET, SO_SNDBUF, &socketLength, sizeOfSocketLength);
 		if (status == -1)
-			std::cout <<  "Error with setsockopt sendBufferSize " << errno << std::endl ;
+			std::cout << __PRETTY_FUNCTION__ <<  "Error with setsockopt sendBufferSize " << errno << std::endl ;
 		socketLength = 0;
 		status = getsockopt(fdClientSocket_, SOL_SOCKET, SO_SNDBUF, &socketLength, &sizeOfSocketLength);
 		if (socketLength < (sendBufferSize * 2))
-			std::cout <<  "sendBufferSize " << socketLength << " not expected (" << sendBufferSize << " status/errno=" << status << "/" << errno << ")" << std::endl;
+			std::cout << __PRETTY_FUNCTION__ <<  "sendBufferSize " << socketLength << " not expected (" << sendBufferSize << " status/errno=" << status << "/" << errno << ")" << std::endl;
 		else
-			std::cout <<  "sendBufferSize " << socketLength << " status/errno=" << status << "/" << errno << std::endl;
+			std::cout << __PRETTY_FUNCTION__ <<  "sendBufferSize " << socketLength << " status/errno=" << status << "/" << errno << std::endl;
 	}
 	return fdClientSocket_;
 }

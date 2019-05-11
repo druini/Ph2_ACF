@@ -97,6 +97,7 @@ public:
 			{
 				streamChip(board->getId(), module->getId(), chip);
 				const std::vector<char>& tmp = encodeStream();
+				incrementStreamPacketNumber();
 				networkStreamer->sendMessage(tmp);
 			}
 		}

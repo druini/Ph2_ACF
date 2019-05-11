@@ -58,7 +58,12 @@ class Summary : public SummaryBase
 {
 public:
     Summary() {;}
-	Summary(S theSummary) {theSummary_ = theSummary;}
+	Summary(const S& theSummary) {
+        theSummary_ = theSummary;
+    }
+    Summary(const Summary<S,C>& summary) {
+        theSummary_ = summary.theSummary_;
+    }
 	~Summary() {;}
 	void makeSummary(const ChannelContainerBase* theChannelList, const uint32_t numberOfEnabledChannels) override
 	{
@@ -96,6 +101,7 @@ public:
 	virtual void initialize() {;}
     virtual void setNumberOfTestedAndUnmaskedChannels(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup) = 0;
     virtual void normalizeAndAverageContainers(uint16_t numberOfEvents) = 0;
+    virtual void cleanDataStored() = 0;
     
     SummaryBase *summary_;
     uint32_t theNumberOfEnabledChannels_;
@@ -168,6 +174,16 @@ public:
         summary_->makeSummary(getAllObjectSummaryContainers(),theNumberOfEnabledChannelsList);//sum of chip container needed!!!
     }
 
+    void cleanDataStored() override
+    {
+        delete summary_;
+        summary_ = nullptr;
+        for(auto container : *this)
+        {
+            container->cleanDataStored();
+        }
+    }
+
 
 protected:
 	virtual T* addObject(int objectId, T* object)
@@ -207,7 +223,6 @@ public:
 	{
 		for(auto& channel : *this) channel.normalize(numberOfEvents);
 	}
-
 	
     T& getChannel(unsigned int channel) {return this->at(channel);}
 	
@@ -247,7 +262,7 @@ public:
 	typename ChannelContainer<T>::iterator end  (){return static_cast<ChannelContainer<T>*>(container_)->end();}
 	
     template <typename S, typename V>
-	void initialize() override
+	void initialize()
 	{	
 		summary_ = new Summary<S,V>();
 		container_ = static_cast<ChannelContainerBase*>(new ChannelContainer<V>(nOfRows_*nOfCols_));
@@ -294,6 +309,13 @@ public:
         container_->normalize(numberOfEvents);
         summary_->makeSummary(container_,theNumberOfEnabledChannels_);
     }
+    void cleanDataStored() override
+    {
+        delete container_;
+        container_ = nullptr;
+    }
+    
+
     void reset()
     {
         if(container_ != nullptr) 

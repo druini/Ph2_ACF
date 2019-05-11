@@ -45,7 +45,7 @@ std::string MiddlewareController::readMessage(const std::string& buffer)
 	{
 		//We need to think :)
 	    theSystemController_->Stop();
-		std::cout << "Run " << currentRun_ << " stopped!" << std::endl;
+	    std::cout << "Run " << currentRun_ << " stopped!" << std::endl;
 		sendMessage("StopDone");
 	}
 	else if (buffer == "Pause")

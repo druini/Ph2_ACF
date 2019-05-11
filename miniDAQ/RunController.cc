@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 
 	while(1)
 	{
-		theMiddlewareController.accept(1, 0);
+		theMiddlewareController.startAccept();
 	}
 
 	return EXIT_SUCCESS;
