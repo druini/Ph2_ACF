@@ -14,7 +14,7 @@
 #include <iostream>
 #include <vector>
 #include "../HWDescription/Definition.h"
-
+#include "../Utils/ConsoleColor.h"
 #include "easylogging++.h"
 
 /*!
@@ -114,7 +114,14 @@ class FileHeader
         if (fEventType == EventType::VR) cEventTypeString = "EventType::VR" ;
         else cEventTypeString = "EventType::ZS";
 
-        LOG (INFO) << "Board Type: " << fType << " -- FWMajor: " << fVersionMajor << " -- FWMinor: " << fVersionMinor << " -- Event Type: " << cEventTypeString << " -- BeId: " << fBeId << " -- fNChip: " << fNCbc << " -- EventSize32: " << fEventSize32 << " -- Valid: " << fValid;
+        LOG (INFO) << BOLDBLUE << "Board Type: " << BOLDYELLOW << fType
+		   << BOLDBLUE << " -- FWMajor: " << BOLDYELLOW << fVersionMajor
+		   << BOLDBLUE << " -- FWMinor: " << BOLDYELLOW << fVersionMinor
+		   << BOLDBLUE << " -- Event Type: " << BOLDYELLOW << cEventTypeString
+		   << BOLDBLUE << " -- BeId: " << BOLDYELLOW << fBeId
+		   << BOLDBLUE << " -- fNChip: " << BOLDYELLOW << fNCbc
+		   << BOLDBLUE << " -- EventSize32: " << BOLDYELLOW << fEventSize32
+		   << BOLDBLUE << " -- Valid: " << BOLDYELLOW << fValid << RESET;
         return cVec;
     }
 

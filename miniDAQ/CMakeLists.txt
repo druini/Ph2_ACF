@@ -83,7 +83,7 @@ endif()
 
 #CMSIT_miniDAQ
 add_executable(CMSIT_miniDAQ CMSIT_miniDAQ.cc)
-target_link_libraries(CMSIT_miniDAQ ${LIBS} RootWeb)
+target_link_libraries(CMSIT_miniDAQ ${LIBS} Ph2_Tools RootWeb)
 
 #miniDAQ
 add_executable(miniDAQ miniDAQ.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.h ../DQMUtils/DQMEvent.cc ../DQMUtils/SLinkDQMHistogrammer.cc ../DQMUtils/SLinkDQMHistogrammer.cc)

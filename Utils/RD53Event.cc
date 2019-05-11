@@ -11,22 +11,43 @@
 
 namespace Ph2_HwInterface
 {
-  bool RD53Event::DataBit (uint8_t /*module_id*/, uint8_t chip_id, uint32_t channel_id) const
+  bool RD53Event::isThereAnHit (uint8_t module_id, uint8_t chip_id, uint32_t row, uint32_t col) const
   {
-    for (size_t i = 0; i < chip_events.size(); i++)
+    for (size_t j = 0; j < module_id_vec.size(); j++)
       {
-	if (chip_id == chip_id_vec[i])
-	  {
-	    for (const auto& hit : chip_events[i].data)
+    	if (module_id == module_id_vec[j])
+    	  {
+	    for (size_t i = 0; i < chip_events.size(); i++)
 	      {
-		if ((hit.row * NROWS + hit.col) / 4 == channel_id / 4 && hit.tots[channel_id % 4])
+		if (chip_id == chip_id_vec[i])
 		  {
-		    return true;
-		  } 
+		    for (const auto& hit : chip_events[i].data)
+		      {
+			if (row == hit.row &&
+			    (col-hit.col) >=0 &&
+			    (col-hit.col) < 4 &&
+			    hit.tots[col-hit.col] != 15)
+			  {
+			    return true;
+			  } 
+		      }
+		  }
 	      }
-	  }
+      	  }
       }
     
     return false;
+  }
+  
+  void RD53Event::fillDataContainer(BoardContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+  {
+    for (auto module : *boardContainer)
+      for (auto chip : *module)
+	for (auto row = 0; row < RD53::nRows; row++)
+	  for (auto col = 0; col < RD53::nCols; col++)
+	    {
+	      if (cTestChannelGroup->isChannelEnabled(row,col))
+		chip->getChannel<Occupancy>(row,col).fOccupancy += (float)this->isThereAnHit(module->getId(),chip->getId(),row,col);
+	    }
   }
 }
