@@ -357,15 +357,11 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
 
     ContainerFactory   theDetectorFactory;
 	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-	// std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
- //    std::map<uint16_t, ModuleGlobalOccupancyMap>     backEndCbcOccupanyMap;
- //    float globalOccupancy=0;
 
     bool originalAllChannelFlag = this->fAllChan;
 
     this->SetTestAllChannels(true);
 
-    // this->measureOccupancy(fEventsPerPoint*pMultiple, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
     this->measureData(fEventsPerPoint*pMultiple);
     this->SetTestAllChannels(originalAllChannelFlag);
     for ( auto cBoard : fBoardVector )
@@ -376,61 +372,31 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
             {
                 //get the histogram for the occupancy
                 TH1F* cHist = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_occupancy" ) );
-
-            	std::cout << __PRETTY_FUNCTION__ << (unsigned int)(cBoard->getBeId())
-            			<< "  "<< (unsigned int)(cFe->getFeId())
-            			<< "  "<< (unsigned int)(cCbc->getChipId())
-						<< std::endl;
-                for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
-                {
-                    // cHist->SetBinContent(iChan+1,backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getFeId()][cCbc->getChipId()][iChan]);
-
-                    cHist->SetBinContent(iChan+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->getChannel<Occupancy>(iChan).fOccupancy);
-                }
-            }
-        }
-    }
-
-    //now I've filled the histogram with the occupancy
-    //let's say if there is more than 1% noise occupancy, we consider the strip as noise and thus set the offset to either 0 or FF
-    for ( auto cBoard : fBoardVector )
-    {
-        for ( auto cFe : cBoard->fModuleVector )
-        {
-            for ( auto cCbc : cFe->fChipVector )
-            {
-                //get the histogram for the occupancy
-                TH1F* cHist = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_occupancy" ) );
-                cHist->Scale (1.);
                 TLine* line = new TLine (0, pNoiseStripThreshold * 0.001, NCHANNELS, pNoiseStripThreshold * 0.001);
+                RegisterVector cRegVec;
 
-                //as we are at it, draw the plot
+            	for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
+                {
+                    float occupancy = theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->getChannel<Occupancy>(iChan).fOccupancy;
+                    cHist->SetBinContent(iChan+1,occupancy);
+                    if( occupancy > float ( pNoiseStripThreshold * 0.001 ) )
+                    {
+                        TString cRegName = Form ( "Channel%03d", iChan + 1 );
+                        cRegVec.push_back ({cRegName.Data(), 0xFF });
+                        LOG (INFO) << RED << "Found a noisy channel on CBC " << +cCbc->getChipId() << " Channel " << iChan  << " with an occupancy of " << cHist->GetBinContent (iChan) << "; setting offset to " << +0xFF << RESET ;
+                    }
+                }
+
                 fNoiseCanvas->cd ( cCbc->getChipId() + 1 );
+                cHist->Scale (1.);
                 gPad->SetLogy (1);
                 cHist->DrawCopy();
                 line->Draw ("same");
                 fNoiseCanvas->Modified();
                 fNoiseCanvas->Update();
-                RegisterVector cRegVec;
-                delete line;
-
-                for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
-                {
-                    // suggested B. Schneider
-                    int iBin = cHist->FindBin (iChan);
-
-                    if (cHist->GetBinContent (iBin) > double ( pNoiseStripThreshold * 0.001 ) ) // consider it noisy
-                    {
-                        TString cRegName = Form ( "Channel%03d", iChan + 1 );
-                        uint8_t cValue = fHoleMode ? 0x00 : 0xFF;
-                        cRegVec.push_back ({cRegName.Data(), cValue });
-                        LOG (INFO) << RED << "Found a noisy channel on CBC " << +cCbc->getChipId() << " Channel " << iChan  << " with an occupancy of " << cHist->GetBinContent (iChan) << "; setting offset to " << +cValue << RESET ;
-                    }
-
-                }
-
-                //Write the changes
+                
                 fChipInterface->WriteChipMultReg (cCbc, cRegVec);
+
             }
         }
 
