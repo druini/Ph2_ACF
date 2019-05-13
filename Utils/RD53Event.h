@@ -10,9 +10,9 @@
 #ifndef _RD53Event_h_
 #define _RD53Event_h_
 
-#include "../HWDescription/RD53.h"
-#include "../Utils/Occupancy.h"
+#include "Occupancy.h"
 #include "Event.h"
+#include "../HWDescription/RD53.h"
 
 
 using namespace Ph2_HwDescription;

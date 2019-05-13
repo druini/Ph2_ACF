@@ -1,9 +1,11 @@
 #include "../System/SystemController.h"
+
 #include "../Utils/argvparser.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+
 #include "../tools/Tool.h"
 
 #include "TH2F.h"
@@ -39,12 +41,12 @@ public:
       for (size_t col = 128; col < 138; col++)
 	customBitset.set(RD53::nRows*col + row);
 
-    ChannelGroupBase* customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
-    customChannelGroup->setCustomPattern(customBitset);
+    // customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
+    // customChannelGroup->setCustomPattern(customBitset);
 
 
     fChannelGroupHandler = new RD53ChannelGroupHandler();
-    ChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
+    // fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
     fChannelGroupHandler->setChannelGroupParameters(10, 1, 1);
 
     theCanvas      = new TCanvas("RD53canvas","RD53canvas",0,0,700,500);
@@ -53,7 +55,7 @@ public:
   
   ~PixelAlive()
   {
-    delete customChannelGroup;
+    // delete customChannelGroup;
     delete fChannelGroupHandler;
 
     delete histoOccupancy;
@@ -93,7 +95,8 @@ private:
   uint32_t nTriggers;
 
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
-
+  ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
+  
   TCanvas* theCanvas;
   TH2F*    histoOccupancy;
 };
@@ -101,7 +104,9 @@ private:
 
 int main (int argc, char** argv)
 {
-  // Configure the logger
+  // ########################
+  // # Configure the logger #
+  // ########################
   el::Configurations conf("settings/logger.conf");
   el::Loggers::reconfigureAllLoggers(conf);
   
@@ -111,10 +116,8 @@ int main (int argc, char** argv)
   // #############################
   ArgvParser cmd;
 
-  // Introduction
   cmd.setIntroductoryDescription("CMSIT middleware system test application");
 
-  // Options
   cmd.setHelpOption("h","help","Print this help page");
 
   cmd.defineOption("file","Hardware description file. Default value: settings/CMSIT_FC7.xml",ArgvParser::OptionRequiresValue);
@@ -131,9 +134,8 @@ int main (int argc, char** argv)
       exit(1);
     }
 
-  // Query the parser results
-  std::string cHWFile  = cmd.foundOption("file")      == true ? cmd.optionValue("file") : "settings/CMSIT_FC7.xml";
-  unsigned int nEvents = cmd.foundOption("events")    == true ? convertAnyInt(cmd.optionValue("events").c_str()) : NEVENTS;
+  std::string cHWFile  = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT_FC7.xml";
+  unsigned int nEvents = cmd.foundOption("events") == true ? convertAnyInt(cmd.optionValue("events").c_str()) : NEVENTS;
 
 
   // ##################################
