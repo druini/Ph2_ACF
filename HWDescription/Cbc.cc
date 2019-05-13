@@ -25,10 +25,10 @@ namespace Ph2_HwDescription {
 
     Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : Chip ( pFeDesc, pCbcId)
      {
+        fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
         fChipMask = std::vector<uint8_t>(NCHANNELS%8 == 0 ? NCHANNELS/8 : NCHANNELS/8 + 1,0);
         loadfRegMap ( filename );
         setFrontEndType ( FrontEndType::CBC3);
-        fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
     }
 
     // C'tors which take BeId, FMCId, FeID, CbcId
@@ -36,10 +36,10 @@ namespace Ph2_HwDescription {
     Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename ) : Chip ( pBeId, pFMCId, pFeId, pCbcId)
 
     {
+        fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
         fChipMask = std::vector<uint8_t>(NCHANNELS%8 == 0 ? NCHANNELS/8 : NCHANNELS/8 + 1,0);
         loadfRegMap ( filename );
         setFrontEndType ( FrontEndType::CBC3);
-        fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
     }
 
     //load fRegMap from file

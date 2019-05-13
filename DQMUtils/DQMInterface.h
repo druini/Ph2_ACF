@@ -2,6 +2,7 @@
 #define _DQMInterface_h_
 
 #include <vector>
+#include <future>
 
 class TCPNetworkClient;
 class DQMHistogramBase;
@@ -10,7 +11,7 @@ class DQMInterface
 {
 public:
 
-	DQMInterface (void);
+	DQMInterface (std::string configurationFileName);
 	~DQMInterface(void);
 
 	void configure           (void) ;
@@ -20,7 +21,7 @@ public:
 	void resumeProcessingData(void) ;
 	//void load(std::string fileName){;}
 
-	bool running();
+	bool running(void);
 
 private:
 	void destroy(void);
@@ -28,6 +29,9 @@ private:
 	TCPNetworkClient* fListener;
 	DQMHistogramBase* fDQMHistogram;
 	std::vector<char> fDataBuffer;
+	bool              fRunning;
+	std::future<bool> fRunningFuture;
+	std::string       fConfigurationFile;
 
 };
 

@@ -136,12 +136,13 @@ namespace Ph2_System {
         fStreamerEnabled = streamData;
         if(streamData)
         {
-            fNetworkStreamer = new TCPNetworkServer(6000,0x10000,false);
-            if(!fNetworkStreamer->accept(10, 0))
-            {
-                std::cout << "NOBODY IS LISTENING FOR MY OCCUPANCY DATA!!!!!!!! CRASHING!" << std::endl;
-                abort();
-            }
+            fNetworkStreamer = new TCPNetworkServer(6000,0x10000);
+            fNetworkStreamer->startAccept();
+//            if(!fNetworkStreamer->acceptClient(10, 0))
+//            {
+//                std::cout << "NOBODY IS LISTENING FOR MY OCCUPANCY DATA!!!!!!!! CRASHING!" << std::endl;
+//                abort();
+//            }
         }
     // this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, os, pIsFile );
         fDetectorContainer = new DetectorContainer;

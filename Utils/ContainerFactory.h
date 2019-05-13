@@ -31,7 +31,6 @@ public:
 	template <typename T>
 	void print(DetectorContainer& detector)
 	{
-		std::cout << __PRETTY_FUNCTION__ << std::endl;
 		for(std::vector<BoardContainer*>::iterator board = detector.begin(); board != detector.end(); board++)
 		{
 			std::cout << "Board" << std::endl;
@@ -129,6 +128,8 @@ public:
 					copyModule->addChipContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
 					static_cast<ChipContainer*>(copyModule->back())->initialize<SC,T>(chipSummay,channel);
 				}
+				static_cast<Summary<SC,T>*>(copyModule->at(0)->summary_)->theSummary_.print();
+				static_cast<Summary<SC,T>*>(copyModule->at(1)->summary_)->theSummary_.print();
 			}
 		}
 	}
@@ -149,7 +150,6 @@ public:
 	//EXAMPLES
 	//	void buildDetectorUsingFile(DetectorContainer& detector)
 	//	{
-	//		std::cout << __PRETTY_FUNCTION__ << std::endl;
 	//		detector.addBoardContainer(1);
 	//		//for(auto& board : theStripDetector)
 	//		for(std::vector<BoardContainer*>::iterator board = detector.begin(); board != detector.end(); board++)
@@ -181,7 +181,6 @@ public:
 
 	//	void buildDetectorUsingFile(Detector& detector)
 	//	{
-	//		std::cout << __PRETTY_FUNCTION__ << std::endl;
 	//		detector.addBoard(1);
 	//		//for(auto& board : theStripDetector)
 	//		for(std::vector<Board>::iterator board = detector.begin(); board != detector.end(); board++)

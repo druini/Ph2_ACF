@@ -13,7 +13,7 @@
 #ifndef __SYSTEMCONTROLLER_H__
 #define __SYSTEMCONTROLLER_H__
 
-#include "FileParser.h"
+#include "../System/FileParser.h"
 #include "../HWInterface/ChipInterface.h"
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/MPAInterface.h"
@@ -111,6 +111,7 @@ namespace Ph2_System {
         * \brief create a FileHandler object with
          * \param pFilename : the filename of the binary file
         */
+        
         void addFileHandler ( const std::string& pFilename, char pOption );
         void closeFileHandler();
 

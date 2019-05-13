@@ -16,7 +16,7 @@
  * \class DQMHistogramPedeNoise
  * \brief Base class for monitoring histograms
  */
-class DQMHistogramPedeNoise
+class DQMHistogramPedeNoise : public DQMHistogramBase
 {
 
   public:
@@ -33,16 +33,17 @@ class DQMHistogramPedeNoise
     /*!
      * Book histograms
      */
-    void bookHistos(void);
+    void book(std::string configurationFileName);
 
     /*!
      * Fill histogram
      */
-    void fillHistos (void);
-    void saveHistos (const std::string& outFile);
-    void resetHistos(void);
+    void fill (std::vector<char>& dataBuffer);
+    void save (const std::string& outFile);
+    void reset(void);
     //virtual void summarizeHistos();
   private:
     DetectorContainer fDetectorData;
+    DetectorContainer fDetectorValidationHistograms;
 };
 #endif

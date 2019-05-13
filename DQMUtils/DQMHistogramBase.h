@@ -12,7 +12,7 @@
 #define __DQMHISTOGRAMBASE_H__
 
 #include <string>
-
+#include <vector>
 /*!
  * \class DQMHistogramBase
  * \brief Base class for monitoring histograms
@@ -34,14 +34,14 @@ class DQMHistogramBase
     /*!
      * Book histograms
      */
-    virtual void bookHistos(void) = 0;
+    virtual void book(std::string configurationFileName) = 0;
 
     /*!
      * Fill histogram
      */
-    virtual void fillHistos (void) = 0;
-    virtual void saveHistos (const std::string& outFile) = 0;
-    virtual void resetHistos(void) = 0;
+    virtual void fill (std::vector<char>& dataBuffer) = 0;
+    virtual void save (const std::string& outFile) = 0;
+    virtual void reset(void) = 0;
     //virtual void summarizeHistos();
 };
 #endif

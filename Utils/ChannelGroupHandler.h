@@ -17,6 +17,7 @@
 #include <bitset>
 #include <map>
 
+class ChannelGroupHandler;
 
 class ChannelGroupBase
 {
@@ -25,6 +26,8 @@ public:
     ChannelGroupBase(uint16_t numberOfRows, uint16_t numberOfCols)
     : numberOfRows_(numberOfRows)
     , numberOfCols_(numberOfCols)
+    , numberOfEnabledChannels_(numberOfRows*numberOfCols)
+    , customPatternSet_(false)
     {};
     virtual ~ChannelGroupBase(){;}
     virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster=1) const = 0 ;
@@ -39,9 +42,10 @@ public:
     virtual inline bool              areAllChannelsEnabled        (void                          ) const = 0;
     
 protected:
-    uint16_t         numberOfRows_           ;
-    uint16_t         numberOfCols_           ;
+    uint16_t numberOfRows_           ;
+    uint16_t numberOfCols_           ;
     uint32_t numberOfEnabledChannels_;
+    bool     customPatternSet_       ;
 };
 
 
@@ -51,7 +55,6 @@ class ChannelGroup : public ChannelGroupBase
 public:
     ChannelGroup() 
     : ChannelGroupBase(R,C)
-    , customPatternSet_(false)
     {
         enableAllChannels();
         numberOfEnabledChannels_=numberOfRows_*numberOfCols_;
@@ -119,9 +122,8 @@ public:
         }
     }
 
-protected:
+private:
     std::bitset<R*C> channelsBitset_         ;
-    bool             customPatternSet_       ;
 };
 
 
@@ -167,6 +169,8 @@ public:
 
     void setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster=1);
     
+    void setCustomChannelGroup(ChannelGroupBase *customAllChannelGroup);
+
     ChannelGroupIterator begin()
     {
         return ChannelGroupIterator(*this,0);
@@ -181,6 +185,8 @@ public:
     {
         return allChannelGroup_;
     }
+
+
 
 protected:
     virtual ChannelGroupBase* getTestGroup(uint32_t groupNumber) const

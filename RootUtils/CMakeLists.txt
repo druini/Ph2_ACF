@@ -2,26 +2,27 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     MESSAGE(STATUS " ") 
     MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}") 
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/RootUtils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}") 
     MESSAGE(STATUS " ") 
 
     #includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
     include_directories(${PROJECT_SOURCE_DIR}/System)
-    include_directories(${PROJECT_SOURCE_DIR}/tools)
-    include_directories(${PROJECT_SOURCE_DIR}/CombinedCalibrations)
     include_directories(${PROJECT_SOURCE_DIR})
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
     #library dirs
     link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${PROJECT_SOURCE_DIR/lib})
 
-    #initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_DQMUtils)
+    #find source files
+    file(GLOB HEADERS *.h)
+    file(GLOB SOURCES *.cc)
+
+    #add the library
+    add_library(Ph2_RootUtils SHARED ${SOURCES} ${HEADERS})
 
     #check for ZMQ installed
     if(ZMQ_FOUND)
@@ -56,11 +57,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ANTENNA__")
     endif()
 
-    #boost also needs to be linked
-    if(Boost_FOUND)
-        set(LIBS ${LIBS} ${Boost_LIBRARIES})
-    endif()
-
     #last but not least, find root and link against it
     if(${ROOT_FOUND})
         include_directories(${ROOT_INCLUDE_DIRS})
@@ -73,25 +69,24 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         endif()
     endif()
 
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
+    TARGET_LINK_LIBRARIES(Ph2_RootUtils ${LIBS})
+
     ####################################
     ## EXECUTABLES
     ####################################
 
-    file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src *.cc)
-    #to remove binaries
-    list(REMOVE_ITEM BINARIES test.cc)
+    file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/RootUtils *.cc)
 
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
     foreach( sourcefile ${BINARIES} )
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
-        add_executable(${name} ${sourcefile})
-        target_link_libraries(${name} ${LIBS})
     endforeach(sourcefile ${BINARIES})
     message("--     ${BoldCyan}#### End ####${Reset}")
 
     MESSAGE(STATUS " ") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}") 
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/RootUtils/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}") 
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
     MESSAGE(STATUS " ") 
 
@@ -99,14 +94,31 @@ else()
 
     MESSAGE(STATUS " ") 
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}") 
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/RootUtils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}") 
     MESSAGE(STATUS " ") 
+    
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/uhal/uhal/include)
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/uhal/log/include)
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/uhal/grammars/include)
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/otsdaq-cmsinnertracker/Ph2_ACF)
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/extern/pugixml/RPMBUILD/SOURCES/include/)
+    
 
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${PROJECT_SOURCE_DIR/lib})
+    cet_set_compiler_flags(
+     EXTRA_FLAGS -Wno-reorder -Wl,--undefined
+     )
+    
+    cet_make(LIBRARY_NAME Ph2_RootUtils_${Ph2_ACF_Master}
+            LIBRARIES
+            pthread
+            ${Boost_SYSTEM_LIBRARY}
+            )
+    
+    install_headers()
+    install_source()
 
     MESSAGE(STATUS " ") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}") 
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/tool/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}") 
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
     MESSAGE(STATUS " ") 
 

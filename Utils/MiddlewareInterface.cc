@@ -1,5 +1,6 @@
 #include "../Utils/MiddlewareInterface.h"
 #include <iostream>
+#include <unistd.h>
 
 //========================================================================================================================
 MiddlewareInterface::MiddlewareInterface(std::string serverIP, int serverPort)
@@ -19,7 +20,9 @@ void MiddlewareInterface::initialize(void)
 	while(TCPNetworkClient::connectClient() < 0)
 	{
 		//ADD A TIMEOUT
+		usleep(100000); //wait 100 ms
 		std::cout << __PRETTY_FUNCTION__ << "Trying to connect!" << std::endl;
+
 	}
 	std::string readBuffer="";
 	TCPNetworkClient::sendAndReceive("Initialize", readBuffer, 10);

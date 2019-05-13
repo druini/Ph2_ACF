@@ -79,6 +79,53 @@ protected:
 	uint32_t fDataSize;
 }__attribute__((packed));
 
+template <class H, class D>
+class ObjectStream;
+
+class CheckStream
+{
+
+public:
+	template <class H, class D>
+	friend class ObjectStream;
+	
+	CheckStream() : fPacketNumberAndSize(0) {;}
+	CheckStream(uint32_t packetNumberAndSize) : fPacketNumberAndSize(packetNumberAndSize) {;}
+	~CheckStream() {;}
+
+	uint8_t getPacketNumber()
+	{
+		return (fPacketNumberAndSize & 0xFF000000) >>24;
+	}
+
+	uint32_t getPacketSize()
+	{
+		return (fPacketNumberAndSize & 0x00FFFFFF);
+	}
+
+private:
+	void setPacketSize(uint32_t packetSize)
+	{
+		if(packetSize >= 0xFFFFFF)
+		{
+			std::cout<< __PRETTY_FUNCTION__ << " Error: stream size must be less then 2^24 bytes" << std::endl;
+			abort();
+		}
+		fPacketNumberAndSize = (packetSize) | (fPacketNumberAndSize & 0xFF000000);
+	}
+
+	void incrementPacketNumber()
+	{
+		static uint8_t packet = 0; // Initialized only once!!!
+		if(packet == 0xFF) packet =0;
+		else ++packet;
+		fPacketNumberAndSize = packet<<24 | (fPacketNumberAndSize & 0x00FFFFFF);
+	}
+
+	uint32_t fPacketNumberAndSize;
+};
+
+
 
 template <class H, class D>
 class ObjectStream
@@ -88,17 +135,17 @@ private:
 	{
 	public:
 		friend class ObjectStream;
-		Metadata() : fObjectNameLength(0) {}
+		Metadata() : fStreamSizeAndNumber(0), fObjectNameLength(0) {}
 		~Metadata() {};
 
 		static uint32_t size(const std::string& objectName)
 		{
-			return sizeof(fObjectNameLength) + objectName.size();
+			return sizeof(fStreamSizeAndNumber) + sizeof(fObjectNameLength) + objectName.size();
 		}
 
 		uint32_t size(void) const
 		{
-			return sizeof(fObjectNameLength) + fObjectNameLength;
+			return sizeof(fStreamSizeAndNumber) + sizeof(fObjectNameLength) + fObjectNameLength;
 		}
 
 	private:
@@ -108,17 +155,18 @@ private:
 			fObjectNameLength = objectName.size();
 		}
 
+		CheckStream	fStreamSizeAndNumber;
 		uint8_t     fObjectNameLength;
 		char        fObjectName[size_t(pow(2,(sizeof(fObjectNameLength)*8)))];
-	};
+	}__attribute__((packed));
 
 public:
 	ObjectStream()
-: fMetadataStream(nullptr)
-, fTheStream     (nullptr)
-, fObjectName    ("")
-{
-};
+	: fMetadataStream(nullptr)
+	, fTheStream     (nullptr)
+	, fObjectName    ("")
+	{
+	};
 	virtual ~ObjectStream()
 	{
 		if(fTheStream != nullptr)
@@ -129,7 +177,7 @@ public:
 
 	//Creates the buffer to stream copying the object metadata, header and data into it
 	const std::vector<char>& encodeStream(void)
-    						{
+    {
 		if(fTheStream == nullptr)
 		{
 			fTheStream = new std::vector<char>(Metadata::size(getObjectName()) + fHeaderStream.size() + fDataStream.size());
@@ -139,6 +187,7 @@ public:
 		else
 			fTheStream->resize(fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
 
+		fMetadataStream->fStreamSizeAndNumber.setPacketSize(fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
 		fHeaderStream.copyToStream(&fTheStream->at(fMetadataStream->size()));
 		fDataStream  .copyToStream(&fTheStream->at(fMetadataStream->size()+ fHeaderStream.size()));
 		return *fTheStream;
@@ -152,7 +201,7 @@ public:
 		{
 			fHeaderStream.copyFromStream(&bufferBegin->at(fMetadataStream->size()));
 			fDataStream  .copyFromStream(&bufferBegin->at(fMetadataStream->size() + fHeaderStream.size()));
-			bufferBegin->erase(bufferBegin->begin(),bufferBegin->begin() + fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
+			//bufferBegin->erase(bufferBegin->begin(),bufferBegin->begin() + fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
 			fMetadataStream = nullptr;
 			return true;
 		}
@@ -160,6 +209,10 @@ public:
 		return false;
 	}
 
+	void incrementStreamPacketNumber(void)
+	{
+		fMetadataStream->fStreamSizeAndNumber.incrementPacketNumber();
+	}
 	// H& getHeaderStream() const
 	// {
 	// 	return fHeaderStream;
