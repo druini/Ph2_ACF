@@ -7,7 +7,7 @@ void ChannelGroupHandler::setChannelGroupParameters(uint32_t numberOfClustersPer
     numberOfRowsPerCluster_   = numberOfRowsPerCluster  ;
     numberOfColsPerCluster_   = numberOfColsPerCluster  ;
     numberOfGroups_ = allChannelGroup_->getNumberOfEnabledChannels() / (numberOfClustersPerGroup*numberOfRowsPerCluster*numberOfColsPerCluster);
-    if(allChannelGroup_->getNumberOfEnabledChannels() / (numberOfClustersPerGroup*numberOfRowsPerCluster*numberOfColsPerCluster) != 0) ++numberOfGroups_;
+    if(allChannelGroup_->getNumberOfEnabledChannels() % (numberOfClustersPerGroup*numberOfRowsPerCluster*numberOfColsPerCluster) != 0) ++numberOfGroups_;
 }
 
 void ChannelGroupHandler::setCustomChannelGroup(ChannelGroupBase *customAllChannelGroup)

@@ -277,12 +277,12 @@ namespace Ph2_HwInterface
 		(static_cast<uint16_t>((*mask)[i+1].TDAC  [j]) << (NBIT_PIXEN + NBIT_INJEN + NBIT_HITBUS))) << (NBIT_CMD/2));
 
 	    // @TMP@
-	    // this->WriteChipReg(pRD53, "PIX_PORTAL", data);
+	    this->WriteChipReg(pRD53, "PIX_PORTAL", data);
 
 	    dataVec.push_back(data);
 	    if ((j % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
 	      {
-		this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec);
+		// this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec);
 		dataVec.clear();
 	      }
 	  }

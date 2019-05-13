@@ -55,7 +55,6 @@ public:
   
   ~PixelAlive()
   {
-    delete customChannelGroup;
     delete fChannelGroupHandler;
 
     delete histoOccupancy;
@@ -237,7 +236,7 @@ int main (int argc, char** argv)
   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.trigger_en             = cfgFastCmd.fast_cmd_fsm.trigger_en;
   
   
-  bool doRandom = true;
+  bool doRandom = false;
   if (doRandom == true)
     {
       RD53Board->ResetReadout();
