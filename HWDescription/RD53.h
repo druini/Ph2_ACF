@@ -18,7 +18,6 @@
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/ChannelGroupHandler.h"
-
 #include "../Utils/bit_packing.h"
 
 #include <unordered_map>

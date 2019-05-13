@@ -96,7 +96,7 @@ public:
         }
         static_cast<ChannelGroup*>(currentChannelGroup)->disableAllChannels();
 
-        uint32_t numberOfClusterToSkip = (numberOfEnabledChannels_/(numberOfRowsPerCluster*numberOfColsPerCluster))/numberOfClustersPerGroup;
+        uint32_t numberOfClusterToSkip = (numberOfEnabledChannels_ / (numberOfRowsPerCluster*numberOfColsPerCluster)) / numberOfClustersPerGroup - 1;
         uint32_t clusterSkipped = numberOfClusterToSkip - groupNumber;
         for(uint16_t col = 0; col<numberOfCols_; col+=numberOfColsPerCluster)
         {

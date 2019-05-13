@@ -249,7 +249,7 @@ namespace Ph2_HwInterface
     uint16_t colPair;
 
     // @TMP@
-    // for (unsigned int i = 0; i < RD53::nCols; i+=2)
+    // for (unsigned int i = 0; i < RD53::nCols-1; i+=2)
     for (unsigned int i = 128; i < 135; i+=2)
       {
 	pRD53->ConvertRowCol2Cores (0,i,colPair,row);
