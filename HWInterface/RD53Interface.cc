@@ -239,9 +239,9 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53, "PIX_MODE", 0x0);
 
     // @TMP@
-    // pRD53->resetMask();
-    // pRD53->enablePixel(50,129,true);
-    // pRD53->injectPixel(50,129,true);
+    pRD53->resetMask();
+    pRD53->enablePixel(50,129,true);
+    pRD53->injectPixel(50,129,true);
 
     std::vector<uint16_t> dataVec;
     uint16_t data;

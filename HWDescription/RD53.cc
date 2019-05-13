@@ -79,8 +79,8 @@ namespace Ph2_HwDescription
 			if (std::all_of(readWord.begin(), readWord.end(), isdigit))
 			  {
 			    pixData.Enable[row] = atoi(readWord.c_str());
-			    row++;
 			    if (pixData.Enable[row] == 0) fChipOriginalMask->disableChannel(row,col);
+			    row++;
 			  }
 		      }
 		    

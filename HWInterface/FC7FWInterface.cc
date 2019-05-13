@@ -357,6 +357,7 @@ namespace Ph2_HwInterface
     this->ResetDDR3();
     this->ConfigureFastCommands();
     this->ChipReset();
+    // this->ChipReSync();
 
     this->Start();
     usleep(100);
@@ -364,8 +365,8 @@ namespace Ph2_HwInterface
     this->ReadData(pBoard, false, pData);
 
     // @TMP@
-    auto events = this->DecodeEvents(pData);
-    this->AnalyzeEvents(events,true);
+    // auto events = this->DecodeEvents(pData);
+    // this->AnalyzeEvents(events,true);
   }
 
   std::vector<uint32_t> FC7FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
