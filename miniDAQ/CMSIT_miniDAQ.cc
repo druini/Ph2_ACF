@@ -31,17 +31,31 @@ class PixelAlive : public Tool
 public:
   PixelAlive(uint32_t nTrig) : nTriggers(nTrig), Tool()
   {
+    // ########################
+    // # Custom channel group #
+    // ########################
+    customBitset.reset();
+    for (size_t row = 50; row < 60; row++)
+      for (size_t col = 128; col < 138; col++)
+	customBitset.set(RD53::nRows*col + row);
+
+    ChannelGroupBase* customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
+    customChannelGroup->setCustomPattern(customBitset);
+
+
     fChannelGroupHandler = new RD53ChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(100, 1, 1);
-    
+    ChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
+    fChannelGroupHandler->setChannelGroupParameters(10, 1, 1);
+
     theCanvas      = new TCanvas("RD53canvas","RD53canvas",0,0,700,500);
     histoOccupancy = new TH2F("histoOccupancy","histoOccupancy",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
   }
   
   ~PixelAlive()
   {
+    delete customChannelGroup;
     delete fChannelGroupHandler;
-    
+
     delete histoOccupancy;
     delete theCanvas;
   }
@@ -77,6 +91,8 @@ public:
 
 private:
   uint32_t nTriggers;
+
+  std::bitset<RD53::nRows * RD53::nCols> customBitset;
 
   TCanvas* theCanvas;
   TH2F*    histoOccupancy;
