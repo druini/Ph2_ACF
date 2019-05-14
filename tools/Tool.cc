@@ -50,7 +50,7 @@ Tool::Tool (THttpServer* pHttpServer)
 
 Tool::Tool (const Tool& pTool)
 {
-	fDetectorContainer   = pTool.fDetectorContainer;
+    fDetectorContainer   = pTool.fDetectorContainer;
     fBeBoardInterface    = pTool.fBeBoardInterface;
     fChipInterface       = pTool.fChipInterface;
     fBoardVector         = pTool.fBoardVector;
@@ -80,8 +80,8 @@ Tool::~Tool()
 
 void Tool::Inherit (Tool* pTool)
 {
-	fDetectorContainer   = pTool->fDetectorContainer;//IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
-	fBeBoardInterface    = pTool->fBeBoardInterface;
+    fDetectorContainer   = pTool->fDetectorContainer;//IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
+    fBeBoardInterface    = pTool->fBeBoardInterface;
     fChipInterface       = pTool->fChipInterface;
     fBoardVector         = pTool->fBoardVector;
     fBeBoardFWMap        = pTool->fBeBoardFWMap;
@@ -105,7 +105,7 @@ void Tool::Inherit (Tool* pTool)
 
 void Tool::Inherit (SystemController* pSystemController)
 {
-	fDetectorContainer = pSystemController->fDetectorContainer; //IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
+    fDetectorContainer = pSystemController->fDetectorContainer; //IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
     fBeBoardInterface  = pSystemController->fBeBoardInterface;
     fChipInterface     = pSystemController->fChipInterface;
     fBoardVector       = pSystemController->fBoardVector;
@@ -113,6 +113,7 @@ void Tool::Inherit (SystemController* pSystemController)
     fSettingsMap       = pSystemController->fSettingsMap;
     fFileHandler       = pSystemController->fFileHandler;
     fNetworkStreamer   = pSystemController->fNetworkStreamer;
+    fStreamerEnabled   = pSystemController->fStreamerEnabled;
 }
 
 void Tool::Destroy()

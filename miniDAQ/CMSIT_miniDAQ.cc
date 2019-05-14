@@ -1,9 +1,11 @@
 #include "../System/SystemController.h"
+
 #include "../Utils/argvparser.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+
 #include "../tools/Tool.h"
 
 #include "TH2F.h"
@@ -31,9 +33,22 @@ class PixelAlive : public Tool
 public:
   PixelAlive(uint32_t nTrig) : nTriggers(nTrig), Tool()
   {
+    // ########################
+    // # Custom channel group #
+    // ########################
+    customBitset.reset();
+    for (size_t row = 50; row < 60; row++)
+      for (size_t col = 128; col < 138; col++)
+	customBitset.set(RD53::nRows*col + row);
+
+    customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
+    customChannelGroup->setCustomPattern(customBitset);
+
+
     fChannelGroupHandler = new RD53ChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(100, 1, 1);
-    
+    fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
+    fChannelGroupHandler->setChannelGroupParameters(10, 1, 1);
+
     theCanvas      = new TCanvas("RD53canvas","RD53canvas",0,0,700,500);
     histoOccupancy = new TH2F("histoOccupancy","histoOccupancy",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
   }
@@ -41,7 +56,7 @@ public:
   ~PixelAlive()
   {
     delete fChannelGroupHandler;
-    
+
     delete histoOccupancy;
     delete theCanvas;
   }
@@ -53,7 +68,8 @@ public:
     ContainerFactory          theDetectorFactory;
     theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
-    this->SetTestAllChannels(false);
+    this->SetTestPulse(true);
+    this->fMaskChannelsFromOtherGroups = true;
     this->measureData(nTriggers);
 
 
@@ -77,6 +93,9 @@ public:
 private:
   uint32_t nTriggers;
 
+  std::bitset<RD53::nRows * RD53::nCols> customBitset;
+  ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
+  
   TCanvas* theCanvas;
   TH2F*    histoOccupancy;
 };
@@ -84,7 +103,9 @@ private:
 
 int main (int argc, char** argv)
 {
-  // Configure the logger
+  // ########################
+  // # Configure the logger #
+  // ########################
   el::Configurations conf("settings/logger.conf");
   el::Loggers::reconfigureAllLoggers(conf);
   
@@ -94,10 +115,8 @@ int main (int argc, char** argv)
   // #############################
   ArgvParser cmd;
 
-  // Introduction
   cmd.setIntroductoryDescription("CMSIT middleware system test application");
 
-  // Options
   cmd.setHelpOption("h","help","Print this help page");
 
   cmd.defineOption("file","Hardware description file. Default value: settings/CMSIT_FC7.xml",ArgvParser::OptionRequiresValue);
@@ -114,9 +133,8 @@ int main (int argc, char** argv)
       exit(1);
     }
 
-  // Query the parser results
-  std::string cHWFile  = cmd.foundOption("file")      == true ? cmd.optionValue("file") : "settings/CMSIT_FC7.xml";
-  unsigned int nEvents = cmd.foundOption("events")    == true ? convertAnyInt(cmd.optionValue("events").c_str()) : NEVENTS;
+  std::string cHWFile  = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT_FC7.xml";
+  unsigned int nEvents = cmd.foundOption("events") == true ? convertAnyInt(cmd.optionValue("events").c_str()) : NEVENTS;
 
 
   // ##################################
@@ -162,35 +180,60 @@ int main (int argc, char** argv)
   cfgFastCmd.initial_ecr_en   = false;
   cfgFastCmd.n_triggers       = nEvents;
   cfgFastCmd.trigger_duration = 0;
-  
-  
+ 
   // #######################################
   // # Configuration for digital injection #
   // #######################################
-  RD53::CalCmd calcmd(1,2,10,0,0);
-  cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd.getCalCmd(chipId);
+  RD53::CalCmd calcmd_first(1,2,10,0,0);
+  cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
+  RD53::CalCmd calcmd_second(0,0,0,0,0);
+  cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
   
-  cfgFastCmd.fast_cmd_fsm.delay_after_first_cal = 30;
+  // cfgFastCmd.fast_cmd_fsm.delay_after_ecr       = 500;
+  cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 30;
+  cfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 0;
+  cfgFastCmd.fast_cmd_fsm.delay_loop             = 0;
   
   cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
   cfgFastCmd.fast_cmd_fsm.second_cal_en = false;
   cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
   
-  
   // ######################################
   // # Configuration for analog injection #
   // ######################################
-  // RD53::CalCmd calcmd(0,0,1,0,0);
-  // cfgFastCmd.fast_cmd_fsm.first_cal_data  = calcmd.getCalCmd(chipId);
-  // calcmd.setCalCmd(1,0,0,0,0);
-  // cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd.getCalCmd(chipId);
+  // RD53::CalCmd calcmd_first(0,0,1,0,0);
+  // cfgFastCmd.fast_cmd_fsm.first_cal_data  = calcmd_first.getCalCmd(chipId);
+  // RD53::CalCmd calcmd_second(0,0,1,0,0);
+  // cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
   
   // // cfgFastCmd.fast_cmd_fsm.delay_after_ecr       = 500;
-  // cfgFastCmd.fast_cmd_fsm.delay_after_first_cal = 30;
+  // cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 30;
+  // cfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 0;
+  // cfgFastCmd.fast_cmd_fsm.delay_loop             = 0;
 
   // cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
   // cfgFastCmd.fast_cmd_fsm.second_cal_en = true;
   // cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
+  
+
+  // ###############################################
+  // # Copy to FC7FWInterface data member variable #
+  // ###############################################
+  RD53Board->getLoaclCfgFastCmd()->trigger_source                      = cfgFastCmd.trigger_source;
+  RD53Board->getLoaclCfgFastCmd()->initial_ecr_en                      = cfgFastCmd.initial_ecr_en;
+  RD53Board->getLoaclCfgFastCmd()->n_triggers                          = cfgFastCmd.n_triggers;
+  RD53Board->getLoaclCfgFastCmd()->trigger_duration                    = cfgFastCmd.trigger_duration;
+  
+  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_data         = cfgFastCmd.fast_cmd_fsm.first_cal_data;
+  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_data        = cfgFastCmd.fast_cmd_fsm.second_cal_data;
+  
+  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_first_cal  = cfgFastCmd.fast_cmd_fsm.delay_after_first_cal;
+  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_second_cal = cfgFastCmd.fast_cmd_fsm.delay_after_second_cal;
+  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_loop             = cfgFastCmd.fast_cmd_fsm.delay_loop;
+  
+  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_en           = cfgFastCmd.fast_cmd_fsm.first_cal_en;
+  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_en          = cfgFastCmd.fast_cmd_fsm.second_cal_en;
+  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.trigger_en             = cfgFastCmd.fast_cmd_fsm.trigger_en;
   
   
   bool doRandom = false;
@@ -198,7 +241,7 @@ int main (int argc, char** argv)
     {
       RD53Board->ResetReadout();
       RD53Board->ResetDDR3();
-      RD53Board->ConfigureFastCommands(&cfgFastCmd);
+      RD53Board->ConfigureFastCommands();
 
 
       // ###########
@@ -209,50 +252,17 @@ int main (int argc, char** argv)
 	{
 	  data.clear();
 	  std::cout << std::endl;
-
-	  /*
-	  RD53Board->getLoaclCfgFastCmd()->trigger_source   = FC7FWInterface::TriggerSource::FastCMDFSM;
-	  RD53Board->getLoaclCfgFastCmd()->n_triggers       = nEvents;
-	  RD53Board->getLoaclCfgFastCmd()->trigger_duration = 0;
-	  
-	  RD53::CalCmd calcmd(1,2,10,0,0);
-	  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_data = calcmd.getCalCmd(chipId);
-	  
-	  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_first_cal = 30;
-	  
-	  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_en  = true;
-	  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_en = false;
-	  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.trigger_en    = true;
 	  
 	  unsigned int nEvts;
 	  LOG (INFO) << BOLDBLUE << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
 	  RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt);
 
 	  RD53Board->ReadNEvents(pBoard,nEvents,data);
-	  */
-	  
-	  LOG (INFO) << BOLDBLUE << "Resetting/ ConfiguringFSM/ ECR/ BCR" << RESET;
-	  RD53Board->ResetReadout();
-	  RD53Board->ResetDDR3();
-	  RD53Board->ConfigureFastCommands(&cfgFastCmd);
-	  RD53Board->ChipReset();
-	  // RD53Board->ChipReSync();
-
-	  unsigned int nEvts;
-	  LOG (INFO) << BOLDBLUE << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
-	  RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt);
-
-	  cSystemController.Start(pBoard);
-	  usleep(100);
-
-	  RD53Board->ReadData(pBoard, false, data);
-	  
 
 	  auto events = FC7FWInterface::DecodeEvents(data);
 	  nEvts = FC7FWInterface::AnalyzeEvents(events,true);
 	  assert ((nEvts == 0) && "Found some events!");
 	}
-
 
       // ####################
       // # Configuring DIO5 #
@@ -270,20 +280,6 @@ int main (int argc, char** argv)
       // #######################
       // # Run PixelAlive scan #
       // #######################
-
-      RD53Board->getLoaclCfgFastCmd()->trigger_source   = FC7FWInterface::TriggerSource::FastCMDFSM;
-      RD53Board->getLoaclCfgFastCmd()->n_triggers       = nEvents;
-      RD53Board->getLoaclCfgFastCmd()->trigger_duration = 0;
-
-      RD53::CalCmd calcmd(1,2,10,0,0);
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_data = calcmd.getCalCmd(chipId);
-      
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_first_cal = 30;
-      
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_en  = true;
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_en = false;
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.trigger_en    = true;
-
       PixelAlive pa(nEvents);
       pa.Inherit(&cSystemController);
       pa.Run();
