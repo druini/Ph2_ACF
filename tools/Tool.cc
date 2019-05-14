@@ -66,6 +66,8 @@ Tool::Tool (const Tool& pTool)
     fModuleHistMap       = pTool.fModuleHistMap;
     fBeBoardHistMap      = pTool.fBeBoardHistMap;
     fTestGroupChannelMap = pTool.fTestGroupChannelMap;
+    fNetworkStreamer     = pTool.fNetworkStreamer;
+    fStreamerEnabled     = pTool.fStreamerEnabled;
 
 #ifdef __HTTP__
     fHttpServer          = pTool.fHttpServer;

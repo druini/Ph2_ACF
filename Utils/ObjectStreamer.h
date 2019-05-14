@@ -89,16 +89,16 @@ public:
 	template <class H, class D>
 	friend class ObjectStream;
 	
-	CheckStream() : fPacketNumberAndSize(0) {;}
+	CheckStream(void) : fPacketNumberAndSize(0) {;}
 	CheckStream(uint32_t packetNumberAndSize) : fPacketNumberAndSize(packetNumberAndSize) {;}
-	~CheckStream() {;}
+	~CheckStream(void) {;}
 
-	uint8_t getPacketNumber()
+	uint8_t getPacketNumber(void)
 	{
 		return (fPacketNumberAndSize & 0xFF000000) >>24;
 	}
 
-	uint32_t getPacketSize()
+	uint32_t getPacketSize(void)
 	{
 		return (fPacketNumberAndSize & 0x00FFFFFF);
 	}
@@ -114,12 +114,12 @@ private:
 		fPacketNumberAndSize = (packetSize) | (fPacketNumberAndSize & 0xFF000000);
 	}
 
-	void incrementPacketNumber()
+	void incrementPacketNumber(void)
 	{
 		static uint8_t packet = 0; // Initialized only once!!!
-		if(packet == 0xFF) packet =0;
+		if(packet == 0xFF) packet=0;
 		else ++packet;
-		fPacketNumberAndSize = packet<<24 | (fPacketNumberAndSize & 0x00FFFFFF);
+		fPacketNumberAndSize = (packet<<24) | (fPacketNumberAndSize & 0x00FFFFFF);
 	}
 
 	uint32_t fPacketNumberAndSize;
