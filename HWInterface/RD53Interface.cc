@@ -31,7 +31,7 @@ namespace Ph2_HwInterface
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    this->WriteRD53Mask (pRD53);
+    this->WriteRD53Mask (pRD53,true);
 
     return true;
   }
@@ -239,6 +239,10 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53, "PIX_MODE", 0x0);
 
     // @TMP@
+    if (defaultT_currentF == true)
+      this->WriteChipReg(pRD53, "PIX_MODE", 0x2);
+    else
+      this->WriteChipReg(pRD53, "PIX_MODE", 0x8);
     pRD53->resetMask();
     pRD53->enablePixel(50,129,true);
     pRD53->injectPixel(50,129,true);
@@ -261,7 +265,8 @@ namespace Ph2_HwInterface
 	  {
 	    pRD53->ConvertRowCol2Cores (j,i,colPair,row);
 	    data = row;
-	    this->WriteChipReg(pRD53, "REGION_ROW", data);
+	    // @TMP@
+	    // this->WriteChipReg(pRD53, "REGION_ROW", data);
 
 	    data =
 	      HIGHGAIN                                                                   |

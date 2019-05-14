@@ -23,6 +23,7 @@
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
 #define DEEPSLEEP  500000 // [microseconds]
+#define SHALLOWSLEEP 1000 // [microseconds]
 
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40MHz clk cycles
 
@@ -107,8 +108,8 @@ namespace Ph2_HwInterface
     void TurnOffFMC();
     void TurnOnFMC();
     void ResetBoard();
-    void ResetReadout();
-    void ResetDDR3();
+    void ResetFastCmdBlk();
+    void ResetReadoutBlk();
 
     struct ChipFrame
     {

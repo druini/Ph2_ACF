@@ -89,7 +89,7 @@ void print_data(Stream& s, It begin, It end) {
 void readout(FC7FWInterface* board_interface, RD53Interface* chip_interface, BeBoard* pBoard) {
     
     std::cout << "ResetReadout" << std::endl;
-    board_interface->ResetReadout();
+    board_interface->ResetReadoutBlk();
     usleep(10000);
 
     // std::cout << "ResetReadout" << std::endl;

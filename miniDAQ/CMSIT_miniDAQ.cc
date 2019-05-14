@@ -190,9 +190,9 @@ int main (int argc, char** argv)
   cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
   
   // cfgFastCmd.fast_cmd_fsm.delay_after_ecr       = 500;
-  cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 30;
-  cfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 0;
-  cfgFastCmd.fast_cmd_fsm.delay_loop             = 0;
+  cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  16;
+  cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =   0;
+  cfgFastCmd.fast_cmd_fsm.delay_loop             = 512;
   
   cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
   cfgFastCmd.fast_cmd_fsm.second_cal_en = false;
@@ -239,8 +239,8 @@ int main (int argc, char** argv)
   bool doRandom = false;
   if (doRandom == true)
     {
-      RD53Board->ResetReadout();
-      RD53Board->ResetDDR3();
+      RD53Board->ResetFastCmdBlk();
+      RD53Board->ResetReadoutBlk();
       RD53Board->ConfigureFastCommands();
 
 

@@ -53,12 +53,13 @@ namespace Ph2_HwInterface
   void FC7FWInterface::ConfigureBoard (const BeBoard* pBoard)
   {
     // @TMP@
-    // this->TurnOffFMC();
-    // this->TurnOnFMC();
-    // this->ResetReadout();
-    // this->ResetBoard();
-    // this->ChipReset();
-    // this->ChipReSync();
+    this->TurnOffFMC();
+    this->TurnOnFMC();
+    this->ResetBoard();
+    this->ResetFastCmdBlk();
+    this->ResetReadoutBlk();
+    this->ChipReset();
+    this->ChipReSync();
 
     // Wait for user to reset power to the chip
     // LOG (INFO) << BOLDMAGENTA << "Powercycle SCC and press any key to continue: " << RESET;
@@ -353,11 +354,11 @@ namespace Ph2_HwInterface
   {
     this->localCfgFastCmd.n_triggers = pNEvents;
 
-    this->ResetReadout();
-    this->ResetDDR3();
+    this->ResetFastCmdBlk();
+    this->ResetReadoutBlk();
     this->ConfigureFastCommands();
     this->ChipReset();
-    // this->ChipReSync();
+    this->ChipReSync();
 
     this->Start();
     usleep(100);
@@ -440,28 +441,29 @@ namespace Ph2_HwInterface
 
     WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",1);
     usleep(DEEPSLEEP);
-  }
-  
-  void FC7FWInterface::ResetReadout()
-  {
-    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset"); // Resets the fast command block --> which should be reprogrammed
 
-    WriteStackReg({
-	{"user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBFASTDURATION},
-
-	{"user.ctrl_regs.reset_reg.readout_block_rst",1},
-	{"user.ctrl_regs.reset_reg.readout_block_rst",0}}); // Resets the readout block --> which should be reprogrammed
-  }
-
-  void FC7FWInterface::ResetDDR3()
-  {
+    
     while (!ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done").value())
       {
         LOG (INFO) << YELLOW << "Waiting for DDR3 calibration" << RESET;
         usleep(DEEPSLEEP);
       }
-
+    
     LOG (INFO) << BOLDGREEN << "\t--> DDR3 calibration done" << RESET;
+  }
+  
+  void FC7FWInterface::ResetFastCmdBlk()
+  {
+    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset"); // Resets the fast command block --> which should then be reprogrammed
+  }
+
+  void FC7FWInterface::ResetReadoutBlk()
+  {
+    WriteStackReg({
+	{"user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBFASTDURATION},
+
+	{"user.ctrl_regs.reset_reg.readout_block_rst",1},
+	{"user.ctrl_regs.reset_reg.readout_block_rst",0}}); // Resets the readout block --> which should then be reprogrammed
   }
 
   void FC7FWInterface::ChipReset()
@@ -478,7 +480,6 @@ namespace Ph2_HwInterface
     WriteStackReg({
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",1},
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0}});
-    usleep(DEEPSLEEP); // @TMP@ 10000 [us]
   }
 
   std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents(const std::vector<uint32_t>& data)
@@ -664,6 +665,8 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.Hybrid1.Hybrid_en",               HYBRID_EN},
 	{"user.ctrl_regs.Hybrid1.Chips_en",                READOUT_CHIP_MASK}
       });
+
+    usleep(SHALLOWSLEEP);
   }
 
   void FC7FWInterface::ConfigureDIO5 (const DIO5Config* cfg)
