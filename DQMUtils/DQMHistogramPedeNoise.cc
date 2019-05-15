@@ -53,6 +53,7 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
 	std::cout << __PRETTY_FUNCTION__ << dataBuffer.size() << std::endl;
 	OccupancyBoardStream theOccupancy;
+	//TODO Occupancy histos and Occupancy should be used and filled the same way so there should be no need to pass through the detector data
 	if(theOccupancy.attachBuffer(&dataBuffer))
 	{
 		std::cout<<"Matched!!!!!\n";
@@ -81,6 +82,7 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 				}
 			}
 		}
+		//If I want to keep the data then I just copy them in another container
         fDetectorData.cleanDataStored();
 	}
 
@@ -113,8 +115,8 @@ void DQMHistogramPedeNoise::save(const std::string& outFile)
     }
 
     c1->Write();
-    delete c1;
-    output.Close();
+    //delete c1;
+    //output.Close();
 }
 
 //========================================================================================================================
