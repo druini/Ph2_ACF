@@ -22,8 +22,8 @@
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
-#define DEEPSLEEP  500000 // [microseconds]
-#define SHALLOWSLEEP 1000 // [microseconds]
+#define DEEPSLEEP   500000 // [microseconds]
+#define SHALLOWSLEEP 10000 // [microseconds]
 
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40MHz clk cycles
 
@@ -59,7 +59,7 @@
 // ###############
 // # Chip header #
 // ###############
-#define CHIP_HEADER    10
+#define FRAME_HEADER   10
 #define NBIT_CHIPHEAD   4 // Number of bits in '1010'
 #define NBIT_ERR        4 // Number of bits for the Error Code
 #define NBIT_HYBRID     8 // Number of bits for the Hybrid ID
@@ -94,9 +94,9 @@ namespace Ph2_HwInterface
     void Resume()                 override;
     bool InitChipCommunication () override;
 
-    void     ReadNEvents  (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = false)   override;
-    uint32_t ReadData     (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = false)  override;
-    void SerializeSymbols (std::vector<std::vector<uint16_t> > & data, std::vector<uint32_t> & serialData)         override;
+    void     ReadNEvents  (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = false)  override;
+    uint32_t ReadData     (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = false) override;
+    void SerializeSymbols (std::vector<std::vector<uint16_t> > & data, std::vector<uint32_t> & serialData)        override;
 
     void WriteChipCommand (std::vector<uint32_t> & data, unsigned int repetition = 1)                                                        override;
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadChipRegisters (std::vector<uint32_t> & data, unsigned int nBlocks2Read = 1) override;
@@ -134,7 +134,7 @@ namespace Ph2_HwInterface
       uint16_t l1a_counter;
       uint32_t bx_counter;
       
-      std::vector<ChipFrame> chip_frames;
+      std::vector<ChipFrame>   chip_frames;
       std::vector<RD53::Event> chip_events;
     };
     

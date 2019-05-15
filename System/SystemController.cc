@@ -216,32 +216,21 @@ namespace Ph2_System {
 	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fChipInterface);
 
 	      LOG (INFO) << BOLDYELLOW << "@@@ Found an Inner Tracker board @@@" << RESET;
-
 	      LOG (INFO) << BOLDYELLOW << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;
 	      fBeBoardInterface->ConfigureBoard (cBoard);
 
 	      for (const auto& cFe : cBoard->fModuleVector)
 		{
-		  unsigned int itTrials = 0;
-		  bool isGoodTrial      = false;
 		  LOG (INFO) << BOLDYELLOW << "Initializing communication to Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
-		  while ((isGoodTrial == false) && (itTrials <= MAXTRIALS))
+		  for (const auto& cRD53 : cFe->fChipVector)
 		    {
-		      for (const auto& cRD53 : cFe->fChipVector)
-			{
-			  LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
-			  fRD53Interface->ResetRD53 (static_cast<RD53*>(cRD53));
-			  fRD53Interface->InitRD53Aurora (static_cast<RD53*>(cRD53));
-			}
-
-		      isGoodTrial = fBeBoardInterface->InitChipCommunication(cBoard);
-		      LOG (INFO) << BOLDRED << "Attempt number #" << itTrials+1 << "/" << MAXTRIALS+1 << RESET;
-		      std::cout << std::endl;
-
-		      itTrials++;
+		      LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
+		      fRD53Interface->InitRD53Aurora (static_cast<RD53*>(cRD53));
 		    }
+		  
+		  bool commGood = fBeBoardInterface->InitChipCommunication(cBoard);
 
-		  if (isGoodTrial == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication of all RD53s of Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
+		  if (commGood == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication of all RD53s of Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
 		  else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication with all RD53s of Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
 
 		  for (const auto& cRD53 : cFe->fChipVector)

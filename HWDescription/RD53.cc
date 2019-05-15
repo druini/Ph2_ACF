@@ -14,17 +14,17 @@ namespace Ph2_HwDescription
   RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename) : Chip (pFeDesc, pRD53Id)
   {
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
-    loadfRegMap     (filename);
+    loadfRegMap (filename);
     setFrontEndType (FrontEndType::RD53);
-    fRD53Id           = pRD53Id;
+    fRD53Id = pRD53Id;
   }
 
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
   {
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
-    loadfRegMap     (filename);
+    loadfRegMap (filename);
     setFrontEndType (FrontEndType::RD53);
-    fRD53Id           = pRD53Id;
+    fRD53Id = pRD53Id;
   }
 
   RD53::~RD53 () {}
@@ -87,7 +87,7 @@ namespace Ph2_HwDescription
 		    if (row < nRows)
 		      {
 			myString.str(""); myString.clear();
-			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsConfig.size();
+			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
 			throw Exception (myString.str().c_str());
 		      }
 		    
@@ -114,7 +114,7 @@ namespace Ph2_HwDescription
 		    if (row < nRows)
 		      {
 			myString.str(""); myString.clear();
-			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsConfig.size();
+			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
 			throw Exception (myString.str().c_str());
 		      }
 		  }
@@ -139,7 +139,7 @@ namespace Ph2_HwDescription
 		    if (row < nRows)
 		      {
 			myString.str(""); myString.clear();
-			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsConfig.size();
+			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
 			throw Exception (myString.str().c_str());
 		      }
 		  }
@@ -164,11 +164,11 @@ namespace Ph2_HwDescription
 		    if (row < nRows)
 		      {
 			myString.str(""); myString.clear();
-			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsConfig.size();
+			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
 			throw Exception (myString.str().c_str());
 		      }
 
-		    fPixelsConfig.push_back(pixData);
+		    fPixelsMask.push_back(pixData);
 		  }
 	      }
 	    else
@@ -185,7 +185,7 @@ namespace Ph2_HwDescription
 		else if (fDefValue_str.compare(0,2,"0b") == 0) baseType = 2;
 		else
 		  {
-		    LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError, unknown base " << fDefValue_str << RESET;
+		    LOG (ERROR) << BOLDRED << "Unknown base " << fDefValue_str << RESET;
 		    throw Exception ("[RD53::loadfRegMap]\tError, unknown base");
 		  }
 		fDefValue_str.erase(0,2);
@@ -196,7 +196,7 @@ namespace Ph2_HwDescription
 		else if (fValue_str.compare(0,2,"0b") == 0) baseType = 2;
 		else
 		  {
-		    LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError, unknown base " << fValue_str << RESET;
+		    LOG (ERROR) << BOLDRED << "Unknown base " << fValue_str << RESET;
 		    throw Exception ("[RD53::loadfRegMap]\tError, unknown base");
 		  }
 
@@ -214,12 +214,12 @@ namespace Ph2_HwDescription
 	    cLineCounter++;
 	  }
 
-	fPixelsConfigDefault = fPixelsConfig;
+	fPixelsMaskDefault = fPixelsMask;
 	file.close();
       }
     else
       {
-	LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tThe RD53 file settings " << filename << " does not exist" << RESET;
+	LOG (ERROR) << BOLDRED << "The RD53 file settings " << filename << " does not exist" << RESET;
 	exit (1);
       }
   }
@@ -288,28 +288,28 @@ namespace Ph2_HwDescription
 	file << "*------------------------------------------------------------------------------------------" << std::endl;
 	file << "PIXELCONFIGURATION" << std::endl;
 	file << "*------------------------------------------------------------------------------------------" << std::endl;
-	for (unsigned int i = 0; i < fPixelsConfig.size(); i++)
+	for (unsigned int i = 0; i < fPixelsMask.size(); i++)
 	  {
 	    file << "COL					" << std::setfill ('0') << std::setw (3) << i << std::endl;
 
-	    file << "ENABLE " << fPixelsConfig[i].Enable[0];
-	    for (unsigned int j = 1; j < fPixelsConfig[i].Enable.size(); j++)
-	      file << "," << fPixelsConfig[i].Enable[j];
+	    file << "ENABLE " << fPixelsMask[i].Enable[0];
+	    for (unsigned int j = 1; j < fPixelsMask[i].Enable.size(); j++)
+	      file << "," << fPixelsMask[i].Enable[j];
 	    file << std::endl;
 
-	    file << "HITBUS " << fPixelsConfig[i].HitBus[0];
-	    for (unsigned int j = 1; j < fPixelsConfig[i].HitBus.size(); j++)
-	      file << "," << fPixelsConfig[i].HitBus[j];
+	    file << "HITBUS " << fPixelsMask[i].HitBus[0];
+	    for (unsigned int j = 1; j < fPixelsMask[i].HitBus.size(); j++)
+	      file << "," << fPixelsMask[i].HitBus[j];
 	    file << std::endl;
 
-	    file << "INJEN  " << fPixelsConfig[i].InjEn[0];
-	    for (unsigned int j = 1; j < fPixelsConfig[i].InjEn.size(); j++)
-	      file << "," << fPixelsConfig[i].InjEn[j];
+	    file << "INJEN  " << fPixelsMask[i].InjEn[0];
+	    for (unsigned int j = 1; j < fPixelsMask[i].InjEn.size(); j++)
+	      file << "," << fPixelsMask[i].InjEn[j];
 	    file << std::endl;
 
-	    file << "TDAC   " << unsigned(fPixelsConfig[i].TDAC[0]);
-	    for (unsigned int j = 1; j < fPixelsConfig[i].TDAC.size(); j++)
-	      file << "," << unsigned(fPixelsConfig[i].TDAC[j]);
+	    file << "TDAC   " << unsigned(fPixelsMask[i].TDAC[0]);
+	    for (unsigned int j = 1; j < fPixelsMask[i].TDAC.size(); j++)
+	      file << "," << unsigned(fPixelsMask[i].TDAC[j]);
 	    file << std::endl;
 
 	    file << std::endl;
@@ -318,52 +318,52 @@ namespace Ph2_HwDescription
 	file.close();
       }
     else
-      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError opening file " << filename << RESET;
+      LOG (ERROR) << BOLDRED << "Error opening file " << filename << RESET;
   }
   
-  void RD53::resetMask()
+  void RD53::resetMask ()
   {
-    for (unsigned int i = 0; i < fPixelsConfig.size(); i++)
+    for (unsigned int i = 0; i < fPixelsMask.size(); i++)
       {
-	fPixelsConfig[i].Enable.reset();
-	fPixelsConfig[i].HitBus.reset();
-	fPixelsConfig[i].InjEn .reset();
-	for (unsigned int j = 0; j < fPixelsConfig[i].TDAC.size(); j++) fPixelsConfig[i].TDAC[j] = 0;
+	fPixelsMask[i].Enable.reset();
+	fPixelsMask[i].HitBus.reset();
+	fPixelsMask[i].InjEn .reset();
+	for (unsigned int j = 0; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = 0;
       }
   }
 
-  void RD53::enableAllPixels()
+  void RD53::enableAllPixels ()
   {
-    for (unsigned int i = 0; i < fPixelsConfig.size(); i++)
+    for (unsigned int i = 0; i < fPixelsMask.size(); i++)
       {
-	fPixelsConfig[i].Enable.set();
-	fPixelsConfig[i].HitBus.set();
+	fPixelsMask[i].Enable.set();
+	fPixelsMask[i].HitBus.set();
       }
   }
 
   void RD53::disableAllPixels()
   {
-    for (unsigned int i = 0; i < fPixelsConfig.size(); i++)
+    for (unsigned int i = 0; i < fPixelsMask.size(); i++)
       {
-	fPixelsConfig[i].Enable.reset();
-	fPixelsConfig[i].HitBus.reset();
+	fPixelsMask[i].Enable.reset();
+	fPixelsMask[i].HitBus.reset();
       }
   }
 
   void RD53::enablePixel (unsigned int row, unsigned int col, bool enable)
   {
-    fPixelsConfig[col].Enable[row] = enable;
-    fPixelsConfig[col].HitBus[row] = enable;
+    fPixelsMask[col].Enable[row] = enable;
+    fPixelsMask[col].HitBus[row] = enable;
   }
 
   void RD53::injectPixel (unsigned int row, unsigned int col, bool inject)
   {
-    fPixelsConfig[col].InjEn[row] = inject;
+    fPixelsMask[col].InjEn[row] = inject;
   }
 
   void RD53::setTDAC (unsigned int row, unsigned int col, uint8_t TDAC)
   {
-    fPixelsConfig[col].TDAC[row] = TDAC;
+    fPixelsMask[col].TDAC[row] = TDAC;
   }
 
   void RD53::EncodeCMD (const RD53RegItem                   & pRegItem,
@@ -540,7 +540,7 @@ namespace Ph2_HwDescription
     pVecReg.push_back(word);
   }
 
-  void RD53::ConvertRowCol2Cores (unsigned int _row, unsigned int col, uint16_t& colPair, uint16_t& row)
+  void RD53::ConvertRowCol2Cores (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair)
   {
     colPair = col >> (NPIXCOL_PROG/2);
     row     = _row;

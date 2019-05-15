@@ -31,9 +31,8 @@ namespace Ph2_HwInterface {
 
     void Data::Set (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
     {
-      // if (pData.size() != 0) // @TMP@ Mauro: if pData.size() == 0 then it crashes fFuture.get();
-      fFuture = std::async (&Data::privateSet, this, pBoard, pData, pNevents, pType);
-      //fFuture.share();
+      if (pData.size() != 0)
+	fFuture = std::async (&Data::privateSet, this, pBoard, pData, pNevents, pType);
     }
 
 
@@ -44,18 +43,19 @@ namespace Ph2_HwInterface {
       if (pType == BoardType::FC7)
 	{
 	  auto fc7_events = FC7FWInterface::DecodeEvents(pData);
-
+	  
 	  for (const auto& evt : fc7_events)
 	    {
 	      std::vector<size_t> chip_id_vec;
 	      std::vector<size_t> module_id_vec;
+
 	      for (const auto& chip_frame : evt.chip_frames)
 		{
 		  chip_id_vec.push_back(chip_frame.chip_id);
 		  module_id_vec.push_back(chip_frame.hybrid_id);
                 }
 	      
-	      fEventList.push_back(new RD53Event(module_id_vec, chip_id_vec, std::move(evt.chip_events)));
+	      fEventList.push_back(new RD53Event(std::move(module_id_vec), std::move(chip_id_vec), std::move(evt.chip_events)));
             }
         }
       else 

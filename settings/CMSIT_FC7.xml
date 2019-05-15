@@ -15,7 +15,7 @@
 	<!-- Overwrite .txt configuration file settings -->
         <Settings
             EN_CORE_COL_SYNC   = "0"
-            EN_CORE_COL_LIN_1  = "1"
+            EN_CORE_COL_LIN_1  = "3"
             EN_CORE_COL_LIN_2  =     "0"
             EN_CORE_COL_DIFF_1 = "0"
             EN_CORE_COL_DIFF_2 =     "0"

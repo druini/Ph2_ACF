@@ -108,8 +108,8 @@ namespace Ph2_HwDescription
     bool     isDACLocal          (const std::string& dacName)                                          override;
     uint8_t  getNumberOfBits     (const std::string& dacName)                                          override;
 
-    std::vector<perPixelData>* getPixelsConfig        () { return &fPixelsConfig;        }
-    std::vector<perPixelData>* getPixelsConfigDefault () { return &fPixelsConfigDefault; }
+    std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
+    std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
 
     void resetMask        ();
     void enableAllPixels  ();
@@ -131,7 +131,7 @@ namespace Ph2_HwDescription
 		    std::vector<uint32_t>       & pVecReg,
 		    const std::vector<uint16_t> * dataVec = NULL);
 
-    void ConvertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& colPair, uint16_t& row);
+    void ConvertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair);
     void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& col);
 
     static uint16_t ResetEvtCtr() { return RESET_ECR;  }
@@ -187,8 +187,8 @@ namespace Ph2_HwDescription
     };
   
   private:
-    std::vector<perPixelData> fPixelsConfig;
-    std::vector<perPixelData> fPixelsConfigDefault;
+    std::vector<perPixelData> fPixelsMask;
+    std::vector<perPixelData> fPixelsMaskDefault;
     CommentMap fCommentMap;
 
     std::vector<uint8_t> cmd_data_map =
