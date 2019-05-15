@@ -128,8 +128,6 @@ public:
 					copyModule->addChipContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
 					static_cast<ChipContainer*>(copyModule->back())->initialize<SC,T>(chipSummay,channel);
 				}
-				static_cast<Summary<SC,T>*>(copyModule->at(0)->summary_)->theSummary_.print();
-				static_cast<Summary<SC,T>*>(copyModule->at(1)->summary_)->theSummary_.print();
 			}
 		}
 	}

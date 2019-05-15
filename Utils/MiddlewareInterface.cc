@@ -59,15 +59,20 @@ void MiddlewareInterface::resume(void)
 void MiddlewareInterface::start(std::string runNumber)
 {
 	std::string readBuffer="";
-	TCPNetworkClient::sendAndReceive("Start:{RunNumber:" + runNumber + "}",readBuffer,200);
+	if(TCPNetworkClient::sendAndReceive("Start:{RunNumber:" + runNumber + "}",readBuffer,200) < 0)
+		std::cout << __PRETTY_FUNCTION__ << "Failed Start communication!" << std::endl;
+
 	std::cout << __PRETTY_FUNCTION__ << "DONE WITH Start-" << readBuffer << "-"<< std::endl;
 }
 
 //========================================================================================================================
 void MiddlewareInterface::stop(void)
 {
+	std::cout << __PRETTY_FUNCTION__ << "Sending Stop!" << std::endl;
 	std::string readBuffer="";
-	TCPNetworkClient::sendAndReceive("Stop",readBuffer,10);
+	if(TCPNetworkClient::sendAndReceive("Stop",readBuffer,10) < 0)
+		std::cout << __PRETTY_FUNCTION__ << "Failed Stop communication!" << std::endl;
+
 	std::cout << __PRETTY_FUNCTION__ << "DONE WITH Stop-" << readBuffer << "-"<< std::endl;
 
 }

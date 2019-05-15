@@ -19,7 +19,8 @@ class Occupancy //: public streammable
 {
 public:
 	Occupancy()
-	: fOccupancy(0)
+    : fOccupancy(0)
+	//, fOccupancyError(0)
 	{;}
 	~Occupancy(){;}
 	void print(void){ std::cout << fOccupancy << std::endl;}
@@ -52,9 +53,11 @@ public:
     void normalize(uint16_t numberOfEvents) 
     {
         fOccupancy/=float(numberOfEvents);
+        //fOccupancyError =sqrt(fOccupancy*(1.-fOccupancy)/fEventsPerPoint)
     }
 
 	float  fOccupancy;
+    //float  fOccupancyError;
 };
 
 

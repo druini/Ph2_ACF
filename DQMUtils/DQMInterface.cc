@@ -102,42 +102,48 @@ void DQMInterface::resumeProcessingData(void)
 //========================================================================================================================
 bool DQMInterface::running()
 {
-	CheckStream theCurrentStream;
+	CheckStream* theCurrentStream;
 	int packetNumber=-1;
+	std::vector<char> tmpDataBuffer;
+
 
 	while(fRunning)
 	{
 		// if(receive(configBuffer, 1) != -1)
 		// if(receive(*reinterpret_cast<std::vector<char>*>(*configBuffer.end()), 1) != -1)
-		std::vector<char> tmpDataBuffer;
+		//TODO We need to optimize the data readout so we don't do multiple copies
+		//TODO We need to optimize the data readout so we don't do multiple copies
+		//TODO We need to optimize the data readout so we don't do multiple copies
 		if(fListener->receive(tmpDataBuffer, 1) > 0)
 		{
 			std::cout << __PRETTY_FUNCTION__ << "Got Something" << std::endl;
 			fDataBuffer.insert(fDataBuffer.end(), tmpDataBuffer.begin(), tmpDataBuffer.end());
-			while(fDataBuffer.size()>0)
+			while(fDataBuffer.size() > 0)
 			{
-				if(fDataBuffer.size()<sizeof(theCurrentStream))
+				if(fDataBuffer.size() < sizeof(CheckStream))
 				{
 					std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
 					break; // Not enough bytes to retreive the packet size
 				}
-				theCurrentStream = *reinterpret_cast<CheckStream*>(&fDataBuffer.at(0));
-				std::cout<< __PRETTY_FUNCTION__ << " Packet Number received " << int(theCurrentStream.getPacketNumber()) << std::endl;
-				if(packetNumber<0) packetNumber = int(theCurrentStream.getPacketNumber()); // first packet received
-				else if(theCurrentStream.getPacketNumber() != packetNumber)
+				theCurrentStream = reinterpret_cast<CheckStream*>(&fDataBuffer.at(0));
+				std::cout<< __PRETTY_FUNCTION__ << " Packet Number received " << int(theCurrentStream->getPacketNumber()) << std::endl;
+				if(packetNumber < 0)
+					packetNumber = int(theCurrentStream->getPacketNumber()); // first packet received
+				else if(theCurrentStream->getPacketNumber() != packetNumber)
 				{
 					std::cout<< __PRETTY_FUNCTION__ << " Packet Number expected " << --packetNumber << " But received " 
-						<< int(theCurrentStream.getPacketNumber()) << ", Aborting" << std::endl;
+						<< int(theCurrentStream->getPacketNumber()) << ", Aborting" << std::endl;
 					abort();
 				}
-				std::cout << __PRETTY_FUNCTION__ << " vector size "<< fDataBuffer.size() << " extected " << theCurrentStream.getPacketSize()  << std::endl;
-				if(fDataBuffer.size() < theCurrentStream.getPacketSize())
+				std::cout << __PRETTY_FUNCTION__ << " vector size "<< fDataBuffer.size() << " extected " << theCurrentStream->getPacketSize()  << std::endl;
+				if(fDataBuffer.size() < theCurrentStream->getPacketSize())
 				{
 					std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
 					break; // Packet not completed, waiting
 				}
-				fDQMHistogram->fill(fDataBuffer);
-				fDataBuffer.erase(fDataBuffer.begin(),fDataBuffer.begin() + theCurrentStream.getPacketSize());
+				std::vector<char> streamDataBuffer(fDataBuffer.begin(),fDataBuffer.begin() + theCurrentStream->getPacketSize());
+				fDataBuffer.erase(fDataBuffer.begin(),fDataBuffer.begin() + theCurrentStream->getPacketSize());
+				fDQMHistogram->fill(streamDataBuffer);
 				if(++packetNumber>=256) packetNumber=0;
 			}
 		}

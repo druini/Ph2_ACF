@@ -15,6 +15,7 @@
 #include <signal.h>
 #include "../Utils/MiddlewareInterface.h"
 #include "../DQMUtils/DQMInterface.h"
+#include <TApplication.h>
 
 
 using namespace Ph2_HwDescription;
@@ -25,10 +26,20 @@ using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP
 
 static bool controlC = false;
+static pid_t  runControllerPid = -1;
+static int runControllerStatus = 0;
 
 void interruptHandler(int handler)
 {
 	std::cout << __PRETTY_FUNCTION__ << " Sig handler: " << handler << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "Run controller pid: " << runControllerPid << " status: " << runControllerStatus << std::endl;
+	if(runControllerStatus != 0 && runControllerPid > 0)
+	{
+		std::cout << __PRETTY_FUNCTION__ << "Killing run controller pid: " << runControllerPid << " status: " << runControllerStatus << std::endl;
+		kill(runControllerPid,SIGKILL);
+	}
+	exit(EXIT_FAILURE);
+
 	controlC = true;
 }
 
@@ -36,7 +47,7 @@ bool checkExitStatus(int status, std::string programName)
 {
 	if (WIFEXITED(status) && !WEXITSTATUS(status))
 	{
-		std::cout << __PRETTY_FUNCTION__ << programName << " executed successfull." << std::endl;
+		std::cout << __PRETTY_FUNCTION__ << programName << " executed successfully." << std::endl;
 		return true;
 	}
 	else if (WIFEXITED(status) && WEXITSTATUS(status))
@@ -120,10 +131,10 @@ int main ( int argc, char* argv[] )
 
 
 
-	pid_t  runControllerPid = -1;
-	pid_t  dqmControllerPid = -1;
+	//pid_t  runControllerPid = -1;
+	//pid_t  dqmControllerPid = -1;
 	int ret = 1;
-	int runControllerStatus;
+	int runControllerPidStatus;
 	int dqmControllerStatus;
 
 	std::cout << __PRETTY_FUNCTION__ << "Forking RunController" << std::endl;
@@ -181,22 +192,44 @@ int main ( int argc, char* argv[] )
     int stateMachineStatus = INITIAL;
 	MiddlewareInterface theMiddlewareInterface("127.0.0.1",5000);
 	theMiddlewareInterface.initialize();
+
+
+	//int main ( int argc, char* argv[] )
+	//std::cout << argc << "-" << argv[2] << std::endl;
+	//exit(0);
+	int tAppArgc = 1;
+	char *tAppArgv[2];
+	tAppArgv[0] = argv[0];
+	tAppArgv[1] = "-b";
+	if(batchMode)
+		tAppArgc = 2;
+	TApplication theApp("App", &tAppArgc, tAppArgv);
+
 	DQMInterface        theDQMInterface(cmd.optionValue("file"));
 
 	stateMachineStatus = HALTED;
 
-    int runControllerPidStatus = 0;
+    //int runControllerPidStatus = 0;
 	//int dqmControllerPidStatus = 0;
-	bool done = false;
+	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
+    bool done = false;
 	while(!done)
     {
 		if(runControllerPidStatus == 0 && (runControllerPidStatus = waitpid(runControllerPid, &runControllerStatus, WNOHANG)) != 0)
 		{
+			std::cout << __PRETTY_FUNCTION__ << "1Run Controller status: " << runControllerStatus << std::endl;
 			if(!checkExitStatus(runControllerStatus,"RunController"))
-			{
-	    		//kill(dqmControllerPid,SIGKILL);
 	    		exit(EXIT_FAILURE);
-			}
 
 		}
 //		if(dqmControllerPidStatus == 0 && (dqmControllerPidStatus = waitpid(dqmControllerPid, &dqmControllerStatus, WNOHANG)) != 0)
@@ -208,17 +241,14 @@ int main ( int argc, char* argv[] )
 //			}
 //
 //		}
-    	if(controlC)
-    	{
-    		std::cout << __PRETTY_FUNCTION__ << "Detected Ctr-c killing process runController" << std::endl;
-    		kill(runControllerPid,SIGKILL);
-    		//kill(dqmControllerPid,SIGKILL);
-    		exit(EXIT_FAILURE);
-    	}
-    	if(runControllerPidStatus != 0)// && dqmControllerPidStatus != 0)
-    		done = true;
+//    	if(runControllerPidStatus != 0)// && dqmControllerPidStatus != 0)
+//    	{
+//    		std::cout << __PRETTY_FUNCTION__ << "3Run Controller pid status: " << runControllerPidStatus << std::endl;
+//    		done = true;
+//    	}
     	else
     	{
+    		std::cout << __PRETTY_FUNCTION__ << "3Run Controller status: " << runControllerStatus << std::endl;
     		switch(stateMachineStatus)
     		{
     		case HALTED:
@@ -248,13 +278,11 @@ int main ( int argc, char* argv[] )
     	}
 
 	}
+	std::cout << __PRETTY_FUNCTION__ << "4Run Controller status: " << runControllerStatus << std::endl;
 	checkExitStatus(runControllerStatus,"RunController");
 	//checkExitStatus(dqmControllerStatus,"DQMController");
 
+    theApp.Run();
 
-    std::cout<<"Press Enter...\n";
-    std::cin.get();
-    std::cout<< "DONE" <<std::endl;
-    
 	return EXIT_SUCCESS;
 }

@@ -25,7 +25,7 @@
 
 #define MAXPACKETSIZE 4096
 
-#define DEBUG 0
+#define DEBUG 1
 
 //using namespace ots;
 
@@ -90,11 +90,46 @@ int TCPNetworkClient::connectClient(std::string serverIP, int serverPort)
 int TCPNetworkClient::send(const uint8_t* buffer, size_t bufferSize)
 {
 	std::unique_lock<std::mutex> lock(socketMutex_);
+/*
+	if (fdClientSocket_ == -1 && connectClient())
+		return fdClientSocket_;
+	struct timeval timeout;
+	timeout.tv_sec  = 1;
+	timeout.tv_usec = 0;
+	int status;
+	//check whether the socket is ready to write data
+	fd_set fdWrite;
+	FD_ZERO(&fdWrite);
+	FD_SET(fdClientSocket_, &fdWrite);
+	//int iRet = ::select(0, NULL, &fdWrite, NULL, &timeout);
+	int iRet = ::select(fdClientSocket_ + 1, &fdWrite, 0, 0, &timeout);
+	std::cout << __PRETTY_FUNCTION__ << "after select: " << iRet << std::endl;
 
-	if (fdClientSocket_ == -1 && connectClient()) return fdClientSocket_;
+	if ((iRet > 0) && (FD_ISSET(fdClientSocket_, &fdWrite)))
+	{
+		std::cout << __PRETTY_FUNCTION__ << "SENDING: " << iRet << std::endl;
+		std::cout << __PRETTY_FUNCTION__ << "SENDING: " << iRet << std::endl;
+		int iSentLen = ::send(fdClientSocket_, buffer, bufferSize, 0);
+		std::cout << __PRETTY_FUNCTION__ << "sent: " << iSentLen << std::endl;
+
+		//sending failed due to socket error
+		if (iSentLen < 0)
+		{
+			std::cout << __PRETTY_FUNCTION__ << "Call to socket API 'send' failed, error" << std::endl;
+			status = false;
+		}
+
+	}
+	else
+	{
+		std::cout << __PRETTY_FUNCTION__ << "Call to socket API 'select' failed inside send method, error" << std::endl;
+		status = false;
+	}
+*/
 
 	if (DEBUG) std::cout << "Sending buffer: " << buffer << std::endl;
 	int status = ::send(fdClientSocket_, buffer, bufferSize, 0);
+	if (DEBUG) std::cout << "Buffer sent: " << status << std::endl;
 
 	if (status <= 0)
 		std::cout << __PRETTY_FUNCTION__ << "Error writing buffer for socket " << fdClientSocket_ << ": " << strerror(errno) << std::endl;
@@ -126,7 +161,7 @@ int TCPNetworkClient::receive(uint8_t* buffer, unsigned int timeoutSeconds, unsi
 {
 	if (DEBUG) std::cout << "Receive method for client : "<< fdClientSocket_ <<std::endl;
 
-    //if (fdClientSocket_ == -1) recover connection?
+	//if (fdClientSocket_ == -1) recover connection?
 
 	struct timeval timeout;
 	timeout.tv_sec  = timeoutSeconds;
@@ -179,8 +214,10 @@ int TCPNetworkClient::receive(std::vector<char>& buffer, unsigned int timeoutSec
 //========================================================================================================================
 int TCPNetworkClient::sendAndReceive(const std::string& sendBuffer, std::string& receiveBuffer, uint32_t timeoutSeconds, uint32_t timeoutUSeconds)
 {
+	std::cout << __PRETTY_FUNCTION__ << "Sending..." << std::endl;
 	if(send(sendBuffer) < 0)
 		return -1;
+	std::cout << __PRETTY_FUNCTION__ << "Receiving..." << std::endl;
 	return receive(receiveBuffer, timeoutSeconds, timeoutUSeconds);
 }
 
@@ -269,7 +306,7 @@ int TCPNetworkClient::resolveServer(std::string serverIP, int serverPort, sockad
 		resolvedIP   = std::string("127.0.0.1");
 		resolvedPort = serverPort;
 	}
-	*/
+	 */
 
 	std::cout << __PRETTY_FUNCTION__ << "Resolving server " << resolvedIP << ", on port " << resolvedPort << std::endl;
 
@@ -280,17 +317,17 @@ int TCPNetworkClient::resolveServer(std::string serverIP, int serverPort, sockad
 	serverSocketAddress.sin_port = htons(resolvedPort); // just a guess at an open port
 
 	//if (regex_match(resolvedIP, mm, std::regex("\\d+(\\.\\d+){3}")))
-		inet_aton(resolvedIP.c_str(), &serverSocketAddress.sin_addr);
-//	else
-//	{
-//		hostent_sp = gethostbyname(resolvedIP.c_str());
-//		if (!hostent_sp)
-//		{
-//			perror("gethostbyname");
-//			return (-1);
-//		}
-//		serverSocketAddress.sin_addr = *(struct in_addr *)(hostent_sp->h_addr_list[0]);
-//	}
+	inet_aton(resolvedIP.c_str(), &serverSocketAddress.sin_addr);
+	//	else
+	//	{
+	//		hostent_sp = gethostbyname(resolvedIP.c_str());
+	//		if (!hostent_sp)
+	//		{
+	//			perror("gethostbyname");
+	//			return (-1);
+	//		}
+	//		serverSocketAddress.sin_addr = *(struct in_addr *)(hostent_sp->h_addr_list[0]);
+	//	}
 	return 0;
 }
 
