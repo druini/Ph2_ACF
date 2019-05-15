@@ -26,39 +26,28 @@ public:
     {;}
     ~RegisterValue(){;}
     void print(void){ std::cout << fRegisterValue << std::endl;}
-    template<typename  T>
-    void makeAverage(const std::vector<T>* theEmpyContainerVector, const uint32_t numberOfEnabledChannels) {;}
-    void makeAverage(const std::vector<RegisterValue>* theRegisterValueVector, const uint32_t numberOfEnabledChannels)
-    {
-        for(auto RegisterValue : *theRegisterValueVector) 
-        {
-            // std::cout<<RegisterValue.fRegisterValue<<std::endl;
-            fRegisterValue+=RegisterValue.fRegisterValue;
-        }
-        fRegisterValue/=uint16_t(numberOfEnabledChannels);
-    }
-    void makeAverage(const std::vector<RegisterValue>* theRegisterValueVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList)
-    {
-        if(theRegisterValueVector->size()!=theNumberOfEnabledChannelsList.size()) 
-        {
-            std::cout << __PRETTY_FUNCTION__ << "theRegisterValueVector size = " << theRegisterValueVector->size() 
-            << " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
-            abort();
-        }
-        uint16_t totalNumberOfEnableChannels = 0;
-        for(size_t iContainer = 0; iContainer<theRegisterValueVector->size(); ++iContainer)
-        {
-            // std::cout<<theRegisterValueVector->at(iContainer)->fRegisterValue<<std::endl;
-            fRegisterValue+=(theRegisterValueVector->at(iContainer).fRegisterValue*uint16_t(theNumberOfEnabledChannelsList[iContainer]));
-            totalNumberOfEnableChannels+=theNumberOfEnabledChannelsList[iContainer];
-        }
-        fRegisterValue/=uint16_t(totalNumberOfEnableChannels);
-    }
-    void normalize(uint16_t numberOfEvents) {;}
+    
+    template<typename T>
+    void makeAverage(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) {;}
+    
+    void makeAverage(const std::vector<RegisterValue>* theRegisterValueVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents);
+    
+    void normalize(const uint16_t numberOfEvents) {;}
 
     uint16_t fRegisterValue;
 };
 
+
+template<>
+inline void RegisterValue::makeAverage<RegisterValue>(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents)
+{
+    for(const auto registerValue : *theChipContainer->getChannelContainer<ChannelContainer<RegisterValue>>()) 
+    {
+        fRegisterValue+=registerValue.fRegisterValue;
+    }
+    int numberOfEnabledChannels = cTestChannelGroup->getNumberOfEnabledChannels(theChipContainer->getChipOriginalMask());
+    fRegisterValue/=float(numberOfEnabledChannels);
+}
 
 #endif
 

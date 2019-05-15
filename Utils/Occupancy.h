@@ -14,95 +14,41 @@
 
 #include <iostream>
 #include "../Utils/Container.h"
+#include <math.h>
 
 class Occupancy //: public streammable
 {
 public:
 	Occupancy()
     : fOccupancy(0)
-	//, fOccupancyError(0)
+	, fOccupancyError(0)
 	{;}
 	~Occupancy(){;}
 	void print(void){ std::cout << fOccupancy << std::endl;}
-    void makeAverage(const std::vector<Occupancy>* theOccupancyVector, const uint32_t numberOfEnabledChannels)
-    {
-        for(auto occupancy : *theOccupancyVector) 
-        {
-            // std::cout<<occupancy.fOccupancy<<std::endl;
-            fOccupancy+=occupancy.fOccupancy;
-        }
-        fOccupancy/=float(numberOfEnabledChannels);
-    }
-    void makeAverage(const std::vector<Occupancy>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList)
-    {
-        if(theOccupancyVector->size()!=theNumberOfEnabledChannelsList.size()) 
-        {
-            std::cout << __PRETTY_FUNCTION__ << "theOccupancyVector size = " << theOccupancyVector->size() 
-            << " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
-            abort();
-        }
-        float totalNumberOfEnableChannels = 0;
-        for(size_t iContainer = 0; iContainer<theOccupancyVector->size(); ++iContainer)
-        {
-            // std::cout<<theOccupancyVector->at(iContainer)->fOccupancy<<std::endl;
-            fOccupancy+=(theOccupancyVector->at(iContainer).fOccupancy*float(theNumberOfEnabledChannelsList[iContainer]));
-            totalNumberOfEnableChannels+=theNumberOfEnabledChannelsList[iContainer];
-        }
-        fOccupancy/=float(totalNumberOfEnableChannels);
-    }
-    void normalize(uint16_t numberOfEvents) 
-    {
-        fOccupancy/=float(numberOfEvents);
-        //fOccupancyError =sqrt(fOccupancy*(1.-fOccupancy)/fEventsPerPoint)
-    }
-
+    
+    template<typename T>
+    void makeAverage(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) {;}
+    
+    void makeAverage(const std::vector<Occupancy>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents);
+    
+    void normalize(const uint16_t numberOfEvents);
+    
 	float  fOccupancy;
-    //float  fOccupancyError;
+    float  fOccupancyError;
 };
 
+template<>
+inline void Occupancy::makeAverage<Occupancy>(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents)
+{
+
+    for(const auto occupancy : *theChipContainer->getChannelContainer<ChannelContainer<Occupancy>>()) 
+    {
+        fOccupancy+=occupancy.fOccupancy;
+    }
+    int numberOfEnabledChannels = cTestChannelGroup->getNumberOfEnabledChannels(chipOriginalMask);
+    fOccupancy/=float(numberOfEnabledChannels);
+    fOccupancyError =sqrt(float(fOccupancy*(1.-fOccupancy)/numberOfEvents));
+}
 
 #endif
 
-//class RD53 : public ChannelBase
-//{
-//public:
-//	RD53(){;}
-//	void print(void){;}//{std::cout << __PRETTY_FUNCTION__ << std::endl;}// = 0;
-//	float occupancy;
-//	float pulseHeight;
-//	float pulseHeightVariation;
-//};
-
-//class Plot : public ChannelBase
-//{
-//public:
-//	void print(void){;}//{std::cout << __PRETTY_FUNCTION__ << std::endl;}// = 0;
-//
-//private:
-//};
-/*
-class TrimAndMask// : public ChannelBase
-{
-public:
-  TrimAndMask(){;}
-  ~TrimAndMask(){}
-	void print(void){std::cout << __PRETTY_FUNCTION__ << "Mask: " << mask << " Trim: " << trim << " trim2: " << trim2 << std::endl;}// = 0;
-
-	float trim = 1;
-	int   mask = 0;
-	float trim2 = 1;
-	float trim3 = 1;
-	float trim4 = 1;
-	float trim5 = 1;
-	float trim6 = 1;
-	float trim7 = 1;
-	float trim8 = 1;
-	friend std::ostream& operator<<(std::ostream& os, const TrimAndMask& channel)
-	{
-   		 os << channel.trim << channel.mask << '\n';
-    	return os;
-	}
-
-
-};
-*/

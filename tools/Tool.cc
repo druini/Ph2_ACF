@@ -1177,8 +1177,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, const uint16_t numberOfEvents
         measureBeBoardDataPerGroup(boardIndex, numberOfEvents, fChannelGroupHandler->allChannelGroup());
     }
     //It need to be moved into the place the loop on boards is done
-    fDetectorDataContainer->setNumberOfTestedAndUnmaskedChannels(fDetectorContainer,fChannelGroupHandler->allChannelGroup());
-    fDetectorDataContainer->normalizeAndAverageContainers(numberOfEvents);
+    fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
     
 }
 
