@@ -215,7 +215,7 @@ namespace Ph2_System {
 	      // ######################################
 	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fChipInterface);
 
-	      LOG (INFO) << BOLDYELLOW << "@@@ Found an Inner Tracker board @@@" << RESET;
+	      LOG (INFO) << BOLDGREEN << "\t--> Found an Inner Tracker board" << RESET;
 	      LOG (INFO) << BOLDYELLOW << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;
 	      fBeBoardInterface->ConfigureBoard (cBoard);
 

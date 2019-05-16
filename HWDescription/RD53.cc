@@ -341,7 +341,7 @@ namespace Ph2_HwDescription
       }
   }
 
-  void RD53::disableAllPixels()
+  void RD53::disableAllPixels ()
   {
     for (unsigned int i = 0; i < fPixelsMask.size(); i++)
       {
@@ -760,12 +760,10 @@ namespace Ph2_HwDescription
   {
     uint32_t core_col, side, all_tots;
     std::tie(core_col, row, side, all_tots) = unpack_bits<NBIT_CCOL, NBIT_ROW, NBIT_SIDE, NBIT_TOT>(data);
-
     unpack_array<NBIT_TOT / NPIX_REGION>(tots, all_tots);
-    
     col = 4 * pack_bits<NBIT_CCOL, NBIT_SIDE>(core_col, side);
   }
-  
+
   RD53::CalCmd::CalCmd (const uint8_t& _cal_edge_mode,
 			const uint8_t& _cal_edge_delay,
 			const uint8_t& _cal_edge_width,

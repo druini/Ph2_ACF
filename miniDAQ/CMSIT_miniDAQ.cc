@@ -31,32 +31,33 @@ INITIALIZE_EASYLOGGINGPP
 class PixelAlive : public Tool
 {
 public:
-  PixelAlive(uint32_t nTrig) : nTriggers(nTrig), Tool()
+  PixelAlive(const char* fileName, uint32_t nTrig) : nTriggers(nTrig), Tool()
   {
     // ########################
     // # Custom channel group #
     // ########################
     customBitset.reset();
-    for (size_t row = 50; row < 66; row++)
-      for (size_t col = 128; col < 144; col++)
+    for (auto row = 50; row < 66; row++)
+      for (auto col = 128; col < 144; col++)
 	customBitset.set(RD53::nRows*col + row);
 
     customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
     customChannelGroup->setCustomPattern(customBitset);
 
-
     fChannelGroupHandler = new RD53ChannelGroupHandler();
     fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
-    fChannelGroupHandler->setChannelGroupParameters(10, 1, 1);
+    fChannelGroupHandler->setChannelGroupParameters(16, 1, 1);
 
+    theFile.Open(fileName, "RECREATE");
     theCanvas      = new TCanvas("RD53canvas","RD53canvas",0,0,700,500);
     histoOccupancy = new TH2F("histoOccupancy","histoOccupancy",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
   }
   
   ~PixelAlive()
   {
-    delete fChannelGroupHandler;
+    theFile.Close();
 
+    delete fChannelGroupHandler;
     delete histoOccupancy;
     delete theCanvas;
   }
@@ -72,7 +73,6 @@ public:
     this->fMaskChannelsFromOtherGroups = true;
     this->measureData(nTriggers);
 
-
     // #########################
     // # Filling the histogram #
     // #########################
@@ -84,10 +84,16 @@ public:
 	      histoOccupancy->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy);
 
     theCanvas->cd();
-    histoOccupancy->Draw();
+    histoOccupancy->Draw("gcolz");
     theCanvas->Modified();
     theCanvas->Update();
-    theCanvas->Print("PixelAlive.root");
+  }
+
+  void Save()
+  {
+    theFile.cd();
+    theCanvas->Write();
+    theFile.Write();
   }
 
 private:
@@ -96,6 +102,7 @@ private:
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
   
+  TFile theFile;
   TCanvas* theCanvas;
   TH2F*    histoOccupancy;
 };
@@ -179,7 +186,7 @@ int main (int argc, char** argv)
   cfgFastCmd.trigger_source   = FC7FWInterface::TriggerSource::FastCMDFSM;
   cfgFastCmd.initial_ecr_en   = false;
   cfgFastCmd.n_triggers       = nEvents;
-  cfgFastCmd.trigger_duration = 7;
+  cfgFastCmd.trigger_duration = 31;
  
   // #######################################
   // # Configuration for digital injection #
@@ -189,7 +196,6 @@ int main (int argc, char** argv)
   RD53::CalCmd calcmd_second(0,0,0,0,0);
   cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
   
-  // cfgFastCmd.fast_cmd_fsm.delay_after_ecr       = 500;
   cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  32;
   cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =   0;
   cfgFastCmd.fast_cmd_fsm.delay_loop             = 512;
@@ -206,7 +212,6 @@ int main (int argc, char** argv)
   // RD53::CalCmd calcmd_second(0,0,1,0,0);
   // cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
   
-  // // cfgFastCmd.fast_cmd_fsm.delay_after_ecr       = 500;
   // cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  16;
   // cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  16;
   // cfgFastCmd.fast_cmd_fsm.delay_loop             = 512;
@@ -243,7 +248,7 @@ int main (int argc, char** argv)
       // # Running #
       // ###########
       std::vector<uint32_t> data;
-      for (auto lt = 15; lt < 35; lt++)
+      for (auto lt = 10; lt < 30; lt++)
 	{
 	  data.clear();
 	  std::cout << std::endl;
@@ -275,14 +280,16 @@ int main (int argc, char** argv)
       // #######################
       // # Run PixelAlive scan #
       // #######################
-      PixelAlive pa(nEvents);
+      PixelAlive pa("PixelAlive.root",nEvents);
       pa.Inherit(&cSystemController);
       pa.Run();
+      pa.Save();
     }
 
 
   cSystemController.Stop(pBoard);
   cSystemController.Destroy();
+  std::cout << std::endl;
   LOG (INFO) << BOLDBLUE << "@@@ End of CMSIT miniDAQ @@@" << RESET;
 
   return 0;

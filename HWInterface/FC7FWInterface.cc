@@ -56,10 +56,10 @@ namespace Ph2_HwInterface
     // this->TurnOffFMC();
     // this->TurnOnFMC();
     // this->ResetBoard();
-    this->ResetFastCmdBlk();
-    this->ResetReadoutBlk();
-    this->ChipReset();
-    this->ChipReSync();
+    // this->ResetFastCmdBlk();
+    // this->ResetReadoutBlk();
+    // this->ChipReset();
+    // this->ChipReSync();
 
     // Wait for user to reset power to the chip
     // LOG (INFO) << BOLDMAGENTA << "Powercycle SCC and press any key to continue: " << RESET;
@@ -313,6 +313,7 @@ namespace Ph2_HwInterface
              cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
 
     // @TMP@
+    std::cout << std::endl;
     LOG (INFO) << GREEN << "cNWords         = " << cNWords    << RESET;
     LOG (INFO) << GREEN << "handshake       = " << handshake  << RESET;
     LOG (INFO) << GREEN << "cNtriggers      = " << cNtriggers << RESET;
@@ -368,18 +369,18 @@ namespace Ph2_HwInterface
 	usleep(100);
 	
 	dataSize = this->ReadData(pBoard, false, pData);
-	if (dataSize == 0) LOG (INFO) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected --> retry" << RESET;
+	if (dataSize == 0) LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected --> retry" << RESET;
       } while (dataSize == 0);
 
     // @TMP@
     auto events = this->DecodeEvents(pData);
     try
       {
-	this->AnalyzeEvents(events,true);
+    	this->AnalyzeEvents(events, true);
       }
     catch (const char* msg)
       {
-	LOG (ERROR) << BOLDRED << msg << RESET;
+    	LOG (ERROR) << BOLDRED << msg << RESET;
       }
   }
 
@@ -468,13 +469,13 @@ namespace Ph2_HwInterface
   void FC7FWInterface::ResetFastCmdBlk()
   {
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset"); // Resets the fast command block --> which should then be reprogrammed
+    
+    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBFASTDURATION);
   }
 
   void FC7FWInterface::ResetReadoutBlk()
   {
     WriteStackReg({
-	{"user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBFASTDURATION},
-
 	{"user.ctrl_regs.reset_reg.readout_block_rst",1},
 	{"user.ctrl_regs.reset_reg.readout_block_rst",0}}); // Resets the readout block --> which should then be reprogrammed
   }
@@ -538,7 +539,7 @@ namespace Ph2_HwInterface
 	  {
 	    if (print == true)
 	      {
-		LOG (INFO) << CYAN << "Chip Header:"                                         << RESET;
+		LOG (INFO) << CYAN << "Chip Header:"                                           << RESET;
 		LOG (INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code    << RESET;
 		LOG (INFO) << CYAN << "hybrid_id       = " << evt.chip_frames[j].hybrid_id     << RESET;
 		LOG (INFO) << CYAN << "chip_id         = " << evt.chip_frames[j].chip_id       << RESET;
@@ -665,9 +666,6 @@ namespace Ph2_HwInterface
     
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
 
-    usleep(SHALLOWSLEEP);
-
-
     // #############################
     // # Configuring readout block #
     // #############################
@@ -677,6 +675,8 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.Hybrid1.Hybrid_en",               HYBRID_EN},
 	{"user.ctrl_regs.Hybrid1.Chips_en",                READOUT_CHIP_MASK}
       });
+
+    usleep(SHALLOWSLEEP);
   }
 
   void FC7FWInterface::ConfigureDIO5 (const DIO5Config* cfg)

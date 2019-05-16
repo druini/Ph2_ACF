@@ -23,13 +23,14 @@ namespace Ph2_HwInterface
 		  {
 		    for (const auto& hit : chip_events[i].data)
 		      {
+			// @TMP@
+			// std::cout << "AAA " << row << "\t" << col << "\t" << hit.row << "\t" << hit.col << std::endl;
 			if (row == hit.row &&
 			    (col-hit.col) >=0 &&
 			    (col-hit.col) < 4 &&
-			    hit.tots[col-hit.col] != 15)
-			  {
-			    return true;
-			  } 
+			    hit.tots[4-(col-hit.col)] != 15)
+			  // @TMP@
+			  return true;
 		      }
 		  }
 	      }
