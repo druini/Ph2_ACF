@@ -7,7 +7,7 @@
   Support:               email to mauro.dinard@cern.ch
 */
 
-#include "../Utils/RD53Event.h"
+#include "RD53Event.h"
 
 namespace Ph2_HwInterface
 {
@@ -26,10 +26,9 @@ namespace Ph2_HwInterface
 			if (row == hit.row &&
 			    (col-hit.col) >=0 &&
 			    (col-hit.col) < 4 &&
-			    hit.tots[col-hit.col] != 15)
-			  {
-			    return true;
-			  } 
+			    hit.tots[4-(col-hit.col)] != 15)
+			  // @TMP@
+			  return true;
 		      }
 		  }
 	      }

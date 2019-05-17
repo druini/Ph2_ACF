@@ -110,8 +110,6 @@ namespace Ph2_System {
 
         for ( i = 0; i < 80; i++ )
             os << "*";
-
-        os << "\n";
     }
 
     void FileParser::parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile )
@@ -179,9 +177,6 @@ namespace Ph2_System {
 
         for ( i = 0; i < 80; i++ )
             os << "*";
-
-        os << "\n";
-
     }
 
     void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector,  std::ostream& os)
