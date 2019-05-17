@@ -15,8 +15,8 @@
 
 
 //========================================================================================================================
-MiddlewareController::MiddlewareController(int serverPort, int bufferSize)
-: TCPNetworkServer      (serverPort, bufferSize)
+MiddlewareController::MiddlewareController(int serverPort)
+: TCPNetworkServer      (serverPort)
 {
 }
 //========================================================================================================================

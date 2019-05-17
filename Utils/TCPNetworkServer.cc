@@ -30,12 +30,13 @@
 #define MAXPACKETSIZE 200
 
 //========================================================================================================================
-TCPNetworkServer::TCPNetworkServer(int serverPort, int bufferSize)
-: serverPort_    (serverPort)
+TCPNetworkServer::TCPNetworkServer(int serverPort)
+: TCPServerSocket(serverPort)
+, serverPort_    (serverPort)
 , fdServerSocket_(-1)
 {
 	std::cout << __PRETTY_FUNCTION__ << "New server socket to be used. "<<std::endl;
-	initialize(bufferSize);
+	initialize(0x100000);
 }
 
 //========================================================================================================================
@@ -47,32 +48,8 @@ TCPNetworkServer::~TCPNetworkServer(void)
 //========================================================================================================================
 void TCPNetworkServer::initialize(int bufferSize)
 {
-	fdServerSocket_ = initializeSocket(serverPort_, bufferSize);
-	//	if (bufferSize > 0)
-	//	{
-	//		int socketLength = 0;
-	//		socklen_t sizeOfSocketLength = sizeof(socketLength);
-	//		auto status = getsockopt(fdServerSocket_, SOL_SOCKET, SO_SNDBUF, &socketLength, &sizeOfSocketLength);
-	//		std::cout << "SNDBUF initial: " << socketLength << " status/errno = " << status << "/" << errno << " lenlen = " << sizeOfSocketLength << std::endl;
-	//
-	//		socketLength = bufferSize;
-	//		status = setsockopt(fdServerSocket_, SOL_SOCKET, SO_SNDBUF, &socketLength, sizeOfSocketLength);
-	//		if (status == -1)
-	//		{
-	//			std::cout << "Error with setsockopt SNDBUF " << errno << std::endl;
-	//			perror("Error at setsockopt");
-	//			exit(EXIT_FAILURE);
-	//		}
-	//
-	//		socketLength = 0;
-	//		status = getsockopt(fdServerSocket_, SOL_SOCKET, SO_SNDBUF, &socketLength, &sizeOfSocketLength);
-	//		if (socketLength < (bufferSize * 2))
-	//			std::cout << "SNDBUF " << socketLength << " not expected (" << bufferSize << ") status/errno = " << status << "/" << errno <<  std::endl;
-	//		else
-	//			std::cout << "SNDBUF " << socketLength << " status/errno = "<< status << "/" << errno << std::endl;
-	//
-	//	}
-
+	//OLDfdServerSocket_ = initializeSocket(serverPort_, bufferSize);
+	fdServerSocket_ = getSocketId();
 	std::cout << __PRETTY_FUNCTION__ << "New server socket initialized. " << "Listening on port: " << serverPort_ << std::endl;
 
 }
@@ -163,13 +140,13 @@ void TCPNetworkServer::reset(void)
 {
     //NEED TO CLOSE ALL SOCKETS
 	for(auto& socket : connectedClients_)
-		close(socket);
+		::close(socket);
 	connectedClients_.clear();
 	stopAccept();
 	if (fdServerSocket_ != -1)
 	{
 		std::cout << __PRETTY_FUNCTION__ << "CLOSING TCPSocket #" << fdServerSocket_ << " port: " << serverPort_ << std::endl;
-		close(fdServerSocket_);
+		::close(fdServerSocket_);
 	}
 	std::cout << __PRETTY_FUNCTION__ << "TCPSocket #" << fdServerSocket_ << " port: " << serverPort_ << " closed." << std::endl;
 }
@@ -192,6 +169,12 @@ void TCPNetworkServer::stopAccept(void)
 //========================================================================================================================
 bool TCPNetworkServer::accept(unsigned int sleepMSeconds, unsigned int timeoutSeconds, unsigned int timeoutUSeconds)
 {
+//	while(fAccept)
+//	{
+//		TCPDataSocket clientSocket = accept();
+//		std::thread thread(&TCPNetworkServer::connectClient, this, clientSocket.getSocketId());
+//		thread.detach();
+//	}
 	std::chrono::milliseconds sleepTime (sleepMSeconds);
 	struct timeval timeout;
 	timeout.tv_sec  = timeoutSeconds;
@@ -316,7 +299,7 @@ void TCPNetworkServer::closeClientSocket(int socket)
 {
 	if(connectedClients_.find(socket) != connectedClients_.end())
 	{
-		close(socket);
+		::close(socket);
 		connectedClients_.erase(connectedClients_.find(socket));
 	}
 }

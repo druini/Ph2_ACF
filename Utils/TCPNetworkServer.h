@@ -1,6 +1,7 @@
 #ifndef _ots_TCPNetworkServer_h_
 #define _ots_TCPNetworkServer_h_
 
+#include "../Utils/TCPSocket.h"
 #include <string>
 #include <vector>
 #include <set>
@@ -11,10 +12,10 @@
 //namespace ots
 //{
 
-class TCPNetworkServer
+class TCPNetworkServer : public TCPServerSocket
 {
 public:
-	TCPNetworkServer(int serverPort, int bufferSize = 0x10000);
+	TCPNetworkServer(int serverPort);
 	virtual ~TCPNetworkServer(void);
 
 	void                 initialize     (int bufferSize = 0x10000);

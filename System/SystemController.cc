@@ -136,7 +136,7 @@ namespace Ph2_System {
         fStreamerEnabled = streamData;
         if(streamData)
         {
-            fNetworkStreamer = new TCPNetworkServer(6000,0x10000);
+            fNetworkStreamer = new TCPNetworkServer(6000);
             fNetworkStreamer->startAccept();
 //            if(!fNetworkStreamer->acceptClient(10, 0))
 //            {
