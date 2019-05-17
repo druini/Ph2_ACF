@@ -22,10 +22,10 @@ public:
     EmptyContainer() {;}
     ~EmptyContainer() {;}
     void print(void){ std::cout << "EmptyContainer" << std::endl;}
+    template<typename T>
+    uint32_t makeAverage(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) {;}
     template<typename  T>
-    void makeAverage(const std::vector<T>* theEmptyContainerVector, const uint32_t numberOfEnabledChannels) {;}
-    template<typename  T>
-    void makeAverage(const std::vector<T>* theEmptyContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList) {;}
+    void makeAverage(const std::vector<T>* theEmptyContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) {;}
     void normalize(uint16_t numberOfEvents) {;}
 
 };

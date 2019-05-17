@@ -379,6 +379,8 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
                 {
                     float occupancy = theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->getChannel<Occupancy>(iChan).fOccupancy;
                     cHist->SetBinContent(iChan+1,occupancy);
+                    cHist->SetBinError  (iChan+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->getChannel<Occupancy>(iChan).fOccupancyError);
+
                     if( occupancy > float ( pNoiseStripThreshold * 0.001 ) )
                     {
                         TString cRegName = Form ( "Channel%03d", iChan + 1 );

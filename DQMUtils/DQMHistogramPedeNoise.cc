@@ -51,7 +51,6 @@ void DQMHistogramPedeNoise::book(std::string configurationFileName)
 //========================================================================================================================
 void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
-	std::cout << __PRETTY_FUNCTION__ << dataBuffer.size() << std::endl;
 	OccupancyBoardStream theOccupancy;
 	//TODO Occupancy histos and Occupancy should be used and filled the same way so there should be no need to pass through the detector data
 	if(theOccupancy.attachBuffer(&dataBuffer))
@@ -67,18 +66,17 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
                     TH1F *chipHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
                         fDetectorValidationHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
                         )->theSummary_.fTheHistogram;
-                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << chipHistogram << std::endl;
-                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << chip->getChannelContainer<ChannelContainer<Occupancy>>() << std::endl;
+                    
                     uint channelBin=1;
                     if(chip->getChannelContainer<ChannelContainer<Occupancy>>() == nullptr ) continue;
 					for(auto channel : *chip->getChannelContainer<ChannelContainer<Occupancy>>())
                     {
                         // fDetectorValidationHistograms.at(board->getId()).at(module->getId()).at(chip->getId()).fTheHistogram
-                        chipHistogram->SetBinContent(channelBin++,channel.fOccupancy);
+                        chipHistogram->SetBinContent(channelBin  ,channel.fOccupancy     );
+                        chipHistogram->SetBinError  (channelBin++,channel.fOccupancyError);
 						std::cout << channel.fOccupancy << " ";
                     }
 					std::cout << std::endl;
-                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << chipHistogram << std::endl;
 				}
 			}
 		}
