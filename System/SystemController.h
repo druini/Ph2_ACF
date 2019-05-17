@@ -42,13 +42,6 @@
 #include <string.h>
 
 
-// #################
-// # FC7 CONSTANTS #
-// #################
-#define MAXTRIALS   1 // Maximum number of attempts to program the system
-#define NSYNCWORDS 50 // Number of sync words for chip PLL syncronisation
-
-
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 

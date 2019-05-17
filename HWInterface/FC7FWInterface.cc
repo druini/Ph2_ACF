@@ -55,8 +55,9 @@ namespace Ph2_HwInterface
     // @TMP@
     // this->TurnOffFMC();
     // this->TurnOnFMC();
-    // this->ResetReadout();
     // this->ResetBoard();
+    // this->ResetFastCmdBlk();
+    // this->ResetReadoutBlk();
     // this->ChipReset();
     // this->ChipReSync();
 
@@ -90,10 +91,10 @@ namespace Ph2_HwInterface
     std::vector< std::pair<std::string, uint32_t> > stackRegisters;
 
     if (ReadReg ("user.stat_regs.cmd_proc.fifo_empty") == false)
-      LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: command processor FIFO NOT empty before sending new commands" << RESET;
+      LOG (INFO) << BOLDRED << "Command processor FIFO NOT empty before sending new commands" << RESET;
 
     if (ReadReg ("user.stat_regs.cmd_proc.fifo_full") == true)
-      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: command processor FIFO full" << RESET;
+      LOG (ERROR) << BOLDRED << "Command processor FIFO full" << RESET;
 
     switch (data.size())
       {
@@ -312,6 +313,7 @@ namespace Ph2_HwInterface
              cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
 
     // @TMP@
+    std::cout << std::endl;
     LOG (INFO) << GREEN << "cNWords         = " << cNWords    << RESET;
     LOG (INFO) << GREEN << "handshake       = " << handshake  << RESET;
     LOG (INFO) << GREEN << "cNtriggers      = " << cNtriggers << RESET;
@@ -351,22 +353,34 @@ namespace Ph2_HwInterface
   
   void FC7FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
+    int dataSize;
+
     this->localCfgFastCmd.n_triggers = pNEvents;
 
-    this->ResetReadout();
-    this->ResetDDR3();
-    this->ConfigureFastCommands();
-    this->ChipReset();
-    // this->ChipReSync();
+    do
+      {
+	this->ResetFastCmdBlk();
+	this->ResetReadoutBlk();
+	this->ConfigureFastCommands();
+	this->ChipReset();
+	this->ChipReSync();
+	
+	this->Start();
+	usleep(100);
+	
+	dataSize = this->ReadData(pBoard, false, pData);
+	if (dataSize == 0) LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected --> retry" << RESET;
+      } while (dataSize == 0);
 
-    this->Start();
-    usleep(100);
-
-    this->ReadData(pBoard, false, pData);
-
-    // @TMP@
-    // auto events = this->DecodeEvents(pData);
-    // this->AnalyzeEvents(events,true);
+    auto events = this->DecodeEvents(pData);
+    try
+      {
+    	this->AnalyzeEvents(events, true); // @TMP@
+      }
+    catch (const char* msg)
+      {
+    	LOG (ERROR) << BOLDRED << msg << RESET;
+      }
   }
 
   std::vector<uint32_t> FC7FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
@@ -387,6 +401,7 @@ namespace Ph2_HwInterface
     WriteStackReg({{"system.ctrl_2.fmc_l12_pwr_en",1},
 	           {"system.ctrl_2.fmc_l8_pwr_en", 1},
 		   {"system.ctrl_2.fmc_pg_c2m",    1}});
+
     usleep(DEEPSLEEP);
   }
 
@@ -440,28 +455,29 @@ namespace Ph2_HwInterface
 
     WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",1);
     usleep(DEEPSLEEP);
-  }
-  
-  void FC7FWInterface::ResetReadout()
-  {
-    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset"); // Resets the fast command block --> which should be reprogrammed
 
-    WriteStackReg({
-	{"user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBFASTDURATION},
-
-	{"user.ctrl_regs.reset_reg.readout_block_rst",1},
-	{"user.ctrl_regs.reset_reg.readout_block_rst",0}}); // Resets the readout block --> which should be reprogrammed
-  }
-
-  void FC7FWInterface::ResetDDR3()
-  {
+    
     while (!ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done").value())
       {
         LOG (INFO) << YELLOW << "Waiting for DDR3 calibration" << RESET;
         usleep(DEEPSLEEP);
       }
-
+    
     LOG (INFO) << BOLDGREEN << "\t--> DDR3 calibration done" << RESET;
+  }
+  
+  void FC7FWInterface::ResetFastCmdBlk()
+  {
+    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset"); // Resets the fast command block --> which should then be reprogrammed
+    
+    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBFASTDURATION);
+  }
+
+  void FC7FWInterface::ResetReadoutBlk()
+  {
+    WriteStackReg({
+	{"user.ctrl_regs.reset_reg.readout_block_rst",1},
+	{"user.ctrl_regs.reset_reg.readout_block_rst",0}}); // Resets the readout block --> which should then be reprogrammed
   }
 
   void FC7FWInterface::ChipReset()
@@ -478,7 +494,6 @@ namespace Ph2_HwInterface
     WriteStackReg({
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",1},
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0}});
-    usleep(DEEPSLEEP); // @TMP@ 10000 [us]
   }
 
   std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents(const std::vector<uint32_t>& data)
@@ -495,7 +510,7 @@ namespace Ph2_HwInterface
     for (size_t i = 0; i < event_start.size(); i++)
       {
 	const size_t start = event_start[i];
-	const size_t end   = (i == event_start.size() - 1) ? data.size() : event_start[i + 1];
+	const size_t end   = ((i == event_start.size() - 1) ? data.size() : event_start[i + 1]);
 	events.emplace_back(&data[start], end - start);
       }
 
@@ -524,7 +539,7 @@ namespace Ph2_HwInterface
 	  {
 	    if (print == true)
 	      {
-		LOG (INFO) << CYAN << "Chip Header:"                                         << RESET;
+		LOG (INFO) << CYAN << "Chip Header:"                                           << RESET;
 		LOG (INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code    << RESET;
 		LOG (INFO) << CYAN << "hybrid_id       = " << evt.chip_frames[j].hybrid_id     << RESET;
 		LOG (INFO) << CYAN << "chip_id         = " << evt.chip_frames[j].chip_id       << RESET;
@@ -539,6 +554,7 @@ namespace Ph2_HwInterface
 		LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
 	      }
 
+	    if (evt.l1a_counter != evt.chip_events[j].trigger_id) throw "Mismatch on L1A counter between backend and frontend";
 	    if (evt.chip_events[j].data.size() != 0) nEvts++;
 
 	    for (const auto& region_data : evt.chip_events[j].data)
@@ -547,7 +563,7 @@ namespace Ph2_HwInterface
 		  {
 		    LOG(INFO)   << "Column: " << region_data.col 
 				<< ", Row: "  << region_data.row 
-				<< ", ToTs: [" << +region_data.tots[3] << "," << +region_data.tots[2] << "," << +region_data.tots[1] << "," << +region_data.tots[0] << "]"
+				<< ", ToTs: [" << +region_data.tots[0] << "," << +region_data.tots[1] << "," << +region_data.tots[2] << "," << +region_data.tots[3] << "]"
 				<< RESET;
 		  }
 	      }
@@ -561,7 +577,7 @@ namespace Ph2_HwInterface
   {
     std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
     
-    if (block_size * 4 != n) LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tInvalid event block size: " << block_size << " instead of " << (n / 4) << RESET;
+    if (block_size * 4 != n) LOG (ERROR) << BOLDRED << "Invalid event block size: " << block_size << " instead of " << (n / 4) << RESET;
 
     bool dummy_size;
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
@@ -569,25 +585,20 @@ namespace Ph2_HwInterface
     bx_counter = data[3];
 
     std::vector<size_t> chip_start;
-    for (size_t i = 4; i < n; i += 4)
-      {
-	if (data[i] >> (NBIT_ERR + NBIT_HYBRID + NBIT_CHIPID + NBIT_L1ASIZE) == CHIP_HEADER) chip_start.push_back(i);
-      }
-    
+    for (size_t i = 4; i < n; i += 4) if (data[i] >> (NBIT_ERR + NBIT_HYBRID + NBIT_CHIPID + NBIT_L1ASIZE) == FRAME_HEADER) chip_start.push_back(i);
+
     chip_frames.reserve(chip_start.size());
     chip_events.reserve(chip_start.size());
     for (size_t i = 0; i < chip_start.size(); i++)
       {
 	const size_t start = chip_start[i];
-	const size_t end   = (i == chip_start.size() - 1) ? n : chip_start[i + 1];
-
+	const size_t end   = ((i == chip_start.size() - 1) ? n : chip_start[i + 1]);
 	chip_frames.emplace_back(data[start], data[start + 1]);
 
-	const size_t size = dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start;
-
+	const size_t size = (dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start);
 	chip_events.emplace_back(&data[start + 2], size - 2);
 	
-	if ((chip_frames[i].l1a_data_size+1+dummy_size) * 4 != n) LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tInvalid chip L1A data size" << RESET;
+	if ((chip_frames[i].l1a_data_size+1+dummy_size) * 4 != n) LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
       }
   }
 
@@ -664,6 +675,8 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.Hybrid1.Hybrid_en",               HYBRID_EN},
 	{"user.ctrl_regs.Hybrid1.Chips_en",                READOUT_CHIP_MASK}
       });
+
+    usleep(SHALLOWSLEEP);
   }
 
   void FC7FWInterface::ConfigureDIO5 (const DIO5Config* cfg)

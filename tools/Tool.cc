@@ -105,14 +105,15 @@ void Tool::Inherit (Tool* pTool)
 
 void Tool::Inherit (SystemController* pSystemController)
 {
-	fDetectorContainer = pSystemController->fDetectorContainer; //IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
-    fBeBoardInterface  = pSystemController->fBeBoardInterface;
-    fChipInterface     = pSystemController->fChipInterface;
-    fBoardVector       = pSystemController->fBoardVector;
-    fBeBoardFWMap      = pSystemController->fBeBoardFWMap;
-    fSettingsMap       = pSystemController->fSettingsMap;
-    fFileHandler       = pSystemController->fFileHandler;
-    fNetworkStreamer   = pSystemController->fNetworkStreamer;
+  fDetectorContainer = pSystemController->fDetectorContainer; //IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
+  fBeBoardInterface  = pSystemController->fBeBoardInterface;
+  fChipInterface     = pSystemController->fChipInterface;
+  fBoardVector       = pSystemController->fBoardVector;
+  fBeBoardFWMap      = pSystemController->fBeBoardFWMap;
+  fSettingsMap       = pSystemController->fSettingsMap;
+  fFileHandler       = pSystemController->fFileHandler;
+  fNetworkStreamer   = pSystemController->fNetworkStreamer;
+  fStreamerEnabled   = pSystemController->fStreamerEnabled;
 }
 
 void Tool::Destroy()
