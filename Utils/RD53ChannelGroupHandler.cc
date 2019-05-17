@@ -7,7 +7,7 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "../Utils/RD53ChannelGroupHandler.h"
+#include "RD53ChannelGroupHandler.h"
 
 RD53ChannelGroupHandler::RD53ChannelGroupHandler()
 {

@@ -138,7 +138,7 @@ public:
 		return idObjectMap_[id];
 	}
 	template <typename S, typename V>
-	void initialize() override
+	void initialize()
 	{	
 		summary_ = new Summary<S,V>();
 	}

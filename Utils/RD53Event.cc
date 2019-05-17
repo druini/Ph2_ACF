@@ -7,7 +7,7 @@
   Support:               email to mauro.dinard@cern.ch
 */
 
-#include "../Utils/RD53Event.h"
+#include "RD53Event.h"
 
 namespace Ph2_HwInterface
 {
@@ -23,8 +23,6 @@ namespace Ph2_HwInterface
 		  {
 		    for (const auto& hit : chip_events[i].data)
 		      {
-			// @TMP@
-			// std::cout << "AAA " << row << "\t" << col << "\t" << hit.row << "\t" << hit.col << std::endl;
 			if (row == hit.row &&
 			    (col-hit.col) >=0 &&
 			    (col-hit.col) < 4 &&

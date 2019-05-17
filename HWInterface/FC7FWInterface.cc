@@ -372,11 +372,10 @@ namespace Ph2_HwInterface
 	if (dataSize == 0) LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected --> retry" << RESET;
       } while (dataSize == 0);
 
-    // @TMP@
     auto events = this->DecodeEvents(pData);
     try
       {
-    	this->AnalyzeEvents(events, true);
+    	this->AnalyzeEvents(events, true); // @TMP@
       }
     catch (const char* msg)
       {
@@ -402,6 +401,7 @@ namespace Ph2_HwInterface
     WriteStackReg({{"system.ctrl_2.fmc_l12_pwr_en",1},
 	           {"system.ctrl_2.fmc_l8_pwr_en", 1},
 		   {"system.ctrl_2.fmc_pg_c2m",    1}});
+
     usleep(DEEPSLEEP);
   }
 

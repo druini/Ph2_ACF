@@ -1,14 +1,6 @@
 #include "../System/SystemController.h"
-
 #include "../Utils/argvparser.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-
-#include "../tools/Tool.h"
-
-#include "TH2F.h"
+#include "../tools/RD53PixelAlive.h"
 
 
 // ##################
@@ -23,89 +15,6 @@ using namespace Ph2_System;
 using namespace std;
 
 INITIALIZE_EASYLOGGINGPP
-
-
-// #########################
-// # PixelAlive test suite #
-// #########################
-class PixelAlive : public Tool
-{
-public:
-  PixelAlive(const char* fileName, uint32_t nTrig) : nTriggers(nTrig), Tool()
-  {
-    // ########################
-    // # Custom channel group #
-    // ########################
-    customBitset.reset();
-    for (auto row = 50; row < 66; row++)
-      for (auto col = 128; col < 144; col++)
-	customBitset.set(RD53::nRows*col + row);
-
-    customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
-    customChannelGroup->setCustomPattern(customBitset);
-
-    fChannelGroupHandler = new RD53ChannelGroupHandler();
-    fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
-    fChannelGroupHandler->setChannelGroupParameters(16, 1, 1);
-
-    theFile.Open(fileName, "RECREATE");
-    theCanvas      = new TCanvas("RD53canvas","RD53canvas",0,0,700,500);
-    histoOccupancy = new TH2F("histoOccupancy","histoOccupancy",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
-  }
-  
-  ~PixelAlive()
-  {
-    theFile.Close();
-
-    delete fChannelGroupHandler;
-    delete histoOccupancy;
-    delete theCanvas;
-  }
-  
-  void Run()
-  {
-    DetectorContainer         theOccupancyContainer;
-    fDetectorDataContainer = &theOccupancyContainer;
-    ContainerFactory          theDetectorFactory;
-    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-
-    this->SetTestPulse(true);
-    this->fMaskChannelsFromOtherGroups = true;
-    this->measureData(nTriggers);
-
-    // #########################
-    // # Filling the histogram #
-    // #########################
-    for (auto cBoard : fBoardVector)
-      for (auto cFe : cBoard->fModuleVector)
-	for (auto cChip : cFe->fChipVector)
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
-	      histoOccupancy->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy);
-
-    theCanvas->cd();
-    histoOccupancy->Draw("gcolz");
-    theCanvas->Modified();
-    theCanvas->Update();
-  }
-
-  void Save()
-  {
-    theFile.cd();
-    theCanvas->Write();
-    theFile.Write();
-  }
-
-private:
-  uint32_t nTriggers;
-
-  std::bitset<RD53::nRows * RD53::nCols> customBitset;
-  ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
-  
-  TFile theFile;
-  TCanvas* theCanvas;
-  TH2F*    histoOccupancy;
-};
 
 
 int main (int argc, char** argv)
@@ -184,7 +93,6 @@ int main (int argc, char** argv)
   FC7FWInterface::FastCommandsConfig cfgFastCmd;
   
   cfgFastCmd.trigger_source   = FC7FWInterface::TriggerSource::FastCMDFSM;
-  cfgFastCmd.initial_ecr_en   = false;
   cfgFastCmd.n_triggers       = nEvents;
   cfgFastCmd.trigger_duration = 31;
  
@@ -225,7 +133,6 @@ int main (int argc, char** argv)
   // # Copy to FC7FWInterface data member variable #
   // ###############################################
   RD53Board->getLoaclCfgFastCmd()->trigger_source                      = cfgFastCmd.trigger_source;
-  RD53Board->getLoaclCfgFastCmd()->initial_ecr_en                      = cfgFastCmd.initial_ecr_en;
   RD53Board->getLoaclCfgFastCmd()->n_triggers                          = cfgFastCmd.n_triggers;
   RD53Board->getLoaclCfgFastCmd()->trigger_duration                    = cfgFastCmd.trigger_duration;
   
@@ -280,9 +187,10 @@ int main (int argc, char** argv)
       // #######################
       // # Run PixelAlive scan #
       // #######################
-      PixelAlive pa("PixelAlive.root",nEvents);
+      PixelAlive pa("PixelAlive.root",0,191,128,263,16,nEvents);
       pa.Inherit(&cSystemController);
       pa.Run();
+      pa.Display();
       pa.Save();
     }
 
