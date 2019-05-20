@@ -19,6 +19,11 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   nTriggers(nTrig),
   Tool()
 {
+  std::stringstream myString;
+  myString.clear();
+  myString.str("");
+
+
   // ########################
   // # Custom channel group #
   // ########################
@@ -34,10 +39,22 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
   
+
+  // #######################
+  // # Allocate histograms #
+  // #######################
+  size_t indx = 0;
+  for (auto cBoard : fBoardVector)
+    for (auto cFe : cBoard->fModuleVector)
+      for (auto cChip : cFe->fChipVector)
+	{
+	  myString << "theOccupancy_" << indx;
+	  theOccupancy.push_back(new TH2F(myString.str().c_str(),"PixelAlive",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
+	  indx++;
+	}
+  
   theCanvas = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
-  theCanvas->Divide(sqrt(NHISTO),sqrt(NHISTO));
-  for (size_t i = 0; i < NHISTO; i++)
-    theOccupancy.push_back(new TH2F("theOccupancy","PixelAlive",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
+  theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
 }
 
 PixelAlive::~PixelAlive()
@@ -86,6 +103,7 @@ void PixelAlive::Display()
       theCanvas->cd(i+1);
       theOccupancy[i]->Draw("gcolz");
     }
+  
   theCanvas->Modified();
   theCanvas->Update();
 }

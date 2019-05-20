@@ -194,7 +194,7 @@ namespace Ph2_HwInterface
     setBoard (pRD53->getBeBoardId());
     
     std::vector<uint32_t> serialSymbols;
-    pRD53->EncodeCMD (pRD53->getRegItem (pRegNode).fAddress, pRD53->getRegItem (pRegNode).fValue, pRD53->getChipId(), RD53::WriteCmd(), false, serialSymbols, dataVec);
+    pRD53->EncodeCMD (pRD53->getRegItem (pRegNode).fAddress, pRD53->getRegItem (pRegNode).fValue, pRD53->getChipId(), RD53::WriteCmd(), true, serialSymbols, dataVec);
 
     fBoardFW->WriteChipCommand (serialSymbols);
     return true;
@@ -268,10 +268,8 @@ namespace Ph2_HwInterface
 	    
 	    for (auto row = 0; row < RD53::nRows; row++)
 	      {
-		// this->WriteChipReg(pRD53, "REGION_ROW", row, pVerifLoop);
-		
-		
 		// @TMP@
+		// this->WriteChipReg(pRD53, "REGION_ROW", row, pVerifLoop);
 		// if ((*mask)[col].Enable[row] == 1)
 		//   {
 		//     uint16_t row_;
@@ -279,7 +277,6 @@ namespace Ph2_HwInterface
 		//     this->WriteChipReg(pRD53, "REGION_COL", colPair, pVerifLoop);
 		//     this->WriteChipReg(pRD53, "REGION_ROW", row_, pVerifLoop);
 		//   }
-
 		
 		data =
 		  HIGHGAIN                                                                       |
@@ -295,17 +292,10 @@ namespace Ph2_HwInterface
 		    (static_cast<uint16_t>((*mask)[col+1].HitBus[row]) << (NBIT_PIXEN + NBIT_INJEN)) |
 		    (static_cast<uint16_t>((*mask)[col+1].TDAC  [row]) << (NBIT_PIXEN + NBIT_INJEN + NBIT_HITBUS))) << (NBIT_CMD/2));
 		
-		// @TMP@
-		// this->WriteChipReg(pRD53, "PIX_PORTAL", data, pVerifLoop);
-
 		dataVec.push_back(data);
 		if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
 		  {
 		    this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec);
-            for (auto& v : dataVec) {
-                std::cout << v << "\t";
-            }
-            std::cout << std::endl;
 		    dataVec.clear();
 		  }
 	      }

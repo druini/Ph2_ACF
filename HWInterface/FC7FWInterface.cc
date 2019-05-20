@@ -369,17 +369,18 @@ namespace Ph2_HwInterface
 	usleep(100);
 	
 	dataSize = this->ReadData(pBoard, false, pData);
-    auto events = this->DecodeEvents(pData);
-    try
-      {
-    	this->AnalyzeEvents(events, true); // @TMP@
-      }
-    catch (const char* msg)
-      {
-    	LOG (ERROR) << BOLDRED << msg << RESET;
-        continue;
-      }
 
+	auto events = this->DecodeEvents(pData);
+	try
+	  {
+	    this->AnalyzeEvents(events, true); // @TMP@
+	  }
+	catch (const char* msg)
+	  {
+	    LOG (ERROR) << BOLDRED << msg << RESET;
+	    continue;
+	  }
+	
 	if (dataSize == 0) LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected --> retry" << RESET;
       } while (dataSize == 0);
   }
@@ -497,7 +498,7 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0}});
   }
 
-  std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents(const std::vector<uint32_t>& data)
+  std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents (const std::vector<uint32_t>& data)
   {
     std::vector<size_t> event_start;
     for (size_t i = 0; i < data.size(); i++)
@@ -518,7 +519,7 @@ namespace Ph2_HwInterface
     return events;
   }
 
-  unsigned int FC7FWInterface::AnalyzeEvents(const std::vector<FC7FWInterface::Event>& events, bool print)
+  unsigned int FC7FWInterface::AnalyzeEvents (const std::vector<FC7FWInterface::Event>& events, bool print)
   {
     unsigned int nEvts = 0;
 
@@ -574,7 +575,7 @@ namespace Ph2_HwInterface
     return nEvts;
   }
   
-  FC7FWInterface::Event::Event(const uint32_t* data, size_t n)
+  FC7FWInterface::Event::Event (const uint32_t* data, size_t n)
   {
     std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
     
@@ -599,11 +600,11 @@ namespace Ph2_HwInterface
 	const size_t size = (dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start);
 	chip_events.emplace_back(&data[start + 2], size - 2);
 	
-//	if ((chip_frames[i].l1a_data_size+1+dummy_size) * 4 != n) LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
+ 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end-start)) LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
       }
   }
 
-  FC7FWInterface::ChipFrame::ChipFrame(const uint32_t data0, const uint32_t data1)
+  FC7FWInterface::ChipFrame::ChipFrame (const uint32_t data0, const uint32_t data1)
   {
     std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = 
       unpack_bits<NBIT_ERR, NBIT_HYBRID, NBIT_CHIPID, NBIT_L1ASIZE>(data0);
@@ -611,7 +612,7 @@ namespace Ph2_HwInterface
     std::tie(chip_type, frame_delay) = unpack_bits<NBIT_CHIPTYPE, NBIT_FRAME>(data1);
   }
   
-  void FC7FWInterface::SendBoardCommand(const std::string& cmd_reg)
+  void FC7FWInterface::SendBoardCommand (const std::string& cmd_reg)
   {
     WriteStackReg({
 	{cmd_reg, 1},
@@ -621,7 +622,7 @@ namespace Ph2_HwInterface
       });
   }
   
-  void FC7FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
+  void FC7FWInterface::ConfigureFastCommands (const FastCommandsConfig* cfg)
   {
     if (cfg == nullptr) cfg = &localCfgFastCmd;
 

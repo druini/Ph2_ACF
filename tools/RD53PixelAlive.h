@@ -19,14 +19,7 @@
 #include "TH2F.h"
 
 
-// #############
-// # CONSTANTS #
-// #############
-#define NHISTO 1
-
-
 using namespace Ph2_System;
-using namespace std;
 
 // #########################
 // # PixelAlive test suite #
@@ -55,7 +48,7 @@ class PixelAlive : public Tool
   
   TFile*   theFile;
   TCanvas* theCanvas;
-  vector<TH2F*> theOccupancy;
+  std::vector<TH2F*> theOccupancy;
 };
 
 #endif
