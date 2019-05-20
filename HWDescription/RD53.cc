@@ -550,7 +550,7 @@ namespace Ph2_HwDescription
 				   unsigned int& row, unsigned int& col)
   {
     row = coreRowAndRegion;
-    col = 4 * ((coreCol << NBIT_SIDE) | side);
+    col = NPIX_REGION * ((coreCol << NBIT_SIDE) | side);
   }
   
   uint32_t RD53::getNumberOfChannels () const
@@ -760,8 +760,9 @@ namespace Ph2_HwDescription
   {
     uint32_t core_col, side, all_tots;
     std::tie(core_col, row, side, all_tots) = unpack_bits<NBIT_CCOL, NBIT_ROW, NBIT_SIDE, NBIT_TOT>(data);
-    unpack_array<NBIT_TOT / NPIX_REGION>(tots, all_tots);
-    col = 4 * pack_bits<NBIT_CCOL, NBIT_SIDE>(core_col, side);
+    RangePacker<NPIX_REGION>::unpack_reverse<NBIT_TOT / NPIX_REGION>(all_tots, tots);
+    // unpack_array<NBIT_TOT / NPIX_REGION>(tots, all_tots);
+    col = NPIX_REGION * pack_bits<NBIT_CCOL, NBIT_SIDE>(core_col, side);
   }
 
   RD53::CalCmd::CalCmd (const uint8_t& _cal_edge_mode,

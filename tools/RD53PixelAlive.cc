@@ -34,8 +34,10 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
   
-  theCanvas    = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
-  theOccupancy = new TH2F("theOccupancy","PixelAlive",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
+  theCanvas = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
+  theCanvas->Divide(sqrt(NHISTO),sqrt(NHISTO));
+  for (size_t i = 0; i < NHISTO; i++)
+    theOccupancy.push_back(new TH2F("theOccupancy","PixelAlive",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
 }
 
 PixelAlive::~PixelAlive()
@@ -45,7 +47,8 @@ PixelAlive::~PixelAlive()
   delete fChannelGroupHandler;
   delete theFile;
   delete theCanvas;
-  delete theOccupancy;
+  for (size_t i = 0; i < theOccupancy.size(); i++)
+    delete theOccupancy[i];
 }
 
 void PixelAlive::Run()
@@ -64,17 +67,25 @@ void PixelAlive::Run()
   // #########################
   for (auto cBoard : fBoardVector)
     for (auto cFe : cBoard->fModuleVector)
-      for (auto cChip : cFe->fChipVector)
-	for (auto row = 0; row < RD53::nRows; row++)
-	  for (auto col = 0; col < RD53::nCols; col++)
-	    theOccupancy->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy);
+      {
+	size_t indx = 0;
+	for (auto cChip : cFe->fChipVector)
+	  for (auto row = 0; row < RD53::nRows; row++)
+	    for (auto col = 0; col < RD53::nCols; col++)
+	      theOccupancy[indx]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy);
+	indx++;
+      }
 }
 
 void PixelAlive::Display()
 {
   theFile = new TFile(fileName, "RECREATE");
   
-  theOccupancy->Draw("gcolz");
+  for (size_t i = 0; i < theOccupancy.size(); i++)
+    {
+      theCanvas->cd(i+1);
+      theOccupancy[i]->Draw("gcolz");
+    }
   theCanvas->Modified();
   theCanvas->Update();
 }

@@ -59,7 +59,7 @@
 // ###############
 // # Chip header #
 // ###############
-#define FRAME_HEADER   10
+#define FRAME_HEADER  0xA
 #define NBIT_CHIPHEAD   4 // Number of bits in '1010'
 #define NBIT_ERR        4 // Number of bits for the Error Code
 #define NBIT_HYBRID     8 // Number of bits for the Hybrid ID

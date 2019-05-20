@@ -26,8 +26,7 @@ namespace Ph2_HwInterface
 			if (row == hit.row &&
 			    (col-hit.col) >=0 &&
 			    (col-hit.col) < 4 &&
-			    hit.tots[4-(col-hit.col)] != 15)
-			  // @TMP@
+			    hit.tots[col-hit.col] != NOHIT_TOT)
 			  return true;
 		      }
 		  }
