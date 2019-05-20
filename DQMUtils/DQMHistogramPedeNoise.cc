@@ -9,6 +9,8 @@
 
 #include "../DQMUtils/DQMHistogramPedeNoise.h"
 #include "../Utils/OccupancyStream.h"
+#include "../Utils/ThresholdAndNoise.h"
+#include "../Utils/ThresholdAndNoiseStream.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/EmptyContainer.h"
 #include "../RootUtils/TH1FContainer.h"
@@ -34,28 +36,33 @@ DQMHistogramPedeNoise::~DQMHistogramPedeNoise ()
 void DQMHistogramPedeNoise::book(std::string configurationFileName)
 {
 	Ph2_System::FileParser fParser;
-    DetectorContainer detectorContainer;
     std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*> fBeBoardFWMap;
     std::vector<Ph2_HwDescription::BeBoard*> fBoardVector;
     std::stringstream out;
-    fParser.parseHW (configurationFileName, fBeBoardFWMap, fBoardVector, &detectorContainer, out, true );
+    fParser.parseHW (configurationFileName, fBeBoardFWMap, fBoardVector, &fDetectorStructure, out, true );
     std::cout << out.str() << std::endl;
     ContainerFactory   theDetectorFactory;
-    theDetectorFactory.copyStructure(detectorContainer, fDetectorData);
-    // theDetectorFactory.copyAndInitStructure<Occupancy>(detectorContainer, fDetectorData);
     EmptyContainer theEmptyContainer;
     TH1FContainer theTH1FContainer("","",254,-0.5,253.5);
-    theDetectorFactory.copyAndInitStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(detectorContainer, fDetectorValidationHistograms, theEmptyContainer, theTH1FContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
+    theDetectorFactory.copyAndInitStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(fDetectorStructure, fDetectorValidationHistograms, theEmptyContainer, theTH1FContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
+    theDetectorFactory.copyStructure(fDetectorStructure, fDetectorData);
 }
 
 //========================================================================================================================
 void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
-	OccupancyBoardStream theOccupancy;
+
+    for (auto i : dataBuffer)
+        std::cout << i ;
+    std::cout<<std::endl;
+
+	OccupancyBoardStream          theOccupancy;
+    ThresholdAndNoiseBoardStream  theThresholdAndNoiseStream;
+
 	//TODO Occupancy histos and Occupancy should be used and filled the same way so there should be no need to pass through the detector data
 	if(theOccupancy.attachBuffer(&dataBuffer))
 	{
-		std::cout<<"Matched!!!!!\n";
+		std::cout<<"Matched Occupancy!!!!!\n";
 		theOccupancy.decodeChipData(fDetectorData);
 		for(auto board : fDetectorData)
 		{
@@ -83,6 +90,10 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 		//If I want to keep the data then I just copy them in another container
         fDetectorData.cleanDataStored();
 	}
+    else if(theThresholdAndNoiseStream.attachBuffer(&dataBuffer))
+    {
+        std::cout<<"Matched ThresholdAndNoise!!!!!\n";
+    }
 
 }
 

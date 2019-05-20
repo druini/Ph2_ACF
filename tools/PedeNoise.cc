@@ -2,6 +2,9 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
+#include "../Utils/EmptyContainer.h"
+#include "../Utils/ThresholdAndNoise.h"
+#include "../Utils/ThresholdAndNoiseStream.h"
 #include "../Utils/OccupancyStream.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include <math.h>
@@ -24,6 +27,8 @@ PedeNoise::PedeNoise() :
 PedeNoise::~PedeNoise()
 {
     delete fChannelGroupHandler;
+    for(auto container : fSCurveOccupancyMap) delete container.second;
+    fSCurveOccupancyMap.clear();
     // delete fPedestalCanvas;
     // delete fNoiseCanvas;
 }
@@ -339,6 +344,7 @@ void PedeNoise::measureNoise (uint8_t pTPAmplitude)
 {
     std::string cHistName = this->sweepSCurves (pTPAmplitude);
     this->extractPedeNoise (cHistName);
+    this->extractPedeNoise ();
 }
 
 void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
@@ -515,10 +521,11 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
         // this->setDacAndMeasureOccupancy("VCth", cValue, fEventsPerPoint, backEndOccupancyPerChannelMap, backEndCbcOccupanyMap, globalOccupancy);
         
 
-        DetectorContainer         theOccupancyContainer;
-        fDetectorDataContainer = &theOccupancyContainer;
+        DetectorContainer *theOccupancyContainer = new DetectorContainer();
+        fDetectorDataContainer = theOccupancyContainer;
         ContainerFactory   theDetectorFactory;
         theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+        fSCurveOccupancyMap[cValue] = theOccupancyContainer;
 
         this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
 
@@ -538,7 +545,7 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
                     for (uint32_t cChannel = 0; cChannel < NCHANNELS; cChannel++)
                     // for (int cChannel=0; cChannel<=backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()].size(); ++cChannel)
                     {
-                        float tmpOccupancy = theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->getChannel<Occupancy>(cChannel).fOccupancy;
+                        float tmpOccupancy = theOccupancyContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->getChannel<Occupancy>(cChannel).fOccupancy;
                         // float tmpOccupancy = backEndOccupancyPerChannelMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()][cChannel];
                         cSCurveHist->SetBinContent ( cChannel+1, cValue+1, tmpOccupancy);
                         cSCurveHist->SetBinError   ( cChannel+1, cValue+1, sqrt(tmpOccupancy*(1.-tmpOccupancy)/fEventsPerPoint));
@@ -547,7 +554,7 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
             }
         }
 
-        float globalOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(theOccupancyContainer.summary_)->theSummary_.fOccupancy;
+        float globalOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(theOccupancyContainer->summary_)->theSummary_.fOccupancy;
         // std::cout<<globalOccupancy<<std::endl;
         //now establish if I'm zero or one
         if (globalOccupancy == 0) ++cAllZeroCounter;
@@ -603,6 +610,7 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
 
 void PedeNoise::processSCurves (std::string pHistName)
 {
+    
     //filling histograms
     for ( auto cBoard : fBoardVector )
     {
@@ -790,6 +798,84 @@ void PedeNoise::fitHist (Chip* pCbc, std::string pHistName)
         cProjection->SetDirectory (cDir);
         cProjection->Write (cProjection->GetName(), TObject::kOverwrite);
     }
+}
+
+void PedeNoise::extractPedeNoise ()
+{
+
+    //MEGATMP!!!!
+    //Threshold = average
+    //fThresholdError = normalization
+    //Noise = rms
+
+    ContainerFactory   theDetectorFactory;
+    DetectorContainer theDifferentialContainer;
+    theDetectorFactory.copyAndInitStructure<ThresholdAndNoise,EmptyContainer>(*fDetectorContainer, theDifferentialContainer);
+    
+    uint16_t counter = 0;
+    std::map<uint16_t, DetectorContainer*>::reverse_iterator previousIterator = fSCurveOccupancyMap.rend();
+    for(std::map<uint16_t, DetectorContainer*>::reverse_iterator mIt=fSCurveOccupancyMap.rbegin(); mIt!=fSCurveOccupancyMap.rend(); ++mIt)
+    {
+        if(previousIterator == fSCurveOccupancyMap.rend())
+        {
+            previousIterator = mIt;
+            continue;
+        }
+        if(fSCurveOccupancyMap.size()-1 == counter) break;
+
+        for ( auto board : *fDetectorContainer)
+        {
+            for ( auto module : *board)
+            {
+                for ( auto chip : *module )
+                {
+                    for(uint8_t iChannel=0; iChannel<chip->size(); ++iChannel)
+                    {
+                        float previousOccupancy = mIt->second->at(board->getId())->at(module->getId())->at(chip->getId())->getChannel<Occupancy>(iChannel).fOccupancy;
+                        float currentOccupancy = (previousIterator)->second->at(board->getId())->at(module->getId())->at(chip->getId())->getChannel<Occupancy>(iChannel).fOccupancy;
+                        float binCenter = (mIt->first + (previousIterator)->first)/2.;
+
+                        theDifferentialContainer.at(board->getId())->at(module->getId())->at(chip->getId())->getChannel<ThresholdAndNoise>(iChannel).fThreshold +=
+                            binCenter * (previousOccupancy - currentOccupancy);
+
+                        theDifferentialContainer.at(board->getId())->at(module->getId())->at(chip->getId())->getChannel<ThresholdAndNoise>(iChannel).fNoise +=
+                            binCenter * binCenter * (previousOccupancy - currentOccupancy) * (previousOccupancy - currentOccupancy);
+
+                        theDifferentialContainer.at(board->getId())->at(module->getId())->at(chip->getId())->getChannel<ThresholdAndNoise>(iChannel).fThresholdError +=
+                            previousOccupancy - currentOccupancy;
+
+                    }
+                }
+            }
+        }
+
+        previousIterator = mIt;
+        ++counter;
+    }
+
+    //calculate the averages and ship
+    ThresholdAndNoiseBoardStream  theThresholdAndNoiseStream;
+    
+    for ( auto board : theDifferentialContainer)
+    {
+        for ( auto module : *board)
+        {
+            for ( auto chip : *module )
+            {
+                for(uint8_t iChannel=0; iChannel<chip->size(); ++iChannel)
+                {
+                    chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold/=chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
+                    chip->getChannel<ThresholdAndNoise>(iChannel).fNoise/=chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
+                    chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold * chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold));
+                    chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError = 0;
+                }
+            }
+        }
+        if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
+
+    }
+
+
 }
 
 void PedeNoise::extractPedeNoise (std::string pHistName)

@@ -44,6 +44,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     //virtual void summarizeHistos();
   private:
     DetectorContainer fDetectorData;
+    DetectorContainer fDetectorStructure;
     DetectorContainer fDetectorValidationHistograms;
 };
 #endif
