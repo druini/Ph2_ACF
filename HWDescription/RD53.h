@@ -11,7 +11,7 @@
 #define _RD53_h_
 
 #include "Chip.h"
-#include "RD53RegItem.h"
+// #include "RD53RegItem.h"
 
 #include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
@@ -119,7 +119,7 @@ namespace Ph2_HwDescription
     void injectPixel      (unsigned int row, unsigned int col, bool inject);
     void setTDAC          (unsigned int row, unsigned int col, uint8_t TDAC);
 
-    void EncodeCMD (const RD53RegItem                   & pRegItem,
+    void EncodeCMD (const ChipRegItem                   & pRegItem,
 		    const uint8_t                         pRD53Id,
 		    const uint16_t                        pRD53Cmd,
 		    std::vector<std::vector<uint16_t> > & pVecReg);

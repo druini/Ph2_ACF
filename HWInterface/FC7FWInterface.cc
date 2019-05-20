@@ -369,9 +369,6 @@ namespace Ph2_HwInterface
 	usleep(100);
 	
 	dataSize = this->ReadData(pBoard, false, pData);
-	if (dataSize == 0) LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected --> retry" << RESET;
-      } while (dataSize == 0);
-
     auto events = this->DecodeEvents(pData);
     try
       {
@@ -380,7 +377,11 @@ namespace Ph2_HwInterface
     catch (const char* msg)
       {
     	LOG (ERROR) << BOLDRED << msg << RESET;
+        continue;
       }
+
+	if (dataSize == 0) LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected --> retry" << RESET;
+      } while (dataSize == 0);
   }
 
   std::vector<uint32_t> FC7FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
@@ -598,7 +599,7 @@ namespace Ph2_HwInterface
 	const size_t size = (dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start);
 	chip_events.emplace_back(&data[start + 2], size - 2);
 	
-	if ((chip_frames[i].l1a_data_size+1+dummy_size) * 4 != n) LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
+//	if ((chip_frames[i].l1a_data_size+1+dummy_size) * 4 != n) LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
       }
   }
 

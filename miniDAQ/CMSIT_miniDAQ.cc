@@ -115,7 +115,7 @@ int main (int argc, char** argv)
   // ######################################
   // # Configuration for analog injection #
   // ######################################
-  // RD53::CalCmd calcmd_first(0,0,1,0,0);
+  // RD53::CalCmd calcmd_first(1,0,0,0,0);
   // cfgFastCmd.fast_cmd_fsm.first_cal_data  = calcmd_first.getCalCmd(chipId);
   // RD53::CalCmd calcmd_second(0,0,1,0,0);
   // cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
@@ -187,7 +187,7 @@ int main (int argc, char** argv)
       // #######################
       // # Run PixelAlive scan #
       // #######################
-      PixelAlive pa("PixelAlive.root",0,191,128,263,16,nEvents);
+      PixelAlive pa("PixelAlive.root",50,65,128,143,16,nEvents);
       pa.Inherit(&cSystemController);
       pa.Run();
       pa.Display();

@@ -85,7 +85,7 @@ namespace Ph2_HwInterface
 
     // std::vector<std::vector<uint16_t> > symbols; // Useful in case the encoding is done in the software
     std::vector<uint32_t> serialSymbols;
-    RD53RegItem cRegItem(0,0,0);
+    ChipRegItem cRegItem(0,0,0,0);
     cRegItem.fValue = data;
 
     if (strcmp(pRegNode.c_str(),"GLOBAL_PULSE") == 0)
@@ -256,7 +256,7 @@ namespace Ph2_HwInterface
       }
     else
       {
-	this->WriteChipReg(pRD53, "PIX_MODE", 0x0, pVerifLoop);
+	this->WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
 
 	// for (uint16_t col = 0; col < RD53::nCols-1; col+=2)
 	for (auto col = 128; col < 263; col+=2)
@@ -268,7 +268,7 @@ namespace Ph2_HwInterface
 	    
 	    for (auto row = 0; row < RD53::nRows; row++)
 	      {
-		this->WriteChipReg(pRD53, "REGION_ROW", row, pVerifLoop);
+		// this->WriteChipReg(pRD53, "REGION_ROW", row, pVerifLoop);
 		
 		
 		// @TMP@
@@ -296,12 +296,16 @@ namespace Ph2_HwInterface
 		    (static_cast<uint16_t>((*mask)[col+1].TDAC  [row]) << (NBIT_PIXEN + NBIT_INJEN + NBIT_HITBUS))) << (NBIT_CMD/2));
 		
 		// @TMP@
-		this->WriteChipReg(pRD53, "PIX_PORTAL", data, pVerifLoop);
+		// this->WriteChipReg(pRD53, "PIX_PORTAL", data, pVerifLoop);
 
 		dataVec.push_back(data);
 		if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
 		  {
-		    // this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec);
+		    this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec);
+            for (auto& v : dataVec) {
+                std::cout << v << "\t";
+            }
+            std::cout << std::endl;
 		    dataVec.clear();
 		  }
 	      }
