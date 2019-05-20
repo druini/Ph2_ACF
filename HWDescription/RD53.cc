@@ -277,17 +277,18 @@ namespace Ph2_HwDescription
 	    for (int j = 0; j < Nspaces; j++)
 	      file << " ";
 	    file.seekp (-v.first.size(), std::ios_base::cur);
-	    file << "0x"       << std::setfill ('0') << std::setw (2) << std::hex << std::uppercase << int (v.second.fAddress)
-		 << "\t0x"     << std::setfill ('0') << std::setw (4) << std::hex << std::uppercase << int (v.second.fDefValue)
-		 << "\t\t\t0x" << std::setfill ('0') << std::setw (4) << std::hex << std::uppercase << int (v.second.fValue) << std::endl;
+	    file << "0x"         << std::setfill ('0') << std::setw (2) << std::hex << std::uppercase << int (v.second.fAddress)
+		 << "\t0x"       << std::setfill ('0') << std::setw (4) << std::hex << std::uppercase << int (v.second.fDefValue)
+		 << "\t\t\t0x"   << std::setfill ('0') << std::setw (4) << std::hex << std::uppercase << int (v.second.fValue)
+		 << "\t\t\t\t\t" << std::setfill ('0') << std::setw (2) << std::dec << std::uppercase << int (v.second.fBitSize) << std::endl;
 
 	    cLineCounter++;
 	  }
 
 	file << std::dec << std::endl;
-	file << "*------------------------------------------------------------------------------------------" << std::endl;
+	file << "*-------------------------------------------------------------------------------------------------------" << std::endl;
 	file << "PIXELCONFIGURATION" << std::endl;
-	file << "*------------------------------------------------------------------------------------------" << std::endl;
+	file << "*-------------------------------------------------------------------------------------------------------" << std::endl;
 	for (unsigned int i = 0; i < fPixelsMask.size(); i++)
 	  {
 	    file << "COL					" << std::setfill ('0') << std::setw (3) << i << std::endl;
@@ -478,7 +479,7 @@ namespace Ph2_HwDescription
 	std::bitset<NBIT_DATA*NDATAMAX_PERPIXEL> tmp(0);
 	for (unsigned int i = 0; i < NDATAMAX_PERPIXEL; i++)
 	  {
-	    tmp = (*dataVec)[i];
+	    tmp = (*dataVec)[NDATAMAX_PERPIXEL - i - 1];
 	    dataBitStream |= (tmp << NBIT_DATA*i);
 	  }
 
