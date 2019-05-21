@@ -259,7 +259,7 @@ namespace Ph2_HwInterface
 	this->WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
 
 	// for (uint16_t col = 0; col < RD53::nCols-1; col+=2)
-	for (auto col = 128; col < 263; col+=2)
+	for (auto col = 128; col < 263; col+=2) // @TMP@
 	  {
 	    uint16_t row_;
 	    pRD53->ConvertRowCol2Cores (0,col,row_,colPair);

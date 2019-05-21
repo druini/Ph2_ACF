@@ -108,6 +108,20 @@ void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD5
   int latency  = 0;
   std::vector<uint32_t> data;
   
+  TH1F theLatency("theLatency","LatencyScan",32,0,32);
+  TCanvas theCanvas("theCanvas","RD53Canvas",0,0,700,500);
+
+
+  // ########################
+  // # Set pixels to inject #
+  // ########################
+  static_cast<RD53*>(pChip)->enablePixel(ROWSTART,COLSTART,true);
+  static_cast<RD53*>(pChip)->injectPixel(ROWSTART,COLSTART,true);
+
+  static_cast<RD53*>(pChip)->enablePixel(ROWSTART+1,COLSTART+1,true);
+  static_cast<RD53*>(pChip)->injectPixel(ROWSTART+1,COLSTART+1,true);
+
+
   for (auto lt = LATENCY_START; lt < LATENCY_STOP; lt++)
     {
       data.clear();
@@ -116,15 +130,29 @@ void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD5
       RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt);
       
       RD53Board->ReadNEvents(pBoard,nEvents,data);
-      if (data.size() > dataSize)
-	{
-	  latency  = lt;
-	  dataSize = data.size();
-	}
 
       std::cout << std::endl;
+
+
+      auto events = RD53Board->DecodeEvents(data);
+      auto nEvts  = RD53Board->AnalyzeEvents(events, false);
+
+      if (nEvts > dataSize)
+	{
+	  latency  = lt;
+	  dataSize = nEvts;
+	}
+
+      theLatency.Fill(nEvts);
     }
+
   
+  theCanvas.cd();
+  theLatency.Draw();
+  theCanvas.Modified();
+  theCanvas.Update();
+  theCanvas.Print("LatencyScan.png");
+
   LOG(INFO) << GREEN << "\t--> Best latency: " << BOLDYELLOW << latency << std::endl;
 }
 
