@@ -354,6 +354,7 @@ namespace Ph2_HwInterface
   void FC7FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
     int dataSize;
+    int nTriggers;
 
     this->localCfgFastCmd.n_triggers = pNEvents;
 
@@ -369,15 +370,22 @@ namespace Ph2_HwInterface
 	usleep(100);
 	
 	dataSize = this->ReadData(pBoard, false, pData);
-
 	auto events = this->DecodeEvents(pData);
+
+	nTriggers = localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration);
+	if (events.size() != nTriggers)
+	  {
+	    LOG (ERROR) << BOLDRED << "Sent " << nTriggers << " triggers, but collected only " << events.size() << " --> retry" << RESET;
+	    continue;
+	  }
+	
 	try
 	  {
 	    this->AnalyzeEvents(events, true); // @TMP@
 	  }
 	catch (const char* msg)
 	  {
-	    LOG (ERROR) << BOLDRED << msg << RESET;
+	    LOG (ERROR) << BOLDRED << msg << " --> retry" << RESET;
 	    continue;
 	  }
 	

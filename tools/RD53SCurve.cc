@@ -1,15 +1,15 @@
 /*!
-  \file                  RD53PixelAlive.cc
-  \brief                 Implementaion pf PixelAlive scan
+  \file                  RD53SCurve.cc
+  \brief                 Implementaion pf SCurve scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "RD53PixelAlive.h"
+#include "RD53SCurve.h"
 
-PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nTrig) :
+SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nTrig, float startValue, float stopValue, int nSteps) :
   fileName(fName),
   rowStart(rStart),
   rowEnd(rEnd),
@@ -17,6 +17,9 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   colEnd(cEnd),
   nPixels2Inj(nPix),
   nTriggers(nTrig),
+  startValue(startValue),
+  stopValue(stopValue),
+  nSteps(nSteps),
   Tool()
 {
   std::stringstream myString;
@@ -38,7 +41,7 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   fChannelGroupHandler = new RD53ChannelGroupHandler();
   fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
-  
+
 
   // #######################
   // # Allocate histograms #
@@ -49,16 +52,16 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
 //       for (auto cChip : cFe->fChipVector)
 // 	{
 	  myString << "theOccupancy_" << indx;
-	  theOccupancy.push_back(new TH2F(myString.str().c_str(),"PixelAlive",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
+	  theOccupancy.push_back(new TH2F(myString.str().c_str(),"SCurve",nSteps,startValue,stopValue,nTriggers,0,1));
 	//   indx++;
 	// }
     
-  theFile   = new TFile(fileName, "RECREATE");
+  theFile = new TFile(fileName, "RECREATE");
   theCanvas = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
   theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
 }
 
-PixelAlive::~PixelAlive()
+SCurve::~SCurve()
 {
   theFile->Close();
   
@@ -69,17 +72,27 @@ PixelAlive::~PixelAlive()
     delete theOccupancy[i];
 }
 
-void PixelAlive::Run()
+void SCurve::Run()
 {
-  DetectorContainer         theOccupancyContainer;
-  fDetectorDataContainer = &theOccupancyContainer;
+//   DetectorContainer         theOccupancyContainer;
+//   fDetectorDataContainer = &theOccupancyContainer;
   ContainerFactory          theDetectorFactory;
-  theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+
+  float step = (stopValue - startValue) / nSteps;
+
+  std::vector<uint16_t> dacList;
+  for (int i = 0; i < nSteps; i++) {
+      dacList.push_back(startValue + step * i);
+  }
+
+  std::vector<DetectorContainer*> detectorContainerVector(dacList.size());
+  for (auto& p : detectorContainerVector)
+    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *p);
   
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
-  this->measureData(nTriggers);
-
+  this->scanDac("VCAL_HIGH", dacList, nTriggers, detectorContainerVector);
+//   this->measureData(nTriggers);
 
   // #########################
   // # Filling the histogram #
@@ -89,15 +102,17 @@ void PixelAlive::Run()
       {
 	size_t indx = 0;
 	for (auto cChip : cFe->fChipVector)
-	  for (auto row = 0; row < RD53::nRows; row++)
+      for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      theOccupancy[indx]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy);
-	indx++;
+          for (int i = 0; i < dacList.size(); i++)
+	          theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy/nTriggers);
+	    indx++;
       }
 }
 
-void PixelAlive::Display()
+void SCurve::Display()
 {
+//   theFile = new TFile(fileName, "RECREATE");
   theFile->cd();
 
   for (size_t i = 0; i < theOccupancy.size(); i++)
@@ -110,7 +125,7 @@ void PixelAlive::Display()
   theCanvas->Update();
 }
 
-void PixelAlive::Save()
+void SCurve::Save()
 {
   theCanvas->Write();
   theFile->Write();

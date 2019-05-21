@@ -1,6 +1,7 @@
 #include "../System/SystemController.h"
 #include "../Utils/argvparser.h"
 #include "../tools/RD53PixelAlive.h"
+#include "../tools/RD53SCurve.h"
 
 
 // ##################
@@ -10,7 +11,7 @@
 #define RUNNUMBER  0
 
 #define NTRIGxL1A 31
-#define INJTYPE "Digital"
+#define INJTYPE "Analog"
 
 #define ROWSTART  50
 #define ROWSTOP   65
@@ -18,8 +19,8 @@
 #define COLSTOP  143
 #define NPIXELINJ 16
 
-#define LATENCY_START 10
-#define LATENCY_STOP  30
+#define LATENCY_START  0
+#define LATENCY_STOP 100
 
 
 using namespace CommandLineProcessing;
@@ -118,8 +119,10 @@ void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD5
   static_cast<RD53*>(pChip)->enablePixel(ROWSTART,COLSTART,true);
   static_cast<RD53*>(pChip)->injectPixel(ROWSTART,COLSTART,true);
 
-  static_cast<RD53*>(pChip)->enablePixel(ROWSTART+1,COLSTART+1,true);
-  static_cast<RD53*>(pChip)->injectPixel(ROWSTART+1,COLSTART+1,true);
+  static_cast<RD53*>(pChip)->enablePixel(ROWSTART+2,COLSTART+2,true);
+  static_cast<RD53*>(pChip)->injectPixel(ROWSTART+2,COLSTART+2,true);
+
+  RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(pChip), false, false);
 
 
   for (auto lt = LATENCY_START; lt < LATENCY_STOP; lt++)
@@ -143,7 +146,7 @@ void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD5
 	  dataSize = nEvts;
 	}
 
-      theLatency.Fill(nEvts);
+      theLatency.Fill(lt,nEvts);
     }
 
   
@@ -181,7 +184,7 @@ int main (int argc, char** argv)
   cmd.defineOption ("events", "Number of Events. Default value: 10", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("events", "e");
 
-  cmd.defineOption ("calib", "Which calibration to run [Latency; PixelAlive]. Default: PixelAlive", ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [Latency; PixelAlive; SCurve]. Default: PixelAlive", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
   cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", ArgvParser::NoOptionAttribute);
@@ -274,7 +277,20 @@ int main (int argc, char** argv)
       pa.Display();
       pa.Save();
     }
-  else LOG(ERROR) << BOLDRED << "Option non recognized: " << whichCalib << RESET;
+  else if (whichCalib == "SCurve")
+    {
+      // ##############
+      // # Run SCurve #
+      // ##############
+      LOG(INFO) << BOLDBLUE << "@@@ Performing SCurve scan @@@" << RESET;
+
+      SCurve sc("SCurve.root",ROWSTART,ROWSTOP,COLSTART,COLSTOP,NPIXELINJ,200,1000,10,nEvents);
+      sc.Inherit(&cSystemController);
+      sc.Run();
+      sc.Display();
+      sc.Save();
+    }
+    else LOG(ERROR) << BOLDRED << "Option non recognized: " << whichCalib << RESET;
   
 
   cSystemController.Stop(pBoard);
