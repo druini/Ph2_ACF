@@ -354,10 +354,11 @@ namespace Ph2_HwInterface
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
     
-    bool test;
     for (auto row = 0; row < RD53::nRows; row++)
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->enablePixel(row,col,group->isChannelEnabled(row,col));
+
+    this->WriteRD53Mask(pRD53, false, false);
 
     return true;
   }

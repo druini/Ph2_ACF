@@ -367,7 +367,7 @@ namespace Ph2_HwInterface
 	this->ChipReSync();
 	
 	this->Start();
-	usleep(100);
+	usleep(SHALLOWSLEEP); // @TMP@
 	
 	dataSize = this->ReadData(pBoard, false, pData);
 	auto events = this->DecodeEvents(pData);
@@ -564,7 +564,7 @@ namespace Ph2_HwInterface
 		LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
 	      }
 
-	    if (evt.l1a_counter != evt.chip_events[j].trigger_id) throw "Mismatch on L1A counter between backend and frontend";
+	    if (evt.l1a_counter % NBIT_TRIGID != evt.chip_events[j].trigger_id) throw "Mismatch on L1A counter between backend and frontend";
 	    if (evt.chip_events[j].data.size() != 0) nEvts++;
 
 	    for (const auto& region_data : evt.chip_events[j].data)

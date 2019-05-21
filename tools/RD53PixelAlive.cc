@@ -1,6 +1,6 @@
 /*!
   \file                  RD53PixelAlive.cc
-  \brief                 Implementaion pf PixelAlive scan
+  \brief                 Implementaion of PixelAlive scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -9,7 +9,7 @@
 
 #include "RD53PixelAlive.h"
 
-PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nTrig) :
+PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nTrig, bool inject) :
   fileName(fName),
   rowStart(rStart),
   rowEnd(rEnd),
@@ -17,6 +17,7 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   colEnd(cEnd),
   nPixels2Inj(nPix),
   nTriggers(nTrig),
+  inject(inject),
   Tool()
 {
   std::stringstream myString;
@@ -43,15 +44,11 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   // #######################
   // # Allocate histograms #
   // #######################
-  size_t indx = 0;
-//   for (auto cBoard : fBoardVector)
-//     for (auto cFe : cBoard->fModuleVector)
-//       for (auto cChip : cFe->fChipVector)
-// 	{
-	  myString << "theOccupancy_" << indx;
-	  theOccupancy.push_back(new TH2F(myString.str().c_str(),"PixelAlive",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
-	//   indx++;
-	// }
+  for (auto i = 0; i < NHISTO; i++)
+    {
+      myString << "theOccupancy_" << i;
+      theOccupancy.push_back(new TH2F(myString.str().c_str(),"PixelAlive",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
+    }
     
   theFile   = new TFile(fileName, "RECREATE");
   theCanvas = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
@@ -76,7 +73,7 @@ void PixelAlive::Run()
   ContainerFactory          theDetectorFactory;
   theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
   
-  this->SetTestPulse(true);
+  this->SetTestPulse(inject);
   this->fMaskChannelsFromOtherGroups = true;
   this->measureData(nTriggers);
 

@@ -1,6 +1,6 @@
 /*!
   \file                  RD53SCurve.cc
-  \brief                 Implementaion pf SCurve scan
+  \brief                 Implementaion of SCurve scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -9,7 +9,7 @@
 
 #include "RD53SCurve.h"
 
-SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nTrig, float startValue, float stopValue, int nSteps) :
+SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nTrig, float startValue, float stopValue, size_t nSteps) :
   fileName(fName),
   rowStart(rStart),
   rowEnd(rEnd),
@@ -46,16 +46,12 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   // #######################
   // # Allocate histograms #
   // #######################
-  size_t indx = 0;
-//   for (auto cBoard : fBoardVector)
-//     for (auto cFe : cBoard->fModuleVector)
-//       for (auto cChip : cFe->fChipVector)
-// 	{
-	  myString << "theOccupancy_" << indx;
-	  theOccupancy.push_back(new TH2F(myString.str().c_str(),"SCurve",nSteps,startValue,stopValue,nTriggers,0,1));
-	//   indx++;
-	// }
-    
+  for (auto i = 0; i < NHISTO; i++)
+    {
+      myString << "theOccupancy_" << i;
+      theOccupancy.push_back(new TH2F(myString.str().c_str(),"SCurve",nSteps,startValue,stopValue,nTriggers,0,1));
+    }
+
   theFile = new TFile(fileName, "RECREATE");
   theCanvas = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
   theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
@@ -74,16 +70,11 @@ SCurve::~SCurve()
 
 void SCurve::Run()
 {
-//   DetectorContainer         theOccupancyContainer;
-//   fDetectorDataContainer = &theOccupancyContainer;
-  ContainerFactory          theDetectorFactory;
-
+  ContainerFactory theDetectorFactory;
   float step = (stopValue - startValue) / nSteps;
 
   std::vector<uint16_t> dacList;
-  for (int i = 0; i < nSteps; i++) {
-      dacList.push_back(startValue + step * i);
-  }
+  for (int i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
   std::vector<DetectorContainer*> detectorContainerVector(dacList.size());
   for (auto& p : detectorContainerVector)
@@ -92,7 +83,7 @@ void SCurve::Run()
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
   this->scanDac("VCAL_HIGH", dacList, nTriggers, detectorContainerVector);
-//   this->measureData(nTriggers);
+
 
   // #########################
   // # Filling the histogram #
@@ -102,19 +93,18 @@ void SCurve::Run()
       {
 	size_t indx = 0;
 	for (auto cChip : cFe->fChipVector)
-      for (auto row = 0; row < RD53::nRows; row++)
+	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-          for (int i = 0; i < dacList.size(); i++)
-	          theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy/nTriggers);
-	    indx++;
+	      for (int i = 0; i < dacList.size(); i++)
+		theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy/nTriggers);
+	indx++;
       }
 }
 
 void SCurve::Display()
 {
-//   theFile = new TFile(fileName, "RECREATE");
   theFile->cd();
-
+  
   for (size_t i = 0; i < theOccupancy.size(); i++)
     {
       theCanvas->cd(i+1);
@@ -129,4 +119,9 @@ void SCurve::Save()
 {
   theCanvas->Write();
   theFile->Write();
+}
+
+void SCurve::Analyze()
+{
+  LOG(INFO) << BOLDRED << "Need to implement SCurve analysis" << RESET;
 }

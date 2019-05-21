@@ -42,15 +42,6 @@
             MONITOR_SELECT   = "8203"
 	    />
 	<!--
-	    HITOR_0_MASK_LIN_0 = "0"
-	    HITOR_0_MASK_LIN_1 =     "0"
-	    HITOR_1_MASK_LIN_0 = "0"
-	    HITOR_1_MASK_LIN_1 =     "0"
-	    HITOR_2_MASK_LIN_0 = "0"
-	    HITOR_2_MASK_LIN_1 =     "0"
-	    HITOR_3_MASK_LIN_0 = "0"
-	    HITOR_3_MASK_LIN_1 =     "0"
-
 	    MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
 	-->
       </Global>

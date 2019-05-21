@@ -32,7 +32,7 @@
 #define NBIT_STATUS     2 // Number of bits for the status  in the register frame
 #define NBIT_ADDRESS   10 // Number of bits for the address in the register frame
 #define NBIT_VALUE     16 // Number of bits for the value   in the register frame
-#define NBIT_AURORAREG  8 // Number of bits for the Aurora registers:lane_up and channel_ip
+#define NBIT_AURORAREG  8 // Number of bits for the Aurora registers lane_up and channel_ip
 
 
 // #################

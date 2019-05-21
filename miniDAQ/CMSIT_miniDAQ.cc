@@ -1,3 +1,12 @@
+/*!
+  \file                  CMSIT_miniDAQ.cc
+  \brief                 Mini DAQ to test RD53 readout
+  \author                Mauro DINARDO
+  \version               1.0
+  \date                  28/06/18
+  Support:               email to mauro.dinardo@cern.ch
+*/
+
 #include "../System/SystemController.h"
 #include "../Utils/argvparser.h"
 #include "../tools/RD53PixelAlive.h"
@@ -21,6 +30,10 @@
 
 #define LATENCY_START  0
 #define LATENCY_STOP 100
+
+#define VCAL_START 200
+#define VCAL_STOP 1000
+#define VCAL_STEP   10
 
 
 using namespace CommandLineProcessing;
@@ -54,9 +67,9 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, st
       RD53::CalCmd calcmd_second(0,0,0,0,0);
       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
       
-      cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  32;
-      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =   0;
-      cfgFastCmd.fast_cmd_fsm.delay_loop             = 512;
+      cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =   32;
+      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =    0;
+      cfgFastCmd.fast_cmd_fsm.delay_loop             = 2048;
       
       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
       cfgFastCmd.fast_cmd_fsm.second_cal_en = false;
@@ -72,10 +85,10 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, st
       RD53::CalCmd calcmd_second(0,0,1,0,0);
       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
       
-      cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  16;
-      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  16;
-      cfgFastCmd.fast_cmd_fsm.delay_loop             = 512;
-      
+      cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =   16;
+      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =   16;
+      cfgFastCmd.fast_cmd_fsm.delay_loop             = 2048;
+
       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
       cfgFastCmd.fast_cmd_fsm.second_cal_en = true;
       cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
@@ -243,7 +256,7 @@ int main (int argc, char** argv)
       // ####################
       // # Configuring DIO5 #
       // ####################
-      LOG (INFO) << BOLDBLUE << "@@@ Configuring DIO5 for external trigger and external clock @@@" << RESET;
+      LOG (INFO) << BOLDYELLOW << "@@@ Configuring DIO5 for external trigger and external clock @@@" << RESET;
 
       RD53Board->getLoaclCfgFastCmd()->trigger_source = FC7FWInterface::TriggerSource::External;
       
@@ -260,7 +273,7 @@ int main (int argc, char** argv)
       // ###################
       // # Run LatencyScan #
       // ###################
-      LOG(INFO) << BOLDBLUE << "@@@ Performing Latency scan @@@" << RESET;
+      LOG(INFO) << BOLDYELLOW << "@@@ Performing Latency scan @@@" << RESET;
 	
       LatencyScan(pBoard, RD53Board, RD53ChipInterface, pChip, nEvents);
     }
@@ -269,9 +282,9 @@ int main (int argc, char** argv)
       // ##################
       // # Run PixelAlive #
       // ##################
-      LOG(INFO) << BOLDBLUE << "@@@ Performing PixelAlive scan @@@" << RESET;
+      LOG(INFO) << BOLDYELLOW << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-      PixelAlive pa("PixelAlive.root",ROWSTART,ROWSTOP,COLSTART,COLSTOP,NPIXELINJ,nEvents);
+      PixelAlive pa("PixelAlive.root",ROWSTART,ROWSTOP,COLSTART,COLSTOP,NPIXELINJ,nEvents,true);
       pa.Inherit(&cSystemController);
       pa.Run();
       pa.Display();
@@ -282,13 +295,14 @@ int main (int argc, char** argv)
       // ##############
       // # Run SCurve #
       // ##############
-      LOG(INFO) << BOLDBLUE << "@@@ Performing SCurve scan @@@" << RESET;
+      LOG(INFO) << BOLDYELLOW << "@@@ Performing SCurve scan @@@" << RESET;
 
-      SCurve sc("SCurve.root",ROWSTART,ROWSTOP,COLSTART,COLSTOP,NPIXELINJ,200,1000,10,nEvents);
+      SCurve sc("SCurve.root",ROWSTART,ROWSTOP,COLSTART,COLSTOP,NPIXELINJ,VCAL_START,VCAL_STOP,VCAL_STEP,nEvents);
       sc.Inherit(&cSystemController);
       sc.Run();
       sc.Display();
       sc.Save();
+      sc.Analyze();
     }
     else LOG(ERROR) << BOLDRED << "Option non recognized: " << whichCalib << RESET;
   
@@ -296,6 +310,6 @@ int main (int argc, char** argv)
   cSystemController.Stop(pBoard);
   cSystemController.Destroy();
   LOG (INFO) << BOLDBLUE << "@@@ End of CMSIT miniDAQ @@@" << RESET;
-  
+
   return 0;
 }
