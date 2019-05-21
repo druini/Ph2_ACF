@@ -50,9 +50,19 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
     {
       myString << "theOccupancy_" << i;
       theOccupancy.push_back(new TH2F(myString.str().c_str(),"SCurve",nSteps,startValue,stopValue,nTriggers,0,1));
+      theOccupancy.back()->SetXTitle("VCal");
+      theOccupancy.back()->SetYTitle("Efficiency");
     }
 
-  theFile = new TFile(fileName, "RECREATE");
+  theNoise = new TH1F("theNoise","Noise",100,0,100);
+  theNoise->SetXTitle("VCal");
+  theNoise->SetYTitle("Entries");
+
+  theThreshold = new TH1F("theThreshold","Threshold",100,0,100);
+  theThreshold->SetXTitle("VCal");
+  theThreshold->SetYTitle("Entries");
+
+  theFile   = new TFile(fileName, "RECREATE");
   theCanvas = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
   theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
 }
@@ -124,4 +134,5 @@ void SCurve::Save()
 void SCurve::Analyze()
 {
   LOG(INFO) << BOLDRED << "Need to implement SCurve analysis" << RESET;
+  // @TMP@ Fill theNoise and theThreshold
 }

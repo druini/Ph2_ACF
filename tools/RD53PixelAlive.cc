@@ -48,6 +48,8 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
     {
       myString << "theOccupancy_" << i;
       theOccupancy.push_back(new TH2F(myString.str().c_str(),"PixelAlive",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
+      theOccupancy.back()->SetXTitle("Columns");
+      theOccupancy.back()->SetYTitle("Rows");
     }
     
   theFile   = new TFile(fileName, "RECREATE");

@@ -60,6 +60,8 @@ class SCurve : public Tool
   TFile*   theFile;
   TCanvas* theCanvas;
   std::vector<TH2F*> theOccupancy;
+  TH1F* theNoise;
+  TH1F* theThreshold;
 };
 
 #endif
