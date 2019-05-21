@@ -123,6 +123,8 @@ void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD5
   std::vector<uint32_t> data;
   
   TH1F theLatency("theLatency","LatencyScan",32,0,32);
+  theLatency.SetXTitle("Trigger ID");
+  theLatency.SetYTitle("Entries");
   TCanvas theCanvas("theCanvas","RD53Canvas",0,0,700,500);
 
 
