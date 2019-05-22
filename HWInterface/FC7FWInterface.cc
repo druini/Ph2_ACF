@@ -176,10 +176,10 @@ namespace Ph2_HwInterface
 
 	for (unsigned int i = 0; i < regFIFO.size(); i++)
 	  {
-	    outputDecoded.first .push_back((regFIFO[i] >> NBIT_VALUE) & static_cast<uint32_t>(pow(2,NBIT_ADDRESS)-1));
-	    outputDecoded.second.push_back(regFIFO[i] & static_cast<uint32_t>(pow(2,NBIT_VALUE)-1));
-	    uint8_t status = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS))               & static_cast<uint32_t>(pow(2,NBIT_STATUS)-1);
-	    uint8_t id     = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS + NBIT_STATUS)) & static_cast<uint32_t>(pow(2,NBIT_ID)-1);
+	    outputDecoded.first .push_back((regFIFO[i] >> NBIT_VALUE)                  & static_cast<uint32_t>(RD53::SetBits<NBIT_ADDRESS>(NBIT_ADDRESS).to_ulong()));
+	    outputDecoded.second.push_back(regFIFO[i]                                  & static_cast<uint32_t>(RD53::SetBits<NBIT_VALUE>(NBIT_VALUE).to_ulong()));
+	    uint8_t status = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS))               & static_cast<uint32_t>(RD53::SetBits<NBIT_STATUS>(NBIT_STATUS).to_ulong());
+	    uint8_t id     = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS + NBIT_STATUS)) & static_cast<uint32_t>(RD53::SetBits<NBIT_ID>(NBIT_ID).to_ulong());
 	  }
       }
 

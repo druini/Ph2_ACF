@@ -213,7 +213,7 @@ namespace Ph2_HwInterface
 
     for (auto i = 0; i < outputDecoded.first.size(); i++)
       // Removing bit for PIX_PORTAL reading
-      outputDecoded.first[i] = outputDecoded.first[i] & static_cast<uint16_t>(pow(2,NBIT_ADDR)-1);
+      outputDecoded.first[i] = outputDecoded.first[i] & static_cast<uint16_t>(RD53::SetBits<NBIT_ADDR>(NBIT_ADDR).to_ulong());
 
     return outputDecoded;
   }
@@ -268,16 +268,6 @@ namespace Ph2_HwInterface
 	    
 	    for (auto row = 0; row < RD53::nRows; row++)
 	      {
-		// @TMP@
-		// this->WriteChipReg(pRD53, "REGION_ROW", row, pVerifLoop);
-		// if ((*mask)[col].Enable[row] == 1)
-		//   {
-		//     uint16_t row_;
-		//     pRD53->ConvertRowCol2Cores (row,col,row_,colPair);
-		//     this->WriteChipReg(pRD53, "REGION_COL", colPair, pVerifLoop);
-		//     this->WriteChipReg(pRD53, "REGION_ROW", row_, pVerifLoop);
-		//   }
-		
 		data =
 		  HIGHGAIN                                                                       |
 		  static_cast<uint16_t> ((*mask)[col].Enable[row])                               |
