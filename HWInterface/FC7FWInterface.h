@@ -16,6 +16,7 @@
 
 #include <uhal/uhal.hpp>
 
+#include <stdexcept>
 #include <sstream>
 
 

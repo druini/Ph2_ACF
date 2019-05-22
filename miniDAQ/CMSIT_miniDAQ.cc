@@ -122,8 +122,8 @@ void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD5
   int latency  = 0;
   std::vector<uint32_t> data;
   
-  TH1F theLatency("theLatency","LatencyScan",32,0,32);
-  theLatency.SetXTitle("Trigger ID");
+  TH1F theLatency("theLatency","LatencyScan",LATENCY_STOP-LATENCY_START,LATENCY_START,LATENCY_STOP);
+  theLatency.SetXTitle("Latency [n.bx]");
   theLatency.SetYTitle("Entries");
   TCanvas theCanvas("theCanvas","RD53Canvas",0,0,700,500);
 
@@ -151,7 +151,6 @@ void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD5
 
       std::cout << std::endl;
 
-
       auto events = RD53Board->DecodeEvents(data);
       auto nEvts  = RD53Board->AnalyzeEvents(events, false);
 
@@ -164,14 +163,13 @@ void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD5
       theLatency.Fill(lt,nEvts);
     }
 
+  LOG(INFO) << GREEN << "\t--> Best latency: " << BOLDYELLOW << latency << std::endl;
   
   theCanvas.cd();
   theLatency.Draw();
   theCanvas.Modified();
   theCanvas.Update();
   theCanvas.Print("LatencyScan.png");
-
-  LOG(INFO) << GREEN << "\t--> Best latency: " << BOLDYELLOW << latency << std::endl;
 }
 
 
@@ -199,7 +197,7 @@ int main (int argc, char** argv)
   cmd.defineOption ("events", "Number of Events. Default value: 10", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("events", "e");
 
-  cmd.defineOption ("calib", "Which calibration to run [Latency; PixelAlive; SCurve]. Default: PixelAlive", ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency; pixelalive; scurve]. Default: pixelalive", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
   cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", ArgvParser::NoOptionAttribute);
@@ -215,7 +213,7 @@ int main (int argc, char** argv)
 
   std::string cHWFile    = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT_FC7.xml";
   unsigned int nEvents   = cmd.foundOption("events") == true ? convertAnyInt(cmd.optionValue("events").c_str()) : NEVENTS;
-  std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "PixelAlive";
+  std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
   bool extClkTrg         = cmd.foundOption("ext")    == true ? true : false;
 
 
@@ -270,7 +268,7 @@ int main (int argc, char** argv)
 
 
   std::cout << std::endl;
-  if (whichCalib == "Latency")
+  if (whichCalib == "latency")
     {
       // ###################
       // # Run LatencyScan #
@@ -279,7 +277,7 @@ int main (int argc, char** argv)
 	
       LatencyScan(pBoard, RD53Board, RD53ChipInterface, pChip, nEvents);
     }
-  else if (whichCalib == "PixelAlive")
+  else if (whichCalib == "pixelalive")
     {
       // ##################
       // # Run PixelAlive #
@@ -292,7 +290,7 @@ int main (int argc, char** argv)
       pa.Display();
       pa.Save();
     }
-  else if (whichCalib == "SCurve")
+  else if (whichCalib == "scurve")
     {
       // ##############
       // # Run SCurve #

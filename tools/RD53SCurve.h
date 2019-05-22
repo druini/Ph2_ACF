@@ -56,6 +56,7 @@ class SCurve : public Tool
 
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
+  std::vector<DetectorContainer*> detectorContainerVector;
 
   TFile*   theFile;
   TCanvas* theCanvas;

@@ -365,10 +365,10 @@ namespace Ph2_HwInterface
 	this->ConfigureFastCommands();
 	this->ChipReset();
 	this->ChipReSync();
-	
+
 	this->Start();
 	usleep(SHALLOWSLEEP); // @TMP@
-	
+
 	dataSize = this->ReadData(pBoard, false, pData);
 	auto events = this->DecodeEvents(pData);
 
@@ -383,9 +383,9 @@ namespace Ph2_HwInterface
 	  {
 	    this->AnalyzeEvents(events, true); // @TMP@
 	  }
-	catch (const char* msg)
+	catch (const std::exception& e)
 	  {
-	    LOG (ERROR) << BOLDRED << msg << " --> retry" << RESET;
+	    LOG (ERROR) << BOLDRED << e.what() << " --> retry" << RESET;
 	    continue;
 	  }
 	
@@ -530,6 +530,7 @@ namespace Ph2_HwInterface
   unsigned int FC7FWInterface::AnalyzeEvents (const std::vector<FC7FWInterface::Event>& events, bool print)
   {
     unsigned int nEvts = 0;
+    size_t maxL1Counter = pow(2,NBIT_TRIGID); // @TMP@
 
     for (int i = 0; i < events.size(); i++)
       {
@@ -564,7 +565,7 @@ namespace Ph2_HwInterface
 		LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
 	      }
 
-	    if (evt.l1a_counter % NBIT_TRIGID != evt.chip_events[j].trigger_id) throw "Mismatch on L1A counter between backend and frontend";
+	    if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) throw std::runtime_error("Mismatch on L1A counter between backend and frontend");
 	    if (evt.chip_events[j].data.size() != 0) nEvts++;
 
 	    for (const auto& region_data : evt.chip_events[j].data)

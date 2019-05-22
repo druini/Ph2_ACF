@@ -248,7 +248,12 @@ namespace Ph2_HwDescription
       };
     
     template<size_t NBITS>
-      std::bitset<NBITS> SetBits (size_t nBit2Set);
+    static std::bitset<NBITS> SetBits (size_t nBit2Set)
+      {
+	std::bitset<NBITS> output(0);
+	for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
+	return output;
+      }
   };
 }
 

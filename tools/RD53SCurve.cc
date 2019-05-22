@@ -76,6 +76,9 @@ SCurve::~SCurve()
   delete theCanvas;
   for (size_t i = 0; i < theOccupancy.size(); i++)
     delete theOccupancy[i];
+
+  for (auto i = 0; i < detectorContainerVector.size(); i++)
+    delete detectorContainerVector[i];
 }
 
 void SCurve::Run()
@@ -86,9 +89,15 @@ void SCurve::Run()
   std::vector<uint16_t> dacList;
   for (int i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
-  std::vector<DetectorContainer*> detectorContainerVector(dacList.size());
-  for (auto& p : detectorContainerVector)
-    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *p);
+  for (auto i = 0; i < detectorContainerVector.size(); i++)
+    delete detectorContainerVector[i];
+  detectorContainerVector.clear();
+  detectorContainerVector.reserve(dacList.size());
+  for (auto i = 0; i < dacList.size(); i++)
+    {
+      detectorContainerVector.emplace_back(new DetectorContainer());
+      theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *detectorContainerVector.back());
+    }
   
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;

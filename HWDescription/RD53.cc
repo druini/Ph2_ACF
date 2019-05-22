@@ -625,12 +625,4 @@ namespace Ph2_HwDescription
 																  cal_aux_mode,
 																  cal_aux_delay);
   }
-  
-  template<size_t NBITS>
-  std::bitset<NBITS> RD53::SetBits (size_t nBit2Set)
-  {
-    std::bitset<NBITS> output(0);
-    for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
-    return output;
-  }
 }
