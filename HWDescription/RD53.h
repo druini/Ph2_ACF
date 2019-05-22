@@ -186,6 +186,14 @@ namespace Ph2_HwDescription
       uint8_t cal_aux_delay;
     };
   
+    template<size_t NBITS>
+    static std::bitset<NBITS> SetBits (size_t nBit2Set)
+    {
+      std::bitset<NBITS> output(0);
+      for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
+      return output;
+    }
+
   private:
     std::vector<perPixelData> fPixelsMask;
     std::vector<perPixelData> fPixelsMaskDefault;
@@ -246,14 +254,6 @@ namespace Ph2_HwDescription
 	0x55, // 14
 	0x56  // 15
       };
-    
-    template<size_t NBITS>
-    static std::bitset<NBITS> SetBits (size_t nBit2Set)
-      {
-	std::bitset<NBITS> output(0);
-	for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
-	return output;
-      }
   };
 }
 

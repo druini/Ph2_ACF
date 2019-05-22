@@ -530,7 +530,7 @@ namespace Ph2_HwInterface
   unsigned int FC7FWInterface::AnalyzeEvents (const std::vector<FC7FWInterface::Event>& events, bool print)
   {
     unsigned int nEvts = 0;
-    size_t maxL1Counter = pow(2,NBIT_TRIGID); // @TMP@
+    size_t maxL1Counter = RD53::SetBits<NBIT_TRIGID>(NBIT_TRIGID).to_ulong() + 1;
 
     for (int i = 0; i < events.size(); i++)
       {
