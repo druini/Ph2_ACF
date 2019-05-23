@@ -313,7 +313,6 @@ namespace Ph2_HwInterface
              cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
 
     // @TMP@
-    std::cout << std::endl;
     LOG (INFO) << GREEN << "cNWords         = " << cNWords    << RESET;
     LOG (INFO) << GREEN << "handshake       = " << handshake  << RESET;
     LOG (INFO) << GREEN << "cNtriggers      = " << cNtriggers << RESET;
@@ -360,14 +359,14 @@ namespace Ph2_HwInterface
 
     do
       {
-	this->ResetFastCmdBlk();
+	// this->ResetFastCmdBlk(); // @TMP@
 	this->ResetReadoutBlk();
 	this->ConfigureFastCommands();
 	this->ChipReset();
-	this->ChipReSync();
+	// this->ChipReSync(); // @TMP@
 
 	this->Start();
-	usleep(SHALLOWSLEEP); // @TMP@
+	usleep(SHALLOWSLEEP);
 
 	dataSize = this->ReadData(pBoard, false, pData);
 	auto events = this->DecodeEvents(pData);
@@ -375,21 +374,21 @@ namespace Ph2_HwInterface
 	nTriggers = localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration);
 	if (events.size() != nTriggers)
 	  {
-	    LOG (ERROR) << BOLDRED << "Sent " << nTriggers << " triggers, but collected only " << events.size() << " --> retry" << RESET;
+	    LOG (ERROR) << BOLDRED << "Sent " << nTriggers << " triggers, but collected only " << events.size() << BOLDYELLOW << " --> retry" << RESET;
 	    continue;
 	  }
 	
 	try
 	  {
-	    this->AnalyzeEvents(events, true); // @TMP@
+	    this->AnalyzeEvents(events, false);
 	  }
 	catch (const std::exception& e)
 	  {
-	    LOG (ERROR) << BOLDRED << e.what() << " --> retry" << RESET;
+	    LOG (ERROR) << BOLDRED << e.what() << BOLDYELLOW << " --> retry" << RESET;
 	    continue;
 	  }
 	
-	if (dataSize == 0) LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected --> retry" << RESET;
+	if (dataSize == 0) LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected " << BOLDYELLOW << "--> retry" << RESET;
       } while (dataSize == 0);
   }
 
@@ -497,6 +496,8 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.reset_reg.scc_rst",0},
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",1},
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",0}});
+
+    usleep(SHALLOWSLEEP);
   }
 
   void FC7FWInterface::ChipReSync()
@@ -581,6 +582,7 @@ namespace Ph2_HwInterface
 	  }
       }
 
+    if (print == true) std::cout << std::endl;
     return nEvts;
   }
   
@@ -588,7 +590,7 @@ namespace Ph2_HwInterface
   {
     std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
     
-    if (block_size * 4 != n) LOG (ERROR) << BOLDRED << "Invalid event block size: " << block_size << " instead of " << (n / 4) << RESET;
+    if (block_size * 4 != n) LOG (ERROR) << BOLDRED << "Invalid event block size: " << BOLDYELLOW << block_size << BOLDRED << " instead of " << BOLDYELLOW << (n / 4) << RESET;
 
     bool dummy_size;
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
@@ -686,8 +688,6 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.Hybrid1.Hybrid_en",               HYBRID_EN},
 	{"user.ctrl_regs.Hybrid1.Chips_en",                READOUT_CHIP_MASK}
       });
-
-    usleep(SHALLOWSLEEP);
   }
 
   void FC7FWInterface::ConfigureDIO5 (const DIO5Config* cfg)

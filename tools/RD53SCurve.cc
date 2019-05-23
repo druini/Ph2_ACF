@@ -58,7 +58,7 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   theNoise->SetXTitle("VCal");
   theNoise->SetYTitle("Entries");
 
-  theThreshold = new TH1F("theThreshold","Threshold",100,0,100);
+  theThreshold = new TH1F("theThreshold","Threshold",1000,0,1000);
   theThreshold->SetXTitle("VCal");
   theThreshold->SetYTitle("Entries");
 
@@ -115,7 +115,8 @@ void SCurve::Run()
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      for (int i = 0; i < dacList.size(); i++)
-		theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy/nTriggers);
+		if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy != 0)
+		  theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy);
 	indx++;
       }
 }

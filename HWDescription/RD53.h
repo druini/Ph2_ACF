@@ -43,7 +43,6 @@
 #define HIGHGAIN 0x80 // Set High Gain Linear FE
 
 #define NOHIT_TOT  0xF    // ToT value corresponding to no-hit
-#define NOHIT_4TOT 0xFFFF // ToT value corresponding to no-hit
 #define RESET_ECR  0x5A5A // Event Counter Reset word
 #define RESET_BCR  0x5959 // Bunch Counter Reset word
 #define GLOB_PULSE 0x5C5C // Global pulse word

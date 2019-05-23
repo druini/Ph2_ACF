@@ -23,10 +23,10 @@
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
-#define DEEPSLEEP   500000 // [microseconds]
-#define SHALLOWSLEEP 10000 // [microseconds]
+#define DEEPSLEEP  500000 // [microseconds]
+#define SHALLOWSLEEP 1000 // [microseconds]
 
-#define IPBFASTDURATION 1 // Duration of a fast command in terms of 40MHz clk cycles
+#define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 
 #define NBIT_FWVER      4 // Number of bits for the firmware version
 #define NBIT_ID         2 // Number of bits for the ID      in the register frame

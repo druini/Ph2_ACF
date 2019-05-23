@@ -16,24 +16,24 @@
 // ##################
 // # Default values #
 // ##################
-#define NEVENTS   10
-#define RUNNUMBER  0
+#define NEVENTS  10
+#define RUNNUMBER 0
 
 #define NTRIGxL1A 31
-#define INJTYPE "Analog"
+#define INJTYPE "Digital"
 
-#define ROWSTART  50
-#define ROWSTOP   65
-#define COLSTART 128
-#define COLSTOP  143
-#define NPIXELINJ 16
+#define ROWSTART    0
+#define ROWSTOP   191
+#define COLSTART  128
+#define COLSTOP   263
+#define NPIXELINJ 200
 
-#define LATENCY_START  0
-#define LATENCY_STOP 100
+#define LATENCY_START 0
+#define LATENCY_STOP 50
 
-#define VCAL_START 200
-#define VCAL_STOP 1000
-#define VCAL_STEP   10
+#define VCAL_START 300
+#define VCAL_STOP  500
+#define VCAL_NSTEPS 40
 
 
 using namespace CommandLineProcessing;
@@ -69,7 +69,7 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, st
       
       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =   32;
       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =    0;
-      cfgFastCmd.fast_cmd_fsm.delay_loop             = 2048;
+      cfgFastCmd.fast_cmd_fsm.delay_loop             =  512;
       
       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
       cfgFastCmd.fast_cmd_fsm.second_cal_en = false;
@@ -87,7 +87,7 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, st
       
       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =   16;
       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =   16;
-      cfgFastCmd.fast_cmd_fsm.delay_loop             = 2048;
+      cfgFastCmd.fast_cmd_fsm.delay_loop             =  512;
 
       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
       cfgFastCmd.fast_cmd_fsm.second_cal_en = true;
@@ -149,8 +149,6 @@ void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD5
       
       RD53Board->ReadNEvents(pBoard,nEvents,data);
 
-      std::cout << std::endl;
-
       auto events = RD53Board->DecodeEvents(data);
       auto nEvts  = RD53Board->AnalyzeEvents(events, false);
 
@@ -163,10 +161,10 @@ void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD5
       theLatency.Fill(lt,nEvts);
     }
 
-  LOG(INFO) << GREEN << "\t--> Best latency: " << BOLDYELLOW << latency << std::endl;
+  LOG(INFO) << GREEN << "\t--> Best latency: " << BOLDYELLOW << latency << RESET;
   
   theCanvas.cd();
-  theLatency.Draw();
+  theLatency.Draw("hist");
   theCanvas.Modified();
   theCanvas.Update();
   theCanvas.Print("LatencyScan.png");
@@ -187,7 +185,7 @@ int main (int argc, char** argv)
   // #############################
   ArgvParser cmd;
 
-  cmd.setIntroductoryDescription("@@@ CMSIT middleware system test application @@@");
+  cmd.setIntroductoryDescription("@@@ CMSIT Middleware System Test Application @@@");
 
   cmd.setHelpOption("h","help","Print this help page");
 
@@ -297,7 +295,7 @@ int main (int argc, char** argv)
       // ##############
       LOG(INFO) << BOLDYELLOW << "@@@ Performing SCurve scan @@@" << RESET;
 
-      SCurve sc("SCurve.root",ROWSTART,ROWSTOP,COLSTART,COLSTOP,NPIXELINJ,VCAL_START,VCAL_STOP,VCAL_STEP,nEvents);
+      SCurve sc("SCurve.root",ROWSTART,ROWSTOP,COLSTART,COLSTOP,NPIXELINJ,nEvents,VCAL_START,VCAL_STOP,VCAL_NSTEPS);
       sc.Inherit(&cSystemController);
       sc.Run();
       sc.Display();
