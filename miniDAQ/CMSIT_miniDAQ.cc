@@ -202,7 +202,7 @@ int main (int argc, char** argv)
   cmd.defineOption ("events", "Number of Events. Default value: 10", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("events", "e");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency; pixelalive; scurve]. Default: pixelalive", ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency; pixelalive; scurve; gain; gainopt; thropt]. Default: pixelalive", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
   cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", ArgvParser::NoOptionAttribute);
@@ -309,8 +309,29 @@ int main (int argc, char** argv)
       sc.Display();
       sc.Save();
     }
-    else LOG(ERROR) << BOLDRED << "Option non recognized: " << whichCalib << RESET;
-  
+  else if (whichCalib == "gain")
+    {
+      // ############
+      // # Run Gain #
+      // ############
+      LOG(INFO) << BOLDRED << "@@@ Gain scan not implemented yet ... coming soon @@@" << RESET;
+    }
+  else if (whichCalib == "gainopt")
+    {
+      // #########################
+      // # Run Gain Optimisation #
+      // #########################
+      LOG(INFO) << BOLDRED << "@@@ Gain optimisation not implemented yet ... coming soon @@@" << RESET;
+    }
+  else if (whichCalib == "thropt")
+    {
+      // ##############################
+      // # Run Threshold Optimisation #
+      // ##############################
+      LOG(INFO) << BOLDRED << "@@@ Threshold optimisation not implemented yet ... coming soon @@@" << RESET;
+    }
+  else LOG(ERROR) << BOLDRED << "Option non recognized: " << whichCalib << RESET;
+
 
   cSystemController.Stop(pBoard);
   cSystemController.Destroy();
