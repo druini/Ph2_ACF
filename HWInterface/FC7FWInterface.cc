@@ -86,7 +86,7 @@ namespace Ph2_HwInterface
 	serialData.push_back(data[i][j]);
   }
 
-  void FC7FWInterface::WriteChipCommand (std::vector<uint32_t> & data, unsigned int repetition)
+  void FC7FWInterface::WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd, unsigned int repetition)
   {
     std::vector< std::pair<std::string, uint32_t> > stackRegisters;
 
@@ -96,37 +96,41 @@ namespace Ph2_HwInterface
     if (ReadReg ("user.stat_regs.cmd_proc.fifo_full") == true)
       LOG (ERROR) << BOLDRED << "Command processor FIFO full" << RESET;
 
-    switch (data.size())
+    size_t size = data.size()/nCmd;
+    for (auto i = 0; i < nCmd; i++)
       {
-      case 1:
-	{
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[0]));
-	  break;
-	}
-      case 2:
-	{
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[0]));
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[1]));
-	  break;
-	}
-      case 3:
-	{
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[0]));
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[1]));
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data1_reg",data[2]));
-	  break;
-	}
-      case 4:
-	{
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[0]));
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[1]));
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data1_reg",data[2]));
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data2_reg",data[3]));
-	  break;
-	}
+	switch (size)
+	  {
+	  case 1:
+	    {
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
+	      break;
+	    }
+	  case 2:
+	    {
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[size*i+1]));
+	      break;
+	    }
+	  case 3:
+	    {
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[size*i+1]));
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data1_reg",data[size*i+2]));
+	      break;
+	    }
+	  case 4:
+	    {
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[size*i+1]));
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data1_reg",data[size*i+2]));
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data2_reg",data[size*i+3]));
+	      break;
+	    }
+	  }
       }
 
-    for (unsigned int i = 0; i < repetition; i++) WriteStackReg (stackRegisters);
+    for (auto i = 0; i < repetition; i++) WriteStackReg (stackRegisters);
   }
 
   std::pair< std::vector<uint16_t>,std::vector<uint16_t> > FC7FWInterface::ReadChipRegisters (std::vector<uint32_t> & data, unsigned int nBlocks2Read)
@@ -354,11 +358,14 @@ namespace Ph2_HwInterface
   {
     int dataSize;
     int nTriggers;
+    std::string exception;
 
     this->localCfgFastCmd.n_triggers = pNEvents;
 
     do
       {
+	pData.clear();
+
 	// this->ResetFastCmdBlk(); // @TMP@
 	this->ResetReadoutBlk();
 	this->ConfigureFastCommands();
@@ -369,26 +376,25 @@ namespace Ph2_HwInterface
 	usleep(SHALLOWSLEEP);
 
 	dataSize = this->ReadData(pBoard, false, pData);
+	if (dataSize == 0)
+	  {
+	    LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected " << BOLDYELLOW << "--> retry" << RESET;
+	    continue;
+	  }
+	
 	auto events = this->DecodeEvents(pData);
-
+	if (this->AnalyzeEvents(events, exception, false) == -1)
+	  {
+	    LOG (ERROR) << BOLDRED << exception << BOLDYELLOW << " --> retry" << RESET;
+	    continue;
+	  }
+	
 	nTriggers = localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration);
 	if (events.size() != nTriggers)
 	  {
 	    LOG (ERROR) << BOLDRED << "Sent " << nTriggers << " triggers, but collected only " << events.size() << BOLDYELLOW << " --> retry" << RESET;
 	    continue;
 	  }
-	
-	try
-	  {
-	    this->AnalyzeEvents(events, false);
-	  }
-	catch (const std::exception& e)
-	  {
-	    LOG (ERROR) << BOLDRED << e.what() << BOLDYELLOW << " --> retry" << RESET;
-	    continue;
-	  }
-	
-	if (dataSize == 0) LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected " << BOLDYELLOW << "--> retry" << RESET;
       } while (dataSize == 0);
   }
 
@@ -528,7 +534,7 @@ namespace Ph2_HwInterface
     return events;
   }
 
-  unsigned int FC7FWInterface::AnalyzeEvents (const std::vector<FC7FWInterface::Event>& events, bool print)
+  unsigned int FC7FWInterface::AnalyzeEvents (const std::vector<FC7FWInterface::Event>& events, std::string& exception, bool print)
   {
     unsigned int nEvts = 0;
     size_t maxL1Counter = RD53::SetBits<NBIT_TRIGID>(NBIT_TRIGID).to_ulong() + 1;
@@ -566,7 +572,12 @@ namespace Ph2_HwInterface
 		LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
 	      }
 
-	    if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) throw std::runtime_error("Mismatch on L1A counter between backend and frontend");
+	    if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id)
+	      {
+		exception = "Mismatch on L1A counter between backend and frontend";
+		return -1;
+	      }
+
 	    if (evt.chip_events[j].data.size() != 0) nEvts++;
 
 	    for (const auto& region_data : evt.chip_events[j].data)

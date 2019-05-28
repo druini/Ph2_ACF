@@ -342,49 +342,26 @@ namespace Ph2_HwInterface {
         }
 
 
-// ################################################################################################
-// # Virtual methods which are defined in the concrete implementation of BeBoardFWInterface class #
-// ################################################################################################
-/*!
-* \brief Serialize all symbols e.g. for several chip into one unique vector
-* \param data : symbols to serialize
-* \param serialData : serialized symbols
-*/
-        virtual void SerializeSymbols (std::vector<std::vector<uint16_t> > & data,
-            std::vector<uint32_t>               & serialData)
+	// ################################################################################################
+	// # Virtual methods which are defined in the concrete implementation of BeBoardFWInterface class #
+	// ################################################################################################
+	virtual void WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd = 1, unsigned int repetition = 1)
         {
-            LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+	  LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         }
-
-/*!
-* \brief Write register blocks of an RD53
-* \param data : block of words to write
-* \param repetition : number of times to send the same command
-*/
-        virtual void WriteChipCommand (std::vector<uint32_t> & data,  unsigned int repetition = 1)
-        {
-            LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-        }
-
-/*!
-* \brief Read register blocks of an RD53
-* \param data : block of words readout
-*/
+	
         virtual std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadChipRegisters (std::vector<uint32_t> & data, unsigned int nBlocks2Read = 1)
-        {
+	  {
             LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
             return std::pair< std::vector<uint16_t>,std::vector<uint16_t> >();
-        }
-
-/*!
-* \brief Initialize communication with RD53
-*/
+	  }
+	
         virtual bool InitChipCommunication()
         {
-            LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-            return false;
+	  LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+	  return false;
         }
-// ################################################################################################
+	// ################################################################################################
 
 
     protected:

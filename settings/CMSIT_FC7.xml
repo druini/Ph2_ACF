@@ -37,7 +37,7 @@
 	    VCAL_HIGH        =  "500"
 	    VCAL_MED         =  "100"
 
-	    INJECTION_SELECT =   "16"
+	    INJECTION_SELECT =    "0"
             LATENCY_CONFIG   =   "28"
             MONITOR_SELECT   = "8203"
 	    />

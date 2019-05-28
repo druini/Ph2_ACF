@@ -20,13 +20,13 @@
 #define RUNNUMBER 0
 
 #define NTRIGxL1A 31
-#define INJTYPE "Digital"
+#define INJTYPE "Analog"
 
-#define ROWSTART    0
-#define ROWSTOP   191
+#define ROWSTART    50//0
+#define ROWSTOP   73//191
 #define COLSTART  128
-#define COLSTOP   263
-#define NPIXELINJ 200
+#define COLSTOP   151//263
+#define NPIXELINJ 24//200
 
 #define LATENCY_START 0
 #define LATENCY_STOP 50
@@ -116,12 +116,13 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, st
 }
 
 
-void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD53ChipInterface, Chip* pChip, size_t nEvents)
+void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD53ChipInterface, Chip* pChip, size_t nEvents)
 {
   int dataSize = 0;
   int latency  = 0;
   std::vector<uint32_t> data;
-  
+  std::string exception;
+
   TH1F theLatency("theLatency","LatencyScan",LATENCY_STOP-LATENCY_START,LATENCY_START,LATENCY_STOP);
   theLatency.SetXTitle("Latency [n.bx]");
   theLatency.SetYTitle("Entries");
@@ -150,7 +151,7 @@ void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD5
       RD53Board->ReadNEvents(pBoard,nEvents,data);
 
       auto events = RD53Board->DecodeEvents(data);
-      auto nEvts  = RD53Board->AnalyzeEvents(events, false);
+      auto nEvts  = RD53Board->AnalyzeEvents(events, exception, false);
 
       if (nEvts > dataSize)
 	{
@@ -167,6 +168,12 @@ void LatencyScan (BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD5
   theLatency.Draw("hist");
   theCanvas.Modified();
   theCanvas.Update();
+
+  TFile theFile(fName, "RECREATE");
+  theCanvas.Write();
+  theFile.Write();
+  theFile.Close();
+
   theCanvas.Print("LatencyScan.png");
 }
 
@@ -273,7 +280,7 @@ int main (int argc, char** argv)
       // ###################
       LOG(INFO) << BOLDYELLOW << "@@@ Performing Latency scan @@@" << RESET;
 	
-      LatencyScan(pBoard, RD53Board, RD53ChipInterface, pChip, nEvents);
+      LatencyScan("LatencyScan.root", pBoard, RD53Board, RD53ChipInterface, pChip, nEvents);
     }
   else if (whichCalib == "pixelalive")
     {

@@ -43,6 +43,13 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 
 
+  // ##############################
+  // # Initialize dac scan values #
+  // ##############################
+  float step = (stopValue - startValue) / nSteps;
+  for (int i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
+
+
   // #######################
   // # Allocate histograms #
   // #######################
@@ -84,10 +91,6 @@ SCurve::~SCurve()
 void SCurve::Run()
 {
   ContainerFactory theDetectorFactory;
-  float step = (stopValue - startValue) / nSteps;
-
-  std::vector<uint16_t> dacList;
-  for (int i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
   for (auto i = 0; i < detectorContainerVector.size(); i++)
     delete detectorContainerVector[i];
@@ -123,8 +126,6 @@ void SCurve::Run()
 
 void SCurve::Display()
 {
-  theFile->cd();
-  
   for (size_t i = 0; i < theOccupancy.size(); i++)
     {
       theCanvas->cd(i+1);
@@ -139,10 +140,44 @@ void SCurve::Save()
 {
   theCanvas->Write();
   theFile->Write();
+
+  theCanvas->Print("SCurve.png");
 }
 
 void SCurve::Analyze()
 {
-  LOG(INFO) << BOLDRED << "Need to implement SCurve analysis" << RESET;
+  double mean, rms;
+  std::vector<double> measurements;
+
+  for (auto cBoard : fBoardVector)
+    for (auto cFe : cBoard->fModuleVector)
+      for (auto cChip : cFe->fChipVector)
+	for (auto row = 0; row < RD53::nRows; row++)
+	  for (auto col = 0; col < RD53::nCols; col++)
+	    {
+	      for (int i = 0; i < dacList.size()-1; i++)
+		if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy != 0)
+		  measurements.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy - 
+					 detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy);
+	      this->ComputeStats(measurements,mean,rms);
+	      theThreshold->Fill(mean);
+	      theNoise->Fill(rms);
+	    }
+  // LOG(INFO) << BOLDRED << "Need to implement SCurve analysis" << RESET;
   // @TMP@ Fill theNoise and theThreshold
+}
+
+void SCurve::ComputeStats(std::vector<double>& measurements, double& mean, double& rms)
+{
+  double mean2 = 0;
+  mean = 0;
+
+  for (auto m : measurements)
+    {
+      mean  += m;
+      mean2 += m*m;
+    }
+
+  mean /= measurements.size();
+  rms = (mean2/measurements.size() - mean*mean) * measurements.size() / (measurements.size()-1);
 }

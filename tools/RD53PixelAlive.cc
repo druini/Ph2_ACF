@@ -97,8 +97,6 @@ void PixelAlive::Run()
 
 void PixelAlive::Display()
 {
-  theFile->cd();
-
   for (size_t i = 0; i < theOccupancy.size(); i++)
     {
       theCanvas->cd(i+1);
@@ -113,4 +111,6 @@ void PixelAlive::Save()
 {
   theCanvas->Write();
   theFile->Write();
+
+  theCanvas->Print("PixelAlive.png");
 }

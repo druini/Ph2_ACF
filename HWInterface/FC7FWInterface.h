@@ -24,7 +24,7 @@
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
 #define DEEPSLEEP  500000 // [microseconds]
-#define SHALLOWSLEEP 1000 // [microseconds]
+#define SHALLOWSLEEP 2000 // [microseconds]
 
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 
@@ -60,14 +60,14 @@
 // ###############
 // # Chip header #
 // ###############
-#define FRAME_HEADER  0xA
-#define NBIT_CHIPHEAD   4 // Number of bits in '1010'
-#define NBIT_ERR        4 // Number of bits for the Error Code
-#define NBIT_HYBRID     8 // Number of bits for the Hybrid ID
-#define NBIT_CHIPID     4 // Number of bits for the Chip ID
-#define NBIT_L1ASIZE   12 // Number of bits for the L1A Data Size
-#define NBIT_CHIPTYPE   4 // Number of bits for the Chip Type
-#define NBIT_FRAME     12 // Number of bits for the Frame Delay
+#define FRAME_HEADER 0xA
+#define NBIT_CHIPHEAD  4 // Number of bits in '1010'
+#define NBIT_ERR       4 // Number of bits for the Error Code
+#define NBIT_HYBRID    8 // Number of bits for the Hybrid ID
+#define NBIT_CHIPID    4 // Number of bits for the Chip ID
+#define NBIT_L1ASIZE  12 // Number of bits for the L1A Data Size
+#define NBIT_CHIPTYPE  4 // Number of bits for the Chip Type
+#define NBIT_FRAME    12 // Number of bits for the Frame Delay
 
 
 using namespace Ph2_HwDescription;
@@ -97,15 +97,15 @@ namespace Ph2_HwInterface
 
     void     ReadNEvents  (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = false)  override;
     uint32_t ReadData     (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = false) override;
-    void SerializeSymbols (std::vector<std::vector<uint16_t> > & data, std::vector<uint32_t> & serialData)        override;
 
-    void WriteChipCommand (std::vector<uint32_t> & data, unsigned int repetition = 1)                                                        override;
+    void WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd = 1, unsigned int repetition = 1)                                 override;
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadChipRegisters (std::vector<uint32_t> & data, unsigned int nBlocks2Read = 1) override;
     std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)                                        override;
 
     void ChipReset()  override;
     void ChipReSync() override;
 
+    void SerializeSymbols (std::vector<std::vector<uint16_t> > & data, std::vector<uint32_t> & serialData);
     void TurnOffFMC();
     void TurnOnFMC();
     void ResetBoard();
@@ -140,7 +140,7 @@ namespace Ph2_HwInterface
     };
     
     static std::vector<Event> DecodeEvents(const std::vector<uint32_t>& data);
-    static unsigned int AnalyzeEvents(const std::vector<FC7FWInterface::Event>& events, bool print = false);
+    static unsigned int AnalyzeEvents(const std::vector<FC7FWInterface::Event>& events, std::string& exception, bool print = false);
 
     enum class TriggerSource : uint32_t
     {

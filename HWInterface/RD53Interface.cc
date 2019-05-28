@@ -189,14 +189,19 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::WriteRD53Reg (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec)
+  bool RD53Interface::WriteRD53Reg (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec, size_t nCmd)
   {
     setBoard (pRD53->getBeBoardId());
     
+    size_t size = dataVec->size()/nCmd;
     std::vector<uint32_t> serialSymbols;
-    pRD53->EncodeCMD (pRD53->getRegItem (pRegNode).fAddress, pRD53->getRegItem (pRegNode).fValue, pRD53->getChipId(), RD53::WriteCmd(), true, serialSymbols, dataVec);
+    for (auto i = 0; i < nCmd; i++)
+      {
+	std::vector<uint16_t> subDataVec(dataVec->begin() + size*i, dataVec->begin() + size*(i+1));
+	pRD53->EncodeCMD (pRD53->getRegItem (pRegNode).fAddress, pRD53->getRegItem (pRegNode).fValue, pRD53->getChipId(), RD53::WriteCmd(), true, serialSymbols, &subDataVec);
+      }
 
-    fBoardFW->WriteChipCommand (serialSymbols);
+    fBoardFW->WriteChipCommand (serialSymbols,nCmd);
     return true;
   }
 
@@ -265,7 +270,8 @@ namespace Ph2_HwInterface
 	    pRD53->ConvertRowCol2Cores (0,col,row_,colPair);
 	    this->WriteChipReg(pRD53, "REGION_COL", colPair, pVerifLoop);
 	    this->WriteChipReg(pRD53, "REGION_ROW", 0x0, pVerifLoop);
-	    
+
+	    size_t itPixCmd = 0;
 	    for (auto row = 0; row < RD53::nRows; row++)
 	      {
 		data =
@@ -285,8 +291,14 @@ namespace Ph2_HwInterface
 		dataVec.push_back(data);
 		if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
 		  {
-		    this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec);
-		    dataVec.clear();
+		    itPixCmd++;
+
+		    if (itPixCmd == NPIXCMD)
+		      {
+			this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec,itPixCmd);
+			dataVec.clear();
+			itPixCmd = 0;
+		      }
 		  }
 	      }
 	  }
