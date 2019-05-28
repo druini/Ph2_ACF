@@ -73,7 +73,7 @@ void PixelAlive::Run()
   DetectorContainer         theOccupancyContainer;
   fDetectorDataContainer = &theOccupancyContainer;
   ContainerFactory          theDetectorFactory;
-  theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+  theDetectorFactory.copyAndInitStructure<OccupancyAndToT>(*fDetectorContainer, *fDetectorDataContainer);
   
   this->SetTestPulse(inject);
   this->fMaskChannelsFromOtherGroups = true;
@@ -90,7 +90,7 @@ void PixelAlive::Run()
 	for (auto cChip : cFe->fChipVector)
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      theOccupancy[indx]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy);
+	      theOccupancy[indx]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 	indx++;
       }
 }

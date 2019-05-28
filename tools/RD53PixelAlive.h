@@ -11,7 +11,7 @@
 #define _RD53PixelAlive_h_
 
 #include "../Utils/Container.h"
-#include "../Utils/Occupancy.h"
+#include "../Utils/OccupancyAndToT.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"

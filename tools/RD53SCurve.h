@@ -11,7 +11,7 @@
 #define _RD53SCurve_h_
 
 #include "../Utils/Container.h"
-#include "../Utils/Occupancy.h"
+#include "../Utils/OccupancyAndToT.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"
@@ -64,6 +64,8 @@ class SCurve : public Tool
 
   TFile*   theFile;
   TCanvas* theCanvas;
+  TCanvas* theCanvasTh;
+  TCanvas* theCanvasNo;
   std::vector<TH2F*> theOccupancy;
   TH1F* theNoise;
   TH1F* theThreshold;

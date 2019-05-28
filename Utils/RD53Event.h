@@ -10,8 +10,8 @@
 #ifndef _RD53Event_h_
 #define _RD53Event_h_
 
-#include "Occupancy.h"
 #include "Event.h"
+#include "OccupancyAndToT.h"
 #include "../HWDescription/RD53.h"
 
 
@@ -50,11 +50,11 @@ namespace Ph2_HwInterface
 
   
   private:
-  bool isThereAnHit (uint8_t module_id, uint8_t chip_id, uint32_t row, uint32_t col) const;
-  
-  std::vector<size_t>       module_id_vec;
-  std::vector<size_t>       chip_id_vec;
-  std::vector<RD53::Event>  chip_events;
+  bool isThereAnHit (uint8_t module_id, uint8_t chip_id, uint32_t row, uint32_t col, size_t& ToT) const;
+
+  std::vector<size_t>      module_id_vec;
+  std::vector<size_t>      chip_id_vec;
+  std::vector<RD53::Event> chip_events;
   
 
   protected:

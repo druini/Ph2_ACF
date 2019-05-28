@@ -69,9 +69,11 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   theThreshold->SetXTitle("VCal");
   theThreshold->SetYTitle("Entries");
 
-  theFile   = new TFile(fileName, "RECREATE");
-  theCanvas = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
+  theFile     = new TFile(fileName, "RECREATE");
+  theCanvas   = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
   theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
+  theCanvasTh = new TCanvas("theCanvasTh","RD53Canvas",0,0,700,500);
+  theCanvasNo = new TCanvas("theCanvasNo","RD53Canvas",0,0,700,500);
 }
 
 SCurve::~SCurve()
@@ -99,7 +101,7 @@ void SCurve::Run()
   for (auto i = 0; i < dacList.size(); i++)
     {
       detectorContainerVector.emplace_back(new DetectorContainer());
-      theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *detectorContainerVector.back());
+      theDetectorFactory.copyAndInitStructure<OccupancyAndToT>(*fDetectorContainer, *detectorContainerVector.back());
     }
   
   this->SetTestPulse(true);
@@ -117,9 +119,9 @@ void SCurve::Run()
 	for (auto cChip : cFe->fChipVector)
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      for (int i = 0; i < dacList.size(); i++)
-		if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy != 0)
-		  theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy);
+	      for (auto i = 0; i < dacList.size(); i++)
+		if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
+		  theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 	indx++;
       }
 }
@@ -134,20 +136,35 @@ void SCurve::Display()
   
   theCanvas->Modified();
   theCanvas->Update();
+
+  theCanvasTh->cd();
+  theThreshold->Draw();
+  theCanvasTh->Modified();
+  theCanvasTh->Update();
+
+  theCanvasNo->cd();
+  theNoise->Draw();
+  theCanvasNo->Modified();
+  theCanvasNo->Update();
 }
 
 void SCurve::Save()
 {
   theCanvas->Write();
+  theCanvasTh->Write();
+  theCanvasNo->Write();
   theFile->Write();
 
   theCanvas->Print("SCurve.png");
+  theCanvasTh->Print("SCurveTh.png");
+  theCanvasNo->Print("SCurveNo.png");
 }
 
 void SCurve::Analyze()
 {
   double mean, rms;
   std::vector<double> measurements;
+  measurements.push_back(0);
 
   for (auto cBoard : fBoardVector)
     for (auto cFe : cBoard->fModuleVector)
@@ -155,29 +172,32 @@ void SCurve::Analyze()
 	for (auto row = 0; row < RD53::nRows; row++)
 	  for (auto col = 0; col < RD53::nCols; col++)
 	    {
-	      for (int i = 0; i < dacList.size()-1; i++)
-		if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy != 0)
-		  measurements.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy - 
-					 detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy);
+	      measurements.clear();
+
+	      for (auto i = 0; i < dacList.size()-1; i++)
+		measurements.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy - 
+				       detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+
 	      this->ComputeStats(measurements,mean,rms);
 	      theThreshold->Fill(mean);
 	      theNoise->Fill(rms);
 	    }
-  // LOG(INFO) << BOLDRED << "Need to implement SCurve analysis" << RESET;
-  // @TMP@ Fill theNoise and theThreshold
 }
 
 void SCurve::ComputeStats(std::vector<double>& measurements, double& mean, double& rms)
 {
-  double mean2 = 0;
+  double mean2  = 0;
+  double weight = 0;
   mean = 0;
 
-  for (auto m : measurements)
+  for (auto i = 0; i < dacList.size(); i++)
     {
-      mean  += m;
-      mean2 += m*m;
+      mean   += dacList[i]*measurements[i];
+      weight += measurements[i];
+
+      mean2 += dacList[i]*dacList[i]*measurements[i];
     }
 
-  mean /= measurements.size();
-  rms = (mean2/measurements.size() - mean*mean) * measurements.size() / (measurements.size()-1);
+  mean /= weight;
+  rms   = sqrt((mean2/weight - mean*mean) * weight / (weight - 1./nTriggers));
 }

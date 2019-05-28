@@ -20,18 +20,27 @@ void OccupancyAndToT::makeAverage (const std::vector<OccupancyAndToT>* theOccupa
     }
 
   float totalNumberOfEnableChannels = 0;
-  for (size_t iContainer = 0; iContainer<theOccupancyVector->size(); ++iContainer)
+  for (size_t iContainer = 0; iContainer<theOccupancyVector->size(); iContainer++)
     {
-      fOccupancy += (theOccupancyVector->at(iContainer).fOccupancy * float(theNumberOfEnabledChannelsList[iContainer]));
+      fOccupancy                  += theOccupancyVector->at(iContainer).fOccupancy * float(theNumberOfEnabledChannelsList[iContainer]);
       totalNumberOfEnableChannels += theNumberOfEnabledChannelsList[iContainer];
+
+      fToT                        += theOccupancyVector->at(iContainer).fToT * float(theNumberOfEnabledChannelsList[iContainer]);
+      fToT2                       += theOccupancyVector->at(iContainer).fToT * theOccupancyVector->at(iContainer).fToT * float(theNumberOfEnabledChannelsList[iContainer]);
     }
-  
+
   fOccupancy     /= float(totalNumberOfEnableChannels);
   fOccupancyError = sqrt(float(fOccupancy * (1. - fOccupancy) / numberOfEvents));
+
+  fToT           /= float(totalNumberOfEnableChannels);
+  fToTError       = sqrt((fToT2 / float(totalNumberOfEnableChannels) - fToT*fToT) * float(totalNumberOfEnableChannels) / (float(totalNumberOfEnableChannels)-1));
 }
 
-void OccupancyAndToT::normalize (const uint16_t numberOfEvents) 
+void OccupancyAndToT::normalize (const uint16_t numberOfEvents)
 {
   fOccupancy     /= float(numberOfEvents);
   fOccupancyError = sqrt(float(fOccupancy * (1. - fOccupancy) / numberOfEvents));
+
+  fToT           /= float(numberOfEvents);
+  fToTError       = sqrt((fToT2 / float(numberOfEvents) - fToT*fToT) * float(numberOfEvents) / (float(numberOfEvents)-1));
 }

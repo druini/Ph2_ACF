@@ -11,7 +11,7 @@
 
 namespace Ph2_HwInterface
 {
-  bool RD53Event::isThereAnHit (uint8_t module_id, uint8_t chip_id, uint32_t row, uint32_t col) const
+  bool RD53Event::isThereAnHit (uint8_t module_id, uint8_t chip_id, uint32_t row, uint32_t col, size_t& ToT) const
   {
     for (size_t j = 0; j < module_id_vec.size(); j++)
       {
@@ -27,7 +27,10 @@ namespace Ph2_HwInterface
 			    (col-hit.col) >=0 &&
 			    (col-hit.col) < 4 &&
 			    hit.tots[col-hit.col] != NOHIT_TOT)
-			  return true;
+			  {
+			    ToT = hit.tots[col-hit.col];
+			    return true;
+			  }
 		      }
 		  }
 	      }
@@ -36,7 +39,7 @@ namespace Ph2_HwInterface
     
     return false;
   }
-  
+
   void RD53Event::fillDataContainer(BoardContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
   {
     for (auto module : *boardContainer)
@@ -45,7 +48,14 @@ namespace Ph2_HwInterface
 	  for (auto col = 0; col < RD53::nCols; col++)
 	    {
 	      if (cTestChannelGroup->isChannelEnabled(row,col))
-		chip->getChannel<Occupancy>(row,col).fOccupancy += (float)this->isThereAnHit(module->getId(),chip->getId(),row,col);
+		{
+		  size_t ToT;
+		  if (this->isThereAnHit(module->getId(),chip->getId(),row,col,ToT) == true);
+		  {
+		    chip->getChannel<OccupancyAndToT>(row,col).fOccupancy++;
+		    chip->getChannel<OccupancyAndToT>(row,col).fToT      += (float)ToT;
+		  }
+		}
 	    }
   }
 }

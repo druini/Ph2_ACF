@@ -23,10 +23,10 @@
 #define INJTYPE "Analog"
 
 #define ROWSTART    50//0
-#define ROWSTOP   73//191
+#define ROWSTOP   67//191
 #define COLSTART  128
-#define COLSTOP   151//263
-#define NPIXELINJ 24//200
+#define COLSTOP   143//263
+#define NPIXELINJ 16//200
 
 #define LATENCY_START 0
 #define LATENCY_STOP 50
@@ -305,9 +305,9 @@ int main (int argc, char** argv)
       SCurve sc("SCurve.root",ROWSTART,ROWSTOP,COLSTART,COLSTOP,NPIXELINJ,nEvents,VCAL_START,VCAL_STOP,VCAL_NSTEPS);
       sc.Inherit(&cSystemController);
       sc.Run();
+      sc.Analyze();
       sc.Display();
       sc.Save();
-      sc.Analyze();
     }
     else LOG(ERROR) << BOLDRED << "Option non recognized: " << whichCalib << RESET;
   
