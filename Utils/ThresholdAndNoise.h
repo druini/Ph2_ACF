@@ -51,10 +51,10 @@ inline void ThresholdAndNoise::makeAverage<ThresholdAndNoise>(const ChipContaine
         {
             if(chipOriginalMask->isChannelEnabled(row,col) && cTestChannelGroup->isChannelEnabled(row,col))
             {
-                fThreshold+=theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThreshold/(theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThresholdError*theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThresholdError);
+                fThreshold      += theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThreshold/(theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThresholdError*theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThresholdError);
                 fThresholdError += 1./(theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThresholdError*theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThresholdError);
-                fNoise+=theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoise/(theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoiseError*theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoiseError);
-                fNoiseError += 1./(theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoiseError*theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoiseError);
+                fNoise          += theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoise/(theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoiseError*theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoiseError);
+                fNoiseError     += 1./(theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoiseError*theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoiseError);
             }
         }
     }

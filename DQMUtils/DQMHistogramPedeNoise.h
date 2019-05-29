@@ -46,5 +46,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     DetectorContainer fDetectorData;
     DetectorContainer fDetectorStructure;
     DetectorContainer fDetectorValidationHistograms;
+    DetectorContainer fDetectorPedestalHistograms;
+    DetectorContainer fDetectorNoiseHistograms;
 };
 #endif

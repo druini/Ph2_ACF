@@ -10,6 +10,7 @@ MiddlewareInterface::MiddlewareInterface(std::string serverIP, int serverPort)
 //========================================================================================================================
 MiddlewareInterface::~MiddlewareInterface(void)
 {
+	std::cout << __PRETTY_FUNCTION__ << "DESTRUCTOR!" << std::endl;
 }
 
 //========================================================================================================================

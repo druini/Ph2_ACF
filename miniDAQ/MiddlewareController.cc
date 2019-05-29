@@ -22,10 +22,10 @@ MiddlewareController::MiddlewareController(int serverPort)
 //========================================================================================================================
 MiddlewareController::~MiddlewareController(void)
 {
+	std::cout << __PRETTY_FUNCTION__ << "DESTRUCTOR" << std::endl;
 }
 //========================================================================================================================
 // virtual function to interpret messages
-// interacting with theBurninBoxController_ using theBeagleBoneConfiguration_ as helper class
 std::string MiddlewareController::readMessage(const std::string& buffer)
 {
 
@@ -65,8 +65,8 @@ std::string MiddlewareController::readMessage(const std::string& buffer)
 	{
 
 		std::cout << "We are in the configuration submodule" << std::endl;
-		if     (getVariableValue("Calibration",buffer) == "calibration")                  theSystemController_ = new Calibration();
-		else if(getVariableValue("Calibration",buffer) == "pedenoise")                    theSystemController_ = new PedeNoise();
+		if     (getVariableValue("Calibration",buffer) == "calibration")                  theSystemController_ = new CombinedCalibration<Calibration>;
+		else if(getVariableValue("Calibration",buffer) == "pedenoise")                    theSystemController_ = new CombinedCalibration<PedeNoise>;
 		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoise")      theSystemController_ = new CombinedCalibration<Calibration,PedeNoise>();
 		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoisenoise") theSystemController_ = new CombinedCalibration<Calibration,PedeNoise,PedeNoise>();
 		else

@@ -20,17 +20,21 @@ DQMInterface::DQMInterface(std::string configurationFile)
 //========================================================================================================================
 DQMInterface::~DQMInterface(void)
 {
+	std::cout << __PRETTY_FUNCTION__ << "DESTRUCTOR!" << std::endl;
 	destroy();
+	std::cout << __PRETTY_FUNCTION__ << "DESTRUCTOR DONE!" << std::endl;
 }
 
 //========================================================================================================================
 void DQMInterface::destroy(void)
 {
+	std::cout << __PRETTY_FUNCTION__ << "destroy!" << std::endl;
 	if(fListener != nullptr)
 		delete fListener;
 	destroyHistogram();
 	fListener     = nullptr;
 	fDQMHistogram = nullptr;
+	std::cout << __PRETTY_FUNCTION__ << "destroy DONE!" << std::endl;
 }
 
 //========================================================================================================================
@@ -39,6 +43,7 @@ void DQMInterface::destroyHistogram(void)
 	if(fDQMHistogram != nullptr)
 		delete fDQMHistogram;
 	fDQMHistogram = nullptr;
+	std::cout << __PRETTY_FUNCTION__ << "destroyHistogram DONE!" << std::endl;
 }
 
 //========================================================================================================================
@@ -78,7 +83,10 @@ void DQMInterface::stopProcessingData  (void)
 	fRunning = false;
 	std::chrono::milliseconds span (100);
 	while (fRunningFuture.wait_for(span)==std::future_status::timeout)
-		std::cout << "Still running" << std::endl;
+		std::cout << __PRETTY_FUNCTION__ << "Still running" << std::endl;
+
+	std::cout << __PRETTY_FUNCTION__ << "Thread done running" << std::endl;
+
 	if(fDataBuffer.size()>0)
 	{
 		std::cout<< __PRETTY_FUNCTION__ << " Buffer should be empty, some data were not read, Aborting " << std::endl;
@@ -109,12 +117,13 @@ bool DQMInterface::running()
 
 	while(fRunning)
 	{
+		std::cout << __PRETTY_FUNCTION__ << "Running?" << fRunning << std::endl;
 		// if(receive(configBuffer, 1) != -1)
 		// if(receive(*reinterpret_cast<std::vector<char>*>(*configBuffer.end()), 1) != -1)
 		//TODO We need to optimize the data readout so we don't do multiple copies
 		//TODO We need to optimize the data readout so we don't do multiple copies
 		//TODO We need to optimize the data readout so we don't do multiple copies
-		if(fListener->receive(tmpDataBuffer, 1) > 0)
+		if(fListener->receive(tmpDataBuffer, 0, 100000) > 0)
 		{
 			std::cout << __PRETTY_FUNCTION__ << "Got Something" << std::endl;
 			fDataBuffer.insert(fDataBuffer.end(), tmpDataBuffer.begin(), tmpDataBuffer.end());
@@ -149,8 +158,8 @@ bool DQMInterface::running()
 		}
 		else
 		{
-			std::cout << "Got Nada" << std::endl;
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			std::cout << __PRETTY_FUNCTION__ << "Got Nada" << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
 
 	}

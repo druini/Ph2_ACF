@@ -43,18 +43,26 @@ void DQMHistogramPedeNoise::book(std::string configurationFileName)
     std::cout << out.str() << std::endl;
     ContainerFactory   theDetectorFactory;
     EmptyContainer theEmptyContainer;
-    TH1FContainer theTH1FContainer("","",254,-0.5,253.5);
-    theDetectorFactory.copyAndInitStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(fDetectorStructure, fDetectorValidationHistograms, theEmptyContainer, theTH1FContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
+
+    //Pedestal
+    TH1FContainer theTH1FPedestalContainer("", "", 2048, -0.5, 1023.5);
+    theDetectorFactory.copyAndInitStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(fDetectorStructure, fDetectorPedestalHistograms, theEmptyContainer, theTH1FPedestalContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
+
+    //Noise
+    TH1FContainer theTH1FNoiseContainer("", "", 200, 0., 20.);
+    theDetectorFactory.copyAndInitStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(fDetectorStructure, fDetectorNoiseHistograms, theEmptyContainer, theTH1FNoiseContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
+
+    //Validation
+    TH1FContainer theTH1FValidationContainer("", "", 254, -0.5, 253.5);
+    theDetectorFactory.copyAndInitStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(fDetectorStructure, fDetectorValidationHistograms, theEmptyContainer, theTH1FValidationContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
+
+    //Data container initialization
     theDetectorFactory.copyStructure(fDetectorStructure, fDetectorData);
 }
 
 //========================================================================================================================
 void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
-
-    for (auto i : dataBuffer)
-        std::cout << i ;
-    std::cout<<std::endl;
 
 	OccupancyBoardStream          theOccupancy;
     ThresholdAndNoiseBoardStream  theThresholdAndNoiseStream;
@@ -70,7 +78,7 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 			{
 				for(auto chip: *module)
 				{
-                    TH1F *chipHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
+                    TH1F *chipValidationHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
                         fDetectorValidationHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
                         )->theSummary_.fTheHistogram;
                     
@@ -79,11 +87,9 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 					for(auto channel : *chip->getChannelContainer<ChannelContainer<Occupancy>>())
                     {
                         // fDetectorValidationHistograms.at(board->getId()).at(module->getId()).at(chip->getId()).fTheHistogram
-                        chipHistogram->SetBinContent(channelBin  ,channel.fOccupancy     );
-                        chipHistogram->SetBinError  (channelBin++,channel.fOccupancyError);
-						std::cout << channel.fOccupancy << " ";
-                    }
-					std::cout << std::endl;
+                        chipValidationHistogram->SetBinContent(channelBin  ,channel.fOccupancy     );
+                        chipValidationHistogram->SetBinError  (channelBin++,channel.fOccupancyError);
+					}
 				}
 			}
 		}
@@ -93,6 +99,33 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
     else if(theThresholdAndNoiseStream.attachBuffer(&dataBuffer))
     {
         std::cout<<"Matched ThresholdAndNoise!!!!!\n";
+        theThresholdAndNoiseStream.decodeChipData(fDetectorData);
+        for(auto board : fDetectorData)
+        {
+            for(auto module: *board)
+            {
+                for(auto chip: *module)
+                {
+                    TH1F *chipPedestalHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
+                        fDetectorPedestalHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
+                        )->theSummary_.fTheHistogram;
+                    
+                    TH1F *chipNoiseHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
+                        fDetectorNoiseHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
+                        )->theSummary_.fTheHistogram;
+
+                    // uint channelBin=1;
+                    if(chip->getChannelContainer<ChannelContainer<ThresholdAndNoise>>() == nullptr ) continue;
+                    for(auto channel : *chip->getChannelContainer<ChannelContainer<ThresholdAndNoise>>())
+                    {
+                        // fDetectorValidationHistograms.at(board->getId()).at(module->getId()).at(chip->getId()).fTheHistogram
+                        chipPedestalHistogram->Fill(channel.fThreshold);
+                        chipNoiseHistogram->Fill(channel.fNoise);
+                    }
+                }
+            }
+        }
+        fDetectorData.cleanDataStored();
     }
 
 }
@@ -102,28 +135,65 @@ void DQMHistogramPedeNoise::save(const std::string& outFile)
 {
     TFile output(outFile.data(), "RECREATE");
     //@TMP
-    TCanvas *c1 = new TCanvas();
-    for(auto board : fDetectorValidationHistograms)
+    TCanvas *cValidation = new TCanvas();
+
+    for(auto board : fDetectorStructure)
     {
         for(auto module: *board)
         {
-            c1->Divide(module->size());
+            cValidation->Divide(module->size());
             int padId = 1;
             for(auto chip: *module)
             {
-                c1->cd(padId++);
-                TH1F *chipHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
+                cValidation->cd(padId++);
+                TH1F *chipValidationHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
                     fDetectorValidationHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
                     )->theSummary_.fTheHistogram;
                 std::string cHistname = Form ( "Fe%dCBC%d_Occupancy", module->getId(), chip->getId() );
-                chipHistogram->SetNameTitle(cHistname.data(), cHistname.data());
-                chipHistogram->Write();
-                chipHistogram->Draw();
+                chipValidationHistogram->SetNameTitle(cHistname.data(), cHistname.data());
+                chipValidationHistogram->Write();
+                chipValidationHistogram->Draw();
             }
         }
     }
 
-    c1->Write();
+    TCanvas *cPedeNoise = new TCanvas();
+
+    for(auto board : fDetectorStructure)
+    {
+        for(auto module: *board)
+        {
+            cPedeNoise->Divide(module->size(),2);
+            int padId = 1;
+            for(auto chip: *module)
+            {
+                cPedeNoise->cd(padId++);
+                TH1F *chipPedestalHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
+                    fDetectorPedestalHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
+                    )->theSummary_.fTheHistogram;
+
+                std::string cHistname = Form ( "Fe%dCBC%d_Pedestal", module->getId(), chip->getId() );
+                chipPedestalHistogram->SetNameTitle(cHistname.data(), cHistname.data());
+                chipPedestalHistogram->Write();
+                chipPedestalHistogram->Draw();
+
+                cPedeNoise->cd(padId++);
+                TH1F *chipNoiseHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
+                    fDetectorNoiseHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
+                    )->theSummary_.fTheHistogram;
+
+                cHistname = Form ( "Fe%dCBC%d_Noise", module->getId(), chip->getId() );
+                chipNoiseHistogram->SetNameTitle(cHistname.data(), cHistname.data());
+                chipNoiseHistogram->Write();
+                chipNoiseHistogram->Draw();
+
+
+            }
+        }
+    }
+
+    cValidation->Write();
+    cPedeNoise->Write();
     //delete c1;
     //output.Close();
 }

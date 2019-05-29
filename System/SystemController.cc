@@ -137,7 +137,7 @@ namespace Ph2_System {
         if(streamData)
         {
             fNetworkStreamer = new TCPNetworkServer(6000);
-            fNetworkStreamer->startAccept();
+            //fNetworkStreamer->startAccept();
 //            if(!fNetworkStreamer->acceptClient(10, 0))
 //            {
 //                std::cout << "NOBODY IS LISTENING FOR MY OCCUPANCY DATA!!!!!!!! CRASHING!" << std::endl;

@@ -162,34 +162,34 @@ int main ( int argc, char* argv[] )
 		exit(0);
 	}
 	//usleep(10000000);
-//	std::cout << "forking dqm" << std::endl;
-//	dqmControllerPid = fork();
-//	if (dqmControllerPid == -1)// pid == -1 means error occured
-//	{
-//		LOG (ERROR) << "Can't fork DQMHistogrammer, error occured";
-//		exit(EXIT_FAILURE);
-//	}
-//
-//	else if (dqmControllerPid == 0)// pid == 0 means child process created
-//	{
-//		char * argv[] = {"DQMController", NULL};
-//		execv((binDir + "DQMController").c_str(),NULL);
-//		LOG (ERROR) << "Can't run DQMController, error occured";
-//		exit(EXIT_FAILURE);
-//	}
-//
-//	// a positive number is returned for the pid of
-//	// parent process
-//	// getppid() returns process id of parent of
-//	// calling process
-//	printf("Parent process, pid = %u\n",getppid());
+	//	std::cout << "forking dqm" << std::endl;
+	//	dqmControllerPid = fork();
+	//	if (dqmControllerPid == -1)// pid == -1 means error occured
+	//	{
+	//		LOG (ERROR) << "Can't fork DQMHistogrammer, error occured";
+	//		exit(EXIT_FAILURE);
+	//	}
+	//
+	//	else if (dqmControllerPid == 0)// pid == 0 means child process created
+	//	{
+	//		char * argv[] = {"DQMController", NULL};
+	//		execv((binDir + "DQMController").c_str(),NULL);
+	//		LOG (ERROR) << "Can't run DQMController, error occured";
+	//		exit(EXIT_FAILURE);
+	//	}
+	//
+	//	// a positive number is returned for the pid of
+	//	// parent process
+	//	// getppid() returns process id of parent of
+	//	// calling process
+	//	printf("Parent process, pid = %u\n",getppid());
 
 	struct sigaction act;
-    act.sa_handler = interruptHandler;
-    sigaction(SIGINT, &act, NULL);
+	act.sa_handler = interruptHandler;
+	sigaction(SIGINT, &act, NULL);
 
 	enum{INITIAL,HALTED,CONFIGURED,RUNNING,STOPPED};
-    int stateMachineStatus = INITIAL;
+	int stateMachineStatus = INITIAL;
 	MiddlewareInterface theMiddlewareInterface("127.0.0.1",5000);
 	theMiddlewareInterface.initialize();
 
@@ -209,7 +209,7 @@ int main ( int argc, char* argv[] )
 
 	stateMachineStatus = HALTED;
 
-    //int runControllerPidStatus = 0;
+	//int runControllerPidStatus = 0;
 	//int dqmControllerPidStatus = 0;
 	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
 	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
@@ -222,67 +222,71 @@ int main ( int argc, char* argv[] )
 	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
 	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
 	std::cout << __PRETTY_FUNCTION__ << "runControllerPid: " <<  runControllerPid << std::endl;
-    bool done = false;
+	bool done = false;
 	while(!done)
-    {
+	{
 		if(runControllerPidStatus == 0 && (runControllerPidStatus = waitpid(runControllerPid, &runControllerStatus, WNOHANG)) != 0)
 		{
 			std::cout << __PRETTY_FUNCTION__ << "1Run Controller status: " << runControllerStatus << std::endl;
 			if(!checkExitStatus(runControllerStatus,"RunController"))
-	    		exit(EXIT_FAILURE);
+				exit(EXIT_FAILURE);
 
 		}
-//		if(dqmControllerPidStatus == 0 && (dqmControllerPidStatus = waitpid(dqmControllerPid, &dqmControllerStatus, WNOHANG)) != 0)
-//		{
-//			if(!checkExitStatus(dqmControllerStatus,"DQMController"))
-//			{
-//	    		kill(runControllerPid,SIGKILL);
-//	    		exit(EXIT_FAILURE);
-//			}
-//
-//		}
-//    	if(runControllerPidStatus != 0)// && dqmControllerPidStatus != 0)
-//    	{
-//    		std::cout << __PRETTY_FUNCTION__ << "3Run Controller pid status: " << runControllerPidStatus << std::endl;
-//    		done = true;
-//    	}
-    	else
-    	{
-    		std::cout << __PRETTY_FUNCTION__ << "3Run Controller status: " << runControllerStatus << std::endl;
-    		switch(stateMachineStatus)
-    		{
-    		case HALTED:
-        		std::cout << __PRETTY_FUNCTION__ << "Sending Configure!!!" << std::endl;
-    			theMiddlewareInterface.configure(cmd.optionValue("calibration"), baseDir + cmd.optionValue("file"));
-    			theDQMInterface.configure();
+		//		if(dqmControllerPidStatus == 0 && (dqmControllerPidStatus = waitpid(dqmControllerPid, &dqmControllerStatus, WNOHANG)) != 0)
+		//		{
+		//			if(!checkExitStatus(dqmControllerStatus,"DQMController"))
+		//			{
+		//	    		kill(runControllerPid,SIGKILL);
+		//	    		exit(EXIT_FAILURE);
+		//			}
+		//
+		//		}
+		//    	if(runControllerPidStatus != 0)// && dqmControllerPidStatus != 0)
+		//    	{
+		//    		std::cout << __PRETTY_FUNCTION__ << "3Run Controller pid status: " << runControllerPidStatus << std::endl;
+		//    		done = true;
+		//    	}
+		else
+		{
+			std::cout << __PRETTY_FUNCTION__ << "Supervisor Run Controller status: " << runControllerStatus << std::endl;
+			switch(stateMachineStatus)
+			{
+			case HALTED:
+				std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
+				theMiddlewareInterface.configure(cmd.optionValue("calibration"), baseDir + cmd.optionValue("file"));
+				theDQMInterface.configure();
 				stateMachineStatus = CONFIGURED;
 				break;
 			case CONFIGURED:
-	    		std::cout << __PRETTY_FUNCTION__ << "Sending Start!!!" << std::endl;
-    			theDQMInterface.startProcessingData("5");
+				std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;
+				theDQMInterface.startProcessingData("5");
 				theMiddlewareInterface.start("5");
 				stateMachineStatus = RUNNING;
 				break;
 			case RUNNING:
-	    		std::cout << __PRETTY_FUNCTION__ << "Sending Stop!!!" << std::endl;
+				std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
 				theMiddlewareInterface.stop();
-    			theDQMInterface.stopProcessingData();
+				theDQMInterface.stopProcessingData();
 				stateMachineStatus = STOPPED;
 				break;
 			case STOPPED:
+				std::cout << __PRETTY_FUNCTION__ << "Supervisor Everything Stoped!!! Exiting..." << std::endl;
 				done = true;
 				break;
-    		}
-			std::cout << __PRETTY_FUNCTION__ << "SLEEPING!!!" << std::endl;
-    		if(!done) usleep(1000000);
-    	}
+			}
+			if(!done)
+			{
+				std::cout << __PRETTY_FUNCTION__ << "Supervisor SLEEPING!!!" << std::endl;
+				usleep(1000000);
+			}
+		}
 
 	}
-	std::cout << __PRETTY_FUNCTION__ << "4Run Controller status: " << runControllerStatus << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "Out of supervisor state machine!. Run Controller status: " << runControllerStatus << std::endl;
 	checkExitStatus(runControllerStatus,"RunController");
 	//checkExitStatus(dqmControllerStatus,"DQMController");
 
-    theApp.Run();
+	theApp.Run();
 
 	return EXIT_SUCCESS;
 }

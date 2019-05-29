@@ -19,7 +19,6 @@ Calibration::Calibration() :
 
 Calibration::~Calibration()
 {
-    delete fChannelGroupHandler;
     // delete fOffsetCanvas;
     // delete fOccupancyCanvas;
 }
@@ -28,9 +27,14 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 {
     fDisableStubLogic = pDisableStubLogic;
     // Initialize the TestGroups
+
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
+    // This new it is dangerous since it may cause a memory leak!!! Please handle it //
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
     fChannelGroupHandler = new CBCChannelGroupHandler();
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
-    this->MakeTestGroups(FrontEndType::CBC3);
     this->fAllChan = pAllChan;
     
     // now read the settings from the map

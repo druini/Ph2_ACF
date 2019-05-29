@@ -1,6 +1,7 @@
 #ifndef _ots_TCPNetworkClient_h_
 #define _ots_TCPNetworkClient_h_
 
+#include "../Utils/TCPSocket.h"
 #include <vector>
 #include <string>
 #include <netinet/in.h>
@@ -9,18 +10,18 @@
 //namespace ots
 //{
 
-class TCPNetworkClient
+class TCPNetworkClient : TCPDataSocket
 {
 public:
 
-	TCPNetworkClient();
+	//TCPNetworkClient();
 	TCPNetworkClient(const std::string& serverIP, int serverPort);
 	virtual ~TCPNetworkClient(void);
 
 	void setupServerInfo  (std::string serverIP, int serverPort);
 	int  connectClient    (std::string serverIP="", int serverPort=-1);
 	void closeConnection  (void);
-	bool isConnected      (void) { return fdClientSocket_ > 0; };
+	bool isConnected      (void) { return getSocketId() > 0; };
 
 	int  send             (const uint8_t* buffer, size_t size);
 	int  send             (const std::string& buffer);
@@ -46,7 +47,6 @@ protected:
 
 	std::string           serverIP_;
 	int	                  serverPort_;
-	int                   fdClientSocket_;
 
 	//unused. where is it needed?
 	mutable std::mutex    socketMutex_;
