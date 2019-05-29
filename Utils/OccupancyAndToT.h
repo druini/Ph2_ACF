@@ -35,8 +35,8 @@ class OccupancyAndToT
   
   float fOccupancy;
   float fOccupancyError;
+
   float fToT;
-  float fToT2;
   float fToTError;
 };
 
@@ -46,17 +46,18 @@ inline void OccupancyAndToT::makeAverage<OccupancyAndToT> (const ChipContainer* 
   for (const auto occupancy : *theChipContainer->getChannelContainer<ChannelContainer<OccupancyAndToT>>())
     {
       fOccupancy += occupancy.fOccupancy;
+
       fToT       += occupancy.fToT;
-      fToT2      += fToT*fToT;
+      fToTError  += occupancy.fToTError*occupancy.fToTError;
     }
 
   int numberOfEnabledChannels = cTestChannelGroup->getNumberOfEnabledChannels(chipOriginalMask);
 
-  fOccupancy     /= float(numberOfEnabledChannels);
-  fOccupancyError = sqrt(float(fOccupancy * (1. - fOccupancy) / numberOfEvents));
-
-  fToT           /= float(numberOfEnabledChannels);
-  fToTError       = sqrt((fToT2 / float(numberOfEnabledChannels) - fToT*fToT) * float(numberOfEnabledChannels) / (float(numberOfEnabledChannels)-1));
+  fOccupancy     /= numberOfEnabledChannels;
+  fOccupancyError = sqrt(fOccupancy * (1. - fOccupancy) / numberOfEvents);
+  
+  fToT           /= numberOfEnabledChannels;
+  fToTError      /= sqrt(fToTError / numberOfEnabledChannels);
 }
 
 #endif

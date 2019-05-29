@@ -1,15 +1,15 @@
 /*!
-  \file                  RD53SCurve.cc
-  \brief                 Implementaion of SCurve scan
+  \file                  RD53Gain.cc
+  \brief                 Implementaion of Gain scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "RD53SCurve.h"
+#include "RD53Gain.h"
 
-SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t nTrgs, float startValue, float stopValue, size_t nSteps) :
+Gain::Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t nTrgs, float startValue, float stopValue, size_t nSteps) :
   fileName(fName),
   rowStart(rStart),
   rowEnd(rEnd),
@@ -57,37 +57,37 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   for (auto i = 0; i < NHISTO; i++)
     {
       myString << "theOccupancy_" << i;
-      theOccupancy.push_back(new TH2F(myString.str().c_str(),"SCurve",nSteps,startValue,stopValue,nEvents*1.1,0,1.1));
+      theOccupancy.push_back(new TH2F(myString.str().c_str(),"Gain",nSteps,startValue,stopValue,nEvents*161./160,0,16.1));
       theOccupancy.back()->SetXTitle("VCal");
-      theOccupancy.back()->SetYTitle("Efficiency");
+      theOccupancy.back()->SetYTitle("ToT");
     }
 
-  theNoise1D = new TH1F("theNoise1D","Noise-1D",100,0,100);
-  theNoise1D->SetXTitle("VCal");
-  theNoise1D->SetYTitle("Entries");
+  theGain1D = new TH1F("theGain1D","Gain-1D",100,0,100);
+  theGain1D->SetXTitle("Gain");
+  theGain1D->SetYTitle("Entries");
 
-  theThreshold1D = new TH1F("theThreshold1D","Threshold-1D",1000,0,1000);
-  theThreshold1D->SetXTitle("VCal");
-  theThreshold1D->SetYTitle("Entries");
+  theIntercept1D = new TH1F("theIntercept1D","Intercept-1D",1000,0,1000);
+  theIntercept1D->SetXTitle("ToT");
+  theIntercept1D->SetYTitle("Entries");
 
-  theNoise2D = new TH2F("theNoise2D","Noise-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
-  theNoise2D->SetXTitle("Columns");
-  theNoise2D->SetYTitle("Rows");
+  theGain2D = new TH2F("theGain2D","Gain-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
+  theGain2D->SetXTitle("Columns");
+  theGain2D->SetYTitle("Rows");
 
-  theThreshold2D = new TH2F("theThreshold","Threshold-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
-  theThreshold2D->SetXTitle("Columns");
-  theThreshold2D->SetYTitle("Rows");
+  theIntercept2D = new TH2F("theThreshold","Intercept-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
+  theIntercept2D->SetXTitle("Columns");
+  theIntercept2D->SetYTitle("Rows");
 
-  theFile       = new TFile(fileName, "RECREATE");
-  theCanvas     = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
+  theFile     = new TFile(fileName, "RECREATE");
+  theCanvas   = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
   theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
-  theCanvasTh1D = new TCanvas("theCanvasTh1D","RD53Canvas",0,0,700,500);
-  theCanvasNo1D = new TCanvas("theCanvasNo1D","RD53Canvas",0,0,700,500);
-  theCanvasTh2D = new TCanvas("theCanvasTh2D","RD53Canvas",0,0,700,500);
-  theCanvasNo2D = new TCanvas("theCanvasNo2D","RD53Canvas",0,0,700,500);
+  theCanvasGa1D = new TCanvas("theCanvasGa1D","RD53Canvas",0,0,700,500);
+  theCanvasIn1D = new TCanvas("theCanvasIn1D","RD53Canvas",0,0,700,500);
+  theCanvasGa2D = new TCanvas("theCanvasGa2D","RD53Canvas",0,0,700,500);
+  theCanvasIn2D = new TCanvas("theCanvasIn2D","RD53Canvas",0,0,700,500);
 }
 
-SCurve::~SCurve()
+Gain::~Gain()
 {
   theFile->Close();
   
@@ -97,23 +97,23 @@ SCurve::~SCurve()
   for (size_t i = 0; i < theOccupancy.size(); i++)
     delete theOccupancy[i];
 
-  delete theCanvasNo1D;
-  delete theNoise1D;
+  delete theCanvasGa1D;
+  delete theGain1D;
 
-  delete theCanvasTh1D;
-  delete theThreshold1D;
+  delete theCanvasIn1D;
+  delete theIntercept1D;
 
-  delete theCanvasNo2D;
-  delete theNoise2D;
+  delete theCanvasGa2D;
+  delete theGain2D;
 
-  delete theCanvasTh2D;
-  delete theThreshold2D;
+  delete theCanvasIn2D;
+  delete theIntercept2D;
 
   for (auto i = 0; i < detectorContainerVector.size(); i++)
     delete detectorContainerVector[i];
 }
 
-void SCurve::Run()
+void Gain::Run()
 {
   ContainerFactory theDetectorFactory;
 
@@ -149,7 +149,7 @@ void SCurve::Run()
       }
 }
 
-void SCurve::Display()
+void Gain::Display()
 {
   for (size_t i = 0; i < theOccupancy.size(); i++)
     {
@@ -160,28 +160,44 @@ void SCurve::Display()
   theCanvas->Modified();
   theCanvas->Update();
 
-  theCanvasTh1D->cd();
-  theThreshold1D->Draw();
-  theCanvasTh1D->Modified();
-  theCanvasTh1D->Update();
+  theCanvasIn1D->cd();
+  theIntercept1D->Draw();
+  theCanvasIn1D->Modified();
+  theCanvasIn1D->Update();
 
-  theCanvasNo1D->cd();
-  theNoise1D->Draw();
-  theCanvasNo1D->Modified();
-  theCanvasNo1D->Update();
+  theCanvasGa1D->cd();
+  theGain1D->Draw();
+  theCanvasGa1D->Modified();
+  theCanvasGa1D->Update();
 
-  theCanvasTh2D->cd();
-  theThreshold2D->Draw();
-  theCanvasTh2D->Modified();
-  theCanvasTh2D->Update();
+  theCanvasIn2D->cd();
+  theIntercept2D->Draw();
+  theCanvasIn2D->Modified();
+  theCanvasIn2D->Update();
 
-  theCanvasNo2D->cd();
-  theNoise2D->Draw();
-  theCanvasNo2D->Modified();
-  theCanvasNo2D->Update();
+  theCanvasGa2D->cd();
+  theGain2D->Draw();
+  theCanvasGa2D->Modified();
+  theCanvasGa2D->Update();
 }
 
-void SCurve::Analyze()
+void Gain::Save()
+{
+  theCanvas->Write();
+  theCanvasGa1D->Write();
+  theCanvasIn1D->Write();
+  theCanvasGa2D->Write();
+  theCanvasIn2D->Write();
+  theFile->Write();
+
+  theCanvas->Print("Gain.png");
+  theCanvasGa1D->Print("Gain1D.png");
+  theCanvasIn1D->Print("InterceptD.png");
+  theCanvasGa2D->Print("Gain2D.png");
+  theCanvasIn2D->Print("Intercept2D.png");
+}
+
+void Gain::Analyze()
 {
   double mean, rms;
   std::vector<double> measurements;
@@ -196,35 +212,19 @@ void SCurve::Analyze()
 	      measurements.clear();
 
 	      for (auto i = 0; i < dacList.size()-1; i++)
-		measurements.push_back((detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy - 
-					detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy)/nTriggers);
-	      
+		measurements.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy - 
+				       detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+
 	      this->ComputeStats(measurements,mean,rms);
 
-	      theThreshold1D->Fill(mean);
-	      theNoise1D->Fill(rms);
-	      theThreshold2D->SetBinContent(col+1,row+1,mean);
-	      theNoise2D->SetBinContent(col+1,row+1,rms);
+	      theIntercept1D->Fill(mean);
+	      theGain1D->Fill(rms);
+	      theIntercept2D->SetBinContent(col+1,row+1,mean);
+	      theGain2D->SetBinContent(col+1,row+1,rms);
 	    }
 }
 
-void SCurve::Save()
-{
-  theCanvas->Write();
-  theCanvasTh1D->Write();
-  theCanvasNo1D->Write();
-  theCanvasTh2D->Write();
-  theCanvasNo2D->Write();
-  theFile->Write();
-
-  theCanvas->Print("SCurve.png");
-  theCanvasTh1D->Print("SCurveTh1D.png");
-  theCanvasNo1D->Print("SCurveNo1D.png");
-  theCanvasTh2D->Print("SCurveTh2D.png");
-  theCanvasNo2D->Print("SCurveNo2D.png");
-}
-
-void SCurve::ComputeStats(std::vector<double>& measurements, double& mean, double& rms)
+void Gain::ComputeStats(std::vector<double>& measurements, double& mean, double& rms)
 {
   double mean2  = 0;
   double weight = 0;

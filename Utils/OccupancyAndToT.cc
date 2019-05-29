@@ -20,27 +20,29 @@ void OccupancyAndToT::makeAverage (const std::vector<OccupancyAndToT>* theOccupa
     }
 
   float totalNumberOfEnableChannels = 0;
+
   for (size_t iContainer = 0; iContainer<theOccupancyVector->size(); iContainer++)
     {
-      fOccupancy                  += theOccupancyVector->at(iContainer).fOccupancy * float(theNumberOfEnabledChannelsList[iContainer]);
-      totalNumberOfEnableChannels += theNumberOfEnabledChannelsList[iContainer];
+      fOccupancy                  += theOccupancyVector->at(iContainer).fOccupancy * theNumberOfEnabledChannelsList[iContainer];
 
-      fToT                        += theOccupancyVector->at(iContainer).fToT * float(theNumberOfEnabledChannelsList[iContainer]);
-      fToT2                       += theOccupancyVector->at(iContainer).fToT * theOccupancyVector->at(iContainer).fToT * float(theNumberOfEnabledChannelsList[iContainer]);
+      fToT                        += theOccupancyVector->at(iContainer).fToT * theNumberOfEnabledChannelsList[iContainer];
+      fToTError                   += theOccupancyVector->at(iContainer).fToTError * theOccupancyVector->at(iContainer).fToTError * theNumberOfEnabledChannelsList[iContainer];
+
+      totalNumberOfEnableChannels += theNumberOfEnabledChannelsList[iContainer];
     }
 
-  fOccupancy     /= float(totalNumberOfEnableChannels);
-  fOccupancyError = sqrt(float(fOccupancy * (1. - fOccupancy) / numberOfEvents));
+  fOccupancy     /= totalNumberOfEnableChannels;
+  fOccupancyError = sqrt(fOccupancy * (1. - fOccupancy) / numberOfEvents);
 
-  fToT           /= float(totalNumberOfEnableChannels);
-  fToTError       = sqrt((fToT2 / float(totalNumberOfEnableChannels) - fToT*fToT) * float(totalNumberOfEnableChannels) / (float(totalNumberOfEnableChannels)-1));
+  fToT           /= totalNumberOfEnableChannels;
+  fToTError      /= sqrt(fToTError / totalNumberOfEnableChannels);
 }
 
 void OccupancyAndToT::normalize (const uint16_t numberOfEvents)
 {
-  fOccupancy     /= float(numberOfEvents);
-  fOccupancyError = sqrt(float(fOccupancy * (1. - fOccupancy) / numberOfEvents));
+  fOccupancy     /= numberOfEvents;
+  fOccupancyError = sqrt(fOccupancy * (1. - fOccupancy) / numberOfEvents);
 
-  fToT           /= float(numberOfEvents);
-  fToTError       = sqrt((fToT2 / float(numberOfEvents) - fToT*fToT) * float(numberOfEvents) / (float(numberOfEvents)-1));
+  fToT           /= numberOfEvents;
+  fToTError       = sqrt((fToTError / numberOfEvents - fToT*fToT) * numberOfEvents / (numberOfEvents-1));
 }

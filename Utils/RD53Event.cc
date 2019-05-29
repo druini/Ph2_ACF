@@ -50,10 +50,11 @@ namespace Ph2_HwInterface
 	      if (cTestChannelGroup->isChannelEnabled(row,col))
 		{
 		  size_t ToT;
-		  if (this->isThereAnHit(module->getId(),chip->getId(),row,col,ToT) == true);
+		  if (this->isThereAnHit(module->getId(),chip->getId(),row,col,ToT) == true)
 		  {
 		    chip->getChannel<OccupancyAndToT>(row,col).fOccupancy++;
-		    chip->getChannel<OccupancyAndToT>(row,col).fToT      += (float)ToT;
+		    chip->getChannel<OccupancyAndToT>(row,col).fToT      += float(ToT);
+		    chip->getChannel<OccupancyAndToT>(row,col).fToTError += float(ToT*ToT);
 		  }
 		}
 	    }

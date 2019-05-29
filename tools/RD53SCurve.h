@@ -33,13 +33,13 @@ using namespace Ph2_System;
 class SCurve : public Tool
 {
  public:
-  SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nTrig, float startValue, float stopValue, size_t nSteps);
+  SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t nTrgs, float startValue, float stopValue, size_t nSteps);
   ~SCurve();
 
   void Run();
   void Display();
-  void Save();
   void Analyze();
+  void Save();
 
  private:
   const char* fileName;
@@ -48,6 +48,7 @@ class SCurve : public Tool
   size_t colStart;
   size_t colEnd;
   size_t nPixels2Inj;
+  size_t nEvents;
   size_t nTriggers;
 
   float  startValue;
@@ -64,11 +65,15 @@ class SCurve : public Tool
 
   TFile*   theFile;
   TCanvas* theCanvas;
-  TCanvas* theCanvasTh;
-  TCanvas* theCanvasNo;
+  TCanvas* theCanvasTh1D;
+  TCanvas* theCanvasNo1D;
+  TCanvas* theCanvasTh2D;
+  TCanvas* theCanvasNo2D;
   std::vector<TH2F*> theOccupancy;
-  TH1F* theNoise;
-  TH1F* theThreshold;
+  TH1F* theNoise1D;
+  TH1F* theThreshold1D;
+  TH2F* theNoise2D;
+  TH2F* theThreshold2D;
 };
 
 #endif

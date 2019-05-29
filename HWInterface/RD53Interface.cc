@@ -151,6 +151,7 @@ namespace Ph2_HwInterface
 
     // fBoardFW->SerializeSymbols (symbols,serialSymbols);
     fBoardFW->WriteChipCommand (serialSymbols);
+    if ((strcmp(pRegNode.c_str(),"VCAL_HIGH") == 0) || (strcmp(pRegNode.c_str(),"VCAL_MED") == 0)) usleep(SHALLOWSLEEP);
     return true;
   }
 
@@ -217,7 +218,7 @@ namespace Ph2_HwInterface
     outputDecoded = fBoardFW->ReadChipRegisters (serialSymbols);
 
     for (auto i = 0; i < outputDecoded.first.size(); i++)
-      // Removing bit for PIX_PORTAL reading
+      // Removing bit related to PIX_PORTAL register identification
       outputDecoded.first[i] = outputDecoded.first[i] & static_cast<uint16_t>(RD53::SetBits<NBIT_ADDR>(NBIT_ADDR).to_ulong());
 
     return outputDecoded;
@@ -253,11 +254,8 @@ namespace Ph2_HwInterface
     // @TMP@
     if (defaultT_currentF == true)
       {
-	this->WriteChipReg(pRD53, "PIX_MODE", 0x2F, pVerifLoop);
-	this->WriteChipReg(pRD53, "REGION_COL", 0x0, pVerifLoop);
-	this->WriteChipReg(pRD53, "REGION_ROW", 0x0, pVerifLoop);
-	for (auto row = 0; row < RD53::nRows; row++)
-	  this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0, pVerifLoop);
+	this->WriteChipReg(pRD53, "PIX_MODE", 0x27, pVerifLoop);
+	this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0, pVerifLoop);
       }
     else
       {

@@ -1,14 +1,14 @@
 /*!
-  \file                  RD53PixelAlive.h
-  \brief                 Implementaion of PixelAlive scan
+  \file                  RD53Gain.h
+  \brief                 Implementaion of Gain scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53PixelAlive_h_
-#define _RD53PixelAlive_h_
+#ifndef _RD53Gain_h_
+#define _RD53Gain_h_
 
 #include "../Utils/Container.h"
 #include "../Utils/OccupancyAndToT.h"
@@ -27,19 +27,20 @@
 
 using namespace Ph2_System;
 
-// #########################
-// # PixelAlive test suite #
-// #########################
-class PixelAlive : public Tool
+// ##########################
+// # Gain measurement suite #
+// ##########################
+class Gain : public Tool
 {
  public:
-  PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t nTrgs, bool inject);
-  ~PixelAlive();
+  Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t nTrgs, float startValue, float stopValue, size_t nSteps);
+  ~Gain();
 
   void Run();
   void Display();
+  void Analyze();
   void Save();
-  
+
  private:
   const char* fileName;
   size_t rowStart;
@@ -49,15 +50,30 @@ class PixelAlive : public Tool
   size_t nPixels2Inj;
   size_t nEvents;
   size_t nTriggers;
-  
-  bool inject;
+
+  float  startValue;
+  float  stopValue;
+  size_t nSteps;
+
+  std::vector<uint16_t> dacList;
 
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
-  
+  std::vector<DetectorContainer*> detectorContainerVector;
+
+  void ComputeStats(std::vector<double>& measurements, double& mean, double& rms);
+
   TFile*   theFile;
   TCanvas* theCanvas;
+  TCanvas* theCanvasGa1D;
+  TCanvas* theCanvasIn1D;
+  TCanvas* theCanvasGa2D;
+  TCanvas* theCanvasIn2D;
   std::vector<TH2F*> theOccupancy;
+  TH1F* theGain1D;
+  TH1F* theIntercept1D;
+  TH2F* theGain2D;
+  TH2F* theIntercept2D;
 };
 
 #endif

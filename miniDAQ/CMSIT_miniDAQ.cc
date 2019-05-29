@@ -11,6 +11,7 @@
 #include "../Utils/argvparser.h"
 #include "../tools/RD53PixelAlive.h"
 #include "../tools/RD53SCurve.h"
+#include "../tools/RD53Gain.h"
 
 
 // ##################
@@ -19,14 +20,14 @@
 #define NEVENTS  10
 #define RUNNUMBER 0
 
-#define NTRIGxL1A 31
+#define NTRIGxL1A 7
 #define INJTYPE "Analog"
 
-#define ROWSTART    50//0
-#define ROWSTOP   67//191
+#define ROWSTART  50//0
+#define ROWSTOP   73//191
 #define COLSTART  128
-#define COLSTOP   143//263
-#define NPIXELINJ 16//200
+#define COLSTOP   151//263
+#define NPIXELINJ  24//68
 
 #define LATENCY_START 0
 #define LATENCY_STOP 50
@@ -67,9 +68,9 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, st
       RD53::CalCmd calcmd_second(0,0,0,0,0);
       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
       
-      cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =   32;
-      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =    0;
-      cfgFastCmd.fast_cmd_fsm.delay_loop             =  512;
+      cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  32;
+      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =   0;
+      cfgFastCmd.fast_cmd_fsm.delay_loop             = 512;
       
       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
       cfgFastCmd.fast_cmd_fsm.second_cal_en = false;
@@ -85,9 +86,9 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, st
       RD53::CalCmd calcmd_second(0,0,1,0,0);
       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
       
-      cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =   16;
-      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =   16;
-      cfgFastCmd.fast_cmd_fsm.delay_loop             =  512;
+      cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  16;
+      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  16;
+      cfgFastCmd.fast_cmd_fsm.delay_loop             = 512;
 
       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
       cfgFastCmd.fast_cmd_fsm.second_cal_en = true;
@@ -289,7 +290,7 @@ int main (int argc, char** argv)
       // ##################
       LOG(INFO) << BOLDYELLOW << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-      PixelAlive pa("PixelAlive.root",ROWSTART,ROWSTOP,COLSTART,COLSTOP,NPIXELINJ,nEvents,true);
+      PixelAlive pa("PixelAlive.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, NTRIGxL1A+1, true);
       pa.Inherit(&cSystemController);
       pa.Run();
       pa.Display();
@@ -302,10 +303,10 @@ int main (int argc, char** argv)
       // ##############
       LOG(INFO) << BOLDYELLOW << "@@@ Performing SCurve scan @@@" << RESET;
 
-      SCurve sc("SCurve.root",ROWSTART,ROWSTOP,COLSTART,COLSTOP,NPIXELINJ,nEvents,VCAL_START,VCAL_STOP,VCAL_NSTEPS);
+      SCurve sc("SCurve.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, NTRIGxL1A+1, VCAL_START, VCAL_STOP, VCAL_NSTEPS);
       sc.Inherit(&cSystemController);
       sc.Run();
-      sc.Analyze();
+      // sc.Analyze();
       sc.Display();
       sc.Save();
     }
@@ -314,7 +315,10 @@ int main (int argc, char** argv)
       // ############
       // # Run Gain #
       // ############
-      LOG(INFO) << BOLDRED << "@@@ Gain scan not implemented yet ... coming soon @@@" << RESET;
+      LOG(INFO) << BOLDYELLOW << "@@@ Performing Gain scan @@@" << RESET;
+
+      Gain ga("Gain.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, NTRIGxL1A+1, VCAL_START, VCAL_STOP, VCAL_NSTEPS);
+      ga.Inherit(&cSystemController);
     }
   else if (whichCalib == "gainopt")
     {
