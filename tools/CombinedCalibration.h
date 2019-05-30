@@ -62,20 +62,22 @@ public:
 
 void privateStart(int currentRun, CombinedCalibration<> calList) 
 {
-    std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Private Starting Empty !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    std::cout << __PRETTY_FUNCTION__ <<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Private Starting Empty !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
 }
 
 template<typename T, typename... Rest >
 void privateStart(int currentRun, CombinedCalibration<T, Rest...> calList)
 {
-    std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Private Starting !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-    std::cout<<calList.toolPointer<<std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Private Starting !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    std::cout << __PRETTY_FUNCTION__ << calList.toolPointer<<std::endl;
     calList.calibrationHead.Inherit(calList.toolPointer);
     calList.calibrationHead.Start(currentRun);
     calList.calibrationHead.writeObjects( );
-    std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! The Rest !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    calList.calibrationHead.resetPointers();
+    std::cout << __PRETTY_FUNCTION__ <<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! The Rest !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
     calList.calibrationTail.toolPointer = calList.toolPointer;
     privateStart(currentRun,calList.calibrationTail);
+    std::cout << __PRETTY_FUNCTION__ <<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Done with the rest !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
 }
 
 

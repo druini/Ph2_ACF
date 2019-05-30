@@ -67,7 +67,7 @@ public:
 		theSummary_ = summary.theSummary_;
 	}
 	~Summary() {;}
-	
+
 	void makeSummary(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) override
 	{
 		theSummary_.template makeAverage<C>(theChipContainer, chipOriginalMask, cTestChannelGroup, numberOfEvents);
@@ -84,14 +84,15 @@ public:
 	S theSummary_;
 };
 
-
 class BaseContainer
 {
 public:
 	BaseContainer(int id=-1) 
-: summary_(nullptr)
+: summary_                   (nullptr)
 , theNumberOfEnabledChannels_(-1)
-, id_(id){;}
+, id_                        (id)
+, index_                     (0)
+{;}
 	virtual ~BaseContainer()
 	{
 		if(summary_ != nullptr)
@@ -100,16 +101,21 @@ public:
 			summary_ = nullptr;
 		}
 	}
-	int getId(void) {return id_;}
-	virtual void initialize() {;}
+	virtual void initialize(void) {;}
+	int getId   (void) {return id_;}
+	int getIndex(void) {return index_;}
 	virtual uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) = 0;
-	virtual void cleanDataStored() = 0;
+	virtual void     cleanDataStored              (void) = 0;
+
+	void setIndex(int index) {index_ = index;}
 
 	SummaryBase *summary_;
 	uint32_t theNumberOfEnabledChannels_;
 
+
 private:
 	int id_;
+	int index_;
 };
 
 template <class T>
@@ -155,7 +161,7 @@ public:
 		for(auto container : *this) SummaryContainerList->emplace_back(container->summary_);
 		return SummaryContainerList;
 	}
-	
+
 	uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents)
 	{
 
@@ -187,6 +193,7 @@ public:
 protected:
 	virtual T* addObject(int objectId, T* object)
 	{
+		object->setIndex(this->size());
 		std::vector<T*>::push_back(object);
 		Container::idObjectMap_[objectId] = this->back();
 		return this->back();

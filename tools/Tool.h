@@ -75,7 +75,7 @@ class Tool : public SystemController
     std::map< int, std::vector<uint8_t> > fMaskForTestGroupChannelMap;
 
     std::string fDirectoryName;             /*< the Directoryname for the Root file with results */
-    TFile* fResultFile;                /*< the Name for the Root file with results */
+    TFile*      fResultFile;                /*< the Name for the Root file with results */
     std::string fResultFileName;
 #ifdef __HTTP__
     THttpServer* fHttpServer;
@@ -89,10 +89,11 @@ class Tool : public SystemController
     Tool (const Tool& pTool);
     ~Tool();
 
-    void Inherit (Tool* pTool);
-    void Inherit (SystemController* pSystemController);
-    void Destroy();
-    void SoftDestroy();
+    void Inherit      (Tool* pTool);
+    void Inherit      (SystemController* pSystemController);
+    void resetPointers();
+    void Destroy      ();
+    void SoftDestroy  ();
 
 
     void bookHistogram ( Chip* pChip, std::string pName, TObject* pObject );
@@ -133,7 +134,6 @@ class Tool : public SystemController
     //enable commissioning loops and Test Pulse
     void setFWTestPulse();
     // make test groups for everything Test pulse or Calibration
-    void MakeTestGroups (FrontEndType theFrontEndType);
     void SetTestAllChannels( bool pAllChan ) {fAllChan = pAllChan; }
     void SetTestPulse( bool pTestPulse ) {fTestPulse = pTestPulse; }
     void SetSkipMaskedChannels( bool pSkipMaskedChannels ) {fSkipMaskedChannels = pSkipMaskedChannels; }

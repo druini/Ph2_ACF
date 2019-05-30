@@ -20,8 +20,10 @@ class ThresholdAndNoise //: public streammable
 {
 public:
 	ThresholdAndNoise()
-	: fThreshold(0)
+    : fThreshold(0)
+	, fThresholdError(0)
     , fNoise(0)
+    , fNoiseError(0)
 	{;}
 	~ThresholdAndNoise(){;}
 	void print(void){ std::cout << fNoise << std::endl;}
@@ -31,10 +33,12 @@ public:
     
     void makeAverage(const std::vector<ThresholdAndNoise>* theThresholdAndNoiseVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents);
     
-    void normalize(const uint16_t numberOfEvents);
+    void normalize(const uint16_t numberOfEvents) {;}
     
     float  fThreshold;
-	float  fNoise;
+    float  fThresholdError;
+    float  fNoise;
+	float  fNoiseError;
 };
 
 
@@ -47,15 +51,22 @@ inline void ThresholdAndNoise::makeAverage<ThresholdAndNoise>(const ChipContaine
         {
             if(chipOriginalMask->isChannelEnabled(row,col) && cTestChannelGroup->isChannelEnabled(row,col))
             {
-                fNoise+=theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoise;
-                fThreshold+=theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThreshold;
+                fThreshold      += theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThreshold/(theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThresholdError*theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThresholdError);
+                fThresholdError += 1./(theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThresholdError*theChipContainer->getChannel<ThresholdAndNoise>(row,col).fThresholdError);
+                fNoise          += theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoise/(theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoiseError*theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoiseError);
+                fNoiseError     += 1./(theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoiseError*theChipContainer->getChannel<ThresholdAndNoise>(row,col).fNoiseError);
             }
         }
     }
     
-    int numberOfEnabledChannels = cTestChannelGroup->getNumberOfEnabledChannels(theChipContainer->getChipOriginalMask());
-    fNoise/=float(numberOfEnabledChannels);
-    fThreshold/=float(numberOfEnabledChannels);
+    fThresholdError= 1/fThresholdError;
+    fThreshold/=fThresholdError;
+    fThresholdError= sqrt(fThresholdError);
+
+    fNoiseError= 1/fNoiseError;
+    fNoise/=fNoiseError;
+    fNoiseError= sqrt(fNoiseError);
+ 
 }
 
 

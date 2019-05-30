@@ -13,7 +13,7 @@ class MiddlewareController: public TCPNetworkServer
 {
 public:
 
-	MiddlewareController(int serverPort, int bufferSize = 0x10000);
+	MiddlewareController(int serverPort);
 	virtual ~MiddlewareController(void);
 
 	std::string readMessage(const std::string& buffer);

@@ -113,9 +113,9 @@ int main ( int argc, char* argv[] )
     cCalibration.FindOffsets();
     cCalibration.writeObjects();
     cCalibration.dumpConfigFiles();
+    cCalibration.resetPointers();
     t.stop();
     t.show ( "Time to Calibrate the system: " );
-
     if (cNoiseScan)
     {
         t.start();
@@ -134,6 +134,7 @@ int main ( int argc, char* argv[] )
         cPedeNoise.Validate();
         cPedeNoise.writeObjects( );
         cPedeNoise.dumpConfigFiles();
+        cPedeNoise.resetPointers();
         t.stop();
         t.show ( "Time to Scan Pedestals and Noise" );
     }

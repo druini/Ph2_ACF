@@ -33,7 +33,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-
+class DetectorContainer;
 
 class PedeNoise : public Tool
 {
@@ -90,6 +90,7 @@ class PedeNoise : public Tool
     void differentiateHist (Chip* pCbc, std::string pHistName);
     void fitHist (Chip* pCbc, std::string pHistName);
     void processSCurves (std::string pHistName);
+    void extractPedeNoise ();
     void extractPedeNoise (std::string pHistName);
 
     // for validation
@@ -97,6 +98,9 @@ class PedeNoise : public Tool
     
     //helpers for SCurve measurement
     uint16_t findPedestal (bool forceAllChannels = false);
+
+    std::map<uint16_t, DetectorContainer*> fSCurveOccupancyMap;
+
 };
 
 
