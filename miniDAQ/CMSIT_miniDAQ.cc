@@ -20,11 +20,11 @@
 #define NEVENTS  10
 #define RUNNUMBER 0
 
-#define NTRIGxL1A 7
+#define NTRIGxL1A 31
 #define INJTYPE "Analog"
 
-#define ROWSTART  50//0
-#define ROWSTOP   73//191
+#define ROWSTART   50//0
+#define ROWSTOP    73//191
 #define COLSTART  128
 #define COLSTOP   151//263
 #define NPIXELINJ  24//68
@@ -34,7 +34,7 @@
 
 #define VCAL_START 350
 #define VCAL_STOP  750
-#define VCAL_NSTEPS 40
+#define VCAL_NSTEPS 80
 
 
 using namespace CommandLineProcessing;
@@ -319,6 +319,7 @@ int main (int argc, char** argv)
 
       Gain ga("Gain.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, VCAL_START, VCAL_STOP, VCAL_NSTEPS);
       ga.Inherit(&cSystemController);
+      LOG(INFO) << BOLDRED << "@@@ Gain not implemented yet ... coming soon @@@" << RESET;
     }
   else if (whichCalib == "gainopt")
     {

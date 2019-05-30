@@ -503,7 +503,7 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",1},
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",0}});
 
-    usleep(SHALLOWSLEEP);
+    usleep(SHALLOWSLEEP); // @TMP@
   }
 
   void FC7FWInterface::ChipReSync()

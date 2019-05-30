@@ -182,9 +182,8 @@ void SCurve::Display()
 
 void SCurve::Analyze()
 {
-  double mean, rms;
-  std::vector<double> measurements;
-  measurements.push_back(0);
+  float mean, rms;
+  std::vector<float> measurements;
 
   for (auto cBoard : fBoardVector)
     for (auto cFe : cBoard->fModuleVector)
@@ -193,6 +192,7 @@ void SCurve::Analyze()
 	  for (auto col = 0; col < RD53::nCols; col++)
 	    {
 	      measurements.clear();
+	      measurements.push_back(0);
 
 	      for (auto i = 0; i < dacList.size()-1; i++)
 		measurements.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy - 
@@ -200,10 +200,13 @@ void SCurve::Analyze()
 	      
 	      this->ComputeStats(measurements,mean,rms);
 
-	      theThreshold1D->Fill(mean);
-	      theNoise1D->Fill(rms);
-	      theThreshold2D->SetBinContent(col+1,row+1,mean);
-	      theNoise2D->SetBinContent(col+1,row+1,rms);
+	      if (rms != 0)
+		{
+		  theThreshold1D->Fill(mean);
+		  theNoise1D->Fill(rms);
+		  theThreshold2D->SetBinContent(col+1,row+1,mean);
+		  theNoise2D->SetBinContent(col+1,row+1,rms);
+		}
 	    }
 }
 
@@ -223,20 +226,28 @@ void SCurve::Save()
   theCanvasNo2D->Print("SCurveNo2D.png");
 }
 
-void SCurve::ComputeStats(std::vector<double>& measurements, double& mean, double& rms)
+void SCurve::ComputeStats(std::vector<float>& measurements, float& mean, float& rms)
 {
-  double mean2  = 0;
-  double weight = 0;
-  mean = 0;
+  float mean2  = 0;
+  float weight = 0;
+  mean         = 0;
 
   for (auto i = 0; i < dacList.size(); i++)
     {
-      mean   += dacList[i]*measurements[i];
+      mean   += measurements[i]*dacList[i];
       weight += measurements[i];
 
-      mean2 += dacList[i]*dacList[i]*measurements[i];
+      mean2  += measurements[i]*dacList[i]*dacList[i];
     }
 
-  mean /= weight;
-  rms   = sqrt((mean2/weight - mean*mean) * weight / (weight - 1./nEvents));
+  if (weight != 0)
+    {
+      mean /= weight;
+      rms   = sqrt((mean2/weight - mean*mean) * weight / (weight - 1./nEvents));
+    }
+  else
+    {
+      mean = 0;
+      rms  = 0;
+    }
 }

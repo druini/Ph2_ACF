@@ -60,7 +60,7 @@ class SCurve : public Tool
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
   std::vector<DetectorContainer*> detectorContainerVector;
 
-  void ComputeStats(std::vector<double>& measurements, double& mean, double& rms);
+  void ComputeStats(std::vector<float>& measurements, float& mean, float& rms);
 
   TFile*   theFile;
   TCanvas* theCanvas;
@@ -69,10 +69,10 @@ class SCurve : public Tool
   TCanvas* theCanvasTh2D;
   TCanvas* theCanvasNo2D;
   std::vector<TH2F*> theOccupancy;
-  TH1F* theNoise1D;
-  TH1F* theThreshold1D;
-  TH2F* theNoise2D;
-  TH2F* theThreshold2D;
+  TH1F*    theNoise1D;
+  TH1F*    theThreshold1D;
+  TH2F*    theNoise2D;
+  TH2F*    theThreshold2D;
 };
 
 #endif
