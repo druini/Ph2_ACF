@@ -29,7 +29,7 @@ INITIALIZE_EASYLOGGINGPP
 auto FindValue (const SystemController& sc, const char* name)
 {
   auto setting = sc.fSettingsMap.find(name);
-  return ((setting != std::end (sc.fSettingsMap)) ? setting->second : 0);
+  return ((setting != std::end(sc.fSettingsMap)) ? setting->second : 0);
 }
 
 
