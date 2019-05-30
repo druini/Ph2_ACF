@@ -61,11 +61,11 @@ PixelAlive::~PixelAlive()
 {
   theFile->Close();
   
-  delete fChannelGroupHandler;
-  delete theFile;
-  delete theCanvas;
+  if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
+  if (theFile != nullptr)              delete theFile;
+  if (theCanvas != nullptr)            delete theCanvas;
   for (size_t i = 0; i < theOccupancy.size(); i++)
-    delete theOccupancy[i];
+    if (theOccupancy[i] != nullptr) delete theOccupancy[i];
 }
 
 void PixelAlive::Run()

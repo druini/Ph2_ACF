@@ -59,12 +59,27 @@
   </BeBoard>
   
   
-  <!-- Parameters for the calibration program -->
+  <!-- Parameters for the calibration program
+       INJtype = 0: Analog; INJtype = 1: Digital
+  -->
   <Settings>
-    <Setting name="Nevents">       2000 </Setting>
-    <Setting name="HoleMode">         0 </Setting>
-    <Setting name="VerificationLoop"> 1 </Setting>
-    <Setting name="FitSCurves">       0 </Setting>
+    <Setting name="nEvents">    100 </Setting>
+
+    <Setting name="NTRIGxL1A">   31 </Setting>
+    <Setting name="INJtype">      0 </Setting>
+
+    <Setting name="ROWstart">    50 </Setting>
+    <Setting name="ROWstop">     73 </Setting>
+    <Setting name="COLstart">   128 </Setting>
+    <Setting name="COLstop">    151 </Setting>
+    <Setting name="nPixelInj">   24 </Setting>
+
+    <Setting name="LatencStart">  0 </Setting>
+    <Setting name="LatencStop">  50 </Setting>
+
+    <Setting name="VCALstart">  300 </Setting>
+    <Setting name="VCALstop">   500 </Setting>
+    <Setting name="VCALnsteps"> 200 </Setting>
   </Settings>
   
 </HwDescription>

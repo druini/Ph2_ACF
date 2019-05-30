@@ -366,7 +366,7 @@ namespace Ph2_HwInterface
       {
 	pData.clear();
 
-	// this->ResetFastCmdBlk(); // @TMP@
+	this->ResetFastCmdBlk(); // @TMP@
 	this->ResetReadoutBlk();
 	this->ConfigureFastCommands();
 	this->ChipReset();

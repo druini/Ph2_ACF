@@ -17,24 +17,7 @@
 // ##################
 // # Default values #
 // ##################
-#define NEVENTS  10
 #define RUNNUMBER 0
-
-#define NTRIGxL1A 31
-#define INJTYPE "Analog"
-
-#define ROWSTART   50//0
-#define ROWSTOP    73//191
-#define COLSTART  128
-#define COLSTOP   151//263
-#define NPIXELINJ  24//68
-
-#define LATENCY_START 0
-#define LATENCY_STOP 50
-
-#define VCAL_START  300
-#define VCAL_STOP   500
-#define VCAL_NSTEPS 100
 
 
 using namespace CommandLineProcessing;
@@ -43,7 +26,52 @@ using namespace Ph2_System;
 INITIALIZE_EASYLOGGINGPP
 
 
-void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, std::string type)
+auto FindValue (const SystemController& sc, const char* name)
+{
+  auto setting = sc.fSettingsMap.find(name);
+  return ((setting != std::end (sc.fSettingsMap)) ? setting->second : 0);
+}
+
+
+void InitParameters (const SystemController& sc,
+
+		     size_t& nEvents,
+		     size_t& NTRIGxL1A,
+		     std::string& INJtype,
+
+		     size_t& ROWstart,
+		     size_t& ROWstop,
+		     size_t& COLstart,
+		     size_t& COLstop,
+		     size_t& nPixelInj,
+
+		     size_t& LatencStart,
+		     size_t& LatencStop,
+
+		     size_t& VCALstart,
+		     size_t& VCALstop,
+		     size_t& VCALnsteps)
+{
+  nEvents     = FindValue(sc,"nEvents");
+  NTRIGxL1A   = FindValue(sc,"NTRIGxL1A");
+  INJtype     = (FindValue(sc,"INJtype") == 0 ? "Analog" : "Digital");
+
+  ROWstart    = FindValue(sc,"ROWstart");
+  ROWstop     = FindValue(sc,"ROWstop");
+  COLstart    = FindValue(sc,"COLstart");
+  COLstop     = FindValue(sc,"COLstop");
+  nPixelInj   = FindValue(sc,"nPixelInj");
+
+  LatencStart = FindValue(sc,"LatencStart");
+  LatencStop  = FindValue(sc,"LatencStop");
+
+  VCALstart   = FindValue(sc,"VCALstart");
+  VCALstop    = FindValue(sc,"VCALstop");
+  VCALnsteps  = FindValue(sc,"VCALnsteps");
+}
+
+
+void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, size_t NTRIGxL1A, std::string type)
 // ###################
 // # type == Digital #
 // # type == Analog  #
@@ -87,7 +115,7 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, st
       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
       
       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  16;
-      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  32;
+      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  16;
       cfgFastCmd.fast_cmd_fsm.delay_loop             = 512;
 
       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
@@ -117,14 +145,15 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, st
 }
 
 
-void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD53ChipInterface, Chip* pChip, size_t nEvents)
+void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD53ChipInterface, Chip* pChip,
+		  size_t ROWstart, size_t ROWstop, size_t COLstart, size_t COLstop,size_t LatencyStart, size_t LatencyStop, size_t nEvents)
 {
   int dataSize = 0;
   int latency  = 0;
   std::vector<uint32_t> data;
   std::string exception;
 
-  TH1F theLatency("theLatency","LatencyScan",LATENCY_STOP-LATENCY_START,LATENCY_START,LATENCY_STOP);
+  TH1F theLatency("theLatency","LatencyScan",LatencyStop-LatencyStart,LatencyStart,LatencyStop);
   theLatency.SetXTitle("Latency [n.bx]");
   theLatency.SetYTitle("Entries");
   TCanvas theCanvas("theCanvas","RD53Canvas",0,0,700,500);
@@ -133,16 +162,13 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
   // ########################
   // # Set pixels to inject #
   // ########################
-  static_cast<RD53*>(pChip)->enablePixel(ROWSTART,COLSTART,true);
-  static_cast<RD53*>(pChip)->injectPixel(ROWSTART,COLSTART,true);
-
-  static_cast<RD53*>(pChip)->enablePixel(ROWSTART+2,COLSTART+2,true);
-  static_cast<RD53*>(pChip)->injectPixel(ROWSTART+2,COLSTART+2,true);
-
+  static_cast<RD53*>(pChip)->enablePixel((ROWstart+ROWstop)/2,(COLstart+COLstop)/2,true);
+  static_cast<RD53*>(pChip)->injectPixel((ROWstart+ROWstop)/2,(COLstart+COLstop)/2,true);
+  
   RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(pChip), false, false);
 
 
-  for (auto lt = LATENCY_START; lt < LATENCY_STOP; lt++)
+  for (auto lt = LatencyStart; lt < LatencyStop; lt++)
     {
       data.clear();
       
@@ -200,9 +226,6 @@ int main (int argc, char** argv)
   cmd.defineOption("file","Hardware description file. Default value: settings/CMSIT_FC7.xml",ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("events", "Number of Events. Default value: 10", ArgvParser::OptionRequiresValue);
-  cmd.defineOptionAlternative ("events", "e");
-
   cmd.defineOption ("calib", "Which calibration to run [latency; pixelalive; scurve; gain; gainopt; thropt]. Default: pixelalive", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
@@ -218,7 +241,6 @@ int main (int argc, char** argv)
     }
 
   std::string cHWFile    = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT_FC7.xml";
-  unsigned int nEvents   = cmd.foundOption("events") == true ? convertAnyInt(cmd.optionValue("events").c_str()) : NEVENTS;
   std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
   bool extClkTrg         = cmd.foundOption("ext")    == true ? true : false;
 
@@ -242,8 +264,16 @@ int main (int argc, char** argv)
   LOG (INFO) << BOLDYELLOW << "@@@ Initializing the Hardware @@@" << RESET;
   cSystemController.ConfigureHardware(cHWFile);
   LOG (INFO) << BOLDBLUE << "@@@ Hardware initialization done @@@" << RESET;
-  
-  
+
+
+  // ######################
+  // # Configure software #
+  // ######################
+  size_t nEvents, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps;
+  std::string INJtype;
+  InitParameters(cSystemController, nEvents, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps);
+
+
   // #####################
   // # Preparing the FSM #
   // #####################
@@ -254,7 +284,7 @@ int main (int argc, char** argv)
   auto RD53ChipInterface = static_cast<RD53Interface*>(cSystemController.fChipInterface);
   uint8_t chipId         = pChip->getChipId();
 
-  ConfigureFSM(RD53Board, chipId, nEvents, INJTYPE);
+  ConfigureFSM(RD53Board, chipId, nEvents, NTRIGxL1A, INJtype);
 
 
   if (extClkTrg == true)
@@ -281,7 +311,7 @@ int main (int argc, char** argv)
       // ###################
       LOG(INFO) << BOLDYELLOW << "@@@ Performing Latency scan @@@" << RESET;
 	
-      LatencyScan("LatencyScan.root", pBoard, RD53Board, RD53ChipInterface, pChip, nEvents);
+      LatencyScan("LatencyScan.root", pBoard, RD53Board, RD53ChipInterface, pChip, ROWstart, ROWstop, COLstart, COLstop, LatencStart, LatencStop, nEvents);
     }
   else if (whichCalib == "pixelalive")
     {
@@ -290,7 +320,7 @@ int main (int argc, char** argv)
       // ##################
       LOG(INFO) << BOLDYELLOW << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-      PixelAlive pa("PixelAlive.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, true);
+      PixelAlive pa("PixelAlive.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, true);
       pa.Inherit(&cSystemController);
       pa.Run();
       pa.Display();
@@ -303,7 +333,7 @@ int main (int argc, char** argv)
       // ##############
       LOG(INFO) << BOLDYELLOW << "@@@ Performing SCurve scan @@@" << RESET;
 
-      SCurve sc("SCurve.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, VCAL_START, VCAL_STOP, VCAL_NSTEPS);
+      SCurve sc("SCurve.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       sc.Inherit(&cSystemController);
       sc.Run();
       sc.Analyze();
@@ -317,9 +347,12 @@ int main (int argc, char** argv)
       // ############
       LOG(INFO) << BOLDYELLOW << "@@@ Performing Gain scan @@@" << RESET;
 
-      Gain ga("Gain.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, VCAL_START, VCAL_STOP, VCAL_NSTEPS);
+      Gain ga("Gain.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       ga.Inherit(&cSystemController);
-      LOG(INFO) << BOLDRED << "@@@ Gain not implemented yet ... coming soon @@@" << RESET;
+      ga.Run();
+      // ga.Analyze();
+      ga.Display();
+      ga.Save();
     }
   else if (whichCalib == "gainopt")
     {

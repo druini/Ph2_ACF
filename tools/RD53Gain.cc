@@ -56,16 +56,16 @@ Gain::Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t 
   for (auto i = 0; i < NHISTO; i++)
     {
       myString << "theOccupancy_" << i;
-      theOccupancy.push_back(new TH2F(myString.str().c_str(),"Gain",nSteps,startValue,stopValue,nEvents*161./160,0,16.1));
+      theOccupancy.push_back(new TH2F(myString.str().c_str(),"Gain",nSteps,startValue,stopValue,nEvents,0,ADCDYNRANGE));
       theOccupancy.back()->SetXTitle("VCal");
       theOccupancy.back()->SetYTitle("ToT");
     }
 
-  theGain1D = new TH1F("theGain1D","Gain-1D",100,0,100);
+  theGain1D = new TH1F("theGain1D","Gain-1D",100,0,1);
   theGain1D->SetXTitle("Gain");
   theGain1D->SetYTitle("Entries");
 
-  theIntercept1D = new TH1F("theIntercept1D","Intercept-1D",1000,0,1000);
+  theIntercept1D = new TH1F("theIntercept1D","Intercept-1D",100,-10,10);
   theIntercept1D->SetXTitle("ToT");
   theIntercept1D->SetYTitle("Entries");
 
@@ -90,26 +90,28 @@ Gain::~Gain()
 {
   theFile->Close();
   
-  delete fChannelGroupHandler;
-  delete theFile;
-  delete theCanvas;
+  if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
+  if (theFile != nullptr)              delete theFile;
+  if (theCanvas != nullptr)            delete theCanvas;
   for (size_t i = 0; i < theOccupancy.size(); i++)
-    delete theOccupancy[i];
+    if (theOccupancy[i] != nullptr) delete theOccupancy[i];
 
-  delete theCanvasGa1D;
-  delete theGain1D;
+  if (theCanvasGa1D != nullptr)  delete theCanvasGa1D;
+  if (theGain1D != nullptr)      delete theGain1D;
 
-  delete theCanvasIn1D;
-  delete theIntercept1D;
+  if (theCanvasIn1D != nullptr)  delete theCanvasIn1D;
+  if (theIntercept1D != nullptr) delete theIntercept1D;
 
-  delete theCanvasGa2D;
-  delete theGain2D;
+  if (theCanvasGa2D != nullptr)  delete theCanvasGa2D;
+  if (theGain2D != nullptr)      delete theGain2D;
 
-  delete theCanvasIn2D;
-  delete theIntercept2D;
+  if (theCanvasIn2D != nullptr)  delete theCanvasIn2D;
+  if (theIntercept2D != nullptr) delete theIntercept2D;
 
   for (auto i = 0; i < detectorContainerVector.size(); i++)
-    delete detectorContainerVector[i];
+    if (detectorContainerVector[i] != nullptr) delete detectorContainerVector[i];
+  
+  if (theGainAndInterceptContainer != nullptr) delete theGainAndInterceptContainer;
 }
 
 void Gain::Run()
@@ -142,8 +144,8 @@ void Gain::Run()
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      for (auto i = 0; i < dacList.size(); i++)
-		if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
-		  theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+		if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT != 0)
+		  theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
 	indx++;
       }
 }
@@ -180,6 +182,35 @@ void Gain::Display()
   theCanvasGa2D->Update();
 }
 
+void Gain::Analyze()
+{
+  double gain, intercept;
+
+  theGainAndInterceptContainer = new DetectorContainer();
+  ContainerFactory  theDetectorFactory;
+  theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theGainAndInterceptContainer);
+
+  for (auto cBoard : fBoardVector)
+    for (auto cFe : cBoard->fModuleVector)
+      for (auto cChip : cFe->fChipVector)
+	for (auto row = 0; row < RD53::nRows; row++)
+	  for (auto col = 0; col < RD53::nCols; col++)
+	    {
+	      this->ComputeStats(gain,intercept);
+	      
+	      if (gain != 0)
+		{
+		  theGainAndInterceptContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fThreshold = gain;
+		  theGainAndInterceptContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fNoise     = intercept;
+
+		  theGain1D->Fill(gain);
+		  theIntercept1D->Fill(intercept);
+		  theGain2D->SetBinContent(col+1,row+1,gain);
+		  theIntercept2D->SetBinContent(col+1,row+1,intercept);
+		}
+	    }
+}
+
 void Gain::Save()
 {
   theCanvas->Write();
@@ -196,47 +227,7 @@ void Gain::Save()
   theCanvasIn2D->Print("Intercept2D.png");
 }
 
-void Gain::Analyze()
+void Gain::ComputeStats(double& gain, double& intercept)
 {
-  double mean, rms;
-  std::vector<double> measurements;
-  measurements.push_back(0);
-
-  for (auto cBoard : fBoardVector)
-    for (auto cFe : cBoard->fModuleVector)
-      for (auto cChip : cFe->fChipVector)
-	for (auto row = 0; row < RD53::nRows; row++)
-	  for (auto col = 0; col < RD53::nCols; col++)
-	    {
-	      measurements.clear();
-
-	      for (auto i = 0; i < dacList.size()-1; i++)
-		measurements.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy - 
-				       detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
-
-	      this->ComputeStats(measurements,mean,rms);
-
-	      theIntercept1D->Fill(mean);
-	      theGain1D->Fill(rms);
-	      theIntercept2D->SetBinContent(col+1,row+1,mean);
-	      theGain2D->SetBinContent(col+1,row+1,rms);
-	    }
-}
-
-void Gain::ComputeStats(std::vector<double>& measurements, double& mean, double& rms)
-{
-  double mean2  = 0;
-  double weight = 0;
-  mean = 0;
-
-  for (auto i = 0; i < dacList.size(); i++)
-    {
-      mean   += dacList[i]*measurements[i];
-      weight += measurements[i];
-
-      mean2 += dacList[i]*dacList[i]*measurements[i];
-    }
-
-  mean /= weight;
-  rms   = sqrt((mean2/weight - mean*mean) * weight / (weight - 1./nEvents));
+  std::cout << __PRETTY_FUNCTION__ << std::endl;
 }

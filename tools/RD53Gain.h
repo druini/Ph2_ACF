@@ -14,6 +14,7 @@
 #include "../Utils/OccupancyAndToT.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+#include "../Utils/ThresholdAndNoise.h"
 #include "Tool.h"
 
 #include "TH2F.h"
@@ -22,7 +23,8 @@
 // #############
 // # CONSTANTS #
 // #############
-#define NHISTO 1
+#define NHISTO       1
+#define ADCDYNRANGE 16
 
 
 using namespace Ph2_System;
@@ -59,8 +61,9 @@ class Gain : public Tool
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
   std::vector<DetectorContainer*> detectorContainerVector;
+  DetectorContainer* theGainAndInterceptContainer;
 
-  void ComputeStats(std::vector<double>& measurements, double& mean, double& rms);
+  void ComputeStats(double& gain, double& intercept);
 
   TFile*   theFile;
   TCanvas* theCanvas;
@@ -69,10 +72,10 @@ class Gain : public Tool
   TCanvas* theCanvasGa2D;
   TCanvas* theCanvasIn2D;
   std::vector<TH2F*> theOccupancy;
-  TH1F* theGain1D;
-  TH1F* theIntercept1D;
-  TH2F* theGain2D;
-  TH2F* theIntercept2D;
+  TH1F*    theGain1D;
+  TH1F*    theIntercept1D;
+  TH2F*    theGain2D;
+  TH2F*    theIntercept2D;
 };
 
 #endif

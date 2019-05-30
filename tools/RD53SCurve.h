@@ -14,6 +14,7 @@
 #include "../Utils/OccupancyAndToT.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+#include "../Utils/ThresholdAndNoise.h"
 #include "Tool.h"
 
 #include "TH2F.h"
@@ -59,6 +60,7 @@ class SCurve : public Tool
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
   std::vector<DetectorContainer*> detectorContainerVector;
+  DetectorContainer* theThresholdAndNoiseContainer;
 
   void ComputeStats(std::vector<float>& measurements, float& mean, float& rms);
 

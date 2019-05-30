@@ -90,26 +90,28 @@ SCurve::~SCurve()
 {
   theFile->Close();
   
-  delete fChannelGroupHandler;
-  delete theFile;
-  delete theCanvas;
+  if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
+  if (theFile != nullptr)              delete theFile;
+  if (theCanvas != nullptr)            delete theCanvas;
   for (size_t i = 0; i < theOccupancy.size(); i++)
-    delete theOccupancy[i];
+    if (theOccupancy[i] != nullptr) delete theOccupancy[i];
 
-  delete theCanvasNo1D;
-  delete theNoise1D;
+  if (theCanvasNo1D != nullptr)  delete theCanvasNo1D;
+  if (theNoise1D != nullptr)     delete theNoise1D;
 
-  delete theCanvasTh1D;
-  delete theThreshold1D;
+  if (theCanvasTh1D != nullptr)  delete theCanvasTh1D;
+  if (theThreshold1D != nullptr) delete theThreshold1D;
 
-  delete theCanvasNo2D;
-  delete theNoise2D;
+  if (theCanvasNo2D != nullptr)  delete theCanvasNo2D;
+  if (theNoise2D != nullptr)     delete theNoise2D;
 
-  delete theCanvasTh2D;
-  delete theThreshold2D;
+  if (theCanvasTh2D != nullptr)  delete theCanvasTh2D;
+  if (theThreshold2D != nullptr) delete theThreshold2D;
 
   for (auto i = 0; i < detectorContainerVector.size(); i++)
-    delete detectorContainerVector[i];
+    if (detectorContainerVector[i] != nullptr) delete detectorContainerVector[i];
+  
+  if (theThresholdAndNoiseContainer != nullptr) delete theThresholdAndNoiseContainer;
 }
 
 void SCurve::Run()
@@ -185,9 +187,9 @@ void SCurve::Analyze()
   float mean, rms;
   std::vector<float> measurements;
 
-  // DetectorContainer theThresholdAndNoiseContainer;
-  // ContainerFactory  theDetectorFactory;
-  // theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
+  theThresholdAndNoiseContainer = new DetectorContainer();
+  ContainerFactory  theDetectorFactory;
+  theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
 
   for (auto cBoard : fBoardVector)
     for (auto cFe : cBoard->fModuleVector)
@@ -206,8 +208,8 @@ void SCurve::Analyze()
 
 	      if (rms != 0)
 		{
-		  // theThresholdAndNoiseContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fThreshold = mean;
-		  // theThresholdAndNoiseContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fNoise     = rms;
+		  theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fThreshold = mean;
+		  theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fNoise     = rms;
 
 		  theThreshold1D->Fill(mean);
 		  theNoise1D->Fill(rms);
