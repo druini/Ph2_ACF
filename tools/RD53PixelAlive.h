@@ -33,7 +33,7 @@ using namespace Ph2_System;
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t nTrgs, bool inject);
+  PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, bool inject);
   ~PixelAlive();
 
   void Run();
@@ -48,7 +48,6 @@ class PixelAlive : public Tool
   size_t colEnd;
   size_t nPixels2Inj;
   size_t nEvents;
-  size_t nTriggers;
   
   bool inject;
 

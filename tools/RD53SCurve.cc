@@ -9,7 +9,7 @@
 
 #include "RD53SCurve.h"
 
-SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t nTrgs, float startValue, float stopValue, size_t nSteps) :
+SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, float startValue, float stopValue, size_t nSteps) :
   fileName(fName),
   rowStart(rStart),
   rowEnd(rEnd),
@@ -17,7 +17,6 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   colEnd(cEnd),
   nPixels2Inj(nPix),
   nEvents(nEvts),
-  nTriggers(nTrgs),
   startValue(startValue),
   stopValue(stopValue),
   nSteps(nSteps),
@@ -57,7 +56,7 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   for (auto i = 0; i < NHISTO; i++)
     {
       myString << "theOccupancy_" << i;
-      theOccupancy.push_back(new TH2F(myString.str().c_str(),"SCurve",nSteps,startValue,stopValue,nEvents*1.1,0,1.1));
+      theOccupancy.push_back(new TH2F(myString.str().c_str(),"SCurve",nSteps,startValue,stopValue,nEvents+1,0,1+1./nEvents));
       theOccupancy.back()->SetXTitle("VCal");
       theOccupancy.back()->SetYTitle("Efficiency");
     }
@@ -144,7 +143,7 @@ void SCurve::Run()
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      for (auto i = 0; i < dacList.size(); i++)
 		if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
-		  theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy/nTriggers);
+		  theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 	indx++;
       }
 }
@@ -171,12 +170,12 @@ void SCurve::Display()
   theCanvasNo1D->Update();
 
   theCanvasTh2D->cd();
-  theThreshold2D->Draw();
+  theThreshold2D->Draw("gcolz");
   theCanvasTh2D->Modified();
   theCanvasTh2D->Update();
 
   theCanvasNo2D->cd();
-  theNoise2D->Draw();
+  theNoise2D->Draw("gcolz");
   theCanvasNo2D->Modified();
   theCanvasNo2D->Update();
 }
@@ -196,8 +195,8 @@ void SCurve::Analyze()
 	      measurements.clear();
 
 	      for (auto i = 0; i < dacList.size()-1; i++)
-		measurements.push_back((detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy - 
-					detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy)/nTriggers);
+		measurements.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy - 
+				       detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 	      
 	      this->ComputeStats(measurements,mean,rms);
 

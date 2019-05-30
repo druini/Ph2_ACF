@@ -33,7 +33,7 @@ using namespace Ph2_System;
 class SCurve : public Tool
 {
  public:
-  SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t nTrgs, float startValue, float stopValue, size_t nSteps);
+  SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, float startValue, float stopValue, size_t nSteps);
   ~SCurve();
 
   void Run();
@@ -49,7 +49,6 @@ class SCurve : public Tool
   size_t colEnd;
   size_t nPixels2Inj;
   size_t nEvents;
-  size_t nTriggers;
 
   float  startValue;
   float  stopValue;

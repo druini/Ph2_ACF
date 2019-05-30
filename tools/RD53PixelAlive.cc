@@ -9,7 +9,7 @@
 
 #include "RD53PixelAlive.h"
 
-PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t nTrgs, bool inject) :
+PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, bool inject) :
   fileName(fName),
   rowStart(rStart),
   rowEnd(rEnd),
@@ -17,7 +17,6 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   colEnd(cEnd),
   nPixels2Inj(nPix),
   nEvents(nEvts),
-  nTriggers(nTrgs),
   inject(inject),
   Tool()
 {
@@ -91,7 +90,7 @@ void PixelAlive::Run()
 	for (auto cChip : cFe->fChipVector)
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      theOccupancy[indx]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy/nTriggers);
+	      theOccupancy[indx]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 	indx++;
       }
 }

@@ -9,7 +9,7 @@
 
 #include "RD53Gain.h"
 
-Gain::Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t nTrgs, float startValue, float stopValue, size_t nSteps) :
+Gain::Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, float startValue, float stopValue, size_t nSteps) :
   fileName(fName),
   rowStart(rStart),
   rowEnd(rEnd),
@@ -17,7 +17,6 @@ Gain::Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t 
   colEnd(cEnd),
   nPixels2Inj(nPix),
   nEvents(nEvts),
-  nTriggers(nTrgs),
   startValue(startValue),
   stopValue(stopValue),
   nSteps(nSteps),
@@ -144,7 +143,7 @@ void Gain::Run()
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      for (auto i = 0; i < dacList.size(); i++)
 		if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
-		  theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy/nTriggers);
+		  theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 	indx++;
       }
 }
@@ -171,12 +170,12 @@ void Gain::Display()
   theCanvasGa1D->Update();
 
   theCanvasIn2D->cd();
-  theIntercept2D->Draw();
+  theIntercept2D->Draw("gcolz");
   theCanvasIn2D->Modified();
   theCanvasIn2D->Update();
 
   theCanvasGa2D->cd();
-  theGain2D->Draw();
+  theGain2D->Draw("gcolz");
   theCanvasGa2D->Modified();
   theCanvasGa2D->Update();
 }

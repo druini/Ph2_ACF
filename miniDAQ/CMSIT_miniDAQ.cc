@@ -32,8 +32,8 @@
 #define LATENCY_START 0
 #define LATENCY_STOP 50
 
-#define VCAL_START 300
-#define VCAL_STOP  500
+#define VCAL_START 350
+#define VCAL_STOP  750
 #define VCAL_NSTEPS 40
 
 
@@ -290,7 +290,7 @@ int main (int argc, char** argv)
       // ##################
       LOG(INFO) << BOLDYELLOW << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-      PixelAlive pa("PixelAlive.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, NTRIGxL1A+1, true);
+      PixelAlive pa("PixelAlive.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, true);
       pa.Inherit(&cSystemController);
       pa.Run();
       pa.Display();
@@ -303,10 +303,10 @@ int main (int argc, char** argv)
       // ##############
       LOG(INFO) << BOLDYELLOW << "@@@ Performing SCurve scan @@@" << RESET;
 
-      SCurve sc("SCurve.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, NTRIGxL1A+1, VCAL_START, VCAL_STOP, VCAL_NSTEPS);
+      SCurve sc("SCurve.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, VCAL_START, VCAL_STOP, VCAL_NSTEPS);
       sc.Inherit(&cSystemController);
       sc.Run();
-      // sc.Analyze();
+      sc.Analyze();
       sc.Display();
       sc.Save();
     }
@@ -317,7 +317,7 @@ int main (int argc, char** argv)
       // ############
       LOG(INFO) << BOLDYELLOW << "@@@ Performing Gain scan @@@" << RESET;
 
-      Gain ga("Gain.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, NTRIGxL1A+1, VCAL_START, VCAL_STOP, VCAL_NSTEPS);
+      Gain ga("Gain.root", ROWSTART, ROWSTOP, COLSTART, COLSTOP, NPIXELINJ, nEvents, VCAL_START, VCAL_STOP, VCAL_NSTEPS);
       ga.Inherit(&cSystemController);
     }
   else if (whichCalib == "gainopt")
