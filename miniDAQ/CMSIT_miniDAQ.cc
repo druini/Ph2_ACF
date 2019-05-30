@@ -32,9 +32,9 @@
 #define LATENCY_START 0
 #define LATENCY_STOP 50
 
-#define VCAL_START 350
-#define VCAL_STOP  750
-#define VCAL_NSTEPS 80
+#define VCAL_START  300
+#define VCAL_STOP   500
+#define VCAL_NSTEPS 100
 
 
 using namespace CommandLineProcessing;
@@ -87,7 +87,7 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, st
       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
       
       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  16;
-      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  16;
+      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  32;
       cfgFastCmd.fast_cmd_fsm.delay_loop             = 512;
 
       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;

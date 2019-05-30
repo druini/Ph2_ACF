@@ -185,6 +185,10 @@ void SCurve::Analyze()
   float mean, rms;
   std::vector<float> measurements;
 
+  // DetectorContainer theThresholdAndNoiseContainer;
+  // ContainerFactory  theDetectorFactory;
+  // theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
+
   for (auto cBoard : fBoardVector)
     for (auto cFe : cBoard->fModuleVector)
       for (auto cChip : cFe->fChipVector)
@@ -202,6 +206,9 @@ void SCurve::Analyze()
 
 	      if (rms != 0)
 		{
+		  // theThresholdAndNoiseContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fThreshold = mean;
+		  // theThresholdAndNoiseContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fNoise     = rms;
+
 		  theThreshold1D->Fill(mean);
 		  theNoise1D->Fill(rms);
 		  theThreshold2D->SetBinContent(col+1,row+1,mean);
