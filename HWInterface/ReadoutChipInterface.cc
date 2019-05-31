@@ -81,7 +81,7 @@ namespace Ph2_HwInterface {
     //else
     //{
 
-    //Chip* cChip = pModule->getChip ( i + cMissed );
+    //ReadoutChip* cChip = pModule->getChip ( i + cMissed );
 
     //const ChipRegMap& cChipRegMap = cChip->getRegMap();
 

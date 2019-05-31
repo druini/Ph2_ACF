@@ -69,7 +69,7 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        virtual bool ConfigureChip ( const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
+        virtual bool ConfigureChip ( const ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
 
         /*!
          * \brief setChannels fo be injected
@@ -77,21 +77,21 @@ namespace Ph2_HwInterface {
          * \param group: group of channels under test
          * \param pVerifLoop: perform a readback check
          */
-        virtual bool setInjectionSchema (Chip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true ) = 0;
+        virtual bool setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true ) = 0;
         /*!
          * \brief Mask the channels not belonging to the group under test
          * \param pChip: pointer to Chip object
          * \param group: group of channels under test
          * \param pVerifLoop: perform a readback check
          */
-        virtual bool maskChannelsGroup (Chip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true ) = 0;
+        virtual bool maskChannelsGroup (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true ) = 0;
          /*!
          * \brief Reapply the stored mask for the Chip, use it after group masking is applied
          * \param pChip: pointer to Chip object
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        virtual bool ConfigureChipOriginalMask (Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
+        virtual bool ConfigureChipOriginalMask (ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
         
         /*!
          * \brief Mask all channels of the chip
@@ -100,7 +100,7 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        virtual bool MaskAllChannels ( Chip* pChip, bool mask, bool pVerifLoop = true ) = 0;
+        virtual bool MaskAllChannels ( ReadoutChip* pChip, bool mask, bool pVerifLoop = true ) = 0;
         
         /*!
          * \brief Write the designated register in both Chip and Chip Config File
@@ -108,14 +108,14 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        virtual bool WriteChipReg ( Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true ) = 0;
+        virtual bool WriteChipReg ( ReadoutChip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true ) = 0;
 
         /*!
          * \brief Write several registers in both Chip and Chip Config File
          * \param pChip
          * \param pVecReq : Vector of pair: Node of the register to write versus value to write
          */
-        virtual bool WriteChipMultReg ( Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true ) = 0;
+        virtual bool WriteChipMultReg ( ReadoutChip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true ) = 0;
         
         /*!
          * \brief Write all Local registers on Chip and Chip Config File (able to recognize local parameter names)
@@ -123,14 +123,14 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        virtual bool WriteChipAllLocalReg ( Chip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true ) = 0;
+        virtual bool WriteChipAllLocalReg ( ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true ) = 0;
 
         /*!
          * \brief Read the designated register in the Chip
          * \param pChip
          * \param pRegNode : Node of the register to read
          */
-        virtual uint16_t ReadChipReg ( Chip* pChip, const std::string& pRegNode ) = 0;
+        virtual uint16_t ReadChipReg ( ReadoutChip* pChip, const std::string& pRegNode ) = 0;
 
         void output();
 

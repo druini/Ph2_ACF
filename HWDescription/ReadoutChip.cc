@@ -32,22 +32,14 @@ namespace Ph2_HwDescription
     // C'tors which take BeId, FMCId, FeID, ChipId
 
     ReadoutChip::ReadoutChip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId , uint16_t pMaxRegValue)
-    : FrontEndDescription(pBeId, pFMCId, pFeId)
-    , ChipContainer      (pChipId)
-    , fChipId            (pChipId )
-    , fMaxRegValue       (pMaxRegValue)
+    :  Chip (pBeId, pFMCId, pFeId, pChipId , pMaxRegValue)
     {
     }
 
+    //TODO
     // Copy C'tor
-    ReadoutChip::ReadoutChip (const ReadoutChip& chipObj)
-    : FrontEndDescription(chipObj)
-    , ChipContainer      (chipObj.fChipId)
-    , fChipId            (chipObj.fChipId)
-    , fRegMap            (chipObj.fRegMap)
-    , fCommentMap         (chipObj.fCommentMap)
-    , fChipMask (chipObj.fChipMask) 
-    {
-    }
+   // ReadoutChip::ReadoutChip (const ReadoutChip& chipObj) 
+   // {
+   // }
 
 }

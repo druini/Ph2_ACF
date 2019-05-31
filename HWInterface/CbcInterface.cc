@@ -21,7 +21,7 @@
 
 namespace Ph2_HwInterface {
 
-    CbcInterface::CbcInterface ( const BeBoardFWMap& pBoardMap ) : ChipInterface ( pBoardMap )
+    CbcInterface::CbcInterface ( const BeBoardFWMap& pBoardMap ) : ReadoutChipInterface ( pBoardMap )
     {
     }
 
