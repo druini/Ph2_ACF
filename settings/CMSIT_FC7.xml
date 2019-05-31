@@ -34,11 +34,11 @@
             VTH1_DIFF        =  "400"
             VTH2_DIFF        =   "50"
 
-	    VCAL_HIGH        =  "500"
+	    VCAL_HIGH        =  "600"
 	    VCAL_MED         =  "100"
 
 	    INJECTION_SELECT =    "0"
-            LATENCY_CONFIG   =  "128"
+            LATENCY_CONFIG   =  "140"
             MONITOR_SELECT   = "8203"
 	    />
 	<!--
@@ -57,8 +57,8 @@
     </Register>
     
   </BeBoard>
-  
-  
+
+
   <!-- Parameters for the calibration program
        INJtype = 0: Analog; INJtype = 1: Digital
   -->
@@ -77,9 +77,9 @@
     <Setting name="LatencStart"> 100 </Setting>
     <Setting name="LatencStop">  150 </Setting>
 
-    <Setting name="VCALstart">   300 </Setting>
-    <Setting name="VCALstop">    500 </Setting>
-    <Setting name="VCALnsteps">   20 </Setting>
+    <Setting name="VCALstart">   360 </Setting>
+    <Setting name="VCALstop">    600 </Setting>
+    <Setting name="VCALnsteps">  20 </Setting>
   </Settings>
   
 </HwDescription>

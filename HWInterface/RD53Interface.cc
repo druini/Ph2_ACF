@@ -31,7 +31,7 @@ namespace Ph2_HwInterface
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    this->WriteRD53Mask (pRD53, false, true);
+    this->WriteRD53Mask (pRD53, false, true, true);
 
     return true;
   }
@@ -224,15 +224,15 @@ namespace Ph2_HwInterface
     return outputDecoded;
   }
   
-  bool RD53Interface::WriteRD53Mask (RD53* pRD53, bool pVerifLoop, bool defaultT_currentF)
+  bool RD53Interface::WriteRD53Mask (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop)
   {
     std::vector<uint16_t> dataVec;
     uint16_t data;
     uint16_t colPair;
 
     std::vector<perPixelData>* mask;
-    if (defaultT_currentF == true) mask = pRD53->getPixelsMaskDefault();
-    else                           mask = pRD53->getPixelsMask();
+    if (doDefault == true) mask = pRD53->getPixelsMaskDefault();
+    else                   mask = pRD53->getPixelsMask();
 
     // ##########################
     // # Disable default config #
@@ -251,10 +251,14 @@ namespace Ph2_HwInterface
     // bit[0]: broadcast to DIFF FE
 
     
-    // @TMP@
-    // this->WriteChipReg(pRD53, "PIX_MODE", 0x27, pVerifLoop);
-    // this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0, pVerifLoop);
-    this->WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
+    if (doSparse == true)
+      {
+	this->WriteChipReg(pRD53, "PIX_MODE", 0x27, pVerifLoop);
+	this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0, pVerifLoop);
+	this->WriteChipReg(pRD53, "PIX_MODE", 0x0, pVerifLoop);
+      }
+    else this->WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
+    
 
     // for (uint16_t col = 0; col < RD53::nCols-1; col+=2) // @TMP@
     for (auto col = 128; col < 263; col+=2)
@@ -281,16 +285,28 @@ namespace Ph2_HwInterface
 		(static_cast<uint16_t>((*mask)[col+1].HitBus[row]) << (NBIT_PIXEN + NBIT_INJEN)) |
 		(static_cast<uint16_t>((*mask)[col+1].TDAC  [row]) << (NBIT_PIXEN + NBIT_INJEN + NBIT_HITBUS))) << (NBIT_CMD/2));
 	    
-	    dataVec.push_back(data);
-	    if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
+	    if (doSparse == true)
 	      {
-		itPixCmd++;
-		
-		if (itPixCmd == NPIXCMD)
+		if (((*mask)[col].Enable[row] == 1) || ((*mask)[col+1].Enable[row] == 1))
 		  {
-		    this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec,itPixCmd);
-		    dataVec.clear();
-		    itPixCmd = 0;
+		    pRD53->ConvertRowCol2Cores (row,col,row_,colPair);
+		    this->WriteChipReg(pRD53, "REGION_ROW", row_, pVerifLoop);
+		    this->WriteChipReg(pRD53,"PIX_PORTAL",data,pVerifLoop);
+		  }
+	      }
+	    else
+	      {
+		dataVec.push_back(data);
+		if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
+		  {
+		    itPixCmd++;
+		    
+		    if (itPixCmd == NPIXCMD)
+		      {
+			this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec,itPixCmd);
+			dataVec.clear();
+			itPixCmd = 0;
+		      }
 		  }
 	      }
 	  }
@@ -314,7 +330,7 @@ namespace Ph2_HwInterface
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
-    this->WriteRD53Mask(pRD53, false, true);
+    this->WriteRD53Mask(pRD53, false, true, false);
 
     return true;
   }
@@ -326,7 +342,7 @@ namespace Ph2_HwInterface
     if (mask == true) pRD53->disableAllPixels();
     else              pRD53->enableAllPixels();
 
-    this->WriteRD53Mask(pRD53, false, false);
+    this->WriteRD53Mask(pRD53, false, false, false);
 
     return true;
   }
@@ -339,7 +355,7 @@ namespace Ph2_HwInterface
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->injectPixel(row,col,group->isChannelEnabled(row,col));
     
-    this->WriteRD53Mask(pRD53, false, false);
+    this->WriteRD53Mask(pRD53, false, false, false);
 
     return true;
   }
@@ -352,7 +368,7 @@ namespace Ph2_HwInterface
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->enablePixel(row,col,group->isChannelEnabled(row,col));
 
-    this->WriteRD53Mask(pRD53, false, false);
+    this->WriteRD53Mask(pRD53, false, false, false);
 
     return true;
   }
@@ -365,7 +381,7 @@ namespace Ph2_HwInterface
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->setTDAC(row,col,pValue.getChannel<RegisterValue>(row,col).fRegisterValue);
     
-    this->WriteRD53Mask(pRD53, false, true);
+    this->WriteRD53Mask(pRD53, false, true, false);
     
     return true;
   }

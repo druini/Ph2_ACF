@@ -317,9 +317,10 @@ namespace Ph2_HwInterface
              cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
 
     // @TMP@
-    LOG (INFO) << GREEN << "cNWords         = " << cNWords    << RESET;
-    LOG (INFO) << GREEN << "handshake       = " << handshake  << RESET;
-    LOG (INFO) << GREEN << "cNtriggers      = " << cNtriggers << RESET;
+    LOG (INFO) << GREEN << "cNWords         = "       << cNWords    << RESET;
+    LOG (INFO) << GREEN << "handshake       = "       << handshake  << RESET;
+    LOG (INFO) << GREEN << "cNtriggers      = "       << cNtriggers << RESET;
+    LOG (INFO) << GREEN << "========================" << RESET;
 
     if (!cNWords) return 0;
 

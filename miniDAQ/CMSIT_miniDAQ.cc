@@ -165,7 +165,7 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
   static_cast<RD53*>(pChip)->enablePixel((ROWstart+ROWstop)/2,(COLstart+COLstop)/2,true);
   static_cast<RD53*>(pChip)->injectPixel((ROWstart+ROWstop)/2,(COLstart+COLstop)/2,true);
   
-  RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(pChip), false, false);
+  RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(pChip), false, false, false);
 
 
   for (auto lt = LatencyStart; lt <= LatencyStop; lt++)
