@@ -56,10 +56,10 @@ namespace Ph2_HwInterface
     // this->TurnOffFMC();
     // this->TurnOnFMC();
     // this->ResetBoard();
-    // this->ResetFastCmdBlk();
-    // this->ResetReadoutBlk();
-    // this->ChipReset();
-    // this->ChipReSync();
+    this->ResetFastCmdBlk();
+    this->ResetReadoutBlk();
+    this->ChipReset();
+    this->ChipReSync();
 
     // Wait for user to reset power to the chip
     // LOG (INFO) << BOLDMAGENTA << "Powercycle SCC and press any key to continue: " << RESET;
@@ -356,6 +356,7 @@ namespace Ph2_HwInterface
   
   void FC7FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
+    bool retry;
     int dataSize;
     int nTriggers;
     std::string exception;
@@ -364,13 +365,13 @@ namespace Ph2_HwInterface
 
     do
       {
+	retry = false;
 	pData.clear();
 
-	// this->ResetFastCmdBlk(); // @TMP@
 	this->ResetReadoutBlk();
 	this->ConfigureFastCommands();
 	this->ChipReset();
-	// this->ChipReSync(); // @TMP@
+	this->ChipReSync();
 
 	this->Start();
 	usleep(SHALLOWSLEEP);
@@ -379,6 +380,7 @@ namespace Ph2_HwInterface
 	if (dataSize == 0)
 	  {
 	    LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected " << BOLDYELLOW << "--> retry" << RESET;
+	    retry = true;
 	    continue;
 	  }
 	
@@ -386,6 +388,7 @@ namespace Ph2_HwInterface
 	if (this->AnalyzeEvents(events, exception, false) == -1)
 	  {
 	    LOG (ERROR) << BOLDRED << exception << BOLDYELLOW << " --> retry" << RESET;
+	    retry = true;
 	    continue;
 	  }
 	
@@ -393,9 +396,10 @@ namespace Ph2_HwInterface
 	if (events.size() != nTriggers)
 	  {
 	    LOG (ERROR) << BOLDRED << "Sent " << nTriggers << " triggers, but collected only " << events.size() << BOLDYELLOW << " --> retry" << RESET;
+	    retry = true;
 	    continue;
 	  }
-      } while (dataSize == 0);
+      } while (retry == true);
   }
 
   std::vector<uint32_t> FC7FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
@@ -502,8 +506,6 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.reset_reg.scc_rst",0},
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",1},
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",0}});
-
-    usleep(SHALLOWSLEEP); // @TMP@
   }
 
   void FC7FWInterface::ChipReSync()

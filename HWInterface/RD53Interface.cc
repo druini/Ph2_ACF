@@ -250,53 +250,47 @@ namespace Ph2_HwInterface
     // bit[1]: broadcast to LIN FE
     // bit[0]: broadcast to DIFF FE
 
-
+    
     // @TMP@
-    if (defaultT_currentF == true)
-      {
-	this->WriteChipReg(pRD53, "PIX_MODE", 0x27, pVerifLoop);
-	this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0, pVerifLoop);
-      }
-    else
-      {
-	this->WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
+    // this->WriteChipReg(pRD53, "PIX_MODE", 0x27, pVerifLoop);
+    // this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0, pVerifLoop);
+    this->WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
 
-	// for (uint16_t col = 0; col < RD53::nCols-1; col+=2) // @TMP@
-	for (auto col = 128; col < 263; col+=2)
+    // for (uint16_t col = 0; col < RD53::nCols-1; col+=2) // @TMP@
+    for (auto col = 128; col < 263; col+=2)
+      {
+	uint16_t row_;
+	pRD53->ConvertRowCol2Cores (0,col,row_,colPair);
+	this->WriteChipReg(pRD53, "REGION_COL", colPair, pVerifLoop);
+	this->WriteChipReg(pRD53, "REGION_ROW", 0x0, pVerifLoop);
+	
+	size_t itPixCmd = 0;
+	for (auto row = 0; row < RD53::nRows; row++)
 	  {
-	    uint16_t row_;
-	    pRD53->ConvertRowCol2Cores (0,col,row_,colPair);
-	    this->WriteChipReg(pRD53, "REGION_COL", colPair, pVerifLoop);
-	    this->WriteChipReg(pRD53, "REGION_ROW", 0x0, pVerifLoop);
-
-	    size_t itPixCmd = 0;
-	    for (auto row = 0; row < RD53::nRows; row++)
+	    data =
+	      HIGHGAIN                                                                       |
+	      static_cast<uint16_t> ((*mask)[col].Enable[row])                               |
+	      (static_cast<uint16_t>((*mask)[col].InjEn [row]) << NBIT_PIXEN)                |
+	      (static_cast<uint16_t>((*mask)[col].HitBus[row]) << (NBIT_PIXEN + NBIT_INJEN)) |
+	      (static_cast<uint16_t>((*mask)[col].TDAC  [row]) << (NBIT_PIXEN + NBIT_INJEN + NBIT_HITBUS));
+	    
+	    data = data                                                                          |
+	      ((HIGHGAIN                                                                         |
+		static_cast<uint16_t> ((*mask)[col+1].Enable[row])                               |
+		(static_cast<uint16_t>((*mask)[col+1].InjEn [row]) << NBIT_PIXEN)                |
+		(static_cast<uint16_t>((*mask)[col+1].HitBus[row]) << (NBIT_PIXEN + NBIT_INJEN)) |
+		(static_cast<uint16_t>((*mask)[col+1].TDAC  [row]) << (NBIT_PIXEN + NBIT_INJEN + NBIT_HITBUS))) << (NBIT_CMD/2));
+	    
+	    dataVec.push_back(data);
+	    if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
 	      {
-		data =
-		  HIGHGAIN                                                                       |
-		  static_cast<uint16_t> ((*mask)[col].Enable[row])                               |
-		  (static_cast<uint16_t>((*mask)[col].InjEn [row]) << NBIT_PIXEN)                |
-		  (static_cast<uint16_t>((*mask)[col].HitBus[row]) << (NBIT_PIXEN + NBIT_INJEN)) |
-		  (static_cast<uint16_t>((*mask)[col].TDAC  [row]) << (NBIT_PIXEN + NBIT_INJEN + NBIT_HITBUS));
-
-		data = data                                                                          |
-		  ((HIGHGAIN                                                                         |
-		    static_cast<uint16_t> ((*mask)[col+1].Enable[row])                               |
-		    (static_cast<uint16_t>((*mask)[col+1].InjEn [row]) << NBIT_PIXEN)                |
-		    (static_cast<uint16_t>((*mask)[col+1].HitBus[row]) << (NBIT_PIXEN + NBIT_INJEN)) |
-		    (static_cast<uint16_t>((*mask)[col+1].TDAC  [row]) << (NBIT_PIXEN + NBIT_INJEN + NBIT_HITBUS))) << (NBIT_CMD/2));
+		itPixCmd++;
 		
-		dataVec.push_back(data);
-		if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
+		if (itPixCmd == NPIXCMD)
 		  {
-		    itPixCmd++;
-
-		    if (itPixCmd == NPIXCMD)
-		      {
-			this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec,itPixCmd);
-			dataVec.clear();
-			itPixCmd = 0;
-		      }
+		    this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec,itPixCmd);
+		    dataVec.clear();
+		    itPixCmd = 0;
 		  }
 	      }
 	  }

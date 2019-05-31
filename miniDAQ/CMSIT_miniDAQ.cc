@@ -115,7 +115,7 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, si
       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
       
       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  16;
-      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  16;
+      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  32;
       cfgFastCmd.fast_cmd_fsm.delay_loop             = 512;
 
       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
@@ -168,7 +168,7 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
   RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(pChip), false, false);
 
 
-  for (auto lt = LatencyStart; lt < LatencyStop; lt++)
+  for (auto lt = LatencyStart; lt <= LatencyStop; lt++)
     {
       data.clear();
       

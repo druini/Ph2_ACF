@@ -579,9 +579,7 @@ namespace Ph2_HwDescription
     if (header != HEADER) LOG (ERROR) << BOLDRED << "Invalid RD53 event header" << RESET;
     size_t noHitToT = RD53::SetBits<NBIT_TOT>(NBIT_TOT).to_ulong();
     for (size_t i = 1; i < n; i++)
-      // @TMP@
-      if (data[i] != 0) this->data.emplace_back(data[i]);
-      // if (data[i] != noHitToT) this->data.emplace_back(data[i]);
+      if (data[i] != noHitToT) this->data.emplace_back(data[i]);
   }
 
   RD53::HitData::HitData (const uint32_t data)

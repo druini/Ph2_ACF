@@ -137,17 +137,27 @@ void SCurve::Run()
   // # Filling the histogram #
   // #########################
   for (auto cBoard : fBoardVector)
-    for (auto cFe : cBoard->fModuleVector)
-      {
-	size_t indx = 0;
-	for (auto cChip : cFe->fChipVector)
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
-	      for (auto i = 0; i < dacList.size(); i++)
-		if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
-		  theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
-	indx++;
-      }
+    {
+      for (auto cFe : cBoard->fModuleVector)
+	{
+	  size_t indx = 0;
+	  for (auto cChip : cFe->fChipVector)
+	    {
+	      for (auto row = 0; row < RD53::nRows; row++)
+		{
+		  for (auto col = 0; col < RD53::nCols; col++)
+		    {
+		      for (auto i = 0; i < dacList.size(); i++)
+			{
+			  if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
+			    theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+			}
+		    }
+		}
+	    }
+	  indx++;
+	}
+    }
 }
 
 void SCurve::Display()
