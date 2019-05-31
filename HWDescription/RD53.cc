@@ -11,7 +11,7 @@
 
 namespace Ph2_HwDescription
 {
-  RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename) : Chip (pFeDesc, pRD53Id)
+  RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename) : ReadoutChip (pFeDesc, pRD53Id)
   {
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     loadfRegMap (filename);
@@ -19,7 +19,7 @@ namespace Ph2_HwDescription
     fRD53Id = pRD53Id;
   }
 
-  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
+  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id)
   {
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     loadfRegMap (filename);
@@ -224,7 +224,7 @@ namespace Ph2_HwDescription
       }
   }
 
-  uint16_t RD53::getReg (const std::string& pReg) const
+  /*uint16_t RD53::getReg (const std::string& pReg) const
   {
     ChipRegMap::const_iterator i = fRegMap.find (pReg);
 
@@ -236,7 +236,6 @@ namespace Ph2_HwDescription
     else
       return i->second.fValue;
   }
-
   void RD53::setReg (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg)
   {
     ChipRegMap::iterator i = fRegMap.find (pReg);
@@ -248,7 +247,7 @@ namespace Ph2_HwDescription
 	i->second.fValue = psetValue;
 	i->second.fPrmptCfg = pPrmptCfg;
       }
-  }
+  }*/
 
   void RD53::saveRegMap (const std::string& filename)
   {

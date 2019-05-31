@@ -24,19 +24,21 @@ namespace Ph2_HwDescription
 {
     // C'tors with object FE Description
 
-    Chip::Chip (const FrontEndDescription& pFeDesc, uint8_t pChipId)
+    Chip::Chip (const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue)
     : FrontEndDescription(pFeDesc)
     , ChipContainer      (pChipId)
     , fChipId            (pChipId)
+    , fMaxRegValue       (pMaxRegValue)
     {
     }
 
     // C'tors which take BeId, FMCId, FeID, ChipId
 
-    Chip::Chip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId)
+    Chip::Chip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId , uint16_t pMaxRegValue)
     : FrontEndDescription(pBeId, pFMCId, pFeId)
     , ChipContainer      (pChipId)
     , fChipId            (pChipId )
+    , fMaxRegValue       (pMaxRegValue)
     {
     }
 
@@ -54,7 +56,6 @@ namespace Ph2_HwDescription
     // D'Tor
     Chip::~Chip()
     {
-        delete fChipOriginalMask;
     }
 
     ChipRegItem Chip::getRegItem ( const std::string& pReg )
@@ -70,9 +71,32 @@ namespace Ph2_HwDescription
             return cItem;
         }
     }
+    uint16_t Chip::getReg ( const std::string& pReg ) const
+    {
+        ChipRegMap::const_iterator i = fRegMap.find ( pReg );
 
+        if ( i == fRegMap.end() )
+        {
+            LOG (INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg ;
+            return 0;
+        }
+        else
+            return i->second.fValue & 0xFF;
+    }
+    void Chip::setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg )
+    {
+        ChipRegMap::iterator i = fRegMap.find ( pReg );
 
-
+        if ( i == fRegMap.end() )
+            LOG (INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg ;
+        if ( psetValue > fMaxRegValue)
+            LOG (ERROR) << "Chip register are at most"<< fMaxRegValue << " bits, impossible to write " << psetValue << " on registed " << pReg ;
+        else
+        {
+            i->second.fValue = psetValue & fMaxRegValue;
+            i->second.fPrmptCfg = pPrmptCfg;
+        }
+    }
 
     bool ChipComparer::operator() ( const Chip& cbc1, const Chip& cbc2 ) const
     {

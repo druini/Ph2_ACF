@@ -558,14 +558,47 @@ namespace Ph2_System {
             }
             else
             {
-                for ( pugi::xml_node pCbcNode = pModuleNode.child ( "CBC" ); pCbcNode; pCbcNode = pCbcNode.next_sibling() )
-                    this->parseCbc  (pCbcNode, cModule, cFilePrefix, os);
-
-            // parse the GlobalCbcSettings so that Global CBC regisers take precedence over Global CBC settings which take precedence over CBC specific settings
+                //default  configurations 
+                pugi::xml_node cDefConfigsNode = pModuleNode.child ( "DefaultConfigurations" );
+                // now try and do the configruation in a slightly more readable
+                for (pugi::xml_node cChild: pModuleNode.children())
+                {
+                    std::string cName = cChild.name();
+                    if( cName == "Services" || cName == "ReadoutASICs" ) 
+                    {
+                        os << BOLDCYAN << "|" << "	" << "|" << "	" << "|" << "----" << cName << "  " << RESET << std::endl;
+                        for (pugi::xml_node cGrandchild: cChild.children())
+                        {
+                            cName = cGrandchild.name();
+                            std::string cFileName = expandEnvironmentVariables (cGrandchild.attribute ( "configfile" ).value() );
+                            int cId = cGrandchild.attribute("Id").as_int();
+                            // modify file name with prefix given in default
+                            // configuration (if it exists) 
+                            cFilePrefix = expandEnvironmentVariables (static_cast<std::string> ( cDefConfigsNode.child( (cName + "_Files").c_str() ).attribute ( "path" ).value() ) ) ;
+                            if ( !cFilePrefix.empty() )
+                            {
+                                if (cFilePrefix.at (cFilePrefix.length() - 1) != '/') 
+                                    cFilePrefix.append ("/");
+                                cFileName = cFilePrefix + cFileName; 
+                            }
+                            os << BOLDCYAN << "\t\t\t" << " ----" << cName << " [I2C address " <<  cId << "], File: " << cFileName << RESET << std:: endl;
+                            if( cName == "CIC" ) 
+                            {
+                                //Cic* cCic = new Cic ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cId , cFileName );
+                                //cModule->addCic (cCic);
+                            }
+                            else if( cName == "CBC" ) 
+                            {
+                                Chip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cId , cFileName );
+                                cModule->addChip (cCbc);
+                            }
+                        }
+                    }
+                }
+                // parse the GlobalCbcSettings so that Global CBC regisers take precedence over Global CBC settings which take precedence over CBC specific settings
                 this->parseGlobalCbcSettings (pModuleNode, cModule, os);
-            }
+          }
         }
-
         return;
     }
 

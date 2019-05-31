@@ -14,7 +14,7 @@
 #define Cbc_h__
 
 #include "FrontEndDescription.h"
-#include "Chip.h"
+#include "ReadoutChip.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
 #include <iostream>
@@ -24,7 +24,7 @@
 #include <utility>
 #include <set>
 #include "../Utils/easylogging++.h"
-#include "ChipRegItem.h"
+//#include "ChipRegItem.h"
 
 // Cbc2 Chip HW Description Class
 
@@ -43,7 +43,7 @@ namespace Ph2_HwDescription {
      * \class Cbc
      * \brief Read/Write Cbc's registers on a file, contains a register map
      */
-    class Cbc : public Chip
+    class Cbc : public ReadoutChip
     {
 
       public:
@@ -63,18 +63,14 @@ namespace Ph2_HwDescription {
         {
             pVisitor.visit ( *this );
         }
-        // void accept( HwDescriptionVisitor& pVisitor ) const {
-        //  pVisitor.visit( *this );
-        // }
         /*!
         * \brief Load RegMap from a file
         * \param filename
         */
         void loadfRegMap ( const std::string& filename ) override;
 
-        uint16_t getReg ( const std::string& pReg ) const override;
-
-        void setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
+        //uint16_t getReg ( const std::string& pReg ) const override;
+        //void setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
 
 
         /*!
@@ -85,7 +81,6 @@ namespace Ph2_HwDescription {
 
         uint32_t getNumberOfChannels() const override { return NCHANNELS; }
 
-        // bool IsChannelUnMasked(uint32_t cChan) const override {return ( fChipMask[cChan>>3]>>(cChan&0x7)) & 0x1; };
 
         bool isDACLocal(const std::string &dacName) override {
             if(dacName.find("MaskChannel-",0,12)!=std::string::npos || dacName.find("Channel",0,7)!=std::string::npos ) return true;
@@ -99,9 +94,6 @@ namespace Ph2_HwDescription {
             else if(dacName == "TriggerLatency" ) return 9;
             else return 8;
         }
-	
-        // std::vector<uint8_t>& getChipMask() { return fChipMask; }
-
       protected:
         
     };

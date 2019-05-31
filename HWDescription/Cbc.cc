@@ -23,7 +23,7 @@
 namespace Ph2_HwDescription {
     // C'tors with object FE Description
 
-    Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : Chip ( pFeDesc, pCbcId)
+    Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : ReadoutChip ( pFeDesc, pCbcId)
      {
         fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
         fChipMask = std::vector<uint8_t>(NCHANNELS%8 == 0 ? NCHANNELS/8 : NCHANNELS/8 + 1,0);
@@ -33,7 +33,7 @@ namespace Ph2_HwDescription {
 
     // C'tors which take BeId, FMCId, FeID, CbcId
 
-    Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename ) : Chip ( pBeId, pFMCId, pFeId, pCbcId)
+    Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename ) : ReadoutChip ( pBeId, pFMCId, pFeId, pCbcId)
 
     {
         fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
@@ -115,7 +115,7 @@ namespace Ph2_HwDescription {
         //LOG (DEBUG) << cItem.first;
     }
 
-    uint16_t Cbc::getReg ( const std::string& pReg ) const
+    /*uint16_t Cbc::getReg ( const std::string& pReg ) const
     {
         ChipRegMap::const_iterator i = fRegMap.find ( pReg );
 
@@ -127,8 +127,6 @@ namespace Ph2_HwDescription {
         else
             return i->second.fValue & 0xFF;
     }
-
-
     void Cbc::setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg )
     {
         ChipRegMap::iterator i = fRegMap.find ( pReg );
@@ -140,6 +138,7 @@ namespace Ph2_HwDescription {
         else
             i->second.fValue = psetValue & 0xFF;
     }
+    */
 
 
     //Write RegValues in a file

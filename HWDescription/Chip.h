@@ -50,11 +50,10 @@ namespace Ph2_HwDescription {
       public:
 
         // C'tors which take BeId, FMCId, FeID, ChipId
-        Chip ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId);
+        Chip ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue=8);
 
         // C'tors with object FE Description
-        Chip ( const FrontEndDescription& pFeDesc, uint8_t pChipId);
- 
+        Chip ( const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue=8);
 
         // Default C'tor
         Chip();
@@ -87,13 +86,13 @@ namespace Ph2_HwDescription {
         * \param pReg
         * \return The value of the register
         */
-        virtual uint16_t getReg ( const std::string& pReg ) const = 0;
+        uint16_t getReg ( const std::string& pReg ) const;
         /*!
         * \brief Set any register of the Map
         * \param pReg
         * \param psetValue
         */
-        virtual void setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) = 0;
+        void setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) ;
         /*!
         * \brief Get any registeritem of the Map
         * \param pReg
@@ -135,20 +134,9 @@ namespace Ph2_HwDescription {
             fChipId = pChipId;
         }
 
-        virtual uint32_t getNumberOfChannels() const  = 0;
-
-        // virtual std::vector<uint8_t>& getChipMask() = 0;
-
-        const ChannelGroupBase* getChipOriginalMask() const override {return fChipOriginalMask;}
-
-   //      bool hasMaskedChannels() const
-   //      {
-	  // return fhasMaskedChannels;
-   //      }
-	
-        // virtual bool IsChannelUnMasked(uint32_t cChan) const = 0;
-
-        virtual bool isDACLocal(const std::string &dacName)  = 0;
+        //virtual uint32_t getNumberOfChannels() const  = 0;
+        //const ChannelGroupBase* getChipOriginalMask() const override {return fChipOriginalMask;}
+        //virtual bool isDACLocal(const std::string &dacName)  = 0;
 
         virtual uint8_t getNumberOfBits(const std::string &dacName) = 0;
 
@@ -157,14 +145,14 @@ namespace Ph2_HwDescription {
         // uint16_t fNumberOfChannels;
         //Chip Description
         uint8_t fChipId;
+        uint16_t fMaxRegValue;
         // bool fhasMaskedChannels;
 
         // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value
         ChipRegMap fRegMap;
         CommentMap fCommentMap;
-        std::vector<uint8_t> fChipMask;
-        ChannelGroupBase*     fChipOriginalMask;
-        
+        //std::vector<uint8_t> fChipMask;
+        //ChannelGroupBase*     fChipOriginalMask;
     };
 
 
@@ -176,7 +164,6 @@ namespace Ph2_HwDescription {
     {
 
         bool operator() ( const Chip& cbc1, const Chip& cbc2 ) const;
-
     };
 
     /*!
