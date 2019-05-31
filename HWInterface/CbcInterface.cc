@@ -30,7 +30,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool CbcInterface::ConfigureChip ( const Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
+    bool CbcInterface::ConfigureChip ( const ReadoutChip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
     {
         //first, identify the correct BeBoardFWInterface
         setBoard ( pCbc->getBeBoardId() );
@@ -67,7 +67,7 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
-    bool CbcInterface::setInjectionSchema (Chip* pCbc, const ChannelGroupBase *group, bool pVerifLoop)
+    bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group, bool pVerifLoop)
     {
         uint8_t testPulseDel  = pCbc->getReg ("TestPulseDel&ChanGroup") & 0xF8;
         std::bitset<NCHANNELS> baseInjectionChannel (std::string("00000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011"));
@@ -80,12 +80,12 @@ namespace Ph2_HwInterface {
             }
         }
         if(channelGroup == 8)
-            throw Exception( "bool CbcInterface::setInjectionSchema (Chip* pCbc, const ChannelGroupBase *group, bool pVerifLoop): CBC is not able to inject the channel pattern" );
+            throw Exception( "bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group, bool pVerifLoop): CBC is not able to inject the channel pattern" );
         uint8_t cRegValue = testPulseDel & 3;
         return WriteChipReg ( pCbc, "TestPulseDel&ChanGroup",  cRegValue );
     }
 
-    bool CbcInterface::maskChannelsGroup (Chip* pCbc, const ChannelGroupBase *group, bool pVerifLoop)
+    bool CbcInterface::maskChannelsGroup (ReadoutChip* pCbc, const ChannelGroupBase *group, bool pVerifLoop)
     {
         const ChannelGroup<NCHANNELS,1>* originalMask     = static_cast<const ChannelGroup<NCHANNELS,1>*>(pCbc->getChipOriginalMask());
         const ChannelGroup<NCHANNELS,1>* currentGroupMask = static_cast<const ChannelGroup<NCHANNELS,1>*>(group                       );
@@ -104,7 +104,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool CbcInterface::ConfigureChipOriginalMask (Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
+    bool CbcInterface::ConfigureChipOriginalMask (ReadoutChip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
     {
         
         const ChannelGroup<NCHANNELS,1>* originalMask = static_cast<const ChannelGroup<NCHANNELS,1>*>(pCbc->getChipOriginalMask());
@@ -121,7 +121,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool CbcInterface::MaskAllChannels ( Chip* pCbc, bool mask, bool pVerifLoop )
+    bool CbcInterface::MaskAllChannels ( ReadoutChip* pCbc, bool mask, bool pVerifLoop )
     {
         uint8_t maskValue = mask ? 0x0 : 0xFF;
         std::vector<std::pair<std::string, uint16_t> >  cRegVec; 
@@ -135,7 +135,7 @@ namespace Ph2_HwInterface {
         return WriteChipMultReg ( pCbc, cRegVec, pVerifLoop );
     }
 
-    bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop )
+    bool CbcInterface::WriteChipReg ( ReadoutChip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop )
     {
         if(dacName=="VCth"){
             if (pCbc->getFrontEndType() == FrontEndType::CBC3)
@@ -179,7 +179,7 @@ namespace Ph2_HwInterface {
         return false;
     }
 
-    bool CbcInterface::WriteChipSingleReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop )
+    bool CbcInterface::WriteChipSingleReg ( ReadoutChip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop )
     {
 
         if ( pValue > 0xFF){
@@ -217,7 +217,7 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
-    bool CbcInterface::WriteChipMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop )
+    bool CbcInterface::WriteChipMultReg ( ReadoutChip* pCbc, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop )
     {
         //first, identify the correct BeBoardFWInterface
         setBoard ( pCbc->getBeBoardId() );
@@ -265,7 +265,7 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
-    bool CbcInterface::WriteChipAllLocalReg ( Chip* pCbc, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop )
+    bool CbcInterface::WriteChipAllLocalReg ( ReadoutChip* pCbc, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop )
     {
         assert(localRegValues.size()==pCbc->getNumberOfChannels());
         std::string dacTemplate;
@@ -304,7 +304,7 @@ namespace Ph2_HwInterface {
             
     }
 
-    uint16_t CbcInterface::ReadChipReg ( Chip* pCbc, const std::string& pRegNode )
+    uint16_t CbcInterface::ReadChipReg ( ReadoutChip* pCbc, const std::string& pRegNode )
     {
         setBoard ( pCbc->getBeBoardId() );
 
