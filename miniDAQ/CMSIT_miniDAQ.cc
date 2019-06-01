@@ -322,6 +322,7 @@ int main (int argc, char** argv)
 
       PixelAlive pa("PixelAlive.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, true);
       pa.Inherit(&cSystemController);
+      pa.InitHisto();
       pa.Run();
       pa.Display();
       pa.Save();
@@ -335,6 +336,7 @@ int main (int argc, char** argv)
 
       SCurve sc("SCurve.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       sc.Inherit(&cSystemController);
+      sc.InitHisto();
       sc.Run();
       sc.Analyze();
       sc.Display();
@@ -349,6 +351,7 @@ int main (int argc, char** argv)
 
       Gain ga("Gain.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       ga.Inherit(&cSystemController);
+      ga.InitHisto();
       ga.Run();
       // ga.Analyze();
       ga.Display();

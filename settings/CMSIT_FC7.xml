@@ -78,7 +78,7 @@
     <Setting name="LatencStop">  150 </Setting>
 
     <Setting name="VCALstart">   360 </Setting>
-    <Setting name="VCALstop">   4000 </Setting>
+    <Setting name="VCALstop">    600 </Setting>
     <Setting name="VCALnsteps">  240 </Setting>
   </Settings>
   

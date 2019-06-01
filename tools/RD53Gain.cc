@@ -22,11 +22,6 @@ Gain::Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t 
   nSteps(nSteps),
   Tool()
 {
-  std::stringstream myString;
-  myString.clear();
-  myString.str("");
-
-
   // ########################
   // # Custom channel group #
   // ########################
@@ -48,42 +43,6 @@ Gain::Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t 
   // ##############################
   float step = (stopValue - startValue) / nSteps;
   for (auto i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
-
-
-  // #######################
-  // # Allocate histograms #
-  // #######################
-  for (auto i = 0; i < NHISTO; i++)
-    {
-      myString << "theOccupancy_" << i;
-      theOccupancy.push_back(new TH2F(myString.str().c_str(),"Gain",nSteps,startValue,stopValue,nEvents,0,ADCDYNRANGE));
-      theOccupancy.back()->SetXTitle("VCal");
-      theOccupancy.back()->SetYTitle("ToT");
-    }
-
-  theGain1D = new TH1F("theGain1D","Gain-1D",100,0,1);
-  theGain1D->SetXTitle("Gain");
-  theGain1D->SetYTitle("Entries");
-
-  theIntercept1D = new TH1F("theIntercept1D","Intercept-1D",100,-10,10);
-  theIntercept1D->SetXTitle("ToT");
-  theIntercept1D->SetYTitle("Entries");
-
-  theGain2D = new TH2F("theGain2D","Gain-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
-  theGain2D->SetXTitle("Columns");
-  theGain2D->SetYTitle("Rows");
-
-  theIntercept2D = new TH2F("theThreshold","Intercept-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
-  theIntercept2D->SetXTitle("Columns");
-  theIntercept2D->SetYTitle("Rows");
-
-  theFile     = new TFile(fileName, "RECREATE");
-  theCanvas   = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
-  theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
-  theCanvasGa1D = new TCanvas("theCanvasGa1D","RD53Canvas",0,0,700,500);
-  theCanvasIn1D = new TCanvas("theCanvasIn1D","RD53Canvas",0,0,700,500);
-  theCanvasGa2D = new TCanvas("theCanvasGa2D","RD53Canvas",0,0,700,500);
-  theCanvasIn2D = new TCanvas("theCanvasIn2D","RD53Canvas",0,0,700,500);
 }
 
 Gain::~Gain()
@@ -114,6 +73,52 @@ Gain::~Gain()
   if (theGainAndInterceptContainer != nullptr) delete theGainAndInterceptContainer;
 }
 
+void Gain::InitHisto()
+{
+  std::stringstream myString;
+
+  // #######################
+  // # Allocate histograms #
+  // #######################
+  for (auto cBoard : fBoardVector)
+    for (auto cFe : cBoard->fModuleVector)
+      for (auto cChip : cFe->fChipVector)
+	{
+	  myString.clear();
+	  myString.str("");
+          myString << "Gain_Board" << std::setfill ('0') << std::setw (3) << +cBoard->getBeId()
+		   << "_Mod"       << std::setfill ('0') << std::setw (3) << +cFe->getFeId()
+		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue,stopValue,nEvents,0,RD53::SetBits<NBIT_TOT/NPIX_REGION>(NBIT_TOT/NPIX_REGION).to_ulong() - 1));
+	  theOccupancy.back()->SetXTitle("VCal");
+	  theOccupancy.back()->SetYTitle("ToT");
+	}
+  
+  theGain1D = new TH1F("theGain1D","Gain-1D",100,0,1);
+  theGain1D->SetXTitle("Gain");
+  theGain1D->SetYTitle("Entries");
+
+  theIntercept1D = new TH1F("theIntercept1D","Intercept-1D",100,-10,10);
+  theIntercept1D->SetXTitle("ToT");
+  theIntercept1D->SetYTitle("Entries");
+
+  theGain2D = new TH2F("theGain2D","Gain-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
+  theGain2D->SetXTitle("Columns");
+  theGain2D->SetYTitle("Rows");
+
+  theIntercept2D = new TH2F("theThreshold","Intercept-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
+  theIntercept2D->SetXTitle("Columns");
+  theIntercept2D->SetYTitle("Rows");
+
+  theFile     = new TFile(fileName, "RECREATE");
+  theCanvas   = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
+  theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
+  theCanvasGa1D = new TCanvas("theCanvasGa1D","RD53Canvas",0,0,700,500);
+  theCanvasIn1D = new TCanvas("theCanvasIn1D","RD53Canvas",0,0,700,500);
+  theCanvasGa2D = new TCanvas("theCanvasGa2D","RD53Canvas",0,0,700,500);
+  theCanvasIn2D = new TCanvas("theCanvasIn2D","RD53Canvas",0,0,700,500);
+}
+
 void Gain::Run()
 {
   ContainerFactory theDetectorFactory;
@@ -136,18 +141,18 @@ void Gain::Run()
   // #########################
   // # Filling the histogram #
   // #########################
+  size_t index = 0;
   for (auto cBoard : fBoardVector)
     for (auto cFe : cBoard->fModuleVector)
-      {
-	size_t indx = 0;
-	for (auto cChip : cFe->fChipVector)
+      for (auto cChip : cFe->fChipVector)
+	{
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      for (auto i = 0; i < dacList.size(); i++)
 		if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT != 0)
-		  theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
-	indx++;
-      }
+		  theOccupancy[index]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
+	  index++;
+	}
 }
 
 void Gain::Display()

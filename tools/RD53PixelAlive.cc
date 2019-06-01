@@ -20,11 +20,6 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   inject(inject),
   Tool()
 {
-  std::stringstream myString;
-  myString.clear();
-  myString.str("");
-
-
   // ########################
   // # Custom channel group #
   // ########################
@@ -39,22 +34,6 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   fChannelGroupHandler = new RD53ChannelGroupHandler();
   fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
-  
-
-  // #######################
-  // # Allocate histograms #
-  // #######################
-  for (auto i = 0; i < NHISTO; i++)
-    {
-      myString << "theOccupancy_" << i;
-      theOccupancy.push_back(new TH2F(myString.str().c_str(),"PixelAlive",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
-      theOccupancy.back()->SetXTitle("Columns");
-      theOccupancy.back()->SetYTitle("Rows");
-    }
-    
-  theFile   = new TFile(fileName, "RECREATE");
-  theCanvas = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
-  theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
 }
 
 PixelAlive::~PixelAlive()
@@ -66,6 +45,32 @@ PixelAlive::~PixelAlive()
   if (theCanvas != nullptr)            delete theCanvas;
   for (size_t i = 0; i < theOccupancy.size(); i++)
     if (theOccupancy[i] != nullptr) delete theOccupancy[i];
+}
+
+void PixelAlive::InitHisto()
+{
+  std::stringstream myString;
+
+  // #######################
+  // # Allocate histograms #
+  // #######################
+  for (auto cBoard : fBoardVector)
+    for (auto cFe : cBoard->fModuleVector)
+      for (auto cChip : cFe->fChipVector)
+        {
+	  myString.clear();
+	  myString.str("");
+          myString << "PixelAlive_Board" << std::setfill ('0') << std::setw (3) << +cBoard->getBeId()
+		   << "_Mod"             << std::setfill ('0') << std::setw (3) << +cFe->getFeId()
+		   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
+	  theOccupancy.back()->SetXTitle("Columns");
+	  theOccupancy.back()->SetYTitle("Rows");
+	}
+
+  theFile   = new TFile(fileName, "RECREATE");
+  theCanvas = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
+  theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
 }
 
 void PixelAlive::Run()
@@ -83,16 +88,16 @@ void PixelAlive::Run()
   // #########################
   // # Filling the histogram #
   // #########################
+  size_t index = 0;
   for (auto cBoard : fBoardVector)
     for (auto cFe : cBoard->fModuleVector)
-      {
-	size_t indx = 0;
-	for (auto cChip : cFe->fChipVector)
+      for (auto cChip : cFe->fChipVector)
+	{
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      theOccupancy[indx]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
-	indx++;
-      }
+	      theOccupancy[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+	  index++;
+	}
 }
 
 void PixelAlive::Display()

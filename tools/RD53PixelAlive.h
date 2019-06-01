@@ -19,12 +19,6 @@
 #include "TH2F.h"
 
 
-// #############
-// # CONSTANTS #
-// #############
-#define NHISTO 1
-
-
 using namespace Ph2_System;
 
 // #########################
@@ -36,6 +30,7 @@ class PixelAlive : public Tool
   PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, bool inject);
   ~PixelAlive();
 
+  void InitHisto();
   void Run();
   void Display();
   void Save();

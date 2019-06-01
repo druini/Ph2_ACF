@@ -22,11 +22,6 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   nSteps(nSteps),
   Tool()
 {
-  std::stringstream myString;
-  myString.clear();
-  myString.str("");
-
-
   // ########################
   // # Custom channel group #
   // ########################
@@ -48,42 +43,6 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   // ##############################
   float step = (stopValue - startValue) / nSteps;
   for (auto i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
-
-
-  // #######################
-  // # Allocate histograms #
-  // #######################
-  for (auto i = 0; i < NHISTO; i++)
-    {
-      myString << "theOccupancy_" << i;
-      theOccupancy.push_back(new TH2F(myString.str().c_str(),"SCurve",nSteps,startValue,stopValue,nEvents+1,0,1+1./nEvents));
-      theOccupancy.back()->SetXTitle("VCal");
-      theOccupancy.back()->SetYTitle("Efficiency");
-    }
-
-  theNoise1D = new TH1F("theNoise1D","Noise-1D",100,0,100);
-  theNoise1D->SetXTitle("VCal");
-  theNoise1D->SetYTitle("Entries");
-
-  theThreshold1D = new TH1F("theThreshold1D","Threshold-1D",1000,0,1000);
-  theThreshold1D->SetXTitle("VCal");
-  theThreshold1D->SetYTitle("Entries");
-
-  theNoise2D = new TH2F("theNoise2D","Noise-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
-  theNoise2D->SetXTitle("Columns");
-  theNoise2D->SetYTitle("Rows");
-
-  theThreshold2D = new TH2F("theThreshold","Threshold-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
-  theThreshold2D->SetXTitle("Columns");
-  theThreshold2D->SetYTitle("Rows");
-
-  theFile       = new TFile(fileName, "RECREATE");
-  theCanvas     = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
-  theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
-  theCanvasTh1D = new TCanvas("theCanvasTh1D","RD53Canvas",0,0,700,500);
-  theCanvasNo1D = new TCanvas("theCanvasNo1D","RD53Canvas",0,0,700,500);
-  theCanvasTh2D = new TCanvas("theCanvasTh2D","RD53Canvas",0,0,700,500);
-  theCanvasNo2D = new TCanvas("theCanvasNo2D","RD53Canvas",0,0,700,500);
 }
 
 SCurve::~SCurve()
@@ -114,6 +73,52 @@ SCurve::~SCurve()
   if (theThresholdAndNoiseContainer != nullptr) delete theThresholdAndNoiseContainer;
 }
 
+void SCurve::InitHisto()
+{
+  std::stringstream myString;
+
+  // #######################
+  // # Allocate histograms #
+  // #######################
+  for (auto cBoard : fBoardVector)
+    for (auto cFe : cBoard->fModuleVector)
+      for (auto cChip : cFe->fChipVector)
+	{
+	  myString.clear();
+	  myString.str("");
+          myString << "SCurve_Board" << std::setfill ('0') << std::setw (3) << +cBoard->getBeId()
+		   << "_Mod"         << std::setfill ('0') << std::setw (3) << +cFe->getFeId()
+		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue,stopValue,nEvents/2+1,0,1+2./nEvents)); // @TMP@
+	  theOccupancy.back()->SetXTitle("VCal");
+	  theOccupancy.back()->SetYTitle("Efficiency");
+	}
+
+  theNoise1D = new TH1F("theNoise1D","Noise-1D",100,0,100);
+  theNoise1D->SetXTitle("VCal");
+  theNoise1D->SetYTitle("Entries");
+
+  theThreshold1D = new TH1F("theThreshold1D","Threshold-1D",1000,0,1000);
+  theThreshold1D->SetXTitle("VCal");
+  theThreshold1D->SetYTitle("Entries");
+
+  theNoise2D = new TH2F("theNoise2D","Noise-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
+  theNoise2D->SetXTitle("Columns");
+  theNoise2D->SetYTitle("Rows");
+
+  theThreshold2D = new TH2F("theThreshold","Threshold-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
+  theThreshold2D->SetXTitle("Columns");
+  theThreshold2D->SetYTitle("Rows");
+
+  theFile       = new TFile(fileName, "RECREATE");
+  theCanvas     = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
+  theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
+  theCanvasTh1D = new TCanvas("theCanvasTh1D","RD53Canvas",0,0,700,500);
+  theCanvasNo1D = new TCanvas("theCanvasNo1D","RD53Canvas",0,0,700,500);
+  theCanvasTh2D = new TCanvas("theCanvasTh2D","RD53Canvas",0,0,700,500);
+  theCanvasNo2D = new TCanvas("theCanvasNo2D","RD53Canvas",0,0,700,500);
+}
+
 void SCurve::Run()
 {
   ContainerFactory theDetectorFactory;
@@ -136,28 +141,20 @@ void SCurve::Run()
   // #########################
   // # Filling the histogram #
   // #########################
+  size_t index = 0;
   for (auto cBoard : fBoardVector)
-    {
-      for (auto cFe : cBoard->fModuleVector)
+    for (auto cFe : cBoard->fModuleVector)
+      for (auto cChip : cFe->fChipVector)
 	{
-	  size_t indx = 0;
-	  for (auto cChip : cFe->fChipVector)
-	    {
-	      for (auto row = 0; row < RD53::nRows; row++)
+	  for (auto row = 0; row < RD53::nRows; row++)
+	    for (auto col = 0; col < RD53::nCols; col++)
+	      for (auto i = 0; i < dacList.size(); i++)
 		{
-		  for (auto col = 0; col < RD53::nCols; col++)
-		    {
-		      for (auto i = 0; i < dacList.size(); i++)
-			{
-			  if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
-			    theOccupancy[indx]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
-			}
-		    }
+		  if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
+		    theOccupancy[index]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 		}
-	    }
-	  indx++;
+	  index++;
 	}
-    }
 }
 
 void SCurve::Display()

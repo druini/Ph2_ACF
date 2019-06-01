@@ -20,13 +20,6 @@
 #include "TH2F.h"
 
 
-// #############
-// # CONSTANTS #
-// #############
-#define NHISTO       1
-#define ADCDYNRANGE 16
-
-
 using namespace Ph2_System;
 
 // ##########################
@@ -38,6 +31,7 @@ class Gain : public Tool
   Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, float startValue, float stopValue, size_t nSteps);
   ~Gain();
 
+  void InitHisto();
   void Run();
   void Display();
   void Analyze();
