@@ -59,16 +59,16 @@ class Gain : public Tool
 
   void ComputeStats(double& gain, double& intercept);
 
-  TFile*   theFile;
-  TCanvas* theCanvas;
+  TFile* theFile;
+  std::vector<TCanvas*> theCanvas;
+  std::vector<TH2F*>    theOccupancy;
   TCanvas* theCanvasGa1D;
-  TCanvas* theCanvasIn1D;
-  TCanvas* theCanvasGa2D;
-  TCanvas* theCanvasIn2D;
-  std::vector<TH2F*> theOccupancy;
   TH1F*    theGain1D;
+  TCanvas* theCanvasIn1D;
   TH1F*    theIntercept1D;
+  TCanvas* theCanvasGa2D;
   TH2F*    theGain2D;
+  TCanvas* theCanvasIn2D;
   TH2F*    theIntercept2D;
 };
 

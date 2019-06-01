@@ -59,17 +59,17 @@ class SCurve : public Tool
 
   void ComputeStats(std::vector<float>& measurements, float& mean, float& rms);
 
-  TFile*   theFile;
-  TCanvas* theCanvas;
+  TFile* theFile;
+  std::vector<TCanvas*> theCanvas;
+  std::vector<TH2F*>    theOccupancy;
   TCanvas* theCanvasTh1D;
-  TCanvas* theCanvasNo1D;
-  TCanvas* theCanvasTh2D;
-  TCanvas* theCanvasNo2D;
-  std::vector<TH2F*> theOccupancy;
-  TH1F*    theNoise1D;
   TH1F*    theThreshold1D;
-  TH2F*    theNoise2D;
+  TCanvas* theCanvasNo1D;
+  TH1F*    theNoise1D;
+  TCanvas* theCanvasTh2D;
   TH2F*    theThreshold2D;
+  TCanvas* theCanvasNo2D;
+  TH2F*    theNoise2D;
 };
 
 #endif

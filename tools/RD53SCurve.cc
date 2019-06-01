@@ -50,22 +50,24 @@ SCurve::~SCurve()
   theFile->Close();
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
-  if (theFile != nullptr)              delete theFile;
-  if (theCanvas != nullptr)            delete theCanvas;
-  for (size_t i = 0; i < theOccupancy.size(); i++)
-    if (theOccupancy[i] != nullptr) delete theOccupancy[i];
-
-  if (theCanvasNo1D != nullptr)  delete theCanvasNo1D;
-  if (theNoise1D != nullptr)     delete theNoise1D;
-
-  if (theCanvasTh1D != nullptr)  delete theCanvasTh1D;
+  if (theFile              != nullptr) delete theFile;
+  for (auto i = 0; i < theOccupancy.size(); i++)
+    {
+      if (theOccupancy[i] != nullptr) delete theOccupancy[i];
+      if (theCanvas[i]    != nullptr) delete theCanvas[i];
+    }
+ 
   if (theThreshold1D != nullptr) delete theThreshold1D;
+  if (theCanvasTh1D  != nullptr) delete theCanvasTh1D;
 
-  if (theCanvasNo2D != nullptr)  delete theCanvasNo2D;
-  if (theNoise2D != nullptr)     delete theNoise2D;
+  if (theNoise1D    != nullptr)  delete theNoise1D;
+  if (theCanvasNo1D != nullptr)  delete theCanvasNo1D;
 
-  if (theCanvasTh2D != nullptr)  delete theCanvasTh2D;
   if (theThreshold2D != nullptr) delete theThreshold2D;
+  if (theCanvasTh2D  != nullptr) delete theCanvasTh2D;
+
+  if (theNoise2D    != nullptr)  delete theNoise2D;
+  if (theCanvasNo2D != nullptr)  delete theCanvasNo2D;
 
   for (auto i = 0; i < detectorContainerVector.size(); i++)
     if (detectorContainerVector[i] != nullptr) delete detectorContainerVector[i];
@@ -86,12 +88,19 @@ void SCurve::InitHisto()
 	{
 	  myString.clear();
 	  myString.str("");
-          myString << "SCurve_Board" << std::setfill ('0') << std::setw (3) << +cBoard->getBeId()
-		   << "_Mod"         << std::setfill ('0') << std::setw (3) << +cFe->getFeId()
+          myString << "SCurve_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
 		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
 	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue,stopValue,nEvents/2+1,0,1+2./nEvents)); // @TMP@
 	  theOccupancy.back()->SetXTitle("VCal");
 	  theOccupancy.back()->SetYTitle("Efficiency");
+
+	  myString.clear();
+	  myString.str("");
+          myString << "theCanvas_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
   theNoise1D = new TH1F("theNoise1D","Noise-1D",100,0,100);
@@ -111,8 +120,6 @@ void SCurve::InitHisto()
   theThreshold2D->SetYTitle("Rows");
 
   theFile       = new TFile(fileName, "RECREATE");
-  theCanvas     = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
-  theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
   theCanvasTh1D = new TCanvas("theCanvasTh1D","RD53Canvas",0,0,700,500);
   theCanvasNo1D = new TCanvas("theCanvasNo1D","RD53Canvas",0,0,700,500);
   theCanvasTh2D = new TCanvas("theCanvasTh2D","RD53Canvas",0,0,700,500);
@@ -161,13 +168,12 @@ void SCurve::Display()
 {
   for (size_t i = 0; i < theOccupancy.size(); i++)
     {
-      theCanvas->cd(i+1);
+      theCanvas[i]->cd();
       theOccupancy[i]->Draw("gcolz");
+      theCanvas[i]->Modified();
+      theCanvas[i]->Update();
     }
   
-  theCanvas->Modified();
-  theCanvas->Update();
-
   theCanvasTh1D->cd();
   theThreshold1D->Draw();
   theCanvasTh1D->Modified();
@@ -228,14 +234,23 @@ void SCurve::Analyze()
 
 void SCurve::Save()
 {
-  theCanvas->Write();
-  theCanvasTh1D->Write();
-  theCanvasNo1D->Write();
-  theCanvasTh2D->Write();
-  theCanvasNo2D->Write();
+  std::stringstream myString;
+
+  for (auto i = 0; i < theOccupancy.size(); i++)
+    {
+      theOccupancy[i]->Write();
+      myString.clear();
+      myString.str("");
+      myString << theOccupancy[i]->GetName() << ".png";
+      theCanvas[i]->Print(myString.str().c_str());
+    }
+
+  theThreshold1D->Write();
+  theNoise1D->Write();
+  theThreshold2D->Write();
+  theNoise2D->Write();
   theFile->Write();
 
-  theCanvas->Print("SCurve.png");
   theCanvasTh1D->Print("SCurveTh1D.png");
   theCanvasNo1D->Print("SCurveNo1D.png");
   theCanvasTh2D->Print("SCurveTh2D.png");

@@ -41,10 +41,12 @@ PixelAlive::~PixelAlive()
   theFile->Close();
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
-  if (theFile != nullptr)              delete theFile;
-  if (theCanvas != nullptr)            delete theCanvas;
-  for (size_t i = 0; i < theOccupancy.size(); i++)
-    if (theOccupancy[i] != nullptr) delete theOccupancy[i];
+  if (theFile              != nullptr) delete theFile;
+  for (auto i = 0; i < theOccupancy.size(); i++)
+    {
+      if (theOccupancy[i] != nullptr) delete theOccupancy[i];
+      if (theCanvas[i]    != nullptr) delete theCanvas[i];
+    }
 }
 
 void PixelAlive::InitHisto()
@@ -60,17 +62,22 @@ void PixelAlive::InitHisto()
         {
 	  myString.clear();
 	  myString.str("");
-          myString << "PixelAlive_Board" << std::setfill ('0') << std::setw (3) << +cBoard->getBeId()
-		   << "_Mod"             << std::setfill ('0') << std::setw (3) << +cFe->getFeId()
+          myString << "PixelAlive_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
 		   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
 	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
 	  theOccupancy.back()->SetXTitle("Columns");
 	  theOccupancy.back()->SetYTitle("Rows");
+
+	  myString.clear();
+	  myString.str("");
+          myString << "theCanvas_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
-  theFile   = new TFile(fileName, "RECREATE");
-  theCanvas = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
-  theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
+  theFile = new TFile(fileName, "RECREATE");
 }
 
 void PixelAlive::Run()
@@ -102,20 +109,27 @@ void PixelAlive::Run()
 
 void PixelAlive::Display()
 {
-  for (size_t i = 0; i < theOccupancy.size(); i++)
+  for (auto i = 0; i < theOccupancy.size(); i++)
     {
-      theCanvas->cd(i+1);
+      theCanvas[i]->cd();
       theOccupancy[i]->Draw("gcolz");
+      theCanvas[i]->Modified();
+      theCanvas[i]->Update();
     }
-  
-  theCanvas->Modified();
-  theCanvas->Update();
 }
 
 void PixelAlive::Save()
 {
-  theCanvas->Write();
-  theFile->Write();
+  std::stringstream myString;
 
-  theCanvas->Print("PixelAlive.png");
+  for (auto i = 0; i < theOccupancy.size(); i++)
+    {
+      theOccupancy[i]->Write();
+      myString.clear();
+      myString.str("");
+      myString << theOccupancy[i]->GetName() << ".png";
+      theCanvas[i]->Print(myString.str().c_str());
+    }
+
+  theFile->Write();
 }

@@ -50,22 +50,24 @@ Gain::~Gain()
   theFile->Close();
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
-  if (theFile != nullptr)              delete theFile;
-  if (theCanvas != nullptr)            delete theCanvas;
+  if (theFile              != nullptr) delete theFile;
   for (size_t i = 0; i < theOccupancy.size(); i++)
-    if (theOccupancy[i] != nullptr) delete theOccupancy[i];
+    {
+      if (theOccupancy[i] != nullptr) delete theOccupancy[i];
+      if (theCanvas[i]    != nullptr) delete theCanvas[i];
+    }
 
+  if (theGain1D     != nullptr)  delete theGain1D;
   if (theCanvasGa1D != nullptr)  delete theCanvasGa1D;
-  if (theGain1D != nullptr)      delete theGain1D;
 
-  if (theCanvasIn1D != nullptr)  delete theCanvasIn1D;
   if (theIntercept1D != nullptr) delete theIntercept1D;
+  if (theCanvasIn1D  != nullptr) delete theCanvasIn1D;
 
+  if (theGain2D     != nullptr)  delete theGain2D;
   if (theCanvasGa2D != nullptr)  delete theCanvasGa2D;
-  if (theGain2D != nullptr)      delete theGain2D;
 
-  if (theCanvasIn2D != nullptr)  delete theCanvasIn2D;
   if (theIntercept2D != nullptr) delete theIntercept2D;
+  if (theCanvasIn2D  != nullptr) delete theCanvasIn2D;
 
   for (auto i = 0; i < detectorContainerVector.size(); i++)
     if (detectorContainerVector[i] != nullptr) delete detectorContainerVector[i];
@@ -86,12 +88,19 @@ void Gain::InitHisto()
 	{
 	  myString.clear();
 	  myString.str("");
-          myString << "Gain_Board" << std::setfill ('0') << std::setw (3) << +cBoard->getBeId()
-		   << "_Mod"       << std::setfill ('0') << std::setw (3) << +cFe->getFeId()
+          myString << "Gain_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
 		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
 	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue,stopValue,nEvents,0,RD53::SetBits<NBIT_TOT/NPIX_REGION>(NBIT_TOT/NPIX_REGION).to_ulong() - 1));
 	  theOccupancy.back()->SetXTitle("VCal");
 	  theOccupancy.back()->SetYTitle("ToT");
+
+	  myString.clear();
+	  myString.str("");
+          myString << "theCanvas_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
   
   theGain1D = new TH1F("theGain1D","Gain-1D",100,0,1);
@@ -110,9 +119,7 @@ void Gain::InitHisto()
   theIntercept2D->SetXTitle("Columns");
   theIntercept2D->SetYTitle("Rows");
 
-  theFile     = new TFile(fileName, "RECREATE");
-  theCanvas   = new TCanvas("theCanvas","RD53Canvas",0,0,700,500);
-  theCanvas->Divide(sqrt(theOccupancy.size()),sqrt(theOccupancy.size()));
+  theFile       = new TFile(fileName, "RECREATE");
   theCanvasGa1D = new TCanvas("theCanvasGa1D","RD53Canvas",0,0,700,500);
   theCanvasIn1D = new TCanvas("theCanvasIn1D","RD53Canvas",0,0,700,500);
   theCanvasGa2D = new TCanvas("theCanvasGa2D","RD53Canvas",0,0,700,500);
@@ -159,32 +166,31 @@ void Gain::Display()
 {
   for (size_t i = 0; i < theOccupancy.size(); i++)
     {
-      theCanvas->cd(i+1);
+      theCanvas[i]->cd();
       theOccupancy[i]->Draw("gcolz");
+      theCanvas[i]->Modified();
+      theCanvas[i]->Update();
     }
   
-  theCanvas->Modified();
-  theCanvas->Update();
+  theCanvasGa1D->cd();
+  theGain1D->Draw();
+  theCanvasGa1D->Modified();
+  theCanvasGa1D->Update();
 
   theCanvasIn1D->cd();
   theIntercept1D->Draw();
   theCanvasIn1D->Modified();
   theCanvasIn1D->Update();
 
-  theCanvasGa1D->cd();
-  theGain1D->Draw();
-  theCanvasGa1D->Modified();
-  theCanvasGa1D->Update();
+  theCanvasGa2D->cd();
+  theGain2D->Draw("gcolz");
+  theCanvasGa2D->Modified();
+  theCanvasGa2D->Update();
 
   theCanvasIn2D->cd();
   theIntercept2D->Draw("gcolz");
   theCanvasIn2D->Modified();
   theCanvasIn2D->Update();
-
-  theCanvasGa2D->cd();
-  theGain2D->Draw("gcolz");
-  theCanvasGa2D->Modified();
-  theCanvasGa2D->Update();
 }
 
 void Gain::Analyze()
@@ -217,15 +223,24 @@ void Gain::Analyze()
 }
 
 void Gain::Save()
-{
-  theCanvas->Write();
-  theCanvasGa1D->Write();
-  theCanvasIn1D->Write();
-  theCanvasGa2D->Write();
-  theCanvasIn2D->Write();
+{ 
+  std::stringstream myString;
+  
+  for (auto i = 0; i < theOccupancy.size(); i++)
+    {
+      theOccupancy[i]->Write();
+      myString.clear();
+      myString.str("");
+      myString << theOccupancy[i]->GetName() << ".png";
+      theCanvas[i]->Print(myString.str().c_str());
+    }
+
+  theGain1D->Write();
+  theIntercept1D->Write();
+  theGain2D->Write();
+  theIntercept2D->Write();
   theFile->Write();
 
-  theCanvas->Print("Gain.png");
   theCanvasGa1D->Print("Gain1D.png");
   theCanvasIn1D->Print("InterceptD.png");
   theCanvasGa2D->Print("Gain2D.png");
