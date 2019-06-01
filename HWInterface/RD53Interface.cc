@@ -291,19 +291,20 @@ namespace Ph2_HwInterface
 		  {
 		    pRD53->ConvertRowCol2Cores (row,col,row_,colPair);
 		    this->WriteChipReg(pRD53, "REGION_ROW", row_, pVerifLoop);
-		    this->WriteChipReg(pRD53,"PIX_PORTAL",data,pVerifLoop);
+		    this->WriteChipReg(pRD53, "PIX_PORTAL", data, pVerifLoop);
 		  }
 	      }
 	    else
 	      {
 		dataVec.push_back(data);
+
 		if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
 		  {
 		    itPixCmd++;
 		    
 		    if (itPixCmd == NPIXCMD)
 		      {
-			this->WriteRD53Reg(pRD53,"PIX_PORTAL",&dataVec,itPixCmd);
+			this->WriteRD53Reg(pRD53, "PIX_PORTAL", &dataVec, itPixCmd);
 			dataVec.clear();
 			itPixCmd = 0;
 		      }
@@ -355,7 +356,7 @@ namespace Ph2_HwInterface
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->injectPixel(row,col,group->isChannelEnabled(row,col));
     
-    this->WriteRD53Mask(pRD53, false, false, false);
+    this->WriteRD53Mask(pRD53, true, false, false);
 
     return true;
   }
@@ -368,7 +369,7 @@ namespace Ph2_HwInterface
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->enablePixel(row,col,group->isChannelEnabled(row,col));
 
-    this->WriteRD53Mask(pRD53, false, false, false);
+    this->WriteRD53Mask(pRD53, true, false, false);
 
     return true;
   }

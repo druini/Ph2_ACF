@@ -102,7 +102,8 @@
       <node id="data_handshake_en"    mask="0x00000001"       permission="rw"      description="Enable data handshake" />
       <node id="l1a_timeout_value"    mask="0x00001FFE"       permission="rw"      description="" />
       <node id="ddr3_traffic_str"     mask="0x00002000"       permission="rw"      description="" />
-    </node>	
+      <node id="Nb_of_events"         mask="0x3FFFC000"       permission="rw"      description="" />
+    </node>
 
     <node id="Hybrid1"              address="0x0000000B"    permission="rw"      description="">
       <node id="Hybrid_en"            mask="0x00000001"       permission="rw"      description="" />
