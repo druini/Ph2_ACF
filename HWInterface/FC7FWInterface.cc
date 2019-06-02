@@ -520,9 +520,7 @@ namespace Ph2_HwInterface
   {
     std::vector<size_t> event_start;
     for (size_t i = 0; i < data.size(); i++)
-      {
-	if (data[i] >> NBIT_BLOCKSIZE == EVT_HEADER) event_start.push_back(i);
-      }
+      if (data[i] >> NBIT_BLOCKSIZE == EVT_HEADER) event_start.push_back(i);
 
     std::vector<FC7FWInterface::Event> events;
     events.reserve(event_start.size());
@@ -542,7 +540,7 @@ namespace Ph2_HwInterface
     unsigned int nEvts = 0;
     size_t maxL1Counter = RD53::SetBits<NBIT_TRIGID>(NBIT_TRIGID).to_ulong() + 1;
 
-    for (int i = 0; i < events.size(); i++)
+    for (auto i = 0; i < events.size(); i++)
       {
 	auto& evt = events[i];
 	if (print == true)
@@ -556,7 +554,13 @@ namespace Ph2_HwInterface
 	    LOG (INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter      << RESET;
 	  }
 
-	for (size_t j = 0; j < evt.chip_events.size(); j++)
+	if (evt.chip_frames.size() == 0)
+	  {
+	    exception = "Event without frame data [error_code; hybrid_id; chip_id; l1a_data_size; chip_type; frame_delay]";
+	    return -1;
+	  }
+
+	for (auto j = 0; j < evt.chip_events.size(); j++)
 	  {
 	    if (print == true)
 	      {
@@ -604,7 +608,11 @@ namespace Ph2_HwInterface
   {
     std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
     
-    if (block_size * 4 != n) LOG (ERROR) << BOLDRED << "Invalid event block size: " << BOLDYELLOW << block_size << BOLDRED << " instead of " << BOLDYELLOW << (n / 4) << RESET;
+    if (block_size * 4 != n)
+      {
+	LOG (ERROR) << BOLDRED << "Invalid event block size: " << BOLDYELLOW << block_size << BOLDRED << " instead of " << BOLDYELLOW << (n / 4) << RESET;
+	return;
+      }
 
     bool dummy_size;
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
@@ -625,16 +633,22 @@ namespace Ph2_HwInterface
 	const size_t size = (dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start);
 	chip_events.emplace_back(&data[start + 2], size - 2);
 	
- 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end-start)) LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
+ 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start))
+	  {
+	    // @TMP@
+	    // LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
+	    LOG (ERROR) << BOLDRED << "Invalid chip L1A data size " << dummy_size << "\t" << chip_frames[i].l1a_data_size << "\t" << end - start << RESET;
+	    chip_frames.clear();
+	    chip_events.clear();
+	    return;
+	  }
       }
   }
 
   FC7FWInterface::ChipFrame::ChipFrame (const uint32_t data0, const uint32_t data1)
   {
-    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = 
-      unpack_bits<NBIT_ERR, NBIT_HYBRID, NBIT_CHIPID, NBIT_L1ASIZE>(data0);
-    
-    std::tie(chip_type, frame_delay) = unpack_bits<NBIT_CHIPTYPE, NBIT_FRAME>(data1);
+    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = unpack_bits<NBIT_ERR, NBIT_HYBRID, NBIT_CHIPID, NBIT_L1ASIZE>(data0);    
+    std::tie(chip_type, frame_delay)                        = unpack_bits<NBIT_CHIPTYPE, NBIT_FRAME>(data1);
   }
   
   void FC7FWInterface::SendBoardCommand (const std::string& cmd_reg)

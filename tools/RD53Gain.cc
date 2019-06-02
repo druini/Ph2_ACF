@@ -51,7 +51,7 @@ Gain::~Gain()
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
   if (theFile              != nullptr) delete theFile;
-  for (size_t i = 0; i < theOccupancy.size(); i++)
+  for (auto i = 0; i < theOccupancy.size(); i++)
     {
       if (theOccupancy[i] != nullptr) delete theOccupancy[i];
       if (theCanvas[i]    != nullptr) delete theCanvas[i];
@@ -164,7 +164,7 @@ void Gain::Run()
 
 void Gain::Display()
 {
-  for (size_t i = 0; i < theOccupancy.size(); i++)
+  for (auto i = 0; i < theOccupancy.size(); i++)
     {
       theCanvas[i]->cd();
       theOccupancy[i]->Draw("gcolz");

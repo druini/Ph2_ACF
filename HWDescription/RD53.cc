@@ -576,7 +576,11 @@ namespace Ph2_HwDescription
   {
     uint32_t header;
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<NBIT_HEADER, NBIT_TRIGID, NBIT_TRGTAG, NBIT_BCID>(*data);
-    if (header != HEADER) LOG (ERROR) << BOLDRED << "Invalid RD53 event header" << RESET;
+    if (header != HEADER)
+      {
+	LOG (ERROR) << BOLDRED << "Invalid RD53 event header" << RESET;
+	return;
+      }
     size_t noHitToT = RD53::SetBits<NBIT_TOT>(NBIT_TOT).to_ulong();
     for (size_t i = 1; i < n; i++)
       if (data[i] != noHitToT) this->data.emplace_back(data[i]);

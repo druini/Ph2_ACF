@@ -95,8 +95,8 @@ namespace Ph2_HwInterface
     void Resume()                 override;
     bool InitChipCommunication () override;
 
-    void     ReadNEvents  (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = false)  override;
-    uint32_t ReadData     (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = false) override;
+    void     ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = false)  override;
+    uint32_t ReadData    (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = false) override;
 
     void WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd = 1, unsigned int repetition = 1)                                 override;
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadChipRegisters (std::vector<uint32_t> & data, unsigned int nBlocks2Read = 1) override;
