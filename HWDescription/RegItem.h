@@ -29,7 +29,6 @@ namespace Ph2_HwDescription {
         uint16_t fAddress;
         uint8_t fDefValue;
         uint8_t fValue;
-
     };
 }
 

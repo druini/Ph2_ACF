@@ -11,7 +11,6 @@
 #define _RD53_h_
 
 #include "Chip.h"
-#include "RD53RegItem.h"
 
 #include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
@@ -20,7 +19,6 @@
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/bit_packing.h"
 
-#include <unordered_map>
 #include <iomanip>
 #include <bitset>
 #include <cmath>
@@ -44,6 +42,7 @@
 #define NBIT_TDAC   4 // Number of TDAC bits
 #define HIGHGAIN 0x80 // Set High Gain Linear FE
 
+#define NOHIT_TOT  0xF    // ToT value corresponding to no-hit
 #define RESET_ECR  0x5A5A // Event Counter Reset word
 #define RESET_BCR  0x5959 // Bunch Counter Reset word
 #define GLOB_PULSE 0x5C5C // Global pulse word
@@ -118,7 +117,7 @@ namespace Ph2_HwDescription
     void injectPixel      (unsigned int row, unsigned int col, bool inject);
     void setTDAC          (unsigned int row, unsigned int col, uint8_t TDAC);
 
-    void EncodeCMD (const RD53RegItem                   & pRegItem,
+    void EncodeCMD (const ChipRegItem                   & pRegItem,
 		    const uint8_t                         pRD53Id,
 		    const uint16_t                        pRD53Cmd,
 		    std::vector<std::vector<uint16_t> > & pVecReg);
@@ -186,6 +185,14 @@ namespace Ph2_HwDescription
       uint8_t cal_aux_delay;
     };
   
+    template<size_t NBITS>
+    static std::bitset<NBITS> SetBits (size_t nBit2Set)
+    {
+      std::bitset<NBITS> output(0);
+      for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
+      return output;
+    }
+
   private:
     std::vector<perPixelData> fPixelsMask;
     std::vector<perPixelData> fPixelsMaskDefault;
@@ -246,9 +253,6 @@ namespace Ph2_HwDescription
 	0x55, // 14
 	0x56  // 15
       };
-    
-    template<size_t NBITS>
-      std::bitset<NBITS> SetBits (size_t nBit2Set);
   };
 }
 
