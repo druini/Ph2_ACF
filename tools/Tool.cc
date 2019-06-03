@@ -930,7 +930,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, c
 	DetectorContainer *outputDataContainer = fDetectorDataContainer;
 
 	float globalOccupancy = 0.;
-	Chip *cChip = static_cast<BeBoard*>(fDetectorContainer->at(boardIndex))->fModuleVector.at(0)->fChipVector.at(0); //assumption: one BeBoard has only one type of chip;
+	ReadoutChip *cChip = static_cast<BeBoard*>(fDetectorContainer->at(boardIndex))->fModuleVector.at(0)->fReadoutChipVector.at(0); //assumption: one BeBoard has only one type of chip;
 
 	bool localDAC = cChip->isDACLocal(dacName);
 	uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
@@ -1240,7 +1240,7 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, c
 {
 	for ( auto cFe : pBoard->fModuleVector )
 	{
-		for ( auto cChip : cFe->fChipVector )
+		for ( auto cChip : cFe->fReadoutChipVector )
 		{
 			ChannelContainer<RegisterValue>* dacVector = new ChannelContainer<RegisterValue>(cChip->getNumberOfChannels(),RegisterValue(dacValue));
 			ChipContainer theChipContainer(cChip->getId(),cChip->getNumberOfRows(),cChip->getNumberOfCols());

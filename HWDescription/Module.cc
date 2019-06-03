@@ -116,46 +116,4 @@ namespace Ph2_HwDescription {
             return false;
         }
     }
-
-
-//   // #################
-//   // # RD53 specific #
-//   // #################  
-//   bool Module::removeRD53 (uint8_t pRD53Id)
-//   {
-//     std::vector < RD53* > :: iterator i;
-//     bool found = false;
-    
-//     for (i = fRD53Vector.begin(); i != fRD53Vector.end(); ++i)
-//       {
-// 	if ((*i)->getRD53Id() == pRD53Id)
-// 	  {
-// 	    found = true;
-// 	    break;
-// 	  }
-//       }
-    
-//     if (found)
-//       {
-// 	fRD53Vector.erase (i);
-// 	return true;
-//       }
-//     else
-//       {
-// 	LOG (INFO) << "Error:The Module " << +fModuleId << " doesn't have the RD53 " << +pRD53Id;
-// 	return false;
-//       }
-//   }
-  
-//   RD53* Module::getRD53 (uint8_t pRD53Id) const
-//   {
-//     for (RD53* c : fRD53Vector)
-//       {
-// 	if (c->getRD53Id() == pRD53Id)
-// 	  return c;
-//       }
-    
-//     return nullptr;
-//   }
-//   // #################  
 }

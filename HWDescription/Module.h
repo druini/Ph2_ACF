@@ -14,6 +14,7 @@
 
 #include "FrontEndDescription.h"
 // #include "RD53.h"
+#include "ReadoutChip.h"
 #include "Chip.h"
 #include "MPA.h"
 #include "SSA.h"
@@ -51,23 +52,6 @@ namespace Ph2_HwDescription {
         // D'tor
         ~Module()
         {
-            // for ( auto& pChip : fChipVector )
-            //     if (pChip) delete pChip;
-
-            // fChipVector.clear();
-
-            // for ( auto& pMPA : fMPAVector )
-            //     delete pMPA;
-
-       	    // for ( auto& pSSA : fSSAVector )
-            // delete pSSA;
-
-            // fMPAVector.clear();
- 
-	    // for ( auto& pRD53 : fRD53Vector )
-	    //   if (pRD53) delete pRD53;
-	    
-     //        fRD53Vector.clear();
         };
 
         /*!
@@ -76,16 +60,11 @@ namespace Ph2_HwDescription {
          */
         void accept ( HwDescriptionVisitor& pVisitor )
         {
-	  pVisitor.visit ( *this );
-	  
-	  for ( Chip* cChip : fChipVector )
-	    cChip->accept ( pVisitor );
+            pVisitor.visit ( *this );
+
+            for ( Chip* cChip : fChipVector )
+                cChip->accept ( pVisitor );
         }
-        // void accept( HwDescriptionVisitor& pVisitor ) const {
-        //  pVisitor.visit( *this );
-        //  for ( auto& cChip : fChipVector )
-        //      cChip.accept( pVisitor );
-        // }
         /*!
         * \brief Get the number of Chip connected to the Module
         * \return The size of the vector
@@ -142,6 +121,40 @@ namespace Ph2_HwDescription {
 
             fChipVector.push_back ( pChip );
         }
+        
+        void addReadoutChip ( ReadoutChip& pChip )
+        {
+            //get the FrontEndType of the Chip and set the module one accordingly
+            //this is the case when no chip type has been set so get the one from the Chip
+            if (fType == FrontEndType::UNDEFINED)
+                fType = pChip.getFrontEndType();
+            //else, the chip type has already been set - if it is different from another Chip, rais a warning
+            //no different chips should be on a module
+            else if (fType != pChip.getFrontEndType() )
+            {
+                LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
+                exit (1);
+            }
+
+            fReadoutChipVector.push_back ( &pChip );
+        }
+        void addReadoutChip ( ReadoutChip* pChip )
+        {
+            //get the FrontEndType of the Chip and set the module one accordingly
+            //this is the case when no chip type has been set so get the one from the Chip
+            if (fType == FrontEndType::UNDEFINED)
+                fType = pChip->getFrontEndType();
+            //else, the chip type has already been set - if it is different from another Chip, rais a warning
+            //no different chips should be on a module
+            else if (fType != pChip->getFrontEndType() )
+            {
+                LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
+                exit (1);
+            }
+
+            fReadoutChipVector.push_back ( pChip );
+        }
+
 
         void addMPA ( MPA& pMPA )
         {
@@ -277,6 +290,7 @@ namespace Ph2_HwDescription {
 
 
         // std::vector < RD53* > fRD53Vector;
+        std::vector < ReadoutChip* > fReadoutChipVector;
         std::vector < Chip* > fChipVector;
         std::vector < MPA* > fMPAVector;
         std::vector < SSA* > fSSAVector;
