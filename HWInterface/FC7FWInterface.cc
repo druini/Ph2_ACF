@@ -56,10 +56,10 @@ namespace Ph2_HwInterface
     // this->TurnOffFMC();
     // this->TurnOnFMC();
     // this->ResetBoard();
-    // this->ResetFastCmdBlk();
-    // this->ResetReadoutBlk();
-    // this->ChipReset();
-    // this->ChipReSync();
+    this->ResetFastCmdBlk();
+    this->ResetReadoutBlk();
+    this->ChipReset();
+    this->ChipReSync();
 
     // Wait for user to reset power to the chip
     // LOG (INFO) << BOLDMAGENTA << "Powercycle SCC and press any key to continue: " << RESET;
@@ -86,7 +86,7 @@ namespace Ph2_HwInterface
 	serialData.push_back(data[i][j]);
   }
 
-  void FC7FWInterface::WriteChipCommand (std::vector<uint32_t> & data, unsigned int repetition)
+  void FC7FWInterface::WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd, unsigned int repetition)
   {
     std::vector< std::pair<std::string, uint32_t> > stackRegisters;
 
@@ -96,37 +96,41 @@ namespace Ph2_HwInterface
     if (ReadReg ("user.stat_regs.cmd_proc.fifo_full") == true)
       LOG (ERROR) << BOLDRED << "Command processor FIFO full" << RESET;
 
-    switch (data.size())
+    size_t size = data.size()/nCmd;
+    for (auto i = 0; i < nCmd; i++)
       {
-      case 1:
-	{
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[0]));
-	  break;
-	}
-      case 2:
-	{
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[0]));
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[1]));
-	  break;
-	}
-      case 3:
-	{
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[0]));
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[1]));
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data1_reg",data[2]));
-	  break;
-	}
-      case 4:
-	{
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[0]));
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[1]));
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data1_reg",data[2]));
-	  stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data2_reg",data[3]));
-	  break;
-	}
+	switch (size)
+	  {
+	  case 1:
+	    {
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
+	      break;
+	    }
+	  case 2:
+	    {
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[size*i+1]));
+	      break;
+	    }
+	  case 3:
+	    {
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[size*i+1]));
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data1_reg",data[size*i+2]));
+	      break;
+	    }
+	  case 4:
+	    {
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[size*i+1]));
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data1_reg",data[size*i+2]));
+	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data2_reg",data[size*i+3]));
+	      break;
+	    }
+	  }
       }
 
-    for (unsigned int i = 0; i < repetition; i++) WriteStackReg (stackRegisters);
+    for (auto i = 0; i < repetition; i++) WriteStackReg (stackRegisters);
   }
 
   std::pair< std::vector<uint16_t>,std::vector<uint16_t> > FC7FWInterface::ReadChipRegisters (std::vector<uint32_t> & data, unsigned int nBlocks2Read)
@@ -176,10 +180,10 @@ namespace Ph2_HwInterface
 
 	for (unsigned int i = 0; i < regFIFO.size(); i++)
 	  {
-	    outputDecoded.first .push_back((regFIFO[i] >> NBIT_VALUE) & static_cast<uint32_t>(pow(2,NBIT_ADDRESS)-1));
-	    outputDecoded.second.push_back(regFIFO[i] & static_cast<uint32_t>(pow(2,NBIT_VALUE)-1));
-	    uint8_t status = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS))               & static_cast<uint32_t>(pow(2,NBIT_STATUS)-1);
-	    uint8_t id     = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS + NBIT_STATUS)) & static_cast<uint32_t>(pow(2,NBIT_ID)-1);
+	    outputDecoded.first .push_back((regFIFO[i] >> NBIT_VALUE)                  & static_cast<uint32_t>(RD53::SetBits<NBIT_ADDRESS>(NBIT_ADDRESS).to_ulong()));
+	    outputDecoded.second.push_back(regFIFO[i]                                  & static_cast<uint32_t>(RD53::SetBits<NBIT_VALUE>(NBIT_VALUE).to_ulong()));
+	    uint8_t status = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS))               & static_cast<uint32_t>(RD53::SetBits<NBIT_STATUS>(NBIT_STATUS).to_ulong());
+	    uint8_t id     = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS + NBIT_STATUS)) & static_cast<uint32_t>(RD53::SetBits<NBIT_ID>(NBIT_ID).to_ulong());
 	  }
       }
 
@@ -313,10 +317,10 @@ namespace Ph2_HwInterface
              cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
 
     // @TMP@
-    std::cout << std::endl;
-    LOG (INFO) << GREEN << "cNWords         = " << cNWords    << RESET;
-    LOG (INFO) << GREEN << "handshake       = " << handshake  << RESET;
-    LOG (INFO) << GREEN << "cNtriggers      = " << cNtriggers << RESET;
+    LOG (INFO) << GREEN << "cNWords         = "       << cNWords    << RESET;
+    LOG (INFO) << GREEN << "handshake       = "       << handshake  << RESET;
+    LOG (INFO) << GREEN << "cNtriggers      = "       << cNtriggers << RESET;
+    LOG (INFO) << GREEN << "========================" << RESET;
 
     if (!cNWords) return 0;
 
@@ -353,34 +357,50 @@ namespace Ph2_HwInterface
   
   void FC7FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
+    bool retry;
     int dataSize;
+    int nTriggers;
+    std::string exception;
 
     this->localCfgFastCmd.n_triggers = pNEvents;
 
     do
       {
-	this->ResetFastCmdBlk();
+	retry = false;
+	pData.clear();
+
 	this->ResetReadoutBlk();
 	this->ConfigureFastCommands();
 	this->ChipReset();
 	this->ChipReSync();
-	
-	this->Start();
-	usleep(100);
-	
-	dataSize = this->ReadData(pBoard, false, pData);
-	if (dataSize == 0) LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected --> retry" << RESET;
-      } while (dataSize == 0);
 
-    auto events = this->DecodeEvents(pData);
-    try
-      {
-    	this->AnalyzeEvents(events, true); // @TMP@
-      }
-    catch (const char* msg)
-      {
-    	LOG (ERROR) << BOLDRED << msg << RESET;
-      }
+	this->Start();
+	usleep(SHALLOWSLEEP);
+
+	dataSize = this->ReadData(pBoard, false, pData);
+	if (dataSize == 0)
+	  {
+	    LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected " << BOLDYELLOW << "--> retry" << RESET;
+	    retry = true;
+	    continue;
+	  }
+	
+	auto events = this->DecodeEvents(pData);
+	if (this->AnalyzeEvents(events, exception, false) == -1)
+	  {
+	    LOG (ERROR) << BOLDRED << exception << BOLDYELLOW << " --> retry" << RESET;
+	    retry = true;
+	    continue;
+	  }
+	
+	nTriggers = localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration);
+	if (events.size() != nTriggers)
+	  {
+	    LOG (ERROR) << BOLDRED << "Sent " << nTriggers << " triggers, but collected only " << events.size() << BOLDYELLOW << " --> retry" << RESET;
+	    retry = true;
+	    continue;
+	  }
+      } while (retry == true);
   }
 
   std::vector<uint32_t> FC7FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
@@ -496,13 +516,11 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0}});
   }
 
-  std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents(const std::vector<uint32_t>& data)
+  std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents (const std::vector<uint32_t>& data)
   {
     std::vector<size_t> event_start;
     for (size_t i = 0; i < data.size(); i++)
-      {
-	if (data[i] >> NBIT_BLOCKSIZE == EVT_HEADER) event_start.push_back(i);
-      }
+      if (data[i] >> NBIT_BLOCKSIZE == EVT_HEADER) event_start.push_back(i);
 
     std::vector<FC7FWInterface::Event> events;
     events.reserve(event_start.size());
@@ -517,11 +535,12 @@ namespace Ph2_HwInterface
     return events;
   }
 
-  unsigned int FC7FWInterface::AnalyzeEvents(const std::vector<FC7FWInterface::Event>& events, bool print)
+  unsigned int FC7FWInterface::AnalyzeEvents (const std::vector<FC7FWInterface::Event>& events, std::string& exception, bool print)
   {
     unsigned int nEvts = 0;
+    size_t maxL1Counter = RD53::SetBits<NBIT_TRIGID>(NBIT_TRIGID).to_ulong() + 1;
 
-    for (int i = 0; i < events.size(); i++)
+    for (auto i = 0; i < events.size(); i++)
       {
 	auto& evt = events[i];
 	if (print == true)
@@ -535,7 +554,13 @@ namespace Ph2_HwInterface
 	    LOG (INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter      << RESET;
 	  }
 
-	for (size_t j = 0; j < evt.chip_events.size(); j++)
+	if (evt.chip_frames.size() == 0)
+	  {
+	    exception = "Event without frame data [error_code; hybrid_id; chip_id; l1a_data_size; chip_type; frame_delay]";
+	    return -1;
+	  }
+
+	for (auto j = 0; j < evt.chip_events.size(); j++)
 	  {
 	    if (print == true)
 	      {
@@ -554,7 +579,12 @@ namespace Ph2_HwInterface
 		LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
 	      }
 
-	    if (evt.l1a_counter != evt.chip_events[j].trigger_id) throw "Mismatch on L1A counter between backend and frontend";
+	    if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id)
+	      {
+		exception = "Mismatch on L1A counter between backend and frontend";
+		return -1;
+	      }
+
 	    if (evt.chip_events[j].data.size() != 0) nEvts++;
 
 	    for (const auto& region_data : evt.chip_events[j].data)
@@ -570,14 +600,19 @@ namespace Ph2_HwInterface
 	  }
       }
 
+    if (print == true) std::cout << std::endl;
     return nEvts;
   }
   
-  FC7FWInterface::Event::Event(const uint32_t* data, size_t n)
+  FC7FWInterface::Event::Event (const uint32_t* data, size_t n)
   {
     std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
     
-    if (block_size * 4 != n) LOG (ERROR) << BOLDRED << "Invalid event block size: " << block_size << " instead of " << (n / 4) << RESET;
+    if (block_size * 4 != n)
+      {
+	LOG (ERROR) << BOLDRED << "Invalid event block size: " << BOLDYELLOW << block_size << BOLDRED << " instead of " << BOLDYELLOW << (n / 4) << RESET;
+	return;
+      }
 
     bool dummy_size;
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
@@ -598,19 +633,25 @@ namespace Ph2_HwInterface
 	const size_t size = (dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start);
 	chip_events.emplace_back(&data[start + 2], size - 2);
 	
-	if ((chip_frames[i].l1a_data_size+1+dummy_size) * 4 != n) LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
+ 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start))
+	  {
+	    // @TMP@
+	    // LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
+	    LOG (ERROR) << BOLDRED << "Invalid chip L1A data size " << dummy_size << "\t" << chip_frames[i].l1a_data_size << "\t" << end - start << RESET;
+	    chip_frames.clear();
+	    chip_events.clear();
+	    return;
+	  }
       }
   }
 
-  FC7FWInterface::ChipFrame::ChipFrame(const uint32_t data0, const uint32_t data1)
+  FC7FWInterface::ChipFrame::ChipFrame (const uint32_t data0, const uint32_t data1)
   {
-    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = 
-      unpack_bits<NBIT_ERR, NBIT_HYBRID, NBIT_CHIPID, NBIT_L1ASIZE>(data0);
-    
-    std::tie(chip_type, frame_delay) = unpack_bits<NBIT_CHIPTYPE, NBIT_FRAME>(data1);
+    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = unpack_bits<NBIT_ERR, NBIT_HYBRID, NBIT_CHIPID, NBIT_L1ASIZE>(data0);    
+    std::tie(chip_type, frame_delay)                        = unpack_bits<NBIT_CHIPTYPE, NBIT_FRAME>(data1);
   }
   
-  void FC7FWInterface::SendBoardCommand(const std::string& cmd_reg)
+  void FC7FWInterface::SendBoardCommand (const std::string& cmd_reg)
   {
     WriteStackReg({
 	{cmd_reg, 1},
@@ -620,7 +661,7 @@ namespace Ph2_HwInterface
       });
   }
   
-  void FC7FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
+  void FC7FWInterface::ConfigureFastCommands (const FastCommandsConfig* cfg)
   {
     if (cfg == nullptr) cfg = &localCfgFastCmd;
 
@@ -675,8 +716,6 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.Hybrid1.Hybrid_en",               HYBRID_EN},
 	{"user.ctrl_regs.Hybrid1.Chips_en",                READOUT_CHIP_MASK}
       });
-
-    usleep(SHALLOWSLEEP);
   }
 
   void FC7FWInterface::ConfigureDIO5 (const DIO5Config* cfg)

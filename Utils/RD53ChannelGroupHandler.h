@@ -8,7 +8,7 @@
 */
 
 #ifndef _RD53ChannelGroupHandler_h_
-#define _RRD53ChannelGroupHandler_h_
+#define _RD53ChannelGroupHandler_h_
 
 #include "ChannelGroupHandler.h"
 #include "../HWDescription/RD53.h"

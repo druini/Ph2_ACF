@@ -34,23 +34,14 @@
             VTH1_DIFF        =  "400"
             VTH2_DIFF        =   "50"
 
-	    VCAL_HIGH        = "1500"
+	    VCAL_HIGH        =  "600"
 	    VCAL_MED         =  "100"
 
-	    INJECTION_SELECT =   "16"
-            LATENCY_CONFIG   =   "28"
+	    INJECTION_SELECT =    "0"
+            LATENCY_CONFIG   =  "140"
             MONITOR_SELECT   = "8203"
 	    />
 	<!--
-	    HITOR_0_MASK_LIN_0 = "0"
-	    HITOR_0_MASK_LIN_1 =     "0"
-	    HITOR_1_MASK_LIN_0 = "0"
-	    HITOR_1_MASK_LIN_1 =     "0"
-	    HITOR_2_MASK_LIN_0 = "0"
-	    HITOR_2_MASK_LIN_1 =     "0"
-	    HITOR_3_MASK_LIN_0 = "0"
-	    HITOR_3_MASK_LIN_1 =     "0"
-
 	    MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
 	-->
       </Global>
@@ -66,14 +57,29 @@
     </Register>
     
   </BeBoard>
-  
-  
-  <!-- Parameters for the calibration program -->
+
+
+  <!-- Parameters for the calibration program
+       INJtype = 0: Analog; INJtype = 1: Digital
+  -->
   <Settings>
-    <Setting name="Nevents">       2000 </Setting>
-    <Setting name="HoleMode">         0 </Setting>
-    <Setting name="VerificationLoop"> 1 </Setting>
-    <Setting name="FitSCurves">       0 </Setting>
+    <Setting name="nEvents">     100 </Setting>
+
+    <Setting name="NTRIGxL1A">    31 </Setting>
+    <Setting name="INJtype">       0 </Setting>
+
+    <Setting name="ROWstart">     50 </Setting>
+    <Setting name="ROWstop">      73 </Setting>
+    <Setting name="COLstart">    128 </Setting>
+    <Setting name="COLstop">     151 </Setting>
+    <Setting name="nPixelInj">    24 </Setting>
+
+    <Setting name="LatencStart"> 100 </Setting>
+    <Setting name="LatencStop">  150 </Setting>
+
+    <Setting name="VCALstart">   360 </Setting>
+    <Setting name="VCALstop">   4000 </Setting>
+    <Setting name="VCALnsteps">   91 </Setting>
   </Settings>
   
 </HwDescription>
