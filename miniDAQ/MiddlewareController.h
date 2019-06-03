@@ -6,8 +6,6 @@
 #include "../System/SystemController.h"
 
 #include <string>
-//#include "BeagleBoneConfiguration.h"
-//#include "BurninBoxController.h"
 
 class MiddlewareController: public TCPNetworkServer
 {
@@ -16,7 +14,7 @@ public:
 	MiddlewareController(int serverPort);
 	virtual ~MiddlewareController(void);
 
-	std::string readMessage(const std::string& buffer);
+	std::string readMessage(const std::string& buffer) override;
 
 protected:
 
