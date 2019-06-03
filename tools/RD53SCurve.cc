@@ -9,7 +9,7 @@
 
 #include "RD53SCurve.h"
 
-SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, float startValue, float stopValue, size_t nSteps) :
+SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t startValue, size_t stopValue, size_t nSteps, size_t offset) :
   fileName(fName),
   rowStart(rStart),
   rowEnd(rEnd),
@@ -54,7 +54,7 @@ SCurve::~SCurve()
   for (auto i = 0; i < theOccupancy.size(); i++)
     {
       if (theOccupancy[i] != nullptr) delete theOccupancy[i];
-      if (theCanvas[i]    != nullptr) delete theCanvas[i];
+      if (theCanvasOcc[i] != nullptr) delete theCanvasOcc[i];
     }
  
   if (theThreshold1D != nullptr) delete theThreshold1D;
@@ -92,23 +92,23 @@ void SCurve::InitHisto()
 		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
 		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
 	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue,stopValue,nEvents/2 + 1,0,1 + 2./nEvents));
-	  theOccupancy.back()->SetXTitle("VCal");
+	  theOccupancy.back()->SetXTitle("#DeltaVCal");
 	  theOccupancy.back()->SetYTitle("Efficiency");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvas_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
   theNoise1D = new TH1F("theNoise1D","Noise-1D",100,0,100);
-  theNoise1D->SetXTitle("VCal");
+  theNoise1D->SetXTitle("#DeltaVCal");
   theNoise1D->SetYTitle("Entries");
 
   theThreshold1D = new TH1F("theThreshold1D","Threshold-1D",1000,0,1000);
-  theThreshold1D->SetXTitle("VCal");
+  theThreshold1D->SetXTitle("#DeltaVCal");
   theThreshold1D->SetYTitle("Entries");
 
   theNoise2D = new TH2F("theNoise2D","Noise-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
@@ -158,7 +158,7 @@ void SCurve::Run()
 	      for (auto i = 0; i < dacList.size(); i++)
 		{
 		  if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
-		    theOccupancy[index]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+		    theOccupancy[index]->Fill(dacList[i]-offset,detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 		}
 	  index++;
 	}
@@ -168,10 +168,10 @@ void SCurve::Display()
 {
   for (size_t i = 0; i < theOccupancy.size(); i++)
     {
-      theCanvas[i]->cd();
+      theCanvasOcc[i]->cd();
       theOccupancy[i]->Draw("gcolz");
-      theCanvas[i]->Modified();
-      theCanvas[i]->Update();
+      theCanvasOcc[i]->Modified();
+      theCanvasOcc[i]->Update();
     }
   
   theCanvasTh1D->cd();
@@ -243,7 +243,7 @@ void SCurve::Save()
       myString.clear();
       myString.str("");
       myString << theOccupancy[i]->GetName() << ".png";
-      theCanvas[i]->Print(myString.str().c_str());
+      theCanvasOcc[i]->Print(myString.str().c_str());
     }
 
   theThreshold1D->Write();
@@ -266,10 +266,10 @@ void SCurve::ComputeStats(std::vector<float>& measurements, float& nHits, float&
 
   for (auto i = 0; i < dacList.size(); i++)
     {
-      mean   += measurements[i]*dacList[i];
+      mean   += measurements[i]*(dacList[i]-offset);
       weight += measurements[i];
 
-      mean2  += measurements[i]*dacList[i]*dacList[i];
+      mean2  += measurements[i]*(dacList[i]-offset)*(dacList[i]-offset);
     }
 
   nHits = weight * nEvents;

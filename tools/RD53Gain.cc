@@ -9,7 +9,7 @@
 
 #include "RD53Gain.h"
 
-Gain::Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, float startValue, float stopValue, size_t nSteps) :
+Gain::Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t startValue, size_t stopValue, size_t nSteps, size_t offset) :
   fileName(fName),
   rowStart(rStart),
   rowEnd(rEnd),
@@ -54,7 +54,7 @@ Gain::~Gain()
   for (auto i = 0; i < theOccupancy.size(); i++)
     {
       if (theOccupancy[i] != nullptr) delete theOccupancy[i];
-      if (theCanvas[i]    != nullptr) delete theCanvas[i];
+      if (theCanvasOcc[i] != nullptr) delete theCanvasOcc[i];
     }
 
   if (theGain1D     != nullptr)  delete theGain1D;
@@ -91,16 +91,16 @@ void Gain::InitHisto()
           myString << "Gain_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
 		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
 		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue,stopValue,nEvents/2,0,RD53::SetBits<NBIT_TOT/NPIX_REGION>(NBIT_TOT/NPIX_REGION).to_ulong() - 1));
-	  theOccupancy.back()->SetXTitle("VCal");
+	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue,stopValue,nEvents/2,0,RD53::SetBits<NBIT_TOT/NPIX_REGION>(NBIT_TOT/NPIX_REGION).to_ulong()));
+	  theOccupancy.back()->SetXTitle("#DeltaVCal");
 	  theOccupancy.back()->SetYTitle("ToT");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvas_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
   
   theGain1D = new TH1F("theGain1D","Gain-1D",100,0,1);
@@ -157,7 +157,7 @@ void Gain::Run()
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      for (auto i = 0; i < dacList.size(); i++)
 		if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT != 0)
-		  theOccupancy[index]->Fill(dacList[i],detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
+		  theOccupancy[index]->Fill(dacList[i]-offset,detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
 	  index++;
 	}
 }
@@ -166,10 +166,10 @@ void Gain::Display()
 {
   for (auto i = 0; i < theOccupancy.size(); i++)
     {
-      theCanvas[i]->cd();
+      theCanvasOcc[i]->cd();
       theOccupancy[i]->Draw("gcolz");
-      theCanvas[i]->Modified();
-      theCanvas[i]->Update();
+      theCanvasOcc[i]->Modified();
+      theCanvasOcc[i]->Update();
     }
   
   theCanvasGa1D->cd();
@@ -214,8 +214,8 @@ void Gain::Analyze()
 
               for (auto i = 0; i < dacList.size()-1; i++)
 		{
-		  x.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
-		  y.push_back(dacList[i]);
+		  x.push_back(dacList[i]);
+		  y.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
 		  e.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToTError);
 		}
 
@@ -246,7 +246,7 @@ void Gain::Save()
       myString.clear();
       myString.str("");
       myString << theOccupancy[i]->GetName() << ".png";
-      theCanvas[i]->Print(myString.str().c_str());
+      theCanvasOcc[i]->Print(myString.str().c_str());
     }
 
   theGain1D->Write();
@@ -262,24 +262,43 @@ void Gain::Save()
 }
 
 void Gain::ComputeStats(std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
+// ##############################################
+// # Linear regression with least-square method #
+// # Model: y = f(x) = q + mx                   #
+// # Measurements with uncertainty: Y = AX + E  #
+// ##############################################
+// # A = (XtX)^(-1)XtY                          #
+// # X = | 1 x1 |                               #
+// #     | 1 x2 |                               #
+// #     ...                                    #
+// # A = | q |                                  #
+// #     | m |                                  #
+// ##############################################
 {
   float a  = 0, b  = 0, c  = 0, d  = 0;
   float ai = 0, bi = 0, ci = 0, di = 0;
   float det;
-  float aa = 0, bb = 0;
+  float y1 = 0, y2 = 0;
 
+
+  // #######
+  // # XtX #
+  // #######
   a = x.size();
   for (auto i = 0; i < x.size(); i++)
     {
       b  += x[i];
       d  += x[i] * x[i];
-      aa += y[i];
-      bb += x[i] * y[i];
+      y1 += y[i];
+      y2 += x[i] * y[i];
     }
   c = b;
 
-  det = a*d - b*c;
 
+  // ##############
+  // # (XtX)^(-1) #
+  // ##############
+  det = a*d - b*c;
   if (det != 0)
     {
       ai = d/det;
@@ -288,9 +307,16 @@ void Gain::ComputeStats(std::vector<float>& x, std::vector<float>& y, std::vecto
       di = a/det;
     }
 
-  intercept    = ai * aa + bi * bb;
-  interceptErr = 0; // @TMP@
 
-  gain         = ci * aa + di * bb;
-  gainErr      = 0; // @TMP@
+  // #################
+  // # (XtX)^(-1)XtY #
+  // #################
+  for (auto i = 0; i < x.size(); i++)
+    {
+      intercept = (ai + bi*x[i]) * y[i];
+      gain      = (ci + di*x[i]) * y[i];
+
+      interceptErr = (ai + bi*x[i])*(ai + bi*x[i]) * e[i]*e[i];
+      gainErr      = (ci + di*x[i])*(ci + di*x[i]) * e[i]*e[i];
+    }
 }

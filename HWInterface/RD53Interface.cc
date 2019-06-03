@@ -253,9 +253,9 @@ namespace Ph2_HwInterface
     
     if (doSparse == true)
       {
-	this->WriteChipReg(pRD53, "PIX_MODE", 0x27, pVerifLoop);
-	this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0, pVerifLoop);
-	this->WriteChipReg(pRD53, "PIX_MODE", 0x0, pVerifLoop);
+	this->WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
+	this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0,  pVerifLoop);
+	this->WriteChipReg(pRD53, "PIX_MODE",   0x0,  pVerifLoop);
       }
     else this->WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
     
@@ -267,7 +267,7 @@ namespace Ph2_HwInterface
 	pRD53->ConvertRowCol2Cores (0,col,row_,colPair);
 	this->WriteChipReg(pRD53, "REGION_COL", colPair, pVerifLoop);
 	this->WriteChipReg(pRD53, "REGION_ROW", 0x0, pVerifLoop);
-	
+
 	size_t itPixCmd = 0;
 	for (auto row = 0; row < RD53::nRows; row++)
 	  {

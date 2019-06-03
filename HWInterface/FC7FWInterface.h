@@ -24,7 +24,7 @@
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
 #define DEEPSLEEP   500000 // [microseconds]
-#define SHALLOWSLEEP 10000 // [microseconds]
+#define SHALLOWSLEEP   100 // [microseconds]
 
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 

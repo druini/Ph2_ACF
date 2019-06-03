@@ -50,8 +50,10 @@ class PixelAlive : public Tool
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
 
   TFile* theFile;
-  std::vector<TCanvas*> theCanvas;
+  std::vector<TCanvas*> theCanvasOcc;
   std::vector<TH2F*>    theOccupancy;
+  TCanvas*              theCanvasToT;
+  TH1F*                 theToT;
 };
 
 #endif

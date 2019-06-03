@@ -286,6 +286,8 @@ int main (int argc, char** argv)
   auto RD53Board         = static_cast<FC7FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
   auto RD53ChipInterface = static_cast<RD53Interface*>(cSystemController.fChipInterface);
   uint8_t chipId         = pChip->getChipId();
+  size_t VCalOffset      = pChip->getReg("VCAL_MED");
+
 
   ConfigureFSM(RD53Board, chipId, nEvents, NTRIGxL1A, INJtype);
 
@@ -337,7 +339,7 @@ int main (int argc, char** argv)
       // ##############
       LOG(INFO) << BOLDYELLOW << "@@@ Performing SCurve scan @@@" << RESET;
 
-      SCurve sc("SCurve.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      SCurve sc("SCurve.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, VCalOffset);
       sc.Inherit(&cSystemController);
       sc.InitHisto();
       sc.Run();
@@ -352,11 +354,11 @@ int main (int argc, char** argv)
       // ############
       LOG(INFO) << BOLDYELLOW << "@@@ Performing Gain scan @@@" << RESET;
 
-      Gain ga("Gain.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      Gain ga("Gain.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, VCalOffset);
       ga.Inherit(&cSystemController);
       ga.InitHisto();
       ga.Run();
-      // ga.Analyze();
+      ga.Analyze();
       ga.Display();
       ga.Save();
     }

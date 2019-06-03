@@ -375,7 +375,9 @@ namespace Ph2_HwInterface
 	this->ChipReSync();
 
 	this->Start();
-	usleep(SHALLOWSLEEP);
+
+	while (ReadReg("user.stat_regs.trigger_cntr").value() != (localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration)))
+	  usleep(SHALLOWSLEEP);
 
 	dataSize = this->ReadData(pBoard, false, pData);
 	if (dataSize == 0)
@@ -392,7 +394,7 @@ namespace Ph2_HwInterface
 	    retry = true;
 	    continue;
 	  }
-	
+
 	nTriggers = localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration);
 	if (events.size() != nTriggers)
 	  {
