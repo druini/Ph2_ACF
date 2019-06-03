@@ -102,12 +102,12 @@ void Gain::InitHisto()
 		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
 	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
-  
-  theGain1D = new TH1F("theGain1D","Gain-1D",100,0,1);
+
+  theGain1D = new TH1F("theGain1D","Gain-1D",100,0,1e-2);
   theGain1D->SetXTitle("Gain");
   theGain1D->SetYTitle("Entries");
 
-  theIntercept1D = new TH1F("theIntercept1D","Intercept-1D",100,-10,10);
+  theIntercept1D = new TH1F("theIntercept1D","Intercept-1D",100,-3,3);
   theIntercept1D->SetXTitle("ToT");
   theIntercept1D->SetYTitle("Entries");
 
@@ -115,7 +115,7 @@ void Gain::InitHisto()
   theGain2D->SetXTitle("Columns");
   theGain2D->SetYTitle("Rows");
 
-  theIntercept2D = new TH2F("theThreshold","Intercept-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
+  theIntercept2D = new TH2F("theIntercept2D","Intercept-2D",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
   theIntercept2D->SetXTitle("Columns");
   theIntercept2D->SetYTitle("Rows");
 
@@ -215,8 +215,8 @@ void Gain::Analyze()
               for (auto i = 0; i < dacList.size()-1; i++)
 		{
 		  x.push_back(dacList[i]);
-		  y.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
-		  e.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToTError);
+		  y.push_back(detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
+		  e.push_back(detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToTError);
 		}
 
 	      this->ComputeStats(x,y,e,gain,gainErr,intercept,interceptErr);
@@ -278,7 +278,11 @@ void Gain::ComputeStats(std::vector<float>& x, std::vector<float>& y, std::vecto
   float a  = 0, b  = 0, c  = 0, d  = 0;
   float ai = 0, bi = 0, ci = 0, di = 0;
   float det;
-  float y1 = 0, y2 = 0;
+
+  intercept    = 0;
+  gain         = 0;
+  interceptErr = 0;
+  gainErr      = 0;
 
 
   // #######
@@ -289,8 +293,6 @@ void Gain::ComputeStats(std::vector<float>& x, std::vector<float>& y, std::vecto
     {
       b  += x[i];
       d  += x[i] * x[i];
-      y1 += y[i];
-      y2 += x[i] * y[i];
     }
   c = b;
 
@@ -301,10 +303,10 @@ void Gain::ComputeStats(std::vector<float>& x, std::vector<float>& y, std::vecto
   det = a*d - b*c;
   if (det != 0)
     {
-      ai = d/det;
+      ai =  d/det;
       bi = -b/det;
-      ci = bi;
-      di = a/det;
+      ci = -c/det;
+      di =  a/det;
     }
 
 
@@ -313,10 +315,13 @@ void Gain::ComputeStats(std::vector<float>& x, std::vector<float>& y, std::vecto
   // #################
   for (auto i = 0; i < x.size(); i++)
     {
-      intercept = (ai + bi*x[i]) * y[i];
-      gain      = (ci + di*x[i]) * y[i];
+      intercept    += (ai + bi*x[i]) * y[i];
+      gain         += (ci + di*x[i]) * y[i];
 
-      interceptErr = (ai + bi*x[i])*(ai + bi*x[i]) * e[i]*e[i];
-      gainErr      = (ci + di*x[i])*(ci + di*x[i]) * e[i]*e[i];
+      interceptErr += (ai + bi*x[i])*(ai + bi*x[i]) * e[i]*e[i];
+      gainErr      += (ci + di*x[i])*(ci + di*x[i]) * e[i]*e[i];
     }
+
+  interceptErr = sqrt(interceptErr);
+  gainErr      = sqrt(gainErr);
 }

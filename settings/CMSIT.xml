@@ -79,7 +79,7 @@
 
     <Setting name="VCALstart">   360 </Setting>
     <Setting name="VCALstop">   4000 </Setting>
-    <Setting name="VCALnsteps">   91 </Setting>
+    <Setting name="VCALnsteps">   20 </Setting>
   </Settings>
 
 </HwDescription>

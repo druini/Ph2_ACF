@@ -375,9 +375,7 @@ namespace Ph2_HwInterface
 	this->ChipReSync();
 
 	this->Start();
-
-	while (ReadReg("user.stat_regs.trigger_cntr").value() != (localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration)))
-	  usleep(SHALLOWSLEEP);
+	usleep(SHALLOWSLEEP);
 
 	dataSize = this->ReadData(pBoard, false, pData);
 	if (dataSize == 0)
