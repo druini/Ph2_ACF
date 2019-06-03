@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _OCCUPANCYAndToT_H_
-#define _OCCUPANCYAndToT_H_
+#ifndef _OccupancyAndToT_h_
+#define _OccupancyAndToT_h_
 
 #include "../Utils/Container.h"
 
@@ -29,9 +29,8 @@ class OccupancyAndToT
   
   template<typename T>
     void makeAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents) {}
-  
-  void makeAverage (const std::vector<OccupancyAndToT>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents);
-  void normalize   (const uint16_t numberOfEvents);
+  void makeAverage   (const std::vector<OccupancyAndToT>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents);
+  void normalize     (const uint16_t numberOfEvents);
   
   float fOccupancy;
   float fOccupancyError;
@@ -48,7 +47,7 @@ inline void OccupancyAndToT::makeAverage<OccupancyAndToT> (const ChipContainer* 
       fOccupancy += occupancy.fOccupancy;
 
       fToT       += occupancy.fToT;
-      fToTError  += occupancy.fToTError*occupancy.fToTError;
+      fToTError  += occupancy.fToTError * occupancy.fToTError;
     }
 
   int numberOfEnabledChannels = cTestChannelGroup->getNumberOfEnabledChannels(chipOriginalMask);

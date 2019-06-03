@@ -14,7 +14,7 @@
 #include "../Utils/OccupancyAndToT.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/ThresholdAndNoise.h"
+#include "../Utils/GainAndIntercept.h"
 #include "Tool.h"
 
 #include "TH2F.h"
@@ -57,7 +57,7 @@ class Gain : public Tool
   std::vector<DetectorContainer*> detectorContainerVector;
   DetectorContainer* theGainAndInterceptContainer;
 
-  void ComputeStats(double& gain, double& intercept);
+  void ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
 
   TFile* theFile;
   std::vector<TCanvas*> theCanvas;

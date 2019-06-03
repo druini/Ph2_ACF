@@ -91,7 +91,7 @@ void Gain::InitHisto()
           myString << "Gain_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
 		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
 		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue,stopValue,nEvents,0,RD53::SetBits<NBIT_TOT/NPIX_REGION>(NBIT_TOT/NPIX_REGION).to_ulong() - 1));
+	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue,stopValue,nEvents/2,0,RD53::SetBits<NBIT_TOT/NPIX_REGION>(NBIT_TOT/NPIX_REGION).to_ulong() - 1));
 	  theOccupancy.back()->SetXTitle("VCal");
 	  theOccupancy.back()->SetYTitle("ToT");
 
@@ -195,11 +195,12 @@ void Gain::Display()
 
 void Gain::Analyze()
 {
-  double gain, intercept;
+  double gain, gainErr, intercept, interceptErr;
+  std::vector<float> x, y, e;
 
   theGainAndInterceptContainer = new DetectorContainer();
   ContainerFactory  theDetectorFactory;
-  theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theGainAndInterceptContainer);
+  theDetectorFactory.copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
 
   for (auto cBoard : fBoardVector)
     for (auto cFe : cBoard->fModuleVector)
@@ -207,12 +208,25 @@ void Gain::Analyze()
 	for (auto row = 0; row < RD53::nRows; row++)
 	  for (auto col = 0; col < RD53::nCols; col++)
 	    {
-	      this->ComputeStats(gain,intercept);
-	      
+	      x.clear();
+	      y.clear();
+	      e.clear();
+
+              for (auto i = 0; i < dacList.size()-1; i++)
+		{
+		  x.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
+		  y.push_back(dacList[i]);
+		  e.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToTError);
+		}
+
+	      this->ComputeStats(x,y,e,gain,gainErr,intercept,interceptErr);
+
 	      if (gain != 0)
 		{
-		  theGainAndInterceptContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fThreshold = gain;
-		  theGainAndInterceptContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fNoise     = intercept;
+		  theGainAndInterceptContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<GainAndIntercept>(row,col).fGain           = gain;
+		  theGainAndInterceptContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<GainAndIntercept>(row,col).fGainError      = gainErr;
+		  theGainAndInterceptContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<GainAndIntercept>(row,col).fIntercept      = intercept;
+		  theGainAndInterceptContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<GainAndIntercept>(row,col).fInterceptError = interceptErr;
 
 		  theGain1D->Fill(gain);
 		  theIntercept1D->Fill(intercept);
@@ -247,7 +261,36 @@ void Gain::Save()
   theCanvasIn2D->Print("Intercept2D.png");
 }
 
-void Gain::ComputeStats(double& gain, double& intercept)
+void Gain::ComputeStats(std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
 {
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  float a  = 0, b  = 0, c  = 0, d  = 0;
+  float ai = 0, bi = 0, ci = 0, di = 0;
+  float det;
+  float aa = 0, bb = 0;
+
+  a = x.size();
+  for (auto i = 0; i < x.size(); i++)
+    {
+      b  += x[i];
+      d  += x[i] * x[i];
+      aa += y[i];
+      bb += x[i] * y[i];
+    }
+  c = b;
+
+  det = a*d - b*c;
+
+  if (det != 0)
+    {
+      ai = d/det;
+      bi = -b/det;
+      ci = bi;
+      di = a/det;
+    }
+
+  intercept    = ai * aa + bi * bb;
+  interceptErr = 0; // @TMP@
+
+  gain         = ci * aa + di * bb;
+  gainErr      = 0; // @TMP@
 }

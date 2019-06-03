@@ -37,7 +37,7 @@
 	    VCAL_HIGH        =  "600"
 	    VCAL_MED         =  "100"
 
-	    INJECTION_SELECT =   "16"
+	    INJECTION_SELECT =    "0"
             LATENCY_CONFIG   =  "140"
             MONITOR_SELECT   = "8203"
 	    />
@@ -66,7 +66,7 @@
     <Setting name="nEvents">     100 </Setting>
 
     <Setting name="NTRIGxL1A">    31 </Setting>
-    <Setting name="INJtype">       1 </Setting>
+    <Setting name="INJtype">       0 </Setting>
 
     <Setting name="ROWstart">     50 </Setting>
     <Setting name="ROWstop">      73 </Setting>

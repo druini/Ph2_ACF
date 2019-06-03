@@ -91,7 +91,7 @@ void SCurve::InitHisto()
           myString << "SCurve_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
 		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
 		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue,stopValue,nEvents+1,0,1+1./nEvents));
+	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue,stopValue,nEvents/2 + 1,0,1 + 2./nEvents));
 	  theOccupancy.back()->SetXTitle("VCal");
 	  theOccupancy.back()->SetYTitle("Efficiency");
 
@@ -197,7 +197,7 @@ void SCurve::Display()
 
 void SCurve::Analyze()
 {
-  float mean, rms;
+  float nHits, mean, rms;
   std::vector<float> measurements;
 
   theThresholdAndNoiseContainer = new DetectorContainer();
@@ -217,12 +217,13 @@ void SCurve::Analyze()
 		measurements.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy - 
 				       detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 	      
-	      this->ComputeStats(measurements,mean,rms);
+	      this->ComputeStats(measurements,nHits,mean,rms);
 
 	      if (rms != 0)
 		{
-		  theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fThreshold = mean;
-		  theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fNoise     = rms;
+		  theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fThreshold      = mean;
+		  theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fThresholdError = rms / sqrt(nHits);
+		  theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fNoise          = rms;
 
 		  theThreshold1D->Fill(mean);
 		  theNoise1D->Fill(rms);
@@ -257,7 +258,7 @@ void SCurve::Save()
   theCanvasNo2D->Print("SCurveNo2D.png");
 }
 
-void SCurve::ComputeStats(std::vector<float>& measurements, float& mean, float& rms)
+void SCurve::ComputeStats(std::vector<float>& measurements, float& nHits, float& mean, float& rms)
 {
   float mean2  = 0;
   float weight = 0;
@@ -270,6 +271,8 @@ void SCurve::ComputeStats(std::vector<float>& measurements, float& mean, float& 
 
       mean2  += measurements[i]*dacList[i]*dacList[i];
     }
+
+  nHits = weight * nEvents;
 
   if (weight != 0)
     {

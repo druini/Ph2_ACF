@@ -40,9 +40,9 @@ void OccupancyAndToT::makeAverage (const std::vector<OccupancyAndToT>* theOccupa
 
 void OccupancyAndToT::normalize (const uint16_t numberOfEvents)
 {
+  fToT           /= fOccupancy;
+  fToTError       = (fOccupancy > 1 ? sqrt((fToTError / fOccupancy - fToT*fToT) * fOccupancy / (fOccupancy-1)) : 0);
+
   fOccupancy     /= numberOfEvents;
   fOccupancyError = sqrt(fOccupancy * (1. - fOccupancy) / numberOfEvents);
-
-  fToT           /= numberOfEvents;
-  fToTError       = sqrt((fToTError / numberOfEvents - fToT*fToT) * numberOfEvents / (numberOfEvents-1));
 }

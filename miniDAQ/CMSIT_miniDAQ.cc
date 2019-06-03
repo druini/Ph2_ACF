@@ -98,7 +98,7 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, si
       
       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  32;
       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =   0;
-      cfgFastCmd.fast_cmd_fsm.delay_loop             = 512;
+      cfgFastCmd.fast_cmd_fsm.delay_loop             = 128;
       
       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
       cfgFastCmd.fast_cmd_fsm.second_cal_en = false;
@@ -116,7 +116,7 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, si
       
       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  16;
       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  32;
-      cfgFastCmd.fast_cmd_fsm.delay_loop             = 512;
+      cfgFastCmd.fast_cmd_fsm.delay_loop             = 128;
 
       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
       cfgFastCmd.fast_cmd_fsm.second_cal_en = true;
@@ -153,7 +153,7 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
   std::vector<uint32_t> data;
   std::string exception;
 
-  TH1F theLatency("theLatency","LatencyScan",LatencyStop-LatencyStart,LatencyStart,LatencyStop);
+  TH1F theLatency("theLatency","LatencyScan",LatencyStop - LatencyStart,LatencyStart,LatencyStop);
   theLatency.SetXTitle("Latency [n.bx]");
   theLatency.SetYTitle("Entries");
   TCanvas theCanvas("theCanvas","RD53Canvas",0,0,700,500);
@@ -162,13 +162,16 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
   // ########################
   // # Set pixels to inject #
   // ########################
-  static_cast<RD53*>(pChip)->enablePixel((ROWstart+ROWstop)/2,(COLstart+COLstop)/2,true);
-  static_cast<RD53*>(pChip)->injectPixel((ROWstart+ROWstop)/2,(COLstart+COLstop)/2,true);
-  
+  static_cast<RD53*>(pChip)->enablePixel(ROWstart,COLstart,true);
+  static_cast<RD53*>(pChip)->injectPixel(ROWstart,COLstart,true);
+
+  static_cast<RD53*>(pChip)->enablePixel(ROWstop,COLstop,true);
+  static_cast<RD53*>(pChip)->injectPixel(ROWstop,COLstop,true);
+
   RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(pChip), false, false, false);
 
 
-  for (auto lt = LatencyStart; lt <= LatencyStop; lt++)
+  for (auto lt = LatencyStart; lt < LatencyStop; lt++)
     {
       data.clear();
       

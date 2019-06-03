@@ -57,7 +57,7 @@ class SCurve : public Tool
   std::vector<DetectorContainer*> detectorContainerVector;
   DetectorContainer* theThresholdAndNoiseContainer;
 
-  void ComputeStats(std::vector<float>& measurements, float& mean, float& rms);
+  void ComputeStats (std::vector<float>& measurements, float& nHits, float& mean, float& rms);
 
   TFile* theFile;
   std::vector<TCanvas*> theCanvas;
