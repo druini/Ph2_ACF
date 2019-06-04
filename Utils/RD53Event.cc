@@ -13,11 +13,11 @@ namespace Ph2_HwInterface
 {
   bool RD53Event::isThereAnHit (uint8_t module_id, uint8_t chip_id, uint32_t row, uint32_t col, size_t& ToT) const
   {
-    for (size_t j = 0; j < module_id_vec.size(); j++)
+    for (auto j = 0; j < module_id_vec.size(); j++)
       {
     	if (module_id == module_id_vec[j])
     	  {
-	    for (size_t i = 0; i < chip_events.size(); i++)
+	    for (auto i = 0; i < chip_events.size(); i++)
 	      {
 		if (chip_id == chip_id_vec[i])
 		  {

@@ -59,9 +59,9 @@ void PixelAlive::InitHisto()
   // #######################
   // # Allocate histograms #
   // #######################
-  for (auto cBoard : fBoardVector)
-    for (auto cFe : cBoard->fModuleVector)
-      for (auto cChip : cFe->fChipVector)
+  for (const auto& cBoard : fBoardVector)
+    for (const auto& cFe : cBoard->fModuleVector)
+      for (const auto& cChip : cFe->fChipVector)
         {
 	  myString.clear();
 	  myString.str("");
@@ -80,7 +80,7 @@ void PixelAlive::InitHisto()
 	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
-  theToT = new TH1F("theToT","ToT",RD53::SetBits<NBIT_TOT/NPIX_REGION>(NBIT_TOT/NPIX_REGION).to_ulong(),0,RD53::SetBits<NBIT_TOT/NPIX_REGION>(NBIT_TOT/NPIX_REGION).to_ulong());
+  theToT = new TH1F("theToT","ToT",RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong(),0,RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong());
   theToT->SetXTitle("ToT");
   theToT->SetYTitle("Entries");
 
@@ -104,9 +104,9 @@ void PixelAlive::Run()
   // # Filling the histogram #
   // #########################
   size_t index = 0;
-  for (auto cBoard : fBoardVector)
-    for (auto cFe : cBoard->fModuleVector)
-      for (auto cChip : cFe->fChipVector)
+  for (const auto& cBoard : fBoardVector)
+    for (const auto& cFe : cBoard->fModuleVector)
+      for (const auto& cChip : cFe->fChipVector)
 	{
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)

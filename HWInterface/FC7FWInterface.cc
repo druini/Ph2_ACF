@@ -58,6 +58,7 @@ namespace Ph2_HwInterface
     // this->ResetBoard();
     this->ResetFastCmdBlk();
     this->ResetReadoutBlk();
+    // this->ConfigureFastCommands();
     this->ChipReset();
     this->ChipReSync();
 
@@ -81,8 +82,8 @@ namespace Ph2_HwInterface
   void FC7FWInterface::SerializeSymbols (std::vector<std::vector<uint16_t> > & data,
 					 std::vector<uint32_t>               & serialData)
   {
-    for (unsigned int i = 0; i < data.size(); i++)
-      for (unsigned int j = 0; j < data[i].size(); j++)
+    for (auto i = 0; i < data.size(); i++)
+      for (auto j = 0; j < data[i].size(); j++)
 	serialData.push_back(data[i][j]);
   }
 
@@ -150,7 +151,7 @@ namespace Ph2_HwInterface
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
     std::vector<uint32_t> regFIFO;
 
-    for (unsigned int i = 0; i < nActiveChns; i++)
+    for (auto i = 0; i < nActiveChns; i++)
       {
 	myString.clear(); myString.str("");
 	myString << "user.readout" << i << ".reg_mask";
@@ -170,7 +171,7 @@ namespace Ph2_HwInterface
 
     this->WriteChipCommand(data);
 
-    for (unsigned int i = 0; i < nActiveChns; i++)
+    for (auto i = 0; i < nActiveChns; i++)
       {
 	myString.clear(); myString.str("");
 	myString << "user.readout" << i << ".reg_read";
@@ -178,7 +179,7 @@ namespace Ph2_HwInterface
 	if (nBlocks2Read <= nodeBlocks) regFIFO = ReadBlockRegValue(myString.str().c_str(), nBlocks2Read);
 	else LOG (INFO) << BOLDRED << "Number of register blocks to read (" << nBlocks2Read << ") exceds FIFO lenght " << nodeBlocks << RESET;
 
-	for (unsigned int i = 0; i < regFIFO.size(); i++)
+	for (auto i = 0; i < regFIFO.size(); i++)
 	  {
 	    outputDecoded.first .push_back((regFIFO[i] >> NBIT_VALUE)                  & static_cast<uint32_t>(RD53::SetBits<NBIT_ADDRESS>(NBIT_ADDRESS).to_ulong()));
 	    outputDecoded.second.push_back(regFIFO[i]                                  & static_cast<uint32_t>(RD53::SetBits<NBIT_VALUE>(NBIT_VALUE).to_ulong()));
@@ -358,8 +359,7 @@ namespace Ph2_HwInterface
   void FC7FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
     bool retry;
-    int dataSize;
-    int nTriggers;
+    int  dataSize;
     std::string exception;
 
     this->localCfgFastCmd.n_triggers = pNEvents;
@@ -398,10 +398,9 @@ namespace Ph2_HwInterface
 	    continue;
 	  }
 
-	nTriggers = localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration);
-	if (events.size() != nTriggers)
+	if (events.size() != localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration))
 	  {
-	    LOG (ERROR) << BOLDRED << "Sent " << nTriggers << " triggers, but collected only " << events.size() << BOLDYELLOW << " --> retry" << RESET;
+	    LOG (ERROR) << BOLDRED << "Sent " << localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration) << " triggers, but collected only " << events.size() << BOLDYELLOW << " --> retry" << RESET;
 	    retry = true;
 	    continue;
 	  }
@@ -524,13 +523,13 @@ namespace Ph2_HwInterface
   std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents (const std::vector<uint32_t>& data)
   {
     std::vector<size_t> event_start;
-    for (size_t i = 0; i < data.size(); i++)
-      if (data[i] >> NBIT_BLOCKSIZE == EVT_HEADER) event_start.push_back(i);
+    for (auto i = 0; i < data.size(); i++)
+      if (data[i] >> FC7EvtEncoder::NBIT_BLOCKSIZE == FC7EvtEncoder::EVT_HEADER) event_start.push_back(i);
 
     std::vector<FC7FWInterface::Event> events;
     events.reserve(event_start.size());
     
-    for (size_t i = 0; i < event_start.size(); i++)
+    for (auto i = 0; i < event_start.size(); i++)
       {
 	const size_t start = event_start[i];
 	const size_t end   = ((i == event_start.size() - 1) ? data.size() : event_start[i + 1]);
@@ -543,7 +542,7 @@ namespace Ph2_HwInterface
   unsigned int FC7FWInterface::AnalyzeEvents (const std::vector<FC7FWInterface::Event>& events, std::string& exception, bool print)
   {
     unsigned int nEvts = 0;
-    size_t maxL1Counter = RD53::SetBits<NBIT_TRIGID>(NBIT_TRIGID).to_ulong() + 1;
+    size_t maxL1Counter = RD53::SetBits<RD53EvtEncoder::NBIT_TRIGID>(RD53EvtEncoder::NBIT_TRIGID).to_ulong() + 1;
 
     for (auto i = 0; i < events.size(); i++)
       {
@@ -611,7 +610,7 @@ namespace Ph2_HwInterface
   
   FC7FWInterface::Event::Event (const uint32_t* data, size_t n)
   {
-    std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
+    std::tie(block_size) = unpack_bits<FC7EvtEncoder::NBIT_BLOCKSIZE>(data[0]);
     
     if (block_size * 4 != n)
       {
@@ -620,16 +619,16 @@ namespace Ph2_HwInterface
       }
 
     bool dummy_size;
-    std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
-    std::tie(tdc, l1a_counter) = unpack_bits<NBIT_TDC, NBIT_L1ACNT>(data[2]);
+    std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<FC7EvtEncoder::NBIT_TRIGID, FC7EvtEncoder::NBIT_FMTVER, FC7EvtEncoder::NBIT_DUMMY>(data[1]);
+    std::tie(tdc, l1a_counter) = unpack_bits<FC7EvtEncoder::NBIT_TDC, FC7EvtEncoder::NBIT_L1ACNT>(data[2]);
     bx_counter = data[3];
 
     std::vector<size_t> chip_start;
-    for (size_t i = 4; i < n; i += 4) if (data[i] >> (NBIT_ERR + NBIT_HYBRID + NBIT_CHIPID + NBIT_L1ASIZE) == FRAME_HEADER) chip_start.push_back(i);
+    for (auto i = 4; i < n; i += 4) if (data[i] >> (FC7EvtEncoder::NBIT_ERR + FC7EvtEncoder::NBIT_HYBRID + FC7EvtEncoder::NBIT_CHIPID + FC7EvtEncoder::NBIT_L1ASIZE) == FC7EvtEncoder::FRAME_HEADER) chip_start.push_back(i);
 
     chip_frames.reserve(chip_start.size());
     chip_events.reserve(chip_start.size());
-    for (size_t i = 0; i < chip_start.size(); i++)
+    for (auto i = 0; i < chip_start.size(); i++)
       {
 	const size_t start = chip_start[i];
 	const size_t end   = ((i == chip_start.size() - 1) ? n : chip_start[i + 1]);
@@ -652,8 +651,8 @@ namespace Ph2_HwInterface
 
   FC7FWInterface::ChipFrame::ChipFrame (const uint32_t data0, const uint32_t data1)
   {
-    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = unpack_bits<NBIT_ERR, NBIT_HYBRID, NBIT_CHIPID, NBIT_L1ASIZE>(data0);    
-    std::tie(chip_type, frame_delay)                        = unpack_bits<NBIT_CHIPTYPE, NBIT_FRAME>(data1);
+    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = unpack_bits<FC7EvtEncoder::NBIT_ERR, FC7EvtEncoder::NBIT_HYBRID, FC7EvtEncoder::NBIT_CHIPID, FC7EvtEncoder::NBIT_L1ASIZE>(data0);    
+    std::tie(chip_type, frame_delay)                        = unpack_bits<FC7EvtEncoder::NBIT_CHIPTYPE, FC7EvtEncoder::NBIT_DELAY>(data1);
   }
   
   void FC7FWInterface::SendBoardCommand (const std::string& cmd_reg)

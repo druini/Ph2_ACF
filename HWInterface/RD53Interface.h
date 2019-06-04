@@ -18,9 +18,9 @@
 #include <vector>
 
 
-// ################################
-// # CONSTANTS AND BIT DEFINITION #
-// ################################
+// #############
+// # CONSTANTS #
+// #############
 #define DEEPSLEEP   500000 // [microseconds]
 #define SHALLOWSLEEP 50000 // [microseconds]
 #define NWRITE_ATTEMPTS 10 // Number of write attempts to program the front-end chip

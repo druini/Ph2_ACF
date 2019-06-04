@@ -27,14 +27,14 @@
 #define SHALLOWSLEEP  50   // [microseconds]
 #define DELAYPERIOD    0.1 // [microseconds] Delay duration in FW fast command block FSM
 
+#define NBIT_FWVER      4 // Number of bits for the firmware version
+#define NBIT_AURORAREG  8 // Number of bits for the Aurora registers lane_up and channel_up
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 
-#define NBIT_FWVER      4 // Number of bits for the firmware version
 #define NBIT_ID         2 // Number of bits for the ID      in the register frame
 #define NBIT_STATUS     2 // Number of bits for the status  in the register frame
 #define NBIT_ADDRESS   10 // Number of bits for the address in the register frame
 #define NBIT_VALUE     16 // Number of bits for the value   in the register frame
-#define NBIT_AURORAREG  8 // Number of bits for the Aurora registers lane_up and channel_ip
 
 
 // #################
@@ -45,30 +45,34 @@
 #define READOUT_CHIP_MASK 1
 #define L1A_TIMEOUT    4000
 
-// ################
-// # Event header #
-// ################
-#define EVT_HEADER     0xFFFF
-#define NBIT_EVTHEAD   16 // Number of bits for the Error Code
-#define NBIT_BLOCKSIZE 16 // Number of bits for the Block Size
-#define NBIT_TRIGGID   16 // Number of bits for the TLU Trigger ID
-#define NBIT_FMTVER     8 // Number of bits for the Format Version
-#define NBIT_DUMMY      8 // Number of bits for the Dummy Size
-#define NBIT_TDC        8 // Number of bits for the TDC
-#define NBIT_L1ACNT    24 // Number of bits for the L1A Counter (Event number)
-#define NBIT_BXCNT     32 // Number of bits for the BX Counter
 
-// ###############
-// # Chip header #
-// ###############
-#define FRAME_HEADER 0xA
-#define NBIT_CHIPHEAD  4 // Number of bits in '1010'
-#define NBIT_ERR       4 // Number of bits for the Error Code
-#define NBIT_HYBRID    8 // Number of bits for the Hybrid ID
-#define NBIT_CHIPID    4 // Number of bits for the Chip ID
-#define NBIT_L1ASIZE  12 // Number of bits for the L1A Data Size
-#define NBIT_CHIPTYPE  4 // Number of bits for the Chip Type
-#define NBIT_FRAME    12 // Number of bits for the Frame Delay
+namespace FC7EvtEncoder
+{
+  // ################
+  // # Event header #
+  // ################
+  const uint16_t EVT_HEADER     = 0xFFFF;
+  const uint8_t  NBIT_EVTHEAD   = 16; // Number of bits for the Error Code
+  const uint8_t  NBIT_BLOCKSIZE = 16; // Number of bits for the Block Size
+  const uint8_t  NBIT_TRIGID    = 16; // Number of bits for the TLU Trigger ID
+  const uint8_t  NBIT_FMTVER    =  8; // Number of bits for the Format Version
+  const uint8_t  NBIT_DUMMY     =  8; // Number of bits for the Dummy Size
+  const uint8_t  NBIT_TDC       =  8; // Number of bits for the TDC
+  const uint8_t  NBIT_L1ACNT    = 24; // Number of bits for the L1A Counter (Event number)
+  const uint8_t  NBIT_BXCNT     = 32; // Number of bits for the BX Counter
+
+  // ###############
+  // # Chip header #
+  // ###############
+  const uint8_t FRAME_HEADER   = 0xA;
+  const uint8_t NBIT_CHIPHEAD  =  4; // Number of bits in '1010'
+  const uint8_t NBIT_ERR       =  4; // Number of bits for the Error Code
+  const uint8_t NBIT_HYBRID    =  8; // Number of bits for the Hybrid ID
+  const uint8_t NBIT_CHIPID    =  4; // Number of bits for the Chip ID
+  const uint8_t NBIT_L1ASIZE   = 12; // Number of bits for the L1A Data Size
+  const uint8_t NBIT_CHIPTYPE  =  4; // Number of bits for the Chip Type
+  const uint8_t NBIT_DELAY     = 12; // Number of bits for the Frame Delay
+}
 
 
 using namespace Ph2_HwDescription;

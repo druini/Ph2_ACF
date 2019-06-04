@@ -27,8 +27,19 @@
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
+#define NROWS           192 // Total number of rows
+#define NCOLS           400 // Total number of columns
+#define NOHIT_TOT       0xF // ToT value corresponding to no-hit
+#define NPIXCOL_PROG      2 // Number of pixel columns to program
+#define NDATAMAX_PERPIXEL 6 // Number of data-bit packets used to program the pixel
+#define NPIX_REGION       4 // Number of pixels in a region (1x4)
+
+
+// #########################
+// # Command configuration #
+// #########################
 #define NBIT_CMD   16 // Number of command bits
-#define NBIT_CHIPID 4 // Number of chip ID bits
+#define NBIT_ID     4 // Number of chip ID bits
 #define NBIT_ADDR   9 // Number of address bits
 #define NBIT_DATA  16 // Number of value bits
 #define NBIT_SYMBOL 8 // Number of symbol bits
@@ -36,44 +47,64 @@
 #define NBIT_5BITW  3 // Number of 5-bit word counter bits
 #define NBIT_FRAME  5 // Number of frame bits
 
-#define NBIT_PIXEN  1 // Number of pixel enable bits
-#define NBIT_INJEN  1 // Number of injection enable bits
-#define NBIT_HITBUS 1 // Number of hit bust bits
-#define NBIT_TDAC   4 // Number of TDAC bits
-#define HIGHGAIN 0x80 // Set High Gain Linear FE
 
-#define NOHIT_TOT  0xF    // ToT value corresponding to no-hit
-#define RESET_ECR  0x5A5A // Event Counter Reset word
-#define RESET_BCR  0x5959 // Bunch Counter Reset word
-#define GLOB_PULSE 0x5C5C // Global pulse word
-#define CAL        0x6363 // Calibration word
-#define WRITECMD   0x6666 // Write command word
-#define READCMD    0x6565 // Read command word
-#define NOOP       0x6969 // No operation word
-#define SYNC       0x817E // Synchronization word
-#define HEADER        0x1 // Data header word
+// ############ 
+// # Commands #
+// ############ 
+namespace RD53CmdEncoder
+{
+  const uint16_t RESET_ECR  = 0x5A5A; // Event Counter Reset word
+  const uint16_t RESET_BCR  = 0x5959; // Bunch Counter Reset word
+  const uint16_t GLOB_PULSE = 0x5C5C; // Global pulse word
+  const uint16_t CAL        = 0x6363; // Calibration word
+  const uint16_t WRITE      = 0x6666; // Write command word
+  const uint16_t READ       = 0x6565; // Read command word
+  const uint16_t NOOP       = 0x6969; // No operation word
+  const uint16_t SYNC       = 0x817E; // Synchronization word
+}
 
-#define NROWS 192 // Total number of rows
-#define NCOLS 400 // Total number of columns
 
-#define NPIXCOL_PROG      2 // Number of pixel columns to program
-#define NDATAMAX_PERPIXEL 6 // Number of data-bit packets used to program the pixel
-#define NPIX_REGION       4 // Number of pixels in a region (1x4)
+// ###########################
+// # Injection configuration #
+// ###########################
+namespace RD53InjEncoder
+{
+  const uint8_t NBIT_CAL_EDGE_MODE  = 1; // Number of cal_edge_mode bits
+  const uint8_t NBIT_CAL_EDGE_DELAY = 3; // Number of cal_edge_delay bits
+  const uint8_t NBIT_CAL_EDGE_WIDTH = 6; // Number of cal_edge_width bits
+  const uint8_t NBIT_CAL_AUX_MODE   = 1; // Number of cal_aux_mode bits
+  const uint8_t NBIT_CAL_AUX_DELAY  = 5; // Number of cal_aux_mode bits
+}
 
-#define NBIT_BCID  15 // Number of bunch crossing ID bits
-#define NBIT_TRGTAG 5 // Number of trigger tag bits
-#define NBIT_TRIGID 5 // Number of trigger ID bits
-#define NBIT_HEADER 7 // Number of data header bits
-#define NBIT_TOT   16 // Number of ToT bits
-#define NBIT_SIDE   1 // Number of "side" bits
-#define NBIT_ROW    9 // Number of row bits
-#define NBIT_CCOL   6 // Number of core column bits
 
-#define NBIT_CAL_EDGE_MODE  1 // Number of cal_edge_mode bits
-#define NBIT_CAL_EDGE_DELAY 3 // Number of cal_edge_delaybits
-#define NBIT_CAL_EDGE_WIDTH 6 // Number of cal_edge_width bits
-#define NBIT_CAL_AUX_MODE   1 // Number of cal_aux_mode bits
-#define NBIT_CAL_AUX_DELAY  5 // Number of cal_aux_mode bits
+// ############################
+// # Pixel cell configuration #
+// ############################
+namespace RD53PixelEncoder
+{
+  const uint8_t NBIT_PIXEN  =    1; // Number of pixel enable bits
+  const uint8_t NBIT_INJEN  =    1; // Number of injection enable bits
+  const uint8_t NBIT_HITBUS =    1; // Number of hit bust bits
+  const uint8_t NBIT_TDAC   =    4; // Number of TDAC bits
+  const uint8_t HIGHGAIN    = 0x80; // Set High Gain Linear FE
+}
+
+
+// #######################
+// # Event configuration #
+// #######################
+namespace RD53EvtEncoder
+{
+  const uint8_t HEADER      = 0x1; // Data header word
+  const uint8_t NBIT_HEADER =   7; // Number of data header bits
+  const uint8_t NBIT_TRIGID =   5; // Number of trigger ID bits
+  const uint8_t NBIT_TRGTAG =   5; // Number of trigger tag bits
+  const uint8_t NBIT_BCID   =  15; // Number of bunch crossing ID bits
+  const uint8_t NBIT_TOT    =  16; // Number of ToT bits
+  const uint8_t NBIT_SIDE   =   1; // Number of "side" bits
+  const uint8_t NBIT_ROW    =   9; // Number of row bits
+  const uint8_t NBIT_CCOL   =   6; // Number of core column bits
+}
 
 
 namespace Ph2_HwDescription
@@ -133,15 +164,6 @@ namespace Ph2_HwDescription
     void ConvertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair);
     void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& col);
 
-    static uint16_t ResetEvtCtr() { return RESET_ECR;  }
-    static uint16_t ResetBcrCtr() { return RESET_BCR;  }
-    static uint16_t GlobalPulse() { return GLOB_PULSE; }
-    static uint16_t Calibration() { return CAL;        }
-    static uint16_t WriteCmd()    { return WRITECMD;   }
-    static uint16_t ReadCmd()     { return READCMD;    }
-    static uint16_t NoOperation() { return NOOP;       }
-    static uint16_t Sync()        { return SYNC;       }
-    
     struct HitData
     {
       HitData (const uint32_t data);

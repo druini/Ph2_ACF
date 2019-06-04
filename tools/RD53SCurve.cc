@@ -82,9 +82,9 @@ void SCurve::InitHisto()
   // #######################
   // # Allocate histograms #
   // #######################
-  for (auto cBoard : fBoardVector)
-    for (auto cFe : cBoard->fModuleVector)
-      for (auto cChip : cFe->fChipVector)
+  for (const auto& cBoard : fBoardVector)
+    for (const auto& cFe : cBoard->fModuleVector)
+      for (const auto& cChip : cFe->fChipVector)
 	{
 	  myString.clear();
 	  myString.str("");
@@ -149,9 +149,9 @@ void SCurve::Run()
   // # Filling the histogram #
   // #########################
   size_t index = 0;
-  for (auto cBoard : fBoardVector)
-    for (auto cFe : cBoard->fModuleVector)
-      for (auto cChip : cFe->fChipVector)
+  for (const auto& cBoard : fBoardVector)
+    for (const auto& cFe : cBoard->fModuleVector)
+      for (const auto& cChip : cFe->fChipVector)
 	{
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
@@ -166,7 +166,7 @@ void SCurve::Run()
 
 void SCurve::Display()
 {
-  for (size_t i = 0; i < theOccupancy.size(); i++)
+  for (auto i = 0; i < theOccupancy.size(); i++)
     {
       theCanvasOcc[i]->cd();
       theOccupancy[i]->Draw("gcolz");
@@ -204,9 +204,9 @@ void SCurve::Analyze()
   ContainerFactory  theDetectorFactory;
   theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
 
-  for (auto cBoard : fBoardVector)
-    for (auto cFe : cBoard->fModuleVector)
-      for (auto cChip : cFe->fChipVector)
+  for (const auto& cBoard : fBoardVector)
+    for (const auto& cFe : cBoard->fModuleVector)
+      for (const auto& cChip : cFe->fChipVector)
 	for (auto row = 0; row < RD53::nRows; row++)
 	  for (auto col = 0; col < RD53::nCols; col++)
 	    {
