@@ -23,8 +23,9 @@
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
-#define DEEPSLEEP   500000 // [microseconds]
-#define SHALLOWSLEEP  2000 // [microseconds]
+#define DEEPSLEEP 500000   // [microseconds]
+#define SHALLOWSLEEP  50   // [microseconds]
+#define DELAYPERIOD    0.1 // [microseconds] Delay duration in FW fast command block FSM
 
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 

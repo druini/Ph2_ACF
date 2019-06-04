@@ -375,7 +375,12 @@ namespace Ph2_HwInterface
 	this->ChipReSync();
 
 	this->Start();
-	usleep(SHALLOWSLEEP);
+	usleep((this->localCfgFastCmd.fast_cmd_fsm.delay_after_ecr        +
+		this->localCfgFastCmd.fast_cmd_fsm.delay_after_autozero   +
+		this->localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  +
+		this->localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal +
+		this->localCfgFastCmd.fast_cmd_fsm.delay_loop) * DELAYPERIOD *
+	       this->localCfgFastCmd.n_triggers + SHALLOWSLEEP);
 
 	dataSize = this->ReadData(pBoard, false, pData);
 	if (dataSize == 0)
