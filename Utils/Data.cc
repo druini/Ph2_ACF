@@ -44,6 +44,7 @@ namespace Ph2_HwInterface {
 	{
 	  uint8_t status;
 	  auto fc7_events = FC7FWInterface::DecodeEvents(pData,status);
+	  if (status != FC7EvtEncoder::GOOD) FC7FWInterface::ErrorHandler(status);
 
 	  for (const auto& evt : fc7_events)
 	    {

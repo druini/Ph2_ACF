@@ -572,18 +572,14 @@ namespace Ph2_HwDescription
     return it->second.fBitSize;
   }
 
-  RD53::Event::Event(const uint32_t* data, size_t n)
+  RD53::Event::Event (const uint32_t* data, size_t n)
   {
     uint32_t header;
 
     evtStatus = RD53EvtEncoder::GOOD;
 
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
-    if (header != RD53EvtEncoder::HEADER)
-      {
-	LOG (ERROR) << BOLDRED << "Invalid RD53 event header" << RESET;
-	evtStatus = RD53EvtEncoder::BAD;
-      }
+    if (header != RD53EvtEncoder::HEADER) evtStatus = RD53EvtEncoder::BAD;
 
     size_t noHitToT = RD53::SetBits<RD53EvtEncoder::NBIT_TOT>(RD53EvtEncoder::NBIT_TOT).to_ulong();
     for (auto i = 1; i < n; i++)

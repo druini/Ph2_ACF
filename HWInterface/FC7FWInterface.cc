@@ -396,11 +396,11 @@ namespace Ph2_HwInterface
 	    retry = true;
 	    continue;
 	  }
-	
+
 	auto events = this->DecodeEvents(pData,status);
 	if (status != FC7EvtEncoder::GOOD)
 	  {
-	    LOG (ERROR) << BOLDRED << "Error detected in the event decoding " << BOLDYELLOW << " --> retry" << RESET;
+	    this->ErrorHandler(status);
 	    retry = true;
 	    continue;
 	  }
@@ -532,7 +532,8 @@ namespace Ph2_HwInterface
     std::vector<size_t> event_start;
     size_t maxL1Counter = RD53::SetBits<RD53EvtEncoder::NBIT_TRIGID>(RD53EvtEncoder::NBIT_TRIGID).to_ulong() + 1;
 
-    evtStatus = FC7EvtEncoder::GOOD;
+    if (data.size() != 0) evtStatus = FC7EvtEncoder::GOOD;
+    else                  evtStatus = FC7EvtEncoder::EMPTY;
 
     for (auto i = 0; i < data.size(); i++)
       if (data[i] >> FC7EvtEncoder::NBIT_BLOCKSIZE == FC7EvtEncoder::EVT_HEADER) event_start.push_back(i);
@@ -552,7 +553,7 @@ namespace Ph2_HwInterface
 	else
 	  {
 	    for (auto j = 0; j < evt.chip_events.size(); j++)
-	      if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evtStatus = FC7EvtEncoder::BAD;
+	      if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evtStatus = FC7EvtEncoder::L1A;
 	  }
       }
 
@@ -601,17 +602,44 @@ namespace Ph2_HwInterface
     std::cout << std::endl;
   }
   
+  void FC7FWInterface::ErrorHandler(uint8_t status)
+  {
+    switch (status)
+      {
+      case (FC7EvtEncoder::EVSIZE):
+	{
+	  LOG (ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << RESET;
+	  break;
+	}
+      case (FC7EvtEncoder::EMPTY):
+	{
+	  LOG (ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << RESET;
+	  break;
+	}
+      case (FC7EvtEncoder::L1A):
+	{
+	  LOG (ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << RESET;
+	  break;
+	}
+      case (FC7EvtEncoder::FRSIZE):
+	{
+	  LOG (ERROR) << BOLDRED << "Invalid frame size " << BOLDYELLOW << "--> retry" << RESET;
+	  break;
+	}
+      case (FC7EvtEncoder::CHIP):
+	{
+	  LOG (ERROR) << BOLDRED << "Error in chip data decoding " << BOLDYELLOW << "--> retry" << RESET;
+	  break;
+	}
+      }    
+  }
+
   FC7FWInterface::Event::Event (const uint32_t* data, size_t n)
   {
     evtStatus = FC7EvtEncoder::GOOD;
 
-    std::tie(block_size) = unpack_bits<FC7EvtEncoder::NBIT_BLOCKSIZE>(data[0]);
-    
-    if (block_size * 4 != n)
-      {
-	LOG (ERROR) << BOLDRED << "Invalid event block size: " << BOLDYELLOW << block_size << BOLDRED << " instead of " << BOLDYELLOW << (n / 4) << RESET;
-	evtStatus = FC7EvtEncoder::BAD;
-      }
+    std::tie(block_size) = unpack_bits<FC7EvtEncoder::NBIT_BLOCKSIZE>(data[0]);    
+    if (block_size * 4 != n) evtStatus = FC7EvtEncoder::EVSIZE;
 
     bool dummy_size;
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<FC7EvtEncoder::NBIT_TRIGID, FC7EvtEncoder::NBIT_FMTVER, FC7EvtEncoder::NBIT_DUMMY>(data[1]);
@@ -629,16 +657,12 @@ namespace Ph2_HwInterface
 	const size_t end   = ((i == chip_start.size() - 1) ? n : chip_start[i + 1]);
 	chip_frames.emplace_back(data[start], data[start + 1]);
 
- 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start))
-	  {
-	    LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
-	    evtStatus = FC7EvtEncoder::BAD;
-	  }
+ 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start)) evtStatus = FC7EvtEncoder::FRSIZE;
 
 	const size_t size = (dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start);
 	chip_events.emplace_back(&data[start + 2], size - 2);
 
-	if (chip_events[i].evtStatus != RD53EvtEncoder::GOOD) evtStatus = FC7EvtEncoder::BAD;
+	if (chip_events[i].evtStatus != RD53EvtEncoder::GOOD) evtStatus = FC7EvtEncoder::CHIP;
       }
   }
 
@@ -647,7 +671,7 @@ namespace Ph2_HwInterface
     std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = unpack_bits<FC7EvtEncoder::NBIT_ERR, FC7EvtEncoder::NBIT_HYBRID, FC7EvtEncoder::NBIT_FRAMEHEAD, FC7EvtEncoder::NBIT_L1ASIZE>(data0);    
     std::tie(chip_type, frame_delay)                        = unpack_bits<FC7EvtEncoder::NBIT_CHIPTYPE, FC7EvtEncoder::NBIT_DELAY>(data1);
   }
-  
+
   void FC7FWInterface::SendBoardCommand (const std::string& cmd_reg)
   {
     WriteStackReg({

@@ -186,7 +186,8 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
       
       RD53Board->ReadNEvents(pBoard,nEvents,data);
       auto events = RD53Board->DecodeEvents(data,status);
-      
+      if (status != FC7EvtEncoder::GOOD) FC7FWInterface::ErrorHandler(status);
+
       auto nEvts = 0;
       for (auto i = 0; i < events.size(); i++)
 	{
