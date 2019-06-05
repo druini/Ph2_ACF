@@ -185,7 +185,7 @@ namespace Ph2_HwDescription
 		else if (fDefValue_str.compare(0,2,"0b") == 0) baseType = 2;
 		else
 		  {
-		    LOG (ERROR) << BOLDRED << "Unknown base " << fDefValue_str << RESET;
+		    LOG (ERROR) << BOLDRED << "Unknown base " << BOLDYELLOW << fDefValue_str << RESET;
 		    throw Exception ("[RD53::loadfRegMap]\tError, unknown base");
 		  }
 		fDefValue_str.erase(0,2);
@@ -196,7 +196,7 @@ namespace Ph2_HwDescription
 		else if (fValue_str.compare(0,2,"0b") == 0) baseType = 2;
 		else
 		  {
-		    LOG (ERROR) << BOLDRED << "Unknown base " << fValue_str << RESET;
+		    LOG (ERROR) << BOLDRED << "Unknown base " << BOLDYELLOW << fValue_str << RESET;
 		    throw Exception ("[RD53::loadfRegMap]\tError, unknown base");
 		  }
 
@@ -219,7 +219,7 @@ namespace Ph2_HwDescription
       }
     else
       {
-	LOG (ERROR) << BOLDRED << "The RD53 file settings " << filename << " does not exist" << RESET;
+	LOG (ERROR) << BOLDRED << "The RD53 file settings " << BOLDYELLOW << filename << BOLDRED << " does not exist" << RESET;
 	exit (1);
       }
   }
@@ -319,7 +319,7 @@ namespace Ph2_HwDescription
 	file.close();
       }
     else
-      LOG (ERROR) << BOLDRED << "Error opening file " << filename << RESET;
+      LOG (ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << filename << RESET;
   }
   
   void RD53::resetMask ()
@@ -575,12 +575,16 @@ namespace Ph2_HwDescription
   RD53::Event::Event(const uint32_t* data, size_t n)
   {
     uint32_t header;
+
+    evtStatus = RD53EvtEncoder::GOOD;
+
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
     if (header != RD53EvtEncoder::HEADER)
       {
 	LOG (ERROR) << BOLDRED << "Invalid RD53 event header" << RESET;
-	return;
+	evtStatus = RD53EvtEncoder::BAD;
       }
+
     size_t noHitToT = RD53::SetBits<RD53EvtEncoder::NBIT_TOT>(RD53EvtEncoder::NBIT_TOT).to_ulong();
     for (auto i = 1; i < n; i++)
       if (data[i] != noHitToT) this->data.emplace_back(data[i]);
@@ -589,6 +593,7 @@ namespace Ph2_HwDescription
   RD53::HitData::HitData (const uint32_t data)
   {
     uint32_t core_col, side, all_tots;
+
     std::tie(core_col, row, side, all_tots) = unpack_bits<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_ROW, RD53EvtEncoder::NBIT_SIDE, RD53EvtEncoder::NBIT_TOT>(data);
     RangePacker<RD53EvtEncoder::NBIT_TOT / NPIX_REGION>::unpack_reverse(all_tots, tots);
     col = NPIX_REGION * pack_bits<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);

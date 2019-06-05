@@ -105,29 +105,21 @@ namespace Ph2_HwInterface
 	if (pVerifLoop == true)
 	  {
 	    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
-	    unsigned int row     = 0;
 	    unsigned int pixMode = 0;
+	    unsigned int row     = 0;
 
 	    fBoardFW->WriteChipCommand (serialSymbols);
 
-	    if (strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0)
-	      {
-		outputDecoded = this->ReadRD53Reg (pRD53, "PIX_MODE");
-		pixMode = outputDecoded.second[0];
-		
-		outputDecoded = this->ReadRD53Reg (pRD53, "REGION_ROW");
-		row = outputDecoded.second[0];
-	      }
-	    
-	    if (pixMode == 0)
-	      outputDecoded = this->ReadRD53Reg (pRD53, pRegNode);
-	    
+	    if (strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0)                     pixMode       = this->ReadRD53Reg (pRD53, "PIX_MODE").second[0];
+	    if (pixMode == 0)                                                   outputDecoded = this->ReadRD53Reg (pRD53, pRegNode);
+	    if ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (pixMode == 0)) row           = this->ReadRD53Reg (pRD53, "REGION_ROW").second[0];
+
 	    if ((pixMode == 0) &&
 		(((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded.first[0] != cRegItem.fAddress)) ||
 		 ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded.first[0] != row))               ||
 		 (outputDecoded.second[0] != cRegItem.fValue)))
 	      {
-		LOG (INFO) << BOLDRED << "Error while writing into RD53 reg. " << pRegNode << RESET;
+		LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
 		return false;
 	      }
 	    else
@@ -255,7 +247,7 @@ namespace Ph2_HwInterface
 	uint16_t row_;
 	pRD53->ConvertRowCol2Cores (0,col,row_,colPair);
 	this->WriteChipReg(pRD53, "REGION_COL", colPair, pVerifLoop);
-	this->WriteChipReg(pRD53, "REGION_ROW", 0x0, doSparse);
+	this->WriteChipReg(pRD53, "REGION_ROW", 0x0,     doSparse);
 
 	size_t itPixCmd = 0;
 	for (auto row = 0; row < RD53::nRows; row++)
@@ -294,10 +286,6 @@ namespace Ph2_HwInterface
 		    if ((itPixCmd == NPIXCMD) || (row == (RD53::nRows-1)))
 		      {
 			this->WriteRD53Reg(pRD53, "PIX_PORTAL", &dataVec, itPixCmd);
-			// @TMP@
-			// std::cout << std::endl;
-			// for (auto i = 0; i < dataVec.size(); i++)
-			//   std::cout << "AAA " << row << "\t" << std::hex << dataVec[i] << std::dec << std::endl;
 			dataVec.clear();
 			itPixCmd = 0;
 		      }
@@ -349,7 +337,7 @@ namespace Ph2_HwInterface
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->injectPixel(row,col,group->isChannelEnabled(row,col));
     
-    this->WriteRD53Mask(pRD53, false, false, pVerifLoop);
+    this->WriteRD53Mask(pRD53, true, false, pVerifLoop);
 
     return true;
   }
@@ -362,7 +350,7 @@ namespace Ph2_HwInterface
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->enablePixel(row,col,group->isChannelEnabled(row,col));
 
-    // this->WriteRD53Mask(pRD53, false, false, pVerifLoop);
+    this->WriteRD53Mask(pRD53, true, false, pVerifLoop);
 
     return true;
   }

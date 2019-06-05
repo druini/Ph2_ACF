@@ -122,7 +122,7 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, si
       cfgFastCmd.fast_cmd_fsm.second_cal_en = true;
       cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
     }
-  else LOG(ERROR) << BOLDRED << "Option non recognized " << type << RESET;
+  else LOG (ERROR) << BOLDRED << "Option non recognized " << type << RESET;
 
 
   // ###############################################
@@ -154,10 +154,10 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, si
 void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD53ChipInterface, Chip* pChip,
 		  size_t ROWstart, size_t ROWstop, size_t COLstart, size_t COLstop,size_t LatencyStart, size_t LatencyStop, size_t nEvents)
 {
-  int dataSize = 0;
-  int latency  = 0;
+  int     dataSize = 0;
+  int     latency  = 0;
+  uint8_t status;
   std::vector<uint32_t> data;
-  std::string exception;
 
   TH1F theLatency("theLatency","LatencyScan",LatencyStop - LatencyStart,LatencyStart,LatencyStop);
   theLatency.SetXTitle("Latency [n.bx]");
@@ -185,9 +185,15 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
       RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt, true);
       
       RD53Board->ReadNEvents(pBoard,nEvents,data);
-
-      auto events = RD53Board->DecodeEvents(data);
-      auto nEvts  = RD53Board->AnalyzeEvents(events, exception, false);
+      auto events = RD53Board->DecodeEvents(data,status);
+      
+      auto nEvts = 0;
+      for (auto i = 0; i < events.size(); i++)
+	{
+	  auto& evt = events[i];
+	  for (auto j = 0; j < evt.chip_events.size(); j++)
+	    if (evt.chip_events[j].data.size() != 0) nEvts++;
+	}
 
       if (nEvts > dataSize)
 	{
@@ -373,16 +379,16 @@ int main (int argc, char** argv)
       // #########################
       // # Run Gain Optimisation #
       // #########################
-      LOG(INFO) << BOLDRED << "@@@ Gain optimisation not implemented yet ... coming soon @@@" << RESET;
+      LOG (ERROR) << BOLDRED << "@@@ Gain optimisation not implemented yet ... coming soon @@@" << RESET;
     }
   else if (whichCalib == "thropt")
     {
       // ##############################
       // # Run Threshold Optimisation #
       // ##############################
-      LOG(INFO) << BOLDRED << "@@@ Threshold optimisation not implemented yet ... coming soon @@@" << RESET;
+      LOG (ERROR) << BOLDRED << "@@@ Threshold optimisation not implemented yet ... coming soon @@@" << RESET;
     }
-  else LOG(ERROR) << BOLDRED << "Option non recognized: " << whichCalib << RESET;
+  else LOG (ERROR) << BOLDRED << "Option non recognized: " << whichCalib << RESET;
 
 
   cSystemController.Stop(pBoard);

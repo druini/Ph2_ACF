@@ -42,8 +42,9 @@ namespace Ph2_HwInterface {
       
       if (pType == BoardType::FC7)
 	{
-	  auto fc7_events = FC7FWInterface::DecodeEvents(pData);
-	  
+	  uint8_t status;
+	  auto fc7_events = FC7FWInterface::DecodeEvents(pData,status);
+
 	  for (const auto& evt : fc7_events)
 	    {
 	      std::vector<size_t> chip_id_vec;
@@ -54,7 +55,7 @@ namespace Ph2_HwInterface {
 		  chip_id_vec.push_back(chip_frame.chip_id);
 		  module_id_vec.push_back(chip_frame.hybrid_id);
                 }
-	      
+
 	      fEventList.push_back(new RD53Event(std::move(module_id_vec), std::move(chip_id_vec), std::move(evt.chip_events)));
             }
         }

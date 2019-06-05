@@ -31,11 +31,6 @@
 #define NBIT_AURORAREG  8 // Number of bits for the Aurora registers lane_up and channel_up
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 
-#define NBIT_ID         2 // Number of bits for the ID      in the register frame
-#define NBIT_STATUS     2 // Number of bits for the status  in the register frame
-#define NBIT_ADDRESS   10 // Number of bits for the address in the register frame
-#define NBIT_VALUE     16 // Number of bits for the value   in the register frame
-
 
 // #################
 // # Readout block #
@@ -65,13 +60,19 @@ namespace FC7EvtEncoder
   // # Chip header #
   // ###############
   const uint8_t FRAME_HEADER   = 0xA;
-  const uint8_t NBIT_CHIPHEAD  =  4; // Number of bits in '1010'
-  const uint8_t NBIT_ERR       =  4; // Number of bits for the Error Code
-  const uint8_t NBIT_HYBRID    =  8; // Number of bits for the Hybrid ID
-  const uint8_t NBIT_CHIPID    =  4; // Number of bits for the Chip ID
-  const uint8_t NBIT_L1ASIZE   = 12; // Number of bits for the L1A Data Size
-  const uint8_t NBIT_CHIPTYPE  =  4; // Number of bits for the Chip Type
-  const uint8_t NBIT_DELAY     = 12; // Number of bits for the Frame Delay
+  const uint8_t NBIT_FRAMEHEAD =   4; // Number of bits for the Frame Header
+  const uint8_t NBIT_ERR       =   4; // Number of bits for the Error Code
+  const uint8_t NBIT_HYBRID    =   8; // Number of bits for the Hybrid ID
+  const uint8_t NBIT_CHIPID    =   4; // Number of bits for the Chip ID
+  const uint8_t NBIT_L1ASIZE   =  12; // Number of bits for the L1A Data Size
+  const uint8_t NBIT_CHIPTYPE  =   4; // Number of bits for the Chip Type
+  const uint8_t NBIT_DELAY     =  12; // Number of bits for the Frame Delay
+
+  // ################
+  // # Event status #
+  // ################
+  const uint8_t GOOD = 0x00; // Event status good
+  const uint8_t BAD  = 0x01; // Event status good
 }
 
 
@@ -142,10 +143,12 @@ namespace Ph2_HwInterface
       
       std::vector<ChipFrame>   chip_frames;
       std::vector<RD53::Event> chip_events;
+
+      uint8_t evtStatus;
     };
-    
-    static std::vector<Event> DecodeEvents(const std::vector<uint32_t>& data);
-    static unsigned int AnalyzeEvents(const std::vector<FC7FWInterface::Event>& events, std::string& exception, bool print = false);
+
+    static std::vector<Event> DecodeEvents(const std::vector<uint32_t>& data, uint8_t& status);
+    static void PrintEvents(const std::vector<FC7FWInterface::Event>& events);
 
     enum class TriggerSource : uint32_t
     {

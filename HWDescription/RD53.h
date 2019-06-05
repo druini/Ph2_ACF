@@ -48,6 +48,18 @@
 #define NBIT_FRAME  5 // Number of frame bits
 
 
+// ##################
+// # Register frame #
+// ##################
+namespace RD53RegFrameEncoder
+{
+  const uint8_t NBIT_CHIPID  =  3; // Number of bits for the ID      in the register frame
+  const uint8_t NBIT_STATUS  =  3; // Number of bits for the status  in the register frame
+  const uint8_t NBIT_ADDRESS = 10; // Number of bits for the address in the register frame
+  const uint8_t NBIT_VALUE   = 16; // Number of bits for the value   in the register frame
+}
+
+
 // ############ 
 // # Commands #
 // ############ 
@@ -90,11 +102,11 @@ namespace RD53PixelEncoder
 }
 
 
-// #######################
-// # Event configuration #
-// #######################
 namespace RD53EvtEncoder
 {
+  // #######################
+  // # Event configuration #
+  // #######################
   const uint8_t HEADER      = 0x1; // Data header word
   const uint8_t NBIT_HEADER =   7; // Number of data header bits
   const uint8_t NBIT_TRIGID =   5; // Number of trigger ID bits
@@ -104,6 +116,12 @@ namespace RD53EvtEncoder
   const uint8_t NBIT_SIDE   =   1; // Number of "side" bits
   const uint8_t NBIT_ROW    =   9; // Number of row bits
   const uint8_t NBIT_CCOL   =   6; // Number of core column bits
+
+  // ################
+  // # Event status #
+  // ################
+  const uint8_t GOOD = 0x00; // Event status good
+  const uint8_t BAD  = 0x01; // Event status good
 }
 
 
@@ -182,8 +200,10 @@ namespace Ph2_HwDescription
       uint16_t bc_id;
       
       std::vector<HitData> data;
+
+      uint8_t evtStatus;
     };
-    
+
     struct CalCmd
     {
       CalCmd (const uint8_t& _cal_edge_mode,
