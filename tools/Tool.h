@@ -26,6 +26,7 @@ class DetectorContainer;
 class VContainerStreamBase;
 class ChannelGroupHandler;
 class ChannelGroupBase;
+class ScanBase;
 
 
 #ifdef __HTTP__
@@ -261,7 +262,7 @@ class Tool : public SystemController
     // One dimensional dac scan
     void scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorContainer*> detectorContainerVector);
     // One dimensional dac scan per BeBoard
-    void scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorContainer*> detectorContainerVector);
+    void scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorContainer*> &detectorContainerVector);
     // bit wise scan
     void bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy);
     // bit wise scan per BeBoard
@@ -275,7 +276,7 @@ class Tool : public SystemController
     // measure data per BeBoard
     void measureBeBoardData(uint16_t boardIndex, const uint16_t numberOfEvents);
     // measure data per BeBoard and per group
-    void measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup);
+    // void measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup);
     // set global DAC for all CBCs in the BeBoard
     void setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorContainer &globalDACContainer);
     //Set global DAC for all Chips in the BeBoard
@@ -293,6 +294,8 @@ class Tool : public SystemController
     //Set same DAC list for all Chips (it is able to recognize if the dac is local or global)
     void setSameDac(const std::string &dacName, const uint16_t &dacValue);
 
+private:
+    void doScanOnAllGroupsBeBoard(uint16_t boardIndex, const uint16_t numberOfEvents, ScanBase *scanFunctor);
 
     // Old scans without Detector Containers
 

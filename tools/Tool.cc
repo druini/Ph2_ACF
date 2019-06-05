@@ -894,23 +894,23 @@ void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacL
 }
 
 
-// One dimensional dac scan per BeBoard
-void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorContainer*> detectorContainerVector)
-{
-	if(dacList.size() != detectorContainerVector.size())
-	{
-		LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
-		abort();
-	}
+// // One dimensional dac scan per BeBoard
+// void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorContainer*> detectorContainerVector)
+// {
+// 	if(dacList.size() != detectorContainerVector.size())
+// 	{
+// 		LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
+// 		abort();
+// 	}
 
-	for(size_t dacIt = 0; dacIt<dacList.size(); ++dacIt)
-	{
-		fDetectorDataContainer = detectorContainerVector[dacIt];
-		setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents);
-	}
+// 	for(size_t dacIt = 0; dacIt<dacList.size(); ++dacIt)
+// 	{
+// 		fDetectorDataContainer = detectorContainerVector[dacIt];
+// 		setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents);
+// 	}
 
-	return;
-}
+// 	return;
+// }
 
 // bit wise scan
 void Tool::bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy)
@@ -1098,75 +1098,253 @@ void Tool::measureData(const uint16_t &numberOfEvents)
 
 }
 
-// measure occupancy
-void Tool::measureBeBoardData(uint16_t boardIndex, const uint16_t numberOfEvents)
+// // measure occupancy
+// void Tool::measureBeBoardData(uint16_t boardIndex, const uint16_t numberOfEvents)
+// {
+
+// 	uint32_t normalization=0;
+// 	uint32_t numberOfHits=0;
+
+// 	if(fChannelGroupHandler == nullptr)
+// 	{
+// 		std::cout << __PRETTY_FUNCTION__ << "ERROR: This method REQUIRES that fChannelGroupHandler != nullptr! ABORTING!" << std::endl;
+// 		abort();
+// 	}
+// 	if(!fAllChan)
+// 	{
+// 		for(auto group : *fChannelGroupHandler)
+// 		{
+
+// 			if(fMaskChannelsFromOtherGroups || fTestPulse)
+// 			{
+// 				for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
+// 				{
+// 					for ( auto cChip : *cFe )
+// 					{
+// 						if(fMaskChannelsFromOtherGroups)
+// 						{
+// 							fChipInterface->maskChannelsGroup(static_cast<Chip*>(cChip), group);
+// 						}
+// 						if(fTestPulse)
+// 						{
+// 							fChipInterface->setInjectionSchema(static_cast<Chip*>(cChip), group);
+// 						}
+// 					}
+// 				}
+// 			}
+
+// 			measureBeBoardDataPerGroup(boardIndex, numberOfEvents, group);
+// 		}
+
+// 		if(fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
+// 		{
+// 			for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
+// 			{
+// 				for ( auto cChip : *cFe )
+// 				{
+// 					fChipInterface->ConfigureChipOriginalMask ( static_cast<Chip*>(cChip) );
+// 				}
+// 			}
+// 		}
+// 	}
+// 	else
+// 	{
+// 		measureBeBoardDataPerGroup(boardIndex, numberOfEvents, fChannelGroupHandler->allChannelGroup());
+// 	}
+// 	//It need to be moved into the place the loop on boards is done
+// 	// fDetectorDataContainer->at(boardIndex)->normalizeAndAverageContainers(fDetectorContainer->at(boardIndex), fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+
+// 	fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+
+// }
+
+
+// void Tool::measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup)
+// {
+// 	ReadNEvents ( static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)), numberOfEvents );
+// 	// Loop over Events from this Acquisition
+// 	const std::vector<Event*>& events = GetEvents ( static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)) );
+// 	for ( auto& event : events )
+// 		event->fillDataContainer((fDetectorDataContainer->at(boardIndex)), cTestChannelGroup);
+
+// }
+
+
+
+
+
+class ScanBase
+{
+public:
+	ScanBase(Tool *theTool) : fTool(theTool) {;}
+	virtual ~ScanBase() {;}
+
+	virtual void makeScan() = 0;
+	void setGroup(const ChannelGroupBase *cTestChannelGroup) {fTestChannelGroup = cTestChannelGroup;}
+	void setBoardId(uint16_t boardIndex) {fBoardIndex = boardIndex;}
+	void setNumberOfEvents(uint16_t numberOfEvents) {fNumberOfEvents = numberOfEvents;}
+
+	void setDetectorContainer(DetectorContainer *detectorContainer) {fDetectorContainer = detectorContainer;}
+
+protected:
+	uint16_t fNumberOfEvents;
+	uint16_t fBoardIndex;
+	const ChannelGroupBase *fTestChannelGroup;
+	Tool *fTool;
+	DetectorContainer *fDetectorContainer;
+};
+
+void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, const uint16_t numberOfEvents, ScanBase *groupScan)
 {
 
-	uint32_t normalization=0;
-	uint32_t numberOfHits=0;
+	groupScan->setBoardId(boardIndex);
+	groupScan->setNumberOfEvents(numberOfEvents);
+	groupScan->setDetectorContainer(fDetectorContainer);
 
 	if(fChannelGroupHandler == nullptr)
 	{
-		std::cout << __PRETTY_FUNCTION__ << "ERROR: This method REQUIRES that fChannelGroupHandler != nullptr! ABORTING!" << std::endl;
-		abort();
+	    std::cout << __PRETTY_FUNCTION__ << "ERROR: This method REQUIRES that fChannelGroupHandler != nullptr! ABORTING!" << std::endl;
+	    abort();
 	}
 	if(!fAllChan)
 	{
-		for(auto group : *fChannelGroupHandler)
-		{
+	    for(auto group : *fChannelGroupHandler)
+	    {
 
-			if(fMaskChannelsFromOtherGroups || fTestPulse)
-			{
-				for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
-				{
-					for ( auto cChip : *cFe )
-					{
-						if(fMaskChannelsFromOtherGroups)
-						{
-							fChipInterface->maskChannelsGroup(static_cast<Chip*>(cChip), group);
-						}
-						if(fTestPulse)
-						{
-							fChipInterface->setInjectionSchema(static_cast<Chip*>(cChip), group);
-						}
-					}
-				}
-			}
+	        if(fMaskChannelsFromOtherGroups || fTestPulse)
+	        {
+	            for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
+	            {
+	                for ( auto cChip : *cFe )
+	                {
+	                    if(fMaskChannelsFromOtherGroups)
+	                    {
+	                        fChipInterface->maskChannelsGroup(static_cast<Chip*>(cChip), group);
+	                    }
+	                    if(fTestPulse)
+	                    {
+	                        fChipInterface->setInjectionSchema(static_cast<Chip*>(cChip), group);
+	                    }
+	                }
+	            }
+	        }
 
-			measureBeBoardDataPerGroup(boardIndex, numberOfEvents, group);
-		}
+	        groupScan->setGroup(group);
+	        groupScan->makeScan();
+	    }
 
-		if(fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
-				{
-			for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
-			{
-				for ( auto cChip : *cFe )
-				{
-					fChipInterface->ConfigureChipOriginalMask ( static_cast<Chip*>(cChip) );
-				}
-			}
-				}
+	    if(fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
+	    {
+	        for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
+	        {
+	            for ( auto cChip : *cFe )
+	            {
+	                fChipInterface->ConfigureChipOriginalMask ( static_cast<Chip*>(cChip) );
+	            }
+	        }
+	    }
 	}
 	else
 	{
-		measureBeBoardDataPerGroup(boardIndex, numberOfEvents, fChannelGroupHandler->allChannelGroup());
+	    groupScan->setGroup(fChannelGroupHandler->allChannelGroup());
+	    groupScan->makeScan();
 	}
 	//It need to be moved into the place the loop on boards is done
 	// fDetectorDataContainer->at(boardIndex)->normalizeAndAverageContainers(fDetectorContainer->at(boardIndex), fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+
+}
+
+
+
+class MeasureBeBoardDataPerGroup : public ScanBase
+{
+public:
+	MeasureBeBoardDataPerGroup(Tool *theTool) : ScanBase(theTool) {;}
+	~MeasureBeBoardDataPerGroup() {;}
+
+	void makeScan() override
+	{
+		fTool->ReadNEvents ( static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)), fNumberOfEvents );
+		// Loop over Events from this Acquisition
+		const std::vector<Event*>& events = fTool->GetEvents ( static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)) );
+		for ( auto& event : events )
+			event->fillDataContainer((fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
+	}
+
+	void setDataContainer(DetectorContainer *detectorDataContainer) {fDetectorDataContainer = detectorDataContainer;}
+
+private:
+	DetectorContainer *fDetectorDataContainer;
+
+};
+
+void Tool::measureBeBoardData(uint16_t boardIndex, const uint16_t numberOfEvents)
+{
+	MeasureBeBoardDataPerGroup theScan(this);
+	theScan.setDataContainer(fDetectorDataContainer);
+
+    doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, &theScan);
 
 	fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
 
 }
 
-void Tool::measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup)
-{
-	ReadNEvents ( static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)), numberOfEvents );
-	// Loop over Events from this Acquisition
-	const std::vector<Event*>& events = GetEvents ( static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)) );
-	for ( auto& event : events )
-		event->fillDataContainer((fDetectorDataContainer->at(boardIndex)), cTestChannelGroup);
 
+
+
+class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
+{
+public:
+	ScanBeBoardDacPerGroup(Tool *theTool) : MeasureBeBoardDataPerGroup(theTool) {;}
+	~ScanBeBoardDacPerGroup() {;}
+
+	void makeScan() override
+	{
+		for(size_t dacIt = 0; dacIt<fDacList->size(); ++dacIt)
+		{
+			fTool->setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)), fDacName, fDacList->at(dacIt));
+			setDataContainer(fDetectorDataContainerVector->at(dacIt));
+			MeasureBeBoardDataPerGroup::makeScan();
+		}
+	}
+
+	void setDataContainerVector(std::vector<DetectorContainer*>* detectorDataContainerVector) {fDetectorDataContainerVector = detectorDataContainerVector;}
+	void setDacName(const std::string &dacName) {fDacName = dacName;}
+	void setDacList(const std::vector<uint16_t>* dacList) {fDacList = dacList;}
+
+private:
+	std::vector<DetectorContainer*>* fDetectorDataContainerVector;
+	const std::vector<uint16_t>* fDacList;
+	std::string fDacName;
+
+};
+
+
+// One dimensional dac scan per BeBoard
+void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorContainer*> &detectorContainerVector)
+{
+
+	if(dacList.size() != detectorContainerVector.size())
+	{
+		LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
+		abort();
+	}
+
+	ScanBeBoardDacPerGroup theScan(this);
+	theScan.setDataContainerVector(&detectorContainerVector);
+	theScan.setDacName(dacName);
+	theScan.setDacList(&dacList);
+
+    doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, &theScan);
+
+    for(auto container : detectorContainerVector)
+		container->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+
+	return;
 }
+
+
+
 
 //Set global DAC for all CBCs in the BeBoard
 void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorContainer &globalDACContainer)
