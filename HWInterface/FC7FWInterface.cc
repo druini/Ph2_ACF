@@ -639,9 +639,7 @@ namespace Ph2_HwInterface
 	
  	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start))
 	  {
-	    // @TMP@
-	    // LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
-	    LOG (ERROR) << BOLDRED << "Invalid chip L1A data size " << dummy_size << "\t" << chip_frames[i].l1a_data_size << "\t" << end - start << RESET;
+	    LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
 	    chip_frames.clear();
 	    chip_events.clear();
 	    return;

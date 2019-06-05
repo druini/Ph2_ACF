@@ -21,10 +21,8 @@
 // #############
 // # CONSTANTS #
 // #############
-#define DEEPSLEEP   500000 // [microseconds]
-#define SHALLOWSLEEP 50000 // [microseconds]
-#define NWRITE_ATTEMPTS 10 // Number of write attempts to program the front-end chip
-#define NPIXCMD          1 // Number of pixel commands to pack
+#define DEEPSLEEP 50000 // [microseconds]
+#define NPIXCMD       1 // Number of pixel commands to pack
 
 
 using namespace Ph2_HwDescription;
