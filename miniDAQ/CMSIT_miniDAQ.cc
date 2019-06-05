@@ -182,7 +182,7 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
       data.clear();
       
       LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
-      RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt);
+      RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt, true);
       
       RD53Board->ReadNEvents(pBoard,nEvents,data);
 

@@ -25,7 +25,7 @@ namespace Ph2_HwInterface
 	// ###############################
 	// # Programmig global registers #
 	// ###############################
-	if (cRegItem.second.fPrmptCfg == true) this->WriteChipReg(pRD53, cRegItem.first, cRegItem.second.fValue);
+	if (cRegItem.second.fPrmptCfg == true) this->WriteChipReg(pRD53, cRegItem.first, cRegItem.second.fValue, true);
       }
 
     // ###################################
@@ -52,32 +52,32 @@ namespace Ph2_HwInterface
     // # CML_CONFIG    = 0b00001111 #
     // ##############################
 
-    this->WriteChipReg(pRD53, "OUTPUT_CONFIG",      0x4);
+    this->WriteChipReg(pRD53, "OUTPUT_CONFIG",      0x4,   true);
     // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
-    this->WriteChipReg(pRD53, "CML_CONFIG", 0x1); // Default: 00_11_1111
-    this->WriteChipReg(pRD53, "AURORA_CB_CONFIG0",  0xF1);
-    this->WriteChipReg(pRD53, "AURORA_CB_CONFIG1",  0xF);
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x30); // 0x30 = reset Aurora AND reset serializer
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x1);
+    this->WriteChipReg(pRD53, "CML_CONFIG",         0x1,   true); // Default: 00_11_1111
+    this->WriteChipReg(pRD53, "AURORA_CB_CONFIG0",  0xF1,  true);
+    this->WriteChipReg(pRD53, "AURORA_CB_CONFIG1",  0xF,   true);
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x30,  true); // 0x30 = reset Aurora AND reset serializer
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x1,   true);
  
     // ###############################################################
     // # Enable monitoring (needed for AutoRead register monitoring) #
     // ###############################################################
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100); // 0x100 = start monitoring
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x4);
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100, true); // 0x100 = start monitoring
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x4,   true);
 
     usleep(DEEPSLEEP);
   }
 
   void RD53Interface::SyncRD53 (RD53* pRD53, unsigned int nSyncWords)
   {
-    this->WriteChipReg(pRD53, "SYNC", 0x0);
+    this->WriteChipReg(pRD53, "SYNC", 0x0, true);
   }
 
-  bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifyLoop)
+  bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
   {
     setBoard (pChip->getBeBoardId());
 
@@ -104,7 +104,7 @@ namespace Ph2_HwInterface
 	pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, false, serialSymbols);
 	// pRD53->EncodeCMD (cRegItem, pRD53->getChipId(), RD53CmdEncoder::WRITE, symbols);
 
-	if (pVerifyLoop == true)
+	if (pVerifLoop == true)
 	  {
 	    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
 	    unsigned int it      = 0;
@@ -266,7 +266,7 @@ namespace Ph2_HwInterface
 	uint16_t row_;
 	pRD53->ConvertRowCol2Cores (0,col,row_,colPair);
 	this->WriteChipReg(pRD53, "REGION_COL", colPair, pVerifLoop);
-	this->WriteChipReg(pRD53, "REGION_ROW", 0x0, pVerifLoop);
+	this->WriteChipReg(pRD53, "REGION_ROW", 0x0, doSparse);
 
 	size_t itPixCmd = 0;
 	for (auto row = 0; row < RD53::nRows; row++)
@@ -304,10 +304,11 @@ namespace Ph2_HwInterface
 
 		    if ((itPixCmd == NPIXCMD) || (row == (RD53::nRows-1)))
 		      {
-			std::cout << std::endl;
-			for (auto i = 0; i < dataVec.size(); i++)
-			  std::cout << "AAA " << row << "\t" << std::hex << dataVec[i] << std::dec << std::endl;
 			this->WriteRD53Reg(pRD53, "PIX_PORTAL", &dataVec, itPixCmd);
+			// @TMP@
+			// std::cout << std::endl;
+			// for (auto i = 0; i < dataVec.size(); i++)
+			//   std::cout << "AAA " << row << "\t" << std::hex << dataVec[i] << std::dec << std::endl;
 			dataVec.clear();
 			itPixCmd = 0;
 		      }
@@ -321,8 +322,8 @@ namespace Ph2_HwInterface
 
   void RD53Interface::ResetRD53 (RD53* pRD53)
   {
-    this->WriteChipReg(pRD53, "RESET_EVTCTR", 0x0);
-    this->WriteChipReg(pRD53, "RESET_BCRCTR", 0x0);
+    this->WriteChipReg(pRD53, "RESET_EVTCTR", 0x0, true);
+    this->WriteChipReg(pRD53, "RESET_BCRCTR", 0x0, true);
   }
 
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode)
@@ -334,7 +335,7 @@ namespace Ph2_HwInterface
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
-    this->WriteRD53Mask(pRD53, false, true, false);
+    this->WriteRD53Mask(pRD53, false, true, pVerifLoop);
 
     return true;
   }
@@ -346,7 +347,7 @@ namespace Ph2_HwInterface
     if (mask == true) pRD53->disableAllPixels();
     else              pRD53->enableAllPixels();
 
-    // this->WriteRD53Mask(pRD53, false, false, pVerifLoop);
+    this->WriteRD53Mask(pRD53, false, false, pVerifLoop);
 
     return true;
   }

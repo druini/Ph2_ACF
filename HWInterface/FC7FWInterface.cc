@@ -131,9 +131,6 @@ namespace Ph2_HwInterface
 	  }
       }
 
-    std::cout << std::endl;
-    for (auto i = 0; i < stackRegisters.size(); i++)
-      std::cout << "AAA BBB " << std::hex << stackRegisters[i].second << std::dec << std::endl;
     for (auto i = 0; i < repetition; i++) WriteStackReg (stackRegisters);
   }
 
