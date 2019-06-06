@@ -23,9 +23,11 @@
 
 
 class DetectorContainer;
+class DetectorDataContainer;
 class VContainerStreamBase;
 class ChannelGroupHandler;
 class ChannelGroupBase;
+class ScanBase;
 
 
 #ifdef __HTTP__
@@ -62,15 +64,15 @@ class Tool : public SystemController
     using ModuleGlobalOccupancyMap            = std::map<uint8_t,ChipGlobalOccupancyMap    >; //module       : { cbc    : { strip : occupancy } }
         // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyPerChannelMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
 
-    DetectorContainer*    fDetectorDataContainer;
-    VContainerStreamBase* fObjectStream;
-    ChannelGroupHandler*  fChannelGroupHandler;
-    CanvasMap             fCanvasMap;
-    ChipHistogramMap      fChipHistMap;
-    ModuleHistogramMap    fModuleHistMap;
-    BeBoardHistogramMap   fBeBoardHistMap;
-    FrontEndType          fType;
-    TestGroupChannelMap   fTestGroupChannelMap;
+    DetectorDataContainer* fDetectorDataContainer;
+    VContainerStreamBase*  fObjectStream;
+    ChannelGroupHandler*   fChannelGroupHandler;
+    CanvasMap              fCanvasMap;
+    ChipHistogramMap       fChipHistMap;
+    ModuleHistogramMap     fModuleHistMap;
+    BeBoardHistogramMap    fBeBoardHistMap;
+    FrontEndType           fType;
+    TestGroupChannelMap    fTestGroupChannelMap;
 
     std::map< int, std::vector<uint8_t> > fMaskForTestGroupChannelMap;
 
@@ -255,13 +257,13 @@ class Tool : public SystemController
     void selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup);
 
     // // Two dimensional dac scan
-    void scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::vector<std::vector<DetectorContainer*>> detectorContainerVectorOfVector);
+    void scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector);
     // // Two dimensional dac scan per BeBoard
-    void scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::vector<std::vector<DetectorContainer*>> detectorContainerVector);
+    void scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVector);
     // One dimensional dac scan
-    void scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorContainer*> detectorContainerVector);
+    void scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorDataContainer*> detectorContainerVector);
     // One dimensional dac scan per BeBoard
-    void scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorContainer*> detectorContainerVector);
+    void scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorDataContainer*> &detectorContainerVector);
     // bit wise scan
     void bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy);
     // bit wise scan per BeBoard
@@ -275,11 +277,11 @@ class Tool : public SystemController
     // measure data per BeBoard
     void measureBeBoardData(uint16_t boardIndex, const uint16_t numberOfEvents);
     // measure data per BeBoard and per group
-    void measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup);
+    // void measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup);
     // set global DAC for all CBCs in the BeBoard
-    void setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorContainer &globalDACContainer);
+    void setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer);
     //Set global DAC for all Chips in the BeBoard
-    void setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorContainer &globalDACContainer);
+    void setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer);
     //Set same global DAC for all Chips
     void setSameGlobalDac(const std::string &dacName, const uint16_t &dacValue);
     //Set same global DAC for all Chips in the BeBoard
@@ -293,6 +295,8 @@ class Tool : public SystemController
     //Set same DAC list for all Chips (it is able to recognize if the dac is local or global)
     void setSameDac(const std::string &dacName, const uint16_t &dacValue);
 
+private:
+    void doScanOnAllGroupsBeBoard(uint16_t boardIndex, const uint16_t numberOfEvents, ScanBase *scanFunctor);
 
     // Old scans without Detector Containers
 

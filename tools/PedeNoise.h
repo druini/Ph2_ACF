@@ -99,7 +99,7 @@ class PedeNoise : public Tool
     //helpers for SCurve measurement
     uint16_t findPedestal (bool forceAllChannels = false);
 
-    std::map<uint16_t, DetectorContainer*> fSCurveOccupancyMap;
+    std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
 
 };
 

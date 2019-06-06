@@ -175,8 +175,7 @@ void Calibration::FindVplus()
     setSameLocalDac("ChannelOffset", fTargetOffset);
     
     // bitWiseScan("VCth", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
-    
-    DetectorContainer         theOccupancyContainer;
+    DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory   theDetectorFactory;
     theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -229,7 +228,7 @@ void Calibration::FindOffsets()
     // bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
     
 
-    DetectorContainer         theOccupancyContainer;
+    DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory   theDetectorFactory;
     theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);

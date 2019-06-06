@@ -59,13 +59,13 @@ inline void ThresholdAndNoise::makeAverage<ThresholdAndNoise>(const ChipContaine
         }
     }
     
-    fThresholdError= 1/fThresholdError;
+    fThresholdError= 1./fThresholdError;
     fThreshold/=fThresholdError;
-    fThresholdError= sqrt(fThresholdError);
+    fThresholdError= sqrt(1./fThresholdError);
 
-    fNoiseError= 1/fNoiseError;
+    fNoiseError= 1./fNoiseError;
     fNoise/=fNoiseError;
-    fNoiseError= sqrt(fNoiseError);
+    fNoiseError= sqrt(1./fNoiseError);
  
 }
 

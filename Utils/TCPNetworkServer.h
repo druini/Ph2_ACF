@@ -17,14 +17,20 @@ public:
 	TCPNetworkServer(int serverPort);
 	virtual ~TCPNetworkServer(void);
 
-	void                 initialize        (int bufferSize = 0x10000);
-	void                 closeClientSockets(void);
 	virtual std::string  readMessage       (const std::string&       buffer){std::string emptyString(""); return emptyString;}
 	virtual void         sendMessage       (const std::string&       message);
 	virtual void         sendMessage       (const std::vector<char>& message);
+
+private:
+
+
+
+	void                 initialize        (int bufferSize = 0x10000);
 	int                  send              (int fdClientSocket, const uint8_t*           buffer, size_t size);
 	int                  send              (int fdClientSocket, const std::string&       buffer);
 	int                  send              (int fdClientSocket, const std::vector<char>& buffer);
+	void                 closeClientSockets(void);
+
 
 
 protected:
@@ -34,7 +40,7 @@ protected:
 	void                acceptConnections(void);
 
 	//unused. where is it needed?
-	mutable std::mutex          fSocketMutex;
+	//mutable std::mutex          fSocketMutex;
 	std::future<void>           fAcceptFuture;
 	std::unordered_map<int, TCPDataSocket> fConnectedClients;
 

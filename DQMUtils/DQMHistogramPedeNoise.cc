@@ -63,7 +63,6 @@ void DQMHistogramPedeNoise::book(std::string configurationFileName)
 //========================================================================================================================
 void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
-
 	OccupancyBoardStream          theOccupancy;
     ThresholdAndNoiseBoardStream  theThresholdAndNoiseStream;
 
@@ -72,6 +71,8 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 	{
 		std::cout<<"Matched Occupancy!!!!!\n";
 		theOccupancy.decodeChipData(fDetectorData);
+        // fillOccupancy(fDetectorData);
+        
 		for(auto board : fDetectorData)
 		{
 			for(auto module: *board)

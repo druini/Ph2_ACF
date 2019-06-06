@@ -90,7 +90,7 @@ void PixelAlive::InitHisto()
 
 void PixelAlive::Run()
 {
-  DetectorContainer         theOccupancyContainer;
+  DetectorDataContainer     theOccupancyContainer;
   fDetectorDataContainer = &theOccupancyContainer;
   ContainerFactory          theDetectorFactory;
   theDetectorFactory.copyAndInitStructure<OccupancyAndToT>(*fDetectorContainer, *fDetectorDataContainer);

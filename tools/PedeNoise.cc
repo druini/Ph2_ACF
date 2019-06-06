@@ -179,7 +179,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     else
         LOG (INFO) << BOLDBLUE << "Chip Type determined to be " << BOLDRED << "CBC2" << RESET;
 
-    DetectorContainer         theOccupancyContainer;
+    DetectorDataContainer         theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory   theDetectorFactory;
     theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -373,7 +373,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
         //increase threshold to supress noise
         setThresholdtoNSigma (static_cast<BeBoard*>(cBoard), 5);
     }
-    DetectorContainer         theOccupancyContainer;
+    DetectorDataContainer     theOccupancyContainer;
 	fDetectorDataContainer = &theOccupancyContainer;
 	OccupancyBoardStream      theOccupancyStream;
     fObjectStream          = &theOccupancyStream;
@@ -477,7 +477,7 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
 
     // bitWiseScan("VCth", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
 
-    DetectorContainer         theOccupancyContainer;
+    DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory   theDetectorFactory;
     theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -525,7 +525,7 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
 
     while (! (cAllZero && cAllOne) )
     {
-        DetectorContainer *theOccupancyContainer = new DetectorContainer();
+        DetectorDataContainer *theOccupancyContainer = new DetectorDataContainer();
         fDetectorDataContainer = theOccupancyContainer;
         ContainerFactory   theDetectorFactory;
         theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -786,13 +786,13 @@ void PedeNoise::extractPedeNoise ()
     //fThresholdError = normalization
     //Noise = rms
 
-    ContainerFactory   theDetectorFactory;
-    DetectorContainer theDifferentialContainer;
+    ContainerFactory      theDetectorFactory;
+    DetectorDataContainer theDifferentialContainer;
     theDetectorFactory.copyAndInitStructure<ThresholdAndNoise,EmptyContainer>(*fDetectorContainer, theDifferentialContainer);
     
     uint16_t counter = 0;
-    std::map<uint16_t, DetectorContainer*>::reverse_iterator previousIterator = fSCurveOccupancyMap.rend();
-    for(std::map<uint16_t, DetectorContainer*>::reverse_iterator mIt=fSCurveOccupancyMap.rbegin(); mIt!=fSCurveOccupancyMap.rend(); ++mIt)
+    std::map<uint16_t, DetectorDataContainer*>::reverse_iterator previousIterator = fSCurveOccupancyMap.rend();
+    for(std::map<uint16_t, DetectorDataContainer*>::reverse_iterator mIt=fSCurveOccupancyMap.rbegin(); mIt!=fSCurveOccupancyMap.rend(); ++mIt)
     {
         if(previousIterator == fSCurveOccupancyMap.rend())
         {

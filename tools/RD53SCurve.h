@@ -11,6 +11,7 @@
 #define _RD53SCurve_h_
 
 #include "../Utils/Container.h"
+#include "../Utils/DataContainer.h"
 #include "../Utils/OccupancyAndToT.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
@@ -55,8 +56,8 @@ class SCurve : public Tool
 
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
-  std::vector<DetectorContainer*> detectorContainerVector;
-  DetectorContainer* theThresholdAndNoiseContainer;
+  std::vector<DetectorDataContainer*> detectorContainerVector;
+  DetectorDataContainer* theThresholdAndNoiseContainer;
 
   void ComputeStats (std::vector<float>& measurements, float& nHits, float& mean, float& rms);
 
