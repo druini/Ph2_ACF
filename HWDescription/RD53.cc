@@ -242,10 +242,10 @@ namespace Ph2_HwDescription
     ChipRegMap::iterator i = fRegMap.find (pReg);
 
     if (i == fRegMap.end())
-      LOG (INFO) << "The RD53 object: " << fRD53Id << " doesn't have " << pReg;
+      LOG (ERROR) << BOLDRED << "The RD53 chip " << BOLDYELLOW << fRD53Id << BOLDRED << " doesn't have the  register " << BOLDYELLOW << pReg << RESET;
     else
       {
-	i->second.fValue = psetValue;
+	i->second.fValue    = psetValue;
 	i->second.fPrmptCfg = pPrmptCfg;
       }
   }

@@ -245,7 +245,7 @@ void Gain::Save()
       theOccupancy[i]->Write();
       myString.clear();
       myString.str("");
-      myString << theOccupancy[i]->GetName() << ".png";
+      myString << theOccupancy[i]->GetName() << ".svg";
       theCanvasOcc[i]->Print(myString.str().c_str());
     }
 
@@ -255,10 +255,10 @@ void Gain::Save()
   theIntercept2D->Write();
   theFile->Write();
 
-  theCanvasGa1D->Print("Gain1D.png");
-  theCanvasIn1D->Print("InterceptD.png");
-  theCanvasGa2D->Print("Gain2D.png");
-  theCanvasIn2D->Print("Intercept2D.png");
+  theCanvasGa1D->Print("Gain1D.svg");
+  theCanvasIn1D->Print("InterceptD.svg");
+  theCanvasGa2D->Print("Gain2D.svg");
+  theCanvasIn2D->Print("Intercept2D.svg");
 }
 
 void Gain::ComputeStats(std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)

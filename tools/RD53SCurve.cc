@@ -242,7 +242,7 @@ void SCurve::Save()
       theOccupancy[i]->Write();
       myString.clear();
       myString.str("");
-      myString << theOccupancy[i]->GetName() << ".png";
+      myString << theOccupancy[i]->GetName() << ".svg";
       theCanvasOcc[i]->Print(myString.str().c_str());
     }
 
@@ -252,10 +252,10 @@ void SCurve::Save()
   theNoise2D->Write();
   theFile->Write();
 
-  theCanvasTh1D->Print("SCurveTh1D.png");
-  theCanvasNo1D->Print("SCurveNo1D.png");
-  theCanvasTh2D->Print("SCurveTh2D.png");
-  theCanvasNo2D->Print("SCurveNo2D.png");
+  theCanvasTh1D->Print("SCurveTh1D.svg");
+  theCanvasNo1D->Print("SCurveNo1D.svg");
+  theCanvasTh2D->Print("SCurveTh2D.svg");
+  theCanvasNo2D->Print("SCurveNo2D.svg");
 }
 
 void SCurve::ComputeStats(std::vector<float>& measurements, float& nHits, float& mean, float& rms)

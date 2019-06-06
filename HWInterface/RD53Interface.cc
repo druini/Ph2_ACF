@@ -62,6 +62,7 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53, "AURORA_CB_CONFIG1",  0xF,   true);
     this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x30,  true); // 0x30 = reset Aurora AND reset serializer
     this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x1,   true);
+    usleep(DEEPSLEEP);
  
     // ###############################################################
     // # Enable monitoring (needed for AutoRead register monitoring) #
@@ -234,12 +235,12 @@ namespace Ph2_HwInterface
     
     if (doSparse == true)
       {
-    	this->WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
-    	this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0,  pVerifLoop);
-    	this->WriteChipReg(pRD53, "PIX_MODE",   0x0,  pVerifLoop);
+    	this->WriteChipReg(pRD53, "PIX_MODE",   0x27, true);
+    	this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0,  true);
+    	this->WriteChipReg(pRD53, "PIX_MODE",   0x0,  true);
       }
-    else this->WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
-    
+    else this->WriteChipReg(pRD53, "PIX_MODE", 0x8, true);
+
 
     // for (auto col = 0; col < RD53::nCols-1; col+=2) // @TMP@
     for (auto col = 128; col < 263; col+=2)
@@ -337,7 +338,7 @@ namespace Ph2_HwInterface
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->injectPixel(row,col,group->isChannelEnabled(row,col));
     
-    this->WriteRD53Mask(pRD53, true, false, pVerifLoop);
+    this->WriteRD53Mask(pRD53, false, false, pVerifLoop);
 
     return true;
   }
@@ -350,7 +351,7 @@ namespace Ph2_HwInterface
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->enablePixel(row,col,group->isChannelEnabled(row,col));
 
-    this->WriteRD53Mask(pRD53, true, false, pVerifLoop);
+    this->WriteRD53Mask(pRD53, false, false, pVerifLoop);
 
     return true;
   }

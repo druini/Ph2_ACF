@@ -144,12 +144,12 @@ void PixelAlive::Save()
       theOccupancy[i]->Write();
       myString.clear();
       myString.str("");
-      myString << theOccupancy[i]->GetName() << ".png";
+      myString << theOccupancy[i]->GetName() << ".svg";
       theCanvasOcc[i]->Print(myString.str().c_str());
     }
   
   theToT->Write();
   theFile->Write();
 
-  theCanvasToT->Print("PixelAlive_ToT.png");
+  theCanvasToT->Print("PixelAlive_ToT.svg");
 }

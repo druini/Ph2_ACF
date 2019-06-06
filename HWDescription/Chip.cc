@@ -65,7 +65,7 @@ namespace Ph2_HwDescription
         if ( i != std::end ( fRegMap ) ) return ( i->second );
         else
         {
-            LOG (ERROR) << "Error, no Register " << pReg << " found in the RegisterMap of CBC " << +fChipId << "!" ;
+            LOG (ERROR) << "Error, no register " << pReg << " found in the RegisterMap of Chip " << +fChipId << "!" ;
             throw Exception ( "Chip: no matching register found" );
             return cItem;
         }

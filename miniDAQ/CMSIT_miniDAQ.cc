@@ -217,7 +217,7 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
   theFile.Write();
   theFile.Close();
 
-  theCanvas.Print("LatencyScan.png");
+  theCanvas.Print("LatencyScan.svg");
 }
 
 
