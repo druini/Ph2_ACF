@@ -87,7 +87,9 @@ public:
 class BaseDataContainer
 {
 public:
-	BaseDataContainer() {;}
+	BaseDataContainer() 
+	: summary_{nullptr}
+	{;}
 
 	virtual ~BaseDataContainer()
 	{
@@ -214,8 +216,6 @@ public:
 		summary_->makeSummary(this,static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask(), cTestChannelGroup, numberOfEvents);
 		return cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask());
 	}
-
-	void cleanDataStored() override {;}
 
 };
 
