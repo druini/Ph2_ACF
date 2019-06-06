@@ -99,6 +99,7 @@ public:
 	ChannelContainerBase(){;}
 	virtual ~ChannelContainerBase(){;}
 	virtual void print(void) = 0;
+	virtual void normalize(uint16_t numberOfEvents) {;}
 };
 
 template <typename T>
@@ -210,10 +211,10 @@ public:
 		}
 	}
 
-	ChannelContainerBase* container_;
 protected:
 	unsigned int nOfRows_;
 	unsigned int nOfCols_;
+	ChannelContainerBase* container_;
 };
 
 class ModuleContainer : public Container<ChipContainer>

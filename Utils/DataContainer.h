@@ -159,18 +159,16 @@ public:
 
 };
 
-
-
-class ChannelDataContainerBase
-{
-public:
-	ChannelDataContainerBase() {;}
-	virtual ~ChannelDataContainerBase(){;}
-	virtual void normalize(uint16_t numberOfEvents) = 0;
-};
+// class ChannelDataContainerBase
+// {
+// public:
+// 	ChannelDataContainerBase() {;}
+// 	virtual ~ChannelDataContainerBase(){;}
+// 	virtual void normalize(uint16_t numberOfEvents) = 0;
+// };
 
 template <typename T>
-class ChannelDataContainer: public ChannelContainer<T>, public ChannelDataContainerBase
+class ChannelDataContainer: public ChannelContainer<T> //, public ChannelContainerBase
 {
 public:
 	ChannelDataContainer(int size) : ChannelContainer<T>(size) {}
@@ -192,7 +190,7 @@ public:
 	{}
 
 	ChipDataContainer(int id, unsigned int numberOfRows, unsigned int numberOfCols=1)
-	: ChipDataContainer(id, numberOfRows, numberOfCols)
+	: ChipContainer(id, numberOfRows, numberOfCols)
 	{}
 
 	virtual ~ChipDataContainer() {;}
@@ -201,13 +199,13 @@ public:
 	void initialize()
 	{	
 		summary_ = new Summary<S,V>();
-		container_ = static_cast<ChannelDataContainerBase*>(new ChannelDataContainer<V>(nOfRows_*nOfCols_));
+		container_ = new ChannelDataContainer<V>(nOfRows_*nOfCols_);
 	}
 	template <typename S, typename V>
 	void initialize(S& theSummary, V& initialValue)
 	{
 		summary_ = new Summary<S,V>(theSummary);
-		container_ = static_cast<ChannelDataContainerBase*>(new ChannelDataContainer<V>(nOfRows_*nOfCols_, initialValue));
+		container_ = new ChannelDataContainer<V>(nOfRows_*nOfCols_, initialValue);
 	}
 	
 	uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents)
@@ -218,8 +216,6 @@ public:
 	}
 
 	void cleanDataStored() override {;}
-
-	ChannelDataContainerBase* container_;
 
 };
 

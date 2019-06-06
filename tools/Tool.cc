@@ -1109,7 +1109,6 @@ void Tool::measureData(const uint16_t &numberOfEvents)
 
 // 	if(fChannelGroupHandler == nullptr)
 // 	{
-// 		std::cout << __PRETTY_FUNCTION__ << "ERROR: This method REQUIRES that fChannelGroupHandler != nullptr! ABORTING!" << std::endl;
 // 		abort();
 // 	}
 // 	if(!fAllChan)
@@ -1205,7 +1204,6 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, const uint16_t numberOf
 
 	if(fChannelGroupHandler == nullptr)
 	{
-	    std::cout << __PRETTY_FUNCTION__ << "ERROR: This method REQUIRES that fChannelGroupHandler != nullptr! ABORTING!" << std::endl;
 	    abort();
 	}
 	if(!fAllChan)

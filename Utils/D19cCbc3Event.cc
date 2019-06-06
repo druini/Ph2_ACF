@@ -48,7 +48,7 @@ namespace Ph2_HwInterface {
     		for(auto chip: *module)
     		{
                 unsigned int i = 0;
-    			for(ChannelContainer<Occupancy>::iterator channel =  chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
+    			for(ChannelDataContainer<Occupancy>::iterator channel =  chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
 				{
                     if(cTestChannelGroup->isChannelEnabled(i))
                     {
