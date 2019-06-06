@@ -56,11 +56,15 @@ class Gain : public Tool
 
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
-  std::vector<DetectorDataContainer*> detectorContainerVector;
-  DetectorDataContainer* theGainAndInterceptContainer;
+  std::vector<DetectorDataContainer*>    detectorContainerVector;
+  DetectorDataContainer*                 theGainAndInterceptContainer;
 
   void ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
 
+
+  // ########
+  // # ROOT #
+  // ########
   TFile* theFile;
   std::vector<TCanvas*> theCanvasOcc;
   std::vector<TH2F*>    theOccupancy;

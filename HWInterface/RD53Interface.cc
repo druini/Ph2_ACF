@@ -337,8 +337,8 @@ namespace Ph2_HwInterface
     for (auto row = 0; row < RD53::nRows; row++)
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->injectPixel(row,col,group->isChannelEnabled(row,col));
-    
-    this->WriteRD53Mask(pRD53, false, false, pVerifLoop);
+
+    this->WriteRD53Mask(pRD53, true, false, pVerifLoop);
 
     return true;
   }
@@ -351,7 +351,7 @@ namespace Ph2_HwInterface
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->enablePixel(row,col,group->isChannelEnabled(row,col));
 
-    this->WriteRD53Mask(pRD53, false, false, pVerifLoop);
+    this->WriteRD53Mask(pRD53, true, false, pVerifLoop);
 
     return true;
   }

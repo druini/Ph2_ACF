@@ -50,6 +50,10 @@ class PixelAlive : public Tool
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
 
+
+  // ########
+  // # ROOT #
+  // ########
   TFile* theFile;
   std::vector<TCanvas*> theCanvasOcc;
   std::vector<TH2F*>    theOccupancy;

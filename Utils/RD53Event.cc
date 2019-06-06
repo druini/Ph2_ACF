@@ -8,7 +8,6 @@
 */
 
 #include "RD53Event.h"
-#include "../Utils/DataContainer.h"
 
 namespace Ph2_HwInterface
 {
@@ -52,11 +51,11 @@ namespace Ph2_HwInterface
 		{
 		  size_t ToT;
 		  if (this->isThereAnHit(module->getId(),chip->getId(),row,col,ToT) == true)
-		  {
-		    chip->getChannel<OccupancyAndToT>(row,col).fOccupancy++;
-		    chip->getChannel<OccupancyAndToT>(row,col).fToT      += float(ToT);
-		    chip->getChannel<OccupancyAndToT>(row,col).fToTError += float(ToT*ToT);
-		  }
+		    {
+		      chip->getChannel<OccupancyAndToT>(row,col).fOccupancy++;
+		      chip->getChannel<OccupancyAndToT>(row,col).fToT      += float(ToT);
+		      chip->getChannel<OccupancyAndToT>(row,col).fToTError += float(ToT*ToT);
+		    }
 		}
 	    }
   }

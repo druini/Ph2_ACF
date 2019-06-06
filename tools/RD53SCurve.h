@@ -56,11 +56,15 @@ class SCurve : public Tool
 
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
-  std::vector<DetectorDataContainer*> detectorContainerVector;
-  DetectorDataContainer* theThresholdAndNoiseContainer;
+  std::vector<DetectorDataContainer*>    detectorContainerVector;
+  DetectorDataContainer*                 theThresholdAndNoiseContainer;
 
   void ComputeStats (std::vector<float>& measurements, float& nHits, float& mean, float& rms);
 
+
+  // ########
+  // # ROOT #
+  // ########
   TFile* theFile;
   std::vector<TCanvas*> theCanvasOcc;
   std::vector<TH2F*>    theOccupancy;
