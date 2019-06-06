@@ -8,6 +8,7 @@
 */
 
 #include "RD53Event.h"
+#include "../Utils/DataContainer.h"
 
 namespace Ph2_HwInterface
 {
@@ -40,7 +41,7 @@ namespace Ph2_HwInterface
     return false;
   }
 
-  void RD53Event::fillDataContainer(BoardContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+  void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
   {
     for (auto module : *boardContainer)
       for (auto chip : *module)

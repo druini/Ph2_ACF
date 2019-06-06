@@ -14,7 +14,7 @@
 
 #include "../Utils/ObjectStreamer.h"
 #include "../Utils/Occupancy.h"
-#include "../Utils/Container.h"
+#include "../Utils/DataContainer.h"
 #include "../Utils/TCPNetworkServer.h"
 #include "../HWDescription/Chip.h"
 #include <iostream>
@@ -89,7 +89,7 @@ public:
 }
 	~OccupancyBoardStream(){;}
 
-	void streamAndSendBoard(BoardContainer* board, TCPNetworkServer* networkStreamer)
+	void streamAndSendBoard(BoardDataContainer* board, TCPNetworkServer* networkStreamer) override
 	{
 		for(auto module: *board)
 		{
@@ -102,12 +102,12 @@ public:
 			}
 		}
 	}
-	void streamChip (uint16_t boardId, uint16_t moduleId, ChipContainer* chip  )
+	void streamChip (uint16_t boardId, uint16_t moduleId, ChipDataContainer* chip  )
 	{
 		retrieveChipData(boardId, moduleId, chip);
 	}
 
-	void decodeChipData(DetectorContainer& detectorContainer)
+	void decodeChipData(DetectorDataContainer& detectorContainer)
 	{
 		detectorContainer.getObject(fHeaderStream.boardId)
 						->getObject(fHeaderStream.moduleId)
@@ -116,13 +116,12 @@ public:
 		fDataStream.fChannelOccupancy = nullptr;
 	}
 
-	void retrieveChipData(uint16_t boardId, uint16_t moduleId, ChipContainer* chip)
+	void retrieveChipData(uint16_t boardId, uint16_t moduleId, ChipDataContainer* chip)
 	{
-		Chip* pChip = static_cast<Chip*>(chip);
 		fHeaderStream.boardId         = boardId;
 		fHeaderStream.moduleId        = moduleId;
 		fHeaderStream.fChipId         = chip->getId()                                                ;
-		fDataStream.fChannelOccupancy = chip->getChannelContainer<ChannelContainer<Occupancy>>();
+		fDataStream.fChannelOccupancy = chip->getChannelContainer<ChannelDataContainer<Occupancy>>();
 	}
 
 };

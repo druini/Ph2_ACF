@@ -22,96 +22,21 @@ class ChannelContainerBase;
 template <typename T>
 class ChannelContainer;
 class ChipContainer;
-class SummaryContainerBase;
-
-class SummaryBase
-{
-public:
-	SummaryBase() {;}
-	virtual ~SummaryBase() {;}
-	virtual void makeSummary(const ChipContainer* theChannelList, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) = 0;
-	virtual void makeSummary(const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) = 0;
-
-};
-
-class SummaryContainerBase 
-{
-public:
-	SummaryContainerBase() {;}
-	~SummaryContainerBase() {;}
-	virtual void emplace_back(SummaryBase* theSummary) = 0;
-};
-
-template <typename T>
-class SummaryContainer : public std::vector<T*>, public SummaryContainerBase
-{
-public:
-	SummaryContainer() {;}
-	~SummaryContainer() {;}
-	void emplace_back(SummaryBase* theSummary) override
-	{
-		std::vector<T*>::emplace_back(theSummary);
-	}
-};
-
-
-template <class S, class C>
-class Summary : public SummaryBase
-{
-public:
-	Summary() {;}
-	Summary(const S& theSummary) {
-		theSummary_ = theSummary;
-	}
-	Summary(const Summary<S,C>& summary) {
-		theSummary_ = summary.theSummary_;
-	}
-	~Summary() {;}
-
-	void makeSummary(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) override
-	{
-		theSummary_.template makeAverage<C>(theChipContainer, chipOriginalMask, cTestChannelGroup, numberOfEvents);
-	}
-	void makeSummary(const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) override
-	{
-		const SummaryContainer<SummaryBase>* tmpSummaryContainer = static_cast<const SummaryContainer<SummaryBase>*>(theSummaryList);
-		std::vector<S> tmpSummaryVector;
-		for(auto summary : *tmpSummaryContainer) tmpSummaryVector.emplace_back(static_cast<Summary<S,C>*>(summary)->theSummary_);
-		theSummary_.makeAverage(&tmpSummaryVector,theNumberOfEnabledChannelsList, numberOfEvents);
-		delete theSummaryList;
-	}
-
-	S theSummary_;
-};
 
 class BaseContainer
 {
 public:
 	BaseContainer(int id=-1) 
-: summary_                   (nullptr)
-, theNumberOfEnabledChannels_(-1)
-, id_                        (id)
-, index_                     (0)
-{;}
-	virtual ~BaseContainer()
-	{
-		if(summary_ != nullptr)
-		{
-			delete summary_;
-			summary_ = nullptr;
-		}
-	}
-	virtual void initialize(void) {;}
+	: id_                        (id)
+	, index_                     (0)
+	{;}
+
+	virtual ~BaseContainer() {;}
 	int getId   (void) {return id_;}
 	int getIndex(void) {return index_;}
-	virtual uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) = 0;
 	virtual void     cleanDataStored              (void) = 0;
 
 	void setIndex(int index) {index_ = index;}
-
-	SummaryBase *summary_;
-	uint32_t theNumberOfEnabledChannels_;
-
 
 private:
 	int id_;
@@ -145,44 +70,9 @@ public:
 		if(idObjectMap_.find(id) == idObjectMap_.end()) throw Ph2_HwDescription::Exception("T* getObject(int id) : Object Id not found");
 		return idObjectMap_[id];
 	}
-	template <typename S, typename V>
-	void initialize()
-	{	
-		summary_ = new Summary<S,V>();
-	}
-	template <typename S, typename V>
-	void initialize(S& theSummary)
-	{
-		summary_ = new Summary<S,V>(theSummary);
-	}
-	SummaryContainerBase* getAllObjectSummaryContainers() const
-	{
-		SummaryContainerBase *SummaryContainerList = new SummaryContainer<SummaryBase>;
-		for(auto container : *this) SummaryContainerList->emplace_back(container->summary_);
-		return SummaryContainerList;
-	}
-
-	uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents)
-	{
-
-		int index = 0;
-		uint32_t numberOfEnabledChannels_ = 0;
-		std::vector<uint32_t> theNumberOfEnabledChannelsList;
-		for(auto container : *this)
-		{
-			uint32_t numberOfContainerEnabledChannels = container->normalizeAndAverageContainers(static_cast<const Container<T>*>(theContainer)->at(index++), cTestChannelGroup, numberOfEvents);
-			theNumberOfEnabledChannelsList.emplace_back(numberOfContainerEnabledChannels);
-			numberOfEnabledChannels_+=numberOfContainerEnabledChannels;
-
-		}
-		summary_->makeSummary(getAllObjectSummaryContainers(),theNumberOfEnabledChannelsList,numberOfEvents);//sum of chip container needed!!!
-		return numberOfEnabledChannels_;
-	}
 
 	void cleanDataStored() override
 	{
-		delete summary_;
-		summary_ = nullptr;
 		for(auto container : *this)
 		{
 			container->cleanDataStored();
@@ -208,8 +98,6 @@ class ChannelContainerBase
 public:
 	ChannelContainerBase(){;}
 	virtual ~ChannelContainerBase(){;}
-	virtual void normalize(uint16_t numberOfEvents) = 0;
-
 	virtual void print(void) = 0;
 };
 
@@ -224,10 +112,6 @@ public:
 	{
 		for(auto& channel: *this)
 			channel.print();
-	}
-	void normalize(uint16_t numberOfEvents) override
-	{
-		for(auto& channel : *this) channel.normalize(numberOfEvents);
 	}
 
 	T& getChannel(unsigned int channel) {return this->at(channel);}
@@ -245,11 +129,11 @@ class ChipContainer : public BaseContainer
 {
 public:
 	ChipContainer(int id)
-: BaseContainer(id)
-, nOfRows_  (0)
-, nOfCols_  (1)
-,container_ (nullptr)
-{}
+	: BaseContainer(id)
+	, nOfRows_  (0)
+	, nOfCols_  (1)
+	,container_ (nullptr)
+	{}
 	ChipContainer(int id, unsigned int numberOfRows, unsigned int numberOfCols=1)
 	: BaseContainer(id)
 	, nOfRows_  (numberOfRows)
@@ -272,18 +156,6 @@ public:
 	template <typename T>
 	typename ChannelContainer<T>::const_iterator end  () const {return static_cast<ChannelContainer<T>*>(container_)->end();}
 
-	template <typename S, typename V>
-	void initialize()
-	{	
-		summary_ = new Summary<S,V>();
-		container_ = static_cast<ChannelContainerBase*>(new ChannelContainer<V>(nOfRows_*nOfCols_));
-	}
-	template <typename S, typename V>
-	void initialize(S& theSummary, V& initialValue)
-	{
-		summary_ = new Summary<S,V>(theSummary);
-		container_ = static_cast<ChannelContainerBase*>(new ChannelContainer<V>(nOfRows_*nOfCols_, initialValue));
-	}
 	void setNumberOfChannels(unsigned int numberOfRows, unsigned int numberOfCols=1){nOfRows_ = numberOfRows; nOfCols_ = numberOfCols;}
 	virtual const ChannelGroupBase* getChipOriginalMask() const {return nullptr;};
 
@@ -322,13 +194,6 @@ public:
 		else return true;
 	}
 
-	uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents)
-	{
-		container_->normalize(numberOfEvents);
-		summary_->makeSummary(this,static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask(), cTestChannelGroup, numberOfEvents);
-		return cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask());
-	}
-
 	void cleanDataStored() override
 	{
 		delete container_;
@@ -346,7 +211,7 @@ public:
 	}
 
 	ChannelContainerBase* container_;
-private:
+protected:
 	unsigned int nOfRows_;
 	unsigned int nOfCols_;
 };

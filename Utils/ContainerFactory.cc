@@ -14,17 +14,17 @@
 #include "../Utils/Container.h"
 #include "../HWDescription/Chip.h"
 
-void ContainerFactory::copyStructure(DetectorContainer& original, DetectorContainer& copy)
+void ContainerFactory::copyStructure(DetectorContainer& original, DetectorDataContainer& copy)
 {
 	for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
 	{
-		BoardContainer* copyBoard = copy.addBoardContainer((*board)->getId());
+		BoardDataContainer* copyBoard = copy.addBoardDataContainer((*board)->getId());
 		for(ModuleContainer* module : **board)
 		{
-			ModuleContainer* copyModule = copyBoard->addModuleContainer(module->getId());
+			ModuleDataContainer* copyModule = copyBoard->addModuleDataContainer(module->getId());
 			for(ChipContainer* chip : *module)
 			{
-				copyModule->addChipContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
+				copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
 			}
 		}
 	}

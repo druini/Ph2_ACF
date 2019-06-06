@@ -136,7 +136,7 @@ void SCurve::Run()
   detectorContainerVector.reserve(dacList.size());
   for (auto i = 0; i < dacList.size(); i++)
     {
-      detectorContainerVector.emplace_back(new DetectorContainer());
+      detectorContainerVector.emplace_back(new DetectorDataContainer());
       theDetectorFactory.copyAndInitStructure<OccupancyAndToT>(*fDetectorContainer, *detectorContainerVector.back());
     }
   
@@ -200,7 +200,7 @@ void SCurve::Analyze()
   float nHits, mean, rms;
   std::vector<float> measurements;
 
-  theThresholdAndNoiseContainer = new DetectorContainer();
+  theThresholdAndNoiseContainer = new DetectorDataContainer();
   ContainerFactory  theDetectorFactory;
   theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
 

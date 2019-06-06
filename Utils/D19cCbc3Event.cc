@@ -10,7 +10,7 @@
  */
 
 #include "../Utils/D19cCbc3Event.h"
-#include "../Utils/Container.h"
+#include "../Utils/DataContainer.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/ChannelGroupHandler.h"
@@ -41,7 +41,7 @@ namespace Ph2_HwInterface {
 
     //}
 
-    void D19cCbc3Event::fillDataContainer(BoardContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
+    void D19cCbc3Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
     {
         for(auto module: *boardContainer)
     	{

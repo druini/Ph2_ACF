@@ -25,7 +25,7 @@ namespace Ph2_HwInterface
   RD53Event(const std::vector<size_t>& module_id, const std::vector<size_t>& chip_id, const std::vector<RD53::Event>& events)
     : module_id_vec(module_id), chip_id_vec(chip_id), chip_events(events) {}
     
-  void fillDataContainer (BoardContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
+  void fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
     
   // @TMP@ not implemented yet
   bool DataBit                     (uint8_t /*module_id*/, uint8_t chip_id, uint32_t channel_id) const         {}

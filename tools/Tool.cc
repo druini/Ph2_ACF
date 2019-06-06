@@ -7,6 +7,8 @@
 #include "../Utils/Occupancy.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/RegisterValue.h"
+#include "../Utils/DataContainer.h"
+#include "../Utils/Container.h"
 
 
 Tool::Tool() :
@@ -846,7 +848,7 @@ void Tool::unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair)
 
 
 // Two dimensional dac scan
-void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::vector<std::vector<DetectorContainer*>> detectorContainerVectorOfVector)
+void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector)
 {
 
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
@@ -859,7 +861,7 @@ void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &
 
 
 // Two dimensional dac scan per BeBoard
-void Tool::scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::vector<std::vector<DetectorContainer*>> detectorContainerVectorOfVector)
+void Tool::scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector)
 {
 
 	if(dac1List.size() != detectorContainerVectorOfVector.size())
@@ -881,7 +883,7 @@ void Tool::scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, c
 
 
 // One dimensional dac scan
-void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorContainer*> detectorContainerVector)
+void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorDataContainer*> detectorContainerVector)
 {
 
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
@@ -927,7 +929,7 @@ void Tool::bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvent
 void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy)
 {
 
-	DetectorContainer *outputDataContainer = fDetectorDataContainer;
+	DetectorDataContainer *outputDataContainer = fDetectorDataContainer;
 
 	float globalOccupancy = 0.;
 	Chip *cChip = static_cast<BeBoard*>(fDetectorContainer->at(boardIndex))->fModuleVector.at(0)->fChipVector.at(0); //assumption: one BeBoard has only one type of chip;
@@ -937,13 +939,13 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, c
 	bool occupanyDirectlyProportionalToDAC;
 
 	ContainerFactory   theDetectorFactory;
-	DetectorContainer *previousStepOccupancyContainer = new DetectorContainer();
+	DetectorDataContainer *previousStepOccupancyContainer = new DetectorDataContainer();
 	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *previousStepOccupancyContainer);
-	DetectorContainer *currentStepOccupancyContainer = new DetectorContainer();
+	DetectorDataContainer *currentStepOccupancyContainer = new DetectorDataContainer();
 	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *currentStepOccupancyContainer);
 
-	DetectorContainer *previousDacList = new DetectorContainer();
-	DetectorContainer *currentDacList = new DetectorContainer();
+	DetectorDataContainer *previousDacList = new DetectorDataContainer();
+	DetectorDataContainer *currentDacList = new DetectorDataContainer();
 
 	RegisterValue allZeroRegister(0);
 	RegisterValue allOneRegister (0xFFFF>>(16-numberOfBits));
@@ -976,7 +978,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, c
 
 	if(!occupanyDirectlyProportionalToDAC)
 	{
-		DetectorContainer *tmpPointer = previousDacList;
+		DetectorDataContainer *tmpPointer = previousDacList;
 		previousDacList = currentDacList;
 		currentDacList = tmpPointer;
 	}
@@ -1271,10 +1273,10 @@ public:
 			event->fillDataContainer((fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
 	}
 
-	void setDataContainer(DetectorContainer *detectorDataContainer) {fDetectorDataContainer = detectorDataContainer;}
+	void setDataContainer(DetectorDataContainer *detectorDataContainer) {fDetectorDataContainer = detectorDataContainer;}
 
 private:
-	DetectorContainer *fDetectorDataContainer;
+	DetectorDataContainer *fDetectorDataContainer;
 
 };
 
@@ -1308,12 +1310,12 @@ public:
 		}
 	}
 
-	void setDataContainerVector(std::vector<DetectorContainer*>* detectorDataContainerVector) {fDetectorDataContainerVector = detectorDataContainerVector;}
+	void setDataContainerVector(std::vector<DetectorDataContainer*>* detectorDataContainerVector) {fDetectorDataContainerVector = detectorDataContainerVector;}
 	void setDacName(const std::string &dacName) {fDacName = dacName;}
 	void setDacList(const std::vector<uint16_t>* dacList) {fDacList = dacList;}
 
 private:
-	std::vector<DetectorContainer*>* fDetectorDataContainerVector;
+	std::vector<DetectorDataContainer*>* fDetectorDataContainerVector;
 	const std::vector<uint16_t>* fDacList;
 	std::string fDacName;
 
@@ -1321,7 +1323,7 @@ private:
 
 
 // One dimensional dac scan per BeBoard
-void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorContainer*> &detectorContainerVector)
+void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorDataContainer*> &detectorContainerVector)
 {
 
 	if(dacList.size() != detectorContainerVector.size())
@@ -1347,7 +1349,7 @@ void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const
 
 
 //Set global DAC for all CBCs in the BeBoard
-void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorContainer &globalDACContainer)
+void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer)
 {
 	for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
 	{
@@ -1362,7 +1364,7 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacNam
 }
 
 // set local dac per BeBoard
-void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorContainer &globalDACContainer)
+void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer)
 {   
 	for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
 	{

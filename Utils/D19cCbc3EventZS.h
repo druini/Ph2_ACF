@@ -187,7 +187,7 @@ namespace Ph2_HwInterface {
 
         std::vector<Cluster> getClusters ( uint8_t pFeId, uint8_t pCbcId) const override;
         
-        void fillDataContainer(BoardContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup) override;
+        void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup) override;
 
         void print (std::ostream& out) const override;
 

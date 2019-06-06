@@ -11,6 +11,7 @@
 #define __DQMHISTOGRAMPEDENOISE_H__
 #include "../DQMUtils/DQMHistogramBase.h"
 #include "../Utils/Container.h"
+#include "../Utils/DataContainer.h"
 
 /*!
  * \class DQMHistogramPedeNoise
@@ -43,10 +44,10 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     void reset(void);
     //virtual void summarizeHistos();
   private:
-    DetectorContainer fDetectorData;
     DetectorContainer fDetectorStructure;
-    DetectorContainer fDetectorValidationHistograms;
-    DetectorContainer fDetectorPedestalHistograms;
-    DetectorContainer fDetectorNoiseHistograms;
+    DetectorDataContainer fDetectorData;
+    DetectorDataContainer fDetectorValidationHistograms;
+    DetectorDataContainer fDetectorPedestalHistograms;
+    DetectorDataContainer fDetectorNoiseHistograms;
 };
 #endif
