@@ -45,8 +45,11 @@ PixelAlive::~PixelAlive()
   for (auto i = 0; i < theOccupancy.size(); i++)
     {
       if (theOccupancy[i] != nullptr) delete theOccupancy[i];
-      if (theCanvas[i]    != nullptr) delete theCanvas[i];
+      if (theCanvasOcc[i] != nullptr) delete theCanvasOcc[i];
     }
+
+  if (theToT       != nullptr) delete theToT;
+  if (theCanvasToT != nullptr) delete theCanvasToT;
 }
 
 void PixelAlive::InitHisto()
@@ -56,9 +59,9 @@ void PixelAlive::InitHisto()
   // #######################
   // # Allocate histograms #
   // #######################
-  for (auto cBoard : fBoardVector)
-    for (auto cFe : cBoard->fModuleVector)
-      for (auto cChip : cFe->fChipVector)
+  for (const auto& cBoard : fBoardVector)
+    for (const auto& cFe : cBoard->fModuleVector)
+      for (const auto& cChip : cFe->fChipVector)
         {
 	  myString.clear();
 	  myString.str("");
@@ -71,13 +74,18 @@ void PixelAlive::InitHisto()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvas_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
-  theFile = new TFile(fileName, "RECREATE");
+  theToT = new TH1F("theToT","ToT",RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong(),0,RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong());
+  theToT->SetXTitle("ToT");
+  theToT->SetYTitle("Entries");
+
+  theFile      = new TFile(fileName, "RECREATE");
+  theCanvasToT = new TCanvas("theCanvasTot","RD53Canvas",0,0,700,500);
 }
 
 void PixelAlive::Run()
@@ -96,13 +104,17 @@ void PixelAlive::Run()
   // # Filling the histogram #
   // #########################
   size_t index = 0;
-  for (auto cBoard : fBoardVector)
-    for (auto cFe : cBoard->fModuleVector)
-      for (auto cChip : cFe->fChipVector)
+  for (const auto& cBoard : fBoardVector)
+    for (const auto& cFe : cBoard->fModuleVector)
+      for (const auto& cChip : cFe->fChipVector)
 	{
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      theOccupancy[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+	      {
+		theOccupancy[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+		if (theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
+		  theToT->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
+	      }
 	  index++;
 	}
 }
@@ -111,11 +123,16 @@ void PixelAlive::Display()
 {
   for (auto i = 0; i < theOccupancy.size(); i++)
     {
-      theCanvas[i]->cd();
+      theCanvasOcc[i]->cd();
       theOccupancy[i]->Draw("gcolz");
-      theCanvas[i]->Modified();
-      theCanvas[i]->Update();
+      theCanvasOcc[i]->Modified();
+      theCanvasOcc[i]->Update();
     }
+
+  theCanvasToT->cd();
+  theToT->Draw();
+  theCanvasToT->Modified();
+  theCanvasToT->Update();
 }
 
 void PixelAlive::Save()
@@ -127,9 +144,12 @@ void PixelAlive::Save()
       theOccupancy[i]->Write();
       myString.clear();
       myString.str("");
-      myString << theOccupancy[i]->GetName() << ".png";
-      theCanvas[i]->Print(myString.str().c_str());
+      myString << theOccupancy[i]->GetName() << ".svg";
+      theCanvasOcc[i]->Print(myString.str().c_str());
     }
-
+  
+  theToT->Write();
   theFile->Write();
+
+  theCanvasToT->Print("PixelAlive_ToT.svg");
 }

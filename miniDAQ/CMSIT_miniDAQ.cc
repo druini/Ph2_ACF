@@ -122,7 +122,7 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, si
       cfgFastCmd.fast_cmd_fsm.second_cal_en = true;
       cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
     }
-  else LOG(ERROR) << BOLDRED << "Option non recognized " << type << RESET;
+  else LOG (ERROR) << BOLDRED << "Option non recognized " << type << RESET;
 
 
   // ###############################################
@@ -142,16 +142,22 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, si
   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_en           = cfgFastCmd.fast_cmd_fsm.first_cal_en;
   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_en          = cfgFastCmd.fast_cmd_fsm.second_cal_en;
   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.trigger_en             = cfgFastCmd.fast_cmd_fsm.trigger_en;
+
+
+  // ##############################
+  // # Download the configuration #
+  // ##############################
+  RD53Board->ConfigureFastCommands();
 }
 
 
 void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD53ChipInterface, Chip* pChip,
 		  size_t ROWstart, size_t ROWstop, size_t COLstart, size_t COLstop,size_t LatencyStart, size_t LatencyStop, size_t nEvents)
 {
-  int dataSize = 0;
-  int latency  = 0;
+  int     dataSize = 0;
+  int     latency  = 0;
+  uint8_t status;
   std::vector<uint32_t> data;
-  std::string exception;
 
   TH1F theLatency("theLatency","LatencyScan",LatencyStop - LatencyStart,LatencyStart,LatencyStop);
   theLatency.SetXTitle("Latency [n.bx]");
@@ -168,7 +174,7 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
   static_cast<RD53*>(pChip)->enablePixel(ROWstop,COLstop,true);
   static_cast<RD53*>(pChip)->injectPixel(ROWstop,COLstop,true);
 
-  RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(pChip), false, false, false);
+  RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(pChip), true, false, false);
 
 
   for (auto lt = LatencyStart; lt < LatencyStop; lt++)
@@ -176,12 +182,19 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
       data.clear();
       
       LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
-      RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt);
+      RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt, true);
       
       RD53Board->ReadNEvents(pBoard,nEvents,data);
+      auto events = RD53Board->DecodeEvents(data,status);
+      if (status != FC7EvtEncoder::GOOD) FC7FWInterface::ErrorHandler(status);
 
-      auto events = RD53Board->DecodeEvents(data);
-      auto nEvts  = RD53Board->AnalyzeEvents(events, exception, false);
+      auto nEvts = 0;
+      for (auto i = 0; i < events.size(); i++)
+	{
+	  auto& evt = events[i];
+	  for (auto j = 0; j < evt.chip_events.size(); j++)
+	    if (evt.chip_events[j].data.size() != 0) nEvts++;
+	}
 
       if (nEvts > dataSize)
 	{
@@ -204,7 +217,7 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
   theFile.Write();
   theFile.Close();
 
-  theCanvas.Print("LatencyScan.png");
+  theCanvas.Print("LatencyScan.svg");
 }
 
 
@@ -286,6 +299,8 @@ int main (int argc, char** argv)
   auto RD53Board         = static_cast<FC7FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
   auto RD53ChipInterface = static_cast<RD53Interface*>(cSystemController.fChipInterface);
   uint8_t chipId         = pChip->getChipId();
+  size_t VCalOffset      = pChip->getReg("VCAL_MED");
+
 
   ConfigureFSM(RD53Board, chipId, nEvents, NTRIGxL1A, INJtype);
 
@@ -337,7 +352,7 @@ int main (int argc, char** argv)
       // ##############
       LOG(INFO) << BOLDYELLOW << "@@@ Performing SCurve scan @@@" << RESET;
 
-      SCurve sc("SCurve.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      SCurve sc("SCurve.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, VCalOffset);
       sc.Inherit(&cSystemController);
       sc.InitHisto();
       sc.Run();
@@ -352,11 +367,11 @@ int main (int argc, char** argv)
       // ############
       LOG(INFO) << BOLDYELLOW << "@@@ Performing Gain scan @@@" << RESET;
 
-      Gain ga("Gain.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      Gain ga("Gain.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, VCalOffset);
       ga.Inherit(&cSystemController);
       ga.InitHisto();
       ga.Run();
-      // ga.Analyze();
+      ga.Analyze();
       ga.Display();
       ga.Save();
     }
@@ -365,16 +380,16 @@ int main (int argc, char** argv)
       // #########################
       // # Run Gain Optimisation #
       // #########################
-      LOG(INFO) << BOLDRED << "@@@ Gain optimisation not implemented yet ... coming soon @@@" << RESET;
+      LOG (ERROR) << BOLDRED << "@@@ Gain optimisation not implemented yet ... coming soon @@@" << RESET;
     }
   else if (whichCalib == "thropt")
     {
       // ##############################
       // # Run Threshold Optimisation #
       // ##############################
-      LOG(INFO) << BOLDRED << "@@@ Threshold optimisation not implemented yet ... coming soon @@@" << RESET;
+      LOG (ERROR) << BOLDRED << "@@@ Threshold optimisation not implemented yet ... coming soon @@@" << RESET;
     }
-  else LOG(ERROR) << BOLDRED << "Option non recognized: " << whichCalib << RESET;
+  else LOG (ERROR) << BOLDRED << "Option non recognized: " << whichCalib << RESET;
 
 
   cSystemController.Stop(pBoard);

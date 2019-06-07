@@ -29,7 +29,7 @@ using namespace Ph2_System;
 class Gain : public Tool
 {
  public:
-  Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, float startValue, float stopValue, size_t nSteps);
+  Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t startValue, size_t stopValue, size_t nSteps, size_t offset);
   ~Gain();
 
   void InitHisto();
@@ -47,21 +47,26 @@ class Gain : public Tool
   size_t nPixels2Inj;
   size_t nEvents;
 
-  float  startValue;
-  float  stopValue;
+  size_t startValue;
+  size_t stopValue;
   size_t nSteps;
+  size_t offset;
 
   std::vector<uint16_t> dacList;
 
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
-  std::vector<DetectorDataContainer*> detectorContainerVector;
-  DetectorDataContainer* theGainAndInterceptContainer;
+  std::vector<DetectorDataContainer*>    detectorContainerVector;
+  DetectorDataContainer*                 theGainAndInterceptContainer;
 
   void ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
 
+
+  // ########
+  // # ROOT #
+  // ########
   TFile* theFile;
-  std::vector<TCanvas*> theCanvas;
+  std::vector<TCanvas*> theCanvasOcc;
   std::vector<TH2F*>    theOccupancy;
   TCanvas* theCanvasGa1D;
   TH1F*    theGain1D;
