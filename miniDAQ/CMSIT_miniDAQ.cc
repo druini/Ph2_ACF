@@ -131,7 +131,7 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, si
   RD53Board->getLoaclCfgFastCmd()->trigger_source                      = cfgFastCmd.trigger_source;
   RD53Board->getLoaclCfgFastCmd()->n_triggers                          = cfgFastCmd.n_triggers;
   RD53Board->getLoaclCfgFastCmd()->trigger_duration                    = cfgFastCmd.trigger_duration;
-  
+
   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_data         = cfgFastCmd.fast_cmd_fsm.first_cal_data;
   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_data        = cfgFastCmd.fast_cmd_fsm.second_cal_data;
   
@@ -151,7 +151,7 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, si
 }
 
 
-void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD53ChipInterface, Chip* pChip,
+void LatencyScan (const char* fName, SystemController& sc, BeBoard* pBoard, RD53Interface* RD53ChipInterface, Chip* pChip,
 		  size_t ROWstart, size_t ROWstop, size_t COLstart, size_t COLstop,size_t LatencyStart, size_t LatencyStop, size_t nEvents)
 {
   int     dataSize = 0;
@@ -184,8 +184,8 @@ void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board,
       LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
       RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt, true);
       
-      RD53Board->ReadNEvents(pBoard,nEvents,data);
-      auto events = RD53Board->DecodeEvents(data,status);
+      sc.ReadNEvents(pBoard,nEvents,data);
+      auto events = FC7FWInterface::DecodeEvents(data,status);
       if (status != FC7EvtEncoder::GOOD) FC7FWInterface::ErrorHandler(status);
 
       auto nEvts = 0;
@@ -328,8 +328,8 @@ int main (int argc, char** argv)
       // # Run LatencyScan #
       // ###################
       LOG(INFO) << BOLDYELLOW << "@@@ Performing Latency scan @@@" << RESET;
-	
-      LatencyScan("LatencyScan.root", pBoard, RD53Board, RD53ChipInterface, pChip, ROWstart, ROWstop, COLstart, COLstop, LatencStart, LatencStop, nEvents);
+
+      LatencyScan("LatencyScan.root", cSystemController, pBoard, RD53ChipInterface, pChip, ROWstart, ROWstop, COLstart, COLstop, LatencStart, LatencStop, nEvents);
     }
   else if (whichCalib == "pixelalive")
     {

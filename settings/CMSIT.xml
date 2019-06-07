@@ -37,7 +37,7 @@
 	    VCAL_HIGH        =  "600"
 	    VCAL_MED         =  "100"
 
-	    INJECTION_SELECT =   "16"
+	    INJECTION_SELECT =    "0"
             LATENCY_CONFIG   =  "140"
             MONITOR_SELECT   = "8203"
 	    CMDERR_CNT       =    "0"
@@ -67,10 +67,10 @@
     <Setting name="nEvents">     100 </Setting>
 
     <Setting name="NTRIGxL1A">    31 </Setting>
-    <Setting name="INJtype">       1 </Setting>
+    <Setting name="INJtype">       0 </Setting>
 
-    <Setting name="ROWstart">     50 </Setting>
-    <Setting name="ROWstop">      73 </Setting>
+    <Setting name="ROWstart">      0 </Setting>
+    <Setting name="ROWstop">      79 </Setting>
     <Setting name="COLstart">    128 </Setting>
     <Setting name="COLstop">     151 </Setting>
     <Setting name="nPixelInj">    24 </Setting>

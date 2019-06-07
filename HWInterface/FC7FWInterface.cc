@@ -680,7 +680,7 @@ namespace Ph2_HwInterface
 	{cmd_reg, 0}
       });
   }
-  
+
   void FC7FWInterface::ConfigureFastCommands (const FastCommandsConfig* cfg)
   {
     if (cfg == nullptr) cfg = &localCfgFastCmd;
