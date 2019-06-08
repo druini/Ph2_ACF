@@ -9,7 +9,7 @@
 
 #include "RD53SCurve.h"
 
-SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t startValue, size_t stopValue, size_t nSteps, size_t offset) :
+SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t startValue, size_t stopValue, size_t nSteps) :
   fileName(fName),
   rowStart(rStart),
   rowEnd(rEnd),
@@ -45,16 +45,17 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   for (auto i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
 
+
 SCurve::~SCurve()
 {
   theFile->Close();
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
   if (theFile              != nullptr) delete theFile;
-  for (auto i = 0; i < theOccupancy.size(); i++)
+  for (auto i = 0; i < theCanvas.size(); i++)
     {
       if (theOccupancy[i] != nullptr) delete theOccupancy[i];
-      if (theCanvasOcc[i] != nullptr) delete theCanvasOcc[i];
+      if (theCanvas[i]    != nullptr) delete theCanvas[i];
     }
  
   if (theThreshold1D != nullptr) delete theThreshold1D;
@@ -74,6 +75,7 @@ SCurve::~SCurve()
   
   if (theThresholdAndNoiseContainer != nullptr) delete theThresholdAndNoiseContainer;
 }
+
 
 void SCurve::InitHisto()
 {
@@ -97,10 +99,10 @@ void SCurve::InitHisto()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+          myString << "theCanvas_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
   theNoise1D = new TH1F("theNoise1D","Noise-1D",100,0,100);
@@ -125,6 +127,7 @@ void SCurve::InitHisto()
   theCanvasTh2D = new TCanvas("theCanvasTh2D","RD53Canvas",0,0,700,500);
   theCanvasNo2D = new TCanvas("theCanvasNo2D","RD53Canvas",0,0,700,500);
 }
+
 
 void SCurve::Run()
 {
@@ -153,25 +156,29 @@ void SCurve::Run()
     for (const auto& cFe : cBoard->fModuleVector)
       for (const auto& cChip : cFe->fChipVector)
 	{
+	  size_t VCalOffset = cChip->getReg("VCAL_MED");
+
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      for (auto i = 0; i < dacList.size(); i++)
 		{
 		  if (detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
-		    theOccupancy[index]->Fill(dacList[i]-offset,detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+		    theOccupancy[index]->Fill(dacList[i]-VCalOffset,detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 		}
+
 	  index++;
 	}
 }
 
+
 void SCurve::Display()
 {
-  for (auto i = 0; i < theOccupancy.size(); i++)
+  for (auto i = 0; i < theCanvas.size(); i++)
     {
-      theCanvasOcc[i]->cd();
+      theCanvas[i]->cd();
       theOccupancy[i]->Draw("gcolz");
-      theCanvasOcc[i]->Modified();
-      theCanvasOcc[i]->Update();
+      theCanvas[i]->Modified();
+      theCanvas[i]->Update();
     }
   
   theCanvasTh1D->cd();
@@ -195,6 +202,7 @@ void SCurve::Display()
   theCanvasNo2D->Update();
 }
 
+
 void SCurve::Analyze()
 {
   float nHits, mean, rms;
@@ -207,43 +215,48 @@ void SCurve::Analyze()
   for (const auto& cBoard : fBoardVector)
     for (const auto& cFe : cBoard->fModuleVector)
       for (const auto& cChip : cFe->fChipVector)
-	for (auto row = 0; row < RD53::nRows; row++)
-	  for (auto col = 0; col < RD53::nCols; col++)
-	    {
-	      measurements.clear();
-	      measurements.push_back(0);
+	{
+	  size_t VCalOffset = cChip->getReg("VCAL_MED");
 
-	      for (auto i = 0; i < dacList.size()-1; i++)
-		measurements.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy - 
-				       detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+	  for (auto row = 0; row < RD53::nRows; row++)
+	    for (auto col = 0; col < RD53::nCols; col++)
+	      {
+		measurements.clear();
+		measurements.push_back(0);
+
+		for (auto i = 0; i < dacList.size()-1; i++)
+		  measurements.push_back(detectorContainerVector[i+1]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy - 
+					 detectorContainerVector[i]->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 	      
-	      this->ComputeStats(measurements,nHits,mean,rms);
+		this->ComputeStats(measurements, VCalOffset, nHits, mean, rms);
 
-	      if (rms != 0)
-		{
-		  theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fThreshold      = mean;
-		  theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fThresholdError = rms / sqrt(nHits);
-		  theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fNoise          = rms;
+		if (rms != 0)
+		  {
+		    theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fThreshold      = mean;
+		    theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fThresholdError = rms / sqrt(nHits);
+		    theThresholdAndNoiseContainer->at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<ThresholdAndNoise>(row,col).fNoise          = rms;
 
-		  theThreshold1D->Fill(mean);
-		  theNoise1D->Fill(rms);
-		  theThreshold2D->SetBinContent(col+1,row+1,mean);
-		  theNoise2D->SetBinContent(col+1,row+1,rms);
-		}
-	    }
+		    theThreshold1D->Fill(mean);
+		    theNoise1D->Fill(rms);
+		    theThreshold2D->SetBinContent(col+1,row+1,mean);
+		    theNoise2D->SetBinContent(col+1,row+1,rms);
+		  }
+	      }
+	}
 }
+
 
 void SCurve::Save()
 {
   std::stringstream myString;
 
-  for (auto i = 0; i < theOccupancy.size(); i++)
+  for (auto i = 0; i < theCanvas.size(); i++)
     {
       theOccupancy[i]->Write();
       myString.clear();
       myString.str("");
       myString << theOccupancy[i]->GetName() << ".svg";
-      theCanvasOcc[i]->Print(myString.str().c_str());
+      theCanvas[i]->Print(myString.str().c_str());
     }
 
   theThreshold1D->Write();
@@ -258,7 +271,8 @@ void SCurve::Save()
   theCanvasNo2D->Print("SCurveNo2D.svg");
 }
 
-void SCurve::ComputeStats(std::vector<float>& measurements, float& nHits, float& mean, float& rms)
+
+void SCurve::ComputeStats(std::vector<float>& measurements, size_t offset, float& nHits, float& mean, float& rms)
 {
   float mean2  = 0;
   float weight = 0;

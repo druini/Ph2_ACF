@@ -36,21 +36,23 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
 
+
 PixelAlive::~PixelAlive()
 {
   theFile->Close();
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
   if (theFile              != nullptr) delete theFile;
-  for (auto i = 0; i < theOccupancy.size(); i++)
+  for (auto i = 0; i < theCanvas.size(); i++)
     {
       if (theOccupancy[i] != nullptr) delete theOccupancy[i];
-      if (theCanvasOcc[i] != nullptr) delete theCanvasOcc[i];
+      if (theCanvas[i]    != nullptr) delete theCanvas[i];
     }
 
   if (theToT       != nullptr) delete theToT;
   if (theCanvasToT != nullptr) delete theCanvasToT;
 }
+
 
 void PixelAlive::InitHisto()
 {
@@ -74,10 +76,10 @@ void PixelAlive::InitHisto()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+          myString << "theCanvas_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
   theToT = new TH1F("theToT","ToT",RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong(),0,RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong());
@@ -87,6 +89,7 @@ void PixelAlive::InitHisto()
   theFile      = new TFile(fileName, "RECREATE");
   theCanvasToT = new TCanvas("theCanvasTot","RD53Canvas",0,0,700,500);
 }
+
 
 void PixelAlive::Run()
 {
@@ -119,14 +122,15 @@ void PixelAlive::Run()
 	}
 }
 
+
 void PixelAlive::Display()
 {
-  for (auto i = 0; i < theOccupancy.size(); i++)
+  for (auto i = 0; i < theCanvas.size(); i++)
     {
-      theCanvasOcc[i]->cd();
+      theCanvas[i]->cd();
       theOccupancy[i]->Draw("gcolz");
-      theCanvasOcc[i]->Modified();
-      theCanvasOcc[i]->Update();
+      theCanvas[i]->Modified();
+      theCanvas[i]->Update();
     }
 
   theCanvasToT->cd();
@@ -135,17 +139,18 @@ void PixelAlive::Display()
   theCanvasToT->Update();
 }
 
+
 void PixelAlive::Save()
 {
   std::stringstream myString;
 
-  for (auto i = 0; i < theOccupancy.size(); i++)
+  for (auto i = 0; i < theCanvas.size(); i++)
     {
       theOccupancy[i]->Write();
       myString.clear();
       myString.str("");
       myString << theOccupancy[i]->GetName() << ".svg";
-      theCanvasOcc[i]->Print(myString.str().c_str());
+      theCanvas[i]->Print(myString.str().c_str());
     }
   
   theToT->Write();
