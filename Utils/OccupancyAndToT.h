@@ -37,7 +37,10 @@ class OccupancyAndToT
 
   float fToT;
   float fToTError;
+
+  float fErrors;
 };
+
 
 template<>
 inline void OccupancyAndToT::makeAverage<OccupancyAndToT> (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents)
@@ -48,6 +51,8 @@ inline void OccupancyAndToT::makeAverage<OccupancyAndToT> (const ChipContainer* 
 
       fToT       += occupancy.fToT;
       fToTError  += occupancy.fToTError * occupancy.fToTError;
+
+      fErrors    += occupancy.fErrors;
     }
 
   int numberOfEnabledChannels = cTestChannelGroup->getNumberOfEnabledChannels(chipOriginalMask);
@@ -57,6 +62,8 @@ inline void OccupancyAndToT::makeAverage<OccupancyAndToT> (const ChipContainer* 
   
   fToT           /= numberOfEnabledChannels;
   fToTError      /= sqrt(fToTError / numberOfEnabledChannels);
+
+  fErrors        /= numberOfEnabledChannels;
 }
 
 #endif

@@ -15,6 +15,7 @@ RD53ChannelGroupHandler::RD53ChannelGroupHandler()
   currentChannelGroup_ = new ChannelGroup<RD53::nRows,RD53::nCols>();
 }
 
+
 RD53ChannelGroupHandler::~RD53ChannelGroupHandler()
 {
   delete allChannelGroup_;

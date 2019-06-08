@@ -59,6 +59,8 @@ class PixelAlive : public Tool
   std::vector<TH2F*>    theOccupancy;
   TCanvas*              theCanvasToT;
   TH1F*                 theToT;
+  TCanvas*              theCanvasErr;
+  TH2F*                 theErr;
 };
 
 #endif

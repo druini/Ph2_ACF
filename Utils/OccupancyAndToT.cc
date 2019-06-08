@@ -28,6 +28,9 @@ void OccupancyAndToT::makeAverage (const std::vector<OccupancyAndToT>* theOccupa
       fToT                        += theOccupancyVector->at(iContainer).fToT * theNumberOfEnabledChannelsList[iContainer];
       fToTError                   += theOccupancyVector->at(iContainer).fToTError * theOccupancyVector->at(iContainer).fToTError * theNumberOfEnabledChannelsList[iContainer];
 
+
+      fErrors                     += theOccupancyVector->at(iContainer).fErrors * theNumberOfEnabledChannelsList[iContainer];
+
       totalNumberOfEnableChannels += theNumberOfEnabledChannelsList[iContainer];
     }
 
@@ -36,7 +39,10 @@ void OccupancyAndToT::makeAverage (const std::vector<OccupancyAndToT>* theOccupa
 
   fToT           /= totalNumberOfEnableChannels;
   fToTError      /= sqrt(fToTError / totalNumberOfEnableChannels);
+
+  fErrors        /= totalNumberOfEnableChannels;
 }
+
 
 void OccupancyAndToT::normalize (const uint16_t numberOfEvents)
 {
@@ -45,4 +51,6 @@ void OccupancyAndToT::normalize (const uint16_t numberOfEvents)
 
   fOccupancy     /= numberOfEvents;
   fOccupancyError = sqrt(fOccupancy * (1. - fOccupancy) / numberOfEvents);
+
+  fErrors        /= numberOfEvents;
 }

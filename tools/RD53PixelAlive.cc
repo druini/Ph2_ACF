@@ -51,6 +51,9 @@ PixelAlive::~PixelAlive()
 
   if (theToT       != nullptr) delete theToT;
   if (theCanvasToT != nullptr) delete theCanvasToT;
+
+  if (theErr       != nullptr) delete theErr;
+  if (theCanvasErr != nullptr) delete theCanvasErr;
 }
 
 
@@ -86,6 +89,10 @@ void PixelAlive::InitHisto()
   theToT->SetXTitle("ToT");
   theToT->SetYTitle("Entries");
 
+  theErr = new TH2F("theErr","Errors",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
+  theErr->SetXTitle("Columns");
+  theErr->SetYTitle("Rows");
+
   theFile      = new TFile(fileName, "RECREATE");
   theCanvasToT = new TCanvas("theCanvasTot","RD53Canvas",0,0,700,500);
 }
@@ -115,9 +122,13 @@ void PixelAlive::Run()
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
 		theOccupancy[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+
 		if (theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
 		  theToT->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
+
+		theErr->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fErrors);
 	      }
+
 	  index++;
 	}
 }
@@ -137,9 +148,14 @@ void PixelAlive::Display()
   theToT->Draw();
   theCanvasToT->Modified();
   theCanvasToT->Update();
+
+  theCanvasErr->cd();
+  theErr->Draw();
+  theCanvasErr->Modified();
+  theCanvasErr->Update();
 }
 
-
+ 
 void PixelAlive::Save()
 {
   std::stringstream myString;
@@ -154,7 +170,9 @@ void PixelAlive::Save()
     }
   
   theToT->Write();
+  theErr->Write();
   theFile->Write();
 
   theCanvasToT->Print("PixelAlive_ToT.svg");
+  theCanvasErr->Print("PixelAlive_Err.svg");
 }
