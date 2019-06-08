@@ -71,7 +71,7 @@ void InitParameters (const SystemController& sc,
 }
 
 
-void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, size_t NTRIGxL1A, std::string type)
+void ConfigureFSM (RD53FWInterface* RD53Board, uint8_t chipId, size_t nEvents, size_t NTRIGxL1A, std::string type)
 // ###################
 // # type == Digital #
 // # type == Analog  #
@@ -80,9 +80,9 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, si
   // #############################
   // # Configuring FastCmd block #
   // #############################
-  FC7FWInterface::FastCommandsConfig cfgFastCmd;
+  RD53FWInterface::FastCommandsConfig cfgFastCmd;
   
-  cfgFastCmd.trigger_source   = FC7FWInterface::TriggerSource::FastCMDFSM;
+  cfgFastCmd.trigger_source   = RD53FWInterface::TriggerSource::FastCMDFSM;
   cfgFastCmd.n_triggers       = nEvents;
   cfgFastCmd.trigger_duration = NTRIGxL1A;
  
@@ -126,7 +126,7 @@ void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, si
 
 
   // ###############################################
-  // # Copy to FC7FWInterface data member variable #
+  // # Copy to RD53FWInterface data member variable #
   // ###############################################
   RD53Board->getLoaclCfgFastCmd()->trigger_source                      = cfgFastCmd.trigger_source;
   RD53Board->getLoaclCfgFastCmd()->n_triggers                          = cfgFastCmd.n_triggers;
@@ -185,8 +185,8 @@ void LatencyScan (const char* fName, SystemController& sc, BeBoard* pBoard, RD53
       RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt, true);
       
       sc.ReadNEvents(pBoard,nEvents,data);
-      auto events = FC7FWInterface::DecodeEvents(data,status);
-      if (status != FC7EvtEncoder::GOOD) FC7FWInterface::ErrorHandler(status);
+      auto events = RD53FWInterface::DecodeEvents(data,status);
+      if (status != RD53FWEvtEncoder::GOOD) RD53FWInterface::ErrorHandler(status);
 
       auto nEvts = 0;
       for (auto i = 0; i < events.size(); i++)
@@ -239,7 +239,7 @@ int main (int argc, char** argv)
 
   cmd.setHelpOption("h","help","Print this help page");
 
-  cmd.defineOption("file","Hardware description file. Default value: settings/CMSIT_FC7.xml",ArgvParser::OptionRequiresValue);
+  cmd.defineOption("file","Hardware description file. Default value: settings/CMSIT.xml",ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
   cmd.defineOption ("calib", "Which calibration to run [latency; pixelalive; scurve; gain; gainopt; thropt]. Default: pixelalive", ArgvParser::OptionRequiresValue);
@@ -256,7 +256,7 @@ int main (int argc, char** argv)
       exit(1);
     }
 
-  std::string cHWFile    = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT_FC7.xml";
+  std::string cHWFile    = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT.xml";
   std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
   bool extClkTrg         = cmd.foundOption("ext")    == true ? true : false;
 
@@ -296,7 +296,7 @@ int main (int argc, char** argv)
   auto pBoard            = cSystemController.fBoardVector.at(0);
   auto pModule           = pBoard->fModuleVector.at(0);
   auto pChip             = pModule->fChipVector.at(0);
-  auto RD53Board         = static_cast<FC7FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
+  auto RD53Board         = static_cast<RD53FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
   auto RD53ChipInterface = static_cast<RD53Interface*>(cSystemController.fChipInterface);
   uint8_t chipId         = pChip->getChipId();
   size_t VCalOffset      = pChip->getReg("VCAL_MED");
@@ -312,9 +312,9 @@ int main (int argc, char** argv)
       // ####################
       LOG (INFO) << BOLDYELLOW << "@@@ Configuring DIO5 for external trigger and external clock @@@" << RESET;
 
-      RD53Board->getLoaclCfgFastCmd()->trigger_source = FC7FWInterface::TriggerSource::External;
+      RD53Board->getLoaclCfgFastCmd()->trigger_source = RD53FWInterface::TriggerSource::External;
       
-      FC7FWInterface::DIO5Config cfgDIO5;
+      RD53FWInterface::DIO5Config cfgDIO5;
       cfgDIO5.enable    = true;
       cfgDIO5.ch_out_en = 0b10010;
       RD53Board->ConfigureDIO5(&cfgDIO5);      

@@ -78,7 +78,7 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
   {
-    setBoard (pChip->getBeBoardId());
+    this->setBoard(pChip->getBeBoardId());
 
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -139,7 +139,7 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::WriteChipMultReg (Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop)
   {
-    setBoard (pChip->getBeBoardId());
+    this->setBoard(pChip->getBeBoardId());
 
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -174,7 +174,7 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::WriteRD53Reg (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec, size_t nCmd)
   {
-    setBoard (pRD53->getBeBoardId());
+    this->setBoard(pRD53->getBeBoardId());
     
     size_t size = dataVec->size()/nCmd;
     std::vector<uint32_t> serialSymbols;
@@ -190,7 +190,7 @@ namespace Ph2_HwInterface
 
   std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53Interface::ReadRD53Reg (RD53* pRD53, const std::string& pRegNode)
   {
-    setBoard (pRD53->getBeBoardId());
+    this->setBoard(pRD53->getBeBoardId());
 
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
     std::vector<uint32_t> serialSymbols;
