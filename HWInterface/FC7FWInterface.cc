@@ -58,6 +58,7 @@ namespace Ph2_HwInterface
     // this->ResetBoard();
     this->ResetFastCmdBlk();
     this->ResetReadoutBlk();
+    this->ConfigureFastCommands();
     this->ChipReset();
     this->ChipReSync();
 
@@ -81,8 +82,8 @@ namespace Ph2_HwInterface
   void FC7FWInterface::SerializeSymbols (std::vector<std::vector<uint16_t> > & data,
 					 std::vector<uint32_t>               & serialData)
   {
-    for (unsigned int i = 0; i < data.size(); i++)
-      for (unsigned int j = 0; j < data[i].size(); j++)
+    for (auto i = 0; i < data.size(); i++)
+      for (auto j = 0; j < data[i].size(); j++)
 	serialData.push_back(data[i][j]);
   }
 
@@ -91,7 +92,7 @@ namespace Ph2_HwInterface
     std::vector< std::pair<std::string, uint32_t> > stackRegisters;
 
     if (ReadReg ("user.stat_regs.cmd_proc.fifo_empty") == false)
-      LOG (INFO) << BOLDRED << "Command processor FIFO NOT empty before sending new commands" << RESET;
+      LOG (ERROR) << BOLDRED << "Command processor FIFO NOT empty before sending new commands" << RESET;
 
     if (ReadReg ("user.stat_regs.cmd_proc.fifo_full") == true)
       LOG (ERROR) << BOLDRED << "Command processor FIFO full" << RESET;
@@ -150,7 +151,7 @@ namespace Ph2_HwInterface
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
     std::vector<uint32_t> regFIFO;
 
-    for (unsigned int i = 0; i < nActiveChns; i++)
+    for (auto i = 0; i < nActiveChns; i++)
       {
 	myString.clear(); myString.str("");
 	myString << "user.readout" << i << ".reg_mask";
@@ -170,20 +171,22 @@ namespace Ph2_HwInterface
 
     this->WriteChipCommand(data);
 
-    for (unsigned int i = 0; i < nActiveChns; i++)
+    for (auto i = 0; i < nActiveChns; i++)
       {
 	myString.clear(); myString.str("");
 	myString << "user.readout" << i << ".reg_read";
 
 	if (nBlocks2Read <= nodeBlocks) regFIFO = ReadBlockRegValue(myString.str().c_str(), nBlocks2Read);
-	else LOG (INFO) << BOLDRED << "Number of register blocks to read (" << nBlocks2Read << ") exceds FIFO lenght " << nodeBlocks << RESET;
+	else LOG (ERROR) << BOLDRED << "Number of register blocks to read (" << BOLDYELLOW << nBlocks2Read << BOLDRED << ") exceds FIFO lenght " << BOLDYELLOW << nodeBlocks << RESET;
 
-	for (unsigned int i = 0; i < regFIFO.size(); i++)
+	for (auto i = 0; i < regFIFO.size(); i++)
 	  {
-	    outputDecoded.first .push_back((regFIFO[i] >> NBIT_VALUE)                  & static_cast<uint32_t>(RD53::SetBits<NBIT_ADDRESS>(NBIT_ADDRESS).to_ulong()));
-	    outputDecoded.second.push_back(regFIFO[i]                                  & static_cast<uint32_t>(RD53::SetBits<NBIT_VALUE>(NBIT_VALUE).to_ulong()));
-	    uint8_t status = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS))               & static_cast<uint32_t>(RD53::SetBits<NBIT_STATUS>(NBIT_STATUS).to_ulong());
-	    uint8_t id     = (regFIFO[i] >> (NBIT_VALUE + NBIT_ADDRESS + NBIT_STATUS)) & static_cast<uint32_t>(RD53::SetBits<NBIT_ID>(NBIT_ID).to_ulong());
+	    outputDecoded.first .push_back((regFIFO[i] >> RD53RegFrameEncoder::NBIT_VALUE)                                                            & static_cast<uint32_t>(RD53::SetBits<RD53RegFrameEncoder::NBIT_ADDRESS>(RD53RegFrameEncoder::NBIT_ADDRESS).to_ulong()));
+	    outputDecoded.second.push_back(regFIFO[i]                                                                                                 & static_cast<uint32_t>(RD53::SetBits<RD53RegFrameEncoder::NBIT_VALUE>(RD53RegFrameEncoder::NBIT_VALUE).to_ulong()));
+	    uint8_t status = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS))                                    & static_cast<uint32_t>(RD53::SetBits<RD53RegFrameEncoder::NBIT_STATUS>(RD53RegFrameEncoder::NBIT_STATUS).to_ulong());
+	    uint8_t id     = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS + RD53RegFrameEncoder::NBIT_STATUS)) & static_cast<uint32_t>(RD53::SetBits<RD53RegFrameEncoder::NBIT_CHIPID>(RD53RegFrameEncoder::NBIT_CHIPID).to_ulong());
+
+	    if (status != 0) LOG (ERROR) << BOLDRED << "Status error in chip register readback: " << BOLDYELLOW << std::hex << +status << std::dec << BOLDRED << " from chip ID: " << BOLDYELLOW << std::hex << +id << std::dec << RESET;
 	  }
       }
 
@@ -201,7 +204,7 @@ namespace Ph2_HwInterface
     if (ReadReg ("user.stat_regs.global_reg.clk_gen_lock") == 1)
       LOG (INFO) << BOLDGREEN << "\t--> Clock generator is locked" << RESET;
     else
-      LOG (INFO) << BOLDRED << "\t--> Clock generator is not locked" << RESET;
+      LOG (ERROR) << BOLDRED << "\t--> Clock generator is not locked" << RESET;
 
 
     // ############################
@@ -211,9 +214,9 @@ namespace Ph2_HwInterface
       LOG (INFO) << BOLDGREEN << "\t--> I2C initialized" << RESET;
     else
       {
-	LOG (INFO) << BOLDRED << "I2C not initialized" << RESET;
+	LOG (ERROR) << BOLDRED << "I2C not initialized" << RESET;
 	unsigned int status = ReadReg ("user.stat_regs.global_reg.i2c_init_err");
-	LOG (INFO) << BOLDRED << "\t--> I2C initialization status: " << BOLDYELLOW << status << RESET;
+	LOG (ERROR) << BOLDRED << "\t--> I2C initialization status: " << BOLDYELLOW << status << RESET;
       }
 
     if (ReadReg ("user.stat_regs.global_reg.i2c_aqu_err") == 1)
@@ -286,7 +289,7 @@ namespace Ph2_HwInterface
       LOG (INFO) << BOLDGREEN << "\t--> Aurora channels up number as expected: " << BOLDYELLOW << bitReg.count() << RESET;
       return true;
     }
-    LOG (INFO) << BOLDRED << "\t--> Aurora channels up number less than expected: " << BOLDYELLOW << bitReg.count() << RESET;
+    LOG (ERROR) << BOLDRED << "\t--> Aurora channels up number less than expected: " << BOLDYELLOW << bitReg.count() << RESET;
     return false;
   }
 
@@ -336,7 +339,7 @@ namespace Ph2_HwInterface
         while (cReadoutReq == 0)
 	  {
             uint32_t fsm_status = ReadReg("user.stat_regs.readout4.fsm_status").value();
-            LOG(INFO) << BOLDRED << "Waiting for readout request, FSM status: " << fsm_status << RESET;
+            LOG (ERROR) << BOLDRED << "Waiting for readout request, FSM status: " << BOLDYELLOW << fsm_status << RESET;
             
             usleep(DEEPSLEEP);
             
@@ -357,9 +360,8 @@ namespace Ph2_HwInterface
   
   void FC7FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
-    bool retry;
-    int dataSize;
-    int nTriggers;
+    bool        retry;
+    uint8_t     status;
     std::string exception;
 
     this->localCfgFastCmd.n_triggers = pNEvents;
@@ -375,28 +377,36 @@ namespace Ph2_HwInterface
 	this->ChipReSync();
 
 	this->Start();
-	usleep(SHALLOWSLEEP);
+	usleep((this->localCfgFastCmd.fast_cmd_fsm.delay_after_ecr        +
+		this->localCfgFastCmd.fast_cmd_fsm.delay_after_autozero   +
+		this->localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  +
+		this->localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal +
+		this->localCfgFastCmd.fast_cmd_fsm.delay_loop) * DELAYPERIOD *
+	       this->localCfgFastCmd.n_triggers + SHALLOWSLEEP);
 
-	dataSize = this->ReadData(pBoard, false, pData);
-	if (dataSize == 0)
+
+	// ##################
+	// # Error checking #
+	// ##################
+	this->ReadData(pBoard, false, pData);
+	if (pData.size() == 0)
 	  {
 	    LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected " << BOLDYELLOW << "--> retry" << RESET;
 	    retry = true;
 	    continue;
 	  }
-	
-	auto events = this->DecodeEvents(pData);
-	if (this->AnalyzeEvents(events, exception, false) == -1)
+
+	auto events = this->DecodeEvents(pData,status);
+	if (status != FC7EvtEncoder::GOOD)
 	  {
-	    LOG (ERROR) << BOLDRED << exception << BOLDYELLOW << " --> retry" << RESET;
+	    this->ErrorHandler(status);
 	    retry = true;
 	    continue;
 	  }
-	
-	nTriggers = localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration);
-	if (events.size() != nTriggers)
+
+	if (events.size() != localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration))
 	  {
-	    LOG (ERROR) << BOLDRED << "Sent " << nTriggers << " triggers, but collected only " << events.size() << BOLDYELLOW << " --> retry" << RESET;
+	    LOG (ERROR) << BOLDRED << "Sent " << localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration) << " triggers, but collected only " << events.size() << BOLDYELLOW << " --> retry" << RESET;
 	    retry = true;
 	    continue;
 	  }
@@ -516,141 +526,151 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0}});
   }
 
-  std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents (const std::vector<uint32_t>& data)
+  std::vector<FC7FWInterface::Event> FC7FWInterface::DecodeEvents (const std::vector<uint32_t>& data, uint8_t& evtStatus)
   {
     std::vector<size_t> event_start;
-    for (size_t i = 0; i < data.size(); i++)
-      if (data[i] >> NBIT_BLOCKSIZE == EVT_HEADER) event_start.push_back(i);
+    size_t maxL1Counter = RD53::SetBits<RD53EvtEncoder::NBIT_TRIGID>(RD53EvtEncoder::NBIT_TRIGID).to_ulong() + 1;
+
+    if (data.size() != 0) evtStatus = FC7EvtEncoder::GOOD;
+    else                  evtStatus = FC7EvtEncoder::EMPTY;
+
+    for (auto i = 0; i < data.size(); i++)
+      if (data[i] >> FC7EvtEncoder::NBIT_BLOCKSIZE == FC7EvtEncoder::EVT_HEADER) event_start.push_back(i);
 
     std::vector<FC7FWInterface::Event> events;
     events.reserve(event_start.size());
     
-    for (size_t i = 0; i < event_start.size(); i++)
+    for (auto i = 0; i < event_start.size(); i++)
       {
 	const size_t start = event_start[i];
 	const size_t end   = ((i == event_start.size() - 1) ? data.size() : event_start[i + 1]);
-	events.emplace_back(&data[start], end - start);
+
+	FC7FWInterface::Event evt(&data[start], end - start);
+	events.push_back(evt);
+
+	if (evt.evtStatus != FC7EvtEncoder::GOOD) evtStatus = evt.evtStatus;
+	else
+	  {
+	    for (auto j = 0; j < evt.chip_events.size(); j++)
+	      if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evtStatus = FC7EvtEncoder::L1A;
+	  }
       }
 
     return events;
   }
 
-  unsigned int FC7FWInterface::AnalyzeEvents (const std::vector<FC7FWInterface::Event>& events, std::string& exception, bool print)
+  void FC7FWInterface::PrintEvents (const std::vector<FC7FWInterface::Event>& events)
   {
-    unsigned int nEvts = 0;
-    size_t maxL1Counter = RD53::SetBits<NBIT_TRIGID>(NBIT_TRIGID).to_ulong() + 1;
-
     for (auto i = 0; i < events.size(); i++)
       {
 	auto& evt = events[i];
-	if (print == true)
-	  {
-	    LOG (INFO) << BOLDGREEN << "Event           = " << i                   << RESET;
-	    LOG (INFO) << BOLDGREEN << "block_size      = " << evt.block_size      << RESET;
-	    LOG (INFO) << BOLDGREEN << "trigger_id      = " << evt.tlu_trigger_id  << RESET;
-	    LOG (INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
-	    LOG (INFO) << BOLDGREEN << "tdc             = " << evt.tdc             << RESET;
-	    LOG (INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter     << RESET;
-	    LOG (INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter      << RESET;
-	  }
-
-	if (evt.chip_frames.size() == 0)
-	  {
-	    exception = "Event without frame data [error_code; hybrid_id; chip_id; l1a_data_size; chip_type; frame_delay]";
-	    return -1;
-	  }
+	LOG (INFO) << BOLDGREEN << "Event           = " << i                   << RESET;
+	LOG (INFO) << BOLDGREEN << "block_size      = " << evt.block_size      << RESET;
+	LOG (INFO) << BOLDGREEN << "trigger_id      = " << evt.tlu_trigger_id  << RESET;
+	LOG (INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
+	LOG (INFO) << BOLDGREEN << "tdc             = " << evt.tdc             << RESET;
+	LOG (INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter     << RESET;
+	LOG (INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter      << RESET;
 
 	for (auto j = 0; j < evt.chip_events.size(); j++)
 	  {
-	    if (print == true)
-	      {
-		LOG (INFO) << CYAN << "Chip Header:"                                           << RESET;
-		LOG (INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code    << RESET;
-		LOG (INFO) << CYAN << "hybrid_id       = " << evt.chip_frames[j].hybrid_id     << RESET;
-		LOG (INFO) << CYAN << "chip_id         = " << evt.chip_frames[j].chip_id       << RESET;
-		LOG (INFO) << CYAN << "l1a_data_size   = " << evt.chip_frames[j].l1a_data_size << RESET;
-		LOG (INFO) << CYAN << "chip_type       = " << evt.chip_frames[j].chip_type     << RESET;
-		LOG (INFO) << CYAN << "frame_delay     = " << evt.chip_frames[j].frame_delay   << RESET;
+	    LOG (INFO) << CYAN << "Chip Header:"                                           << RESET;
+	    LOG (INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code    << RESET;
+	    LOG (INFO) << CYAN << "hybrid_id       = " << evt.chip_frames[j].hybrid_id     << RESET;
+	    LOG (INFO) << CYAN << "chip_id         = " << evt.chip_frames[j].chip_id       << RESET;
+	    LOG (INFO) << CYAN << "l1a_data_size   = " << evt.chip_frames[j].l1a_data_size << RESET;
+	    LOG (INFO) << CYAN << "chip_type       = " << evt.chip_frames[j].chip_type     << RESET;
+	    LOG (INFO) << CYAN << "frame_delay     = " << evt.chip_frames[j].frame_delay   << RESET;
 	      
-		LOG (INFO) << CYAN << "trigger_id      = " << evt.chip_events[j].trigger_id    << RESET;
-		LOG (INFO) << CYAN << "trigger_tag     = " << evt.chip_events[j].trigger_tag   << RESET;
-		LOG (INFO) << CYAN << "bc_id           = " << evt.chip_events[j].bc_id         << RESET;
+	    LOG (INFO) << CYAN << "trigger_id      = " << evt.chip_events[j].trigger_id    << RESET;
+	    LOG (INFO) << CYAN << "trigger_tag     = " << evt.chip_events[j].trigger_tag   << RESET;
+	    LOG (INFO) << CYAN << "bc_id           = " << evt.chip_events[j].bc_id         << RESET;
 	      
-		LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
-	      }
-
-	    if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id)
-	      {
-		exception = "Mismatch on L1A counter between backend and frontend";
-		return -1;
-	      }
-
-	    if (evt.chip_events[j].data.size() != 0) nEvts++;
+	    LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
 
 	    for (const auto& region_data : evt.chip_events[j].data)
 	      {
-		if (print == true)
-		  {
-		    LOG(INFO)   << "Column: " << region_data.col 
-				<< ", Row: "  << region_data.row 
-				<< ", ToTs: [" << +region_data.tots[0] << "," << +region_data.tots[1] << "," << +region_data.tots[2] << "," << +region_data.tots[3] << "]"
-				<< RESET;
-		  }
+		LOG(INFO)   << "Column: " << region_data.col 
+			    << ", Row: "  << region_data.row 
+			    << ", ToTs: [" << +region_data.tots[0] << "," << +region_data.tots[1] << "," << +region_data.tots[2] << "," << +region_data.tots[3] << "]"
+			    << RESET;
 	      }
 	  }
       }
 
-    if (print == true) std::cout << std::endl;
-    return nEvts;
+    std::cout << std::endl;
   }
   
+  void FC7FWInterface::ErrorHandler(uint8_t status)
+  {
+    switch (status)
+      {
+      case (FC7EvtEncoder::EVSIZE):
+	{
+	  LOG (ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << RESET;
+	  break;
+	}
+      case (FC7EvtEncoder::EMPTY):
+	{
+	  LOG (ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << RESET;
+	  break;
+	}
+      case (FC7EvtEncoder::L1A):
+	{
+	  LOG (ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << RESET;
+	  break;
+	}
+      case (FC7EvtEncoder::FRSIZE):
+	{
+	  LOG (ERROR) << BOLDRED << "Invalid frame size " << BOLDYELLOW << "--> retry" << RESET;
+	  break;
+	}
+      case (FC7EvtEncoder::CHIP):
+	{
+	  LOG (ERROR) << BOLDRED << "Error in chip data decoding " << BOLDYELLOW << "--> retry" << RESET;
+	  break;
+	}
+      }    
+  }
+
   FC7FWInterface::Event::Event (const uint32_t* data, size_t n)
   {
-    std::tie(block_size) = unpack_bits<NBIT_BLOCKSIZE>(data[0]);
-    
-    if (block_size * 4 != n)
-      {
-	LOG (ERROR) << BOLDRED << "Invalid event block size: " << BOLDYELLOW << block_size << BOLDRED << " instead of " << BOLDYELLOW << (n / 4) << RESET;
-	return;
-      }
+    evtStatus = FC7EvtEncoder::GOOD;
+
+    std::tie(block_size) = unpack_bits<FC7EvtEncoder::NBIT_BLOCKSIZE>(data[0]);    
+    if (block_size * 4 != n) evtStatus = FC7EvtEncoder::EVSIZE;
 
     bool dummy_size;
-    std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<NBIT_TRIGGID, NBIT_FMTVER, NBIT_DUMMY>(data[1]);
-    std::tie(tdc, l1a_counter) = unpack_bits<NBIT_TDC, NBIT_L1ACNT>(data[2]);
+    std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<FC7EvtEncoder::NBIT_TRIGID, FC7EvtEncoder::NBIT_FMTVER, FC7EvtEncoder::NBIT_DUMMY>(data[1]);
+    std::tie(tdc, l1a_counter) = unpack_bits<FC7EvtEncoder::NBIT_TDC, FC7EvtEncoder::NBIT_L1ACNT>(data[2]);
     bx_counter = data[3];
 
     std::vector<size_t> chip_start;
-    for (size_t i = 4; i < n; i += 4) if (data[i] >> (NBIT_ERR + NBIT_HYBRID + NBIT_CHIPID + NBIT_L1ASIZE) == FRAME_HEADER) chip_start.push_back(i);
+    for (auto i = 4; i < n; i += 4) if (data[i] >> (FC7EvtEncoder::NBIT_ERR + FC7EvtEncoder::NBIT_HYBRID + FC7EvtEncoder::NBIT_FRAMEHEAD + FC7EvtEncoder::NBIT_L1ASIZE) == FC7EvtEncoder::FRAME_HEADER) chip_start.push_back(i);
 
     chip_frames.reserve(chip_start.size());
     chip_events.reserve(chip_start.size());
-    for (size_t i = 0; i < chip_start.size(); i++)
+    for (auto i = 0; i < chip_start.size(); i++)
       {
 	const size_t start = chip_start[i];
 	const size_t end   = ((i == chip_start.size() - 1) ? n : chip_start[i + 1]);
 	chip_frames.emplace_back(data[start], data[start + 1]);
 
+ 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start)) evtStatus = FC7EvtEncoder::FRSIZE;
+
 	const size_t size = (dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start);
 	chip_events.emplace_back(&data[start + 2], size - 2);
-	
- 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start))
-	  {
-	    // @TMP@
-	    // LOG (ERROR) << BOLDRED << "Invalid chip L1A data size" << RESET;
-	    LOG (ERROR) << BOLDRED << "Invalid chip L1A data size " << dummy_size << "\t" << chip_frames[i].l1a_data_size << "\t" << end - start << RESET;
-	    chip_frames.clear();
-	    chip_events.clear();
-	    return;
-	  }
+
+	if (chip_events[i].evtStatus != RD53EvtEncoder::GOOD) evtStatus = FC7EvtEncoder::CHIP;
       }
   }
 
   FC7FWInterface::ChipFrame::ChipFrame (const uint32_t data0, const uint32_t data1)
   {
-    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = unpack_bits<NBIT_ERR, NBIT_HYBRID, NBIT_CHIPID, NBIT_L1ASIZE>(data0);    
-    std::tie(chip_type, frame_delay)                        = unpack_bits<NBIT_CHIPTYPE, NBIT_FRAME>(data1);
+    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = unpack_bits<FC7EvtEncoder::NBIT_ERR, FC7EvtEncoder::NBIT_HYBRID, FC7EvtEncoder::NBIT_FRAMEHEAD, FC7EvtEncoder::NBIT_L1ASIZE>(data0);    
+    std::tie(chip_type, frame_delay)                        = unpack_bits<FC7EvtEncoder::NBIT_CHIPTYPE, FC7EvtEncoder::NBIT_DELAY>(data1);
   }
-  
+
   void FC7FWInterface::SendBoardCommand (const std::string& cmd_reg)
   {
     WriteStackReg({

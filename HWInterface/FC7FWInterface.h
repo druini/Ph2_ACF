@@ -23,17 +23,13 @@
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
-#define DEEPSLEEP   500000 // [microseconds]
-#define SHALLOWSLEEP 10000 // [microseconds]
-
-#define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
+#define DEEPSLEEP 500000   // [microseconds]
+#define SHALLOWSLEEP  50   // [microseconds]
+#define DELAYPERIOD    0.1 // [microseconds] Delay duration in FW fast command block FSM
 
 #define NBIT_FWVER      4 // Number of bits for the firmware version
-#define NBIT_ID         2 // Number of bits for the ID      in the register frame
-#define NBIT_STATUS     2 // Number of bits for the status  in the register frame
-#define NBIT_ADDRESS   10 // Number of bits for the address in the register frame
-#define NBIT_VALUE     16 // Number of bits for the value   in the register frame
-#define NBIT_AURORAREG  8 // Number of bits for the Aurora registers lane_up and channel_ip
+#define NBIT_AURORAREG  8 // Number of bits for the Aurora registers lane_up and channel_up
+#define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 
 
 // #################
@@ -44,30 +40,44 @@
 #define READOUT_CHIP_MASK 1
 #define L1A_TIMEOUT    4000
 
-// ################
-// # Event header #
-// ################
-#define EVT_HEADER     0xFFFF
-#define NBIT_EVTHEAD   16 // Number of bits for the Error Code
-#define NBIT_BLOCKSIZE 16 // Number of bits for the Block Size
-#define NBIT_TRIGGID   16 // Number of bits for the TLU Trigger ID
-#define NBIT_FMTVER     8 // Number of bits for the Format Version
-#define NBIT_DUMMY      8 // Number of bits for the Dummy Size
-#define NBIT_TDC        8 // Number of bits for the TDC
-#define NBIT_L1ACNT    24 // Number of bits for the L1A Counter (Event number)
-#define NBIT_BXCNT     32 // Number of bits for the BX Counter
 
-// ###############
-// # Chip header #
-// ###############
-#define FRAME_HEADER 0xA
-#define NBIT_CHIPHEAD  4 // Number of bits in '1010'
-#define NBIT_ERR       4 // Number of bits for the Error Code
-#define NBIT_HYBRID    8 // Number of bits for the Hybrid ID
-#define NBIT_CHIPID    4 // Number of bits for the Chip ID
-#define NBIT_L1ASIZE  12 // Number of bits for the L1A Data Size
-#define NBIT_CHIPTYPE  4 // Number of bits for the Chip Type
-#define NBIT_FRAME    12 // Number of bits for the Frame Delay
+namespace FC7EvtEncoder
+{
+  // ################
+  // # Event header #
+  // ################
+  const uint16_t EVT_HEADER     = 0xFFFF;
+  const uint8_t  NBIT_EVTHEAD   = 16; // Number of bits for the Error Code
+  const uint8_t  NBIT_BLOCKSIZE = 16; // Number of bits for the Block Size
+  const uint8_t  NBIT_TRIGID    = 16; // Number of bits for the TLU Trigger ID
+  const uint8_t  NBIT_FMTVER    =  8; // Number of bits for the Format Version
+  const uint8_t  NBIT_DUMMY     =  8; // Number of bits for the Dummy Size
+  const uint8_t  NBIT_TDC       =  8; // Number of bits for the TDC
+  const uint8_t  NBIT_L1ACNT    = 24; // Number of bits for the L1A Counter (Event number)
+  const uint8_t  NBIT_BXCNT     = 32; // Number of bits for the BX Counter
+
+  // ###############
+  // # Chip header #
+  // ###############
+  const uint8_t FRAME_HEADER   = 0xA;
+  const uint8_t NBIT_FRAMEHEAD =   4; // Number of bits for the Frame Header
+  const uint8_t NBIT_ERR       =   4; // Number of bits for the Error Code
+  const uint8_t NBIT_HYBRID    =   8; // Number of bits for the Hybrid ID
+  const uint8_t NBIT_CHIPID    =   4; // Number of bits for the Chip ID
+  const uint8_t NBIT_L1ASIZE   =  12; // Number of bits for the L1A Data Size
+  const uint8_t NBIT_CHIPTYPE  =   4; // Number of bits for the Chip Type
+  const uint8_t NBIT_DELAY     =  12; // Number of bits for the Frame Delay
+
+  // ################
+  // # Event status #
+  // ################
+  const uint8_t GOOD   = 0x00; // Event status Good
+  const uint8_t EVSIZE = 0x01; // Event status Invalid event size
+  const uint8_t EMPTY  = 0x02; // Event status Empty event
+  const uint8_t L1A    = 0x03; // Event status L1A counter mismatch
+  const uint8_t FRSIZE = 0x04; // Event status Invalid frame size
+  const uint8_t CHIP   = 0x05; // Event status Error in chip data decoding
+}
 
 
 using namespace Ph2_HwDescription;
@@ -137,10 +147,13 @@ namespace Ph2_HwInterface
       
       std::vector<ChipFrame>   chip_frames;
       std::vector<RD53::Event> chip_events;
+
+      uint8_t evtStatus;
     };
-    
-    static std::vector<Event> DecodeEvents(const std::vector<uint32_t>& data);
-    static unsigned int AnalyzeEvents(const std::vector<FC7FWInterface::Event>& events, std::string& exception, bool print = false);
+
+    static std::vector<Event> DecodeEvents (const std::vector<uint32_t>& data, uint8_t& status);
+    static void PrintEvents                (const std::vector<FC7FWInterface::Event>& events);
+    static void ErrorHandler               (uint8_t status);
 
     enum class TriggerSource : uint32_t
     {
