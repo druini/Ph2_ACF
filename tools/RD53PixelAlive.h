@@ -28,7 +28,7 @@ using namespace Ph2_System;
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, bool inject);
+  PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t nEvtsBurst, bool inject);
   ~PixelAlive();
 
   void InitHisto();
@@ -44,6 +44,7 @@ class PixelAlive : public Tool
   size_t colEnd;
   size_t nPixels2Inj;
   size_t nEvents;
+  size_t nEvtsBurst;
   
   bool inject;
 
@@ -59,6 +60,8 @@ class PixelAlive : public Tool
   std::vector<TH2F*>    theOccupancy;
   TCanvas*              theCanvasToT;
   TH1F*                 theToT;
+  TCanvas*              theCanvasBCID;
+  TH1F*                 theBCID;
   TCanvas*              theCanvasOcc;
   TH1F*                 theOcc;
   TCanvas*              theCanvasErr;

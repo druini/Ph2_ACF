@@ -216,15 +216,15 @@ namespace Ph2_System {
 	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fChipInterface);
 
 	      LOG (INFO) << BOLDGREEN << "\t--> Found an Inner Tracker board" << RESET;
-	      LOG (INFO) << BOLDYELLOW << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;
+	      LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;
 	      fBeBoardInterface->ConfigureBoard (cBoard);
 
 	      for (const auto& cFe : cBoard->fModuleVector)
 		{
-		  LOG (INFO) << BOLDYELLOW << "Initializing communication to Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
+		  LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
 		  for (const auto& cRD53 : cFe->fChipVector)
 		    {
-		      LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
+		      LOG (INFO) << GREEN << "Resetting, Syncing, Initializing AURORA of RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
 		      fRD53Interface->InitRD53Aurora (static_cast<RD53*>(cRD53));
 		    }
 		  
@@ -235,7 +235,7 @@ namespace Ph2_System {
 
 		  for (const auto& cRD53 : cFe->fChipVector)
 		    {
-		      LOG (INFO) << BOLDYELLOW << "Configuring RD53 " << int (cRD53->getChipId()) << RESET;
+		      LOG (INFO) << GREEN << "Configuring RD53 " << int (cRD53->getChipId()) << RESET;
 		      fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));
 		    }
 		}

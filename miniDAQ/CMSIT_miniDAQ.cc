@@ -36,6 +36,7 @@ auto FindValue (const SystemController& sc, const char* name)
 void InitParameters (const SystemController& sc,
 
 		     size_t& nEvents,
+		     size_t& nEvtsBurst,
 		     size_t& NTRIGxL1A,
 		     std::string& INJtype,
 
@@ -53,6 +54,7 @@ void InitParameters (const SystemController& sc,
 		     size_t& VCALnsteps)
 {
   nEvents     = FindValue(sc,"nEvents");
+  nEvtsBurst  = FindValue(sc,"nEvtsBurst");
   NTRIGxL1A   = FindValue(sc,"NTRIGxL1A");
   INJtype     = (FindValue(sc,"INJtype") == 0 ? "Analog" : "Digital");
 
@@ -124,8 +126,8 @@ void ConfigureFSM (SystemController& sc, size_t nEvents, size_t NTRIGxL1A, std::
 	       RD53::CalCmd calcmd_second(0,0,1,0,0);
 	       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 	       
-	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  16;
-	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  32;
+	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  14;
+	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  16;
 	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 128;
 	       
 	       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
@@ -165,6 +167,8 @@ void ConfigureFSM (SystemController& sc, size_t nEvents, size_t NTRIGxL1A, std::
 
 void ConfigureExtClkTrig (SystemController& sc)
 {
+  const uint8_t chnOutEnable = 0b10010; // @TMP@
+
   for (const auto& cBoard : sc.fBoardVector)
     {
       auto RD53Board = static_cast<RD53FWInterface*>(sc.fBeBoardFWMap[cBoard->getBeBoardId()]);
@@ -179,7 +183,7 @@ void ConfigureExtClkTrig (SystemController& sc)
       
       RD53FWInterface::DIO5Config cfgDIO5;
       cfgDIO5.enable    = true;
-      cfgDIO5.ch_out_en = 0b10010;
+      cfgDIO5.ch_out_en = chnOutEnable;
       RD53Board->ConfigureDIO5(&cfgDIO5);      
     }
 }
@@ -231,7 +235,7 @@ void LatencyScan (const char* fName, SystemController& sc, size_t ROWstart, size
 	  // ########################
 	  static_cast<RD53*>(cChip)->enablePixel(ROWstart,COLstart,true);
 	  static_cast<RD53*>(cChip)->injectPixel(ROWstart,COLstart,true);
-	  
+
 	  static_cast<RD53*>(cChip)->enablePixel(ROWstop,COLstop,true);
 	  static_cast<RD53*>(cChip)->injectPixel(ROWstop,COLstop,true);
 	  
@@ -244,7 +248,7 @@ void LatencyScan (const char* fName, SystemController& sc, size_t ROWstart, size
 	      
 	      LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
 	      RD53ChipInterface->WriteChipReg(cChip, "LATENCY_CONFIG", lt, true);
-	      
+
 	      sc.ReadNEvents(cBoard,nEvents,data);
 	      auto events = RD53FWInterface::DecodeEvents(data,status);
 	      if (status != RD53FWEvtEncoder::GOOD) RD53FWInterface::ErrorHandler(status);
@@ -256,13 +260,13 @@ void LatencyScan (const char* fName, SystemController& sc, size_t ROWstart, size
 		  for (auto j = 0; j < evt.chip_events.size(); j++)
 		    if (evt.chip_events[j].data.size() != 0) nEvts++;
 		}
-	      
+
 	      if (nEvts > dataSize)
 		{
 		  latency  = lt;
 		  dataSize = nEvts;
 		}
-	      
+
 	      theLatency.back()->SetBinContent(theLatency.back()->FindBin(lt),nEvts);
 	    }
 
@@ -282,13 +286,13 @@ void LatencyScan (const char* fName, SystemController& sc, size_t ROWstart, size
 	}
     }
 
-  theFile.Close();
-
   for (auto i = 0; i < theCanvas.size(); i++)
     {
       if (theLatency[i] != nullptr) delete theLatency[i];
       if (theCanvas[i]  != nullptr) delete theCanvas[i];
     }
+
+  theFile.Close();
 }
 
 
@@ -356,9 +360,9 @@ int main (int argc, char** argv)
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps;
+  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps;
   std::string INJtype;
-  InitParameters(cSystemController, nEvents, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps);
+  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps);
 
 
   // #####################
@@ -390,7 +394,7 @@ int main (int argc, char** argv)
       // ##################
       LOG(INFO) << BOLDYELLOW << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-      PixelAlive pa("PixelAlive.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, true);
+      PixelAlive pa("PixelAlive.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, true);
       pa.Inherit(&cSystemController);
       pa.InitHisto();
       pa.Run();
@@ -404,7 +408,7 @@ int main (int argc, char** argv)
       // #############
       LOG(INFO) << BOLDYELLOW << "@@@ Performing Noise scan @@@" << RESET;
 
-      PixelAlive pa("NoiseScan.root", ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, false);
+      PixelAlive pa("NoiseScan.root", ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false);
       pa.Inherit(&cSystemController);
       pa.InitHisto();
       pa.Run();

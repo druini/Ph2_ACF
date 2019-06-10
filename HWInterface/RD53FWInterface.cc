@@ -69,7 +69,7 @@ namespace Ph2_HwInterface
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
 
     BeBoardRegMap cRD53FWRegMap = pBoard->getBeBoardRegMap();
-    LOG (INFO) << BOLDYELLOW << "Initializing board's registers" << RESET;
+    LOG (INFO) << GREEN << "Initializing board's registers:" << RESET;
 
     for (const auto& it : cRD53FWRegMap)
       {
@@ -195,7 +195,7 @@ namespace Ph2_HwInterface
 
   bool RD53FWInterface::InitChipCommunication()
   {
-    LOG (INFO) << BOLDYELLOW << "Checking status GLOBAL REGISTERS" << RESET;
+    LOG (INFO) << GREEN << "Checking status GLOBAL REGISTERS" << RESET;
 
     
     // #################################
@@ -357,14 +357,14 @@ namespace Ph2_HwInterface
 
     return pData.size();
   }
-  
+
   void RD53FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
-    bool        retry;
     uint8_t     status;
-    std::string exception;
-
+    bool        retry;
+    
     this->localCfgFastCmd.n_triggers = pNEvents;
+    this->ConfigureFastCommands();
 
     do
       {
@@ -372,7 +372,6 @@ namespace Ph2_HwInterface
 	pData.clear();
 
 	this->ResetReadoutBlk();
-	this->ConfigureFastCommands();
 	this->ChipReset();
 	this->ChipReSync();
 
@@ -392,7 +391,7 @@ namespace Ph2_HwInterface
 	// ##################
 	if (pData.size() == 0)
 	  {
-	    LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected " << BOLDYELLOW << "--> retry" << RESET;
+	    LOG (ERROR) << BOLDRED << "Sent " << this->localCfgFastCmd.n_triggers << " triggers, but no data collected " << BOLDYELLOW << "--> retry" << RESET;
 	    retry = true;
 	    continue;
 	  }
@@ -662,7 +661,11 @@ namespace Ph2_HwInterface
 	const size_t end   = ((i == chip_start.size() - 1) ? n : chip_start[i + 1]);
 	chip_frames.emplace_back(data[start], data[start + 1]);
 
- 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start)) evtStatus = RD53FWEvtEncoder::FRSIZE;
+ 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start))
+	  {
+	    evtStatus = RD53FWEvtEncoder::FRSIZE;
+	    return;
+	  }
 
 	const size_t size = (dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start);
 	chip_events.emplace_back(&data[start + 2], size - 2);

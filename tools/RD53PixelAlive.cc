@@ -9,7 +9,7 @@
 
 #include "RD53PixelAlive.h"
 
-PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, bool inject) :
+PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t nEvtsBurst, bool inject) :
   fileName(fName),
   rowStart(rStart),
   rowEnd(rEnd),
@@ -17,6 +17,7 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   colEnd(cEnd),
   nPixels2Inj(nPix),
   nEvents(nEvts),
+  nEvtsBurst(nEvtsBurst),
   inject(inject),
   Tool()
 {
@@ -51,6 +52,9 @@ PixelAlive::~PixelAlive()
 
   if (theToT       != nullptr) delete theToT;
   if (theCanvasToT != nullptr) delete theCanvasToT;
+
+  if (theBCID       != nullptr) delete theBCID;
+  if (theCanvasBCID != nullptr) delete theCanvasBCID;
 
   if (theOcc       != nullptr) delete theOcc;
   if (theCanvasOcc != nullptr) delete theCanvasOcc;
@@ -104,10 +108,11 @@ void PixelAlive::InitHisto()
   theErr->SetXTitle("Columns");
   theErr->SetYTitle("Rows");
 
-  theFile      = new TFile(fileName, "RECREATE");
-  theCanvasToT = new TCanvas("theCanvasToT","RD53Canvas",0,0,700,500);
-  theCanvasOcc = new TCanvas("theCanvasOcc","RD53Canvas",0,0,700,500);
-  theCanvasErr = new TCanvas("theCanvasErr","RD53Canvas",0,0,700,500);
+  theFile       = new TFile(fileName, "RECREATE");
+  theCanvasToT  = new TCanvas("theCanvasToT","RD53Canvas",0,0,700,500);
+  theCanvasBCID = new TCanvas("theCanvasBCID","RD53Canvas",0,0,700,500);
+  theCanvasOcc  = new TCanvas("theCanvasOcc","RD53Canvas",0,0,700,500);
+  theCanvasErr  = new TCanvas("theCanvasErr","RD53Canvas",0,0,700,500);
 }
 
 
@@ -120,7 +125,7 @@ void PixelAlive::Run()
   
   this->SetTestPulse(inject);
   this->fMaskChannelsFromOtherGroups = true;
-  this->measureData(nEvents);
+  this->measureData(nEvents, nEvtsBurst);
 
 
   // #########################
@@ -165,6 +170,11 @@ void PixelAlive::Display()
   theCanvasToT->Modified();
   theCanvasToT->Update();
 
+  theCanvasBCID->cd();
+  theBCID->Draw();
+  theCanvasBCID->Modified();
+  theCanvasBCID->Update();
+
   theCanvasOcc->cd();
   theOcc->Draw();
   theCanvasOcc->Modified();
@@ -192,6 +202,7 @@ void PixelAlive::Save()
     }
   
   theToT->Write();
+  theBCID->Write();
   theOcc->Write();
   theErr->Write();
   theFile->Write();
@@ -199,6 +210,10 @@ void PixelAlive::Save()
   tmp = fileName;
   tmp = tmp.erase(tmp.find(".root"),5) + "_ToT.svg";
   theCanvasToT->Print(tmp.c_str());
+
+  tmp = fileName;
+  tmp = tmp.erase(tmp.find(".root"),5) + "_BCID.svg";
+  theCanvasBCID->Print(tmp.c_str());
 
   tmp = fileName;
   tmp = tmp.erase(tmp.find(".root"),5) + "_Occ.svg";
