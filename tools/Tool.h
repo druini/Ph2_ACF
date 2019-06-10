@@ -257,25 +257,25 @@ class Tool : public SystemController
     void selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup);
 
     // // Two dimensional dac scan
-    void scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector);
+    void scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, uint32_t numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector, int32_t numberOfEventsPerBurst = -1);
     // // Two dimensional dac scan per BeBoard
-    void scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVector);
+    void scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, uint32_t numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVector, int32_t numberOfEventsPerBurst = -1);
     // One dimensional dac scan
-    void scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorDataContainer*> detectorContainerVector);
+    void scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorDataContainer*> detectorContainerVector, int32_t numberOfEventsPerBurst = -1);
     // One dimensional dac scan per BeBoard
-    void scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorDataContainer*> &detectorContainerVector);
+    void scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorDataContainer*> &detectorContainerVector, int32_t numberOfEventsPerBurst = -1);
     // bit wise scan
-    void bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy);
+    void bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy);
     // bit wise scan per BeBoard
-    void bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy);
+    void bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy);
     // set dac and measure data
-    void setDacAndMeasureData(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents);
+    void setDacAndMeasureData(const std::string &dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
     // set dac and measure data per BeBoard
-    void setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents);
+    void setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string &dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
     // measure data
-    void measureData(const uint16_t &numberOfEvents);
+    void measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
     // measure data per BeBoard
-    void measureBeBoardData(uint16_t boardIndex, const uint16_t numberOfEvents);
+    void measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
     // measure data per BeBoard and per group
     // void measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup);
     // set global DAC for all CBCs in the BeBoard
@@ -283,20 +283,20 @@ class Tool : public SystemController
     //Set global DAC for all Chips in the BeBoard
     void setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer);
     //Set same global DAC for all Chips
-    void setSameGlobalDac(const std::string &dacName, const uint16_t &dacValue);
+    void setSameGlobalDac(const std::string &dacName, const uint16_t dacValue);
     //Set same global DAC for all Chips in the BeBoard
-    void setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
+    void setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue);
     //Set same local DAC list for all Chips
-    void setSameLocalDac(const std::string &dacName, const uint16_t &dacValue);
+    void setSameLocalDac(const std::string &dacName, const uint16_t dacValue);
     //Set same local DAC for all Chips in the BeBoard
-    void setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
+    void setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue);
     //Set same DAC for all Chips in the BeBoard (it is able to recognize if the dac is local or global)
-    void setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue);
+    void setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue);
     //Set same DAC list for all Chips (it is able to recognize if the dac is local or global)
-    void setSameDac(const std::string &dacName, const uint16_t &dacValue);
+    void setSameDac(const std::string &dacName, const uint16_t dacValue);
 
 private:
-    void doScanOnAllGroupsBeBoard(uint16_t boardIndex, const uint16_t numberOfEvents, ScanBase *scanFunctor);
+    void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase *scanFunctor);
 
     // Old scans without Detector Containers
 
