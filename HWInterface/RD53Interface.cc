@@ -235,11 +235,11 @@ namespace Ph2_HwInterface
     
     if (doSparse == true)
       {
-    	this->WriteChipReg(pRD53, "PIX_MODE",   0x27, true);
-    	this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0,  true);
-    	this->WriteChipReg(pRD53, "PIX_MODE",   0x0,  true);
+    	this->WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
+    	this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0,  pVerifLoop);
+    	this->WriteChipReg(pRD53, "PIX_MODE",   0x0,  pVerifLoop);
       }
-    else this->WriteChipReg(pRD53, "PIX_MODE", 0x8, true);
+    else this->WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
 
 
     // for (auto col = 0; col < RD53::nCols-1; col+=2) // @TMP@

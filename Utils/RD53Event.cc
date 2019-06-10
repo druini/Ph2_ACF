@@ -55,7 +55,7 @@ namespace Ph2_HwInterface
 		  chip->getChannel<OccupancyAndToT>(row,col).fOccupancy++;
 		  chip->getChannel<OccupancyAndToT>(row,col).fToT      += float(ToT);
 		  chip->getChannel<OccupancyAndToT>(row,col).fToTError += float(ToT*ToT);
-		  
+
 		  if (cTestChannelGroup->isChannelEnabled(row,col) == false)
 		    chip->getChannel<OccupancyAndToT>(row,col).fErrors++;
 		}

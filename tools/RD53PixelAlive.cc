@@ -59,6 +59,7 @@ PixelAlive::~PixelAlive()
 
 void PixelAlive::InitHisto()
 {
+  std::string tmp;
   std::stringstream myString;
 
   // #######################
@@ -68,11 +69,14 @@ void PixelAlive::InitHisto()
     for (const auto& cFe : cBoard->fModuleVector)
       for (const auto& cChip : cFe->fChipVector)
         {
+	  tmp = fileName;
+	  tmp = tmp.erase(tmp.find(".root"),5);
+
 	  myString.clear();
 	  myString.str("");
-          myString << "PixelAlive_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+          myString << tmp << "_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
 	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
 	  theOccupancy.back()->SetXTitle("Columns");
 	  theOccupancy.back()->SetYTitle("Rows");
@@ -94,7 +98,8 @@ void PixelAlive::InitHisto()
   theErr->SetYTitle("Rows");
 
   theFile      = new TFile(fileName, "RECREATE");
-  theCanvasToT = new TCanvas("theCanvasTot","RD53Canvas",0,0,700,500);
+  theCanvasToT = new TCanvas("theCanvasToT","RD53Canvas",0,0,700,500);
+  theCanvasErr = new TCanvas("theCanvasErr","RD53Canvas",0,0,700,500);
 }
 
 
@@ -158,6 +163,7 @@ void PixelAlive::Display()
  
 void PixelAlive::Save()
 {
+  std::string tmp;
   std::stringstream myString;
 
   for (auto i = 0; i < theCanvas.size(); i++)
@@ -173,6 +179,11 @@ void PixelAlive::Save()
   theErr->Write();
   theFile->Write();
 
-  theCanvasToT->Print("PixelAlive_ToT.svg");
-  theCanvasErr->Print("PixelAlive_Err.svg");
+  tmp = fileName;
+  tmp = tmp.erase(tmp.find(".root"),5) + "_ToT.svg";
+  theCanvasToT->Print(tmp.c_str());
+
+  tmp = fileName;
+  tmp = tmp.erase(tmp.find(".root"),5) + "_Err.svg";
+  theCanvasErr->Print(tmp.c_str());
 }

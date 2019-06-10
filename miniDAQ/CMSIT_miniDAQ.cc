@@ -313,7 +313,7 @@ int main (int argc, char** argv)
   cmd.defineOption("file","Hardware description file. Default value: settings/CMSIT.xml",ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency; pixelalive; scurve; gain; gainopt; thropt]. Default: pixelalive", ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency; pixelalive; noise; scurve; gain; gainopt; thropt]. Default: pixelalive", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
   cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", ArgvParser::NoOptionAttribute);
@@ -391,6 +391,20 @@ int main (int argc, char** argv)
       LOG(INFO) << BOLDYELLOW << "@@@ Performing PixelAlive scan @@@" << RESET;
 
       PixelAlive pa("PixelAlive.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, true);
+      pa.Inherit(&cSystemController);
+      pa.InitHisto();
+      pa.Run();
+      pa.Display();
+      pa.Save();
+    }
+  else if (whichCalib == "noise")
+    {
+      // #############
+      // # Run Noise #
+      // #############
+      LOG(INFO) << BOLDYELLOW << "@@@ Performing Noise scan @@@" << RESET;
+
+      PixelAlive pa("NoiseScan.root", ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, false);
       pa.Inherit(&cSystemController);
       pa.InitHisto();
       pa.Run();

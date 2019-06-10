@@ -88,12 +88,14 @@ void SCurve::InitHisto()
     for (const auto& cFe : cBoard->fModuleVector)
       for (const auto& cChip : cFe->fChipVector)
 	{
+	  size_t VCalOffset = cChip->getReg("VCAL_MED");
+
 	  myString.clear();
 	  myString.str("");
           myString << "SCurve_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
 		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
 		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue,stopValue,nEvents/2 + 1,0,1 + 2./nEvents));
+	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue-VCalOffset,stopValue-VCalOffset,nEvents/2 + 1,0,1 + 2./nEvents));
 	  theOccupancy.back()->SetXTitle("#DeltaVCal");
 	  theOccupancy.back()->SetYTitle("Efficiency");
 
@@ -248,6 +250,7 @@ void SCurve::Analyze()
 
 void SCurve::Save()
 {
+  std::string tmp;
   std::stringstream myString;
 
   for (auto i = 0; i < theCanvas.size(); i++)

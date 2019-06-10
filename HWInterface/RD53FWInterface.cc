@@ -384,11 +384,12 @@ namespace Ph2_HwInterface
 		this->localCfgFastCmd.fast_cmd_fsm.delay_loop) * DELAYPERIOD *
 	       this->localCfgFastCmd.n_triggers + SHALLOWSLEEP);
 
+	this->ReadData(pBoard, false, pData);
+
 
 	// ##################
 	// # Error checking #
 	// ##################
-	this->ReadData(pBoard, false, pData);
 	if (pData.size() == 0)
 	  {
 	    LOG (ERROR) << BOLDRED << "Sent " << pNEvents << " triggers, but no data collected " << BOLDYELLOW << "--> retry" << RESET;
@@ -410,6 +411,8 @@ namespace Ph2_HwInterface
 	    retry = true;
 	    continue;
 	  }
+
+
       } while (retry == true);
   }
 
@@ -486,7 +489,10 @@ namespace Ph2_HwInterface
     WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",1);
     usleep(DEEPSLEEP);
 
-    
+
+    // ########
+    // # DDR3 #
+    // ########
     while (!ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done").value())
       {
         LOG (INFO) << YELLOW << "Waiting for DDR3 calibration" << RESET;

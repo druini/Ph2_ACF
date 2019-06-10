@@ -35,7 +35,6 @@ void OccupancyAndToT::makeAverage (const std::vector<OccupancyAndToT>* theOccupa
     }
 
   fOccupancy     /= totalNumberOfEnableChannels;
-  fOccupancyError = sqrt(fOccupancy * (1. - fOccupancy) / numberOfEvents);
 
   fToT           /= totalNumberOfEnableChannels;
   fToTError      /= sqrt(fToTError / totalNumberOfEnableChannels);
@@ -50,7 +49,6 @@ void OccupancyAndToT::normalize (const uint16_t numberOfEvents)
   fToTError       = (fOccupancy > 1 ? sqrt((fToTError / fOccupancy - fToT*fToT) * fOccupancy / (fOccupancy-1)) : 0);
 
   fOccupancy     /= numberOfEvents;
-  fOccupancyError = sqrt(fOccupancy * (1. - fOccupancy) / numberOfEvents);
 
   fErrors        /= numberOfEvents;
 }

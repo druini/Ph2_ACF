@@ -19,8 +19,8 @@
 class OccupancyAndToT
 {
  public:
- OccupancyAndToT() : fOccupancy(0), fOccupancyError(0), fToT(0), fToTError(0) {}
-  ~OccupancyAndToT()                                                          {}
+ OccupancyAndToT() : fOccupancy(0), fOccupancyError(0), fToT(0), fToTError(0), fErrors(0) {}
+  ~OccupancyAndToT()                                                                      {}
 
   void print(void)
   {
@@ -58,7 +58,6 @@ inline void OccupancyAndToT::makeAverage<OccupancyAndToT> (const ChipContainer* 
   int numberOfEnabledChannels = cTestChannelGroup->getNumberOfEnabledChannels(chipOriginalMask);
 
   fOccupancy     /= numberOfEnabledChannels;
-  fOccupancyError = sqrt(fOccupancy * (1. - fOccupancy) / numberOfEvents);
   
   fToT           /= numberOfEnabledChannels;
   fToTError      /= sqrt(fToTError / numberOfEnabledChannels);
