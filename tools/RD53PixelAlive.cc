@@ -52,6 +52,9 @@ PixelAlive::~PixelAlive()
   if (theToT       != nullptr) delete theToT;
   if (theCanvasToT != nullptr) delete theCanvasToT;
 
+  if (theOcc       != nullptr) delete theOcc;
+  if (theCanvasOcc != nullptr) delete theCanvasOcc;
+
   if (theErr       != nullptr) delete theErr;
   if (theCanvasErr != nullptr) delete theCanvasErr;
 }
@@ -93,12 +96,17 @@ void PixelAlive::InitHisto()
   theToT->SetXTitle("ToT");
   theToT->SetYTitle("Entries");
 
+  theOcc = new TH1F("theOcc","Occupancy",100,0,nEvents);
+  theOcc->SetXTitle("Occupancy");
+  theOcc->SetYTitle("Entries");
+
   theErr = new TH2F("theErr","Errors",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
   theErr->SetXTitle("Columns");
   theErr->SetYTitle("Rows");
 
   theFile      = new TFile(fileName, "RECREATE");
   theCanvasToT = new TCanvas("theCanvasToT","RD53Canvas",0,0,700,500);
+  theCanvasOcc = new TCanvas("theCanvasOcc","RD53Canvas",0,0,700,500);
   theCanvasErr = new TCanvas("theCanvasErr","RD53Canvas",0,0,700,500);
 }
 
@@ -129,7 +137,10 @@ void PixelAlive::Run()
 		theOccupancy[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 
 		if (theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
-		  theToT->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
+		  {
+		    theToT->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
+		    theOcc->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy * nEvents);
+		  }
 
 		theErr->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fErrors);
 	      }
@@ -154,6 +165,11 @@ void PixelAlive::Display()
   theCanvasToT->Modified();
   theCanvasToT->Update();
 
+  theCanvasOcc->cd();
+  theOcc->Draw();
+  theCanvasOcc->Modified();
+  theCanvasOcc->Update();
+
   theCanvasErr->cd();
   theErr->Draw();
   theCanvasErr->Modified();
@@ -176,12 +192,17 @@ void PixelAlive::Save()
     }
   
   theToT->Write();
+  theOcc->Write();
   theErr->Write();
   theFile->Write();
 
   tmp = fileName;
   tmp = tmp.erase(tmp.find(".root"),5) + "_ToT.svg";
   theCanvasToT->Print(tmp.c_str());
+
+  tmp = fileName;
+  tmp = tmp.erase(tmp.find(".root"),5) + "_Occ.svg";
+  theCanvasOcc->Print(tmp.c_str());
 
   tmp = fileName;
   tmp = tmp.erase(tmp.find(".root"),5) + "_Err.svg";
