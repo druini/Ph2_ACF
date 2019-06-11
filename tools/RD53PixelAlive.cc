@@ -44,23 +44,30 @@ PixelAlive::~PixelAlive()
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
   if (theFile              != nullptr) delete theFile;
+
   for (auto i = 0; i < theCanvas.size(); i++)
     {
       if (theOccupancy[i] != nullptr) delete theOccupancy[i];
       if (theCanvas[i]    != nullptr) delete theCanvas[i];
     }
 
-  if (theToT       != nullptr) delete theToT;
-  if (theCanvasToT != nullptr) delete theCanvasToT;
+  for (auto i = 0; i < theCanvasToT.size(); i++)
+    {
+      if (theToT[i]       != nullptr) delete theToT[i];
+      if (theCanvasToT[i] != nullptr) delete theCanvasToT[i];
+    }
+  
+  for (auto i = 0; i < theCanvasOcc.size(); i++)
+    {
+      if (theOcc[i]       != nullptr) delete theOcc[i];
+      if (theCanvasOcc[i] != nullptr) delete theCanvasOcc[i];
+    }
 
-  if (theBCID       != nullptr) delete theBCID;
-  if (theCanvasBCID != nullptr) delete theCanvasBCID;
-
-  if (theOcc       != nullptr) delete theOcc;
-  if (theCanvasOcc != nullptr) delete theCanvasOcc;
-
-  if (theErr       != nullptr) delete theErr;
-  if (theCanvasErr != nullptr) delete theCanvasErr;
+  for (auto i = 0; i < theCanvasToT.size(); i++)
+    {
+      if (theErr[i]       != nullptr) delete theErr[i];
+      if (theCanvasErr[i] != nullptr) delete theCanvasErr[i];
+    }
 }
 
 
@@ -94,25 +101,57 @@ void PixelAlive::InitHisto()
 		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
 		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
 	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+
+	  myString.clear();
+	  myString.str("");
+          myString << "theToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theToT.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong(),0,RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong()));
+	  theToT.back()->SetXTitle("ToT");
+	  theToT.back()->SetYTitle("Entries");
+
+	  myString.clear();
+	  myString.str("");
+          myString << "theCanvasToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvasToT.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+
+	  myString.clear();
+	  myString.str("");
+          myString << "theOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theOcc.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents+1,0,nEvents+1));
+	  theOcc.back()->SetXTitle("Occupancy");
+	  theOcc.back()->SetYTitle("Entries");
+
+	  myString.clear();
+	  myString.str("");
+          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+	  
+	  myString.clear();
+	  myString.str("");
+          myString << "theErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theErr.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
+	  theErr.back()->SetXTitle("Columns");
+	  theErr.back()->SetYTitle("Rows");
+
+	  myString.clear();
+	  myString.str("");
+          myString << "theCanvasErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvasErr.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
-
-  theToT = new TH1F("theToT","ToT",RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong(),0,RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong());
-  theToT->SetXTitle("ToT");
-  theToT->SetYTitle("Entries");
-
-  theOcc = new TH1F("theOcc","Occupancy",100,0,nEvents);
-  theOcc->SetXTitle("Occupancy");
-  theOcc->SetYTitle("Entries");
-
-  theErr = new TH2F("theErr","Errors",RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows);
-  theErr->SetXTitle("Columns");
-  theErr->SetYTitle("Rows");
-
-  theFile       = new TFile(fileName, "RECREATE");
-  theCanvasToT  = new TCanvas("theCanvasToT","RD53Canvas",0,0,700,500);
-  theCanvasBCID = new TCanvas("theCanvasBCID","RD53Canvas",0,0,700,500);
-  theCanvasOcc  = new TCanvas("theCanvasOcc","RD53Canvas",0,0,700,500);
-  theCanvasErr  = new TCanvas("theCanvasErr","RD53Canvas",0,0,700,500);
+  
+  theFile = new TFile(fileName, "RECREATE");
 }
 
 
@@ -122,7 +161,7 @@ void PixelAlive::Run()
   fDetectorDataContainer = &theOccupancyContainer;
   ContainerFactory          theDetectorFactory;
   theDetectorFactory.copyAndInitStructure<OccupancyAndToT>(*fDetectorContainer, *fDetectorDataContainer);
-  
+
   this->SetTestPulse(inject);
   this->fMaskChannelsFromOtherGroups = true;
   this->measureData(nEvents, nEvtsBurst);
@@ -143,11 +182,12 @@ void PixelAlive::Run()
 
 		if (theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
 		  {
-		    theToT->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
-		    theOcc->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy * nEvents);
+		    theToT[index]->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
+		    theOcc[index]->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy * nEvents);
 		  }
 
-		theErr->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fErrors);
+		if (theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fErrors != 0)
+		  theErr[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fErrors);
 	      }
 
 	  index++;
@@ -165,25 +205,29 @@ void PixelAlive::Display()
       theCanvas[i]->Update();
     }
 
-  theCanvasToT->cd();
-  theToT->Draw();
-  theCanvasToT->Modified();
-  theCanvasToT->Update();
+  for (auto i = 0; i < theCanvasToT.size(); i++)
+    {
+      theCanvasToT[i]->cd();
+      theToT[i]->Draw();
+      theCanvasToT[i]->Modified();
+      theCanvasToT[i]->Update();
+    }
 
-  theCanvasBCID->cd();
-  theBCID->Draw();
-  theCanvasBCID->Modified();
-  theCanvasBCID->Update();
+  for (auto i = 0; i < theCanvasOcc.size(); i++)
+    {
+      theCanvasOcc[i]->cd();
+      theOcc[i]->Draw();
+      theCanvasOcc[i]->Modified();
+      theCanvasOcc[i]->Update();
+    }
 
-  theCanvasOcc->cd();
-  theOcc->Draw();
-  theCanvasOcc->Modified();
-  theCanvasOcc->Update();
-
-  theCanvasErr->cd();
-  theErr->Draw();
-  theCanvasErr->Modified();
-  theCanvasErr->Update();
+  for (auto i = 0; i < theCanvasErr.size(); i++)
+    {
+      theCanvasErr[i]->cd();
+      theErr[i]->Draw();
+      theCanvasErr[i]->Modified();
+      theCanvasErr[i]->Update();
+    }
 }
 
  
@@ -200,26 +244,31 @@ void PixelAlive::Save()
       myString << theOccupancy[i]->GetName() << ".svg";
       theCanvas[i]->Print(myString.str().c_str());
     }
-  
-  theToT->Write();
-  theBCID->Write();
-  theOcc->Write();
-  theErr->Write();
-  theFile->Write();
 
-  tmp = fileName;
-  tmp = tmp.erase(tmp.find(".root"),5) + "_ToT.svg";
-  theCanvasToT->Print(tmp.c_str());
+  for (auto i = 0; i < theCanvasToT.size(); i++)
+    {
+      theToT[i]->Write();
+      myString.clear();
+      myString.str("");
+      myString << theToT[i]->GetName() << ".svg";
+      theCanvasToT[i]->Print(myString.str().c_str());
+    }
 
-  tmp = fileName;
-  tmp = tmp.erase(tmp.find(".root"),5) + "_BCID.svg";
-  theCanvasBCID->Print(tmp.c_str());
+  for (auto i = 0; i < theCanvasOcc.size(); i++)
+    {
+      theOcc[i]->Write();
+      myString.clear();
+      myString.str("");
+      myString << theOcc[i]->GetName() << ".svg";
+      theCanvasOcc[i]->Print(myString.str().c_str());
+    }
 
-  tmp = fileName;
-  tmp = tmp.erase(tmp.find(".root"),5) + "_Occ.svg";
-  theCanvasOcc->Print(tmp.c_str());
-
-  tmp = fileName;
-  tmp = tmp.erase(tmp.find(".root"),5) + "_Err.svg";
-  theCanvasErr->Print(tmp.c_str());
+  for (auto i = 0; i < theCanvasErr.size(); i++)
+    {
+      theErr[i]->Write();
+      myString.clear();
+      myString.str("");
+      myString << theErr[i]->GetName() << ".svg";
+      theCanvasErr[i]->Print(myString.str().c_str());
+    }
 }

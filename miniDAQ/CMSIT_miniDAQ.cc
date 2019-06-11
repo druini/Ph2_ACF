@@ -352,9 +352,9 @@ int main (int argc, char** argv)
   // #######################
   // # Initialize Hardware #
   // #######################
-  LOG (INFO) << BOLDYELLOW << "@@@ Initializing the Hardware @@@" << RESET;
+  LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
   cSystemController.ConfigureHardware(cHWFile);
-  LOG (INFO) << BOLDBLUE << "@@@ Hardware initialization done @@@" << RESET;
+  LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
 
 
   // ######################

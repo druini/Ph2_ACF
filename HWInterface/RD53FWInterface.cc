@@ -30,21 +30,21 @@ namespace Ph2_HwInterface
     uint32_t cIDuserLogic2 = ReadReg ("user.stat_regs.usr_id.usr_id_char2");
     uint32_t cIDuserLogic3 = ReadReg ("user.stat_regs.usr_id.usr_id_char3");
     uint32_t cIDuserLogic4 = ReadReg ("user.stat_regs.usr_id.usr_id_char4");
-    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tID user logic 1st : " << cIDuserLogic1;
-    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tID user logic 2nd : " << cIDuserLogic2;
-    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tID user logic 3rd : " << cIDuserLogic3;
-    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tID user logic 4th : " << cIDuserLogic4;
+    // LOG (INFO) << BOLDBLUE << "\t--> ID user logic 1st : " << cIDuserLogic1;
+    // LOG (INFO) << BOLDBLUE << "\t--> ID user logic 2nd : " << cIDuserLogic2;
+    // LOG (INFO) << BOLDBLUE << "\t--> ID user logic 3rd : " << cIDuserLogic3;
+    // LOG (INFO) << BOLDBLUE << "\t--> ID user logic 4th : " << cIDuserLogic4;
 
     uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
     uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
     uint32_t cVersionBuild = ReadReg ("user.stat_regs.usr_ver.usr_ver_build");
-    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tFW version : " << cVersionMajor << "." << cVersionMinor;
-    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tBuild version : " << cVersionBuild;
+    // LOG (INFO) << BOLDBLUE << "\t--> FW version : " << cVersionMajor << "." << cVersionMinor;
+    // LOG (INFO) << BOLDBLUE << "\t--> Build version : " << cVersionBuild;
 
     uint32_t cFWyear  = ReadReg ("user.stat_regs.usr_ver.usr_firmware_yy");
     uint32_t cFWmonth = ReadReg ("user.stat_regs.usr_ver.usr_firmware_mm");
     uint32_t cFWday   = ReadReg ("user.stat_regs.usr_ver.usr_firmware_dd");
-    // LOG (INFO) << __PRETTY_FUNCTION__ << "\tFirmware date (yyyy/mm/dd) : " << cFWyear << "/" << cFWmonth << "/" << cFWday;
+    // LOG (INFO) << BOLDBLUE << "\t--> Firmware date (yyyy/mm/dd) : " << cFWyear << "/" << cFWmonth << "/" << cFWday;
 
     uint32_t cVersionWord = ((cVersionMajor << NBIT_FWVER) | cVersionMinor);
     return cVersionWord;
@@ -77,6 +77,8 @@ namespace Ph2_HwInterface
 	cVecReg.push_back ({it.first, it.second});
       }
     if (cVecReg.size() != 0) WriteStackReg (cVecReg);
+
+    this->PrintFWstatus();
   }
 
   void RD53FWInterface::SerializeSymbols (std::vector<std::vector<uint16_t> > & data,
@@ -193,11 +195,11 @@ namespace Ph2_HwInterface
     return outputDecoded;
   }
 
-  bool RD53FWInterface::InitChipCommunication()
+  void RD53FWInterface::PrintFWstatus()
   {
-    LOG (INFO) << GREEN << "Checking status GLOBAL REGISTERS" << RESET;
+    LOG (INFO) << GREEN << "Checking Firmware status" << RESET;
 
-    
+
     // #################################
     // # Check clock generator locking #
     // #################################
@@ -266,8 +268,10 @@ namespace Ph2_HwInterface
 
     clkRate = ReadReg ("user.stat_regs.clk_rate_5");
     LOG (INFO) << BOLDBLUE << "Clock rate 5: " << BOLDYELLOW << clkRate << RESET;
+  }
 
-
+  bool RD53FWInterface::InitChipCommunication()
+  {
     // ###############################
     // # Check RD53 AURORA registers #
     // ###############################
@@ -320,9 +324,9 @@ namespace Ph2_HwInterface
       cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
 
     // @TMP@
-    LOG (INFO) << GREEN << "cNWords         = "       << cNWords    << RESET;
+    LOG (INFO) << GREEN << "n. words        = "       << cNWords    << RESET;
     LOG (INFO) << GREEN << "handshake       = "       << handshake  << RESET;
-    LOG (INFO) << GREEN << "cNtriggers      = "       << cNtriggers << RESET;
+    LOG (INFO) << GREEN << "n. triggers     = "       << cNtriggers << RESET;
     LOG (INFO) << GREEN << "========================" << RESET;
 
     if (!cNWords) return 0;
@@ -664,6 +668,8 @@ namespace Ph2_HwInterface
  	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start))
 	  {
 	    evtStatus = RD53FWEvtEncoder::FRSIZE;
+	    chip_frames.clear();
+	    chip_events.clear();
 	    return;
 	  }
 

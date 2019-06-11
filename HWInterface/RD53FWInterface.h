@@ -115,6 +115,7 @@ namespace Ph2_HwInterface
     void ChipReset()  override;
     void ChipReSync() override;
 
+    void PrintFWstatus();
     void SerializeSymbols (std::vector<std::vector<uint16_t> > & data, std::vector<uint32_t> & serialData);
     void TurnOffFMC();
     void TurnOnFMC();

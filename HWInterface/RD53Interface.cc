@@ -17,16 +17,28 @@ namespace Ph2_HwInterface
   bool RD53Interface::ConfigureChip (const Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
     ChipRegMap pRD53RegMap = pChip->getRegMap();
+    RD53* pRD53            = static_cast<RD53*>(const_cast<Chip*>(pChip));
 
-    RD53* pRD53 = static_cast<RD53*>(const_cast<Chip*>(pChip));
 
+    // ###################################
+    // # Initializing chip communication #
+    // ###################################
+    this->InitRD53Aurora(pRD53);
+
+    
+    // ###############################################################
+    // # Enable monitoring (needed for AutoRead register monitoring) #
+    // ###############################################################
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100, true); // 0x100 = start monitoring
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x4,   true);
+
+    
+    // ###############################
+    // # Programmig global registers #
+    // ###############################
     for (const auto& cRegItem : pRD53RegMap)
-      {
-	// ###############################
-	// # Programmig global registers #
-	// ###############################
-	if (cRegItem.second.fPrmptCfg == true) this->WriteChipReg(pRD53, cRegItem.first, cRegItem.second.fValue, true);
-      }
+      if (cRegItem.second.fPrmptCfg == true) this->WriteChipReg(pRD53, cRegItem.first, cRegItem.second.fValue, true);
+
 
     // ###################################
     // # Programmig pixel cell registers #
@@ -63,12 +75,6 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x30,  true); // 0x30 = reset Aurora AND Serializer
     this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x1,   true);
     usleep(DEEPSLEEP);
- 
-    // ###############################################################
-    // # Enable monitoring (needed for AutoRead register monitoring) #
-    // ###############################################################
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100, true); // 0x100 = start monitoring
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x4,   true);
   }
 
   void RD53Interface::SyncRD53 (RD53* pRD53, unsigned int nSyncWords)

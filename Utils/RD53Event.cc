@@ -43,22 +43,30 @@ namespace Ph2_HwInterface
 
   void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
   {
+    // bool totRequired = boardContainer->at(0)->at(0)->at(0)->isChannelContainerType<OccupancyAndToT>();
+    
     for (const auto& module : *boardContainer)
       for (const auto& chip : *module)
-	for (auto row = 0; row < RD53::nRows; row++)
-	  for (auto col = 0; col < RD53::nCols; col++)
-	    {
-	      size_t ToT;
+	{
+	  // @TMP@
+	  // if (totRequired == true)
+	  //   use OccupancyAndToT
+	  //   else use Occupancy
+	  for (auto row = 0; row < RD53::nRows; row++)
+	    for (auto col = 0; col < RD53::nCols; col++)
+	      {
+		size_t ToT;
 	      
-	      if (this->isThereAnHit(module->getId(),chip->getId(),row,col,ToT) == true)
-		{
-		  chip->getChannel<OccupancyAndToT>(row,col).fOccupancy++;
-		  chip->getChannel<OccupancyAndToT>(row,col).fToT      += float(ToT);
-		  chip->getChannel<OccupancyAndToT>(row,col).fToTError += float(ToT*ToT);
+		if (this->isThereAnHit(module->getId(),chip->getId(),row,col,ToT) == true)
+		  {
+		    chip->getChannel<OccupancyAndToT>(row,col).fOccupancy++;
+		    chip->getChannel<OccupancyAndToT>(row,col).fToT      += float(ToT);
+		    chip->getChannel<OccupancyAndToT>(row,col).fToTError += float(ToT*ToT);
 
-		  if (cTestChannelGroup->isChannelEnabled(row,col) == false)
-		    chip->getChannel<OccupancyAndToT>(row,col).fErrors++;
-		}
-	    }
+		    if (cTestChannelGroup->isChannelEnabled(row,col) == false)
+		      chip->getChannel<OccupancyAndToT>(row,col).fErrors++;
+		  }
+	      }
+	}
   }
 }
