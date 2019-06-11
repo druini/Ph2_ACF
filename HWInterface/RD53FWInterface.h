@@ -1,14 +1,14 @@
 /*!
-  \file                  FC7FWInterface.h
-  \brief                 FC7FWInterface init/config of the FC7 and its RD53's
+  \file                  RD53FWInterface.h
+  \brief                 RD53FWInterface initialize and configure the FW
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _FC7FWINTERFACE_H_
-#define _FC7FWINTERFACE_H_
+#ifndef _RD53FWInterface_h_
+#define _RD53FWInterface_h_
 
 #include "BeBoardFWInterface.h"
 #include "../HWDescription/Module.h"
@@ -41,7 +41,7 @@
 #define L1A_TIMEOUT    4000
 
 
-namespace FC7EvtEncoder
+namespace RD53FWEvtEncoder
 {
   // ################
   // # Event header #
@@ -84,14 +84,14 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-  class FC7FWInterface: public BeBoardFWInterface
+  class RD53FWInterface: public BeBoardFWInterface
   {
   private:
     FileHandler* fFileHandler;
 
   public:
-    FC7FWInterface (const char* pId, const char* pUri, const char* pAddressTable);
-    virtual ~FC7FWInterface() { if (fFileHandler) delete fFileHandler; }
+    RD53FWInterface (const char* pId, const char* pUri, const char* pAddressTable);
+    virtual ~RD53FWInterface() { if (fFileHandler) delete fFileHandler; }
 
     void      setFileHandler (FileHandler* pHandler) override;
     uint32_t  getBoardInfo   ()                      override;
@@ -115,6 +115,7 @@ namespace Ph2_HwInterface
     void ChipReset()  override;
     void ChipReSync() override;
 
+    void PrintFWstatus();
     void SerializeSymbols (std::vector<std::vector<uint16_t> > & data, std::vector<uint32_t> & serialData);
     void TurnOffFMC();
     void TurnOnFMC();
@@ -152,7 +153,7 @@ namespace Ph2_HwInterface
     };
 
     static std::vector<Event> DecodeEvents (const std::vector<uint32_t>& data, uint8_t& status);
-    static void PrintEvents                (const std::vector<FC7FWInterface::Event>& events);
+    static void PrintEvents                (const std::vector<RD53FWInterface::Event>& events);
     static void ErrorHandler               (uint8_t status);
 
     enum class TriggerSource : uint32_t

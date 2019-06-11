@@ -12,7 +12,7 @@
 #include "../Utils/Data.h"
 #include <iostream>
 
-#include "../HWInterface/FC7FWInterface.h"
+#include "../HWInterface/RD53FWInterface.h"
 
 namespace Ph2_HwInterface {
     //Data Class
@@ -39,14 +39,14 @@ namespace Ph2_HwInterface {
     void Data::privateSet (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
     {
       Reset();
-      
+
       if (pType == BoardType::FC7)
 	{
 	  uint8_t status;
-	  auto fc7_events = FC7FWInterface::DecodeEvents(pData,status);
-	  if (status != FC7EvtEncoder::GOOD) FC7FWInterface::ErrorHandler(status);
+	  auto RD53FWEvts = RD53FWInterface::DecodeEvents(pData,status);
+	  if (status != RD53EvtEncoder::GOOD) RD53FWInterface::ErrorHandler(status);
 
-	  for (const auto& evt : fc7_events)
+	  for (const auto& evt : RD53FWEvts)
 	    {
 	      std::vector<size_t> chip_id_vec;
 	      std::vector<size_t> module_id_vec;

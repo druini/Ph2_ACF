@@ -237,7 +237,7 @@ namespace Ph2_System {
         if (cBeBoard->getBoardType() == BoardType::D19C)
             pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
         else if (cBeBoard->getBoardType() == BoardType::FC7)
-            pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new FC7FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+            pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
 
         os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
 
@@ -332,7 +332,7 @@ namespace Ph2_System {
         }
         else if (cBeBoard->getBoardType() == BoardType::FC7)
         {
-            pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new FC7FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+            pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
         }
 
         os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;

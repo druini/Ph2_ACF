@@ -17,16 +17,28 @@ namespace Ph2_HwInterface
   bool RD53Interface::ConfigureChip (const Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
     ChipRegMap pRD53RegMap = pChip->getRegMap();
+    RD53* pRD53            = static_cast<RD53*>(const_cast<Chip*>(pChip));
 
-    RD53* pRD53 = static_cast<RD53*>(const_cast<Chip*>(pChip));
 
+    // ###################################
+    // # Initializing chip communication #
+    // ###################################
+    this->InitRD53Aurora(pRD53);
+
+    
+    // ###############################################################
+    // # Enable monitoring (needed for AutoRead register monitoring) #
+    // ###############################################################
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100, true); // 0x100 = start monitoring
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x4,   true);
+
+    
+    // ###############################
+    // # Programmig global registers #
+    // ###############################
     for (const auto& cRegItem : pRD53RegMap)
-      {
-	// ###############################
-	// # Programmig global registers #
-	// ###############################
-	if (cRegItem.second.fPrmptCfg == true) this->WriteChipReg(pRD53, cRegItem.first, cRegItem.second.fValue, true);
-      }
+      if (cRegItem.second.fPrmptCfg == true) this->WriteChipReg(pRD53, cRegItem.first, cRegItem.second.fValue, true);
+
 
     // ###################################
     // # Programmig pixel cell registers #
@@ -60,15 +72,9 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53, "CML_CONFIG",         0x1,   true); // Default: 00_11_1111
     this->WriteChipReg(pRD53, "AURORA_CB_CONFIG0",  0xF1,  true);
     this->WriteChipReg(pRD53, "AURORA_CB_CONFIG1",  0xF,   true);
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x30,  true); // 0x30 = reset Aurora AND reset serializer
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x30,  true); // 0x30 = reset Aurora AND Serializer
     this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x1,   true);
     usleep(DEEPSLEEP);
- 
-    // ###############################################################
-    // # Enable monitoring (needed for AutoRead register monitoring) #
-    // ###############################################################
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100, true); // 0x100 = start monitoring
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x4,   true);
   }
 
   void RD53Interface::SyncRD53 (RD53* pRD53, unsigned int nSyncWords)
@@ -78,7 +84,7 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
   {
-    setBoard (pChip->getBeBoardId());
+    this->setBoard(pChip->getBeBoardId());
 
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -126,6 +132,7 @@ namespace Ph2_HwInterface
 	    else
 	      {
 		pRD53->setReg (pRegNode, cRegItem.fValue);
+		if ((strcmp(pRegNode.c_str(),"VCAL_HIGH") == 0) || (strcmp(pRegNode.c_str(),"VCAL_MED") == 0)) usleep(DEEPSLEEP); // @TMP@
 		return true;
 	      }
 	  }
@@ -139,7 +146,7 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::WriteChipMultReg (Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop)
   {
-    setBoard (pChip->getBeBoardId());
+    this->setBoard(pChip->getBeBoardId());
 
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -174,7 +181,7 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::WriteRD53Reg (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec, size_t nCmd)
   {
-    setBoard (pRD53->getBeBoardId());
+    this->setBoard(pRD53->getBeBoardId());
     
     size_t size = dataVec->size()/nCmd;
     std::vector<uint32_t> serialSymbols;
@@ -190,7 +197,7 @@ namespace Ph2_HwInterface
 
   std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53Interface::ReadRD53Reg (RD53* pRD53, const std::string& pRegNode)
   {
-    setBoard (pRD53->getBeBoardId());
+    this->setBoard(pRD53->getBeBoardId());
 
     std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
     std::vector<uint32_t> serialSymbols;
@@ -235,11 +242,11 @@ namespace Ph2_HwInterface
     
     if (doSparse == true)
       {
-    	this->WriteChipReg(pRD53, "PIX_MODE",   0x27, true);
-    	this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0,  true);
-    	this->WriteChipReg(pRD53, "PIX_MODE",   0x0,  true);
+    	this->WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
+    	this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0,  pVerifLoop);
+    	this->WriteChipReg(pRD53, "PIX_MODE",   0x0,  pVerifLoop);
       }
-    else this->WriteChipReg(pRD53, "PIX_MODE", 0x8, true);
+    else this->WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
 
 
     // for (auto col = 0; col < RD53::nCols-1; col+=2) // @TMP@
