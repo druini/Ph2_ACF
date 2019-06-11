@@ -27,9 +27,9 @@
             EN_MACRO_COL_CAL_LIN_5 =    "15"
 
             REF_KRUM_LIN     =  "300"
-            Vthreshold_LIN   =  "400"
+            Vthreshold_LIN   =  "350"
 
-	    VCAL_HIGH        =  "450"
+	    VCAL_HIGH        =  "600"
 	    VCAL_MED         =  "100"
 
 	    INJECTION_SELECT =    "0"
@@ -60,17 +60,17 @@
        INJtype = 0: Analog; INJtype = 1: Digital
   -->
   <Settings>
-    <Setting name="nEvents">     100 </Setting>
+    <Setting name="nEvents">   10000 </Setting>
     <Setting name="nEvtsBurst">  100 </Setting>
 
     <Setting name="NTRIGxL1A">     9 </Setting>
     <Setting name="INJtype">       0 </Setting>
 
-    <Setting name="ROWstart">     50 </Setting>
-    <Setting name="ROWstop">      65 </Setting>
+    <Setting name="ROWstart">      0 </Setting>
+    <Setting name="ROWstop">     191 </Setting>
     <Setting name="COLstart">    128 </Setting>
-    <Setting name="COLstop">     143 </Setting>
-    <Setting name="nPixelInj">    16 </Setting>
+    <Setting name="COLstop">     163 </Setting>
+    <Setting name="nPixelInj">     8 </Setting>
 
     <Setting name="LatencStart">   0 </Setting>
     <Setting name="LatencStop">  511 </Setting>

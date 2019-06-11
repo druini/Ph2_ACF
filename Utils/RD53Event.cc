@@ -53,10 +53,11 @@ namespace Ph2_HwInterface
 	  //   use OccupancyAndToT
 	  //   else use Occupancy
 	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
+	    // for (auto col = 0; col < RD53::nCols; col++) // @TMP@
+	    for (auto col = 128; col < 264; col++)
 	      {
 		size_t ToT;
-	      
+
 		if (this->isThereAnHit(module->getId(),chip->getId(),row,col,ToT) == true)
 		  {
 		    chip->getChannel<OccupancyAndToT>(row,col).fOccupancy++;

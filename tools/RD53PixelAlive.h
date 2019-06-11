@@ -56,12 +56,12 @@ class PixelAlive : public Tool
   // # ROOT #
   // ########
   TFile* theFile;
-  std::vector<TCanvas*> theCanvas;
-  std::vector<TH2F*>    theOccupancy;
+  std::vector<TCanvas*> theCanvasOcc2D;
+  std::vector<TH2F*>    theOcc2D;
   std::vector<TCanvas*> theCanvasToT;
   std::vector<TH1F*>    theToT;
-  std::vector<TCanvas*> theCanvasOcc;
-  std::vector<TH1F*>    theOcc;
+  std::vector<TCanvas*> theCanvasOcc1D;
+  std::vector<TH1F*>    theOcc1D;
   std::vector<TCanvas*> theCanvasErr;
   std::vector<TH2F*>    theErr;
 };

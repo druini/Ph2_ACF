@@ -45,10 +45,10 @@ PixelAlive::~PixelAlive()
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
   if (theFile              != nullptr) delete theFile;
 
-  for (auto i = 0; i < theCanvas.size(); i++)
+  for (auto i = 0; i < theCanvasOcc2D.size(); i++)
     {
-      if (theOccupancy[i] != nullptr) delete theOccupancy[i];
-      if (theCanvas[i]    != nullptr) delete theCanvas[i];
+      if (theOcc2D[i]       != nullptr) delete theOcc2D[i];
+      if (theCanvasOcc2D[i] != nullptr) delete theCanvasOcc2D[i];
     }
 
   for (auto i = 0; i < theCanvasToT.size(); i++)
@@ -57,10 +57,10 @@ PixelAlive::~PixelAlive()
       if (theCanvasToT[i] != nullptr) delete theCanvasToT[i];
     }
   
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
+  for (auto i = 0; i < theCanvasOcc1D.size(); i++)
     {
-      if (theOcc[i]       != nullptr) delete theOcc[i];
-      if (theCanvasOcc[i] != nullptr) delete theCanvasOcc[i];
+      if (theOcc1D[i]       != nullptr) delete theOcc1D[i];
+      if (theCanvasOcc1D[i] != nullptr) delete theCanvasOcc1D[i];
     }
 
   for (auto i = 0; i < theCanvasToT.size(); i++)
@@ -91,16 +91,16 @@ void PixelAlive::InitHisto()
           myString << tmp << "_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
 		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
 		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
-	  theOccupancy.back()->SetXTitle("Columns");
-	  theOccupancy.back()->SetYTitle("Rows");
+	  theOcc2D.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
+	  theOcc2D.back()->SetXTitle("Columns");
+	  theOcc2D.back()->SetYTitle("Rows");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvas_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+          myString << "theCanvasOcc2D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvasOcc2D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 
 	  myString.clear();
 	  myString.str("");
@@ -120,19 +120,19 @@ void PixelAlive::InitHisto()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theOcc.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents+1,0,nEvents+1));
-	  theOcc.back()->SetXTitle("Occupancy");
-	  theOcc.back()->SetYTitle("Entries");
+          myString << "theOcc1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"           << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"          << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theOcc1D.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents+1,0,nEvents+1));
+	  theOcc1D.back()->SetXTitle("Occupancy");
+	  theOcc1D.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+          myString << "theCanvasOcc1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvasOcc1D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	  
 	  myString.clear();
 	  myString.str("");
@@ -178,12 +178,12 @@ void PixelAlive::Run()
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
-		theOccupancy[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+		theOcc2D[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 
 		if (theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
 		  {
 		    theToT[index]->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fToT);
-		    theOcc[index]->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy * nEvents);
+		    theOcc1D[index]->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy * nEvents);
 		  }
 
 		if (theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fErrors != 0)
@@ -197,12 +197,12 @@ void PixelAlive::Run()
 
 void PixelAlive::Display()
 {
-  for (auto i = 0; i < theCanvas.size(); i++)
+  for (auto i = 0; i < theCanvasOcc2D.size(); i++)
     {
-      theCanvas[i]->cd();
-      theOccupancy[i]->Draw("gcolz");
-      theCanvas[i]->Modified();
-      theCanvas[i]->Update();
+      theCanvasOcc2D[i]->cd();
+      theOcc2D[i]->Draw("gcolz");
+      theCanvasOcc2D[i]->Modified();
+      theCanvasOcc2D[i]->Update();
     }
 
   for (auto i = 0; i < theCanvasToT.size(); i++)
@@ -213,12 +213,12 @@ void PixelAlive::Display()
       theCanvasToT[i]->Update();
     }
 
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
+  for (auto i = 0; i < theCanvasOcc1D.size(); i++)
     {
-      theCanvasOcc[i]->cd();
-      theOcc[i]->Draw();
-      theCanvasOcc[i]->Modified();
-      theCanvasOcc[i]->Update();
+      theCanvasOcc1D[i]->cd();
+      theOcc1D[i]->Draw();
+      theCanvasOcc1D[i]->Modified();
+      theCanvasOcc1D[i]->Update();
     }
 
   for (auto i = 0; i < theCanvasErr.size(); i++)
@@ -236,13 +236,13 @@ void PixelAlive::Save()
   std::string tmp;
   std::stringstream myString;
 
-  for (auto i = 0; i < theCanvas.size(); i++)
+  for (auto i = 0; i < theCanvasOcc2D.size(); i++)
     {
-      theOccupancy[i]->Write();
+      theOcc2D[i]->Write();
       myString.clear();
       myString.str("");
-      myString << theOccupancy[i]->GetName() << ".svg";
-      theCanvas[i]->Print(myString.str().c_str());
+      myString << theOcc2D[i]->GetName() << ".svg";
+      theCanvasOcc2D[i]->Print(myString.str().c_str());
     }
 
   for (auto i = 0; i < theCanvasToT.size(); i++)
@@ -254,13 +254,13 @@ void PixelAlive::Save()
       theCanvasToT[i]->Print(myString.str().c_str());
     }
 
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
+  for (auto i = 0; i < theCanvasOcc1D.size(); i++)
     {
-      theOcc[i]->Write();
+      theOcc1D[i]->Write();
       myString.clear();
       myString.str("");
-      myString << theOcc[i]->GetName() << ".svg";
-      theCanvasOcc[i]->Print(myString.str().c_str());
+      myString << theOcc1D[i]->GetName() << ".svg";
+      theCanvasOcc1D[i]->Print(myString.str().c_str());
     }
 
   for (auto i = 0; i < theCanvasErr.size(); i++)
