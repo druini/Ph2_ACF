@@ -132,6 +132,7 @@ namespace Ph2_HwInterface
 	    else
 	      {
 		pRD53->setReg (pRegNode, cRegItem.fValue);
+		if ((strcmp(pRegNode.c_str(),"VCAL_HIGH") == 0) || (strcmp(pRegNode.c_str(),"VCAL_MED") == 0)) usleep(DEEPSLEEP); // @TMP@
 		return true;
 	      }
 	  }

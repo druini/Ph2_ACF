@@ -19,8 +19,8 @@
 class OccupancyAndToT
 {
  public:
- OccupancyAndToT() : fOccupancy(0), fOccupancyError(0), fToT(0), fToTError(0), fErrors(0) {}
-  ~OccupancyAndToT()                                                                      {}
+ OccupancyAndToT() : fOccupancy(0), fToT(0), fToTError(0), fErrors(0) {}
+  ~OccupancyAndToT()                                                  {}
 
   void print(void)
   {
@@ -33,7 +33,6 @@ class OccupancyAndToT
   void normalize     (const uint16_t numberOfEvents);
   
   float fOccupancy;
-  float fOccupancyError;
 
   float fToT;
   float fToTError;
