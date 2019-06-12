@@ -72,11 +72,10 @@ namespace RD53FWEvtEncoder
   // # Event status #
   // ################
   const uint8_t GOOD   = 0x00; // Event status Good
-  const uint8_t EVSIZE = 0x01; // Event status Invalid event size
-  const uint8_t EMPTY  = 0x02; // Event status Empty event
-  const uint8_t L1A    = 0x03; // Event status L1A counter mismatch
-  const uint8_t FRSIZE = 0x04; // Event status Invalid frame size
-  const uint8_t CHIP   = 0x05; // Event status Error in chip data decoding
+  const uint8_t EVSIZE = 0x02; // Event status Invalid event size
+  const uint8_t EMPTY  = 0x04; // Event status Empty event
+  const uint8_t L1A    = 0x08; // Event status L1A counter mismatch
+  const uint8_t FRSIZE = 0x16; // Event status Invalid frame size
 }
 
 
@@ -154,7 +153,7 @@ namespace Ph2_HwInterface
 
     static std::vector<Event> DecodeEvents (const std::vector<uint32_t>& data, uint8_t& status);
     static void PrintEvents                (const std::vector<RD53FWInterface::Event>& events);
-    static void ErrorHandler               (uint8_t status);
+    static bool EvtErrorHandler            (uint8_t status);
 
     enum class TriggerSource : uint32_t
     {

@@ -44,7 +44,6 @@ namespace Ph2_HwInterface {
 	{
 	  uint8_t status;
 	  auto RD53FWEvts = RD53FWInterface::DecodeEvents(pData,status);
-	  if (status != RD53EvtEncoder::GOOD) RD53FWInterface::ErrorHandler(status);
 
 	  for (const auto& evt : RD53FWEvts)
 	    {

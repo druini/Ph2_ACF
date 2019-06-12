@@ -251,8 +251,7 @@ void LatencyScan (const char* fName, SystemController& sc, size_t ROWstart, size
 
 	      sc.ReadNEvents(cBoard,nEvents,data);
 	      auto events = RD53FWInterface::DecodeEvents(data,status);
-	      if (status != RD53FWEvtEncoder::GOOD) RD53FWInterface::ErrorHandler(status);
-	      
+
 	      auto nEvts = 0;
 	      for (auto i = 0; i < events.size(); i++)
 		{

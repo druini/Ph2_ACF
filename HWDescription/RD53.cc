@@ -579,7 +579,7 @@ namespace Ph2_HwDescription
     evtStatus = RD53EvtEncoder::GOOD;
 
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
-    if (header != RD53EvtEncoder::HEADER) evtStatus = RD53EvtEncoder::BAD;
+    if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::BAD;
 
     size_t noHitToT = RD53::SetBits<RD53EvtEncoder::NBIT_TOT>(RD53EvtEncoder::NBIT_TOT).to_ulong();
     for (auto i = 1; i < n; i++)

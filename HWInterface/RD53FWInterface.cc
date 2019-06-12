@@ -21,7 +21,7 @@ namespace Ph2_HwInterface
 	fFileHandler = pHandler;
 	fSaveToFile  = true;
       }
-    else LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError, can not set NULL FileHandler" << RESET;
+    else LOG (ERROR) << BOLDRED << "NULL FileHandler" << RESET;
   }
 
   uint32_t RD53FWInterface::getBoardInfo()
@@ -400,10 +400,9 @@ namespace Ph2_HwInterface
 	    continue;
 	  }
 
-	auto events = this->DecodeEvents(pData,status);
-	if (status != RD53FWEvtEncoder::GOOD)
+	auto events = this->DecodeEvents(pData, status);
+	if (this->EvtErrorHandler(status) == false)
 	  {
-	    this->ErrorHandler(status);
 	    retry = true;
 	    continue;
 	  }
@@ -557,11 +556,11 @@ namespace Ph2_HwInterface
 	RD53FWInterface::Event evt(&data[start], end - start);
 	events.push_back(evt);
 
-	if (evt.evtStatus != RD53FWEvtEncoder::GOOD) evtStatus = evt.evtStatus;
+	if (evt.evtStatus != RD53FWEvtEncoder::GOOD) evtStatus |= evt.evtStatus;
 	else
 	  {
 	    for (auto j = 0; j < evt.chip_events.size(); j++)
-	      if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evtStatus = RD53FWEvtEncoder::L1A;
+	      if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evtStatus |= RD53FWEvtEncoder::L1A;
 	  }
       }
 
@@ -610,36 +609,41 @@ namespace Ph2_HwInterface
     std::cout << std::endl;
   }
   
-  void RD53FWInterface::ErrorHandler(uint8_t status)
+  bool RD53FWInterface::EvtErrorHandler(uint8_t status)
   {
-    switch (status)
+    bool isGood = true;
+
+    if (status & RD53FWEvtEncoder::EVSIZE)
       {
-      case (RD53FWEvtEncoder::EVSIZE):
-	{
-	  LOG (ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << RESET;
-	  break;
-	}
-      case (RD53FWEvtEncoder::EMPTY):
-	{
-	  LOG (ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << RESET;
-	  break;
-	}
-      case (RD53FWEvtEncoder::L1A):
-	{
-	  LOG (ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << RESET;
-	  break;
-	}
-      case (RD53FWEvtEncoder::FRSIZE):
-	{
-	  LOG (ERROR) << BOLDRED << "Invalid frame size " << BOLDYELLOW << "--> retry" << RESET;
-	  break;
-	}
-      case (RD53FWEvtEncoder::CHIP):
-	{
-	  LOG (ERROR) << BOLDRED << "Error in chip data decoding " << BOLDYELLOW << "--> retry" << RESET;
-	  break;
-	}
-      }    
+	LOG (ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
+    if (status & RD53FWEvtEncoder::EMPTY)
+      {
+	LOG (ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
+    if (status & RD53FWEvtEncoder::L1A)
+      {
+	LOG (ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
+    if (status & RD53FWEvtEncoder::FRSIZE)
+      {
+	LOG (ERROR) << BOLDRED << "Invalid frame size " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
+    if (status & RD53EvtEncoder::BAD)
+      {
+	LOG (ERROR) << BOLDRED << "Bad chip header " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
+    return isGood;
   }
 
   RD53FWInterface::Event::Event (const uint32_t* data, size_t n)
@@ -647,7 +651,7 @@ namespace Ph2_HwInterface
     evtStatus = RD53FWEvtEncoder::GOOD;
 
     std::tie(block_size) = unpack_bits<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);    
-    if (block_size * 4 != n) evtStatus = RD53FWEvtEncoder::EVSIZE;
+    if (block_size * 4 != n) evtStatus |= RD53FWEvtEncoder::EVSIZE;
 
     bool dummy_size;
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
@@ -667,7 +671,7 @@ namespace Ph2_HwInterface
 
  	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start))
 	  {
-	    evtStatus = RD53FWEvtEncoder::FRSIZE;
+	    evtStatus |= RD53FWEvtEncoder::FRSIZE;
 	    chip_frames.clear();
 	    chip_events.clear();
 	    return;
@@ -676,7 +680,7 @@ namespace Ph2_HwInterface
 	const size_t size = (dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start);
 	chip_events.emplace_back(&data[start + 2], size - 2);
 
-	if (chip_events[i].evtStatus != RD53EvtEncoder::GOOD) evtStatus = RD53FWEvtEncoder::CHIP;
+	if (chip_events[i].evtStatus != RD53EvtEncoder::GOOD) evtStatus |= chip_events[i].evtStatus;
       }
   }
 
