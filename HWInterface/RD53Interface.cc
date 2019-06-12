@@ -45,6 +45,7 @@ namespace Ph2_HwInterface
     // ###################################
     this->WriteRD53Mask (pRD53, false, true, true);
 
+
     return true;
   }
 
@@ -247,7 +248,6 @@ namespace Ph2_HwInterface
     	this->WriteChipReg(pRD53, "PIX_MODE",   0x0,  pVerifLoop);
       }
     else this->WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
-
 
     // for (auto col = 0; col < RD53::nCols-1; col+=2) // @TMP@
     for (auto col = 128; col < 263; col+=2)

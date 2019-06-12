@@ -167,7 +167,7 @@ void ConfigureFSM (SystemController& sc, size_t nEvents, size_t NTRIGxL1A, std::
 
 void ConfigureExtClkTrig (SystemController& sc)
 {
-  const uint8_t chnOutEnable = 0b10010; // @TMP@
+  const uint8_t chnOutEnable = 0b10010;
 
   for (const auto& cBoard : sc.fBoardVector)
     {

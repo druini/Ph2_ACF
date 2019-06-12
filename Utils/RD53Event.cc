@@ -11,38 +11,28 @@
 
 namespace Ph2_HwInterface
 {
-  bool RD53Event::isThereAnHit (uint8_t module_id, uint8_t chip_id, uint32_t row, uint32_t col, size_t& ToT) const
+  bool RD53Event::isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const
   {
     for (auto j = 0; j < module_id_vec.size(); j++)
       {
     	if (module_id == module_id_vec[j])
     	  {
 	    for (auto i = 0; i < chip_events.size(); i++)
-	      {
-		if (chip_id == chip_id_vec[i])
-		  {
-		    for (const auto& hit : chip_events[i].data)
-		      {
-			if (row == hit.row &&
-			    (col-hit.col) >=0 &&
-			    (col-hit.col) < 4 &&
-			    hit.tots[col-hit.col] != NOHIT_TOT)
-			  {
-			    ToT = hit.tots[col-hit.col];
-			    return true;
-			  }
-		      }
-		  }
-	      }
+	      if (chip_id == chip_id_vec[i])
+		{
+		  chipIndx = i;
+		  return true;
+		}
       	  }
       }
     
     return false;
   }
 
-
-  void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+  
+  void RD53Event::fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
   {
+    size_t chipIndx;
     // bool totRequired = boardContainer->at(0)->at(0)->at(0)->isChannelContainerType<OccupancyAndToT>(); // @TMP@
 
     for (const auto& module : *boardContainer)
@@ -52,22 +42,30 @@ namespace Ph2_HwInterface
 	  // if (totRequired == true)
 	  //   use OccupancyAndToT
 	  //   else use Occupancy
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    // for (auto col = 0; col < RD53::nCols; col++) // @TMP@
-	    for (auto col = 128; col < 264; col++)
-	      {
-		size_t ToT;
 
-		if (this->isThereAnHit(module->getId(),chip->getId(),row,col,ToT) == true)
-		  {
-		    chip->getChannel<OccupancyAndToT>(row,col).fOccupancy++;
-		    chip->getChannel<OccupancyAndToT>(row,col).fToT      += float(ToT);
-		    chip->getChannel<OccupancyAndToT>(row,col).fToTError += float(ToT*ToT);
-
-		    if (cTestChannelGroup->isChannelEnabled(row,col) == false)
-		      chip->getChannel<OccupancyAndToT>(row,col).fErrors++;
-		  }
-	      }
+	  if (this->isHittedChip(module->getId(), chip->getId(), chipIndx) == true)
+	    {
+	      for (const auto& hit : chip_events[chipIndx].data)
+		{
+		  if ((hit.row >= 0) && (hit.row < RD53::nRows) &&
+		      (hit.col >=0)  && (hit.col < RD53::nCols))
+		    {
+		      for (auto i = 0; i < NPIX_REGION; i++)
+			{
+			  if (hit.tots[i] != NOHIT_TOT)
+			    {
+			      chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fOccupancy++;
+			      chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fToT      += float(hit.tots[i]);
+			      chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fToTError += float(hit.tots[i]*hit.tots[i]);
+			      
+			      if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col+i) == false)
+				chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fErrors++;
+			    }
+			}
+		    }
+		}
+	    }
 	}
   }
 }
+

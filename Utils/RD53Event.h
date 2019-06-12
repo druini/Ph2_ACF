@@ -51,7 +51,7 @@ namespace Ph2_HwInterface
 
   
   private:
-  bool isThereAnHit (uint8_t module_id, uint8_t chip_id, uint32_t row, uint32_t col, size_t& ToT) const;
+  bool isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const;
 
   std::vector<size_t>      module_id_vec;
   std::vector<size_t>      chip_id_vec;
