@@ -29,7 +29,7 @@
             REF_KRUM_LIN     =  "300"
             Vthreshold_LIN   =  "400"
 
-	    VCAL_HIGH        =  "4000"
+	    VCAL_HIGH        = "4000"
 	    VCAL_MED         =  "100"
 
 	    INJECTION_SELECT =    "0"
@@ -76,8 +76,8 @@
     <Setting name="LatencStop">  511 </Setting>
 
     <Setting name="VCALstart">   300 </Setting>
-    <Setting name="VCALstop">   4000 </Setting>
-    <Setting name="VCALnsteps">  185 </Setting>
+    <Setting name="VCALstop">    550 </Setting>
+    <Setting name="VCALnsteps">  250 </Setting>
   </Settings>
 
 </HwDescription>

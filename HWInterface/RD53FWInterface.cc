@@ -255,19 +255,19 @@ namespace Ph2_HwInterface
     // # Clock rate #
     // ##############
     unsigned int clkRate = ReadReg ("user.stat_regs.clk_rate_1");
-    LOG (INFO) << BOLDBLUE << "Clock rate 1: " << BOLDYELLOW << clkRate << RESET;
+    LOG (INFO) << BOLDBLUE << "Clock rate 1: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
 
     clkRate = ReadReg ("user.stat_regs.clk_rate_2");
-    LOG (INFO) << BOLDBLUE << "Clock rate 2: " << BOLDYELLOW << clkRate << RESET;
+    LOG (INFO) << BOLDBLUE << "Clock rate 2: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
 
     clkRate = ReadReg ("user.stat_regs.clk_rate_3");
-    LOG (INFO) << BOLDBLUE << "Clock rate 3: " << BOLDYELLOW << clkRate << RESET;
+    LOG (INFO) << BOLDBLUE << "Clock rate 3: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
 
     clkRate = ReadReg ("user.stat_regs.clk_rate_4");
-    LOG (INFO) << BOLDBLUE << "Clock rate 4: " << BOLDYELLOW << clkRate << RESET;
+    LOG (INFO) << BOLDBLUE << "Clock rate 4: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
 
     clkRate = ReadReg ("user.stat_regs.clk_rate_5");
-    LOG (INFO) << BOLDBLUE << "Clock rate 5: " << BOLDYELLOW << clkRate << RESET;
+    LOG (INFO) << BOLDBLUE << "Clock rate 5: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
   }
 
   bool RD53FWInterface::InitChipCommunication()
