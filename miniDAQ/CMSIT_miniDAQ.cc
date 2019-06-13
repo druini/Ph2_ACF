@@ -177,7 +177,7 @@ void ConfigureExtClkTrig (SystemController& sc)
       // ####################
       // # Configuring DIO5 #
       // ####################
-      LOG (INFO) << BOLDYELLOW << "@@@ Configuring DIO5 for external trigger and external clock for board " << cBoard->getBeBoardId() << " @@@" << RESET;
+      LOG (INFO) << GREEN << "Configuring DIO5 for external trigger and external clock for board " << BOLDYELLOW << cBoard->getBeBoardId() << RESET;
 
       RD53Board->getLoaclCfgFastCmd()->trigger_source = RD53FWInterface::TriggerSource::External;
       
@@ -382,7 +382,7 @@ int main (int argc, char** argv)
       // ###################
       // # Run LatencyScan #
       // ###################
-      LOG(INFO) << BOLDYELLOW << "@@@ Performing Latency scan @@@" << RESET;
+      LOG(INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
 
       LatencyScan("LatencyScan.root", cSystemController, ROWstart, ROWstop, COLstart, COLstop, LatencStart, LatencStop, nEvents);
     }
@@ -391,7 +391,7 @@ int main (int argc, char** argv)
       // ##################
       // # Run PixelAlive #
       // ##################
-      LOG(INFO) << BOLDYELLOW << "@@@ Performing PixelAlive scan @@@" << RESET;
+      LOG(INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
       PixelAlive pa("PixelAlive.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, true);
       pa.Inherit(&cSystemController);
@@ -405,7 +405,7 @@ int main (int argc, char** argv)
       // #############
       // # Run Noise #
       // #############
-      LOG(INFO) << BOLDYELLOW << "@@@ Performing Noise scan @@@" << RESET;
+      LOG(INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
       PixelAlive pa("NoiseScan.root", ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false);
       pa.Inherit(&cSystemController);
@@ -419,7 +419,7 @@ int main (int argc, char** argv)
       // ##############
       // # Run SCurve #
       // ##############
-      LOG(INFO) << BOLDYELLOW << "@@@ Performing SCurve scan @@@" << RESET;
+      LOG(INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
       SCurve sc("SCurve.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       sc.Inherit(&cSystemController);
@@ -434,7 +434,7 @@ int main (int argc, char** argv)
       // ############
       // # Run Gain #
       // ############
-      LOG(INFO) << BOLDYELLOW << "@@@ Performing Gain scan @@@" << RESET;
+      LOG(INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
       Gain ga("Gain.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       ga.Inherit(&cSystemController);
@@ -462,7 +462,7 @@ int main (int argc, char** argv)
 
 
   cSystemController.Destroy();
-  LOG (INFO) << BOLDBLUE << "@@@ End of CMSIT miniDAQ @@@" << RESET;
+  LOG (INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
 
   return 0;
 }
