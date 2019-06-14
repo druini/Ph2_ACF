@@ -75,6 +75,7 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53, "AURORA_CB_CONFIG1",  0xF,   true);
     this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x30,  true); // 0x30 = reset Aurora AND Serializer
     this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x1,   true);
+
     usleep(DEEPSLEEP);
   }
 
@@ -358,7 +359,7 @@ namespace Ph2_HwInterface
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->enablePixel(row,col,group->isChannelEnabled(row,col));
 
-    this->WriteRD53Mask(pRD53, true, false, false); // @TMP@
+    // this->WriteRD53Mask(pRD53, true, false, false); // @TMP@
 
     return true;
   }

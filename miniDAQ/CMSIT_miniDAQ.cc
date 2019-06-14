@@ -103,18 +103,18 @@ void ConfigureFSM (SystemController& sc, size_t nEvents, size_t NTRIGxL1A, std::
 	       // #######################################
 	       // # Configuration for digital injection #
 	       // #######################################
-	       RD53::CalCmd calcmd_first(1,2,10,0,0);
+	       RD53::CalCmd calcmd_first(1,2,8,0,0);
 	       cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
 	       RD53::CalCmd calcmd_second(0,0,0,0,0);
 	       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 	       
-	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  32;
-	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =   0;
-	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 128;
+	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
+	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  0;
+	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 60;
 	       
-	       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
-	       cfgFastCmd.fast_cmd_fsm.second_cal_en = false;
-	       cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
+	       cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
+	       cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
+	       cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
 	     }
 	   else if (type == "Analog")
 	     {
@@ -123,16 +123,16 @@ void ConfigureFSM (SystemController& sc, size_t nEvents, size_t NTRIGxL1A, std::
 	       // ######################################
 	       RD53::CalCmd calcmd_first(1,0,0,0,0);
 	       cfgFastCmd.fast_cmd_fsm.first_cal_data  = calcmd_first.getCalCmd(chipId);
-	       RD53::CalCmd calcmd_second(0,0,1,0,0);
+	       RD53::CalCmd calcmd_second(0,0,2,0,0);
 	       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 	       
-	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  14;
-	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  16;
-	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 128;
-	       
-	       cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
-	       cfgFastCmd.fast_cmd_fsm.second_cal_en = true;
-	       cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
+	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
+	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 32;
+	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 60;
+
+	       cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
+	       cfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
+	       cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
 	     }
 	   else LOG (ERROR) << BOLDRED << "Option non recognized " << type << RESET;
 	   

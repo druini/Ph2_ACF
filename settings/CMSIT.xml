@@ -25,8 +25,13 @@
             EN_MACRO_COL_CAL_LIN_3 = "65535"
             EN_MACRO_COL_CAL_LIN_4 = "65535"
             EN_MACRO_COL_CAL_LIN_5 =    "15"
-
-            REF_KRUM_LIN     =  "300"
+	    
+            PA_IN_BIAS_LIN   =  "350"
+	    FC_BIAS_LIN      =   "20"
+	    KRUM_CURR_LIN    =   "32"
+	    LDAC_LIN         =  "130"
+	    COMP_LIN         =  "110"
+	    REF_KRUM_LIN     =  "300"
             Vthreshold_LIN   =  "400"
 
 	    VCAL_HIGH        =  "600"
@@ -34,7 +39,7 @@
 
 	    INJECTION_SELECT =    "0"
             GP_LVDS_ROUTE    =    "1"
-            LATENCY_CONFIG   =  "138"
+            LATENCY_CONFIG   =  "136"
             MONITOR_SELECT   = "8203"
 	    CMDERR_CNT       =    "0"
 	    />
@@ -63,14 +68,14 @@
     <Setting name="nEvents">     100 </Setting>
     <Setting name="nEvtsBurst">  100 </Setting>
 
-    <Setting name="NTRIGxL1A">     0 </Setting>
+    <Setting name="NTRIGxL1A">    11 </Setting>
     <Setting name="INJtype">       0 </Setting>
 
     <Setting name="ROWstart">     50 </Setting>
-    <Setting name="ROWstop">      73 </Setting>
+    <Setting name="ROWstop">      57 </Setting>
     <Setting name="COLstart">    128 </Setting>
-    <Setting name="COLstop">     151 </Setting>
-    <Setting name="nPixelInj">    24 </Setting>
+    <Setting name="COLstop">     135 </Setting>
+    <Setting name="nPixelInj">     8 </Setting>
 
     <Setting name="LatencStart">   0 </Setting>
     <Setting name="LatencStop">  511 </Setting>

@@ -231,8 +231,8 @@ namespace Ph2_System {
 	      
 	      LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
 	      bool commGood = fBeBoardInterface->InitChipCommunication(cBoard);
-	      if (commGood == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication of all chips" << RESET;
-	      else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication with all chips" << RESET;
+	      if (commGood == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication to all chips" << RESET;
+	      else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication to all chips" << RESET;
 	    }
 	}
     } 

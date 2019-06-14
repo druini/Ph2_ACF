@@ -111,7 +111,7 @@ void Gain::InitHisto()
   theGain1D->SetXTitle("Gain");
   theGain1D->SetYTitle("Entries");
 
-  theIntercept1D = new TH1F("theIntercept1D","Intercept-1D",100,-3,3);
+  theIntercept1D = new TH1F("theIntercept1D","Intercept-1D",100,-INTERCEPT_HALFRANGE,INTERCEPT_HALFRANGE);
   theIntercept1D->SetXTitle("ToT");
   theIntercept1D->SetYTitle("Entries");
 

@@ -1,42 +1,36 @@
 /*!
-  \file                  RD53Gain.h
-  \brief                 Implementaion of Gain scan
+  \file                  RD53ThEqual.h
+  \brief                 Implementaion of threshold equalization
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53Gain_h_
-#define _RD53Gain_h_
+#ifndef _RD53ThEqual_h_
+#define _RD53ThEqual_h_
 
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
 #include "../Utils/OccupancyAndToT.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/GainAndIntercept.h"
+#include "../Utils/ThresholdAndNoise.h"
 #include "Tool.h"
 
 #include "TH2F.h"
 
 
-// #############
-// # CONSTANTS #
-// #############
-#define INTERCEPT_HALFRANGE 5 // [ToT]
-
-
 using namespace Ph2_System;
 
-// ##########################
-// # Gain measurement suite #
-// ##########################
-class Gain : public Tool
+// #####################################
+// # Threshold equalization test suite #
+// #####################################
+class ThEqual : public Tool
 {
  public:
-  Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t startValue, size_t stopValue, size_t nSteps);
-  ~Gain();
+  ThEqual(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t startValue, size_t stopValue, size_t nSteps, float targetTh);
+  ~ThEqual();
 
   void InitHisto();
   void Run();
@@ -57,14 +51,16 @@ class Gain : public Tool
   size_t stopValue;
   size_t nSteps;
 
+  float targetTh;
+
   std::vector<uint16_t> dacList;
 
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
   std::vector<DetectorDataContainer*>    detectorContainerVector;
-  DetectorDataContainer*                 theGainAndInterceptContainer;
+  DetectorDataContainer*                 theThresholdAndNoiseContainer;
 
-  void ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
+  void ComputeStats (std::vector<float>& measurements, size_t offset, float& nHits, float& mean, float& rms);
 
 
   // ########
@@ -73,14 +69,14 @@ class Gain : public Tool
   TFile* theFile;
   std::vector<TCanvas*> theCanvas;
   std::vector<TH2F*>    theOccupancy;
-  TCanvas* theCanvasGa1D;
-  TH1F*    theGain1D;
-  TCanvas* theCanvasIn1D;
-  TH1F*    theIntercept1D;
-  TCanvas* theCanvasGa2D;
-  TH2F*    theGain2D;
-  TCanvas* theCanvasIn2D;
-  TH2F*    theIntercept2D;
+  TCanvas* theCanvasTh1D;
+  TH1F*    theThreshold1D;
+  TCanvas* theCanvasNo1D;
+  TH1F*    theNoise1D;
+  TCanvas* theCanvasTh2D;
+  TH2F*    theThreshold2D;
+  TCanvas* theCanvasNo2D;
+  TH2F*    theNoise2D;
 };
 
 #endif
