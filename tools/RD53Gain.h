@@ -59,8 +59,8 @@ class Gain : public Tool
 
   std::vector<uint16_t> dacList;
 
-  std::bitset<RD53::nRows * RD53::nCols> customBitset;
-  ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
+  // std::bitset<RD53::nRows * RD53::nCols> customBitset;
+  // ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
   std::vector<DetectorDataContainer*>    detectorContainerVector;
   DetectorDataContainer*                 theGainAndInterceptContainer;
 

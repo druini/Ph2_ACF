@@ -22,17 +22,32 @@ Gain::Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t 
   nSteps(nSteps),
   Tool()
 {
+  // // ########################
+  // // # Custom channel group #
+  // // ########################
+  // customBitset.reset();
+  // for (auto row = rowStart; row <= rowEnd; row++)
+  //   for (auto col = colStart; col <= colEnd; col++)
+  //     customBitset.set(RD53::nRows*col + row);
+  
+  // customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
+  // customChannelGroup->setCustomPattern(customBitset);
+  
+  // fChannelGroupHandler = new RD53ChannelGroupHandler();
+  // fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
+  // fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
+
+
   // ########################
   // # Custom channel group #
   // ########################
-  customBitset.reset();
+  ChannelGroup<RD53::nRows,RD53::nCols> customChannelGroup;
+  customChannelGroup.disableAllChannels();
+
   for (auto row = rowStart; row <= rowEnd; row++)
     for (auto col = colStart; col <= colEnd; col++)
-      customBitset.set(RD53::nRows*col + row);
-  
-  customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
-  customChannelGroup->setCustomPattern(customBitset);
-  
+      customChannelGroup.enableChannel(row,col);
+
   fChannelGroupHandler = new RD53ChannelGroupHandler();
   fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);

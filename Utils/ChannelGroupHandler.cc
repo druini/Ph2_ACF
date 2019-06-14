@@ -10,9 +10,3 @@ void ChannelGroupHandler::setChannelGroupParameters(uint32_t numberOfClustersPer
     numberOfGroups_ = allChannelGroup_->getNumberOfEnabledChannels() / (numberOfClustersPerGroup*numberOfRowsPerCluster*numberOfColsPerCluster);
     if(allChannelGroup_->getNumberOfEnabledChannels() % (numberOfClustersPerGroup*numberOfRowsPerCluster*numberOfColsPerCluster) != 0) ++numberOfGroups_;
 }
-
-void ChannelGroupHandler::setCustomChannelGroup(ChannelGroupBase *customAllChannelGroup)
-{
-    delete allChannelGroup_;
-    allChannelGroup_ = customAllChannelGroup;
-}

@@ -1,7 +1,9 @@
 #include "../Utils/TCPNetworkClient.h"
 #include "../Utils/ObjectStreamer.h"
+#include "../Utils/Container.h"
 #include "../DQMUtils/DQMInterface.h"
 #include "../DQMUtils/DQMHistogramPedeNoise.h"
+#include "../System/FileParser.h"
 
 #include <iostream>
 #include <string>
@@ -63,9 +65,18 @@ void DQMInterface::configure(void)
 	std::cout << __PRETTY_FUNCTION__ << "DQM connected!" << std::endl;
 	//fListener->send("send me the configuration");
 
+	Ph2_System::FileParser fParser;
+    std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*> fBeBoardFWMap;
+    std::vector<Ph2_HwDescription::BeBoard*> fBoardVector;
+    std::stringstream out;
+    DetectorContainer fDetectorStructure;
+
+    fParser.parseHW (fConfigurationFile, fBeBoardFWMap, fBoardVector, &fDetectorStructure, out, true );
+    std::cout << out.str() << std::endl;
+    
 	//if calibration type pedenoise
 	fDQMHistogram = new DQMHistogramPedeNoise();
-	fDQMHistogram->book(fConfigurationFile);
+	fDQMHistogram->book(fDetectorStructure);
 }
 
 //========================================================================================================================

@@ -15,7 +15,7 @@
 
 /*!
  * \class DQMHistogramPedeNoise
- * \brief Base class for monitoring histograms
+ * \brief Class for PedeNoise monitoring histograms
  */
 class DQMHistogramPedeNoise : public DQMHistogramBase
 {
@@ -34,17 +34,38 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(std::string configurationFileName);
+    void book(DetectorContainer &theDetectorStructure) override;
 
     /*!
      * Fill histogram
      */
-    void fill (std::vector<char>& dataBuffer);
-    void save (const std::string& outFile);
-    void reset(void);
+    void fill (std::vector<char>& dataBuffer) override;
+
+    /*!
+     * Save histogram
+     */
+    void save (const std::string& outFile) override;
+
+    /*!
+     * Reset histogram
+     */
+    void reset(void) override;
     //virtual void summarizeHistos();
+
+    /*!
+     * \brief Fill validation histograms
+     * \param theOccupancy : DataContainer for the occupancy
+     */
+    void fillValidationPlots(DetectorDataContainer &theOccupancy);
+
+    /*!
+     * \brief Fill validation histograms
+     * \param theOccupancy : DataContainer for pedestal and occupancy
+     */
+    void fillPedestalAndNoisePlots(DetectorDataContainer &thePedestalAndNoise);
+
+
   private:
-    DetectorContainer fDetectorStructure;
     DetectorDataContainer fDetectorData;
     DetectorDataContainer fDetectorValidationHistograms;
     DetectorDataContainer fDetectorPedestalHistograms;
