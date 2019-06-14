@@ -44,9 +44,8 @@ class PixelAlive : public Tool
   size_t colEnd;
   size_t nPixels2Inj;
   size_t nEvents;
-  size_t nEvtsBurst;
-  
-  bool inject;
+  size_t nEvtsBurst;  
+  bool   inject;
 
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
   ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;

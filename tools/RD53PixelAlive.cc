@@ -43,6 +43,8 @@ PixelAlive::~PixelAlive()
   theFile->Close();
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
+  if (customChannelGroup   != nullptr) delete customChannelGroup;
+
   if (theFile              != nullptr) delete theFile;
 
   for (auto i = 0; i < theCanvasOcc2D.size(); i++)

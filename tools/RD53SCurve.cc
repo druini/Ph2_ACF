@@ -51,7 +51,9 @@ SCurve::~SCurve()
   theFile->Close();
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
+  if (customChannelGroup   != nullptr) delete customChannelGroup;
   if (theFile              != nullptr) delete theFile;
+
   for (auto i = 0; i < theCanvas.size(); i++)
     {
       if (theOccupancy[i] != nullptr) delete theOccupancy[i];

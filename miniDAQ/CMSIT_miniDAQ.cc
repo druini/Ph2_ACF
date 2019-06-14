@@ -11,6 +11,7 @@
 #include "../Utils/argvparser.h"
 #include "../tools/RD53PixelAlive.h"
 #include "../tools/RD53SCurve.h"
+#include "../tools/RD53ThrOpt.h"
 #include "../tools/RD53Gain.h"
 
 
@@ -269,7 +270,7 @@ void LatencyScan (const char* fName, SystemController& sc, size_t ROWstart, size
 	      theLatency.back()->SetBinContent(theLatency.back()->FindBin(lt),nEvts);
 	    }
 
-	  LOG(INFO) << GREEN << "\t--> Best latency: " << BOLDYELLOW << latency << RESET;
+	  LOG (INFO) << GREEN << "\t--> Best latency: " << BOLDYELLOW << latency << RESET;
 	  
 	  theCanvas.back()->cd();
 	  theLatency.back()->Draw("hist");
@@ -326,7 +327,7 @@ int main (int argc, char** argv)
 
   if (result != ArgvParser::NoParserError)
     {
-      LOG(INFO) << cmd.parseErrorDescription(result);
+      LOG (INFO) << cmd.parseErrorDescription(result);
       exit(1);
     }
 
@@ -382,7 +383,7 @@ int main (int argc, char** argv)
       // ###################
       // # Run LatencyScan #
       // ###################
-      LOG(INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
 
       LatencyScan("LatencyScan.root", cSystemController, ROWstart, ROWstop, COLstart, COLstop, LatencStart, LatencStop, nEvents);
     }
@@ -391,7 +392,7 @@ int main (int argc, char** argv)
       // ##################
       // # Run PixelAlive #
       // ##################
-      LOG(INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
       PixelAlive pa("PixelAlive.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, true);
       pa.Inherit(&cSystemController);
@@ -405,7 +406,7 @@ int main (int argc, char** argv)
       // #############
       // # Run Noise #
       // #############
-      LOG(INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
       PixelAlive pa("NoiseScan.root", ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false);
       pa.Inherit(&cSystemController);
@@ -419,7 +420,7 @@ int main (int argc, char** argv)
       // ##############
       // # Run SCurve #
       // ##############
-      LOG(INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
       SCurve sc("SCurve.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       sc.Inherit(&cSystemController);
@@ -434,7 +435,7 @@ int main (int argc, char** argv)
       // ############
       // # Run Gain #
       // ############
-      LOG(INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
       Gain ga("Gain.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       ga.Inherit(&cSystemController);
@@ -447,18 +448,25 @@ int main (int argc, char** argv)
   else if (whichCalib == "gainopt")
     {
       // #########################
-      // # Run Gain Optimisation #
+      // # Run Gain Optimization #
       // #########################
-      LOG (ERROR) << BOLDRED << "@@@ Gain optimisation not implemented yet ... coming soon @@@" << RESET;
+      LOG (ERROR) << BOLDRED << "@@@ Gain optimization not implemented yet ... coming soon @@@" << RESET;
     }
   else if (whichCalib == "thropt")
     {
       // ##############################
-      // # Run Threshold Optimisation #
+      // # Run Threshold Optimization #
       // ##############################
-      LOG (ERROR) << BOLDRED << "@@@ Threshold optimisation not implemented yet ... coming soon @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Threshold optimization scan @@@" << RESET;
+
+      ThrOpt to("ThresholdOptimization.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, 0);
+      to.Inherit(&cSystemController);
+      to.InitHisto();
+      to.Run();
+      to.Display();
+      to.Save();
     }
-  else LOG (ERROR) << BOLDRED << "Option non recognized: " << whichCalib << RESET;
+  else LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
 
 
   cSystemController.Destroy();
