@@ -79,11 +79,11 @@ public:
 
     inline std::bitset<R*C> getBitset(void                          ) const          { return channelsBitset_                        ; }
     
-    inline void setCustomPattern  (const std::bitset<R*C> &customChannelsBitset)       
+    inline void setCustomPattern  (const ChannelGroup<R,C> &customChannelGroup)       
     { 
-        channelsBitset_          = customChannelsBitset   ; 
-        customPatternSet_        = true                   ;
-        numberOfEnabledChannels_ = channelsBitset_.count();
+        channelsBitset_          = customChannelGroup.channelsBitset_; 
+        customPatternSet_        = true                              ;
+        numberOfEnabledChannels_ = channelsBitset_.count()           ;
     }
 
     virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster=1) const override
@@ -92,7 +92,7 @@ public:
             std::cout<<"Warning, automatic group creation may not work when a custom pattern is set\n";
         if(numberOfClustersPerGroup*numberOfRowsPerCluster*numberOfColsPerCluster >= numberOfEnabledChannels_)
         {
-            static_cast<ChannelGroup<R,C>*>(currentChannelGroup)->setCustomPattern(channelsBitset_);
+            static_cast<ChannelGroup<R,C>*>(currentChannelGroup)->setCustomPattern(*this);
             return;
         }
         static_cast<ChannelGroup*>(currentChannelGroup)->disableAllChannels();
@@ -171,13 +171,11 @@ public:
     virtual ~ChannelGroupHandler(){};
 
     void setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster=1);
-    
-    void setCustomChannelGroup(ChannelGroupBase *customAllChannelGroup);
 
     template<size_t R, size_t C>
-    void setCustomBitSet(std::bitset<R*C> &customBitset)
+    void setCustomChannelGroup(ChannelGroup<R,C> &customChannelGroup)
     {
-        static_cast<ChannelGroup<R,C>*>(allChannelGroup_)->setCustomPattern(customBitset);
+        static_cast<ChannelGroup<R,C>*>(allChannelGroup_)->setCustomPattern(customChannelGroup);
     }
 
 

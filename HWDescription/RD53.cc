@@ -31,9 +31,9 @@ namespace Ph2_HwDescription
   
   void RD53::loadfRegMap (const std::string& filename)
   {
-    std::ifstream file (filename.c_str(), std::ios::in);
+    std::ifstream     file (filename.c_str(), std::ios::in);
     std::stringstream myString;
-    perPixelData pixData;
+    perPixelData      pixData;
 
     if (file)
       {

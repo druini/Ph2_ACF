@@ -29,7 +29,7 @@ using namespace Ph2_System;
 class Gain : public Tool
 {
  public:
-  Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t startValue, size_t stopValue, size_t nSteps, size_t offset);
+  Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t startValue, size_t stopValue, size_t nSteps);
   ~Gain();
 
   void InitHisto();
@@ -50,12 +50,11 @@ class Gain : public Tool
   size_t startValue;
   size_t stopValue;
   size_t nSteps;
-  size_t offset;
 
   std::vector<uint16_t> dacList;
 
-  std::bitset<RD53::nRows * RD53::nCols> customBitset;
-  ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
+  // std::bitset<RD53::nRows * RD53::nCols> customBitset;
+  // ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
   std::vector<DetectorDataContainer*>    detectorContainerVector;
   DetectorDataContainer*                 theGainAndInterceptContainer;
 
@@ -66,7 +65,7 @@ class Gain : public Tool
   // # ROOT #
   // ########
   TFile* theFile;
-  std::vector<TCanvas*> theCanvasOcc;
+  std::vector<TCanvas*> theCanvas;
   std::vector<TH2F*>    theOccupancy;
   TCanvas* theCanvasGa1D;
   TH1F*    theGain1D;
