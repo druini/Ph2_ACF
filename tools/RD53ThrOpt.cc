@@ -9,7 +9,7 @@
 
 #include "RD53ThrOpt.h"
 
-ThrOpt::ThrOpt(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, float targetTh) :
+ThrOpt::ThrOpt(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts) :
   fileName(fName),
   rowStart(rStart),
   rowEnd(rEnd),
@@ -17,19 +17,17 @@ ThrOpt::ThrOpt(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   colEnd(cEnd),
   nPixels2Inj(nPix),
   nEvents(nEvts),
-  targetTh(targetTh),
   Tool()
 {
   // ########################
   // # Custom channel group #
   // ########################
-  customBitset.reset();
+  ChannelGroup<RD53::nRows,RD53::nCols> customChannelGroup;
+  customChannelGroup.disableAllChannels();
+  
   for (auto row = rowStart; row <= rowEnd; row++)
     for (auto col = colStart; col <= colEnd; col++)
-      customBitset.set(RD53::nRows*col + row);
-  
-  customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
-  customChannelGroup->setCustomPattern(customBitset);
+      customChannelGroup.enableChannel(row,col);
   
   fChannelGroupHandler = new RD53ChannelGroupHandler();
   fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
@@ -42,7 +40,6 @@ ThrOpt::~ThrOpt()
   theFile->Close();
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
-  // if (customChannelGroup   != nullptr) delete customChannelGroup; // @TMP@
   if (theFile              != nullptr) delete theFile;
 
   for (auto i = 0; i < theCanvas.size(); i++)
@@ -69,11 +66,11 @@ void ThrOpt::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << "ThrOpt_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),100,0,100,nEvents/2 + 1,0,1 + 2./nEvents));
-	  theOccupancy.back()->SetXTitle("#DeltaVCal");
-	  theOccupancy.back()->SetYTitle("Efficiency");
+		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theOccupancy.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents/2 + 1,0,1 + 2./nEvents));
+	  theOccupancy.back()->SetXTitle("Efficiency");
+	  theOccupancy.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
@@ -94,6 +91,8 @@ void ThrOpt::Run()
   ContainerFactory          theDetectorFactory;
   theDetectorFactory.copyAndInitStructure<OccupancyAndToT>(*fDetectorContainer, *fDetectorDataContainer);
 
+  this->SetTestPulse(true);
+  this->fMaskChannelsFromOtherGroups = true;
   this->bitWiseScan("PIX_PORTAL", nEvents, TARGETeff);
 
 
@@ -108,7 +107,7 @@ void ThrOpt::Run()
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      if (theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
-		theOccupancy[index]->Fill(0.,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+		theOccupancy[index]->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
 
 	  index++;
 	}

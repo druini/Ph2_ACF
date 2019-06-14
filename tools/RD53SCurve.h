@@ -46,17 +46,14 @@ class SCurve : public Tool
   size_t colEnd;
   size_t nPixels2Inj;
   size_t nEvents;
-
   size_t startValue;
   size_t stopValue;
   size_t nSteps;
 
   std::vector<uint16_t> dacList;
 
-  // std::bitset<RD53::nRows * RD53::nCols> customBitset;
-  // ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
-  std::vector<DetectorDataContainer*>    detectorContainerVector;
-  DetectorDataContainer*                 theThresholdAndNoiseContainer;
+  std::vector<DetectorDataContainer*> detectorContainerVector;
+  DetectorDataContainer*              theThresholdAndNoiseContainer;
 
   void ComputeStats (std::vector<float>& measurements, size_t offset, float& nHits, float& mean, float& rms);
 

@@ -459,7 +459,7 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Threshold optimization scan @@@" << RESET;
 
-      ThrOpt to("ThresholdOptimization.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, 0);
+      ThrOpt to("ThresholdOptimization.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents);
       to.Inherit(&cSystemController);
       to.InitHisto();
       to.Run();

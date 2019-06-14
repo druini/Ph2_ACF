@@ -22,21 +22,6 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   nSteps(nSteps),
   Tool()
 {
-  // // ########################
-  // // # Custom channel group #
-  // // ########################
-  // customBitset.reset();
-  // for (auto row = rowStart; row <= rowEnd; row++)
-  //   for (auto col = colStart; col <= colEnd; col++)
-  //     customBitset.set(RD53::nRows*col + row);
-  
-  // customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
-  // customChannelGroup->setCustomPattern(customBitset);
-  
-  // fChannelGroupHandler = new RD53ChannelGroupHandler();
-  // fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
-  // fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
-
   // ########################
   // # Custom channel group #
   // ########################
@@ -51,6 +36,7 @@ SCurve::SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 
+
   // ##############################
   // # Initialize dac scan values #
   // ##############################
@@ -64,7 +50,6 @@ SCurve::~SCurve()
   theFile->Close();
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
-  if (customChannelGroup   != nullptr) delete customChannelGroup;
   if (theFile              != nullptr) delete theFile;
 
   for (auto i = 0; i < theCanvas.size(); i++)

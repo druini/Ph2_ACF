@@ -35,7 +35,7 @@ using namespace Ph2_System;
 class ThrOpt : public Tool
 {
  public:
-  ThrOpt(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, float targetTh);
+  ThrOpt(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts);
   ~ThrOpt();
 
   void InitHisto();
@@ -53,16 +53,13 @@ class ThrOpt : public Tool
   size_t nEvents;
   float  targetTh;
 
-  std::bitset<RD53::nRows * RD53::nCols> customBitset;
-  ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
-
 
   // ########
   // # ROOT #
   // ########
   TFile* theFile;
   std::vector<TCanvas*> theCanvas;
-  std::vector<TH2F*>    theOccupancy;
+  std::vector<TH1F*>    theOccupancy;
 };
 
 #endif

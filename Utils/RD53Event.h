@@ -11,6 +11,7 @@
 #define _RD53Event_h_
 
 #include "Event.h"
+#include "Occupancy.h"
 #include "OccupancyAndToT.h"
 #include "../Utils/DataContainer.h"
 #include "../HWDescription/RD53.h"

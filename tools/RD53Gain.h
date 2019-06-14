@@ -52,17 +52,14 @@ class Gain : public Tool
   size_t colEnd;
   size_t nPixels2Inj;
   size_t nEvents;
-
   size_t startValue;
   size_t stopValue;
   size_t nSteps;
 
   std::vector<uint16_t> dacList;
 
-  // std::bitset<RD53::nRows * RD53::nCols> customBitset;
-  // ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
-  std::vector<DetectorDataContainer*>    detectorContainerVector;
-  DetectorDataContainer*                 theGainAndInterceptContainer;
+  std::vector<DetectorDataContainer*> detectorContainerVector;
+  DetectorDataContainer*              theGainAndInterceptContainer;
 
   void ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
 

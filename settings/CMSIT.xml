@@ -34,7 +34,7 @@
 	    REF_KRUM_LIN     =  "300"
             Vthreshold_LIN   =  "400"
 
-	    VCAL_HIGH        =  "600"
+	    VCAL_HIGH        =  "430"
 	    VCAL_MED         =  "100"
 
 	    INJECTION_SELECT =    "0"
@@ -72,17 +72,17 @@
     <Setting name="INJtype">       0 </Setting>
 
     <Setting name="ROWstart">     50 </Setting>
-    <Setting name="ROWstop">      73 </Setting>
+    <Setting name="ROWstop">      57 </Setting>
     <Setting name="COLstart">    128 </Setting>
-    <Setting name="COLstop">     151 </Setting>
-    <Setting name="nPixelInj">    24 </Setting>
+    <Setting name="COLstop">     135 </Setting>
+    <Setting name="nPixelInj">     8 </Setting>
 
     <Setting name="LatencStart">   0 </Setting>
     <Setting name="LatencStop">  511 </Setting>
 
     <Setting name="VCALstart">   300 </Setting>
-    <Setting name="VCALstop">    500 </Setting>
-    <Setting name="VCALnsteps">  150 </Setting>
+    <Setting name="VCALstop">    600 </Setting>
+    <Setting name="VCALnsteps">  300 </Setting>
   </Settings>
 
 </HwDescription>

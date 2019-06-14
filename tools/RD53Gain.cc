@@ -22,22 +22,6 @@ Gain::Gain(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t 
   nSteps(nSteps),
   Tool()
 {
-  // // ########################
-  // // # Custom channel group #
-  // // ########################
-  // customBitset.reset();
-  // for (auto row = rowStart; row <= rowEnd; row++)
-  //   for (auto col = colStart; col <= colEnd; col++)
-  //     customBitset.set(RD53::nRows*col + row);
-  
-  // customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
-  // customChannelGroup->setCustomPattern(customBitset);
-  
-  // fChannelGroupHandler = new RD53ChannelGroupHandler();
-  // fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
-  // fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
-
-
   // ########################
   // # Custom channel group #
   // ########################
@@ -66,7 +50,6 @@ Gain::~Gain()
   theFile->Close();
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
-  if (customChannelGroup   != nullptr) delete customChannelGroup;
   if (theFile              != nullptr) delete theFile;
 
   for (auto i = 0; i < theCanvas.size(); i++)
@@ -124,7 +107,7 @@ void Gain::InitHisto()
 	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
-  theGain1D = new TH1F("theGain1D","Gain-1D",100,0,1e-2);
+  theGain1D = new TH1F("theGain1D","Gain-1D",100,0,15e-3);
   theGain1D->SetXTitle("Gain");
   theGain1D->SetYTitle("Entries");
 
@@ -311,6 +294,7 @@ void Gain::ComputeStats(std::vector<float>& x, std::vector<float>& y, std::vecto
 {
   float a  = 0, b  = 0, c  = 0, d  = 0;
   float ai = 0, bi = 0, ci = 0, di = 0;
+  float it = 0;
   float det;
 
   intercept    = 0;
@@ -322,12 +306,14 @@ void Gain::ComputeStats(std::vector<float>& x, std::vector<float>& y, std::vecto
   // #######
   // # XtX #
   // #######
-  a = x.size();
   for (auto i = 0; i < x.size(); i++)
-    {
-      b  += x[i];
-      d  += x[i] * x[i];
-    }
+    if (e[i] != 0)
+      {
+	b += x[i];
+	d += x[i] * x[i];
+	it++;
+      }
+  a = it;
   c = b;
 
 
@@ -348,14 +334,15 @@ void Gain::ComputeStats(std::vector<float>& x, std::vector<float>& y, std::vecto
   // # (XtX)^(-1)XtY #
   // #################
   for (auto i = 0; i < x.size(); i++)
-    {
-      intercept    += (ai + bi*x[i]) * y[i];
-      gain         += (ci + di*x[i]) * y[i];
-
-      interceptErr += (ai + bi*x[i])*(ai + bi*x[i]) * e[i]*e[i];
-      gainErr      += (ci + di*x[i])*(ci + di*x[i]) * e[i]*e[i];
-    }
-
+    if (e[i] != 0)
+      {
+	intercept    += (ai + bi*x[i]) * y[i];
+	gain         += (ci + di*x[i]) * y[i];
+	
+	interceptErr += (ai + bi*x[i])*(ai + bi*x[i]) * e[i]*e[i];
+	gainErr      += (ci + di*x[i])*(ci + di*x[i]) * e[i]*e[i];
+      }
+  
   interceptErr = sqrt(interceptErr);
   gainErr      = sqrt(gainErr);
 }

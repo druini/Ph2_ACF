@@ -21,23 +21,6 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   inject(inject),
   Tool()
 {
-
-  // // ########################
-  // // # Custom channel group #
-  // // ########################
-  // customBitset.reset();
-  // for (auto row = rowStart; row <= rowEnd; row++)
-  //   for (auto col = colStart; col <= colEnd; col++)
-  //     customBitset.set(RD53::nRows*col + row);
-  
-  // customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
-  // customChannelGroup->setCustomPattern(customBitset);
-  
-  // fChannelGroupHandler = new RD53ChannelGroupHandler();
-  // fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
-  // fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
-
-
   // ########################
   // # Custom channel group #
   // ########################
@@ -51,7 +34,6 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
   fChannelGroupHandler = new RD53ChannelGroupHandler();
   fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
-
 }
 
 
@@ -60,7 +42,6 @@ PixelAlive::~PixelAlive()
   theFile->Close();
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
-  if (customChannelGroup   != nullptr) delete customChannelGroup;
   if (theFile              != nullptr) delete theFile;
 
   for (auto i = 0; i < theCanvasOcc2D.size(); i++)

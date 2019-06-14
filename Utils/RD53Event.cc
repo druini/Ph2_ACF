@@ -33,33 +33,32 @@ namespace Ph2_HwInterface
   void RD53Event::fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
   {
     size_t chipIndx;
-    // bool totRequired = boardContainer->at(0)->at(0)->at(0)->isChannelContainerType<OccupancyAndToT>(); // @TMP@
+    bool   totRequired = boardContainer->at(0)->at(0)->isChannelContainerType<OccupancyAndToT>();
 
     for (const auto& module : *boardContainer)
       for (const auto& chip : *module)
 	{
-	  // @TMP@
-	  // if (totRequired == true)
-	  //   use OccupancyAndToT
-	  //   else use Occupancy
-
 	  if (this->isHittedChip(module->getId(), chip->getId(), chipIndx) == true)
 	    {
 	      for (const auto& hit : chip_events[chipIndx].data)
 		{
 		  if ((hit.row >= 0) && (hit.row < RD53::nRows) &&
-		      (hit.col >=0)  && (hit.col < RD53::nCols))
+		      (hit.col >= 0) && (hit.col < RD53::nCols))
 		    {
 		      for (auto i = 0; i < NPIX_REGION; i++)
 			{
 			  if (hit.tots[i] != NOHIT_TOT)
 			    {
-			      chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fOccupancy++;
-			      chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fToT      += float(hit.tots[i]);
-			      chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fToTError += float(hit.tots[i]*hit.tots[i]);
-			      
-			      if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col+i) == false)
-				chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fErrors++;
+			      if (totRequired == true)
+				{
+				  chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fOccupancy++;
+				  chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fToT      += float(hit.tots[i]);
+				  chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fToTError += float(hit.tots[i]*hit.tots[i]);
+				  
+				  if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col+i) == false)
+				    chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fErrors++;
+				}
+			      else chip->getChannel<Occupancy>(hit.row,hit.col+i).fOccupancy++;
 			    }
 			}
 		    }
@@ -68,4 +67,3 @@ namespace Ph2_HwInterface
 	}
   }
 }
-
