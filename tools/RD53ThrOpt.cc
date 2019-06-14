@@ -42,7 +42,7 @@ ThrOpt::~ThrOpt()
   theFile->Close();
   
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
-  if (customChannelGroup   != nullptr) delete customChannelGroup;
+  // if (customChannelGroup   != nullptr) delete customChannelGroup; // @TMP@
   if (theFile              != nullptr) delete theFile;
 
   for (auto i = 0; i < theCanvas.size(); i++)

@@ -24,7 +24,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define INTERCEPT_HALFRANGE 5 // [ToT]
+#define INTERCEPT_HALFRANGE 7 // [ToT]
 
 
 using namespace Ph2_System;

@@ -81,8 +81,8 @@
     <Setting name="LatencStop">  511 </Setting>
 
     <Setting name="VCALstart">   300 </Setting>
-    <Setting name="VCALstop">   4000 </Setting>
-    <Setting name="VCALnsteps">  185 </Setting>
+    <Setting name="VCALstop">    500 </Setting>
+    <Setting name="VCALnsteps">  150 </Setting>
   </Settings>
 
 </HwDescription>
