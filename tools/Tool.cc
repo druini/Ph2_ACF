@@ -1277,7 +1277,7 @@ public:
 		else 
 		{
 			burstNumbers = fNumberOfEvents/fNumberOfEventsPerBurst;
-			if(fNumberOfEvents%fNumberOfEventsPerBurst >=0 )
+			if(fNumberOfEvents%fNumberOfEventsPerBurst >0 )
 			{
 				++burstNumbers;
 				lastBurstNumberOfEvents = fNumberOfEvents%fNumberOfEventsPerBurst;

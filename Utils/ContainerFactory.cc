@@ -30,4 +30,20 @@ void ContainerFactory::copyStructure(DetectorContainer& original, DetectorDataCo
 	}
 }
 
+void ContainerFactory::copyStructure(DetectorContainer& original, DetectorContainer& copy)
+{
+    for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
+    {
+        BoardContainer* copyBoard = copy.addBoardContainer((*board)->getId());
+        for(ModuleContainer* module : **board)
+        {
+            ModuleContainer* copyModule = copyBoard->addModuleContainer(module->getId());
+            for(ChipContainer* chip : *module)
+            {
+                copyModule->addChipContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
+            }
+        }
+    }
+}
+
 

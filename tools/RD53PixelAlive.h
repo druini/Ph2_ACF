@@ -48,7 +48,7 @@ class PixelAlive : public Tool
   bool inject;
 
   std::bitset<RD53::nRows * RD53::nCols> customBitset;
-  ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
+  // ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
 
 
   // ########

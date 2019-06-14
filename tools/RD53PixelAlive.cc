@@ -28,11 +28,12 @@ PixelAlive::PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cSt
     for (auto col = colStart; col <= colEnd; col++)
       customBitset.set(RD53::nRows*col + row);
   
-  customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
-  customChannelGroup->setCustomPattern(customBitset);
+  // customChannelGroup = new ChannelGroup<RD53::nRows,RD53::nCols>();
+  // customChannelGroup->setCustomPattern(customBitset);
   
   fChannelGroupHandler = new RD53ChannelGroupHandler();
-  fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
+  // fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
+  // fChannelGroupHandler->setCustomBitSet(customBitset);
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
 

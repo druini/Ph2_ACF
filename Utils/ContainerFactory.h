@@ -28,6 +28,7 @@ public:
 
 	void copyStructure(DetectorContainer& original, DetectorDataContainer& copy);
 
+	void copyStructure(DetectorContainer& original, DetectorContainer& copy);
 
 	template <typename T>
 	void print(DetectorDataContainer& detector)

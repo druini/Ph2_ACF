@@ -56,11 +56,8 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 
     this->SetSkipMaskedChannels( fSkipMaskedChannels );
 
-
-    //is to be called after system controller::InitialiseHW, InitialiseSettings
-    // populates all the maps
-    // create the canvases
-
+    // theDQMHistogrammer.book();
+    
 
     fPedestalCanvas = new TCanvas ( "Pedestal & Noise", "Pedestal & Noise", 670, 0, 650, 650 );
     //fFeSummaryCanvas = new TCanvas ( "Noise for each FE", "Noise for each FE", 0, 670, 650, 650 );

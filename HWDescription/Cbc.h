@@ -39,6 +39,7 @@ namespace Ph2_HwDescription {
     using CbcRegPair = std::pair <std::string, ChipRegItem>;
     using CommentMap = std::map <int, std::string>;
 
+
     /*!
      * \class Cbc
      * \brief Read/Write Cbc's registers on a file, contains a register map

@@ -15,6 +15,7 @@
 #include "Tool.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/CommonVisitors.h"
+#include "../DQMUtils/DQMHistogramPedeNoise.h"
 
 
 #include <map>
@@ -100,6 +101,8 @@ class PedeNoise : public Tool
     uint16_t findPedestal (bool forceAllChannels = false);
 
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
+
+    DQMHistogramPedeNoise theDQMHistogrammer;
 
 };
 
