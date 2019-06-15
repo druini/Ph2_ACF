@@ -359,7 +359,7 @@ namespace Ph2_HwInterface
       for (auto col = 0; col < RD53::nCols; col++)
 	pRD53->enablePixel(row,col,group->isChannelEnabled(row,col));
 
-    // this->WriteRD53Mask(pRD53, true, false, false); // @TMP@
+    this->WriteRD53Mask(pRD53, true, false, false); // @TMP@
 
     return true;
   }

@@ -2,10 +2,10 @@
 
 <HwDescription>
   <BeBoard Id="0" boardType="FC7" eventType="VR">
-    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://settings/address_tables/CMSIT_address_table.xml" />
 <!---
-    <connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://settings/address_tables/CMSIT_address_table.xml" />
+    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://settings/address_tables/CMSIT_address_table.xml" />
 -->
+    <connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://settings/address_tables/CMSIT_address_table.xml" />
 
     <!-- Frontend chip configuration -->
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
@@ -32,9 +32,9 @@
 	    LDAC_LIN         =  "130"
 	    COMP_LIN         =  "110"
 	    REF_KRUM_LIN     =  "300"
-            Vthreshold_LIN   =  "400"
+            Vthreshold_LIN   =  "350"
 
-	    VCAL_HIGH        =  "430"
+	    VCAL_HIGH        =  "600"
 	    VCAL_MED         =  "100"
 
 	    INJECTION_SELECT =    "0"
@@ -68,21 +68,21 @@
     <Setting name="nEvents">     100 </Setting>
     <Setting name="nEvtsBurst">  100 </Setting>
 
-    <Setting name="NTRIGxL1A">    11 </Setting>
+    <Setting name="NTRIGxL1A">     9 </Setting>
     <Setting name="INJtype">       0 </Setting>
 
     <Setting name="ROWstart">     50 </Setting>
-    <Setting name="ROWstop">      57 </Setting>
+    <Setting name="ROWstop">      81 </Setting>
     <Setting name="COLstart">    128 </Setting>
-    <Setting name="COLstop">     135 </Setting>
-    <Setting name="nPixelInj">     8 </Setting>
+    <Setting name="COLstop">     159 </Setting>
+    <Setting name="nPixelInj">    32 </Setting>
 
     <Setting name="LatencStart">   0 </Setting>
     <Setting name="LatencStop">  511 </Setting>
 
     <Setting name="VCALstart">   300 </Setting>
-    <Setting name="VCALstop">    600 </Setting>
-    <Setting name="VCALnsteps">  300 </Setting>
+    <Setting name="VCALstop">   4000 </Setting>
+    <Setting name="VCALnsteps">  370 </Setting>
   </Settings>
 
 </HwDescription>

@@ -409,7 +409,7 @@ namespace Ph2_HwInterface
 
 	if (events.size() != localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration))
 	  {
-	    LOG (ERROR) << BOLDRED << "Sent " << localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration) << " triggers, but collected only " << events.size() << BOLDYELLOW << " --> retry" << RESET;
+	    LOG (ERROR) << BOLDRED << "Sent " << localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration) << " triggers, but collected " << events.size() << " events" << BOLDYELLOW << " --> retry" << RESET;
 	    retry = true;
 	    continue;
 	  }
