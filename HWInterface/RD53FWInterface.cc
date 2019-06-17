@@ -637,9 +637,15 @@ namespace Ph2_HwInterface
 	isGood = false;
       }
 
-    if (status & RD53EvtEncoder::BAD)
+    if (status & RD53EvtEncoder::CHEAD)
       {
 	LOG (ERROR) << BOLDRED << "Bad chip header " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
+    if (status & RD53EvtEncoder::CPIX)
+      {
+	LOG (ERROR) << BOLDRED << "Bad pixel row or column " << BOLDYELLOW << "--> retry" << RESET;
 	isGood = false;
       }
 
@@ -680,7 +686,7 @@ namespace Ph2_HwInterface
 	const size_t size = (dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start);
 	chip_events.emplace_back(&data[start + 2], size - 2);
 
-	if (chip_events[i].evtStatus != RD53EvtEncoder::GOOD) evtStatus |= chip_events[i].evtStatus;
+	if (chip_events[i].evtStatus != RD53EvtEncoder::CGOOD) evtStatus |= chip_events[i].evtStatus;
       }
   }
 

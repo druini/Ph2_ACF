@@ -120,8 +120,9 @@ namespace RD53EvtEncoder
   // ################
   // # Event status #
   // ################
-  const uint8_t GOOD = 0x00; // Event status good
-  const uint8_t BAD  = 0x32; // Event status Bad chip header
+  const uint8_t CGOOD = 0x00; // Chip event status good
+  const uint8_t CHEAD = 0x32; // Chip event status Bad chip header
+  const uint8_t CPIX  = 0x64; // Chip event status Bad pixel row or column
 }
 
 

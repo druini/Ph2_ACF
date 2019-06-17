@@ -576,14 +576,19 @@ namespace Ph2_HwDescription
   {
     uint32_t header;
 
-    evtStatus = RD53EvtEncoder::GOOD;
+    evtStatus = RD53EvtEncoder::CGOOD;
 
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
-    if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::BAD;
+    if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHEAD;
 
     size_t noHitToT = RD53::SetBits<RD53EvtEncoder::NBIT_TOT>(RD53EvtEncoder::NBIT_TOT).to_ulong();
     for (auto i = 1; i < n; i++)
-      if (data[i] != noHitToT) this->data.emplace_back(data[i]);
+      if (data[i] != noHitToT)
+	{
+	  this->data.emplace_back(data[i]);
+	  if ((this->data.back().row < 0) || (this->data.back().row >= RD53::nRows) ||
+	      (this->data.back().col < 0) || (this->data.back().col >= RD53::nCols)) evtStatus |= RD53EvtEncoder::CPIX;
+	}
   }
 
   RD53::HitData::HitData (const uint32_t data)
