@@ -278,7 +278,7 @@ namespace Ph2_System {
 
         //finally set the handler
              fBeBoardInterface->SetFileHandler (cBoard, cHandler);
-             LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << BOLDYELLOW << fRawFileName << ".fedId" << RESET ;
+             LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << BOLDYELLOW << cFilename << RESET;
          }
      }
      uint32_t SystemController::computeEventSize32 (BeBoard* pBoard)

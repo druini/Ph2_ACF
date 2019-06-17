@@ -27,7 +27,7 @@
 #define SHALLOWSLEEP  50   // [microseconds]
 #define DELAYPERIOD    0.1 // [microseconds] Delay duration in FW fast command block FSM
 
-#define NBIT_FWVER      4 // Number of bits for the firmware version
+#define NBIT_FWVER     16 // Number of bits for the firmware version
 #define NBIT_AURORAREG  8 // Number of bits for the Aurora registers lane_up and channel_up
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 
