@@ -12,7 +12,7 @@
 
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
-#include "../Utils/OccupancyAndToT.h"
+#include "../Utils/OccupancyPhTrim.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/GainAndIntercept.h"
@@ -68,16 +68,16 @@ class Gain : public Tool
   // # ROOT #
   // ########
   TFile* theFile;
-  std::vector<TCanvas*> theCanvas;
+  std::vector<TCanvas*> theCanvasOcc;
   std::vector<TH2F*>    theOccupancy;
-  TCanvas* theCanvasGa1D;
-  TH1F*    theGain1D;
-  TCanvas* theCanvasIn1D;
-  TH1F*    theIntercept1D;
-  TCanvas* theCanvasGa2D;
-  TH2F*    theGain2D;
-  TCanvas* theCanvasIn2D;
-  TH2F*    theIntercept2D;
+  std::vector<TCanvas*> theCanvasGa1D;
+  std::vector<TH1F*>    theGain1D;
+  std::vector<TCanvas*> theCanvasIn1D;
+  std::vector<TH1F*>    theIntercept1D;
+  std::vector<TCanvas*> theCanvasGa2D;
+  std::vector<TH2F*>    theGain2D;
+  std::vector<TCanvas*> theCanvasIn2D;
+  std::vector<TH2F*>    theIntercept2D;
 };
 
 #endif

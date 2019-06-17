@@ -181,20 +181,33 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::WriteRD53Reg (RD53* pRD53, const std::string& pRegNode, const std::vector<uint16_t>* dataVec, size_t nCmd)
+  void RD53Interface::WriteRD53RegShort (RD53* pRD53, const std::string& pRegNode, uint16_t data, std::vector<uint32_t>& serialSymbols, size_t nCmd, bool download)
+  {
+    this->setBoard(pRD53->getBeBoardId());
+
+    if (download == false)
+      {	
+	ChipRegItem cRegItem(0,0,0,0);
+	cRegItem.fValue   = data;
+	cRegItem.fAddress = pRD53->getRegItem (pRegNode).fAddress;
+	pRD53->EncodeCMD (cRegItem.fAddress, data, pRD53->getChipId(), RD53CmdEncoder::WRITE, false, serialSymbols);
+      }
+    else fBoardFW->WriteChipCommand (serialSymbols, nCmd);
+  }
+
+  void RD53Interface::WriteRD53RegLong (RD53* pRD53, const std::string& pRegNode, const std::vector<uint32_t>& dataVec, size_t nCmd)
   {
     this->setBoard(pRD53->getBeBoardId());
     
-    size_t size = dataVec->size()/nCmd;
+    size_t size = dataVec.size()/nCmd;
     std::vector<uint32_t> serialSymbols;
     for (auto i = 0; i < nCmd; i++)
       {
-	std::vector<uint16_t> subDataVec(dataVec->begin() + size*i, dataVec->begin() + size*(i+1));
+	std::vector<uint16_t> subDataVec(dataVec.begin() + size*i, dataVec.begin() + size*(i+1));
 	pRD53->EncodeCMD (pRD53->getRegItem (pRegNode).fAddress, pRD53->getRegItem (pRegNode).fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, true, serialSymbols, &subDataVec);
       }
 
-    fBoardFW->WriteChipCommand (serialSymbols,nCmd);
-    return true;
+    fBoardFW->WriteChipCommand (serialSymbols, nCmd);
   }
 
   std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53Interface::ReadRD53Reg (RD53* pRD53, const std::string& pRegNode)
@@ -215,9 +228,9 @@ namespace Ph2_HwInterface
     return outputDecoded;
   }
   
-  bool RD53Interface::WriteRD53Mask (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop)
+  void RD53Interface::WriteRD53Mask (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop)
   {
-    std::vector<uint16_t> dataVec;
+    std::vector<uint32_t> dataVec;
     uint16_t data;
     uint16_t colPair;
 
@@ -281,7 +294,18 @@ namespace Ph2_HwInterface
 	    	  {
 	    	    pRD53->ConvertRowCol2Cores (row,col,row_,colPair);
 	    	    this->WriteChipReg(pRD53, "REGION_ROW", row_, pVerifLoop);
-	    	    this->WriteChipReg(pRD53, "PIX_PORTAL", data, pVerifLoop);
+		    this->WriteChipReg(pRD53, "PIX_PORTAL", data, pVerifLoop);
+		    // @TMP@
+	    	    // this->WriteRD53RegShort(pRD53, "REGION_ROW", row_, dataVec, 0, false);
+		    // this->WriteRD53RegShort(pRD53, "PIX_PORTAL", data, dataVec, 0, false);
+		    // itPixCmd += 2;
+
+		    // if ((itPixCmd == NPIXCMD) || (itPixCmd == NPIXCMD-1) || ((row == (RD53::nRows-1)) && (col == (RD53::nCols-2))))
+                    //   {
+		    // 	this->WriteRD53RegShort(pRD53, "", 0, dataVec, itPixCmd, true);
+		    // 	dataVec.clear();
+                    //     itPixCmd = 0;
+                    //   }
 	    	  }
 	      }
 	    else
@@ -294,7 +318,7 @@ namespace Ph2_HwInterface
 
 		    if ((itPixCmd == NPIXCMD) || (row == (RD53::nRows-1)))
 		      {
-			this->WriteRD53Reg(pRD53, "PIX_PORTAL", &dataVec, itPixCmd);
+			this->WriteRD53RegLong(pRD53, "PIX_PORTAL", dataVec, itPixCmd);
 			dataVec.clear();
 			itPixCmd = 0;
 		      }
@@ -302,8 +326,6 @@ namespace Ph2_HwInterface
 	      }
 	  }
       }
-
-    return true;
   }
 
   void RD53Interface::ResetRD53 (RD53* pRD53)

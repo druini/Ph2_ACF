@@ -74,7 +74,7 @@ void InitParameters (const SystemController& sc,
 }
 
 
-void ConfigureFSM (SystemController& sc, size_t nEvents, size_t NTRIGxL1A, std::string type)
+void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type)
 // ###################
 // # type == Digital #
 // # type == Analog  #
@@ -96,7 +96,7 @@ void ConfigureFSM (SystemController& sc, size_t nEvents, size_t NTRIGxL1A, std::
 	   RD53FWInterface::FastCommandsConfig cfgFastCmd;
       
 	   cfgFastCmd.trigger_source   = RD53FWInterface::TriggerSource::FastCMDFSM;
-	   cfgFastCmd.n_triggers       = nEvents;
+	   cfgFastCmd.n_triggers       = 0;
 	   cfgFastCmd.trigger_duration = NTRIGxL1A;
 	   
 	   if (type == "Digital")
@@ -250,7 +250,7 @@ void LatencyScan (const char* fName, SystemController& sc, size_t ROWstart, size
 	      LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
 	      RD53ChipInterface->WriteChipReg(cChip, "LATENCY_CONFIG", lt, true);
 
-	      sc.ReadNEvents(cBoard,nEvents,data);
+	      sc.ReadNEvents(cBoard, nEvents, data);
 	      auto events = RD53FWInterface::DecodeEvents(data,status);
 
 	      auto nEvts = 0;
@@ -368,7 +368,7 @@ int main (int argc, char** argv)
   // #####################
   // # Preparing the FSM #
   // #####################
-  ConfigureFSM(cSystemController, nEvents, NTRIGxL1A, INJtype);
+  ConfigureFSM(cSystemController, NTRIGxL1A, INJtype);
 
 
   // ######################

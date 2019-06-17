@@ -42,10 +42,16 @@ ThrOpt::~ThrOpt()
   if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
   if (theFile              != nullptr) delete theFile;
 
-  for (auto i = 0; i < theCanvas.size(); i++)
+  for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
       if (theOccupancy[i] != nullptr) delete theOccupancy[i];
-      if (theCanvas[i]    != nullptr) delete theCanvas[i];
+      if (theCanvasOcc[i] != nullptr) delete theCanvasOcc[i];
+    }
+
+  for (auto i = 0; i < theCanvasTDAC.size(); i++)
+    {
+      if (theTDAC[i]       != nullptr) delete theTDAC[i];
+      if (theCanvasTDAC[i] != nullptr) delete theCanvasTDAC[i];
     }
 }
 
@@ -63,6 +69,7 @@ void ThrOpt::InitHisto()
 	{
 	  size_t VCalOffset = cChip->getReg("VCAL_MED");
 
+
 	  myString.clear();
 	  myString.str("");
           myString << "ThrOpt_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
@@ -74,10 +81,27 @@ void ThrOpt::InitHisto()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvas_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+
+
+	  myString.clear();
+	  myString.str("");
+          myString << "TDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theTDAC.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents/2 + 1,0,1 + 2./nEvents));
+	  theTDAC.back()->SetXTitle("Efficiency");
+	  theTDAC.back()->SetYTitle("Entries");
+
+	  myString.clear();
+	  myString.str("");
+          myString << "theCanvasTDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
+		   << "_Mod"                << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
+		   << "_Chip"               << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+	  theCanvasTDAC.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
   theFile = new TFile(fileName, "RECREATE");
@@ -89,7 +113,7 @@ void ThrOpt::Run()
   DetectorDataContainer     theOccupancyContainer;
   fDetectorDataContainer = &theOccupancyContainer;
   ContainerFactory          theDetectorFactory;
-  theDetectorFactory.copyAndInitStructure<OccupancyAndToT>(*fDetectorContainer, *fDetectorDataContainer);
+  theDetectorFactory.copyAndInitStructure<OccupancyPhTrim>(*fDetectorContainer, *fDetectorDataContainer);
 
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
@@ -106,8 +130,11 @@ void ThrOpt::Run()
 	{
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      if (theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy != 0)
-		theOccupancy[index]->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyAndToT>(row,col).fOccupancy);
+	      if (theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyPhTrim>(row,col).fOccupancy != 0)
+		{
+		  theOccupancy[index]->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyPhTrim>(row,col).fOccupancy);
+		  theTDAC[index]->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyPhTrim>(row,col).fOccupancy);
+		}
 
 	  index++;
 	}
@@ -116,28 +143,44 @@ void ThrOpt::Run()
 
 void ThrOpt::Display()
 {
-  for (auto i = 0; i < theCanvas.size(); i++)
+  for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
-      theCanvas[i]->cd();
+      theCanvasOcc[i]->cd();
       theOccupancy[i]->Draw("gcolz");
-      theCanvas[i]->Modified();
-      theCanvas[i]->Update();
+      theCanvasOcc[i]->Modified();
+      theCanvasOcc[i]->Update();
+    }
+
+  for (auto i = 0; i < theCanvasTDAC.size(); i++)
+    {
+      theCanvasTDAC[i]->cd();
+      theTDAC[i]->Draw("gcolz");
+      theCanvasTDAC[i]->Modified();
+      theCanvasTDAC[i]->Update();
     }
 }
 
 
 void ThrOpt::Save()
 {
-  std::string tmp;
   std::stringstream myString;
 
-  for (auto i = 0; i < theCanvas.size(); i++)
+  for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
       theOccupancy[i]->Write();
       myString.clear();
       myString.str("");
       myString << theOccupancy[i]->GetName() << ".svg";
-      theCanvas[i]->Print(myString.str().c_str());
+      theCanvasOcc[i]->Print(myString.str().c_str());
+    }
+
+  for (auto i = 0; i < theCanvasTDAC.size(); i++)
+    {
+      theTDAC[i]->Write();
+      myString.clear();
+      myString.str("");
+      myString << theTDAC[i]->GetName() << ".svg";
+      theCanvasTDAC[i]->Print(myString.str().c_str());
     }
 
   theFile->Write();

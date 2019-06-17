@@ -12,7 +12,7 @@
 
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
-#include "../Utils/OccupancyAndToT.h"
+#include "../Utils/OccupancyPhTrim.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"

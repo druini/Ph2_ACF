@@ -186,7 +186,7 @@ namespace Ph2_HwDescription
     struct HitData
     {
       HitData (const uint32_t data);
-      
+
       uint16_t row;
       uint16_t col;
       std::array<uint8_t, NPIX_REGION> tots;
@@ -195,7 +195,7 @@ namespace Ph2_HwDescription
     struct Event
     {
       Event(const uint32_t* data, size_t n);
-      
+
       uint16_t trigger_id;
       uint16_t trigger_tag;
       uint16_t bc_id;

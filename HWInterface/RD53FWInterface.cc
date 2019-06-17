@@ -30,21 +30,21 @@ namespace Ph2_HwInterface
     uint32_t cIDuserLogic2 = ReadReg ("user.stat_regs.usr_id.usr_id_char2");
     uint32_t cIDuserLogic3 = ReadReg ("user.stat_regs.usr_id.usr_id_char3");
     uint32_t cIDuserLogic4 = ReadReg ("user.stat_regs.usr_id.usr_id_char4");
-    // LOG (INFO) << BOLDBLUE << "\t--> ID user logic 1st : " << cIDuserLogic1;
-    // LOG (INFO) << BOLDBLUE << "\t--> ID user logic 2nd : " << cIDuserLogic2;
-    // LOG (INFO) << BOLDBLUE << "\t--> ID user logic 3rd : " << cIDuserLogic3;
-    // LOG (INFO) << BOLDBLUE << "\t--> ID user logic 4th : " << cIDuserLogic4;
+    LOG (INFO) << BOLDBLUE << "\t--> ID user logic 1st : " << cIDuserLogic1;
+    LOG (INFO) << BOLDBLUE << "\t--> ID user logic 2nd : " << cIDuserLogic2;
+    LOG (INFO) << BOLDBLUE << "\t--> ID user logic 3rd : " << cIDuserLogic3;
+    LOG (INFO) << BOLDBLUE << "\t--> ID user logic 4th : " << cIDuserLogic4;
 
     uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
     uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
     uint32_t cVersionBuild = ReadReg ("user.stat_regs.usr_ver.usr_ver_build");
-    // LOG (INFO) << BOLDBLUE << "\t--> FW version : " << cVersionMajor << "." << cVersionMinor;
-    // LOG (INFO) << BOLDBLUE << "\t--> Build version : " << cVersionBuild;
+    LOG (INFO) << BOLDBLUE << "\t--> FW version : " << cVersionMajor << "." << cVersionMinor;
+    LOG (INFO) << BOLDBLUE << "\t--> Build version : " << cVersionBuild;
 
     uint32_t cFWyear  = ReadReg ("user.stat_regs.usr_ver.usr_firmware_yy");
     uint32_t cFWmonth = ReadReg ("user.stat_regs.usr_ver.usr_firmware_mm");
     uint32_t cFWday   = ReadReg ("user.stat_regs.usr_ver.usr_firmware_dd");
-    // LOG (INFO) << BOLDBLUE << "\t--> Firmware date (yyyy/mm/dd) : " << cFWyear << "/" << cFWmonth << "/" << cFWday;
+    LOG (INFO) << BOLDBLUE << "\t--> Firmware date (yyyy/mm/dd) : " << cFWyear << "/" << cFWmonth << "/" << cFWday;
 
     uint32_t cVersionWord = ((cVersionMajor << NBIT_FWVER) | cVersionMinor);
     return cVersionWord;
@@ -388,6 +388,7 @@ namespace Ph2_HwInterface
 	       this->localCfgFastCmd.n_triggers + SHALLOWSLEEP);
 
 	this->ReadData(pBoard, false, pData);
+	this->Stop();
 
 
 	// ##################

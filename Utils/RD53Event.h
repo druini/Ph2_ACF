@@ -12,7 +12,7 @@
 
 #include "Event.h"
 #include "Occupancy.h"
-#include "OccupancyAndToT.h"
+#include "OccupancyPhTrim.h"
 #include "../Utils/DataContainer.h"
 #include "../HWDescription/RD53.h"
 
@@ -26,7 +26,9 @@ namespace Ph2_HwInterface
   public:
   RD53Event(const std::vector<size_t>& module_id, const std::vector<size_t>& chip_id, const std::vector<RD53::Event>& events)
     : module_id_vec(module_id), chip_id_vec(chip_id), chip_events(events) {}
-    
+  /* RD53Event(std::vector<size_t>&& module_id, std::vector<size_t>&& chip_id, std::vector<RD53::Event>&& events) */
+  /*   : module_id_vec(std::move(module_id)), chip_id_vec(std::move(chip_id)), chip_events(std::move(events)) {} */
+
   void fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
     
   // @TMP@ not implemented yet

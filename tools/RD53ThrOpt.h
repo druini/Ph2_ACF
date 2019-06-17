@@ -12,7 +12,7 @@
 
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
-#include "../Utils/OccupancyAndToT.h"
+#include "../Utils/OccupancyPhTrim.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
@@ -58,8 +58,10 @@ class ThrOpt : public Tool
   // # ROOT #
   // ########
   TFile* theFile;
-  std::vector<TCanvas*> theCanvas;
+  std::vector<TCanvas*> theCanvasOcc;
   std::vector<TH1F*>    theOccupancy;
+  std::vector<TCanvas*> theCanvasTDAC;
+  std::vector<TH1F*>    theTDAC;
 };
 
 #endif

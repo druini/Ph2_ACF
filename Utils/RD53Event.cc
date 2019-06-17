@@ -33,7 +33,7 @@ namespace Ph2_HwInterface
   void RD53Event::fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
   {
     size_t chipIndx;
-    bool   totRequired = boardContainer->at(0)->at(0)->isChannelContainerType<OccupancyAndToT>();
+    bool   totRequired = boardContainer->at(0)->at(0)->isChannelContainerType<OccupancyPhTrim>();
 
     for (const auto& module : *boardContainer)
       for (const auto& chip : *module)
@@ -51,12 +51,12 @@ namespace Ph2_HwInterface
 			    {
 			      if (totRequired == true)
 				{
-				  chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fOccupancy++;
-				  chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fToT      += float(hit.tots[i]);
-				  chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fToTError += float(hit.tots[i]*hit.tots[i]);
-				  
+				  chip->getChannel<OccupancyPhTrim>(hit.row,hit.col+i).fOccupancy++;
+				  chip->getChannel<OccupancyPhTrim>(hit.row,hit.col+i).fPh      += float(hit.tots[i]);
+				  chip->getChannel<OccupancyPhTrim>(hit.row,hit.col+i).fPhError += float(hit.tots[i]*hit.tots[i]);
+
 				  if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col+i) == false)
-				    chip->getChannel<OccupancyAndToT>(hit.row,hit.col+i).fErrors++;
+				    chip->getChannel<OccupancyPhTrim>(hit.row,hit.col+i).fErrors++;
 				}
 			      else chip->getChannel<Occupancy>(hit.row,hit.col+i).fOccupancy++;
 			    }

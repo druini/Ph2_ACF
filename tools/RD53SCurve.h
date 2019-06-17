@@ -12,7 +12,7 @@
 
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
-#include "../Utils/OccupancyAndToT.h"
+#include "../Utils/OccupancyPhTrim.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
@@ -62,16 +62,16 @@ class SCurve : public Tool
   // # ROOT #
   // ########
   TFile* theFile;
-  std::vector<TCanvas*> theCanvas;
+  std::vector<TCanvas*> theCanvasOcc;
   std::vector<TH2F*>    theOccupancy;
-  TCanvas* theCanvasTh1D;
-  TH1F*    theThreshold1D;
-  TCanvas* theCanvasNo1D;
-  TH1F*    theNoise1D;
-  TCanvas* theCanvasTh2D;
-  TH2F*    theThreshold2D;
-  TCanvas* theCanvasNo2D;
-  TH2F*    theNoise2D;
+  std::vector<TCanvas*> theCanvasTh1D;
+  std::vector<TH1F*>    theThreshold1D;
+  std::vector<TCanvas*> theCanvasNo1D;
+  std::vector<TH1F*>    theNoise1D;
+  std::vector<TCanvas*> theCanvasTh2D;
+  std::vector<TH2F*>    theThreshold2D;
+  std::vector<TCanvas*> theCanvasNo2D;
+  std::vector<TH2F*>    theNoise2D;
 };
 
 #endif
