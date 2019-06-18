@@ -9,14 +9,14 @@
 
 #include "RD53ThrOpt.h"
 
-ThrOpt::ThrOpt(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts) :
+ThrOpt::ThrOpt(const char* fName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents) :
   fileName(fName),
-  rowStart(rStart),
-  rowEnd(rEnd),
-  colStart(cStart),
-  colEnd(cEnd),
-  nPixels2Inj(nPix),
-  nEvents(nEvts),
+  rowStart(rowStart),
+  rowEnd(rowEnd),
+  colStart(colStart),
+  colEnd(colEnd),
+  nPixels2Inj(nPixels2Inj),
+  nEvents(nEvents),
   Tool()
 {
   // ########################
@@ -33,7 +33,6 @@ ThrOpt::ThrOpt(const char* fName, size_t rStart, size_t rEnd, size_t cStart, siz
   fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
-
 
 ThrOpt::~ThrOpt()
 {
@@ -54,7 +53,6 @@ ThrOpt::~ThrOpt()
       if (theCanvasTDAC[i] != nullptr) delete theCanvasTDAC[i];
     }
 }
-
 
 void ThrOpt::InitHisto()
 {
@@ -107,13 +105,16 @@ void ThrOpt::InitHisto()
   theFile = new TFile(fileName, "RECREATE");
 }
 
-
 void ThrOpt::Run()
 {
-  DetectorDataContainer     theOccupancyContainer;
+  ContainerFactory theDetectorFactory;
+
+  DetectorDataContainer theOccupancyContainer;
   fDetectorDataContainer = &theOccupancyContainer;
-  ContainerFactory          theDetectorFactory;
-  theDetectorFactory.copyAndInitStructure<OccupancyPhTrim>(*fDetectorContainer, *fDetectorDataContainer);
+  theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+
+  DetectorDataContainer theTDACcontainer;
+  theDetectorFactory.copyAndInitStructure<RegisterValue,EmptyContainer>(*fDetectorContainer, theTDACcontainer);
 
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
@@ -124,22 +125,25 @@ void ThrOpt::Run()
   // # Filling the histogram #
   // #########################
   size_t index = 0;
-  for (const auto& cBoard : fBoardVector)
-    for (const auto& cFe : cBoard->fModuleVector)
-      for (const auto& cChip : cFe->fChipVector)
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cFe : *cBoard)
+      for (const auto cChip : *cFe)
 	{
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      if (theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyPhTrim>(row,col).fOccupancy != 0)
-		{
-		  theOccupancy[index]->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyPhTrim>(row,col).fOccupancy);
-		  theTDAC[index]->Fill(theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<OccupancyPhTrim>(row,col).fOccupancy);
-		}
+	      {
+		if (theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(row,col).fOccupancy != 0)
+		  {
+		    theOccupancy[index]->Fill(theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(row,col).fOccupancy);
+
+		    theTDAC[index]->Fill((*static_cast<RD53* const>(cChip)->getPixelsMask())[col].TDAC[row]);		    
+		    theTDACcontainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53* const>(cChip)->getPixelsMask())[col].TDAC[row];
+		  }
+	      }
 
 	  index++;
 	}
 }
-
 
 void ThrOpt::Display()
 {
@@ -159,7 +163,6 @@ void ThrOpt::Display()
       theCanvasTDAC[i]->Update();
     }
 }
-
 
 void ThrOpt::Save()
 {

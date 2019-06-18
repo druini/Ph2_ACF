@@ -12,7 +12,7 @@
 
 #include "Event.h"
 #include "Occupancy.h"
-#include "OccupancyPhTrim.h"
+#include "OccupancyAndPh.h"
 #include "../Utils/DataContainer.h"
 #include "../HWDescription/RD53.h"
 

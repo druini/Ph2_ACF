@@ -109,7 +109,6 @@ namespace Ph2_HwInterface
       {
 	cRegItem.fAddress = pRD53->getRegItem (pRegNode).fAddress;
 	pRD53->EncodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, false, serialSymbols);
-	// pRD53->EncodeCMD (cRegItem, pRD53->getChipId(), RD53CmdEncoder::WRITE, symbols);
 
 	if (pVerifLoop == true)
 	  {
@@ -140,7 +139,6 @@ namespace Ph2_HwInterface
 	  }
       }
 
-    // fBoardFW->SerializeSymbols (symbols,serialSymbols);
     fBoardFW->WriteChipCommand (serialSymbols);
     if ((strcmp(pRegNode.c_str(),"VCAL_HIGH") == 0) || (strcmp(pRegNode.c_str(),"VCAL_MED") == 0)) usleep(DEEPSLEEP); // @TMP@
     return true;
@@ -233,6 +231,7 @@ namespace Ph2_HwInterface
     std::vector<uint32_t> dataVec;
     uint16_t data;
     uint16_t colPair;
+    size_t   itPixCmd = 0;
 
     std::vector<perPixelData>* mask;
     if (doDefault == true) mask = pRD53->getPixelsMaskDefault();
@@ -268,10 +267,12 @@ namespace Ph2_HwInterface
       {
 	uint16_t row_;
 	pRD53->ConvertRowCol2Cores (0,col,row_,colPair);
-	this->WriteChipReg(pRD53, "REGION_COL", colPair, pVerifLoop);
-	this->WriteChipReg(pRD53, "REGION_ROW", 0x0,     doSparse);
+	if (doSparse == false)
+	  {
+	    this->WriteChipReg(pRD53, "REGION_COL", colPair, pVerifLoop);
+	    this->WriteChipReg(pRD53, "REGION_ROW", 0x0,     pVerifLoop && doSparse);
+	  }
 
-	size_t itPixCmd = 0;
 	for (auto row = 0; row < RD53::nRows; row++)
 	  {
 	    data =
@@ -293,20 +294,18 @@ namespace Ph2_HwInterface
 	    	if (((*mask)[col].Enable[row] == 1) || ((*mask)[col+1].Enable[row] == 1))
 	    	  {
 	    	    pRD53->ConvertRowCol2Cores (row,col,row_,colPair);
-	    	    this->WriteChipReg(pRD53, "REGION_ROW", row_, pVerifLoop);
-		    this->WriteChipReg(pRD53, "PIX_PORTAL", data, pVerifLoop);
-		    // @TMP@
-	    	    // this->WriteRD53RegShort(pRD53, "REGION_ROW", row_, dataVec, 0, false);
-		    // this->WriteRD53RegShort(pRD53, "PIX_PORTAL", data, dataVec, 0, false);
-		    // itPixCmd += 2;
+		    this->WriteRD53RegShort(pRD53, "REGION_COL", colPair, dataVec, 0, false);
+	    	    this->WriteRD53RegShort(pRD53, "REGION_ROW", row_,    dataVec, 0, false);
+		    this->WriteRD53RegShort(pRD53, "PIX_PORTAL", data,    dataVec, 0, false);
+		    itPixCmd += 3;
+		  }
 
-		    // if ((itPixCmd == NPIXCMD) || (itPixCmd == NPIXCMD-1) || ((row == (RD53::nRows-1)) && (col == (RD53::nCols-2))))
-                    //   {
-		    // 	this->WriteRD53RegShort(pRD53, "", 0, dataVec, itPixCmd, true);
-		    // 	dataVec.clear();
-                    //     itPixCmd = 0;
-                    //   }
-	    	  }
+		if ((itPixCmd >= NPIXCMD) || ((row == RD53::nRows-1) && (col == 263-1) && (itPixCmd != 0)))
+		  {
+		    this->WriteRD53RegShort(pRD53, "", 0, dataVec, itPixCmd, true);
+		    dataVec.clear();
+		    itPixCmd = 0;
+		  }
 	      }
 	    else
 	      {

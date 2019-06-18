@@ -73,15 +73,7 @@ namespace Ph2_HwInterface
     this->PrintFWstatus();
   }
 
-  void RD53FWInterface::SerializeSymbols (std::vector<std::vector<uint16_t> > & data,
-					  std::vector<uint32_t>               & serialData)
-  {
-    for (auto i = 0; i < data.size(); i++)
-      for (auto j = 0; j < data[i].size(); j++)
-	serialData.push_back(data[i][j]);
-  }
-
-  void RD53FWInterface::WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd, unsigned int repetition)
+  void RD53FWInterface::WriteChipCommand (std::vector<uint32_t>& data, unsigned int nCmd)
   {
     std::vector< std::pair<std::string, uint32_t> > stackRegisters;
 
@@ -98,37 +90,39 @@ namespace Ph2_HwInterface
 	  {
 	  case 1:
 	    {
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
+	      stackRegisters.push_back({"user.cmd_regs.ctrl_reg", data[size*i+0]});
 	      break;
 	    }
 	  case 2:
 	    {
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[size*i+1]));
+	      stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
+	      stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
 	      break;
 	    }
 	  case 3:
 	    {
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[size*i+1]));
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data1_reg",data[size*i+2]));
+	      stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
+	      stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
+	      stackRegisters.push_back({"user.cmd_regs.data1_reg", data[size*i+2]});
 	      break;
 	    }
 	  case 4:
 	    {
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[size*i+1]));
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data1_reg",data[size*i+2]));
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data2_reg",data[size*i+3]));
+	      stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
+	      stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
+	      stackRegisters.push_back({"user.cmd_regs.data1_reg", data[size*i+2]});
+	      stackRegisters.push_back({"user.cmd_regs.data2_reg", data[size*i+3]});
 	      break;
 	    }
 	  }
+
+	if (nCmd != 1) stackRegisters.push_back({"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0}); // @TMP@
       }
 
-    for (auto i = 0; i < repetition; i++) WriteStackReg (stackRegisters);
+    WriteStackReg (stackRegisters);
   }
 
-  std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53FWInterface::ReadChipRegisters (std::vector<uint32_t> & data, unsigned int nBlocks2Read)
+  std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53FWInterface::ReadChipRegisters (std::vector<uint32_t>& data, unsigned int nBlocks2Read)
   {
     // ##############################
     // # Filter readback data:      #

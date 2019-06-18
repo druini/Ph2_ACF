@@ -167,18 +167,13 @@ namespace Ph2_HwDescription
     void injectPixel      (unsigned int row, unsigned int col, bool inject);
     void setTDAC          (unsigned int row, unsigned int col, uint8_t TDAC);
 
-    void EncodeCMD (const ChipRegItem                   & pRegItem,
-		    const uint8_t                         pRD53Id,
-		    const uint16_t                        pRD53Cmd,
-		    std::vector<std::vector<uint16_t> > & pVecReg);
-
-    void EncodeCMD (const uint16_t                address,
-		    const uint16_t                data,
-		    const uint8_t                 pRD53Id,
-		    const uint8_t                 pRD53Cmd,
-		    const bool                    isBroadcast,
-		    std::vector<uint32_t>       & pVecReg,
-		    const std::vector<uint16_t> * dataVec = NULL);
+    void EncodeCMD (const uint16_t               address,
+		    const uint16_t               data,
+		    const uint8_t                pRD53Id,
+		    const uint8_t                pRD53Cmd,
+		    const bool                   isBroadcast,
+		    std::vector<uint32_t>      & pVecReg,
+		    const std::vector<uint16_t>* dataVec = NULL);
 
     void ConvertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair);
     void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& col);
@@ -240,62 +235,6 @@ namespace Ph2_HwDescription
     std::vector<perPixelData> fPixelsMask;
     std::vector<perPixelData> fPixelsMaskDefault;
     CommentMap fCommentMap;
-
-    std::vector<uint8_t> cmd_data_map =
-      {
-	0x6A, // 00
-	0x6C, // 01
-	0x71, // 02
-	0x72, // 03
-	0x74, // 04
-	0x8B, // 05
-	0x8D, // 06
-	0x8E, // 07
-	0x93, // 08
-	0x95, // 09
-	0x96, // 10
-	0x99, // 11
-	0x9A, // 12
-	0x9C, // 13
-	0x23, // 14
-	0xA5, // 15
-	0xA6, // 16
-	0xA9, // 17
-	0xAA, // 18
-	0xAC, // 19
-	0xB1, // 20
-	0xB2, // 21
-	0xB4, // 22
-	0xC3, // 23
-	0xC5, // 24
-	0xC6, // 25
-	0xC9, // 26
-	0xCA, // 27
-	0xCC, // 28
-	0xD1, // 29
-	0xD2, // 30
-	0xD4  // 31
-      };
-
-    std::vector<uint8_t> trigger_map =
-      {
-	0x2B, // 00
-	0x2B, // 01
-	0x2D, // 02
-	0x2E, // 03
-	0x33, // 04
-	0x35, // 05
-	0x36, // 06
-	0x39, // 07
-	0x3A, // 08
-	0x3C, // 09
-	0x4B, // 10
-	0x4D, // 11
-	0x4E, // 12
-	0x53, // 13
-	0x55, // 14
-	0x56  // 15
-      };
   };
 }
 

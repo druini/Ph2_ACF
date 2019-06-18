@@ -22,7 +22,7 @@
 // # CONSTANTS #
 // #############
 #define DEEPSLEEP 50000 // [microseconds]
-#define NPIXCMD       1 // Number of pixel commands to pack
+#define NPIXCMD      32 // Number of pixel commands to stack
 
 
 using namespace Ph2_HwDescription;

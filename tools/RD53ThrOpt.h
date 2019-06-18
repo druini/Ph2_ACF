@@ -1,6 +1,6 @@
 /*!
   \file                  RD53ThrOpt.h
-  \brief                 Implementaion of threshold equalization
+  \brief                 Implementaion of threshold optimization
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -12,7 +12,8 @@
 
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
-#include "../Utils/OccupancyPhTrim.h"
+#include "../Utils/Occupancy.h"
+#include "../Utils/EmptyContainer.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
@@ -35,7 +36,7 @@ using namespace Ph2_System;
 class ThrOpt : public Tool
 {
  public:
-  ThrOpt(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts);
+  ThrOpt(const char* fName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents);
   ~ThrOpt();
 
   void InitHisto();
