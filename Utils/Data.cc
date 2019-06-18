@@ -45,12 +45,12 @@ namespace Ph2_HwInterface {
 	  uint8_t status;
 	  auto RD53FWEvts = RD53FWInterface::DecodeEvents(pData,status);
 
-	  for (const auto& evt : RD53FWEvts)
+	  for (auto& evt : RD53FWEvts)
 	    {
 	      std::vector<size_t> chip_id_vec;
 	      std::vector<size_t> module_id_vec;
 
-	      for (const auto& chip_frame : evt.chip_frames)
+	      for (auto& chip_frame : evt.chip_frames)
 		{
 		  chip_id_vec.push_back(chip_frame.chip_id);
 		  module_id_vec.push_back(chip_frame.hybrid_id);
