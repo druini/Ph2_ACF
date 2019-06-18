@@ -11,14 +11,14 @@
 
 namespace Ph2_HwInterface
 {
-  RD53Interface::RD53Interface  (const BeBoardFWMap& pBoardMap) : ChipInterface (pBoardMap) {}
+  RD53Interface::RD53Interface  (const BeBoardFWMap& pBoardMap) : ReadoutChipInterface (pBoardMap) {}
   RD53Interface::~RD53Interface ()                                                          {}
 
-  bool RD53Interface::ConfigureChip (const Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+  bool RD53Interface::ConfigureChip (const ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
     ChipRegMap pRD53RegMap = pChip->getRegMap();
 
-    RD53* pRD53 = static_cast<RD53*>(const_cast<Chip*>(pChip));
+    RD53* pRD53 = static_cast<RD53*>(const_cast<ReadoutChip*>(pChip));
 
     for (const auto& cRegItem : pRD53RegMap)
       {
@@ -77,7 +77,7 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53, "SYNC", 0x0);
   }
 
-  bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifyLoop)
+  bool RD53Interface::WriteChipReg (ReadoutChip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifyLoop)
   {
     setBoard (pChip->getBeBoardId());
 
@@ -154,7 +154,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::WriteChipMultReg (Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop)
+  bool RD53Interface::WriteChipMultReg (ReadoutChip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop)
   {
     setBoard (pChip->getBeBoardId());
 
@@ -317,12 +317,12 @@ namespace Ph2_HwInterface
     this->WriteChipReg(pRD53, "RESET_BCRCTR", 0x0);
   }
 
-  uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode)
+  uint16_t RD53Interface::ReadChipReg (ReadoutChip* pChip, const std::string& pRegNode)
   {
     return this->ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode).second[0];
   }
   
-  bool RD53Interface::ConfigureChipOriginalMask (Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+  bool RD53Interface::ConfigureChipOriginalMask (ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -331,7 +331,7 @@ namespace Ph2_HwInterface
     return true;
   }
   
-  bool RD53Interface::MaskAllChannels (Chip* pChip, bool mask, bool pVerifLoop)
+  bool RD53Interface::MaskAllChannels (ReadoutChip* pChip, bool mask, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -343,7 +343,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::setInjectionSchema (Chip* pChip, const ChannelGroupBase* group, bool pVerifLoop)
+  bool RD53Interface::setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -356,7 +356,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::maskChannelsGroup (Chip* pChip, const ChannelGroupBase* group, bool pVerifLoop)
+  bool RD53Interface::maskChannelsGroup (ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
     
@@ -368,7 +368,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::WriteChipAllLocalReg (Chip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop)
+  bool RD53Interface::WriteChipAllLocalReg (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
     
