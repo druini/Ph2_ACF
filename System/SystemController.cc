@@ -197,7 +197,7 @@ namespace Ph2_System {
 	      for (auto& cFe : cBoard->fModuleVector)
                 {
 	          LOG (INFO) << BLUE << "Loop Module Vector " << RESET;
-		  for (auto& cCbc : cFe->fChipVector)
+		  for (auto& cCbc : cFe->fReadoutChipVector)
 		    {
 	              LOG (INFO) << BLUE << "Loop Chip Vector " << RESET;
 		      if ( !bIgnoreI2c )
