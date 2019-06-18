@@ -305,15 +305,14 @@ namespace Ph2_HwInterface
 
   uint32_t RD53FWInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
   {
-    uint32_t cNWords    = ReadReg("user.stat_regs.words_to_read").value(),
-      handshake  = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value(),
-      cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
+    uint32_t cNWords    = ReadReg("user.stat_regs.words_to_read").value();
+    uint32_t handshake  = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value();
+    uint32_t cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
 
-    // @TMP@
-    LOG (INFO) << GREEN << "n. words        = "       << cNWords    << RESET;
-    LOG (INFO) << GREEN << "handshake       = "       << handshake  << RESET;
-    LOG (INFO) << GREEN << "n. triggers     = "       << cNtriggers << RESET;
-    LOG (INFO) << GREEN << "========================" << RESET;
+    LOG (INFO) << GREEN << "--- Reading DDR3 data ---" << RESET;
+    LOG (INFO) << GREEN << "n. words        = "        << cNWords    << RESET;
+    LOG (INFO) << GREEN << "n. triggers     = "        << cNtriggers << RESET;
+    LOG (INFO) << CYAN  << "=========================" << RESET;
 
     if (!cNWords) return 0;
 
