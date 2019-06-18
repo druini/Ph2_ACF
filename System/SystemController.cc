@@ -189,26 +189,30 @@ namespace Ph2_System {
 	  // ######################################
 
 	  if (cBoard->getBoardType() != BoardType::FC7)
-	    {
+	  {
 	      fBeBoardInterface->ConfigureBoard ( cBoard );
 
 	      LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
 
 	      for (auto& cFe : cBoard->fModuleVector)
-		{
+                {
+	          LOG (INFO) << BLUE << "Loop Module Vector " << RESET;
 		  for (auto& cCbc : cFe->fChipVector)
 		    {
+	              LOG (INFO) << BLUE << "Loop Chip Vector " << RESET;
 		      if ( !bIgnoreI2c )
-			{
-			  fChipInterface->ConfigureChip ( cCbc );
-			  LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
-			}
+                      {
+	                LOG (INFO) << BLUE << "Ignore I2c " << RESET;
+                        fChipInterface->ConfigureChip ( cCbc );
+	                LOG (INFO) << BLUE << "Configure Chip " << RESET;
+                        LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
+                      }
 		    }
-		}
+                }
 
 	      fBeBoardInterface->ChipReSync ( cBoard );
 	    }
-	  else
+	    else
 	    {
 	      // ######################################
 	      // # Configuring Inner Tracker hardware #

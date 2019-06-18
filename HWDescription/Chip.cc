@@ -90,7 +90,7 @@ namespace Ph2_HwDescription
         if ( i == fRegMap.end() )
             LOG (INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg ;
         if ( psetValue > fMaxRegValue)
-            LOG (ERROR) << "Chip register are at most"<< fMaxRegValue << " bits, impossible to write " << psetValue << " on registed " << pReg ;
+            LOG (ERROR) << "Chip register are at most " << fMaxRegValue << " bits, impossible to write " << psetValue << " on registed " << pReg ;
         else
         {
             i->second.fValue = psetValue & fMaxRegValue;

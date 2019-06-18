@@ -1255,7 +1255,7 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, c
 void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue)
 {
 	//Assumption: 1 BeBoard has only 1 chip flavor:
-	if(pBoard->fModuleVector.at(0)->fChipVector.at(0)->isDACLocal(dacName))
+	if(pBoard->fModuleVector.at(0)->fReadoutChipVector.at(0)->isDACLocal(dacName))
 	{
 		setSameLocalDacBeBoard(pBoard, dacName, dacValue);
 	}
