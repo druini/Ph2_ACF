@@ -34,13 +34,12 @@ void OccupancyAndPh::makeAverage (const std::vector<OccupancyAndPh>* theOccupanc
     }
 
   fOccupancy /= totalNumberOfEnableChannels;
-  
+
   fPh        /= totalNumberOfEnableChannels;
   fPhError   /= sqrt(fPhError / totalNumberOfEnableChannels);
 
   fErrors    /= totalNumberOfEnableChannels;
 }
-
 
 void OccupancyAndPh::normalize (const uint16_t numberOfEvents)
 {

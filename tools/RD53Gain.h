@@ -11,7 +11,6 @@
 #define _RD53Gain_h_
 
 #include "../Utils/Container.h"
-#include "../Utils/DataContainer.h"
 #include "../Utils/OccupancyAndPh.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"

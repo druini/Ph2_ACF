@@ -11,7 +11,6 @@
 #define _RD53SCurve_h_
 
 #include "../Utils/Container.h"
-#include "../Utils/DataContainer.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"

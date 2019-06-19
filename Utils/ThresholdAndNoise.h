@@ -45,9 +45,9 @@ public:
 template<>
 inline void ThresholdAndNoise::makeAverage<ThresholdAndNoise>(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents)
 {
-    for(int row=0; row<=theChipContainer->getNumberOfRows(); ++row) 
+    for(int row=0; row < theChipContainer->getNumberOfRows(); ++row) 
     {
-        for(int col=0; col<=theChipContainer->getNumberOfCols(); ++col) 
+        for(int col=0; col < theChipContainer->getNumberOfCols(); ++col) 
         {
             if(chipOriginalMask->isChannelEnabled(row,col) && cTestChannelGroup->isChannelEnabled(row,col))
             {

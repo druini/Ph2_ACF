@@ -40,31 +40,31 @@ PixelAlive::~PixelAlive()
 {
   theFile->Close();
   
-  if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
-  if (theFile              != nullptr) delete theFile;
+  delete fChannelGroupHandler;
+  delete theFile;
 
   for (auto i = 0; i < theCanvasOcc2D.size(); i++)
     {
-      if (theOcc2D[i]       != nullptr) delete theOcc2D[i];
-      if (theCanvasOcc2D[i] != nullptr) delete theCanvasOcc2D[i];
+      delete theOcc2D[i];
+      delete theCanvasOcc2D[i];
     }
 
   for (auto i = 0; i < theCanvasToT.size(); i++)
     {
-      if (theToT[i]       != nullptr) delete theToT[i];
-      if (theCanvasToT[i] != nullptr) delete theCanvasToT[i];
+      delete theToT[i];
+      delete theCanvasToT[i];
     }
   
   for (auto i = 0; i < theCanvasOcc1D.size(); i++)
     {
-      if (theOcc1D[i]       != nullptr) delete theOcc1D[i];
-      if (theCanvasOcc1D[i] != nullptr) delete theCanvasOcc1D[i];
+      delete theOcc1D[i];
+      delete theCanvasOcc1D[i];
     }
 
   for (auto i = 0; i < theCanvasToT.size(); i++)
     {
-      if (theErr[i]       != nullptr) delete theErr[i];
-      if (theCanvasErr[i] != nullptr) delete theCanvasErr[i];
+      delete theErr[i];
+      delete theCanvasErr[i];
     }
 }
 
@@ -96,7 +96,11 @@ void PixelAlive::Draw(bool display, bool save)
 
 void PixelAlive::Analyze()
 {
-  
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cFe : *cBoard)
+      for (const auto cChip : *cFe)
+	LOG (INFO) << BOLDGREEN << "\t--> Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cFe->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
+		   << static_cast<Summary<OccupancyAndPh,OccupancyAndPh>*>(theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.fOccupancy << RESET;
 }
 
 void PixelAlive::InitHisto()
@@ -117,66 +121,69 @@ void PixelAlive::InitHisto()
 
 	  myString.clear();
 	  myString.str("");
-          myString << tmp << "_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
-		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cFe->getId()
-		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getId();
+          myString << tmp << "_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOcc2D.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
 	  theOcc2D.back()->SetXTitle("Columns");
 	  theOcc2D.back()->SetYTitle("Rows");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasOcc2D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
-		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cFe->getId()
-		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getId();
+          myString << "theCanvasOcc2D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasOcc2D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
-		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getId()
-		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getId();
+          myString << "theToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theToT.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),ToTsize,0,ToTsize));
 	  theToT.back()->SetXTitle("ToT");
 	  theToT.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
-		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getId()
-		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getId();
+          myString << "theCanvasToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasToT.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theOcc1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
-		   << "_Mod"           << std::setfill ('0') << std::setw (2) << +cFe->getId()
-		   << "_Chip"          << std::setfill ('0') << std::setw (2) << +cChip->getId();
+          myString << "theOcc1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"           << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Chip"          << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOcc1D.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents+1,0,nEvents+1));
 	  theOcc1D.back()->SetXTitle("Occupancy");
 	  theOcc1D.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasOcc1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
-		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cFe->getId()
-		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getId();
+          myString << "theCanvasOcc1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasOcc1D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+
 	  
 	  myString.clear();
 	  myString.str("");
-          myString << "theErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
-		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getId()
-		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getId();
+          myString << "theErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theErr.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
 	  theErr.back()->SetXTitle("Columns");
 	  theErr.back()->SetYTitle("Rows");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
-		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getId()
-		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getId();
+          myString << "theCanvasErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasErr.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
   
@@ -193,15 +200,15 @@ void PixelAlive::FillHisto()
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
-		if (theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fOccupancy != 0)
+		if (theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy != 0)
 		  {
-		    theOcc2D[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
-		    theToT[index]->Fill(theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fPh);
-		    theOcc1D[index]->Fill(theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fOccupancy * nEvents);
+		    theOcc2D[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
+		    theToT[index]->Fill(theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh);
+		    theOcc1D[index]->Fill(theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy * nEvents);
 		  }
 
-		if (theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fErrors != 0)
-		  theErr[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fErrors);
+		if (theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fErrors != 0)
+		  theErr[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fErrors);
 	      }
 
 	  index++;
@@ -245,7 +252,6 @@ void PixelAlive::Display()
 
 void PixelAlive::Save()
 {
-  std::string tmp;
   std::stringstream myString;
 
   for (auto i = 0; i < theCanvasOcc2D.size(); i++)

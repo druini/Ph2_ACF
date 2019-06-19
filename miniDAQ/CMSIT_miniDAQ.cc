@@ -10,6 +10,7 @@
 #include "../System/SystemController.h"
 #include "../Utils/argvparser.h"
 #include "../tools/RD53PixelAlive.h"
+#include "../tools/RD53Latency.h"
 #include "../tools/RD53SCurve.h"
 #include "../tools/RD53ThrOpt.h"
 #include "../tools/RD53Gain.h"
@@ -47,33 +48,34 @@ void InitParameters (const SystemController& sc,
 		     size_t& COLstop,
 		     size_t& nPixelInj,
 
-		     size_t& LatencStart,
-		     size_t& LatencStop,
+		     size_t& LatencyStart,
+		     size_t& LatencyStop,
 
 		     size_t& VCALstart,
 		     size_t& VCALstop,
 		     size_t& VCALnsteps,
+
 		     size_t& display)
 {
-  nEvents     = FindValue(sc,"nEvents");
-  nEvtsBurst  = FindValue(sc,"nEvtsBurst");
-  NTRIGxL1A   = FindValue(sc,"NTRIGxL1A");
-  INJtype     = (FindValue(sc,"INJtype") == 0 ? "Analog" : "Digital");
+  nEvents      = FindValue(sc,"nEvents");
+  nEvtsBurst   = FindValue(sc,"nEvtsBurst");
+  NTRIGxL1A    = FindValue(sc,"NTRIGxL1A");
+  INJtype      = (FindValue(sc,"INJtype") == 0 ? "Analog" : "Digital");
 
-  ROWstart    = FindValue(sc,"ROWstart");
-  ROWstop     = FindValue(sc,"ROWstop");
-  COLstart    = FindValue(sc,"COLstart");
-  COLstop     = FindValue(sc,"COLstop");
-  nPixelInj   = FindValue(sc,"nPixelInj");
+  ROWstart     = FindValue(sc,"ROWstart");
+  ROWstop      = FindValue(sc,"ROWstop");
+  COLstart     = FindValue(sc,"COLstart");
+  COLstop      = FindValue(sc,"COLstop");
+  nPixelInj    = FindValue(sc,"nPixelInj");
 
-  LatencStart = FindValue(sc,"LatencStart");
-  LatencStop  = FindValue(sc,"LatencStop");
+  LatencyStart = FindValue(sc,"LatencyStart");
+  LatencyStop  = FindValue(sc,"LatencyStop");
 
-  VCALstart   = FindValue(sc,"VCALstart");
-  VCALstop    = FindValue(sc,"VCALstop");
-  VCALnsteps  = FindValue(sc,"VCALnsteps");
+  VCALstart    = FindValue(sc,"VCALstart");
+  VCALstop     = FindValue(sc,"VCALstop");
+  VCALnsteps   = FindValue(sc,"VCALnsteps");
 
-  display     = FindValue(sc,"DisplayHisto");
+  display      = FindValue(sc,"DisplayHisto");
 }
 
 
@@ -193,112 +195,6 @@ void ConfigureExtClkTrig (SystemController& sc)
 }
 
 
-void LatencyScan (const char* fName, SystemController& sc, size_t ROWstart, size_t ROWstop, size_t COLstart, size_t COLstop,size_t LatencyStart, size_t LatencyStop, size_t nEvents)
-{
-  int     dataSize;
-  int     latency;
-  uint8_t status;
-  std::stringstream     myString;
-  std::vector<uint32_t> data;
-  std::vector<TCanvas*> theCanvas;
-  std::vector<TH1F*>    theLatency;
-
-  auto RD53ChipInterface = static_cast<RD53Interface*>(sc.fChipInterface);
-
-  TFile theFile(fName, "RECREATE");
-
-  for (const auto& cBoard : sc.fBoardVector)
-    {
-      auto RD53Board = static_cast<RD53FWInterface*>(sc.fBeBoardFWMap[cBoard->getBeBoardId()]);
-
-      for (const auto& cFe : cBoard->fModuleVector)
-	for (const auto& cChip : cFe->fChipVector)
-	{
-	  dataSize = 0;
-	  latency  = 0;
-
-	  myString.clear();
-          myString.str("");
-	  myString << "LatencyScan_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-                   << "_Mod"              << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-                   << "_Chip"             << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theLatency.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),LatencyStop - LatencyStart,LatencyStart,LatencyStop));
-	  theLatency.back()->SetXTitle("Latency [n.bx]");
-	  theLatency.back()->SetYTitle("Entries");
-
-	  myString.clear();
-          myString.str("");
-	  myString << "theCanvas_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-                   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-                   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theCanvas.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-
-
-	  // ########################
-	  // # Set pixels to inject #
-	  // ########################
-	  static_cast<RD53*>(cChip)->enablePixel(ROWstart,COLstart,true);
-	  static_cast<RD53*>(cChip)->injectPixel(ROWstart,COLstart,true);
-
-	  static_cast<RD53*>(cChip)->enablePixel(ROWstop,COLstop,true);
-	  static_cast<RD53*>(cChip)->injectPixel(ROWstop,COLstop,true);
-	  
-	  RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(cChip), true, false, false);
-
-
-	  for (auto lt = LatencyStart; lt < LatencyStop; lt++)
-	    {
-	      data.clear();
-	      
-	      LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
-	      RD53ChipInterface->WriteChipReg(cChip, "LATENCY_CONFIG", lt, true);
-
-	      sc.ReadNEvents(cBoard, nEvents, data);
-	      auto events = RD53FWInterface::DecodeEvents(data,status);
-
-	      auto nEvts = 0;
-	      for (auto i = 0; i < events.size(); i++)
-		{
-		  auto& evt = events[i];
-		  for (auto j = 0; j < evt.chip_events.size(); j++)
-		    if (evt.chip_events[j].data.size() != 0) nEvts++;
-		}
-
-	      if (nEvts > dataSize)
-		{
-		  latency  = lt;
-		  dataSize = nEvts;
-		}
-
-	      theLatency.back()->SetBinContent(theLatency.back()->FindBin(lt),nEvts);
-	    }
-
-	  LOG (INFO) << BOLDGREEN << "\t--> BEST LATENCY: " << BOLDYELLOW << latency << RESET;
-	  
-	  theCanvas.back()->cd();
-	  theLatency.back()->Draw("hist");
-	  theCanvas.back()->Modified();
-	  theCanvas.back()->Update();
-	  
-	  theFile.Write();
-
-	  myString.clear();
-          myString.str("");
-	  myString << theLatency.back()->GetName() << ".svg";
-	  theCanvas.back()->Print(myString.str().c_str());
-	}
-    }
-
-  for (auto i = 0; i < theCanvas.size(); i++)
-    {
-      if (theLatency[i] != nullptr) delete theLatency[i];
-      if (theCanvas[i]  != nullptr) delete theCanvas[i];
-    }
-
-  theFile.Close();
-}
-
-
 int main (int argc, char** argv)
 {
   // ########################
@@ -363,9 +259,9 @@ int main (int argc, char** argv)
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps, display;
+  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display;
   std::string INJtype;
-  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps, display);
+  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display);
 
 
   // #####################
@@ -388,7 +284,11 @@ int main (int argc, char** argv)
       // ###################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
 
-      LatencyScan("LatencyScan.root", cSystemController, ROWstart, ROWstop, COLstart, COLstop, LatencStart, LatencStop, nEvents);
+      Latency la("LatencyScan.root", ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
+      la.Inherit(&cSystemController);
+      la.Run();
+      la.Draw(display,true);
+      la.Analyze();
     }
   else if (whichCalib == "pixelalive")
     {
@@ -401,6 +301,7 @@ int main (int argc, char** argv)
       pa.Inherit(&cSystemController);
       pa.Run();
       pa.Draw(display,true);
+      pa.Analyze();
     }
   else if (whichCalib == "noise")
     {
@@ -413,6 +314,7 @@ int main (int argc, char** argv)
       pa.Inherit(&cSystemController);
       pa.Run();
       pa.Draw(display,true);
+      pa.Analyze();
     }
   else if (whichCalib == "scurve")
     {

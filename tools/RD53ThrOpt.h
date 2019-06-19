@@ -11,7 +11,6 @@
 #define _RD53ThrOpt_h_
 
 #include "../Utils/Container.h"
-#include "../Utils/DataContainer.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/ContainerFactory.h"

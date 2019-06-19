@@ -40,24 +40,27 @@ class OccupancyAndPh
   float fErrors;
 };
 
-
 template<>
 inline void OccupancyAndPh::makeAverage<OccupancyAndPh> (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents)
 {
-  for (const auto occupancy : *theChipContainer->getChannelContainer<ChannelContainer<OccupancyAndPh>>())
-    {
-      fOccupancy += occupancy.fOccupancy;
+  int numberOfEnabledChannels = 0;
 
-      fPh        += occupancy.fPh;
-      fPhError   += occupancy.fPhError * occupancy.fPhError;
+  for (auto row = 0; row < theChipContainer->getNumberOfRows(); row++)
+    for (auto col = 0; col < theChipContainer->getNumberOfCols(); col++)
+      if (chipOriginalMask->isChannelEnabled(row,col) && cTestChannelGroup->isChannelEnabled(row,col))
+	{
+	  fOccupancy += theChipContainer->getChannel<OccupancyAndPh>(row,col).fOccupancy;
+	  
+	  fPh        += theChipContainer->getChannel<OccupancyAndPh>(row,col).fPh;
+	  fPhError   += theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError * theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError;
+	  
+	  fErrors    += theChipContainer->getChannel<OccupancyAndPh>(row,col).fErrors;
 
-      fErrors    += occupancy.fErrors;
-    }
-
-  int numberOfEnabledChannels = cTestChannelGroup->getNumberOfEnabledChannels(chipOriginalMask);
+	  numberOfEnabledChannels++;
+	}
 
   fOccupancy /= numberOfEnabledChannels;
-  
+
   fPh        /= numberOfEnabledChannels;
   fPhError   /= sqrt(fPhError / numberOfEnabledChannels);
 

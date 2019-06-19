@@ -38,19 +38,19 @@ ThrOpt::~ThrOpt()
 {
   theFile->Close();
   
-  if (fChannelGroupHandler != nullptr) delete fChannelGroupHandler;
-  if (theFile              != nullptr) delete theFile;
+  delete fChannelGroupHandler;
+  delete theFile;
 
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
-      if (theOccupancy[i] != nullptr) delete theOccupancy[i];
-      if (theCanvasOcc[i] != nullptr) delete theCanvasOcc[i];
+      delete theOccupancy[i];
+      delete theCanvasOcc[i];
     }
 
   for (auto i = 0; i < theCanvasTDAC.size(); i++)
     {
-      if (theTDAC[i]       != nullptr) delete theTDAC[i];
-      if (theCanvasTDAC[i] != nullptr) delete theCanvasTDAC[i];
+      delete theTDAC[i];
+      delete theCanvasTDAC[i];
     }
 }
 
@@ -93,40 +93,40 @@ void ThrOpt::InitHisto()
     for (const auto cFe : *cBoard)
       for (const auto cChip : *cFe)
 	{
-	  size_t VCalOffset = static_cast<Chip* const>(cChip)->getReg("VCAL_MED");
+	  size_t VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
 
 
 	  myString.clear();
 	  myString.str("");
-          myString << "ThrOpt_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
-		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getId()
-		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getId();
+          myString << "ThrOpt_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOccupancy.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents/2 + 1,0,1 + 2./nEvents));
 	  theOccupancy.back()->SetXTitle("Efficiency");
 	  theOccupancy.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
-		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getId()
-		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getId();
+          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 
 
 	  myString.clear();
 	  myString.str("");
-          myString << "TDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
-		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cFe->getId()
-		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getId();
+          myString << "TDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theTDAC.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),TDACsize,0,TDACsize));
 	  theTDAC.back()->SetXTitle("Efficiency");
 	  theTDAC.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasTDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
-		   << "_Mod"                << std::setfill ('0') << std::setw (2) << +cFe->getId()
-		   << "_Chip"               << std::setfill ('0') << std::setw (2) << +cChip->getId();
+          myString << "theCanvasTDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"                << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Chip"               << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasTDAC.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
@@ -143,12 +143,12 @@ void ThrOpt::FillHisto()
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
-		if (theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(row,col).fOccupancy != 0)
+		if (theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy != 0)
 		  {
-		    theOccupancy[index]->Fill(theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(row,col).fOccupancy);
+		    theOccupancy[index]->Fill(theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
 
-		    theTDAC[index]->Fill((*static_cast<RD53* const>(cChip)->getPixelsMask())[col].TDAC[row]);		    
-		    theTDACcontainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53* const>(cChip)->getPixelsMask())[col].TDAC[row];
+		    theTDAC[index]->Fill((*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row]);		    
+		    theTDACcontainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
 		  }
 	      }
 
