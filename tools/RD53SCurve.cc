@@ -274,7 +274,7 @@ void SCurve::Display()
 void SCurve::Analyze()
 {
   float nHits, mean, rms;
-  std::vector<float> measurements;
+  std::vector<float> measurements(dacList.size(),0);
 
   ContainerFactory  theDetectorFactory;
   theThresholdAndNoiseContainer = new DetectorDataContainer();
@@ -290,12 +290,9 @@ void SCurve::Analyze()
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
-		measurements.clear();
-		measurements.push_back(0);
-
 		for (auto i = 0; i < dacList.size()-1; i++)
-		  measurements.push_back(detectorContainerVector[i+1]->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(row,col).fOccupancy - 
-					 detectorContainerVector[i]->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(row,col).fOccupancy);
+		  measurements[i+1] = (detectorContainerVector[i+1]->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(row,col).fOccupancy - 
+				       detectorContainerVector[i]->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(row,col).fOccupancy);
 	      
 		this->ComputeStats(measurements, VCalOffset, nHits, mean, rms);
 
@@ -311,7 +308,7 @@ void SCurve::Analyze()
 		    theNoise2D[index]->SetBinContent(col+1,row+1,rms);
 		  }
 	      }
-
+	  
 	  index++;
 	}
 }

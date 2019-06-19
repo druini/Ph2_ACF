@@ -57,48 +57,49 @@ ThrOpt::~ThrOpt()
 void ThrOpt::InitHisto()
 {
   std::stringstream myString;
+  size_t TDACsize = RD53::SetBits<RD53PixelEncoder::NBIT_TDAC>(RD53PixelEncoder::NBIT_TDAC).to_ulong()+1;
 
   // #######################
   // # Allocate histograms #
   // #######################
-  for (const auto& cBoard : fBoardVector)
-    for (const auto& cFe : cBoard->fModuleVector)
-      for (const auto& cChip : cFe->fChipVector)
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cFe : *cBoard)
+      for (const auto cChip : *cFe)
 	{
-	  size_t VCalOffset = cChip->getReg("VCAL_MED");
+	  size_t VCalOffset = static_cast<Chip* const>(cChip)->getReg("VCAL_MED");
 
 
 	  myString.clear();
 	  myString.str("");
-          myString << "ThrOpt_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+          myString << "ThrOpt_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
+		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getId()
+		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getId();
 	  theOccupancy.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents/2 + 1,0,1 + 2./nEvents));
 	  theOccupancy.back()->SetXTitle("Efficiency");
 	  theOccupancy.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getId()
+		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getId();
 	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 
 
 	  myString.clear();
 	  myString.str("");
-          myString << "TDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
-	  theTDAC.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents/2 + 1,0,1 + 2./nEvents));
+          myString << "TDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
+		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cFe->getId()
+		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getId();
+	  theTDAC.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),TDACsize,0,TDACsize));
 	  theTDAC.back()->SetXTitle("Efficiency");
 	  theTDAC.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasTDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getBeId()
-		   << "_Mod"                << std::setfill ('0') << std::setw (2) << +cFe->getFeId()
-		   << "_Chip"               << std::setfill ('0') << std::setw (2) << +cChip->getChipId();
+          myString << "theCanvasTDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
+		   << "_Mod"                << std::setfill ('0') << std::setw (2) << +cFe->getId()
+		   << "_Chip"               << std::setfill ('0') << std::setw (2) << +cChip->getId();
 	  theCanvasTDAC.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 

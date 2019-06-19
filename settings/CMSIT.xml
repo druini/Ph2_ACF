@@ -71,18 +71,18 @@
     <Setting name="NTRIGxL1A">     9 </Setting>
     <Setting name="INJtype">       0 </Setting>
 
-    <Setting name="ROWstart">      0 </Setting>
-    <Setting name="ROWstop">     191 </Setting>
+    <Setting name="ROWstart">     50 </Setting>
+    <Setting name="ROWstop">      73 </Setting>
     <Setting name="COLstart">    128 </Setting>
-    <Setting name="COLstop">     263 </Setting>
-    <Setting name="nPixelInj">   136 </Setting>
+    <Setting name="COLstop">     151 </Setting>
+    <Setting name="nPixelInj">    24 </Setting>
 
     <Setting name="LatencStart">   0 </Setting>
     <Setting name="LatencStop">  511 </Setting>
 
     <Setting name="VCALstart">   300 </Setting>
     <Setting name="VCALstop">    600 </Setting>
-    <Setting name="VCALnsteps">  300 </Setting>
+    <Setting name="VCALnsteps">  100 </Setting>
   </Settings>
 
 </HwDescription>

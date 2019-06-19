@@ -72,6 +72,7 @@ void PixelAlive::InitHisto()
 {
   std::string tmp;
   std::stringstream myString;
+  size_t ToTsize = RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong();
 
   // #######################
   // # Allocate histograms #
@@ -80,6 +81,7 @@ void PixelAlive::InitHisto()
     for (const auto cFe : *cBoard)
       for (const auto cChip : *cFe)
         {
+
 	  tmp = fileName;
 	  tmp = tmp.erase(tmp.find(".root"),5);
 
@@ -104,7 +106,7 @@ void PixelAlive::InitHisto()
           myString << "theToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getId()
 		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getId()
 		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getId();
-	  theToT.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong(),0,RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong()));
+	  theToT.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),ToTsize,0,ToTsize));
 	  theToT.back()->SetXTitle("ToT");
 	  theToT.back()->SetYTitle("Entries");
 

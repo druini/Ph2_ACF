@@ -275,49 +275,47 @@ void Gain::Display()
 void Gain::Analyze()
 {
   double gain, gainErr, intercept, interceptErr;
-  std::vector<float> x, y, e;
+  std::vector<float> x(dacList.size(),0);
+  std::vector<float> y(dacList.size(),0);
+  std::vector<float> e(dacList.size(),0);
 
   theGainAndInterceptContainer = new DetectorDataContainer();
-  ContainerFactory  theDetectorFactory;
+  ContainerFactory theDetectorFactory;
   theDetectorFactory.copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
 
   size_t index = 0;
-  for (const auto& cBoard : fBoardVector)
-    for (const auto& cFe : cBoard->fModuleVector)
-      for (const auto& cChip : cFe->fChipVector)
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cFe : *cBoard)
+      for (const auto cChip : *cFe)
 	{
-	  size_t VCalOffset = cChip->getReg("VCAL_MED");
+	  size_t VCalOffset = static_cast<Chip* const>(cChip)->getReg("VCAL_MED");
 
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
-		x.clear();
-		y.clear();
-		e.clear();
-
 		for (auto i = 0; i < dacList.size()-1; i++)
-		  {
-		    x.push_back(dacList[i]-VCalOffset);
-		    y.push_back(detectorContainerVector[i]->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fPh);
-		    e.push_back(detectorContainerVector[i]->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fPhError);
-		  }
-
+		{
+		  x[i] = dacList[i]-VCalOffset;
+		  y[i] = detectorContainerVector[i]->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fPh;
+		  e[i] = detectorContainerVector[i]->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fPhError;
+		}
+		
 		this->ComputeStats(x,y,e,gain,gainErr,intercept,interceptErr);
-
+		
 		if (gain != 0)
 		  {
 		    theGainAndInterceptContainer->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<GainAndIntercept>(row,col).fGain           = gain;
 		    theGainAndInterceptContainer->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<GainAndIntercept>(row,col).fGainError      = gainErr;
 		    theGainAndInterceptContainer->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<GainAndIntercept>(row,col).fIntercept      = intercept;
 		    theGainAndInterceptContainer->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<GainAndIntercept>(row,col).fInterceptError = interceptErr;
-
+		    
 		    theGain1D[index]->Fill(gain);
 		    theIntercept1D[index]->Fill(intercept);
 		    theGain2D[index]->SetBinContent(col+1,row+1,gain);
 		    theIntercept2D[index]->SetBinContent(col+1,row+1,intercept);
 		  }
 	      }
-
+	  
 	  index++;
 	}
 }
