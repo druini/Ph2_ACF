@@ -25,7 +25,6 @@ Latency::~Latency()
 {
   theFile->Close();
   
-  delete theLatencyContainer;
   delete theFile;
   
   for (auto i = 0; i < theCanvasLat.size(); i++)
@@ -41,8 +40,7 @@ void Latency::Run()
   std::vector<uint32_t> data;
   uint8_t               status;
 
-  theLatencyContainer = new DetectorDataContainer();
-  theDetectorFactory.copyAndInitStructure<EmptyContainer, GenericDataVector>(*fDetectorContainer, *theLatencyContainer);
+  theDetectorFactory.copyAndInitStructure<EmptyContainer, GenericDataVector>(*fDetectorContainer, theLatencyContainer);
 
   auto RD53ChipInterface = static_cast<RD53Interface*>(fChipInterface);
 
@@ -50,10 +48,10 @@ void Latency::Run()
     {
       auto RD53Board = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getIndex()]);
 
-      for (const auto cFe : *cBoard)
-	for (const auto cChip : *cFe)
+      for (const auto cModule : *cBoard)
+	for (const auto cChip : *cModule)
 	  {
-	    LOG (INFO) << GREEN << "Performing latency scan for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cFe->getId() << "/" << cChip->getId() << GREEN << "]" << RESET;
+	    LOG (INFO) << GREEN << "Performing latency scan for [board/module/chip] = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET;
 
 
 	    // ########################
@@ -86,7 +84,7 @@ void Latency::Run()
 		      if (evt.chip_events[j].data.size() != 0) nEvts++;
 		  }
 
-		static_cast<Summary<GenericDataVector,EmptyContainer>*>(theLatencyContainer->at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data.push_back(nEvts);
+		static_cast<Summary<GenericDataVector,EmptyContainer>*>(theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data.push_back(nEvts);
 	      }
 	  }
     }
@@ -109,15 +107,15 @@ void Latency::Draw(bool display, bool save)
 void Latency::Analyze()
 {
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cFe : *cBoard)
-      for (const auto cChip : *cFe)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
 	{
 	  auto dataSize = 0;
 	  auto latency  = 0;
 	  
 	  for (auto lt = startValue; lt < stopValue; lt++)
 	    {
-	      auto nEvts = static_cast<Summary<GenericDataVector,EmptyContainer>*>(theLatencyContainer->at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data[lt-startValue];
+	      auto nEvts = static_cast<Summary<GenericDataVector,EmptyContainer>*>(theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data[lt-startValue];
 	      if (nEvts > dataSize)
 		{
 		  latency  = lt;
@@ -138,8 +136,8 @@ void Latency::InitHisto()
   // # Allocate histograms #
   // #######################
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cFe : *cBoard)
-      for (const auto cChip : *cFe)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
         {
 	  tmp = fileName;
 	  tmp = tmp.erase(tmp.find(".root"),5);
@@ -147,7 +145,7 @@ void Latency::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << tmp << "_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theLat.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),stopValue - startValue,startValue,stopValue));
 	  theLat.back()->SetXTitle("Latency [n.bx]");
@@ -156,7 +154,7 @@ void Latency::InitHisto()
 	  myString.clear();
           myString.str("");
 	  myString << "theCanvasLat_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+                   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
                    << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasLat.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
@@ -168,11 +166,11 @@ void Latency::FillHisto()
 {
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cFe : *cBoard)
-      for (const auto cChip : *cFe)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
 	{
 	  for (auto lt = startValue; lt < stopValue; lt++)
-	    theLat[index]->SetBinContent(theLat[index]->FindBin(lt),static_cast<Summary<GenericDataVector,EmptyContainer>*>(theLatencyContainer->at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data[lt-startValue]);
+	    theLat[index]->SetBinContent(theLat[index]->FindBin(lt),static_cast<Summary<GenericDataVector,EmptyContainer>*>(theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data[lt-startValue]);
 	  
 	  index++;
 	}

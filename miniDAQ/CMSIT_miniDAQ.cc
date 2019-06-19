@@ -89,8 +89,8 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type)
     {
       auto RD53Board = static_cast<RD53FWInterface*>(sc.fBeBoardFWMap[cBoard->getBeBoardId()]);
 
-      for (const auto& cFe : cBoard->fModuleVector)
-	for (const auto& cChip : cFe->fChipVector)
+      for (const auto& cModule : cBoard->fModuleVector)
+	for (const auto& cChip : cModule->fChipVector)
 	 {
 	   uint8_t chipId = cChip->getChipId();
 

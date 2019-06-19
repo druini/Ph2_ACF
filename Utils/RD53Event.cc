@@ -31,14 +31,18 @@ namespace Ph2_HwInterface
   
   void RD53Event::fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
   {
+    bool   totRequired    = boardContainer->at(0)->at(0)->isChannelContainerType<OccupancyAndPh>();
+    bool   vectorRequired = boardContainer->at(0)->at(0)->isChannelContainerType<GenericDataVector>();
     size_t chipIndx;
-    bool   totRequired = boardContainer->at(0)->at(0)->isChannelContainerType<OccupancyAndPh>();
 
-    for (const auto& module : *boardContainer)
-      for (const auto& chip : *module)
+    for (const auto& cModule : *boardContainer)
+      for (const auto& cChip : *cModule)
 	{
-	  if (this->isHittedChip(module->getId(), chip->getId(), chipIndx) == true)
+	  if (this->isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
 	    {
+	      if (vectorRequired == true)
+		static_cast<Summary<GenericDataVector, EmptyContainer>*>(boardContainer->at(cModule->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data.push_back(chip_events[chipIndx].bc_id);
+
 	      for (const auto& hit : chip_events[chipIndx].data)
 		{
 		  if ((hit.row >= 0) && (hit.row < RD53::nRows) &&
@@ -50,14 +54,14 @@ namespace Ph2_HwInterface
 			    {
 			      if (totRequired == true)
 			      	{
-				  chip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fOccupancy++;
-				  chip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPh      += float(hit.tots[i]);
-				  chip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPhError += float(hit.tots[i]*hit.tots[i]);
+				  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fOccupancy++;
+				  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPh      += float(hit.tots[i]);
+				  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPhError += float(hit.tots[i]*hit.tots[i]);
 
 				  if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col+i) == false)
-				    chip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fErrors++;
+				    cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fErrors++;
 			      	}
-			      else chip->getChannel<Occupancy>(hit.row,hit.col+i).fOccupancy++;
+			      else cChip->getChannel<Occupancy>(hit.row,hit.col+i).fOccupancy++;
 			    }
 			}
 		    }

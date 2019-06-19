@@ -12,6 +12,8 @@
 
 #include "../Utils/Container.h"
 #include "../Utils/OccupancyAndPh.h"
+#include "../Utils/GenericDataVector.h"
+#include "../Utils/EmptyContainer.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"
@@ -47,6 +49,7 @@ class PixelAlive : public Tool
   bool   inject;
 
   DetectorDataContainer theOccupancyContainer;
+  DetectorDataContainer theBCIDcontainer;
 
   void InitHisto ();
   void FillHisto ();
@@ -64,6 +67,8 @@ class PixelAlive : public Tool
   std::vector<TH1F*>    theToT;
   std::vector<TCanvas*> theCanvasOcc1D;
   std::vector<TH1F*>    theOcc1D;
+  std::vector<TCanvas*> theCanvasBCID;
+  std::vector<TH1F*>    theBCID;
   std::vector<TCanvas*> theCanvasErr;
   std::vector<TH2F*>    theErr;
 };

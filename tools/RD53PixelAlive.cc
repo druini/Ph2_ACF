@@ -61,6 +61,12 @@ PixelAlive::~PixelAlive()
       delete theCanvasOcc1D[i];
     }
 
+  for (auto i = 0; i < theCanvasBCID.size(); i++)
+    {
+      delete theBCID[i];
+      delete theCanvasBCID[i];
+    }
+
   for (auto i = 0; i < theCanvasToT.size(); i++)
     {
       delete theErr[i];
@@ -73,7 +79,8 @@ void PixelAlive::Run()
   ContainerFactory theDetectorFactory;
 
   fDetectorDataContainer = &theOccupancyContainer;
-  theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *fDetectorDataContainer);
+  theDetectorFactory.copyAndInitStructure<OccupancyAndPh>                   (*fDetectorContainer, *fDetectorDataContainer);
+  theDetectorFactory.copyAndInitStructure<EmptyContainer, GenericDataVector>(*fDetectorContainer, theBCIDcontainer);
 
   this->SetTestPulse(inject);
   this->fMaskChannelsFromOtherGroups = true;
@@ -97,10 +104,10 @@ void PixelAlive::Draw(bool display, bool save)
 void PixelAlive::Analyze()
 {
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cFe : *cBoard)
-      for (const auto cChip : *cFe)
-	LOG (INFO) << BOLDGREEN << "\t--> Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cFe->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-		   << static_cast<Summary<OccupancyAndPh,OccupancyAndPh>*>(theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.fOccupancy << RESET;
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+	LOG (INFO) << BOLDGREEN << "\t--> Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
+		   << static_cast<Summary<OccupancyAndPh,OccupancyAndPh>*>(theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.fOccupancy << RESET;
 }
 
 void PixelAlive::InitHisto()
@@ -113,8 +120,8 @@ void PixelAlive::InitHisto()
   // # Allocate histograms #
   // #######################
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cFe : *cBoard)
-      for (const auto cChip : *cFe)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
         {
 	  tmp = fileName;
 	  tmp = tmp.erase(tmp.find(".root"),5);
@@ -122,7 +129,7 @@ void PixelAlive::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << tmp << "_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOcc2D.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
 	  theOcc2D.back()->SetXTitle("Columns");
@@ -131,7 +138,7 @@ void PixelAlive::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << "theCanvasOcc2D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasOcc2D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 
@@ -139,7 +146,7 @@ void PixelAlive::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << "theToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theToT.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),ToTsize,0,ToTsize));
 	  theToT.back()->SetXTitle("ToT");
@@ -148,7 +155,7 @@ void PixelAlive::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << "theCanvasToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasToT.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 
@@ -156,7 +163,7 @@ void PixelAlive::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << "theOcc1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"           << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"           << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"          << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOcc1D.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents+1,0,nEvents+1));
 	  theOcc1D.back()->SetXTitle("Occupancy");
@@ -165,15 +172,32 @@ void PixelAlive::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << "theCanvasOcc1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasOcc1D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 
 	  
 	  myString.clear();
 	  myString.str("");
+          myString << "theBCID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+	  theBCID.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),ToTsize,0,ToTsize));
+	  theBCID.back()->SetXTitle("ToT");
+	  theBCID.back()->SetYTitle("Entries");
+
+	  myString.clear();
+	  myString.str("");
+          myString << "theCanvasBCID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"                << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"               << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+	  theCanvasBCID.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+
+
+	  myString.clear();
+	  myString.str("");
           myString << "theErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theErr.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
 	  theErr.back()->SetXTitle("Columns");
@@ -182,7 +206,7 @@ void PixelAlive::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << "theCanvasErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasErr.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
@@ -194,22 +218,25 @@ void PixelAlive::FillHisto()
 {
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cFe : *cBoard)
-      for (const auto cChip : *cFe)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
 	{
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
-		if (theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy != 0)
+		if (theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy != 0)
 		  {
-		    theOcc2D[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
-		    theToT[index]->Fill(theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh);
-		    theOcc1D[index]->Fill(theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy * nEvents);
+		    theOcc2D[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
+		    theToT[index]->Fill(theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh);
+		    theOcc1D[index]->Fill(theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy * nEvents);
 		  }
 
-		if (theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fErrors != 0)
-		  theErr[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fErrors);
+		if (theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fErrors != 0)
+		  theErr[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fErrors);
 	      }
+	  
+	  for (auto& el : static_cast<Summary<GenericDataVector,EmptyContainer>*>(theBCIDcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data)
+	    theBCID[index]->Fill(el);
 
 	  index++;
 	}
@@ -239,6 +266,14 @@ void PixelAlive::Display()
       theOcc1D[i]->Draw();
       theCanvasOcc1D[i]->Modified();
       theCanvasOcc1D[i]->Update();
+    }
+
+  for (auto i = 0; i < theCanvasBCID.size(); i++)
+    {
+      theCanvasBCID[i]->cd();
+      theBCID[i]->Draw();
+      theCanvasBCID[i]->Modified();
+      theCanvasBCID[i]->Update();
     }
 
   for (auto i = 0; i < theCanvasErr.size(); i++)
@@ -279,6 +314,15 @@ void PixelAlive::Save()
       myString.str("");
       myString << theOcc1D[i]->GetName() << ".svg";
       theCanvasOcc1D[i]->Print(myString.str().c_str());
+    }
+
+  for (auto i = 0; i < theCanvasBCID.size(); i++)
+    {
+      theBCID[i]->Write();
+      myString.clear();
+      myString.str("");
+      myString << theBCID[i]->GetName() << ".svg";
+      theCanvasBCID[i]->Print(myString.str().c_str());
     }
 
   for (auto i = 0; i < theCanvasErr.size(); i++)

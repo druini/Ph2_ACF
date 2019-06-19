@@ -13,6 +13,8 @@
 #include "Event.h"
 #include "Occupancy.h"
 #include "OccupancyAndPh.h"
+#include "GenericDataVector.h"
+#include "EmptyContainer.h"
 #include "../Utils/DataContainer.h"
 #include "../HWDescription/RD53.h"
 
@@ -57,7 +59,7 @@ namespace Ph2_HwInterface
   std::vector<size_t>      module_id_vec;
   std::vector<size_t>      chip_id_vec;
   std::vector<RD53::Event> chip_events;
-  
+
 
   protected:
   void print (std::ostream& out) const {};

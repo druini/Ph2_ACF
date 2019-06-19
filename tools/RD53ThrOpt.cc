@@ -90,8 +90,8 @@ void ThrOpt::InitHisto()
   // # Allocate histograms #
   // #######################
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cFe : *cBoard)
-      for (const auto cChip : *cFe)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
 	{
 	  size_t VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
 
@@ -99,7 +99,7 @@ void ThrOpt::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << "ThrOpt_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOccupancy.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents/2 + 1,0,1 + 2./nEvents));
 	  theOccupancy.back()->SetXTitle("Efficiency");
@@ -108,7 +108,7 @@ void ThrOpt::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 
@@ -116,7 +116,7 @@ void ThrOpt::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << "TDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theTDAC.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),TDACsize,0,TDACsize));
 	  theTDAC.back()->SetXTitle("Efficiency");
@@ -125,7 +125,7 @@ void ThrOpt::InitHisto()
 	  myString.clear();
 	  myString.str("");
           myString << "theCanvasTDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"                << std::setfill ('0') << std::setw (2) << +cFe->getIndex()
+		   << "_Mod"                << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"               << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasTDAC.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
@@ -137,18 +137,18 @@ void ThrOpt::FillHisto()
 {
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cFe : *cBoard)
-      for (const auto cChip : *cFe)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
 	{
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
-		if (theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy != 0)
+		if (theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy != 0)
 		  {
-		    theOccupancy[index]->Fill(theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
+		    theOccupancy[index]->Fill(theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
 
 		    theTDAC[index]->Fill((*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row]);		    
-		    theTDACcontainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
+		    theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
 		  }
 	      }
 

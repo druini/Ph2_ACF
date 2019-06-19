@@ -219,10 +219,10 @@ namespace Ph2_System {
 	      LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;
 	      fBeBoardInterface->ConfigureBoard (cBoard);
 
-	      for (const auto& cFe : cBoard->fModuleVector)
+	      for (const auto& cModule : cBoard->fModuleVector)
 		{
-		  LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
-		  for (const auto& cRD53 : cFe->fChipVector)
+		  LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << int (cModule->getModuleId()) << RESET;
+		  for (const auto& cRD53 : cModule->fChipVector)
 		    {
 		      LOG (INFO) << GREEN << "Configuring RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
 		      fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));

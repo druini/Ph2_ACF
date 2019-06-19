@@ -52,8 +52,8 @@ namespace Ph2_HwInterface {
 
 	      for (auto& chip_frame : evt.chip_frames)
 		{
-		  chip_id_vec.push_back(chip_frame.chip_id);
 		  module_id_vec.push_back(chip_frame.hybrid_id);
+		  chip_id_vec.push_back(chip_frame.chip_id);
                 }
 
 	      fEventList.push_back(new RD53Event(std::move(module_id_vec), std::move(chip_id_vec), std::move(evt.chip_events)));

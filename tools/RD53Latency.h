@@ -46,7 +46,7 @@ class Latency : public Tool
   size_t stopValue;
   size_t nEvents;
 
-  DetectorDataContainer* theLatencyContainer;
+  DetectorDataContainer theLatencyContainer;
 
   void InitHisto ();
   void FillHisto ();
