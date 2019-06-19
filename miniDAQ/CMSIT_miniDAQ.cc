@@ -81,9 +81,9 @@ int main (int argc, char** argv)
   LOG (INFO) << BOLDYELLOW << "@@@ Starting data-taking @@@" << RESET;
   auto pBoard            = cSystemController.fBoardVector.at(0);
   auto pModule           = pBoard->fModuleVector.at(0);
-  auto pChip             = pModule->fReadoutChipVector.at(0);
+  auto pChip             = pModule->fChipVector.at(0);
   auto RD53Board         = static_cast<FC7FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
-  auto RD53ChipInterface = static_cast<RD53Interface*>(cSystemController.fReadoutChipInterface);
+  auto RD53ChipInterface = static_cast<RD53Interface*>(cSystemController.fChipInterface);
   uint8_t chipId         = pChip->getChipId();
 
 

@@ -19,7 +19,7 @@ namespace Ph2_System {
 
     SystemController::SystemController()
     : fBeBoardInterface   (nullptr)
-    , fReadoutChipInterface      (nullptr)
+    , fChipInterface      (nullptr)
     , fBoardVector        ()
     , fSettingsMap        ()
     , fFileHandler        (nullptr)
@@ -44,7 +44,7 @@ namespace Ph2_System {
     void SystemController::Inherit (SystemController* pController)
     {
         fBeBoardInterface = pController->fBeBoardInterface;
-        fReadoutChipInterface = pController->fReadoutChipInterface;
+        fChipInterface = pController->fChipInterface;
         fBoardVector = pController->fBoardVector;
         fBeBoardFWMap = pController->fBeBoardFWMap;
         fSettingsMap = pController->fSettingsMap;
@@ -63,7 +63,7 @@ namespace Ph2_System {
 
         if (fBeBoardInterface!=nullptr) delete fBeBoardInterface;
 
-        if (fReadoutChipInterface!=nullptr)  delete fReadoutChipInterface;
+        if (fChipInterface!=nullptr)  delete fChipInterface;
         if (fMPAInterface!=nullptr)  delete fMPAInterface;
         if(fDetectorContainer!=nullptr) delete fDetectorContainer;
 
@@ -150,9 +150,9 @@ namespace Ph2_System {
 
         fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
         if (fBoardVector[0]->getBoardType() != BoardType::FC7)
-            fReadoutChipInterface  = new CbcInterface     ( fBeBoardFWMap );
+            fChipInterface  = new CbcInterface     ( fBeBoardFWMap );
         else
-            fReadoutChipInterface  = new RD53Interface    ( fBeBoardFWMap );
+            fChipInterface  = new RD53Interface    ( fBeBoardFWMap );
         fMPAInterface     = new MPAInterface     ( fBeBoardFWMap );
 
         if (fWriteHandlerEnabled)
@@ -197,13 +197,13 @@ namespace Ph2_System {
 	      for (auto& cFe : cBoard->fModuleVector)
                 {
 	          LOG (INFO) << BLUE << "Loop Module Vector " << RESET;
-		  for (auto& cCbc : cFe->fReadoutChipVector)
+		  for (auto& cCbc : cFe->fChipVector)
 		    {
 	              LOG (INFO) << BLUE << "Loop Chip Vector " << RESET;
 		      if ( !bIgnoreI2c )
                       {
 	                LOG (INFO) << BLUE << "Ignore I2c " << RESET;
-                        fReadoutChipInterface->ConfigureChip ( cCbc );
+                        fChipInterface->ConfigureChip ( cCbc );
 	                LOG (INFO) << BLUE << "Configure Chip " << RESET;
                         LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
                       }
@@ -217,7 +217,7 @@ namespace Ph2_System {
 	      // ######################################
 	      // # Configuring Inner Tracker hardware #
 	      // ######################################
-	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fReadoutChipInterface);
+	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fChipInterface);
 
 	      LOG (INFO) << BOLDGREEN << "\t--> Found an Inner Tracker board" << RESET;
 	      LOG (INFO) << BOLDYELLOW << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;

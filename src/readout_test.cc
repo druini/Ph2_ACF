@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
         auto board_fw = static_cast<FC7FWInterface*>(sys.fBeBoardFWMap[board->getBeBoardId()]);
         for (auto& module : board->fModuleVector) {
             for (auto& chip : module->fChipVector) {
-                readout(board_fw, static_cast<RD53Interface*>(sys.fReadoutChipInterface), board);
+                readout(board_fw, static_cast<RD53Interface*>(sys.fChipInterface), board);
             }
         }
     }
