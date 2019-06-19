@@ -17,6 +17,7 @@
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"
 
+#include "TApplication.h"
 #include "TH2F.h"
 
 
@@ -28,13 +29,12 @@ using namespace Ph2_System;
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive(const char* fName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
+  PixelAlive(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
   ~PixelAlive();
 
-  void InitHisto();
-  void Run();
-  void Display();
-  void Save();
+  void Run     ();
+  void Draw    (bool display, bool save);
+  void Analyze ();
   
  private:
   const char* fileName;
@@ -46,6 +46,13 @@ class PixelAlive : public Tool
   size_t nEvents;
   size_t nEvtsBurst;  
   bool   inject;
+
+  DetectorDataContainer theOccupancyContainer;
+
+  void InitHisto ();
+  void FillHisto ();
+  void Display   ();
+  void Save      ();
 
 
   // ########

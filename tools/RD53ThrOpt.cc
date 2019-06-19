@@ -9,15 +9,15 @@
 
 #include "RD53ThrOpt.h"
 
-ThrOpt::ThrOpt(const char* fName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents) :
-  fileName(fName),
-  rowStart(rowStart),
-  rowEnd(rowEnd),
-  colStart(colStart),
-  colEnd(colEnd),
-  nPixels2Inj(nPixels2Inj),
-  nEvents(nEvents),
-  Tool()
+ThrOpt::ThrOpt(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents) :
+  fileName    (fileName),
+  rowStart    (rowStart),
+  rowEnd      (rowEnd),
+  colStart    (colStart),
+  colEnd      (colEnd),
+  nPixels2Inj (nPixels2Inj),
+  nEvents     (nEvents),
+  Tool        ()
 {
   // ########################
   // # Custom channel group #
@@ -52,6 +52,33 @@ ThrOpt::~ThrOpt()
       if (theTDAC[i]       != nullptr) delete theTDAC[i];
       if (theCanvasTDAC[i] != nullptr) delete theCanvasTDAC[i];
     }
+}
+
+void ThrOpt::Run()
+{
+  ContainerFactory theDetectorFactory;
+
+  fDetectorDataContainer = &theOccupancyContainer;
+  theDetectorFactory.copyAndInitStructure<Occupancy>                   (*fDetectorContainer, *fDetectorDataContainer);
+  theDetectorFactory.copyAndInitStructure<RegisterValue,EmptyContainer>(*fDetectorContainer, theTDACcontainer);
+
+  this->SetTestPulse(true);
+  this->fMaskChannelsFromOtherGroups = true;
+  this->bitWiseScan("PIX_PORTAL", nEvents, TARGETeff);
+}
+
+void ThrOpt::Draw(bool display, bool save)
+{
+  TApplication* myApp;
+
+  if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
+
+  this->InitHisto();
+  this->FillHisto();
+  this->Display();
+
+  if (save    == true) this->Save();
+  if (display == true) myApp->Run();
 }
 
 void ThrOpt::InitHisto()
@@ -106,25 +133,8 @@ void ThrOpt::InitHisto()
   theFile = new TFile(fileName, "RECREATE");
 }
 
-void ThrOpt::Run()
+void ThrOpt::FillHisto()
 {
-  ContainerFactory theDetectorFactory;
-
-  DetectorDataContainer theOccupancyContainer;
-  fDetectorDataContainer = &theOccupancyContainer;
-  theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-
-  DetectorDataContainer theTDACcontainer;
-  theDetectorFactory.copyAndInitStructure<RegisterValue,EmptyContainer>(*fDetectorContainer, theTDACcontainer);
-
-  this->SetTestPulse(true);
-  this->fMaskChannelsFromOtherGroups = true;
-  this->bitWiseScan("PIX_PORTAL", nEvents, TARGETeff);
-
-
-  // #########################
-  // # Filling the histogram #
-  // #########################
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cFe : *cBoard)

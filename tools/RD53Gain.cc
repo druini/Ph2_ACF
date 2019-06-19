@@ -9,18 +9,18 @@
 
 #include "RD53Gain.h"
 
-Gain::Gain(const char* fName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
-  fileName(fName),
-  rowStart(rowStart),
-  rowEnd(rowEnd),
-  colStart(colStart),
-  colEnd(colEnd),
-  nPixels2Inj(nPixels2Inj),
-  nEvents(nEvents),
-  startValue(startValue),
-  stopValue(stopValue),
-  nSteps(nSteps),
-  Tool()
+Gain::Gain(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
+  fileName    (fileName),
+  rowStart    (rowStart),
+  rowEnd      (rowEnd),
+  colStart    (colStart),
+  colEnd      (colEnd),
+  nPixels2Inj (nPixels2Inj),
+  nEvents     (nEvents),
+  startValue  (startValue),
+  stopValue   (stopValue),
+  nSteps      (nSteps),
+  Tool        ()
 {
   // ########################
   // # Custom channel group #
@@ -85,6 +85,88 @@ Gain::~Gain()
     if (detectorContainerVector[i] != nullptr) delete detectorContainerVector[i];
   
   if (theGainAndInterceptContainer != nullptr) delete theGainAndInterceptContainer;
+}
+
+void Gain::Run()
+{
+  ContainerFactory theDetectorFactory;
+
+  for (auto i = 0; i < detectorContainerVector.size(); i++)
+    delete detectorContainerVector[i];
+
+  detectorContainerVector.clear();
+  detectorContainerVector.reserve(dacList.size());
+  for (auto i = 0; i < dacList.size(); i++)
+    {
+      detectorContainerVector.emplace_back(new DetectorDataContainer());
+      theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *detectorContainerVector.back());
+    }
+  
+  this->SetTestPulse(true);
+  this->fMaskChannelsFromOtherGroups = true;
+  this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
+}
+
+void Gain::Draw(bool display, bool save)
+{
+  TApplication* myApp;
+
+  if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
+
+  this->InitHisto();
+  this->FillHisto();
+  this->Display();
+
+  if (save    == true) this->Save();
+  if (display == true) myApp->Run();
+}
+
+void Gain::Analyze()
+{
+  double gain, gainErr, intercept, interceptErr;
+  std::vector<float> x(dacList.size(),0);
+  std::vector<float> y(dacList.size(),0);
+  std::vector<float> e(dacList.size(),0);
+
+  theGainAndInterceptContainer = new DetectorDataContainer();
+  ContainerFactory theDetectorFactory;
+  theDetectorFactory.copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
+
+  size_t index = 0;
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cFe : *cBoard)
+      for (const auto cChip : *cFe)
+	{
+	  size_t VCalOffset = static_cast<Chip* const>(cChip)->getReg("VCAL_MED");
+
+	  for (auto row = 0; row < RD53::nRows; row++)
+	    for (auto col = 0; col < RD53::nCols; col++)
+	      {
+		for (auto i = 0; i < dacList.size()-1; i++)
+		{
+		  x[i] = dacList[i]-VCalOffset;
+		  y[i] = detectorContainerVector[i]->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fPh;
+		  e[i] = detectorContainerVector[i]->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fPhError;
+		}
+		
+		this->ComputeStats(x,y,e,gain,gainErr,intercept,interceptErr);
+		
+		if (gain != 0)
+		  {
+		    theGainAndInterceptContainer->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<GainAndIntercept>(row,col).fGain           = gain;
+		    theGainAndInterceptContainer->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<GainAndIntercept>(row,col).fGainError      = gainErr;
+		    theGainAndInterceptContainer->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<GainAndIntercept>(row,col).fIntercept      = intercept;
+		    theGainAndInterceptContainer->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<GainAndIntercept>(row,col).fInterceptError = interceptErr;
+		    
+		    theGain1D[index]->Fill(gain);
+		    theIntercept1D[index]->Fill(intercept);
+		    theGain2D[index]->SetBinContent(col+1,row+1,gain);
+		    theIntercept2D[index]->SetBinContent(col+1,row+1,intercept);
+		  }
+	      }
+	  
+	  index++;
+	}
 }
 
 void Gain::InitHisto()
@@ -189,29 +271,8 @@ void Gain::InitHisto()
   theFile = new TFile(fileName, "RECREATE");
 }
 
-void Gain::Run()
+void Gain::FillHisto()
 {
-  ContainerFactory theDetectorFactory;
-
-  for (auto i = 0; i < detectorContainerVector.size(); i++)
-    delete detectorContainerVector[i];
-
-  detectorContainerVector.clear();
-  detectorContainerVector.reserve(dacList.size());
-  for (auto i = 0; i < dacList.size(); i++)
-    {
-      detectorContainerVector.emplace_back(new DetectorDataContainer());
-      theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *detectorContainerVector.back());
-    }
-  
-  this->SetTestPulse(true);
-  this->fMaskChannelsFromOtherGroups = true;
-  this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
-
-
-  // #########################
-  // # Filling the histogram #
-  // #########################
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cFe : *cBoard)
@@ -270,54 +331,6 @@ void Gain::Display()
       theCanvasIn2D[i]->Modified();
       theCanvasIn2D[i]->Update();
     }
-}
-
-void Gain::Analyze()
-{
-  double gain, gainErr, intercept, interceptErr;
-  std::vector<float> x(dacList.size(),0);
-  std::vector<float> y(dacList.size(),0);
-  std::vector<float> e(dacList.size(),0);
-
-  theGainAndInterceptContainer = new DetectorDataContainer();
-  ContainerFactory theDetectorFactory;
-  theDetectorFactory.copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
-
-  size_t index = 0;
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cFe : *cBoard)
-      for (const auto cChip : *cFe)
-	{
-	  size_t VCalOffset = static_cast<Chip* const>(cChip)->getReg("VCAL_MED");
-
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
-	      {
-		for (auto i = 0; i < dacList.size()-1; i++)
-		{
-		  x[i] = dacList[i]-VCalOffset;
-		  y[i] = detectorContainerVector[i]->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fPh;
-		  e[i] = detectorContainerVector[i]->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fPhError;
-		}
-		
-		this->ComputeStats(x,y,e,gain,gainErr,intercept,interceptErr);
-		
-		if (gain != 0)
-		  {
-		    theGainAndInterceptContainer->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<GainAndIntercept>(row,col).fGain           = gain;
-		    theGainAndInterceptContainer->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<GainAndIntercept>(row,col).fGainError      = gainErr;
-		    theGainAndInterceptContainer->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<GainAndIntercept>(row,col).fIntercept      = intercept;
-		    theGainAndInterceptContainer->at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<GainAndIntercept>(row,col).fInterceptError = interceptErr;
-		    
-		    theGain1D[index]->Fill(gain);
-		    theIntercept1D[index]->Fill(intercept);
-		    theGain2D[index]->SetBinContent(col+1,row+1,gain);
-		    theIntercept2D[index]->SetBinContent(col+1,row+1,intercept);
-		  }
-	      }
-	  
-	  index++;
-	}
 }
 
 void Gain::Save()

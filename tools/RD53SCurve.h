@@ -18,6 +18,7 @@
 #include "../Utils/ThresholdAndNoise.h"
 #include "Tool.h"
 
+#include "TApplication.h"
 #include "TH2F.h"
 
 
@@ -29,14 +30,12 @@ using namespace Ph2_System;
 class SCurve : public Tool
 {
  public:
-  SCurve(const char* fName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
+  SCurve(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
   ~SCurve();
 
-  void InitHisto();
-  void Run();
-  void Display();
-  void Analyze();
-  void Save();
+  void Run     ();
+  void Draw    (bool display, bool save);
+  void Analyze ();
 
  private:
   const char* fileName;
@@ -55,6 +54,10 @@ class SCurve : public Tool
   std::vector<DetectorDataContainer*> detectorContainerVector;
   DetectorDataContainer*              theThresholdAndNoiseContainer;
 
+  void InitHisto    ();
+  void FillHisto    ();
+  void Display      ();
+  void Save         ();
   void ComputeStats (std::vector<float>& measurements, size_t offset, float& nHits, float& mean, float& rms);
 
 

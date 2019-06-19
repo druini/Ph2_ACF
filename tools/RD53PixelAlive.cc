@@ -9,17 +9,17 @@
 
 #include "RD53PixelAlive.h"
 
-PixelAlive::PixelAlive(const char* fName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject) :
-  fileName(fName),
-  rowStart(rowStart),
-  rowEnd(rowEnd),
-  colStart(colStart),
-  colEnd(colEnd),
-  nPixels2Inj(nPixels2Inj),
-  nEvents(nEvents),
-  nEvtsBurst(nEvtsBurst),
-  inject(inject),
-  Tool()
+PixelAlive::PixelAlive(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject) :
+  fileName    (fileName),
+  rowStart    (rowStart),
+  rowEnd      (rowEnd),
+  colStart    (colStart),
+  colEnd      (colEnd),
+  nPixels2Inj (nPixels2Inj),
+  nEvents     (nEvents),
+  nEvtsBurst  (nEvtsBurst),
+  inject      (inject),
+  Tool        ()
 {
   // ########################
   // # Custom channel group #
@@ -68,6 +68,37 @@ PixelAlive::~PixelAlive()
     }
 }
 
+void PixelAlive::Run()
+{
+  ContainerFactory theDetectorFactory;
+
+  fDetectorDataContainer = &theOccupancyContainer;
+  theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *fDetectorDataContainer);
+
+  this->SetTestPulse(inject);
+  this->fMaskChannelsFromOtherGroups = true;
+  this->measureData(nEvents, nEvtsBurst);
+}
+
+void PixelAlive::Draw(bool display, bool save)
+{
+  TApplication* myApp;
+  
+  if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
+
+  this->InitHisto();
+  this->FillHisto();
+  this->Display();
+
+  if (save    == true) this->Save();
+  if (display == true) myApp->Run();
+}
+
+void PixelAlive::Analyze()
+{
+  
+}
+
 void PixelAlive::InitHisto()
 {
   std::string tmp;
@@ -81,7 +112,6 @@ void PixelAlive::InitHisto()
     for (const auto cFe : *cBoard)
       for (const auto cChip : *cFe)
         {
-
 	  tmp = fileName;
 	  tmp = tmp.erase(tmp.find(".root"),5);
 
@@ -153,22 +183,8 @@ void PixelAlive::InitHisto()
   theFile = new TFile(fileName, "RECREATE");
 }
 
-void PixelAlive::Run()
+void PixelAlive::FillHisto()
 {
-  ContainerFactory theDetectorFactory;
-
-  DetectorDataContainer theOccupancyContainer;
-  fDetectorDataContainer = &theOccupancyContainer;
-  theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *fDetectorDataContainer);
-
-  this->SetTestPulse(inject);
-  this->fMaskChannelsFromOtherGroups = true;
-  this->measureData(nEvents, nEvtsBurst);
-
-
-  // #########################
-  // # Filling the histogram #
-  // #########################
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cFe : *cBoard)
@@ -183,7 +199,7 @@ void PixelAlive::Run()
 		    theToT[index]->Fill(theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fPh);
 		    theOcc1D[index]->Fill(theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fOccupancy * nEvents);
 		  }
-		
+
 		if (theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fErrors != 0)
 		  theErr[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getId())->at(cFe->getId())->at(cChip->getId())->getChannel<OccupancyAndPh>(row,col).fErrors);
 	      }

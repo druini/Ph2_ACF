@@ -18,6 +18,7 @@
 #include "../Utils/GainAndIntercept.h"
 #include "Tool.h"
 
+#include "TApplication.h"
 #include "TH2F.h"
 
 
@@ -35,14 +36,12 @@ using namespace Ph2_System;
 class Gain : public Tool
 {
  public:
-  Gain(const char* fName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
+  Gain(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
   ~Gain();
 
-  void InitHisto();
-  void Run();
-  void Display();
-  void Analyze();
-  void Save();
+  void Run     ();
+  void Draw    (bool display, bool save);
+  void Analyze ();
 
  private:
   const char* fileName;
@@ -61,6 +60,10 @@ class Gain : public Tool
   std::vector<DetectorDataContainer*> detectorContainerVector;
   DetectorDataContainer*              theGainAndInterceptContainer;
 
+  void InitHisto    ();
+  void FillHisto    ();
+  void Display      ();
+  void Save         ();
   void ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
 
 

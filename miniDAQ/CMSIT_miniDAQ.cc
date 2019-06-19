@@ -52,7 +52,8 @@ void InitParameters (const SystemController& sc,
 
 		     size_t& VCALstart,
 		     size_t& VCALstop,
-		     size_t& VCALnsteps)
+		     size_t& VCALnsteps,
+		     size_t& display)
 {
   nEvents     = FindValue(sc,"nEvents");
   nEvtsBurst  = FindValue(sc,"nEvtsBurst");
@@ -71,6 +72,8 @@ void InitParameters (const SystemController& sc,
   VCALstart   = FindValue(sc,"VCALstart");
   VCALstop    = FindValue(sc,"VCALstop");
   VCALnsteps  = FindValue(sc,"VCALnsteps");
+
+  display     = FindValue(sc,"DisplayHisto");
 }
 
 
@@ -112,7 +115,7 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type)
 	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
 	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  0;
 	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 60;
-	       
+
 	       cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
 	       cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
 	       cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
@@ -129,7 +132,7 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type)
 	       
 	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
 	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 32;
-	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 60;
+	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 40;
 
 	       cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
 	       cfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
@@ -270,7 +273,7 @@ void LatencyScan (const char* fName, SystemController& sc, size_t ROWstart, size
 	      theLatency.back()->SetBinContent(theLatency.back()->FindBin(lt),nEvts);
 	    }
 
-	  LOG (INFO) << GREEN << "\t--> Best latency: " << BOLDYELLOW << latency << RESET;
+	  LOG (INFO) << BOLDGREEN << "\t--> BEST LATENCY: " << BOLDYELLOW << latency << RESET;
 	  
 	  theCanvas.back()->cd();
 	  theLatency.back()->Draw("hist");
@@ -360,9 +363,9 @@ int main (int argc, char** argv)
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps;
+  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps, display;
   std::string INJtype;
-  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps);
+  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps, display);
 
 
   // #####################
@@ -396,10 +399,8 @@ int main (int argc, char** argv)
 
       PixelAlive pa("PixelAlive.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, true);
       pa.Inherit(&cSystemController);
-      pa.InitHisto();
       pa.Run();
-      pa.Display();
-      pa.Save();
+      pa.Draw(display,true);
     }
   else if (whichCalib == "noise")
     {
@@ -410,10 +411,8 @@ int main (int argc, char** argv)
 
       PixelAlive pa("NoiseScan.root", ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false);
       pa.Inherit(&cSystemController);
-      pa.InitHisto();
       pa.Run();
-      pa.Display();
-      pa.Save();
+      pa.Draw(display,true);
     }
   else if (whichCalib == "scurve")
     {
@@ -424,11 +423,9 @@ int main (int argc, char** argv)
 
       SCurve sc("SCurve.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       sc.Inherit(&cSystemController);
-      sc.InitHisto();
       sc.Run();
       sc.Analyze();
-      sc.Display();
-      sc.Save();
+      sc.Draw(display,true);
     }
   else if (whichCalib == "gain")
     {
@@ -439,11 +436,9 @@ int main (int argc, char** argv)
 
       Gain ga("Gain.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       ga.Inherit(&cSystemController);
-      ga.InitHisto();
       ga.Run();
       ga.Analyze();
-      ga.Display();
-      ga.Save();
+      ga.Draw(display,true);
     }
   else if (whichCalib == "gainopt")
     {
@@ -461,10 +456,8 @@ int main (int argc, char** argv)
 
       ThrOpt to("ThresholdOptimization.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents);
       to.Inherit(&cSystemController);
-      to.InitHisto();
       to.Run();
-      to.Display();
-      to.Save();
+      to.Draw(display,true);
     }
   else LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
 

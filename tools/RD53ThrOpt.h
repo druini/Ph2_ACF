@@ -19,6 +19,7 @@
 #include "../Utils/ThresholdAndNoise.h"
 #include "Tool.h"
 
+#include "TApplication.h"
 #include "TH2F.h"
 
 
@@ -39,10 +40,8 @@ class ThrOpt : public Tool
   ThrOpt(const char* fName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents);
   ~ThrOpt();
 
-  void InitHisto();
-  void Run();
-  void Display();
-  void Save();
+  void Run  ();
+  void Draw (bool display, bool save);
 
  private:
   const char* fileName;
@@ -53,6 +52,14 @@ class ThrOpt : public Tool
   size_t nPixels2Inj;
   size_t nEvents;
   float  targetTh;
+
+  DetectorDataContainer theOccupancyContainer;
+  DetectorDataContainer theTDACcontainer;
+
+  void InitHisto ();
+  void FillHisto ();
+  void Display   ();
+  void Save      ();
 
 
   // ########
