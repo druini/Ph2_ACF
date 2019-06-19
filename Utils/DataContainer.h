@@ -103,6 +103,15 @@ public:
 	virtual void initialize(void) {;}
 	virtual uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) = 0;
 	
+	template<typename T>
+	bool isSummaryContainerType()
+	{
+		const std::type_info& containerTypeId = typeid(summary_);
+		const std::type_info& templateTypeId = typeid(T*);
+
+		return (containerTypeId.hash_code() == templateTypeId.hash_code());
+	}
+
 	SummaryBase *summary_;
 };
 
