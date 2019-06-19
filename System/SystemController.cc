@@ -150,9 +150,9 @@ namespace Ph2_System {
 
         fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
         if (fBoardVector[0]->getBoardType() != BoardType::FC7)
-            fChipInterface  = new CbcInterface     ( fBeBoardFWMap );
+            fReadoutChipInterface  = new CbcInterface     ( fBeBoardFWMap );
         else
-            fChipInterface  = new RD53Interface    ( fBeBoardFWMap );
+            fReadoutChipInterface  = new RD53Interface    ( fBeBoardFWMap );
         fMPAInterface     = new MPAInterface     ( fBeBoardFWMap );
 
         if (fWriteHandlerEnabled)
@@ -196,15 +196,11 @@ namespace Ph2_System {
 
 	      for (auto& cFe : cBoard->fModuleVector)
                 {
-	          LOG (INFO) << BLUE << "Loop Module Vector " << RESET;
-		  for (auto& cCbc : cFe->fChipVector)
+		  for (auto& cCbc : cFe->fReadoutChipVector)
 		    {
-	              LOG (INFO) << BLUE << "Loop Chip Vector " << RESET;
 		      if ( !bIgnoreI2c )
                       {
-	                LOG (INFO) << BLUE << "Ignore I2c " << RESET;
-                        fChipInterface->ConfigureChip ( cCbc );
-	                LOG (INFO) << BLUE << "Configure Chip " << RESET;
+                        fReadoutChipInterface->ConfigureChip ( cCbc );
                         LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
                       }
 		    }
@@ -217,7 +213,7 @@ namespace Ph2_System {
 	      // ######################################
 	      // # Configuring Inner Tracker hardware #
 	      // ######################################
-	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fChipInterface);
+	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fReadoutChipInterface);
 
 	      LOG (INFO) << BOLDGREEN << "\t--> Found an Inner Tracker board" << RESET;
 	      LOG (INFO) << BOLDYELLOW << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;
