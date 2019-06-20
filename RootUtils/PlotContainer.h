@@ -18,13 +18,17 @@ class PlotContainer //: public streammable
 {
 public:
     PlotContainer() {;}
-    PlotContainer(const PlotContainer& container) = default;
-    PlotContainer& operator= (const PlotContainer& container) = default;
+    PlotContainer(const PlotContainer& container) = delete;
+    PlotContainer& operator= (const PlotContainer& container) = delete;
+    PlotContainer(PlotContainer&& container) = default;
+    PlotContainer& operator= (PlotContainer&& container) = default;
     
     virtual ~PlotContainer() {;}
 
     virtual void setNameTitle(std::string histogramName, std::string histogramTitle) = 0;
     virtual std::string getName() const = 0;
+    virtual std::string getTitle() const = 0;
+    virtual void initialize(std::string name, std::string title, const PlotContainer *reference) = 0;
 
 };
 

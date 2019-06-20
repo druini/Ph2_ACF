@@ -16,6 +16,7 @@
 #include <../Utils/Container.h>
 
 class DetectorContainer;
+class TFile;
 
 /*!
  * \class DQMHistogramBase
@@ -39,7 +40,7 @@ class DQMHistogramBase
      * \brief Book histograms
      * \param theDetectorStructure : Container of the Detector structure
      */
-    virtual void book(DetectorContainer &theDetectorStructure) = 0;
+    virtual void book(TFile *outputFile, DetectorContainer &theDetectorStructure) = 0;
 
     /*!
      * \brief Book histograms
@@ -51,7 +52,7 @@ class DQMHistogramBase
      * \brief SAve histograms
      * \param outFile : ouput file name
      */
-    virtual void save (const std::string& outFile) = 0;
+    virtual void process () = 0;
     
     /*!
      * \brief Book histograms

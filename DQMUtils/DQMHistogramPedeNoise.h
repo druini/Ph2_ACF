@@ -13,6 +13,8 @@
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
 
+class TFile;
+
 /*!
  * \class DQMHistogramPedeNoise
  * \brief Class for PedeNoise monitoring histograms
@@ -34,7 +36,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(DetectorContainer &theDetectorStructure) override;
+    void book(TFile *theOutputFile, DetectorContainer &theDetectorStructure) override;
 
     /*!
      * Fill histogram
@@ -44,7 +46,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     /*!
      * Save histogram
      */
-    void save (const std::string& outFile) override;
+    void process () override;
 
     /*!
      * Reset histogram
