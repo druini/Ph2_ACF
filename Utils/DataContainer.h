@@ -63,9 +63,28 @@ public:
 	Summary(const S& theSummary) {
 		theSummary_ = theSummary;
 	}
+	Summary(S&& theSummary) {
+		theSummary_ = std::move(theSummary);
+	}
+	Summary& operator= (S&& theSummary)
+	{
+std::cout<< __PRETTY_FUNCTION__ << __LINE__ <<std::endl;
+		theSummary_ = std::move(theSummary);
+std::cout<< __PRETTY_FUNCTION__ << __LINE__ <<std::endl;
+	}
 	Summary(const Summary<S,C>& summary) {
 		theSummary_ = summary.theSummary_;
 	}
+
+	Summary& operator= (const Summary& summary)
+    {
+		theSummary_ = summary.theSummary_;
+	}
+	Summary& operator= (const Summary&& summary)
+    {
+		theSummary_ = std::move(summary.theSummary_);
+	}		
+
 	~Summary() {;}
 
 	void makeSummary(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) override
@@ -76,7 +95,10 @@ public:
 	{
 		const SummaryContainer<SummaryBase>* tmpSummaryContainer = static_cast<const SummaryContainer<SummaryBase>*>(theSummaryList);
 		std::vector<S> tmpSummaryVector;
-		for(auto summary : *tmpSummaryContainer) tmpSummaryVector.emplace_back(static_cast<Summary<S,C>*>(summary)->theSummary_);
+		for(auto summary : *tmpSummaryContainer) 
+		{
+			tmpSummaryVector.emplace_back(std::move(static_cast<Summary<S,C>*>(summary)->theSummary_));
+		}
 		theSummary_.makeAverage(&tmpSummaryVector,theNumberOfEnabledChannelsList, numberOfEvents);
 		delete theSummaryList;
 	}
@@ -103,6 +125,21 @@ public:
 	virtual void initialize(void) {;}
 	virtual uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) = 0;
 	
+	template<typename T>
+	bool isSummaryContainerType()
+	{
+		const std::type_info& containerTypeId = typeid(summary_);
+		const std::type_info& templateTypeId = typeid(T*);
+
+		return (containerTypeId.hash_code() == templateTypeId.hash_code());
+	}
+
+	template<typename S, typename T>
+	Summary<S,T>& getSummary()
+	{
+		return *static_cast<Summary<S,T>*>(summary_);
+	}	
+
 	SummaryBase *summary_;
 };
 

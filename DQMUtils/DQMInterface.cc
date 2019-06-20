@@ -4,6 +4,7 @@
 #include "../DQMUtils/DQMInterface.h"
 #include "../DQMUtils/DQMHistogramPedeNoise.h"
 #include "../System/FileParser.h"
+#include "TFile.h"
 
 #include <iostream>
 #include <string>
@@ -16,6 +17,7 @@ DQMInterface::DQMInterface(std::string configurationFile)
 , fDQMHistogram     (nullptr)
 , fRunning          (false)
 , fConfigurationFile(configurationFile)
+, fOutputFile(nullptr)
 {
 }
 
@@ -36,6 +38,8 @@ void DQMInterface::destroy(void)
 	destroyHistogram();
 	fListener     = nullptr;
 	fDQMHistogram = nullptr;
+	delete fOutputFile;
+	fOutputFile = nullptr;
 	std::cout << __PRETTY_FUNCTION__ << "destroy DONE!" << std::endl;
 }
 
@@ -76,7 +80,9 @@ void DQMInterface::configure(void)
     
 	//if calibration type pedenoise
 	fDQMHistogram = new DQMHistogramPedeNoise();
-	fDQMHistogram->book(fDetectorStructure);
+	fOutputFile = new TFile("tmp.root", "RECREATE");
+	fDQMHistogram->book(fOutputFile, fDetectorStructure);
+
 }
 
 //========================================================================================================================
@@ -103,7 +109,8 @@ void DQMInterface::stopProcessingData  (void)
 		std::cout<< __PRETTY_FUNCTION__ << " Buffer should be empty, some data were not read, Aborting " << std::endl;
 		abort();  
 	}
-	fDQMHistogram->save("tmp.root");
+	fDQMHistogram->process();
+	fOutputFile->Write();
 }
 
 //========================================================================================================================
