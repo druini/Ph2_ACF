@@ -41,7 +41,10 @@ namespace Ph2_HwInterface
 	  if (this->isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
 	    {
 	      if (vectorRequired == true)
-		boardContainer->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data.push_back(chip_events[chipIndx].bc_id);
+		{
+		  std::cout << "AAA " << (chip_events[chipIndx].bc_id) << std::endl;
+		  boardContainer->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data.push_back(chip_events[chipIndx].bc_id);
+		}
 
 	      for (const auto& hit : chip_events[chipIndx].data)
 		{

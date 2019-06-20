@@ -40,7 +40,7 @@ void Latency::Run()
   std::vector<uint32_t> data;
   uint8_t               status;
 
-  theDetectorFactory.copyAndInitStructure<EmptyContainer, GenericDataVector>(*fDetectorContainer, theLatencyContainer);
+  theDetectorFactory.copyAndInitStructure<EmptyContainer,GenericDataVector>(*fDetectorContainer, theLatencyContainer);
 
   auto RD53ChipInterface = static_cast<RD53Interface*>(fChipInterface);
 

@@ -79,8 +79,8 @@ void PixelAlive::Run()
   ContainerFactory theDetectorFactory;
 
   fDetectorDataContainer = &theOccupancyContainer;
-  theDetectorFactory.copyAndInitStructure<OccupancyAndPh>                   (*fDetectorContainer, *fDetectorDataContainer);
-  theDetectorFactory.copyAndInitStructure<EmptyContainer, GenericDataVector>(*fDetectorContainer, theBCIDcontainer);
+  theDetectorFactory.copyAndInitStructure<OccupancyAndPh>                  (*fDetectorContainer, *fDetectorDataContainer);
+  theDetectorFactory.copyAndInitStructure<EmptyContainer,GenericDataVector>(*fDetectorContainer, theBCIDcontainer);
 
   this->SetTestPulse(inject);
   this->fMaskChannelsFromOtherGroups = true;
