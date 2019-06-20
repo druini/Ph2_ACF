@@ -337,8 +337,8 @@ void SCurve::Display()
       TPad* myPad = (TPad*)theCanvasNo1D[i]->GetPad(0);
       myPad->SetTopMargin(0.18);
       theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-				   RD53VCal2Charge::Convert(theNoise1D[i]->GetBinLowEdge(1)),
-				   RD53VCal2Charge::Convert(theNoise1D[i]->GetBinLowEdge(theNoise1D[i]->GetNbinsX())),
+				   RD53VCal2Charge::Convert(theNoise1D[i]->GetBinLowEdge(1),true),
+				   RD53VCal2Charge::Convert(theNoise1D[i]->GetBinLowEdge(theNoise1D[i]->GetNbinsX()),true),
 				   510,"-"));
       theAxis.back()->SetTitle("Noise (electrons)"); 
       theAxis.back()->SetTitleOffset(1.2);

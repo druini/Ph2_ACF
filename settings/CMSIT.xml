@@ -34,7 +34,7 @@
 	    REF_KRUM_LIN     =  "300"
             Vthreshold_LIN   =  "400"
 
-	    VCAL_HIGH        =  "439"
+	    VCAL_HIGH        =  "600"
 	    VCAL_MED         =  "100"
 
 	    INJECTION_SELECT =    "0"

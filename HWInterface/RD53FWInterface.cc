@@ -309,7 +309,7 @@ namespace Ph2_HwInterface
     uint32_t handshake  = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value();
     uint32_t cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
 
-    LOG (INFO) << GREEN << "--- Reading DDR3 data ---" << RESET;
+    LOG (INFO) << GREEN << "----- Reading  data -----" << RESET;
     LOG (INFO) << GREEN << "n. words        = "        << cNWords    << RESET;
     LOG (INFO) << GREEN << "n. triggers     = "        << cNtriggers << RESET;
     LOG (INFO) << CYAN  << "=========================" << RESET;
