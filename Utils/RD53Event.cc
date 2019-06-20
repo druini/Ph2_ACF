@@ -32,7 +32,7 @@ namespace Ph2_HwInterface
   void RD53Event::fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
   {
     bool   totRequired    = boardContainer->at(0)->at(0)->isChannelContainerType<OccupancyAndPh>();
-    bool   vectorRequired = boardContainer->at(0)->at(0)->isChannelContainerType<GenericDataVector>();
+    bool   vectorRequired = boardContainer->at(0)->at(0)->isSummaryContainerType<Summary<GenericDataVector,EmptyContainer>>();
     size_t chipIndx;
 
     for (const auto& cModule : *boardContainer)
@@ -41,7 +41,7 @@ namespace Ph2_HwInterface
 	  if (this->isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
 	    {
 	      if (vectorRequired == true)
-		static_cast<Summary<GenericDataVector, EmptyContainer>*>(boardContainer->at(cModule->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data.push_back(chip_events[chipIndx].bc_id);
+		boardContainer->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data.push_back(chip_events[chipIndx].bc_id);
 
 	      for (const auto& hit : chip_events[chipIndx].data)
 		{

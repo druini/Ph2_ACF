@@ -266,7 +266,7 @@ int main (int argc, char** argv)
   // ######################################
   // # Correct injection pattern for RD53 #
   // ######################################
-  nPixelInj = (ROWstop - ROWstart + 1) * (COLstop  - COLstart + 1) / (COLstop  - COLstart + 1 + ((COLstop  - COLstart + 1) > NROW_CORE ? NROW_CORE : 0));
+  if (nPixelInj == 0) nPixelInj = (ROWstop - ROWstart + 1) * (COLstop  - COLstart + 1) / (ROWstop  - ROWstart + 1 + ((ROWstop  - ROWstart + 1) > NROW_CORE ? NROW_CORE : 0));
 
 
   // #####################
@@ -292,8 +292,8 @@ int main (int argc, char** argv)
       Latency la("LatencyScan.root", ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
       la.Inherit(&cSystemController);
       la.Run();
-      la.Draw(display,true);
       la.Analyze();
+      la.Draw(display,true);
     }
   else if (whichCalib == "pixelalive")
     {
@@ -305,8 +305,8 @@ int main (int argc, char** argv)
       PixelAlive pa("PixelAlive.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, true);
       pa.Inherit(&cSystemController);
       pa.Run();
-      pa.Draw(display,true);
       pa.Analyze();
+      pa.Draw(display,true);
     }
   else if (whichCalib == "noise")
     {
@@ -318,8 +318,8 @@ int main (int argc, char** argv)
       PixelAlive pa("NoiseScan.root", ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false);
       pa.Inherit(&cSystemController);
       pa.Run();
-      pa.Draw(display,true);
       pa.Analyze();
+      pa.Draw(display,true);
     }
   else if (whichCalib == "scurve")
     {

@@ -103,18 +103,19 @@ void PixelAlive::Draw(bool display, bool save)
 
 void PixelAlive::Analyze()
 {
-  for (const auto cBoard : *fDetectorContainer)
+  for (const auto cBoard : theOccupancyContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	LOG (INFO) << BOLDGREEN << "\t--> Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-		   << static_cast<Summary<OccupancyAndPh,OccupancyAndPh>*>(theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.fOccupancy << RESET;
+		   << cChip->getSummary<OccupancyAndPh,EmptyContainer>().theSummary_.fOccupancy << RESET;
 }
 
 void PixelAlive::InitHisto()
 {
   std::string tmp;
   std::stringstream myString;
-  size_t ToTsize = RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong();
+  size_t ToTsize  = RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong()+1;
+  size_t BCIDsize = RD53::SetBits<RD53EvtEncoder::NBIT_BCID>(RD53EvtEncoder::NBIT_BCID).to_ulong()+1;
 
   // #######################
   // # Allocate histograms #
@@ -182,8 +183,8 @@ void PixelAlive::InitHisto()
           myString << "theBCID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
 		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theBCID.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),ToTsize,0,ToTsize));
-	  theBCID.back()->SetXTitle("ToT");
+	  theBCID.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),BCIDsize,0,BCIDsize));
+	  theBCID.back()->SetXTitle("BCID");
 	  theBCID.back()->SetYTitle("Entries");
 
 	  myString.clear();
@@ -235,7 +236,7 @@ void PixelAlive::FillHisto()
 		  theErr[index]->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fErrors);
 	      }
 	  
-	  for (auto& el : static_cast<Summary<GenericDataVector,EmptyContainer>*>(theBCIDcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data)
+	  for (auto& el : theBCIDcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data)
 	    theBCID[index]->Fill(el);
 
 	  index++;

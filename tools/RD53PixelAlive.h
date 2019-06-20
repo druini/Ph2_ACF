@@ -19,6 +19,8 @@
 #include "Tool.h"
 
 #include "TApplication.h"
+#include "TStyle.h"
+#include "TGaxis.h"
 #include "TH2F.h"
 
 

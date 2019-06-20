@@ -119,7 +119,7 @@ void ThrOpt::InitHisto()
 		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theTDAC.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),TDACsize,0,TDACsize));
-	  theTDAC.back()->SetXTitle("Efficiency");
+	  theTDAC.back()->SetXTitle("TDAC");
 	  theTDAC.back()->SetYTitle("Entries");
 
 	  myString.clear();

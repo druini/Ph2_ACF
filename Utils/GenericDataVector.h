@@ -14,7 +14,7 @@
 
 #include <iostream>
 
-
+/* template<size_t size> */
 class GenericDataVector
 {
  public:
@@ -32,6 +32,7 @@ class GenericDataVector
   void normalize     (const uint16_t numberOfEvents)                                                                                                                             {}
 
   std::vector<float> data;
+  /* float data[size]; */
 };
 
 #endif
