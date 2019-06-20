@@ -116,7 +116,7 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type)
 	       
 	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
 	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  0;
-	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 60;
+	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 40;
 
 	       cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
 	       cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
@@ -261,7 +261,12 @@ int main (int argc, char** argv)
   // ######################
   size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display;
   std::string INJtype;
-  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display);
+  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display);  
+
+  // ######################################
+  // # Correct injection pattern for RD53 #
+  // ######################################
+  nPixelInj = (ROWstop - ROWstart + 1) * (COLstop  - COLstart + 1) / (COLstop  - COLstart + 1 + ((COLstop  - COLstart + 1) > NROW_CORE ? NROW_CORE : 0));
 
 
   // #####################

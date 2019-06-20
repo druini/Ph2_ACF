@@ -291,7 +291,7 @@ void PixelAlive::Save()
 
   for (auto i = 0; i < theCanvasOcc2D.size(); i++)
     {
-      theOcc2D[i]->Write();
+      theCanvasOcc2D[i]->Write();
       myString.clear();
       myString.str("");
       myString << theOcc2D[i]->GetName() << ".svg";
@@ -300,7 +300,7 @@ void PixelAlive::Save()
 
   for (auto i = 0; i < theCanvasToT.size(); i++)
     {
-      theToT[i]->Write();
+      theCanvasToT[i]->Write();
       myString.clear();
       myString.str("");
       myString << theToT[i]->GetName() << ".svg";
@@ -309,7 +309,7 @@ void PixelAlive::Save()
 
   for (auto i = 0; i < theCanvasOcc1D.size(); i++)
     {
-      theOcc1D[i]->Write();
+      theCanvasOcc1D[i]->Write();
       myString.clear();
       myString.str("");
       myString << theOcc1D[i]->GetName() << ".svg";
@@ -318,7 +318,7 @@ void PixelAlive::Save()
 
   for (auto i = 0; i < theCanvasBCID.size(); i++)
     {
-      theBCID[i]->Write();
+      theCanvasBCID[i]->Write();
       myString.clear();
       myString.str("");
       myString << theBCID[i]->GetName() << ".svg";
@@ -327,7 +327,7 @@ void PixelAlive::Save()
 
   for (auto i = 0; i < theCanvasErr.size(); i++)
     {
-      theErr[i]->Write();
+      theCanvasErr[i]->Write();
       myString.clear();
       myString.str("");
       myString << theErr[i]->GetName() << ".svg";

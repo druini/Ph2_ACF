@@ -181,7 +181,7 @@ void ThrOpt::Save()
 
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
-      theOccupancy[i]->Write();
+      theCanvasOcc[i]->Write();
       myString.clear();
       myString.str("");
       myString << theOccupancy[i]->GetName() << ".svg";
@@ -190,7 +190,7 @@ void ThrOpt::Save()
 
   for (auto i = 0; i < theCanvasTDAC.size(); i++)
     {
-      theTDAC[i]->Write();
+      theCanvasTDAC[i]->Write();
       myString.clear();
       myString.str("");
       myString << theTDAC[i]->GetName() << ".svg";

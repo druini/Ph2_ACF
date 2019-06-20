@@ -18,6 +18,8 @@
 #include "Tool.h"
 
 #include "TApplication.h"
+#include "TStyle.h"
+#include "TGaxis.h"
 #include "TH2F.h"
 
 
@@ -80,6 +82,8 @@ class Gain : public Tool
   std::vector<TH2F*>    theGain2D;
   std::vector<TCanvas*> theCanvasIn2D;
   std::vector<TH2F*>    theIntercept2D;
+
+  std::vector<TGaxis*>  theAxis;
 };
 
 #endif

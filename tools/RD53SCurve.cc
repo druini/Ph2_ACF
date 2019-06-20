@@ -81,6 +81,8 @@ SCurve::~SCurve()
       delete theCanvasNo2D[i];
     }
 
+  for (auto i = 0; i < theAxis.size(); i++) delete theAxis[i];
+
   for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
   
   delete theThresholdAndNoiseContainer;
@@ -149,11 +151,6 @@ void SCurve::Analyze()
 		    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold      = mean;
 		    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThresholdError = rms / sqrt(nHits);
 		    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise          = rms;
-
-		    theThreshold1D[index]->Fill(mean);
-		    theNoise1D[index]->Fill(rms);
-		    theThreshold2D[index]->SetBinContent(col+1,row+1,mean);
-		    theNoise2D[index]->SetBinContent(col+1,row+1,rms);
 		  }
 	      }
 	  
@@ -198,7 +195,7 @@ void SCurve::InitHisto()
 		   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theNoise1D.push_back( new TH1F(myString.str().c_str(),myString.str().c_str(),100,0,20));
-	  theNoise1D.back()->SetXTitle("#DeltaVCal");
+	  theNoise1D.back()->SetXTitle("Noise (#DeltaVCal)");
 	  theNoise1D.back()->SetYTitle("Entries");
 	  
 	  myString.clear();
@@ -215,7 +212,7 @@ void SCurve::InitHisto()
                    << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
                    << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theThreshold1D.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),1000,0,1000));
-	  theThreshold1D.back()->SetXTitle("#DeltaVCal");
+	  theThreshold1D.back()->SetXTitle("Threshold (#DeltaVCal)");
 	  theThreshold1D.back()->SetYTitle("Entries");
 
 	  myString.clear();
@@ -274,9 +271,19 @@ void SCurve::FillHisto()
 	  
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      for (auto i = 0; i < dacList.size(); i++)
-		if (fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
-		  theOccupancy[index]->Fill(dacList[i]-VCalOffset,detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
+	      {
+		for (auto i = 0; i < dacList.size(); i++)
+		  if (fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
+		    theOccupancy[index]->Fill(dacList[i]-VCalOffset,detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
+
+		if (theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise != 0)
+		  {
+		    theThreshold1D[index]->Fill(theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold);
+		    theNoise1D[index]->Fill(theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise);
+		    theThreshold2D[index]->SetBinContent(col+1,row+1,theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold);
+		    theNoise2D[index]->SetBinContent(col+1,row+1,theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise);
+		  }
+	      }
 
 	  index++;
 	}
@@ -298,12 +305,52 @@ void SCurve::Display()
       theThreshold1D[i]->Draw();
       theCanvasTh1D[i]->Modified();
       theCanvasTh1D[i]->Update();
+
+      TPad* myPad = (TPad*)theCanvasTh1D[i]->GetPad(0);
+      myPad->SetTopMargin(0.18);
+      theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
+				   RD53VCal2Charge::Convert(theThreshold1D[i]->GetBinLowEdge(1)),
+				   RD53VCal2Charge::Convert(theThreshold1D[i]->GetBinLowEdge(theThreshold1D[i]->GetNbinsX())),
+				   510,"-"));
+      theAxis.back()->SetTitle("Threshold (electrons)"); 
+      theAxis.back()->SetTitleOffset(1.2);
+      theAxis.back()->SetTitleSize(0.035);
+      theAxis.back()->SetTitleFont(40);
+      theAxis.back()->SetLabelOffset(0.001);
+      theAxis.back()->SetLabelSize(0.035);
+      theAxis.back()->SetLabelFont(42);
+      theAxis.back()->SetLabelColor(kRed);
+      theAxis.back()->SetLineColor(kRed);
+      theAxis.back()->Draw();
+
+      theCanvasTh1D[i]->Modified();
+      theCanvasTh1D[i]->Update();
     }
 
   for (auto i = 0; i < theCanvasNo1D.size(); i++)
     {
       theCanvasNo1D[i]->cd();
       theNoise1D[i]->Draw();
+      theCanvasNo1D[i]->Modified();
+      theCanvasNo1D[i]->Update();
+
+      TPad* myPad = (TPad*)theCanvasNo1D[i]->GetPad(0);
+      myPad->SetTopMargin(0.18);
+      theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
+				   RD53VCal2Charge::Convert(theNoise1D[i]->GetBinLowEdge(1)),
+				   RD53VCal2Charge::Convert(theNoise1D[i]->GetBinLowEdge(theNoise1D[i]->GetNbinsX())),
+				   510,"-"));
+      theAxis.back()->SetTitle("Noise (electrons)"); 
+      theAxis.back()->SetTitleOffset(1.2);
+      theAxis.back()->SetTitleSize(0.035);
+      theAxis.back()->SetTitleFont(40);
+      theAxis.back()->SetLabelOffset(0.001);
+      theAxis.back()->SetLabelSize(0.035);
+      theAxis.back()->SetLabelFont(42);
+      theAxis.back()->SetLabelColor(kRed);
+      theAxis.back()->SetLineColor(kRed);
+      theAxis.back()->Draw();
+
       theCanvasNo1D[i]->Modified();
       theCanvasNo1D[i]->Update();
     }
@@ -331,7 +378,7 @@ void SCurve::Save()
 
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
-      theOccupancy[i]->Write();
+      theCanvasOcc[i]->Write();
       myString.clear();
       myString.str("");
       myString << theOccupancy[i]->GetName() << ".svg";
@@ -340,7 +387,7 @@ void SCurve::Save()
 
   for (auto i = 0; i < theCanvasTh1D.size(); i++)
     {
-      theThreshold1D[i]->Write();
+      theCanvasTh1D[i]->Write();
       myString.clear();
       myString.str("");
       myString << theThreshold1D[i]->GetName() << ".svg";
@@ -349,7 +396,7 @@ void SCurve::Save()
 
   for (auto i = 0; i < theCanvasNo1D.size(); i++)
     {
-      theNoise1D[i]->Write();
+      theCanvasNo1D[i]->Write();
       myString.clear();
       myString.str("");
       myString << theNoise1D[i]->GetName() << ".svg";
@@ -358,7 +405,7 @@ void SCurve::Save()
 
   for (auto i = 0; i < theCanvasTh2D.size(); i++)
     {
-      theThreshold2D[i]->Write();
+      theCanvasTh2D[i]->Write();
       myString.clear();
       myString.str("");
       myString << theThreshold2D[i]->GetName() << ".svg";
@@ -367,7 +414,7 @@ void SCurve::Save()
 
   for (auto i = 0; i < theCanvasNo2D.size(); i++)
     {
-      theNoise2D[i]->Write();
+      theCanvasNo2D[i]->Write();
       myString.clear();
       myString.str("");
       myString << theNoise2D[i]->GetName() << ".svg";

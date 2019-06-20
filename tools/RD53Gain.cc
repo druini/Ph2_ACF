@@ -81,6 +81,8 @@ Gain::~Gain()
       delete theCanvasIn2D[i];
     }
 
+  for (auto i = 0; i < theAxis.size(); i++) delete theAxis[i];
+
   for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
   
   delete theGainAndInterceptContainer;
@@ -156,11 +158,6 @@ void Gain::Analyze()
 		    theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGainError      = gainErr;
 		    theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept      = intercept;
 		    theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fInterceptError = interceptErr;
-		    
-		    theGain1D[index]->Fill(gain);
-		    theIntercept1D[index]->Fill(intercept);
-		    theGain2D[index]->SetBinContent(col+1,row+1,gain);
-		    theIntercept2D[index]->SetBinContent(col+1,row+1,intercept);
 		  }
 	      }
 	  
@@ -187,7 +184,9 @@ void Gain::InitHisto()
           myString << "Gain_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
 		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue-VCalOffset,stopValue-VCalOffset,nEvents/2,0,RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong()));
+	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),
+					  nSteps,startValue-VCalOffset,stopValue-VCalOffset,
+					  nEvents/2,0,RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong()));
 	  theOccupancy.back()->SetXTitle("#DeltaVCal");
 	  theOccupancy.back()->SetYTitle("ToT");
 
@@ -205,7 +204,7 @@ void Gain::InitHisto()
                    << "_Mod"            << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
                    << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theGain1D.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),100,0,15e-3));
-	  theGain1D.back()->SetXTitle("Gain");
+	  theGain1D.back()->SetXTitle("Gain (ToT/VCal)");
 	  theGain1D.back()->SetYTitle("Entries");
   
 	  myString.clear();
@@ -222,7 +221,7 @@ void Gain::InitHisto()
                    << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
                    << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theIntercept1D.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),100,-INTERCEPT_HALFRANGE,INTERCEPT_HALFRANGE));
-	  theIntercept1D.back()->SetXTitle("ToT");
+	  theIntercept1D.back()->SetXTitle("Intercept (ToT)");
 	  theIntercept1D.back()->SetYTitle("Entries");
 
 	  myString.clear();
@@ -281,9 +280,19 @@ void Gain::FillHisto()
 	  
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      for (auto i = 0; i < dacList.size(); i++)
-		if (detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh != 0)
-		  theOccupancy[index]->Fill(dacList[i]-VCalOffset,detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh);
+	      {
+		for (auto i = 0; i < dacList.size(); i++)
+		  if (detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh != 0)
+		    theOccupancy[index]->Fill(dacList[i]-VCalOffset,detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh);
+		
+		if (theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain != 0)
+		  {
+		    theGain1D[index]->Fill(theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain);
+		    theIntercept1D[index]->Fill(theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept);
+		    theGain2D[index]->SetBinContent(col+1,row+1,theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain);
+		    theIntercept2D[index]->SetBinContent(col+1,row+1,theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept);
+		  }
+	      }
 
 	  index++;
 	}
@@ -303,6 +312,26 @@ void Gain::Display()
     {
       theCanvasGa1D[i]->cd();
       theGain1D[i]->Draw();
+      theCanvasGa1D[i]->Modified();
+      theCanvasGa1D[i]->Update();
+
+      TPad* myPad = (TPad*)theCanvasGa1D[i]->GetPad(0);
+      myPad->SetTopMargin(0.18);
+      theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
+				   1./RD53VCal2Charge::Convert(1./theGain1D[i]->GetBinLowEdge(1),true),
+				   1./RD53VCal2Charge::Convert(1./theGain1D[i]->GetBinLowEdge(theGain1D[i]->GetNbinsX()),true),
+				   510,"-"));
+      theAxis.back()->SetTitle("Gain (ToT/electrons)");
+      theAxis.back()->SetTitleOffset(1.2);
+      theAxis.back()->SetTitleSize(0.035);
+      theAxis.back()->SetTitleFont(40);
+      theAxis.back()->SetLabelOffset(0.001);
+      theAxis.back()->SetLabelSize(0.035);
+      theAxis.back()->SetLabelFont(42);
+      theAxis.back()->SetLabelColor(kRed);
+      theAxis.back()->SetLineColor(kRed);
+      theAxis.back()->Draw();
+
       theCanvasGa1D[i]->Modified();
       theCanvasGa1D[i]->Update();
     }
@@ -338,7 +367,7 @@ void Gain::Save()
   
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
-      theOccupancy[i]->Write();
+      theCanvasOcc[i]->Write();
       myString.clear();
       myString.str("");
       myString << theOccupancy[i]->GetName() << ".svg";
@@ -347,7 +376,7 @@ void Gain::Save()
 
   for (auto i = 0; i < theCanvasGa1D.size(); i++)
     {
-      theGain1D[i]->Write();
+      theCanvasGa1D[i]->Write();
       myString.clear();
       myString.str("");
       myString << theGain1D[i]->GetName() << ".svg";
@@ -356,7 +385,7 @@ void Gain::Save()
 
   for (auto i = 0; i < theCanvasIn1D.size(); i++)
     {
-      theIntercept1D[i]->Write();
+      theCanvasIn1D[i]->Write();
       myString.clear();
       myString.str("");
       myString << theIntercept1D[i]->GetName() << ".svg";
@@ -365,7 +394,7 @@ void Gain::Save()
 
   for (auto i = 0; i < theCanvasGa2D.size(); i++)
     {
-      theGain2D[i]->Write();
+      theCanvasGa2D[i]->Write();
       myString.clear();
       myString.str("");
       myString << theGain2D[i]->GetName() << ".svg";
@@ -374,7 +403,7 @@ void Gain::Save()
 
   for (auto i = 0; i < theCanvasIn2D.size(); i++)
     {
-      theIntercept2D[i]->Write();
+      theCanvasIn2D[i]->Write();
       myString.clear();
       myString.str("");
       myString << theIntercept2D[i]->GetName() << ".svg";

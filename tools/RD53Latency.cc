@@ -10,15 +10,15 @@
 #include "RD53Latency.h"
 
 Latency::Latency(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t startValue, size_t stopValue, size_t nEvents) :
-  fileName     (fileName),
-  rowStart     (rowStart),
-  rowEnd       (rowEnd),
-  colStart     (colStart),
-  colEnd       (colEnd),
-  startValue   (startValue),
-  stopValue    (stopValue),
-  nEvents      (nEvents),
-  Tool         ()
+  fileName   (fileName),
+  rowStart   (rowStart),
+  rowEnd     (rowEnd),
+  colStart   (colStart),
+  colEnd     (colEnd),
+  startValue (startValue),
+  stopValue  (stopValue),
+  nEvents    (nEvents),
+  Tool       ()
 {}
 
 Latency::~Latency()
@@ -193,7 +193,7 @@ void Latency::Save()
   
   for (auto i = 0; i < theCanvasLat.size(); i++)
     {
-      theLat[i]->Write();
+      theCanvasLat[i]->Write();
       myString.clear();
       myString.str("");
       myString << theLat[i]->GetName() << ".svg";

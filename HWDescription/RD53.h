@@ -33,6 +33,23 @@
 #define NPIXCOL_PROG      2 // Number of pixel columns to program
 #define NDATAMAX_PERPIXEL 6 // Number of data-bit packets used to program the pixel
 #define NPIX_REGION       4 // Number of pixels in a region (1x4)
+#define NROW_CORE         8 // Number of rows in a core
+
+
+// #################################################################################
+// # Formula: (par0 1e-3 + par1*VCal 1e-3) / electron_charge [C] * capacitance [C] #
+// #################################################################################
+namespace RD53VCal2Charge
+{
+  const float par0 = -1.0;
+  const float par1 =  0.195;
+  const float cap  =  8.2;
+  const float ele  =  1.6;
+  constexpr float Convert(float VCal, bool onlySlope = false)
+  {
+    return ((onlySlope ? 0 : par0) + par1*VCal) / ele * cap * 10.0;
+  }
+}
 
 
 // #########################

@@ -18,6 +18,8 @@
 #include "Tool.h"
 
 #include "TApplication.h"
+#include "TStyle.h"
+#include "TGaxis.h"
 #include "TH2F.h"
 
 
@@ -74,6 +76,8 @@ class SCurve : public Tool
   std::vector<TH2F*>    theThreshold2D;
   std::vector<TCanvas*> theCanvasNo2D;
   std::vector<TH2F*>    theNoise2D;
+
+  std::vector<TGaxis*>  theAxis;
 };
 
 #endif
