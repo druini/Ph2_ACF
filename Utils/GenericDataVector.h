@@ -11,10 +11,11 @@
 #define _GenericDataVector_h_
 
 #include "../Utils/Container.h"
+#include "../Utils/OccupancyAndPh.h"
 
 #include <iostream>
 
-class GenericDataVector
+class GenericDataVector : public OccupancyAndPh
 {
  public:
   GenericDataVector()  {}
@@ -26,9 +27,22 @@ class GenericDataVector
   }
   
   template<typename T>
-    void makeAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents) {}
-  void makeAverage   (const std::vector<GenericDataVector>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents)      {}
-  void normalize     (const uint16_t numberOfEvents)                                                                                                                             {}
+  void makeAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents)
+  {
+    OccupancyAndPh::makeAverage<T>(theChipContainer,chipOriginalMask,cTestChannelGroup,numberOfEvents);
+  }
+  
+  void makeAverage (const std::vector<OccupancyAndPh>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents)
+  {
+    OccupancyAndPh::makeAverage(theOccupancyVector, theNumberOfEnabledChannelsList, numberOfEvents);
+  }
+
+  void makeAverage (const std::vector<GenericDataVector>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) {}
+  
+  void normalize (const uint16_t numberOfEvents)
+  {
+    OccupancyAndPh::normalize(numberOfEvents);
+  }
 
   std::vector<float> data;
 };

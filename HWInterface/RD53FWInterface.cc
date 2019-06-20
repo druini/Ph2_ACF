@@ -387,6 +387,7 @@ namespace Ph2_HwInterface
 	  }
 
 	auto events = this->DecodeEvents(pData, status);
+	// this->PrintEvents(events); // @TMP@
 	if (this->EvtErrorHandler(status) == false)
 	  {
 	    retry = true;

@@ -50,8 +50,7 @@ class PixelAlive : public Tool
   size_t nEvtsBurst;  
   bool   inject;
 
-  DetectorDataContainer theOccupancyContainer;
-  DetectorDataContainer theBCIDcontainer;
+  DetectorDataContainer theContainer;
 
   void InitHisto ();
   void FillHisto ();

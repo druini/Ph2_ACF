@@ -51,7 +51,7 @@ void Latency::Run()
       for (const auto cModule : *cBoard)
 	for (const auto cChip : *cModule)
 	  {
-	    LOG (INFO) << GREEN << "Performing latency scan for [board/module/chip] = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET;
+	    LOG (INFO) << GREEN << "Performing latency scan for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
 
 
 	    // ########################

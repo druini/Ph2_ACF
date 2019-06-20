@@ -76,7 +76,7 @@
     <Setting name="COLstart">    128 </Setting>
     <Setting name="COLstop">     151 </Setting>
     <!--
-    <Setting name="nPixelInj">     8 </Setting>
+    <Setting name="nPixelInj">    24 </Setting>
     -->
 
     <Setting name="LatencyStart">  0 </Setting>

@@ -127,11 +127,18 @@ public:
 	
 	template<typename T>
 	bool isSummaryContainerType()
-	{
-		const std::type_info& containerTypeId = typeid(summary_);
-		const std::type_info& templateTypeId = typeid(T*);
+	  {
+		T* tmpSummaryContainer = dynamic_cast<T*>(summary_);
+		if (tmpSummaryContainer == nullptr)
+		{
+			return false;
+		}
+		else return true;
 
-		return (containerTypeId.hash_code() == templateTypeId.hash_code());
+		/* const std::type_info& containerTypeId = typeid(summary_); */
+		/* const std::type_info& templateTypeId = typeid(T*); */
+
+		/* return (containerTypeId.hash_code() == templateTypeId.hash_code()); */
 	}
 
 	template<typename S, typename T>
