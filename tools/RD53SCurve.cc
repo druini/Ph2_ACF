@@ -135,7 +135,7 @@ void SCurve::Analyze()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  size_t VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
+	  int VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
 
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
@@ -169,7 +169,7 @@ void SCurve::InitHisto()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  size_t VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
+	  int VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
 
 
 	  myString.clear();
@@ -267,7 +267,7 @@ void SCurve::FillHisto()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  size_t VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
+	  int VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
 	  
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
@@ -425,7 +425,7 @@ void SCurve::Save()
 }
 
 
-void SCurve::ComputeStats(std::vector<float>& measurements, size_t offset, float& nHits, float& mean, float& rms)
+void SCurve::ComputeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
 {
   float mean2  = 0;
   float weight = 0;

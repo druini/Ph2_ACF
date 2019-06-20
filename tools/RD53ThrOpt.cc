@@ -93,7 +93,7 @@ void ThrOpt::InitHisto()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  size_t VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
+	  int VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
 
 
 	  myString.clear();

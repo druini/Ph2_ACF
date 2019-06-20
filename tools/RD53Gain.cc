@@ -138,7 +138,7 @@ void Gain::Analyze()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  size_t VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
+	  int VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
 
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
@@ -176,7 +176,7 @@ void Gain::InitHisto()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  size_t VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
+	  int VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
 
 
 	  myString.clear();
@@ -276,7 +276,7 @@ void Gain::FillHisto()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  size_t VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
+	  int VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
 	  
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)

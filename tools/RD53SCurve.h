@@ -59,7 +59,7 @@ class SCurve : public Tool
   void FillHisto    ();
   void Display      ();
   void Save         ();
-  void ComputeStats (std::vector<float>& measurements, size_t offset, float& nHits, float& mean, float& rms);
+  void ComputeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
 
 
   // ########
