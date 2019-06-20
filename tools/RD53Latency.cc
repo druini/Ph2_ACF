@@ -84,8 +84,7 @@ void Latency::Run()
 		      if (evt.chip_events[j].data.size() != 0) nEvts++;
 		  }
 
-		// cChip->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data.push_back(nEvts);
-		static_cast<Summary<GenericDataVector,EmptyContainer>*>(theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data.push_back(nEvts);
+		theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data.push_back(nEvts);
 	      }
 	  }
     }
@@ -107,7 +106,7 @@ void Latency::Draw(bool display, bool save)
 
 void Latency::Analyze()
 {
-  for (const auto cBoard : *fDetectorContainer)
+  for (const auto cBoard : theLatencyContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
@@ -116,8 +115,7 @@ void Latency::Analyze()
 	  
 	  for (auto lt = startValue; lt < stopValue; lt++)
 	    {
-	      auto nEvts = static_cast<Summary<GenericDataVector,EmptyContainer>*>(theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data[lt-startValue];
-	      // auto nEvts = cChip->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data[lt-startValue]);
+	      auto nEvts = cChip->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data[lt-startValue];
 	      if (nEvts > dataSize)
 		{
 		  latency  = lt;
@@ -167,14 +165,13 @@ void Latency::InitHisto()
 void Latency::FillHisto()
 {
   size_t index = 0;
-  for (const auto cBoard : *fDetectorContainer)
+  for (const auto cBoard : theLatencyContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
 	  for (auto lt = startValue; lt < stopValue; lt++)
-	    theLat[index]->SetBinContent(theLat[index]->FindBin(lt),static_cast<Summary<GenericDataVector,EmptyContainer>*>(theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->summary_)->theSummary_.data[lt-startValue]);
-	  // theLat[index]->SetBinContent(theLat[index]->FindBin(lt),cChip->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data[lt-startValue]);
-
+	    theLat[index]->SetBinContent(theLat[index]->FindBin(lt),cChip->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data[lt-startValue]);
+	  
 	  index++;
 	}
 }

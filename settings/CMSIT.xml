@@ -83,7 +83,7 @@
     <Setting name="LatencyStop"> 511 </Setting>
 
     <Setting name="VCALstart">   300 </Setting>
-    <Setting name="VCALstop">    600 </Setting>
+    <Setting name="VCALstop">   4000 </Setting>
     <Setting name="VCALnsteps">   30 </Setting>
 
     <Setting name="DisplayHisto">  1 </Setting>
