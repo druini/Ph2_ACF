@@ -40,7 +40,7 @@ namespace Ph2_HwInterface
 	{
 	  if (this->isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
 	    {
-	      if (vectorRequired == true) cChip->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data.push_back(chip_events[chipIndx].bc_id);
+	      if (vectorRequired == true) cChip->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data.push_back(chip_events[chipIndx].bc_id);
 
 	      for (const auto& hit : chip_events[chipIndx].data)
 		{
