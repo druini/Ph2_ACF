@@ -82,11 +82,11 @@
     <Setting name="LatencyStart">  0 </Setting>
     <Setting name="LatencyStop"> 511 </Setting>
 
-    <Setting name="VCALstart">   300 </Setting>
-    <Setting name="VCALstop">    600 </Setting>
+    <Setting name="VCALstart">   200 </Setting>
+    <Setting name="VCALstop">    500 </Setting>
     <Setting name="VCALnsteps">   30 </Setting>
 
-    <Setting name="DisplayHisto">  0 </Setting>
+    <Setting name="DisplayHisto">  1 </Setting>
   </Settings>
 
 </HwDescription>

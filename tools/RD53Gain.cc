@@ -316,7 +316,7 @@ void Gain::Display()
       theCanvasGa1D[i]->Update();
 
       TPad* myPad = (TPad*)theCanvasGa1D[i]->GetPad(0);
-      myPad->SetTopMargin(0.18);
+      myPad->SetTopMargin(0.16);
       theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
 				   1./RD53VCal2Charge::Convert(1./theGain1D[i]->GetBinLowEdge(1),true),
 				   1./RD53VCal2Charge::Convert(1./theGain1D[i]->GetBinLowEdge(theGain1D[i]->GetNbinsX()),true),

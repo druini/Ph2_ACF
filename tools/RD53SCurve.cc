@@ -155,6 +155,10 @@ void SCurve::Analyze()
 	      }
 	  
 	  index++;
+
+	  LOG (INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
+		     << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().theSummary_.fThreshold
+		     << BOLDGREEN << " (VCal)" << RESET;
 	}
 }
 
@@ -307,7 +311,7 @@ void SCurve::Display()
       theCanvasTh1D[i]->Update();
 
       TPad* myPad = (TPad*)theCanvasTh1D[i]->GetPad(0);
-      myPad->SetTopMargin(0.18);
+      myPad->SetTopMargin(0.16);
       theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
 				   RD53VCal2Charge::Convert(theThreshold1D[i]->GetBinLowEdge(1)),
 				   RD53VCal2Charge::Convert(theThreshold1D[i]->GetBinLowEdge(theThreshold1D[i]->GetNbinsX())),
@@ -335,7 +339,7 @@ void SCurve::Display()
       theCanvasNo1D[i]->Update();
 
       TPad* myPad = (TPad*)theCanvasNo1D[i]->GetPad(0);
-      myPad->SetTopMargin(0.18);
+      myPad->SetTopMargin(0.16);
       theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
 				   RD53VCal2Charge::Convert(theNoise1D[i]->GetBinLowEdge(1),true),
 				   RD53VCal2Charge::Convert(theNoise1D[i]->GetBinLowEdge(theNoise1D[i]->GetNbinsX()),true),

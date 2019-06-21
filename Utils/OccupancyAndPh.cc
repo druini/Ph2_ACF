@@ -25,8 +25,8 @@ void OccupancyAndPh::makeAverage (const std::vector<OccupancyAndPh>* theOccupanc
     {
       fOccupancy                  += theOccupancyVector->at(iContainer).fOccupancy * theNumberOfEnabledChannelsList[iContainer];
 
-      fPh                         += theOccupancyVector->at(iContainer).fPh * theNumberOfEnabledChannelsList[iContainer];
-      fPhError                    += theOccupancyVector->at(iContainer).fPhError * theOccupancyVector->at(iContainer).fPhError * theNumberOfEnabledChannelsList[iContainer];
+      fPh                         += theOccupancyVector->at(iContainer).fPh * theNumberOfEnabledChannelsList[iContainer] / (theOccupancyVector->at(iContainer).fPhError * theOccupancyVector->at(iContainer).fPhError);
+      fPhError                    += theNumberOfEnabledChannelsList[iContainer] / (theOccupancyVector->at(iContainer).fPhError * theOccupancyVector->at(iContainer).fPhError);
 
       fErrors                     += theOccupancyVector->at(iContainer).fErrors * theNumberOfEnabledChannelsList[iContainer];
 
@@ -35,10 +35,13 @@ void OccupancyAndPh::makeAverage (const std::vector<OccupancyAndPh>* theOccupanc
 
   fOccupancy /= totalNumberOfEnableChannels;
 
-  fPh        /= totalNumberOfEnableChannels;
-  fPhError   /= sqrt(fPhError / totalNumberOfEnableChannels);
+  if (fPhError != 0)
+    {
+      fPh      /= fPhError;
+      fPhError /= sqrt(1./ fPhError);
+    }
 
-  fErrors    /= totalNumberOfEnableChannels;
+  fErrors /= totalNumberOfEnableChannels;
 }
 
 void OccupancyAndPh::normalize (const uint16_t numberOfEvents)

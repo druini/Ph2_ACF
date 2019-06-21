@@ -19,11 +19,15 @@ void ThresholdAndNoise::makeAverage(const std::vector<ThresholdAndNoise>* theThr
     
     }
     
-    fThresholdError = 1./fThresholdError;
-    fThreshold     /= fThresholdError;
-    fThresholdError = sqrt(fThresholdError);
+    if (fThresholdError != 0)
+      {
+	fThreshold      /= fThresholdError;
+	fThresholdError /= sqrt(1./ fThresholdError);
+      }
 
-    fNoiseError     = 1./fNoiseError;
-    fNoise         /= fNoiseError;
-    fNoiseError     = sqrt(fNoiseError);
+    if (fNoiseError != 0)
+      {
+	fNoise      /= fNoiseError;
+	fNoiseError /= sqrt(1. / fNoiseError);
+      }
 }
