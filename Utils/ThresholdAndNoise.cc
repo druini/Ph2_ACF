@@ -12,20 +12,26 @@ void ThresholdAndNoise::makeAverage(const std::vector<ThresholdAndNoise>* theThr
     
     for(size_t iContainer = 0; iContainer<theThresholdAndNoiseVector->size(); ++iContainer)
     {
-        fThreshold      += (theThresholdAndNoiseVector->at(iContainer).fThreshold*float(theNumberOfEnabledChannelsList[iContainer]))/(theThresholdAndNoiseVector->at(iContainer).fThresholdError*theThresholdAndNoiseVector->at(iContainer).fThresholdError);
-        fNoise          += (theThresholdAndNoiseVector->at(iContainer).fNoise*float(theNumberOfEnabledChannelsList[iContainer]))/(theThresholdAndNoiseVector->at(iContainer).fNoiseError*theThresholdAndNoiseVector->at(iContainer).fNoiseError);
-        fThresholdError += float(theNumberOfEnabledChannelsList[iContainer])/(theThresholdAndNoiseVector->at(iContainer).fThresholdError*theThresholdAndNoiseVector->at(iContainer).fThresholdError);
-        fNoiseError     += float(theNumberOfEnabledChannelsList[iContainer])/(theThresholdAndNoiseVector->at(iContainer).fNoiseError*theThresholdAndNoiseVector->at(iContainer).fNoiseError);
-    
+      if (theThresholdAndNoiseVector->at(iContainer).fThresholdError > 0)
+	{
+	  fThreshold      += (theThresholdAndNoiseVector->at(iContainer).fThreshold*float(theNumberOfEnabledChannelsList[iContainer]))/(theThresholdAndNoiseVector->at(iContainer).fThresholdError*theThresholdAndNoiseVector->at(iContainer).fThresholdError);
+	  fThresholdError += float(theNumberOfEnabledChannelsList[iContainer])/(theThresholdAndNoiseVector->at(iContainer).fThresholdError*theThresholdAndNoiseVector->at(iContainer).fThresholdError);
+	}
+
+      if (theThresholdAndNoiseVector->at(iContainer).fNoiseError > 0)
+	{
+	  fNoise          += (theThresholdAndNoiseVector->at(iContainer).fNoise*float(theNumberOfEnabledChannelsList[iContainer]))/(theThresholdAndNoiseVector->at(iContainer).fNoiseError*theThresholdAndNoiseVector->at(iContainer).fNoiseError);
+	  fNoiseError     += float(theNumberOfEnabledChannelsList[iContainer])/(theThresholdAndNoiseVector->at(iContainer).fNoiseError*theThresholdAndNoiseVector->at(iContainer).fNoiseError);
+	}
     }
     
-    if (fThresholdError != 0)
+    if (fThresholdError > 0)
       {
 	fThreshold      /= fThresholdError;
 	fThresholdError /= sqrt(1./ fThresholdError);
       }
 
-    if (fNoiseError != 0)
+    if (fNoiseError > 0)
       {
 	fNoise      /= fNoiseError;
 	fNoiseError /= sqrt(1. / fNoiseError);

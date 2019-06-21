@@ -46,26 +46,26 @@ inline void GainAndIntercept::makeAverage<GainAndIntercept>(const ChipContainer*
     for (auto col = 0; col < theChipContainer->getNumberOfCols(); col++)
       if (chipOriginalMask->isChannelEnabled(row,col) && cTestChannelGroup->isChannelEnabled(row,col))
 	{
-	  if (theChipContainer->getChannel<GainAndIntercept>(row,col).fGainError != 0)
+	  if (theChipContainer->getChannel<GainAndIntercept>(row,col).fGainError > 0)
 	    {
 	      fGain      += theChipContainer->getChannel<GainAndIntercept>(row,col).fGain / (theChipContainer->getChannel<GainAndIntercept>(row,col).fGainError * theChipContainer->getChannel<GainAndIntercept>(row,col).fGainError);
 	      fGainError += 1. / (theChipContainer->getChannel<GainAndIntercept>(row,col).fGainError * theChipContainer->getChannel<GainAndIntercept>(row,col).fGainError);
 	    }
 	  
-	  if (theChipContainer->getChannel<GainAndIntercept>(row,col).fInterceptError != 0)
+	  if (theChipContainer->getChannel<GainAndIntercept>(row,col).fInterceptError > 0)
 	    {
 	      fIntercept      += theChipContainer->getChannel<GainAndIntercept>(row,col).fIntercept / (theChipContainer->getChannel<GainAndIntercept>(row,col).fInterceptError * theChipContainer->getChannel<GainAndIntercept>(row,col).fInterceptError);
 	      fInterceptError += 1. / (theChipContainer->getChannel<GainAndIntercept>(row,col).fInterceptError * theChipContainer->getChannel<GainAndIntercept>(row,col).fInterceptError);
 	    }
 	}
 
-  if (fGainError != 0)
+  if (fGainError > 0)
     {
       fGain     /= fGainError;
       fGainError = sqrt(1. / fGainError);
     }
 
-  if (fInterceptError != 0)
+  if (fInterceptError > 0)
     {
       fIntercept     /= fInterceptError;
       fInterceptError = sqrt(1. / fInterceptError);

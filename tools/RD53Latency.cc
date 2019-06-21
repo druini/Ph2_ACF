@@ -57,6 +57,8 @@ void Latency::Run()
 	    // ########################
 	    // # Set pixels to inject #
 	    // ########################
+	    static_cast<RD53*>(cChip)->resetMask();
+
 	    static_cast<RD53*>(cChip)->enablePixel(rowStart,colStart,true);
 	    static_cast<RD53*>(cChip)->injectPixel(rowStart,colStart,true);
 
@@ -131,6 +133,7 @@ void Latency::InitHisto()
 {
   std::string tmp;
   std::stringstream myString;
+
 
   // #######################
   // # Allocate histograms #

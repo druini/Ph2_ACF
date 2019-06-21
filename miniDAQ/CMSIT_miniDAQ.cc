@@ -216,7 +216,7 @@ int main (int argc, char** argv)
   cmd.defineOption("file","Hardware description file. Default value: settings/CMSIT.xml",ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency; pixelalive; noise; scurve; gain; gainopt; thropt]. Default: pixelalive", ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain thropt gainopt]. Default: pixelalive", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
   cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", ArgvParser::NoOptionAttribute);
@@ -347,24 +347,24 @@ int main (int argc, char** argv)
       ga.Analyze();
       ga.Draw(display,true);
     }
+  else if (whichCalib == "thropt")
+    {
+      // ##############################
+      // # Run Threshold Optimization #
+      // ##############################
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing threshold optimization @@@" << RESET;
+
+      ThrOpt to("ThresholdOptimization.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents);
+      to.Inherit(&cSystemController);
+      to.Run();
+      to.Draw(display,true);
+    }
   else if (whichCalib == "gainopt")
     {
       // #########################
       // # Run Gain Optimization #
       // #########################
       LOG (ERROR) << BOLDRED << "@@@ Gain optimization not implemented yet ... coming soon @@@" << RESET;
-    }
-  else if (whichCalib == "thropt")
-    {
-      // ##############################
-      // # Run Threshold Optimization #
-      // ##############################
-      LOG (INFO) << BOLDMAGENTA << "@@@ Threshold optimization scan @@@" << RESET;
-
-      ThrOpt to("ThresholdOptimization.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents);
-      to.Inherit(&cSystemController);
-      to.Run();
-      to.Draw(display,true);
     }
   else LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
 

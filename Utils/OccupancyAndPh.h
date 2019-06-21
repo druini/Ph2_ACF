@@ -51,17 +51,20 @@ inline void OccupancyAndPh::makeAverage<OccupancyAndPh> (const ChipContainer* th
 	{
 	  fOccupancy += theChipContainer->getChannel<OccupancyAndPh>(row,col).fOccupancy;
 	  
-	  fPh        += theChipContainer->getChannel<OccupancyAndPh>(row,col).fPh / (theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError * theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError);
-	  fPhError   += 1./(theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError * theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError);
-	  
-	  fErrors    += theChipContainer->getChannel<OccupancyAndPh>(row,col).fErrors;
+	  if (theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError > 0)
+	    {
+	      fPh      += theChipContainer->getChannel<OccupancyAndPh>(row,col).fPh / (theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError * theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError);
+	      fPhError += 1./(theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError * theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError);
+	    }
+
+	  fErrors += theChipContainer->getChannel<OccupancyAndPh>(row,col).fErrors;
 
 	  numberOfEnabledChannels++;
 	}
 
   fOccupancy /= numberOfEnabledChannels;
 
-  if (fPhError != 0)
+  if (fPhError > 0)
     {
       fPh      /= fPhError;
       fPhError /= sqrt(1. / fPhError);

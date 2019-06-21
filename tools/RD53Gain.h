@@ -59,7 +59,7 @@ class Gain : public Tool
   std::vector<uint16_t> dacList;
 
   std::vector<DetectorDataContainer*> detectorContainerVector;
-  DetectorDataContainer*              theGainAndInterceptContainer;
+  DetectorDataContainer               theGainAndInterceptContainer;
 
   void InitHisto    ();
   void FillHisto    ();

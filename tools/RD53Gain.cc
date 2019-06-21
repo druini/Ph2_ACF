@@ -84,17 +84,13 @@ Gain::~Gain()
   for (auto i = 0; i < theAxis.size(); i++) delete theAxis[i];
 
   for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
-  
-  delete theGainAndInterceptContainer;
 }
 
 void Gain::Run()
 {
   ContainerFactory theDetectorFactory;
 
-  for (auto i = 0; i < detectorContainerVector.size(); i++)
-    delete detectorContainerVector[i];
-
+  for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
   detectorContainerVector.clear();
   detectorContainerVector.reserve(dacList.size());
   for (auto i = 0; i < dacList.size(); i++)
@@ -129,9 +125,8 @@ void Gain::Analyze()
   std::vector<float> y(dacList.size(),0);
   std::vector<float> e(dacList.size(),0);
 
-  theGainAndInterceptContainer = new DetectorDataContainer();
   ContainerFactory theDetectorFactory;
-  theDetectorFactory.copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
+  theDetectorFactory.copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, theGainAndInterceptContainer);
 
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
@@ -154,10 +149,10 @@ void Gain::Analyze()
 		
 		if (gain != 0)
 		  {
-		    theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain           = gain;
-		    theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGainError      = gainErr;
-		    theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept      = intercept;
-		    theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fInterceptError = interceptErr;
+		    theGainAndInterceptContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain           = gain;
+		    theGainAndInterceptContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGainError      = gainErr;
+		    theGainAndInterceptContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept      = intercept;
+		    theGainAndInterceptContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fInterceptError = interceptErr;
 		  }
 	      }
 	  
@@ -168,6 +163,7 @@ void Gain::Analyze()
 void Gain::InitHisto()
 {
   std::stringstream myString;
+
 
   // #######################
   // # Allocate histograms #
@@ -285,12 +281,12 @@ void Gain::FillHisto()
 		  if (detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh != 0)
 		    theOccupancy[index]->Fill(dacList[i]-VCalOffset,detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh);
 		
-		if (theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain != 0)
+		if (theGainAndInterceptContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain != 0)
 		  {
-		    theGain1D[index]->Fill(theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain);
-		    theIntercept1D[index]->Fill(theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept);
-		    theGain2D[index]->SetBinContent(col+1,row+1,theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain);
-		    theIntercept2D[index]->SetBinContent(col+1,row+1,theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept);
+		    theGain1D[index]->Fill(theGainAndInterceptContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain);
+		    theIntercept1D[index]->Fill(theGainAndInterceptContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept);
+		    theGain2D[index]->SetBinContent(col+1,row+1,theGainAndInterceptContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain);
+		    theIntercept2D[index]->SetBinContent(col+1,row+1,theGainAndInterceptContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept);
 		  }
 	      }
 

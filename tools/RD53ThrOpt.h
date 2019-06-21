@@ -25,7 +25,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define TARGETeff 0.56 // Target efficiency for optimization algorithm
+#define TARGETeff 0.70 // Target efficiency for optimization algorithm
 
 
 using namespace Ph2_System;
@@ -52,7 +52,7 @@ class ThrOpt : public Tool
   size_t nEvents;
   float  targetTh;
 
-  DetectorDataContainer theOccupancyContainer;
+  DetectorDataContainer theContainer;
   DetectorDataContainer theTDACcontainer;
 
   void InitHisto ();

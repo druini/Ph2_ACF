@@ -58,13 +58,24 @@ void ThrOpt::Run()
 {
   ContainerFactory theDetectorFactory;
 
-  fDetectorDataContainer = &theOccupancyContainer;
+  fDetectorDataContainer = &theContainer;
   theDetectorFactory.copyAndInitStructure<Occupancy>                   (*fDetectorContainer, *fDetectorDataContainer);
   theDetectorFactory.copyAndInitStructure<RegisterValue,EmptyContainer>(*fDetectorContainer, theTDACcontainer);
 
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
   this->bitWiseScan("PIX_PORTAL", nEvents, TARGETeff);
+
+
+  // #######################
+  // # Fill TDAC container #
+  // #######################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+	for (auto row = 0; row < RD53::nRows; row++)
+	  for (auto col = 0; col < RD53::nCols; col++)
+	    theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
 }
 
 void ThrOpt::Draw(bool display, bool save)
@@ -85,6 +96,7 @@ void ThrOpt::InitHisto()
 {
   std::stringstream myString;
   size_t TDACsize = RD53::SetBits<RD53PixelEncoder::NBIT_TDAC>(RD53PixelEncoder::NBIT_TDAC).to_ulong()+1;
+
 
   // #######################
   // # Allocate histograms #
@@ -143,12 +155,10 @@ void ThrOpt::FillHisto()
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
-		if (theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy != 0)
+		if (theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy != 0)
 		  {
-		    theOccupancy[index]->Fill(theOccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
-
-		    theTDAC[index]->Fill((*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row]);		    
-		    theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
+		    theOccupancy[index]->Fill(theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
+		    theTDAC[index]->Fill(theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
 		  }
 	      }
 
@@ -198,4 +208,33 @@ void ThrOpt::Save()
     }
 
   theFile->Write();
+
+
+  // ############################
+  // # Save register new values #
+  // ############################
+  std::string tmp;
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+	{
+	  static_cast<RD53*>(cChip)->resetMask();
+	  static_cast<RD53*>(cChip)->enableAllPixels();
+
+	  for (auto row = 0; row < RD53::nRows; row++)
+	    for (auto col = 0; col < RD53::nCols; col++)
+	      if (static_cast<Chip*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+		static_cast<RD53*>(cChip)->setTDAC(row,col,theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
+
+	  tmp = fileName;
+	  tmp = tmp.erase(tmp.find(".root"),5);
+
+	  myString.clear();
+	  myString.str("");
+	  myString << tmp << "_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex()
+		   << ".txt";
+	  static_cast<Chip*>(cChip)->saveRegMap(myString.str().c_str());
+	}
 }

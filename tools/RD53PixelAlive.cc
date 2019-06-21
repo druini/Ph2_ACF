@@ -116,6 +116,7 @@ void PixelAlive::InitHisto()
   size_t ToTsize  = RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong()+1;
   size_t BCIDsize = RD53::SetBits<RD53EvtEncoder::NBIT_BCID>(RD53EvtEncoder::NBIT_BCID).to_ulong()+1;
 
+
   // #######################
   // # Allocate histograms #
   // #######################

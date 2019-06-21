@@ -329,7 +329,7 @@ namespace Ph2_HwDescription
 	fPixelsMask[i].Enable.reset();
 	fPixelsMask[i].HitBus.reset();
 	fPixelsMask[i].InjEn .reset();
-	for (auto j = 0; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = 0;
+	for (auto j = 0; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = this->SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong() / 2;
       }
   }
 

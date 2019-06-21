@@ -53,7 +53,7 @@ class SCurve : public Tool
   std::vector<uint16_t> dacList;
 
   std::vector<DetectorDataContainer*> detectorContainerVector;
-  DetectorDataContainer*              theThresholdAndNoiseContainer;
+  DetectorDataContainer               theThresholdAndNoiseContainer;
 
   void InitHisto    ();
   void FillHisto    ();
