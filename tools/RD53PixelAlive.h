@@ -70,6 +70,8 @@ class PixelAlive : public Tool
   std::vector<TH1F*>    theOcc1D;
   std::vector<TCanvas*> theCanvasBCID;
   std::vector<TH1F*>    theBCID;
+  std::vector<TCanvas*> theCanvasTrgID;
+  std::vector<TH1F*>    theTrgID;
   std::vector<TCanvas*> theCanvasErr;
   std::vector<TH2F*>    theErr;
 };

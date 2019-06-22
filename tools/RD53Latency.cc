@@ -86,7 +86,7 @@ void Latency::Run()
 		      if (evt.chip_events[j].data.size() != 0) nEvts++;
 		  }
 
-		theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data.push_back(nEvts);
+		theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data1.push_back(nEvts);
 	      }
 	  }
     }
@@ -117,7 +117,7 @@ void Latency::Analyze()
 	  
 	  for (auto lt = startValue; lt < stopValue; lt++)
 	    {
-	      auto nEvts = cChip->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data[lt-startValue];
+	      auto nEvts = cChip->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data1[lt-startValue];
 	      if (nEvts > dataSize)
 		{
 		  latency  = lt;
@@ -173,7 +173,7 @@ void Latency::FillHisto()
       for (const auto cChip : *cModule)
 	{
 	  for (auto lt = startValue; lt < stopValue; lt++)
-	    theLat[index]->SetBinContent(theLat[index]->FindBin(lt),cChip->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data[lt-startValue]);
+	    theLat[index]->SetBinContent(theLat[index]->FindBin(lt),cChip->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data1[lt-startValue]);
 	  
 	  index++;
 	}

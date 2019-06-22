@@ -113,8 +113,9 @@ void PixelAlive::InitHisto()
 {
   std::string tmp;
   std::stringstream myString;
-  size_t ToTsize  = RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong()+1;
-  size_t BCIDsize = RD53::SetBits<RD53EvtEncoder::NBIT_BCID>(RD53EvtEncoder::NBIT_BCID).to_ulong()+1;
+  size_t ToTsize   = RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong()+1;
+  size_t BCIDsize  = RD53::SetBits<RD53EvtEncoder::NBIT_BCID>(RD53EvtEncoder::NBIT_BCID).to_ulong()+1;
+  size_t TrgIDsize = RD53::SetBits<RD53EvtEncoder::NBIT_TRIGID>(RD53EvtEncoder::NBIT_TRIGID).to_ulong()+1;
 
 
   // #######################
@@ -197,6 +198,23 @@ void PixelAlive::InitHisto()
 
 	  myString.clear();
 	  myString.str("");
+          myString << "theTrgID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"           << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"          << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+	  theTrgID.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),TrgIDsize,0,TrgIDsize));
+	  theTrgID.back()->SetXTitle("Trigger ID");
+	  theTrgID.back()->SetYTitle("Entries");
+
+	  myString.clear();
+	  myString.str("");
+          myString << "theCanvasTrgID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+	  theCanvasTrgID.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+
+
+	  myString.clear();
+	  myString.str("");
           myString << "theErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
 		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
@@ -231,19 +249,27 @@ void PixelAlive::FillHisto()
 		    theToT[index]->Fill(theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh);
 		    theOcc1D[index]->Fill(theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy * nEvents);
 		  }
-
+		
 		if (theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fErrors != 0)
 		  theErr[index]->SetBinContent(col+1,row+1,theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fErrors);
 	      }
 	  
-	  for (auto i = 1; i < theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data.size(); i++)
+	  for (auto i = 1; i < theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data1.size(); i++)
 	    {
-	      int deltaBCID = theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data[i] -
-		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data[i-1];
+	      int deltaBCID = theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data1[i] -
+		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data1[i-1];
 	      
 	      theBCID[index]->Fill((deltaBCID > 0 ? 0 : RD53::SetBits<RD53EvtEncoder::NBIT_BCID>(RD53EvtEncoder::NBIT_BCID).to_ulong()+1) + deltaBCID);
 	    }
-
+	  
+	  for (auto i = 1; i < theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data2.size(); i++)
+	    {
+	      int deltaTrgID = theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data2[i] -
+		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data2[i-1];
+	      
+	      theTrgID[index]->Fill((deltaTrgID > 0 ? 0 : RD53::SetBits<RD53EvtEncoder::NBIT_TRIGID>(RD53EvtEncoder::NBIT_TRIGID).to_ulong()+1) + deltaTrgID);
+	    }
+	  
 	  index++;
 	}
 }
@@ -280,6 +306,14 @@ void PixelAlive::Display()
       theBCID[i]->Draw();
       theCanvasBCID[i]->Modified();
       theCanvasBCID[i]->Update();
+    }
+
+  for (auto i = 0; i < theCanvasTrgID.size(); i++)
+    {
+      theCanvasTrgID[i]->cd();
+      theTrgID[i]->Draw();
+      theCanvasTrgID[i]->Modified();
+      theCanvasTrgID[i]->Update();
     }
 
   for (auto i = 0; i < theCanvasErr.size(); i++)
@@ -329,6 +363,15 @@ void PixelAlive::Save()
       myString.str("");
       myString << theBCID[i]->GetName() << ".svg";
       theCanvasBCID[i]->Print(myString.str().c_str());
+    }
+
+  for (auto i = 0; i < theCanvasTrgID.size(); i++)
+    {
+      theCanvasTrgID[i]->Write();
+      myString.clear();
+      myString.str("");
+      myString << theTrgID[i]->GetName() << ".svg";
+      theCanvasTrgID[i]->Print(myString.str().c_str());
     }
 
   for (auto i = 0; i < theCanvasErr.size(); i++)

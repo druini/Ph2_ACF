@@ -23,7 +23,7 @@ class GenericDataVector : public OccupancyAndPh
 
   void print(void)
   {
-    std::cout << data.size() << std::endl;
+    std::cout << data1.size() << "\t" << data2.size() << std::endl;
   }
   
   template<typename T>
@@ -44,7 +44,8 @@ class GenericDataVector : public OccupancyAndPh
     OccupancyAndPh::normalize(numberOfEvents);
   }
 
-  std::vector<float> data;
+  std::vector<float> data1;
+  std::vector<float> data2;
 };
 
 #endif
