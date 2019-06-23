@@ -21,7 +21,8 @@
 // ##################
 // # Default values #
 // ##################
-#define FILErunNUMBER "./RunNumber.txt"
+#define FileRUNNUMBER "./RunNumber.txt"
+#define RUNNUMBER     "0000"
 
 
 using namespace CommandLineProcessing;
@@ -243,16 +244,20 @@ int main (int argc, char** argv)
   SystemController cSystemController;
 
 
+  // #################
+  // Read run number #
+  // #################
+  std::ifstream fileRunNumberIn;
+  std::string runNumber = RUNNUMBER;
+  fileRunNumberIn.open(FileRUNNUMBER, std::ios::in);
+  if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
+  fileRunNumberIn.close();
+
+
   // ##########################
   // # Initialize output file #
   // ##########################
-  std::ifstream fileRunNumberIn;
-  std::string runNumber = "0000\n";
-  fileRunNumberIn.open(FILErunNUMBER, std::ios::in);
-  if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
-  fileRunNumberIn.close();
-  std::string cOutputFile("run_" + runNumber + ".raw");
-  cSystemController.addFileHandler(cOutputFile, 'w');
+  cSystemController.addFileHandler("run_" + runNumber + ".raw", 'w');
 
 
   // #######################
@@ -389,7 +394,7 @@ int main (int argc, char** argv)
   std::stringstream ss;
   ss << std::setfill('0') << std::setw(4) << std::stoi(runNumber) + 1;
   runNumber = ss.str();
-  fileRunNumberOut.open(FILErunNUMBER, std::ios::out);
+  fileRunNumberOut.open(FileRUNNUMBER, std::ios::out);
   if (fileRunNumberOut.is_open() == true) fileRunNumberOut << runNumber << std::endl;
   fileRunNumberOut.close();
 
