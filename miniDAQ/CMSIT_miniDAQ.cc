@@ -372,7 +372,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing threshold optimization @@@" << RESET;
 
       std::string fileName("ThresholdOptimization_" + runNumber + ".root");
-      ThrOpt to(fileName.c_str(), ".\CMSIT_RD53.txt", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents);
+      ThrOpt to(fileName.c_str(), "./CMSIT_RD53.txt", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents);
       to.Inherit(&cSystemController);
       to.Run();
       to.Draw(display,true);
