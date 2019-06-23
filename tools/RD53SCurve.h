@@ -11,13 +11,15 @@
 #define _RD53SCurve_h_
 
 #include "../Utils/Container.h"
-#include "../Utils/DataContainer.h"
-#include "../Utils/OccupancyAndToT.h"
+#include "../Utils/Occupancy.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "Tool.h"
 
+#include "TApplication.h"
+#include "TStyle.h"
+#include "TGaxis.h"
 #include "TH2F.h"
 
 
@@ -29,52 +31,53 @@ using namespace Ph2_System;
 class SCurve : public Tool
 {
  public:
-  SCurve(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nEvts, size_t startValue, size_t stopValue, size_t nSteps);
+  SCurve(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
   ~SCurve();
 
-  void InitHisto();
-  void Run();
-  void Display();
-  void Analyze();
-  void Save();
+  void Run     ();
+  void Draw    (bool display, bool save);
+  void Analyze ();
 
  private:
-  const char* fileName;
+  const char* fileRes;
   size_t rowStart;
   size_t rowEnd;
   size_t colStart;
   size_t colEnd;
   size_t nPixels2Inj;
   size_t nEvents;
-
   size_t startValue;
   size_t stopValue;
   size_t nSteps;
 
   std::vector<uint16_t> dacList;
 
-  // std::bitset<RD53::nRows * RD53::nCols> customBitset;
-  // ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
-  std::vector<DetectorDataContainer*>    detectorContainerVector;
-  DetectorDataContainer*                 theThresholdAndNoiseContainer;
+  std::vector<DetectorDataContainer*> detectorContainerVector;
+  DetectorDataContainer               theThresholdAndNoiseContainer;
 
-  void ComputeStats (std::vector<float>& measurements, size_t offset, float& nHits, float& mean, float& rms);
+  void InitHisto    ();
+  void FillHisto    ();
+  void Display      ();
+  void Save         ();
+  void ComputeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
 
 
   // ########
   // # ROOT #
   // ########
   TFile* theFile;
-  std::vector<TCanvas*> theCanvas;
+  std::vector<TCanvas*> theCanvasOcc;
   std::vector<TH2F*>    theOccupancy;
-  TCanvas* theCanvasTh1D;
-  TH1F*    theThreshold1D;
-  TCanvas* theCanvasNo1D;
-  TH1F*    theNoise1D;
-  TCanvas* theCanvasTh2D;
-  TH2F*    theThreshold2D;
-  TCanvas* theCanvasNo2D;
-  TH2F*    theNoise2D;
+  std::vector<TCanvas*> theCanvasTh1D;
+  std::vector<TH1F*>    theThreshold1D;
+  std::vector<TCanvas*> theCanvasNo1D;
+  std::vector<TH1F*>    theNoise1D;
+  std::vector<TCanvas*> theCanvasTh2D;
+  std::vector<TH2F*>    theThreshold2D;
+  std::vector<TCanvas*> theCanvasNo2D;
+  std::vector<TH2F*>    theNoise2D;
+
+  std::vector<TGaxis*>  theAxis;
 };
 
 #endif

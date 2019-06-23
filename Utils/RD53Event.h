@@ -11,7 +11,10 @@
 #define _RD53Event_h_
 
 #include "Event.h"
-#include "OccupancyAndToT.h"
+#include "Occupancy.h"
+#include "OccupancyAndPh.h"
+#include "GenericDataVector.h"
+#include "EmptyContainer.h"
 #include "../Utils/DataContainer.h"
 #include "../HWDescription/RD53.h"
 
@@ -23,9 +26,9 @@ namespace Ph2_HwInterface
   class RD53Event : public Event
   {
   public:
-  RD53Event(const std::vector<size_t>& module_id, const std::vector<size_t>& chip_id, const std::vector<RD53::Event>& events)
-    : module_id_vec(module_id), chip_id_vec(chip_id), chip_events(events) {}
-    
+  RD53Event(std::vector<size_t>&& module_id, std::vector<size_t>&& chip_id, std::vector<RD53::Event>&& events)
+    : module_id_vec(std::move(module_id)), chip_id_vec(std::move(chip_id)), chip_events(std::move(events)) {}
+
   void fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
     
   // @TMP@ not implemented yet
@@ -51,12 +54,12 @@ namespace Ph2_HwInterface
 
   
   private:
-  bool isThereAnHit (uint8_t module_id, uint8_t chip_id, uint32_t row, uint32_t col, size_t& ToT) const;
+  bool isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const;
 
   std::vector<size_t>      module_id_vec;
   std::vector<size_t>      chip_id_vec;
   std::vector<RD53::Event> chip_events;
-  
+
 
   protected:
   void print (std::ostream& out) const {};

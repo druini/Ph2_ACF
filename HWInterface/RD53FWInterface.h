@@ -27,7 +27,7 @@
 #define SHALLOWSLEEP  50   // [microseconds]
 #define DELAYPERIOD    0.1 // [microseconds] Delay duration in FW fast command block FSM
 
-#define NBIT_FWVER      4 // Number of bits for the firmware version
+#define NBIT_FWVER     16 // Number of bits for the firmware version
 #define NBIT_AURORAREG  8 // Number of bits for the Aurora registers lane_up and channel_up
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 
@@ -72,11 +72,10 @@ namespace RD53FWEvtEncoder
   // # Event status #
   // ################
   const uint8_t GOOD   = 0x00; // Event status Good
-  const uint8_t EVSIZE = 0x01; // Event status Invalid event size
-  const uint8_t EMPTY  = 0x02; // Event status Empty event
-  const uint8_t L1A    = 0x03; // Event status L1A counter mismatch
-  const uint8_t FRSIZE = 0x04; // Event status Invalid frame size
-  const uint8_t CHIP   = 0x05; // Event status Error in chip data decoding
+  const uint8_t EVSIZE = 0x02; // Event status Invalid event size
+  const uint8_t EMPTY  = 0x04; // Event status Empty event
+  const uint8_t L1A    = 0x08; // Event status L1A counter mismatch
+  const uint8_t FRSIZE = 0x16; // Event status Invalid frame size
 }
 
 
@@ -105,18 +104,18 @@ namespace Ph2_HwInterface
     void Resume()                 override;
     bool InitChipCommunication () override;
 
-    void     ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = false)  override;
+    void     ReadNEvents (BeBoard* pBoard, uint32_t pNEvents,  std::vector<uint32_t>& pData, bool pWait = false) override;
     uint32_t ReadData    (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = false) override;
 
-    void WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd = 1, unsigned int repetition = 1)                                 override;
-    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadChipRegisters (std::vector<uint32_t> & data, unsigned int nBlocks2Read = 1) override;
-    std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)                                        override;
+    void WriteChipCommand (std::vector<uint32_t>& data, unsigned int nCmd = 1)                                                              override;
+    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadChipRegisters (std::vector<uint32_t>& data, unsigned int nBlocks2Read = 1) override;
+    std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)                                       override;
 
     void ChipReset()  override;
     void ChipReSync() override;
 
     void PrintFWstatus();
-    void SerializeSymbols (std::vector<std::vector<uint16_t> > & data, std::vector<uint32_t> & serialData);
+    void SerializeSymbols (std::vector<std::vector<uint16_t> >& data, std::vector<uint32_t>& serialData);
     void TurnOffFMC();
     void TurnOnFMC();
     void ResetBoard();
@@ -154,7 +153,7 @@ namespace Ph2_HwInterface
 
     static std::vector<Event> DecodeEvents (const std::vector<uint32_t>& data, uint8_t& status);
     static void PrintEvents                (const std::vector<RD53FWInterface::Event>& events);
-    static void ErrorHandler               (uint8_t status);
+    static bool EvtErrorHandler            (uint8_t status);
 
     enum class TriggerSource : uint32_t
     {

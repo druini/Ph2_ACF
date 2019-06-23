@@ -1002,7 +1002,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 			{
 				if(localDAC)
 				{
-					for(uint8_t iChannel=0; iChannel<cChip->size(); ++iChannel)
+					for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 					{
 
 						if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue
@@ -1034,7 +1034,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 			{
 				if(localDAC)
 				{
-					for(uint8_t iChannel=0; iChannel<cChip->size(); ++iChannel)
+					for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 					{
 						if( currentStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
 						{

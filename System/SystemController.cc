@@ -219,10 +219,10 @@ namespace Ph2_System {
 	      LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;
 	      fBeBoardInterface->ConfigureBoard (cBoard);
 
-	      for (const auto& cFe : cBoard->fModuleVector)
+	      for (const auto& cModule : cBoard->fModuleVector)
 		{
-		  LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
-		  for (const auto& cRD53 : cFe->fChipVector)
+		  LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << int (cModule->getModuleId()) << RESET;
+		  for (const auto& cRD53 : cModule->fChipVector)
 		    {
 		      LOG (INFO) << GREEN << "Configuring RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
 		      fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));
@@ -231,8 +231,8 @@ namespace Ph2_System {
 	      
 	      LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
 	      bool commGood = fBeBoardInterface->InitChipCommunication(cBoard);
-	      if (commGood == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication of all chips" << RESET;
-	      else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication with all chips" << RESET;
+	      if (commGood == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication to all chips" << RESET;
+	      else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication to all chips" << RESET;
 	    }
 	}
     } 
@@ -268,7 +268,7 @@ namespace Ph2_System {
 
         //construct a Handler
              std::stringstream cBeBoardString;
-             cBeBoardString << "_BeBoard_" << std::setw (3) << std::setfill ('0') << cBeId;
+             cBeBoardString << "_Board" << std::setw (3) << std::setfill ('0') << cBeId;
              std::string cFilename = fRawFileName;
 
              if (fRawFileName.find (".raw") != std::string::npos)
@@ -278,7 +278,7 @@ namespace Ph2_System {
 
         //finally set the handler
              fBeBoardInterface->SetFileHandler (cBoard, cHandler);
-             LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << BOLDYELLOW << fRawFileName << ".fedId" << RESET ;
+             LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << BOLDYELLOW << cFilename << RESET;
          }
      }
      uint32_t SystemController::computeEventSize32 (BeBoard* pBoard)

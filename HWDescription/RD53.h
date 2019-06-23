@@ -33,6 +33,23 @@
 #define NPIXCOL_PROG      2 // Number of pixel columns to program
 #define NDATAMAX_PERPIXEL 6 // Number of data-bit packets used to program the pixel
 #define NPIX_REGION       4 // Number of pixels in a region (1x4)
+#define NROW_CORE         8 // Number of rows in a core
+
+
+// #################################################################################
+// # Formula: (par0 1e-3 + par1*VCal 1e-3) / electron_charge [C] * capacitance [C] #
+// #################################################################################
+namespace RD53VCal2Charge
+{
+  const float par0 = -1.0;
+  const float par1 =  0.195;
+  const float cap  =  8.2;
+  const float ele  =  1.6;
+  constexpr float Convert(float VCal, bool onlySlope = false)
+  {
+    return ((onlySlope ? 0 : par0) + par1*VCal) / ele * cap * 10.0;
+  }
+}
 
 
 // #########################
@@ -120,8 +137,9 @@ namespace RD53EvtEncoder
   // ################
   // # Event status #
   // ################
-  const uint8_t GOOD = 0x00; // Event status good
-  const uint8_t BAD  = 0x01; // Event status good
+  const uint8_t CGOOD = 0x00; // Chip event status good
+  const uint8_t CHEAD = 0x32; // Chip event status Bad chip header
+  const uint8_t CPIX  = 0x64; // Chip event status Bad pixel row or column
 }
 
 
@@ -166,18 +184,13 @@ namespace Ph2_HwDescription
     void injectPixel      (unsigned int row, unsigned int col, bool inject);
     void setTDAC          (unsigned int row, unsigned int col, uint8_t TDAC);
 
-    void EncodeCMD (const ChipRegItem                   & pRegItem,
-		    const uint8_t                         pRD53Id,
-		    const uint16_t                        pRD53Cmd,
-		    std::vector<std::vector<uint16_t> > & pVecReg);
-
-    void EncodeCMD (const uint16_t                address,
-		    const uint16_t                data,
-		    const uint8_t                 pRD53Id,
-		    const uint8_t                 pRD53Cmd,
-		    const bool                    isBroadcast,
-		    std::vector<uint32_t>       & pVecReg,
-		    const std::vector<uint16_t> * dataVec = NULL);
+    void EncodeCMD (const uint16_t               address,
+		    const uint16_t               data,
+		    const uint8_t                pRD53Id,
+		    const uint8_t                pRD53Cmd,
+		    const bool                   isBroadcast,
+		    std::vector<uint32_t>      & pVecReg,
+		    const std::vector<uint16_t>* dataVec = NULL);
 
     void ConvertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair);
     void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& col);
@@ -185,7 +198,7 @@ namespace Ph2_HwDescription
     struct HitData
     {
       HitData (const uint32_t data);
-      
+
       uint16_t row;
       uint16_t col;
       std::array<uint8_t, NPIX_REGION> tots;
@@ -194,7 +207,7 @@ namespace Ph2_HwDescription
     struct Event
     {
       Event(const uint32_t* data, size_t n);
-      
+
       uint16_t trigger_id;
       uint16_t trigger_tag;
       uint16_t bc_id;
@@ -239,62 +252,6 @@ namespace Ph2_HwDescription
     std::vector<perPixelData> fPixelsMask;
     std::vector<perPixelData> fPixelsMaskDefault;
     CommentMap fCommentMap;
-
-    std::vector<uint8_t> cmd_data_map =
-      {
-	0x6A, // 00
-	0x6C, // 01
-	0x71, // 02
-	0x72, // 03
-	0x74, // 04
-	0x8B, // 05
-	0x8D, // 06
-	0x8E, // 07
-	0x93, // 08
-	0x95, // 09
-	0x96, // 10
-	0x99, // 11
-	0x9A, // 12
-	0x9C, // 13
-	0x23, // 14
-	0xA5, // 15
-	0xA6, // 16
-	0xA9, // 17
-	0xAA, // 18
-	0xAC, // 19
-	0xB1, // 20
-	0xB2, // 21
-	0xB4, // 22
-	0xC3, // 23
-	0xC5, // 24
-	0xC6, // 25
-	0xC9, // 26
-	0xCA, // 27
-	0xCC, // 28
-	0xD1, // 29
-	0xD2, // 30
-	0xD4  // 31
-      };
-
-    std::vector<uint8_t> trigger_map =
-      {
-	0x2B, // 00
-	0x2B, // 01
-	0x2D, // 02
-	0x2E, // 03
-	0x33, // 04
-	0x35, // 05
-	0x36, // 06
-	0x39, // 07
-	0x3A, // 08
-	0x3C, // 09
-	0x4B, // 10
-	0x4D, // 11
-	0x4E, // 12
-	0x53, // 13
-	0x55, // 14
-	0x56  // 15
-      };
   };
 }
 
