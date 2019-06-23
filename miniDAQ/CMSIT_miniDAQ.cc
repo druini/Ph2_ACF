@@ -15,11 +15,13 @@
 #include "../tools/RD53ThrOpt.h"
 #include "../tools/RD53Gain.h"
 
+#include <fstream>
+
 
 // ##################
 // # Default values #
 // ##################
-#define RUNNUMBER 0
+#define FILErunNUMBER "./RunNumber.txt"
 
 
 using namespace CommandLineProcessing;
@@ -244,7 +246,12 @@ int main (int argc, char** argv)
   // ##########################
   // # Initialize output file #
   // ##########################
-  std::string cOutputFile = string_format("run_%04d.raw", RUNNUMBER);
+  std::ifstream fileRunNumberIn;
+  std::string runNumber = "0000";
+  fileRunNumberIn.open(FILErunNUMBER, std::ios::in);
+  if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
+  fileRunNumberIn.close();
+  std::string cOutputFile("run_" + runNumber + ".raw");
   cSystemController.addFileHandler(cOutputFile, 'w');
 
 
@@ -289,7 +296,8 @@ int main (int argc, char** argv)
       // ###################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
 
-      Latency la("LatencyScan.root", ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
+      std::string fileName("LatencyScan_" + runNumber + ".root");
+      Latency la(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
       la.Inherit(&cSystemController);
       la.Run();
       la.Analyze();
@@ -302,7 +310,8 @@ int main (int argc, char** argv)
       // ##################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-      PixelAlive pa("PixelAlive.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, true);
+      std::string fileName("PixelAlive_" + runNumber + ".root");
+      PixelAlive pa(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, true);
       pa.Inherit(&cSystemController);
       pa.Run();
       pa.Analyze();
@@ -315,7 +324,8 @@ int main (int argc, char** argv)
       // #############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
-      PixelAlive pa("NoiseScan.root", ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false);
+      std::string fileName("NoiseScan_" + runNumber + ".root");
+      PixelAlive pa(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false);
       pa.Inherit(&cSystemController);
       pa.Run();
       pa.Analyze();
@@ -328,7 +338,8 @@ int main (int argc, char** argv)
       // ##############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
-      SCurve sc("SCurve.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      std::string fileName("SCurve_" + runNumber + ".root");
+      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       sc.Inherit(&cSystemController);
       sc.Run();
       sc.Analyze();
@@ -341,7 +352,8 @@ int main (int argc, char** argv)
       // ############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
-      Gain ga("Gain.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      std::string fileName("Gain_" + runNumber + ".root");
+      Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       ga.Inherit(&cSystemController);
       ga.Run();
       ga.Analyze();
@@ -354,7 +366,8 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing threshold optimization @@@" << RESET;
 
-      ThrOpt to("ThresholdOptimization.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents);
+      std::string fileName("ThresholdOptimization_" + runNumber + ".root");
+      ThrOpt to(fileName.c_str(), ".\CMSIT_RD53.txt", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents);
       to.Inherit(&cSystemController);
       to.Run();
       to.Draw(display,true);
@@ -367,6 +380,18 @@ int main (int argc, char** argv)
       LOG (ERROR) << BOLDRED << "@@@ Gain optimization not implemented yet ... coming soon @@@" << RESET;
     }
   else LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
+
+
+  // #####################
+  // # Update run number #
+  // #####################
+  std::ofstream fileRunNumberOut;
+  std::stringstream ss;
+  ss << std::setfill('0') << std::setw(4) << std::stoi(runNumber) + 1;
+  runNumber = ss.str();
+  fileRunNumberOut.open(FILErunNUMBER, std::ios::out);
+  if (fileRunNumberOut.is_open() == true) fileRunNumberOut << runNumber << std::endl;
+  fileRunNumberOut.close();
 
 
   cSystemController.Destroy();

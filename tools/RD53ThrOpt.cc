@@ -9,8 +9,9 @@
 
 #include "RD53ThrOpt.h"
 
-ThrOpt::ThrOpt(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents) :
-  fileName    (fileName),
+ThrOpt::ThrOpt(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents) :
+  fileRes     (fileRes),
+  fileReg     (fileReg),
   rowStart    (rowStart),
   rowEnd      (rowEnd),
   colStart    (colStart),
@@ -142,7 +143,7 @@ void ThrOpt::InitHisto()
 	  theCanvasTDAC.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
-  theFile = new TFile(fileName, "RECREATE");
+  theFile = new TFile(fileRes, "RECREATE");
 }
 
 void ThrOpt::FillHisto()
@@ -213,7 +214,6 @@ void ThrOpt::Save()
   // ############################
   // # Save register new values #
   // ############################
-  std::string tmp;
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
@@ -226,15 +226,6 @@ void ThrOpt::Save()
 	      if (static_cast<Chip*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
 		static_cast<RD53*>(cChip)->setTDAC(row,col,theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
 
-	  tmp = fileName;
-	  tmp = tmp.erase(tmp.find(".root"),5);
-
-	  myString.clear();
-	  myString.str("");
-	  myString << tmp << "_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex()
-		   << ".txt";
-	  static_cast<Chip*>(cChip)->saveRegMap(myString.str().c_str());
+	  static_cast<Chip*>(cChip)->saveRegMap(fileReg);
 	}
 }

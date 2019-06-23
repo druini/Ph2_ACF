@@ -268,7 +268,7 @@ namespace Ph2_System {
 
         //construct a Handler
              std::stringstream cBeBoardString;
-             cBeBoardString << "_BeBoard_" << std::setw (3) << std::setfill ('0') << cBeId;
+             cBeBoardString << "_Board" << std::setw (3) << std::setfill ('0') << cBeId;
              std::string cFilename = fRawFileName;
 
              if (fRawFileName.find (".raw") != std::string::npos)

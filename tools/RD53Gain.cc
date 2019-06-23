@@ -9,8 +9,8 @@
 
 #include "RD53Gain.h"
 
-Gain::Gain(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
-  fileName    (fileName),
+Gain::Gain(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
+  fileRes     (fileRes),
   rowStart    (rowStart),
   rowEnd      (rowEnd),
   colStart    (colStart),
@@ -262,7 +262,7 @@ void Gain::InitHisto()
 	  theCanvasIn2D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
-  theFile = new TFile(fileName, "RECREATE");
+  theFile = new TFile(fileRes, "RECREATE");
 }
 
 void Gain::FillHisto()

@@ -9,8 +9,8 @@
 
 #include "RD53PixelAlive.h"
 
-PixelAlive::PixelAlive(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject) :
-  fileName    (fileName),
+PixelAlive::PixelAlive(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject) :
+  fileRes     (fileRes),
   rowStart    (rowStart),
   rowEnd      (rowEnd),
   colStart    (colStart),
@@ -125,7 +125,7 @@ void PixelAlive::InitHisto()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-	  tmp = fileName;
+	  tmp = fileRes;
 	  tmp = tmp.erase(tmp.find(".root"),5);
 
 	  myString.clear();
@@ -230,7 +230,7 @@ void PixelAlive::InitHisto()
 	  theCanvasErr.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
   
-  theFile = new TFile(fileName, "RECREATE");
+  theFile = new TFile(fileRes, "RECREATE");
 }
 
 void PixelAlive::FillHisto()

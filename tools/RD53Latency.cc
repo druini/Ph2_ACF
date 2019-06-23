@@ -9,8 +9,8 @@
 
 #include "RD53Latency.h"
 
-Latency::Latency(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t startValue, size_t stopValue, size_t nEvents) :
-  fileName   (fileName),
+Latency::Latency(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t startValue, size_t stopValue, size_t nEvents) :
+  fileRes    (fileRes),
   rowStart   (rowStart),
   rowEnd     (rowEnd),
   colStart   (colStart),
@@ -142,7 +142,7 @@ void Latency::InitHisto()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-	  tmp = fileName;
+	  tmp = fileRes;
 	  tmp = tmp.erase(tmp.find(".root"),5);
 
 	  myString.clear();
@@ -162,7 +162,7 @@ void Latency::InitHisto()
 	  theCanvasLat.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
   
-  theFile = new TFile(fileName, "RECREATE");
+  theFile = new TFile(fileRes, "RECREATE");
 }
 
 void Latency::FillHisto()

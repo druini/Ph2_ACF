@@ -31,7 +31,7 @@ using namespace Ph2_System;
 class SCurve : public Tool
 {
  public:
-  SCurve(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
+  SCurve(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
   ~SCurve();
 
   void Run     ();
@@ -39,7 +39,7 @@ class SCurve : public Tool
   void Analyze ();
 
  private:
-  const char* fileName;
+  const char* fileRes;
   size_t rowStart;
   size_t rowEnd;
   size_t colStart;

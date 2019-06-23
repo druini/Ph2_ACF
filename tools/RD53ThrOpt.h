@@ -36,14 +36,15 @@ using namespace Ph2_System;
 class ThrOpt : public Tool
 {
  public:
-  ThrOpt(const char* fName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents);
+  ThrOpt(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents);
   ~ThrOpt();
 
   void Run  ();
   void Draw (bool display, bool save);
 
  private:
-  const char* fileName;
+  const char* fileRes;
+  const char* fileReg;
   size_t rowStart;
   size_t rowEnd;
   size_t colStart;

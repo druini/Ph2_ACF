@@ -37,7 +37,7 @@ using namespace Ph2_System;
 class Gain : public Tool
 {
  public:
-  Gain(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
+  Gain(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
   ~Gain();
 
   void Run     ();
@@ -45,7 +45,7 @@ class Gain : public Tool
   void Analyze ();
 
  private:
-  const char* fileName;
+  const char* fileRes;
   size_t rowStart;
   size_t rowEnd;
   size_t colStart;

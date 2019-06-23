@@ -32,7 +32,7 @@ using namespace Ph2_System;
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive(const char* fileName, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
+  PixelAlive(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
   ~PixelAlive();
 
   void Run     ();
@@ -40,7 +40,7 @@ class PixelAlive : public Tool
   void Analyze ();
   
  private:
-  const char* fileName;
+  const char* fileRes;
   size_t rowStart;
   size_t rowEnd;
   size_t colStart;
