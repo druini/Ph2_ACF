@@ -21,30 +21,22 @@ namespace Ph2_HwInterface
 	fFileHandler = pHandler;
 	fSaveToFile  = true;
       }
-    else LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError, can not set NULL FileHandler" << RESET;
+    else LOG (ERROR) << BOLDRED << "NULL FileHandler" << RESET;
   }
 
   uint32_t RD53FWInterface::getBoardInfo()
   {
-    uint32_t cIDuserLogic1 = ReadReg ("user.stat_regs.usr_id.usr_id_char1");
-    uint32_t cIDuserLogic2 = ReadReg ("user.stat_regs.usr_id.usr_id_char2");
-    uint32_t cIDuserLogic3 = ReadReg ("user.stat_regs.usr_id.usr_id_char3");
-    uint32_t cIDuserLogic4 = ReadReg ("user.stat_regs.usr_id.usr_id_char4");
-    // LOG (INFO) << BOLDBLUE << "\t--> ID user logic 1st : " << cIDuserLogic1;
-    // LOG (INFO) << BOLDBLUE << "\t--> ID user logic 2nd : " << cIDuserLogic2;
-    // LOG (INFO) << BOLDBLUE << "\t--> ID user logic 3rd : " << cIDuserLogic3;
-    // LOG (INFO) << BOLDBLUE << "\t--> ID user logic 4th : " << cIDuserLogic4;
-
     uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
     uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
     uint32_t cVersionBuild = ReadReg ("user.stat_regs.usr_ver.usr_ver_build");
-    // LOG (INFO) << BOLDBLUE << "\t--> FW version : " << cVersionMajor << "." << cVersionMinor;
-    // LOG (INFO) << BOLDBLUE << "\t--> Build version : " << cVersionBuild;
 
-    uint32_t cFWyear  = ReadReg ("user.stat_regs.usr_ver.usr_firmware_yy");
-    uint32_t cFWmonth = ReadReg ("user.stat_regs.usr_ver.usr_firmware_mm");
-    uint32_t cFWday   = ReadReg ("user.stat_regs.usr_ver.usr_firmware_dd");
-    // LOG (INFO) << BOLDBLUE << "\t--> Firmware date (yyyy/mm/dd) : " << cFWyear << "/" << cFWmonth << "/" << cFWday;
+    uint32_t cFWyear       = ReadReg ("user.stat_regs.usr_ver.usr_firmware_yy");
+    uint32_t cFWmonth      = ReadReg ("user.stat_regs.usr_ver.usr_firmware_mm");
+    uint32_t cFWday        = ReadReg ("user.stat_regs.usr_ver.usr_firmware_dd");
+
+    LOG (INFO) << BOLDBLUE << "FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor
+	       << BOLDBLUE << " -- Build version : " << BOLDYELLOW << cVersionBuild
+	       << BOLDBLUE << " -- Firmware date (yyyy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/" << cFWday << RESET;
 
     uint32_t cVersionWord = ((cVersionMajor << NBIT_FWVER) | cVersionMinor);
     return cVersionWord;
@@ -81,15 +73,7 @@ namespace Ph2_HwInterface
     this->PrintFWstatus();
   }
 
-  void RD53FWInterface::SerializeSymbols (std::vector<std::vector<uint16_t> > & data,
-					  std::vector<uint32_t>               & serialData)
-  {
-    for (auto i = 0; i < data.size(); i++)
-      for (auto j = 0; j < data[i].size(); j++)
-	serialData.push_back(data[i][j]);
-  }
-
-  void RD53FWInterface::WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd, unsigned int repetition)
+  void RD53FWInterface::WriteChipCommand (std::vector<uint32_t>& data, unsigned int nCmd)
   {
     std::vector< std::pair<std::string, uint32_t> > stackRegisters;
 
@@ -106,37 +90,39 @@ namespace Ph2_HwInterface
 	  {
 	  case 1:
 	    {
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
+	      stackRegisters.push_back({"user.cmd_regs.ctrl_reg", data[size*i+0]});
 	      break;
 	    }
 	  case 2:
 	    {
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[size*i+1]));
+	      stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
+	      stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
 	      break;
 	    }
 	  case 3:
 	    {
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[size*i+1]));
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data1_reg",data[size*i+2]));
+	      stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
+	      stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
+	      stackRegisters.push_back({"user.cmd_regs.data1_reg", data[size*i+2]});
 	      break;
 	    }
 	  case 4:
 	    {
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.ctrl_reg", data[size*i+0]));
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data0_reg",data[size*i+1]));
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data1_reg",data[size*i+2]));
-	      stackRegisters.push_back(std::pair<std::string, uint32_t>("user.cmd_regs.data2_reg",data[size*i+3]));
+	      stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
+	      stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
+	      stackRegisters.push_back({"user.cmd_regs.data1_reg", data[size*i+2]});
+	      stackRegisters.push_back({"user.cmd_regs.data2_reg", data[size*i+3]});
 	      break;
 	    }
 	  }
+
+	if (nCmd != 1) stackRegisters.push_back({"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0}); // @TMP@
       }
 
-    for (auto i = 0; i < repetition; i++) WriteStackReg (stackRegisters);
+    WriteStackReg (stackRegisters);
   }
 
-  std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53FWInterface::ReadChipRegisters (std::vector<uint32_t> & data, unsigned int nBlocks2Read)
+  std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53FWInterface::ReadChipRegisters (std::vector<uint32_t>& data, unsigned int nBlocks2Read)
   {
     // ##############################
     // # Filter readback data:      #
@@ -255,19 +241,19 @@ namespace Ph2_HwInterface
     // # Clock rate #
     // ##############
     unsigned int clkRate = ReadReg ("user.stat_regs.clk_rate_1");
-    LOG (INFO) << BOLDBLUE << "Clock rate 1: " << BOLDYELLOW << clkRate << RESET;
+    LOG (INFO) << BOLDBLUE << "Clock rate 1: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
 
     clkRate = ReadReg ("user.stat_regs.clk_rate_2");
-    LOG (INFO) << BOLDBLUE << "Clock rate 2: " << BOLDYELLOW << clkRate << RESET;
+    LOG (INFO) << BOLDBLUE << "Clock rate 2: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
 
     clkRate = ReadReg ("user.stat_regs.clk_rate_3");
-    LOG (INFO) << BOLDBLUE << "Clock rate 3: " << BOLDYELLOW << clkRate << RESET;
+    LOG (INFO) << BOLDBLUE << "Clock rate 3: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
 
     clkRate = ReadReg ("user.stat_regs.clk_rate_4");
-    LOG (INFO) << BOLDBLUE << "Clock rate 4: " << BOLDYELLOW << clkRate << RESET;
+    LOG (INFO) << BOLDBLUE << "Clock rate 4: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
 
     clkRate = ReadReg ("user.stat_regs.clk_rate_5");
-    LOG (INFO) << BOLDBLUE << "Clock rate 5: " << BOLDYELLOW << clkRate << RESET;
+    LOG (INFO) << BOLDBLUE << "Clock rate 5: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
   }
 
   bool RD53FWInterface::InitChipCommunication()
@@ -319,15 +305,14 @@ namespace Ph2_HwInterface
 
   uint32_t RD53FWInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
   {
-    uint32_t cNWords    = ReadReg("user.stat_regs.words_to_read").value(),
-      handshake  = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value(),
-      cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
+    uint32_t cNWords    = ReadReg("user.stat_regs.words_to_read").value();
+    uint32_t handshake  = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value();
+    uint32_t cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
 
-    // @TMP@
-    LOG (INFO) << GREEN << "n. words        = "       << cNWords    << RESET;
-    LOG (INFO) << GREEN << "handshake       = "       << handshake  << RESET;
-    LOG (INFO) << GREEN << "n. triggers     = "       << cNtriggers << RESET;
-    LOG (INFO) << GREEN << "========================" << RESET;
+    LOG (INFO) << GREEN << "----- Reading  data -----" << RESET;
+    LOG (INFO) << GREEN << "n. words        = "        << cNWords    << RESET;
+    LOG (INFO) << GREEN << "n. triggers     = "        << cNtriggers << RESET;
+    LOG (INFO) << CYAN  << "=========================" << RESET;
 
     if (!cNWords) return 0;
 
@@ -388,6 +373,7 @@ namespace Ph2_HwInterface
 	       this->localCfgFastCmd.n_triggers + SHALLOWSLEEP);
 
 	this->ReadData(pBoard, false, pData);
+	this->Stop();
 
 
 	// ##################
@@ -400,17 +386,17 @@ namespace Ph2_HwInterface
 	    continue;
 	  }
 
-	auto events = this->DecodeEvents(pData,status);
-	if (status != RD53FWEvtEncoder::GOOD)
+	auto events = this->DecodeEvents(pData, status);
+	// this->PrintEvents(events); // @TMP@
+	if (this->EvtErrorHandler(status) == false)
 	  {
-	    this->ErrorHandler(status);
 	    retry = true;
 	    continue;
 	  }
 
 	if (events.size() != localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration))
 	  {
-	    LOG (ERROR) << BOLDRED << "Sent " << localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration) << " triggers, but collected only " << events.size() << BOLDYELLOW << " --> retry" << RESET;
+	    LOG (ERROR) << BOLDRED << "Sent " << localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration) << " triggers, but collected " << events.size() << " events" << BOLDYELLOW << " --> retry" << RESET;
 	    retry = true;
 	    continue;
 	  }
@@ -557,11 +543,11 @@ namespace Ph2_HwInterface
 	RD53FWInterface::Event evt(&data[start], end - start);
 	events.push_back(evt);
 
-	if (evt.evtStatus != RD53FWEvtEncoder::GOOD) evtStatus = evt.evtStatus;
+	if (evt.evtStatus != RD53FWEvtEncoder::GOOD) evtStatus |= evt.evtStatus;
 	else
 	  {
 	    for (auto j = 0; j < evt.chip_events.size(); j++)
-	      if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evtStatus = RD53FWEvtEncoder::L1A;
+	      if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evtStatus |= RD53FWEvtEncoder::L1A;
 	  }
       }
 
@@ -610,36 +596,47 @@ namespace Ph2_HwInterface
     std::cout << std::endl;
   }
   
-  void RD53FWInterface::ErrorHandler(uint8_t status)
+  bool RD53FWInterface::EvtErrorHandler(uint8_t status)
   {
-    switch (status)
+    bool isGood = true;
+
+    if (status & RD53FWEvtEncoder::EVSIZE)
       {
-      case (RD53FWEvtEncoder::EVSIZE):
-	{
-	  LOG (ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << RESET;
-	  break;
-	}
-      case (RD53FWEvtEncoder::EMPTY):
-	{
-	  LOG (ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << RESET;
-	  break;
-	}
-      case (RD53FWEvtEncoder::L1A):
-	{
-	  LOG (ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << RESET;
-	  break;
-	}
-      case (RD53FWEvtEncoder::FRSIZE):
-	{
-	  LOG (ERROR) << BOLDRED << "Invalid frame size " << BOLDYELLOW << "--> retry" << RESET;
-	  break;
-	}
-      case (RD53FWEvtEncoder::CHIP):
-	{
-	  LOG (ERROR) << BOLDRED << "Error in chip data decoding " << BOLDYELLOW << "--> retry" << RESET;
-	  break;
-	}
-      }    
+	LOG (ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
+    if (status & RD53FWEvtEncoder::EMPTY)
+      {
+	LOG (ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
+    if (status & RD53FWEvtEncoder::L1A)
+      {
+	LOG (ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
+    if (status & RD53FWEvtEncoder::FRSIZE)
+      {
+	LOG (ERROR) << BOLDRED << "Invalid frame size " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
+    if (status & RD53EvtEncoder::CHEAD)
+      {
+	LOG (ERROR) << BOLDRED << "Bad chip header " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
+    if (status & RD53EvtEncoder::CPIX)
+      {
+	LOG (ERROR) << BOLDRED << "Bad pixel row or column " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
+    return isGood;
   }
 
   RD53FWInterface::Event::Event (const uint32_t* data, size_t n)
@@ -647,7 +644,7 @@ namespace Ph2_HwInterface
     evtStatus = RD53FWEvtEncoder::GOOD;
 
     std::tie(block_size) = unpack_bits<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);    
-    if (block_size * 4 != n) evtStatus = RD53FWEvtEncoder::EVSIZE;
+    if (block_size * 4 != n) evtStatus |= RD53FWEvtEncoder::EVSIZE;
 
     bool dummy_size;
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
@@ -667,7 +664,7 @@ namespace Ph2_HwInterface
 
  	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start))
 	  {
-	    evtStatus = RD53FWEvtEncoder::FRSIZE;
+	    evtStatus |= RD53FWEvtEncoder::FRSIZE;
 	    chip_frames.clear();
 	    chip_events.clear();
 	    return;
@@ -676,7 +673,7 @@ namespace Ph2_HwInterface
 	const size_t size = (dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start);
 	chip_events.emplace_back(&data[start + 2], size - 2);
 
-	if (chip_events[i].evtStatus != RD53EvtEncoder::GOOD) evtStatus = RD53FWEvtEncoder::CHIP;
+	if (chip_events[i].evtStatus != RD53EvtEncoder::CGOOD) evtStatus |= chip_events[i].evtStatus;
       }
   }
 

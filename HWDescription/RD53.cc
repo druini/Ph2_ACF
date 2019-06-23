@@ -329,7 +329,7 @@ namespace Ph2_HwDescription
 	fPixelsMask[i].Enable.reset();
 	fPixelsMask[i].HitBus.reset();
 	fPixelsMask[i].InjEn .reset();
-	for (auto j = 0; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = 0;
+	for (auto j = 0; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = this->SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong() / 2;
       }
   }
 
@@ -367,45 +367,13 @@ namespace Ph2_HwDescription
     fPixelsMask[col].TDAC[row] = TDAC;
   }
 
-  void RD53::EncodeCMD (const ChipRegItem                   & pRegItem,
-  			const uint8_t                         pRD53Id,
-  			const uint16_t                        pRD53Cmd,
-  			std::vector<std::vector<uint16_t> > & pVecReg)
-  {
-    const unsigned int nBits = NBIT_ID + NBIT_ADDR + NBIT_DATA;
-    
-    std::bitset<nBits> idANDaddANDdata(pRD53Id           << (NBIT_ADDR + NBIT_DATA) |
-  				       pRegItem.fAddress << NBIT_DATA               |
-  				       pRegItem.fValue);
-
-    std::bitset<nBits> mask = this->SetBits<nBits>(NBIT_ID);
-    std::vector<uint16_t> frame;
-
-    frame.push_back(pRD53Cmd);
-    frame.push_back(pRD53Cmd);
-    
-    std::bitset<nBits> tmp;
-    for (auto i = nBits/NBIT_DATA-1; i >= 0; i-=2)
-      {
-  	tmp = (idANDaddANDdata & (mask << NBIT_ID*i)) >> NBIT_ID*i;
-  	unsigned long long data1 = tmp.to_ullong();
-	
-  	tmp = (idANDaddANDdata & (mask << NBIT_ID*(i-1))) >> NBIT_ID*(i-1);
-  	unsigned long long data2 = tmp.to_ullong();
-	
-  	frame.push_back(cmd_data_map[data1] << NBIT_SYMBOL | cmd_data_map[data1]);
-      }
-    
-    pVecReg.push_back(frame);
-  }
-
-  void RD53::EncodeCMD (const uint16_t                address,
-			const uint16_t                data,
-  			const uint8_t                 pRD53Id,
-  			const uint8_t                 pRD53Cmd,
-			const bool                    isBroadcast,
-  			std::vector<uint32_t>       & pVecReg,
-			const std::vector<uint16_t> * dataVec)
+  void RD53::EncodeCMD (const uint16_t               address,
+			const uint16_t               data,
+  			const uint8_t                pRD53Id,
+  			const uint8_t                pRD53Cmd,
+			const bool                   isBroadcast,
+  			std::vector<uint32_t>      & pVecReg,
+			const std::vector<uint16_t>* dataVec)
   {
     uint32_t word = 0;
     std::bitset<NBIT_FRAME> frame(0);
@@ -576,14 +544,19 @@ namespace Ph2_HwDescription
   {
     uint32_t header;
 
-    evtStatus = RD53EvtEncoder::GOOD;
+    evtStatus = RD53EvtEncoder::CGOOD;
 
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
-    if (header != RD53EvtEncoder::HEADER) evtStatus = RD53EvtEncoder::BAD;
+    if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHEAD;
 
     size_t noHitToT = RD53::SetBits<RD53EvtEncoder::NBIT_TOT>(RD53EvtEncoder::NBIT_TOT).to_ulong();
     for (auto i = 1; i < n; i++)
-      if (data[i] != noHitToT) this->data.emplace_back(data[i]);
+      if (data[i] != noHitToT)
+	{
+	  this->data.emplace_back(data[i]);
+	  if ((this->data.back().row < 0) || (this->data.back().row >= RD53::nRows) ||
+	      (this->data.back().col < 0) || (this->data.back().col >= RD53::nCols)) evtStatus |= RD53EvtEncoder::CPIX;
+	}
   }
 
   RD53::HitData::HitData (const uint32_t data)
@@ -595,16 +568,16 @@ namespace Ph2_HwDescription
     col = NPIX_REGION * pack_bits<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
   }
 
-  RD53::CalCmd::CalCmd (const uint8_t& _cal_edge_mode,
-			const uint8_t& _cal_edge_delay,
-			const uint8_t& _cal_edge_width,
-			const uint8_t& _cal_aux_mode,
-			const uint8_t& _cal_aux_delay) :
-    cal_edge_mode(_cal_edge_mode),
-    cal_edge_delay(_cal_edge_delay),
-    cal_edge_width(_cal_edge_width),
-    cal_aux_mode(_cal_aux_mode),
-    cal_aux_delay(_cal_aux_delay)
+  RD53::CalCmd::CalCmd (const uint8_t& cal_edge_mode,
+			const uint8_t& cal_edge_delay,
+			const uint8_t& cal_edge_width,
+			const uint8_t& cal_aux_mode,
+			const uint8_t& cal_aux_delay) :
+    cal_edge_mode(cal_edge_mode),
+    cal_edge_delay(cal_edge_delay),
+    cal_edge_width(cal_edge_width),
+    cal_aux_mode(cal_aux_mode),
+    cal_aux_delay(cal_aux_delay)
   {}
   
   void RD53::CalCmd::setCalCmd (const uint8_t& _cal_edge_mode,

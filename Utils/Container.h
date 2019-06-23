@@ -188,16 +188,17 @@ public:
 	template<typename T>
 	bool isChannelContainerType()
 	{
-		// ChannelContainer<T>* tmpChannelContainer = dynamic_cast<ChannelContainer<T>*>(container_);
-		// if (tmpChannelContainer == nullptr)
-		// {
-		// 	return false;
-		// }
-		// else return true;
-		const std::type_info& containerTypeId = typeid(container_);
-		const std::type_info& templateTypeId = typeid(T*);
+		ChannelContainer<T>* tmpChannelContainer = dynamic_cast<ChannelContainer<T>*>(container_);
+		if (tmpChannelContainer == nullptr)
+		{
+			return false;
+		}
+		else return true;
 
-		return (containerTypeId.hash_code() == templateTypeId.hash_code());
+		/* const std::type_info& containerTypeId = typeid(container_); */
+		/* const std::type_info& templateTypeId = typeid(T*); */
+
+		/* return (containerTypeId.hash_code() == templateTypeId.hash_code()); */
 	}
 
 	void cleanDataStored() override

@@ -345,7 +345,7 @@ namespace Ph2_HwInterface {
 	// ################################################################################################
 	// # Virtual methods which are defined in the concrete implementation of BeBoardFWInterface class #
 	// ################################################################################################
-	virtual void WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd = 1, unsigned int repetition = 1)
+	virtual void WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd = 1)
         {
 	  LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         }
