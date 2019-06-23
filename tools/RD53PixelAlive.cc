@@ -202,7 +202,7 @@ void PixelAlive::InitHisto()
 		   << "_Mod"           << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"          << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theTrgID.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),TrgIDsize,0,TrgIDsize));
-	  theTrgID.back()->SetXTitle("Trigger ID");
+	  theTrgID.back()->SetXTitle("#DeltaTrigger-ID");
 	  theTrgID.back()->SetYTitle("Entries");
 
 	  myString.clear();
