@@ -247,7 +247,7 @@ int main (int argc, char** argv)
   // # Initialize output file #
   // ##########################
   std::ifstream fileRunNumberIn;
-  std::string runNumber = "0000";
+  std::string runNumber = "0000\n";
   fileRunNumberIn.open(FILErunNUMBER, std::ios::in);
   if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
   fileRunNumberIn.close();
