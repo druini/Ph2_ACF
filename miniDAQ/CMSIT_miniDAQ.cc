@@ -392,7 +392,7 @@ int main (int argc, char** argv)
   // #####################
   std::ofstream fileRunNumberOut;
   std::stringstream ss;
-  ss << std::setfill('0') << std::setw(4) << std::stoi(runNumber) + 1;
+  ss << std::setfill('0') << std::setw(runNumber.size()) << std::stoi(runNumber) + 1;
   runNumber = ss.str();
   fileRunNumberOut.open(FileRUNNUMBER, std::ios::out);
   if (fileRunNumberOut.is_open() == true) fileRunNumberOut << runNumber << std::endl;
