@@ -1,4 +1,5 @@
 #include "Tool.h"
+#include "TH1.h"
 #include <TSystem.h>
 #include "../HWDescription/Chip.h"
 #include "../Utils/ObjectStreamer.h"
@@ -202,6 +203,9 @@ void Tool::SoftDestroy()
 
 void Tool::bookHistogram ( Chip* pChip, std::string pName, TObject* pObject )
 {
+	TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
+	if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
+
 	// find or create map<string,TOBject> for specific CBC
 	auto cChipHistMap = fChipHistMap.find ( pChip );
 
@@ -230,6 +234,9 @@ void Tool::bookHistogram ( Chip* pChip, std::string pName, TObject* pObject )
 
 void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject )
 {
+	TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
+	if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
+
 	// find or create map<string,TOBject> for specific CBC
 	auto cModuleHistMap = fModuleHistMap.find ( pModule );
 
@@ -257,6 +264,9 @@ void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject 
 
 void Tool::bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObject )
 {
+	TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
+	if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
+
 	// find or create map<string,TOBject> for specific CBC
 	auto cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
 
@@ -406,8 +416,8 @@ void Tool::SaveResults()
 		cCanvas.second->SaveAs ( cPdfName.c_str() );
 	}
 
-	//fResultFile->Write();
-	//fResultFile->Close();
+	fResultFile->Write();
+	// fResultFile->Close();
 
 	LOG (INFO) << "Results saved!" ;
 }
@@ -1095,7 +1105,7 @@ void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
 		measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
-		if(fStreamerEnabled) fObjectStream->streamAndSendBoard(fDetectorDataContainer->at(boardIndex), fNetworkStreamer);
+		// if(fStreamerEnabled) fObjectStream->streamAndSendBoard(fDetectorDataContainer->at(boardIndex), fNetworkStreamer);
 	}
 
 }

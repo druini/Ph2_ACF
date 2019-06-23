@@ -9,6 +9,12 @@
 #include "../Utils/CBCChannelGroupHandler.h"
 #include <math.h>
 
+#ifdef __USE_ROOT__
+#include "../RootUtils/RootContainerFactory.h" 
+#include "../RootUtils/TH1FContainer.h" 
+#include "../DQMUtils/DQMHistogramPedeNoise.h" 
+#endif
+
 PedeNoise::PedeNoise() :
     Tool(),
     fNoiseCanvas (nullptr),
@@ -56,8 +62,9 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 
     this->SetSkipMaskedChannels( fSkipMaskedChannels );
 
-    // theDQMHistogrammer.book();
-    
+    #ifdef __USE_ROOT__
+        theDQMHistogramPedeNoise.book(fResultFile,*fDetectorContainer);
+    #endif    
 
     fPedestalCanvas = new TCanvas ( "Pedestal & Noise", "Pedestal & Noise", 670, 0, 650, 650 );
     //fFeSummaryCanvas = new TCanvas ( "Noise for each FE", "Noise for each FE", 0, 670, 650, 650 );
@@ -373,7 +380,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     DetectorDataContainer     theOccupancyContainer;
 	fDetectorDataContainer = &theOccupancyContainer;
 	OccupancyBoardStream      theOccupancyStream;
-    fObjectStream          = &theOccupancyStream;
+    // fObjectStream          = &theOccupancyStream;
 
     ContainerFactory   theDetectorFactory;
 	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -384,6 +391,16 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
 
     this->measureData(fEventsPerPoint*pMultiple);
     this->SetTestAllChannels(originalAllChannelFlag);
+
+    #ifdef __USE_ROOT__
+        theDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
+    #else
+        for(auto board : theOccupancyContainer)
+        {
+            if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
+        }
+    #endif
+
     for ( auto cBoard : *fDetectorContainer )
     {
         for ( auto cFe : *cBoard )
@@ -847,8 +864,17 @@ void PedeNoise::extractPedeNoise ()
             }
         }
         board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), fChannelGroupHandler->allChannelGroup(), 0);
-        if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
     }
+
+    #ifdef __USE_ROOT__
+        theDQMHistogramPedeNoise.fillPedestalAndNoisePlots(theDifferentialContainer);
+    #else
+        for(auto board : theDifferentialContainer )
+        {
+            if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
+        }
+    #endif
+
 
 
 }
@@ -972,7 +998,7 @@ void PedeNoise::setThresholdtoNSigma (BeBoard* pBoard, uint32_t pNSigma)
 
 void PedeNoise::writeObjects()
 {
-    this->SaveResults();
+    // this->SaveResults();
     // just use auto iterators to write everything to disk
     // this is the old method before Tool class was cool
     fResultFile->cd();

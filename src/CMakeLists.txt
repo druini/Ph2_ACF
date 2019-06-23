@@ -59,12 +59,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #boost also needs to be linked
     if(Boost_FOUND)
         set(LIBS ${LIBS} ${Boost_LIBRARIES})
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time")
     endif()
 
     #last but not least, find root and link against it
     if(${ROOT_FOUND})
         include_directories(${ROOT_INCLUDE_DIRS})
         set(LIBS ${LIBS} ${ROOT_LIBRARIES})
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__USE_NO_ROOT__")
 
         #check for THttpServer
         if(${ROOT_HAS_HTTP})

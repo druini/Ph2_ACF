@@ -36,7 +36,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile *theOutputFile, DetectorContainer &theDetectorStructure) override;
+    void book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure) override;
 
     /*!
      * Fill histogram
@@ -68,9 +68,9 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
 
 
   private:
-    DetectorDataContainer fDetectorData;
     DetectorDataContainer fDetectorValidationHistograms;
     DetectorDataContainer fDetectorPedestalHistograms;
     DetectorDataContainer fDetectorNoiseHistograms;
+    DetectorDataContainer fDetectorData;
 };
 #endif

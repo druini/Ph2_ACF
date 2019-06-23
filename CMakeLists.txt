@@ -59,7 +59,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
     # compiler flags
-    set (CMAKE_CXX_FLAGS "-std=c++1y -O3 -Wcpp -pthread -pedantic -Wall -Werror -w -g -fPIC ${CMAKE_CXX_FLAGS}")
+    set (CMAKE_CXX_FLAGS "-std=c++1y -O3 -Wcpp -pthread -pedantic -Wall -Werror -w -g -fPIC ${CMAKE_CXX_FLAGS}  -D__USE_NO_ROOT__")
 
     # set (CMAKE_CXX_FLAGS "-g -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-maybe-uninitialized -Wno-ignored-qualifiers -Wno-unused-variable -std=c++11 -Wall -Werror=return-type -Wextra -Wno-long-long -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -pthread -w -Wcpp -fPIC ${CMAKE_CXX_FLAGS}")
 
@@ -76,6 +76,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         elseif()
             message(STATUS "    ROOT built without THttp Server - disabling compiler flags")
         endif()
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__USE_NO_ROOT__")
         message(STATUS "    Using ROOT version ${ROOT_VERSION}")
     endif(ROOT_FOUND)
 
