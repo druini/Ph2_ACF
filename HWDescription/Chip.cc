@@ -56,6 +56,8 @@ namespace Ph2_HwDescription
     // D'Tor
     Chip::~Chip()
     {
+        fRegMap.clear();
+        fCommentMap.clear();
     }
 
     ChipRegItem Chip::getRegItem ( const std::string& pReg )
@@ -98,12 +100,12 @@ namespace Ph2_HwDescription
         }
     }
 
-    bool ChipComparer::operator() ( const Chip& cbc1, const Chip& cbc2 ) const
+    bool ChipComparer::operator() ( const Chip& chip1, const Chip& chip2 ) const
     {
-        if ( cbc1.getBeId() != cbc2.getBeId() ) return cbc1.getBeId() < cbc2.getBeId();
-        else if ( cbc1.getFMCId() != cbc2.getFMCId() ) return cbc1.getFMCId() < cbc2.getFMCId();
-        else if ( cbc1.getFeId() != cbc2.getFeId() ) return cbc1.getFeId() < cbc2.getFeId();
-        else return cbc1.getChipId() < cbc2.getChipId();
+        if ( chip1.getBeId() != chip2.getBeId() ) return chip1.getBeId() < chip2.getBeId();
+        else if ( chip1.getFMCId() != chip2.getFMCId() ) return chip1.getFMCId() < chip2.getFMCId();
+        else if ( chip1.getFeId() != chip2.getFeId() ) return chip1.getFeId() < chip2.getFeId();
+        else return chip1.getChipId() < chip2.getChipId();
     }
 
 

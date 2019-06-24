@@ -12,7 +12,7 @@ void StubTool::Initialize()
     //we want to keep things simple, so lets get a pointer to a CBC and a pointer to a BeBoard
     //this will facilitate the code as we save a lot of looping
     fBoard = this->fBoardVector.at (0);
-    fCbc = fBoard->fModuleVector.at (0)->fChipVector.at (0);
+    fCbc = fBoard->fModuleVector.at (0)->fReadoutChipVector.at (0);
 
     //we also need a TCanvas
     //std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/pulseshape";
@@ -70,7 +70,7 @@ void StubTool::scanStubs()
       for (auto cFe : cBoard->fModuleVector)
       {
          uint32_t cFeId = cFe->getFeId();
-         std::vector < Chip* > cCbcVector = cFe->fChipVector;
+         std::vector < ReadoutChip* > cCbcVector = cFe->fReadoutChipVector;
          uint8_t nCBC = cCbcVector.size();
          for (uint8_t iCBC = 0; iCBC< nCBC; iCBC++)
          {
@@ -247,7 +247,7 @@ void StubTool::scanStubs_wNoise()
     for (auto cFe : cBoard->fModuleVector)
       {
         uint32_t cFeId = cFe->getFeId();
-        std::vector < Chip* > cCbcVector = cFe->fChipVector;
+        std::vector < ReadoutChip* > cCbcVector = cFe->fReadoutChipVector;
         uint8_t nCBC = cCbcVector.size();
         //Uncoment for Bend uncoding 2
         //hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
@@ -506,7 +506,7 @@ void StubTool::scanStubs_swap()
     for (auto cFe : cBoard->fModuleVector)
       {
         uint32_t cFeId = cFe->getFeId();
-        std::vector < Chip* > cCbcVector = cFe->fChipVector;
+        std::vector < ReadoutChip* > cCbcVector = cFe->fReadoutChipVector;
         uint8_t nCBC = cCbcVector.size();
         //Uncoment for Bend uncoding 2
         //hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
@@ -777,7 +777,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
     for (auto cFe : cBoard->fModuleVector)
       {
         uint32_t cFeId = cFe->getFeId();
-        std::vector < Chip* > cCbcVector = cFe->fChipVector;
+        std::vector < ReadoutChip* > cCbcVector = cFe->fReadoutChipVector;
         uint8_t nCBC = cCbcVector.size();
         std::string stubscanname_cw   = "StubsSCAN_ClusterWidth";
         std::string stubscanname_cbc = "StubsSCAN_ClusterWidth_vs_Strips";
@@ -925,7 +925,7 @@ void StubTool::scanStubs_ptWidth()
     for (auto cFe : cBoard->fModuleVector)
       {
         uint32_t cFeId = cFe->getFeId();
-        std::vector < Chip* > cCbcVector = cFe->fChipVector;
+        std::vector < ReadoutChip* > cCbcVector = cFe->fReadoutChipVector;
         uint8_t nCBC = cCbcVector.size();
         //Uncoment for Bend uncoding 2
         //hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
@@ -1200,7 +1200,7 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
     for (auto cFe : cBoard->fModuleVector)
       {
         uint32_t cFeId = cFe->getFeId();
-        std::vector < Chip* > cCbcVector = cFe->fChipVector;
+        std::vector < ReadoutChip* > cCbcVector = cFe->fReadoutChipVector;
         uint8_t nCBC = cCbcVector.size();
         std::string stubscanname_sof = "StubsSCAN_SoF";
         std::string stubscanname_cbc = "StubsSCAN_SoF_vs_Strips";
@@ -1417,7 +1417,7 @@ void StubTool::setInitialOffsets()
         {
             uint32_t cFeId = cFe->getFeId();
 
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
                 uint32_t cCbcId = cCbc->getChipId();
                 RegisterVector cRegVec;

@@ -18,15 +18,16 @@ using namespace Ph2_HwInterface;
 namespace Ph2_System {
 
     SystemController::SystemController()
-    : fBeBoardInterface   (nullptr)
-    , fChipInterface      (nullptr)
-    , fBoardVector        ()
-    , fSettingsMap        ()
-    , fFileHandler        (nullptr)
-    , fRawFileName        ("")
-    , fWriteHandlerEnabled(false)
-    , fData               (nullptr)
-    , fNetworkStreamer    (nullptr)//This is the server listening port
+    : fBeBoardInterface    (nullptr)
+    , fReadoutChipInterface(nullptr)
+    , fChipInterface       (nullptr)
+    , fBoardVector         ()
+    , fSettingsMap         ()
+    , fFileHandler         (nullptr)
+    , fRawFileName         ("")
+    , fWriteHandlerEnabled (false)
+    , fData                (nullptr)
+    , fNetworkStreamer     (nullptr)//This is the server listening port
     {
     //      bool fStreamData = true;
     //      if(fStreamData && !fNetworkStreamer->accept(10, 0))
@@ -45,6 +46,7 @@ namespace Ph2_System {
     {
         fBeBoardInterface = pController->fBeBoardInterface;
         fChipInterface = pController->fChipInterface;
+        fReadoutChipInterface = pController->fReadoutChipInterface;
         fBoardVector = pController->fBoardVector;
         fBeBoardFWMap = pController->fBeBoardFWMap;
         fSettingsMap = pController->fSettingsMap;
@@ -63,6 +65,7 @@ namespace Ph2_System {
 
         if (fBeBoardInterface!=nullptr) delete fBeBoardInterface;
 
+        if (fReadoutChipInterface!=nullptr)  delete fReadoutChipInterface;
         if (fChipInterface!=nullptr)  delete fChipInterface;
         if (fMPAInterface!=nullptr)  delete fMPAInterface;
         if(fDetectorContainer!=nullptr) delete fDetectorContainer;
@@ -196,6 +199,7 @@ namespace Ph2_System {
 
 	      for (auto& cFe : cBoard->fModuleVector)
                 {
+                    LOG (INFO) << "Configuring board.." << RESET;
 		  for (auto& cCbc : cFe->fReadoutChipVector)
 		    {
 		      if ( !bIgnoreI2c )
@@ -205,7 +209,6 @@ namespace Ph2_System {
                       }
 		    }
                 }
-
 	      fBeBoardInterface->ChipReSync ( cBoard );
 	    }
 	    else
@@ -222,7 +225,7 @@ namespace Ph2_System {
 	      for (const auto& cFe : cBoard->fModuleVector)
 		{
 		  LOG (INFO) << BOLDYELLOW << "Initializing communication to Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
-		  for (const auto& cRD53 : cFe->fChipVector)
+		  for (const auto& cRD53 : cFe->fReadoutChipVector)
 		    {
 		      LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
 		      fRD53Interface->InitRD53Aurora (static_cast<RD53*>(cRD53));
@@ -233,7 +236,7 @@ namespace Ph2_System {
 		  if (commGood == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication of all RD53s of Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
 		  else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication with all RD53s of Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
 
-		  for (const auto& cRD53 : cFe->fChipVector)
+		  for (const auto& cRD53 : cFe->fReadoutChipVector)
 		    {
 		      LOG (INFO) << BOLDYELLOW << "Configuring RD53 " << int (cRD53->getChipId()) << RESET;
 		      fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));

@@ -82,7 +82,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
             cFeCount++;
             fType = cFe->getFrontEndType();
 
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
                 //if it is a CBC3, disable the stub logic for this procedure
                 if (cCbc->getFrontEndType() == FrontEndType::CBC3 && fDisableStubLogic)
@@ -191,7 +191,7 @@ void Calibration::FindVplus()
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
 
                 TH1I* vPlusHist = static_cast<TH1I*> ( getHist ( cCbc, "Vplus" ) );
@@ -248,7 +248,7 @@ void Calibration::FindOffsets()
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
                 TH1F* cOccHist = static_cast<TH1F*> ( getHist ( cCbc, "Occupancy" ) );
                 TH1I* cOffsetHist = static_cast<TH1I*> ( getHist ( cCbc, "Offsets" ) );

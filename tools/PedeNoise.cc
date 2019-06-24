@@ -83,7 +83,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
             cFeCount++;
             fType = cFe->getFrontEndType();
 
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
 
                 //if it is a CBC3, disable the stub logic for this procedure
@@ -285,7 +285,7 @@ std::string PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
                 TString cHistname = Form ( "Fe%dCBC%d_Scurves_TP%d", cCbc->getFeId(), cCbc->getChipId(), fTestPulseAmplitude );
                 TH2F* cHist = new TH2F ( cHistname, cHistname, NCHANNELS, -0.5, 253.5, 1024, -0.5, 1023.5 );
@@ -441,14 +441,14 @@ double PedeNoise::getPedestal (Module* pFe)
 {
     double cPedestal = 0;
 
-    for (auto cCbc : pFe->fChipVector)
+    for (auto cCbc : pFe->fReadoutChipVector)
     {
         TH1F* cPedeHist  = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_Pedestal" ) );
         cPedestal += cPedeHist->GetMean();
         LOG (INFO) << "Pedestal on CBC " << +cCbc->getChipId() << " is " << cPedeHist->GetMean() << " VCth units.";
     }
 
-    cPedestal /= pFe->fChipVector.size();
+    cPedestal /= pFe->fReadoutChipVector.size();
 
     LOG (INFO) << "Pedestal on Module " << +pFe->getFeId() << " is " << cPedestal << " VCth units.";
     return cPedestal;
@@ -492,7 +492,7 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
                 uint16_t tmpVthr = (cCbc->getReg("VCth1") + (cCbc->getReg("VCth2")<<8));
                 cMean+=tmpVthr;
@@ -594,7 +594,7 @@ void PedeNoise::processSCurves (std::string pHistName)
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
 
                 // TH2F* cHist = dynamic_cast<TH2F*> ( getHist ( cCbc, pHistName) );
@@ -872,7 +872,7 @@ void PedeNoise::extractPedeNoise (std::string pHistName)
             TH1F* cTmpHist = dynamic_cast<TH1F*> ( getHist ( cFe, "Module_noisehist" ) );
             TProfile* cTmpProfile = dynamic_cast<TProfile*> ( getHist ( cFe, "Module_Stripnoise" ) );
 
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
                 uint32_t cCbcId = static_cast<int> ( cCbc->getChipId() );
 
@@ -952,7 +952,7 @@ void PedeNoise::setThresholdtoNSigma (BeBoard* pBoard, uint32_t pNSigma)
     {
         uint32_t cFeId = cFe->getFeId();
 
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cCbc : cFe->fReadoutChipVector )
         {
             uint32_t cCbcId = cCbc->getChipId();
             TH1F* cNoiseHist = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_Noise" ) );

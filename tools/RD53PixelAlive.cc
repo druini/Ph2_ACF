@@ -64,7 +64,7 @@ void PixelAlive::Run()
   // #########################
   for (auto cBoard : fBoardVector)
     for (auto cFe : cBoard->fModuleVector)
-      for (auto cChip : cFe->fChipVector)
+      for (auto cChip : cFe->fReadoutChipVector)
 	for (auto row = 0; row < RD53::nRows; row++)
 	  for (auto col = 0; col < RD53::nCols; col++)
 	    theOccupancy->SetBinContent(col+1,row+1,theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cChip->getChipId())->getChannel<Occupancy>(row,col).fOccupancy);

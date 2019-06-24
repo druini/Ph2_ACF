@@ -70,7 +70,7 @@ void HybridTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 
         for (auto& cFe : cBoard->fModuleVector)
         {
-            for (auto& cCbc : cFe->fChipVector)
+            for (auto& cCbc : cFe->fReadoutChipVector)
             {
                 std::string pRegFile ;
                 char buffer[120];
@@ -172,7 +172,7 @@ void HybridTester::InitializeHists()
             uint16_t cMaxRange = 1023;
             fType = cFe->getFrontEndType();
 
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
 
                 uint32_t cCbcId = cCbc->getChipId();
@@ -265,7 +265,7 @@ uint32_t HybridTester::fillSCurves ( BeBoard* pBoard,  const Event* pEvent, uint
 
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cCbc : cFe->fReadoutChipVector )
         {
             // SS
             /*TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
@@ -394,7 +394,7 @@ void HybridTester::ScanThresholds()
     {
         for ( auto cFe : pBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
                 fSCurveCanvas->cd(cCbc->getChipId()+1);
                 TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
@@ -629,7 +629,7 @@ void HybridTester::updateSCurveCanvas ( BeBoard* pBoard )
 
     /*for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cCbc : cFe->fReadoutChipVector )
         {
             fSCurveCanvas->cd(cCbc->getChipId()+1);
             TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
@@ -643,7 +643,7 @@ void HybridTester::updateSCurveCanvas ( BeBoard* pBoard )
 
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cCbc : cFe->fReadoutChipVector )
         {
             uint32_t cCbcId = cCbc->getChipId();
             auto cScurve = fSCurveMap.find ( cCbc );
@@ -937,7 +937,7 @@ void HybridTester::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
 {
     for (auto cFe : pBoard->fModuleVector)
     {
-        for (auto cCbc : cFe->fChipVector)
+        for (auto cCbc : cFe->fReadoutChipVector)
         {
             std::vector<std::pair<std::string, uint16_t>> cRegVec;
             uint16_t cRegValue = this->to_reg ( 0, pTestGroup );

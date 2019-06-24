@@ -188,7 +188,7 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 
         for (auto& cFe : cBoard->fModuleVector)
         {
-            for (auto& cCbc : cFe->fChipVector)
+            for (auto& cCbc : cFe->fReadoutChipVector)
             {
                 std::string pRegFile ;
                 char buffer[120];

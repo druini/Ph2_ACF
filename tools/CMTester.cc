@@ -22,7 +22,7 @@ void CMTester::Initialize()
         {
             uint32_t cFeId = cFe->getFeId();
 
-            for ( auto& cCbc : cFe->fChipVector )
+            for ( auto& cCbc : cFe->fReadoutChipVector )
             {
                 uint32_t cCbcId = cCbc->getChipId();
 
@@ -228,7 +228,7 @@ void CMTester::ScanNoiseChannels()
         {
             for ( auto& cFe : pBoard->fModuleVector )
             {
-                for ( auto& cCbc : cFe->fChipVector )
+                for ( auto& cCbc : cFe->fReadoutChipVector )
                 {
                     // just re-use the hitprobability histogram here?
                     // this has to go into a dedicated method
@@ -473,7 +473,7 @@ void CMTester::analyze ( BeBoard* pBoard, const Event* pEvent )
 
         std::vector<bool> cModuleData; // use this to store data for all CBCs....
 
-        for ( auto& cCbc : cFe->fChipVector )
+        for ( auto& cCbc : cFe->fReadoutChipVector )
         {
 
             // here loop over the channels and fill the histograms

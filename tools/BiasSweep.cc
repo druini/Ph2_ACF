@@ -124,7 +124,7 @@ void BiasSweep::Initialize()
         {
             fType = cFe->getFrontEndType();
 
-            for (auto cCbc : cFe->fChipVector)
+            for (auto cCbc : cFe->fReadoutChipVector)
             {
                 cName = Form ("BiasSweep_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() );
                 cObj = gROOT->FindObject (cName);

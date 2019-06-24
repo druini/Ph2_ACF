@@ -22,7 +22,7 @@ void RegisterTester::TestRegisters()
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
                 ChipRegMap cMap = cCbc->getRegMap();
 
@@ -93,7 +93,7 @@ void RegisterTester::ReconfigureRegisters (std::string pDirectoryName )
 
         for (auto& cFe : cBoard->fModuleVector)
         {
-            for (auto& cCbc : cFe->fChipVector)
+            for (auto& cCbc : cFe->fReadoutChipVector)
             {
                 std::string pRegFile ;
 

@@ -126,7 +126,7 @@ namespace Ph2_System {
         void parseModuleContainer  (pugi::xml_node pModuleNode,   BeBoard* pBoard,               std::ostream& os );
         void parseCbc              (pugi::xml_node pModuleNode,   Module* cModule,               std::string cFilePrefix, std::ostream& os );
         void parseCbcContainer     (pugi::xml_node pModuleNode,   Module* cModule,               std::string cFilePrefix, std::ostream& os );
-        void parseCbcSettings      (pugi::xml_node pCbcNode,      Chip* pCbc,                    std::ostream& os);
+        void parseCbcSettings      (pugi::xml_node pCbcNode,      ReadoutChip* pCbc,             std::ostream& os);
         void parseGlobalCbcSettings(pugi::xml_node pModuleNode,   Module* pModule,               std::ostream& os);
 
 
@@ -134,7 +134,7 @@ namespace Ph2_System {
 	// # RD53 specific parser #
 	// ########################
         void parseRD53               (pugi::xml_node pModuleNode, Module* cModule, std::string cFilePrefix, std::ostream& os);
-        void parseRD53Settings       (pugi::xml_node pRd53Node,   Chip* pRD53,     std::ostream& os);
+        void parseRD53Settings       (pugi::xml_node pRd53Node,   ReadoutChip* pRD53,std::ostream& os);
         void parseGlobalRD53Settings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os);
 	// ########################
 

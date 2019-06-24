@@ -31,9 +31,9 @@
  */
 namespace Ph2_HwDescription {
 
-    using ChipRegMap  = std::map < std::string, ChipRegItem >;
-    using ChipRegPair = std::pair <std::string, ChipRegItem>;
-    using CommentMap  = std::map <int, std::string>;
+    // using ChipRegMap  = std::map < std::string, ChipRegItem >;
+    // using ChipRegPair = std::pair <std::string, ChipRegItem>;
+    // using CommentMap  = std::map <int, std::string>;
 
     /*!
      * \class ReadoutChip
@@ -48,6 +48,8 @@ namespace Ph2_HwDescription {
 
         // C'tors with object FE Description
         ReadoutChip ( const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue=256);
+
+        ~ReadoutChip();
         
         /*!
          * \brief acceptor method for HwDescriptionVisitor
@@ -58,27 +60,13 @@ namespace Ph2_HwDescription {
             pVisitor.visit ( *this );
         }
 
-        /*!
-        * \brief Read the registers of the Map in a file
-        * \param filename
-        */
-        virtual void loadfRegMap ( const std::string& filename )  = 0 ;
-        /*!
-        * \brief Write the registers of the Map in a file
-        * \param filename
-        */
-        virtual void saveRegMap ( const std::string& filename ) = 0;
-
         virtual uint32_t getNumberOfChannels() const  = 0;
 
         virtual bool isDACLocal(const std::string &dacName)  = 0;
 
-        virtual uint8_t getNumberOfBits(const std::string &dacName) = 0;
-
         const ChannelGroupBase* getChipOriginalMask() const override {return fChipOriginalMask;}
 
       protected:
-        std::vector<uint8_t> fChipMask;
         ChannelGroupBase*     fChipOriginalMask;
     };
 }

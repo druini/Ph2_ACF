@@ -54,6 +54,7 @@ Tool::Tool (const Tool& pTool)
 	fDetectorContainer           = pTool.fDetectorContainer;
 	fBeBoardInterface            = pTool.fBeBoardInterface;
 	fChipInterface               = pTool.fChipInterface;
+    fReadoutChipInterface        = pTool.fReadoutChipInterface;
 	fBoardVector                 = pTool.fBoardVector;
 	fBeBoardFWMap                = pTool.fBeBoardFWMap;
 	fSettingsMap                 = pTool.fSettingsMap;
@@ -90,6 +91,7 @@ void Tool::Inherit (Tool* pTool)
 	fDetectorContainer           = pTool->fDetectorContainer;//IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
 	fBeBoardInterface            = pTool->fBeBoardInterface;
 	fChipInterface               = pTool->fChipInterface;
+	fReadoutChipInterface        = pTool->fReadoutChipInterface;
 	fBoardVector                 = pTool->fBoardVector;
 	fBeBoardFWMap                = pTool->fBeBoardFWMap;
 	fSettingsMap                 = pTool->fSettingsMap;
@@ -117,15 +119,16 @@ void Tool::Inherit (Tool* pTool)
 
 void Tool::Inherit (SystemController* pSystemController)
 {
-	fDetectorContainer = pSystemController->fDetectorContainer; //IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
-	fBeBoardInterface  = pSystemController->fBeBoardInterface;
-	fChipInterface     = pSystemController->fChipInterface;
-	fBoardVector       = pSystemController->fBoardVector;
-	fBeBoardFWMap      = pSystemController->fBeBoardFWMap;
-	fSettingsMap       = pSystemController->fSettingsMap;
-	fFileHandler       = pSystemController->fFileHandler;
-	fNetworkStreamer   = pSystemController->fNetworkStreamer;
-	fStreamerEnabled   = pSystemController->fStreamerEnabled;
+	fDetectorContainer    = pSystemController->fDetectorContainer; //IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
+	fBeBoardInterface     = pSystemController->fBeBoardInterface;
+	fReadoutChipInterface = pSystemController->fReadoutChipInterface;
+	fChipInterface        = pSystemController->fChipInterface;
+	fBoardVector          = pSystemController->fBoardVector;
+	fBeBoardFWMap         = pSystemController->fBeBoardFWMap;
+	fSettingsMap          = pSystemController->fSettingsMap;
+	fFileHandler          = pSystemController->fFileHandler;
+	fNetworkStreamer      = pSystemController->fNetworkStreamer;
+	fStreamerEnabled      = pSystemController->fStreamerEnabled;
 }
 
 void Tool::resetPointers()
@@ -567,7 +570,7 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
 	{
 		for (auto cFe : cBoard->fModuleVector)
 		{
-			for (auto cChip : cFe->fChipVector)
+			for (auto cChip : cFe->fReadoutChipVector)
 			{
 				//Fabio: CBC specific but not used by common scans - BEGIN
 				//first, get the Amux Value
@@ -594,7 +597,7 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
 					LOG (DEBUG) << BOLDBLUE << "Read original Amux Value to be: " << std::bitset<8> (cOriginalAmuxValue) << " and changed to " << std::bitset<8> (cTPRegValue) << " - the TP is bit 6!" RESET;
 				}
 
-				this->fChipInterface->WriteChipMultReg (cChip, cRegVec);
+				this->fReadoutChipInterface->WriteChipMultReg (cChip, cRegVec);
 				//Fabio: CBC specific but not used by common scans - END
 
 			}
@@ -609,7 +612,7 @@ void Tool::enableTestPulse(bool enableTP)
 	{
 		for (auto cFe : cBoard->fModuleVector)
 		{
-			for (auto cChip : cFe->fChipVector)
+			for (auto cChip : cFe->fReadoutChipVector)
 			{
 				switch(cChip->getFrontEndType())
 				{
@@ -623,7 +626,7 @@ void Tool::enableTestPulse(bool enableTP)
 					if (enableTP) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
 					else cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
 
-					this->fChipInterface->WriteChipReg ( cChip, "MiscTestPulseCtrl&AnalogMux",  cTPRegValue );
+					this->fReadoutChipInterface->WriteChipReg ( cChip, "MiscTestPulseCtrl&AnalogMux",  cTPRegValue );
 					break;
 				}
 
@@ -652,7 +655,7 @@ void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
 	case FrontEndType::CBC3 :
 	{
 		uint8_t cRegValue =  to_reg ( 0, pTestGroup );
-		this->fChipInterface->WriteChipReg ( cChip, "TestPulseDel&ChanGroup",  cRegValue );
+		this->fReadoutChipInterface->WriteChipReg ( cChip, "TestPulseDel&ChanGroup",  cRegValue );
 		break;
 	}
 
@@ -723,7 +726,7 @@ std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pChip)
 	for( int i = 0 ; i <= 14 ; i++ )
 	{
 		TString cRegName = Form ( "Bend%d", i  );
-		uint8_t cRegValue = fChipInterface->ReadChipReg (pChip, cRegName.Data() );
+		uint8_t cRegValue = fReadoutChipInterface->ReadChipReg (pChip, cRegName.Data() );
 		//LOG (INFO) << BOLDGREEN << "Reading register " << cRegName.Data() << " - value of 0x" << std::hex <<  +cRegValue << " found [LUT entry for bend of " << cBend << " strips]" <<  RESET;
 
 		uint8_t cLUTvalue_0 = (cRegValue >> 0) & 0x0F;
@@ -781,7 +784,7 @@ std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pChip)
 //         }
 //     }
 
-//     fChipInterface->WriteChipMultReg ( pChip , cRegVec );
+//     fReadoutChipInterface->WriteChipMultReg ( pChip , cRegVec );
 
 //     return;
 // }
@@ -838,7 +841,7 @@ void Tool::unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair)
 			cOutput += cOut.Data();
 		}
 		//LOG (INFO) << GREEN << "\t Writing " << std::bitset<8> (cRegValue) <<  " to " << cMasked.first << " to UNMASK channels for stub sweep : " << cOutput.c_str() << RESET ;
-		fChipInterface->WriteChipReg ( cChip, cMasked.first ,  cRegValue  );
+		fReadoutChipInterface->WriteChipReg ( cChip, cMasked.first ,  cRegValue  );
 	}
 	//Fabio: CBC specific but not used by common scans - END
 
@@ -930,7 +933,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, c
 	DetectorContainer *outputDataContainer = fDetectorDataContainer;
 
 	float globalOccupancy = 0.;
-	Chip *cChip = static_cast<BeBoard*>(fDetectorContainer->at(boardIndex))->fModuleVector.at(0)->fChipVector.at(0); //assumption: one BeBoard has only one type of chip;
+	ReadoutChip *cChip = static_cast<BeBoard*>(fDetectorContainer->at(boardIndex))->fModuleVector.at(0)->fReadoutChipVector.at(0); //assumption: one BeBoard has only one type of chip;
 
 	bool localDAC = cChip->isDACLocal(dacName);
 	uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
@@ -1123,11 +1126,11 @@ void Tool::measureBeBoardData(uint16_t boardIndex, const uint16_t numberOfEvents
 					{
 						if(fMaskChannelsFromOtherGroups)
 						{
-							fChipInterface->maskChannelsGroup(static_cast<Chip*>(cChip), group);
+							fReadoutChipInterface->maskChannelsGroup(static_cast<ReadoutChip*>(cChip), group);
 						}
 						if(fTestPulse)
 						{
-							fChipInterface->setInjectionSchema(static_cast<Chip*>(cChip), group);
+							fReadoutChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), group);
 						}
 					}
 				}
@@ -1142,7 +1145,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, const uint16_t numberOfEvents
 			{
 				for ( auto cChip : *cFe )
 				{
-					fChipInterface->ConfigureChipOriginalMask ( static_cast<Chip*>(cChip) );
+					fReadoutChipInterface->ConfigureChipOriginalMask ( static_cast<ReadoutChip*>(cChip) );
 				}
 			}
 				}
@@ -1177,7 +1180,7 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacNam
 		{
 			// float cOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(globalDACContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->summary_)->theSummary_.fOccupancy;
 			// Summary<RegisterValue,EmptyContainer>* tmp = static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex))->summary_;
-			fChipInterface->WriteChipReg ( static_cast<Chip*>(cChip), dacName, static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue);
+			fReadoutChipInterface->WriteChipReg ( static_cast<Chip*>(cChip), dacName, static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue);
 		}
 	}
 	return;
@@ -1191,7 +1194,7 @@ void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName
 		for ( auto cChip : *cFe )
 		{
 			std::vector<uint16_t> dacVector ;//= dacList.at(cFe->getModuleId()).at(cChip->getChipId());
-			fChipInterface->WriteChipAllLocalReg ( static_cast<Chip*>(cChip), dacName, *globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId()));
+			fReadoutChipInterface->WriteChipAllLocalReg ( static_cast<ReadoutChip*>(cChip), dacName, *globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId()));
 		}
 	}
 	return;
@@ -1214,9 +1217,9 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, 
 {
 	for ( auto cFe : pBoard->fModuleVector )
 	{
-		for ( auto cChip : cFe->fChipVector )
+		for ( auto cChip : cFe->fReadoutChipVector )
 		{
-			fChipInterface->WriteChipReg ( cChip, dacName, dacValue );
+			fReadoutChipInterface->WriteChipReg ( cChip, dacName, dacValue );
 		}
 	}
 	return;
@@ -1240,13 +1243,13 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, c
 {
 	for ( auto cFe : pBoard->fModuleVector )
 	{
-		for ( auto cChip : cFe->fChipVector )
+		for ( auto cChip : cFe->fReadoutChipVector )
 		{
 			ChannelContainer<RegisterValue>* dacVector = new ChannelContainer<RegisterValue>(cChip->getNumberOfChannels(),RegisterValue(dacValue));
 			ChipContainer theChipContainer(cChip->getId(),cChip->getNumberOfRows(),cChip->getNumberOfCols());
 			theChipContainer.setChannelContainer(dacVector);
 
-			fChipInterface->WriteChipAllLocalReg ( cChip, dacName, theChipContainer);
+			fReadoutChipInterface->WriteChipAllLocalReg ( cChip, dacName, theChipContainer);
 		}
 	}
 	return;
@@ -1255,7 +1258,7 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, c
 void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue)
 {
 	//Assumption: 1 BeBoard has only 1 chip flavor:
-	if(pBoard->fModuleVector.at(0)->fChipVector.at(0)->isDACLocal(dacName))
+	if(pBoard->fModuleVector.at(0)->fReadoutChipVector.at(0)->isDACLocal(dacName))
 	{
 		setSameLocalDacBeBoard(pBoard, dacName, dacValue);
 	}

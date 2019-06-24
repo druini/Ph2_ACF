@@ -32,7 +32,7 @@ void PulseShape::Initialize()
             std::cerr << "cFeId = " << cFeId ;
             fType = cFe->getFrontEndType();
 
-            for ( auto& cCbc : cFe->fChipVector )
+            for ( auto& cCbc : cFe->fReadoutChipVector )
             {
                 uint16_t cMaxValue = 1023;
                 uint32_t cCbcId = cCbc->getChipId();
@@ -389,7 +389,7 @@ uint32_t PulseShape::fillVcthHist ( BeBoard* pBoard, Event* pEvent, uint32_t pVc
     // Loop over Events from this Acquisition
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cCbc : cFe->fReadoutChipVector )
         {
             //  get histogram to fill
             auto cChannelVector = fChannelMap.find ( cCbc );
@@ -544,7 +544,7 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
         {
             uint32_t cFeId = cFe->getFeId();
 
-            for ( auto& cCbc : cFe->fChipVector )
+            for ( auto& cCbc : cFe->fReadoutChipVector )
             {
                 std::vector<Channel*> cChannelVector;
                 uint32_t cCbcId = cCbc->getChipId();

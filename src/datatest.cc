@@ -202,9 +202,12 @@ int main ( int argc, char* argv[] )
 
         for ( auto& ev : *pEvents )
         {
-            LOG (INFO) << ">>> Event #" << cN++ ;
-            LOG (INFO) << *ev;
-
+            if( cN < 10 )
+            {
+                LOG (INFO) << ">>> Event #" << cN ;
+                LOG (INFO) << *ev;
+            }
+            cN++;
             if (cDAQFile)
             {
                 SLinkEvent cSLev = ev->GetSLinkEvent (pBoard);

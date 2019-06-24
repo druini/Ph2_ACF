@@ -483,7 +483,7 @@ namespace Ph2_System {
                         {
                             if (cFe->getFeId() != cFeId) continue;
 
-                            for (auto cCbc : cFe->fChipVector )
+                            for (auto cCbc : cFe->fReadoutChipVector )
                             {
                                 if (cCbc->getChipId() != cCbcId) continue;
                                 else if (cCbc->getFeId() == cFeId && cCbc->getChipId() == cCbcId)
@@ -589,8 +589,8 @@ namespace Ph2_System {
                             }
                             else if( cName == "CBC" ) 
                             {
-                                Chip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cId , cFileName );
-                                cModule->addChip (cCbc);
+                                ReadoutChip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cId , cFileName );
+                                cModule->addReadoutChip (cCbc);
                             }
                         }
                     }
@@ -673,8 +673,8 @@ namespace Ph2_System {
         }
         else cFileName = expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() );
 
-        Chip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
-        cModule->addChip (cCbc);
+        ReadoutChip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
+        cModule->addReadoutChip (cCbc);
 
     // parse the specific CBC settings so that Registers take precedence
         this->parseCbcSettings (pCbcNode, cCbc, os);
@@ -705,13 +705,13 @@ namespace Ph2_System {
         }
         else cFileName = expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() );
 
-    //Chip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
-    //cModule->addChip (cCbc);
-    //Chip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
+    //ReadoutChip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
+    //cModule->addReadoutChip (cCbc);
+    //ReadoutChip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
 
         uint32_t cChipId = pCbcNode.attribute ( "Id" ).as_int();
-        Chip* cCbc = cModule->addChipContainer(cChipId, new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName ));
-        cModule->addChip (cCbc);
+        ReadoutChip* cCbc = cModule->addChipContainer(cChipId, new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName ));
+        cModule->addReadoutChip (cCbc);
         cCbc->setNumberOfChannels(254);
 
     // parse the specific CBC settings so that Registers take precedence
@@ -728,6 +728,7 @@ namespace Ph2_System {
 
     void FileParser::parseGlobalCbcSettings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os)
     {
+        LOG (INFO) << BOLDBLUE << "Now I'm parsing global..." << RESET;
     //use this to parse GlobalCBCRegisters and the Global CBC settings
     //i deliberately pass the Module object so I can loop the CBCs of the Module inside this method
     //this has to be called at the end of the parseCBC() method
@@ -740,7 +741,7 @@ namespace Ph2_System {
 
             int cCounter = 0;
 
-            for (auto cCbc : pModule->fChipVector)
+            for (auto cCbc : pModule->fReadoutChipVector)
             {
                 if (cCounter == 0)
                     this->parseCbcSettings (cGlobalCbcSettingsNode, cCbc, os);
@@ -762,7 +763,7 @@ namespace Ph2_System {
                 std::string regname = std::string ( cCbcGlobalNode.attribute ( "name" ).value() );
                 uint32_t regvalue = convertAnyInt ( cCbcGlobalNode.first_child().value() ) ;
 
-                for (auto cCbc : pModule->fChipVector)
+                for (auto cCbc : pModule->fReadoutChipVector)
                     cCbc->setReg ( regname, uint8_t ( regvalue ) ) ;
 
                 os << BOLDGREEN << "|" << " " << "|" << "   " << "|" << "----" << cCbcGlobalNode.name()
@@ -772,7 +773,7 @@ namespace Ph2_System {
         }
     }
 
-    void FileParser::parseCbcSettings (pugi::xml_node pCbcNode, Chip* pCbc, std::ostream& os)
+    void FileParser::parseCbcSettings (pugi::xml_node pCbcNode, ReadoutChip* pCbc, std::ostream& os)
     {
     //parse the cbc settings here and put them in the corresponding registers of the Chip object
     //call this for every CBC, Register nodes should take precedence over specific settings??
@@ -796,6 +797,7 @@ namespace Ph2_System {
         //the moment the cbc object is constructed, it knows which chip type it is
             if (cType == FrontEndType::CBC3)
             {
+                std::cout<< __PRETTY_FUNCTION__ << std::endl;
                 pCbc->setReg ("VCth1", (cThreshold & 0x00FF) );
                 pCbc->setReg ("VCth2", (cThreshold & 0x0300) >> 8);
                 pCbc->setReg ("TriggerLatency1", (cLatency & 0x00FF) );
@@ -1004,7 +1006,7 @@ namespace Ph2_System {
     else cFileName = expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
 
     uint32_t cChipId = theChipNode.attribute ("Id").as_int();
-    Chip* theChip    = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName));
+    ReadoutChip* theChip    = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName));
     theChip->setNumberOfChannels(RD53::nRows,RD53::nCols);
     
     // Parse the specific Chip settings so that Registers take precedence
@@ -1017,7 +1019,7 @@ namespace Ph2_System {
 	   << convertAnyInt (theChipRegisterNode.first_child().value()) << RESET << std::dec << std::endl;
       }
 
-    cModule->addChip(theChip);
+    cModule->addReadoutChip(theChip);
   }
 
   void FileParser::parseGlobalRD53Settings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os)
@@ -1030,7 +1032,7 @@ namespace Ph2_System {
 	
 	int cCounter = 0;
 	
-	for (auto theChip : pModule->fChipVector)
+	for (auto theChip : pModule->fReadoutChipVector)
 	  {
 	    if (cCounter == 0)
 	      this->parseRD53Settings (cGlobalChipSettingsNode, theChip, os);
@@ -1052,7 +1054,7 @@ namespace Ph2_System {
 	    std::string regname = std::string   (theChipGlobalNode.attribute ( "name" ).value());
 	    uint32_t regvalue   = convertAnyInt (theChipGlobalNode.first_child().value());
 	    
-	    for (auto theChip : pModule->fChipVector) theChip->setReg (regname, uint8_t (regvalue));
+	    for (auto theChip : pModule->fReadoutChipVector) theChip->setReg (regname, uint8_t (regvalue));
 	    
 	    os << BOLDGREEN << "|" << "	" << "|" << "	" << "|" << "----" << theChipGlobalNode.name()
 	       << "  " << theChipGlobalNode.first_attribute().name() << " :"
@@ -1061,7 +1063,7 @@ namespace Ph2_System {
       }
   }
   
-  void FileParser::parseRD53Settings (pugi::xml_node theChipNode, Chip* theChip, std::ostream& os)
+  void FileParser::parseRD53Settings (pugi::xml_node theChipNode, ReadoutChip* theChip, std::ostream& os)
   {
     // Parse the Chip settings here and put them in the corresponding registers of the Chip object
     os << BOLDBLUE << "|\t|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53" << RESET << std::endl;

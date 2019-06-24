@@ -47,7 +47,7 @@ void StubSweep::Initialize()
             cFeCount++;
             fType = cFe->getFrontEndType();
 
-            for (auto cCbc : cFe->fChipVector)
+            for (auto cCbc : cFe->fReadoutChipVector)
             {
                 uint32_t cCbcId = cCbc->getChipId();
                 cCbcCount++;
@@ -124,7 +124,7 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
         {
             uint32_t cFeId = cFe->getFeId();
 
-            for (auto cCbc : cFe->fChipVector)
+            for (auto cCbc : cFe->fReadoutChipVector)
             {
                 uint32_t cCbcId = cCbc->getChipId();
 

@@ -30,8 +30,10 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool CbcInterface::ConfigureChip ( const ReadoutChip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
+    bool CbcInterface::ConfigureChip ( const Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
     {
+        std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << "!!!!!!!!!!!!!!!!" << std::endl;
         //first, identify the correct BeBoardFWInterface
         setBoard ( pCbc->getBeBoardId() );
 
@@ -45,8 +47,15 @@ namespace Ph2_HwInterface {
         for ( auto& cRegItem : cCbcRegMap )
         {
             //this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should be e-fused in the CBC3
-            if (cRegItem.first.find ("BandgapFuse") == std::string::npos && cRegItem.first.find ("ChipIDFuse") == std::string::npos)
+            if (cRegItem.first != "BandgapFuse" || cRegItem.first != "ChipIDFuse")
             {
+                if( cRegItem.first == "VCth1" || cRegItem.first == "VCth2")
+                {
+                    std::cout << __PRETTY_FUNCTION__ << cRegItem.first << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << +cRegItem.second.fValue << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << +pCbc->getFeId() << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << +pCbc->getChipId() << std::endl;
+                }
                 fBoardFW->EncodeReg (cRegItem.second, pCbc->getFeId(), pCbc->getChipId(), cVec, pVerifLoop, true);
 
 #ifdef COUNT_FLAG
@@ -135,7 +144,7 @@ namespace Ph2_HwInterface {
         return WriteChipMultReg ( pCbc, cRegVec, pVerifLoop );
     }
 
-    bool CbcInterface::WriteChipReg ( ReadoutChip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop )
+    bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop )
     {
         if(dacName=="VCth"){
             if (pCbc->getFrontEndType() == FrontEndType::CBC3)
@@ -179,7 +188,7 @@ namespace Ph2_HwInterface {
         return false;
     }
 
-    bool CbcInterface::WriteChipSingleReg ( ReadoutChip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop )
+    bool CbcInterface::WriteChipSingleReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop )
     {
 
         if ( pValue > 0xFF){
@@ -217,7 +226,7 @@ namespace Ph2_HwInterface {
         return cSuccess;
     }
 
-    bool CbcInterface::WriteChipMultReg ( ReadoutChip* pCbc, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop )
+    bool CbcInterface::WriteChipMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop )
     {
         //first, identify the correct BeBoardFWInterface
         setBoard ( pCbc->getBeBoardId() );
@@ -304,7 +313,7 @@ namespace Ph2_HwInterface {
             
     }
 
-    uint16_t CbcInterface::ReadChipReg ( ReadoutChip* pCbc, const std::string& pRegNode )
+    uint16_t CbcInterface::ReadChipReg ( Chip* pCbc, const std::string& pRegNode )
     {
         setBoard ( pCbc->getBeBoardId() );
 
@@ -332,7 +341,7 @@ namespace Ph2_HwInterface {
         //first set the correct BeBoard
         setBoard ( pModule->getBeBoardId() );
 
-        ChipRegItem cRegItem = pModule->fChipVector.at (0)->getRegItem ( pRegNode );
+        ChipRegItem cRegItem = pModule->fReadoutChipVector.at (0)->getRegItem ( pRegNode );
         cRegItem.fValue = pValue;
 
         //vector for transaction
@@ -340,7 +349,7 @@ namespace Ph2_HwInterface {
 
         // encode the reg specific to the FW, pVerifLoop decides if it should be read back, true means to write it
         // the 1st boolean could be true if I acually wanted to read back from each CBC but this somehow does not make sense!
-        fBoardFW->BCEncodeReg ( cRegItem, pModule->fChipVector.size(), cVec, false, true );
+        fBoardFW->BCEncodeReg ( cRegItem, pModule->fReadoutChipVector.size(), cVec, false, true );
 
         //true is the readback bit - the IC FW just checks that the transaction was successful and the
         //Strasbourg FW does nothing
@@ -353,7 +362,7 @@ namespace Ph2_HwInterface {
 
         //update the HWDescription object -- not sure if the transaction was successfull
         if (cSuccess)
-            for (auto& cCbc : pModule->fChipVector)
+            for (auto& cCbc : pModule->fReadoutChipVector)
                 cCbc->setReg ( pRegNode, pValue );
     }
 
@@ -369,10 +378,10 @@ namespace Ph2_HwInterface {
 
         for ( const auto& cReg : pVecReg )
         {
-            cRegItem = pModule->fChipVector.at (0)->getRegItem ( cReg.first );
+            cRegItem = pModule->fReadoutChipVector.at (0)->getRegItem ( cReg.first );
             cRegItem.fValue = cReg.second;
 
-            fBoardFW->BCEncodeReg ( cRegItem, pModule->fChipVector.size(), cVec, false, true );
+            fBoardFW->BCEncodeReg ( cRegItem, pModule->fReadoutChipVector.size(), cVec, false, true );
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif
@@ -386,7 +395,7 @@ namespace Ph2_HwInterface {
 #endif
 
         if (cSuccess)
-            for (auto& cCbc : pModule->fChipVector)
+            for (auto& cCbc : pModule->fReadoutChipVector)
                 for (auto& cReg : pVecReg)
                 {
                     cRegItem = cCbc->getRegItem ( cReg.first );

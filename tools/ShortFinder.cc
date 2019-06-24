@@ -76,7 +76,7 @@ void ShortFinder::ReconfigureRegisters()
 
         for (auto& cFe : cBoard->fModuleVector)
         {
-            for (auto& cCbc : cFe->fChipVector)
+            for (auto& cCbc : cFe->fReadoutChipVector)
             {
                 std::string pRegFile ;
 
@@ -330,7 +330,7 @@ void ShortFinder::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
 {
     for (auto cFe : pBoard->fModuleVector)
     {
-        for (auto cCbc : cFe->fChipVector)
+        for (auto cCbc : cFe->fReadoutChipVector)
         {
             std::vector<std::pair<std::string, uint16_t>> cRegVec;
             uint8_t cRegValue = this->to_reg ( 0, pTestGroup );

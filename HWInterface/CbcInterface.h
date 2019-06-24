@@ -51,7 +51,7 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        bool ConfigureChip ( const ReadoutChip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
+        bool ConfigureChip ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
         
         bool setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
 
@@ -78,7 +78,7 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteChipReg ( ReadoutChip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true ) override;
+        bool WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true ) override;
 
         /*!
          * \brief Write the designated register in both Chip and Chip Config File
@@ -86,14 +86,14 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteChipSingleReg ( ReadoutChip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true );
+        bool WriteChipSingleReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true );
 
         /*!
          * \brief Write several registers in both Chip and Chip Config File
          * \param pCbc
          * \param pVecReq : Vector of pair: Node of the register to write versus value to write
          */
-        bool WriteChipMultReg ( ReadoutChip* pCbc, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true ) override;
+        bool WriteChipMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true ) override;
 
         /*!
          * \brief Write same register in all Cbcs and then UpdateCbc
@@ -124,7 +124,7 @@ namespace Ph2_HwInterface {
          * \param pCbc
          * \param pRegNode : Node of the register to read
          */
-        uint16_t ReadChipReg ( ReadoutChip* pCbc, const std::string& pRegNode ) override;
+        uint16_t ReadChipReg ( Chip* pCbc, const std::string& pRegNode ) override;
 
     private:
 

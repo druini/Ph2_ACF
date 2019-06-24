@@ -134,10 +134,6 @@ namespace Ph2_HwDescription {
             fChipId = pChipId;
         }
 
-        virtual uint32_t getNumberOfChannels() const  = 0;
-        //const ChannelGroupBase* getChipOriginalMask() const override {return fChipOriginalMask;}
-        virtual bool isDACLocal(const std::string &dacName)  = 0;
-
         virtual uint8_t getNumberOfBits(const std::string &dacName) = 0;
 
       protected:

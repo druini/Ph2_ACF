@@ -26,7 +26,6 @@ namespace Ph2_HwDescription {
     Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : ReadoutChip ( pFeDesc, pCbcId)
      {
         fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
-        fChipMask = std::vector<uint8_t>(NCHANNELS%8 == 0 ? NCHANNELS/8 : NCHANNELS/8 + 1,0);
         loadfRegMap ( filename );
         setFrontEndType ( FrontEndType::CBC3);
     }
@@ -37,7 +36,6 @@ namespace Ph2_HwDescription {
 
     {
         fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
-        fChipMask = std::vector<uint8_t>(NCHANNELS%8 == 0 ? NCHANNELS/8 : NCHANNELS/8 + 1,0);
         loadfRegMap ( filename );
         setFrontEndType ( FrontEndType::CBC3);
     }
@@ -57,6 +55,7 @@ namespace Ph2_HwDescription {
             // fhasMaskedChannels = false;
             while ( getline ( file, line ) )
             {
+                std::cout<< __PRETTY_FUNCTION__ << " " << line << std::endl;
                 if ( line.find_first_not_of ( " \t" ) == std::string::npos )
                 {
                     fCommentMap[cLineCounter] = line;
@@ -82,7 +81,6 @@ namespace Ph2_HwDescription {
                     fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
 
                     if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
-                        fChipMask[fRegItem.fAddress - 0x20] = fRegItem.fValue;
                         // if(!fhasMaskedChannels && fRegItem.fValue!=0xFF) fhasMaskedChannels=true;
                         //disable masked channels only
                         if(fRegItem.fValue!=0xFF)
@@ -98,6 +96,8 @@ namespace Ph2_HwDescription {
                     }
 
                     fRegMap[fName] = fRegItem;
+                    std::cout << __PRETTY_FUNCTION__ << +fRegItem.fValue << std::endl;
+                    
                     cLineCounter++;
                 }
             }

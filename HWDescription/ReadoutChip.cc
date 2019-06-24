@@ -26,6 +26,7 @@ namespace Ph2_HwDescription
 
     ReadoutChip::ReadoutChip (const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue)
     : Chip( pFeDesc, pChipId, pMaxRegValue) 
+    , fChipOriginalMask(nullptr)
     {
     }
 
@@ -33,9 +34,15 @@ namespace Ph2_HwDescription
 
     ReadoutChip::ReadoutChip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId , uint16_t pMaxRegValue)
     :  Chip (pBeId, pFMCId, pFeId, pChipId , pMaxRegValue)
+    , fChipOriginalMask(nullptr)
     {
     }
 
+    ReadoutChip::~ReadoutChip()
+    {
+        delete fChipOriginalMask;
+        fChipOriginalMask = nullptr;
+    }
     //TODO
     // Copy C'tor
    // ReadoutChip::ReadoutChip (const ReadoutChip& chipObj) 

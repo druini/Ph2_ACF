@@ -62,7 +62,7 @@ namespace Ph2_HwDescription {
         {
             pVisitor.visit ( *this );
 
-            for ( Chip* cChip : fChipVector )
+            for ( Chip* cChip : fReadoutChipVector )
                 cChip->accept ( pVisitor );
         }
         /*!
@@ -71,7 +71,7 @@ namespace Ph2_HwDescription {
         */
         uint8_t getNChip() const
         {
-            return fChipVector.size();
+            return fReadoutChipVector.size();
         }
 
 
@@ -164,47 +164,6 @@ namespace Ph2_HwDescription {
         {
             fMPAVector.push_back ( pMPA );
         }
-
-
-        /*!
-         * \brief Remove a Chip from the vector
-         * \param pChipId
-         * \return a bool which indicate if the removing was successful
-         */
-        bool   removeChip ( uint8_t pChipId );
-        /*!
-         * \brief Get a Chip from the vector
-         * \param pChipId
-         * \return a pointer of Chip, so we can manipulate directly the Chip contained in the vector
-         */
-        Chip* getChip ( uint8_t pChipId ) const;
-
-
-        /*!
-         * \brief Remove a MPA from the vector
-         * \param pMPAId
-         * \return a bool which indicate if the removing was successful
-         */
-        bool   removeMPA ( uint8_t pMPAId );
-        /*!
-         * \brief Get a MPA from the vector
-         * \param pMPAId
-         * \return a pointer of MPA, so we can manipulate directly the MPA contained in the vector
-         */
-        MPA* getMPA ( uint8_t pMPAId ) const;
-
-       /*!
-         * \brief Remove a SSA from the vector
-         * \param pSSAId
-         * \return a bool which indicate if the removing was successful
-         */
-        bool   removeSSA ( uint8_t pSSAId );
-        /*!
-         * \brief Get a SSA from the vector
-         * \param pSSAId
-         * \return a pointer of SSA, so we can manipulate directly the SSA contained in the vector
-         */
-        SSA* getSSA ( uint8_t pSSAId ) const;
 
 
 	// // #################

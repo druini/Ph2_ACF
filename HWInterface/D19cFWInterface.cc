@@ -338,7 +338,7 @@ namespace Ph2_HwInterface {
                 hybrid_enable |= 1 << cFe->getFeId();
 
                 if (fFirwmareFrontEndType == FrontEndType::CBC3) {
-                    for ( Chip* cCbc : cFe->fChipVector)
+                    for ( Chip* cCbc : cFe->fReadoutChipVector)
                     {
                         LOG (INFO) << "     Enabling CBC3 Chip " << (int) cCbc->getChipId();
                         chips_enable[cFe->getFeId()] |= 1 << cCbc->getChipId();
@@ -428,7 +428,7 @@ namespace Ph2_HwInterface {
 
                 for (Module* cFe : pBoard->fModuleVector)
                 {
-                    for ( Chip* cCbc : cFe->fChipVector)
+                    for ( Chip* cCbc : cFe->fReadoutChipVector)
                     {
                         uint32_t cWord = pReplies.at (k);
                         if(fI2CVersion >= 1) cWordCorrect = ( ( ( (cWord & 0x007C0000) >> 18) == cCbc->getChipId() ) & ( ( (cWord & 0x07800000) >> 23) == cFe->getFeId() ) ) ? true : false;
@@ -760,7 +760,7 @@ namespace Ph2_HwInterface {
 
                     for (auto cFe : pBoard->fModuleVector)
                     {
-                        for (auto cCbc : cFe->fChipVector)
+                        for (auto cCbc : cFe->fReadoutChipVector)
                         {
 
                             uint8_t cOriginalStubLogicInput = cCbc->getReg ("Pipe&StubInpSel&Ptwidth");
@@ -796,7 +796,7 @@ namespace Ph2_HwInterface {
                             // print statuses
                             for (auto cFe : pBoard->fModuleVector)
                             {
-                                for (auto cCbc : cFe->fChipVector)
+                                for (auto cCbc : cFe->fReadoutChipVector)
                                 {
                                     PhaseTuningGetLineStatus(cFe->getFeId(), cCbc->getChipId(), 5);
                                 }
@@ -817,7 +817,7 @@ namespace Ph2_HwInterface {
                     cVecReq.clear();
                     for (auto cFe : pBoard->fModuleVector)
                     {
-                        for (auto cCbc : cFe->fChipVector)
+                        for (auto cCbc : cFe->fReadoutChipVector)
                         {
 
                             ChipRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
@@ -887,7 +887,7 @@ namespace Ph2_HwInterface {
                     // print statuses
                 for (auto cFe : pBoard->fModuleVector)
                 {
-                    for (auto cCbc : cFe->fChipVector)
+                    for (auto cCbc : cFe->fReadoutChipVector)
                     {
                         PhaseTuningGetLineStatus(cFe->getFeId(), cCbc->getChipId(), 5);
                     }
