@@ -125,101 +125,98 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength, bool pParticle )
         // Take Data for all Boards
         for ( BeBoard* pBoard : fBoardVector )
         {
-	          uint32_t cTotalEvents = 0;
-            fBeBoardInterface->Start (pBoard);
+//	          uint32_t cTotalEvents = 0;
+//            fBeBoardInterface->Start (pBoard);
 
-            // Loop untill number of events per Vcth is reached
-            while (cTotalEvents < fNevents)
+//             Loop untill number of events per Vcth is reached
+//            while (cTotalEvents < fNevents)
+//            {
+//                try{
+//                    ReadData ( pBoard ); // ReadData() is preferred for high number of events per Vcth
+//                    //ReadNEvents(1000);
+//                } catch (uhal::exception::exception& e){
+//                    LOG(ERROR)<< e.what();
+//                    updateHists ( "module_signal", false );
+//                    this->SaveResults();    
+//                    return;
+//                }
+
+            // fNevents is now the timer number * 25 ns
+            ReadNEvents ( pBoard, fNevents ); 
+            
+            const std::vector<Event*>& cEvents = GetEvents ( pBoard ); // Get the events and play with them    
+            uint32_t cTotalEvents = cEvents.size();
+            int cEventHits = 0;
+            int cEventClusters = 0;
+
+            // Loop over the Modules to get the histos           
+            for ( auto cFe : pBoard->fModuleVector )
             {
-                try{
-                    ReadData ( pBoard ); // ReadData() is preferred for high number of events per Vcth
-                    //ReadNEvents(1000);
-                } catch (uhal::exception::exception& e){
-                    LOG(ERROR)<< e.what();
-                    updateHists ( "module_signal", false );
-                    this->SaveResults();    
-                    return;
-                }
+                TH2D* cSignalHist = static_cast<TH2D*> (getHist ( cFe, "module_signal") );
+                TH2D* cVcthClusters = static_cast<TH2D*> (getHist ( cFe, "vcth_ClusterSize" ) );
+              
+                // Loop over the CBCs to get the histos
+                for ( auto cCbc : cFe->fCbcVector )
+                {
+                    TH1D* cHitsEvenHist         = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_even" ) );
+                    TH1D* cHitsOddHist          = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_odd" ) );
+                    TH1D* cClustersEvenHist     = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Clusters_even" ) );
+                    TH1D* cClustersOddHist      = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Clusters_odd" ) );
+                    TProfile* cClustersEvenProf = dynamic_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterOccupancy_even" ) );
+                    TProfile* cClustersOddProf  = dynamic_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterOccupancy_odd" ) );                     
 
-                // Get the events and process them
-                const std::vector<Event*>& cEvents = GetEvents ( pBoard );
-                
-                cTotalEvents += cEvents.size();
-                int cEventHits = 0;
-                int cEventClusters = 0;
-
-                // Loop over the Modules                    
-	              for ( auto cFe : pBoard->fModuleVector )
-	              {
-                    TH2D* cSignalHist = static_cast<TH2D*> (getHist ( cFe, "module_signal") );
-                    TH2D* cVcthClusters = static_cast<TH2D*> (getHist ( cFe, "vcth_ClusterSize" ) );
-	                
-                    // Loop over the CBCs
-	                  for ( auto cCbc : cFe->fCbcVector )
+                    // Loop over Events from this Acquisition to fill the histos
+                    for ( auto& cEvent : cEvents )
                     {
-                        TH1D* cHitsEvenHist         = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_even" ) );
-                        TH1D* cHitsOddHist          = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_odd" ) );
-                        TH1D* cClustersEvenHist     = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Clusters_even" ) );
-                        TH1D* cClustersOddHist      = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Clusters_odd" ) );
-                        TProfile* cClustersEvenProf = dynamic_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterOccupancy_even" ) );
-                        TProfile* cClustersOddProf  = dynamic_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterOccupancy_odd" ) );
-
-                        //uint32_t cHitsEven = 0, cHitsOdd = 0;	                      
-
-                        // Loop over Events from this Acquisition
-	                      for ( auto& cEvent : cEvents )
-	                      {
-                            // Find the hits in an event and fill the hits histos
-                            for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
+                        // Find the hits in an event and fill the hits histos
+                        for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
+                        {
+                            if ( cEvent->DataBit ( cCbc->getFeId(), cCbc->getCbcId(), cId ) )
                             {
-                                if ( cEvent->DataBit ( cCbc->getFeId(), cCbc->getCbcId(), cId ) )
-                                {
-                                    // Check which sensor we are on
-                                    if ( ( int (cId) % 2 ) == 0 ) cHitsEvenHist->Fill( cVCth );
-			                              else cHitsOddHist->Fill( cVCth );
+                                // Check which sensor we are on
+                                if ( ( int (cId) % 2 ) == 0 ) cHitsEvenHist->Fill( cVCth );
+	                              else cHitsOddHist->Fill( cVCth );
 
-                                    cSignalHist->Fill (cCbc->getCbcId() * NCHANNELS + cId, cVCth );
-                                    cEventHits++;
-                                }
+                                cSignalHist->Fill (cCbc->getCbcId() * NCHANNELS + cId, cVCth );
+                                cEventHits++;
                             }
-
-                            // Fill the cluster histos, use the middleware clustering
-                            std::vector<Cluster> cClusters = cEvent->getClusters (cCbc->getFeId(), cCbc->getCbcId() ); 
-                            cEventClusters += cClusters.size();
-
-                            // For the TProfiles
-                            double cClustersEven = 0;
-                            double cClustersOdd = 0;
-
-                            // Now fill the ClusterWidth per VCth plots:
-                            for ( auto& cCluster : cClusters )
-                            {
-                                cVcthClusters->Fill( cCluster.fClusterWidth, cVCth ); // Cluster size counter
-
-                                // Fill cluster per sensor
-                                if ( cCluster.fSensor == 0 ) 
-                                {                              
-                                    cClustersEvenHist->Fill ( cVCth );
-                                    cClustersEven++;
-                                } 
-                                else if ( cCluster.fSensor == 1 ) 
-                                {
-                                    cClustersOddHist->Fill ( cVCth );
-                                    cClustersOdd++;
-                                }
-                            }
-                            // Fill the cluster profiles
-                            cClustersEvenProf->Fill( cVCth, cClustersEven );
-                            cClustersOddProf->Fill( cVCth, cClustersOdd ); 
                         }
-                    }
-                } 
 
-                LOG (INFO) <<  "Vcth: " << +cVCth << ". Recorded " << cTotalEvents << " Events, with " << cEventClusters << " clusters and " << cEventHits << " hits.";
-                updateHists ( "module_signal", false ); // For online display
-            }
-		       fBeBoardInterface->Stop (pBoard);
+                        // Fill the cluster histos, use the middleware clustering
+                        std::vector<Cluster> cClusters = cEvent->getClusters (cCbc->getFeId(), cCbc->getCbcId() ); 
+                        cEventClusters += cClusters.size();
+
+                        // Now fill the ClusterWidth per VCth plots:
+                        double cClustersEven = 0;
+                        double cClustersOdd = 0;
+                        for ( auto& cCluster : cClusters )
+                        {
+                            cVcthClusters->Fill( cCluster.fClusterWidth, cVCth ); // Cluster size counter
+
+                            // Fill cluster per sensor
+                            if ( cCluster.fSensor == 0 ) 
+                            {                              
+                                cClustersEvenHist->Fill ( cVCth );
+                                cClustersEven++;
+                            } 
+                            else if ( cCluster.fSensor == 1 ) 
+                            {
+                                cClustersOddHist->Fill ( cVCth );
+                                cClustersOdd++;
+                            }
+                        }
+                        // Fill the cluster profiles
+                        cClustersEvenProf->Fill( cVCth, cClustersEven );
+                        cClustersOddProf->Fill( cVCth, cClustersOdd ); 
+                    }
+                }
+            } 
+
+            LOG (INFO) <<  "Vcth: " << +cVCth << ". Recorded " << cTotalEvents << " Events, with " << cEventClusters << " clusters and " << cEventHits << " hits.";
+            updateHists ( "module_signal", false ); // For online display
         }
+        //fBeBoardInterface->Stop (pBoard);
+        //}
 
         // Done counting hits for all FE's, now update the Histogram
         updateHists ( "module_signal", false );
@@ -230,14 +227,12 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength, bool pParticle )
         cVisitor.setThreshold (cVCth);
         this->accept (cVisitor);
     }
-
     // Now do the fit if requested, WARNING this fitting procedure is still under construction (N. Deelen / G. Zevi Della Porta)
     for ( BeBoard* pBoard : fBoardVector )
     {    
         processCurves ( pBoard, "Cbc_ClusterOccupancy_even" );
         processCurves ( pBoard, "Cbc_ClusterOccupancy_odd" ); 
     }
-
     // Last but not least, save the results. This also happens in the commissioning.cc but when we only use that some plots do not get saved properly! To be checked!
     SaveResults();
 }
@@ -328,7 +323,7 @@ void SignalScanFit::processCurves ( BeBoard *pBoard, std::string pHistName )
             // Make the differential histo
             // Do this with the histogram, not the profile
             this->differentiateHist (cCbc, clusters.Data());
-            std::cout << "I got here!" << std::endl;
+            //std::cout << "I got here!" << std::endl;
             // Only do this if requested? Yes, see SignalScan and fFit setting!
             if ( fFit ) this->fitHist (cCbc, pHistName);
         }
