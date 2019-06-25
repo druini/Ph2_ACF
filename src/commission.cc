@@ -91,7 +91,7 @@ int main ( int argc, char* argv[] )
     bool cStubLatency = ( cmd.foundOption ( "stublatency" ) ) ? true : false;
     bool cSignal = ( cmd.foundOption ( "signal" ) ) ? true : false;
     bool cSignalFit = ( cmd.foundOption ( "signalFit" ) ) ? true : false;
-    bool cParticle = ( cmd.foundOption ( "hitOR" ) ) ? true : false;
+    bool cHitOR = ( cmd.foundOption ( "hitOR" ) ) ? true : false;
     bool cNoise = ( cmd.foundOption ( "noise" ) ) ? true : false;
     bool cNoTDC = ( cmd.foundOption ( "notdc" ) ) ? true : false;
     bool cAntenna = (cmd.foundOption ("antenna") )? true : false;
@@ -189,7 +189,7 @@ int main ( int argc, char* argv[] )
         SignalScanFit cSignalScanFit;
         cSignalScanFit.Inherit (&cTool);
         cSignalScanFit.Initialize();
-        cSignalScanFit.ScanSignal ( cSignalFitRange, cParticle ); // Particle means that we trigger on a particle
+        cSignalScanFit.ScanSignal ( cSignalFitRange, cHitOR ); // Particle means that we trigger on a particle
     }
 
     else if ( cNoise )

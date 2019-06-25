@@ -45,7 +45,7 @@ class SignalScanFit : public Tool
 
   public:
     void Initialize ( );
-    void ScanSignal ( int pSignalScanLength, bool pParticle );
+    void ScanSignal ( int pSignalScanLength, bool pHitOR );
     double fVCthMin;
     double fVCthMax;
     double fVCthNbins;
