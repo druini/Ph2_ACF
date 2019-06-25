@@ -1,6 +1,6 @@
 #include "SignalScanFit.h"
 
-void SignalScanFit::Initialize ()
+void SignalScanFit::Initialize ( )
 {
     // To read the SignalScanFit-specific stuff
     parseSettings();    
@@ -99,7 +99,7 @@ void SignalScanFit::Initialize ()
     LOG (INFO) << GREEN << "Histograms & Settings initialised." << RESET;
 }
 
-void SignalScanFit::ScanSignal (int pSignalScanLength)
+void SignalScanFit::ScanSignal ( int pSignalScanLength, bool pParticle )
 {
     // The step scan is +1 for hole mode
     int cVcthDirection = ( fHoleMode == 1 ) ? +1 : -1;
@@ -119,7 +119,8 @@ void SignalScanFit::ScanSignal (int pSignalScanLength)
 
     for (int i = 0; i < pSignalScanLength; i += fSignalScanStep )
     {
-        LOG (INFO) << BLUE << "Threshold: " << +cVCth << " - Iteration " << i << " - Taking " << fNevents << RESET;
+        if ( pParticle ) LOG (INFO) << BLUE << "Threshold: " << +cVCth << " - Iteration " << i << " - Taking 2.4e9 * 25 ns of triggers" << RESET;
+        else LOG (INFO) << BLUE << "Threshold: " << +cVCth << " - Iteration " << i << " - Taking " << fNevents << RESET;
 
         // Take Data for all Boards
         for ( BeBoard* pBoard : fBoardVector )
@@ -237,7 +238,7 @@ void SignalScanFit::ScanSignal (int pSignalScanLength)
         processCurves ( pBoard, "Cbc_ClusterOccupancy_odd" ); 
     }
 
-    // Last but not least, save the results. This also happens in the commissioning.cc but when we only use that some plots do not get saved properly!!! To be checked!
+    // Last but not least, save the results. This also happens in the commissioning.cc but when we only use that some plots do not get saved properly! To be checked!
     SaveResults();
 }
 
@@ -271,11 +272,6 @@ void SignalScanFit::parseSettings ()
     if ( cSetting != std::end ( fSettingsMap ) )  fHoleMode = cSetting->second;
     else fHoleMode = 0;
 
-    //cSetting = fSettingsMap.find ( "PedestalStepBack" );
-
-    //if ( cSetting != std::end ( fSettingsMap ) )  fStepback = cSetting->second;
-    //else fStepback = 1;
-
     cSetting = fSettingsMap.find ( "SignalScanStep" );
 
     if ( cSetting != std::end ( fSettingsMap ) )  fSignalScanStep = cSetting->second;
@@ -296,7 +292,6 @@ void SignalScanFit::parseSettings ()
     LOG (INFO) << "	Nevents = " << fNevents ;
     LOG (INFO) << "	InitialThreshold = " << fInitialThreshold ;
     LOG (INFO) << "	HoleMode = " << int ( fHoleMode ) ;
-    //LOG (INFO) << "	Step back from Pedestal = " << fStepback ;
     LOG (INFO) << "	SignalScanStep = " << fSignalScanStep ;
     LOG (INFO) << "	Fit the scan = " << int ( fFit ) ;
 }
