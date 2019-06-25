@@ -218,7 +218,7 @@ int main ( int argc, char** argv )
             D19cFWInterface* d19cfw = (D19cFWInterface*)cTool.fBeBoardInterface->getFirmwareInterface();
 
             // init threshold visitior
-            ThresholdVisitor cThresholdVisitor (cTool.fChipInterface, 0);
+            ThresholdVisitor cThresholdVisitor (cTool.fReadoutChipInterface, 0);
             cTool.accept (cThresholdVisitor);
             auto cFe0 = pBoard->fModuleVector.at(0);
 

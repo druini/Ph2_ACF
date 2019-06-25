@@ -291,7 +291,7 @@ int main ( int argc, char* argv[] )
         Module* cFe = cPedeNoise.fBoardVector.at (0)->fModuleVector.at (0);
         uint16_t cPedestal = round (cPedeNoise.getPedestal (cFe) );
         //sweep the stubs
-        ThresholdVisitor cVisitor (cTool.fChipInterface, 0);
+        ThresholdVisitor cVisitor (cTool.fReadoutChipInterface, 0);
 
         if (cFull)
         {

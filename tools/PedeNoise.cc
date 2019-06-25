@@ -93,11 +93,11 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
                 //if it is a CBC3, disable the stub logic for this procedure
                 if (cCbc->getFrontEndType() == FrontEndType::CBC3 && fDisableStubLogic)
                 {
-                    LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning" << RESET ;
-                    fStubLogicValue[cCbc] = fChipInterface->ReadChipReg (cCbc, "Pipe&StubInpSel&Ptwidth");
-                    fHIPCountValue[cCbc] = fChipInterface->ReadChipReg (cCbc, "HIP&TestMode");
-                    fChipInterface->WriteChipReg (cCbc, "Pipe&StubInpSel&Ptwidth", 0x23);
-                    fChipInterface->WriteChipReg (cCbc, "HIP&TestMode", 0x08);
+                    LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET ;
+                    fStubLogicValue[cCbc] = fReadoutChipInterface->ReadChipReg (cCbc, "Pipe&StubInpSel&Ptwidth");
+                    fHIPCountValue[cCbc] = fReadoutChipInterface->ReadChipReg (cCbc, "HIP&TestMode");
+                    fReadoutChipInterface->WriteChipReg (cCbc, "Pipe&StubInpSel&Ptwidth", 0x23);
+                    fReadoutChipInterface->WriteChipReg (cCbc, "HIP&TestMode", 0x08);
                 }
 
                 uint32_t cCbcId = cCbc->getChipId();
@@ -193,7 +193,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     // float globalOccupancy=0;
     
     bool originalAllChannelFlag = this->fAllChan;
-    this->SetTestAllChannels(false);
+    this->SetTestAllChannels(true);
 
     this->setDacAndMeasureData("VCth", cStartValue, fEventsPerPoint);
 
@@ -339,7 +339,7 @@ std::string PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
                     cRegVec.push_back ({"HIP&TestMode", fHIPCountValue[static_cast<Chip*>(cCbc)]});
                 }
 
-                fChipInterface->WriteChipMultReg (static_cast<Chip*>(cCbc), cRegVec);
+                fReadoutChipInterface->WriteChipMultReg (static_cast<Chip*>(cCbc), cRegVec);
             }
         }
     }
@@ -434,7 +434,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
                 fNoiseCanvas->Modified();
                 fNoiseCanvas->Update();
                 
-                fChipInterface->WriteChipMultReg (static_cast<Chip*>(cCbc), cRegVec);
+                fReadoutChipInterface->WriteChipMultReg (static_cast<Chip*>(cCbc), cRegVec);
 
             }
         }
@@ -990,7 +990,7 @@ void PedeNoise::setThresholdtoNSigma (BeBoard* pBoard, uint32_t pNSigma)
             if (pNSigma > 0) LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " by " << cDiff << " to " << cPedestal + cDiff << " VCth units to supress noise!" ;
             else LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " back to the pedestal at " << +cPedestal ;
 
-            ThresholdVisitor cThresholdVisitor (fChipInterface, cValue);
+            ThresholdVisitor cThresholdVisitor (fReadoutChipInterface, cValue);
             cCbc->accept (cThresholdVisitor);
         }
     }
@@ -998,7 +998,7 @@ void PedeNoise::setThresholdtoNSigma (BeBoard* pBoard, uint32_t pNSigma)
 
 void PedeNoise::writeObjects()
 {
-    // this->SaveResults();
+    this->SaveResults();
     // just use auto iterators to write everything to disk
     // this is the old method before Tool class was cool
     fResultFile->cd();

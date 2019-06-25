@@ -84,23 +84,22 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
             for ( auto cCbc : cFe->fReadoutChipVector )
             {
+                LOG (INFO) << BOLDBLUE << "CBC" << +cCbc->getChipId() << "[ " << +cCbcIdMax << "]" << RESET; 
                 //if it is a CBC3, disable the stub logic for this procedure
                 if (cCbc->getFrontEndType() == FrontEndType::CBC3 && fDisableStubLogic)
                 {
                     LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning" << RESET ;
-                    fStubLogicValue[cCbc] = fChipInterface->ReadChipReg (cCbc, "Pipe&StubInpSel&Ptwidth");
-                    fHIPCountValue[cCbc] = fChipInterface->ReadChipReg (cCbc, "HIP&TestMode");
-                    fChipInterface->WriteChipReg (cCbc, "Pipe&StubInpSel&Ptwidth", 0x23);
-                    fChipInterface->WriteChipReg (cCbc, "HIP&TestMode", 0x08);
+                    fStubLogicValue[cCbc] = fReadoutChipInterface->ReadChipReg (cCbc, "Pipe&StubInpSel&Ptwidth");
+                    fHIPCountValue[cCbc] = fReadoutChipInterface->ReadChipReg (cCbc, "HIP&TestMode");
+                    fReadoutChipInterface->WriteChipReg (cCbc, "Pipe&StubInpSel&Ptwidth", 0x23);
+                    fReadoutChipInterface->WriteChipReg (cCbc, "HIP&TestMode", 0x08);
                 }
 
                 uint32_t cCbcId = cCbc->getChipId();
                 cCbcCount++;
 
                 if ( cCbcId > cCbcIdMax ) cCbcIdMax = cCbcId;
-
                 fVplusMap.insert ({cCbc, 0});
-
                 TString cName = Form ( "h_VplusValues_Fe%dCbc%d", cFeId, cCbcId );
                 TObject* cObj = gROOT->FindObject ( cName );
 
@@ -158,14 +157,17 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
         LOG (INFO) << "  Target Vcth determined algorithmically for CBC3";
         LOG (INFO) << "  Target Offset fixed to half range (0x80) for CBC3";
     }
+
 }
 
 
 void Calibration::FindVplus()
 {
+    LOG (INFO) << BOLDBLUE << "Identifying optimal Vplus for CBC..." << RESET;
     // first, set VCth to the target value for each CBC
-    ThresholdVisitor cThresholdVisitor (fChipInterface, fTargetVcth);
+    ThresholdVisitor cThresholdVisitor (fReadoutChipInterface, fTargetVcth);
     this->accept (cThresholdVisitor);
+    LOG (INFO) << BOLDBLUE << "... after the visitor..." << RESET;
 
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(true);
@@ -216,9 +218,9 @@ void Calibration::FindVplus()
 
 void Calibration::FindOffsets()
 {
-    
+    LOG (INFO) << BOLDBLUE << "Finding offsets..." << RESET;
     // just to be sure, configure the correct VCth and VPlus values
-    ThresholdVisitor cThresholdVisitor (fChipInterface, fTargetVcth);
+    ThresholdVisitor cThresholdVisitor (fReadoutChipInterface, fTargetVcth);
     this->accept (cThresholdVisitor);
     // ok, done, all the offsets are at the starting value, VCth & Vplus are written
 
@@ -237,10 +239,6 @@ void Calibration::FindOffsets()
     // std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
     // std::map<uint16_t, ModuleGlobalOccupancyMap > backEndCbcOccupanyMap;
     // float globalOccupancy=0;
-    
-
-
-
     // setSameLocalDac("ChannelOffset", ( fHoleMode ) ? 0x00 : 0xFF);
 
     for ( auto cBoard : fBoardVector )
@@ -251,14 +249,16 @@ void Calibration::FindOffsets()
             {
                 TH1F* cOccHist = static_cast<TH1F*> ( getHist ( cCbc, "Occupancy" ) );
                 TH1I* cOffsetHist = static_cast<TH1I*> ( getHist ( cCbc, "Offsets" ) );
-
+                int cMeanOffset=0;
                 for ( int cChannel=0; cChannel<254; ++cChannel)
                 {
                     cOccHist->Fill(cChannel, theOccupancyContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->getChannel<Occupancy>(cChannel).fOccupancy);
                     // cOccHist->Fill(cChannel, backEndOccupanyPerChannelAtTargetMap[cBoard->getBeId()][cFe->getModuleId()][cCbc->getChipId()][cChannel]);
                     std::string cRegName = Form ( "Channel%03d", cChannel + 1 );
                     cOffsetHist->Fill ( cChannel, (uint16_t)cCbc->getReg(cRegName) );
+                    cMeanOffset += cCbc->getReg(cRegName);
                 }
+                LOG (INFO) << BOLDRED << "Mean offset on CBC" << +cCbc->getChipId() << " is : " << (cMeanOffset)/(double)NCHANNELS << " Vcth units." << RESET;
             }
         }
     }

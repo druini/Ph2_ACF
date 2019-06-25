@@ -42,7 +42,7 @@ void Latency::Run()
 
   theDetectorFactory.copyAndInitStructure<EmptyContainer,GenericDataVector>(*fDetectorContainer, theLatencyContainer);
 
-  auto RD53ChipInterface = static_cast<RD53Interface*>(fChipInterface);
+  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
 
   for (const auto cBoard : *fDetectorContainer)
     {

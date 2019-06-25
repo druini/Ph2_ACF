@@ -76,7 +76,7 @@ class Calibration : public Tool
   private:
     // Containers
     //static std::map<Chip*, uint16_t> fVplusMap;
-    std::map<Chip*, uint16_t> fVplusMap;
+    std::map<ReadoutChip*, uint16_t> fVplusMap;
 
     // Canvases
     TCanvas* fVplusCanvas;

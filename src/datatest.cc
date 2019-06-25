@@ -139,7 +139,7 @@ int main ( int argc, char* argv[] )
     if ( cVcth != 0 )
     {
         t.start();
-        ThresholdVisitor cVisitor (cSystemController.fChipInterface, 0);
+        ThresholdVisitor cVisitor (cSystemController.fReadoutChipInterface, 0);
         cVisitor.setThreshold (cVcth);
         cSystemController.accept (cVisitor);
 

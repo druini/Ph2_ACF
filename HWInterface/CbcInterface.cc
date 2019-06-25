@@ -99,13 +99,13 @@ namespace Ph2_HwInterface {
         const ChannelGroup<NCHANNELS,1>* originalMask     = static_cast<const ChannelGroup<NCHANNELS,1>*>(pCbc->getChipOriginalMask());
         const ChannelGroup<NCHANNELS,1>* currentGroupMask = static_cast<const ChannelGroup<NCHANNELS,1>*>(group                       );
         std::bitset<NCHANNELS> maskToBeSet = originalMask->getBitset() & currentGroupMask->getBitset();
-
+        LOG (INFO) << BOLDBLUE << "Bitset used for mask has " << maskToBeSet.count() << " active channels." << RESET;
         std::vector< std::pair<std::string, uint16_t> > cRegVec; 
         cRegVec.clear(); 
         
         for(uint8_t maskGroup=0; maskGroup<32; ++maskGroup)
         {
-            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)((maskToBeSet>>(maskGroup<<3)).to_ulong() & 0xFF)));
+            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)(originalMask->getBitset()>>(maskGroup<<3) & std::bitset<NCHANNELS>(255)).to_ulong()));
         }
 
         return WriteChipMultReg ( pCbc , cRegVec, pVerifLoop );
@@ -123,7 +123,7 @@ namespace Ph2_HwInterface {
         
         for(uint8_t maskGroup=0; maskGroup<32; ++maskGroup)
         {
-            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)((originalMask->getBitset()>>(maskGroup<<3)).to_ulong() & 0xFF)));
+            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)(originalMask->getBitset()>>(maskGroup<<3) & std::bitset<NCHANNELS>(255)).to_ulong()));
         }
 
         return WriteChipMultReg ( pCbc , cRegVec, pVerifLoop );

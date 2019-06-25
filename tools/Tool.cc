@@ -419,11 +419,17 @@ void Tool::SaveResults()
 		cCanvas.second->SaveAs ( cPdfName.c_str() );
 	}
 
-	fResultFile->Write();
+	// fResultFile->Write();
 	// fResultFile->Close();
 
 	LOG (INFO) << "Results saved!" ;
 }
+
+void Tool::WriteRootFile()
+{
+	fResultFile->Write();
+}
+
 
 void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool pDate )
 {
@@ -949,6 +955,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 
 	bool localDAC = cChip->isDACLocal(dacName);
 	uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
+    LOG (INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
 	bool occupanyDirectlyProportionalToDAC;
 
 	ContainerFactory   theDetectorFactory;

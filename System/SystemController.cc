@@ -210,6 +210,7 @@ namespace Ph2_System {
 		    }
                 }
 	      fBeBoardInterface->ChipReSync ( cBoard );
+          LOG (INFO) << BOLDGREEN << "Successfully sent resync." << RESET;
 	    }
 	    else
 	    {
