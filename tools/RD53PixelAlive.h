@@ -1,6 +1,6 @@
 /*!
   \file                  RD53PixelAlive.h
-  \brief                 Implementaion pf PixelAlive scan
+  \brief                 Implementaion of PixelAlive scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -11,17 +11,20 @@
 #define _RD53PixelAlive_h_
 
 #include "../Utils/Container.h"
-#include "../Utils/Occupancy.h"
+#include "../Utils/OccupancyAndPh.h"
+#include "../Utils/GenericDataVector.h"
+#include "../Utils/EmptyContainer.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"
 
+#include "TApplication.h"
+#include "TStyle.h"
+#include "TGaxis.h"
 #include "TH2F.h"
 
 
 using namespace Ph2_System;
-using namespace std;
-
 
 // #########################
 // # PixelAlive test suite #
@@ -29,28 +32,48 @@ using namespace std;
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive(const char* fName, size_t rStart, size_t rEnd, size_t cStart, size_t cEnd, size_t nPix, size_t nTrig);
+  PixelAlive(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
   ~PixelAlive();
 
-  void Run();
-  void Display();
-  void Save();
+  void Run     ();
+  void Draw    (bool display, bool save);
+  void Analyze ();
   
  private:
-  const char* fileName;
+  const char* fileRes;
   size_t rowStart;
   size_t rowEnd;
   size_t colStart;
   size_t colEnd;
   size_t nPixels2Inj;
-  size_t nTriggers;
+  size_t nEvents;
+  size_t nEvtsBurst;  
+  bool   inject;
 
-  std::bitset<RD53::nRows * RD53::nCols> customBitset;
-  ChannelGroup<RD53::nRows,RD53::nCols>* customChannelGroup;
-  
-  TFile*   theFile;
-  TCanvas* theCanvas;
-  TH2F*    theOccupancy;
+  DetectorDataContainer theContainer;
+
+  void InitHisto ();
+  void FillHisto ();
+  void Display   ();
+  void Save      ();
+
+
+  // ########
+  // # ROOT #
+  // ########
+  TFile* theFile;
+  std::vector<TCanvas*> theCanvasOcc2D;
+  std::vector<TH2F*>    theOcc2D;
+  std::vector<TCanvas*> theCanvasToT;
+  std::vector<TH1F*>    theToT;
+  std::vector<TCanvas*> theCanvasOcc1D;
+  std::vector<TH1F*>    theOcc1D;
+  std::vector<TCanvas*> theCanvasBCID;
+  std::vector<TH1F*>    theBCID;
+  std::vector<TCanvas*> theCanvasTrgID;
+  std::vector<TH1F*>    theTrgID;
+  std::vector<TCanvas*> theCanvasErr;
+  std::vector<TH2F*>    theErr;
 };
 
 #endif

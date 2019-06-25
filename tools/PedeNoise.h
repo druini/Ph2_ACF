@@ -15,18 +15,21 @@
 #include "Tool.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/CommonVisitors.h"
+#ifdef __USE_ROOT__
+  #include "../DQMUtils/DQMHistogramPedeNoise.h"
+#endif
 
 
 #include <map>
 
-#include "TCanvas.h"
+// #include "TCanvas.h"
 #include <TH2.h>
 #include <TF1.h>
 #include "TProfile.h"
-#include "TString.h"
-#include "TGraphErrors.h"
-#include "TString.h"
-#include "TText.h"
+// #include "TString.h"
+// #include "TGraphErrors.h"
+// #include "TString.h"
+// #include "TText.h"
 #include "TLine.h"
 
 using namespace Ph2_HwDescription;
@@ -99,8 +102,11 @@ class PedeNoise : public Tool
     //helpers for SCurve measurement
     uint16_t findPedestal (bool forceAllChannels = false);
 
-    std::map<uint16_t, DetectorContainer*> fSCurveOccupancyMap;
+    std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
 
+    #ifdef __USE_ROOT__
+      DQMHistogramPedeNoise theDQMHistogramPedeNoise;
+    #endif
 };
 
 

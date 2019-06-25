@@ -1,7 +1,10 @@
 #include "../Utils/TCPNetworkClient.h"
 #include "../Utils/ObjectStreamer.h"
+#include "../Utils/Container.h"
 #include "../DQMUtils/DQMInterface.h"
 #include "../DQMUtils/DQMHistogramPedeNoise.h"
+#include "../System/FileParser.h"
+#include "TFile.h"
 
 #include <iostream>
 #include <string>
@@ -14,6 +17,7 @@ DQMInterface::DQMInterface(std::string configurationFile)
 , fDQMHistogram     (nullptr)
 , fRunning          (false)
 , fConfigurationFile(configurationFile)
+, fOutputFile(nullptr)
 {
 }
 
@@ -34,6 +38,8 @@ void DQMInterface::destroy(void)
 	destroyHistogram();
 	fListener     = nullptr;
 	fDQMHistogram = nullptr;
+	delete fOutputFile;
+	fOutputFile = nullptr;
 	std::cout << __PRETTY_FUNCTION__ << "destroy DONE!" << std::endl;
 }
 
@@ -63,9 +69,20 @@ void DQMInterface::configure(void)
 	std::cout << __PRETTY_FUNCTION__ << "DQM connected!" << std::endl;
 	//fListener->send("send me the configuration");
 
+	Ph2_System::FileParser fParser;
+    std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*> fBeBoardFWMap;
+    std::vector<Ph2_HwDescription::BeBoard*> fBoardVector;
+    std::stringstream out;
+    DetectorContainer fDetectorStructure;
+
+    fParser.parseHW (fConfigurationFile, fBeBoardFWMap, fBoardVector, &fDetectorStructure, out, true );
+    std::cout << out.str() << std::endl;
+    
 	//if calibration type pedenoise
 	fDQMHistogram = new DQMHistogramPedeNoise();
-	fDQMHistogram->book(fConfigurationFile);
+	fOutputFile = new TFile("tmp.root", "RECREATE");
+	fDQMHistogram->book(fOutputFile, fDetectorStructure);
+
 }
 
 //========================================================================================================================
@@ -92,7 +109,8 @@ void DQMInterface::stopProcessingData  (void)
 		std::cout<< __PRETTY_FUNCTION__ << " Buffer should be empty, some data were not read, Aborting " << std::endl;
 		abort();  
 	}
-	fDQMHistogram->save("tmp.root");
+	fDQMHistogram->process();
+	fOutputFile->Write();
 }
 
 //========================================================================================================================

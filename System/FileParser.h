@@ -17,7 +17,7 @@
 //#include "../HWInterface/ChipInterface.h"
 //#include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/FC7FWInterface.h"
+#include "../HWInterface/RD53FWInterface.h"
 // #include "../HWInterface/GlibFWInterface.h"
 // #include "../HWInterface/ICGlibFWInterface.h"
 // #include "../HWInterface/CtaFWInterface.h"

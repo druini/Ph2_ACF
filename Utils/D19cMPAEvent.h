@@ -271,7 +271,7 @@ namespace Ph2_HwInterface {
             }
         }
 
-        void fillDataContainer(BoardContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup) override
+        void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup) override
         {
             std::cout<< __PRETTY_FUNCTION__ << " YOU NEED TO IMPLEMENT ME!!!!";
             abort();

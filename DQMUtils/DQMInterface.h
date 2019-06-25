@@ -6,6 +6,7 @@
 
 class TCPNetworkClient;
 class DQMHistogramBase;
+class TFile;
 
 class DQMInterface
 {
@@ -32,6 +33,7 @@ private:
 	bool              fRunning;
 	std::future<bool> fRunningFuture;
 	std::string       fConfigurationFile;
+	TFile *fOutputFile;
 
 };
 
