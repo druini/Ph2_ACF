@@ -44,10 +44,10 @@ namespace Ph2_HwDescription {
 
       public:
         // C'tors which take BeId, FMCId, FeID, ChipId
-        ReadoutChip ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue=256);
+        ReadoutChip ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue=255);
 
         // C'tors with object FE Description
-        ReadoutChip ( const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue=256);
+        ReadoutChip ( const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue=255);
 
         ~ReadoutChip();
         

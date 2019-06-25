@@ -23,18 +23,18 @@
 namespace Ph2_HwDescription {
     // C'tors with object FE Description
 
-    Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : ReadoutChip ( pFeDesc, pCbcId)
+    Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : ReadoutChip ( pFeDesc, pCbcId )
      {
+        fMaxRegValue=255; // 8 bit registers in CBC
         fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
         loadfRegMap ( filename );
         setFrontEndType ( FrontEndType::CBC3);
     }
 
     // C'tors which take BeId, FMCId, FeID, CbcId
-
     Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename ) : ReadoutChip ( pBeId, pFMCId, pFeId, pCbcId)
-
     {
+        fMaxRegValue=255; // 8 bit registers in CBC
         fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
         loadfRegMap ( filename );
         setFrontEndType ( FrontEndType::CBC3);
@@ -55,7 +55,7 @@ namespace Ph2_HwDescription {
             // fhasMaskedChannels = false;
             while ( getline ( file, line ) )
             {
-                std::cout<< __PRETTY_FUNCTION__ << " " << line << std::endl;
+                //std::cout<< __PRETTY_FUNCTION__ << " " << line << std::endl;
                 if ( line.find_first_not_of ( " \t" ) == std::string::npos )
                 {
                     fCommentMap[cLineCounter] = line;
@@ -96,8 +96,7 @@ namespace Ph2_HwDescription {
                     }
 
                     fRegMap[fName] = fRegItem;
-                    std::cout << __PRETTY_FUNCTION__ << +fRegItem.fValue << std::endl;
-                    
+                    //std::cout << __PRETTY_FUNCTION__ << +fRegItem.fValue << std::endl;
                     cLineCounter++;
                 }
             }

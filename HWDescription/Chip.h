@@ -50,10 +50,10 @@ namespace Ph2_HwDescription {
       public:
 
         // C'tors which take BeId, FMCId, FeID, ChipId
-        Chip ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue=256);
+        Chip ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue=255);
 
         // C'tors with object FE Description
-        Chip ( const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue=256);
+        Chip ( const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue=255);
 
         // Default C'tor
         Chip();

@@ -32,8 +32,8 @@ namespace Ph2_HwInterface {
 
     bool CbcInterface::ConfigureChip ( const Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
     {
-        std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
-        std::cout << __PRETTY_FUNCTION__ << "!!!!!!!!!!!!!!!!" << std::endl;
+        //std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
+        //std::cout << __PRETTY_FUNCTION__ << "!!!!!!!!!!!!!!!!" << std::endl;
         //first, identify the correct BeBoardFWInterface
         setBoard ( pCbc->getBeBoardId() );
 
@@ -49,13 +49,13 @@ namespace Ph2_HwInterface {
             //this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should be e-fused in the CBC3
             if (cRegItem.first != "BandgapFuse" || cRegItem.first != "ChipIDFuse")
             {
-                if( cRegItem.first == "VCth1" || cRegItem.first == "VCth2")
+                /*if( cRegItem.first == "VCth1" || cRegItem.first == "VCth2")
                 {
                     std::cout << __PRETTY_FUNCTION__ << cRegItem.first << std::endl;
                     std::cout << __PRETTY_FUNCTION__ << +cRegItem.second.fValue << std::endl;
                     std::cout << __PRETTY_FUNCTION__ << +pCbc->getFeId() << std::endl;
                     std::cout << __PRETTY_FUNCTION__ << +pCbc->getChipId() << std::endl;
-                }
+                }*/
                 fBoardFW->EncodeReg (cRegItem.second, pCbc->getFeId(), pCbc->getChipId(), cVec, pVerifLoop, true);
 
 #ifdef COUNT_FLAG
