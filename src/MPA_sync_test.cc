@@ -5,7 +5,7 @@
 #include <fstream>
 #include "../Utils/Utilities.h"
 #include "../HWDescription/SSA.h"
-#include "../HWDescription/Module.h"
+#include "../HWDescription/OuterTrackerModule.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
@@ -50,7 +50,7 @@ int main( int argc, char* argv[] )
 	mpa1->loadfRegMap("settings/MPAFiles/MPA_default.txt");
 	BeBoard* pBoard = mysyscontroller.fBoardVector.at( 0 );
 
-	Module* MPAM = new Module();
+	OuterTrackerModule* MPAM = new OuterTrackerModule();
 	MPAM->addMPA(mpa1);
 	uint8_t nummpa =MPAM->getNMPA();
 	pBoard->addModule(MPAM);

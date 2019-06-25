@@ -78,7 +78,7 @@ namespace Ph2_HwDescription {
         * \brief Write the registers of the Map in a file
         * \param filename
         */
-        void saveRegMap ( const std::string& filename );
+        void saveRegMap ( const std::string& filename ) override;
 
         uint32_t getNumberOfChannels() const override { return NCHANNELS; }
 

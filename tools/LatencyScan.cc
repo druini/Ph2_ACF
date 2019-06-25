@@ -1,4 +1,5 @@
 #include "LatencyScan.h"
+#include "../HWDescription/Cbc.h"
 
 LatencyScan::LatencyScan() : Tool()
 {}

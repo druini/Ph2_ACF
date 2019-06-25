@@ -26,8 +26,11 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWDescription/Module.h"
+#include "../HWDescription/SSA.h"
+#include "../HWDescription/MPA.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/RD53.h"
+#include "../HWDescription/RegItem.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>

@@ -44,7 +44,7 @@ namespace Ph2_HwDescription {
      * \class Chip
      * \brief Read/Write Chip's registers on a file, contains a register map
      */
-    class Chip : public FrontEndDescription, public ChipContainer
+    class Chip : public FrontEndDescription
     {
 
       public:

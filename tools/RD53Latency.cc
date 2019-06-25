@@ -73,7 +73,7 @@ void Latency::Run()
 		data.clear();
 
 		LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
-		RD53ChipInterface->WriteChipReg(static_cast<Chip*>(cChip), "LATENCY_CONFIG", lt, true);
+		RD53ChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", lt, true);
 
 		this->ReadNEvents(static_cast<BeBoard*>(cBoard), nEvents, data);
 		auto events = RD53FWInterface::DecodeEvents(data,status);

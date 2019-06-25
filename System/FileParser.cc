@@ -1,5 +1,9 @@
 #include "FileParser.h"
 #include "../HWDescription/Cbc.h"
+#include "../HWDescription/Cic.h"
+#include "../HWDescription/RD53.h"
+#include "../HWDescription/Module.h"
+#include "../HWDescription/OuterTrackerModule.h"
 
 
 namespace Ph2_System {
@@ -618,7 +622,15 @@ namespace Ph2_System {
         //Module* cModule = new Module ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId );
         //pBoard->addModule ( cModule );
         //FIX with reference
-            Module* cModule = pBoard->addModuleContainer(cModuleId, new Module ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId ));
+            Module* cModule;
+            if (pBoard->getBoardType() == BoardType::FC7)
+            {
+                cModule = pBoard->addModuleContainer(cModuleId, new Module ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId ));
+            }
+            else
+            {
+                cModule = pBoard->addModuleContainer(cModuleId, new OuterTrackerModule ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId ));
+            }
             pBoard->addModule ( cModule );
 
 
@@ -647,6 +659,23 @@ namespace Ph2_System {
                 for ( pugi::xml_node pCbcNode = pModuleNode.child ( "CBC" ); pCbcNode; pCbcNode = pCbcNode.next_sibling() )
                     this->parseCbcContainer  (pCbcNode, cModule, cFilePrefix, os);
 
+                for ( pugi::xml_node pCicNode = pModuleNode.child ( "CIC" ); pCicNode; pCicNode = pCicNode.next_sibling() )
+                {
+
+                    std::string cFileName;
+
+                    if ( !cFilePrefix.empty() )
+                    {
+                        if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
+                            cFilePrefix.append ("/");
+
+                        cFileName = cFilePrefix + expandEnvironmentVariables (pCicNode.attribute ( "configfile" ).value() );
+                    }
+                    else cFileName = expandEnvironmentVariables (pCicNode.attribute ( "configfile" ).value() );
+
+                    Cic* cCic = new Cic ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCicNode.attribute ( "Id" ).as_int(), cFileName );
+                    static_cast<OuterTrackerModule*>(cModule)->addCic (cCic);
+                }
             // parse the GlobalCbcSettings so that Global CBC regisers take precedence over Global CBC settings which take precedence over CBC specific settings
                 this->parseGlobalCbcSettings (pModuleNode, cModule, os);
             }

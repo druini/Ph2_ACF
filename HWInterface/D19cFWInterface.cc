@@ -17,6 +17,7 @@
 #include "D19cFWInterface.h"
 #include "D19cFpgaConfig.h"
 #include "../HWDescription/Module.h"
+#include "../HWDescription/OuterTrackerModule.h"
 
 //#include "ChipInterface.h"
 
@@ -346,7 +347,7 @@ namespace Ph2_HwInterface {
                         fNCbc++;
                     }
                 } else if (fFirwmareFrontEndType == FrontEndType::MPA) {
-                    for ( MPA* cMPA : cFe->fMPAVector)
+                    for ( MPA* cMPA : static_cast<OuterTrackerModule*>(cFe)->fMPAVector)
                     {
                         LOG (INFO) << "     Enabling MPA Chip " << (int) cMPA->getMPAId();
                         chips_enable[cFe->getFeId()] |= 1 << cMPA->getMPAId();
@@ -354,7 +355,7 @@ namespace Ph2_HwInterface {
                         fNMPA++;
                     }
                 } else if (fFirwmareFrontEndType == FrontEndType::SSA) {
-                    for (SSA* cSSA : cFe->fSSAVector)
+                    for (SSA* cSSA : static_cast<OuterTrackerModule*>(cFe)->fSSAVector)
                     {
                         LOG (INFO) << "     Enabling SSA Chip " << (int) cSSA->getSSAId();
                         chips_enable[cFe->getFeId()] |= 1 << cSSA->getSSAId();
@@ -907,7 +908,7 @@ namespace Ph2_HwInterface {
 
             for (auto cFe : pBoard->fModuleVector)
             {
-                for (auto cMpa : cFe->fMPAVector)
+                for (auto cMpa : static_cast<OuterTrackerModule*>(cFe)->fMPAVector)
                 {
 
                     uint8_t cOriginalReadoutMode = cMpa->getReg ("ReadoutMode");
@@ -947,7 +948,7 @@ namespace Ph2_HwInterface {
             cVecReq.clear();
             for (auto cFe : pBoard->fModuleVector)
             {
-                for (auto cMpa : cFe->fMPAVector)
+                for (auto cMpa : static_cast<OuterTrackerModule*>(cFe)->fMPAVector)
                 {
 
                     RegItem cRegItem = cMpa->getRegItem ( "ReadoutMode" );
@@ -1232,8 +1233,8 @@ namespace Ph2_HwInterface {
         for (const auto& cFe : pBoard->fModuleVector)
         {
             cNCbc += cFe->getNChip();
-            cNMPA += cFe->getNMPA();
-            cNSSA += cFe->getNSSA();
+            cNMPA += static_cast<OuterTrackerModule*>(cFe)->getNMPA();
+            cNSSA += static_cast<OuterTrackerModule*>(cFe)->getNSSA();
         }
         if (cNCbc>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNCbc * D19C_EVENT_SIZE_32_CBC3;
         if (cNMPA>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNMPA * D19C_EVENT_SIZE_32_MPA;

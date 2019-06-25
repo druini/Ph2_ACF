@@ -10,6 +10,7 @@
  */
 
 #include "../Utils/D19cSSAEvent.h"
+#include "../HWDescription/OuterTrackerModule.h"
 
 using namespace Ph2_HwDescription;
 
@@ -755,7 +756,7 @@ namespace Ph2_HwInterface {
             //stub counter per FE
             uint8_t cFeStubCounter = 0;
 
-            for (auto cSSA : cFe->fSSAVector)
+            for (auto cSSA : static_cast<OuterTrackerModule*>(cFe)->fSSAVector)
             {
                 uint8_t cSSAId = cSSA->getSSAId();
                 uint16_t cKey = encodeId (cFeId, cSSAId);

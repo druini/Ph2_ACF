@@ -39,7 +39,7 @@ namespace Ph2_HwDescription {
      * \class ReadoutChip
      * \brief Read/Write Chip's registers on a file, contains a register map
      */
-    class ReadoutChip : public Chip
+    class ReadoutChip : public Chip, public ChipContainer
     {
 
       public:
@@ -48,6 +48,9 @@ namespace Ph2_HwDescription {
 
         // C'tors with object FE Description
         ReadoutChip ( const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue=255);
+
+        // Copy C'tor
+        ReadoutChip (const ReadoutChip& chipObj);
 
         ~ReadoutChip();
         

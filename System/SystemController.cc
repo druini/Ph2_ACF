@@ -226,7 +226,7 @@ namespace Ph2_System {
 	      for (const auto& cModule : cBoard->fModuleVector)
 		{
 		  LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << int (cModule->getModuleId()) << RESET;
-		  for (const auto& cRD53 : cModule->fChipVector)
+		  for (const auto& cRD53 : cModule->fReadoutChipVector)
 		    {
 		      LOG (INFO) << GREEN << "Configuring RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
 		      fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));

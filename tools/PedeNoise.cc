@@ -1,4 +1,5 @@
 #include "PedeNoise.h"
+#include "../HWDescription/Cbc.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
@@ -313,7 +314,7 @@ std::string PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
             for ( auto cCbc : *cFe )
             {
                
-                TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (static_cast<Chip*>(cCbc), cHistogramname) );
+                TH2F* cSCurveHist = dynamic_cast<TH2F*> (this->getHist (static_cast<Cbc*>(cCbc), cHistogramname) );
 
                 for( auto & scurveContainer : fSCurveOccupancyMap )
                 {
@@ -335,11 +336,11 @@ std::string PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
                 if (fDisableStubLogic)
                 {
                     LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
-                    cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue[static_cast<Chip*>(cCbc)]});
-                    cRegVec.push_back ({"HIP&TestMode", fHIPCountValue[static_cast<Chip*>(cCbc)]});
+                    cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue[static_cast<Cbc*>(cCbc)]});
+                    cRegVec.push_back ({"HIP&TestMode", fHIPCountValue[static_cast<Cbc*>(cCbc)]});
                 }
 
-                fReadoutChipInterface->WriteChipMultReg (static_cast<Chip*>(cCbc), cRegVec);
+                fReadoutChipInterface->WriteChipMultReg (static_cast<Cbc*>(cCbc), cRegVec);
             }
         }
     }
@@ -408,7 +409,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
             for ( auto cCbc : *cFe )
             {
                 //get the histogram for the occupancy
-                TH1F* cHist = dynamic_cast<TH1F*> ( getHist ( static_cast<Chip*>(cCbc), "Cbc_occupancy" ) );
+                TH1F* cHist = dynamic_cast<TH1F*> ( getHist ( static_cast<Cbc*>(cCbc), "Cbc_occupancy" ) );
                 TLine* line = new TLine (0, pNoiseStripThreshold * 0.001, NCHANNELS, pNoiseStripThreshold * 0.001);
                 RegisterVector cRegVec;
 
@@ -434,7 +435,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
                 fNoiseCanvas->Modified();
                 fNoiseCanvas->Update();
                 
-                fReadoutChipInterface->WriteChipMultReg (static_cast<Chip*>(cCbc), cRegVec);
+                fReadoutChipInterface->WriteChipMultReg (static_cast<Cbc*>(cCbc), cRegVec);
 
             }
         }

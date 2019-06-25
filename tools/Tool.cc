@@ -1144,11 +1144,11 @@ void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 // 					{
 // 						if(fMaskChannelsFromOtherGroups)
 // 						{
-// 							fChipInterface->maskChannelsGroup(static_cast<Chip*>(cChip), group);
+// 							fChipInterface->maskChannelsGroup(static_cast<ReadoutChip*>(cChip), group);
 // 						}
 // 						if(fTestPulse)
 // 						{
-// 							fChipInterface->setInjectionSchema(static_cast<Chip*>(cChip), group);
+// 							fChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), group);
 // 						}
 // 					}
 // 				}
@@ -1163,7 +1163,7 @@ void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 // 			{
 // 				for ( auto cChip : *cFe )
 // 				{
-// 					fChipInterface->ConfigureChipOriginalMask ( static_cast<Chip*>(cChip) );
+// 					fChipInterface->ConfigureChipOriginalMask ( static_cast<ReadoutChip*>(cChip) );
 // 				}
 // 			}
 // 		}
@@ -1404,7 +1404,7 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacNam
 		{
 			// float cOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(globalDACContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->summary_)->theSummary_.fOccupancy;
 			// Summary<RegisterValue,EmptyContainer>* tmp = static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex))->summary_;
-			fReadoutChipInterface->WriteChipReg ( static_cast<Chip*>(cChip), dacName, static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue);
+			fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), dacName, static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue);
 		}
 	}
 	return;
