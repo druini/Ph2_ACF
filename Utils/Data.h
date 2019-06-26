@@ -131,19 +131,22 @@ namespace Ph2_HwInterface {
         const Event* GetNextEvent ( const BeBoard* pBoard )
         {
             //fFuture.wait();
-            fFuture.get();
+            if( fFuture.valid() ) 
+                fFuture.get();
             return ( ( fCurrentEvent >= fEventList.size() ) ? nullptr : fEventList.at ( fCurrentEvent++ ) );
         }
         const Event* GetEvent ( const BeBoard* pBoard, int i )
         {
             //fFuture.wait();
-            fFuture.get();
+            if( fFuture.valid() ) 
+                fFuture.get();
             return ( ( i >= (int) fEventList.size() ) ? nullptr : fEventList.at ( i ) );
         }
         const std::vector<Event*>& GetEvents ( const BeBoard* pBoard )
         {
             //fFuture.wait();
-            fFuture.get();
+            if( fFuture.valid() ) 
+                fFuture.get();
             return fEventList;
         }
     };

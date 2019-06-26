@@ -611,17 +611,12 @@ namespace Ph2_System {
 
         bool cStatus = pModuleNode.attribute ( "Status" ).as_bool();
 
-    //LOG(INFO) << cStatus ;
         if ( cStatus )
         {
             os << BOLDCYAN << "|" << "       " << "|" << "----" << pModuleNode.name() << "  "
             << pModuleNode.first_attribute().name() << ": " << BOLDYELLOW << pModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
 
             uint32_t cModuleId = pModuleNode.attribute ( "ModuleId" ).as_int();
-
-        //Module* cModule = new Module ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId );
-        //pBoard->addModule ( cModule );
-        //FIX with reference
             Module* cModule;
             if (pBoard->getBoardType() == BoardType::FC7)
             {
@@ -633,54 +628,74 @@ namespace Ph2_System {
             }
             pBoard->addModule ( cModule );
 
-
-            pugi::xml_node cChipPathPrefixNode;
-        // Iterate the CBC node
-            if (pBoard->getBoardType() == BoardType::FC7)
-                cChipPathPrefixNode = pModuleNode.child ( "RD53_Files" );
-            else
-                cChipPathPrefixNode = pModuleNode.child ( "CBC_Files" );
-
-            std::string cFilePrefix = expandEnvironmentVariables (static_cast<std::string> ( cChipPathPrefixNode.attribute ( "path" ).value() ) );
-
-            if ( !cFilePrefix.empty() ) os << BOLDBLUE << "|" << "       " << "|" << "       " << "|" << "----" << "Chip Files Path: " << BOLDYELLOW << cFilePrefix << RESET << std::endl;
-
-        // Iterate the Chip node
-            if (pBoard->getBoardType() == BoardType::FC7)
+            //default  configurations 
+            pugi::xml_node cDefConfigsNode = pModuleNode.child ( "DefaultConfiguration" );
+            // now try and do the configruation in a slightly more readable
+            std::string cConfigFileDirectory;
+            for (pugi::xml_node cChild: pModuleNode.children())
             {
-                for (pugi::xml_node theChipNode = pModuleNode.child ("RD53"); theChipNode, theChipNode.name() == std::string("RD53"); theChipNode = theChipNode.next_sibling())
-                    this->parseRD53 (theChipNode, cModule, cFilePrefix, os);
-
-            // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
-                this->parseGlobalRD53Settings (pModuleNode, cModule, os);
-            }
-            else
-            {
-                for ( pugi::xml_node pCbcNode = pModuleNode.child ( "CBC" ); pCbcNode; pCbcNode = pCbcNode.next_sibling() )
-                    this->parseCbcContainer  (pCbcNode, cModule, cFilePrefix, os);
-
-                for ( pugi::xml_node pCicNode = pModuleNode.child ( "CIC" ); pCicNode; pCicNode = pCicNode.next_sibling() )
+                std::string cName = cChild.name();
+                std::string cNextName = cChild.next_sibling().name();
+                if ( cName.find("CBC") != std::string::npos || cName.find("RD53") != std::string::npos || cName.find("CIC") != std::string::npos) 
                 {
-
-                    std::string cFileName;
-
-                    if ( !cFilePrefix.empty() )
+                    if( cName.find("_Files") != std::string::npos ) 
                     {
-                        if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
-                            cFilePrefix.append ("/");
-
-                        cFileName = cFilePrefix + expandEnvironmentVariables (pCicNode.attribute ( "configfile" ).value() );
+                        cConfigFileDirectory = expandEnvironmentVariables (static_cast<std::string> ( cChild.attribute ( "path" ).value() ) ); 
                     }
-                    else cFileName = expandEnvironmentVariables (pCicNode.attribute ( "configfile" ).value() );
+                    else
+                    {
+                        int cChipId = cChild.attribute("Id").as_int();
+                        std::string cFileName = expandEnvironmentVariables (static_cast<std::string> ( cChild.attribute ( "configfile" ).value() ) );
+                        LOG (DEBUG) << BOLDBLUE << "Configuration file ...." << cName << " --- " << cConfigFileDirectory << RESET;
+                        LOG (DEBUG) << BOLDGREEN << cName << " Id = " << +cChipId << " --- " << cFileName << RESET; 
+                        if( cName == "RD53") 
+                        {
+                            this->parseRD53 (cChild, cModule, cConfigFileDirectory, os);
+                            // check if this is the last node with this name 
+                            // check if this is the last node with this name 
+                            if( cNextName.empty() || cNextName!=cName )
+                            {
+                                // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
+                                this->parseGlobalRD53Settings (pModuleNode, cModule, os);
+                            }
+                        }
+                        else if( cName == "CBC" ) 
+                        {    
+                            this->parseCbcContainer  (cChild, cModule, cConfigFileDirectory, os);
+                            // check if this is the last node with this name 
+                            if( cNextName.empty() || cNextName!=cName )
+                            {
+                                // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
+                                this->parseGlobalCbcSettings (pModuleNode, cModule, os);
+                            }
 
-                    Cic* cCic = new Cic ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCicNode.attribute ( "Id" ).as_int(), cFileName );
-                    static_cast<OuterTrackerModule*>(cModule)->addCic (cCic);
+                        }
+                        else if( cName == "CIC" ) 
+                        {
+                            if ( !cConfigFileDirectory.empty() )
+                            {
+                                if (cConfigFileDirectory.at (cConfigFileDirectory.length() - 1) != '/')
+                                    cConfigFileDirectory.append ("/");
+
+                                cFileName = cConfigFileDirectory + cFileName;
+                            }
+                            LOG (INFO) << BOLDBLUE << "Loading configuration for CIC from " << cFileName << RESET;
+                            os << BOLDCYAN << "|" << "  " << "|" << "   " << "|" << "----" << cName << "  "
+                            << "Id" << cChipId << " , File: " << cFileName << RESET << std::endl;
+                            Cic* cCic = new Cic ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId , cFileName );
+                            static_cast<OuterTrackerModule*>(cModule)->addCic (cCic);
+                            FrontEndType cType = cCic->getFrontEndType();
+                            os << GREEN << "|\t|\t|\t|----FrontEndType: ";
+                            os << GREEN << "|\t|\t|\t|----FrontEndType: ";
+                            if (cType == FrontEndType::CIC)
+                                os << RED << "CIC";
+                            os << RESET << std::endl;
+
+                        }
+                    }
                 }
-            // parse the GlobalCbcSettings so that Global CBC regisers take precedence over Global CBC settings which take precedence over CBC specific settings
-                this->parseGlobalCbcSettings (pModuleNode, cModule, os);
             }
         }
-
         return;
     }
 
