@@ -41,7 +41,7 @@ class Gain : public Tool
   ~Gain();
 
   void Run     ();
-  void Draw    (bool display, bool save);
+  void Draw    (bool display, bool saveHisto);
   void Analyze ();
 
  private:
@@ -64,7 +64,7 @@ class Gain : public Tool
   void InitHisto    ();
   void FillHisto    ();
   void Display      ();
-  void Save         ();
+  void SaveHisto    ();
   void ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
 
 

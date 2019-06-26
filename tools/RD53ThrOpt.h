@@ -25,7 +25,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define TARGETeff 0.70 // Target efficiency for optimization algorithm
+#define TARGETeff 0.50 // Target efficiency for optimization algorithm
 
 
 using namespace Ph2_System;
@@ -40,7 +40,7 @@ class ThrOpt : public Tool
   ~ThrOpt();
 
   void Run  ();
-  void Draw (bool display, bool save);
+  void Draw (bool display, bool saveHisto, bool saveReg);
 
  private:
   const char* fileRes;
@@ -59,7 +59,8 @@ class ThrOpt : public Tool
   void InitHisto ();
   void FillHisto ();
   void Display   ();
-  void Save      ();
+  void SaveHisto ();
+  void SaveReg   ();
 
 
   // ########

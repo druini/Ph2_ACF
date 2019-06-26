@@ -79,7 +79,7 @@ void ThrOpt::Run()
 	    theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
 }
 
-void ThrOpt::Draw(bool display, bool save)
+void ThrOpt::Draw(bool display, bool saveHisto, bool saveReg)
 {
   TApplication* myApp;
 
@@ -89,8 +89,9 @@ void ThrOpt::Draw(bool display, bool save)
   this->FillHisto();
   this->Display();
 
-  if (save    == true) this->Save();
-  if (display == true) myApp->Run();
+  if (saveHisto == true) this->SaveHisto();
+  if (saveReg   == true) this->SaveReg();
+  if (display   == true) myApp->Run();
 }
 
 void ThrOpt::InitHisto()
@@ -186,7 +187,7 @@ void ThrOpt::Display()
     }
 }
 
-void ThrOpt::Save()
+void ThrOpt::SaveHisto()
 {
   std::stringstream myString;
 
@@ -209,8 +210,10 @@ void ThrOpt::Save()
     }
 
   theFile->Write();
+}
 
-
+void ThrOpt::SaveReg()
+{
   // ############################
   // # Save register new values #
   // ############################
@@ -218,14 +221,13 @@ void ThrOpt::Save()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  static_cast<RD53*>(cChip)->resetMask();
-	  static_cast<RD53*>(cChip)->enableAllPixels();
+	  static_cast<RD53*>(cChip)->copyFromDefault();
 
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      if (static_cast<Chip*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
 		static_cast<RD53*>(cChip)->setTDAC(row,col,theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
-
+	  
 	  static_cast<Chip*>(cChip)->saveRegMap(fileReg);
 	}
 }

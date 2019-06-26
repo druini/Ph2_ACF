@@ -92,7 +92,7 @@ void Latency::Run()
     }
 }
 
-void Latency::Draw(bool display, bool save)
+void Latency::Draw(bool display, bool saveHisto)
 {
   TApplication* myApp;
   
@@ -102,8 +102,8 @@ void Latency::Draw(bool display, bool save)
   this->FillHisto();
   this->Display();
 
-  if (save    == true) this->Save();
-  if (display == true) myApp->Run();
+  if (saveHisto == true) this->SaveHisto();
+  if (display   == true) myApp->Run();
 }
 
 void Latency::Analyze()
@@ -190,7 +190,7 @@ void Latency::Display()
     }
 }
 
-void Latency::Save()
+void Latency::SaveHisto()
 {
   std::stringstream myString;
   

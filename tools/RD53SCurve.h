@@ -31,15 +31,16 @@ using namespace Ph2_System;
 class SCurve : public Tool
 {
  public:
-  SCurve(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
+  SCurve(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
   ~SCurve();
 
   void Run     ();
-  void Draw    (bool display, bool save);
+  void Draw    (bool display, bool saveHisto, bool saveReg);
   void Analyze ();
 
  private:
   const char* fileRes;
+  const char* fileReg;
   size_t rowStart;
   size_t rowEnd;
   size_t colStart;
@@ -58,7 +59,8 @@ class SCurve : public Tool
   void InitHisto    ();
   void FillHisto    ();
   void Display      ();
-  void Save         ();
+  void SaveHisto    ();
+  void SaveReg      ();
   void ComputeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
 
 

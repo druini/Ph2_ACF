@@ -9,8 +9,9 @@
 
 #include "RD53SCurve.h"
 
-SCurve::SCurve(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
+SCurve::SCurve(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
   fileRes     (fileRes),
+  fileReg     (fileReg),
   rowStart    (rowStart),
   rowEnd      (rowEnd),
   colStart    (colStart),
@@ -104,7 +105,7 @@ void SCurve::Run()
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
 }
 
-void SCurve::Draw(bool display, bool save)
+void SCurve::Draw(bool display, bool saveHisto, bool saveReg)
 {
   TApplication* myApp;
 
@@ -114,8 +115,9 @@ void SCurve::Draw(bool display, bool save)
   this->FillHisto();
   this->Display();
 
-  if (save    == true) this->Save();
-  if (display == true) myApp->Run();
+  if (saveHisto == true) this->SaveHisto();
+  if (saveReg   == true) this->SaveReg();
+  if (display   == true) myApp->Run();
 }
 
 void SCurve::Analyze()
@@ -374,7 +376,7 @@ void SCurve::Display()
     }
 }
 
-void SCurve::Save()
+void SCurve::SaveHisto()
 {
   std::stringstream myString;
 
@@ -424,6 +426,23 @@ void SCurve::Save()
     }
 
   theFile->Write();
+}
+
+void SCurve::SaveReg()
+{
+  // ############################
+  // # Save register new values #
+  // ############################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+	{
+	  static_cast<RD53*>(cChip)->copyFromDefault();
+
+	  size_t avgVCal = theThresholdAndNoiseContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().theSummary_.fThreshold;
+	  static_cast<Chip*>(cChip)->setReg("VCAL_HIGH", static_cast<Chip*>(cChip)->getReg("VCAL_MED") + avgVCal);
+	  static_cast<Chip*>(cChip)->saveRegMap(fileReg);
+	}
 }
 
 

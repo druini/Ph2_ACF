@@ -203,9 +203,6 @@ namespace Ph2_HwDescription
 		fValue_str.erase(0,2);
 		fRegItem.fValue = strtoul (fValue_str.c_str(), 0, baseType);
 
-		fDefValue_str.erase(0,2);
-		fRegItem.fDefValue = strtoul (fDefValue_str.c_str(), 0, baseType);
-
 		fRegItem.fPage    = 0;
 		fRegItem.fBitSize = strtoul (fBitSize_str.c_str(), 0, 10);
 		fRegMap[fName]    = fRegItem;
@@ -277,10 +274,10 @@ namespace Ph2_HwDescription
 	    for (auto j = 0; j < Nspaces; j++)
 	      file << " ";
 	    file.seekp (-v.first.size(), std::ios_base::cur);
-	    file << "0x"         << std::setfill ('0') << std::setw (2) << std::hex << std::uppercase << int (v.second.fAddress)
-		 << "\t0x"       << std::setfill ('0') << std::setw (4) << std::hex << std::uppercase << int (v.second.fDefValue)
-		 << "\t\t\t0x"   << std::setfill ('0') << std::setw (4) << std::hex << std::uppercase << int (v.second.fValue)
-		 << "\t\t\t\t\t" << std::setfill ('0') << std::setw (2) << std::dec << std::uppercase << int (v.second.fBitSize) << std::endl;
+	    file << "0x"       << std::setfill ('0') << std::setw (2) << std::hex << std::uppercase << int (v.second.fAddress)
+		 << "\t0x"     << std::setfill ('0') << std::setw (4) << std::hex << std::uppercase << int (v.second.fDefValue)
+		 << "\t\t\t0x" << std::setfill ('0') << std::setw (4) << std::hex << std::uppercase << int (v.second.fValue)
+		 << "\t\t\t"   << std::setfill ('0') << std::setw (2) << std::dec << std::uppercase << int (v.second.fBitSize) << std::endl;
 
 	    cLineCounter++;
 	  }
@@ -322,6 +319,28 @@ namespace Ph2_HwDescription
       LOG (ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << filename << RESET;
   }
   
+  void RD53::copyFromDefault ()
+  {
+    for (auto i = 0; i < fPixelsMask.size(); i++)
+      {
+	fPixelsMask[i].Enable = fPixelsMaskDefault[i].Enable;
+	fPixelsMask[i].HitBus = fPixelsMaskDefault[i].HitBus;
+	fPixelsMask[i].InjEn  = fPixelsMaskDefault[i].InjEn;
+	for (auto j = 0; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = fPixelsMaskDefault[i].TDAC[j];
+      }
+  }
+
+  void RD53::copyToDefault ()
+  {
+    for (auto i = 0; i < fPixelsMaskDefault.size(); i++)
+      {
+	fPixelsMaskDefault[i].Enable = fPixelsMask[i].Enable;
+	fPixelsMaskDefault[i].HitBus = fPixelsMask[i].HitBus;
+	fPixelsMaskDefault[i].InjEn  = fPixelsMask[i].InjEn;
+	for (auto j = 0; j < fPixelsMaskDefault[i].TDAC.size(); j++) fPixelsMaskDefault[i].TDAC[j] = fPixelsMask[i].TDAC[j];
+      }
+  }
+
   void RD53::resetMask ()
   {
     for (auto i = 0; i < fPixelsMask.size(); i++)

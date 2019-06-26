@@ -177,6 +177,8 @@ namespace Ph2_HwDescription
     std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
     std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
 
+    void copyFromDefault  ();
+    void copyToDefault    ();
     void resetMask        ();
     void enableAllPixels  ();
     void disableAllPixels ();

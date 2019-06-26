@@ -33,7 +33,7 @@ class Latency : public Tool
   ~Latency();
 
   void Run     ();
-  void Draw    (bool display, bool save);
+  void Draw    (bool display, bool saveHisto);
   void Analyze ();
 
  private:
@@ -51,7 +51,7 @@ class Latency : public Tool
   void InitHisto ();
   void FillHisto ();
   void Display   ();
-  void Save      ();
+  void SaveHisto ();
 
 
   // ########

@@ -104,7 +104,7 @@ void Gain::Run()
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
 }
 
-void Gain::Draw(bool display, bool save)
+void Gain::Draw(bool display, bool saveHisto)
 {
   TApplication* myApp;
 
@@ -114,8 +114,8 @@ void Gain::Draw(bool display, bool save)
   this->FillHisto();
   this->Display();
 
-  if (save    == true) this->Save();
-  if (display == true) myApp->Run();
+  if (saveHisto == true) this->SaveHisto();
+  if (display   == true) myApp->Run();
 }
 
 void Gain::Analyze()
@@ -357,7 +357,7 @@ void Gain::Display()
     }
 }
 
-void Gain::Save()
+void Gain::SaveHisto()
 { 
   std::stringstream myString;
   
