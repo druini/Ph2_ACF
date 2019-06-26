@@ -9,9 +9,8 @@
 
 #include "RD53SCurve.h"
 
-SCurve::SCurve (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
+SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
   fileRes     (fileRes),
-  fileReg     (fileReg),
   rowStart    (rowStart),
   rowEnd      (rowEnd),
   colStart    (colStart),
@@ -49,6 +48,7 @@ SCurve::~SCurve ()
 {
   theFile->Close();
   
+  delete theThresholdAndNoiseContainer;
   delete fChannelGroupHandler;
   delete theFile;
 
@@ -105,7 +105,7 @@ void SCurve::Run ()
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
 }
 
-void SCurve::Draw (bool display, bool saveHisto, bool saveReg)
+void SCurve::Draw (bool display, bool save)
 {
   TApplication* myApp;
 
@@ -115,18 +115,18 @@ void SCurve::Draw (bool display, bool saveHisto, bool saveReg)
   this->FillHisto();
   this->Display();
 
-  if (saveHisto == true) this->SaveHisto();
-  if (saveReg   == true) this->SaveReg();
-  if (display   == true) myApp->Run();
+  if (save    == true) this->Save();
+  if (display == true) myApp->Run();
 }
 
-void SCurve::Analyze ()
+DetectorDataContainer* SCurve::Analyze ()
 {
   float nHits, mean, rms;
   std::vector<float> measurements(dacList.size(),0);
 
   ContainerFactory theDetectorFactory;
-  theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, theThresholdAndNoiseContainer);
+  theThresholdAndNoiseContainer = new DetectorDataContainer();
+  theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
 
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
@@ -146,19 +146,21 @@ void SCurve::Analyze ()
 
 		if ((rms > 0) && (nHits > 0) && (isnan(rms) == false))
 		  {
-		    theThresholdAndNoiseContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold      = mean;
-		    theThresholdAndNoiseContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThresholdError = rms / sqrt(nHits);
-		    theThresholdAndNoiseContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise          = rms;
+		    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold      = mean;
+		    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThresholdError = rms / sqrt(nHits);
+		    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise          = rms;
 		  }
 	      }
 	  
 	  index++;
 
-	  theThresholdAndNoiseContainer.normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
+	  theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
 	  LOG (INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-		     << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().theSummary_.fThreshold
+		     << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().theSummary_.fThreshold
 		     << BOLDGREEN << " (Delta_VCal)" << RESET;
 	}
+
+  return theThresholdAndNoiseContainer;
 }
 
 void SCurve::InitHisto ()
@@ -280,12 +282,12 @@ void SCurve::FillHisto ()
 		  if (fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
 		    theOccupancy[index]->Fill(dacList[i]-VCalOffset,detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
 
-		if (theThresholdAndNoiseContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise != 0)
+		if (theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise != 0)
 		  {
-		    theThreshold1D[index]->Fill(theThresholdAndNoiseContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold);
-		    theNoise1D[index]->Fill(theThresholdAndNoiseContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise);
-		    theThreshold2D[index]->SetBinContent(col+1,row+1,theThresholdAndNoiseContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold);
-		    theNoise2D[index]->SetBinContent(col+1,row+1,theThresholdAndNoiseContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise);
+		    theThreshold1D[index]->Fill(theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold);
+		    theNoise1D[index]->Fill(theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise);
+		    theThreshold2D[index]->SetBinContent(col+1,row+1,theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold);
+		    theNoise2D[index]->SetBinContent(col+1,row+1,theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise);
 		  }
 	      }
 
@@ -376,7 +378,7 @@ void SCurve::Display ()
     }
 }
 
-void SCurve::SaveHisto ()
+void SCurve::Save ()
 {
   std::stringstream myString;
 
@@ -427,24 +429,6 @@ void SCurve::SaveHisto ()
 
   theFile->Write();
 }
-
-void SCurve::SaveReg ()
-{
-  // ############################
-  // # Save register new values #
-  // ############################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-	{
-	  static_cast<RD53*>(cChip)->copyFromDefault();
-
-	  size_t avgVCal = theThresholdAndNoiseContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().theSummary_.fThreshold;
-	  static_cast<Chip*>(cChip)->setReg("VCAL_HIGH", static_cast<Chip*>(cChip)->getReg("VCAL_MED") + avgVCal);
-	  static_cast<Chip*>(cChip)->saveRegMap(fileReg);
-	}
-}
-
 
 void SCurve::ComputeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
 {

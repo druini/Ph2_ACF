@@ -36,7 +36,7 @@ class PixelAlive : public Tool
   ~PixelAlive();
 
   void Run     ();
-  void Draw    (bool display, bool saveHisto);
+  void Draw    (bool display, bool save);
   void Analyze ();
   
  private:
@@ -55,7 +55,7 @@ class PixelAlive : public Tool
   void InitHisto ();
   void FillHisto ();
   void Display   ();
-  void SaveHisto ();
+  void Save      ();
 
 
   // ########

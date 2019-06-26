@@ -86,7 +86,7 @@ void PixelAlive::Run ()
   this->measureData(nEvents, nEvtsBurst);
 }
 
-void PixelAlive::Draw (bool display, bool saveHisto)
+void PixelAlive::Draw (bool display, bool save)
 {
   TApplication* myApp;
   
@@ -96,8 +96,8 @@ void PixelAlive::Draw (bool display, bool saveHisto)
   this->FillHisto();
   this->Display();
 
-  if (saveHisto == true) this->SaveHisto();
-  if (display   == true) myApp->Run();
+  if (save    == true) this->Save();
+  if (display == true) myApp->Run();
 }
 
 void PixelAlive::Analyze ()
@@ -325,7 +325,7 @@ void PixelAlive::Display ()
     }
 }
 
-void PixelAlive::SaveHisto ()
+void PixelAlive::Save ()
 {
   std::stringstream myString;
 

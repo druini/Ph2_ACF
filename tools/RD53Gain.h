@@ -41,7 +41,7 @@ class Gain : public Tool
   ~Gain();
 
   void Run     ();
-  void Draw    (bool display, bool saveHisto);
+  void Draw    (bool display, bool save);
   void Analyze ();
 
  private:
@@ -59,12 +59,12 @@ class Gain : public Tool
   std::vector<uint16_t> dacList;
 
   std::vector<DetectorDataContainer*> detectorContainerVector;
-  DetectorDataContainer               theGainAndInterceptContainer;
+  DetectorDataContainer*              theGainAndInterceptContainer;
 
   void InitHisto    ();
   void FillHisto    ();
   void Display      ();
-  void SaveHisto    ();
+  void Save         ();
   void ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
 
 

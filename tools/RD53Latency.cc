@@ -40,7 +40,7 @@ void Latency::Run ()
   std::vector<uint32_t> data;
   uint8_t               status;
 
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,GenericDataVector>(*fDetectorContainer, theLatencyContainer);
+  theDetectorFactory.copyAndInitStructure<EmptyContainer,GenericDataVector>(*fDetectorContainer, theContainer);
 
   auto RD53ChipInterface = static_cast<RD53Interface*>(fChipInterface);
 
@@ -86,13 +86,13 @@ void Latency::Run ()
 		      if (evt.chip_events[j].data.size() != 0) nEvts++;
 		  }
 
-		theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data1.push_back(nEvts);
+		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data1.push_back(nEvts);
 	      }
 	  }
     }
 }
 
-void Latency::Draw (bool display, bool saveHisto)
+void Latency::Draw (bool display, bool save)
 {
   TApplication* myApp;
   
@@ -102,13 +102,13 @@ void Latency::Draw (bool display, bool saveHisto)
   this->FillHisto();
   this->Display();
 
-  if (saveHisto == true) this->SaveHisto();
-  if (display   == true) myApp->Run();
+  if (save    == true) this->Save();
+  if (display == true) myApp->Run();
 }
 
 void Latency::Analyze ()
 {
-  for (const auto cBoard : theLatencyContainer)
+  for (const auto cBoard : theContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
@@ -168,7 +168,7 @@ void Latency::InitHisto ()
 void Latency::FillHisto ()
 {
   size_t index = 0;
-  for (const auto cBoard : theLatencyContainer)
+  for (const auto cBoard : theContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
@@ -190,7 +190,7 @@ void Latency::Display ()
     }
 }
 
-void Latency::SaveHisto ()
+void Latency::Save ()
 {
   std::stringstream myString;
   

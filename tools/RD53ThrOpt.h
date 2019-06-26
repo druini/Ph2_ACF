@@ -36,11 +36,11 @@ using namespace Ph2_System;
 class ThrOpt : public Tool
 {
  public:
-  ThrOpt(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents);
+  ThrOpt(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, DetectorDataContainer* newVCal = nullptr);
   ~ThrOpt();
 
   void Run  ();
-  void Draw (bool display, bool saveHisto, bool saveReg);
+  void Draw (bool display, bool save);
 
  private:
   const char* fileRes;
@@ -53,14 +53,14 @@ class ThrOpt : public Tool
   size_t nEvents;
   float  targetTh;
 
-  DetectorDataContainer theContainer;
-  DetectorDataContainer theTDACcontainer;
+  DetectorDataContainer  theContainer;
+  DetectorDataContainer* theTDACcontainer;
+  DetectorDataContainer* newVCal;
 
   void InitHisto ();
   void FillHisto ();
   void Display   ();
-  void SaveHisto ();
-  void SaveReg   ();
+  void Save      ();
 
 
   // ########

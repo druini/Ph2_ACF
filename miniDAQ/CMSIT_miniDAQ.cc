@@ -59,28 +59,28 @@ void InitParameters (const SystemController& sc,
 		     size_t& VCALnsteps,
 
 		     size_t& display,
-		     size_t& saveReg)
+		     size_t& chipRegDefault)
 {
-  nEvents      = FindValue(sc,"nEvents");
-  nEvtsBurst   = FindValue(sc,"nEvtsBurst");
-  NTRIGxL1A    = FindValue(sc,"NTRIGxL1A");
-  INJtype      = (FindValue(sc,"INJtype") == 0 ? "Analog" : "Digital");
+  nEvents        = FindValue(sc,"nEvents");
+  nEvtsBurst     = FindValue(sc,"nEvtsBurst");
+  NTRIGxL1A      = FindValue(sc,"NTRIGxL1A");
+  INJtype        = (FindValue(sc,"INJtype") == 0 ? "Analog" : "Digital");
 
-  ROWstart     = FindValue(sc,"ROWstart");
-  ROWstop      = FindValue(sc,"ROWstop");
-  COLstart     = FindValue(sc,"COLstart");
-  COLstop      = FindValue(sc,"COLstop");
-  nPixelInj    = FindValue(sc,"nPixelInj");
+  ROWstart       = FindValue(sc,"ROWstart");
+  ROWstop        = FindValue(sc,"ROWstop");
+  COLstart       = FindValue(sc,"COLstart");
+  COLstop        = FindValue(sc,"COLstop");
+  nPixelInj      = FindValue(sc,"nPixelInj");
 
-  LatencyStart = FindValue(sc,"LatencyStart");
-  LatencyStop  = FindValue(sc,"LatencyStop");
+  LatencyStart   = FindValue(sc,"LatencyStart");
+  LatencyStop    = FindValue(sc,"LatencyStop");
 
-  VCALstart    = FindValue(sc,"VCALstart");
-  VCALstop     = FindValue(sc,"VCALstop");
-  VCALnsteps   = FindValue(sc,"VCALnsteps");
+  VCALstart      = FindValue(sc,"VCALstart");
+  VCALstop       = FindValue(sc,"VCALstop");
+  VCALnsteps     = FindValue(sc,"VCALnsteps");
 
-  display      = FindValue(sc,"DisplayHisto");
-  saveReg      = FindValue(sc,"SaveChipReg");
+  display        = FindValue(sc,"DisplayHisto");
+  chipRegDefault = FindValue(sc,"ChipRegDefaultFile");
 }
 
 
@@ -273,9 +273,9 @@ int main (int argc, char** argv)
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display, saveReg;
+  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display, chipRegDefault;
   std::string INJtype;
-  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display, saveReg);
+  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display, chipRegDefault);
 
   // ######################################
   // # Correct injection pattern for RD53 #
@@ -346,14 +346,11 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
       std::string fileName("SCurve_" + runNumber + ".root");
-      std::string chipConfig;
-      if (saveReg == 1) chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
-      else              chipConfig = "./CMSIT_RD53.txt";
-      SCurve sc(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       sc.Inherit(&cSystemController);
       sc.Run();
       sc.Analyze();
-      sc.Draw(display,true,saveReg);
+      sc.Draw(display,true);
     }
   else if (whichCalib == "gain")
     {
@@ -376,14 +373,22 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing threshold optimization @@@" << RESET;
 
-      std::string fileName("ThresholdOptimization_" + runNumber + ".root");
+      std::string fileName("SCurve_" + runNumber + ".root");
+      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      sc.Inherit(&cSystemController);
+      sc.Run();
+      auto newVCal = sc.Analyze();
+
+      fileName = "ThresholdOptimization_" + runNumber + ".root";
       std::string chipConfig;
-      if (saveReg == 1) chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
-      else              chipConfig = "./CMSIT_RD53.txt";
-      ThrOpt to(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents);
+      if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
+      else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
+      ThrOpt to(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, newVCal);
       to.Inherit(&cSystemController);
       to.Run();
-      to.Draw(display,true,saveReg);
+      std::cout << "AAA " << __LINE__ << std::endl;
+      to.Draw(display,true);
+      std::cout << "AAA " << __LINE__ << std::endl;
     }
   else if (whichCalib == "gainopt")
     {
