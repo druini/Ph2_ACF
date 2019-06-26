@@ -235,7 +235,7 @@ void ThrOpt::Save ()
       for (const auto cChip : *cModule)
 	{
 	  static_cast<RD53*>(cChip)->copyFromDefault();
-
+	  
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      if (static_cast<Chip*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))

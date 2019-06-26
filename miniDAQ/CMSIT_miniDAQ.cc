@@ -386,9 +386,7 @@ int main (int argc, char** argv)
       ThrOpt to(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, newVCal);
       to.Inherit(&cSystemController);
       to.Run();
-      std::cout << "AAA " << __LINE__ << std::endl;
       to.Draw(display,true);
-      std::cout << "AAA " << __LINE__ << std::endl;
     }
   else if (whichCalib == "gainopt")
     {
