@@ -84,7 +84,7 @@
     -->
 
     <Setting name="LatencyStart">       0 </Setting>
-    <Setting name="LatencyStop">      510 </Setting>
+    <Setting name="LatencyStop">      511 </Setting>
 
     <Setting name="VCALstart">        200 </Setting>
     <Setting name="VCALstop">         500 </Setting>
