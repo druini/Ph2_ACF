@@ -135,7 +135,7 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength, bool pHitOR )
                 while ( fBeBoardInterface->ReadBoardReg ( pBoard, "fc7_daq_stat.fast_command_block.general.fsm_state" ) !=  0 )
                 {
                     try{
-                        ReadData ( pBoard ); // ReadData() is preferred for high number of events per Vcth
+                        ReadData ( pBoard, false ); // ReadData() is preferred for high number of events per Vcth
                         //ReadNEvents(1000);
                     } catch (uhal::exception::exception& e){
                         LOG(ERROR)<< e.what();
