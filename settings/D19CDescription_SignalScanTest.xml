@@ -137,7 +137,7 @@
     <Setting name="SkipMaskedChannels">1</Setting>
 
     <!--Signal Scan Fit-->
-    <Setting name="InitialVcth">0x258</Setting>
+    <Setting name="InitialVcth">0x226</Setting>
     <Setting name="SignalScanStep">10</Setting>
     <Setting name="FitSignal">0</Setting>
 
