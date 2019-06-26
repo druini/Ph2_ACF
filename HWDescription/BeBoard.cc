@@ -135,7 +135,7 @@ namespace Ph2_HwDescription {
                     {
                         if (cCondItem.fFeId != cFe->getFeId() ) continue;
 
-                        for (auto cCbc : cFe->fChipVector )
+                        for (auto cCbc : cFe->fReadoutChipVector )
                         {
                             if (cCondItem.fCbcId != cCbc->getChipId() ) continue;
                             else if (cCbc->getFeId() == cCondItem.fFeId && cCbc->getChipId() == cCondItem.fCbcId)

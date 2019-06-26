@@ -42,7 +42,7 @@ void Latency::Run()
 
   theDetectorFactory.copyAndInitStructure<EmptyContainer,GenericDataVector>(*fDetectorContainer, theLatencyContainer);
 
-  auto RD53ChipInterface = static_cast<RD53Interface*>(fChipInterface);
+  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
 
   for (const auto cBoard : *fDetectorContainer)
     {
@@ -73,7 +73,7 @@ void Latency::Run()
 		data.clear();
 
 		LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
-		RD53ChipInterface->WriteChipReg(static_cast<Chip*>(cChip), "LATENCY_CONFIG", lt, true);
+		RD53ChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", lt, true);
 
 		this->ReadNEvents(static_cast<BeBoard*>(cBoard), nEvents, data);
 		auto events = RD53FWInterface::DecodeEvents(data,status);

@@ -47,7 +47,7 @@ void StubSweep::Initialize()
             cFeCount++;
             fType = cFe->getFrontEndType();
 
-            for (auto cCbc : cFe->fChipVector)
+            for (auto cCbc : cFe->fReadoutChipVector)
             {
                 uint32_t cCbcId = cCbc->getChipId();
                 cCbcCount++;
@@ -109,7 +109,7 @@ void StubSweep::configureTestPulse (Chip* pCbc, uint8_t pPulseState)
     uint8_t cOrigValue = pCbc->getReg ("MiscTestPulseCtrl&AnalogMux" );
     uint8_t cRegValue = cOrigValue |  (pPulseState << 6);
 
-    fChipInterface->WriteChipReg ( pCbc, "MiscTestPulseCtrl&AnalogMux",  cRegValue  );
+    fReadoutChipInterface->WriteChipReg ( pCbc, "MiscTestPulseCtrl&AnalogMux",  cRegValue  );
     cRegValue = pCbc->getReg ("MiscTestPulseCtrl&AnalogMux" );
     //LOG (DEBUG) << "Test pulse register 0x" << std::hex << +cOrigValue << " - " << std::bitset<8> (cOrigValue)  << " - now set to: 0x" << std::hex << +cRegValue << " - " << std::bitset<8> (cRegValue) ;
 }
@@ -124,7 +124,7 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
         {
             uint32_t cFeId = cFe->getFeId();
 
-            for (auto cCbc : cFe->fChipVector)
+            for (auto cCbc : cFe->fReadoutChipVector)
             {
                 uint32_t cCbcId = cCbc->getChipId();
 
@@ -146,7 +146,7 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
 
                     // first, configure test pulse
                     uint8_t cRegValue =  to_reg ( fDelay, cTestGroup );
-                    fChipInterface->WriteChipReg ( cCbc, "TestPulseDel&ChanGroup",  cRegValue  );
+                    fReadoutChipInterface->WriteChipReg ( cCbc, "TestPulseDel&ChanGroup",  cRegValue  );
 
 
                     // now un-mask channel in pairs
@@ -188,7 +188,7 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
                         // get value that is already in the register
                         cRegValue = cCbc->getReg (cRegName );
                         // write new mask to cbc register
-                        fChipInterface->WriteChipReg ( cCbc, cRegName,  cMaskRegValue  );
+                        fReadoutChipInterface->WriteChipReg ( cCbc, cRegName,  cMaskRegValue  );
                         //LOG (DEBUG) << "\t" << cRegName << MAGENTA << " wrote - " << std::bitset<8> (cMaskRegValue) << RESET  ;
 
 
@@ -237,7 +237,7 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
                         fillStubSweepHist ( cCbc,  cChannelPair, cStubPosition );
 
                         // Re-configure the CBC mask register back to its original state
-                        fChipInterface->WriteChipReg ( cCbc, cRegName,  cRegValue  );
+                        fReadoutChipInterface->WriteChipReg ( cCbc, cRegName,  cRegValue  );
 
                         //if( i%4 == 0 )
                         updateHists ( "StubAddresses" );
@@ -345,7 +345,7 @@ void StubSweep::maskAllChannels (Chip* pCbc)
             pCbc->setReg (fChannelMaskMapCBC3[i], 0);
             cRegValue = pCbc->getReg (fChannelMaskMapCBC3[i]);
             cRegName =  fChannelMaskMapCBC3[i];
-            fChipInterface->WriteChipReg ( pCbc, cRegName,  cRegValue  );
+            fReadoutChipInterface->WriteChipReg ( pCbc, cRegName,  cRegValue  );
             //LOG (DEBUG) << fChannelMaskMapCBC3[i] << " " << std::bitset<8> (cReadValue);
         }
     }
@@ -410,10 +410,10 @@ void StubSweep::setCorrelationWinodwOffsets ( Chip* pCbc, double pOffsetR1, doub
     uint8_t cOffsetRegR12 = ( ( (cOffsetR2 ) << 4) | cOffsetR1 );
     uint8_t cOffsetRegR34 = ( ( (cOffsetR4 ) << 4) | cOffsetR3 );
 
-    fChipInterface->WriteChipReg ( pCbc, "CoincWind&Offset12",  cOffsetRegR12  );
+    fReadoutChipInterface->WriteChipReg ( pCbc, "CoincWind&Offset12",  cOffsetRegR12  );
     LOG (DEBUG) << "\t" << "CoincWind&Offset12" << BOLDBLUE << " set to " << std::bitset<8> (cOffsetRegR12) << " - offsets were supposed to be : " << +cOffsetR1 << " and " << +cOffsetR2 <<  RESET  ;
 
-    fChipInterface->WriteChipReg ( pCbc, "CoincWind&Offset34",  cOffsetRegR34  );
+    fReadoutChipInterface->WriteChipReg ( pCbc, "CoincWind&Offset34",  cOffsetRegR34  );
     LOG (DEBUG) << "\t" << "CoincWind&Offset34" << BOLDBLUE << " set to " << std::bitset<8> (cOffsetRegR34) << " - offsets were supposed to be : " << +cOffsetR3 << " and " << +cOffsetR4 <<  RESET  ;
 
 }

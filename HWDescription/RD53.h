@@ -10,7 +10,7 @@
 #ifndef _RD53_h_
 #define _RD53_h_
 
-#include "Chip.h"
+#include "../HWDescription/ReadoutChip.h"
 
 #include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
@@ -153,7 +153,7 @@ namespace Ph2_HwDescription
 			 std::vector<uint8_t> TDAC;
   };
 
-  class RD53: public Chip
+  class RD53: public ReadoutChip
   {
   protected:
     uint8_t fRD53Id;
@@ -167,9 +167,9 @@ namespace Ph2_HwDescription
     ~RD53 ();
 
     void     loadfRegMap         (const std::string& filename)                                         override;
-    void     setReg              (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
     void     saveRegMap          (const std::string& filename)                                         override;
-    uint16_t getReg              (const std::string& pReg) const                                       override;
+    //void     setReg              (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
+    //uint16_t getReg              (const std::string& pReg) const                                       override;
     uint32_t getNumberOfChannels () const                                                              override;
     bool     isDACLocal          (const std::string& dacName)                                          override;
     uint8_t  getNumberOfBits     (const std::string& dacName)                                          override;

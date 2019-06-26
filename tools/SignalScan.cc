@@ -53,7 +53,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
         fBeBoardInterface->Pause(pBoard);
         for (auto cFe : pBoard->fModuleVector)
         {
-            for (auto cCbc : cFe->fChipVector)
+            for (auto cCbc : cFe->fReadoutChipVector)
             {
 
                 uint32_t cCbcId = cCbc->getChipId();
@@ -99,7 +99,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
 
             for( int cVcth = cVcthStart ; cVcth >= cVcthStop ; cVcth -= cVcthStep )
             {   
-                ThresholdVisitor cVisitor (fChipInterface, cVcth);
+                ThresholdVisitor cVisitor (fReadoutChipInterface, cVcth);
                 cVisitor.setThreshold (cVcth);
                 this->accept ( cVisitor );
 
@@ -133,7 +133,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
                     for (auto& cEvent : events)
                     {
                         
-                        for ( auto cCbc : cFe->fChipVector )
+                        for ( auto cCbc : cFe->fReadoutChipVector )
                         {
                             TString cHistName;
                             cHistName = Form("Fe%dCbc%d_Clusters_SignalScan" , +cFe->getFeId() ,+cCbc->getChipId() );
@@ -180,7 +180,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
                 }while( cContinue ); 
 
                 double cTimeElapsed = t.getCurrentTime();  
-                for ( auto cCbc : cFe->fChipVector )
+                for ( auto cCbc : cFe->fReadoutChipVector )
                 {
                     TString cHistName = Form("Fe%dCbc%d_Time_SignalScan" , +cFe->getFeId() , +cCbc->getChipId() );
                     TH1D* cTime = ( TH1D* ) ( gROOT->FindObject ( cHistName ) );
@@ -190,7 +190,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
                 t.stop();
 
                 // calculate efficiency and assoc. error for each channel 
-                for ( auto cCbc : cFe->fChipVector )
+                for ( auto cCbc : cFe->fReadoutChipVector )
                 {
                     TString cHistName = Form("Fe%dCbc%d_SignalScan" , +cFe->getFeId() , +cCbc->getChipId() );
                     TH2D* cSignalScan = dynamic_cast<TH2D*> ( getHist ( cCbc, cHistName.Data() ) );
@@ -240,7 +240,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
 //     // CBC VCth reader and writer
 
 //     // This is a bit ugly but since I program the same global value to both chips I guess it is ok...
-//     ThresholdVisitor cVisitor (fChipInterface);
+//     ThresholdVisitor cVisitor (fReadoutChipInterface);
 //     this->accept (cVisitor);
 //     uint16_t cVCth = cVisitor.getThreshold();
 
@@ -285,7 +285,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
 //                         std::string cDataString;
 //                         std::string cClusterDataString;
 
-//                         for ( auto cCbc : cFe->fChipVector )
+//                         for ( auto cCbc : cFe->fReadoutChipVector )
 //                         {
 //                             //now loop the channels for this particular event and increment a counter
 //                             for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )

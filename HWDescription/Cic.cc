@@ -1,15 +1,15 @@
 /*!
 
-        Filename :                      Cbc.cc
-        Content :                       Cbc Description class, config of the Cbcs
-        Programmer :                    Lorenzo BIDEGAIN
+        Filename :                      Cic.cc
+        Content :                       Cic Description class, config of the Cbcs
+        Programmer :                    Davide Di Croce, Fabio Ravera, Sarah Seif El Nasr-Storey
         Version :                       1.0
-        Date of Creation :              25/06/14
-        Support :                       mail to : lorenzo.bidegain@gmail.com
+        Date of Creation :              25/06/19
+        Support :                       mail to : sarah.storey@cern.ch
 
  */
 
-#include "Cbc.h"
+#include "Cic.h"
 #include <fstream>
 #include <cstdio>
 #include <sstream>
@@ -17,32 +17,28 @@
 #include <string.h>
 #include <iomanip>
 #include "Definition.h"
-#include "../Utils/ChannelGroupHandler.h"
 
 
 namespace Ph2_HwDescription {
     // C'tors with object FE Description
 
-    Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : ReadoutChip ( pFeDesc, pCbcId )
-     {
-        fMaxRegValue=255; // 8 bit registers in CBC
-        fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
+    Cic::Cic ( const FrontEndDescription& pFeDesc, uint8_t pCicId, const std::string& filename ) : Chip ( pFeDesc, pCicId )
+    {
+        fMaxRegValue=255; // 8 bit registers in CIC
         loadfRegMap ( filename );
-        setFrontEndType ( FrontEndType::CBC3);
+        setFrontEndType ( FrontEndType::CIC);
     }
 
     // C'tors which take BeId, FMCId, FeID, CbcId
-    Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename ) : ReadoutChip ( pBeId, pFMCId, pFeId, pCbcId)
+    Cic::Cic ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCicId, const std::string& filename ) : Chip ( pBeId, pFMCId, pFeId, pCicId)
     {
-        fMaxRegValue=255; // 8 bit registers in CBC
-        fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
+        fMaxRegValue=255; // 8 bit registers in CIC
         loadfRegMap ( filename );
-        setFrontEndType ( FrontEndType::CBC3);
+        setFrontEndType ( FrontEndType::CIC);
     }
 
     //load fRegMap from file
-
-    void Cbc::loadfRegMap ( const std::string& filename )
+    void Cic::loadfRegMap ( const std::string& filename )
     {
         std::ifstream file ( filename.c_str(), std::ios::in );
 
@@ -55,7 +51,6 @@ namespace Ph2_HwDescription {
             // fhasMaskedChannels = false;
             while ( getline ( file, line ) )
             {
-                //std::cout<< __PRETTY_FUNCTION__ << " " << line << std::endl;
                 if ( line.find_first_not_of ( " \t" ) == std::string::npos )
                 {
                     fCommentMap[cLineCounter] = line;
@@ -79,24 +74,7 @@ namespace Ph2_HwDescription {
                     fRegItem.fAddress = strtoul ( fAddress_str.c_str(), 0, 16 );
                     fRegItem.fDefValue = strtoul ( fDefValue_str.c_str(), 0, 16 );
                     fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
-
-                    if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
-                        // if(!fhasMaskedChannels && fRegItem.fValue!=0xFF) fhasMaskedChannels=true;
-                        //disable masked channels only
-                        if(fRegItem.fValue!=0xFF)
-                        {
-                            for(uint8_t channel=0; channel<8; ++channel)
-                            {
-                                if((fRegItem.fValue && (0x1<<channel)) == 0)
-                                {
-                                    fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20)*8 + channel);
-                                }
-                            }
-                        }
-                    }
-
                     fRegMap[fName] = fRegItem;
-                    //std::cout << __PRETTY_FUNCTION__ << +fRegItem.fValue << std::endl;
                     cLineCounter++;
                 }
             }
@@ -106,21 +84,25 @@ namespace Ph2_HwDescription {
         }
         else
         {
-            LOG (ERROR) << "The CBC Settings File " << filename << " does not exist!" ;
+            LOG (ERROR) << "The CIC Settings File " << filename << " does not exist!" ;
             exit (1);
+        }
+
+        for(auto& cRegItem : fRegMap ) 
+        {
+            LOG (DEBUG) << BOLDBLUE << "CIC register : " << cRegItem.first << " --- " << +cRegItem.second.fValue << RESET;
         }
 
     }
     //Write RegValues in a file
-    void Cbc::saveRegMap ( const std::string& filename )
+    void Cic::saveRegMap ( const std::string& filename )
     {
 
         std::ofstream file ( filename.c_str(), std::ios::out | std::ios::trunc );
 
         if ( file )
         {
-            std::set<CbcRegPair, RegItemComparer> fSetRegItem;
-
+            std::set<CicRegPair, RegItemComparer> fSetRegItem;
             for ( auto& it : fRegMap )
                 fSetRegItem.insert ( {it.first, it.second} );
 
@@ -154,6 +136,5 @@ namespace Ph2_HwDescription {
         else
             LOG (ERROR) << "Error opening file" ;
     }
-
 
 }

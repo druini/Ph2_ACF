@@ -106,7 +106,7 @@ void ThrOpt::InitHisto()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  int VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
+	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
 
 
 	  myString.clear();
@@ -223,9 +223,9 @@ void ThrOpt::Save()
 
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      if (static_cast<Chip*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
 		static_cast<RD53*>(cChip)->setTDAC(row,col,theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
 
-	  static_cast<Chip*>(cChip)->saveRegMap(fileReg);
+	  static_cast<RD53*>(cChip)->saveRegMap(fileReg);
 	}
 }

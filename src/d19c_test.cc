@@ -141,7 +141,7 @@ int main ( int argc, char** argv )
             uint32_t cNEventsToCollect = ( cmd.foundOption ( "events" ) ) ? convertAnyInt ( cmd.optionValue ( "events" ).c_str() ) : 10000;
 
             // be careful works only for one hybrid
-            std::vector < Chip* > cCbcVector = pBoard->getModule(0)->fChipVector;
+            std::vector < ReadoutChip* > &cCbcVector = pBoard->getModule(0)->fReadoutChipVector;
             uint32_t cNCbc = cCbcVector.size();
 
             Timer t;
@@ -218,7 +218,7 @@ int main ( int argc, char** argv )
             D19cFWInterface* d19cfw = (D19cFWInterface*)cTool.fBeBoardInterface->getFirmwareInterface();
 
             // init threshold visitior
-            ThresholdVisitor cThresholdVisitor (cTool.fChipInterface, 0);
+            ThresholdVisitor cThresholdVisitor (cTool.fReadoutChipInterface, 0);
             cTool.accept (cThresholdVisitor);
             auto cFe0 = pBoard->fModuleVector.at(0);
 
@@ -258,7 +258,7 @@ int main ( int argc, char** argv )
                 for (uint32_t cThreshold = cThresholdMin; cThreshold < cThresholdMax; cThreshold++) {
 
                     // set threshold
-                    for(auto& cCbc : cFe0->fChipVector) {
+                    for(auto& cCbc : cFe0->fReadoutChipVector) {
                         cThresholdVisitor.setThreshold(cThreshold);
                         cCbc->accept(cThresholdVisitor);
                     }
@@ -271,7 +271,7 @@ int main ( int argc, char** argv )
                         const std::vector<Event*>& events = cTool.GetEvents ( pBoard );
                         for ( auto& ev : events ) {
                             for(auto& cFe : pBoard->fModuleVector) {
-                                for(auto& cCbc : cFe->fChipVector) {
+                                for(auto& cCbc : cFe->fReadoutChipVector) {
                                     for(uint8_t ch = 0; ch < NCHANNELS; ch++) {
                                         if (ev->DataBit(cFe->getFeId(), cCbc->getChipId(), ch))
                                             cChannelCounters[cFe->getFeId()][cCbc->getChipId()][ch]++;
@@ -289,7 +289,7 @@ int main ( int argc, char** argv )
 
                     // reset the counters
                     for(auto& cFe : pBoard->fModuleVector) {
-                        for(auto& cCbc : cFe->fChipVector) {
+                        for(auto& cCbc : cFe->fReadoutChipVector) {
                             for(uint8_t ch = 0; ch < NCHANNELS; ch++) {
                                 cChannelCounters[cFe->getFeId()][cCbc->getChipId()][ch] = 0;
                             }

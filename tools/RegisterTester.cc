@@ -22,14 +22,14 @@ void RegisterTester::TestRegisters()
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
                 ChipRegMap cMap = cCbc->getRegMap();
 
                 for ( const auto& cReg : cMap )
                 {
 
-                    if ( !fChipInterface->WriteChipReg ( cCbc, cReg.first, cFirstBitPattern, true ) )
+                    if ( !fReadoutChipInterface->WriteChipReg ( cCbc, cReg.first, cFirstBitPattern, true ) )
                     {
                         sprintf (line, "# Writing 0x%.2x to CBC Register %s FAILED.\n", cFirstBitPattern, (cReg.first).c_str()  );
                         LOG (INFO) << BOLDRED << line << RESET ;
@@ -41,7 +41,7 @@ void RegisterTester::TestRegisters()
                     // sleep for 100 ns between register writes
                     std::this_thread::sleep_for (std::chrono::nanoseconds (100) );
 
-                    if ( !fChipInterface->WriteChipReg ( cCbc, cReg.first, cSecondBitPattern, true ) )
+                    if ( !fReadoutChipInterface->WriteChipReg ( cCbc, cReg.first, cSecondBitPattern, true ) )
                     {
                         sprintf (line, "# Writing 0x%.2x to CBC Register %s FAILED.\n", cSecondBitPattern, (cReg.first).c_str()  );
                         LOG (INFO) << BOLDRED << line << RESET ;
@@ -93,7 +93,7 @@ void RegisterTester::ReconfigureRegisters (std::string pDirectoryName )
 
         for (auto& cFe : cBoard->fModuleVector)
         {
-            for (auto& cCbc : cFe->fChipVector)
+            for (auto& cCbc : cFe->fReadoutChipVector)
             {
                 std::string pRegFile ;
 
@@ -107,7 +107,7 @@ void RegisterTester::ReconfigureRegisters (std::string pDirectoryName )
                 }
 
                 cCbc->loadfRegMap (pRegFile);
-                fChipInterface->ConfigureChip ( cCbc );
+                fReadoutChipInterface->ConfigureChip ( cCbc );
                 LOG (INFO) << GREEN << "\t\t Successfully (re)configured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
             }
         }
