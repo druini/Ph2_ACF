@@ -9,7 +9,7 @@
 
 #include "RD53SCurve.h"
 
-SCurve::SCurve(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
+SCurve::SCurve (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
   fileRes     (fileRes),
   fileReg     (fileReg),
   rowStart    (rowStart),
@@ -45,7 +45,7 @@ SCurve::SCurve(const char* fileRes, const char* fileReg, size_t rowStart, size_t
   for (auto i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
 
-SCurve::~SCurve()
+SCurve::~SCurve ()
 {
   theFile->Close();
   
@@ -87,7 +87,7 @@ SCurve::~SCurve()
   for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
 }
 
-void SCurve::Run()
+void SCurve::Run ()
 {
   ContainerFactory theDetectorFactory;
 
@@ -105,7 +105,7 @@ void SCurve::Run()
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
 }
 
-void SCurve::Draw(bool display, bool saveHisto, bool saveReg)
+void SCurve::Draw (bool display, bool saveHisto, bool saveReg)
 {
   TApplication* myApp;
 
@@ -120,7 +120,7 @@ void SCurve::Draw(bool display, bool saveHisto, bool saveReg)
   if (display   == true) myApp->Run();
 }
 
-void SCurve::Analyze()
+void SCurve::Analyze ()
 {
   float nHits, mean, rms;
   std::vector<float> measurements(dacList.size(),0);
@@ -161,7 +161,7 @@ void SCurve::Analyze()
 	}
 }
 
-void SCurve::InitHisto()
+void SCurve::InitHisto ()
 {
   std::stringstream myString;
 
@@ -264,7 +264,7 @@ void SCurve::InitHisto()
   theFile = new TFile(fileRes, "RECREATE");
 }
 
-void SCurve::FillHisto()
+void SCurve::FillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
@@ -293,7 +293,7 @@ void SCurve::FillHisto()
 	}
 }
 
-void SCurve::Display()
+void SCurve::Display ()
 {
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -376,7 +376,7 @@ void SCurve::Display()
     }
 }
 
-void SCurve::SaveHisto()
+void SCurve::SaveHisto ()
 {
   std::stringstream myString;
 
@@ -428,7 +428,7 @@ void SCurve::SaveHisto()
   theFile->Write();
 }
 
-void SCurve::SaveReg()
+void SCurve::SaveReg ()
 {
   // ############################
   // # Save register new values #
@@ -446,7 +446,7 @@ void SCurve::SaveReg()
 }
 
 
-void SCurve::ComputeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
+void SCurve::ComputeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
 {
   float mean2  = 0;
   float weight = 0;

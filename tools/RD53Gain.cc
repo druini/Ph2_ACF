@@ -9,7 +9,7 @@
 
 #include "RD53Gain.h"
 
-Gain::Gain(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
+Gain::Gain (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
   fileRes     (fileRes),
   rowStart    (rowStart),
   rowEnd      (rowEnd),
@@ -44,7 +44,7 @@ Gain::Gain(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart,
   for (auto i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
 
-Gain::~Gain()
+Gain::~Gain ()
 {
   theFile->Close();
   
@@ -86,7 +86,7 @@ Gain::~Gain()
   for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
 }
 
-void Gain::Run()
+void Gain::Run ()
 {
   ContainerFactory theDetectorFactory;
 
@@ -118,7 +118,7 @@ void Gain::Draw(bool display, bool saveHisto)
   if (display   == true) myApp->Run();
 }
 
-void Gain::Analyze()
+void Gain::Analyze ()
 {
   double gain, gainErr, intercept, interceptErr;
   std::vector<float> x(dacList.size(),0);
@@ -160,7 +160,7 @@ void Gain::Analyze()
 	}
 }
 
-void Gain::InitHisto()
+void Gain::InitHisto ()
 {
   std::stringstream myString;
 
@@ -265,7 +265,7 @@ void Gain::InitHisto()
   theFile = new TFile(fileRes, "RECREATE");
 }
 
-void Gain::FillHisto()
+void Gain::FillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
@@ -294,7 +294,7 @@ void Gain::FillHisto()
 	}
 }
 
-void Gain::Display()
+void Gain::Display ()
 {
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -357,7 +357,7 @@ void Gain::Display()
     }
 }
 
-void Gain::SaveHisto()
+void Gain::SaveHisto ()
 { 
   std::stringstream myString;
   
@@ -409,7 +409,7 @@ void Gain::SaveHisto()
   theFile->Write();
 }
 
-void Gain::ComputeStats(std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
+void Gain::ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
 // ##############################################
 // # Linear regression with least-square method #
 // # Model: y = f(x) = q + mx                   #

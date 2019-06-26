@@ -9,7 +9,7 @@
 
 #include "RD53PixelAlive.h"
 
-PixelAlive::PixelAlive(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject) :
+PixelAlive::PixelAlive (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject) :
   fileRes     (fileRes),
   rowStart    (rowStart),
   rowEnd      (rowEnd),
@@ -36,7 +36,7 @@ PixelAlive::PixelAlive(const char* fileRes, size_t rowStart, size_t rowEnd, size
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
 
-PixelAlive::~PixelAlive()
+PixelAlive::~PixelAlive ()
 {
   theFile->Close();
   
@@ -74,7 +74,7 @@ PixelAlive::~PixelAlive()
     }
 }
 
-void PixelAlive::Run()
+void PixelAlive::Run ()
 {
   ContainerFactory theDetectorFactory;
 
@@ -86,7 +86,7 @@ void PixelAlive::Run()
   this->measureData(nEvents, nEvtsBurst);
 }
 
-void PixelAlive::Draw(bool display, bool saveHisto)
+void PixelAlive::Draw (bool display, bool saveHisto)
 {
   TApplication* myApp;
   
@@ -100,7 +100,7 @@ void PixelAlive::Draw(bool display, bool saveHisto)
   if (display   == true) myApp->Run();
 }
 
-void PixelAlive::Analyze()
+void PixelAlive::Analyze ()
 {
   for (const auto cBoard : theContainer)
     for (const auto cModule : *cBoard)
@@ -109,7 +109,7 @@ void PixelAlive::Analyze()
 		   << cChip->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.fOccupancy << RESET;
 }
 
-void PixelAlive::InitHisto()
+void PixelAlive::InitHisto ()
 {
   std::string tmp;
   std::stringstream myString;
@@ -233,7 +233,7 @@ void PixelAlive::InitHisto()
   theFile = new TFile(fileRes, "RECREATE");
 }
 
-void PixelAlive::FillHisto()
+void PixelAlive::FillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
@@ -274,7 +274,7 @@ void PixelAlive::FillHisto()
 	}
 }
 
-void PixelAlive::Display()
+void PixelAlive::Display ()
 {
   for (auto i = 0; i < theCanvasOcc2D.size(); i++)
     {
@@ -325,7 +325,7 @@ void PixelAlive::Display()
     }
 }
 
-void PixelAlive::SaveHisto()
+void PixelAlive::SaveHisto ()
 {
   std::stringstream myString;
 

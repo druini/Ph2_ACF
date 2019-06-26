@@ -345,7 +345,7 @@ int main (int argc, char** argv)
       // ##############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
-      std::string fileName   ("SCurve_"       + runNumber + ".root");
+      std::string fileName("SCurve_" + runNumber + ".root");
       std::string chipConfig;
       if (saveReg == 1) chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
       else              chipConfig = "./CMSIT_RD53.txt";
@@ -376,7 +376,7 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing threshold optimization @@@" << RESET;
 
-      std::string fileName   ("ThresholdOptimization_" + runNumber + ".root");
+      std::string fileName("ThresholdOptimization_" + runNumber + ".root");
       std::string chipConfig;
       if (saveReg == 1) chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
       else              chipConfig = "./CMSIT_RD53.txt";
