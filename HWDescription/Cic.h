@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <utility>
 #include <set>
+#include "../Utils/ConsoleColor.h"
 #include "../Utils/easylogging++.h"
 // Cic Chip HW Description Class
 

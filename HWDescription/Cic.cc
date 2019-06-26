@@ -88,6 +88,11 @@ namespace Ph2_HwDescription {
             exit (1);
         }
 
+        for(auto& cRegItem : fRegMap ) 
+        {
+            LOG (DEBUG) << BOLDBLUE << "CIC register : " << cRegItem.first << " --- " << +cRegItem.second.fValue << RESET;
+        }
+
     }
     //Write RegValues in a file
     void Cic::saveRegMap ( const std::string& filename )
