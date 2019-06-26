@@ -9,7 +9,7 @@
 
 #include "RD53ThrOpt.h"
 
-ThrOpt::ThrOpt(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents) :
+ThrOpt::ThrOpt (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents) :
   fileRes     (fileRes),
   fileReg     (fileReg),
   rowStart    (rowStart),
@@ -35,7 +35,7 @@ ThrOpt::ThrOpt(const char* fileRes, const char* fileReg, size_t rowStart, size_t
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
 
-ThrOpt::~ThrOpt()
+ThrOpt::~ThrOpt ()
 {
   theFile->Close();
   
@@ -55,7 +55,7 @@ ThrOpt::~ThrOpt()
     }
 }
 
-void ThrOpt::Run()
+void ThrOpt::Run ()
 {
   ContainerFactory theDetectorFactory;
 
@@ -79,7 +79,7 @@ void ThrOpt::Run()
 	    theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
 }
 
-void ThrOpt::Draw(bool display, bool saveHisto, bool saveReg)
+void ThrOpt::Draw (bool display, bool saveHisto, bool saveReg)
 {
   TApplication* myApp;
 
@@ -94,7 +94,7 @@ void ThrOpt::Draw(bool display, bool saveHisto, bool saveReg)
   if (display   == true) myApp->Run();
 }
 
-void ThrOpt::InitHisto()
+void ThrOpt::InitHisto ()
 {
   std::stringstream myString;
   size_t TDACsize = RD53::SetBits<RD53PixelEncoder::NBIT_TDAC>(RD53PixelEncoder::NBIT_TDAC).to_ulong()+1;
@@ -147,7 +147,7 @@ void ThrOpt::InitHisto()
   theFile = new TFile(fileRes, "RECREATE");
 }
 
-void ThrOpt::FillHisto()
+void ThrOpt::FillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
@@ -168,7 +168,7 @@ void ThrOpt::FillHisto()
 	}
 }
 
-void ThrOpt::Display()
+void ThrOpt::Display ()
 {
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -187,7 +187,7 @@ void ThrOpt::Display()
     }
 }
 
-void ThrOpt::SaveHisto()
+void ThrOpt::SaveHisto ()
 {
   std::stringstream myString;
 
@@ -212,7 +212,7 @@ void ThrOpt::SaveHisto()
   theFile->Write();
 }
 
-void ThrOpt::SaveReg()
+void ThrOpt::SaveReg ()
 {
   // ############################
   // # Save register new values #

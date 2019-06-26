@@ -9,7 +9,7 @@
 
 #include "RD53Latency.h"
 
-Latency::Latency(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t startValue, size_t stopValue, size_t nEvents) :
+Latency::Latency (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t startValue, size_t stopValue, size_t nEvents) :
   fileRes    (fileRes),
   rowStart   (rowStart),
   rowEnd     (rowEnd),
@@ -21,7 +21,7 @@ Latency::Latency(const char* fileRes, size_t rowStart, size_t rowEnd, size_t col
   Tool       ()
 {}
 
-Latency::~Latency()
+Latency::~Latency ()
 {
   theFile->Close();
   
@@ -34,7 +34,7 @@ Latency::~Latency()
     }
 }
 
-void Latency::Run()
+void Latency::Run ()
 {
   ContainerFactory      theDetectorFactory;
   std::vector<uint32_t> data;
@@ -92,7 +92,7 @@ void Latency::Run()
     }
 }
 
-void Latency::Draw(bool display, bool saveHisto)
+void Latency::Draw (bool display, bool saveHisto)
 {
   TApplication* myApp;
   
@@ -106,7 +106,7 @@ void Latency::Draw(bool display, bool saveHisto)
   if (display   == true) myApp->Run();
 }
 
-void Latency::Analyze()
+void Latency::Analyze ()
 {
   for (const auto cBoard : theLatencyContainer)
     for (const auto cModule : *cBoard)
@@ -129,7 +129,7 @@ void Latency::Analyze()
 	}
 }
 
-void Latency::InitHisto()
+void Latency::InitHisto ()
 {
   std::string tmp;
   std::stringstream myString;
@@ -165,7 +165,7 @@ void Latency::InitHisto()
   theFile = new TFile(fileRes, "RECREATE");
 }
 
-void Latency::FillHisto()
+void Latency::FillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : theLatencyContainer)
@@ -179,7 +179,7 @@ void Latency::FillHisto()
 	}
 }
 
-void Latency::Display()
+void Latency::Display ()
 {
   for (auto i = 0; i < theCanvasLat.size(); i++)
     {
@@ -190,7 +190,7 @@ void Latency::Display()
     }
 }
 
-void Latency::SaveHisto()
+void Latency::SaveHisto ()
 {
   std::stringstream myString;
   
