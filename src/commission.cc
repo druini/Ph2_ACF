@@ -48,7 +48,7 @@ int main ( int argc, char* argv[] )
     cmd.defineOptionAlternative ( "triggerTdc", "t" );
 
     cmd.defineOption ( "antenna", "perform latency scan with antenna on UIB",  ArgvParser::OptionRequiresValue );
- 
+
     cmd.defineOption ( "stublatency", "scan the stub latency", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "stublatency", "s" );
 
@@ -60,6 +60,9 @@ int main ( int argc, char* argv[] )
 
     cmd.defineOption ( "signalFit", "Scan the threshold and fit for signal Vcth", ArgvParser::OptionRequiresValue );
     cmd.defineOptionAlternative ( "signalFit", "F" );
+
+    cmd.defineOption ( "hitOR", "To be used with SignalScanFit in case you want to run in hitOR mode", ArgvParser::NoOptionAttribute );
+    cmd.defineOptionAlternative ( "hitOR", "H" );
 
     cmd.defineOption ( "minimum", "minimum value for latency scan", ArgvParser::OptionRequiresValue );
     cmd.defineOptionAlternative ( "minimum", "m" );
@@ -91,13 +94,11 @@ int main ( int argc, char* argv[] )
     bool cStubLatency = ( cmd.foundOption ( "stublatency" ) ) ? true : false;
     bool cSignal = ( cmd.foundOption ( "signal" ) ) ? true : false;
     bool cSignalFit = ( cmd.foundOption ( "signalFit" ) ) ? true : false;
+    bool cHitOR = ( cmd.foundOption ( "hitOR" ) ) ? true : false;
     bool cNoise = ( cmd.foundOption ( "noise" ) ) ? true : false;
     bool cAntenna = (cmd.foundOption ("antenna") )? true : false;
 
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
-
-    //if ( !cNoise ) cDirectory += "Commissioning";
-    //else if ( cNoise ) cDirectory += "NoiseScan";
 
     if ( cNoise )          cDirectory += "NoiseScan";
     else if ( cSignalFit ) cDirectory += "SignalFit";
@@ -108,9 +109,9 @@ int main ( int argc, char* argv[] )
 
     uint16_t cStartLatency = ( cmd.foundOption ( "minimum" ) ) ? convertAnyInt ( cmd.optionValue ( "minimum" ).c_str() ) :  0;
     uint16_t cLatencyRange = ( cmd.foundOption ( "range" ) )   ?  convertAnyInt ( cmd.optionValue ( "range" ).c_str() ) :  10;
-    int     cSignalRange  = ( cmd.foundOption ( "signal" ) )  ?  convertAnyInt ( cmd.optionValue ( "signal" ).c_str() ) :  30;
-    int     cSignalFitRange = ( cmd.foundOption ( "signalFit" ) )  ?  convertAnyInt ( cmd.optionValue ( "signalFit" ).c_str() ) :  30;
-    uint8_t cAntennaPotential = ( cmd.foundOption ( "antenna" ) )   ?  convertAnyInt ( cmd.optionValue ( "antenna" ).c_str() ) :  0;
+    int      cSignalRange  = ( cmd.foundOption ( "signal" ) )  ?  convertAnyInt ( cmd.optionValue ( "signal" ).c_str() ) :  30;
+    int      cSignalFitRange = ( cmd.foundOption ( "signalFit" ) )  ?  convertAnyInt ( cmd.optionValue ( "signalFit" ).c_str() ) :  10;
+    uint8_t  cAntennaPotential = ( cmd.foundOption ( "antenna" ) )   ?  convertAnyInt ( cmd.optionValue ( "antenna" ).c_str() ) :  0;
 
     TApplication cApp ( "Root Application", &argc, argv );
 
@@ -134,9 +135,8 @@ int main ( int argc, char* argv[] )
     cTool.InitResultFile ( cResultfile );
     cTool.StartHttpServer();
     cTool.ConfigureHw ();
+
     #ifdef __ANTENNA__
-
-
     AntennaTester cAntennaTester;
     cAntennaTester.Inherit (&cTool);
     cAntennaTester.Initialize();
@@ -149,33 +149,31 @@ int main ( int argc, char* argv[] )
         cLatencyScan.Initialize (cStartLatency, cLatencyRange);
      
         // Here comes our Part:
-        if( cAntenna)
-		LOG (INFO) << BOLDBLUE << "Enabling antenna with " << +cAntennaPotential << " written to the potentiometer" <<  RESET;
+        if( cAntenna) LOG (INFO) << BOLDBLUE << "Enabling antenna with " << +cAntennaPotential << " written to the potentiometer" <<  RESET;
+	           
+     if ( cLatency ) 
+	 {
 
-	if ( cLatency ) 
-	{
 #ifdef __ANTENNA__
+        if( cAntenna)cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential );
+#endif
 
-		if( cAntenna)cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential );
-    #endif
-
-		cLatencyScan.ScanLatency ( cStartLatency, cLatencyRange);
+	    cLatencyScan.ScanLatency ( cStartLatency, cLatencyRange);
 	}
 
-        if ( cStubLatency ) cLatencyScan.ScanStubLatency ( cStartLatency, cLatencyRange );
+    if ( cStubLatency ) cLatencyScan.ScanStubLatency ( cStartLatency, cLatencyRange );
 
-	// if antenna was being used ... then disable it again at the end 
-
+// if antenna was being used ... then disable it again at the end 
 #ifdef __ANTENNA__
 
         if( cAntenna)
-	{
-		LOG (INFO) << BOLDBLUE << "Disable antenna with " << +cAntennaPotential << " written to the potentiometer" <<  RESET;
-		   cAntennaTester.EnableAntenna(false, cAntennaPotential );
-	}
-    #endif
+	    {
+		    LOG (INFO) << BOLDBLUE << "Disable antenna with " << +cAntennaPotential << " written to the potentiometer" <<  RESET;
+            cAntennaTester.EnableAntenna(false, cAntennaPotential );
+        }
+#endif
 
-	cLatencyScan.writeObjects();
+        cLatencyScan.writeObjects();
     }
 
     else if ( cTriggerTDC )
@@ -201,7 +199,7 @@ int main ( int argc, char* argv[] )
         SignalScanFit cSignalScanFit;
         cSignalScanFit.Inherit (&cTool);
         cSignalScanFit.Initialize();
-        cSignalScanFit.ScanSignal ( cSignalFitRange );
+        cSignalScanFit.ScanSignal ( cSignalFitRange, cHitOR ); // Particle means that we trigger on a particle
     }
 
     else if ( cNoise )
@@ -209,40 +207,31 @@ int main ( int argc, char* argv[] )
         Timer t;
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit (&cTool);
+
 #ifdef __ANTENNA__
 
-        if( cAntenna)
-		LOG (INFO) << BOLDBLUE << "Enabling antenna with " << +cAntennaPotential << " written to the potentiometer" <<  RESET;
-	if( cAntenna)cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential );
+        if( cAntenna) LOG (INFO) << BOLDBLUE << "Enabling antenna with " << +cAntennaPotential << " written to the potentiometer" <<  RESET;
+        if( cAntenna)cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential );
 #endif
+
         cPedeNoise.Initialise (cAllChan); // canvases etc. for fast calibration
         t.start();
         cPedeNoise.measureNoise();
         t.stop();
         t.show ("Time for noise measurement");
         //cPedeNoise.Validate();
+
 #ifdef __ANTENNA__
 
-              if( cAntenna)
+        if( cAntenna)
         {
-                LOG (INFO) << BOLDBLUE << "Disable antenna with " << +cAntennaPotential << " written to the potentiometer" <<  RESET;
-                   cAntennaTester.EnableAntenna(false, cAntennaPotential );
+            LOG (INFO) << BOLDBLUE << "Disable antenna with " << +cAntennaPotential << " written to the potentiometer" <<  RESET;
+            cAntennaTester.EnableAntenna(false, cAntennaPotential );
         }
 #endif
         cPedeNoise.writeObjects( );
         cPedeNoise.dumpConfigFiles();
     }
-/*    else if (cAntenna){
-
-
-cAntennaTester.ConfigureHw ();
-
-    cAntennaTester.Measure(cAntennaPotential);
-
-    // save results
-//    cAntennaTester.writeObjects();
-
-   }*/
 
     cTool.SaveResults();
     cTool.CloseResultFile();
