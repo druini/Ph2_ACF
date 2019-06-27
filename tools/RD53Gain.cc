@@ -203,7 +203,7 @@ void Gain::InitHisto ()
           myString << "Gain1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
                    << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
                    << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theGain1D.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),100,0,15e-3));
+	  theGain1D.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),100,0,20e-3));
 	  theGain1D.back()->SetXTitle("Gain (ToT/VCal)");
 	  theGain1D.back()->SetYTitle("Entries");
   

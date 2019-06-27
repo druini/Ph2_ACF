@@ -373,7 +373,7 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing threshold equalization @@@" << RESET;
 
-      std::string fileName = "ThresholdEqualization_" + runNumber + ".root";
+      std::string fileName = "ThrEqualization_" + runNumber + ".root";
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       sc.Inherit(&cSystemController);
       sc.Run();
