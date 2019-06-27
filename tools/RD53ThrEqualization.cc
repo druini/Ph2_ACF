@@ -1,5 +1,5 @@
 /*!
-  \file                  RD53ThrEqu.cc
+  \file                  RD53ThrEqualization.cc
   \brief                 Implementaion of threshold equalization
   \author                Mauro DINARDO
   \version               1.0
@@ -7,9 +7,9 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "RD53ThrEqu.h"
+#include "RD53ThrEqualization.h"
 
-ThrEqu::ThrEqu (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, DetectorDataContainer* newVCal) :
+ThrEqualization::ThrEqualization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, DetectorDataContainer* newVCal) :
   fileRes     (fileRes),
   fileReg     (fileReg),
   rowStart    (rowStart),
@@ -36,7 +36,7 @@ ThrEqu::ThrEqu (const char* fileRes, const char* fileReg, size_t rowStart, size_
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
 
-ThrEqu::~ThrEqu ()
+ThrEqualization::~ThrEqualization ()
 {
   theFile->Close();
   
@@ -57,7 +57,7 @@ ThrEqu::~ThrEqu ()
     }
 }
 
-void ThrEqu::Run ()
+void ThrEqualization::Run ()
 {
   // #######################
   // # Use new VCal values #
@@ -95,7 +95,7 @@ void ThrEqu::Run ()
 	    theTDACcontainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
 }
 
-void ThrEqu::Draw (bool display, bool save)
+void ThrEqualization::Draw (bool display, bool save)
 {
   TApplication* myApp;
 
@@ -111,7 +111,7 @@ void ThrEqu::Draw (bool display, bool save)
   theFile->Close();
 }
 
-void ThrEqu::InitHisto ()
+void ThrEqualization::InitHisto ()
 {
   std::stringstream myString;
   size_t TDACsize = RD53::SetBits<RD53PixelEncoder::NBIT_TDAC>(RD53PixelEncoder::NBIT_TDAC).to_ulong()+1;
@@ -129,7 +129,7 @@ void ThrEqu::InitHisto ()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "ThrEqu_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+          myString << "ThrEqualization_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
 		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOccupancy.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents/2 + 1,0,1 + 2./nEvents));
@@ -138,7 +138,7 @@ void ThrEqu::InitHisto ()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "CanvasThrEqu_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+          myString << "CanvasThrEqualization_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
 		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
@@ -164,7 +164,7 @@ void ThrEqu::InitHisto ()
   theFile = new TFile(fileRes, "UPDATE");
 }
 
-void ThrEqu::FillHisto ()
+void ThrEqualization::FillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
@@ -185,7 +185,7 @@ void ThrEqu::FillHisto ()
 	}
 }
 
-void ThrEqu::Display ()
+void ThrEqualization::Display ()
 {
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -204,7 +204,7 @@ void ThrEqu::Display ()
     }
 }
 
-void ThrEqu::Save ()
+void ThrEqualization::Save ()
 {
   std::stringstream myString;
 

@@ -1,5 +1,5 @@
 /*!
-  \file                  RD53ThrEqu.h
+  \file                  RD53ThrEqualization.h
   \brief                 Implementaion of threshold equalization
   \author                Mauro DINARDO
   \version               1.0
@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53ThrEqu_h_
-#define _RD53ThrEqu_h_
+#ifndef _RD53ThrEqualization_h_
+#define _RD53ThrEqualization_h_
 
 #include "../Utils/Container.h"
 #include "../Utils/Occupancy.h"
@@ -33,11 +33,11 @@ using namespace Ph2_System;
 // #####################################
 // # Threshold equalization test suite #
 // #####################################
-class ThrEqu : public Tool
+class ThrEqualization : public Tool
 {
  public:
-  ThrEqu(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, DetectorDataContainer* newVCal = nullptr);
-  ~ThrEqu();
+  ThrEqualization(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, DetectorDataContainer* newVCal = nullptr);
+  ~ThrEqualization();
 
   void Run  ();
   void Draw (bool display, bool save);

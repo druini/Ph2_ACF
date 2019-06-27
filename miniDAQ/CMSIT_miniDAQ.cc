@@ -9,10 +9,10 @@
 
 #include "../Utils/argvparser.h"
 #include "../System/SystemController.h"
+#include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53PixelAlive.h"
 #include "../tools/RD53Latency.h"
 #include "../tools/RD53SCurve.h"
-#include "../tools/RD53ThrEqu.h"
 #include "../tools/RD53Gain.h"
 
 #include <fstream>
@@ -383,7 +383,7 @@ int main (int argc, char** argv)
       std::string chipConfig;
       if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
       else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
-      ThrEqu te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, newVCal);
+      ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, newVCal);
       te.Inherit(&cSystemController);
       te.Run();
       te.Draw(display,true);
