@@ -23,7 +23,6 @@
 //========================================================================================================================
 DQMHistogramPedeNoise::DQMHistogramPedeNoise ()
 {
-
 }
 
 //========================================================================================================================
@@ -32,29 +31,27 @@ DQMHistogramPedeNoise::~DQMHistogramPedeNoise ()
 
 }
 
+
 //========================================================================================================================
-void DQMHistogramPedeNoise::book(TFile *theOutputFile, DetectorContainer &theDetectorStructure)
+void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure)
 {
     ContainerFactory   theDetectorFactory;
-    theDetectorFactory.copyStructure(theDetectorStructure,fDetectorStructure);
-    //Data container initialization
-    theDetectorFactory.copyStructure(fDetectorStructure, fDetectorData);
+    theDetectorFactory.copyStructure(theDetectorStructure, fDetectorData);
     
     RootContainerFactory theRootFactory;
-    
     EmptyContainer theEmptyContainer;
 
     //Pedestal
     TH1FContainer theTH1FPedestalContainer("PedestalDistribution", "Pedestal Distribution", 2048, -0.5, 1023.5);
-    theRootFactory.bookHistrogramsFromStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, fDetectorStructure, fDetectorPedestalHistograms, theEmptyContainer, theTH1FPedestalContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
+    theRootFactory.bookHistrogramsFromStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, theDetectorStructure, fDetectorPedestalHistograms, theEmptyContainer, theTH1FPedestalContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
 
     //Noise
     TH1FContainer theTH1FNoiseContainer("NoiseDistribution", "Noise Distribution", 200, 0., 20.);
-    theRootFactory.bookHistrogramsFromStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, fDetectorStructure, fDetectorNoiseHistograms, theEmptyContainer, theTH1FNoiseContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
+    theRootFactory.bookHistrogramsFromStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, theDetectorStructure, fDetectorNoiseHistograms, theEmptyContainer, theTH1FNoiseContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
 
     //Validation
-    TH1FContainer theTH1FValidationContainer("ThresholdDistribution", "Threshold Distribution", 254, -0.5, 253.5);
-    theRootFactory.bookHistrogramsFromStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, fDetectorStructure, fDetectorValidationHistograms, theEmptyContainer, theTH1FValidationContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
+    TH1FContainer theTH1FValidationContainer("Occupancy", "Occupancy", 254, -0.5, 253.5);
+    theRootFactory.bookHistrogramsFromStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, theDetectorStructure, fDetectorValidationHistograms, theEmptyContainer, theTH1FValidationContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
 
 }
 
@@ -64,7 +61,6 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 	OccupancyBoardStream          theOccupancy;
     ThresholdAndNoiseBoardStream  theThresholdAndNoiseStream;
 
-	//TODO Occupancy histos and Occupancy should be used and filled the same way so there should be no need to pass through the detector data
 	if(theOccupancy.attachBuffer(&dataBuffer))
 	{
 		std::cout<<"Matched Occupancy!!!!!\n";
@@ -88,7 +84,7 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 void DQMHistogramPedeNoise::process()
 {
 
-    for(auto board : fDetectorStructure)
+    for(auto board : fDetectorPedestalHistograms)
     {
         std::string boardFolder = "Board_" + std::to_string(board->getId());
         // if(output.TDirectory::GetDirectory(boardFolder.data()) == nullptr) output.mkdir(boardFolder.data());

@@ -98,6 +98,8 @@ void PixelAlive::Draw (bool display, bool save)
 
   if (save    == true) this->Save();
   if (display == true) myApp->Run();
+
+  theFile->Close();
 }
 
 void PixelAlive::Analyze ()
@@ -111,7 +113,6 @@ void PixelAlive::Analyze ()
 
 void PixelAlive::InitHisto ()
 {
-  std::string tmp;
   std::stringstream myString;
   size_t ToTsize   = RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong()+1;
   size_t BCIDsize  = RD53::SetBits<RD53EvtEncoder::NBIT_BCID>(RD53EvtEncoder::NBIT_BCID).to_ulong()+1;
@@ -125,112 +126,109 @@ void PixelAlive::InitHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-	  tmp = fileRes;
-	  tmp = tmp.erase(tmp.find(".root"),5);
-
 	  myString.clear();
 	  myString.str("");
-          myString << tmp << "_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "PixelAlive_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOcc2D.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
 	  theOcc2D.back()->SetXTitle("Columns");
 	  theOcc2D.back()->SetYTitle("Rows");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasOcc2D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "CanvasPixelAlive_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"                   << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"                  << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasOcc2D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "ToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"      << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"     << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theToT.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),ToTsize,0,ToTsize));
 	  theToT.back()->SetXTitle("ToT");
 	  theToT.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "CanvasToT_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasToT.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theOcc1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"           << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"          << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "Occ1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"        << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"       << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOcc1D.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents+1,0,nEvents+1));
 	  theOcc1D.back()->SetXTitle("Occupancy");
 	  theOcc1D.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasOcc1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "CanvasOcc1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"              << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"             << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasOcc1D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 
 	  
 	  myString.clear();
 	  myString.str("");
-          myString << "theBCID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "BCID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theBCID.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),BCIDsize,0,BCIDsize));
 	  theBCID.back()->SetXTitle("#DeltaBCID");
 	  theBCID.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasBCID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"                << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"               << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "CanvasBCID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasBCID.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theTrgID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"           << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"          << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "TrgID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"        << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"       << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theTrgID.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),TrgIDsize,0,TrgIDsize));
 	  theTrgID.back()->SetXTitle("#DeltaTrigger-ID");
 	  theTrgID.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasTrgID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "CanvasTrgID_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"              << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"             << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasTrgID.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "Err_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"      << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"     << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theErr.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
 	  theErr.back()->SetXTitle("Columns");
 	  theErr.back()->SetYTitle("Rows");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "CanvasErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasErr.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
   
-  theFile = new TFile(fileRes, "APPEND");
+  theFile = new TFile(fileRes, "UPDATE");
 }
 
 void PixelAlive::FillHisto ()

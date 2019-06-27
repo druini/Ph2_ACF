@@ -67,8 +67,8 @@ void ThrEqu::Run ()
       for (const auto cModule : *cBoard)
 	for (const auto cChip : *cModule)
 	  {
-	    auto value = static_cast<Chip*>(cChip)->getReg("VCAL_MED") + newVCal->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().theSummary_.fThreshold;
-	    this->fChipInterface->WriteChipReg(static_cast<Chip*>(cChip), "VCAL_HIGH", value, true);
+	    auto value = static_cast<RD53*>(cChip)->getReg("VCAL_MED") + newVCal->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().theSummary_.fThreshold;
+	    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", value, true);
 	  }
   
 
@@ -107,6 +107,8 @@ void ThrEqu::Draw (bool display, bool save)
 
   if (save    == true) this->Save();
   if (display == true) myApp->Run();
+
+  theFile->Close();
 }
 
 void ThrEqu::InitHisto ()
@@ -122,7 +124,7 @@ void ThrEqu::InitHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  int VCalOffset = static_cast<Chip*>(cChip)->getReg("VCAL_MED");
+	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
 
 
 	  myString.clear();
@@ -136,7 +138,7 @@ void ThrEqu::InitHisto ()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+          myString << "CanvasThrEqu_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
 		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
@@ -153,13 +155,13 @@ void ThrEqu::InitHisto ()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasTDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"                << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"               << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "CanvasTDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasTDAC.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
-  theFile = new TFile(fileRes, "APPEND");
+  theFile = new TFile(fileRes, "UPDATE");
 }
 
 void ThrEqu::FillHisto ()
@@ -238,9 +240,9 @@ void ThrEqu::Save ()
 	  
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      if (static_cast<Chip*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
 		static_cast<RD53*>(cChip)->setTDAC(row,col,theTDACcontainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
-	  
-	  static_cast<Chip*>(cChip)->saveRegMap(fileReg);
+
+	  static_cast<RD53*>(cChip)->saveRegMap(fileReg);
 	}
 }

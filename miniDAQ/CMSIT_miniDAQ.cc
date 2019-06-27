@@ -95,83 +95,83 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type)
       auto RD53Board = static_cast<RD53FWInterface*>(sc.fBeBoardFWMap[cBoard->getBeBoardId()]);
 
       for (const auto& cModule : cBoard->fModuleVector)
-	for (const auto& cChip : cModule->fChipVector)
-	 {
-	   uint8_t chipId = cChip->getChipId();
+	for (const auto& cChip : cModule->fReadoutChipVector)
+	  {
+	    uint8_t chipId = cChip->getChipId();
 
 
-	   // #############################
-	   // # Configuring FastCmd block #
-	   // #############################
-	   RD53FWInterface::FastCommandsConfig cfgFastCmd;
+	    // #############################
+	    // # Configuring FastCmd block #
+	    // #############################
+	    RD53FWInterface::FastCommandsConfig cfgFastCmd;
       
-	   cfgFastCmd.trigger_source   = RD53FWInterface::TriggerSource::FastCMDFSM;
-	   cfgFastCmd.n_triggers       = 0;
-	   cfgFastCmd.trigger_duration = NTRIGxL1A;
+	    cfgFastCmd.trigger_source   = RD53FWInterface::TriggerSource::FastCMDFSM;
+	    cfgFastCmd.n_triggers       = 0;
+	    cfgFastCmd.trigger_duration = NTRIGxL1A;
 	   
-	   if (type == "Digital")
-	     {
-	       // #######################################
-	       // # Configuration for digital injection #
-	       // #######################################
-	       RD53::CalCmd calcmd_first(1,2,8,0,0);
-	       cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
-	       RD53::CalCmd calcmd_second(0,0,0,0,0);
-	       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
+	    if (type == "Digital")
+	      {
+		// #######################################
+		// # Configuration for digital injection #
+		// #######################################
+		RD53::CalCmd calcmd_first(1,2,8,0,0);
+		cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
+		RD53::CalCmd calcmd_second(0,0,0,0,0);
+		cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 	       
-	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
-	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  0;
-	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 40;
+		cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
+		cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  0;
+		cfgFastCmd.fast_cmd_fsm.delay_loop             = 40;
 
-	       cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
-	       cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
-	       cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
-	     }
-	   else if (type == "Analog")
-	     {
-	       // ######################################
-	       // # Configuration for analog injection #
-	       // ######################################
-	       RD53::CalCmd calcmd_first(1,0,0,0,0);
-	       cfgFastCmd.fast_cmd_fsm.first_cal_data  = calcmd_first.getCalCmd(chipId);
-	       RD53::CalCmd calcmd_second(0,0,2,0,0);
-	       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
+		cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
+		cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
+		cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+	      }
+	    else if (type == "Analog")
+	      {
+		// ######################################
+		// # Configuration for analog injection #
+		// ######################################
+		RD53::CalCmd calcmd_first(1,0,0,0,0);
+		cfgFastCmd.fast_cmd_fsm.first_cal_data  = calcmd_first.getCalCmd(chipId);
+		RD53::CalCmd calcmd_second(0,0,2,0,0);
+		cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 	       
-	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
-	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 32;
-	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 40;
+		cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
+		cfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 32;
+		cfgFastCmd.fast_cmd_fsm.delay_loop             = 40;
 
-	       cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
-	       cfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
-	       cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
-	     }
-	   else LOG (ERROR) << BOLDRED << "Option non recognized " << type << RESET;
+		cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
+		cfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
+		cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+	      }
+	    else LOG (ERROR) << BOLDRED << "Option non recognized " << type << RESET;
 	   
 	   
-	   // ###############################################
-	   // # Copy to RD53FWInterface data member variable #
-	   // ###############################################
-	   RD53Board->getLoaclCfgFastCmd()->trigger_source                      = cfgFastCmd.trigger_source;
-	   RD53Board->getLoaclCfgFastCmd()->n_triggers                          = cfgFastCmd.n_triggers;
-	   RD53Board->getLoaclCfgFastCmd()->trigger_duration                    = cfgFastCmd.trigger_duration;
+	    // ###############################################
+	    // # Copy to RD53FWInterface data member variable #
+	    // ###############################################
+	    RD53Board->getLoaclCfgFastCmd()->trigger_source                      = cfgFastCmd.trigger_source;
+	    RD53Board->getLoaclCfgFastCmd()->n_triggers                          = cfgFastCmd.n_triggers;
+	    RD53Board->getLoaclCfgFastCmd()->trigger_duration                    = cfgFastCmd.trigger_duration;
 	   
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_data         = cfgFastCmd.fast_cmd_fsm.first_cal_data;
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_data        = cfgFastCmd.fast_cmd_fsm.second_cal_data;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_data         = cfgFastCmd.fast_cmd_fsm.first_cal_data;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_data        = cfgFastCmd.fast_cmd_fsm.second_cal_data;
 	   
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_first_cal  = cfgFastCmd.fast_cmd_fsm.delay_after_first_cal;
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_second_cal = cfgFastCmd.fast_cmd_fsm.delay_after_second_cal;
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_loop             = cfgFastCmd.fast_cmd_fsm.delay_loop;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_first_cal  = cfgFastCmd.fast_cmd_fsm.delay_after_first_cal;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_second_cal = cfgFastCmd.fast_cmd_fsm.delay_after_second_cal;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_loop             = cfgFastCmd.fast_cmd_fsm.delay_loop;
 	   
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_en           = cfgFastCmd.fast_cmd_fsm.first_cal_en;
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_en          = cfgFastCmd.fast_cmd_fsm.second_cal_en;
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.trigger_en             = cfgFastCmd.fast_cmd_fsm.trigger_en;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_en           = cfgFastCmd.fast_cmd_fsm.first_cal_en;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_en          = cfgFastCmd.fast_cmd_fsm.second_cal_en;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.trigger_en             = cfgFastCmd.fast_cmd_fsm.trigger_en;
 	   
 	   
-	   // ##############################
-	   // # Download the configuration #
-	   // ##############################
-	   RD53Board->ConfigureFastCommands();
-	 }
+	    // ##############################
+	    // # Download the configuration #
+	    // ##############################
+	    RD53Board->ConfigureFastCommands();
+	  }
     }
 }
 
@@ -221,7 +221,7 @@ int main (int argc, char** argv)
   cmd.defineOption("file","Hardware description file. Default value: settings/CMSIT.xml",ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain thropt gainopt]. Default: pixelalive", ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt]. Default: pixelalive", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
   cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", ArgvParser::NoOptionAttribute);
@@ -366,7 +366,7 @@ int main (int argc, char** argv)
       ga.Analyze();
       ga.Draw(display,true);
     }
-  else if (whichCalib == "thropt")
+  else if (whichCalib == "threqu")
     {
       // ##############################
       // # Run Threshold Equalization #

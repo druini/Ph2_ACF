@@ -29,7 +29,7 @@ public:
 	~RootContainerFactory(){;}
 
 	template<typename T, typename SC, typename SM, typename SB, typename SD>
-	void bookHistrogramsFromStructure(TFile *theOutputFile, DetectorContainer& original, DetectorDataContainer& copy, T& channel, SC& chipSummary, SM& moduleSummary, SB& boardSummary, SD& detectorSummary)
+	void bookHistrogramsFromStructure(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, T& channel, SC& chipSummary, SM& moduleSummary, SB& boardSummary, SD& detectorSummary)
 	{
 		std::string detectorFolder = "Detector";
 		createAndOpenRootFileFolder(theOutputFile,detectorFolder);
@@ -49,26 +49,25 @@ public:
 
 		SD theDetectorSummary;
 		initializePlot<std::is_base_of<PlotContainer,SD>::value, SD>(&theDetectorSummary,Form("%s_Detector",detectorSummaryHistogramGenericName.data()), Form("%s Detector",detectorSummaryHistogramGenericTitle.data()), &detectorSummary);
-		// if(detectorSummaryHistogramGenericName != "NULL") theDetectorSummary.initialize(Form("%s_Detector",detectorSummaryHistogramGenericName), Form("%s Detector",detectorSummaryHistogramGenericTitle), &detectorSummary);
 		copy.getSummary<SD,SB>().theSummary_ = std::move(theDetectorSummary);
 
 		//Boards
-		for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
+		// for(const std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
+		for(const BoardContainer *board : original)
 		{
-			std::string boardFolder = "/Board_" + std::to_string((*board)->getId());
+			std::string boardFolder = "/Board_" + std::to_string(board->getId());
 			std::string fullBoardFolder = detectorFolder + boardFolder;
 			createAndOpenRootFileFolder(theOutputFile, fullBoardFolder);
 		
-			BoardDataContainer* copyBoard = copy.addBoardDataContainer((*board)->getId());
+			BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
 			copyBoard->initialize<SB,SM>();
 
 			SB theBoardSummary;
-			initializePlot<std::is_base_of<PlotContainer,SB>::value, SB>(&theBoardSummary,Form("%s_Board_%d",boardSummaryHistogramGenericName.data(),(*board)->getId()), Form("%s Board_%d",boardSummaryHistogramGenericTitle.data(),(*board)->getId()), &boardSummary);
-			// if(boardSummaryHistogramGenericName != "NULL") theBoardSummary.initialize(Form("%s_Board_%d",boardSummaryHistogramGenericName,(*board)->getId()), Form("%s Board_%d",boardSummaryHistogramGenericTitle,(*board)->getId()), &boardSummary);
+			initializePlot<std::is_base_of<PlotContainer,SB>::value, SB>(&theBoardSummary,Form("%s_Board_%d",boardSummaryHistogramGenericName.data(),board->getId()), Form("%s Board_%d",boardSummaryHistogramGenericTitle.data(),board->getId()), &boardSummary);
 			copyBoard->getSummary<SB,SM>().theSummary_ = std::move(theBoardSummary);
 
 			//Modules
-			for(ModuleContainer* module : **board)
+			for(const ModuleContainer* module : *board)
 			{
 				std::string moduleFolder = "/Module_" + std::to_string(module->getId());
 				std::string fullModuleFolder = detectorFolder + boardFolder + moduleFolder;
@@ -79,11 +78,10 @@ public:
 
 				SM theModuleSummary;
 				initializePlot<std::is_base_of<PlotContainer,SM>::value, SM>(&theModuleSummary,Form("%s_module_%d",moduleSummaryHistogramGenericName.data(),module->getId()), Form("%s module_%d",moduleSummaryHistogramGenericTitle.data(),module->getId()), &moduleSummary);
-				// if(moduleSummaryHistogramGenericName != "NULL") theModuleSummary.initialize(Form("%s_module_%d",moduleSummaryHistogramGenericName,module->getId()), Form("%s module_%d",moduleSummaryHistogramGenericTitle,module->getId()), &moduleSummary);
 				copyModule->getSummary<SM,SC>().theSummary_ = std::move(theModuleSummary);
 
 				//Chips
-				for(ChipContainer* chip : *module)
+				for(const ChipContainer* chip : *module)
 				{
 					std::string chipFolder = "/Chip_" + std::to_string(chip->getId());
 					std::string fullChipFolder = detectorFolder + boardFolder + moduleFolder + chipFolder;
@@ -94,7 +92,6 @@ public:
 					
 					SC theChipSummary;
 					initializePlot<std::is_base_of<PlotContainer,SC>::value,SC>(&theChipSummary,Form("%s_Chip_%d",chipSummaryHistogramGenericName.data(),chip->getId()), Form("%s Chip_%d",chipSummaryHistogramGenericTitle.data(),chip->getId()), &chipSummary);
-					// if(chipSummaryHistogramGenericName != "NULL") theChipSummary.initialize(Form("%s_Chip_%d",chipSummaryHistogramGenericName,chip->getId()), Form("%s Chip_%d",chipSummaryHistogramGenericTitle,chip->getId()), &chipSummary);
 					copyChip->getSummary<SC,T>().theSummary_ = std::move(theChipSummary) ;
 	
 					//Channels
@@ -123,7 +120,6 @@ public:
 								}
 								
 								initializePlot<std::is_base_of<PlotContainer,T>::value, T>(&theChannel,histogramName, histogramTitle, &channel);
-								// theChannel.initialize(histogramName, histogramTitle, &channel);
 							}
 							copyChip->getChannel<T>(row,col) = std::move(theChannel);
 						}	
@@ -131,16 +127,18 @@ public:
 				}
 			}
 		}
+
+		theOutputFile->cd();
 	}
 
 	template<typename T>
-	void bookHistrogramsFromStructure(TFile *theOutputFile, DetectorContainer& original, DetectorDataContainer& copy, T& channel)
+	void bookHistrogramsFromStructure(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, T& channel)
 	{
 		bookHistrogramsFromStructure<T,T,T,T,T>(theOutputFile, original, copy, channel, channel, channel, channel, channel);
 	}
 
 	template<typename T, typename S>
-	void bookHistrogramsFromStructure(TFile *theOutputFile, DetectorContainer& original, DetectorDataContainer& copy, T& channel, S& summay)
+	void bookHistrogramsFromStructure(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, T& channel, S& summay)
 	{
 		bookHistrogramsFromStructure<T,S,S,S,S>(original, copy, channel, summay, summay, summay, summay);
 	}

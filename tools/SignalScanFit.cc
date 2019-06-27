@@ -46,7 +46,7 @@ void SignalScanFit::Initialize ()
             uint32_t cCbcCount = 0;
             uint32_t cCbcIdMax = 0;
 
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
                 uint32_t cCbcId = cCbc->getChipId();
                 cCbcCount++;
@@ -101,7 +101,7 @@ void SignalScanFit::ScanSignal (int pSignalScanLength)
     int cVcthDirection = ( fHoleMode == 1 ) ? +1 : -1;
 
     // Reading the current threshold value
-    ThresholdVisitor cVisitor (fChipInterface);
+    ThresholdVisitor cVisitor (fReadoutChipInterface);
     this->accept (cVisitor);
     uint16_t cVCth = cVisitor.getThreshold();
 
@@ -150,7 +150,7 @@ void SignalScanFit::ScanSignal (int pSignalScanLength)
                     TH2D* cVcthClusters = static_cast<TH2D*> (getHist ( cFe, "vcth_ClusterSize" ) );
 	                
                     // Loop over the CBCs
-	                  for ( auto cCbc : cFe->fChipVector )
+	                  for ( auto cCbc : cFe->fReadoutChipVector )
                     {
                         TH1D* cHitsEvenHist         = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_even" ) );
                         TH1D* cHitsOddHist          = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_odd" ) );
@@ -301,7 +301,7 @@ void SignalScanFit::processCurves ( BeBoard *pBoard, std::string pHistName )
 {
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cCbc : cFe->fReadoutChipVector )
         {
             // This one is not used yet?
             TProfile* cProf = dynamic_cast<TProfile*> ( getHist ( cCbc, pHistName) );

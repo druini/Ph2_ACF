@@ -68,9 +68,7 @@ public:
 	}
 	Summary& operator= (S&& theSummary)
 	{
-std::cout<< __PRETTY_FUNCTION__ << __LINE__ <<std::endl;
 		theSummary_ = std::move(theSummary);
-std::cout<< __PRETTY_FUNCTION__ << __LINE__ <<std::endl;
 	}
 	Summary(const Summary<S,C>& summary) {
 		theSummary_ = summary.theSummary_;
@@ -286,7 +284,8 @@ private:
 class DetectorDataContainer : public DataContainer<BoardDataContainer>
 {
 public:
-	DetectorDataContainer(int id=-1) : DataContainer<BoardDataContainer>(id){}
+	DetectorDataContainer(int id=0) : DataContainer<BoardDataContainer>(id){}
+	~DetectorDataContainer() {}
 	template <class T>
 	T*              addBoardDataContainer(int id, T* board){return static_cast<T*>(DataContainer<BoardDataContainer>::addObject(id, board));}
 	BoardDataContainer* addBoardDataContainer(int id)                {return DataContainer<BoardDataContainer>::addObject(id, new BoardDataContainer(id));}

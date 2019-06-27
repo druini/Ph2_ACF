@@ -14,15 +14,15 @@
 #include "../Utils/Container.h"
 #include "../HWDescription/Chip.h"
 
-void ContainerFactory::copyStructure(DetectorContainer& original, DetectorDataContainer& copy)
+void ContainerFactory::copyStructure(const DetectorContainer& original, DetectorDataContainer& copy)
 {
-	for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
+	for(const BoardContainer *board : original)
 	{
-		BoardDataContainer* copyBoard = copy.addBoardDataContainer((*board)->getId());
-		for(ModuleContainer* module : **board)
+		BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
+		for(const ModuleContainer* module : *board)
 		{
 			ModuleDataContainer* copyModule = copyBoard->addModuleDataContainer(module->getId());
-			for(ChipContainer* chip : *module)
+			for(const ChipContainer* chip : *module)
 			{
 				copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
 			}
@@ -30,20 +30,5 @@ void ContainerFactory::copyStructure(DetectorContainer& original, DetectorDataCo
 	}
 }
 
-void ContainerFactory::copyStructure(DetectorContainer& original, DetectorContainer& copy)
-{
-    for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
-    {
-        BoardContainer* copyBoard = copy.addBoardContainer((*board)->getId());
-        for(ModuleContainer* module : **board)
-        {
-            ModuleContainer* copyModule = copyBoard->addModuleContainer(module->getId());
-            for(ChipContainer* chip : *module)
-            {
-                copyModule->addChipContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
-            }
-        }
-    }
-}
 
 

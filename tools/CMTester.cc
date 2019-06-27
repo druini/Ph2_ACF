@@ -22,7 +22,7 @@ void CMTester::Initialize()
         {
             uint32_t cFeId = cFe->getFeId();
 
-            for ( auto& cCbc : cFe->fChipVector )
+            for ( auto& cCbc : cFe->fReadoutChipVector )
             {
                 uint32_t cCbcId = cCbc->getChipId();
 
@@ -228,7 +228,7 @@ void CMTester::ScanNoiseChannels()
         {
             for ( auto& cFe : pBoard->fModuleVector )
             {
-                for ( auto& cCbc : cFe->fChipVector )
+                for ( auto& cCbc : cFe->fReadoutChipVector )
                 {
                     // just re-use the hitprobability histogram here?
                     // this has to go into a dedicated method
@@ -296,7 +296,7 @@ void CMTester::TakeData()
     std::stringstream outp;
     parseSettings();
 
-    ThresholdVisitor cVisitor (fChipInterface);
+    ThresholdVisitor cVisitor (fReadoutChipInterface);
     this->accept (cVisitor);
     fVcth = cVisitor.getThreshold();
     LOG (INFO) << "Checking threshold on latest CBC that was touched...: "<<fVcth<<std::endl;
@@ -306,7 +306,7 @@ void CMTester::TakeData()
     //    cVcth = cVisitor.getThreshold();
     //    std::cout<<"Now my threshold is: "<<cVcth<<std::endl;
 
-    //CbcRegReader cReader ( fChipInterface, "VCth" );
+    //CbcRegReader cReader ( fReadoutChipInterface, "VCth" );
     // accept( cReader );
 
     for ( BeBoard* pBoard : fBoardVector )
@@ -359,7 +359,7 @@ void CMTester::FinishRun()
     // first CBCs
     LOG (INFO) << "per CBC ..";
 
-    ThresholdVisitor cVisitor (fChipInterface); // No Vcth given, so default option is 'r'
+    ThresholdVisitor cVisitor (fReadoutChipInterface); // No Vcth given, so default option is 'r'
     int iCbc = 0;
     for ( auto cCbc : fChipHistMap )
     {
@@ -473,7 +473,7 @@ void CMTester::analyze ( BeBoard* pBoard, const Event* pEvent )
 
         std::vector<bool> cModuleData; // use this to store data for all CBCs....
 
-        for ( auto& cCbc : cFe->fChipVector )
+        for ( auto& cCbc : cFe->fReadoutChipVector )
         {
 
             // here loop over the channels and fill the histograms

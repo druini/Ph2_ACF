@@ -111,6 +111,7 @@ class Tool : public SystemController
     TObject* getHist ( BeBoard* pBeBoard, std::string pName );
 
     void SaveResults();
+    void WriteRootFile();
 
     /*!
      * \brief Create a result directory at the specified path + ChargeMode + Timestamp

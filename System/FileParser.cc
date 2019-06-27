@@ -1,20 +1,24 @@
 #include "FileParser.h"
 #include "../HWDescription/Cbc.h"
+#include "../HWDescription/Cic.h"
+#include "../HWDescription/RD53.h"
+#include "../HWDescription/Module.h"
+#include "../HWDescription/OuterTrackerModule.h"
 
 
 namespace Ph2_System {
 
-    void FileParser::parseHW ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os, bool pIsFile )
-    {
+    // void FileParser::parseHW ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os, bool pIsFile )
+    // {
 
-    //FIXME-FR
-        if (pIsFile && pFilename.find ( ".xml" ) != std::string::npos )
-            parseHWxml ( pFilename, pBeBoardFWMap, pBoardVector, os, pIsFile );
-        else if (!pIsFile)
-            parseHWxml ( pFilename, pBeBoardFWMap, pBoardVector, os, pIsFile );
-        else
-            LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xml!" ;
-    }
+    // //FIXME-FR
+    //     if (pIsFile && pFilename.find ( ".xml" ) != std::string::npos )
+    //         parseHWxml ( pFilename, pBeBoardFWMap, pBoardVector, os, pIsFile );
+    //     else if (!pIsFile)
+    //         parseHWxml ( pFilename, pBeBoardFWMap, pBoardVector, os, pIsFile );
+    //     else
+    //         LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xml!" ;
+    // }
 
     void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
     {
@@ -46,71 +50,71 @@ namespace Ph2_System {
             LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xm!" ;
     }
 
-    void FileParser::parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os, bool pIsFile )
-    {
-    // uint32_t cNBeBoard = 0;
-        int i, j;
-        pugi::xml_document doc;
-        pugi::xml_parse_result result;
+    // void FileParser::parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os, bool pIsFile )
+    // {
+    // // uint32_t cNBeBoard = 0;
+    //     int i, j;
+    //     pugi::xml_document doc;
+    //     pugi::xml_parse_result result;
 
-        if (pIsFile)
-            result = doc.load_file ( pFilename.c_str() );
-        else
-            result = doc.load (pFilename.c_str() );
+    //     if (pIsFile)
+    //         result = doc.load_file ( pFilename.c_str() );
+    //     else
+    //         result = doc.load (pFilename.c_str() );
 
 
-        if ( !result )
-        {
-            os << BOLDRED << "ERROR :\n Unable to open the file : " << RESET << pFilename << std::endl;
-            os << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
+    //     if ( !result )
+    //     {
+    //         os << BOLDRED << "ERROR :\n Unable to open the file : " << RESET << pFilename << std::endl;
+    //         os << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
 
-            if (!pIsFile) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]\n" << std::endl;
+    //         if (!pIsFile) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]\n" << std::endl;
 
-            throw Exception ("Unable to parse XML source!");
-            return;
-        }
+    //         throw Exception ("Unable to parse XML source!");
+    //         return;
+    //     }
 
-        os << RESET << "\n\n";
+    //     os << RESET << "\n\n";
 
-        for ( i = 0; i < 80; i++ )
-            os << "*";
+    //     for ( i = 0; i < 80; i++ )
+    //         os << "*";
 
-        os << "\n";
+    //     os << "\n";
 
-        for ( j = 0; j < 40; j++ )
-            os << " ";
+    //     for ( j = 0; j < 40; j++ )
+    //         os << " ";
 
-        os << BOLDRED << "HW SUMMARY" << RESET << std::endl;
+    //     os << BOLDRED << "HW SUMMARY" << RESET << std::endl;
 
-        for ( i = 0; i < 80; i++ )
-            os << "*";
+    //     for ( i = 0; i < 80; i++ )
+    //         os << "*";
 
-        os << "\n";
-        const std::string strUhalConfig = expandEnvironmentVariables (doc.child ( "HwDescription" ).child ( "Connections" ).attribute ( "name" ).value() );
+    //     os << "\n";
+    //     const std::string strUhalConfig = expandEnvironmentVariables (doc.child ( "HwDescription" ).child ( "Connections" ).attribute ( "name" ).value() );
 
-    // Iterate over the BeBoard Nodes
-        for ( pugi::xml_node cBeBoardNode = doc.child ( "HwDescription" ).child ( "BeBoard" ); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling() )
-        {
-            if (static_cast<std::string> (cBeBoardNode.name() ) == "BeBoard")
-            {
-                this->parseBeBoard (cBeBoardNode, pBeBoardFWMap, pBoardVector, os);
-            }
-        // cNBeBoard++;
-        }
+    // // Iterate over the BeBoard Nodes
+    //     for ( pugi::xml_node cBeBoardNode = doc.child ( "HwDescription" ).child ( "BeBoard" ); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling() )
+    //     {
+    //         if (static_cast<std::string> (cBeBoardNode.name() ) == "BeBoard")
+    //         {
+    //             this->parseBeBoard (cBeBoardNode, pBeBoardFWMap, pBoardVector, os);
+    //         }
+    //     // cNBeBoard++;
+    //     }
 
-        for ( i = 0; i < 80; i++ )
-            os << "*";
+    //     for ( i = 0; i < 80; i++ )
+    //         os << "*";
 
-        os << "\n";
+    //     os << "\n";
 
-        for ( j = 0; j < 40; j++ )
-            os << " ";
+    //     for ( j = 0; j < 40; j++ )
+    //         os << " ";
 
-        os << BOLDRED << "END OF HW SUMMARY" << RESET << std::endl;
+    //     os << BOLDRED << "END OF HW SUMMARY" << RESET << std::endl;
 
-        for ( i = 0; i < 80; i++ )
-            os << "*";
-    }
+    //     for ( i = 0; i < 80; i++ )
+    //         os << "*";
+    // }
 
     void FileParser::parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile )
     {
@@ -179,98 +183,98 @@ namespace Ph2_System {
             os << "*";
     }
 
-    void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector,  std::ostream& os)
-    {
+    // void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector,  std::ostream& os)
+    // {
 
 
 
-        uint32_t cBeId = pBeBordNode.attribute ( "Id" ).as_int();
-        BeBoard* cBeBoard = new BeBoard ( cBeId );
-        pBoardVector.push_back ( cBeBoard );
+    //     uint32_t cBeId = pBeBordNode.attribute ( "Id" ).as_int();
+    //     BeBoard* cBeBoard = new BeBoard ( cBeId );
+    //     pBoardVector.push_back ( cBeBoard );
 
-        pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute ("boardType");
+    //     pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute ("boardType");
 
-        if (cBoardTypeAttribute == nullptr)
-        {
-            LOG (ERROR) << BOLDRED << "Error: Board Type not specified - aborting!" << RESET;
-            exit (1);
-        }
+    //     if (cBoardTypeAttribute == nullptr)
+    //     {
+    //         LOG (ERROR) << BOLDRED << "Error: Board Type not specified - aborting!" << RESET;
+    //         exit (1);
+    //     }
 
-    //std::string cBoardType = pBeBordNode.attribute ( "boardType" ).value();
-        std::string cBoardType = cBoardTypeAttribute.value();
+    // //std::string cBoardType = pBeBordNode.attribute ( "boardType" ).value();
+    //     std::string cBoardType = cBoardTypeAttribute.value();
 
-        if (cBoardType == "D19C")     cBeBoard->setBoardType (BoardType::D19C);
-        else if (cBoardType == "FC7") cBeBoard->setBoardType (BoardType::FC7);
-        else
-        {
-            LOG (ERROR) << "Error: Unknown Board Type: " << cBoardType << " - aborting!";
-            std::string errorstring = "Unknown Board Type " + cBoardType;
-            throw Exception (errorstring.c_str() );
-            exit (1);
-        }
+    //     if (cBoardType == "D19C")     cBeBoard->setBoardType (BoardType::D19C);
+    //     else if (cBoardType == "FC7") cBeBoard->setBoardType (BoardType::FC7);
+    //     else
+    //     {
+    //         LOG (ERROR) << "Error: Unknown Board Type: " << cBoardType << " - aborting!";
+    //         std::string errorstring = "Unknown Board Type " + cBoardType;
+    //         throw Exception (errorstring.c_str() );
+    //         exit (1);
+    //     }
 
-        pugi::xml_attribute cEventTypeAttribute = pBeBordNode.attribute ("eventType");
-        std::string cEventTypeString;
+    //     pugi::xml_attribute cEventTypeAttribute = pBeBordNode.attribute ("eventType");
+    //     std::string cEventTypeString;
 
-        if (cEventTypeAttribute == nullptr)
-        {
-        //the HWDescription object does not have and EventType node, so assume EventType::VR
-            cBeBoard->setEventType (EventType::VR);
-            cEventTypeString = "VR";
-        }
-        else
-        {
-            cEventTypeString = cEventTypeAttribute.value();
+    //     if (cEventTypeAttribute == nullptr)
+    //     {
+    //     //the HWDescription object does not have and EventType node, so assume EventType::VR
+    //         cBeBoard->setEventType (EventType::VR);
+    //         cEventTypeString = "VR";
+    //     }
+    //     else
+    //     {
+    //         cEventTypeString = cEventTypeAttribute.value();
 
-            if (cEventTypeString == "ZS") cBeBoard->setEventType (EventType::ZS);
-            else cBeBoard->setEventType (EventType::VR);
-        }
+    //         if (cEventTypeString == "ZS") cBeBoard->setEventType (EventType::ZS);
+    //         else cBeBoard->setEventType (EventType::VR);
+    //     }
 
-        os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDCYAN << ", EventType: " << BOLDYELLOW << cEventTypeString << RESET << std:: endl;
+    //     os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDCYAN << ", EventType: " << BOLDYELLOW << cEventTypeString << RESET << std:: endl;
 
-        pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child ("connection");
+    //     pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child ("connection");
 
-        std::string cId = cBeBoardConnectionNode.attribute ( "id" ).value();
-        std::string cUri = cBeBoardConnectionNode.attribute ( "uri" ).value();
-        std::string cAddressTable = expandEnvironmentVariables (cBeBoardConnectionNode.attribute ( "address_table" ).value() );
+    //     std::string cId = cBeBoardConnectionNode.attribute ( "id" ).value();
+    //     std::string cUri = cBeBoardConnectionNode.attribute ( "uri" ).value();
+    //     std::string cAddressTable = expandEnvironmentVariables (cBeBoardConnectionNode.attribute ( "address_table" ).value() );
 
-        if (cBeBoard->getBoardType() == BoardType::D19C)
-            pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-        else if (cBeBoard->getBoardType() == BoardType::FC7)
-            pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+    //     if (cBeBoard->getBoardType() == BoardType::D19C)
+    //         pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+    //     else if (cBeBoard->getBoardType() == BoardType::FC7)
+    //         pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
 
-        os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
+    //     os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
 
-    // Iterate over the BeBoardRegister Nodes
-        for ( pugi::xml_node cBeBoardRegNode = pBeBordNode.child ( "Register" ); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling() )
-        {
-            if (std::string (cBeBoardRegNode.name() ) == "Register")
-            {
-                std::string cNameString;
-                uint32_t cValue;
-                this->parseRegister (cBeBoardRegNode, cNameString, cValue, cBeBoard, os);
-            }
-        }
+    // // Iterate over the BeBoardRegister Nodes
+    //     for ( pugi::xml_node cBeBoardRegNode = pBeBordNode.child ( "Register" ); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling() )
+    //     {
+    //         if (std::string (cBeBoardRegNode.name() ) == "Register")
+    //         {
+    //             std::string cNameString;
+    //             uint32_t cValue;
+    //             this->parseRegister (cBeBoardRegNode, cNameString, cValue, cBeBoard, os);
+    //         }
+    //     }
 
-        os << BLUE <<  "|\t|" << RESET << std::endl;
+    //     os << BLUE <<  "|\t|" << RESET << std::endl;
 
-    // Iterate the module node
-        for ( pugi::xml_node pModuleNode = pBeBordNode.child ( "Module" ); pModuleNode; pModuleNode = pModuleNode.next_sibling() )
-        {
-            if ( static_cast<std::string> ( pModuleNode.name() ) == "Module" )
-            {
-                this->parseModule (pModuleNode, cBeBoard, os );
-            }
-        }
+    // // Iterate the module node
+    //     for ( pugi::xml_node pModuleNode = pBeBordNode.child ( "Module" ); pModuleNode; pModuleNode = pModuleNode.next_sibling() )
+    //     {
+    //         if ( static_cast<std::string> ( pModuleNode.name() ) == "Module" )
+    //         {
+    //             this->parseModule (pModuleNode, cBeBoard, os );
+    //         }
+    //     }
 
-    //here parse the Slink Node
-        pugi::xml_node cSLinkNode = pBeBordNode.child ("SLink");
-        this->parseSLink (cSLinkNode, cBeBoard, os);
+    // //here parse the Slink Node
+    //     pugi::xml_node cSLinkNode = pBeBordNode.child ("SLink");
+    //     this->parseSLink (cSLinkNode, cBeBoard, os);
 
 
-        return;
+    //     return;
 
-    }
+    // }
 
     void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os )
     {
@@ -483,7 +487,7 @@ namespace Ph2_System {
                         {
                             if (cFe->getFeId() != cFeId) continue;
 
-                            for (auto cCbc : cFe->fChipVector )
+                            for (auto cCbc : cFe->fReadoutChipVector )
                             {
                                 if (cCbc->getChipId() != cCbcId) continue;
                                 else if (cCbc->getFeId() == cFeId && cCbc->getChipId() == cCbcId)
@@ -520,139 +524,212 @@ namespace Ph2_System {
         pBoard->addConditionDataSet (cSet);
     }
 
-    void FileParser::parseModule (pugi::xml_node pModuleNode, BeBoard* pBoard, std::ostream& os )
-    {
+    // void FileParser::parseModule (pugi::xml_node pModuleNode, BeBoard* pBoard, std::ostream& os )
+    // {
 
-        bool cStatus = pModuleNode.attribute ( "Status" ).as_bool();
+    //     bool cStatus = pModuleNode.attribute ( "Status" ).as_bool();
 
-    //LOG(INFO) << cStatus ;
-        if ( cStatus )
-        {
-            os << BOLDCYAN << "|" << "       " << "|" << "----" << pModuleNode.name() << "  "
-               << pModuleNode.first_attribute().name() << ": " << BOLDYELLOW << pModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
+    // //LOG(INFO) << cStatus ;
+    //     if ( cStatus )
+    //     {
+    //         os << BOLDCYAN << "|" << "       " << "|" << "----" << pModuleNode.name() << "  "
+    //            << pModuleNode.first_attribute().name() << ": " << BOLDYELLOW << pModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
 
-            uint32_t cModuleId = pModuleNode.attribute ( "ModuleId" ).as_int();
+    //         uint32_t cModuleId = pModuleNode.attribute ( "ModuleId" ).as_int();
 
-            Module* cModule = new Module ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId );
-            pBoard->addModule ( cModule );
+    //         Module* cModule = new Module ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId );
+    //         pBoard->addModule ( cModule );
 
-            pugi::xml_node cChipPathPrefixNode;
-        // Iterate the CBC node
-            if (pBoard->getBoardType() == BoardType::FC7)
-                cChipPathPrefixNode = pModuleNode.child ( "RD53_Files" );
-            else
-                cChipPathPrefixNode = pModuleNode.child ( "CBC_Files" );
+    //         pugi::xml_node cChipPathPrefixNode;
+    //     // Iterate the CBC node
+    //         if (pBoard->getBoardType() == BoardType::FC7)
+    //             cChipPathPrefixNode = pModuleNode.child ( "RD53_Files" );
+    //         else
+    //             cChipPathPrefixNode = pModuleNode.child ( "CBC_Files" );
 
-            std::string cFilePrefix = expandEnvironmentVariables (static_cast<std::string> ( cChipPathPrefixNode.attribute ( "path" ).value() ) );
+    //         std::string cFilePrefix = expandEnvironmentVariables (static_cast<std::string> ( cChipPathPrefixNode.attribute ( "path" ).value() ) );
 
-            if ( !cFilePrefix.empty() ) os << BOLDBLUE << "|" << "       " << "|" << "       " << "|" << "----" << "Chip Files Path: " << BOLDYELLOW << cFilePrefix << RESET << std::endl;
+    //         if ( !cFilePrefix.empty() ) os << BOLDBLUE << "|" << "       " << "|" << "       " << "|" << "----" << "Chip Files Path: " << BOLDYELLOW << cFilePrefix << RESET << std::endl;
 
-        // Iterate the Chip node
-            if (pBoard->getBoardType() == BoardType::FC7)
-            {
-                for (pugi::xml_node theChipNode = pModuleNode.child ("RD53"); theChipNode, theChipNode.name() == std::string("RD53"); theChipNode = theChipNode.next_sibling())
-                    this->parseRD53 (theChipNode, cModule, cFilePrefix, os);
+    //     // Iterate the Chip node
+    //         if (pBoard->getBoardType() == BoardType::FC7)
+    //         {
+    //             for (pugi::xml_node theChipNode = pModuleNode.child ("RD53"); theChipNode, theChipNode.name() == std::string("RD53"); theChipNode = theChipNode.next_sibling())
+    //                 this->parseRD53 (theChipNode, cModule, cFilePrefix, os);
 
-            // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
-                this->parseGlobalRD53Settings (pModuleNode, cModule, os);
-            }
-            else
-            {
-                for ( pugi::xml_node pCbcNode = pModuleNode.child ( "CBC" ); pCbcNode; pCbcNode = pCbcNode.next_sibling() )
-                    this->parseCbc  (pCbcNode, cModule, cFilePrefix, os);
-
-            // parse the GlobalCbcSettings so that Global CBC regisers take precedence over Global CBC settings which take precedence over CBC specific settings
-                this->parseGlobalCbcSettings (pModuleNode, cModule, os);
-            }
-        }
-
-        return;
-    }
+    //         // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
+    //             this->parseGlobalRD53Settings (pModuleNode, cModule, os);
+    //         }
+    //         else
+    //         {
+    //             //default  configurations 
+    //             pugi::xml_node cDefConfigsNode = pModuleNode.child ( "DefaultConfigurations" );
+    //             // now try and do the configruation in a slightly more readable
+    //             for (pugi::xml_node cChild: pModuleNode.children())
+    //             {
+    //                 std::string cName = cChild.name();
+    //                 if( cName == "Services" || cName == "ReadoutASICs" ) 
+    //                 {
+    //                     os << BOLDCYAN << "|" << "	" << "|" << "	" << "|" << "----" << cName << "  " << RESET << std::endl;
+    //                     for (pugi::xml_node cGrandchild: cChild.children())
+    //                     {
+    //                         cName = cGrandchild.name();
+    //                         std::string cFileName = expandEnvironmentVariables (cGrandchild.attribute ( "configfile" ).value() );
+    //                         int cId = cGrandchild.attribute("Id").as_int();
+    //                         // modify file name with prefix given in default
+    //                         // configuration (if it exists) 
+    //                         cFilePrefix = expandEnvironmentVariables (static_cast<std::string> ( cDefConfigsNode.child( (cName + "_Files").c_str() ).attribute ( "path" ).value() ) ) ;
+    //                         if ( !cFilePrefix.empty() )
+    //                         {
+    //                             if (cFilePrefix.at (cFilePrefix.length() - 1) != '/') 
+    //                                 cFilePrefix.append ("/");
+    //                             cFileName = cFilePrefix + cFileName; 
+    //                         }
+    //                         os << BOLDCYAN << "\t\t\t" << " ----" << cName << " [I2C address " <<  cId << "], File: " << cFileName << RESET << std:: endl;
+    //                         if( cName == "CIC" ) 
+    //                         {
+    //                             //Cic* cCic = new Cic ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cId , cFileName );
+    //                             //cModule->addCic (cCic);
+    //                         }
+    //                         else if( cName == "CBC" ) 
+    //                         {
+    //                             ReadoutChip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cId , cFileName );
+    //                             cModule->addReadoutChip (cCbc);
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //             // parse the GlobalCbcSettings so that Global CBC regisers take precedence over Global CBC settings which take precedence over CBC specific settings
+    //             this->parseGlobalCbcSettings (pModuleNode, cModule, os);
+    //       }
+    //     }
+    //     return;
+    // }
 
     void FileParser::parseModuleContainer (pugi::xml_node pModuleNode, BeBoard* pBoard, std::ostream& os )
     {
 
         bool cStatus = pModuleNode.attribute ( "Status" ).as_bool();
 
-    //LOG(INFO) << cStatus ;
         if ( cStatus )
         {
             os << BOLDCYAN << "|" << "       " << "|" << "----" << pModuleNode.name() << "  "
             << pModuleNode.first_attribute().name() << ": " << BOLDYELLOW << pModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
 
             uint32_t cModuleId = pModuleNode.attribute ( "ModuleId" ).as_int();
-
-        //Module* cModule = new Module ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId );
-        //pBoard->addModule ( cModule );
-        //FIX with reference
-            Module* cModule = pBoard->addModuleContainer(cModuleId, new Module ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId ));
+            Module* cModule;
+            if (pBoard->getBoardType() == BoardType::FC7)
+            {
+                cModule = pBoard->addModuleContainer(cModuleId, new Module ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId ));
+            }
+            else
+            {
+                cModule = pBoard->addModuleContainer(cModuleId, new OuterTrackerModule ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(), cModuleId ));
+            }
             pBoard->addModule ( cModule );
 
-
-            pugi::xml_node cChipPathPrefixNode;
-        // Iterate the CBC node
-            if (pBoard->getBoardType() == BoardType::FC7)
-                cChipPathPrefixNode = pModuleNode.child ( "RD53_Files" );
-            else
-                cChipPathPrefixNode = pModuleNode.child ( "CBC_Files" );
-
-            std::string cFilePrefix = expandEnvironmentVariables (static_cast<std::string> ( cChipPathPrefixNode.attribute ( "path" ).value() ) );
-
-            if ( !cFilePrefix.empty() ) os << BOLDBLUE << "|" << "       " << "|" << "       " << "|" << "----" << "Chip Files Path: " << BOLDYELLOW << cFilePrefix << RESET << std::endl;
-
-        // Iterate the Chip node
-            if (pBoard->getBoardType() == BoardType::FC7)
+            //default  configurations 
+            pugi::xml_node cDefConfigsNode = pModuleNode.child ( "DefaultConfiguration" );
+            // now try and do the configruation in a slightly more readable
+            std::string cConfigFileDirectory;
+            for (pugi::xml_node cChild: pModuleNode.children())
             {
-                for (pugi::xml_node theChipNode = pModuleNode.child ("RD53"); theChipNode, theChipNode.name() == std::string("RD53"); theChipNode = theChipNode.next_sibling())
-                    this->parseRD53 (theChipNode, cModule, cFilePrefix, os);
+                std::string cName = cChild.name();
+                std::string cNextName = cChild.next_sibling().name();
+                if ( cName.find("CBC") != std::string::npos || cName.find("RD53") != std::string::npos || cName.find("CIC") != std::string::npos) 
+                {
+                    if( cName.find("_Files") != std::string::npos ) 
+                    {
+                        cConfigFileDirectory = expandEnvironmentVariables (static_cast<std::string> ( cChild.attribute ( "path" ).value() ) ); 
+                    }
+                    else
+                    {
+                        int cChipId = cChild.attribute("Id").as_int();
+                        std::string cFileName = expandEnvironmentVariables (static_cast<std::string> ( cChild.attribute ( "configfile" ).value() ) );
+                        LOG (DEBUG) << BOLDBLUE << "Configuration file ...." << cName << " --- " << cConfigFileDirectory << RESET;
+                        LOG (DEBUG) << BOLDGREEN << cName << " Id = " << +cChipId << " --- " << cFileName << RESET; 
+                        if( cName == "RD53") 
+                        {
+                            this->parseRD53 (cChild, cModule, cConfigFileDirectory, os);
+                            // check if this is the last node with this name 
+                            // check if this is the last node with this name 
+                            if( cNextName.empty() || cNextName!=cName )
+                            {
+                                // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
+                                this->parseGlobalRD53Settings (pModuleNode, cModule, os);
+                            }
+                        }
+                        else if( cName == "CBC" ) 
+                        {    
+                            this->parseCbcContainer  (cChild, cModule, cConfigFileDirectory, os);
+                            // check if this is the last node with this name 
+                            if( cNextName.empty() || cNextName!=cName )
+                            {
+                                // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
+                                this->parseGlobalCbcSettings (pModuleNode, cModule, os);
+                            }
 
-            // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
-                this->parseGlobalRD53Settings (pModuleNode, cModule, os);
-            }
-            else
-            {
-                for ( pugi::xml_node pCbcNode = pModuleNode.child ( "CBC" ); pCbcNode; pCbcNode = pCbcNode.next_sibling() )
-                    this->parseCbcContainer  (pCbcNode, cModule, cFilePrefix, os);
+                        }
+                        else if( cName == "CIC" ) 
+                        {
+                            if ( !cConfigFileDirectory.empty() )
+                            {
+                                if (cConfigFileDirectory.at (cConfigFileDirectory.length() - 1) != '/')
+                                    cConfigFileDirectory.append ("/");
 
-            // parse the GlobalCbcSettings so that Global CBC regisers take precedence over Global CBC settings which take precedence over CBC specific settings
-                this->parseGlobalCbcSettings (pModuleNode, cModule, os);
+                                cFileName = cConfigFileDirectory + cFileName;
+                            }
+                            LOG (INFO) << BOLDBLUE << "Loading configuration for CIC from " << cFileName << RESET;
+                            os << BOLDCYAN << "|" << "  " << "|" << "   " << "|" << "----" << cName << "  "
+                            << "Id" << cChipId << " , File: " << cFileName << RESET << std::endl;
+                            Cic* cCic = new Cic ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId , cFileName );
+                            static_cast<OuterTrackerModule*>(cModule)->addCic (cCic);
+                            FrontEndType cType = cCic->getFrontEndType();
+                            os << GREEN << "|\t|\t|\t|----FrontEndType: ";
+                            os << GREEN << "|\t|\t|\t|----FrontEndType: ";
+                            if (cType == FrontEndType::CIC)
+                                os << RED << "CIC";
+                            os << RESET << std::endl;
+
+                        }
+                    }
+                }
             }
         }
-
         return;
     }
 
-    void FileParser::parseCbc (pugi::xml_node pCbcNode, Module* cModule, std::string cFilePrefix, std::ostream& os )
-    {
+    // void FileParser::parseCbc (pugi::xml_node pCbcNode, Module* cModule, std::string cFilePrefix, std::ostream& os )
+    // {
 
-        os << BOLDCYAN << "|" << "  " << "|" << "   " << "|" << "----" << pCbcNode.name() << "  "
-        << pCbcNode.first_attribute().name() << " :" << pCbcNode.attribute ( "Id" ).value()
-        << ", File: " << expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() ) << RESET << std:: endl;
+    //     os << BOLDCYAN << "|" << "  " << "|" << "   " << "|" << "----" << pCbcNode.name() << "  "
+    //     << pCbcNode.first_attribute().name() << " :" << pCbcNode.attribute ( "Id" ).value()
+    //     << ", File: " << expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() ) << RESET << std:: endl;
 
-        std::string cFileName;
+    //     std::string cFileName;
 
-        if ( !cFilePrefix.empty() )
-        {
-            if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
-                cFilePrefix.append ("/");
+    //     if ( !cFilePrefix.empty() )
+    //     {
+    //         if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
+    //             cFilePrefix.append ("/");
 
-            cFileName = cFilePrefix + expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() );
-        }
-        else cFileName = expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() );
+    //         cFileName = cFilePrefix + expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() );
+    //     }
+    //     else cFileName = expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() );
 
-        Chip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
-        cModule->addChip (cCbc);
+    //     ReadoutChip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
+    //     cModule->addReadoutChip (cCbc);
 
-    // parse the specific CBC settings so that Registers take precedence
-        this->parseCbcSettings (pCbcNode, cCbc, os);
+    // // parse the specific CBC settings so that Registers take precedence
+    //     this->parseCbcSettings (pCbcNode, cCbc, os);
 
-        for ( pugi::xml_node cCbcRegisterNode = pCbcNode.child ( "Register" ); cCbcRegisterNode; cCbcRegisterNode = cCbcRegisterNode.next_sibling() )
-        {
-            cCbc->setReg ( std::string ( cCbcRegisterNode.attribute ( "name" ).value() ), convertAnyInt ( cCbcRegisterNode.first_child().value() ) );
-            os << BLUE << "|\t|\t|\t|----Register: " << std::string ( cCbcRegisterNode.attribute ( "name" ).value() ) << " : " << RED << std::hex << "0x" <<  convertAnyInt ( cCbcRegisterNode.first_child().value() ) << RESET << std::dec << std::endl;
-        }
+    //     for ( pugi::xml_node cCbcRegisterNode = pCbcNode.child ( "Register" ); cCbcRegisterNode; cCbcRegisterNode = cCbcRegisterNode.next_sibling() )
+    //     {
+    //         cCbc->setReg ( std::string ( cCbcRegisterNode.attribute ( "name" ).value() ), convertAnyInt ( cCbcRegisterNode.first_child().value() ) );
+    //         os << BLUE << "|\t|\t|\t|----Register: " << std::string ( cCbcRegisterNode.attribute ( "name" ).value() ) << " : " << RED << std::hex << "0x" <<  convertAnyInt ( cCbcRegisterNode.first_child().value() ) << RESET << std::dec << std::endl;
+    //     }
 
-    }
+    // }
 
     void FileParser::parseCbcContainer (pugi::xml_node pCbcNode, Module* cModule, std::string cFilePrefix, std::ostream& os )
     {
@@ -672,13 +749,13 @@ namespace Ph2_System {
         }
         else cFileName = expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() );
 
-    //Chip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
-    //cModule->addChip (cCbc);
-    //Chip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
+    //ReadoutChip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
+    //cModule->addReadoutChip (cCbc);
+    //ReadoutChip* cCbc = new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), pCbcNode.attribute ( "Id" ).as_int(), cFileName );
 
         uint32_t cChipId = pCbcNode.attribute ( "Id" ).as_int();
-        Chip* cCbc = cModule->addChipContainer(cChipId, new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName ));
-        cModule->addChip (cCbc);
+        ReadoutChip* cCbc = cModule->addChipContainer(cChipId, new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName ));
+        cModule->addReadoutChip (cCbc);
         cCbc->setNumberOfChannels(254);
 
     // parse the specific CBC settings so that Registers take precedence
@@ -695,6 +772,7 @@ namespace Ph2_System {
 
     void FileParser::parseGlobalCbcSettings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os)
     {
+        LOG (INFO) << BOLDBLUE << "Now I'm parsing global..." << RESET;
     //use this to parse GlobalCBCRegisters and the Global CBC settings
     //i deliberately pass the Module object so I can loop the CBCs of the Module inside this method
     //this has to be called at the end of the parseCBC() method
@@ -707,7 +785,7 @@ namespace Ph2_System {
 
             int cCounter = 0;
 
-            for (auto cCbc : pModule->fChipVector)
+            for (auto cCbc : pModule->fReadoutChipVector)
             {
                 if (cCounter == 0)
                     this->parseCbcSettings (cGlobalCbcSettingsNode, cCbc, os);
@@ -729,7 +807,7 @@ namespace Ph2_System {
                 std::string regname = std::string ( cCbcGlobalNode.attribute ( "name" ).value() );
                 uint32_t regvalue = convertAnyInt ( cCbcGlobalNode.first_child().value() ) ;
 
-                for (auto cCbc : pModule->fChipVector)
+                for (auto cCbc : pModule->fReadoutChipVector)
                     cCbc->setReg ( regname, uint8_t ( regvalue ) ) ;
 
                 os << BOLDGREEN << "|" << " " << "|" << "   " << "|" << "----" << cCbcGlobalNode.name()
@@ -739,7 +817,7 @@ namespace Ph2_System {
         }
     }
 
-    void FileParser::parseCbcSettings (pugi::xml_node pCbcNode, Chip* pCbc, std::ostream& os)
+    void FileParser::parseCbcSettings (pugi::xml_node pCbcNode, ReadoutChip* pCbc, std::ostream& os)
     {
     //parse the cbc settings here and put them in the corresponding registers of the Chip object
     //call this for every CBC, Register nodes should take precedence over specific settings??
@@ -971,7 +1049,7 @@ namespace Ph2_System {
     else cFileName = expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
 
     uint32_t cChipId = theChipNode.attribute ("Id").as_int();
-    Chip* theChip    = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName));
+    ReadoutChip* theChip    = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName));
     theChip->setNumberOfChannels(RD53::nRows,RD53::nCols);
     
     // Parse the specific Chip settings so that Registers take precedence
@@ -984,7 +1062,7 @@ namespace Ph2_System {
 	   << convertAnyInt (theChipRegisterNode.first_child().value()) << RESET << std::dec << std::endl;
       }
 
-    cModule->addChip(theChip);
+    cModule->addReadoutChip(theChip);
   }
 
   void FileParser::parseGlobalRD53Settings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os)
@@ -997,7 +1075,7 @@ namespace Ph2_System {
 	
 	int cCounter = 0;
 	
-	for (auto theChip : pModule->fChipVector)
+	for (auto theChip : pModule->fReadoutChipVector)
 	  {
 	    if (cCounter == 0)
 	      this->parseRD53Settings (cGlobalChipSettingsNode, theChip, os);
@@ -1019,7 +1097,7 @@ namespace Ph2_System {
 	    std::string regname = std::string   (theChipGlobalNode.attribute ( "name" ).value());
 	    uint32_t regvalue   = convertAnyInt (theChipGlobalNode.first_child().value());
 	    
-	    for (auto theChip : pModule->fChipVector) theChip->setReg (regname, uint8_t (regvalue));
+	    for (auto theChip : pModule->fReadoutChipVector) theChip->setReg (regname, uint8_t (regvalue));
 	    
 	    os << BOLDGREEN << "|" << "	" << "|" << "	" << "|" << "----" << theChipGlobalNode.name()
 	       << "  " << theChipGlobalNode.first_attribute().name() << " :"
@@ -1028,7 +1106,7 @@ namespace Ph2_System {
       }
   }
   
-  void FileParser::parseRD53Settings (pugi::xml_node theChipNode, Chip* theChip, std::ostream& os)
+  void FileParser::parseRD53Settings (pugi::xml_node theChipNode, ReadoutChip* theChip, std::ostream& os)
   {
     // Parse the Chip settings here and put them in the corresponding registers of the Chip object
     os << BOLDBLUE << "|\t|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53" << RESET << std::endl;

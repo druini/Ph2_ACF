@@ -10,6 +10,7 @@
  */
 
 #include "../Utils/D19cMPAEvent.h"
+#include "../HWDescription/OuterTrackerModule.h"
 
 using namespace Ph2_HwDescription;
 
@@ -558,7 +559,7 @@ namespace Ph2_HwInterface {
             //stub counter per FE
             uint8_t cFeStubCounter = 0;
 
-            for (auto cMPA : cFe->fMPAVector)
+            for (auto cMPA : static_cast<OuterTrackerModule*>(cFe)->fMPAVector)
             {
                 uint8_t cMPAId = cMPA->getMPAId();
                 uint16_t cKey = encodeId (cFeId, cMPAId);

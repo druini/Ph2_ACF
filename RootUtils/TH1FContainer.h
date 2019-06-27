@@ -27,17 +27,24 @@ public:
     TH1FContainer(const char *name, const char *title, Int_t nbinsx, Double_t xlow, Double_t xup) 
     {
         fTheHistogram = new TH1F(name, title, nbinsx, xlow, xup);
+        fTheHistogram->SetDirectory(0);  
     }
-    ~TH1FContainer() {delete fTheHistogram; fTheHistogram = nullptr;}
+    ~TH1FContainer() 
+    {
+		if(fHasToBeDeletedManually) delete fTheHistogram;
+		fTheHistogram = nullptr;
+    }
 
     //Move contructors
     TH1FContainer(TH1FContainer&& container)
     {
+        fHasToBeDeletedManually = container.fHasToBeDeletedManually;
         fTheHistogram = container.fTheHistogram;
         container.fTheHistogram = nullptr;
     }
     TH1FContainer& operator= (TH1FContainer&& container)
     {
+        fHasToBeDeletedManually = container.fHasToBeDeletedManually;
         fTheHistogram = container.fTheHistogram;
         container.fTheHistogram = nullptr;
         return *this;
@@ -45,6 +52,7 @@ public:
 
     void initialize(std::string name, std::string title, const PlotContainer *reference) override
     {
+        fHasToBeDeletedManually = false;
         const TH1F *referenceHistogram = static_cast<const TH1FContainer*>(reference)->fTheHistogram;
         fTheHistogram = new TH1F(name.data(), title.data(), referenceHistogram->GetNbinsX(), referenceHistogram->GetXaxis()->GetXmin(), referenceHistogram->GetXaxis()->GetXmax());
     }

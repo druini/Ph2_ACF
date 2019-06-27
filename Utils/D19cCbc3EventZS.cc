@@ -859,7 +859,7 @@ namespace Ph2_HwInterface {
             //TODO
             cStatusPayload.append (this->GetEventCount(), 9);
 
-            for (auto cCbc : cFe->fChipVector)
+            for (auto cCbc : cFe->fReadoutChipVector)
             {
                 uint8_t cCbcId = cCbc->getChipId();
                 uint16_t cKey = encodeId (cFeId, cCbcId);

@@ -32,7 +32,7 @@ void PulseShape::Initialize()
             std::cerr << "cFeId = " << cFeId ;
             fType = cFe->getFrontEndType();
 
-            for ( auto& cCbc : cFe->fChipVector )
+            for ( auto& cCbc : cFe->fReadoutChipVector )
             {
                 uint16_t cMaxValue = 1023;
                 uint32_t cCbcId = cCbc->getChipId();
@@ -121,7 +121,7 @@ void PulseShape::ScanVcth ( uint32_t pDelay , int cLow)
     bool cSaturate = false;
     uint16_t cDoubleVcth;
 
-    ThresholdVisitor cVisitor (fChipInterface, 0);
+    ThresholdVisitor cVisitor (fReadoutChipInterface, 0);
 
     // Adaptive VCth loop
     while ( 0x00 <= cVcth && cVcth <= cMaxValue )
@@ -344,14 +344,14 @@ void PulseShape::toggleTestGroup (bool pEnable )
         cRegVec.push_back ( std::make_pair ( cRegName.Data(), cValue ) );
     }
 
-    //CbcMultiRegWriter cWriter ( fChipInterface, cRegVec );
+    //CbcMultiRegWriter cWriter ( fReadoutChipInterface, cRegVec );
     //this->accept ( cWriter );
 
     /*LOG(INFO) << "Going to do a broadcast()";
     for (BeBoard* cBoard : fBoardVector)
     {
         for (Module* cFe : cBoard->fModuleVector)
-            dynamic_cast<CbcInterface*>(fChipInterface)->WriteBroadcastCbcMultiReg (cFe, cRegVec);
+            dynamic_cast<CbcInterface*>(fReadoutChipInterface)->WriteBroadcastCbcMultiReg (cFe, cRegVec);
     }
     */
 }
@@ -376,7 +376,7 @@ void PulseShape::setDelayAndTesGroup ( uint32_t pDelay )
     }
 
     LOG(INFO) << "Writing fine delay and test group, i2c...";
-    CbcRegWriter cWriter ( fChipInterface, "TestPulseDel&ChanGroup", to_reg ( cFineDelay, fTestGroup ) );
+    CbcRegWriter cWriter ( fReadoutChipInterface, "TestPulseDel&ChanGroup", to_reg ( cFineDelay, fTestGroup ) );
     this->accept ( cWriter );
     LOG(INFO) << "End of Writing fine delay and test group, i2c...";
 
@@ -389,7 +389,7 @@ uint32_t PulseShape::fillVcthHist ( BeBoard* pBoard, Event* pEvent, uint32_t pVc
     // Loop over Events from this Acquisition
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cCbc : cFe->fReadoutChipVector )
         {
             //  get histogram to fill
             auto cChannelVector = fChannelMap.find ( cCbc );
@@ -532,7 +532,7 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
     cRegVec.push_back ( std::make_pair ( "Vplus1&2",  fVplus ) );
     cRegVec.push_back ( std::make_pair ( "Pipe&StubInpSel&Ptwidth",0x03)); //select the hit detect pipeline logic, def is sampled (variable) mode (0x03), 0xc3 for fixed with mode, 0x43 for OR mode, 0x83 for HIP supp
 
-    CbcMultiRegWriter cWriter ( fChipInterface, cRegVec );
+    CbcMultiRegWriter cWriter ( fReadoutChipInterface, cRegVec );
 
     this->accept ( cWriter );
 
@@ -544,7 +544,7 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
         {
             uint32_t cFeId = cFe->getFeId();
 
-            for ( auto& cCbc : cFe->fChipVector )
+            for ( auto& cCbc : cFe->fReadoutChipVector )
             {
                 std::vector<Channel*> cChannelVector;
                 uint32_t cCbcId = cCbc->getChipId();

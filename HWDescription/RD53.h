@@ -10,7 +10,7 @@
 #ifndef _RD53_h_
 #define _RD53_h_
 
-#include "Chip.h"
+#include "../HWDescription/ReadoutChip.h"
 
 #include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
@@ -153,7 +153,7 @@ namespace Ph2_HwDescription
 			 std::vector<uint8_t> TDAC;
   };
 
-  class RD53: public Chip
+  class RD53: public ReadoutChip
   {
   protected:
     uint8_t fRD53Id;
@@ -166,13 +166,11 @@ namespace Ph2_HwDescription
     RD53  (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename);
     ~RD53 ();
 
-    void     loadfRegMap         (const std::string& filename)                                         override;
-    void     setReg              (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
-    void     saveRegMap          (const std::string& filename)                                         override;
-    uint16_t getReg              (const std::string& pReg) const                                       override;
-    uint32_t getNumberOfChannels () const                                                              override;
-    bool     isDACLocal          (const std::string& dacName)                                          override;
-    uint8_t  getNumberOfBits     (const std::string& dacName)                                          override;
+    void     loadfRegMap         (const std::string& filename) override;
+    void     saveRegMap          (const std::string& filename) override;
+    uint32_t getNumberOfChannels () const                      override;
+    bool     isDACLocal          (const std::string& dacName)  override;
+    uint8_t  getNumberOfBits     (const std::string& dacName)  override;
 
     std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
     std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
@@ -243,12 +241,12 @@ namespace Ph2_HwDescription
     };
   
     template<size_t NBITS>
-    static std::bitset<NBITS> SetBits (size_t nBit2Set)
-    {
-      std::bitset<NBITS> output(0);
-      for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
-      return output;
-    }
+      static std::bitset<NBITS> SetBits (size_t nBit2Set)
+      {
+	std::bitset<NBITS> output(0);
+	for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
+	return output;
+      }
 
   private:
     std::vector<perPixelData> fPixelsMask;

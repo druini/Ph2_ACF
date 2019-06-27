@@ -18,15 +18,16 @@ using namespace Ph2_HwInterface;
 namespace Ph2_System {
 
     SystemController::SystemController()
-    : fBeBoardInterface   (nullptr)
-    , fChipInterface      (nullptr)
-    , fBoardVector        ()
-    , fSettingsMap        ()
-    , fFileHandler        (nullptr)
-    , fRawFileName        ("")
-    , fWriteHandlerEnabled(false)
-    , fData               (nullptr)
-    , fNetworkStreamer    (nullptr)//This is the server listening port
+    : fBeBoardInterface    (nullptr)
+    , fReadoutChipInterface(nullptr)
+    , fChipInterface       (nullptr)
+    , fBoardVector         ()
+    , fSettingsMap         ()
+    , fFileHandler         (nullptr)
+    , fRawFileName         ("")
+    , fWriteHandlerEnabled (false)
+    , fData                (nullptr)
+    , fNetworkStreamer     (nullptr)//This is the server listening port
     {
     //      bool fStreamData = true;
     //      if(fStreamData && !fNetworkStreamer->accept(10, 0))
@@ -45,6 +46,7 @@ namespace Ph2_System {
     {
         fBeBoardInterface = pController->fBeBoardInterface;
         fChipInterface = pController->fChipInterface;
+        fReadoutChipInterface = pController->fReadoutChipInterface;
         fBoardVector = pController->fBoardVector;
         fBeBoardFWMap = pController->fBeBoardFWMap;
         fSettingsMap = pController->fSettingsMap;
@@ -63,6 +65,7 @@ namespace Ph2_System {
 
         if (fBeBoardInterface!=nullptr) delete fBeBoardInterface;
 
+        if (fReadoutChipInterface!=nullptr)  delete fReadoutChipInterface;
         if (fChipInterface!=nullptr)  delete fChipInterface;
         if (fMPAInterface!=nullptr)  delete fMPAInterface;
         if(fDetectorContainer!=nullptr) delete fDetectorContainer;
@@ -150,9 +153,9 @@ namespace Ph2_System {
 
         fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
         if (fBoardVector[0]->getBoardType() != BoardType::FC7)
-            fChipInterface  = new CbcInterface     ( fBeBoardFWMap );
+            fReadoutChipInterface  = new CbcInterface     ( fBeBoardFWMap );
         else
-            fChipInterface  = new RD53Interface    ( fBeBoardFWMap );
+            fReadoutChipInterface  = new RD53Interface    ( fBeBoardFWMap );
         fMPAInterface     = new MPAInterface     ( fBeBoardFWMap );
 
         if (fWriteHandlerEnabled)
@@ -189,31 +192,32 @@ namespace Ph2_System {
 	  // ######################################
 
 	  if (cBoard->getBoardType() != BoardType::FC7)
-	    {
+	  {
 	      fBeBoardInterface->ConfigureBoard ( cBoard );
 
 	      LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
 
 	      for (auto& cFe : cBoard->fModuleVector)
-		{
-		  for (auto& cCbc : cFe->fChipVector)
+                {
+                    LOG (INFO) << "Configuring board.." << RESET;
+		  for (auto& cCbc : cFe->fReadoutChipVector)
 		    {
 		      if ( !bIgnoreI2c )
-			{
-			  fChipInterface->ConfigureChip ( cCbc );
-			  LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
-			}
+                      {
+                        fReadoutChipInterface->ConfigureChip ( cCbc );
+                        LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
+                      }
 		    }
-		}
-
+                }
 	      fBeBoardInterface->ChipReSync ( cBoard );
+          LOG (INFO) << BOLDGREEN << "Successfully sent resync." << RESET;
 	    }
-	  else
+	    else
 	    {
 	      // ######################################
 	      // # Configuring Inner Tracker hardware #
 	      // ######################################
-	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fChipInterface);
+	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fReadoutChipInterface);
 
 	      LOG (INFO) << BOLDGREEN << "\t--> Found an Inner Tracker board" << RESET;
 	      LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;
@@ -222,7 +226,7 @@ namespace Ph2_System {
 	      for (const auto& cModule : cBoard->fModuleVector)
 		{
 		  LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << int (cModule->getModuleId()) << RESET;
-		  for (const auto& cRD53 : cModule->fChipVector)
+		  for (const auto& cRD53 : cModule->fReadoutChipVector)
 		    {
 		      LOG (INFO) << GREEN << "Configuring RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
 		      fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));

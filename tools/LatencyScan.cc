@@ -1,4 +1,5 @@
 #include "LatencyScan.h"
+#include "../HWDescription/Cbc.h"
 
 LatencyScan::LatencyScan() : Tool()
 {}
@@ -122,7 +123,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uin
     // setSystemTestPulse ( 200, 0, true, false );
     // //Fabio - clean END
 
-    LatencyVisitor cVisitor (fChipInterface, 0);
+    LatencyVisitor cVisitor (fReadoutChipInterface, 0);
  
     for ( BeBoard* pBoard : fBoardVector )
     {
@@ -160,7 +161,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
     // This is not super clean but should work
     // Take the default VCth which should correspond to the pedestal and add 8 depending on the mode to exclude noise
     // ThresholdVisitor in read mode
-    //ThresholdVisitor cThresholdVisitor (fChipInterface);
+    //ThresholdVisitor cThresholdVisitor (fReadoutChipInterface);
     //this->accept (cThresholdVisitor);
     //uint16_t cVcth = cThresholdVisitor.getThreshold();
 
@@ -264,7 +265,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
 void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
 {
     
-    LatencyVisitor cVisitor (fChipInterface, 0);
+    LatencyVisitor cVisitor (fReadoutChipInterface, 0);
     int cNSteps = 0 ; 
     for ( uint16_t cLatency = pStartLatency; cLatency < pStartLatency + pLatencyRange; cLatency++ )
     {
@@ -307,7 +308,7 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
                             bool cHitFound = false; 
                             bool cStubFound = false; 
                             //now loop the channels for this particular event and increment a counter
-                            for ( auto cCbc : cFe->fChipVector )
+                            for ( auto cCbc : cFe->fReadoutChipVector )
                             {
                                 int cHitCounter = cEvent->GetNHits (cCbc->getFeId(), cCbc->getChipId() );
                                 std::vector<Stub> cStubs = cEvent->StubVector (cCbc->getFeId(), cCbc->getChipId());
@@ -437,7 +438,7 @@ int LatencyScan::countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEve
             //first, reset the hit counter - I need separate counters for each event
             int cHitCounter = 0;
             
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
                 //now loop the channels for this particular event and increment a counter
                 cHitCounter += cEvent->GetNHits (cCbc->getFeId(), cCbc->getChipId() );
@@ -470,7 +471,7 @@ int LatencyScan::countStubs ( Module* pFe,  const Event* pEvent, std::string pHi
     //  get histogram to fill
     TH1F* cTmpHist = dynamic_cast<TH1F*> ( getHist ( pFe, pHistName ) );
 
-    for ( auto cCbc : pFe->fChipVector )
+    for ( auto cCbc : pFe->fReadoutChipVector )
     {
         if ( pEvent->StubBit ( cCbc->getFeId(), cCbc->getChipId() ) )
             cStubCounter += pEvent->StubVector ( cCbc->getFeId(), cCbc->getChipId() ).size();

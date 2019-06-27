@@ -17,7 +17,7 @@
 //#include "../HWInterface/CtaFWInterface.h"
 //#include "../HWInterface/ICGlibFWInterface.h"
 #include "BeBoardFWInterface.h"
-#include "ChipInterface.h"
+#include "ReadoutChipInterface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -31,7 +31,7 @@ namespace Ph2_HwInterface {
      * \class CbcInterface
      * \brief Class representing the User Interface to the Chip on different boards
      */
-    class CbcInterface : public ChipInterface
+    class CbcInterface : public ReadoutChipInterface
     {
       public:
         /*!
@@ -53,15 +53,15 @@ namespace Ph2_HwInterface {
          */
         bool ConfigureChip ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
         
-        bool setInjectionSchema (Chip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
+        bool setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
 
-        bool maskChannelsGroup  (Chip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
+        bool maskChannelsGroup  (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
 
          /*!
          * \brief Reapply the stored mask for the CBC, use it after group masking is applied
          * \param pCbc: pointer to CBC object
          */
-        bool ConfigureChipOriginalMask (Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
+        bool ConfigureChipOriginalMask (ReadoutChip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
 
          /*!
          * \brief Mask all channels of the chip
@@ -70,7 +70,7 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        bool MaskAllChannels ( Chip* pCbc, bool mask, bool pVerifLoop = true ) override;
+        bool MaskAllChannels ( ReadoutChip* pCbc, bool mask, bool pVerifLoop = true ) override;
         
         /*!
          * \brief Write the designated register in both Chip and Chip Config File
@@ -117,7 +117,7 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteChipAllLocalReg ( Chip* pCbc, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true ) override;
+        bool WriteChipAllLocalReg ( ReadoutChip* pCbc, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true ) override;
 
 	/*!
          * \brief Read the designated register in the Chip

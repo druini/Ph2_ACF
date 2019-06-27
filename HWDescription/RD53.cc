@@ -11,16 +11,18 @@
 
 namespace Ph2_HwDescription
 {
-  RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename) : Chip (pFeDesc, pRD53Id)
+  RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename) : ReadoutChip (pFeDesc, pRD53Id)
   {
+    fMaxRegValue=std::pow(2,16)-1;
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     loadfRegMap (filename);
     setFrontEndType (FrontEndType::RD53);
     fRD53Id = pRD53Id;
   }
 
-  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : Chip (pBeId, pFMCId, pFeId, pRD53Id)
+  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id)
   {
+    fMaxRegValue=std::pow(2,16)-1;
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     loadfRegMap (filename);
     setFrontEndType (FrontEndType::RD53);
@@ -218,32 +220,6 @@ namespace Ph2_HwDescription
       {
 	LOG (ERROR) << BOLDRED << "The RD53 file settings " << BOLDYELLOW << filename << BOLDRED << " does not exist" << RESET;
 	exit (1);
-      }
-  }
-
-  uint16_t RD53::getReg (const std::string& pReg) const
-  {
-    ChipRegMap::const_iterator i = fRegMap.find (pReg);
-
-    if (i == fRegMap.end())
-      {
-	LOG (INFO) << "The RD53 object: " << fRD53Id << " doesn't have " << pReg;
-	return 0;
-      }
-    else
-      return i->second.fValue;
-  }
-
-  void RD53::setReg (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg)
-  {
-    ChipRegMap::iterator i = fRegMap.find (pReg);
-
-    if (i == fRegMap.end())
-      LOG (ERROR) << BOLDRED << "The RD53 chip " << BOLDYELLOW << fRD53Id << BOLDRED << " doesn't have the  register " << BOLDYELLOW << pReg << RESET;
-    else
-      {
-	i->second.fValue    = psetValue;
-	i->second.fPrmptCfg = pPrmptCfg;
       }
   }
 

@@ -129,7 +129,7 @@ class HybridTester : public Tool
     */
     void ConfigureVcth ( uint16_t pVcth = 0x0078 )
     {
-        ThresholdVisitor cWriter ( fChipInterface,  pVcth );
+        ThresholdVisitor cWriter ( fReadoutChipInterface,  pVcth );
         accept ( cWriter );
     };
 

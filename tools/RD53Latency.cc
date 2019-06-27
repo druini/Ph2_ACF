@@ -42,7 +42,7 @@ void Latency::Run ()
 
   theDetectorFactory.copyAndInitStructure<EmptyContainer,GenericDataVector>(*fDetectorContainer, theContainer);
 
-  auto RD53ChipInterface = static_cast<RD53Interface*>(fChipInterface);
+  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
 
   for (const auto cBoard : *fDetectorContainer)
     {
@@ -73,7 +73,7 @@ void Latency::Run ()
 		data.clear();
 
 		LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
-		RD53ChipInterface->WriteChipReg(static_cast<Chip*>(cChip), "LATENCY_CONFIG", lt, true);
+		RD53ChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", lt, true);
 
 		this->ReadNEvents(static_cast<BeBoard*>(cBoard), nEvents, data);
 		auto events = RD53FWInterface::DecodeEvents(data,status);
@@ -104,6 +104,8 @@ void Latency::Draw (bool display, bool save)
 
   if (save    == true) this->Save();
   if (display == true) myApp->Run();
+
+  theFile->Close();
 }
 
 void Latency::Analyze ()
@@ -131,7 +133,6 @@ void Latency::Analyze ()
 
 void Latency::InitHisto ()
 {
-  std::string tmp;
   std::stringstream myString;
 
 
@@ -142,12 +143,9 @@ void Latency::InitHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-	  tmp = fileRes;
-	  tmp = tmp.erase(tmp.find(".root"),5);
-
 	  myString.clear();
 	  myString.str("");
-          myString << tmp << "_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+          myString << "Latency_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
 		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theLat.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),stopValue - startValue,startValue,stopValue));
@@ -156,13 +154,13 @@ void Latency::InitHisto ()
 
 	  myString.clear();
           myString.str("");
-	  myString << "theCanvasLat_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+	  myString << "CanvasLat_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+                   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+                   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasLat.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
   
-  theFile = new TFile(fileRes, "APPEND");
+  theFile = new TFile(fileRes, "UPDATE");
 }
 
 void Latency::FillHisto ()

@@ -30,6 +30,8 @@ public:
     virtual std::string getTitle() const = 0;
     virtual void initialize(std::string name, std::string title, const PlotContainer *reference) = 0;
 
+protected:
+    bool fHasToBeDeletedManually{true}; //if associated to a File, ROOT takes the pointer and destroys it :-(
 };
 
 #endif

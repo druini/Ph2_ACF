@@ -63,7 +63,7 @@ namespace Ph2_System {
         FileParser() {}
         ~FileParser() {}
 
-        void parseHW      (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector,                                        std::ostream& os, bool pIsFile );
+        // void parseHW      (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector,                                        std::ostream& os, bool pIsFile );
         void parseHW      (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile );
         void parseSettings(const std::string& pFilename, SettingsMap&  pSettingsMap,                                                                   std::ostream& os, bool pIsFile );
         //void parseConditionDataSet (const std::string& pFilename, ConditionDataSet& pSet, std::ostream& os);
@@ -97,7 +97,7 @@ namespace Ph2_System {
          * \param pFilename : HW Description file
          *\param os : ostream to dump output
          */
-        void parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os, bool pIsFile );
+        // void parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os, bool pIsFile );
         /*!
          * \brief Initialize the hardware via  XML config file
          * \param pFilename : HW Description file
@@ -117,16 +117,16 @@ namespace Ph2_System {
          */
         //void parseConditionDataSetxml (const std::string& pFilename, ConditionDataSet& pSet, std::ostream& os);
 
-        void parseBeBoard          (pugi::xml_node pBeBordNode,   BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os );
+        // void parseBeBoard          (pugi::xml_node pBeBordNode,   BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os );
         void parseBeBoard          (pugi::xml_node pBeBordNode,   BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os );
         void parseRegister         (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os );
-        void parseRegister         (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard &pBoard, std::ostream& os );
+        // void parseRegister         (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard &pBoard, std::ostream& os );
         void parseSLink            (pugi::xml_node pSLinkNode,    BeBoard* pBoard,               std::ostream& os );
-        void parseModule           (pugi::xml_node pModuleNode,   BeBoard* pBoard,               std::ostream& os );
+        // void parseModule           (pugi::xml_node pModuleNode,   BeBoard* pBoard,               std::ostream& os );
         void parseModuleContainer  (pugi::xml_node pModuleNode,   BeBoard* pBoard,               std::ostream& os );
-        void parseCbc              (pugi::xml_node pModuleNode,   Module* cModule,               std::string cFilePrefix, std::ostream& os );
+        // void parseCbc              (pugi::xml_node pModuleNode,   Module* cModule,               std::string cFilePrefix, std::ostream& os );
         void parseCbcContainer     (pugi::xml_node pModuleNode,   Module* cModule,               std::string cFilePrefix, std::ostream& os );
-        void parseCbcSettings      (pugi::xml_node pCbcNode,      Chip* pCbc,                    std::ostream& os);
+        void parseCbcSettings      (pugi::xml_node pCbcNode,      ReadoutChip* pCbc,             std::ostream& os);
         void parseGlobalCbcSettings(pugi::xml_node pModuleNode,   Module* pModule,               std::ostream& os);
 
 
@@ -134,7 +134,7 @@ namespace Ph2_System {
 	// # RD53 specific parser #
 	// ########################
         void parseRD53               (pugi::xml_node pModuleNode, Module* cModule, std::string cFilePrefix, std::ostream& os);
-        void parseRD53Settings       (pugi::xml_node pRd53Node,   Chip* pRD53,     std::ostream& os);
+        void parseRD53Settings       (pugi::xml_node pRd53Node,   ReadoutChip* pRD53,std::ostream& os);
         void parseGlobalRD53Settings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os);
 	// ########################
 
