@@ -1,14 +1,14 @@
 /*!
-  \file                  RD53ThrOpt.h
-  \brief                 Implementaion of threshold optimization
+  \file                  RD53ThrEqu.h
+  \brief                 Implementaion of threshold equalization
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53ThrOpt_h_
-#define _RD53ThrOpt_h_
+#ifndef _RD53ThrEqu_h_
+#define _RD53ThrEqu_h_
 
 #include "../Utils/Container.h"
 #include "../Utils/Occupancy.h"
@@ -33,11 +33,11 @@ using namespace Ph2_System;
 // #####################################
 // # Threshold equalization test suite #
 // #####################################
-class ThrOpt : public Tool
+class ThrEqu : public Tool
 {
  public:
-  ThrOpt(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, DetectorDataContainer* newVCal = nullptr);
-  ~ThrOpt();
+  ThrEqu(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, DetectorDataContainer* newVCal = nullptr);
+  ~ThrEqu();
 
   void Run  ();
   void Draw (bool display, bool save);

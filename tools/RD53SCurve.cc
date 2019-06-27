@@ -263,7 +263,7 @@ void SCurve::InitHisto ()
 	  theCanvasTh2D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
-  theFile = new TFile(fileRes, "RECREATE");
+  theFile = new TFile(fileRes, "APPEND");
 }
 
 void SCurve::FillHisto ()

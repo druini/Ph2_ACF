@@ -1,5 +1,5 @@
 /*!
-  \file                  RD53ThrOpt.cc
+  \file                  RD53ThrEqu.cc
   \brief                 Implementaion of threshold equalization
   \author                Mauro DINARDO
   \version               1.0
@@ -7,9 +7,9 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "RD53ThrOpt.h"
+#include "RD53ThrEqu.h"
 
-ThrOpt::ThrOpt (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, DetectorDataContainer* newVCal) :
+ThrEqu::ThrEqu (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, DetectorDataContainer* newVCal) :
   fileRes     (fileRes),
   fileReg     (fileReg),
   rowStart    (rowStart),
@@ -36,7 +36,7 @@ ThrOpt::ThrOpt (const char* fileRes, const char* fileReg, size_t rowStart, size_
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
 
-ThrOpt::~ThrOpt ()
+ThrEqu::~ThrEqu ()
 {
   theFile->Close();
   
@@ -57,7 +57,7 @@ ThrOpt::~ThrOpt ()
     }
 }
 
-void ThrOpt::Run ()
+void ThrEqu::Run ()
 {
   // #######################
   // # Use new VCal values #
@@ -95,7 +95,7 @@ void ThrOpt::Run ()
 	    theTDACcontainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
 }
 
-void ThrOpt::Draw (bool display, bool save)
+void ThrEqu::Draw (bool display, bool save)
 {
   TApplication* myApp;
 
@@ -109,7 +109,7 @@ void ThrOpt::Draw (bool display, bool save)
   if (display == true) myApp->Run();
 }
 
-void ThrOpt::InitHisto ()
+void ThrEqu::InitHisto ()
 {
   std::stringstream myString;
   size_t TDACsize = RD53::SetBits<RD53PixelEncoder::NBIT_TDAC>(RD53PixelEncoder::NBIT_TDAC).to_ulong()+1;
@@ -127,7 +127,7 @@ void ThrOpt::InitHisto ()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "ThrOpt_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+          myString << "ThrEqu_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
 		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOccupancy.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents/2 + 1,0,1 + 2./nEvents));
@@ -159,10 +159,10 @@ void ThrOpt::InitHisto ()
 	  theCanvasTDAC.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
-  theFile = new TFile(fileRes, "RECREATE");
+  theFile = new TFile(fileRes, "APPEND");
 }
 
-void ThrOpt::FillHisto ()
+void ThrEqu::FillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
@@ -183,7 +183,7 @@ void ThrOpt::FillHisto ()
 	}
 }
 
-void ThrOpt::Display ()
+void ThrEqu::Display ()
 {
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -202,7 +202,7 @@ void ThrOpt::Display ()
     }
 }
 
-void ThrOpt::Save ()
+void ThrEqu::Save ()
 {
   std::stringstream myString;
 
