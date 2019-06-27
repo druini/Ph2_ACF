@@ -17,7 +17,7 @@
 #include "../Utils/Visitor.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/Utilities.h"
-#include "BeBoardFWInterface.h"
+#include "../HWInterface/BeBoardFWInterface.h"
 
 #ifdef __ANTENNA__
 #include "Antenna.h"
@@ -62,7 +62,7 @@ class AntennaTester : public Tool
     // configure only the Vcth value
     void ConfigureVcth ( uint16_t pVcth = 0x0078 )
     {
-        ThresholdVisitor cWriter ( fCbcInterface, pVcth );
+        ThresholdVisitor cWriter ( fReadoutChipInterface, pVcth );
         accept ( cWriter );
     };
 

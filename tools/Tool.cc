@@ -1,55 +1,87 @@
 #include "Tool.h"
+#include "TH1.h"
 #include <TSystem.h>
+#include "../HWDescription/Chip.h"
+#include "../Utils/ObjectStreamer.h"
+#include "../Utils/ChannelGroupHandler.h"
+#include "../Utils/ContainerFactory.h"
+#include "../Utils/Occupancy.h"
+#include "../Utils/EmptyContainer.h"
+#include "../Utils/RegisterValue.h"
+#include "../Utils/DataContainer.h"
+#include "../Utils/Container.h"
+
 
 Tool::Tool() :
-    SystemController(),
-    fCanvasMap(),
-    fCbcHistMap(),
-    fModuleHistMap(),
-    fType(),
-    fTestGroupChannelMap(),
-    fDirectoryName (""),
-    fResultFile (nullptr)
+SystemController            (),
+fCanvasMap                  (),
+fChipHistMap                (),
+fModuleHistMap              (),
+fType                       (),
+fTestGroupChannelMap        (),
+fDirectoryName              (""),
+fResultFile                 (nullptr),
+fSkipMaskedChannels         (false),
+fAllChan                    (false),
+fMaskChannelsFromOtherGroups(false),
+fTestPulse                  (false),
+fChannelGroupHandler        (nullptr)
 {
 #ifdef __HTTP__
-    fHttpServer = nullptr;
+	fHttpServer = nullptr;
 #endif
 }
 
 #ifdef __HTTP__
-Tool::Tool (THttpServer* pHttpServer) :
-    SystemController(),
-    fCanvasMap(),
-    fCbcHistMap(),
-    fModuleHistMap(),
-    fType(),
-    fTestGroupChannelMap(),
-    fDirectoryName (""),
-    fResultFile (nullptr),
-    fHttpServer (pHttpServer)
+Tool::Tool (THttpServer* pHttpServer)
+: SystemController            ()
+, fCanvasMap                  ()
+, fChipHistMap                ()
+, fModuleHistMap              ()
+, fType                       ()
+, fTestGroupChannelMap        ()
+, fDirectoryName              ("")
+, fResultFile                 (nullptr)
+, fHttpServer                 (pHttpServer)
+, fSkipMaskedChannels         (false)
+, fAllChan                    (false)
+, fMaskChannelsFromOtherGroups(false)
+, fTestPulse                  (false)
+, fChannelGroupHandler        (nullptr)
 {
 }
 #endif
 
 Tool::Tool (const Tool& pTool)
 {
-    fBeBoardInterface = pTool.fBeBoardInterface;
-    fCbcInterface = pTool.fCbcInterface;
-    fBoardVector = pTool.fBoardVector;
-    fBeBoardFWMap = pTool.fBeBoardFWMap;
-    fSettingsMap = pTool.fSettingsMap;
-    fFileHandler = pTool.fFileHandler;
+	fDetectorContainer           = pTool.fDetectorContainer;
+	fBeBoardInterface            = pTool.fBeBoardInterface;
+	fChipInterface               = pTool.fChipInterface;
+    fReadoutChipInterface        = pTool.fReadoutChipInterface;
+	fBoardVector                 = pTool.fBoardVector;
+	fBeBoardFWMap                = pTool.fBeBoardFWMap;
+	fSettingsMap                 = pTool.fSettingsMap;
+	fFileHandler                 = pTool.fFileHandler;
 
-    fDirectoryName = pTool.fDirectoryName;             /*< the Directoryname for the Root file with results */
-    fResultFile = pTool.fResultFile;                /*< the Name for the Root file with results */
-    fType = pTool.fType;
+	fDirectoryName               = pTool.fDirectoryName;             /*< the Directoryname for the Root file with results */
+	fResultFile                  = pTool.fResultFile;                /*< the Name for the Root file with results */
+	fType                        = pTool.fType;
+	fCanvasMap                   = pTool.fCanvasMap;
+	fChipHistMap                 = pTool.fChipHistMap;
+	fModuleHistMap               = pTool.fModuleHistMap;
+	fBeBoardHistMap              = pTool.fBeBoardHistMap;
+	fTestGroupChannelMap         = pTool.fTestGroupChannelMap;
+	fNetworkStreamer             = pTool.fNetworkStreamer;
+	fStreamerEnabled             = pTool.fStreamerEnabled;
+	fSkipMaskedChannels          = pTool.fSkipMaskedChannels;
+	fAllChan                     = pTool.fAllChan;
+	fMaskChannelsFromOtherGroups = pTool.fMaskChannelsFromOtherGroups;
+	fTestPulse                   = pTool.fTestPulse;
+	//fChannelGroupHandler         = pTool.fChannelGroupHandler;
+
 #ifdef __HTTP__
-    fHttpServer = pTool.fHttpServer;
+	fHttpServer          = pTool.fHttpServer;
 #endif
-    fCanvasMap = pTool.fCanvasMap;
-    fCbcHistMap = pTool.fCbcHistMap;
-    fModuleHistMap = pTool.fModuleHistMap;
-    fTestGroupChannelMap = pTool.fTestGroupChannelMap;
 }
 
 Tool::~Tool()
@@ -58,263 +90,388 @@ Tool::~Tool()
 
 void Tool::Inherit (Tool* pTool)
 {
-    fBeBoardInterface = pTool->fBeBoardInterface;
-    fCbcInterface = pTool->fCbcInterface;
-    fBoardVector = pTool->fBoardVector;
-    fBeBoardFWMap = pTool->fBeBoardFWMap;
-    fSettingsMap = pTool->fSettingsMap;
-    fFileHandler = pTool->fFileHandler;
-    fDirectoryName = pTool->fDirectoryName;
-    fResultFile = pTool->fResultFile;
-    fType = pTool->fType;
+	//WE SHOULD ONLY KEEP IN HERE ONLY THINGS THAT ARE NOT CALIBRATION SPECIFIC
+	fDetectorContainer           = pTool->fDetectorContainer;//IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
+	fBeBoardInterface            = pTool->fBeBoardInterface;
+	fChipInterface               = pTool->fChipInterface;
+	fReadoutChipInterface        = pTool->fReadoutChipInterface;
+	fBoardVector                 = pTool->fBoardVector;
+	fBeBoardFWMap                = pTool->fBeBoardFWMap;
+	fSettingsMap                 = pTool->fSettingsMap;
+	fFileHandler                 = pTool->fFileHandler;
+	fDirectoryName               = pTool->fDirectoryName;
+	fResultFile                  = pTool->fResultFile;
+	fType                        = pTool->fType;
+	fCanvasMap                   = pTool->fCanvasMap;
+	fChipHistMap                 = pTool->fChipHistMap;
+	fModuleHistMap               = pTool->fModuleHistMap;
+	fBeBoardHistMap              = pTool->fBeBoardHistMap;
+	fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
+	fNetworkStreamer             = pTool->fNetworkStreamer;
+	fStreamerEnabled             = pTool->fStreamerEnabled;
+	fSkipMaskedChannels          = pTool->fSkipMaskedChannels;
+	fAllChan                     = pTool->fAllChan;
+	fMaskChannelsFromOtherGroups = pTool->fMaskChannelsFromOtherGroups;
+	fTestPulse                   = pTool->fTestPulse;
+	//fChannelGroupHandler         = pTool->fChannelGroupHandler;
+
 #ifdef __HTTP__
-    fHttpServer = pTool->fHttpServer;
+	fHttpServer          = pTool->fHttpServer;
 #endif
-    fCanvasMap = pTool->fCanvasMap;
-    fCbcHistMap = pTool->fCbcHistMap;
-    fModuleHistMap = pTool->fModuleHistMap;
-    fTestGroupChannelMap = pTool->fTestGroupChannelMap;
 }
 
 void Tool::Inherit (SystemController* pSystemController)
 {
-    fBeBoardInterface = pSystemController->fBeBoardInterface;
-    fCbcInterface = pSystemController->fCbcInterface;
-    fBoardVector = pSystemController->fBoardVector;
-    fBeBoardFWMap = pSystemController->fBeBoardFWMap;
-    fSettingsMap = pSystemController->fSettingsMap;
-    fFileHandler = pSystemController->fFileHandler;
+	fDetectorContainer    = pSystemController->fDetectorContainer; //IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
+	fBeBoardInterface     = pSystemController->fBeBoardInterface;
+	fReadoutChipInterface = pSystemController->fReadoutChipInterface;
+	fChipInterface        = pSystemController->fChipInterface;
+	fBoardVector          = pSystemController->fBoardVector;
+	fBeBoardFWMap         = pSystemController->fBeBoardFWMap;
+	fSettingsMap          = pSystemController->fSettingsMap;
+	fFileHandler          = pSystemController->fFileHandler;
+	fNetworkStreamer      = pSystemController->fNetworkStreamer;
+	fStreamerEnabled      = pSystemController->fStreamerEnabled;
+}
+
+void Tool::resetPointers()
+{
+	if(fChannelGroupHandler != nullptr)
+	{
+		delete fChannelGroupHandler;
+		fChannelGroupHandler = nullptr;
+	}
+
 }
 
 void Tool::Destroy()
 {
-    LOG (INFO) << BOLDRED << "Destroying memory objects" << RESET;
-    SystemController::Destroy();
+	LOG (INFO) << BOLDRED << "Destroying memory objects" << RESET;
+	SystemController::Destroy();
 #ifdef __HTTP__
 
-    if (fHttpServer) delete fHttpServer;
+	if (fHttpServer) delete fHttpServer;
 
 #endif
 
-    if (fResultFile != nullptr)
-    {
-        if (fResultFile->IsOpen() ) fResultFile->Close();
-
-        if (fResultFile) delete fResultFile;
-    }
-
-    fCanvasMap.clear();
-    fCbcHistMap.clear();
-    fModuleHistMap.clear();
-    fTestGroupChannelMap.clear();
+	SoftDestroy();
 }
 
 void Tool::SoftDestroy()
 {
-    LOG (INFO) << BOLDRED << "Destroying only tool memory objects" << RESET;
 
-    if (fResultFile != nullptr)
-    {
-        if (fResultFile->IsOpen() ) fResultFile->Close();
+	if (fResultFile != nullptr)
+	{
+		if (fResultFile->IsOpen() ) fResultFile->Close();
 
-        if (fResultFile) delete fResultFile;
-    }
+		if (fResultFile) delete fResultFile;
+	}
 
-    fCanvasMap.clear();
-    fCbcHistMap.clear();
-    fModuleHistMap.clear();
-    fTestGroupChannelMap.clear();
+	for(auto canvas : fCanvasMap)
+	{
+		delete canvas.second;
+		canvas.second = nullptr;
+	}
+	fCanvasMap.clear();
+	for(auto chip : fChipHistMap)
+	{
+		for(auto hist : chip.second)
+		{
+			delete hist.second;
+			hist.second = nullptr;
+		}
+	}
+	fChipHistMap.clear();
+	for(auto chip : fModuleHistMap)
+	{
+		for(auto hist : chip.second)
+		{
+			delete hist.second;
+			hist.second = nullptr;
+		}
+	}
+	fModuleHistMap.clear();
+	for(auto chip : fBeBoardHistMap)
+	{
+		for(auto hist : chip.second)
+		{
+			delete hist.second;
+			hist.second = nullptr;
+		}
+	}
+	fBeBoardHistMap.clear();
+	fTestGroupChannelMap.clear();
+
 }
 
-void Tool::bookHistogram ( Cbc* pCbc, std::string pName, TObject* pObject )
+void Tool::bookHistogram ( Chip* pChip, std::string pName, TObject* pObject )
 {
-    // find or create map<string,TOBject> for specific CBC
-    auto cCbcHistMap = fCbcHistMap.find ( pCbc );
+	TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
+	if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
 
-    if ( cCbcHistMap == std::end ( fCbcHistMap ) )
-    {
-        LOG (INFO) << "Histo Map for CBC " << int ( pCbc->getCbcId() ) <<  " (FE " << int ( pCbc->getFeId() ) << ") does not exist - creating " ;
-        std::map<std::string, TObject*> cTempCbcMap;
+	// find or create map<string,TOBject> for specific CBC
+	auto cChipHistMap = fChipHistMap.find ( pChip );
 
-        fCbcHistMap[pCbc] = cTempCbcMap;
-        cCbcHistMap = fCbcHistMap.find ( pCbc );
-    }
+	if ( cChipHistMap == std::end ( fChipHistMap ) )
+	{
+		//Fabio: CBC specific -> to be moved out from Tool
+		LOG (INFO) << "Histo Map for CBC " << int ( pChip->getChipId() ) <<  " (FE " << int ( pChip->getFeId() ) << ") does not exist - creating " ;
+		std::map<std::string, TObject*> cTempChipMap;
 
-    // find histogram with given name: if it exists, delete the object, if not create
-    auto cHisto = cCbcHistMap->second.find ( pName );
+		fChipHistMap[pChip] = cTempChipMap;
+		cChipHistMap = fChipHistMap.find ( pChip );
+	}
 
-    if ( cHisto != std::end ( cCbcHistMap->second ) ) cCbcHistMap->second.erase ( cHisto );
+	// find histogram with given name: if it exists, delete the object, if not create
+	auto cHisto = cChipHistMap->second.find ( pName );
 
-    cCbcHistMap->second[pName] = pObject;
+	if ( cHisto != std::end ( cChipHistMap->second ) ) cChipHistMap->second.erase ( cHisto );
+
+	cChipHistMap->second[pName] = pObject;
 #ifdef __HTTP__
 
-    if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
+	if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
 
 #endif
 }
 
 void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject )
 {
-    // find or create map<string,TOBject> for specific CBC
-    auto cModuleHistMap = fModuleHistMap.find ( pModule );
+	TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
+	if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
 
-    if ( cModuleHistMap == std::end ( fModuleHistMap ) )
-    {
-        LOG (INFO) << "Histo Map for Module " << int ( pModule->getFeId() ) << " does not exist - creating " ;
-        std::map<std::string, TObject*> cTempModuleMap;
+	// find or create map<string,TOBject> for specific CBC
+	auto cModuleHistMap = fModuleHistMap.find ( pModule );
 
-        fModuleHistMap[pModule] = cTempModuleMap;
-        cModuleHistMap = fModuleHistMap.find ( pModule );
-    }
+	if ( cModuleHistMap == std::end ( fModuleHistMap ) )
+	{
+		LOG (INFO) << "Histo Map for Module " << int ( pModule->getFeId() ) << " does not exist - creating " ;
+		std::map<std::string, TObject*> cTempModuleMap;
 
-    // find histogram with given name: if it exists, delete the object, if not create
-    auto cHisto = cModuleHistMap->second.find ( pName );
+		fModuleHistMap[pModule] = cTempModuleMap;
+		cModuleHistMap = fModuleHistMap.find ( pModule );
+	}
 
-    if ( cHisto != std::end ( cModuleHistMap->second ) ) cModuleHistMap->second.erase ( cHisto );
+	// find histogram with given name: if it exists, delete the object, if not create
+	auto cHisto = cModuleHistMap->second.find ( pName );
 
-    cModuleHistMap->second[pName] = pObject;
+	if ( cHisto != std::end ( cModuleHistMap->second ) ) cModuleHistMap->second.erase ( cHisto );
+
+	cModuleHistMap->second[pName] = pObject;
 #ifdef __HTTP__
 
-    if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
+	if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
 
 #endif
 }
 
-TObject* Tool::getHist ( Cbc* pCbc, std::string pName )
+void Tool::bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObject )
 {
-    auto cCbcHistMap = fCbcHistMap.find ( pCbc );
+	TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
+	if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
 
-    if ( cCbcHistMap == std::end ( fCbcHistMap ) )
-    {
-        LOG (ERROR) << RED << "Error: could not find the Histograms for CBC " << int ( pCbc->getCbcId() ) <<  " (FE " << int ( pCbc->getFeId() ) << ")" << RESET ;
-        return nullptr;
-    }
-    else
-    {
-        auto cHisto = cCbcHistMap->second.find ( pName );
+	// find or create map<string,TOBject> for specific CBC
+	auto cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
 
-        if ( cHisto == std::end ( cCbcHistMap->second ) )
-        {
-            LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
-            return nullptr;
-        }
-        else
-            return cHisto->second;
-    }
+	if ( cBeBoardHistMap == std::end ( fBeBoardHistMap ) )
+	{
+		LOG (INFO) << "Histo Map for Module " << int ( pBeBoard->getBeId() ) << " does not exist - creating " ;
+		std::map<std::string, TObject*> cTempModuleMap;
+
+		fBeBoardHistMap[pBeBoard] = cTempModuleMap;
+		cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
+	}
+
+	// find histogram with given name: if it exists, delete the object, if not create
+	auto cHisto = cBeBoardHistMap->second.find ( pName );
+
+	if ( cHisto != std::end ( cBeBoardHistMap->second ) ) cBeBoardHistMap->second.erase ( cHisto );
+
+	cBeBoardHistMap->second[pName] = pObject;
+#ifdef __HTTP__
+
+	if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
+
+#endif
+}
+
+TObject* Tool::getHist ( Chip* pChip, std::string pName )
+{
+	auto cChipHistMap = fChipHistMap.find ( pChip );
+
+	if ( cChipHistMap == std::end ( fChipHistMap ) )
+	{
+		//Fabio: CBC specific -> to be moved out from Tool
+		LOG (ERROR) << RED << "Error: could not find the Histograms for CBC " << int ( pChip->getChipId() ) <<  " (FE " << int ( pChip->getFeId() ) << ")" << RESET ;
+		return nullptr;
+	}
+	else
+	{
+		auto cHisto = cChipHistMap->second.find ( pName );
+
+		if ( cHisto == std::end ( cChipHistMap->second ) )
+		{
+			LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
+			return nullptr;
+		}
+		else
+			return cHisto->second;
+	}
 }
 
 TObject* Tool::getHist ( Module* pModule, std::string pName )
 {
-    auto cModuleHistMap = fModuleHistMap.find ( pModule );
+	auto cModuleHistMap = fModuleHistMap.find ( pModule );
 
-    if ( cModuleHistMap == std::end ( fModuleHistMap ) )
-    {
-        LOG (ERROR) << RED << "Error: could not find the Histograms for Module " << int ( pModule->getFeId() ) << RESET ;
-        return nullptr;
-    }
-    else
-    {
-        auto cHisto = cModuleHistMap->second.find ( pName );
+	if ( cModuleHistMap == std::end ( fModuleHistMap ) )
+	{
+		LOG (ERROR) << RED << "Error: could not find the Histograms for Module " << int ( pModule->getFeId() ) << RESET ;
+		return nullptr;
+	}
+	else
+	{
+		auto cHisto = cModuleHistMap->second.find ( pName );
 
-        if ( cHisto == std::end ( cModuleHistMap->second ) )
-        {
-            LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
-            return nullptr;
-        }
-        else return cHisto->second;
-    }
+		if ( cHisto == std::end ( cModuleHistMap->second ) )
+		{
+			LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
+			return nullptr;
+		}
+		else return cHisto->second;
+	}
+}
+
+TObject* Tool::getHist ( BeBoard* pBeBoard, std::string pName )
+{
+	auto cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
+
+	if ( cBeBoardHistMap == std::end ( fBeBoardHistMap ) )
+	{
+		LOG (ERROR) << RED << "Error: could not find the Histograms for Module " << int ( pBeBoard->getBeId() ) << RESET ;
+		return nullptr;
+	}
+	else
+	{
+		auto cHisto = cBeBoardHistMap->second.find ( pName );
+
+		if ( cHisto == std::end ( cBeBoardHistMap->second ) )
+		{
+			LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
+			return nullptr;
+		}
+		else return cHisto->second;
+	}
 }
 
 void Tool::SaveResults()
 {
-    // Now per FE
-    for ( const auto& cFe : fModuleHistMap )
-    {
-        TString cDirName = Form ( "FE%d", cFe.first->getFeId() );
-        TObject* cObj = gROOT->FindObject ( cDirName );
+	for ( const auto& cBeBoard : fBeBoardHistMap )
+	{
+		fResultFile->cd();
 
-        //if ( cObj ) delete cObj;
+		for ( const auto& cHist : cBeBoard.second )
+			cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
 
-        if (!cObj) fResultFile->mkdir ( cDirName );
+		fResultFile->cd();
+	}
 
-        fResultFile->cd ( cDirName );
+	// Now per FE
+	for ( const auto& cFe : fModuleHistMap )
+	{
+		TString cDirName = Form ( "FE%d", cFe.first->getFeId() );
+		TObject* cObj = gROOT->FindObject ( cDirName );
 
-        for ( const auto& cHist : cFe.second )
-            cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
+		//if ( cObj ) delete cObj;
 
-        fResultFile->cd();
-    }
+		if (!cObj) fResultFile->mkdir ( cDirName );
 
-    for ( const auto& cCbc : fCbcHistMap )
-    {
-        TString cDirName = Form ( "FE%dCBC%d", cCbc.first->getFeId(), cCbc.first->getCbcId() );
-        TObject* cObj = gROOT->FindObject ( cDirName );
+		fResultFile->cd ( cDirName );
 
-        //if ( cObj ) delete cObj;
+		for ( const auto& cHist : cFe.second )
+			cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
 
-        if (!cObj) fResultFile->mkdir ( cDirName );
+		fResultFile->cd();
+	}
 
-        fResultFile->cd ( cDirName );
+	for ( const auto& cChip : fChipHistMap )
+	{
+		//Fabio: CBC specific -> to be moved out from Tool
+		TString cDirName = Form ( "FE%dCBC%d", cChip.first->getFeId(), cChip.first->getChipId() );
+		TObject* cObj = gROOT->FindObject ( cDirName );
 
-        for ( const auto& cHist : cCbc.second )
-            cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
+		//if ( cObj ) delete cObj;
 
-        fResultFile->cd();
-    }
+		if (!cObj) fResultFile->mkdir ( cDirName );
 
-    // Save Canvasses too
-    for ( const auto& cCanvas : fCanvasMap )
-    {
-        cCanvas.second->Write ( cCanvas.second->GetName(), TObject::kOverwrite );
-        std::string cPdfName = fDirectoryName + "/" + cCanvas.second->GetName() + ".pdf";
-        cCanvas.second->SaveAs ( cPdfName.c_str() );
-    }
+		fResultFile->cd ( cDirName );
 
-    //fResultFile->Write();
-    //fResultFile->Close();
+		for ( const auto& cHist : cChip.second )
+			cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
 
-    LOG (INFO) << "Results saved!" ;
+		fResultFile->cd();
+	}
+
+	// Save Canvasses too
+	for ( const auto& cCanvas : fCanvasMap )
+	{
+		cCanvas.second->Write ( cCanvas.second->GetName(), TObject::kOverwrite );
+		std::string cPdfName = fDirectoryName + "/" + cCanvas.second->GetName() + ".pdf";
+		cCanvas.second->SaveAs ( cPdfName.c_str() );
+	}
+
+	// fResultFile->Write();
+	// fResultFile->Close();
+
+	LOG (INFO) << "Results saved!" ;
 }
+
+void Tool::WriteRootFile()
+{
+	fResultFile->Write();
+}
+
 
 void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool pDate )
 {
-    bool cCheck;
-    bool cHoleMode;
-    auto cSetting = fSettingsMap.find ( "HoleMode" );
+	//Fabio: CBC specific -> to be moved out from Tool - BEGIN
+	bool cCheck;
+	bool cHoleMode;
+	auto cSetting = fSettingsMap.find ( "HoleMode" );
 
-    if ( cSetting != std::end ( fSettingsMap ) )
-    {
-        cCheck = true;
-        cHoleMode = ( cSetting->second == 1 ) ? true : false;
-    }
+	if ( cSetting != std::end ( fSettingsMap ) )
+	{
+		cCheck = true;
+		cHoleMode = ( cSetting->second == 1 ) ? true : false;
+	}
 
-    std::string cMode;
+	std::string cMode;
 
-    if ( cCheck )
-    {
-        if ( cHoleMode ) cMode = "_Hole";
-        else cMode = "_Electron";
-    }
+	if ( cCheck )
+	{
+		if ( cHoleMode ) cMode = "_Hole";
+		else cMode = "_Electron";
+	}
+	//Fabio: CBC specific -> to be moved out from Tool - END
 
-    std::string nDirname = pDirname;
+	std::string nDirname = pDirname;
 
-    if ( cCheck && pMode ) nDirname +=  cMode;
+	if ( cCheck && pMode ) nDirname +=  cMode;
 
-    if ( pDate ) nDirname +=  currentDateTime();
+	if ( pDate ) nDirname +=  currentDateTime();
 
-    LOG (INFO)  << "Creating directory: " << nDirname  ;
-    std::string cCommand = "mkdir -p " + nDirname;
+	LOG (INFO)  << "Creating directory: " << nDirname  ;
+	std::string cCommand = "mkdir -p " + nDirname;
 
-    try
-    {
-        system ( cCommand.c_str() );
-    }
-    catch (std::exception& e)
-    {
-        LOG (ERROR) << "Exceptin when trying to create Result Directory: " << e.what();
-    }
+	try
+	{
+		system ( cCommand.c_str() );
+	}
+	catch (std::exception& e)
+	{
+		LOG (ERROR) << "Exceptin when trying to create Result Directory: " << e.what();
+	}
 
-    fDirectoryName = nDirname;
+	fDirectoryName = nDirname;
 }
 /*!
  * \brief Initialize the result Root file
@@ -323,63 +480,64 @@ void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool
 void Tool::InitResultFile ( const std::string& pFilename )
 {
 
-    if ( !fDirectoryName.empty() )
-    {
-        std::string cFilename = fDirectoryName + "/" + pFilename + ".root";
+	if ( !fDirectoryName.empty() )
+	{
+		std::string cFilename = fDirectoryName + "/" + pFilename + ".root";
 
-        try
-        {
-            fResultFile = TFile::Open ( cFilename.c_str(), "RECREATE" );
-            fResultFileName = cFilename;
-        }
-        catch (std::exception& e)
-        {
-            LOG (ERROR) << "Exceptin when trying to create Result File: " << e.what();
-        }
-    }
-    else LOG (INFO) << RED << "ERROR: " << RESET << "No Result Directory initialized - not saving results!" ;
+		try
+		{
+			fResultFile = TFile::Open ( cFilename.c_str(), "RECREATE" );
+			fResultFileName = cFilename;
+		}
+		catch (std::exception& e)
+		{
+			LOG (ERROR) << "Exceptin when trying to create Result File: " << e.what();
+		}
+	}
+	else LOG (INFO) << RED << "ERROR: " << RESET << "No Result Directory initialized - not saving results!" ;
 }
 
 void Tool::CloseResultFile()
 {
-    LOG (INFO) << BOLDRED << "closing result file!" << RESET;
+	LOG (INFO) << BOLDRED << "closing result file!" << RESET;
 
-    if (fResultFile)
-        fResultFile->Close();
+	if (fResultFile)
+		fResultFile->Close();
 }
+
 void Tool::StartHttpServer ( const int pPort, bool pReadonly )
 {
 #ifdef __HTTP__
 
-    if (fHttpServer)
-        delete fHttpServer;
+	if (fHttpServer)
+		delete fHttpServer;
 
-    char hostname[HOST_NAME_MAX];
+	char hostname[HOST_NAME_MAX];
 
-    try
-    {
-        fHttpServer = new THttpServer ( Form ( "http:%d", pPort ) );
-        fHttpServer->SetReadOnly ( pReadonly );
-        //fHttpServer->SetTimer ( pRefreshTime, kTRUE );
-        fHttpServer->SetTimer (0, kTRUE);
-        fHttpServer->SetJSROOT ("https://root.cern.ch/js/latest/");
+	try
+	{
+		fHttpServer = new THttpServer ( Form ( "http:%d", pPort ) );
+		fHttpServer->SetReadOnly ( pReadonly );
+		//fHttpServer->SetTimer ( pRefreshTime, kTRUE );
+		fHttpServer->SetTimer (0, kTRUE);
+		fHttpServer->SetJSROOT ("https://root.cern.ch/js/latest/");
 
-        //configure the server
-        // see: https://root.cern.ch/gitweb/?p=root.git;a=blob_plain;f=tutorials/http/httpcontrol.C;hb=HEAD
-        fHttpServer->SetItemField ("/", "_monitoring", "5000");
-        fHttpServer->SetItemField ("/", "_layout", "grid2x2");
+		//configure the server
+		// see: https://root.cern.ch/gitweb/?p=root.git;a=blob_plain;f=tutorials/http/httpcontrol.C;hb=HEAD
+		fHttpServer->SetItemField ("/", "_monitoring", "5000");
+		fHttpServer->SetItemField ("/", "_layout", "grid2x2");
 
-        gethostname (hostname, HOST_NAME_MAX);
-    }
-    catch (std::exception& e)
-    {
-        LOG (ERROR) << "Exception when trying to start THttpServer: " << e.what();
-    }
+		gethostname (hostname, HOST_NAME_MAX);
+	}
+	catch (std::exception& e)
+	{
+		LOG (ERROR) << "Exception when trying to start THttpServer: " << e.what();
+	}
 
-    LOG (INFO) << "Opening THttpServer on port " << pPort << ". Point your browser to: " << BOLDGREEN << hostname << ":" << pPort << RESET ;
+	LOG (INFO) << "Opening THttpServer on port " << pPort << ". Point your browser to: " << BOLDGREEN << hostname << ":" << pPort << RESET ;
 #else
-    LOG (INFO) << "Error, ROOT version < 5.34 detected or not compiled with Http Server support!"  << " No THttpServer available! - The webgui will fail to show plots!" ;
-    LOG (INFO) << "ROOT must be built with '--enable-http' flag to use this feature." ;
+	LOG (INFO) << "Error, ROOT version < 5.34 detected or not compiled with Http Server support!"  << " No THttpServer available! - The webgui will fail to show plots!" ;
+	LOG (INFO) << "ROOT must be built with '--enable-http' flag to use this feature." ;
 #endif
 }
 
@@ -387,180 +545,962 @@ void Tool::HttpServerProcess()
 {
 #ifdef __HTTP__
 
-    if (fHttpServer)
-    {
-        gSystem->ProcessEvents();
-        fHttpServer->ProcessRequests();
-    }
+	if (fHttpServer)
+	{
+		gSystem->ProcessEvents();
+		fHttpServer->ProcessRequests();
+	}
 
 #endif
 }
 
 void Tool::dumpConfigFiles()
 {
-    // visitor to call dumpRegFile on each Cbc
-    struct RegMapDumper : public HwDescriptionVisitor
-    {
-        std::string fDirectoryName;
-        RegMapDumper ( std::string pDirectoryName ) : fDirectoryName ( pDirectoryName ) {};
-        void visit ( Cbc& pCbc )
-        {
-            if ( !fDirectoryName.empty() )
-            {
-                TString cFilename = fDirectoryName + Form ( "/FE%dCBC%d.txt", pCbc.getFeId(), pCbc.getCbcId() );
-                // cFilename += Form( "/FE%dCBC%d.txt", pCbc.getFeId(), pCbc.getCbcId() );
-                pCbc.saveRegMap ( cFilename.Data() );
-            }
-            else LOG (INFO) << "Error: no results Directory initialized! "  ;
-        }
-    };
+	// visitor to call dumpRegFile on each Chip
+	struct RegMapDumper : public HwDescriptionVisitor
+	{
+		std::string fDirectoryName;
+		RegMapDumper ( std::string pDirectoryName ) : fDirectoryName ( pDirectoryName ) {};
+		void visit ( Chip& pChip )
+		{
+			if ( !fDirectoryName.empty() )
+			{
+				//Fabio: CBC specific -> to be moved out from Tool
+				TString cFilename = fDirectoryName + Form ( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
+				// cFilename += Form( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
+				pChip.saveRegMap ( cFilename.Data() );
+			}
+			else LOG (INFO) << "Error: no results Directory initialized! "  ;
+		}
+	};
 
-    RegMapDumper cDumper ( fDirectoryName );
-    accept ( cDumper );
+	RegMapDumper cDumper ( fDirectoryName );
+	accept ( cDumper );
 
-    LOG (INFO) << BOLDBLUE << "Configfiles for all Cbcs written to " << fDirectoryName << RESET ;
+	LOG (INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fDirectoryName << RESET ;
 }
+
+
 void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTPState, bool pHoleMode )
 {
 
-    for (auto cBoard : this->fBoardVector)
-    {
-        for (auto cFe : cBoard->fModuleVector)
-        {
-            for (auto cCbc : cFe->fCbcVector)
-            {
-                //first, get the Amux Value
-                uint8_t cOriginalAmuxValue;
-                cOriginalAmuxValue = cCbc->getReg ("MiscTestPulseCtrl&AnalogMux" );
-                //uint8_t cOriginalHitDetectSLVSValue = cCbc->getReg ("HitDetectSLVS" );
+	for (auto cBoard : this->fBoardVector)
+	{
+		for (auto cFe : cBoard->fModuleVector)
+		{
+			for (auto cChip : cFe->fReadoutChipVector)
+			{
+				//Fabio: CBC specific but not used by common scans - BEGIN
+				//first, get the Amux Value
+				uint8_t cOriginalAmuxValue;
+				cOriginalAmuxValue = cChip->getReg ("MiscTestPulseCtrl&AnalogMux" );
+				//uint8_t cOriginalHitDetectSLVSValue = cChip->getReg ("HitDetectSLVS" );
 
-                std::vector<std::pair<std::string, uint8_t>> cRegVec;
-                uint8_t cRegValue =  to_reg ( 0, pTestGroup );
+				std::vector<std::pair<std::string, uint16_t>> cRegVec;
+				uint8_t cRegValue =  to_reg ( 0, pTestGroup );
 
-                if (cCbc->getChipType() == ChipType::CBC3)
-                {
-                    uint8_t cTPRegValue;
+				if (cChip->getFrontEndType() == FrontEndType::CBC3)
+				{
+					uint8_t cTPRegValue;
 
-                    if (pTPState) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
-                    else if (!pTPState) cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
+					if (pTPState) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
+					else if (!pTPState) cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
 
-                    //uint8_t cHitDetectSLVSValue = (cOriginalHitDetectSLVSValue & ~(0x1 << 6));
+					//uint8_t cHitDetectSLVSValue = (cOriginalHitDetectSLVSValue & ~(0x1 << 6));
 
-                    //cRegVec.push_back ( std::make_pair ( "HitDetectSLVS", cHitDetectSLVSValue ) );
-                    cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux",  cTPRegValue ) );
-                    cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );
-                    cRegVec.push_back ( std::make_pair ( "TestPulsePotNodeSel", pTPAmplitude ) );
-                    LOG (DEBUG) << BOLDBLUE << "Read original Amux Value to be: " << std::bitset<8> (cOriginalAmuxValue) << " and changed to " << std::bitset<8> (cTPRegValue) << " - the TP is bit 6!" RESET;
-                }
-                else
-                {
-                    //CBC2
-                    cRegVec.push_back ( std::make_pair ( "SelTestPulseDel&ChanGroup",  cRegValue ) );
+					//cRegVec.push_back ( std::make_pair ( "HitDetectSLVS", cHitDetectSLVSValue ) );
+					cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux",  cTPRegValue ) );
+					cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );
+					cRegVec.push_back ( std::make_pair ( "TestPulsePotNodeSel", pTPAmplitude ) );
+					LOG (DEBUG) << BOLDBLUE << "Read original Amux Value to be: " << std::bitset<8> (cOriginalAmuxValue) << " and changed to " << std::bitset<8> (cTPRegValue) << " - the TP is bit 6!" RESET;
+				}
 
-                    uint8_t cTPRegValue;
+				this->fReadoutChipInterface->WriteChipMultReg (cChip, cRegVec);
+				//Fabio: CBC specific but not used by common scans - END
 
-                    if (pTPState) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
-                    else if (!pTPState) cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
+			}
+		}
+	}
+}
 
-                    //uint8_t cHitDetectSLVSValue = (cOriginalHitDetectSLVSValue & ~(0x1 << 6));
+void Tool::enableTestPulse(bool enableTP)
+{
 
-                    //cRegVec.push_back ( std::make_pair ( "HitDetectSLVS", cHitDetectSLVSValue ) );
-                    cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux", cTPRegValue ) );
-                    cRegVec.push_back ( std::make_pair ( "TestPulsePot", pTPAmplitude ) );
-                }
+	for (auto cBoard : this->fBoardVector)
+	{
+		for (auto cFe : cBoard->fModuleVector)
+		{
+			for (auto cChip : cFe->fReadoutChipVector)
+			{
+				switch(cChip->getFrontEndType())
+				{
+				case FrontEndType::CBC3 :
+				{
+					uint8_t cOriginalAmuxValue;
+					cOriginalAmuxValue = cChip->getReg ("MiscTestPulseCtrl&AnalogMux" );
 
-                this->fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
-            }
-        }
-    }
+					uint8_t cTPRegValue;
+
+					if (enableTP) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
+					else cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
+
+					this->fReadoutChipInterface->WriteChipReg ( cChip, "MiscTestPulseCtrl&AnalogMux",  cTPRegValue );
+					break;
+				}
+
+				default :
+				{
+					LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord "<<
+							cBoard->getBeId() << " Module " << cFe->getModuleId() << " Chip " << cChip->getChipId() << ", aborting" << RESET;
+					throw ("[Tool::enableTestPulse]\tError, FrontEnd type not found");
+					break;
+				}
+				}
+
+			}
+		}
+	}
+
+	return;
+}
+
+
+void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
+{
+
+	switch(cChip->getFrontEndType())
+	{
+	case FrontEndType::CBC3 :
+	{
+		uint8_t cRegValue =  to_reg ( 0, pTestGroup );
+		this->fReadoutChipInterface->WriteChipReg ( cChip, "TestPulseDel&ChanGroup",  cRegValue );
+		break;
+	}
+
+	default :
+	{
+		LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord "<<
+				cChip->getBeId() << " Module " << cChip->getFeId() << " Chip " << cChip->getChipId() << ", aborting" << RESET;
+		throw ("[Tool::selectGroupTestPulse]\tError, FrontEnd type not found");
+		break;
+	}
+	}
+
+	return;
 }
 
 void Tool::setFWTestPulse()
 {
-    for (auto& cBoard : fBoardVector)
-    {
-        std::vector<std::pair<std::string, uint32_t> > cRegVec;
-        BoardType cBoardType = cBoard->getBoardType();
+	for (auto& cBoard : fBoardVector)
+	{
+		std::vector<std::pair<std::string, uint32_t> > cRegVec;
 
-        if (cBoardType == BoardType::GLIB || cBoardType == BoardType::CTA)
-        {
-            cRegVec.push_back ({"COMMISSIONNING_MODE_RQ", 1 });
-            cRegVec.push_back ({"COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID", 1 });
-        }
-        else if (cBoardType == BoardType::ICGLIB || cBoardType == BoardType::ICFC7)
-        {
-            cRegVec.push_back ({"cbc_daq_ctrl.commissioning_cycle.mode_flags.enable", 1 });
-            cRegVec.push_back ({"cbc_daq_ctrl.commissioning_cycle.mode_flags.test_pulse_enable", 1 });
-            cRegVec.push_back ({"cbc_daq_ctrl.commissioning_cycle_ctrl", 0x1 });
-        }
-        else if (cBoardType == BoardType::CBC3FC7)
-        {
-            cRegVec.push_back ({"cbc_system_cnfg.fast_signal_manager.fast_signal_generator.enable.test_pulse", 0x1});
-        }
-        else if(cBoardType == BoardType::D19C)
-        {
-            cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
-            cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-        }
+		switch(cBoard->getBoardType())
+		{
+		case BoardType::D19C :
+		{
+			cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+			cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+			break;
+		}
 
-        fBeBoardInterface->WriteBoardMultReg (cBoard, cRegVec);
-    }
-}
+		default :
+		{
+			LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " BeBoard type not recognized for Bebord "<< cBoard->getBeId() << ", aborting" << RESET;
+			throw ("[Tool::setFWTestPulse]\tError, BeBoard type not found");
+			break;
+		}
 
-void Tool::MakeTestGroups ( bool pAllChan )
-{
-    if ( !pAllChan )
-    {
-        for ( int cGId = 0; cGId < 8; cGId++ )
-        {
-            std::vector<uint8_t> tempchannelVec;
+		}
 
-            for ( int idx = 0; idx < 16; idx++ )
-            {
-                int ctemp1 = idx * 16 + cGId * 2;
-                int ctemp2 = ctemp1 + 1;
-
-                if ( ctemp1 < 254 ) tempchannelVec.push_back ( ctemp1 );
-
-                if ( ctemp2 < 254 )  tempchannelVec.push_back ( ctemp2 );
-
-            }
-
-            fTestGroupChannelMap[cGId] = tempchannelVec;
-
-        }
-
-        int cGId = -1;
-        std::vector<uint8_t> tempchannelVec;
-
-        for ( int idx = 0; idx < 254; idx++ )
-            tempchannelVec.push_back ( idx );
-
-        fTestGroupChannelMap[cGId] = tempchannelVec;
-    }
-    else
-    {
-        int cGId = -1;
-        std::vector<uint8_t> tempchannelVec;
-
-        for ( int idx = 0; idx < 254; idx++ )
-            tempchannelVec.push_back ( idx );
-
-        fTestGroupChannelMap[cGId] = tempchannelVec;
-
-    }
+		fBeBoardInterface->WriteBoardMultReg (cBoard, cRegVec);
+	}
 }
 
 void Tool::CreateReport()
 {
-    std::ofstream report;
-    report.open (fDirectoryName + "/TestReport.txt", std::ofstream::out | std::ofstream::app);
-    report.close();
+	std::ofstream report;
+	report.open (fDirectoryName + "/TestReport.txt", std::ofstream::out | std::ofstream::app);
+	report.close();
 }
 void Tool::AmmendReport (std::string pString )
 {
-    std::ofstream report;
-    report.open (fDirectoryName + "/TestReport.txt", std::ofstream::out | std::ofstream::app);
-    report << pString << std::endl;
-    report.close();
+	std::ofstream report;
+	report.open (fDirectoryName + "/TestReport.txt", std::ofstream::out | std::ofstream::app);
+	report << pString << std::endl;
+	report.close();
 }
+
+
+// decode bend LUT for a given CBC
+std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pChip)
+{
+	//Fabio: CBC specific but not used by common scans - BEGIN
+
+	std::map<uint8_t, double> cLUT;
+
+	double cBend=-7.0;
+	LOG (DEBUG) << BOLDGREEN << "Decoding bend LUT for CBC" << +pChip->getChipId() << " ." << RESET;
+	for( int i = 0 ; i <= 14 ; i++ )
+	{
+		TString cRegName = Form ( "Bend%d", i  );
+		uint8_t cRegValue = fReadoutChipInterface->ReadChipReg (pChip, cRegName.Data() );
+		//LOG (INFO) << BOLDGREEN << "Reading register " << cRegName.Data() << " - value of 0x" << std::hex <<  +cRegValue << " found [LUT entry for bend of " << cBend << " strips]" <<  RESET;
+
+		uint8_t cLUTvalue_0 = (cRegValue >> 0) & 0x0F;
+		uint8_t cLUTvalue_1 = (cRegValue >> 4) & 0x0F;
+
+		LOG (DEBUG) << BOLDGREEN << "LUT entry for bend of " << cBend << " strips found to be " << std::bitset<4>(cLUTvalue_0) <<   RESET;
+		cLUT[cLUTvalue_0] =  cBend ;
+		// just check if the bend code is already in the map
+		// and if it is ... do nothing
+		cBend += 0.5;
+		if( cBend > 7) continue;
+
+		auto cItem = cLUT.find(cLUTvalue_1);
+		if(cItem == cLUT.end())
+		{
+			LOG (DEBUG) << BOLDGREEN << "LUT entry for bend of " << cBend << " strips found to be " << std::bitset<4>(cLUTvalue_1) <<   RESET;
+			cLUT[cLUTvalue_1] = cBend ;
+		}
+		cBend += 0.5;
+	}
+	return cLUT;
+	//Fabio: CBC specific but not used by common scans - END
+
+}
+
+
+// //method to mask a channel list
+// void Tool::maskChannelFromOtherGroups (Chip* pChip, int pTestGroup){
+
+//     std::vector<uint8_t> chipMask;
+//     bool chipHasMaskedChannels = pChip->hasMaskedChannels();
+//     if(chipHasMaskedChannels) chipMask = pChip->getChipMask();
+//     const std::vector<uint8_t> &groupMask = fMaskForTestGroupChannelMap[pTestGroup];
+
+//     RegisterVector cRegVec; 
+//     cRegVec.clear(); 
+
+//     switch(pChip->getFrontEndType())
+//     {
+//         case FrontEndType::CBC3 :
+//         {   
+//             for(uint8_t i=0; i<chipMask.size(); ++i){
+//                 if(chipHasMaskedChannels) cRegVec.push_back ( {fChannelMaskMapCBC3[i], chipMask[i] & groupMask[i] } );
+//                 else cRegVec.push_back ( {fChannelMaskMapCBC3[i], groupMask[i] } );
+//             }
+//             break;
+//         }
+
+//         default :
+//         {
+//             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord "<< 
+//                 pChip->getBeId() << " Module " << pChip->getFeId() << " Chip " << pChip->getChipId() << ", aborting" << RESET;
+//             throw ("[Tool::SetMaskAllChannels]\tError, FrontEnd type not found");
+//             break;
+//         }
+//     }
+
+//     fReadoutChipInterface->WriteChipMultReg ( pChip , cRegVec );
+
+//     return;
+// }
+
+
+
+// then a method to un-mask pairs of channels on a given CBC
+void Tool::unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair)
+{
+	//Fabio: CBC specific but not used by common scans - BEGIN
+
+	FrontEndType cFrontEndType;
+	for ( BeBoard* pBoard : fBoardVector )
+	{
+		for (auto cFe : pBoard->fModuleVector)
+		{
+			cFrontEndType = cFe->getFrontEndType();
+		}
+	}
+
+	// get ready to mask/un-mask channels in pairs...
+	MaskedChannelsList cMaskedList;
+	MaskedChannels cMaskedChannels; cMaskedChannels.clear(); cMaskedChannels.push_back(pPair.first);
+
+	uint8_t cRegisterIndex = pPair.first >> 3;
+	std::string cMaskRegName = fChannelMaskMapCBC3[cRegisterIndex];
+	cMaskedList.insert ( std::pair<std::string , MaskedChannels>(cMaskRegName.c_str()  ,cMaskedChannels ) );
+
+	cRegisterIndex = pPair.second >> 3;
+	cMaskRegName = fChannelMaskMapCBC3[cRegisterIndex];
+	auto it = cMaskedList.find(cMaskRegName.c_str() );
+	if (it != cMaskedList.end())
+	{
+		( it->second ).push_back( pPair.second );
+	}
+	else
+	{
+		cMaskedChannels.clear(); cMaskedChannels.push_back(pPair.second);
+		cMaskedList.insert ( std::pair<std::string , MaskedChannels>(cMaskRegName.c_str()  ,cMaskedChannels ) );
+	}
+
+	// do the actual channel un-masking
+	//LOG (INFO) << GREEN << "\t ......... UNMASKing channels : " << RESET ;
+	for( auto cMasked : cMaskedList)
+	{
+		uint8_t cRegValue = 0; //cChip->getReg (cMasked.first);
+		std::string cOutput = "";
+		for(auto cMaskedChannel : cMasked.second )
+		{
+			uint8_t cBitShift = (cMaskedChannel) & 0x7;
+			cRegValue |=  (1 << cBitShift);
+			std::string cChType =  ( (+cMaskedChannel & 0x1) == 0 ) ? "seed" : "correlation";
+			TString cOut; cOut.Form("Channel %d in the %s layer\t", (int)cMaskedChannel, cChType.c_str() );
+			cOutput += cOut.Data();
+		}
+		//LOG (INFO) << GREEN << "\t Writing " << std::bitset<8> (cRegValue) <<  " to " << cMasked.first << " to UNMASK channels for stub sweep : " << cOutput.c_str() << RESET ;
+		fReadoutChipInterface->WriteChipReg ( cChip, cMasked.first ,  cRegValue  );
+	}
+	//Fabio: CBC specific but not used by common scans - END
+
+}
+
+
+// Two dimensional dac scan
+void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, uint32_t numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector, int32_t numberOfEventsPerBurst)
+{
+
+	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
+	{
+		scanBeBoardDacDac(boardIndex, dac1Name, dac1List, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector, numberOfEventsPerBurst);
+	}
+
+	return;
+}
+
+
+// Two dimensional dac scan per BeBoard
+void Tool::scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, uint32_t numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector, int32_t numberOfEventsPerBurst)
+{
+
+	if(dac1List.size() != detectorContainerVectorOfVector.size())
+	{
+		LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
+		abort();
+	}
+
+	for(size_t dacIt = 0; dacIt<dac1List.size(); ++dacIt)
+	{
+		setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)), dac1Name, dac1List[dacIt]);
+		scanBeBoardDac(boardIndex, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector[dacIt],numberOfEventsPerBurst);
+	}
+
+	return;
+}
+
+
+
+
+// One dimensional dac scan
+void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorDataContainer*> detectorContainerVector, int32_t numberOfEventsPerBurst)
+{
+
+	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
+	{
+		scanBeBoardDac(boardIndex, dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst);
+
+	}
+
+	return;
+}
+
+
+// // One dimensional dac scan per BeBoard
+// void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorContainer*> detectorContainerVector)
+// {
+// 	if(dacList.size() != detectorContainerVector.size())
+// 	{
+// 		LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
+// 		abort();
+// 	}
+
+// 	for(size_t dacIt = 0; dacIt<dacList.size(); ++dacIt)
+// 	{
+// 		fDetectorDataContainer = detectorContainerVector[dacIt];
+// 		setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents);
+// 	}
+
+// 	return;
+// }
+
+// bit wise scan
+void Tool::bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy)
+{
+	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
+	{
+		bitWiseScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy);
+	}
+	return;
+}
+
+
+// bit wise scan per BeBoard
+void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy)
+{
+
+	DetectorDataContainer *outputDataContainer = fDetectorDataContainer;
+
+	float globalOccupancy = 0.;
+	ReadoutChip *cChip = static_cast<BeBoard*>(fDetectorContainer->at(boardIndex))->fModuleVector.at(0)->fReadoutChipVector.at(0); //assumption: one BeBoard has only one type of chip;
+
+	bool localDAC = cChip->isDACLocal(dacName);
+	uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
+    LOG (INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
+	bool occupanyDirectlyProportionalToDAC;
+
+	ContainerFactory   theDetectorFactory;
+	DetectorDataContainer *previousStepOccupancyContainer = new DetectorDataContainer();
+	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *previousStepOccupancyContainer);
+	DetectorDataContainer *currentStepOccupancyContainer = new DetectorDataContainer();
+	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *currentStepOccupancyContainer);
+
+	DetectorDataContainer *previousDacList = new DetectorDataContainer();
+	DetectorDataContainer *currentDacList = new DetectorDataContainer();
+
+	RegisterValue allZeroRegister(0);
+	RegisterValue allOneRegister (0xFFFF>>(16-numberOfBits));
+	EmptyContainer empty;
+	if(localDAC)
+	{
+		theDetectorFactory.copyAndInitStructure<RegisterValue,EmptyContainer>(*fDetectorContainer, *previousDacList, allZeroRegister, empty);
+		theDetectorFactory.copyAndInitStructure<RegisterValue,EmptyContainer>(*fDetectorContainer, *currentDacList , allOneRegister , empty);
+	}
+	else
+	{
+		theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, *previousDacList, empty, allZeroRegister);
+		theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, *currentDacList , empty, allOneRegister);
+	}
+
+	if(localDAC) setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList);
+	else setAllGlobalDacBeBoard(boardIndex, dacName, *previousDacList);
+
+	fDetectorDataContainer = previousStepOccupancyContainer;
+	measureBeBoardData(boardIndex, numberOfEvents);
+
+	if(localDAC) setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
+	else setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
+
+	fDetectorDataContainer = currentStepOccupancyContainer;
+	measureBeBoardData(boardIndex, numberOfEvents);
+
+	occupanyDirectlyProportionalToDAC = static_cast<Summary<Occupancy,Occupancy>*>(currentStepOccupancyContainer->at(boardIndex)->summary_)->theSummary_.fOccupancy
+			> static_cast<Summary<Occupancy,Occupancy>*>(previousStepOccupancyContainer->at(boardIndex)->summary_)->theSummary_.fOccupancy;
+
+	if(!occupanyDirectlyProportionalToDAC)
+	{
+		DetectorDataContainer *tmpPointer = previousDacList;
+		previousDacList = currentDacList;
+		currentDacList = tmpPointer;
+	}
+
+	for(int iBit = numberOfBits-1; iBit>=0; --iBit)
+	{
+
+		for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
+		{
+			for ( auto cChip : *cFe )
+			{
+				if(localDAC)
+				{
+					for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
+					{
+
+						if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue
+								= previousDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue + (1<<iBit);
+						else currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue
+								= previousDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue & (0xFFFF - (1<<iBit));
+					}
+				}
+				else
+				{
+					if(occupanyDirectlyProportionalToDAC) static_cast<Summary<RegisterValue,EmptyContainer>*>(currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
+							= static_cast<Summary<RegisterValue,EmptyContainer>*>(previousDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue + (1<<iBit);
+					else static_cast<Summary<RegisterValue,EmptyContainer>*>(currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
+							= static_cast<Summary<RegisterValue,EmptyContainer>*>(previousDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue & (0xFFFF - (1<<iBit));
+				}
+			}
+		}
+
+		if(localDAC) setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
+		else setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
+
+		fDetectorDataContainer = currentStepOccupancyContainer;
+		measureBeBoardData(boardIndex, numberOfEvents);
+
+		//Determine if it is better or not
+		for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
+		{
+			for ( auto cChip : *cFe )
+			{
+				if(localDAC)
+				{
+					for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
+					{
+						if( currentStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
+						{
+							previousDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue
+									= currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue;
+							previousStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(iChannel).fOccupancy
+									= currentStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(iChannel).fOccupancy;
+						}
+					}
+				}
+				else
+				{
+					if( static_cast<Summary<Occupancy,Occupancy>*>(currentStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fOccupancy <= targetOccupancy )
+					{
+						static_cast<Summary<RegisterValue,EmptyContainer>*>(previousDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
+								= static_cast<Summary<RegisterValue,EmptyContainer>*>(currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue;
+						static_cast<Summary<Occupancy,Occupancy>*>(previousStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fOccupancy
+								= static_cast<Summary<Occupancy,Occupancy>*>(currentStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fOccupancy;
+					}
+				}
+			}
+		}
+	}
+
+
+	if(localDAC){
+		setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList);
+	}
+	else setAllGlobalDacBeBoard(boardIndex, dacName, *previousDacList);
+
+	fDetectorDataContainer = outputDataContainer;
+	measureBeBoardData(boardIndex, numberOfEvents);
+
+	dumpConfigFiles();
+
+	delete previousStepOccupancyContainer;
+	delete currentStepOccupancyContainer;
+	delete previousDacList;
+	delete currentDacList;
+
+	return;
+}
+
+
+// set dac and measure occupancy
+void Tool::setDacAndMeasureData(const std::string &dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
+{
+	for(uint16_t boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
+	{
+		setDacAndMeasureBeBoardData(boardIndex, dacName, dacValue, numberOfEvents, numberOfEventsPerBurst);
+	}
+
+	return;
+}
+
+
+// set dac and measure occupancy per BeBoard
+void Tool::setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string &dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
+{
+	setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)), dacName, dacValue);
+	measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+	return;
+}
+
+// measure occupancy
+void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
+{
+	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
+	{
+		measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+		// if(fStreamerEnabled) fObjectStream->streamAndSendBoard(fDetectorDataContainer->at(boardIndex), fNetworkStreamer);
+	}
+
+}
+
+// // measure occupancy
+// void Tool::measureBeBoardData(uint16_t boardIndex, const uint16_t numberOfEvents)
+// {
+
+// 	uint32_t normalization=0;
+// 	uint32_t numberOfHits=0;
+
+// 	if(fChannelGroupHandler == nullptr)
+// 	{
+// 		abort();
+// 	}
+// 	if(!fAllChan)
+// 	{
+// 		for(auto group : *fChannelGroupHandler)
+// 		{
+
+// 			if(fMaskChannelsFromOtherGroups || fTestPulse)
+// 			{
+// 				for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
+// 				{
+// 					for ( auto cChip : *cFe )
+// 					{
+// 						if(fMaskChannelsFromOtherGroups)
+// 						{
+// 							fChipInterface->maskChannelsGroup(static_cast<ReadoutChip*>(cChip), group);
+// 						}
+// 						if(fTestPulse)
+// 						{
+// 							fChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), group);
+// 						}
+// 					}
+// 				}
+// 			}
+
+// 			measureBeBoardDataPerGroup(boardIndex, numberOfEvents, group);
+// 		}
+
+// 		if(fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
+// 		{
+// 			for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
+// 			{
+// 				for ( auto cChip : *cFe )
+// 				{
+// 					fChipInterface->ConfigureChipOriginalMask ( static_cast<ReadoutChip*>(cChip) );
+// 				}
+// 			}
+// 		}
+// 	}
+// 	else
+// 	{
+// 		measureBeBoardDataPerGroup(boardIndex, numberOfEvents, fChannelGroupHandler->allChannelGroup());
+// 	}
+// 	//It need to be moved into the place the loop on boards is done
+// 	// fDetectorDataContainer->at(boardIndex)->normalizeAndAverageContainers(fDetectorContainer->at(boardIndex), fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+
+// 	fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+
+// }
+
+
+// void Tool::measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup)
+// {
+// 	ReadNEvents ( static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)), numberOfEvents );
+// 	// Loop over Events from this Acquisition
+// 	const std::vector<Event*>& events = GetEvents ( static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)) );
+// 	for ( auto& event : events )
+// 		event->fillDataContainer((fDetectorDataContainer->at(boardIndex)), cTestChannelGroup);
+
+// }
+
+
+
+
+
+class ScanBase
+{
+public:
+	ScanBase(Tool *theTool) : fTool(theTool) {;}
+	virtual ~ScanBase() {;}
+
+	virtual void operator()() = 0;
+	void setGroup(const ChannelGroupBase *cTestChannelGroup) {fTestChannelGroup = cTestChannelGroup;}
+	void setBoardId(uint16_t boardIndex) {fBoardIndex = boardIndex;}
+	void setNumberOfEvents(uint32_t numberOfEvents) {fNumberOfEvents = numberOfEvents;}
+	void setNumberOfEventsPerBurst(int32_t numberOfEventsPerBurst) {fNumberOfEventsPerBurst = numberOfEventsPerBurst;}
+
+	void setDetectorContainer(DetectorContainer *detectorContainer) {fDetectorContainer = detectorContainer;}
+
+protected:
+	uint16_t fNumberOfEvents;
+	int32_t fNumberOfEventsPerBurst {-1};
+	uint32_t fBoardIndex;
+	const ChannelGroupBase *fTestChannelGroup;
+	Tool *fTool;
+	DetectorContainer *fDetectorContainer;
+};
+
+void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase *groupScan)
+{
+
+	groupScan->setBoardId(boardIndex);
+	groupScan->setNumberOfEvents(numberOfEvents);
+	groupScan->setDetectorContainer(fDetectorContainer);
+	groupScan->setNumberOfEventsPerBurst(numberOfEventsPerBurst);
+
+	if(fChannelGroupHandler == nullptr)
+	{
+	    abort();
+	}
+	if(!fAllChan)
+	{
+	    for(auto group : *fChannelGroupHandler)
+	    {
+
+	        if(fMaskChannelsFromOtherGroups || fTestPulse)
+	        {
+	            for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
+	            {
+	                for ( auto cChip : *cFe )
+	                {
+	                    if(fMaskChannelsFromOtherGroups)
+	                    {
+	                        fReadoutChipInterface->maskChannelsGroup(static_cast<ReadoutChip*>(cChip), group);
+	                    }
+	                    if(fTestPulse)
+	                    {
+	                        fReadoutChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), group);
+	                    }
+	                }
+	            }
+	        }
+
+	        groupScan->setGroup(group);
+	        (*groupScan)();
+	    }
+
+	    if(fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
+	    {
+	        for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
+	        {
+	            for ( auto cChip : *cFe )
+	            {
+	                fReadoutChipInterface->ConfigureChipOriginalMask ( static_cast<ReadoutChip*>(cChip) );
+	            }
+	        }
+	    }
+	}
+	else
+	{
+	    groupScan->setGroup(fChannelGroupHandler->allChannelGroup());
+	    (*groupScan)();
+	}
+	//It need to be moved into the place the loop on boards is done
+	// fDetectorDataContainer->at(boardIndex)->normalizeAndAverageContainers(fDetectorContainer->at(boardIndex), fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+
+}
+
+
+
+class MeasureBeBoardDataPerGroup : public ScanBase
+{
+public:
+	MeasureBeBoardDataPerGroup(Tool *theTool) : ScanBase(theTool) {;}
+	~MeasureBeBoardDataPerGroup() {;}
+
+	void operator()() override
+	{
+		uint16_t burstNumbers;
+		uint32_t lastBurstNumberOfEvents;
+		if(fNumberOfEventsPerBurst<=0)
+		{
+			burstNumbers = 1;
+			lastBurstNumberOfEvents = fNumberOfEvents;
+		}
+		else 
+		{
+			burstNumbers            = fNumberOfEvents/fNumberOfEventsPerBurst;
+			lastBurstNumberOfEvents = fNumberOfEventsPerBurst;
+			if (fNumberOfEvents%fNumberOfEventsPerBurst > 0)
+			{
+				++burstNumbers;
+				lastBurstNumberOfEvents = fNumberOfEvents%fNumberOfEventsPerBurst;
+			}
+		}
+
+		while(burstNumbers>0)
+		{
+			uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
+			if(burstNumbers==1) currentNumberOfEvents = lastBurstNumberOfEvents;
+			
+			fTool->ReadNEvents ( static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)), currentNumberOfEvents );
+			// Loop over Events from this Acquisition
+			const std::vector<Event*>& events = fTool->GetEvents ( static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)) );
+			for ( auto& event : events )
+				event->fillDataContainer((fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
+			--burstNumbers;
+		}
+
+	}
+
+	void setDataContainer(DetectorDataContainer *detectorDataContainer) {fDetectorDataContainer = detectorDataContainer;}
+
+private:
+	DetectorDataContainer *fDetectorDataContainer;
+
+};
+
+void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
+{
+	MeasureBeBoardDataPerGroup theScan(this);
+	theScan.setDataContainer(fDetectorDataContainer);
+
+    doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
+
+	fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+
+}
+
+
+
+
+class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
+{
+public:
+	ScanBeBoardDacPerGroup(Tool *theTool) : MeasureBeBoardDataPerGroup(theTool) {;}
+	~ScanBeBoardDacPerGroup() {;}
+
+	void operator()() override
+	{
+		for(size_t dacIt = 0; dacIt<fDacList->size(); ++dacIt)
+		{
+			fTool->setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)), fDacName, fDacList->at(dacIt));
+			setDataContainer(fDetectorDataContainerVector->at(dacIt));
+			MeasureBeBoardDataPerGroup::operator()();
+		}
+	}
+
+	void setDataContainerVector(std::vector<DetectorDataContainer*>* detectorDataContainerVector) {fDetectorDataContainerVector = detectorDataContainerVector;}
+	void setDacName(const std::string &dacName) {fDacName = dacName;}
+	void setDacList(const std::vector<uint16_t>* dacList) {fDacList = dacList;}
+
+private:
+	std::vector<DetectorDataContainer*>* fDetectorDataContainerVector;
+	const std::vector<uint16_t>* fDacList;
+	std::string fDacName;
+
+};
+
+
+// One dimensional dac scan per BeBoard
+void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorDataContainer*> &detectorContainerVector, int32_t numberOfEventsPerBurst)
+{
+
+	if(dacList.size() != detectorContainerVector.size())
+	{
+		LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
+		abort();
+	}
+
+	ScanBeBoardDacPerGroup theScan(this);
+	theScan.setDataContainerVector(&detectorContainerVector);
+	theScan.setDacName(dacName);
+	theScan.setDacList(&dacList);
+
+    doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
+
+    for(auto container : detectorContainerVector)
+		container->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+
+	return;
+}
+
+
+
+
+//Set global DAC for all CBCs in the BeBoard
+void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer)
+{
+	for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
+	{
+		for ( auto cChip : *cFe )
+		{
+			// float cOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(globalDACContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->summary_)->theSummary_.fOccupancy;
+			// Summary<RegisterValue,EmptyContainer>* tmp = static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex))->summary_;
+			fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), dacName, static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue);
+		}
+	}
+	return;
+}
+
+// set local dac per BeBoard
+void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer)
+{   
+	for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
+	{
+		for ( auto cChip : *cFe )
+		{
+			std::vector<uint16_t> dacVector ;//= dacList.at(cFe->getModuleId()).at(cChip->getChipId());
+			fReadoutChipInterface->WriteChipAllLocalReg ( static_cast<ReadoutChip*>(cChip), dacName, *globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId()));
+		}
+	}
+	return;
+}
+
+//Set same global DAC for all CBCs
+void Tool::setSameGlobalDac(const std::string &dacName, const uint16_t dacValue){
+
+	for (auto& cBoard : fBoardVector)
+	{
+		setSameGlobalDacBeBoard(cBoard, dacName, dacValue);
+	}
+
+	return;
+}
+
+
+//Set same global DAC for all CBCs in the BeBoard
+void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
+{
+	for ( auto cFe : pBoard->fModuleVector )
+	{
+		for ( auto cChip : cFe->fReadoutChipVector )
+		{
+			fReadoutChipInterface->WriteChipReg ( cChip, dacName, dacValue );
+		}
+	}
+	return;
+}
+
+// set same local dac for all BeBoard
+void Tool::setSameLocalDac(const std::string &dacName, const uint16_t dacValue)
+{
+
+	for (auto& cBoard : fBoardVector)
+	{
+		setSameLocalDacBeBoard(cBoard, dacName, dacValue);
+	}
+
+	return;
+}
+
+
+// set same local dac per BeBoard
+void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
+{
+	for ( auto cFe : pBoard->fModuleVector )
+	{
+		for ( auto cChip : cFe->fReadoutChipVector )
+		{
+			ChannelContainer<RegisterValue>* dacVector = new ChannelContainer<RegisterValue>(cChip->getNumberOfChannels(),RegisterValue(dacValue));
+			ChipContainer theChipContainer(cChip->getId(),cChip->getNumberOfRows(),cChip->getNumberOfCols());
+			theChipContainer.setChannelContainer(dacVector);
+
+			fReadoutChipInterface->WriteChipAllLocalReg ( cChip, dacName, theChipContainer);
+		}
+	}
+	return;
+}
+
+void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
+{
+	//Assumption: 1 BeBoard has only 1 chip flavor:
+	if(pBoard->fModuleVector.at(0)->fReadoutChipVector.at(0)->isDACLocal(dacName))
+	{
+		setSameLocalDacBeBoard(pBoard, dacName, dacValue);
+	}
+	else
+	{
+		setSameGlobalDacBeBoard(pBoard, dacName, dacValue);
+	}
+}
+
+void Tool::setSameDac(const std::string &dacName, const uint16_t dacValue)
+{
+
+	for (auto& cBoard : fBoardVector)
+	{
+		setSameDacBeBoard(cBoard, dacName, dacValue);
+	}
+
+	return;
+
+}
+

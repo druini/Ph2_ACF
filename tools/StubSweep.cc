@@ -45,16 +45,16 @@ void StubSweep::Initialize()
         {
             uint32_t cFeId = cFe->getFeId();
             cFeCount++;
-            fType = cFe->getChipType();
+            fType = cFe->getFrontEndType();
 
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fReadoutChipVector)
             {
-                uint32_t cCbcId = cCbc->getCbcId();
+                uint32_t cCbcId = cCbc->getChipId();
                 cCbcCount++;
 
                 if ( cCbcId > cCbcIdMax ) cCbcIdMax = cCbcId;
 
-                cName = Form ("StubSweep_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getCbcId() );
+                cName = Form ("StubSweep_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() );
                 cObj = gROOT->FindObject (cName);
 
                 if (cObj) delete cObj;
@@ -74,7 +74,7 @@ void StubSweep::Initialize()
                 bookHistogram ( cCbc, "StubAddresses", cStubSweepHist );
 
                 // bend information
-                cName = Form ("StubBends_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getCbcId() );
+                cName = Form ("StubBends_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() );
                 cObj = gROOT->FindObject (cName);
 
                 if (cObj) delete cObj;
@@ -103,13 +103,13 @@ void StubSweep::Initialize()
     updateHists ( "StubBends" );
 
 }
-void StubSweep::configureTestPulse (Cbc* pCbc, uint8_t pPulseState)
+void StubSweep::configureTestPulse (Chip* pCbc, uint8_t pPulseState)
 {
     // get value of TestPulse control register
     uint8_t cOrigValue = pCbc->getReg ("MiscTestPulseCtrl&AnalogMux" );
     uint8_t cRegValue = cOrigValue |  (pPulseState << 6);
 
-    fCbcInterface->WriteCbcReg ( pCbc, "MiscTestPulseCtrl&AnalogMux",  cRegValue  );
+    fReadoutChipInterface->WriteChipReg ( pCbc, "MiscTestPulseCtrl&AnalogMux",  cRegValue  );
     cRegValue = pCbc->getReg ("MiscTestPulseCtrl&AnalogMux" );
     //LOG (DEBUG) << "Test pulse register 0x" << std::hex << +cOrigValue << " - " << std::bitset<8> (cOrigValue)  << " - now set to: 0x" << std::hex << +cRegValue << " - " << std::bitset<8> (cRegValue) ;
 }
@@ -124,9 +124,9 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
         {
             uint32_t cFeId = cFe->getFeId();
 
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fReadoutChipVector)
             {
-                uint32_t cCbcId = cCbc->getCbcId();
+                uint32_t cCbcId = cCbc->getChipId();
 
                 // before you do anything else make sure that the test pulse is enabled
                 configureTestPulse (cCbc, 1);
@@ -146,7 +146,7 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
 
                     // first, configure test pulse
                     uint8_t cRegValue =  to_reg ( fDelay, cTestGroup );
-                    fCbcInterface->WriteCbcReg ( cCbc, "TestPulseDel&ChanGroup",  cRegValue  );
+                    fReadoutChipInterface->WriteChipReg ( cCbc, "TestPulseDel&ChanGroup",  cRegValue  );
 
 
                     // now un-mask channel in pairs
@@ -181,16 +181,14 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
                         std::string cRegName;
 
                         //LOG (DEBUG) << BLUE << "Un-masking channels " <<  +cChannelPair[0] << " and " << +cChannelPair[1] << RESET ;
-                        if (fType == ChipType::CBC2)
-                            cRegName = fChannelMaskMapCBC2[cRegisterIndex];
-                        else if (fType == ChipType::CBC3)
+                        if (fType == FrontEndType::CBC3)
 
                             cRegName = fChannelMaskMapCBC3[cRegisterIndex];
 
                         // get value that is already in the register
                         cRegValue = cCbc->getReg (cRegName );
                         // write new mask to cbc register
-                        fCbcInterface->WriteCbcReg ( cCbc, cRegName,  cMaskRegValue  );
+                        fReadoutChipInterface->WriteChipReg ( cCbc, cRegName,  cMaskRegValue  );
                         //LOG (DEBUG) << "\t" << cRegName << MAGENTA << " wrote - " << std::bitset<8> (cMaskRegValue) << RESET  ;
 
 
@@ -239,7 +237,7 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
                         fillStubSweepHist ( cCbc,  cChannelPair, cStubPosition );
 
                         // Re-configure the CBC mask register back to its original state
-                        fCbcInterface->WriteCbcReg ( cCbc, cRegName,  cRegValue  );
+                        fReadoutChipInterface->WriteChipReg ( cCbc, cRegName,  cRegValue  );
 
                         //if( i%4 == 0 )
                         updateHists ( "StubAddresses" );
@@ -254,22 +252,22 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
 
     this->writeObjects();
 }
-void StubSweep::fillStubSweepHist ( Cbc* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubPosition )
+void StubSweep::fillStubSweepHist ( Chip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubPosition )
 {
-    // Find the Occupancy histogram for the current Cbc
+    // Find the Occupancy histogram for the current Chip
     TProfile* cTmpProfile = static_cast<TProfile*> ( getHist ( pCbc, "StubAddresses" ) );
     cTmpProfile->Fill ( pChannelPair[1], pStubPosition );
 }
-void StubSweep::fillStubBendHist ( Cbc* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubBend )
+void StubSweep::fillStubBendHist ( Chip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubBend )
 {
-    // Find the Occupancy histogram for the current Cbc
+    // Find the Occupancy histogram for the current Chip
     TProfile* cTmpProfile = static_cast<TProfile*> ( getHist ( pCbc, "StubBends" ) );
     cTmpProfile->Fill ( pChannelPair[1], pStubBend );
 }
 void StubSweep::updateHists ( std::string pHistname )
 {
     // loop the CBCs
-    for ( const auto& cCbc : fCbcHistMap )
+    for ( const auto& cCbc : fChipHistMap )
     {
         // loop the map of string vs TObject
         auto cHist = cCbc.second.find ( pHistname );
@@ -335,31 +333,19 @@ uint8_t StubSweep::getStubPosition (std::vector<Event*> pEvents, uint32_t pFeId,
 
     return cStubPosition;
 }
-void StubSweep::maskAllChannels (Cbc* pCbc)
+void StubSweep::maskAllChannels (Chip* pCbc)
 {
     uint8_t cRegValue ;
     std::string cRegName;
 
-    if (fType == ChipType::CBC2)
-    {
-        for ( unsigned int i = 0 ; i < fChannelMaskMapCBC2.size() ; i++ )
-        {
-            pCbc->setReg (fChannelMaskMapCBC2[i], 0);
-            cRegValue = pCbc->getReg (fChannelMaskMapCBC2[i]);
-            cRegName =  fChannelMaskMapCBC2[i];
-            fCbcInterface->WriteCbcReg ( pCbc, cRegName,  cRegValue  );
-            //LOG (DEBUG) << fChannelMaskMapCBC2[i] << " " << std::bitset<8> (cReadValue);
-        }
-    }
-
-    if (fType == ChipType::CBC3)
+    if (fType == FrontEndType::CBC3)
     {
         for ( unsigned int i = 0 ; i < fChannelMaskMapCBC3.size() ; i++ )
         {
             pCbc->setReg (fChannelMaskMapCBC3[i], 0);
             cRegValue = pCbc->getReg (fChannelMaskMapCBC3[i]);
             cRegName =  fChannelMaskMapCBC3[i];
-            fCbcInterface->WriteCbcReg ( pCbc, cRegName,  cRegValue  );
+            fReadoutChipInterface->WriteChipReg ( pCbc, cRegName,  cRegValue  );
             //LOG (DEBUG) << fChannelMaskMapCBC3[i] << " " << std::bitset<8> (cReadValue);
         }
     }
@@ -390,7 +376,7 @@ std::vector<uint8_t> StubSweep::findChannelsInTestGroup ( uint8_t pTestGroup )
 
     return cChannelVector;
 }
-uint8_t StubSweep::getChanelMask ( Cbc* pCbc, uint8_t pChannel )
+uint8_t StubSweep::getChanelMask ( Chip* pCbc, uint8_t pChannel )
 {
     uint8_t cRegisterIndex = (pChannel - 1) / 8;
 
@@ -404,12 +390,7 @@ uint8_t StubSweep::getChanelMask ( Cbc* pCbc, uint8_t pChannel )
         //value of the register
         uint8_t cReadValue;
 
-        if (fType == ChipType::CBC2)
-        {
-            //get the original value of the register
-            cReadValue = pCbc->getReg (fChannelMaskMapCBC2[cRegisterIndex]);
-        }
-        else if (fType == ChipType::CBC3)
+        if (fType == FrontEndType::CBC3)
         {
             //get the original value of the register
             cReadValue = pCbc->getReg (fChannelMaskMapCBC3[cRegisterIndex]);
@@ -418,7 +399,7 @@ uint8_t StubSweep::getChanelMask ( Cbc* pCbc, uint8_t pChannel )
         return cReadValue;
     }
 }
-void StubSweep::setCorrelationWinodwOffsets ( Cbc* pCbc, double pOffsetR1, double pOffsetR2, double pOffsetR3, double pOffsetR4)
+void StubSweep::setCorrelationWinodwOffsets ( Chip* pCbc, double pOffsetR1, double pOffsetR2, double pOffsetR3, double pOffsetR4)
 {
 
     uint8_t cOffsetR1 =  fWindowOffsetMapCBC3.find (pOffsetR1)->second;
@@ -429,10 +410,10 @@ void StubSweep::setCorrelationWinodwOffsets ( Cbc* pCbc, double pOffsetR1, doubl
     uint8_t cOffsetRegR12 = ( ( (cOffsetR2 ) << 4) | cOffsetR1 );
     uint8_t cOffsetRegR34 = ( ( (cOffsetR4 ) << 4) | cOffsetR3 );
 
-    fCbcInterface->WriteCbcReg ( pCbc, "CoincWind&Offset12",  cOffsetRegR12  );
+    fReadoutChipInterface->WriteChipReg ( pCbc, "CoincWind&Offset12",  cOffsetRegR12  );
     LOG (DEBUG) << "\t" << "CoincWind&Offset12" << BOLDBLUE << " set to " << std::bitset<8> (cOffsetRegR12) << " - offsets were supposed to be : " << +cOffsetR1 << " and " << +cOffsetR2 <<  RESET  ;
 
-    fCbcInterface->WriteCbcReg ( pCbc, "CoincWind&Offset34",  cOffsetRegR34  );
+    fReadoutChipInterface->WriteChipReg ( pCbc, "CoincWind&Offset34",  cOffsetRegR34  );
     LOG (DEBUG) << "\t" << "CoincWind&Offset34" << BOLDBLUE << " set to " << std::bitset<8> (cOffsetRegR34) << " - offsets were supposed to be : " << +cOffsetR3 << " and " << +cOffsetR4 <<  RESET  ;
 
 }

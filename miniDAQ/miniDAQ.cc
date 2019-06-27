@@ -7,10 +7,10 @@
 #include "pugixml/pugixml.hpp"
 #include <boost/filesystem.hpp>
 
-#include "../HWDescription/Cbc.h"
+#include "../HWDescription/Chip.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
-#include "../HWInterface/CbcInterface.h"
+#include "../HWInterface/ChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/Utilities.h"
@@ -22,8 +22,8 @@
 
 #include "TROOT.h"
 #include "publisher.h"
-#include "DQMEvent.h"
-#include "SLinkDQMHistogrammer.h"
+#include "../DQMUtils/DQMEvent.h"
+#include "../DQMUtils/SLinkDQMHistogrammer.h"
 
 
 using namespace Ph2_HwDescription;

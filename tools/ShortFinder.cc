@@ -11,9 +11,9 @@ struct HistogramFillerShort  : public HwDescriptionVisitor
 
     HistogramFillerShort ( TH1F* pBotHist, TH1F* pTopHist, const Event* pEvent ) : fBotHist ( pBotHist ), fTopHist ( pTopHist ), fEvent ( pEvent ) {}
 
-    void visit ( Cbc& pCbc )
+    void visit ( Chip& pCbc )
     {
-        std::vector<bool> cDataBitVector = fEvent->DataBitVector ( pCbc.getFeId(), pCbc.getCbcId() );
+        std::vector<bool> cDataBitVector = fEvent->DataBitVector ( pCbc.getFeId(), pCbc.getChipId() );
 
         for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
         {
@@ -72,11 +72,11 @@ void ShortFinder::ReconfigureRegisters()
 
     for (auto& cBoard : fBoardVector)
     {
-        fBeBoardInterface->CbcHardReset ( cBoard );
+        fBeBoardInterface->ChipReset ( cBoard );
 
         for (auto& cFe : cBoard->fModuleVector)
         {
-            for (auto& cCbc : cFe->fCbcVector)
+            for (auto& cCbc : cFe->fReadoutChipVector)
             {
                 std::string pRegFile ;
 
@@ -85,23 +85,22 @@ void ShortFinder::ReconfigureRegisters()
                 else
                 {
                     char buffer[120];
-                    sprintf (buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cCbc->getFeId(), cCbc->getCbcId() );
+                    sprintf (buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cCbc->getFeId(), cCbc->getChipId() );
                     pRegFile = buffer;
                 }
 
                 cCbc->loadfRegMap (pRegFile);
-                fCbcInterface->ConfigureCbc ( cCbc );
-                LOG (INFO) << GREEN << "\t\t Successfully (re)configured CBC" << int ( cCbc->getCbcId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
+                fReadoutChipInterface->ConfigureChip ( cCbc );
+                LOG (INFO) << GREEN << "\t\t Successfully (re)configured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
             }
         }
 
-        //CbcFastReset as per recommendation of Mark Raymond
-        fBeBoardInterface->CbcFastReset ( cBoard );
+        fBeBoardInterface->ChipReSync ( cBoard );
     }
 }
 void ShortFinder::ConfigureVcth (uint16_t pVcth)
 {
-    ThresholdVisitor cWriter ( fCbcInterface, pVcth );
+    ThresholdVisitor cWriter ( fReadoutChipInterface, pVcth );
     accept ( cWriter );
 }
 
@@ -127,7 +126,7 @@ void ShortFinder::InitialiseSettings()
     // figure out how many CBCs you're working with
     Counter cCbcCounter;
     accept ( cCbcCounter );
-    fNCbc = cCbcCounter.getNCbc();
+    fNCbc = cCbcCounter.getNChip();
 
     // figure out what the number of events to take it
     cSetting = fSettingsMap.find ( "Nevents" );
@@ -292,20 +291,19 @@ void ShortFinder::UpdateHistsMerged()
 
 void ShortFinder::SetBeBoard (BeBoard* pBoard)
 {
-    if (pBoard->getBoardType() == BoardType::GLIB || pBoard->getBoardType() == BoardType::CTA) fBeBoardInterface->WriteBoardReg (pBoard, "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE", 2 );
-    else if(pBoard->getBoardType() == BoardType::D19C) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 1);
+    if(pBoard->getBoardType() == BoardType::D19C) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 1);
     setFWTestPulse();
 
     // (potential, group, enable test pulse, hole mode)
     setSystemTestPulse(fTestPulseAmplitude,0x00,true,fHoleMode);
 
     //edit G.A: in order to be compatible with CBC3 (9 bit trigger latency) the recommended method is this:
-    LatencyVisitor cLatencyVisitor (fCbcInterface, 0x01);
+    LatencyVisitor cLatencyVisitor (fReadoutChipInterface, 0x01);
     this->accept (cLatencyVisitor);
 
     // Take the default VCth which should correspond to the pedestal and add 8 depending on the mode to exclude noise
     // ThresholdVisitor in read mode
-    ThresholdVisitor cThresholdVisitor (fCbcInterface);
+    ThresholdVisitor cThresholdVisitor (fReadoutChipInterface);
     this->accept (cThresholdVisitor);
     uint16_t cVcth = cThresholdVisitor.getThreshold();
 
@@ -332,12 +330,12 @@ void ShortFinder::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
 {
     for (auto cFe : pBoard->fModuleVector)
     {
-        for (auto cCbc : cFe->fCbcVector)
+        for (auto cCbc : cFe->fReadoutChipVector)
         {
-            std::vector<std::pair<std::string, uint8_t>> cRegVec;
+            std::vector<std::pair<std::string, uint16_t>> cRegVec;
             uint8_t cRegValue = this->to_reg ( 0, pTestGroup );
 
-            if (cCbc->getChipType() == ChipType::CBC3)
+            if (cCbc->getFrontEndType() == FrontEndType::CBC3)
             {
                 //CBC3
                 cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );
@@ -348,7 +346,7 @@ void ShortFinder::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
                 cRegVec.push_back ( std::make_pair ( "SelTestPulseDel&ChanGroup",  cRegValue ) );
             }
 
-            this->fCbcInterface->WriteCbcMultReg (cCbc, cRegVec);
+            this->fReadoutChipInterface->WriteChipMultReg (cCbc, cRegVec);
         }
     }
 }
@@ -381,7 +379,7 @@ void ShortFinder::FindShorts (std::ostream& os )
     ShortsList cGroundedChannelsList;
 
     //in read mode
-    ThresholdVisitor cVisitor (fCbcInterface);
+    ThresholdVisitor cVisitor (fReadoutChipInterface);
     accept (cVisitor);
     fHistTop->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
     fHistBottom->GetYaxis()->SetRangeUser ( 0, fTotalEvents );

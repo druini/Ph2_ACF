@@ -17,57 +17,27 @@
 #include <string.h>
 #include <iomanip>
 #include "Definition.h"
+#include "../Utils/ChannelGroupHandler.h"
 
 
 namespace Ph2_HwDescription {
     // C'tors with object FE Description
 
-    Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : FrontEndDescription ( pFeDesc ),
-        fCbcId ( pCbcId )
-
-    {
+    Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : ReadoutChip ( pFeDesc, pCbcId )
+     {
+        fMaxRegValue=255; // 8 bit registers in CBC
+        fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
         loadfRegMap ( filename );
-
-        // determine the chip type by checking for existence of VCth register (CBC2 only, called VCth1 & VCth2 for CBC3)
-        if (fRegMap.find ("VCth2") != std::end (fRegMap) ) this->setChipType ( ChipType::CBC3);
-        else this->setChipType ( ChipType::CBC2);
+        setFrontEndType ( FrontEndType::CBC3);
     }
 
     // C'tors which take BeId, FMCId, FeID, CbcId
-
-    Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename ) : FrontEndDescription ( pBeId, pFMCId, pFeId ), fCbcId ( pCbcId )
-
+    Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename ) : ReadoutChip ( pBeId, pFMCId, pFeId, pCbcId)
     {
+        fMaxRegValue=255; // 8 bit registers in CBC
+        fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
         loadfRegMap ( filename );
-
-        // determine the chip type by checking for existence of VCth register (CBC2 only, called VCth1 & VCth2 for CBC3)
-        if (fRegMap.find ("VCth2") != std::end (fRegMap) ) this->setChipType ( ChipType::CBC3);
-        else this->setChipType ( ChipType::CBC2);
-    }
-
-    Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename, ChipType pType ) : FrontEndDescription ( pBeId, pFMCId, pFeId ), fCbcId ( pCbcId )
-
-    {
-        loadfRegMap ( filename );
-
-        this->setChipType (pType);
-    }
-
-    // Copy C'tor
-
-    Cbc::Cbc ( const Cbc& cbcobj ) : FrontEndDescription ( cbcobj ),
-        fCbcId ( cbcobj.fCbcId ),
-        fRegMap ( cbcobj.fRegMap ),
-        fCommentMap (cbcobj.fCommentMap)
-    {
-    }
-
-
-    // D'Tor
-
-    Cbc::~Cbc()
-    {
-
+        setFrontEndType ( FrontEndType::CBC3);
     }
 
     //load fRegMap from file
@@ -80,10 +50,12 @@ namespace Ph2_HwDescription {
         {
             std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
             int cLineCounter = 0;
-            CbcRegItem fRegItem;
-
+            ChipRegItem fRegItem;
+            
+            // fhasMaskedChannels = false;
             while ( getline ( file, line ) )
             {
+                //std::cout<< __PRETTY_FUNCTION__ << " " << line << std::endl;
                 if ( line.find_first_not_of ( " \t" ) == std::string::npos )
                 {
                     fCommentMap[cLineCounter] = line;
@@ -108,12 +80,29 @@ namespace Ph2_HwDescription {
                     fRegItem.fDefValue = strtoul ( fDefValue_str.c_str(), 0, 16 );
                     fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
 
+                    if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
+                        // if(!fhasMaskedChannels && fRegItem.fValue!=0xFF) fhasMaskedChannels=true;
+                        //disable masked channels only
+                        if(fRegItem.fValue!=0xFF)
+                        {
+                            for(uint8_t channel=0; channel<8; ++channel)
+                            {
+                                if((fRegItem.fValue && (0x1<<channel)) == 0)
+                                {
+                                    fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20)*8 + channel);
+                                }
+                            }
+                        }
+                    }
+
                     fRegMap[fName] = fRegItem;
+                    //std::cout << __PRETTY_FUNCTION__ << +fRegItem.fValue << std::endl;
                     cLineCounter++;
                 }
             }
 
             file.close();
+
         }
         else
         {
@@ -121,52 +110,8 @@ namespace Ph2_HwDescription {
             exit (1);
         }
 
-        //for (auto cItem : fRegMap)
-        //LOG (DEBUG) << cItem.first;
     }
-
-
-    uint8_t Cbc::getReg ( const std::string& pReg ) const
-    {
-        CbcRegMap::const_iterator i = fRegMap.find ( pReg );
-
-        if ( i == fRegMap.end() )
-        {
-            LOG (INFO) << "The Cbc object: " << +fCbcId << " doesn't have " << pReg ;
-            return 0;
-        }
-        else
-            return i->second.fValue;
-    }
-
-
-    void Cbc::setReg ( const std::string& pReg, uint8_t psetValue )
-    {
-        CbcRegMap::iterator i = fRegMap.find ( pReg );
-
-        if ( i == fRegMap.end() )
-            LOG (INFO) << "The Cbc object: " << +fCbcId << " doesn't have " << pReg ;
-        else
-            i->second.fValue = psetValue;
-    }
-
-    CbcRegItem Cbc::getRegItem ( const std::string& pReg )
-    {
-        CbcRegItem cItem;
-        CbcRegMap::iterator i = fRegMap.find ( pReg );
-
-        if ( i != std::end ( fRegMap ) ) return ( i->second );
-        else
-        {
-            LOG (ERROR) << "Error, no Register " << pReg << " found in the RegisterMap of CBC " << +fCbcId << "!" ;
-            throw Exception ( "Cbc: no matching register found" );
-            return cItem;
-        }
-    }
-
-
     //Write RegValues in a file
-
     void Cbc::saveRegMap ( const std::string& filename )
     {
 
@@ -210,23 +155,5 @@ namespace Ph2_HwDescription {
             LOG (ERROR) << "Error opening file" ;
     }
 
-
-
-
-    bool CbcComparer::operator() ( const Cbc& cbc1, const Cbc& cbc2 ) const
-    {
-        if ( cbc1.getBeId() != cbc2.getBeId() ) return cbc1.getBeId() < cbc2.getBeId();
-        else if ( cbc1.getFMCId() != cbc2.getFMCId() ) return cbc1.getFMCId() < cbc2.getFMCId();
-        else if ( cbc1.getFeId() != cbc2.getFeId() ) return cbc1.getFeId() < cbc2.getFeId();
-        else return cbc1.getCbcId() < cbc2.getCbcId();
-    }
-
-
-    bool RegItemComparer::operator() ( const CbcRegPair& pRegItem1, const CbcRegPair& pRegItem2 ) const
-    {
-        if ( pRegItem1.second.fPage != pRegItem2.second.fPage )
-            return pRegItem1.second.fPage < pRegItem2.second.fPage;
-        else return pRegItem1.second.fAddress < pRegItem2.second.fAddress;
-    }
 
 }

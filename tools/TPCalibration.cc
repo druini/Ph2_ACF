@@ -37,9 +37,9 @@ void TPCalibration::Init(int pStartAmp, int pEndAmp, int pStepsize)
     {
       int cFeId = cFe->getFeId();
       LOG(INFO) << "  FE" << cFeId << RESET;
-      for(auto &cCbc: cFe->fCbcVector)
+      for(auto &cCbc: cFe->fReadoutChipVector)
       {
-        int cCbcId = cCbc->getCbcId();
+        int cCbcId = cCbc->getChipId();
         LOG(INFO) << "  - CBC" << cCbcId << RESET;
 
         for(int cChannel = 0; cChannel < NCHANNELS; cChannel++)
@@ -98,9 +98,9 @@ void TPCalibration::FillHistograms(int pTPAmp)
     {
       int cFeId = cFe->getFeId();
       LOG(INFO) << "  FE" << cFeId << RESET;
-      for(auto &cCbc: cFe->fCbcVector)
+      for(auto &cCbc: cFe->fReadoutChipVector)
       {
-        int cCbcId = cCbc->getCbcId();
+        int cCbcId = cCbc->getChipId();
         LOG(INFO) << "  - CBC" << cCbcId << RESET;
         TH1F* cPedestalHist = dynamic_cast<TH1F*>(getHist(cCbc, "Cbc_Strippedestal"));
         for(int cChannel = 0; cChannel < NCHANNELS; cChannel++)
@@ -133,9 +133,9 @@ void TPCalibration::FitCorrelations()
       int cFeId = cFe->getFeId();
       LOG(INFO) << "  FE" << cFeId << RESET;
       std::vector<float> cGainVec;
-      for(auto &cCbc: cFe->fCbcVector)
+      for(auto &cCbc: cFe->fReadoutChipVector)
       {
-        int cCbcId = cCbc->getCbcId();
+        int cCbcId = cCbc->getChipId();
         TH1F* cChannelGain = dynamic_cast<TH1F*>(getHist(cCbc, "ChannelGain"));
         TH1F* cChannelElGain = dynamic_cast<TH1F*>(getHist(cCbc, "ChannelElectronsGain"));
         for(int cChannel = 0; cChannel < NCHANNELS; cChannel++)
@@ -194,9 +194,9 @@ void TPCalibration::SaveResults()
       int cFeId = cFe->getFeId();
       cPath = Form("Be%d/Fe%d", cBeId, cFeId);
       fResultFile->mkdir(cPath);
-      for(auto &cCbc: cFe->fCbcVector)
+      for(auto &cCbc: cFe->fReadoutChipVector)
       {
-        int cCbcId = cCbc->getCbcId();
+        int cCbcId = cCbc->getChipId();
         cPath = Form("Be%d/Fe%d/Cbc%d", cBeId, cFeId, cCbcId);
         fResultFile->mkdir(cPath);
         fResultFile->cd(cPath);

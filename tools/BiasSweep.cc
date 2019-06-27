@@ -4,28 +4,7 @@ void BiasSweep::InitializeAmuxMap()
 {
     fAmuxSettings.clear();
 
-    if (fType == ChipType::CBC2)
-    {
-        // key(BiasSweep, reg name, amux code, bit mask, bit shift
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("none"), std::make_tuple ("", 0x00, 0x00, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Vplus"), std::make_tuple ( "Vplus", 0x01, 0xFF, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("VCth"), std::make_tuple ("VCth", 0x02, 0xFF, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Ihyst"), std::make_tuple ("FrontEndControl", 0x03, 0x3C, 2) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Icomp"), std::make_tuple ("Icomp", 0x04, 0xFF, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("CAL_Vcas"), std::make_tuple ("TestPulseChargeMirrCascodeVolt", 0x05, 0xFF, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Ibias"), std::make_tuple ("", 0x06, 0x00, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Bandgap"), std::make_tuple ("", 0x07, 0x00, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("CAL_I"), std::make_tuple ("TestPulseChargePumpCurrent", 0x08, 0xFF, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Ipre1"), std::make_tuple ("Ipre1", 0x09, 0xFF, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Ipre2"), std::make_tuple ("Ipre2", 0x0A, 0xFF, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Vpc"), std::make_tuple ("Vpc", 0x0B, 0xFF, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Ipsf"), std::make_tuple ("Ipsf", 0x0C, 0xFF, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Ipaos"), std::make_tuple ("Ipaos", 0x0D, 0xFF, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Ipa"), std::make_tuple ("Ipa", 0x0E, 0xFF, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Vpasf"), std::make_tuple ("", 0x0F, 0x00, 0) );
-        fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("Vpafb"), std::make_tuple ("Vpafb", 0x10, 0xFF, 0) );
-    }
-    else if (fType == ChipType::CBC3)
+    if (fType == FrontEndType::CBC3)
     {
         // key(BiasSweep, reg name, amux code, bit mask, bit shift
         fAmuxSettings.emplace (std::piecewise_construct, std::make_tuple ("none"),   std::make_tuple ("", 0x00, 0x00, 0) );
@@ -143,20 +122,20 @@ void BiasSweep::Initialize()
     {
         for (auto cFe : cBoard->fModuleVector)
         {
-            fType = cFe->getChipType();
+            fType = cFe->getFrontEndType();
 
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fReadoutChipVector)
             {
-                cName = Form ("BiasSweep_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getCbcId() );
+                cName = Form ("BiasSweep_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() );
                 cObj = gROOT->FindObject (cName);
 
                 if (cObj) delete cObj;
 
                 TTree* cTmpTree = new TTree (cName, cName);
-                //cTmpTree->Branch (Form ("BiasSweepData_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getCbcId() ), "BiasSweepData", &fData);
+                //cTmpTree->Branch (Form ("BiasSweepData_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() ), "BiasSweepData", &fData);
                 cTmpTree->Branch ("Bias", &fData->fBias);
                 cTmpTree->Branch ("Fe", &fData->fFeId, "Fe/s" );
-                cTmpTree->Branch ("Cbc", &fData->fCbcId, "Cbc/s" );
+                cTmpTree->Branch ("Chip", &fData->fCbcId, "Chip/s" );
                 cTmpTree->Branch ("Time", &fData->fTimestamp, "Time/l" );
                 cTmpTree->Branch ("Unit", &fData->fUnit, "Unit/C" );
                 cTmpTree->Branch ("InitialBiasValue", &fData->fInitialXValue, "InitialDAC/s");
@@ -166,7 +145,7 @@ void BiasSweep::Initialize()
 
                 this->bookHistogram (cCbc, "DataTree", cTmpTree);
 
-                LOG (INFO) << "TTree for BiasSweep data for Fe " << +cCbc->getFeId() << " Cbc " << +cCbc->getCbcId() << " created!";
+                LOG (INFO) << "TTree for BiasSweep data for Fe " << +cCbc->getFeId() << " Chip " << +cCbc->getChipId() << " created!";
             }
         }
 
@@ -176,7 +155,7 @@ void BiasSweep::Initialize()
     this->InitializeAmuxMap();
 }
 
-void BiasSweep::MeasureMinPower (BeBoard* pBoard, Cbc* pCbc)
+void BiasSweep::MeasureMinPower (BeBoard* pBoard, Chip* pCbc)
 {
     LOG (INFO) << std::endl;
     LOG (INFO) << BOLDBLUE << "*****************************************" << RESET;
@@ -195,7 +174,7 @@ void BiasSweep::MeasureMinPower (BeBoard* pBoard, Cbc* pCbc)
     fData->fBias = "MinimalPower";
     fData->fTimestamp = static_cast<long int> (cTime);
     fData->fFeId = pCbc->getFeId();
-    fData->fCbcId = pCbc->getCbcId();
+    fData->fCbcId = pCbc->getChipId();
     fData->fUnit[0] = 'I';
     fData->fUnit[1] = 0;
     fData->fInitialXValue = 0;
@@ -218,7 +197,7 @@ void BiasSweep::MeasureMinPower (BeBoard* pBoard, Cbc* pCbc)
 #endif
     //here need to 1st turn off all the biases, then 2nd set the fc7 to external clock, red the digital current and then power cycle the CBC with the LV
     //and re-configure
-    std::vector<std::pair<std::string, uint8_t>> cRegVec;
+    std::vector<std::pair<std::string, uint16_t>> cRegVec;
 
     for (size_t cIndex = 0; cIndex < cRegisters.size(); cIndex++)
     {
@@ -226,7 +205,7 @@ void BiasSweep::MeasureMinPower (BeBoard* pBoard, Cbc* pCbc)
         cRegVec.push_back (std::make_pair (cRegisters.at (cIndex), cRegSettings.at (cIndex) ) );
     }
 
-    this->fCbcInterface->WriteCbcMultReg (pCbc, cRegVec);
+    this->fReadoutChipInterface->WriteChipMultReg (pCbc, cRegVec);
     this->fBeBoardInterface->WriteBoardReg (pBoard, "cbc_system_cnfg.cbc_system_clk", 0);
 
     std::this_thread::sleep_for (std::chrono::milliseconds (800) );
@@ -276,7 +255,7 @@ void BiasSweep::MeasureMinPower (BeBoard* pBoard, Cbc* pCbc)
     LOG (INFO) << "Finished measuring minimal power consumption, results saved!";
 }
 
-void BiasSweep::SweepBias (std::string pBias, Cbc* pCbc)
+void BiasSweep::SweepBias (std::string pBias, Chip* pCbc)
 {
     auto cAmuxValue = fAmuxSettings.find (pBias);
 
@@ -302,7 +281,7 @@ void BiasSweep::SweepBias (std::string pBias, Cbc* pCbc)
         //just create objects, sweep and fill and forget about them again!
 
         std::time_t cTime = std::time (nullptr);
-        TString cName = Form ("g_BiasSweep_%s_Fe%d_Cbc%d_TS%d", pBias.c_str(), pCbc->getFeId(), pCbc->getCbcId(), cTime );
+        TString cName = Form ("g_BiasSweep_%s_Fe%d_Cbc%d_TS%d", pBias.c_str(), pCbc->getFeId(), pCbc->getChipId(), cTime );
 
         TObject* cObj = gROOT->FindObject (cName);
 
@@ -326,7 +305,7 @@ void BiasSweep::SweepBias (std::string pBias, Cbc* pCbc)
         fData->fBias = pBias.c_str();
         fData->fTimestamp = static_cast<long int> (cTime);
         fData->fFeId = pCbc->getFeId();
-        fData->fCbcId = pCbc->getCbcId();
+        fData->fCbcId = pCbc->getChipId();
         fData->fUnit[0] = (cCurrent) ? 'I' : 'V';
         fData->fUnit[1] = 0;
         fData->fInitialXValue = 0;
@@ -444,10 +423,10 @@ void BiasSweep::SweepBias (std::string pBias, Cbc* pCbc)
     }
 }
 
-uint8_t BiasSweep::configureAmux (std::map<std::string, AmuxSetting>::iterator pAmuxValue, Cbc* pCbc, double pSettlingTime_s  )
+uint8_t BiasSweep::configureAmux (std::map<std::string, AmuxSetting>::iterator pAmuxValue, Chip* pCbc, double pSettlingTime_s  )
 {
     // first read original value in Amux register and save for later
-    uint8_t cOriginalAmuxValue = fCbcInterface->ReadCbcReg (pCbc, "MiscTestPulseCtrl&AnalogMux");
+    uint8_t cOriginalAmuxValue = fReadoutChipInterface->ReadChipReg (pCbc, "MiscTestPulseCtrl&AnalogMux");
     LOG (INFO) << "Analog mux originally set to: " << std::hex << (cOriginalAmuxValue & 0x1F) << std::dec << " (full register is 0x" << std::hex << +cOriginalAmuxValue << std::dec << ") (the Test pulse bits are not changed!)";
 
     //ok, now set the Analogmux to the value required to see the bias there
@@ -469,7 +448,7 @@ uint8_t BiasSweep::configureAmux (std::map<std::string, AmuxSetting>::iterator p
 #endif
 
         uint8_t cNewValue = (cOriginalAmuxValue & 0xE0) | (pAmuxValue->second.fAmuxCode & 0x1F);
-        fCbcInterface->WriteCbcReg (pCbc, "MiscTestPulseCtrl&AnalogMux", cNewValue);
+        fReadoutChipInterface->WriteChipReg (pCbc, "MiscTestPulseCtrl&AnalogMux", cNewValue);
         LOG (INFO) << "Analog MUX setting modified to connect " <<  pAmuxValue->first << " (setting to 0x" << std::hex << +cNewValue << std::dec << ")";
 
         for ( unsigned int i = 0 ; i < pSettlingTime_s; i++)
@@ -478,23 +457,23 @@ uint8_t BiasSweep::configureAmux (std::map<std::string, AmuxSetting>::iterator p
         return cOriginalAmuxValue;
     }
 }
-void BiasSweep::resetAmux (uint8_t pAmuxValue, Cbc* pCbc, double pSettlingTime_s  )
+void BiasSweep::resetAmux (uint8_t pAmuxValue, Chip* pCbc, double pSettlingTime_s  )
 {
 #ifdef __USBINST__
     fArdNanoController->ControlRelay (0);
     LOG (INFO) << "Setting Arduino Nano relay to Amux (default)";
 #endif
     LOG (INFO) << "Reseting Amux settings back to original value of 0x" << std::hex << +pAmuxValue << std::dec;
-    fCbcInterface->WriteCbcReg (pCbc, "MiscTestPulseCtrl&AnalogMux", pAmuxValue);
+    fReadoutChipInterface->WriteChipReg (pCbc, "MiscTestPulseCtrl&AnalogMux", pAmuxValue);
 
     for ( unsigned int i = 0 ; i < pSettlingTime_s; i++)
         std::this_thread::sleep_for (std::chrono::milliseconds ( 1000 ) );
 }
 
-void BiasSweep::sweep8Bit (std::map<std::string, AmuxSetting>::iterator pAmuxValue, TGraph* pGraph, Cbc* pCbc, bool pCurrent)
+void BiasSweep::sweep8Bit (std::map<std::string, AmuxSetting>::iterator pAmuxValue, TGraph* pGraph, Chip* pCbc, bool pCurrent)
 {
 
-    uint8_t cOriginalBiasValue = fCbcInterface->ReadCbcReg (pCbc, pAmuxValue->second.fRegName);
+    uint8_t cOriginalBiasValue = fReadoutChipInterface->ReadChipReg (pCbc, pAmuxValue->second.fRegName);
     LOG (INFO) << "Origainal Register Value for bias " << pAmuxValue->first << "(" << pAmuxValue->second.fRegName << ") read to be 0x" << std::hex << +cOriginalBiasValue << std::dec << " - saving for later!";
 
     //take one initial reading on the dmm and save as the inital value in the tree
@@ -541,7 +520,7 @@ void BiasSweep::sweep8Bit (std::map<std::string, AmuxSetting>::iterator pAmuxVal
         //VBG_bias
         if (cBits == 6) cRegValue |= (0x2 << 6);
 
-        fCbcInterface->WriteCbcReg (pCbc, pAmuxValue->second.fRegName, cRegValue );
+        fReadoutChipInterface->WriteChipReg (pCbc, pAmuxValue->second.fRegName, cRegValue );
 
         double cReading = -999;
 #ifdef __USBINST__
@@ -598,11 +577,11 @@ void BiasSweep::sweep8Bit (std::map<std::string, AmuxSetting>::iterator pAmuxVal
     }
 
     // set the bias back to the original value
-    fCbcInterface->WriteCbcReg (pCbc, pAmuxValue->second.fRegName, cOriginalBiasValue );
+    fReadoutChipInterface->WriteChipReg (pCbc, pAmuxValue->second.fRegName, cOriginalBiasValue );
     LOG (INFO) << "Re-setting " << pAmuxValue->second.fRegName << " to original value of 0x" << std::hex << +cOriginalBiasValue << std::dec;
 }
 
-void BiasSweep::measureSingle (std::map<std::string, AmuxSetting>::iterator pAmuxValue, Cbc* pCbc)
+void BiasSweep::measureSingle (std::map<std::string, AmuxSetting>::iterator pAmuxValue, Chip* pCbc)
 {
     LOG (INFO) << "Not an Amux setting that requires a sweep: " << pAmuxValue->first;
     double cReading = -999;
@@ -621,9 +600,9 @@ void BiasSweep::measureSingle (std::map<std::string, AmuxSetting>::iterator pAmu
     fData->fInitialYValue = cReading;
 }
 
-void BiasSweep::sweepVCth (TGraph* pGraph, Cbc* pCbc)
+void BiasSweep::sweepVCth (TGraph* pGraph, Chip* pCbc)
 {
-    ThresholdVisitor cThresholdVisitor (fCbcInterface);
+    ThresholdVisitor cThresholdVisitor (fReadoutChipInterface);
     pCbc->accept (cThresholdVisitor);
     uint16_t cOriginalThreshold = cThresholdVisitor.getThreshold();
     LOG (INFO) << "Original threshold set to " << cOriginalThreshold << " (0x" << std::hex << cOriginalThreshold << std::dec << ") - saving for later!";

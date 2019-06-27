@@ -14,7 +14,7 @@
 #define Cbc_h__
 
 #include "FrontEndDescription.h"
-#include "CbcRegItem.h"
+#include "ReadoutChip.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
 #include <iostream>
@@ -24,6 +24,7 @@
 #include <utility>
 #include <set>
 #include "../Utils/easylogging++.h"
+//#include "ChipRegItem.h"
 
 // Cbc2 Chip HW Description Class
 
@@ -34,15 +35,16 @@
  */
 namespace Ph2_HwDescription {
 
-    using CbcRegMap = std::map < std::string, CbcRegItem >;
-    using CbcRegPair = std::pair <std::string, CbcRegItem>;
+    using ChipRegMap = std::map < std::string, ChipRegItem >;
+    using CbcRegPair = std::pair <std::string, ChipRegItem>;
     using CommentMap = std::map <int, std::string>;
+
 
     /*!
      * \class Cbc
      * \brief Read/Write Cbc's registers on a file, contains a register map
      */
-    class Cbc : public FrontEndDescription
+    class Cbc : public ReadoutChip
     {
 
       public:
@@ -52,120 +54,51 @@ namespace Ph2_HwDescription {
 
         // C'tors with object FE Description
         Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename );
-        Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename, ChipType pType );
 
-        // Default C'tor
-        Cbc();
-
-        // Copy C'tor
-        Cbc ( const Cbc& cbcobj );
-
-        // D'Tor
-        ~Cbc();
 
         /*!
          * \brief acceptor method for HwDescriptionVisitor
          * \param pVisitor
          */
-        void accept ( HwDescriptionVisitor& pVisitor )
+        virtual void accept ( HwDescriptionVisitor& pVisitor )
         {
             pVisitor.visit ( *this );
         }
-        // void accept( HwDescriptionVisitor& pVisitor ) const {
-        //  pVisitor.visit( *this );
-        // }
         /*!
         * \brief Load RegMap from a file
         * \param filename
         */
-        void loadfRegMap ( const std::string& filename );
+        void loadfRegMap ( const std::string& filename ) override;
 
-        /*!
-        * \brief Get any register from the Map
-        * \param pReg
-        * \return The value of the register
-        */
-        uint8_t getReg ( const std::string& pReg ) const;
-        /*!
-        * \brief Set any register of the Map
-        * \param pReg
-        * \param psetValue
-        */
-        void setReg ( const std::string& pReg, uint8_t psetValue );
-        /*!
-        * \brief Get any registeritem of the Map
-        * \param pReg
-        * \return  RegItem
-        */
-        CbcRegItem getRegItem ( const std::string& pReg );
+        //uint16_t getReg ( const std::string& pReg ) const override;
+        //void setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
+
+
         /*!
         * \brief Write the registers of the Map in a file
         * \param filename
         */
-        void saveRegMap ( const std::string& filename );
+        void saveRegMap ( const std::string& filename ) override;
 
-        /*!
-        * \brief Get the Map of the registers
-        * \return The map of register
-        */
-        CbcRegMap& getRegMap()
-        {
-            return fRegMap;
-        }
-        const CbcRegMap& getRegMap() const
-        {
-            return fRegMap;
-        }
-        /*!
-        * \brief Get the Cbc Id
-        * \return The Cbc ID
-        */
-        uint8_t getCbcId() const
-        {
-            return fCbcId;
-        }
-        /*!
-         * \brief Set the Cbc Id
-         * \param pCbcId
-         */
-        void setCbcId ( uint8_t pCbcId )
-        {
-            fCbcId = pCbcId;
-        }
+        uint32_t getNumberOfChannels() const override { return NCHANNELS; }
 
 
+        bool isDACLocal(const std::string &dacName) override {
+            if(dacName.find("MaskChannel-",0,12)!=std::string::npos || dacName.find("Channel",0,7)!=std::string::npos ) return true;
+            else return false;
+        }
+
+        uint8_t getNumberOfBits(const std::string &dacName) override {
+            if(dacName.find("MaskChannel-",0,12)!=std::string::npos) return 1;
+            else if(dacName == "VCth") return 10;
+            else if(dacName == "VCth2") return 2;
+            else if(dacName == "TriggerLatency" ) return 9;
+            else return 8;
+        }
       protected:
-
-        uint8_t fCbcId;
-
-        // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value
-        CbcRegMap fRegMap;
-        CommentMap fCommentMap;
-
+        
     };
 
-
-    /*!
-     * \struct CbcComparer
-     * \brief Compare two Cbc by their ID
-     */
-    struct CbcComparer
-    {
-
-        bool operator() ( const Cbc& cbc1, const Cbc& cbc2 ) const;
-
-    };
-
-    /*!
-     * \struct RegItemComparer
-     * \brief Compare two pair of Register Name Versus CbcRegItem by the Page and Adress of the CbcRegItem
-     */
-    struct RegItemComparer
-    {
-
-        bool operator() ( const CbcRegPair& pRegItem1, const CbcRegPair& pRegItem2 ) const;
-
-    };
 
 }
 

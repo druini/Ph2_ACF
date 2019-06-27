@@ -15,30 +15,33 @@
 #include "Tool.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/CommonVisitors.h"
+#ifdef __USE_ROOT__
+  #include "../DQMUtils/DQMHistogramPedeNoise.h"
+#endif
 
 
 #include <map>
 
-#include "TCanvas.h"
+// #include "TCanvas.h"
 #include <TH2.h>
 #include <TF1.h>
 #include "TProfile.h"
-#include "TString.h"
-#include "TGraphErrors.h"
-#include "TString.h"
-#include "TText.h"
+// #include "TString.h"
+// #include "TGraphErrors.h"
+// #include "TString.h"
+// #include "TText.h"
 #include "TLine.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-
+class DetectorContainer;
 
 class PedeNoise : public Tool
 {
 
-    using RegisterVector =  std::vector<std::pair< std::string, uint8_t> >;
+    //using RegisterVector =  std::vector<std::pair< std::string, uint16_t> >;
     //using TestGroupChannelMap std::map< int, std::vector<uint8_t> >;
 
   public:
@@ -49,62 +52,61 @@ class PedeNoise : public Tool
     void measureNoise (uint8_t pTPAmplitude = 0); //method based on the one below that actually analyzes the scurves and extracts the noise
     std::string sweepSCurves (uint8_t pTPAmplitude); // actual methods to measure SCurves
     void Validate (uint32_t pNoiseStripThreshold = 1, uint32_t pMultiple = 100);
-    double getPedestal (Cbc* pCbc);
+    double getPedestal (Chip* pCbc);
     double getPedestal (Module* pFe);
-    double getNoise (Cbc* pCbc);
+    double getNoise (Chip* pCbc);
     double getNoise (Module* pFe);
     void writeObjects();
+
+    void Start(int currentRun) override;
+    void Stop() override;
+    void ConfigureCalibration() override;
+    void Pause() override;
+    void Resume() override;
 
   private:
     // Canvases for Pede/Noise Plots
     TCanvas* fNoiseCanvas;
     TCanvas* fPedestalCanvas;
     TCanvas* fFeSummaryCanvas;
-    //histogram to divide the Scurves by to get proper binomial errors
-    TH2F*    fNormHist;
-
-    //have a map of thresholds and hit counts
-    std::map<Cbc*, uint16_t> fThresholdMap;
-    std::map<Cbc*, uint32_t> fHitCountMap;
+    // //histogram to divide the Scurves by to get proper binomial errors
+    // TH2F*    fNormHist;
 
     // Counters
     uint32_t fNCbc;
     uint32_t fNFe;
 
     // Settings
-    bool fAllChan;
     bool fHoleMode;
-    bool fTestPulse;
     bool fFitted;
     uint8_t fTestPulseAmplitude;
     uint32_t fEventsPerPoint;
+    // bool fSkipMaskedChannels;
     bool fDisableStubLogic;
 
     //to hold the original register values
-    std::map<Cbc*, uint8_t> fStubLogicValue;
-    std::map<Cbc*, uint8_t> fHIPCountValue;
-
-  protected:
-    //handling offsets
-    void saveInitialOffsets();
-    void setInitialOffsets();
-    void enableTestGroupforNoise ( int  pTGrpId );
-    //void setOffset ( uint8_t pOffset, int  pTGrpId );
-
+    std::map<Chip*, uint8_t> fStubLogicValue;
+    std::map<Chip*, uint8_t> fHIPCountValue;
+    
   private:
-    void measureSCurves ( int  pTGrpId, std::string pHistName,  uint16_t pStartValue = 0 );
-    void differentiateHist (Cbc* pCbc, std::string pHistName);
-    void fitHist (Cbc* pCbc, std::string pHistName);
+    void measureSCurves (std::string pHistName,  uint16_t pStartValue = 0 );
+    void differentiateHist (Chip* pCbc, std::string pHistName);
+    void fitHist (Chip* pCbc, std::string pHistName);
     void processSCurves (std::string pHistName);
+    void extractPedeNoise ();
     void extractPedeNoise (std::string pHistName);
 
     // for validation
     void setThresholdtoNSigma (BeBoard* pBoard, uint32_t pNSigma);
-    void fillOccupancyHist (BeBoard* pBoard, const std::vector<Event*>& pEvents);
-
+    
     //helpers for SCurve measurement
-    void measureOccupancy (BeBoard* pBoard, int pTGrpId);
-    uint16_t findPedestal (int pTGrpId);
+    uint16_t findPedestal (bool forceAllChannels = false);
+
+    std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
+
+    #ifdef __USE_ROOT__
+      DQMHistogramPedeNoise theDQMHistogramPedeNoise;
+    #endif
 };
 
 

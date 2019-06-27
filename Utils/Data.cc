@@ -12,6 +12,8 @@
 #include "../Utils/Data.h"
 #include <iostream>
 
+#include "../HWInterface/RD53FWInterface.h"
+
 namespace Ph2_HwInterface {
     //Data Class
 
@@ -29,120 +31,123 @@ namespace Ph2_HwInterface {
 
     void Data::Set (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
     {
-        if (pData.size() != 0)
-            fFuture = std::async (&Data::privateSet, this, pBoard, pData, pNevents, pType);
-
-        //fFuture.share();
+      if (pData.size() != 0)
+	fFuture = std::async (&Data::privateSet, this, pBoard, pData, pNevents, pType);
     }
 
 
     void Data::privateSet (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
     {
-        Reset();
+      Reset();
 
-        fNevents = static_cast<uint32_t> ( pNevents );
-        // be aware that eventsize is not constant for the zs event, so we are not using it
-        fEventSize = static_cast<uint32_t> ( (pData.size() ) / fNevents );
+      if (pType == BoardType::FC7)
+	{
+	  uint8_t status;
+	  auto RD53FWEvts = RD53FWInterface::DecodeEvents(pData,status);
 
-        EventType fEventType = pBoard->getEventType();
+	  for (auto& evt : RD53FWEvts)
+	    {
+	      std::vector<size_t> chip_id_vec;
+	      std::vector<size_t> module_id_vec;
 
-        if (pType == BoardType::D19C)
-        {
-            uint32_t fNFe = pBoard->getNFe();
+	      for (auto& chip_frame : evt.chip_frames)
+		{
+		  module_id_vec.push_back(chip_frame.hybrid_id);
+		  chip_id_vec.push_back(chip_frame.chip_id);
+                }
 
-            if (fEventType == EventType::ZS) fNCbc = 0;
-            else fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
+	      fEventList.push_back(new RD53Event(std::move(module_id_vec), std::move(chip_id_vec), std::move(evt.chip_events)));
+            }
         }
-        else if (pType == BoardType::CBC3FC7) fNCbc = (fEventSize - (EVENT_HEADER_SIZE_32_CBC3) ) / (CBC_EVENT_SIZE_32_CBC3);
-        else fNCbc = ( fEventSize - ( EVENT_HEADER_TDC_SIZE_32 ) ) / ( CBC_EVENT_SIZE_32 );
-
-        // to fill fEventList
-        std::vector<uint32_t> lvec;
-
-        //use a SwapIndex to decide wether to swap a word or not
-        //use a WordIndex to pick events apart
-        uint32_t cWordIndex = 0;
-        uint32_t cSwapIndex = 0;
-        // index of the word inside the event (ZS)
-        uint32_t fZSEventSize = 0;
-        uint32_t cZSWordIndex = 0;
-
-        for ( auto word : pData )
+      else 
         {
-            //if the SwapIndex is greater than 0 and a multiple of the event size in 32 bit words, reset SwapIndex to 0
-            if (cSwapIndex > 0 && cSwapIndex % fEventSize == 0) cSwapIndex = 0;
+	  fNevents = static_cast<uint32_t> ( pNevents );
+	  // be aware that eventsize is not constant for the zs event, so we are not using it
+	  fEventSize = static_cast<uint32_t> ( (pData.size() ) / fNevents );
 
-            if (pType == BoardType::ICGLIB || pType == BoardType::ICFC7)
-                this->setIC (word, cWordIndex, cSwapIndex);
-            else if (pType == BoardType::SUPERVISOR)
-                this->setStrasbourgSupervisor (word);
+	  EventType fEventType = pBoard->getEventType();
 
-            //else if (pType == BoardType::CBC3FC7)
-            //this->setCbc3Fc7 (word);
+	  if (pType == BoardType::D19C)
+	    {
+	      uint32_t fNFe = pBoard->getNFe();
+
+	      if (fEventType == EventType::ZS) fNCbc = 0;
+	      else fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
+	    }
+        
+	  // to fill fEventList
+	  std::vector<uint32_t> lvec;
+
+	  //use a SwapIndex to decide wether to swap a word or not
+	  //use a WordIndex to pick events apart
+	  uint32_t cWordIndex = 0;
+	  uint32_t cSwapIndex = 0;
+	  // index of the word inside the event (ZS)
+	  uint32_t fZSEventSize = 0;
+	  uint32_t cZSWordIndex = 0;
+
+	  for ( auto word : pData )
+	    {
+	      //if the SwapIndex is greater than 0 and a multiple of the event size in 32 bit words, reset SwapIndex to 0
+	      if (cSwapIndex > 0 && cSwapIndex % fEventSize == 0) cSwapIndex = 0;
 
 #ifdef __CBCDAQ_DEV__
-            //TODO
-            LOG (DEBUG) << std::setw (3) << "Original " << cWordIndex << " ### " << std::bitset<32> (pData.at (cWordIndex) );
-            //LOG (DEBUG) << std::setw (3) << "Treated  " << cWordIndex << " ### " << std::bitset<32> (word);
+	      //TODO
+	      LOG (DEBUG) << std::setw (3) << "Original " << cWordIndex << " ### " << std::bitset<32> (pData.at (cWordIndex) );
+	      //LOG (DEBUG) << std::setw (3) << "Treated  " << cWordIndex << " ### " << std::bitset<32> (word);
 
-            if ( (cWordIndex + 1) % fEventSize == 0 && cWordIndex > 0 ) LOG (DEBUG) << std::endl << std::endl;
+	      if ( (cWordIndex + 1) % fEventSize == 0 && cWordIndex > 0 ) LOG (DEBUG) << std::endl << std::endl;
 
 #endif
 
-            lvec.push_back ( word );
+	      lvec.push_back ( word );
 
-            if (fEventType == EventType::ZS)
-            {
-                if ( cZSWordIndex == fZSEventSize - 1 )
-                {
-                    //LOG(INFO) << "Packing event # " << fEventList.size() << ", Event size is " << fZSEventSize << " words";
-                    if (pType == BoardType::D19C)
+	      if (fEventType == EventType::ZS)
+		{
+		  if ( cZSWordIndex == fZSEventSize - 1 )
+		    {
+		      //LOG(INFO) << "Packing event # " << fEventList.size() << ", Event size is " << fZSEventSize << " words";
+		      if (pType == BoardType::D19C)
                         fEventList.push_back ( new D19cCbc3EventZS ( pBoard, fZSEventSize, lvec ) );
-                    else
-                        fEventList.push_back ( new D19cCbc3EventZS ( pBoard, fZSEventSize, lvec ) );
+                    
+		      lvec.clear();
 
-                    lvec.clear();
+		      if (fEventList.size() >= fNevents) break;
+		    }
+		  else if ( cZSWordIndex == fZSEventSize )
+		    {
+		      // get next event size
+		      cZSWordIndex = 0;
 
-                    if (fEventList.size() >= fNevents) break;
-                }
-                else if ( cZSWordIndex == fZSEventSize )
-                {
-                    // get next event size
-                    cZSWordIndex = 0;
+		      if (pType == BoardType::D19C) fZSEventSize = (0x0000FFFF & word);
+                    
+		      if (fZSEventSize > pData.size() )
+			{
+			  LOG (ERROR) << "Missaligned data, not accepted";
+			  break;
+			}
 
-                    if (pType == BoardType::D19C) fZSEventSize = (0x0000FFFF & word);
-                    else fZSEventSize = fEventSize;
+		    }
 
-                    if (fZSEventSize > pData.size() )
-                    {
-                        LOG (ERROR) << "Missaligned data, not accepted";
-                        break;
-                    }
-
-                }
-
-            }
-            else
-            {
-                if ( cWordIndex > 0 &&  (cWordIndex + 1) % fEventSize == 0 )
-                {
-                    if (pType == BoardType::D19C)
+		}
+	      else
+		{
+		  if ( cWordIndex > 0 &&  (cWordIndex + 1) % fEventSize == 0 )
+		    {
+		      if (pType == BoardType::D19C)
                         fEventList.push_back ( new D19cCbc3Event ( pBoard, fNCbc, lvec ) );
-                    else if (pType == BoardType::CBC3FC7)
-                        fEventList.push_back ( new Cbc3Event ( pBoard, fNCbc, lvec ) );
-                    else
-                        fEventList.push_back ( new Cbc2Event ( pBoard, fNCbc, lvec ) );
+                    
+		      lvec.clear();
 
-                    lvec.clear();
+		      if (fEventList.size() >= fNevents) break;
+		    }
+		}
 
-                    if (fEventList.size() >= fNevents) break;
-                }
-            }
+	      cWordIndex++;
+	      cSwapIndex++;
+	      cZSWordIndex++;
 
-            cWordIndex++;
-            cSwapIndex++;
-            cZSWordIndex++;
-
+	    }
         }
     }
 

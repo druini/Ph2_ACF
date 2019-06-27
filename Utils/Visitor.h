@@ -28,7 +28,7 @@ namespace Ph2_HwDescription
 {
 	class BeBoard;
 	class Module;
-	class Cbc;
+	class Chip;
 }
 
 namespace Ph2_HwInterface
@@ -39,6 +39,7 @@ namespace Ph2_HwInterface
 class HwDescriptionVisitor
 {
   public:
+	virtual ~HwDescriptionVisitor(){}
 	/*!
 	 * \brief Visitor for top level System Controller
 	 * \param pSystemController
@@ -66,12 +67,13 @@ class HwDescriptionVisitor
 	 * \brief Visitor for Cbc Class
 	 * \param pCbc
 	 */
-	virtual void visit( Ph2_HwDescription::Cbc& pCbc ) {}
+	virtual void visit( Ph2_HwDescription::Chip& pChip ) {}
 };
 
 class HwInterfaceVisitor
 {
     public:
+	virtual ~HwInterfaceVisitor(){}
 	virtual void visit ( const Ph2_HwInterface::Event& pEvent ) = 0;
 };
 

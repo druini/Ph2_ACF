@@ -2,7 +2,7 @@
 /*!
 
         \file                           D19cFWInterface.h
-        \brief                          D19cFWInterface init/config of the FC7 and its Cbc's
+        \brief                          D19cFWInterface init/config of the FC7 and its Chip's
         \author                         G. Auzinger, K. Uchida, M. Haranko
         \version            1.0
         \date                           24.03.2017
@@ -20,8 +20,6 @@
 #include <limits.h>
 #include <stdint.h>
 #include "BeBoardFWInterface.h"
-#include "../HWDescription/Module.h"
-#include "../Utils/Visitor.h"
 
 
 using namespace Ph2_HwDescription;
@@ -31,27 +29,29 @@ using namespace Ph2_HwDescription;
  * \brief Namespace regrouping all the interfaces to the hardware
  */
 namespace Ph2_HwInterface {
-    class CtaFpgaConfig;
+    class D19cFpgaConfig;
     /*!
      * \class Cbc3Fc7FWInterface
      *
-     * \brief init/config of the Fc7 and its Cbc's
+     * \brief init/config of the Fc7 and its Chip's
      */
     class D19cFWInterface : public BeBoardFWInterface
     {
 
       private:
         struct timeval fStartVeto;
-        CtaFpgaConfig* fpgaConfig;
+        D19cFpgaConfig* fpgaConfig;
         FileHandler* fFileHandler ;
         uint32_t fBroadcastCbcId;
         uint32_t fNCbc;
+        uint32_t fNMPA;
+        uint32_t fNSSA;
         uint32_t fFMCId;
 
         // number of chips and hybrids defined in firmware (compiled for)
         int fFWNHybrids;
         int fFWNChips;
-        ChipType fFirwmareChipType;
+        FrontEndType fFirmwareFrontEndType;
         bool fCBC3Emulator;
         bool fIsDDR3Readout;
         bool fDDR3Calibrated;
@@ -194,9 +194,10 @@ namespace Ph2_HwInterface {
         std::string getFMCCardName (uint32_t id);
         // convert code of the chip from firmware
         std::string getChipName(uint32_t pChipCode);
-        ChipType getChipType(uint32_t pChipCode);
+        FrontEndType getFrontEndType(uint32_t pChipCode);
 	// set i2c address table depending on the hybrid
 	void SetI2CAddressTable();
+	void Align_out();
 
 
         //template to copy every nth element out of a vector to another vector
@@ -243,32 +244,38 @@ namespace Ph2_HwInterface {
         //      CBC Methods                                 //
         /////////////////////////////////////////////////////
 
-        //Encode/Decode Cbc values
+        //Encode/Decode Chip values
         /*!
-        * \brief Encode a/several word(s) readable for a Cbc
+        * \brief Encode a/several word(s) readable for a Chip
         * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-        * \param pCbcId : Id of the Cbc to work with
+        * \param pCbcId : Id of the Chip to work with
         * \param pVecReq : Vector to stack the encoded words
         */
-        void EncodeReg (const CbcRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
-        void EncodeReg (const CbcRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Cbc*/
-        void BCEncodeReg (const CbcRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override;
-        void DecodeReg ( CbcRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
+        void EncodeReg (const ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
+        void EncodeReg (const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
+        void EncodeReg (const RegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
+        void EncodeReg (const RegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
+
+        void BCEncodeReg (const ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override;
+        void DecodeReg ( ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
+        void BCEncodeReg ( const RegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
+        void DecodeReg ( RegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override; /*!< Decode a word from a read of a register of the MPA/SSA*/
 
 
-        bool WriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
-        bool BCWriteCbcBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
-        void ReadCbcBlockReg (  std::vector<uint32_t>& pVecReg );
 
-        void CbcHardReset();
+        bool WriteChipBlockReg   ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
+        bool BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
+        void ReadChipBlockReg (  std::vector<uint32_t>& pVecReg );
 
-        void CbcFastReset();
+        void ChipReSync() override;
 
-        void CbcI2CRefresh();
+        void ChipReset() override;
 
-        void CbcTestPulse();
+        void ChipI2CRefresh();
 
-        void CbcTrigger();
+        void ChipTestPulse();
+
+        void ChipTrigger();
 
         // phase tuning coomands - d19c
         void PhaseTuningGetLineStatus(uint8_t pHybrid, uint8_t pChip, uint8_t pLine);
@@ -278,6 +285,42 @@ namespace Ph2_HwInterface {
         // measures the occupancy of the 2S chips
         bool Measure2SOccupancy(uint32_t pNEvents, uint8_t **&pErrorCounters, uint8_t ***&pChannelCounters);
         void Manage2SCountersMemory(uint8_t **&pErrorCounters, uint8_t ***&pChannelCounters, bool pAllocate);
+
+        ///////////////////////////////////////////////////////
+        //      MPA/SSA Methods                             //
+        /////////////////////////////////////////////////////
+
+        // Coms
+        void PSInterfaceBoard_SetSlaveMap();
+        void PSInterfaceBoard_ConfigureI2CMaster(uint32_t pEnabled, uint32_t pFrequency);
+        void PSInterfaceBoard_SendI2CCommand(uint32_t slave_id,uint32_t board_id,uint32_t read,uint32_t register_address, uint32_t data);
+        uint32_t PSInterfaceBoard_SendI2CCommand_READ(uint32_t slave_id,uint32_t board_id,uint32_t read,uint32_t register_address, uint32_t data);
+
+        // Main Power:
+        void PSInterfaceBoard_PowerOn(uint8_t mpaid = 0 , uint8_t ssaid = 0  );
+        void PSInterfaceBoard_PowerOff();
+
+        // MPA power on
+        void PSInterfaceBoard_PowerOn_MPA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, uint8_t mpaid = 0 , uint8_t ssaid = 0);
+        void PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
+        /// SSA power on
+        void PSInterfaceBoard_PowerOn_SSA_v1(float VDDPST = 1.25, float DVDD = 1.25, float AVDD = 1.25, float VBF = 0.3, float BG = 0.0, uint8_t mpaid = 0 , uint8_t ssaid = 0);
+        void PSInterfaceBoard_PowerOff_SSA_v1(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
+        void PSInterfaceBoard_PowerOn_SSA_v2(float VDDPST = 1.2, float DVDD = 1.0, float AVDD = 1.2, float VBG = 0.3, uint8_t mpaid = 0 , uint8_t ssaid = 0);
+        void PSInterfaceBoard_PowerOff_SSA_v2(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
+        void ReadPower_SSA(uint8_t mpaid = 0 , uint8_t ssaid = 0);
+        void KillI2C();
+        ///
+
+        void Pix_write_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
+        uint32_t Pix_read_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel);
+        std::vector<uint16_t> ReadoutCounters_MPA(uint32_t raw_mode_en = 0);
+
+        void Compose_fast_command(uint32_t duration = 0,uint32_t resync_en = 0,uint32_t l1a_en = 0,uint32_t cal_pulse_en = 0,uint32_t bc0_en = 0);
+        void PS_Open_shutter(uint32_t duration = 0);
+        void PS_Close_shutter(uint32_t duration = 0);
+        void PS_Clear_counters(uint32_t duration = 0);
+        void PS_Start_counters_read(uint32_t duration = 0);
 
         ///////////////////////////////////////////////////////
         //      FPGA CONFIG                                 //

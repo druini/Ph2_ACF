@@ -1,8 +1,9 @@
 #include <cstring>
-#include "../HWDescription/Cbc.h"
+#include "../HWDescription/Chip.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
-#include "../HWInterface/CbcInterface.h"
+#include "../HWInterface/ChipInterface.h"
+#include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../tools/Calibration.h"
@@ -105,6 +106,7 @@ int main ( int argc, char* argv[] )
     Calibration cCalibration;
     cCalibration.Inherit (&cTool);
     //second parameter disables stub logic on CBC3
+    // cCalibration.Initialise ( false, true );
     cCalibration.Initialise ( cAllChan, true );
 
     if ( cVplus ) cCalibration.FindVplus();
@@ -112,9 +114,9 @@ int main ( int argc, char* argv[] )
     cCalibration.FindOffsets();
     cCalibration.writeObjects();
     cCalibration.dumpConfigFiles();
+    cCalibration.resetPointers();
     t.stop();
     t.show ( "Time to Calibrate the system: " );
-
     if (cNoiseScan)
     {
         t.start();
@@ -125,13 +127,15 @@ int main ( int argc, char* argv[] )
         //second parameter disables stub logic on CBC3
         cPedeNoise.Initialise (cAllChan, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
+        // cPedeNoise.measureNoise(200);
 
         //cPedeNoise.sweepSCurves (225);
         //cPedeNoise.sweepSCurves (205);
-
+        
         cPedeNoise.Validate();
         cPedeNoise.writeObjects( );
         cPedeNoise.dumpConfigFiles();
+        cPedeNoise.resetPointers();
         t.stop();
         t.show ( "Time to Scan Pedestals and Noise" );
     }
@@ -141,6 +145,5 @@ int main ( int argc, char* argv[] )
     cTool.Destroy();
 
     if ( !batchMode ) cApp.Run();
-
     return 0;
 }

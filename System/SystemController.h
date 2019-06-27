@@ -13,16 +13,19 @@
 #ifndef __SYSTEMCONTROLLER_H__
 #define __SYSTEMCONTROLLER_H__
 
-#include "FileParser.h"
-#include "../HWInterface/CbcInterface.h"
+#include "../System/FileParser.h"
+#include "../HWInterface/ReadoutChipInterface.h"
+#include "../HWInterface/ChipInterface.h"
+#include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/MPAInterface.h"
+#include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/GlibFWInterface.h"
-#include "../HWInterface/ICGlibFWInterface.h"
-#include "../HWInterface/CtaFWInterface.h"
-#include "../HWInterface/ICFc7FWInterface.h"
-#include "../HWInterface/Cbc3Fc7FWInterface.h"
+// #include "../HWInterface/GlibFWInterface.h"
+// #include "../HWInterface/ICGlibFWInterface.h"
+// #include "../HWInterface/CtaFWInterface.h"
+// #include "../HWInterface/ICFc7FWInterface.h"
+// #include "../HWInterface/Cbc3Fc7FWInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/Visitor.h"
@@ -31,6 +34,8 @@
 #include "../Utils/FileHandler.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/easylogging++.h"
+#include "../Utils/Container.h"
+#include "../Utils/TCPNetworkServer.h"
 #include <iostream>
 #include <vector>
 #include <map>
@@ -57,17 +62,23 @@ namespace Ph2_System {
     class SystemController
     {
       public:
-        BeBoardInterface*       fBeBoardInterface;                     /*!< Interface to the BeBoard */
-        CbcInterface*           fCbcInterface;                         /*!< Interface to the Cbc */
-        MPAInterface*           fMPAInterface;                         /*!< Interface to the Cbc */
-        BeBoardVec              fBoardVector;                          /*!< Vector of Board pointers */
+    	BeBoardInterface*       fBeBoardInterface;           //!< Interface to the BeBoard
+        ReadoutChipInterface*   fReadoutChipInterface;
+        ChipInterface*          fChipInterface;              //!< Interface to the CBC
+        SSAInterface*           fSSAInterface;               //!< Interface to the SSA
+        MPAInterface*           fMPAInterface;               //!< Interface to the MPA
+
+        DetectorContainer*      fDetectorContainer;          //Detector Container
+        BeBoardVec              fBoardVector;                //!< Vector of Board pointers
         BeBoardFWMap            fBeBoardFWMap;
-        SettingsMap             fSettingsMap;                          /*!< Maps the settings */
+        SettingsMap             fSettingsMap;                //!< Maps the settings
         //for reading single files
         FileHandler*            fFileHandler;
         //for writing 1 file for each FED
         std::string             fRawFileName;
         bool                    fWriteHandlerEnabled;
+        bool                    fStreamerEnabled;
+        TCPNetworkServer*       fNetworkStreamer;
 
       private:
         FileParser fParser;
@@ -95,6 +106,7 @@ namespace Ph2_System {
         * \brief create a FileHandler object with
          * \param pFilename : the filename of the binary file
         */
+        
         void addFileHandler ( const std::string& pFilename, char pOption );
         void closeFileHandler();
 
@@ -140,7 +152,7 @@ namespace Ph2_System {
          * \param pFilename : HW Description file
          *\param os : ostream to dump output
          */
-        void InitializeHw ( const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true );
+        void InitializeHw ( const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = false );
 
         /*!
          * \brief Initialize the settings
@@ -178,10 +190,14 @@ namespace Ph2_System {
          */
         void ReadData (bool pWait = true);
 
-        void Start();
-        void Stop();
-        void Pause();
-        void Resume();
+        virtual void Start(int currentRun);
+        virtual void Stop();
+        virtual void Pause();
+        virtual void Resume();
+        virtual void ConfigureCalibration();
+        virtual void ConfigureHardware(std::string cHWFile, bool enableStream = false);
+        virtual void Configure(std::string cHWFile, bool enableStream = false);
+
 
         //these start and stop acquistion on a single board
         void Start (BeBoard* pBoard);

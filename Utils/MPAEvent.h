@@ -53,15 +53,6 @@ namespace Ph2_HwInterface {
       private:
 
 
-        uint32_t ftotal_trigs;
-        uint32_t ftrigger_total_counter;
-        uint32_t ftrigger_counter;
-
-        std::vector<uint32_t> ftrigger_offset_BEAM;
-        std::vector<uint32_t> ftrigger_offset_MPA;
-
-
-
     };
 }
 #endif

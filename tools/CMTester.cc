@@ -22,9 +22,9 @@ void CMTester::Initialize()
         {
             uint32_t cFeId = cFe->getFeId();
 
-            for ( auto& cCbc : cFe->fCbcVector )
+            for ( auto& cCbc : cFe->fReadoutChipVector )
             {
-                uint32_t cCbcId = cCbc->getCbcId();
+                uint32_t cCbcId = cCbc->getChipId();
 
                 // Fill Canvas Map
                 TCanvas* ctmpCanvas = new TCanvas ( Form ( "c_online_canvas_fe%d_cbc%d", cFeId, cCbcId ), Form ( "FE%d CBC%d Online Canvas", cFeId, cCbcId ), 800, 800 );
@@ -144,7 +144,7 @@ void CMTester::Initialize()
             }
 
             // PER MODULE PLOTS
-            uint32_t cNCbc = cFe->getNCbc();
+            uint32_t cNCbc = cFe->getNChip();
 
             // 2D profile for the combined odccupancy
             TString cName =  Form ( "p_module_combinedoccupancy_Fe%d", cFeId ) ;
@@ -228,13 +228,13 @@ void CMTester::ScanNoiseChannels()
         {
             for ( auto& cFe : pBoard->fModuleVector )
             {
-                for ( auto& cCbc : cFe->fCbcVector )
+                for ( auto& cCbc : cFe->fReadoutChipVector )
                 {
                     // just re-use the hitprobability histogram here?
                     // this has to go into a dedicated method
                     TProfile* cNoiseStrips = dynamic_cast<TProfile*> ( getHist ( cCbc, "hitprob" ) );
 
-                    const std::vector<bool>& list = cEvent->DataBitVector ( cFe->getFeId(), cCbc->getCbcId() );
+                    const std::vector<bool>& list = cEvent->DataBitVector ( cFe->getFeId(), cCbc->getChipId() );
                     int cChan = 0;
 
                     for ( const auto& b : list )
@@ -259,14 +259,14 @@ void CMTester::ScanNoiseChannels()
     }
 
     // done taking data, now iterate over p_noisestrips and find out the bad strips, push them into the fNoiseStripMap, then clear the histogram
-    for ( const auto& cCbc : fCbcHistMap )
+    for ( const auto& cCbc : fChipHistMap )
     {
 
         TProfile* cNoiseStrips = dynamic_cast<TProfile*> ( getHist ( cCbc.first,  "hitprob" ) );
 
         auto cNoiseSet  =  fNoiseStripMap.find ( cCbc.first );
 
-        if ( cNoiseSet == std::end ( fNoiseStripMap ) ) LOG (ERROR) << " Error: Could not find noisy strip container for CBC " << int ( cCbc.first->getCbcId() ) ;
+        if ( cNoiseSet == std::end ( fNoiseStripMap ) ) LOG (ERROR) << " Error: Could not find noisy strip container for CBC " << int ( cCbc.first->getChipId() ) ;
         else
         {
             double cMean = cNoiseStrips->GetMean ( 2 );
@@ -281,7 +281,7 @@ void CMTester::ScanNoiseChannels()
                 if ( fabs ( cStripOccupancy - cMean ) > cMean / 2 )
                 {
                     cNoiseSet->second.insert ( cNoiseStrips->GetBinCenter ( cBin ) );
-                    LOG (INFO) << "Found noisy Strip on CBC " << int ( cCbc.first->getCbcId() ) << " : " << cNoiseStrips->GetBinCenter ( cBin ) ;
+                    LOG (INFO) << "Found noisy Strip on CBC " << int ( cCbc.first->getChipId() ) << " : " << cNoiseStrips->GetBinCenter ( cBin ) ;
                 }
             }
         }
@@ -296,7 +296,7 @@ void CMTester::TakeData()
     std::stringstream outp;
     parseSettings();
 
-    ThresholdVisitor cVisitor (fCbcInterface);
+    ThresholdVisitor cVisitor (fReadoutChipInterface);
     this->accept (cVisitor);
     fVcth = cVisitor.getThreshold();
     LOG (INFO) << "Checking threshold on latest CBC that was touched...: "<<fVcth<<std::endl;
@@ -306,7 +306,7 @@ void CMTester::TakeData()
     //    cVcth = cVisitor.getThreshold();
     //    std::cout<<"Now my threshold is: "<<cVcth<<std::endl;
 
-    //CbcRegReader cReader ( fCbcInterface, "VCth" );
+    //CbcRegReader cReader ( fReadoutChipInterface, "VCth" );
     // accept( cReader );
 
     for ( BeBoard* pBoard : fBoardVector )
@@ -359,9 +359,9 @@ void CMTester::FinishRun()
     // first CBCs
     LOG (INFO) << "per CBC ..";
 
-    ThresholdVisitor cVisitor (fCbcInterface); // No Vcth given, so default option is 'r'
+    ThresholdVisitor cVisitor (fReadoutChipInterface); // No Vcth given, so default option is 'r'
     int iCbc = 0;
-    for ( auto cCbc : fCbcHistMap )
+    for ( auto cCbc : fChipHistMap )
     {
         cCbc.first->accept (cVisitor);
         uint32_t cVcth = cVisitor.getThreshold();
@@ -381,9 +381,9 @@ void CMTester::FinishRun()
 	float CMnoiseFrac = fabs ( cNHitsFit->GetParameter ( 1 ) );
 	float CMnoiseFracErr = fabs ( cNHitsFit->GetParError ( 1 ) );
 	if (fTotalNoise[iCbc]>0) 
-	    LOG (INFO) << BOLDRED << "Average noise on FE " << +cCbc.first->getFeId() << " CBC " << +cCbc.first->getCbcId() << " : " << fTotalNoise[iCbc] << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-" <<  CMnoiseFracErr << "%, so "<<CMnoiseFrac*fTotalNoise[iCbc]<<" VCth." << RESET ;
+	    LOG (INFO) << BOLDRED << "Average noise on FE " << +cCbc.first->getFeId() << " CBC " << +cCbc.first->getChipId() << " : " << fTotalNoise[iCbc] << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-" <<  CMnoiseFracErr << "%, so "<<CMnoiseFrac*fTotalNoise[iCbc]<<" VCth." << RESET ;
 	else 
-	    LOG (INFO) << BOLDRED << "FE " << +cCbc.first->getFeId() << " CBC " << +cCbc.first->getCbcId() << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-" <<  CMnoiseFracErr << "%" << RESET ;
+	    LOG (INFO) << BOLDRED << "FE " << +cCbc.first->getFeId() << " CBC " << +cCbc.first->getChipId() << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-" <<  CMnoiseFracErr << "%" << RESET ;
 
 
         // now compute the correlation coefficient and the uncorrelated probability
@@ -473,7 +473,7 @@ void CMTester::analyze ( BeBoard* pBoard, const Event* pEvent )
 
         std::vector<bool> cModuleData; // use this to store data for all CBCs....
 
-        for ( auto& cCbc : cFe->fCbcVector )
+        for ( auto& cCbc : cFe->fReadoutChipVector )
         {
 
             // here loop over the channels and fill the histograms
@@ -485,7 +485,7 @@ void CMTester::analyze ( BeBoard* pBoard, const Event* pEvent )
             TProfile* cTmpCombinedOccPM = dynamic_cast<TProfile*> ( getHist ( cCbc, "occupancyprojectionplusminus" ) );
 
             int cNHits = 0;
-            int cEventHits = pEvent->GetNHits (cCbc->getFeId(), cCbc->getCbcId() );
+            int cEventHits = pEvent->GetNHits (cCbc->getFeId(), cCbc->getChipId() );
 
             if (cEventHits > 250) LOG (INFO) << " Found an event with " << cEventHits << " hits on a CBC! Is this expected?" ;
 
@@ -506,7 +506,7 @@ void CMTester::analyze ( BeBoard* pBoard, const Event* pEvent )
                 bool chit;
 
                 if ( fDoSimulate ) chit = cSimResult.at ( cChan );
-                else chit = pEvent->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChan );
+                else chit = pEvent->DataBit ( cFe->getFeId(), cCbc->getChipId(), cChan );
 
                 // move the CBC data in a vector that has data for the whole module
                 cModuleData.push_back ( chit );
@@ -524,7 +524,7 @@ void CMTester::analyze ( BeBoard* pBoard, const Event* pEvent )
                     bool chit2;
 
                     if ( fDoSimulate ) chit2 = cSimResult.at ( cChan2 );
-                    else chit2 = pEvent->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChan2 );
+                    else chit2 = pEvent->DataBit ( cFe->getFeId(), cCbc->getChipId(), cChan2 );
 
                     int cfillValue = 0;
 
@@ -584,11 +584,11 @@ void CMTester::updateHists ( bool pFinal )
 {
     // method to iterate over the histograms that I want to draw and update the canvases
     int iCbc = 0;
-    for ( auto& cCbc : fCbcHistMap )
+    for ( auto& cCbc : fChipHistMap )
     {
         auto cCanvas = fCanvasMap.find ( cCbc.first );
 
-        if ( cCanvas == fCanvasMap.end() ) LOG (INFO) << "Error: could not find the canvas for Cbc " << int ( cCbc.first->getCbcId() ) ;
+        if ( cCanvas == fCanvasMap.end() ) LOG (INFO) << "Error: could not find the canvas for Chip " << int ( cCbc.first->getChipId() ) ;
         else
         {
             TH1F* cTmpNHits = dynamic_cast<TH1F*> ( getHist ( cCbc.first, "nhits" ) );
@@ -671,13 +671,13 @@ bool CMTester::randHit ( float pProbability )
     else return false;
 }
 
-bool CMTester::isMasked ( Cbc* pCbc, int pChannel )
+bool CMTester::isMasked ( Chip* pCbc, int pChannel )
 {
     auto cNoiseStripSet = fNoiseStripMap.find ( pCbc );
 
     if ( cNoiseStripSet == std::end ( fNoiseStripMap ) )
     {
-        LOG (ERROR) << "Error: could not find the set of noisy strips for CBC " << int ( cNoiseStripSet->first->getCbcId() ) ;
+        LOG (ERROR) << "Error: could not find the set of noisy strips for CBC " << int ( cNoiseStripSet->first->getChipId() ) ;
         return false;
     }
     else
@@ -705,7 +705,7 @@ bool CMTester::isMasked ( int pGlobalChannel )
 
     for ( const auto& cNoiseStripSet : fNoiseStripMap )
     {
-        if ( int ( cNoiseStripSet.first->getCbcId() ) == cCbcId )
+        if ( int ( cNoiseStripSet.first->getChipId() ) == cCbcId )
         {
             auto cNoiseStrip = cNoiseStripSet.second.find ( pGlobalChannel - cCbcId * 254 );
 

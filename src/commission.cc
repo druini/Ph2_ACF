@@ -44,7 +44,9 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "latency", "scan the trigger latency", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "latency", "l" );
 
-    cmd.defineOption ( "notdc", "don't split the latency histogram in TDC sub-bins", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "triggerTdc", "measure trigger time of arrival", ArgvParser::NoOptionAttribute );
+    cmd.defineOptionAlternative ( "triggerTdc", "t" );
+
     cmd.defineOption ( "antenna", "perform latency scan with antenna on UIB",  ArgvParser::OptionRequiresValue );
 
     cmd.defineOption ( "stublatency", "scan the stub latency", ArgvParser::NoOptionAttribute );
@@ -88,12 +90,12 @@ int main ( int argc, char* argv[] )
     // now query the parsing results
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/Commissioning.xml";
     bool cLatency = ( cmd.foundOption ( "latency" ) ) ? true : false;
+    bool cTriggerTDC = ( cmd.foundOption ( "triggerTdc" ) ) ? true : false;
     bool cStubLatency = ( cmd.foundOption ( "stublatency" ) ) ? true : false;
     bool cSignal = ( cmd.foundOption ( "signal" ) ) ? true : false;
     bool cSignalFit = ( cmd.foundOption ( "signalFit" ) ) ? true : false;
     bool cHitOR = ( cmd.foundOption ( "hitOR" ) ) ? true : false;
     bool cNoise = ( cmd.foundOption ( "noise" ) ) ? true : false;
-    bool cNoTDC = ( cmd.foundOption ( "notdc" ) ) ? true : false;
     bool cAntenna = (cmd.foundOption ("antenna") )? true : false;
 
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
@@ -118,7 +120,7 @@ int main ( int argc, char* argv[] )
 
     std::string cResultfile;
 
-    if ( cLatency || cStubLatency ) cResultfile = "Latency";
+    if ( cLatency || cStubLatency || cTriggerTDC) cResultfile = "Latency";
     else if ( cSignal ) cResultfile = "SignalScan";
     else if ( cSignalFit ) cResultfile = "SignalScanFit";
     else cResultfile = "Commissioning";
@@ -140,39 +142,47 @@ int main ( int argc, char* argv[] )
     cAntennaTester.Initialize();
     #endif
 
-    if ( cLatency || cStubLatency )
+    if ( cLatency || cStubLatency)
     {
         LatencyScan cLatencyScan;
         cLatencyScan.Inherit (&cTool);
-        cLatencyScan.Initialize (cStartLatency, cLatencyRange, cNoTDC );
+        cLatencyScan.Initialize (cStartLatency, cLatencyRange);
      
         // Here comes our Part:
         if( cAntenna) LOG (INFO) << BOLDBLUE << "Enabling antenna with " << +cAntennaPotential << " written to the potentiometer" <<  RESET;
 	           
-             if ( cLatency ) 
-	           {
+     if ( cLatency ) 
+	 {
 
 #ifdef __ANTENNA__
-
-		             if( cAntenna)cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential );
+        if( cAntenna)cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential );
 #endif
 
-		                 cLatencyScan.ScanLatency ( cStartLatency, cLatencyRange, cNoTDC );
-	           }
+	    cLatencyScan.ScanLatency ( cStartLatency, cLatencyRange);
+	}
 
-             if ( cStubLatency ) cLatencyScan.ScanStubLatency ( cStartLatency, cLatencyRange );
+    if ( cStubLatency ) cLatencyScan.ScanStubLatency ( cStartLatency, cLatencyRange );
 
 // if antenna was being used ... then disable it again at the end 
 #ifdef __ANTENNA__
 
-             if( cAntenna)
-	           {
-		             LOG (INFO) << BOLDBLUE << "Disable antenna with " << +cAntennaPotential << " written to the potentiometer" <<  RESET;
-		             cAntennaTester.EnableAntenna(false, cAntennaPotential );
-             }
+        if( cAntenna)
+	    {
+		    LOG (INFO) << BOLDBLUE << "Disable antenna with " << +cAntennaPotential << " written to the potentiometer" <<  RESET;
+            cAntennaTester.EnableAntenna(false, cAntennaPotential );
+        }
 #endif
 
-	      cLatencyScan.writeObjects();
+        cLatencyScan.writeObjects();
+    }
+
+    else if ( cTriggerTDC )
+    {
+        LatencyScan cLatencyScan;
+        cLatencyScan.Inherit (&cTool);
+        cLatencyScan.Initialize (cStartLatency, cLatencyRange);
+        cLatencyScan.MeasureTriggerTDC();
+        cLatencyScan.writeObjects();
     }
 
     else if ( cSignal )
@@ -201,7 +211,7 @@ int main ( int argc, char* argv[] )
 #ifdef __ANTENNA__
 
         if( cAntenna) LOG (INFO) << BOLDBLUE << "Enabling antenna with " << +cAntennaPotential << " written to the potentiometer" <<  RESET;
-	      if( cAntenna)cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential );
+        if( cAntenna)cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential );
 #endif
 
         cPedeNoise.Initialise (cAllChan); // canvases etc. for fast calibration

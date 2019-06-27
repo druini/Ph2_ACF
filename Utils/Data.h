@@ -18,8 +18,7 @@
 #include <ios>
 #include <istream>
 #include "../Utils/Event.h"
-#include "../Utils/Cbc2Event.h"
-#include "../Utils/Cbc3Event.h"
+#include "../Utils/RD53Event.h"
 #include "../Utils/D19cCbc3Event.h"
 #include "../Utils/D19cCbc3EventZS.h"
 #include "../Utils/easylogging++.h"
@@ -107,10 +106,7 @@ namespace Ph2_HwInterface {
          */
         ~Data()
         {
-            for ( auto pevt : fEventList )
-                if (pevt) delete pevt;
-
-            fEventList.clear();
+            Reset();
         }
         /*!
          * \brief Set the data in the data map
@@ -135,21 +131,22 @@ namespace Ph2_HwInterface {
         const Event* GetNextEvent ( const BeBoard* pBoard )
         {
             //fFuture.wait();
-				if (fFuture.valid() )
+            if (fFuture.valid() )
                 fFuture.get();
             return ( ( fCurrentEvent >= fEventList.size() ) ? nullptr : fEventList.at ( fCurrentEvent++ ) );
         }
         const Event* GetEvent ( const BeBoard* pBoard, int i )
         {
             //fFuture.wait();
-				if ( fFuture.valid() ) 
+            if ( fFuture.valid() )
                 fFuture.get();
             return ( ( i >= (int) fEventList.size() ) ? nullptr : fEventList.at ( i ) );
         }
         const std::vector<Event*>& GetEvents ( const BeBoard* pBoard )
         {
             //fFuture.wait();
-				if ( fFuture.valid() ) 
+
+            if ( fFuture.valid() ) 
                 fFuture.get();
             return fEventList;
         }

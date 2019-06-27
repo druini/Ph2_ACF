@@ -15,7 +15,7 @@
 
 namespace Ph2_HwDescription {
 
-    FrontEndDescription::FrontEndDescription ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, bool pStatus, ChipType pType ) :
+    FrontEndDescription::FrontEndDescription ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, bool pStatus, FrontEndType pType ) :
         fBeId ( pBeId ),
         fFMCId ( pFMCId ),
         fFeId ( pFeId ),
@@ -29,7 +29,7 @@ namespace Ph2_HwDescription {
         fFMCId ( 0 ),
         fFeId ( 0 ),
         fStatus ( true ),
-        fType (ChipType::UNDEFINED)
+        fType (FrontEndType::UNDEFINED)
     {
     }
 

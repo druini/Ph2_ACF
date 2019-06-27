@@ -243,7 +243,7 @@ int main ( int argc, char* argv[] )
             {
                 for (auto cFe : cBoard->fModuleVector)
                 {
-                    for (auto cCbc : cFe->fCbcVector)
+                    for (auto cCbc : cFe->fReadoutChipVector)
                     {
 
                         for (auto cBias : cBiases)
@@ -291,7 +291,7 @@ int main ( int argc, char* argv[] )
         Module* cFe = cPedeNoise.fBoardVector.at (0)->fModuleVector.at (0);
         uint16_t cPedestal = round (cPedeNoise.getPedestal (cFe) );
         //sweep the stubs
-        ThresholdVisitor cVisitor (cTool.fCbcInterface, 0);
+        ThresholdVisitor cVisitor (cTool.fReadoutChipInterface, 0);
 
         if (cFull)
         {

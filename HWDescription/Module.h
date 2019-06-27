@@ -13,12 +13,13 @@
 #define Module_h__
 
 #include "FrontEndDescription.h"
-#include "Cbc.h"
-#include "MPA.h"
+// #include "RD53.h"
+#include "ReadoutChip.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/easylogging++.h"
 #include <vector>
 #include <stdint.h>
+#include "../Utils/Container.h"
 
 // FE Hybrid HW Description Class
 
@@ -31,16 +32,16 @@ namespace Ph2_HwDescription {
 
     /*!
      * \class Module
-     * \brief handles a vector of Cbc which are connected to the Module
+     * \brief handles a vector of Chip which are connected to the Module
      */
-    class Module : public FrontEndDescription
+    class Module : public FrontEndDescription, public ModuleContainer
     {
 
       public:
 
         // C'tors take FrontEndDescription or hierachy of connection
-        Module ( const FrontEndDescription& pFeDesc, uint8_t pModuleId );
-        Module ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId );
+        Module (const FrontEndDescription& pFeDesc, uint8_t pModuleId );
+        Module (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId );
 
         // Default C'tor
         Module();
@@ -48,16 +49,6 @@ namespace Ph2_HwDescription {
         // D'tor
         ~Module()
         {
-            for ( auto& pCbc : fCbcVector )
-                if (pCbc) delete pCbc;
-
-            fCbcVector.clear();
-
-            for ( auto& pMPA : fMPAVector )
-                delete pMPA;
-
-            fMPAVector.clear();
-
         };
 
         /*!
@@ -68,108 +59,51 @@ namespace Ph2_HwDescription {
         {
             pVisitor.visit ( *this );
 
-            for ( Cbc* cCbc : fCbcVector )
-                cCbc->accept ( pVisitor );
+            for ( Chip* cChip : fReadoutChipVector )
+                cChip->accept ( pVisitor );
         }
-        // void accept( HwDescriptionVisitor& pVisitor ) const {
-        //  pVisitor.visit( *this );
-        //  for ( auto& cCbc : fCbcVector )
-        //      cCbc.accept( pVisitor );
-        // }
         /*!
-        * \brief Get the number of Cbc connected to the Module
+        * \brief Get the number of Chip connected to the Module
         * \return The size of the vector
         */
-        uint8_t getNCbc() const
+        uint8_t getNChip() const
         {
-            return fCbcVector.size();
+            return fReadoutChipVector.size();
         }
 
+        // void addReadoutChip ( ReadoutChip& pChip )
+        // {
+        //     //get the FrontEndType of the Chip and set the module one accordingly
+        //     //this is the case when no chip type has been set so get the one from the Chip
+        //     if (fType == FrontEndType::UNDEFINED)
+        //         fType = pChip.getFrontEndType();
+        //     //else, the chip type has already been set - if it is different from another Chip, rais a warning
+        //     //no different chips should be on a module
+        //     else if (fType != pChip.getFrontEndType() )
+        //     {
+        //         LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
+        //         exit (1);
+        //     }
 
-        uint8_t getNMPA() const
+        //     fReadoutChipVector.push_back ( &pChip );
+        // }
+        void addReadoutChip ( ReadoutChip* pChip )
         {
-            return fMPAVector.size();
-        }
-
-
-        /*!
-         * \brief Adding a Cbc to the vector
-         * \param pCbc
-         */
-        void addCbc ( Cbc& pCbc )
-        {
-            //get the ChipType of the Cbc and set the module one accordingly
-            //this is the case when no chip type has been set so get the one from the Cbc
-            if (fType == ChipType::UNDEFINED)
-                fType = pCbc.getChipType();
-            //else, the chip type has already been set - if it is different from another Cbc, rais a warning
+            //get the FrontEndType of the Chip and set the module one accordingly
+            //this is the case when no chip type has been set so get the one from the Chip
+            if (fType == FrontEndType::UNDEFINED)
+                fType = pChip->getFrontEndType();
+            //else, the chip type has already been set - if it is different from another Chip, rais a warning
             //no different chips should be on a module
-            else if (fType != pCbc.getChipType() )
+            else if (fType != pChip->getFrontEndType() )
             {
                 LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
                 exit (1);
             }
 
-            fCbcVector.push_back ( &pCbc );
-        }
-        void addCbc ( Cbc* pCbc )
-        {
-            //get the ChipType of the Cbc and set the module one accordingly
-            //this is the case when no chip type has been set so get the one from the Cbc
-            if (fType == ChipType::UNDEFINED)
-                fType = pCbc->getChipType();
-            //else, the chip type has already been set - if it is different from another Cbc, rais a warning
-            //no different chips should be on a module
-            else if (fType != pCbc->getChipType() )
-            {
-                LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
-                exit (1);
-            }
-
-            fCbcVector.push_back ( pCbc );
+            fReadoutChipVector.push_back ( pChip );
         }
 
-        void addMPA ( MPA& pMPA )
-        {
-            fMPAVector.push_back ( &pMPA );
-        }
-        void addMPA ( MPA* pMPA )
-        {
-            fMPAVector.push_back ( pMPA );
-        }
-
-
-        /*!
-         * \brief Remove a Cbc from the vector
-         * \param pCbcId
-         * \return a bool which indicate if the removing was successful
-         */
-        bool   removeCbc ( uint8_t pCbcId );
-        /*!
-         * \brief Get a Cbc from the vector
-         * \param pCbcId
-         * \return a pointer of Cbc, so we can manipulate directly the Cbc contained in the vector
-         */
-        Cbc* getCbc ( uint8_t pCbcId ) const;
-
-
-        /*!
-         * \brief Remove a MPA from the vector
-         * \param pMPAId
-         * \return a bool which indicate if the removing was successful
-         */
-        bool   removeMPA ( uint8_t pMPAId );
-        /*!
-         * \brief Get a MPA from the vector
-         * \param pMPAId
-         * \return a pointer of MPA, so we can manipulate directly the MPA contained in the vector
-         */
-        MPA* getMPA ( uint8_t pMPAId ) const;
-
-        /*!
-        * \brief Get the Module Id
-        * \return The Module ID
-        */
         uint8_t getModuleId() const
         {
             return fModuleId;
@@ -184,10 +118,9 @@ namespace Ph2_HwDescription {
         };
 
 
-        std::vector < Cbc* > fCbcVector;
-        std::vector < MPA* > fMPAVector;
-
-
+        // std::vector < RD53* > fRD53Vector;
+        std::vector < ReadoutChip* > fReadoutChipVector;
+        
       protected:
 
         //moduleID

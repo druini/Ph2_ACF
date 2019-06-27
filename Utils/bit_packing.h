@@ -1,0 +1,345 @@
+// Bit Packing Utilities
+// 
+// Author:  Alkis
+// 
+// Features:
+//          - pack (concatenate) integers into a value
+//          - unpack (extract) integers from a value
+//          - all functions are constexpr
+//
+// where integers is one of the following:
+//          - a number of variables of any integer type
+//          - a built-in array of any integer type
+//          - a std::array of any integer type
+//          - a pair of iterators that define a range of integers
+//
+//
+// Some hacks used in this code:
+//  - C++17 fold expressions in C++14:
+//      Ex:
+//        C++17:    ((array[i++] = pack), ...);
+//
+//        C++14:    [](auto...){}(array[i++] = pack ...); // wrong: the order of evaluation of function arguments is undefined
+//                  auto _ = { array[i++] = pack ... }; // ok: initializer lists behave as expected
+//
+//  - In some templates I want the first template argument to be optional with a default value that depends on other template arguments:
+//    In this case I use:
+//      template <
+//          class T = void, 
+//          /*more parameters*/, 
+//          class R = typename std::conditional_t<
+//              std::is_void<T>::value, 
+//              /*something that depends on parameters*/, 
+//              T
+//          >
+//      >
+//
+// Support: email to alkiviadis.papadopoulos@cern.ch
+//          email to mauro.dinardo@cern.ch
+
+#pragma once
+
+#include <iostream>
+#include <tuple>
+
+using std::size_t;
+
+#define _CONSTEXPR constexpr
+
+// if c++14 is not fully supported...
+#if __cplusplus < 201402
+
+    #define _CONSTEXPR
+    
+    namespace std {
+
+        template <size_t... Is>
+        struct index_sequence {};
+
+        template <size_t N, size_t... Is>
+        struct make_index_sequence_impl {
+            using type = typename make_index_sequence_impl<N-1, N-1, Is...>::type;
+        };
+        
+        template <size_t N, size_t... Is>
+        struct make_index_sequence_impl<N, 0, Is...> {
+            using type = index_sequence<0, Is...>;
+        };
+
+        template <size_t N>
+        using make_index_sequence = typename make_index_sequence_impl<N>::type;
+
+        template <bool Cond, class T>
+        using enable_if_t = typename enable_if<Cond, T>::type;
+
+        template< bool B, class T, class F >
+        using conditional_t = typename conditional<B,T,F>::type;
+
+        template< class Iter >
+        constexpr std::reverse_iterator<Iter> make_reverse_iterator( Iter i )
+        {
+            return std::reverse_iterator<Iter>(i);
+        }
+
+    }
+
+#endif
+
+namespace detail {
+    template<size_t size, size_t... sizes>
+    struct size_sum
+    {
+      static constexpr size_t value = size + size_sum<sizes...>::value;
+    };
+  
+  template<size_t size>
+    struct size_sum<size>
+    {
+      static constexpr size_t value = size;
+    };
+
+
+    template <size_t... Is>
+    auto make_reverse_impl(std::index_sequence<Is...>)
+        -> std::index_sequence<sizeof...(Is) - 1 - Is...>{};
+
+    // used to declare a reveresed index_sequence
+    template <size_t N>
+    using make_reverse_sequence = decltype(make_reverse_impl(std::make_index_sequence<N>{}));
+
+    
+    // choose uint that has N or more bits
+
+    template <size_t N, typename std::enable_if_t<(N <= 8), int> = 0>
+    auto uint_helper() -> uint8_t;
+
+    template <size_t N, typename std::enable_if_t<(N > 8 && N <= 16), int> = 0>
+    auto uint_helper() -> uint16_t;
+
+    template <size_t N, typename std::enable_if_t<(N > 16 && N <= 32), int> = 0>
+    auto uint_helper() -> uint32_t;
+
+    template <size_t N, typename std::enable_if_t<(N > 32), int> = 0>
+    auto uint_helper() -> uint64_t;
+
+    template <size_t N>
+    struct uint_of_size {
+        static_assert(N <= 64, "Cannot declare uint larger than 64 bits.");
+        using type = decltype(uint_helper<N>()); 
+    };
+
+    template <size_t... Sizes>
+    using uint_t = typename uint_of_size<size_sum<Sizes...>::value>::type;
+
+    // tuple of references with constexpr assignement operator
+    // because std::tuple::operator= is not constexpr
+    // useful in case anyone wants to use BitPacker::unpack in constexpr
+    template <class... Ts>
+    struct ref_tuple {
+        constexpr ref_tuple(Ts&... args) : tup(args...) {}
+
+        template <class Tuple>
+        constexpr void operator=(const Tuple& source) {
+            assign(source, std::make_index_sequence<sizeof...(Ts)>{});
+        }
+
+    private:
+        template <class Tuple, size_t... Is>
+        constexpr void assign(const Tuple& source, std::index_sequence<Is...>) {
+            auto unused = {
+                (std::get<Is>(tup) = std::get<Is>(source), 0)...
+            };
+        }
+
+        std::tuple<Ts&...> tup;
+    };
+
+}
+
+// use this instead of std::tie in case you want to unpack in a constexpr context
+template <class... Args>
+constexpr auto make_ref(Args&... args) {
+    return detail::ref_tuple<Args...>(args...);
+}
+
+// returns a value with only the n least significant bits set.
+template <class T = size_t>
+constexpr T bit_mask(size_t n) {
+    return (1 << n) - 1;
+}
+
+// BitPacker
+// For a pack Sizes of length N:
+// - pack:      returns the value that results from concatenating the bitstrings that occupy 
+//              the Sizes(i) least significant bits of each argument i.
+// - unpack:    returns a std::tuple with the values of the N contiguous bitstrings of size
+//              Sizes(i) that occupy the least sigificant bits of the given value.
+template <size_t... Sizes>
+struct BitPacker
+{
+    static_assert(sizeof...(Sizes) > 0, "BitPacker requires at least one template argument.");
+
+    static constexpr size_t total_size = detail::size_sum<Sizes...>::value;
+    
+    template <class T = detail::uint_t<total_size>, class... Args>
+    static _CONSTEXPR T pack(Args... args) {
+        static_assert(sizeof...(Sizes) == sizeof...(Args), "Invalid number of arguments to pack.");
+        static_assert(sizeof(T) * 8 >= total_size, "T is too small.");
+        T result = 0;
+        size_t size = total_size;
+        auto unused = {
+            result |= (args & bit_mask(Sizes)) << (size -= Sizes)...
+        };
+        return result;
+    }
+
+    template <class T>
+    static _CONSTEXPR auto unpack(T value) {
+        return unpack_impl(value, std::make_index_sequence<sizeof...(Sizes)>{});
+    }
+
+private:
+    template <class T, size_t...>
+    using Identity = T;
+
+    template <size_t... Is, class T>
+    static _CONSTEXPR auto unpack_impl(T value, std::index_sequence<Is...>) {
+        std::tuple<Identity<T, Is>...> result;
+        size_t size = total_size;
+        auto unused = {
+            std::get<Is>(result) = (value >> (size -= Sizes)) & bit_mask(Sizes)...
+        };
+        return result;
+    }
+};
+
+template <size_t... Sizes, class... Args>
+_CONSTEXPR auto pack_bits(Args... args) {
+    return BitPacker<Sizes...>::pack(args...);
+}
+
+template <size_t... Sizes, class T>
+_CONSTEXPR auto unpack_bits(T value) {
+    return BitPacker<Sizes...>::unpack(value);
+};
+
+// RangePacker
+// For an array/range of size N:
+// - pack:      returns the value that results from concatenating the bitstrings that 
+//              occupy the Size least significant bits of each element of the array/range.
+// - unpack:    stores the values of the N contiguous bitstrings of size Size that occupy
+//              the least significant bits of the given value into the corresponding  
+//              elements of the array/range.
+// (pack/unpack) x (forward/reverse) x (range/std::array/array) = 12 functions
+template <size_t Size>
+struct RangePacker 
+{
+    // unpack range
+    template <class T, class It>
+    static _CONSTEXPR void unpack(T value, It begin, It end) {
+        size_t total_size = std::distance(begin, end) * Size;
+        for (auto it = begin; it != end; it++) {
+            *it = (value >> (total_size -= Size)) & bit_mask(Size);
+        }
+    }
+    
+    // unpack range reversed
+    template <class T, class It>
+    static _CONSTEXPR void unpack_reverse(T value, It begin, It end) {
+        unpack(value, std::make_reverse_iterator(end), std::make_reverse_iterator(begin));
+    }
+
+    // unpack std::array reversed
+    template <size_t N, class T, class U>
+    static _CONSTEXPR void unpack_reverse(T value, std::array<U, N>& array) {
+        unpack_impl(value, array, detail::make_reverse_sequence<N>{});
+    }
+
+    // unpack std::array
+    template <size_t N, class T, class U>
+    static _CONSTEXPR void unpack(T value, std::array<U, N>& array) {
+        unpack_impl(value, array, std::make_index_sequence<N>{});
+    }
+    
+    // unpack bilt-in array
+    template <size_t N, class T, class U>
+    static _CONSTEXPR void unpack(T value, U (&array)[N]) {
+        unpack_impl(value, array, std::make_index_sequence<N>{});
+    }
+
+    // unpack bilt-in array reversed
+    template <size_t N, class T, class U>
+    static _CONSTEXPR void unpack_reverse(T value, U (&array)[N]) {
+        unpack_impl(value, array, detail::make_reverse_sequence<N>{});
+    }
+    
+    // pack range
+    template <class T = uint64_t, class It>
+    static _CONSTEXPR T pack(const It& begin, const It& end) {
+        T result = 0;
+        size_t total_size = std::distance(begin, end) * Size;
+        for (auto it = begin; it != end; it++) {
+            result |= (*it & bit_mask(Size)) << (total_size -= Size);
+        }
+        return result;
+    }
+    
+    // pack range reversed
+    template <class T = uint64_t, class It>
+    static _CONSTEXPR T pack_reverse(const It& begin, const It& end) {
+        return pack(std::make_reverse_iterator(end), std::make_reverse_iterator(begin));
+    }
+
+    // pack std::array
+    template <class T = void, size_t N, class U, class R = typename std::conditional_t<std::is_void<T>::value, detail::uint_t<N * Size>, T>>
+    static _CONSTEXPR R pack(const std::array<U, N>& array) {
+        return pack_impl<R>(array, std::make_index_sequence<N>{});
+    }
+
+    // pack std::array reversed
+    template <class T = void, size_t N, class U, class R = typename std::conditional_t<std::is_void<T>::value, detail::uint_t<N * Size>, T>>
+    static _CONSTEXPR R pack_reverse(const std::array<U, N>& array) {
+        return pack_impl<R>(array, detail::make_reverse_sequence<N>{});
+    }
+
+    // pack bilt-in array
+    template <class T = void, size_t N, class U, class R = typename std::conditional_t<std::is_void<T>::value, detail::uint_t<N * Size>, T>>
+    static _CONSTEXPR R pack(const U (&array)[N]) {
+        return pack_impl<R>(array, std::make_index_sequence<N>{});
+    }
+
+    // pack bilt-in array reversed
+    template <class T = void, size_t N, class U, class R = typename std::conditional_t<std::is_void<T>::value, detail::uint_t<N * Size>, T>>
+    static _CONSTEXPR R pack_reverse(const U (&array)[N]) {
+        return pack_impl<R>(array, detail::make_reverse_sequence<N>{});
+    }
+
+private:
+    template <size_t N, class T, class U, size_t... Is>
+    static _CONSTEXPR void unpack_impl(T value, std::array<U, N>& array, std::index_sequence<Is...>) {
+        size_t total_size = N * Size;
+        auto unused = {
+            array[Is] = (value >> (total_size -= Size)) & bit_mask(Size)...
+        };
+    }
+
+    template <size_t N, class T, class U, size_t... Is>
+    static _CONSTEXPR void unpack_impl(T value, U (&array)[N], std::index_sequence<Is...>) {
+        size_t total_size = N * Size;
+        auto unused = {
+            array[Is] = (value >> (total_size -= Size)) & bit_mask(Size)...
+        };
+    }
+
+    template <class T, size_t N, class U, size_t... Is>
+    static _CONSTEXPR T pack_impl(const std::array<U, N>& array, std::index_sequence<Is...>) {
+        return BitPacker<(Is - Is + Size)...>::template pack<T>(array[Is]...);
+    }
+
+    template <class T, size_t N, class U, size_t... Is>
+    static _CONSTEXPR T pack_impl(const U (&array)[N], std::index_sequence<Is...>) {
+        return BitPacker<(Is - Is + Size)...>::template pack<T>(array[Is]...);
+    }
+};
+
+#undef _CONSTEXPR

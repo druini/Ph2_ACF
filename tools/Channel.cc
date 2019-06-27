@@ -197,7 +197,7 @@ void Channel::fitHist ( uint32_t pEventsperVcth, bool pHole, uint16_t pValue, TS
 
         pResultfile->cd();
     }
-    else LOG (INFO) << "Historgram Empty for Fe " << fFeId << " Cbc " << fCbcId << " Channel " << fChannelId ;
+    else LOG (INFO) << "Historgram Empty for Fe " << fFeId << " Chip " << fCbcId << " Channel " << fChannelId ;
 
 
 }
@@ -309,7 +309,7 @@ void Channel::differentiateHist ( uint32_t pEventsperVcth, bool pHole, uint16_t 
 
         pResultfile->cd();
     }
-    else LOG (INFO) << "Historgram Empty for Fe " << fFeId << " Cbc " << fCbcId << " Channel " << fChannelId ;
+    else LOG (INFO) << "Historgram Empty for Fe " << fFeId << " Chip " << fCbcId << " Channel " << fChannelId ;
 
 
 }

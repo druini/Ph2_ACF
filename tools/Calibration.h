@@ -33,9 +33,9 @@ using namespace Ph2_System;
 
 
 // Typedefs for Containers
-//typedef std::map<Cbc*, std::vector<Channel> > CbcChannelMap;
-// typedef std::map<Cbc*, TF1*> FitMap;
-// typedef std::map<Cbc*, TH1F*> HistMap;
+//typedef std::map<Chip*, std::vector<Channel> > CbcChannelMap;
+// typedef std::map<Chip*, TF1*> FitMap;
+// typedef std::map<Chip*, TH1F*> HistMap;
 
 class Calibration : public Tool
 {
@@ -52,29 +52,22 @@ class Calibration : public Tool
     void FindOffsets();
     void writeObjects();
 
+    void Start(int currentRun) override;
+    void Stop() override;
+    void ConfigureCalibration() override;
+    void Pause() override;
+    void Resume() override;
 
   protected:
-    void bitwiseVplus ( int pTGroup );
+    // void bitwiseOffset ( int pTGroup );
 
-    void bitwiseVCth ( int pTGroup );
+    // void setOffset ( uint8_t pOffset, int  pTGroupId);
 
-    void bitwiseOffset ( int pTGroup );
+    // void toggleOffset ( int pTGroup, uint8_t pBit, bool pBegin );
 
-    void setOffset ( uint8_t pOffset, int  pTGroupId, bool pVPlus = false );
+    // float findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint );
 
-    void toggleOffset ( int pTGroup, uint8_t pBit, bool pBegin );
-
-    void measureOccupancy ( uint32_t pNEvents, int pTGroup );
-
-    float findCbcOccupancy ( Cbc* pCbc, int pTGroup, int pEventsPerPoint );
-
-    void fillOccupancyHist ( Cbc* pCbc, int pTGroup, const Event* pEvent );
-
-    void clearOccupancyHists ( Cbc* pCbc );
-
-    void clearVPlusMap();
-
-    void setRegValues();
+    void clearOccupancyHists ( Chip* pCbc );
 
     void updateHists ( std::string pHistname );
 
@@ -82,8 +75,8 @@ class Calibration : public Tool
 
   private:
     // Containers
-    //static std::map<Cbc*, uint16_t> fVplusMap;
-    std::map<Cbc*, uint16_t> fVplusMap;
+    //static std::map<Chip*, uint16_t> fVplusMap;
+    std::map<ReadoutChip*, uint16_t> fVplusMap;
 
     // Canvases
     TCanvas* fVplusCanvas;
@@ -106,8 +99,8 @@ class Calibration : public Tool
     bool fDisableStubLogic;
 
     //to hold the original register values
-    std::map<Cbc*, uint8_t> fStubLogicValue;
-    std::map<Cbc*, uint8_t> fHIPCountValue;
+    std::map<Chip*, uint8_t> fStubLogicValue;
+    std::map<Chip*, uint8_t> fHIPCountValue;
 };
 
 

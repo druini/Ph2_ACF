@@ -19,14 +19,8 @@
 //-----------------------------------------------------------------------------
 //Glib Config Files
 
-#define XML_DESCRIPTION_FILE_2CBC "settings/ICDescription.xml"
-#define XML_DESCRIPTION_FILE_4CBC "settings/HWDescription_2CBC.xml"
-#define XML_DESCRIPTION_FILE_8CBC "settings/HWDescription_8CBC.xml"
-#define XML_DESCRIPTION_FILE_16CBC "settings/Beamtest_Nov15.xml"
-
-
 //Time out for stack writing
-#define TIME_OUT         5
+// #define TIME_OUT         5
 
 
 //------------------------------------------------------------------------------
@@ -39,8 +33,14 @@
 #define EVENT_HEADER_TDC_SIZE_32    6 // total of 6 32 bit words for HEADER + TDC
 #define EVENT_HEADER_SIZE_32    5  // 5 words for the header
 
-#define MPA_HEADER_SIZE_32   4099 
-#define MPA_EVENT_SIZE_32   240 
+#define MPAlight_HEADER_SIZE_32   4099
+#define MPAlight_EVENT_SIZE_32   240
+
+#define MPA_HEADER_SIZE_32   1
+#define MPA_EVENT_SIZE_32   5
+
+#define SSA_HEADER_SIZE_32   1
+#define SSA_EVENT_SIZE_32   8
 
 
 //Event
@@ -74,11 +74,23 @@
 #define EVENT_HEADER_TDC_SIZE_32_CBC3    3 // total of 6 32 bit words for HEADER + TDC
 #define EVENT_HEADER_SIZE_32_CBC3        3  // 5 words for the header
 
-//D19C event header size
+//D19C event header size (CBC)
 #define D19C_EVENT_HEADER1_SIZE_32_CBC3 4
 #define D19C_EVENT_SIZE_32_CBC3         16
+//MPA
+//in uint32_t words
+#define D19C_EVENT_SIZE_32_MPA         32 // 11 32bit words per CBC
+//SSA
+//in uint32_t words
+#define D19C_EVENT_SIZE_32_SSA         7 // FIXME??
+
 // points to bufferoverlow
 #define D19C_OFFSET_ERROR_CBC3          2*32+0
+
+//D19C (MPA/SSA)
+//D19C event header size
+#define D19C_EVENT_HEADER1_SIZE_32 5
+#define D19C_EVENT_HEADER2_SIZE_32 1
 
 
 //Event
@@ -106,8 +118,8 @@
 #define WIDTH_CBCSTUBDATA              12
 //------------------------------------------------------------------------------
 
-enum class BoardType {GLIB, ICGLIB, CTA, ICFC7, CBC3FC7, D19C, MPAGLIB, SUPERVISOR};
-enum class ChipType {UNDEFINED = 0, CBC2, CBC3};
+enum class BoardType {D19C, FC7};
+enum class FrontEndType {UNDEFINED = 0, MODULE, CBC3, MPA, SSA, RD53, CIC};
 enum class SLinkDebugMode {SUMMARY = 0, FULL = 1, ERROR = 2};
 enum class EventType {ZS = 1, VR = 2};
 

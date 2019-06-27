@@ -20,7 +20,7 @@
 #include <vector>
 #include <map>
 #include <stdint.h>
-
+#include "../Utils/Container.h"
 
 /*!
  * \namespace Ph2_HwDescription
@@ -34,7 +34,7 @@ namespace Ph2_HwDescription {
      * \class BeBoard
      * \brief Read/Write BeBoard's registers on a file, handles a register map and handles a vector of Module which are connected to the BeBoard
      */
-    class BeBoard
+    class BeBoard: public BoardContainer
     {
 
       public:
@@ -62,10 +62,10 @@ namespace Ph2_HwDescription {
         */
         ~BeBoard()
         {
-            for ( auto& pModule : fModuleVector )
-                if (pModule) delete pModule;
+            // for ( auto& pModule : fModuleVector )
+            //     if (pModule) delete pModule;
 
-            fModuleVector.clear();
+            // fModuleVector.clear();
         }
 
         // Public Methods
@@ -155,7 +155,7 @@ namespace Ph2_HwDescription {
         * \brief Get the BeBoardIdentifier
         * \return The BeBoardIdentifier
         */
-        uint32_t getBeBoardIdentifier() const
+        uint32_t getBeBoardId() const
         {
             return fBeId << 8;
         }
@@ -202,6 +202,15 @@ namespace Ph2_HwDescription {
             return fEventType;
         }
 
+        void setFrontEndType (const FrontEndType pFrontEndType)
+        {
+            fFrontEndType = pFrontEndType;
+        }
+        FrontEndType getFrontEndType() const
+        {
+            return fFrontEndType;
+        }
+
         void addConditionDataSet (ConditionDataSet* pSet)
         {
             if (pSet != nullptr)
@@ -216,13 +225,14 @@ namespace Ph2_HwDescription {
         // Vector of FEModules, each module is supposed to know which FMC slot it is connected to...
         std::vector< Module* > fModuleVector;
 
+        int dummyValue_ = 1989;
       protected:
         //Connection Members
         uint8_t fBeId;
         //uint16_t fNCbcDataSize;
         BoardType fBoardType;
         EventType fEventType;
-
+        FrontEndType fFrontEndType;
 
         BeBoardRegMap fRegMap;             /*!< Map of BeBoard Register Names vs. Register Values */
         ConditionDataSet* fCondDataSet;

@@ -22,7 +22,7 @@
 #include "TAxis.h"
 #include "TTree.h"
 #include "TString.h"
-#include "Utils/CommonVisitors.h"
+#include "../Utils/CommonVisitors.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -52,14 +52,14 @@ class StubSweep : public Tool
 
     // methods to fill/update histograms
     void updateHists ( std::string pHistname );
-    void fillStubBendHist ( Cbc* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubBend );
-    void fillStubSweepHist ( Cbc* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubPosition );
+    void fillStubBendHist ( Chip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubBend );
+    void fillStubSweepHist ( Chip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubPosition );
 
     // method to configure test pulse on the CBC
-    void configureTestPulse (Cbc* pCbc, uint8_t pPulseState);
+    void configureTestPulse (Chip* pCbc, uint8_t pPulseState);
 
     // method to mask all channels on the CBC
-    void maskAllChannels (Cbc* pCbc);
+    void maskAllChannels (Chip* pCbc);
     // method to return the position of the first stub in a CBC event
     uint8_t getStubPosition (std::vector<Event*> pEvents, uint32_t pFeId, uint32_t pCbcId, uint32_t pNEvents);
 
@@ -67,7 +67,7 @@ class StubSweep : public Tool
     * \brief return mask for a given channel
     * \param pTestGroup: the  channel number [ between 1 and 254 ]
     */
-    uint8_t getChanelMask ( Cbc* pCbc, uint8_t pChannel );
+    uint8_t getChanelMask ( Chip* pCbc, uint8_t pChannel );
 
     /*!
     * \brief find the channels of a test group
@@ -83,7 +83,7 @@ class StubSweep : public Tool
         // { 3.0  , 0x0a} , {2.5 , 0x0b} , {2.0 , 0x0c } , {1.5,0x0d}, {1.0,0x0e}  , {0.5, 0x0f}
     };
 
-    void setCorrelationWinodwOffsets ( Cbc* pCbc, double pOffsetR1, double pOffsetR2, double pOffsetR3, double pOffsetR4 );
+    void setCorrelationWinodwOffsets ( Chip* pCbc, double pOffsetR1, double pOffsetR2, double pOffsetR3, double pOffsetR4 );
 
     void writeObjects();
 

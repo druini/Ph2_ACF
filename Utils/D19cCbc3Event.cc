@@ -10,6 +10,11 @@
  */
 
 #include "../Utils/D19cCbc3Event.h"
+#include "../Utils/DataContainer.h"
+#include "../Utils/Occupancy.h"
+#include "../Utils/EmptyContainer.h"
+#include "../Utils/ChannelGroupHandler.h"
+#include "../HWDescription/Definition.h"
 
 using namespace Ph2_HwDescription;
 
@@ -35,6 +40,24 @@ namespace Ph2_HwInterface {
     //{
 
     //}
+
+    void D19cCbc3Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
+    {
+        for(auto module: *boardContainer)
+    	{
+    		for(auto chip: *module)
+    		{
+                unsigned int i = 0;
+    			for(ChannelDataContainer<Occupancy>::iterator channel =  chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
+				{
+                    if(cTestChannelGroup->isChannelEnabled(i))
+                    {
+    					channel->fOccupancy  += (float)DataBit ( module->getId(), chip->getId(), i);
+                    }
+				}
+    		}
+    	}
+    }
 
     void D19cCbc3Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
@@ -628,9 +651,9 @@ namespace Ph2_HwInterface {
             //stub counter per FE
             uint8_t cFeStubCounter = 0;
 
-            for (auto cCbc : cFe->fCbcVector)
+            for (auto cCbc : cFe->fReadoutChipVector)
             {
-                uint8_t cCbcId = cCbc->getCbcId();
+                uint8_t cCbcId = cCbc->getChipId();
                 uint16_t cKey = encodeId (cFeId, cCbcId);
                 EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
@@ -711,7 +734,7 @@ namespace Ph2_HwInterface {
         uint32_t cEvtCount = this->GetEventCount();
         uint16_t cBunch = static_cast<uint16_t> (this->GetBunch() );
         uint32_t cBeStatus = this->fBeStatus;
-        SLinkEvent cEvent (EventType::VR, pBoard->getConditionDataSet()->getDebugMode(), ChipType::CBC3, cEvtCount, cBunch, SOURCE_ID );
+        SLinkEvent cEvent (EventType::VR, pBoard->getConditionDataSet()->getDebugMode(), FrontEndType::CBC3, cEvtCount, cBunch, SOURCE_ID );
         cEvent.generateTkHeader (cBeStatus, cCbcCounter, cEnabledFe, pBoard->getConditionDataSet()->getCondDataEnabled(), false);  // Be Status, total number CBC, condition data?, fake data?
 
         //generate a vector of uint64_t with the chip status

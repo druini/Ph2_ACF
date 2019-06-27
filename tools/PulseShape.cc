@@ -1,4 +1,5 @@
 #include "PulseShape.h"
+#include "../HWInterface/CbcInterface.h"
 
 PulseShape::PulseShape() : Tool()
 {}
@@ -29,14 +30,12 @@ void PulseShape::Initialize()
     	    LOG(INFO) << "Certain board()";
             uint32_t cFeId = cFe->getFeId();
             std::cerr << "cFeId = " << cFeId ;
-            fType = cFe->getChipType();
+            fType = cFe->getFrontEndType();
 
-            for ( auto cCbc : cFe->fCbcVector )
+            for ( auto& cCbc : cFe->fReadoutChipVector )
             {
-		
-    		LOG(INFO) << "Certain chip()";
-                uint16_t cMaxValue = (cCbc->getChipType() == ChipType::CBC2) ? 255 : 1023;
-                uint32_t cCbcId = cCbc->getCbcId();
+                uint16_t cMaxValue = 1023;
+                uint32_t cCbcId = cCbc->getChipId();
                 std::cerr << "cCbcId = " << cCbcId ;
                 fNCbc++;
                 // Create the Canvas to draw
@@ -113,7 +112,7 @@ void PulseShape::ScanVcth ( uint32_t pDelay , int cLow)
         for ( auto& cChannel : cChannelVector.second )
             cChannel->initializeHist ( pDelay, "Delay" );
 
-    uint16_t cMaxValue = (fType == ChipType::CBC2) ? 0xFF : 0x03FF;
+    uint16_t cMaxValue = 0x003FF;
     uint16_t cVcth = ( fHoleMode ) ?  cMaxValue :  0x00;
     int cStep = ( fHoleMode ) ? -10 : +10;
     uint32_t cAllOneCounter = 0;
@@ -122,7 +121,7 @@ void PulseShape::ScanVcth ( uint32_t pDelay , int cLow)
     bool cSaturate = false;
     uint16_t cDoubleVcth;
 
-    ThresholdVisitor cVisitor (fCbcInterface, 0);
+    ThresholdVisitor cVisitor (fReadoutChipInterface, 0);
 
     // Adaptive VCth loop
     while ( 0x00 <= cVcth && cVcth <= cMaxValue )
@@ -238,7 +237,7 @@ void PulseShape::fitGraph ( int pLow )
     {
         for ( auto& cChannel : cCbc.second )
         {
-            TString cName = Form ( "f_cbc_pulse_Fe%dCbc%d_Channel%d", cCbc.first->getFeId(), cCbc.first->getCbcId(), cChannel->fChannelId );
+            TString cName = Form ( "f_cbc_pulse_Fe%dCbc%d_Channel%d", cCbc.first->getFeId(), cCbc.first->getChipId(), cChannel->fChannelId );
             TObject* cObj = gROOT->FindObject ( cName );
 
             if ( cObj ) delete cObj;
@@ -345,20 +344,16 @@ void PulseShape::toggleTestGroup (bool pEnable )
         cRegVec.push_back ( std::make_pair ( cRegName.Data(), cValue ) );
     }
 
-    //CbcMultiRegWriter cWriter ( fCbcInterface, cRegVec );
+    //CbcMultiRegWriter cWriter ( fReadoutChipInterface, cRegVec );
     //this->accept ( cWriter );
 
     /*LOG(INFO) << "Going to do a broadcast()";
     for (BeBoard* cBoard : fBoardVector)
     {
         for (Module* cFe : cBoard->fModuleVector)
-       		for ( auto cBoard : fBoardVector ) {
-	    		//fCbcInterface->WriteBroadcastMultReg (cFe, cRegVec);
-			CbcMultiRegWriter cWriter ( fCbcInterface, cRegVec );
-			this->accept ( cWriter );
-		}
-    }*/
-    LOG(INFO) << "Did a broadcast()";
+            dynamic_cast<CbcInterface*>(fReadoutChipInterface)->WriteBroadcastCbcMultiReg (cFe, cRegVec);
+    }
+    */
 }
 
 void PulseShape::setDelayAndTesGroup ( uint32_t pDelay )
@@ -381,13 +376,9 @@ void PulseShape::setDelayAndTesGroup ( uint32_t pDelay )
     }
 
     LOG(INFO) << "Writing fine delay and test group, i2c...";
- 
-    if (fType == ChipType::CBC2){ CbcRegWriter cWriter ( fCbcInterface, "SelTestPulseDel&ChanGroup", to_reg ( cFineDelay, fTestGroup ) );    this->accept ( cWriter );}
-
-    else{ CbcRegWriter cWriter ( fCbcInterface, "TestPulseDel&ChanGroup", to_reg ( cFineDelay, fTestGroup ) );    this->accept ( cWriter );
-}
+    CbcRegWriter cWriter ( fReadoutChipInterface, "TestPulseDel&ChanGroup", to_reg ( cFineDelay, fTestGroup ) );
+    this->accept ( cWriter );
     LOG(INFO) << "End of Writing fine delay and test group, i2c...";
-//    this->accept ( cWriter );
 
 }
 
@@ -398,18 +389,17 @@ uint32_t PulseShape::fillVcthHist ( BeBoard* pBoard, Event* pEvent, uint32_t pVc
     // Loop over Events from this Acquisition
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fCbcVector )
+        for ( auto cCbc : cFe->fReadoutChipVector )
         {
             //  get histogram to fill
             auto cChannelVector = fChannelMap.find ( cCbc );
 
-            if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel vector mapped to this CBC ( " << +cCbc->getCbcId() << " )" ;
+            if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel vector mapped to this CBC ( " << +cCbc->getChipId() << " )" ;
             else
             {
                 for ( auto& cChannel : cChannelVector->second )
                 {
-                    //LOG (INFO) << (uint32_t) cCbc->getCbcId()<<" "<< (double)cChannel->fChannelId<< " " << pEvent->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChannel->fChannelId - 1 );
-                    if ( pEvent->DataBit ( cFe->getFeId(), cCbc->getCbcId(), cChannel->fChannelId - 1 ) )
+                    if ( pEvent->DataBit ( cFe->getFeId(), cCbc->getChipId(), cChannel->fChannelId - 1 ) )
                     {
                         cChannel->fillHist ( pVcth );
                         cHits++;
@@ -478,12 +468,10 @@ void PulseShape::parseSettings()
 void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
 {
 
-    std::vector<std::pair<std::string, uint8_t>> cRegVec;
+    std::vector<std::pair<std::string, uint16_t>> cRegVec;
     fChannelVector = findChannelsInTestGroup ( fTestGroup );
     uint8_t cRegValue =  to_reg ( 0, fTestGroup );
-    if ( fType == ChipType::CBC2){
-    cRegVec.push_back ( std::make_pair ( "SelTestPulseDel&ChanGroup",  cRegValue ) );
-
+    
     //set the value of test pulsepot registrer and MiscTestPulseCtrl&AnalogMux register
     if ( fHoleMode )
         cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux", 0xC1 ) );
@@ -539,14 +527,13 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
     cRegVec.push_back ( std::make_pair ( "MaskChannelFrom248downto241",  0xff ) );
     cRegVec.push_back ( std::make_pair ( "MaskChannelFrom254downto249",  0xff ) );
 */
-    }
-    else {
 
-      cRegVec.push_back ( std::make_pair ( "TestPulsePotNodeSel", pTPAmplitude ) );
-      cRegVec.push_back ( std::make_pair ( "Vplus1&2",  fVplus ) );
-      cRegVec.push_back ( std::make_pair ( "Pipe&StubInpSel&Ptwidth",0x03)); //select the hit detect pipeline logic, def is sampled (variable) mode (0x03), 0xc3 for fixed with mode, 0x43 for OR mode, 0x83 for HIP supp
-    }
-    CbcMultiRegWriter cWriter ( fCbcInterface, cRegVec );
+    cRegVec.push_back ( std::make_pair ( "TestPulsePotNodeSel", pTPAmplitude ) );
+    cRegVec.push_back ( std::make_pair ( "Vplus1&2",  fVplus ) );
+    cRegVec.push_back ( std::make_pair ( "Pipe&StubInpSel&Ptwidth",0x03)); //select the hit detect pipeline logic, def is sampled (variable) mode (0x03), 0xc3 for fixed with mode, 0x43 for OR mode, 0x83 for HIP supp
+
+    CbcMultiRegWriter cWriter ( fReadoutChipInterface, cRegVec );
+
     this->accept ( cWriter );
 
     for ( auto& cBoard : fBoardVector )
@@ -557,10 +544,10 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
         {
             uint32_t cFeId = cFe->getFeId();
 
-            for ( auto& cCbc : cFe->fCbcVector )
+            for ( auto& cCbc : cFe->fReadoutChipVector )
             {
                 std::vector<Channel*> cChannelVector;
-                uint32_t cCbcId = cCbc->getCbcId();
+                uint32_t cCbcId = cCbc->getChipId();
                 int cMakerColor = 1;
 
                 for ( auto& cChannelId : fChannelVector )
@@ -591,7 +578,7 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         if ( pHistName == "" )
         {
             // now iterate over the channels in the channel map and draw
-            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Cbc*> ( cCanvas.first ) );
+            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ) );
 
             if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
             else
@@ -610,7 +597,7 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         if ( pHistName == "" && pFinal )
         {
             // now iterate over the channels in the channel map and draw
-            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Cbc*> ( cCanvas.first ) );
+            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ) );
 
             if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
             else
@@ -630,12 +617,12 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         }
         else if ( pHistName == "cbc_pulseshape" )
         {
-            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Cbc*> ( cCanvas.first ) );
+            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ) );
 
             if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
             else
             {
-                TH2I* cTmpFrame = static_cast<TH2I*> ( getHist ( static_cast<Ph2_HwDescription::Cbc*> ( cCanvas.first ), "frame" ) );
+                TH2I* cTmpFrame = static_cast<TH2I*> ( getHist ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ), "frame" ) );
                 cCanvas.second->cd ( 2 );
                 cTmpFrame->Draw( );
                 TString cOption = "P same";
@@ -651,13 +638,13 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         }
         else if ( pHistName == "cbc_pulseshape" && pFinal )
         {
-            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Cbc*> ( cCanvas.first ) );
+            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ) );
 
             if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
             else
             {
                 cCanvas.second->cd ( 2 );
-                TMultiGraph* cMultiGraph = static_cast<TMultiGraph*> ( getHist ( static_cast<Ph2_HwDescription::Cbc*> ( cCanvas.first ), "cbc_pulseshape" ) );
+                TMultiGraph* cMultiGraph = static_cast<TMultiGraph*> ( getHist ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ), "cbc_pulseshape" ) );
                 cMultiGraph->Draw ( "A" );
                 cCanvas.second->Modified();
             }

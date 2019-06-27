@@ -14,7 +14,7 @@
 #include <iostream>
 #include <vector>
 #include "../HWDescription/Definition.h"
-
+#include "../Utils/ConsoleColor.h"
 #include "easylogging++.h"
 
 /*!
@@ -69,19 +69,7 @@ class FileHeader
 
     BoardType getBoardType()
     {
-        if (fType == "GLIB")
-            return BoardType::GLIB;
-        else if (fType == "MPAGLIB")
-            return BoardType::MPAGLIB;
-        else if (fType == "CTA")
-            return BoardType::CTA;
-        else if (fType == "ICGLIB")
-            return BoardType::ICGLIB;
-        else if (fType == "ICFC7")
-            return BoardType::ICFC7;
-        else if (fType == "CBC3FC7")
-            return BoardType::CBC3FC7;
-        else if (fType == "D19C")
+        if (fType == "D19C")
             return BoardType::D19C;
         else//LORE ADDED default to D19C
         	return BoardType::D19C;
@@ -126,7 +114,14 @@ class FileHeader
         if (fEventType == EventType::VR) cEventTypeString = "EventType::VR" ;
         else cEventTypeString = "EventType::ZS";
 
-        LOG (INFO) << "Board Type: " << fType << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << "Event Type: " << cEventTypeString << " BeId " << fBeId << " fNCbc " << fNCbc << " EventSize32  " << fEventSize32 << " valid: " << fValid ;
+        LOG (INFO) << BOLDBLUE << "Board Type: " << BOLDYELLOW << fType
+		   << BOLDBLUE << " -- FWMajor: " << BOLDYELLOW << fVersionMajor
+		   << BOLDBLUE << " -- FWMinor: " << BOLDYELLOW << fVersionMinor
+		   << BOLDBLUE << " -- Event Type: " << BOLDYELLOW << cEventTypeString
+		   << BOLDBLUE << " -- BeId: " << BOLDYELLOW << fBeId
+		   << BOLDBLUE << " -- fNChip: " << BOLDYELLOW << fNCbc
+		   << BOLDBLUE << " -- EventSize32: " << BOLDYELLOW << fEventSize32
+		   << BOLDBLUE << " -- Valid: " << BOLDYELLOW << fValid << RESET;
         return cVec;
     }
 
@@ -169,12 +164,12 @@ class FileHeader
             if (fEventType == EventType::VR) cEventTypeString = "EventType::VR" ;
             else cEventTypeString = "EventType::ZS";
 
-            LOG (INFO) << "Sucess, this is a valid header!" ;
-            LOG (INFO) << "Board Type: " << fType << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << " Event Type: " << cEventTypeString << " BeId " << fBeId << " fNCbc " << fNCbc << " EventSize32  " << fEventSize32 << " valid: " << fValid ;
+            LOG (INFO) << "Sucess, this is a valid header!";
+            LOG (INFO) << "Board Type: " << fType << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << " Event Type: " << cEventTypeString << " BeId " << fBeId << " fNCbc " << fNCbc << " EventSize32  " << fEventSize32 << " valid: " << fValid;
         }
         else
         {
-            LOG (INFO) << "Error, this is not a valid header!" ;
+            LOG (INFO) << "Error, this is not a valid header!";
             fValid = false;
         }
     }

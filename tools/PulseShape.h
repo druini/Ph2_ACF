@@ -36,7 +36,7 @@ using namespace Ph2_HwDescription;
  * \class PulseShape
  * \brief Class to reconstruct pulse shape
  */
-typedef std::map<Cbc*, std::vector<Channel*> > ChannelMap;
+typedef std::map<Chip*, std::vector<Channel*> > ChannelMap;
 
 class PulseShape : public Tool
 {
@@ -104,7 +104,7 @@ class PulseShape : public Tool
     */
     void fitGraph ( int pLow );
 
-    ChannelMap fChannelMap;/*!< Map Cbc vs chennels number */
+    ChannelMap fChannelMap;/*!< Map Chip vs chennels number */
     bool fFitHist;
     uint32_t fNevents; /*!< Number of events */
     uint32_t fHoleMode;/*!< Check if is in hole mode */
@@ -117,15 +117,6 @@ class PulseShape : public Tool
     uint8_t fOffset; /*!< Offset value for the channel */
     uint32_t fStepSize; /*!< Step size */
     std::vector<uint32_t> fChannelVector;  /*!< Channels in the test group */
-
-
-    const std::string getDelAfterTPString (BoardType pBoardType)
-    {
-
-        if (pBoardType == BoardType::GLIB || pBoardType == BoardType::CTA) return "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE";
-        else if (pBoardType == BoardType::ICGLIB || pBoardType == BoardType::ICFC7) return "cbc_daq_ctrl.commissioning_cycle.test_pulse_count";
-        else return "not recognized";
-    }
 
 };
 

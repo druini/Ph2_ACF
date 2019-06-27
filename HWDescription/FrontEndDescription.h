@@ -34,7 +34,7 @@ namespace Ph2_HwDescription {
         // METHODS
 
         // 3 C'tors with different parameter sets
-        FrontEndDescription ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, bool pStatus = true, ChipType pType = ChipType::UNDEFINED );
+        FrontEndDescription ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, bool pStatus = true, FrontEndType pType = FrontEndType::UNDEFINED );
         FrontEndDescription( );
 
         //Copy C'tors
@@ -76,7 +76,7 @@ namespace Ph2_HwDescription {
         * \brief Get the BeBoardIdentifier
         * \return The BeBoardIdentifier
         */
-        uint16_t getBeBoardIdentifier() const
+        uint16_t getBeBoardId() const
         {
             return fBeId << 8;
         }
@@ -125,12 +125,12 @@ namespace Ph2_HwDescription {
             fStatus = pStatus;
         }
 
-        void setChipType (ChipType pType)
+        void setFrontEndType (FrontEndType pType)
         {
             fType = pType;
         }
 
-        ChipType getChipType()
+        FrontEndType getFrontEndType()
         {
             return fType;
         }
@@ -139,15 +139,15 @@ namespace Ph2_HwDescription {
         // MEMBERS
 
         // BIO Board Id that the FE is connected to
-        uint8_t fBeId;
+        uint8_t      fBeId;
         // Id of the FMC Slot on the BIO Board, all FEs need to know so the right FW registers can be written
-        uint8_t fFMCId;
+        uint8_t      fFMCId;
         // Id of the FE (module/hybrid, etc...)
-        uint8_t fFeId;
+        uint8_t      fFeId;
         // status (true=active, false=disabled)
-        bool fStatus;
-        // Chip type enum (CBC2, CBC3, ...)
-        ChipType fType;
+        bool         fStatus;
+        // Front End type enum (MODULE, CBC2, CBC3, ...)
+        FrontEndType fType;
 
     };
 
