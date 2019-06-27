@@ -120,7 +120,7 @@ void SCurve::Draw (bool display, bool save)
   theFile->Close();
 }
 
-DetectorDataContainer* SCurve::Analyze ()
+std::shared_ptr<DetectorDataContainer> SCurve::Analyze ()
 {
   float nHits, mean, rms;
   std::vector<float> measurements(dacList.size(),0);
@@ -161,7 +161,7 @@ DetectorDataContainer* SCurve::Analyze ()
 		     << BOLDGREEN << " (Delta_VCal)" << RESET;
 	}
 
-  return theThresholdAndNoiseContainer;
+  return std::shared_ptr<DetectorDataContainer>(theThresholdAndNoiseContainer);
 }
 
 void SCurve::InitHisto ()

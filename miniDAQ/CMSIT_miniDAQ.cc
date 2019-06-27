@@ -387,8 +387,6 @@ int main (int argc, char** argv)
       te.Inherit(&cSystemController);
       te.Run();
       te.Draw(display,true);
-
-      delete newVCal;
     }
   else if (whichCalib == "gainopt")
     {

@@ -36,7 +36,7 @@ class SCurve : public Tool
 
   void                   Run     ();
   void                   Draw    (bool display, bool save);
-  DetectorDataContainer* Analyze ();
+  std::shared_ptr<DetectorDataContainer> Analyze ();
 
  private:
   const char* fileRes;

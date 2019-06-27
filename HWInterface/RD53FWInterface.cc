@@ -569,7 +569,7 @@ namespace Ph2_HwInterface
 
 	for (auto j = 0; j < evt.chip_events.size(); j++)
 	  {
-	    LOG (INFO) << CYAN << "Chip Header:"                                           << RESET;
+	    LOG (INFO) << CYAN << "------- Chip Header -------"                            << RESET;
 	    LOG (INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code    << RESET;
 	    LOG (INFO) << CYAN << "hybrid_id       = " << evt.chip_frames[j].hybrid_id     << RESET;
 	    LOG (INFO) << CYAN << "chip_id         = " << evt.chip_frames[j].chip_id       << RESET;
@@ -581,7 +581,7 @@ namespace Ph2_HwInterface
 	    LOG (INFO) << CYAN << "trigger_tag     = " << evt.chip_events[j].trigger_tag   << RESET;
 	    LOG (INFO) << CYAN << "bc_id           = " << evt.chip_events[j].bc_id         << RESET;
 	      
-	    LOG (INFO) << BOLDYELLOW << "Region Data (" << evt.chip_events[j].data.size() << " words): " << RESET;
+	    LOG (INFO) << BOLDYELLOW << "-- Region Data (" << evt.chip_events[j].data.size() << " words) --" << RESET;
 
 	    for (const auto& region_data : evt.chip_events[j].data)
 	      {

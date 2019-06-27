@@ -48,7 +48,6 @@ Gain::~Gain ()
 {
   theFile->Close();
   
-  delete theGainAndInterceptContainer;
   delete fChannelGroupHandler;
   delete theFile;
 
@@ -121,7 +120,7 @@ void Gain::Draw (bool display, bool save)
   theFile->Close();
 }
 
-void Gain::Analyze ()
+std::shared_ptr<DetectorDataContainer> Gain::Analyze ()
 {
   double gain, gainErr, intercept, interceptErr;
   std::vector<float> x(dacList.size(),0);
@@ -162,6 +161,8 @@ void Gain::Analyze ()
 	  
 	  index++;
 	}
+
+  return std::shared_ptr<DetectorDataContainer>(theGainAndInterceptContainer);
 }
 
 void Gain::InitHisto ()
