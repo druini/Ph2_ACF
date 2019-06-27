@@ -205,7 +205,7 @@ int main (int argc, char** argv)
   // ########################
   // # Configure the logger #
   // ########################
-  el::Configurations conf("settings/logger.conf");
+  el::Configurations conf("../settings/logger.conf");
   el::Loggers::reconfigureAllLoggers(conf);
   
   
@@ -303,7 +303,7 @@ int main (int argc, char** argv)
       // ###################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
 
-      std::string fileName("LatencyScan_" + runNumber + ".root");
+      std::string fileName("Latency_" + runNumber + ".root");
       Latency la(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
       la.Inherit(&cSystemController);
       la.Run();
