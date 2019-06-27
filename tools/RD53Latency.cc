@@ -182,7 +182,7 @@ void Latency::Display ()
   for (auto i = 0; i < theCanvasLat.size(); i++)
     {
       theCanvasLat[i]->cd();
-      theLat[i]->Draw("gcolz");
+      theLat[i]->Draw();
       theCanvasLat[i]->Modified();
       theCanvasLat[i]->Update();
     }

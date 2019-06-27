@@ -175,14 +175,14 @@ namespace Ph2_HwDescription
     std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
     std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
 
-    void copyFromDefault  ();
-    void copyToDefault    ();
-    void resetMask        ();
-    void enableAllPixels  ();
-    void disableAllPixels ();
-    void enablePixel      (unsigned int row, unsigned int col, bool enable);
-    void injectPixel      (unsigned int row, unsigned int col, bool inject);
-    void setTDAC          (unsigned int row, unsigned int col, uint8_t TDAC);
+    void copyMaskFromDefault ();
+    void copyMaskToDefault   ();
+    void resetMask           ();
+    void enableAllPixels     ();
+    void disableAllPixels    ();
+    void enablePixel         (unsigned int row, unsigned int col, bool enable);
+    void injectPixel         (unsigned int row, unsigned int col, bool inject);
+    void setTDAC             (unsigned int row, unsigned int col, uint8_t TDAC);
 
     void EncodeCMD (const uint16_t               address,
 		    const uint16_t               data,
@@ -243,10 +243,17 @@ namespace Ph2_HwDescription
     template<size_t NBITS>
       static std::bitset<NBITS> SetBits (size_t nBit2Set)
       {
-	std::bitset<NBITS> output(0);
-	for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
-	return output;
+    	std::bitset<NBITS> output(0);
+    	for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
+    	return output;
       }
+
+    static size_t SetBits (size_t nBit2Set)
+    {
+      auto output = 1 << (nBit2Set-1);
+      for (auto i = 0; i < nBit2Set-1; i++) output |= 1 << i;
+      return output;
+    }
 
   private:
     std::vector<perPixelData> fPixelsMask;

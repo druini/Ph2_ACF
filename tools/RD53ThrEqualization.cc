@@ -75,7 +75,7 @@ void ThrEqualization::Run ()
   ContainerFactory theDetectorFactory;
 
   fDetectorDataContainer = &theContainer;
-  theDetectorFactory.copyAndInitStructure<Occupancy>                   (*fDetectorContainer, *fDetectorDataContainer);
+  theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
   theTDACcontainer = new DetectorDataContainer();
   theDetectorFactory.copyAndInitStructure<RegisterValue,EmptyContainer>(*fDetectorContainer, *theTDACcontainer);
 
@@ -190,7 +190,7 @@ void ThrEqualization::Display ()
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
       theCanvasOcc[i]->cd();
-      theOccupancy[i]->Draw("gcolz");
+      theOccupancy[i]->Draw();
       theCanvasOcc[i]->Modified();
       theCanvasOcc[i]->Update();
     }
@@ -198,7 +198,7 @@ void ThrEqualization::Display ()
   for (auto i = 0; i < theCanvasTDAC.size(); i++)
     {
       theCanvasTDAC[i]->cd();
-      theTDAC[i]->Draw("gcolz");
+      theTDAC[i]->Draw();
       theCanvasTDAC[i]->Modified();
       theCanvasTDAC[i]->Update();
     }
@@ -236,8 +236,8 @@ void ThrEqualization::Save ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  static_cast<RD53*>(cChip)->copyFromDefault();
-	  
+	  static_cast<RD53*>(cChip)->copyMaskFromDefault();
+
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))

@@ -295,7 +295,7 @@ namespace Ph2_HwDescription
       LOG (ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << filename << RESET;
   }
   
-  void RD53::copyFromDefault ()
+  void RD53::copyMaskFromDefault ()
   {
     for (auto i = 0; i < fPixelsMask.size(); i++)
       {
@@ -306,7 +306,7 @@ namespace Ph2_HwDescription
       }
   }
 
-  void RD53::copyToDefault ()
+  void RD53::copyMaskToDefault ()
   {
     for (auto i = 0; i < fPixelsMaskDefault.size(); i++)
       {
