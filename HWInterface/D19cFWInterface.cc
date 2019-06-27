@@ -1115,13 +1115,18 @@ namespace Ph2_HwInterface {
             }                
 
             std::vector<uint32_t> event_data;
-            if (fIsDDR3Readout) {
-                    // in the no handshake mode the, wr counter is reset when it reaches the maximal value
-                    // therefore offset here also has to be reset
-                if(fDDR3Offset+cNEventsAvailable*cEventSize > 134217727) fDDR3Offset = 0;
-                    // read
+            if (fIsDDR3Readout) 
+            {                    
+                // read
                 event_data = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNEventsAvailable*cEventSize, fDDR3Offset);
-            } else {
+                // in the no handshake mode the, wr counter is reset when it reaches the maximal value
+                // therefore offset here also has to be reset
+                // by coincidence when no hanndshake it also rises the readout_req before resetting the address
+                uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
+                if(cReadoutReq == 1) fDDR3Offset = 0;
+            } 
+            else 
+            {
                 event_data = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNEventsAvailable*cEventSize);
             }
 
