@@ -127,6 +127,14 @@ namespace Ph2_HwInterface {
         uint16_t ReadChipReg ( Chip* pCbc, const std::string& pRegNode ) override;
 
     private:
+        /*!
+         * \brief Read CBC ID eFuse
+         * \param pChip: pointer to Chip object
+         */
+        uint32_t ReadCbcIDeFuse ( Chip* pCbc );
+        //void ReadAllCbc ( const Module* pModule );
+        //void CbcCalibrationTrigger(const Cbc* pCbc );
+        void output();
 
     std::map<uint8_t, std::string> fChannelMaskMapCBC3 =
     {

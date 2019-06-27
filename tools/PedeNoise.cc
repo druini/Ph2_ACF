@@ -118,6 +118,12 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
                 cHist->SetMaximum (10);
                 cHist->SetMinimum (0);
                 bookHistogram ( cCbc, "Cbc_Stripnoise", cHist );
+                
+                cHistname = Form ( "Fe%dCBC%d_StripPedestal", cFe->getFeId(), cCbc->getChipId() );
+                cHist = new TH1F ( cHistname, cHistname, NCHANNELS, -0.5, 253.5 );
+                cHist->SetMaximum (1024);
+                cHist->SetMinimum (0);
+                bookHistogram ( cCbc, "Cbc_Strippedestal", cHist );
 
                 cHistname = Form ( "Fe%dCBC%d_Pedestal", cFe->getFeId(), cCbc->getChipId() );
                 cHist = new TH1F ( cHistname, cHistname, 2048, -0.5, 1023.5 );
@@ -907,6 +913,7 @@ void PedeNoise::extractPedeNoise (std::string pHistName)
                 TH1F* cNoiseHist = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_Noise" ) );
                 TH1F* cPedeHist  = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_Pedestal" ) );
                 TH1F* cStripHist = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_Stripnoise" ) );
+                TH1F* cStripPedHist = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_Strippedestal" ) );
                 TH1F* cEvenHist  = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_Noise_even" ) );
                 TH1F* cOddHist   = dynamic_cast<TH1F*> ( getHist ( cCbc, "Cbc_noise_odd" ) );
 
@@ -931,6 +938,7 @@ void PedeNoise::extractPedeNoise (std::string pHistName)
                         cOddHist->Fill ( int ( cChan / 2.0 ), cProjection->GetRMS() );
 
                     cStripHist->Fill ( cChan, cProjection->GetRMS() );
+                    cStripPedHist->Fill(cChan, cProjection->GetMean());
                 }
 
                 LOG (INFO) << BOLDRED << "Average noise on FE " << +cCbc->getFeId() << " CBC " << +cCbc->getChipId() << " : " << cNoiseHist->GetMean() << " ; RMS : " << cNoiseHist->GetRMS() << " ; Pedestal : " << cPedeHist->GetMean() << " VCth units." << RESET ;

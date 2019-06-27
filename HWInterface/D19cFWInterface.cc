@@ -1708,7 +1708,6 @@ namespace Ph2_HwInterface {
 
     }
 
-
     void D19cFWInterface::PhaseTuningGetDefaultFSMState() {
         // encode command type
         uint32_t command_raw = (0 & 0xF) << 16;
@@ -1723,37 +1722,39 @@ namespace Ph2_HwInterface {
     void D19cFWInterface::PhaseTuningParseStatus() {
         // map of the phase tuning statuses
         std::map<int, std::string> cPhaseFSMStateMap = {{0, "IdlePHASE"},
-        {1, "ResetIDELAYE"},
-        {2, "WaitResetIDELAYE"},
-        {3, "ApplyInitialDelay"},
-        {4, "CheckInitialDelay"},
-        {5, "InitialSampling"},
-        {6, "ProcessInitialSampling"},
-        {7, "ApplyDelay"},
-        {8, "CheckDelay"},
-        {9, "Sampling"},
-        {10, "ProcessSampling"},
-        {11, "WaitGoodDelay"},
-        {12, "FailedInitial"},
-        {13, "FailedToApplyDelay"},
-        {14, "TunedPHASE"},
-        {15, "Unknown"}};
+                                                        {1, "ResetIDELAYE"},
+                                                        {2, "WaitResetIDELAYE"},
+                                                        {3, "ApplyInitialDelay"},
+                                                        {4, "CheckInitialDelay"},
+                                                        {5, "InitialSampling"},
+                                                        {6, "ProcessInitialSampling"},
+                                                        {7, "ApplyDelay"},
+                                                        {8, "CheckDelay"},
+                                                        {9, "Sampling"},
+                                                        {10, "ProcessSampling"},
+                                                        {11, "WaitGoodDelay"},
+                                                        {12, "FailedInitial"},
+                                                        {13, "FailedToApplyDelay"},
+                                                        {14, "TunedPHASE"},
+                                                        {15, "Unknown"}
+                                                       };
         std::map<int, std::string> cWordFSMStateMap = {{0, "IdleWORD or WaitIserdese"},
-        {1, "WaitFrame"},
-        {2, "ApplyBitslip"},
-        {3, "WaitBitslip"},
-        {4, "PatternVerification"},
-        {5, "Not Defined"},
-        {6, "Not Defined"},
-        {7, "Not Defined"},
-        {8, "Not Defined"},
-        {9, "Not Defined"},
-        {10, "Not Defined"},
-        {11, "Not Defined"},
-        {12, "FailedFrame"},
-        {13, "FailedVerification"},
-        {14, "TunedWORD"},
-        {15, "Unknown"}};
+                                                        {1, "WaitFrame"},
+                                                        {2, "ApplyBitslip"},
+                                                        {3, "WaitBitslip"},
+                                                        {4, "PatternVerification"},
+                                                        {5, "Not Defined"},
+                                                        {6, "Not Defined"},
+                                                        {7, "Not Defined"},
+                                                        {8, "Not Defined"},
+                                                        {9, "Not Defined"},
+                                                        {10, "Not Defined"},
+                                                        {11, "Not Defined"},
+                                                        {12, "FailedFrame"},
+                                                        {13, "FailedVerification"},
+                                                        {14, "TunedWORD"},
+                                                        {15, "Unknown"}
+                                                       };
 
         // read status
         uint32_t reply = ReadReg( "fc7_daq_stat.physical_interface_block.phase_tuning_reply" );
