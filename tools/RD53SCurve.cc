@@ -48,7 +48,6 @@ SCurve::~SCurve ()
 {
   theFile->Close();
   
-  delete theThresholdAndNoiseContainer;
   delete fChannelGroupHandler;
   delete theFile;
 
@@ -82,7 +81,7 @@ SCurve::~SCurve ()
       delete theCanvasNo2D[i];
     }
 
-  for (auto i = 0; i < theAxis.size(); i++) delete theAxis[i];
+ for (auto i = 0; i < theAxis.size(); i++) delete theAxis[i];
 
   for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
 }
