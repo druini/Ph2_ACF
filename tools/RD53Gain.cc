@@ -128,6 +128,7 @@ std::shared_ptr<DetectorDataContainer> Gain::Analyze ()
   std::vector<float> e(dacList.size(),0);
 
   ContainerFactory theDetectorFactory;
+  delete theGainAndInterceptContainer;
   theGainAndInterceptContainer = new DetectorDataContainer();
   theDetectorFactory.copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
 
@@ -187,7 +188,7 @@ void Gain::InitHisto ()
 		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),
 					  nSteps,startValue-VCalOffset,stopValue-VCalOffset,
-					  nEvents/2,0,RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong()));
+					  nEvents/2,0,RD53::SetBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)));
 	  theOccupancy.back()->SetXTitle("#DeltaVCal");
 	  theOccupancy.back()->SetYTitle("ToT");
 

@@ -169,10 +169,10 @@ namespace Ph2_HwInterface
 
 	for (auto i = 0; i < regFIFO.size(); i++)
 	  {
-	    outputDecoded.first .push_back((regFIFO[i] >> RD53RegFrameEncoder::NBIT_VALUE)                                                            & static_cast<uint32_t>(RD53::SetBits<RD53RegFrameEncoder::NBIT_ADDRESS>(RD53RegFrameEncoder::NBIT_ADDRESS).to_ulong()));
-	    outputDecoded.second.push_back(regFIFO[i]                                                                                                 & static_cast<uint32_t>(RD53::SetBits<RD53RegFrameEncoder::NBIT_VALUE>(RD53RegFrameEncoder::NBIT_VALUE).to_ulong()));
-	    uint8_t status = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS))                                    & static_cast<uint32_t>(RD53::SetBits<RD53RegFrameEncoder::NBIT_STATUS>(RD53RegFrameEncoder::NBIT_STATUS).to_ulong());
-	    uint8_t id     = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS + RD53RegFrameEncoder::NBIT_STATUS)) & static_cast<uint32_t>(RD53::SetBits<RD53RegFrameEncoder::NBIT_CHIPID>(RD53RegFrameEncoder::NBIT_CHIPID).to_ulong());
+	    outputDecoded.first .push_back((regFIFO[i] >> RD53RegFrameEncoder::NBIT_VALUE)                                                            & static_cast<uint32_t>(RD53::SetBits(RD53RegFrameEncoder::NBIT_ADDRESS)));
+	    outputDecoded.second.push_back(regFIFO[i]                                                                                                 & static_cast<uint32_t>(RD53::SetBits(RD53RegFrameEncoder::NBIT_VALUE)));
+	    uint8_t status = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS))                                    & static_cast<uint32_t>(RD53::SetBits(RD53RegFrameEncoder::NBIT_STATUS));
+	    uint8_t id     = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS + RD53RegFrameEncoder::NBIT_STATUS)) & static_cast<uint32_t>(RD53::SetBits(RD53RegFrameEncoder::NBIT_CHIPID));
 
 	    if (status != 0) LOG (ERROR) << BOLDRED << "Status error in chip register readback: " << BOLDYELLOW << std::hex << +status << std::dec << BOLDRED << " from chip ID: " << BOLDYELLOW << std::hex << +id << std::dec << RESET;
 	  }
@@ -524,7 +524,7 @@ namespace Ph2_HwInterface
   std::vector<RD53FWInterface::Event> RD53FWInterface::DecodeEvents (const std::vector<uint32_t>& data, uint8_t& evtStatus)
   {
     std::vector<size_t> event_start;
-    size_t maxL1Counter = RD53::SetBits<RD53EvtEncoder::NBIT_TRIGID>(RD53EvtEncoder::NBIT_TRIGID).to_ulong() + 1;
+    size_t maxL1Counter = RD53::SetBits(RD53EvtEncoder::NBIT_TRIGID)+1;
 
     if (data.size() != 0) evtStatus = RD53FWEvtEncoder::GOOD;
     else                  evtStatus = RD53FWEvtEncoder::EMPTY;

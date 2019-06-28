@@ -114,9 +114,9 @@ void PixelAlive::Analyze ()
 void PixelAlive::InitHisto ()
 {
   std::stringstream myString;
-  size_t ToTsize   = RD53::SetBits<RD53EvtEncoder::NBIT_TOT/NPIX_REGION>(RD53EvtEncoder::NBIT_TOT/NPIX_REGION).to_ulong()+1;
-  size_t BCIDsize  = RD53::SetBits<RD53EvtEncoder::NBIT_BCID>(RD53EvtEncoder::NBIT_BCID).to_ulong()+1;
-  size_t TrgIDsize = RD53::SetBits<RD53EvtEncoder::NBIT_TRIGID>(RD53EvtEncoder::NBIT_TRIGID).to_ulong()+1;
+  size_t ToTsize   = RD53::SetBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)+1;
+  size_t BCIDsize  = RD53::SetBits(RD53EvtEncoder::NBIT_BCID)+1;
+  size_t TrgIDsize = RD53::SetBits(RD53EvtEncoder::NBIT_TRIGID)+1;
 
 
   // #######################
@@ -257,7 +257,7 @@ void PixelAlive::FillHisto ()
 	      int deltaBCID = theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data1[i] -
 		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data1[i-1];
 	      
-	      theBCID[index]->Fill((deltaBCID > 0 ? 0 : RD53::SetBits<RD53EvtEncoder::NBIT_BCID>(RD53EvtEncoder::NBIT_BCID).to_ulong()+1) + deltaBCID);
+	      theBCID[index]->Fill((deltaBCID > 0 ? 0 : RD53::SetBits(RD53EvtEncoder::NBIT_BCID)+1) + deltaBCID);
 	    }
 	  
 	  for (auto i = 1; i < theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data2.size(); i++)
@@ -265,7 +265,7 @@ void PixelAlive::FillHisto ()
 	      int deltaTrgID = theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data2[i] -
 		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data2[i-1];
 	      
-	      theTrgID[index]->Fill((deltaTrgID > 0 ? 0 : RD53::SetBits<RD53EvtEncoder::NBIT_TRIGID>(RD53EvtEncoder::NBIT_TRIGID).to_ulong()+1) + deltaTrgID);
+	      theTrgID[index]->Fill((deltaTrgID > 0 ? 0 : RD53::SetBits(RD53EvtEncoder::NBIT_TRIGID)+1) + deltaTrgID);
 	    }
 	  
 	  index++;

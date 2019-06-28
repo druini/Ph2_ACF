@@ -126,6 +126,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::Analyze ()
   std::vector<float> measurements(dacList.size(),0);
 
   ContainerFactory theDetectorFactory;
+  delete theThresholdAndNoiseContainer;
   theThresholdAndNoiseContainer = new DetectorDataContainer();
   theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
 

@@ -9,20 +9,21 @@
 
 #include "RD53GainOptimization.h"
 
-GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetGain) :
-  fileRes     (fileRes),
-  fileReg     (fileReg),
-  rowStart    (rowStart),
-  rowEnd      (rowEnd),
-  colStart    (colStart),
-  colEnd      (colEnd),
-  nPixels2Inj (nPixels2Inj),
-  nEvents     (nEvents),
-  startValue  (startValue),
-  stopValue   (stopValue),
-  nSteps      (nSteps),
-  targetGain  (targetGain),
-  Gain        (fileRes, rowStart, rowEnd, colStart, colEnd, nPixels2Inj, nEvents, startValue, stopValue, nSteps)
+GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetCharge, float targetToT) :
+  fileRes      (fileRes),
+  fileReg      (fileReg),
+  rowStart     (rowStart),
+  rowEnd       (rowEnd),
+  colStart     (colStart),
+  colEnd       (colEnd),
+  nPixels2Inj  (nPixels2Inj),
+  nEvents      (nEvents),
+  startValue   (startValue),
+  stopValue    (stopValue),
+  nSteps       (nSteps),
+  targetCharge (targetCharge),
+  targetToT    (targetToT),
+  Gain         (fileRes, rowStart, rowEnd, colStart, colEnd, nPixels2Inj, nEvents, startValue, stopValue, nSteps)
 {
   // ########################
   // # Custom channel group #
@@ -55,20 +56,14 @@ GainOptimization::~GainOptimization ()
 
 void GainOptimization::Run ()
 {
-  ContainerFactory theDetectorFactory;
-
-  fDetectorDataContainer = &theContainer;
-  theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *fDetectorDataContainer);
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, theKrumCurrContainer);
-
-  this->SetTestPulse(true);
-  this->fMaskChannelsFromOtherGroups = true;
-  this->bitWiseScan("KRUM_CURR_LIN", targetGain);
+  this->bitWiseScan("KRUM_CURR_LIN", targetCharge, targetToT);
 
 
   // #######################################
   // # Fill Krummenacher Current container #
   // #######################################
+  ContainerFactory theDetectorFactory;
+  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, theKrumCurrContainer);
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
@@ -103,8 +98,7 @@ void GainOptimization::InitHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  const int bitKrumCurr = 9; // @TMP@
-	  size_t KrumCurrsize   = RD53::SetBits<bitKrumCurr>(bitKrumCurr).to_ulong()+1;
+	  size_t KrumCurrsize = RD53::SetBits(static_cast<RD53*>(cChip)->getNumberOfBits("KRUM_CURR_LIN"))+1;
 
 
 	  myString.clear();
@@ -179,64 +173,79 @@ void GainOptimization::Save ()
 	}
 }
 
-void GainOptimization::bitWiseScan (const char* dacName, float target)
+void GainOptimization::bitWiseScan (const char* dacName, float targetCharge, float targetToT)
 {
-  for (auto boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
-    {
-      DetectorDataContainer* outputDataContainer = fDetectorDataContainer;
-      uint8_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(boardIndex))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName);
+  uint8_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName);
 
 
-      ContainerFactory theDetectorFactory;
-      DetectorDataContainer valueContainer;
-      theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, valueContainer);
+  DetectorDataContainer minDACcontainer;
+  DetectorDataContainer midDACcontainer;
+  DetectorDataContainer maxDACcontainer;
 
-
-      DetectorDataContainer minDACcontainer;
-      DetectorDataContainer midDACcontainer;
-      DetectorDataContainer maxDACcontainer;
-
-      for (auto cModule : *(fDetectorContainer->at(boardIndex)))
-	for (auto cChip : *cModule)
-	  static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(boardIndex)->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue = 0;
-
-      for (auto cModule : *(fDetectorContainer->at(boardIndex)))
-	for (auto cChip : *cModule)
-	  static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(boardIndex)->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue = RD53::SetBits(numberOfBits);
-
+  for (const auto cBoard : *fDetectorContainer)
+    for (auto cModule : *cBoard)
+      for (auto cChip : *cModule)
+	static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue = 0;
+      
+  for (const auto cBoard : *fDetectorContainer)
+    for (auto cModule : *cBoard)
+      for (auto cChip : *cModule)
+	static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue = RD53::SetBits(numberOfBits);
  
-      for (auto i = 0; i < numberOfBits; i++)
-	{
-	  for (auto cModule : *(fDetectorContainer->at(boardIndex)))
-	    for (auto cChip : *cModule)
-	      static_cast<Summary<RegisterValue,EmptyContainer>*>(midDACcontainer.at(boardIndex)->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
-		= (static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(boardIndex)->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue + 
-		   static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(boardIndex)->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue) / 2;
 
-	  
-	  this->setAllGlobalDacBeBoard(boardIndex, dacName, midDACcontainer);
-	  fDetectorDataContainer = &valueContainer;
-	  this->measureBeBoardData(boardIndex, nEvents);
-	  auto ciao = 0;
-
-	  for (auto cModule : *(fDetectorContainer->at(boardIndex)))
-	    for (auto cChip : *cModule)
-	      if (ciao = target)
-		static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(boardIndex)->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
-		  = (static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(boardIndex)->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue + 
-		     static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(boardIndex)->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue) / 2;
-	      else
-		static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(boardIndex)->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
-		  = (static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(boardIndex)->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue + 
-		     static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(boardIndex)->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue) / 2;
-	}
+  for (auto i = 0; i < numberOfBits; i++)
+    {
+      for (const auto cBoard : *fDetectorContainer)
+	for (auto cModule : *cBoard)
+	  for (auto cChip : *cModule)
+	    static_cast<Summary<RegisterValue,EmptyContainer>*>(midDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
+	      = (static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue + 
+		 static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue) / 2;
 
 
-      // ############################################
-      // # Last measurement with final DAC settings #
-      // ############################################
-      this->setAllGlobalDacBeBoard(boardIndex, dacName, midDACcontainer);
-      fDetectorDataContainer = outputDataContainer;
-      this->measureBeBoardData(boardIndex, nEvents);
+      // ###########################
+      // # Download new DAC values #
+      // ###########################
+      for (const auto cBoard : *fDetectorContainer)
+	for (auto cModule : *cBoard)
+	  for (auto cChip : *cModule)
+	    fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, static_cast<Summary<RegisterValue,EmptyContainer>*>(midDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue);
+
+
+      // ################
+      // # Run analysis #
+      // ################
+      static_cast<Gain*>(this)->Run();
+      auto output = static_cast<Gain*>(this)->Analyze();
+      output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
+
+
+      // #####################
+      // # Compute next step #
+      // #####################
+      for (const auto cBoard : *fDetectorContainer)
+	for (auto cModule : *cBoard)
+	  for (auto cChip : *cModule)
+	    if ((targetToT - output->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GainAndIntercept,GainAndIntercept>().theSummary_.fIntercept) /
+		output->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GainAndIntercept,GainAndIntercept>().theSummary_.fGain > targetCharge)
+
+	      static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
+		= (static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue + 
+		   static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue) / 2;
+	    else
+
+	      static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
+		= (static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue + 
+		   static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue) / 2;
     }
+
+
+  // ############################################
+  // # Last measurement with final DAC settings #
+  // ############################################
+  for (const auto cBoard : *fDetectorContainer)
+    for (auto cModule : *cBoard)
+      for (auto cChip : *cModule)
+	fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, static_cast<Summary<RegisterValue,EmptyContainer>*>(midDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue);
+  static_cast<Gain*>(this)->Run();
 }

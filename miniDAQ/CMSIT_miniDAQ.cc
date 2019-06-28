@@ -350,7 +350,7 @@ int main (int argc, char** argv)
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       sc.Inherit(&cSystemController);
       sc.Run();
-      sc.Analyze();
+      auto output = sc.Analyze();
       sc.Draw(display,true);
     }
   else if (whichCalib == "gain")
@@ -364,7 +364,7 @@ int main (int argc, char** argv)
       Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       ga.Inherit(&cSystemController);
       ga.Run();
-      ga.Analyze();
+      auto output = ga.Analyze();
       ga.Draw(display,true);
     }
   else if (whichCalib == "threqu")
@@ -378,13 +378,13 @@ int main (int argc, char** argv)
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       sc.Inherit(&cSystemController);
       sc.Run();
-      auto newVCal = sc.Analyze();
+      auto output = sc.Analyze();
       sc.Draw(false,true);
 
       std::string chipConfig;
       if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
       else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
-      ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, newVCal);
+      ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, output);
       te.Inherit(&cSystemController);
       te.Run();
       te.Draw(display,true);
@@ -400,7 +400,7 @@ int main (int argc, char** argv)
       std::string chipConfig;
       if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
       else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
-      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, 0);
+      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, 7, 700);
       go.Inherit(&cSystemController);
       go.Run();
       go.Draw(display,true);

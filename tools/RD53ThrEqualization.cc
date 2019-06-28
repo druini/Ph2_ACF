@@ -114,7 +114,7 @@ void ThrEqualization::Draw (bool display, bool save)
 void ThrEqualization::InitHisto ()
 {
   std::stringstream myString;
-  size_t TDACsize = RD53::SetBits<RD53PixelEncoder::NBIT_TDAC>(RD53PixelEncoder::NBIT_TDAC).to_ulong()+1;
+  size_t TDACsize = RD53::SetBits(RD53PixelEncoder::NBIT_TDAC)+1;
 
 
   // #######################
