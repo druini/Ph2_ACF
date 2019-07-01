@@ -167,6 +167,8 @@ How to setup up and run the IT-system:
 5. `cd chose_a_name`
 6. Run with the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` or run `CMSIT_miniDAQ --help` for help
 
+git branch / tag : `chipPolymorphism` / `IT-v0.0`
+
 
 ### Nota Bene:
 
