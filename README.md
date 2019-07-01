@@ -1,6 +1,7 @@
 # CMS Ph2 ACF (Acquisition & Control Framework) 
 
-##### Contains:
+
+### Contains:
 
 - A middleware API layer, implemented in C++, which wraps the firmware calls and handshakes into abstracted functions
 
@@ -13,18 +14,21 @@
 
     - some applications: datatest, interfacetest, hybridtest, system, calibrate, commission, fpgaconfig
 
-##### Different versions
+
+### Different versions
 
 On this Repo, you can find different version of the software :
     - a hopefully working and stable version on the master branch
     - An in-progress version in the Dev branch
+
 
 ### Setup
 
 Firmware for the GLIB can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
 You'll need Xilinx Impact and a [Xilinx Platform Cable USB II] (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
 
-#### Setup on SLC6
+
+### Setup on SLC6
 
 1. Install a gcc compiler version > 4.8 - on scientific linux you can obtain this by installing devtoolset-2 or devtoolset-2.1:
 
@@ -67,6 +71,7 @@ If you are working on CC7, gcc4.8 is the default compiler.
 6. On CC7 you also need to install boost v1.53 headers (default on this system) as they don't ship with uHAL any more:
 
         $> sudo yum install boost-devel
+
 
 ### The Ph2_ACF Software : 
 
@@ -144,15 +149,17 @@ Follow these instructions to install and compile the libraries:
 
 
 ### Instructions on how to run the Middleware for the Inner-Tracker system
-1. `mkdir chose_a_name` under `Ph2_ACF`
-2. `cp settings/RD53Files/CMSIT_RD53.txt chose_a_name`
-3. `cp settings/CMSIT.xml chose_a_name`
+
+1. `$> mkdir chose_a_name` under `Ph2_ACF`
+2. `$> cp settings/RD53Files/CMSIT_RD53.txt chose_a_name`
+3. `$> cp settings/CMSIT.xml chose_a_name`
 4. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-5. `cd chose_a_name`
+5. `$> cd chose_a_name`
 6. Run with the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` or run `CMSIT_miniDAQ --help` for help
 
 
-##### Nota Bene:
+### Nota Bene:
+
 When you write a register in the Glib or the Cbc, the corresponding map of the HWDescription object in memory is also updated, so that you always have an exact replica of the HW Status in the memory.
 
 Register values are:
@@ -162,11 +169,12 @@ Register values are:
 For debugging purpose, you can activate DEV_FLAG in the sources or in the Makefile and also activate the uHal log in RegManager.cc.
 
 
-#### External Clock and Trigger:
+### External Clock and Trigger:
+
 Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/Middleware_Short_Guide.md) for instructions on how to use external clock and trigger with the various FMCs (DIO5 and CBC3 FMC)
 
 
-#### Example HWDescription.xml File with DIO5 support:
+### Example HWDescription.xml File with DIO5 support:
 
 ```xml
 
@@ -316,7 +324,6 @@ Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-f
 
 ### Known Issues:
 
-
 - uHAL exceptions and UDP timeouts when reading larger packet sizes from the GLIB board: 
 this can happen for some users (cause not yet identified) but can be circumvented by changing the line
 
@@ -335,4 +342,4 @@ This uses TCP protocol instead of UDP which accounts for packet loss but decreas
 
 ### Support, Suggestions ?
 
-For any support/suggestions, mail georg.auzingerSPAMNOT@cern.ch
+For any support/suggestions, mail to fabio.raveraSPAMNOT@cern.ch, mauro.dinardoSPAMNOT@cern.ch
