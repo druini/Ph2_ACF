@@ -150,12 +150,14 @@ Follow these instructions to install and compile the libraries:
 
 ### Instructions on how to run the Middleware for the Inner-Tracker system
 
+```
 1. `$> mkdir chose_a_name` under `Ph2_ACF`
 2. `$> cp settings/RD53Files/CMSIT_RD53.txt chose_a_name`
 3. `$> cp settings/CMSIT.xml chose_a_name`
 4. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
 5. `$> cd chose_a_name`
 6. Run with the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` or run `CMSIT_miniDAQ --help` for help
+```
 
 
 ### Nota Bene:
@@ -324,8 +326,7 @@ Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-f
 
 ### Known Issues:
 
-- uHAL exceptions and UDP timeouts when reading larger packet sizes from the GLIB board: 
-this can happen for some users (cause not yet identified) but can be circumvented by changing the line
+uHAL exceptions and UDP timeouts when reading larger packet sizes from the GLIB board: this can happen for some users (cause not yet identified) but can be circumvented by changing the line
 
 "ipbusudp-2.0://192.168.000.175:50001"
 
@@ -333,9 +334,9 @@ in the connections.xml file to
 
 "chtcp-2.0://localhost:10203?target=192.168.000.175:50001"
 
-& then launching the CACTUS control hub by the command:
+and then launching the CACTUS control hub by the command:
 
-/opt/cactus/bin/controlhub_start
+`/opt/cactus/bin/controlhub_start`
 
 This uses TCP protocol instead of UDP which accounts for packet loss but decreases the performance.
 
