@@ -150,14 +150,12 @@ Follow these instructions to install and compile the libraries:
 
 ### Instructions on how to run the Middleware for the Inner-Tracker system
 
-```
-1. `$> mkdir chose_a_name` under `Ph2_ACF`
-2. `$> cp settings/RD53Files/CMSIT_RD53.txt chose_a_name`
-3. `$> cp settings/CMSIT.xml chose_a_name`
+1. `mkdir chose_a_name` under `Ph2_ACF`
+2. `cp settings/RD53Files/CMSIT_RD53.txt chose_a_name`
+3. `cp settings/CMSIT.xml chose_a_name`
 4. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-5. `$> cd chose_a_name`
+5. `cd chose_a_name`
 6. Run with the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` or run `CMSIT_miniDAQ --help` for help
-```
 
 
 ### Nota Bene:
@@ -179,7 +177,6 @@ Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-f
 ### Example HWDescription.xml File with DIO5 support:
 
 ```xml
-
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR">
@@ -319,8 +316,6 @@ Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-f
 
 </Settings>
 </HwDescription>
-
-
 ```
 
 
