@@ -36,7 +36,7 @@ using namespace Ph2_System;
 class ThrEqualization : public Tool
 {
  public:
-  ThrEqualization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
+  ThrEqualization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
   ~ThrEqualization ();
 
   void Run  ();
@@ -51,6 +51,7 @@ class ThrEqualization : public Tool
   size_t colEnd;
   size_t nPixels2Inj;
   size_t nEvents;
+  size_t nEvtsBurst;  
 
   DetectorDataContainer                  theContainer;
   DetectorDataContainer*                 theTDACcontainer;

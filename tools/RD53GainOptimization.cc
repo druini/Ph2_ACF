@@ -232,6 +232,7 @@ void GainOptimization::bitWiseScan (const char* dacName, float targetCharge, flo
 	      static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
 		= (static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue + 
 		   static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue) / 2;
+
 	    else
 
 	      static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue

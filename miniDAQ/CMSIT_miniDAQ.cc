@@ -384,7 +384,7 @@ int main (int argc, char** argv)
       std::string chipConfig;
       if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
       else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
-      ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, output);
+      ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents /**VCALnsteps*/, nEvents, output);
       te.Inherit(&cSystemController);
       te.Run();
       te.Draw(display,true);
@@ -394,16 +394,17 @@ int main (int argc, char** argv)
       // #########################
       // # Run Gain Optimization #
       // #########################
-      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
+      LOG (ERROR) << BOLDRED << "@@@ Gain Optimization not implemented yet ... coming soon @@@" << RESET;
+      // LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
 
-      std::string fileName("GainOptimization_" + runNumber + ".root");
-      std::string chipConfig;
-      if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
-      else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
-      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, 7, 700);
-      go.Inherit(&cSystemController);
-      go.Run();
-      go.Draw(display,true);
+      // std::string fileName("GainOptimization_" + runNumber + ".root");
+      // std::string chipConfig;
+      // if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
+      // else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
+      // GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, 7, 700);
+      // go.Inherit(&cSystemController);
+      // go.Run();
+      // go.Draw(display,true);
     }
   else if (whichCalib == "thrmin")
     {
