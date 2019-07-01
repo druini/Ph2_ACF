@@ -143,6 +143,15 @@ Follow these instructions to install and compile the libraries:
     to run the DQM code from the June '15 beamtest
 
 
+### Instructions on how to run the Middleware for the Inner-Tracker system
+1. `mkdir chose_a_name` under `Ph2_ACF`
+2. `cp settings/RD53Files/CMSIT_RD53.txt chose_a_name`
+3. `cp settings/CMSIT.xml chose_a_name`
+4. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
+5. `cd chose_a_name`
+6. Run with the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` or run `CMSIT_miniDAQ --help` for help
+
+
 ##### Nota Bene:
 When you write a register in the Glib or the Cbc, the corresponding map of the HWDescription object in memory is also updated, so that you always have an exact replica of the HW Status in the memory.
 
