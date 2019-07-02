@@ -51,7 +51,7 @@ namespace Ph2_HwInterface {
         // number of chips and hybrids defined in firmware (compiled for)
         int fFWNHybrids;
         int fFWNChips;
-        FrontEndType fFirwmareFrontEndType;
+        FrontEndType fFirmwareFrontEndType;
         bool fCBC3Emulator;
         bool fIsDDR3Readout;
         bool fDDR3Calibrated;

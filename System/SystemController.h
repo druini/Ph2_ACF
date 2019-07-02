@@ -14,6 +14,7 @@
 #define __SYSTEMCONTROLLER_H__
 
 #include "../System/FileParser.h"
+#include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/ChipInterface.h"
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/MPAInterface.h"
@@ -62,6 +63,7 @@ namespace Ph2_System {
     {
       public:
     	BeBoardInterface*       fBeBoardInterface;           //!< Interface to the BeBoard
+        ReadoutChipInterface*   fReadoutChipInterface;
         ChipInterface*          fChipInterface;              //!< Interface to the CBC
         SSAInterface*           fSSAInterface;               //!< Interface to the SSA
         MPAInterface*           fMPAInterface;               //!< Interface to the MPA

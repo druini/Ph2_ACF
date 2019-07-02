@@ -21,16 +21,28 @@ void GainAndIntercept::makeAverage (const std::vector<GainAndIntercept>* theGain
     
   for (size_t iContainer = 0; iContainer<theGainAndInterceptVector->size(); iContainer++)
     {
-      fGain           += theGainAndInterceptVector->at(iContainer).fGain * theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fGainError * theGainAndInterceptVector->at(iContainer).fGainError);
-      fIntercept      += theGainAndInterceptVector->at(iContainer).fIntercept * theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fInterceptError * theGainAndInterceptVector->at(iContainer).fInterceptError);
-
-      fGainError      += theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fGainError * theGainAndInterceptVector->at(iContainer).fGainError);
-      fInterceptError += theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fInterceptError * theGainAndInterceptVector->at(iContainer).fInterceptError);
+      if (theGainAndInterceptVector->at(iContainer).fGainError > 0)
+	{
+	  fGain      += theGainAndInterceptVector->at(iContainer).fGain * theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fGainError * theGainAndInterceptVector->at(iContainer).fGainError);
+	  fGainError += theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fGainError * theGainAndInterceptVector->at(iContainer).fGainError);
+	}
+      
+      if (theGainAndInterceptVector->at(iContainer).fInterceptError > 0)
+	{
+	  fIntercept      += theGainAndInterceptVector->at(iContainer).fIntercept * theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fInterceptError * theGainAndInterceptVector->at(iContainer).fInterceptError);
+	  fInterceptError += theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fInterceptError * theGainAndInterceptVector->at(iContainer).fInterceptError);
+	}
     }
     
-  fGain          /= fGainError;
-  fGainError      = sqrt(1. / fGainError);
+  if (fGainError > 0)
+    {
+      fGain     /= fGainError;
+      fGainError = sqrt(1. / fGainError);
+    }
 
-  fIntercept     /= fInterceptError;
-  fInterceptError = sqrt(1. / fInterceptError);
+  if (fInterceptError > 0)
+    {
+      fIntercept     /= fInterceptError;
+      fInterceptError = sqrt(1. / fInterceptError);
+    }
 }

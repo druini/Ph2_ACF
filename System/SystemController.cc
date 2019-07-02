@@ -18,15 +18,16 @@ using namespace Ph2_HwInterface;
 namespace Ph2_System {
 
     SystemController::SystemController()
-    : fBeBoardInterface   (nullptr)
-    , fChipInterface      (nullptr)
-    , fBoardVector        ()
-    , fSettingsMap        ()
-    , fFileHandler        (nullptr)
-    , fRawFileName        ("")
-    , fWriteHandlerEnabled(false)
-    , fData               (nullptr)
-    , fNetworkStreamer    (nullptr)//This is the server listening port
+    : fBeBoardInterface    (nullptr)
+    , fReadoutChipInterface(nullptr)
+    , fChipInterface       (nullptr)
+    , fBoardVector         ()
+    , fSettingsMap         ()
+    , fFileHandler         (nullptr)
+    , fRawFileName         ("")
+    , fWriteHandlerEnabled (false)
+    , fData                (nullptr)
+    , fNetworkStreamer     (nullptr)//This is the server listening port
     {
     //      bool fStreamData = true;
     //      if(fStreamData && !fNetworkStreamer->accept(10, 0))
@@ -45,6 +46,7 @@ namespace Ph2_System {
     {
         fBeBoardInterface = pController->fBeBoardInterface;
         fChipInterface = pController->fChipInterface;
+        fReadoutChipInterface = pController->fReadoutChipInterface;
         fBoardVector = pController->fBoardVector;
         fBeBoardFWMap = pController->fBeBoardFWMap;
         fSettingsMap = pController->fSettingsMap;
@@ -63,6 +65,7 @@ namespace Ph2_System {
 
         if (fBeBoardInterface!=nullptr) delete fBeBoardInterface;
 
+        if (fReadoutChipInterface!=nullptr)  delete fReadoutChipInterface;
         if (fChipInterface!=nullptr)  delete fChipInterface;
         if (fMPAInterface!=nullptr)  delete fMPAInterface;
         if(fDetectorContainer!=nullptr) delete fDetectorContainer;
@@ -144,9 +147,9 @@ namespace Ph2_System {
 
         fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
         if (fBoardVector[0]->getBoardType() != BoardType::FC7)
-            fChipInterface  = new CbcInterface     ( fBeBoardFWMap );
+            fReadoutChipInterface  = new CbcInterface     ( fBeBoardFWMap );
         else
-            fChipInterface  = new RD53Interface    ( fBeBoardFWMap );
+            fReadoutChipInterface  = new RD53Interface    ( fBeBoardFWMap );
         fMPAInterface     = new MPAInterface     ( fBeBoardFWMap );
 
         if (fWriteHandlerEnabled)
@@ -160,7 +163,7 @@ namespace Ph2_System {
 
     void SystemController::ConfigureHw ( bool bIgnoreI2c )
     {
-      LOG (INFO) << BOLDBLUE << "Configuring HW parsed from .xml file: " << RESET;
+      LOG (INFO) << BOLDBLUE << "@@@ Configuring HW parsed from .xml file @@@" << RESET;
 
       bool cHoleMode = false;
       bool cCheck = false;
@@ -183,59 +186,55 @@ namespace Ph2_System {
 	  // ######################################
 
 	  if (cBoard->getBoardType() != BoardType::FC7)
-	    {
+	  {
 	      fBeBoardInterface->ConfigureBoard ( cBoard );
 
 	      LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
 
 	      for (auto& cFe : cBoard->fModuleVector)
-		{
-		  for (auto& cCbc : cFe->fChipVector)
+                {
+                    LOG (INFO) << "Configuring board.." << RESET;
+		  for (auto& cCbc : cFe->fReadoutChipVector)
 		    {
 		      if ( !bIgnoreI2c )
-			{
-			  fChipInterface->ConfigureChip ( cCbc );
-			  LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
-			}
+                      {
+                        fReadoutChipInterface->ConfigureChip ( cCbc );
+                        LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
+                      }
 		    }
-		}
-
+                }
 	      fBeBoardInterface->ChipReSync ( cBoard );
+          LOG (INFO) << BOLDGREEN << "Successfully sent resync." << RESET;
 	    }
-	  else
+	    else
 	    {
 	      // ######################################
 	      // # Configuring Inner Tracker hardware #
 	      // ######################################
-	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fChipInterface);
+	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fReadoutChipInterface);
 
 	      LOG (INFO) << BOLDGREEN << "\t--> Found an Inner Tracker board" << RESET;
-	      LOG (INFO) << BOLDYELLOW << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;
+	      LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;
 	      fBeBoardInterface->ConfigureBoard (cBoard);
 
-	      for (const auto& cFe : cBoard->fModuleVector)
+	      for (const auto& cModule : cBoard->fModuleVector)
 		{
-		  LOG (INFO) << BOLDYELLOW << "Initializing communication to Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
-		  for (const auto& cRD53 : cFe->fChipVector)
+		  LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << int (cModule->getModuleId()) << RESET;
+		  for (const auto& cRD53 : cModule->fReadoutChipVector)
 		    {
-		      LOG (INFO) << BOLDYELLOW << "Resetting, Syncing, Initializing AURORA of RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
-		      fRD53Interface->InitRD53Aurora (static_cast<RD53*>(cRD53));
-		    }
-		  
-		  bool commGood = fBeBoardInterface->InitChipCommunication(cBoard);
-
-		  if (commGood == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication of all RD53s of Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
-		  else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication with all RD53s of Module " << BOLDYELLOW << int (cFe->getModuleId()) << RESET;
-
-		  for (const auto& cRD53 : cFe->fChipVector)
-		    {
-		      LOG (INFO) << BOLDYELLOW << "Configuring RD53 " << int (cRD53->getChipId()) << RESET;
+		      LOG (INFO) << GREEN << "Configuring RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
 		      fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));
 		    }
 		}
+	      
+	      LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
+	      bool commGood = fBeBoardInterface->InitChipCommunication(cBoard);
+	      if (commGood == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication to all chips" << RESET;
+	      else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication to all chips" << RESET;
 	    }
-	} 
-    }
+	}
+    } 
+
 
     void SystemController::initializeFileHandler()
     {
@@ -267,7 +266,7 @@ namespace Ph2_System {
 
         //construct a Handler
              std::stringstream cBeBoardString;
-             cBeBoardString << "_BeBoard_" << std::setw (3) << std::setfill ('0') << cBeId;
+             cBeBoardString << "_Board" << std::setw (3) << std::setfill ('0') << cBeId;
              std::string cFilename = fRawFileName;
 
              if (fRawFileName.find (".raw") != std::string::npos)
@@ -277,7 +276,7 @@ namespace Ph2_System {
 
         //finally set the handler
              fBeBoardInterface->SetFileHandler (cBoard, cHandler);
-             LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << fRawFileName << ".fedId" << RESET ;
+             LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << BOLDYELLOW << cFilename << RESET;
          }
      }
      uint32_t SystemController::computeEventSize32 (BeBoard* pBoard)
@@ -315,17 +314,16 @@ namespace Ph2_System {
             fBeBoardInterface->Resume (cBoard);
     }
 
-    void SystemController::ConfigureHardware(std::string cHWFile, bool enableStream)
-    {
-
-        std::stringstream outp;
-        InitializeHw ( cHWFile, outp, true, enableStream );
-        InitializeSettings ( cHWFile, outp );
-        LOG (INFO) << outp.str();
-        outp.str ("");
-        ConfigureHw();
-
-    }
+  void SystemController::ConfigureHardware(std::string cHWFile, bool enableStream)
+  {
+    std::stringstream outp;
+    
+    InitializeHw ( cHWFile, outp, true, enableStream );
+    InitializeSettings ( cHWFile, outp );
+    LOG (INFO) << outp.str();
+    outp.str ("");
+    ConfigureHw();
+  }
 
     void SystemController::ConfigureCalibration()
     {

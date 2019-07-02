@@ -10,14 +10,19 @@
 #include "../System/SystemController.h"
 #include "../Utils/argvparser.h"
 #include "../tools/RD53PixelAlive.h"
+#include "../tools/RD53Latency.h"
 #include "../tools/RD53SCurve.h"
+#include "../tools/RD53ThrOpt.h"
 #include "../tools/RD53Gain.h"
+
+#include <fstream>
 
 
 // ##################
 // # Default values #
 // ##################
-#define RUNNUMBER 0
+#define FileRUNNUMBER "./RunNumber.txt"
+#define RUNNUMBER     "0000"
 
 
 using namespace CommandLineProcessing;
@@ -36,6 +41,7 @@ auto FindValue (const SystemController& sc, const char* name)
 void InitParameters (const SystemController& sc,
 
 		     size_t& nEvents,
+		     size_t& nEvtsBurst,
 		     size_t& NTRIGxL1A,
 		     std::string& INJtype,
 
@@ -45,166 +51,150 @@ void InitParameters (const SystemController& sc,
 		     size_t& COLstop,
 		     size_t& nPixelInj,
 
-		     size_t& LatencStart,
-		     size_t& LatencStop,
+		     size_t& LatencyStart,
+		     size_t& LatencyStop,
 
 		     size_t& VCALstart,
 		     size_t& VCALstop,
-		     size_t& VCALnsteps)
+		     size_t& VCALnsteps,
+
+		     size_t& display)
 {
-  nEvents     = FindValue(sc,"nEvents");
-  NTRIGxL1A   = FindValue(sc,"NTRIGxL1A");
-  INJtype     = (FindValue(sc,"INJtype") == 0 ? "Analog" : "Digital");
+  nEvents      = FindValue(sc,"nEvents");
+  nEvtsBurst   = FindValue(sc,"nEvtsBurst");
+  NTRIGxL1A    = FindValue(sc,"NTRIGxL1A");
+  INJtype      = (FindValue(sc,"INJtype") == 0 ? "Analog" : "Digital");
 
-  ROWstart    = FindValue(sc,"ROWstart");
-  ROWstop     = FindValue(sc,"ROWstop");
-  COLstart    = FindValue(sc,"COLstart");
-  COLstop     = FindValue(sc,"COLstop");
-  nPixelInj   = FindValue(sc,"nPixelInj");
+  ROWstart     = FindValue(sc,"ROWstart");
+  ROWstop      = FindValue(sc,"ROWstop");
+  COLstart     = FindValue(sc,"COLstart");
+  COLstop      = FindValue(sc,"COLstop");
+  nPixelInj    = FindValue(sc,"nPixelInj");
 
-  LatencStart = FindValue(sc,"LatencStart");
-  LatencStop  = FindValue(sc,"LatencStop");
+  LatencyStart = FindValue(sc,"LatencyStart");
+  LatencyStop  = FindValue(sc,"LatencyStop");
 
-  VCALstart   = FindValue(sc,"VCALstart");
-  VCALstop    = FindValue(sc,"VCALstop");
-  VCALnsteps  = FindValue(sc,"VCALnsteps");
+  VCALstart    = FindValue(sc,"VCALstart");
+  VCALstop     = FindValue(sc,"VCALstop");
+  VCALnsteps   = FindValue(sc,"VCALnsteps");
+
+  display      = FindValue(sc,"DisplayHisto");
 }
 
 
-void ConfigureFSM (FC7FWInterface* RD53Board, uint8_t chipId, size_t nEvents, size_t NTRIGxL1A, std::string type)
+void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type)
 // ###################
 // # type == Digital #
 // # type == Analog  #
 // ###################
 {
-  // #############################
-  // # Configuring FastCmd block #
-  // #############################
-  FC7FWInterface::FastCommandsConfig cfgFastCmd;
-  
-  cfgFastCmd.trigger_source   = FC7FWInterface::TriggerSource::FastCMDFSM;
-  cfgFastCmd.n_triggers       = nEvents;
-  cfgFastCmd.trigger_duration = NTRIGxL1A;
- 
-  if (type == "Digital")
+  for (const auto& cBoard : sc.fBoardVector)
     {
-      // #######################################
-      // # Configuration for digital injection #
-      // #######################################
-      RD53::CalCmd calcmd_first(1,2,10,0,0);
-      cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
-      RD53::CalCmd calcmd_second(0,0,0,0,0);
-      cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
+      auto RD53Board = static_cast<RD53FWInterface*>(sc.fBeBoardFWMap[cBoard->getBeBoardId()]);
+
+      for (const auto& cModule : cBoard->fModuleVector)
+	for (const auto& cChip : cModule->fReadoutChipVector)
+	 {
+	   uint8_t chipId = cChip->getChipId();
+
+
+	   // #############################
+	   // # Configuring FastCmd block #
+	   // #############################
+	   RD53FWInterface::FastCommandsConfig cfgFastCmd;
       
-      cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  32;
-      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =   0;
-      cfgFastCmd.fast_cmd_fsm.delay_loop             = 128;
-      
-      cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
-      cfgFastCmd.fast_cmd_fsm.second_cal_en = false;
-      cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
+	   cfgFastCmd.trigger_source   = RD53FWInterface::TriggerSource::FastCMDFSM;
+	   cfgFastCmd.n_triggers       = 0;
+	   cfgFastCmd.trigger_duration = NTRIGxL1A;
+	   
+	   if (type == "Digital")
+	     {
+	       // #######################################
+	       // # Configuration for digital injection #
+	       // #######################################
+	       RD53::CalCmd calcmd_first(1,2,8,0,0);
+	       cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
+	       RD53::CalCmd calcmd_second(0,0,0,0,0);
+	       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
+	       
+	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
+	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  0;
+	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 40;
+
+	       cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
+	       cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
+	       cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+	     }
+	   else if (type == "Analog")
+	     {
+	       // ######################################
+	       // # Configuration for analog injection #
+	       // ######################################
+	       RD53::CalCmd calcmd_first(1,0,0,0,0);
+	       cfgFastCmd.fast_cmd_fsm.first_cal_data  = calcmd_first.getCalCmd(chipId);
+	       RD53::CalCmd calcmd_second(0,0,2,0,0);
+	       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
+	       
+	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
+	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 32;
+	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 40;
+
+	       cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
+	       cfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
+	       cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+	     }
+	   else LOG (ERROR) << BOLDRED << "Option non recognized " << type << RESET;
+	   
+	   
+	   // ###############################################
+	   // # Copy to RD53FWInterface data member variable #
+	   // ###############################################
+	   RD53Board->getLoaclCfgFastCmd()->trigger_source                      = cfgFastCmd.trigger_source;
+	   RD53Board->getLoaclCfgFastCmd()->n_triggers                          = cfgFastCmd.n_triggers;
+	   RD53Board->getLoaclCfgFastCmd()->trigger_duration                    = cfgFastCmd.trigger_duration;
+	   
+	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_data         = cfgFastCmd.fast_cmd_fsm.first_cal_data;
+	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_data        = cfgFastCmd.fast_cmd_fsm.second_cal_data;
+	   
+	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_first_cal  = cfgFastCmd.fast_cmd_fsm.delay_after_first_cal;
+	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_second_cal = cfgFastCmd.fast_cmd_fsm.delay_after_second_cal;
+	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_loop             = cfgFastCmd.fast_cmd_fsm.delay_loop;
+	   
+	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_en           = cfgFastCmd.fast_cmd_fsm.first_cal_en;
+	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_en          = cfgFastCmd.fast_cmd_fsm.second_cal_en;
+	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.trigger_en             = cfgFastCmd.fast_cmd_fsm.trigger_en;
+	   
+	   
+	   // ##############################
+	   // # Download the configuration #
+	   // ##############################
+	   RD53Board->ConfigureFastCommands();
+	 }
     }
-  else if (type == "Analog")
-    {
-      // ######################################
-      // # Configuration for analog injection #
-      // ######################################
-      RD53::CalCmd calcmd_first(1,0,0,0,0);
-      cfgFastCmd.fast_cmd_fsm.first_cal_data  = calcmd_first.getCalCmd(chipId);
-      RD53::CalCmd calcmd_second(0,0,1,0,0);
-      cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
-      
-      cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  =  16;
-      cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  32;
-      cfgFastCmd.fast_cmd_fsm.delay_loop             = 128;
-
-      cfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
-      cfgFastCmd.fast_cmd_fsm.second_cal_en = true;
-      cfgFastCmd.fast_cmd_fsm.trigger_en    = true;
-    }
-  else LOG(ERROR) << BOLDRED << "Option non recognized " << type << RESET;
-
-
-  // ###############################################
-  // # Copy to FC7FWInterface data member variable #
-  // ###############################################
-  RD53Board->getLoaclCfgFastCmd()->trigger_source                      = cfgFastCmd.trigger_source;
-  RD53Board->getLoaclCfgFastCmd()->n_triggers                          = cfgFastCmd.n_triggers;
-  RD53Board->getLoaclCfgFastCmd()->trigger_duration                    = cfgFastCmd.trigger_duration;
-  
-  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_data         = cfgFastCmd.fast_cmd_fsm.first_cal_data;
-  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_data        = cfgFastCmd.fast_cmd_fsm.second_cal_data;
-  
-  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_first_cal  = cfgFastCmd.fast_cmd_fsm.delay_after_first_cal;
-  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_second_cal = cfgFastCmd.fast_cmd_fsm.delay_after_second_cal;
-  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_loop             = cfgFastCmd.fast_cmd_fsm.delay_loop;
-  
-  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_en           = cfgFastCmd.fast_cmd_fsm.first_cal_en;
-  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_en          = cfgFastCmd.fast_cmd_fsm.second_cal_en;
-  RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.trigger_en             = cfgFastCmd.fast_cmd_fsm.trigger_en;
 }
 
 
-void LatencyScan (const char* fName, BeBoard* pBoard, FC7FWInterface* RD53Board, RD53Interface* RD53ChipInterface, Chip* pChip,
-		  size_t ROWstart, size_t ROWstop, size_t COLstart, size_t COLstop,size_t LatencyStart, size_t LatencyStop, size_t nEvents)
+void ConfigureExtClkTrig (SystemController& sc)
 {
-  int dataSize = 0;
-  int latency  = 0;
-  std::vector<uint32_t> data;
-  std::string exception;
+  const uint8_t chnOutEnable = 0b10010;
 
-  TH1F theLatency("theLatency","LatencyScan",LatencyStop - LatencyStart,LatencyStart,LatencyStop);
-  theLatency.SetXTitle("Latency [n.bx]");
-  theLatency.SetYTitle("Entries");
-  TCanvas theCanvas("theCanvas","RD53Canvas",0,0,700,500);
-
-
-  // ########################
-  // # Set pixels to inject #
-  // ########################
-  static_cast<RD53*>(pChip)->enablePixel(ROWstart,COLstart,true);
-  static_cast<RD53*>(pChip)->injectPixel(ROWstart,COLstart,true);
-
-  static_cast<RD53*>(pChip)->enablePixel(ROWstop,COLstop,true);
-  static_cast<RD53*>(pChip)->injectPixel(ROWstop,COLstop,true);
-
-  RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(pChip), false, false, false);
-
-
-  for (auto lt = LatencyStart; lt < LatencyStop; lt++)
+  for (const auto& cBoard : sc.fBoardVector)
     {
-      data.clear();
+      auto RD53Board = static_cast<RD53FWInterface*>(sc.fBeBoardFWMap[cBoard->getBeBoardId()]);
+
+
+      // ####################
+      // # Configuring DIO5 #
+      // ####################
+      LOG (INFO) << GREEN << "Configuring DIO5 for external trigger and external clock for board " << BOLDYELLOW << cBoard->getBeBoardId() << RESET;
+
+      RD53Board->getLoaclCfgFastCmd()->trigger_source = RD53FWInterface::TriggerSource::External;
       
-      LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
-      RD53ChipInterface->WriteChipReg(pChip, "LATENCY_CONFIG", lt);
-      
-      RD53Board->ReadNEvents(pBoard,nEvents,data);
-
-      auto events = RD53Board->DecodeEvents(data);
-      auto nEvts  = RD53Board->AnalyzeEvents(events, exception, false);
-
-      if (nEvts > dataSize)
-	{
-	  latency  = lt;
-	  dataSize = nEvts;
-	}
-
-      theLatency.Fill(lt,nEvts);
+      RD53FWInterface::DIO5Config cfgDIO5;
+      cfgDIO5.enable    = true;
+      cfgDIO5.ch_out_en = chnOutEnable;
+      RD53Board->ConfigureDIO5(&cfgDIO5);      
     }
-
-  LOG(INFO) << GREEN << "\t--> Best latency: " << BOLDYELLOW << latency << RESET;
-  
-  theCanvas.cd();
-  theLatency.Draw("hist");
-  theCanvas.Modified();
-  theCanvas.Update();
-
-  TFile theFile(fName, "RECREATE");
-  theCanvas.Write();
-  theFile.Write();
-  theFile.Close();
-
-  theCanvas.Print("LatencyScan.png");
 }
 
 
@@ -226,10 +216,10 @@ int main (int argc, char** argv)
 
   cmd.setHelpOption("h","help","Print this help page");
 
-  cmd.defineOption("file","Hardware description file. Default value: settings/CMSIT_FC7.xml",ArgvParser::OptionRequiresValue);
+  cmd.defineOption("file","Hardware description file. Default value: settings/CMSIT.xml",ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency; pixelalive; scurve; gain; gainopt; thropt]. Default: pixelalive", ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain thropt gainopt]. Default: pixelalive", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
   cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", ArgvParser::NoOptionAttribute);
@@ -239,11 +229,11 @@ int main (int argc, char** argv)
 
   if (result != ArgvParser::NoParserError)
     {
-      LOG(INFO) << cmd.parseErrorDescription(result);
+      LOG (INFO) << cmd.parseErrorDescription(result);
       exit(1);
     }
 
-  std::string cHWFile    = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT_FC7.xml";
+  std::string cHWFile    = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT.xml";
   std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
   bool extClkTrg         = cmd.foundOption("ext")    == true ? true : false;
 
@@ -254,56 +244,53 @@ int main (int argc, char** argv)
   SystemController cSystemController;
 
 
+  // #################
+  // Read run number #
+  // #################
+  std::ifstream fileRunNumberIn;
+  std::string runNumber = RUNNUMBER;
+  fileRunNumberIn.open(FileRUNNUMBER, std::ios::in);
+  if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
+  fileRunNumberIn.close();
+
+
   // ##########################
   // # Initialize output file #
   // ##########################
-  std::string cOutputFile = string_format("run_%04d.raw", RUNNUMBER);
-  cSystemController.addFileHandler(cOutputFile, 'w');
+  cSystemController.addFileHandler("run_" + runNumber + ".raw", 'w');
 
 
   // #######################
   // # Initialize Hardware #
   // #######################
-  LOG (INFO) << BOLDYELLOW << "@@@ Initializing the Hardware @@@" << RESET;
+  LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
   cSystemController.ConfigureHardware(cHWFile);
-  LOG (INFO) << BOLDBLUE << "@@@ Hardware initialization done @@@" << RESET;
+  LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
 
 
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps;
+  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display;
   std::string INJtype;
-  InitParameters(cSystemController, nEvents, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencStart, LatencStop, VCALstart, VCALstop, VCALnsteps);
+  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display);  
+
+  // ######################################
+  // # Correct injection pattern for RD53 #
+  // ######################################
+  if (nPixelInj == 0) nPixelInj = (ROWstop - ROWstart + 1) * (COLstop  - COLstart + 1) / (ROWstop  - ROWstart + 1 + ((ROWstop  - ROWstart + 1) > NROW_CORE ? NROW_CORE : 0));
 
 
   // #####################
   // # Preparing the FSM #
   // #####################
-  auto pBoard            = cSystemController.fBoardVector.at(0);
-  auto pModule           = pBoard->fModuleVector.at(0);
-  auto pChip             = pModule->fChipVector.at(0);
-  auto RD53Board         = static_cast<FC7FWInterface*>(cSystemController.fBeBoardFWMap[pBoard->getBeBoardId()]);
-  auto RD53ChipInterface = static_cast<RD53Interface*>(cSystemController.fChipInterface);
-  uint8_t chipId         = pChip->getChipId();
-
-  ConfigureFSM(RD53Board, chipId, nEvents, NTRIGxL1A, INJtype);
+  ConfigureFSM(cSystemController, NTRIGxL1A, INJtype);
 
 
-  if (extClkTrg == true)
-    {
-      // ####################
-      // # Configuring DIO5 #
-      // ####################
-      LOG (INFO) << BOLDYELLOW << "@@@ Configuring DIO5 for external trigger and external clock @@@" << RESET;
-
-      RD53Board->getLoaclCfgFastCmd()->trigger_source = FC7FWInterface::TriggerSource::External;
-      
-      FC7FWInterface::DIO5Config cfgDIO5;
-      cfgDIO5.enable    = true;
-      cfgDIO5.ch_out_en = 0b10010;
-      RD53Board->ConfigureDIO5(&cfgDIO5);      
-    }
+  // ######################
+  // # Preparing the DIO5 #
+  // ######################
+  if (extClkTrg == true) ConfigureExtClkTrig(cSystemController);
 
 
   std::cout << std::endl;
@@ -312,74 +299,108 @@ int main (int argc, char** argv)
       // ###################
       // # Run LatencyScan #
       // ###################
-      LOG(INFO) << BOLDYELLOW << "@@@ Performing Latency scan @@@" << RESET;
-	
-      LatencyScan("LatencyScan.root", pBoard, RD53Board, RD53ChipInterface, pChip, ROWstart, ROWstop, COLstart, COLstop, LatencStart, LatencStop, nEvents);
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
+
+      std::string fileName("LatencyScan_" + runNumber + ".root");
+      Latency la(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
+      la.Inherit(&cSystemController);
+      la.Run();
+      la.Analyze();
+      la.Draw(display,true);
     }
   else if (whichCalib == "pixelalive")
     {
       // ##################
       // # Run PixelAlive #
       // ##################
-      LOG(INFO) << BOLDYELLOW << "@@@ Performing PixelAlive scan @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-      PixelAlive pa("PixelAlive.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, true);
+      std::string fileName("PixelAlive_" + runNumber + ".root");
+      PixelAlive pa(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, true);
       pa.Inherit(&cSystemController);
-      pa.InitHisto();
       pa.Run();
-      pa.Display();
-      pa.Save();
+      pa.Analyze();
+      pa.Draw(display,true);
+    }
+  else if (whichCalib == "noise")
+    {
+      // #############
+      // # Run Noise #
+      // #############
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
+
+      std::string fileName("NoiseScan_" + runNumber + ".root");
+      PixelAlive pa(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false);
+      pa.Inherit(&cSystemController);
+      pa.Run();
+      pa.Analyze();
+      pa.Draw(display,true);
     }
   else if (whichCalib == "scurve")
     {
       // ##############
       // # Run SCurve #
       // ##############
-      LOG(INFO) << BOLDYELLOW << "@@@ Performing SCurve scan @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
-      SCurve sc("SCurve.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      std::string fileName("SCurve_" + runNumber + ".root");
+      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       sc.Inherit(&cSystemController);
-      sc.InitHisto();
       sc.Run();
       sc.Analyze();
-      sc.Display();
-      sc.Save();
+      sc.Draw(display,true);
     }
   else if (whichCalib == "gain")
     {
       // ############
       // # Run Gain #
       // ############
-      LOG(INFO) << BOLDYELLOW << "@@@ Performing Gain scan @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
-      Gain ga("Gain.root", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      std::string fileName("Gain_" + runNumber + ".root");
+      Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       ga.Inherit(&cSystemController);
-      ga.InitHisto();
       ga.Run();
-      // ga.Analyze();
-      ga.Display();
-      ga.Save();
-    }
-  else if (whichCalib == "gainopt")
-    {
-      // #########################
-      // # Run Gain Optimisation #
-      // #########################
-      LOG(INFO) << BOLDRED << "@@@ Gain optimisation not implemented yet ... coming soon @@@" << RESET;
+      ga.Analyze();
+      ga.Draw(display,true);
     }
   else if (whichCalib == "thropt")
     {
       // ##############################
-      // # Run Threshold Optimisation #
+      // # Run Threshold Optimization #
       // ##############################
-      LOG(INFO) << BOLDRED << "@@@ Threshold optimisation not implemented yet ... coming soon @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing threshold optimization @@@" << RESET;
+
+      std::string fileName("ThresholdOptimization_" + runNumber + ".root");
+      ThrOpt to(fileName.c_str(), "./CMSIT_RD53.txt", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents);
+      to.Inherit(&cSystemController);
+      to.Run();
+      to.Draw(display,true);
     }
-  else LOG(ERROR) << BOLDRED << "Option non recognized: " << whichCalib << RESET;
+  else if (whichCalib == "gainopt")
+    {
+      // #########################
+      // # Run Gain Optimization #
+      // #########################
+      LOG (ERROR) << BOLDRED << "@@@ Gain optimization not implemented yet ... coming soon @@@" << RESET;
+    }
+  else LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
 
 
-  cSystemController.Stop(pBoard);
+  // #####################
+  // # Update run number #
+  // #####################
+  std::ofstream fileRunNumberOut;
+  std::stringstream ss;
+  ss << std::setfill('0') << std::setw(runNumber.size()) << std::stoi(runNumber) + 1;
+  runNumber = ss.str();
+  fileRunNumberOut.open(FileRUNNUMBER, std::ios::out);
+  if (fileRunNumberOut.is_open() == true) fileRunNumberOut << runNumber << std::endl;
+  fileRunNumberOut.close();
+
+
   cSystemController.Destroy();
-  LOG (INFO) << BOLDBLUE << "@@@ End of CMSIT miniDAQ @@@" << RESET;
+  LOG (INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
 
   return 0;
 }

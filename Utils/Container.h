@@ -17,6 +17,7 @@
 #include <map>
 #include "../Utils/Exception.h"
 #include "../Utils/ChannelGroupHandler.h"
+#include <typeinfo>
 
 class ChannelContainerBase;
 template <typename T>
@@ -32,8 +33,8 @@ public:
 	{;}
 
 	virtual ~BaseContainer() {;}
-	int getId   (void) {return id_;}
-	int getIndex(void) {return index_;}
+	int getId   (void) const {return id_;}
+	int getIndex(void) const {return index_;}
 	virtual void     cleanDataStored              (void) = 0;
 
 	void setIndex(int index) {index_ = index;}
@@ -60,6 +61,7 @@ public:
 		for(auto object : *this)
 		{
 			delete object;
+			object = nullptr;
 		}
 		this->clear();
 		idObjectMap_.clear();
@@ -193,6 +195,11 @@ public:
 			return false;
 		}
 		else return true;
+
+		/* const std::type_info& containerTypeId = typeid(container_); */
+		/* const std::type_info& templateTypeId = typeid(T*); */
+
+		/* return (containerTypeId.hash_code() == templateTypeId.hash_code()); */
 	}
 
 	void cleanDataStored() override
@@ -240,7 +247,7 @@ private:
 class DetectorContainer : public Container<BoardContainer>
 {
 public:
-	DetectorContainer(int id=-1) : Container<BoardContainer>(id){}
+	DetectorContainer(int id=0) : Container<BoardContainer>(id){}
 	template <class T>
 	T*              addBoardContainer(int id, T* board){return static_cast<T*>(Container<BoardContainer>::addObject(id, board));}
 	BoardContainer* addBoardContainer(int id)                {return Container<BoardContainer>::addObject(id, new BoardContainer(id));}

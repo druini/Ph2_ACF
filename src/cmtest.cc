@@ -125,10 +125,10 @@ int main ( int argc, char* argv[] )
     
     // Set Vcth to pedestal, or overload with manual setting
     std::vector<double_t> cNoiseV;
-    ThresholdVisitor cVisitor (cTool.fChipInterface, 0);
+    ThresholdVisitor cVisitor (cTool.fReadoutChipInterface, 0);
     Module* cFe = cPedeNoise.fBoardVector.at (0)->fModuleVector.at (0);
     int i = 0;
-    for (auto cCbc : cFe->fChipVector)
+    for (auto cCbc : cFe->fReadoutChipVector)
     {
 	uint16_t cPedestal = round (cPedeNoise.getPedestal (cCbc) );
 	double   cNoise    = cPedeNoise.getNoise (cCbc);

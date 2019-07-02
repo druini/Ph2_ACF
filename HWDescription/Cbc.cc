@@ -23,21 +23,19 @@
 namespace Ph2_HwDescription {
     // C'tors with object FE Description
 
-    Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : Chip ( pFeDesc, pCbcId)
+    Cbc::Cbc ( const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename ) : ReadoutChip ( pFeDesc, pCbcId )
      {
+        fMaxRegValue=255; // 8 bit registers in CBC
         fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
-        fChipMask = std::vector<uint8_t>(NCHANNELS%8 == 0 ? NCHANNELS/8 : NCHANNELS/8 + 1,0);
         loadfRegMap ( filename );
         setFrontEndType ( FrontEndType::CBC3);
     }
 
     // C'tors which take BeId, FMCId, FeID, CbcId
-
-    Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename ) : Chip ( pBeId, pFMCId, pFeId, pCbcId)
-
+    Cbc::Cbc ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename ) : ReadoutChip ( pBeId, pFMCId, pFeId, pCbcId)
     {
+        fMaxRegValue=255; // 8 bit registers in CBC
         fChipOriginalMask = new ChannelGroup<NCHANNELS,1>;
-        fChipMask = std::vector<uint8_t>(NCHANNELS%8 == 0 ? NCHANNELS/8 : NCHANNELS/8 + 1,0);
         loadfRegMap ( filename );
         setFrontEndType ( FrontEndType::CBC3);
     }
@@ -57,6 +55,7 @@ namespace Ph2_HwDescription {
             // fhasMaskedChannels = false;
             while ( getline ( file, line ) )
             {
+                //std::cout<< __PRETTY_FUNCTION__ << " " << line << std::endl;
                 if ( line.find_first_not_of ( " \t" ) == std::string::npos )
                 {
                     fCommentMap[cLineCounter] = line;
@@ -82,7 +81,6 @@ namespace Ph2_HwDescription {
                     fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
 
                     if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
-                        fChipMask[fRegItem.fAddress - 0x20] = fRegItem.fValue;
                         // if(!fhasMaskedChannels && fRegItem.fValue!=0xFF) fhasMaskedChannels=true;
                         //disable masked channels only
                         if(fRegItem.fValue!=0xFF)
@@ -98,6 +96,7 @@ namespace Ph2_HwDescription {
                     }
 
                     fRegMap[fName] = fRegItem;
+                    //std::cout << __PRETTY_FUNCTION__ << +fRegItem.fValue << std::endl;
                     cLineCounter++;
                 }
             }
@@ -111,39 +110,8 @@ namespace Ph2_HwDescription {
             exit (1);
         }
 
-        //for (auto cItem : fRegMap)
-        //LOG (DEBUG) << cItem.first;
     }
-
-    uint16_t Cbc::getReg ( const std::string& pReg ) const
-    {
-        ChipRegMap::const_iterator i = fRegMap.find ( pReg );
-
-        if ( i == fRegMap.end() )
-        {
-            LOG (INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg ;
-            return 0;
-        }
-        else
-            return i->second.fValue & 0xFF;
-    }
-
-
-    void Cbc::setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg )
-    {
-        ChipRegMap::iterator i = fRegMap.find ( pReg );
-
-        if ( i == fRegMap.end() )
-            LOG (INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg ;
-        if ( psetValue > 0xFF)
-            LOG (ERROR) << "Cbc register are 8 bits, impossible to write " << psetValue << " on registed " << pReg ;
-        else
-            i->second.fValue = psetValue & 0xFF;
-    }
-
-
     //Write RegValues in a file
-
     void Cbc::saveRegMap ( const std::string& filename )
     {
 

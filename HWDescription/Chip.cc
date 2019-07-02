@@ -24,26 +24,25 @@ namespace Ph2_HwDescription
 {
     // C'tors with object FE Description
 
-    Chip::Chip (const FrontEndDescription& pFeDesc, uint8_t pChipId)
+    Chip::Chip (const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue)
     : FrontEndDescription(pFeDesc)
-    , ChipContainer      (pChipId)
     , fChipId            (pChipId)
+    , fMaxRegValue       (pMaxRegValue)
     {
     }
 
     // C'tors which take BeId, FMCId, FeID, ChipId
 
-    Chip::Chip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId)
+    Chip::Chip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId , uint16_t pMaxRegValue)
     : FrontEndDescription(pBeId, pFMCId, pFeId)
-    , ChipContainer      (pChipId)
     , fChipId            (pChipId )
+    , fMaxRegValue       (pMaxRegValue)
     {
     }
 
     // Copy C'tor
     Chip::Chip (const Chip& chipObj)
     : FrontEndDescription(chipObj)
-    , ChipContainer      (chipObj.fChipId)
     , fChipId            (chipObj.fChipId)
     , fRegMap            (chipObj.fRegMap)
     ,fCommentMap         (chipObj.fCommentMap)
@@ -54,7 +53,8 @@ namespace Ph2_HwDescription
     // D'Tor
     Chip::~Chip()
     {
-        delete fChipOriginalMask;
+        fRegMap.clear();
+        fCommentMap.clear();
     }
 
     ChipRegItem Chip::getRegItem ( const std::string& pReg )
@@ -65,21 +65,45 @@ namespace Ph2_HwDescription
         if ( i != std::end ( fRegMap ) ) return ( i->second );
         else
         {
-            LOG (ERROR) << "Error, no Register " << pReg << " found in the RegisterMap of CBC " << +fChipId << "!" ;
+            LOG (ERROR) << "Error, no register " << pReg << " found in the RegisterMap of Chip " << +fChipId << "!" ;
             throw Exception ( "Chip: no matching register found" );
             return cItem;
         }
     }
-
-
-
-
-    bool ChipComparer::operator() ( const Chip& cbc1, const Chip& cbc2 ) const
+    uint16_t Chip::getReg ( const std::string& pReg ) const
     {
-        if ( cbc1.getBeId() != cbc2.getBeId() ) return cbc1.getBeId() < cbc2.getBeId();
-        else if ( cbc1.getFMCId() != cbc2.getFMCId() ) return cbc1.getFMCId() < cbc2.getFMCId();
-        else if ( cbc1.getFeId() != cbc2.getFeId() ) return cbc1.getFeId() < cbc2.getFeId();
-        else return cbc1.getChipId() < cbc2.getChipId();
+        ChipRegMap::const_iterator i = fRegMap.find ( pReg );
+
+        if ( i == fRegMap.end() )
+        {
+            LOG (INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg ;
+            return 0;
+        }
+        else
+            return i->second.fValue & 0xFF;
+    }
+    void Chip::setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg )
+    {
+        ChipRegMap::iterator i = fRegMap.find ( pReg );
+
+        if ( i == fRegMap.end() )
+            LOG (INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg ;
+        if ( psetValue > fMaxRegValue)
+            LOG (ERROR) << "Chip register are at most " << fMaxRegValue << " bits, impossible to write " << psetValue << " on registed " << pReg ;
+        else
+        {
+            i->second.fValue = psetValue & fMaxRegValue;
+            i->second.fPrmptCfg = pPrmptCfg;
+            LOG (DEBUG) << "Setting register " << pReg << " to " << psetValue << " [ " << +i->second.fValue << " ] : Max value is " << +fMaxRegValue << "\n";
+        }
+    }
+
+    bool ChipComparer::operator() ( const Chip& chip1, const Chip& chip2 ) const
+    {
+        if ( chip1.getBeId() != chip2.getBeId() ) return chip1.getBeId() < chip2.getBeId();
+        else if ( chip1.getFMCId() != chip2.getFMCId() ) return chip1.getFMCId() < chip2.getFMCId();
+        else if ( chip1.getFeId() != chip2.getFeId() ) return chip1.getFeId() < chip2.getFeId();
+        else return chip1.getChipId() < chip2.getChipId();
     }
 
 

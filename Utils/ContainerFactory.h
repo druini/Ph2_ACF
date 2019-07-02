@@ -26,19 +26,18 @@ public:
 	ContainerFactory(){;}
 	~ContainerFactory(){;}
 
-	void copyStructure(DetectorContainer& original, DetectorDataContainer& copy);
-
+	void copyStructure(const DetectorContainer& original, DetectorDataContainer& copy);
 
 	template <typename T>
-	void print(DetectorDataContainer& detector)
+	void print(const DetectorDataContainer& detector)
 	{
-		for(std::vector<BoardDataContainer*>::iterator board = detector.begin(); board != detector.end(); board++)
+		for(const BoardContainer *board : detector)
 		{
 			std::cout << "Board" << std::endl;
-			for(ModuleDataContainer* module : **board)
+			for(const ModuleDataContainer* module : *board)
 			{
 				std::cout << "Module" << std::endl;
-				for(ChipDataContainer* chip : *module)
+				for(const ChipDataContainer* chip : *module)
 				{
 					std::cout << "Chip" << std::endl;
 					for(typename ChannelDataContainer<T>::iterator channel=chip->begin<T>(); channel!=chip->end<T>(); channel++)
@@ -54,41 +53,19 @@ public:
 		}
 	}
 
-	// template<typename T>
-	// void copyAndInitStructure(DetectorContainer& original, DetectorContainer& copy)
-	// {
-	// 	copy.initialize<T>();
-	// 	for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
-	// 	{
-	// 		BoardContainer* copyBoard = copy.addBoardContainer((*board)->getId());
-	// 		copy.back()->initialize<T>();
-	// 		for(ModuleContainer* module : **board)
-	// 		{
-	// 			ModuleContainer* copyModule = copyBoard->addModuleContainer(module->getId());
-	// 			copyBoard->back()->initialize<T>();
-	// 			for(ChipContainer* chip : *module)
-	// 			{
-	// 				copyModule->addChipContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
-	// 				copyModule->back()->initialize<T>();
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-
 	template<typename T, typename SC, typename SM, typename SB, typename SD>
-	void copyAndInitStructure(DetectorContainer& original, DetectorDataContainer& copy)
+	void copyAndInitStructure(const DetectorContainer& original, DetectorDataContainer& copy)
 	{
 		copy.initialize<SD,SB>();
-		for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
+		for(const BoardContainer *board : original)
 		{
-			BoardDataContainer* copyBoard = copy.addBoardDataContainer((*board)->getId());
+			BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
 			copy.back()->initialize<SB,SM>();
-			for(ModuleContainer* module : **board)
+			for(const ModuleContainer* module : *board)
 			{
 				ModuleDataContainer* copyModule = copyBoard->addModuleDataContainer(module->getId());
 				copyBoard->back()->initialize<SM,SC>();
-				for(ChipContainer* chip : *module)
+				for(const ChipContainer* chip : *module)
 				{
 					copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
 					copyModule->back()->initialize<SC,T>();
@@ -98,14 +75,14 @@ public:
 	}
 
 	template<typename T>
-	void copyAndInitStructure(DetectorContainer& original, DetectorDataContainer& copy)
+	void copyAndInitStructure(const DetectorContainer& original, DetectorDataContainer& copy)
 	{
 		copyAndInitStructure<T,T,T,T,T>(original, copy);
 	}
 
 
 	template<typename T, typename SC>
-	void copyAndInitStructure(DetectorContainer& original, DetectorDataContainer& copy)
+	void copyAndInitStructure(const DetectorContainer& original, DetectorDataContainer& copy)
 	{
 		copyAndInitStructure<T,SC,SC,SC,SC>(original, copy);
 	}
@@ -113,18 +90,18 @@ public:
 
 
 	template<typename T, typename SC, typename SM, typename SB, typename SD>
-	void copyAndInitStructure(DetectorContainer& original, DetectorDataContainer& copy, T& channel, SC& chipSummay, SM& moduleSummary, SB& boardSummary, SD& detectorSummary)
+	void copyAndInitStructure(const DetectorContainer& original, DetectorDataContainer& copy, T& channel, SC& chipSummay, SM& moduleSummary, SB& boardSummary, SD& detectorSummary)
 	{
 		static_cast<DetectorDataContainer&>(copy).initialize<SD,SB>(detectorSummary);
-		for(std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
+		for(const BoardContainer *board : original)
 		{
-			BoardDataContainer* copyBoard = copy.addBoardDataContainer((*board)->getId());
+			BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
 			static_cast<BoardDataContainer*>(copy.back())->initialize<SB,SM>(boardSummary);
-			for(ModuleContainer* module : **board)
+			for(const ModuleContainer* module : *board)
 			{
 				ModuleDataContainer* copyModule = copyBoard->addModuleDataContainer(module->getId());
 				static_cast<ModuleDataContainer*>(copyBoard->back())->initialize<SM,SC>(moduleSummary);
-				for(ChipContainer* chip : *module)
+				for(const ChipContainer* chip : *module)
 				{
 					copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
 					static_cast<ChipDataContainer*>(copyModule->back())->initialize<SC,T>(chipSummay,channel);
@@ -134,69 +111,17 @@ public:
 	}
 
 	template<typename T>
-	void copyAndInitStructure(DetectorContainer& original, DetectorDataContainer& copy, T& channel)
+	void copyAndInitStructure(const DetectorContainer& original, DetectorDataContainer& copy, T& channel)
 	{
 		copyAndInitStructure<T,T,T,T,T>(original, copy, channel, channel, channel, channel, channel);
 	}
 
 
 	template<typename T, typename S>
-	void copyAndInitStructure(DetectorContainer& original, DetectorDataContainer& copy, T& channel, S& summay)
+	void copyAndInitStructure(const DetectorContainer& original, DetectorDataContainer& copy, T& channel, S& summay)
 	{
 		copyAndInitStructure<T,S,S,S,S>(original, copy, channel, summay, summay, summay, summay);
 	}
-
-	//EXAMPLES
-	//	void buildDetectorUsingFile(DetectorContainer& detector)
-	//	{
-	//		detector.addBoardContainer(1);
-	//		//for(auto& board : theStripDetector)
-	//		for(std::vector<BoardContainer*>::iterator board = detector.begin(); board != detector.end(); board++)
-	//		{
-	//			(*board)->addModuleContainer(12);
-	//			std::cout << "Board" << std::endl;
-	//			for(ModuleContainer* module : **board)
-	//			{
-	//				std::cout << "Module" << std::endl;
-	//				module->addChipContainer(7, 10);
-	//				for(ChipContainer* chip : *module)
-	//				{
-	//					chip->initialize<TrimAndMask>();
-	//					std::cout << "Chip" << std::endl;
-	//					int i = 0;
-	//					for(ChannelContainer<TrimAndMask>::iterator channel =  chip->begin<TrimAndMask>(); channel != chip->end<TrimAndMask>(); channel++, i++)
-	//					//TrimAndMask& trim = *(chip.begin<TrimAndMask>());
-	//					//for(auto& channel : chip)
-	//					{
-	//						channel->trim  = i*0.1;
-	//						channel->mask  = i;
-	//						channel->trim2 = i*0.2;
-	//						channel->print();
-	//					}
-	//				}
-	//			}
-	//		}
-	//	}
-
-	//	void buildDetectorUsingFile(Detector& detector)
-	//	{
-	//		detector.addBoard(1);
-	//		//for(auto& board : theStripDetector)
-	//		for(std::vector<Board>::iterator board = detector.begin(); board != detector.end(); board++)
-	//		{
-	//			(*board).addModule(12);
-	//			std::cout << "Board" << std::endl;
-	//			for(Module& module : (*board))
-	//			{
-	//				module.addChip<Chip>(7, 6);
-	//				std::cout << "Module" << std::endl;
-	//				for(Chip* chip : module)
-	//				{
-	//					std::cout << "Chip" << std::endl;
-	//				}
-	//			}
-	//		}
-	//	}
 
 };
 

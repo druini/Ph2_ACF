@@ -1,4 +1,5 @@
 #include "Tool.h"
+#include "TH1.h"
 #include <TSystem.h>
 #include "../HWDescription/Chip.h"
 #include "../Utils/ObjectStreamer.h"
@@ -56,6 +57,7 @@ Tool::Tool (const Tool& pTool)
 	fDetectorContainer           = pTool.fDetectorContainer;
 	fBeBoardInterface            = pTool.fBeBoardInterface;
 	fChipInterface               = pTool.fChipInterface;
+    fReadoutChipInterface        = pTool.fReadoutChipInterface;
 	fBoardVector                 = pTool.fBoardVector;
 	fBeBoardFWMap                = pTool.fBeBoardFWMap;
 	fSettingsMap                 = pTool.fSettingsMap;
@@ -92,6 +94,7 @@ void Tool::Inherit (Tool* pTool)
 	fDetectorContainer           = pTool->fDetectorContainer;//IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
 	fBeBoardInterface            = pTool->fBeBoardInterface;
 	fChipInterface               = pTool->fChipInterface;
+	fReadoutChipInterface        = pTool->fReadoutChipInterface;
 	fBoardVector                 = pTool->fBoardVector;
 	fBeBoardFWMap                = pTool->fBeBoardFWMap;
 	fSettingsMap                 = pTool->fSettingsMap;
@@ -119,15 +122,16 @@ void Tool::Inherit (Tool* pTool)
 
 void Tool::Inherit (SystemController* pSystemController)
 {
-	fDetectorContainer = pSystemController->fDetectorContainer; //IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
-	fBeBoardInterface  = pSystemController->fBeBoardInterface;
-	fChipInterface     = pSystemController->fChipInterface;
-	fBoardVector       = pSystemController->fBoardVector;
-	fBeBoardFWMap      = pSystemController->fBeBoardFWMap;
-	fSettingsMap       = pSystemController->fSettingsMap;
-	fFileHandler       = pSystemController->fFileHandler;
-	fNetworkStreamer   = pSystemController->fNetworkStreamer;
-	fStreamerEnabled   = pSystemController->fStreamerEnabled;
+	fDetectorContainer    = pSystemController->fDetectorContainer; //IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
+	fBeBoardInterface     = pSystemController->fBeBoardInterface;
+	fReadoutChipInterface = pSystemController->fReadoutChipInterface;
+	fChipInterface        = pSystemController->fChipInterface;
+	fBoardVector          = pSystemController->fBoardVector;
+	fBeBoardFWMap         = pSystemController->fBeBoardFWMap;
+	fSettingsMap          = pSystemController->fSettingsMap;
+	fFileHandler          = pSystemController->fFileHandler;
+	fNetworkStreamer      = pSystemController->fNetworkStreamer;
+	fStreamerEnabled      = pSystemController->fStreamerEnabled;
 }
 
 void Tool::resetPointers()
@@ -202,6 +206,9 @@ void Tool::SoftDestroy()
 
 void Tool::bookHistogram ( Chip* pChip, std::string pName, TObject* pObject )
 {
+	TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
+	if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
+
 	// find or create map<string,TOBject> for specific CBC
 	auto cChipHistMap = fChipHistMap.find ( pChip );
 
@@ -230,6 +237,9 @@ void Tool::bookHistogram ( Chip* pChip, std::string pName, TObject* pObject )
 
 void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject )
 {
+	TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
+	if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
+
 	// find or create map<string,TOBject> for specific CBC
 	auto cModuleHistMap = fModuleHistMap.find ( pModule );
 
@@ -257,6 +267,9 @@ void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject 
 
 void Tool::bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObject )
 {
+	TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
+	if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
+
 	// find or create map<string,TOBject> for specific CBC
 	auto cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
 
@@ -406,11 +419,17 @@ void Tool::SaveResults()
 		cCanvas.second->SaveAs ( cPdfName.c_str() );
 	}
 
-	//fResultFile->Write();
-	//fResultFile->Close();
+	// fResultFile->Write();
+	// fResultFile->Close();
 
 	LOG (INFO) << "Results saved!" ;
 }
+
+void Tool::WriteRootFile()
+{
+	fResultFile->Write();
+}
+
 
 void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool pDate )
 {
@@ -569,7 +588,7 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
 	{
 		for (auto cFe : cBoard->fModuleVector)
 		{
-			for (auto cChip : cFe->fChipVector)
+			for (auto cChip : cFe->fReadoutChipVector)
 			{
 				//Fabio: CBC specific but not used by common scans - BEGIN
 				//first, get the Amux Value
@@ -596,7 +615,7 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
 					LOG (DEBUG) << BOLDBLUE << "Read original Amux Value to be: " << std::bitset<8> (cOriginalAmuxValue) << " and changed to " << std::bitset<8> (cTPRegValue) << " - the TP is bit 6!" RESET;
 				}
 
-				this->fChipInterface->WriteChipMultReg (cChip, cRegVec);
+				this->fReadoutChipInterface->WriteChipMultReg (cChip, cRegVec);
 				//Fabio: CBC specific but not used by common scans - END
 
 			}
@@ -611,7 +630,7 @@ void Tool::enableTestPulse(bool enableTP)
 	{
 		for (auto cFe : cBoard->fModuleVector)
 		{
-			for (auto cChip : cFe->fChipVector)
+			for (auto cChip : cFe->fReadoutChipVector)
 			{
 				switch(cChip->getFrontEndType())
 				{
@@ -625,7 +644,7 @@ void Tool::enableTestPulse(bool enableTP)
 					if (enableTP) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
 					else cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
 
-					this->fChipInterface->WriteChipReg ( cChip, "MiscTestPulseCtrl&AnalogMux",  cTPRegValue );
+					this->fReadoutChipInterface->WriteChipReg ( cChip, "MiscTestPulseCtrl&AnalogMux",  cTPRegValue );
 					break;
 				}
 
@@ -654,7 +673,7 @@ void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
 	case FrontEndType::CBC3 :
 	{
 		uint8_t cRegValue =  to_reg ( 0, pTestGroup );
-		this->fChipInterface->WriteChipReg ( cChip, "TestPulseDel&ChanGroup",  cRegValue );
+		this->fReadoutChipInterface->WriteChipReg ( cChip, "TestPulseDel&ChanGroup",  cRegValue );
 		break;
 	}
 
@@ -725,7 +744,7 @@ std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pChip)
 	for( int i = 0 ; i <= 14 ; i++ )
 	{
 		TString cRegName = Form ( "Bend%d", i  );
-		uint8_t cRegValue = fChipInterface->ReadChipReg (pChip, cRegName.Data() );
+		uint8_t cRegValue = fReadoutChipInterface->ReadChipReg (pChip, cRegName.Data() );
 		//LOG (INFO) << BOLDGREEN << "Reading register " << cRegName.Data() << " - value of 0x" << std::hex <<  +cRegValue << " found [LUT entry for bend of " << cBend << " strips]" <<  RESET;
 
 		uint8_t cLUTvalue_0 = (cRegValue >> 0) & 0x0F;
@@ -783,7 +802,7 @@ std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pChip)
 //         }
 //     }
 
-//     fChipInterface->WriteChipMultReg ( pChip , cRegVec );
+//     fReadoutChipInterface->WriteChipMultReg ( pChip , cRegVec );
 
 //     return;
 // }
@@ -840,7 +859,7 @@ void Tool::unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair)
 			cOutput += cOut.Data();
 		}
 		//LOG (INFO) << GREEN << "\t Writing " << std::bitset<8> (cRegValue) <<  " to " << cMasked.first << " to UNMASK channels for stub sweep : " << cOutput.c_str() << RESET ;
-		fChipInterface->WriteChipReg ( cChip, cMasked.first ,  cRegValue  );
+		fReadoutChipInterface->WriteChipReg ( cChip, cMasked.first ,  cRegValue  );
 	}
 	//Fabio: CBC specific but not used by common scans - END
 
@@ -848,12 +867,12 @@ void Tool::unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair)
 
 
 // Two dimensional dac scan
-void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector)
+void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, uint32_t numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector, int32_t numberOfEventsPerBurst)
 {
 
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
-		scanBeBoardDacDac(boardIndex, dac1Name, dac1List, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector);
+		scanBeBoardDacDac(boardIndex, dac1Name, dac1List, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector, numberOfEventsPerBurst);
 	}
 
 	return;
@@ -861,7 +880,7 @@ void Tool::scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &
 
 
 // Two dimensional dac scan per BeBoard
-void Tool::scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector)
+void Tool::scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, uint32_t numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector, int32_t numberOfEventsPerBurst)
 {
 
 	if(dac1List.size() != detectorContainerVectorOfVector.size())
@@ -873,7 +892,7 @@ void Tool::scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, c
 	for(size_t dacIt = 0; dacIt<dac1List.size(); ++dacIt)
 	{
 		setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)), dac1Name, dac1List[dacIt]);
-		scanBeBoardDac(boardIndex, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector[dacIt]);
+		scanBeBoardDac(boardIndex, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector[dacIt],numberOfEventsPerBurst);
 	}
 
 	return;
@@ -883,12 +902,12 @@ void Tool::scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, c
 
 
 // One dimensional dac scan
-void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorDataContainer*> detectorContainerVector)
+void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorDataContainer*> detectorContainerVector, int32_t numberOfEventsPerBurst)
 {
 
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
-		scanBeBoardDac(boardIndex, dacName, dacList, numberOfEvents, detectorContainerVector);
+		scanBeBoardDac(boardIndex, dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst);
 
 	}
 
@@ -897,7 +916,7 @@ void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacL
 
 
 // // One dimensional dac scan per BeBoard
-// void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorContainer*> detectorContainerVector)
+// void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorContainer*> detectorContainerVector)
 // {
 // 	if(dacList.size() != detectorContainerVector.size())
 // 	{
@@ -915,7 +934,7 @@ void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacL
 // }
 
 // bit wise scan
-void Tool::bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy)
+void Tool::bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy)
 {
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
@@ -926,16 +945,17 @@ void Tool::bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvent
 
 
 // bit wise scan per BeBoard
-void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy)
+void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy)
 {
 
 	DetectorDataContainer *outputDataContainer = fDetectorDataContainer;
 
 	float globalOccupancy = 0.;
-	Chip *cChip = static_cast<BeBoard*>(fDetectorContainer->at(boardIndex))->fModuleVector.at(0)->fChipVector.at(0); //assumption: one BeBoard has only one type of chip;
+	ReadoutChip *cChip = static_cast<BeBoard*>(fDetectorContainer->at(boardIndex))->fModuleVector.at(0)->fReadoutChipVector.at(0); //assumption: one BeBoard has only one type of chip;
 
 	bool localDAC = cChip->isDACLocal(dacName);
 	uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
+    LOG (INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
 	bool occupanyDirectlyProportionalToDAC;
 
 	ContainerFactory   theDetectorFactory;
@@ -992,7 +1012,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, c
 			{
 				if(localDAC)
 				{
-					for(uint8_t iChannel=0; iChannel<cChip->size(); ++iChannel)
+					for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 					{
 
 						if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue
@@ -1024,7 +1044,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, c
 			{
 				if(localDAC)
 				{
-					for(uint8_t iChannel=0; iChannel<cChip->size(); ++iChannel)
+					for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 					{
 						if( currentStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
 						{
@@ -1070,11 +1090,11 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, c
 
 
 // set dac and measure occupancy
-void Tool::setDacAndMeasureData(const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents)
+void Tool::setDacAndMeasureData(const std::string &dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
 	for(uint16_t boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
-		setDacAndMeasureBeBoardData(boardIndex, dacName, dacValue, numberOfEvents);
+		setDacAndMeasureBeBoardData(boardIndex, dacName, dacValue, numberOfEvents, numberOfEventsPerBurst);
 	}
 
 	return;
@@ -1082,20 +1102,20 @@ void Tool::setDacAndMeasureData(const std::string &dacName, const uint16_t &dacV
 
 
 // set dac and measure occupancy per BeBoard
-void Tool::setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string &dacName, const uint16_t &dacValue, const uint16_t &numberOfEvents)
+void Tool::setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string &dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
 	setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)), dacName, dacValue);
-	measureBeBoardData(boardIndex, numberOfEvents);
+	measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 	return;
 }
 
 // measure occupancy
-void Tool::measureData(const uint16_t &numberOfEvents)
+void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
-		measureBeBoardData(boardIndex, numberOfEvents);
-		if(fStreamerEnabled) fObjectStream->streamAndSendBoard(fDetectorDataContainer->at(boardIndex), fNetworkStreamer);
+		measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+		// if(fStreamerEnabled) fObjectStream->streamAndSendBoard(fDetectorDataContainer->at(boardIndex), fNetworkStreamer);
 	}
 
 }
@@ -1124,11 +1144,11 @@ void Tool::measureData(const uint16_t &numberOfEvents)
 // 					{
 // 						if(fMaskChannelsFromOtherGroups)
 // 						{
-// 							fChipInterface->maskChannelsGroup(static_cast<Chip*>(cChip), group);
+// 							fChipInterface->maskChannelsGroup(static_cast<ReadoutChip*>(cChip), group);
 // 						}
 // 						if(fTestPulse)
 // 						{
-// 							fChipInterface->setInjectionSchema(static_cast<Chip*>(cChip), group);
+// 							fChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), group);
 // 						}
 // 					}
 // 				}
@@ -1143,7 +1163,7 @@ void Tool::measureData(const uint16_t &numberOfEvents)
 // 			{
 // 				for ( auto cChip : *cFe )
 // 				{
-// 					fChipInterface->ConfigureChipOriginalMask ( static_cast<Chip*>(cChip) );
+// 					fChipInterface->ConfigureChipOriginalMask ( static_cast<ReadoutChip*>(cChip) );
 // 				}
 // 			}
 // 		}
@@ -1180,27 +1200,30 @@ public:
 	ScanBase(Tool *theTool) : fTool(theTool) {;}
 	virtual ~ScanBase() {;}
 
-	virtual void makeScan() = 0;
+	virtual void operator()() = 0;
 	void setGroup(const ChannelGroupBase *cTestChannelGroup) {fTestChannelGroup = cTestChannelGroup;}
 	void setBoardId(uint16_t boardIndex) {fBoardIndex = boardIndex;}
-	void setNumberOfEvents(uint16_t numberOfEvents) {fNumberOfEvents = numberOfEvents;}
+	void setNumberOfEvents(uint32_t numberOfEvents) {fNumberOfEvents = numberOfEvents;}
+	void setNumberOfEventsPerBurst(int32_t numberOfEventsPerBurst) {fNumberOfEventsPerBurst = numberOfEventsPerBurst;}
 
 	void setDetectorContainer(DetectorContainer *detectorContainer) {fDetectorContainer = detectorContainer;}
 
 protected:
 	uint16_t fNumberOfEvents;
-	uint16_t fBoardIndex;
+	int32_t fNumberOfEventsPerBurst {-1};
+	uint32_t fBoardIndex;
 	const ChannelGroupBase *fTestChannelGroup;
 	Tool *fTool;
 	DetectorContainer *fDetectorContainer;
 };
 
-void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, const uint16_t numberOfEvents, ScanBase *groupScan)
+void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase *groupScan)
 {
 
 	groupScan->setBoardId(boardIndex);
 	groupScan->setNumberOfEvents(numberOfEvents);
 	groupScan->setDetectorContainer(fDetectorContainer);
+	groupScan->setNumberOfEventsPerBurst(numberOfEventsPerBurst);
 
 	if(fChannelGroupHandler == nullptr)
 	{
@@ -1219,18 +1242,18 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, const uint16_t numberOf
 	                {
 	                    if(fMaskChannelsFromOtherGroups)
 	                    {
-	                        fChipInterface->maskChannelsGroup(static_cast<Chip*>(cChip), group);
+	                        fReadoutChipInterface->maskChannelsGroup(static_cast<ReadoutChip*>(cChip), group);
 	                    }
 	                    if(fTestPulse)
 	                    {
-	                        fChipInterface->setInjectionSchema(static_cast<Chip*>(cChip), group);
+	                        fReadoutChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), group);
 	                    }
 	                }
 	            }
 	        }
 
 	        groupScan->setGroup(group);
-	        groupScan->makeScan();
+	        (*groupScan)();
 	    }
 
 	    if(fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
@@ -1239,7 +1262,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, const uint16_t numberOf
 	        {
 	            for ( auto cChip : *cFe )
 	            {
-	                fChipInterface->ConfigureChipOriginalMask ( static_cast<Chip*>(cChip) );
+	                fReadoutChipInterface->ConfigureChipOriginalMask ( static_cast<ReadoutChip*>(cChip) );
 	            }
 	        }
 	    }
@@ -1247,7 +1270,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, const uint16_t numberOf
 	else
 	{
 	    groupScan->setGroup(fChannelGroupHandler->allChannelGroup());
-	    groupScan->makeScan();
+	    (*groupScan)();
 	}
 	//It need to be moved into the place the loop on boards is done
 	// fDetectorDataContainer->at(boardIndex)->normalizeAndAverageContainers(fDetectorContainer->at(boardIndex), fChannelGroupHandler->allChannelGroup(), numberOfEvents);
@@ -1262,13 +1285,39 @@ public:
 	MeasureBeBoardDataPerGroup(Tool *theTool) : ScanBase(theTool) {;}
 	~MeasureBeBoardDataPerGroup() {;}
 
-	void makeScan() override
+	void operator()() override
 	{
-		fTool->ReadNEvents ( static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)), fNumberOfEvents );
-		// Loop over Events from this Acquisition
-		const std::vector<Event*>& events = fTool->GetEvents ( static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)) );
-		for ( auto& event : events )
-			event->fillDataContainer((fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
+		uint16_t burstNumbers;
+		uint32_t lastBurstNumberOfEvents;
+		if(fNumberOfEventsPerBurst<=0)
+		{
+			burstNumbers = 1;
+			lastBurstNumberOfEvents = fNumberOfEvents;
+		}
+		else 
+		{
+			burstNumbers            = fNumberOfEvents/fNumberOfEventsPerBurst;
+			lastBurstNumberOfEvents = fNumberOfEventsPerBurst;
+			if (fNumberOfEvents%fNumberOfEventsPerBurst > 0)
+			{
+				++burstNumbers;
+				lastBurstNumberOfEvents = fNumberOfEvents%fNumberOfEventsPerBurst;
+			}
+		}
+
+		while(burstNumbers>0)
+		{
+			uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
+			if(burstNumbers==1) currentNumberOfEvents = lastBurstNumberOfEvents;
+			
+			fTool->ReadNEvents ( static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)), currentNumberOfEvents );
+			// Loop over Events from this Acquisition
+			const std::vector<Event*>& events = fTool->GetEvents ( static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)) );
+			for ( auto& event : events )
+				event->fillDataContainer((fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
+			--burstNumbers;
+		}
+
 	}
 
 	void setDataContainer(DetectorDataContainer *detectorDataContainer) {fDetectorDataContainer = detectorDataContainer;}
@@ -1278,12 +1327,12 @@ private:
 
 };
 
-void Tool::measureBeBoardData(uint16_t boardIndex, const uint16_t numberOfEvents)
+void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
 	MeasureBeBoardDataPerGroup theScan(this);
 	theScan.setDataContainer(fDetectorDataContainer);
 
-    doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, &theScan);
+    doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
 
 	fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
 
@@ -1298,13 +1347,13 @@ public:
 	ScanBeBoardDacPerGroup(Tool *theTool) : MeasureBeBoardDataPerGroup(theTool) {;}
 	~ScanBeBoardDacPerGroup() {;}
 
-	void makeScan() override
+	void operator()() override
 	{
 		for(size_t dacIt = 0; dacIt<fDacList->size(); ++dacIt)
 		{
 			fTool->setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)), fDacName, fDacList->at(dacIt));
 			setDataContainer(fDetectorDataContainerVector->at(dacIt));
-			MeasureBeBoardDataPerGroup::makeScan();
+			MeasureBeBoardDataPerGroup::operator()();
 		}
 	}
 
@@ -1321,7 +1370,7 @@ private:
 
 
 // One dimensional dac scan per BeBoard
-void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents, std::vector<DetectorDataContainer*> &detectorContainerVector)
+void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorDataContainer*> &detectorContainerVector, int32_t numberOfEventsPerBurst)
 {
 
 	if(dacList.size() != detectorContainerVector.size())
@@ -1335,7 +1384,7 @@ void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const
 	theScan.setDacName(dacName);
 	theScan.setDacList(&dacList);
 
-    doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, &theScan);
+    doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
 
     for(auto container : detectorContainerVector)
 		container->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
@@ -1355,7 +1404,7 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacNam
 		{
 			// float cOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(globalDACContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->summary_)->theSummary_.fOccupancy;
 			// Summary<RegisterValue,EmptyContainer>* tmp = static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex))->summary_;
-			fChipInterface->WriteChipReg ( static_cast<Chip*>(cChip), dacName, static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue);
+			fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), dacName, static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue);
 		}
 	}
 	return;
@@ -1369,14 +1418,14 @@ void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName
 		for ( auto cChip : *cFe )
 		{
 			std::vector<uint16_t> dacVector ;//= dacList.at(cFe->getModuleId()).at(cChip->getChipId());
-			fChipInterface->WriteChipAllLocalReg ( static_cast<Chip*>(cChip), dacName, *globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId()));
+			fReadoutChipInterface->WriteChipAllLocalReg ( static_cast<ReadoutChip*>(cChip), dacName, *globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId()));
 		}
 	}
 	return;
 }
 
 //Set same global DAC for all CBCs
-void Tool::setSameGlobalDac(const std::string &dacName, const uint16_t &dacValue){
+void Tool::setSameGlobalDac(const std::string &dacName, const uint16_t dacValue){
 
 	for (auto& cBoard : fBoardVector)
 	{
@@ -1388,20 +1437,20 @@ void Tool::setSameGlobalDac(const std::string &dacName, const uint16_t &dacValue
 
 
 //Set same global DAC for all CBCs in the BeBoard
-void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue)
+void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
 {
 	for ( auto cFe : pBoard->fModuleVector )
 	{
-		for ( auto cChip : cFe->fChipVector )
+		for ( auto cChip : cFe->fReadoutChipVector )
 		{
-			fChipInterface->WriteChipReg ( cChip, dacName, dacValue );
+			fReadoutChipInterface->WriteChipReg ( cChip, dacName, dacValue );
 		}
 	}
 	return;
 }
 
 // set same local dac for all BeBoard
-void Tool::setSameLocalDac(const std::string &dacName, const uint16_t &dacValue)
+void Tool::setSameLocalDac(const std::string &dacName, const uint16_t dacValue)
 {
 
 	for (auto& cBoard : fBoardVector)
@@ -1414,26 +1463,26 @@ void Tool::setSameLocalDac(const std::string &dacName, const uint16_t &dacValue)
 
 
 // set same local dac per BeBoard
-void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue)
+void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
 {
 	for ( auto cFe : pBoard->fModuleVector )
 	{
-		for ( auto cChip : cFe->fChipVector )
+		for ( auto cChip : cFe->fReadoutChipVector )
 		{
 			ChannelContainer<RegisterValue>* dacVector = new ChannelContainer<RegisterValue>(cChip->getNumberOfChannels(),RegisterValue(dacValue));
 			ChipContainer theChipContainer(cChip->getId(),cChip->getNumberOfRows(),cChip->getNumberOfCols());
 			theChipContainer.setChannelContainer(dacVector);
 
-			fChipInterface->WriteChipAllLocalReg ( cChip, dacName, theChipContainer);
+			fReadoutChipInterface->WriteChipAllLocalReg ( cChip, dacName, theChipContainer);
 		}
 	}
 	return;
 }
 
-void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue)
+void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
 {
 	//Assumption: 1 BeBoard has only 1 chip flavor:
-	if(pBoard->fModuleVector.at(0)->fChipVector.at(0)->isDACLocal(dacName))
+	if(pBoard->fModuleVector.at(0)->fReadoutChipVector.at(0)->isDACLocal(dacName))
 	{
 		setSameLocalDacBeBoard(pBoard, dacName, dacValue);
 	}
@@ -1443,7 +1492,7 @@ void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const 
 	}
 }
 
-void Tool::setSameDac(const std::string &dacName, const uint16_t &dacValue)
+void Tool::setSameDac(const std::string &dacName, const uint16_t dacValue)
 {
 
 	for (auto& cBoard : fBoardVector)

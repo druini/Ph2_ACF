@@ -3,6 +3,7 @@
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWInterface/ChipInterface.h"
+#include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../tools/Calibration.h"

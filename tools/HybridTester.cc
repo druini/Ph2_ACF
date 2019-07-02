@@ -68,9 +68,14 @@ void HybridTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 
 
 
+        trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
+         LOG (INFO)  <<int (trigSource);
+
+
+
         for (auto& cFe : cBoard->fModuleVector)
         {
-            for (auto& cCbc : cFe->fChipVector)
+            for (auto& cCbc : cFe->fReadoutChipVector)
             {
                 std::string pRegFile ;
                 char buffer[120];
@@ -82,7 +87,7 @@ void HybridTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 
                 pRegFile = buffer;
                 cCbc->loadfRegMap (pRegFile);
-                fChipInterface->ConfigureChip ( cCbc );
+                fReadoutChipInterface->ConfigureChip ( cCbc );
                 LOG (INFO) << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET ;
             }
         }
@@ -172,7 +177,7 @@ void HybridTester::InitializeHists()
             uint16_t cMaxRange = 1023;
             fType = cFe->getFrontEndType();
 
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
 
                 uint32_t cCbcId = cCbc->getChipId();
@@ -265,7 +270,7 @@ uint32_t HybridTester::fillSCurves ( BeBoard* pBoard,  const Event* pEvent, uint
 
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cCbc : cFe->fReadoutChipVector )
         {
             // SS
             /*TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
@@ -321,7 +326,7 @@ void HybridTester::ScanThresholds()
     //LOG(INFO) << RED << "Vcth = " <<  iVcth << RESET ;
 
     //simple VCth loop
-    ThresholdVisitor cVisitor (fChipInterface, 0);
+    ThresholdVisitor cVisitor (fReadoutChipInterface, 0);
 
     while ( 0 <= iVcth && iVcth <= cMaxValue )
     {
@@ -394,7 +399,7 @@ void HybridTester::ScanThresholds()
     {
         for ( auto cFe : pBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fChipVector )
+            for ( auto cCbc : cFe->fReadoutChipVector )
             {
                 fSCurveCanvas->cd(cCbc->getChipId()+1);
                 TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
@@ -428,7 +433,7 @@ void HybridTester::ScanThreshold()
     int cStep = ( fHoleMode ) ? -10 : 10;
 
     // Adaptive VCth loop
-    ThresholdVisitor cVisitor (fChipInterface, 0);
+    ThresholdVisitor cVisitor (fReadoutChipInterface, 0);
 
     while ( 0x00 <= cVcth && cVcth <= cMaxValue )
     {
@@ -609,7 +614,7 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
             cLine->SetLineColor ( kCyan );
             cLine->Draw ( "same" );
 
-            ThresholdVisitor cVisitor (fChipInterface, cThreshold);
+            ThresholdVisitor cVisitor (fReadoutChipInterface, cThreshold);
             cScurve.first->accept (cVisitor);
         }
 
@@ -629,7 +634,7 @@ void HybridTester::updateSCurveCanvas ( BeBoard* pBoard )
 
     /*for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cCbc : cFe->fReadoutChipVector )
         {
             fSCurveCanvas->cd(cCbc->getChipId()+1);
             TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
@@ -643,7 +648,7 @@ void HybridTester::updateSCurveCanvas ( BeBoard* pBoard )
 
     for ( auto cFe : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fChipVector )
+        for ( auto cCbc : cFe->fReadoutChipVector )
         {
             uint32_t cCbcId = cCbc->getChipId();
             auto cScurve = fSCurveMap.find ( cCbc );
@@ -717,7 +722,7 @@ void HybridTester::TestRegisters()
     char* start = ctime (&start_time);
     LOG (INFO) << "start: " << start ;
     LOG (INFO) << std::endl << "Running registers testing tool ... " ;
-    RegTester cRegTester ( fChipInterface, fNCbc );
+    RegTester cRegTester ( fReadoutChipInterface, fNCbc );
     accept ( cRegTester );
     cRegTester.dumpResult ( fDirectoryName );
     LOG (INFO) << "Done testing registers, re-configuring to calibrated state!" ;
@@ -914,12 +919,12 @@ void HybridTester::SetBeBoardForShortsFinding (BeBoard* pBoard)
     setSystemTestPulse(fTestPulseAmplitude,0x00,true,fHoleMode);
 
     //edit G.A: in order to be compatible with CBC3 (9 bit trigger latency) the recommended method is this:
-    LatencyVisitor cLatencyVisitor (fChipInterface, 0x01);
+    LatencyVisitor cLatencyVisitor (fReadoutChipInterface, 0x01);
     this->accept (cLatencyVisitor);
 
     // Take the default VCth which should correspond to the pedestal and add 8 depending on the mode to exclude noise
     // ThresholdVisitor in read mode
-    ThresholdVisitor cThresholdVisitor (fChipInterface);
+    ThresholdVisitor cThresholdVisitor (fReadoutChipInterface);
     this->accept (cThresholdVisitor);
     uint16_t cVcth = cThresholdVisitor.getThreshold();
 
@@ -937,14 +942,14 @@ void HybridTester::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
 {
     for (auto cFe : pBoard->fModuleVector)
     {
-        for (auto cCbc : cFe->fChipVector)
+        for (auto cCbc : cFe->fReadoutChipVector)
         {
             std::vector<std::pair<std::string, uint16_t>> cRegVec;
             uint16_t cRegValue = this->to_reg ( 0, pTestGroup );
 
             cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );
             
-            this->fChipInterface->WriteChipMultReg (cCbc, cRegVec);
+            this->fReadoutChipInterface->WriteChipMultReg (cCbc, cRegVec);
         }
     }
 }
@@ -959,7 +964,7 @@ void HybridTester::FindShorts()
     std::array<int, 2> cGroundedChannel;
     std::vector<std::array<int, 2> > cGroundedChannelsList;
 
-    ThresholdVisitor cReader ( fChipInterface );
+    ThresholdVisitor cReader ( fReadoutChipInterface );
     accept ( cReader );
     fHistTop->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
     fHistBottom->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
@@ -1069,7 +1074,7 @@ void HybridTester::Measure()
     LOG (INFO) << "Mesuring Efficiency per Strip ... " ;
     LOG (INFO) << "Taking data with " << fTotalEvents << " Events!" ;
 
-    ThresholdVisitor cReader ( fChipInterface );
+    ThresholdVisitor cReader ( fReadoutChipInterface );
     accept ( cReader );
     fHistTop->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
     fHistBottom->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
@@ -1194,7 +1199,7 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
     LOG (INFO) << "Mesuring Efficiency per Strip ... " ;
     LOG (INFO) << "Taking data with " << fTotalEvents << " Events!" ;
 
-    ThresholdVisitor cReader (fChipInterface);
+    ThresholdVisitor cReader (fReadoutChipInterface);
     accept ( cReader );
 
     Antenna cAntenna;

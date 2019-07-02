@@ -17,6 +17,7 @@
 #include "D19cFWInterface.h"
 #include "D19cFpgaConfig.h"
 #include "../HWDescription/Module.h"
+#include "../HWDescription/OuterTrackerModule.h"
 
 //#include "ChipInterface.h"
 
@@ -213,6 +214,11 @@ namespace Ph2_HwInterface {
             case 0x3:
             chip_type = FrontEndType::SSA;
             break;
+            
+            case 0x4:
+            chip_type = FrontEndType::CIC;
+            break;
+
         }
 
         return chip_type;
@@ -299,20 +305,20 @@ namespace Ph2_HwInterface {
 
     void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
     {
-    // after firmware loading it seems that CBC3 is not super stable
-    // and it needs fast reset after, so let's be secure and do also the hard one..
+        // after firmware loading it seems that CBC3 is not super stable
+        // and it needs fast reset after, so let's be secure and do also the hard one..
         this->ChipReset();
         this->ChipReSync();
         usleep (1);
 
-        WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
+        //WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
 
         usleep (500);
 
     // read info about current firmware
         uint32_t cFrontEndTypeCode = ReadReg ("fc7_daq_stat.general.info.chip_type");
         std::string cChipName = getChipName (cFrontEndTypeCode);
-        fFirwmareFrontEndType = getFrontEndType (cFrontEndTypeCode);
+        fFirmwareFrontEndType = getFrontEndType (cFrontEndTypeCode);
         fFWNHybrids = ReadReg ("fc7_daq_stat.general.info.num_hybrids");
         fFWNChips = ReadReg ("fc7_daq_stat.general.info.num_chips");
         fCBC3Emulator = (ReadReg ("fc7_daq_stat.general.info.implementation") == 2);
@@ -324,6 +330,17 @@ namespace Ph2_HwInterface {
         std::vector< std::pair<std::string, uint32_t> > cVecReg;
 
         LOG (INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
+        if( fFirmwareFrontEndType == FrontEndType::CIC ) 
+        {
+            LOG (INFO) << BOLDBLUE << "Enabling CIC clock" << RESET; 
+            // make sure CIC is receiving clock 
+            WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.clock_enable" , 1 ) ;
+            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+        }
+        else
+        {
+            LOG (INFO) << BOLDBLUE << "Firmware NOT configured for a CIC" << RESET;
+        }
 
         int fNHybrids = 0;
         uint16_t hybrid_enable = 0;
@@ -337,24 +354,24 @@ namespace Ph2_HwInterface {
                 LOG (INFO) << "Enabling Hybrid " << (int) cFe->getFeId();
                 hybrid_enable |= 1 << cFe->getFeId();
 
-                if (fFirwmareFrontEndType == FrontEndType::CBC3) {
-                    for ( Chip* cCbc : cFe->fChipVector)
+                if (fFirmwareFrontEndType == FrontEndType::CBC3) {
+                    for ( Chip* cCbc : cFe->fReadoutChipVector)
                     {
                         LOG (INFO) << "     Enabling CBC3 Chip " << (int) cCbc->getChipId();
                         chips_enable[cFe->getFeId()] |= 1 << cCbc->getChipId();
                 //need to increment the NCbc counter for I2C controller
                         fNCbc++;
                     }
-                } else if (fFirwmareFrontEndType == FrontEndType::MPA) {
-                    for ( MPA* cMPA : cFe->fMPAVector)
+                } else if (fFirmwareFrontEndType == FrontEndType::MPA) {
+                    for ( MPA* cMPA : static_cast<OuterTrackerModule*>(cFe)->fMPAVector)
                     {
                         LOG (INFO) << "     Enabling MPA Chip " << (int) cMPA->getMPAId();
                         chips_enable[cFe->getFeId()] |= 1 << cMPA->getMPAId();
                 //need to increment the counter for I2C controller
                         fNMPA++;
                     }
-                } else if (fFirwmareFrontEndType == FrontEndType::SSA) {
-                    for (SSA* cSSA : cFe->fSSAVector)
+                } else if (fFirmwareFrontEndType == FrontEndType::SSA) {
+                    for (SSA* cSSA : static_cast<OuterTrackerModule*>(cFe)->fSSAVector)
                     {
                         LOG (INFO) << "     Enabling SSA Chip " << (int) cSSA->getSSAId();
                         chips_enable[cFe->getFeId()] |= 1 << cSSA->getSSAId();
@@ -411,47 +428,46 @@ namespace Ph2_HwInterface {
 
     // resetting hard
             this->ChipReset();
-
-    // ping all cbcs (reads data from registers #0)
-            uint32_t cInit = ( ( (2) << 28 ) | (  (0) << 18 )  | ( (0) << 17 ) | ( (1) << 16 ) | (0 << 8 ) | 0);
-            std::cout<<cInit<<std::endl;
-            WriteReg ("fc7_daq_ctrl.command_processor_block.i2c.command_fifo", cInit);
-    //read the replies for the pings!
-            std::vector<uint32_t> pReplies;
-            bool cReadSuccess = !ReadI2C (fNCbc+fNMPA+fNSSA, pReplies);
-            bool cWordCorrect = true;
-
-            if (cReadSuccess)
+        for (Module* cFe : pBoard->fModuleVector)
+        {
+            std::vector<uint32_t> cVec; 
+            for ( Chip* cCbc : cFe->fReadoutChipVector)
             {
-        // all the replies will be sorted by hybrid id/chip id: hybrid0: chips(0,2,3,4..), hybrid2: chips(...) - so we can use index k.
-                uint8_t k = 0;
-
-                for (Module* cFe : pBoard->fModuleVector)
-                {
-                    for ( Chip* cCbc : cFe->fChipVector)
-                    {
-                        uint32_t cWord = pReplies.at (k);
-                        if(fI2CVersion >= 1) cWordCorrect = ( ( ( (cWord & 0x007C0000) >> 18) == cCbc->getChipId() ) & ( ( (cWord & 0x07800000) >> 23) == cFe->getFeId() ) ) ? true : false;
-                        else cWordCorrect = ( ( ( (cWord & 0x00f00000) >> 20) == cCbc->getChipId() ) & ( ( (cWord & 0x0f000000) >> 24) == cFe->getFeId() ) ) ? true : false;
-
-                        k++;
-
-                        if (!cWordCorrect) break;
-                    }
-                }
+                ChipRegItem cRegItem = cCbc->getRegItem ( "FeCtrl&TrgLat2" ); 
+                this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getChipId(), cVec, true, false);
             }
-
-            if (cReadSuccess && cWordCorrect) LOG (INFO) << "Successfully received *Pings* from " << fNCbc+fNMPA+fNSSA << " chips";
-
-            if (!cReadSuccess) LOG (ERROR) << RED << "Did not receive the correct number of *Pings*; expected: " << fNCbc+fNMPA+fNSSA << ", received: " << pReplies.size() << RESET;
-
-            if (!cWordCorrect) LOG (ERROR) << RED << "FEs/Chip ids are not correct!" << RESET;
+            
+            std::vector<uint32_t> cReplies;
+            //it sounds weird, but ReadI2C is called inside writeI2c, therefore here I have to write and disable the readback. The actual read command is in the words of the vector, no broadcast, maybe I can get rid of it
+            bool cSuccess = !WriteI2C ( cVec, cReplies, false, false);
+            if( cSuccess ) 
+            {
+                LOG (INFO) << BOLDGREEN << " Successfully read back values from " << +cFe->fReadoutChipVector.size() << " CBCs." << RESET;
+                cVec.clear();
+                if( static_cast<OuterTrackerModule*>(cFe)->fCic != NULL )
+                {
+                    int cFeId = static_cast<OuterTrackerModule*>(cFe)->fCic->getFeId();
+                    int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
+                    ChipRegItem cRegItem = static_cast<OuterTrackerModule*>(cFe)->fCic->getRegItem ( "FE_ENABLE" ); 
+                    this->EncodeReg (cRegItem, cFeId, cChipId, cVec, true, false);
+                    LOG (INFO) << BOLDBLUE << "Going to try and read FE_ENABLE register from CIC.." << RESET;
+                }
+                cReplies.clear();
+                cSuccess = !WriteI2C ( cVec, cReplies, false, false);
+                if( cSuccess ) 
+                    LOG (INFO) << BOLDGREEN << " Successfully read back values from CIC" << RESET;
+                else
+                    LOG (INFO) << BOLDRED << " FAILED to read back values from CIC." << RESET;
+            }
+            else
+                LOG (INFO) << BOLDRED << " FAILED to read back values from " << +cFe->fReadoutChipVector.size() << " CBCs." << RESET;
+        }
 
             this->PhaseTuning (pBoard);
 
             this->ResetReadout();
 
-    //adding an Orbit reset to align CBC L1A counters
+            //adding an Orbit reset to align CBC L1A counters
             this->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset",0x1);
         }
 
@@ -584,11 +600,11 @@ namespace Ph2_HwInterface {
         std::vector< std::vector<uint32_t> > i2c_slave_map;
 
     // setting the map for different chip types
-        if (fFirwmareFrontEndType == FrontEndType::CBC3) {
+        if (fFirmwareFrontEndType == FrontEndType::CBC3) {
         // nothing to de done here default addresses are set for CBC
         // actually FIXME
             return;
-        } else if (fFirwmareFrontEndType == FrontEndType::MPA) {
+        } else if (fFirmwareFrontEndType == FrontEndType::MPA) {
             for (int id = 0; id < fFWNChips; id++) {
             // for chip emulator register width is 8 bits, not 16 as for MPA
                 if(!fCBC3Emulator) {
@@ -598,7 +614,7 @@ namespace Ph2_HwInterface {
                 }
             }
         }
-        else if (fFirwmareFrontEndType == FrontEndType::SSA) // MUST BE IN ORDER! CANNOT DO 0, 1, 4
+        else if (fFirmwareFrontEndType == FrontEndType::SSA) // MUST BE IN ORDER! CANNOT DO 0, 1, 4
         {
             LOG (INFO) << BOLDRED << "WE ARE HERE!!! WE ARE HERE!!! WE ARE HERE!!!  " << fFWNChips << RESET;
             for (int id = 0; id < fFWNChips; id++) 
@@ -743,7 +759,7 @@ namespace Ph2_HwInterface {
 
     void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
     {
-        if (fFirwmareFrontEndType == FrontEndType::CBC3)
+        if (fFirmwareFrontEndType == FrontEndType::CBC3)
         {
             if (!fCBC3Emulator)
             {
@@ -760,7 +776,7 @@ namespace Ph2_HwInterface {
 
                     for (auto cFe : pBoard->fModuleVector)
                     {
-                        for (auto cCbc : cFe->fChipVector)
+                        for (auto cCbc : cFe->fReadoutChipVector)
                         {
 
                             uint8_t cOriginalStubLogicInput = cCbc->getReg ("Pipe&StubInpSel&Ptwidth");
@@ -796,7 +812,7 @@ namespace Ph2_HwInterface {
                             // print statuses
                             for (auto cFe : pBoard->fModuleVector)
                             {
-                                for (auto cCbc : cFe->fChipVector)
+                                for (auto cCbc : cFe->fReadoutChipVector)
                                 {
                                     PhaseTuningGetLineStatus(cFe->getFeId(), cCbc->getChipId(), 5);
                                 }
@@ -817,7 +833,7 @@ namespace Ph2_HwInterface {
                     cVecReq.clear();
                     for (auto cFe : pBoard->fModuleVector)
                     {
-                        for (auto cCbc : cFe->fChipVector)
+                        for (auto cCbc : cFe->fReadoutChipVector)
                         {
 
                             ChipRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
@@ -887,7 +903,7 @@ namespace Ph2_HwInterface {
                     // print statuses
                 for (auto cFe : pBoard->fModuleVector)
                 {
-                    for (auto cCbc : cFe->fChipVector)
+                    for (auto cCbc : cFe->fReadoutChipVector)
                     {
                         PhaseTuningGetLineStatus(cFe->getFeId(), cCbc->getChipId(), 5);
                     }
@@ -896,7 +912,7 @@ namespace Ph2_HwInterface {
             }
         }
         
-        else if (fFirwmareFrontEndType == FrontEndType::MPA)
+        else if (fFirmwareFrontEndType == FrontEndType::MPA)
         {
                 // first need to set the proper i2c settings of the chip for the phase alignment
             std::map<MPA*, uint8_t> cReadoutModeMap;
@@ -907,7 +923,7 @@ namespace Ph2_HwInterface {
 
             for (auto cFe : pBoard->fModuleVector)
             {
-                for (auto cMpa : cFe->fMPAVector)
+                for (auto cMpa : static_cast<OuterTrackerModule*>(cFe)->fMPAVector)
                 {
 
                     uint8_t cOriginalReadoutMode = cMpa->getReg ("ReadoutMode");
@@ -947,7 +963,7 @@ namespace Ph2_HwInterface {
             cVecReq.clear();
             for (auto cFe : pBoard->fModuleVector)
             {
-                for (auto cMpa : cFe->fMPAVector)
+                for (auto cMpa : static_cast<OuterTrackerModule*>(cFe)->fMPAVector)
                 {
 
                     RegItem cRegItem = cMpa->getRegItem ( "ReadoutMode" );
@@ -1099,13 +1115,18 @@ namespace Ph2_HwInterface {
             }                
 
             std::vector<uint32_t> event_data;
-            if (fIsDDR3Readout) {
-                    // in the no handshake mode the, wr counter is reset when it reaches the maximal value
-                    // therefore offset here also has to be reset
-                if(fDDR3Offset+cNEventsAvailable*cEventSize > 134217727) fDDR3Offset = 0;
-                    // read
+            if (fIsDDR3Readout) 
+            {                    
+                // read
                 event_data = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNEventsAvailable*cEventSize, fDDR3Offset);
-            } else {
+                // in the no handshake mode the, wr counter is reset when it reaches the maximal value
+                // therefore offset here also has to be reset
+                // by coincidence when no hanndshake it also rises the readout_req before resetting the address
+                uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
+                if(cReadoutReq == 1) fDDR3Offset = 0;
+            } 
+            else 
+            {
                 event_data = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNEventsAvailable*cEventSize);
             }
 
@@ -1232,8 +1253,8 @@ namespace Ph2_HwInterface {
         for (const auto& cFe : pBoard->fModuleVector)
         {
             cNCbc += cFe->getNChip();
-            cNMPA += cFe->getNMPA();
-            cNSSA += cFe->getNSSA();
+            cNMPA += static_cast<OuterTrackerModule*>(cFe)->getNMPA();
+            cNSSA += static_cast<OuterTrackerModule*>(cFe)->getNSSA();
         }
         if (cNCbc>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNCbc * D19C_EVENT_SIZE_32_CBC3;
         if (cNMPA>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNMPA * D19C_EVENT_SIZE_32_MPA;
@@ -1638,7 +1659,15 @@ namespace Ph2_HwInterface {
   
   void D19cFWInterface::ChipReset()
   {
-    WriteReg ( "fc7_daq_ctrl.physical_interface_block.control.chip_hard_reset", 0x1 );
+    //for CBCs
+    WriteReg ( "fc7_daq_ctrl.physical_interface_block", (0x1) << 0 );
+    std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+
+    //for CICs 
+    WriteReg ( "fc7_daq_ctrl.physical_interface_block", (0x1) << 2 );
+    std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+
+    //WriteReg ( "fc7_daq_ctrl.physical_interface_block.control.chip_hard_reset", 0x1 );
     usleep (10);
   }
 
@@ -1684,7 +1713,6 @@ namespace Ph2_HwInterface {
 
     }
 
-
     void D19cFWInterface::PhaseTuningGetDefaultFSMState() {
         // encode command type
         uint32_t command_raw = (0 & 0xF) << 16;
@@ -1699,37 +1727,39 @@ namespace Ph2_HwInterface {
     void D19cFWInterface::PhaseTuningParseStatus() {
         // map of the phase tuning statuses
         std::map<int, std::string> cPhaseFSMStateMap = {{0, "IdlePHASE"},
-        {1, "ResetIDELAYE"},
-        {2, "WaitResetIDELAYE"},
-        {3, "ApplyInitialDelay"},
-        {4, "CheckInitialDelay"},
-        {5, "InitialSampling"},
-        {6, "ProcessInitialSampling"},
-        {7, "ApplyDelay"},
-        {8, "CheckDelay"},
-        {9, "Sampling"},
-        {10, "ProcessSampling"},
-        {11, "WaitGoodDelay"},
-        {12, "FailedInitial"},
-        {13, "FailedToApplyDelay"},
-        {14, "TunedPHASE"},
-        {15, "Unknown"}};
+                                                        {1, "ResetIDELAYE"},
+                                                        {2, "WaitResetIDELAYE"},
+                                                        {3, "ApplyInitialDelay"},
+                                                        {4, "CheckInitialDelay"},
+                                                        {5, "InitialSampling"},
+                                                        {6, "ProcessInitialSampling"},
+                                                        {7, "ApplyDelay"},
+                                                        {8, "CheckDelay"},
+                                                        {9, "Sampling"},
+                                                        {10, "ProcessSampling"},
+                                                        {11, "WaitGoodDelay"},
+                                                        {12, "FailedInitial"},
+                                                        {13, "FailedToApplyDelay"},
+                                                        {14, "TunedPHASE"},
+                                                        {15, "Unknown"}
+                                                       };
         std::map<int, std::string> cWordFSMStateMap = {{0, "IdleWORD or WaitIserdese"},
-        {1, "WaitFrame"},
-        {2, "ApplyBitslip"},
-        {3, "WaitBitslip"},
-        {4, "PatternVerification"},
-        {5, "Not Defined"},
-        {6, "Not Defined"},
-        {7, "Not Defined"},
-        {8, "Not Defined"},
-        {9, "Not Defined"},
-        {10, "Not Defined"},
-        {11, "Not Defined"},
-        {12, "FailedFrame"},
-        {13, "FailedVerification"},
-        {14, "TunedWORD"},
-        {15, "Unknown"}};
+                                                        {1, "WaitFrame"},
+                                                        {2, "ApplyBitslip"},
+                                                        {3, "WaitBitslip"},
+                                                        {4, "PatternVerification"},
+                                                        {5, "Not Defined"},
+                                                        {6, "Not Defined"},
+                                                        {7, "Not Defined"},
+                                                        {8, "Not Defined"},
+                                                        {9, "Not Defined"},
+                                                        {10, "Not Defined"},
+                                                        {11, "Not Defined"},
+                                                        {12, "FailedFrame"},
+                                                        {13, "FailedVerification"},
+                                                        {14, "TunedWORD"},
+                                                        {15, "Unknown"}
+                                                       };
 
         // read status
         uint32_t reply = ReadReg( "fc7_daq_stat.physical_interface_block.phase_tuning_reply" );

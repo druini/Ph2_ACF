@@ -186,9 +186,12 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
         trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
          LOG (INFO)  <<int (trigSource);
 
+        trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
+         LOG (INFO)  <<int (trigSource);
+
         for (auto& cFe : cBoard->fModuleVector)
         {
-            for (auto& cCbc : cFe->fChipVector)
+            for (auto& cCbc : cFe->fReadoutChipVector)
             {
                 std::string pRegFile ;
                 char buffer[120];
@@ -200,7 +203,7 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 
                 pRegFile = buffer;
                 cCbc->loadfRegMap (pRegFile);
-                fChipInterface->ConfigureChip ( cCbc );
+                fReadoutChipInterface->ConfigureChip ( cCbc );
                 LOG (INFO)  << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
             }
         }
@@ -232,7 +235,7 @@ void AntennaTester::Measure(uint8_t pDigiPotentiometer)
     LOG (INFO)  << "Taking data with " << fTotalEvents << " Events!";
 
     //in read mode like this!
-    ThresholdVisitor cReader ( fChipInterface );
+    ThresholdVisitor cReader ( fReadoutChipInterface );
     accept ( cReader );
 
     InitializeHists();

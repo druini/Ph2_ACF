@@ -3,7 +3,7 @@
 #include <fstream>
 #include "../Utils/Utilities.h"
 #include "../HWDescription/SSA.h"
-#include "../HWDescription/Module.h"
+#include "../HWDescription/OuterTrackerModule.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
@@ -53,7 +53,7 @@ int main( int argc, char* argv[] )
 
 	cTool.ConfigureHw();
 	cTool.fBeBoardInterface->getBoardInfo(pBoard);
-	std::vector < SSA* > cSSAVector = pBoard->getModule(0)->fSSAVector;
+	std::vector < SSA* > cSSAVector = static_cast<OuterTrackerModule*>(pBoard->getModule(0))->fSSAVector;
 
 
 }

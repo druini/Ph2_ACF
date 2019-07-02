@@ -24,9 +24,13 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/ChipRegItem.h"
 #include "../HWDescription/Chip.h"
+#include "../HWDescription/ReadoutChip.h"
 #include "../HWDescription/Module.h"
+#include "../HWDescription/SSA.h"
+#include "../HWDescription/MPA.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/RD53.h"
+#include "../HWDescription/RegItem.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -345,7 +349,7 @@ namespace Ph2_HwInterface {
 	// ################################################################################################
 	// # Virtual methods which are defined in the concrete implementation of BeBoardFWInterface class #
 	// ################################################################################################
-	virtual void WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd = 1, unsigned int repetition = 1)
+	virtual void WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd = 1)
         {
 	  LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         }

@@ -3,8 +3,8 @@
         \file                   SignalScanFit.h
         \brief                  class threshold scans
         \author                 Giovanni Zevi Della Porta, Nikkie Deelen
-        \version                2.0
-        \date                   27/09/17
+        \version                3.0
+        \date                   25/06/19
         Support :               mail to : giovanni.zevidellaporta@gmail.com / nikkie.deelen@cern.ch
 
 */
@@ -44,8 +44,8 @@ class SignalScanFit : public Tool
 {
 
   public:
-    void Initialize ();
-    void ScanSignal ( int pSignalScanLength );
+    void Initialize ( );
+    void ScanSignal ( int pSignalScanLength, bool pHitOR );
     double fVCthMin;
     double fVCthMax;
     double fVCthNbins;
