@@ -35,8 +35,11 @@ void SignalScanFit::Initialize ( )
             bookHistogram ( cFe, "module_signal", cSignalHist );
 
             // 2D-plot with cluster width on the x-axis, Vcth on y-axis, counts of certain clustersize on z-axis.
-            TH2D* cVCthClusterSizeHist = new TH2D ( Form ( "h_module_clusterSize_per_Vcth_Fe%d", cFeId ), Form ( "Cluster size vs Vcth ; Cluster size [strips] ; Threshold [VCth] ; # clusters", cFeId ), 15, -0.5, 14.5, fVCthNbins, fVCthMin, fVCthMax );
+            TH2D* cVCthClusterSizeHist = new TH2D ( Form ( "h_module_clusterSize_per_Vcth_Fe%d", cFeId ), Form ( "Cluster size vs Vcth ; Cluster size [strips] ; Threshold [Vcth] ; # clusters", cFeId ), 15, -0.5, 14.5, fVCthNbins, fVCthMin, fVCthMax );
             bookHistogram ( cFe, "vcth_ClusterSize", cVCthClusterSizeHist );
+
+            TProfile* cNumberOfTriggers = new TProfile ( Form("f_module_totalNumberOfTriggers_Fe%d", cFeId), Form ( "Total number of triggers received ; Number of triggers ; Threshold [Vcth]" ), fVCthNbins, fVCthMin, fVCthMax);
+            bookHistogram ( cFe, "number_of_triggers", cNumberOfTriggers );
              
             uint32_t cCbcCount = 0;
             uint32_t cCbcIdMax = 0;
@@ -76,13 +79,13 @@ void SignalScanFit::Initialize ( )
                 cHist = new TH1D ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
                 bookHistogram ( cCbc, "Cbc_Hits_odd", cHist );
 
-                cHistname = Form ( "Fe%dCBC%d_ClusterOccupancy_even",cFeId, cCbcId );
-                cProfile = new TProfile ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
-                bookHistogram ( cCbc, "Cbc_ClusterOccupancy_even", cProfile );
+//                cHistname = Form ( "Fe%dCBC%d_ClusterOccupancy_even",cFeId, cCbcId );
+//                cProfile = new TProfile ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
+//                bookHistogram ( cCbc, "Cbc_ClusterOccupancy_even", cProfile );
 
-                cHistname = Form ( "Fe%dCBC%d_ClusterOccupancy_odd",cFeId, cCbcId );
-                cProfile = new TProfile ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
-                bookHistogram ( cCbc, "Cbc_ClusterOccupancy_odd", cProfile );
+//                cHistname = Form ( "Fe%dCBC%d_ClusterOccupancy_odd",cFeId, cCbcId );
+//                cProfile = new TProfile ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
+//                bookHistogram ( cCbc, "Cbc_ClusterOccupancy_odd", cProfile );
             }
         }
     }
