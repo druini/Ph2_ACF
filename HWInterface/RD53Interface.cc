@@ -221,7 +221,7 @@ namespace Ph2_HwInterface
 
     for (auto i = 0; i < outputDecoded.first.size(); i++)
       // Removing bit related to PIX_PORTAL register identification
-      outputDecoded.first[i] = outputDecoded.first[i] & static_cast<uint16_t>(RD53::SetBits<NBIT_ADDR>(NBIT_ADDR).to_ulong());
+      outputDecoded.first[i] = outputDecoded.first[i] & static_cast<uint16_t>(RD53::SetBits(NBIT_ADDR));
 
     return outputDecoded;
   }

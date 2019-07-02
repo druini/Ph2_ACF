@@ -53,7 +53,7 @@ namespace Ph2_HwInterface
 		    {
 		      for (auto i = 0; i < NPIX_REGION; i++)
 			{
-			  if (hit.tots[i] != NOHIT_TOT)
+			  if (hit.tots[i] != RD53::SetBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION))
 			    {
 			      if (totRequired == true)
 			      	{
