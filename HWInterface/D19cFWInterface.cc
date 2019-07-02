@@ -1115,13 +1115,18 @@ namespace Ph2_HwInterface {
             }                
 
             std::vector<uint32_t> event_data;
-            if (fIsDDR3Readout) {
-                    // in the no handshake mode the, wr counter is reset when it reaches the maximal value
-                    // therefore offset here also has to be reset
-                if(fDDR3Offset+cNEventsAvailable*cEventSize > 134217727) fDDR3Offset = 0;
-                    // read
+            if (fIsDDR3Readout) 
+            {                    
+                // read
                 event_data = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNEventsAvailable*cEventSize, fDDR3Offset);
-            } else {
+                // in the no handshake mode the, wr counter is reset when it reaches the maximal value
+                // therefore offset here also has to be reset
+                // by coincidence when no hanndshake it also rises the readout_req before resetting the address
+                uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
+                if(cReadoutReq == 1) fDDR3Offset = 0;
+            } 
+            else 
+            {
                 event_data = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNEventsAvailable*cEventSize);
             }
 
@@ -1708,7 +1713,6 @@ namespace Ph2_HwInterface {
 
     }
 
-
     void D19cFWInterface::PhaseTuningGetDefaultFSMState() {
         // encode command type
         uint32_t command_raw = (0 & 0xF) << 16;
@@ -1723,37 +1727,39 @@ namespace Ph2_HwInterface {
     void D19cFWInterface::PhaseTuningParseStatus() {
         // map of the phase tuning statuses
         std::map<int, std::string> cPhaseFSMStateMap = {{0, "IdlePHASE"},
-        {1, "ResetIDELAYE"},
-        {2, "WaitResetIDELAYE"},
-        {3, "ApplyInitialDelay"},
-        {4, "CheckInitialDelay"},
-        {5, "InitialSampling"},
-        {6, "ProcessInitialSampling"},
-        {7, "ApplyDelay"},
-        {8, "CheckDelay"},
-        {9, "Sampling"},
-        {10, "ProcessSampling"},
-        {11, "WaitGoodDelay"},
-        {12, "FailedInitial"},
-        {13, "FailedToApplyDelay"},
-        {14, "TunedPHASE"},
-        {15, "Unknown"}};
+                                                        {1, "ResetIDELAYE"},
+                                                        {2, "WaitResetIDELAYE"},
+                                                        {3, "ApplyInitialDelay"},
+                                                        {4, "CheckInitialDelay"},
+                                                        {5, "InitialSampling"},
+                                                        {6, "ProcessInitialSampling"},
+                                                        {7, "ApplyDelay"},
+                                                        {8, "CheckDelay"},
+                                                        {9, "Sampling"},
+                                                        {10, "ProcessSampling"},
+                                                        {11, "WaitGoodDelay"},
+                                                        {12, "FailedInitial"},
+                                                        {13, "FailedToApplyDelay"},
+                                                        {14, "TunedPHASE"},
+                                                        {15, "Unknown"}
+                                                       };
         std::map<int, std::string> cWordFSMStateMap = {{0, "IdleWORD or WaitIserdese"},
-        {1, "WaitFrame"},
-        {2, "ApplyBitslip"},
-        {3, "WaitBitslip"},
-        {4, "PatternVerification"},
-        {5, "Not Defined"},
-        {6, "Not Defined"},
-        {7, "Not Defined"},
-        {8, "Not Defined"},
-        {9, "Not Defined"},
-        {10, "Not Defined"},
-        {11, "Not Defined"},
-        {12, "FailedFrame"},
-        {13, "FailedVerification"},
-        {14, "TunedWORD"},
-        {15, "Unknown"}};
+                                                        {1, "WaitFrame"},
+                                                        {2, "ApplyBitslip"},
+                                                        {3, "WaitBitslip"},
+                                                        {4, "PatternVerification"},
+                                                        {5, "Not Defined"},
+                                                        {6, "Not Defined"},
+                                                        {7, "Not Defined"},
+                                                        {8, "Not Defined"},
+                                                        {9, "Not Defined"},
+                                                        {10, "Not Defined"},
+                                                        {11, "Not Defined"},
+                                                        {12, "FailedFrame"},
+                                                        {13, "FailedVerification"},
+                                                        {14, "TunedWORD"},
+                                                        {15, "Unknown"}
+                                                       };
 
         // read status
         uint32_t reply = ReadReg( "fc7_daq_stat.physical_interface_block.phase_tuning_reply" );

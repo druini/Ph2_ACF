@@ -186,6 +186,9 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
         trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
          LOG (INFO)  <<int (trigSource);
 
+        trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
+         LOG (INFO)  <<int (trigSource);
+
         for (auto& cFe : cBoard->fModuleVector)
         {
             for (auto& cCbc : cFe->fReadoutChipVector)

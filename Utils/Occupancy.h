@@ -33,6 +33,11 @@ public:
     
     void normalize(const uint16_t numberOfEvents);
     
+    // Occupancy operator/(const float &denominator) const
+    // {
+
+    // }
+
 	float  fOccupancy;
     float  fOccupancyError;
 };

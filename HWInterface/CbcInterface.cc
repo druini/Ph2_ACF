@@ -402,4 +402,16 @@ namespace Ph2_HwInterface {
                     cCbc->setReg ( cReg.first, cReg.second );
                 }
     }
+
+    uint32_t CbcInterface::ReadCbcIDeFuse ( Chip* pCbc )
+    {
+        WriteChipReg ( pCbc, "ChipIDFuse3",  8  );
+        uint8_t IDa = ReadChipReg(pCbc, "ChipIDFuse1");
+        uint8_t IDb = ReadChipReg(pCbc, "ChipIDFuse2");
+        uint8_t IDc = ReadChipReg(pCbc, "ChipIDFuse3");
+        uint32_t IDeFuse = ((IDa) & 0x000000FF) + (((IDb) << 8) & 0x0000FF00) + (((IDb) << 16) & 0x000F0000);
+        LOG(INFO) << BOLDBLUE << " CHIP ID FUSE " << +IDeFuse << RESET;
+        return IDeFuse;
+    }
+
 }
