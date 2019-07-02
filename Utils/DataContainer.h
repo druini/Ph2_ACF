@@ -17,6 +17,7 @@
 #include <map>
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/Container.h"
+#include "../Utils/EmptyContainer.h"
 
 class ChannelDataContainerBase;
 template <typename T>
@@ -139,10 +140,10 @@ public:
 		/* return (containerTypeId.hash_code() == templateTypeId.hash_code()); */
 	}
 
-	template<typename S, typename T>
-	Summary<S,T>& getSummary()
+	template<typename S, typename T = EmptyContainer>
+	S& getSummary()
 	{
-		return *static_cast<Summary<S,T>*>(summary_);
+		return static_cast<Summary<S,T>*>(summary_)->theSummary_;
 	}	
 
 	SummaryBase *summary_;

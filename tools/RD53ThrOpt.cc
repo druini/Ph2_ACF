@@ -60,8 +60,8 @@ void ThrOpt::Run()
   ContainerFactory theDetectorFactory;
 
   fDetectorDataContainer = &theContainer;
-  theDetectorFactory.copyAndInitStructure<Occupancy>                   (*fDetectorContainer, *fDetectorDataContainer);
-  theDetectorFactory.copyAndInitStructure<RegisterValue,EmptyContainer>(*fDetectorContainer, theTDACcontainer);
+  theDetectorFactory.copyAndInitStructure<Occupancy>  (*fDetectorContainer, *fDetectorDataContainer);
+  theDetectorFactory.copyAndInitChannel<RegisterValue>(*fDetectorContainer, theTDACcontainer);
 
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
