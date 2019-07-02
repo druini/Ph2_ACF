@@ -350,7 +350,7 @@ int main (int argc, char** argv)
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       sc.Inherit(&cSystemController);
       sc.Run();
-      auto output = sc.Analyze();
+      sc.Analyze();
       sc.Draw(display,true);
     }
   else if (whichCalib == "gain")
@@ -364,7 +364,7 @@ int main (int argc, char** argv)
       Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       ga.Inherit(&cSystemController);
       ga.Run();
-      auto output = ga.Analyze();
+      ga.Analyze();
       ga.Draw(display,true);
     }
   else if (whichCalib == "threqu")

@@ -270,16 +270,16 @@ namespace Ph2_HwInterface
     auroraReg = ReadReg ("user.stat_regs.aurora.n_ch");
     LOG (INFO) << BOLDBLUE << "Aurora number of channels: " << BOLDYELLOW << auroraReg << RESET;
 
-    std::bitset<NBIT_AURORAREG> bitReg = static_cast<uint8_t>(ReadReg ("user.stat_regs.aurora.lane_up"));
-    LOG (INFO) << BOLDBLUE << "Aurora lane up status: " << BOLDYELLOW << bitReg.count() << RESET;
+    unsigned int bitReg = ReadReg ("user.stat_regs.aurora.lane_up");
+    LOG (INFO) << BOLDBLUE << "Aurora lane up status: " << BOLDYELLOW << RD53::CountBitsOne(bitReg) << RESET;
 
-    bitReg = static_cast<uint8_t>(ReadReg ("user.stat_regs.aurora.channel_up"));
-    if (bitReg.count() == auroraReg)
+    bitReg = ReadReg ("user.stat_regs.aurora.channel_up");
+    if (RD53::CountBitsOne(bitReg) == auroraReg)
       {
-	LOG (INFO) << BOLDGREEN << "\t--> Aurora channels up number as expected: " << BOLDYELLOW << bitReg.count() << RESET;
+	LOG (INFO) << BOLDGREEN << "\t--> Aurora channels up number as expected: " << BOLDYELLOW << RD53::CountBitsOne(bitReg) << RESET;
 	return true;
       }
-    LOG (ERROR) << BOLDRED << "\t--> Aurora channels up number less than expected: " << BOLDYELLOW << bitReg.count() << RESET;
+    LOG (ERROR) << BOLDRED << "\t--> Aurora channels up number less than expected: " << BOLDYELLOW << RD53::CountBitsOne(bitReg) << RESET;
     return false;
   }
 
@@ -364,14 +364,19 @@ namespace Ph2_HwInterface
 	this->ChipReset();
 	this->ChipReSync();
 
-	this->Start();
-	usleep((this->localCfgFastCmd.fast_cmd_fsm.delay_after_ecr        +
-		this->localCfgFastCmd.fast_cmd_fsm.delay_after_autozero   +
-		this->localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  +
-		this->localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal +
-		this->localCfgFastCmd.fast_cmd_fsm.delay_loop) * DELAYPERIOD *
-	       this->localCfgFastCmd.n_triggers + SHALLOWSLEEP);
 
+	// ####################
+	// # Readout sequence #
+	// ####################
+	this->Start();
+	while (ReadReg("user.stat_regs.trigger_cntr").value() < pNEvents*(1 + this->localCfgFastCmd.trigger_duration)) usleep (SHALLOWSLEEP);
+	size_t dataAmountOld, dataAmountNew = ReadReg("user.stat_regs.words_to_read").value();
+	do
+	  {
+	    dataAmountOld = dataAmountNew;
+	    usleep(SHALLOWSLEEP);
+	  }
+	while ((dataAmountNew = ReadReg("user.stat_regs.words_to_read").value()) != dataAmountOld);
 	this->ReadData(pBoard, false, pData);
 	this->Stop();
 
@@ -387,16 +392,16 @@ namespace Ph2_HwInterface
 	  }
 
 	auto events = this->DecodeEvents(pData, status);
-	// this->PrintEvents(events); // @TMP@
+	// this->PrintEvents(events,&pData); // @TMP@
 	if (this->EvtErrorHandler(status) == false)
 	  {
 	    retry = true;
 	    continue;
 	  }
 
-	if (events.size() != localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration))
+	if (events.size() != this->localCfgFastCmd.n_triggers * (1 + this->localCfgFastCmd.trigger_duration))
 	  {
-	    LOG (ERROR) << BOLDRED << "Sent " << localCfgFastCmd.n_triggers * (1 + localCfgFastCmd.trigger_duration) << " triggers, but collected " << events.size() << " events" << BOLDYELLOW << " --> retry" << RESET;
+	    LOG (ERROR) << BOLDRED << "Sent " << this->localCfgFastCmd.n_triggers * (1 + this->localCfgFastCmd.trigger_duration) << " triggers, but collected " << events.size() << " events" << BOLDYELLOW << " --> retry" << RESET;
 	    retry = true;
 	    continue;
 	  }
@@ -554,8 +559,22 @@ namespace Ph2_HwInterface
     return events;
   }
 
-  void RD53FWInterface::PrintEvents (const std::vector<RD53FWInterface::Event>& events)
+  void RD53FWInterface::PrintEvents (const std::vector<RD53FWInterface::Event>& events, std::vector<uint32_t>* pData)
   {
+    // ##################
+    // # Print raw data #
+    // ##################
+    if (pData != nullptr)
+      {
+	for (auto j = 0; j < pData->size(); j++)
+	  {
+	    if (j%NWORDS_DDR3 == 0) std::cout << std::dec << "\n" << j << ":\t";
+	    std::cout << std::hex << std::setfill('0') << std::setw(8) << (*pData)[j] << "\t";
+	  }
+	std::cout << std::endl;
+      }
+
+
     for (auto i = 0; i < events.size(); i++)
       {
 	auto& evt = events[i];

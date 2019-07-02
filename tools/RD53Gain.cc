@@ -128,8 +128,7 @@ std::shared_ptr<DetectorDataContainer> Gain::Analyze ()
   std::vector<float> e(dacList.size(),0);
 
   ContainerFactory theDetectorFactory;
-  delete theGainAndInterceptContainer;
-  theGainAndInterceptContainer = new DetectorDataContainer();
+  theGainAndInterceptContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
   theDetectorFactory.copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
 
   size_t index = 0;
@@ -163,7 +162,7 @@ std::shared_ptr<DetectorDataContainer> Gain::Analyze ()
 	  index++;
 	}
 
-  return std::shared_ptr<DetectorDataContainer>(theGainAndInterceptContainer);
+  return theGainAndInterceptContainer;
 }
 
 void Gain::InitHisto ()

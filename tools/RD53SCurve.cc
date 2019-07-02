@@ -126,8 +126,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::Analyze ()
   std::vector<float> measurements(dacList.size(),0);
 
   ContainerFactory theDetectorFactory;
-  delete theThresholdAndNoiseContainer;
-  theThresholdAndNoiseContainer = new DetectorDataContainer();
+  theThresholdAndNoiseContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
   theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
 
   size_t index = 0;
@@ -143,7 +142,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::Analyze ()
 		for (auto i = 0; i < dacList.size()-1; i++)
 		  measurements[i+1] = (detectorContainerVector[i+1]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy - 
 				       detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
-	      
+
 		this->ComputeStats(measurements, VCalOffset, nHits, mean, rms);
 
 		if ((rms > 0) && (nHits > 0) && (isnan(rms) == false))
@@ -162,7 +161,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::Analyze ()
 		     << BOLDGREEN << " (Delta_VCal)" << RESET;
 	}
 
-  return std::shared_ptr<DetectorDataContainer>(theThresholdAndNoiseContainer);
+  return theThresholdAndNoiseContainer;
 }
 
 void SCurve::InitHisto ()
