@@ -1,7 +1,7 @@
 #ifndef _MiddlewareInterface_h_
 #define _MiddlewareInterface_h_
 
-#include "../Utils/TCPNetworkClient.h"
+#include "../NetworkUtils/TCPNetworkClient.h"
 #include <string>
 
 class MiddlewareInterface: public TCPNetworkClient

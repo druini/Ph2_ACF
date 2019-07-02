@@ -1,12 +1,10 @@
-#include "../Utils/TCPNetworkClient.h"
+#include "../NetworkUtils/TCPNetworkClient.h"
 #include "../Utils/ObjectStreamer.h"
 #include "../DQMUtils/DQMInterface.h"
 #include "../DQMUtils/DQMHistogramPedeNoise.h"
 
 #include <iostream>
 #include <string>
-#include <thread>
-#include <chrono>         // std::chrono::milliseconds
 
 //========================================================================================================================
 DQMInterface::DQMInterface(std::string configurationFile)
@@ -54,11 +52,10 @@ void DQMInterface::configure(void)
 	fListener = new TCPNetworkClient(serverIP, serverPort);
 	//This can be done in the configure or start stage
 	std::cout << __PRETTY_FUNCTION__ << std::endl;
-	while(fListener->connectClient() < 0)
+	if(!fListener->connect())
 	{
-		//ADD A TIMEOUT
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		std::cout << __PRETTY_FUNCTION__ << "Trying to connect!" << std::endl;
+		std::cout << __PRETTY_FUNCTION__ << "ERROR CAN'T CONNECT TO SERVER!"<< std::endl;
+		abort();
 	}
 	std::cout << __PRETTY_FUNCTION__ << "DQM connected!" << std::endl;
 	//fListener->send("send me the configuration");

@@ -60,9 +60,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # compiler flags
     set (CMAKE_CXX_FLAGS "-std=c++1y -O3 -Wcpp -pthread -pedantic -Wall -w -g -fPIC ${CMAKE_CXX_FLAGS}")
-
-    # set (CMAKE_CXX_FLAGS "-g -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-maybe-uninitialized -Wno-ignored-qualifiers -Wno-unused-variable -std=c++11 -Wall -Werror=return-type -Wextra -Wno-long-long -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -pthread -w -Wcpp -fPIC ${CMAKE_CXX_FLAGS}")
-
+    #set (CMAKE_CXX_FLAGS "-g -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-maybe-uninitialized -Wno-ignored-qualifiers -Wno-unused-variable -std=c++11 -Wall -Werror=return-type -Wextra -Wno-long-long -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS}")
+ 
     #check for external dependences
     message("--")
     message("--     ${BoldCyan}#### Checking for external Dependencies ####${Reset}")
@@ -140,6 +139,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     add_subdirectory(miniDAQ)
     add_subdirectory(Utils)
     add_subdirectory(RootUtils)
+    add_subdirectory(NetworkUtils)
     add_subdirectory(HWDescription)
     add_subdirectory(HWInterface)
     add_subdirectory(System)
