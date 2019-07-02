@@ -1209,7 +1209,7 @@ public:
 	void setDetectorContainer(DetectorContainer *detectorContainer) {fDetectorContainer = detectorContainer;}
 
 protected:
-	uint16_t fNumberOfEvents;
+	uint32_t fNumberOfEvents;
 	int32_t fNumberOfEventsPerBurst {-1};
 	uint32_t fBoardIndex;
 	const ChannelGroupBase *fTestChannelGroup;
