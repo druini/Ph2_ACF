@@ -23,13 +23,12 @@
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
-#define DEEPSLEEP 500000   // [microseconds]
-#define SHALLOWSLEEP  50   // [microseconds]
-#define DELAYPERIOD    0.1 // [microseconds] Delay duration in FW fast command block FSM
+#define DEEPSLEEP  500000 // [microseconds]
+#define SHALLOWSLEEP   50 // [microseconds]
 
 #define NBIT_FWVER     16 // Number of bits for the firmware version
-#define NBIT_AURORAREG  8 // Number of bits for the Aurora registers lane_up and channel_up
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
+#define NWORDS_DDR3     4 // Number of IPbus words in a DDR3 word
 
 
 // #################
@@ -152,7 +151,7 @@ namespace Ph2_HwInterface
     };
 
     static std::vector<Event> DecodeEvents (const std::vector<uint32_t>& data, uint8_t& status);
-    static void PrintEvents                (const std::vector<RD53FWInterface::Event>& events);
+    static void PrintEvents                (const std::vector<RD53FWInterface::Event>& events, std::vector<uint32_t>* pData = nullptr);
     static bool EvtErrorHandler            (uint8_t status);
 
     enum class TriggerSource : uint32_t
