@@ -312,6 +312,26 @@ void Gain::Display ()
       theOccupancy[i]->Draw("gcolz");
       theCanvasOcc[i]->Modified();
       theCanvasOcc[i]->Update();
+
+      TPad* myPad = (TPad*)theCanvasOcc[i]->GetPad(0);
+      myPad->SetTopMargin(0.16);
+      theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
+				   RD53chargeConverter::VCAl2Charge(theOccupancy[i]->GetXaxis()->GetBinLowEdge(1)),
+				   RD53chargeConverter::VCAl2Charge(theOccupancy[i]->GetXaxis()->GetBinLowEdge(theOccupancy[i]->GetNbinsX())),
+				   510,"-"));
+      theAxis.back()->SetTitle("Charge (electrons)"); 
+      theAxis.back()->SetTitleOffset(1.2);
+      theAxis.back()->SetTitleSize(0.035);
+      theAxis.back()->SetTitleFont(40);
+      theAxis.back()->SetLabelOffset(0.001);
+      theAxis.back()->SetLabelSize(0.035);
+      theAxis.back()->SetLabelFont(42);
+      theAxis.back()->SetLabelColor(kRed);
+      theAxis.back()->SetLineColor(kRed);
+      theAxis.back()->Draw();
+
+      theCanvasOcc[i]->Modified();
+      theCanvasOcc[i]->Update();
     }
   
   for (auto i = 0; i < theCanvasGa1D.size(); i++)

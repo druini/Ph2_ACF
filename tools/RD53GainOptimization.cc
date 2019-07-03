@@ -182,7 +182,7 @@ void GainOptimization::Save ()
 
 void GainOptimization::bitWiseScan ()
 {
-  uint8_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits("KRUM_CURR_LIN");
+  uint8_t numberOfBits = (KrumCurrStop != 0 ? log2(KrumCurrStop - KrumCurrStart) + 1 : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits("KRUM_CURR_LIN"));
 
 
   ContainerFactory      theDetectorFactory;

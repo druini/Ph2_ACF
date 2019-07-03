@@ -244,7 +244,7 @@ int main (int argc, char** argv)
   if (result != ArgvParser::NoParserError)
     {
       LOG (INFO) << cmd.parseErrorDescription(result);
-      exit(1);
+      exit(EXIT_FAILURE);
     }
 
   std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT.xml";
