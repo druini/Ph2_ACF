@@ -158,6 +158,7 @@ Through `CMSIT_miniDAQ`, and with the right command line option, you can run the
 3. Noise scan
 4. SCurve
 5. Threshold equalization
+6. Gain optimization
 ```
 How to setup up and run the IT-system:
 1. `mkdir chose_a_name` under `Ph2_ACF`
@@ -167,7 +168,8 @@ How to setup up and run the IT-system:
 5. `cd chose_a_name`
 6. Run with the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` or run `CMSIT_miniDAQ --help` for help
 
-git branch / tag : `chipPolymorphism` / `IT-v0.0`
+- Software git branch / tag : `chipPolymorphism` / `IT-v0.0`
+- Firmware tag: `2.5`
 
 
 ### Nota Bene:
