@@ -59,6 +59,10 @@ void InitParameters (const SystemController& sc,
 		     size_t& VCALstop,
 		     size_t& VCALnsteps,
 
+		     size_t& targetCharge,
+		     size_t& KrumCurrStart,
+		     size_t& KrumCurrStop,
+
 		     size_t& display,
 		     size_t& chipRegDefault)
 {
@@ -80,12 +84,16 @@ void InitParameters (const SystemController& sc,
   VCALstop       = FindValue(sc,"VCALstop");
   VCALnsteps     = FindValue(sc,"VCALnsteps");
 
+  targetCharge   = FindValue(sc,"targetCharge");
+  KrumCurrStart  = FindValue(sc,"KrumCurrStart");
+  KrumCurrStop   = FindValue(sc,"KrumCurrStop");
+
   display        = FindValue(sc,"DisplayHisto");
   chipRegDefault = FindValue(sc,"ChipRegDefaultFile");
 }
 
 
-void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type)
+void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type, bool hitOr)
 // ###################
 // # type == Digital #
 // # type == Analog  #
@@ -106,7 +114,7 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type)
 	    // #############################
 	    RD53FWInterface::FastCommandsConfig cfgFastCmd;
       
-	    cfgFastCmd.trigger_source   = RD53FWInterface::TriggerSource::FastCMDFSM;
+	    cfgFastCmd.trigger_source   = (hitOr == true ? RD53FWInterface::TriggerSource::HitOr : RD53FWInterface::TriggerSource::FastCMDFSM);
 	    cfgFastCmd.n_triggers       = 0;
 	    cfgFastCmd.trigger_duration = NTRIGxL1A;
 	   
@@ -228,6 +236,9 @@ int main (int argc, char** argv)
   cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("ext", "x");
 
+  cmd.defineOption ("hitor", "Use Hit-Or signal to trigger. Default: disabled", ArgvParser::NoOptionAttribute);
+  cmd.defineOptionAlternative ("hitor", "o");
+
   int result = cmd.parse(argc,argv);
 
   if (result != ArgvParser::NoParserError)
@@ -236,9 +247,10 @@ int main (int argc, char** argv)
       exit(1);
     }
 
-  std::string cHWFile    = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT.xml";
+  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT.xml";
   std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
   bool extClkTrg         = cmd.foundOption("ext")    == true ? true : false;
+  bool hitOr             = cmd.foundOption("hitor")  == true ? true : false;
 
 
   // ##################################
@@ -247,9 +259,9 @@ int main (int argc, char** argv)
   SystemController cSystemController;
 
 
-  // #################
-  // Read run number #
-  // #################
+  // ###################
+  // # Read run number #
+  // ###################
   std::ifstream fileRunNumberIn;
   std::string runNumber = RUNNUMBER;
   fileRunNumberIn.open(FileRUNNUMBER, std::ios::in);
@@ -267,16 +279,16 @@ int main (int argc, char** argv)
   // # Initialize Hardware #
   // #######################
   LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-  cSystemController.ConfigureHardware(cHWFile);
+  cSystemController.ConfigureHardware(configFile);
   LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
 
 
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display, chipRegDefault;
+  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, targetCharge, KrumCurrStart, KrumCurrStop, display, chipRegDefault;
   std::string INJtype;
-  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display, chipRegDefault);
+  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, targetCharge, KrumCurrStart, KrumCurrStop, display, chipRegDefault);
 
   // ######################################
   // # Correct injection pattern for RD53 #
@@ -287,7 +299,7 @@ int main (int argc, char** argv)
   // #####################
   // # Preparing the FSM #
   // #####################
-  ConfigureFSM(cSystemController, NTRIGxL1A, INJtype);
+  ConfigureFSM(cSystemController, NTRIGxL1A, INJtype, hitOr);
 
 
   // ######################
@@ -394,17 +406,16 @@ int main (int argc, char** argv)
       // #########################
       // # Run Gain Optimization #
       // #########################
-      LOG (ERROR) << BOLDRED << "@@@ Gain Optimization not implemented yet ... coming soon @@@" << RESET;
-      // LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
 
-      // std::string fileName("GainOptimization_" + runNumber + ".root");
-      // std::string chipConfig;
-      // if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
-      // else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
-      // GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, 7, 700);
-      // go.Inherit(&cSystemController);
-      // go.Run();
-      // go.Draw(display,true);
+      std::string fileName("GainOptimization_" + runNumber + ".root");
+      std::string chipConfig;
+      if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
+      else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
+      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, RD53chargeConverter::Charge2VCal(targetCharge), KrumCurrStart, KrumCurrStop);
+      go.Inherit(&cSystemController);
+      go.Run();
+      go.Draw(display,true);
     }
   else if (whichCalib == "thrmin")
     {

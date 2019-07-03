@@ -46,10 +46,8 @@ SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colS
 
 SCurve::~SCurve ()
 {
-  theFile->Close();
-  
-  delete fChannelGroupHandler;
-  delete theFile;
+  delete fChannelGroupHandler; fChannelGroupHandler = nullptr;
+  delete theFile;              theFile              = nullptr;
 
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -316,8 +314,8 @@ void SCurve::Display ()
       TPad* myPad = (TPad*)theCanvasTh1D[i]->GetPad(0);
       myPad->SetTopMargin(0.16);
       theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-				   RD53VCal2Charge::Convert(theThreshold1D[i]->GetBinLowEdge(1)),
-				   RD53VCal2Charge::Convert(theThreshold1D[i]->GetBinLowEdge(theThreshold1D[i]->GetNbinsX())),
+				   RD53chargeConverter::VCAl2Charge(theThreshold1D[i]->GetBinLowEdge(1)),
+				   RD53chargeConverter::VCAl2Charge(theThreshold1D[i]->GetBinLowEdge(theThreshold1D[i]->GetNbinsX())),
 				   510,"-"));
       theAxis.back()->SetTitle("Threshold (electrons)"); 
       theAxis.back()->SetTitleOffset(1.2);
@@ -344,8 +342,8 @@ void SCurve::Display ()
       TPad* myPad = (TPad*)theCanvasNo1D[i]->GetPad(0);
       myPad->SetTopMargin(0.16);
       theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-				   RD53VCal2Charge::Convert(theNoise1D[i]->GetBinLowEdge(1),true),
-				   RD53VCal2Charge::Convert(theNoise1D[i]->GetBinLowEdge(theNoise1D[i]->GetNbinsX()),true),
+				   RD53chargeConverter::VCAl2Charge(theNoise1D[i]->GetBinLowEdge(1),true),
+				   RD53chargeConverter::VCAl2Charge(theNoise1D[i]->GetBinLowEdge(theNoise1D[i]->GetNbinsX()),true),
 				   510,"-"));
       theAxis.back()->SetTitle("Noise (electrons)"); 
       theAxis.back()->SetTitleOffset(1.2);

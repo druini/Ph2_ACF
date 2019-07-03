@@ -39,11 +39,9 @@ ThrEqualization::ThrEqualization (const char* fileRes, const char* fileReg, size
 
 ThrEqualization::~ThrEqualization ()
 {
-  theFile->Close();
-  
   delete theTDACcontainer;
-  delete fChannelGroupHandler;
-  delete theFile;
+  delete fChannelGroupHandler; fChannelGroupHandler = nullptr;
+  delete theFile;              theFile              = nullptr;
 
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {

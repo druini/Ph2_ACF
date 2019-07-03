@@ -392,7 +392,7 @@ namespace Ph2_HwInterface
 	  }
 
 	auto events = this->DecodeEvents(pData, status);
-	// this->PrintEvents(events,&pData); // @TMP@
+	// this->PrintEvents(events, &pData); // @TMP@
 	if (this->EvtErrorHandler(status) == false)
 	  {
 	    retry = true;
@@ -565,14 +565,12 @@ namespace Ph2_HwInterface
     // # Print raw data #
     // ##################
     if (pData != nullptr)
-      {
-	for (auto j = 0; j < pData->size(); j++)
-	  {
-	    if (j%NWORDS_DDR3 == 0) std::cout << std::dec << "\n" << j << ":\t";
-	    std::cout << std::hex << std::setfill('0') << std::setw(8) << (*pData)[j] << "\t";
-	  }
-	std::cout << std::endl;
-      }
+      for (auto j = 0; j < pData->size(); j++)
+	{
+	  if (j%NWORDS_DDR3 == 0) std::cout << std::dec << j << ":\t";
+	  std::cout << std::hex << std::setfill('0') << std::setw(8) << (*pData)[j] << "\t";
+	  if (j%NWORDS_DDR3 == NWORDS_DDR3-1) std::cout << std::endl;
+	}
 
 
     for (auto i = 0; i < events.size(); i++)

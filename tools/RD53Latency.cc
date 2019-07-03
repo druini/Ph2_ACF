@@ -23,10 +23,8 @@ Latency::Latency (const char* fileRes, size_t rowStart, size_t rowEnd, size_t co
 
 Latency::~Latency ()
 {
-  theFile->Close();
-  
-  delete theFile;
-  
+  delete theFile; theFile = nullptr;
+
   for (auto i = 0; i < theCanvasLat.size(); i++)
     {
       delete theLat[i];

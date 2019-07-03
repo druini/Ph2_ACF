@@ -38,10 +38,8 @@ PixelAlive::PixelAlive (const char* fileRes, size_t rowStart, size_t rowEnd, siz
 
 PixelAlive::~PixelAlive ()
 {
-  theFile->Close();
-  
-  delete fChannelGroupHandler;
-  delete theFile;
+  delete fChannelGroupHandler; fChannelGroupHandler = nullptr;
+  delete theFile;              theFile              = nullptr;
 
   for (auto i = 0; i < theCanvasOcc2D.size(); i++)
     {

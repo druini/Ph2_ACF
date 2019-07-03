@@ -38,15 +38,21 @@
 // #################################################################################
 // # Formula: (par0 1e-3 + par1*VCal 1e-3) / electron_charge [C] * capacitance [C] #
 // #################################################################################
-namespace RD53VCal2Charge
+namespace RD53chargeConverter
 {
   constexpr float par0 = -1.0;
   constexpr float par1 =  0.195;
   constexpr float cap  =  8.2;
   constexpr float ele  =  1.6;
-  constexpr float Convert(float VCal, bool onlySlope = false)
+
+  constexpr float VCAl2Charge(float VCal, bool onlySlope = false)
   {
     return ((onlySlope ? 0 : par0) + par1*VCal) / ele * cap * 10.0;
+  }
+
+  constexpr float Charge2VCal(float Charge, bool onlySlope = false)
+  {
+    return (Charge / (cap * 10.0) * ele - par0) / par1;
   }
 }
 
