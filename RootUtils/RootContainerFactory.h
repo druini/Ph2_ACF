@@ -16,6 +16,7 @@
 #include "../Utils/DataContainer.h"
 #include "../RootUtils/PlotContainer.h"
 #include "../RootUtils/TH1FContainer.h"
+#include "../RootUtils/TH2FContainer.h"
 
 #include "TFile.h"
 #include <iostream>
@@ -219,6 +220,25 @@ std::string RootContainerFactory::getPlotTitle<true,TH1FContainer>(TH1FContainer
 
 template<>
 void RootContainerFactory::initializePlot<true,TH1FContainer>(TH1FContainer *plot, std::string name, std::string title, const TH1FContainer *reference)
+{
+	plot->initialize(name, title, reference);
+}
+
+
+template<>
+std::string RootContainerFactory::getPlotName<true,TH2FContainer>(TH2FContainer *plot)
+{
+	return plot->getName();
+}
+
+template<>
+std::string RootContainerFactory::getPlotTitle<true,TH2FContainer>(TH2FContainer *plot)
+{
+	return plot->getTitle();
+}
+
+template<>
+void RootContainerFactory::initializePlot<true,TH2FContainer>(TH2FContainer *plot, std::string name, std::string title, const TH2FContainer *reference)
 {
 	plot->initialize(name, title, reference);
 }

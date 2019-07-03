@@ -1,7 +1,7 @@
 /*
 
-        \file                          TH1FContainer.h
-        \brief                         Generic TH1FContainer for DQM
+        \file                          TH2FContainer.h
+        \brief                         Generic TH2FContainer for DQM
         \author                        Fabio Ravera, Lorenzo Uplegger
         \version                       1.0
         \date                          08/04/19
@@ -9,40 +9,40 @@
 
  */
 
-#ifndef __TH1F_CONTAINER_H__
-#define __TH1F_CONTAINER_H__
+#ifndef __TH2F_CONTAINER_H__
+#define __TH2F_CONTAINER_H__
 
 #include <iostream>
-#include "TH1F.h"
+#include "TH2F.h"
 #include "../Utils/Container.h"
 #include "../RootUtils/PlotContainer.h"
 
-class TH1FContainer : public PlotContainer
+class TH2FContainer : public PlotContainer
 {
 public:
-    TH1FContainer() : fTheHistogram(nullptr) {;}
+    TH2FContainer() : fTheHistogram(nullptr) {;}
 
-    TH1FContainer(const TH1FContainer& container) = delete;
-    TH1FContainer& operator= (const TH1FContainer& container) = delete;
-    TH1FContainer(const char *name, const char *title, int nBinsX, double xLow, double xUp) 
+    TH2FContainer(const TH2FContainer& container) = delete;
+    TH2FContainer& operator= (const TH2FContainer& container) = delete;
+    TH2FContainer(const char *name, const char *title, int nBinsX, double xLow, double xUp, int nBinsY, double yLow, double yUp) 
     {
-        fTheHistogram = new TH1F(name, title, nBinsX, xLow, xUp);
+        fTheHistogram = new TH2F(name, title, nBinsX, xLow, xUp, nBinsY, yLow, yUp);
         fTheHistogram->SetDirectory(0);  
     }
-    ~TH1FContainer() 
+    ~TH2FContainer() 
     {
 		if(fHasToBeDeletedManually) delete fTheHistogram;
 		fTheHistogram = nullptr;
     }
 
     //Move contructors
-    TH1FContainer(TH1FContainer&& container)
+    TH2FContainer(TH2FContainer&& container)
     {
         fHasToBeDeletedManually = container.fHasToBeDeletedManually;
         fTheHistogram = container.fTheHistogram;
         container.fTheHistogram = nullptr;
     }
-    TH1FContainer& operator= (TH1FContainer&& container)
+    TH2FContainer& operator= (TH2FContainer&& container)
     {
         fHasToBeDeletedManually = container.fHasToBeDeletedManually;
         fTheHistogram = container.fTheHistogram;
@@ -53,18 +53,19 @@ public:
     void initialize(std::string name, std::string title, const PlotContainer *reference) override
     {
         fHasToBeDeletedManually = false;
-        const TH1F *referenceHistogram = static_cast<const TH1FContainer*>(reference)->fTheHistogram;
-        fTheHistogram = new TH1F(name.data(), title.data(), referenceHistogram->GetNbinsX(), referenceHistogram->GetXaxis()->GetXmin(), referenceHistogram->GetXaxis()->GetXmax());
+        const TH2F *referenceHistogram = static_cast<const TH2FContainer*>(reference)->fTheHistogram;
+        fTheHistogram = new TH2F(name.data(), title.data(), referenceHistogram->GetNbinsX(), referenceHistogram->GetXaxis()->GetXmin(), referenceHistogram->GetXaxis()->GetXmax(),
+            referenceHistogram->GetNbinsY(), referenceHistogram->GetYaxis()->GetXmin(), referenceHistogram->GetYaxis()->GetXmax());
     }
     
     void print(void)
     { 
-        std::cout << "TH1FContainer " << fTheHistogram->GetName() << std::endl;
+        std::cout << "TH2FContainer " << fTheHistogram->GetName() << std::endl;
     }
     template<typename T>
     void makeAverage(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) {;}
     template<typename  T>
-    void makeAverage(const std::vector<T>* theTH1FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) {;}
+    void makeAverage(const std::vector<T>* theTH2FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) {;}
     void normalize(const uint16_t numberOfEvents) {;}
 
     void setNameTitle(std::string histogramName, std::string histogramTitle) override 
@@ -82,7 +83,7 @@ public:
         return fTheHistogram->GetTitle();
     }
 
-    TH1F* fTheHistogram;
+    TH2F* fTheHistogram;
 
 };
 
