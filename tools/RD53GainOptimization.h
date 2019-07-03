@@ -22,7 +22,7 @@ using namespace Ph2_System;
 class GainOptimization : public Gain
 {
  public:
-  GainOptimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetCharge, float targetToT);
+  GainOptimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetCharge, size_t KrumCurrStart = 0, size_t KrumCurrStop = 0);
   ~GainOptimization ();
 
   void Run  ();
@@ -40,8 +40,9 @@ class GainOptimization : public Gain
   size_t startValue;
   size_t stopValue;
   size_t nSteps;
+  size_t KrumCurrStart;
+  size_t KrumCurrStop;
   float  targetCharge;
-  float  targetToT;
 
   DetectorDataContainer theKrumCurrContainer;
 
@@ -49,7 +50,7 @@ class GainOptimization : public Gain
   void FillHisto   ();
   void Display     ();
   void Save        ();
-  void bitWiseScan (const char* dacName, float targetCharge, float targetToT);
+  void bitWiseScan ();
 
 
   // ########

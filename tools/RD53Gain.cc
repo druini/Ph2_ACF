@@ -46,10 +46,8 @@ Gain::Gain (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart
 
 Gain::~Gain ()
 {
-  theFile->Close();
-  
-  delete fChannelGroupHandler;
-  delete theFile;
+  delete fChannelGroupHandler; fChannelGroupHandler = nullptr;
+  delete theFile;              theFile              = nullptr;
 
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -319,8 +317,8 @@ void Gain::Display ()
       TPad* myPad = (TPad*)theCanvasGa1D[i]->GetPad(0);
       myPad->SetTopMargin(0.16);
       theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-				   1./RD53VCal2Charge::Convert(1./theGain1D[i]->GetBinLowEdge(1),true),
-				   1./RD53VCal2Charge::Convert(1./theGain1D[i]->GetBinLowEdge(theGain1D[i]->GetNbinsX()),true),
+				   1./RD53chargeConverter::VCAl2Charge(1./theGain1D[i]->GetBinLowEdge(1),true),
+				   1./RD53chargeConverter::VCAl2Charge(1./theGain1D[i]->GetBinLowEdge(theGain1D[i]->GetNbinsX()),true),
 				   510,"-"));
       theAxis.back()->SetTitle("Gain (ToT/electrons)");
       theAxis.back()->SetTitleOffset(1.2);
