@@ -5,41 +5,27 @@
 //#endif
 
 #include <iostream>
-#include <cassert>
-#include <sstream>
-#include <unistd.h>
-#include <stdio.h>           // printf
-#include <stdlib.h>          // exit
 #include <strings.h>         // bzero
-#include <sys/socket.h>      // inet_aton, socket, bind, listen, accept
 #include <netinet/in.h>      // inet_aton, struct sockaddr_in
 #include <arpa/inet.h>       // inet_aton
-#include <netdb.h>           // gethostbyname
-#include <errno.h>           // errno
-#include <sys/types.h>       // socket, bind, listen, accept
-#include <string.h>          // bzero
-#include <fcntl.h>
-#include <ifaddrs.h>
-#include <linux/if_link.h>
+// #include <sys/socket.h>      // inet_aton, socket, bind, listen, accept
+// #include <cassert>
+// #include <sstream>
+// #include <unistd.h>
+// #include <stdio.h>           // printf
+// #include <stdlib.h>          // exit
+// #include <netdb.h>           // gethostbyname
+// #include <errno.h>           // errno
+// #include <sys/types.h>       // socket, bind, listen, accept
+// #include <string.h>          // bzero
+// #include <fcntl.h>
+// #include <ifaddrs.h>
+// #include <linux/if_link.h>
 #include <regex>
 
 
-#include <chrono>
+// #include <chrono>
 #include <thread>
-
-#define MAXPACKETSIZE 4096
-
-#define DEBUG 1
-
-//using namespace ots;
-
-//========================================================================================================================
-//TCPClientBase::TCPClientBase()
-//: TCPConnectSocket()
-//, fServerIP      ("")
-//, fServerPort    (-1)
-//{
-//}
 
 //========================================================================================================================
 TCPClientBase::TCPClientBase(const std::string& serverIP, int serverPort)
