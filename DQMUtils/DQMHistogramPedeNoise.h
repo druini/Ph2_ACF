@@ -66,11 +66,43 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
      */
     void fillPedestalAndNoisePlots(DetectorDataContainer &thePedestalAndNoise);
 
+    /*!
+     * \brief Fill SCurve histograms
+     * \param fSCurveOccupancyMap : maps of Vthr and DataContainer
+     */
+    void fillSCurvePlots(std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap);
+
+    void setFitSCurve (bool flag) 
+    {
+      if(flag){
+        fPlotSCurve = true;
+        fFitSCurve = true;
+      }
+      else fFitSCurve = false;
+    }
+
+    void setPlotSCurve(bool flag) {fPlotSCurve = flag;};
 
   private:
+
+    void fitSCurves ();
+
+    DetectorDataContainer fThresholdAndNoiseContainer;
+
+    DetectorDataContainer fDetectorSCurveHistograms;
+    DetectorDataContainer fDetectorChannelSCurveHistograms;
     DetectorDataContainer fDetectorValidationHistograms;
     DetectorDataContainer fDetectorPedestalHistograms;
     DetectorDataContainer fDetectorNoiseHistograms;
+    DetectorDataContainer fDetectorStripNoiseHistograms;
+    DetectorDataContainer fDetectorStripPedestalHistograms;
+    DetectorDataContainer fDetectorStripNoiseEvenHistograms;
+    DetectorDataContainer fDetectorStripNoiseOddHistograms;
+    DetectorDataContainer fDetectorModuleNoiseHistograms;
+    DetectorDataContainer fDetectorModuleStripNoiseHistograms;
     DetectorDataContainer fDetectorData;
+
+    bool fPlotSCurve {false};
+    bool fFitSCurve  {false};
 };
 #endif

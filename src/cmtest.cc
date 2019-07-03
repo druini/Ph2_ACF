@@ -130,8 +130,8 @@ int main ( int argc, char* argv[] )
     int i = 0;
     for (auto cCbc : cFe->fReadoutChipVector)
     {
-	uint16_t cPedestal = round (cPedeNoise.getPedestal (cCbc) );
-	double   cNoise    = cPedeNoise.getNoise (cCbc);
+	uint16_t cPedestal = 0; //round (cPedeNoise.getPedestal (cCbc) );
+	double   cNoise    = 0.; //cPedeNoise.getNoise (cCbc);
 	cNoiseV.push_back(cNoise);
 	
 	if (cManualVcth==0) 
