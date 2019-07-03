@@ -42,9 +42,9 @@ namespace Ph2_HwInterface
     uint16_t ReadChipReg                       (Chip* pChip, const std::string& pRegNode)                                                             override;
     bool     ConfigureChipOriginalMask         (ReadoutChip* pChip, bool pVerifLoop = false, uint32_t pBlockSize = 310)                               override;
     bool     MaskAllChannels                   (ReadoutChip* pChip, bool mask, bool pVerifLoop = false)                                               override;
-    bool     maskChannelsAndSetInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = true )   override;
-    bool     setInjectionSchema                (ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = false)                           {}; // @TMP@
-    bool     maskChannelsGroup                 (ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = false)                           {}; // @TMP@
+    bool     maskChannelsAndSetInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false)   override;
+    bool     setInjectionSchema                (ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = false) { std::cout << __PRETTY_FUNCTION__ << std::endl; exit(1); }; // @TMP@
+    bool     maskChannelsGroup                 (ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = false) { std::cout << __PRETTY_FUNCTION__ << std::endl; exit(1); }; // @TMP@
     
     void     WriteRD53Mask     (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
     void     WriteRD53RegLong  (RD53* pRD53, const std::string& pRegNode, const std::vector<uint32_t>& dataVec, size_t nCmd = 1);
