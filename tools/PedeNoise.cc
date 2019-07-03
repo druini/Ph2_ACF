@@ -227,8 +227,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
                 {
                     std::stringstream ss;
                     
-                    float cOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->summary_)->theSummary_.fOccupancy;
-                    // float cOccupancy = backEndCbcOccupanyMap[cBoard->getBeId()][cFe->getFMCId()][cCbc->getChipId()];
+                    float cOccupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy;
                     cHoleModeFromOccupancy = (cOccupancy == 0) ? false :  true;
 
                     if (cHoleModeFromOccupancy != cHoleModeFromSettings)
@@ -249,7 +248,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
             {
                 for ( auto cCbc : *cFe )
                 {
-                    float cOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->summary_)->theSummary_.fOccupancy;
+                    float cOccupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy;
                     // float cOccupancy = backEndCbcOccupanyMap[cBoard->getBeId()][cFe->getFMCId()][cCbc->getChipId()];
                     fHoleMode = (cOccupancy == 0) ? false :  true;
                     std::string cMode = "Electron Mode";
@@ -554,8 +553,8 @@ void PedeNoise::measureSCurves (std::string pHistName, uint16_t pStartValue)
 
         this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
 
-        float globalOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(theOccupancyContainer->summary_)->theSummary_.fOccupancy;
-
+        float globalOccupancy = theOccupancyContainer->getSummary<Occupancy,Occupancy>().fOccupancy;
+        
         if (globalOccupancy == 0) ++cAllZeroCounter;
 
         if (globalOccupancy > 0.98) ++cAllOneCounter;
@@ -809,7 +808,7 @@ void PedeNoise::extractPedeNoise ()
 
     ContainerFactory      theDetectorFactory;
     DetectorDataContainer theDifferentialContainer;
-    theDetectorFactory.copyAndInitStructure<ThresholdAndNoise,EmptyContainer>(*fDetectorContainer, theDifferentialContainer);
+    theDetectorFactory.copyAndInitChannel<ThresholdAndNoise>(*fDetectorContainer, theDifferentialContainer);
     
     uint16_t counter = 0;
     std::map<uint16_t, DetectorDataContainer*>::reverse_iterator previousIterator = fSCurveOccupancyMap.rend();

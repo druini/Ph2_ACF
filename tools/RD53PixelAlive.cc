@@ -106,7 +106,7 @@ void PixelAlive::Analyze ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	LOG (INFO) << BOLDGREEN << "\t--> Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-		   << cChip->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.fOccupancy << RESET;
+		   << cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
 }
 
 void PixelAlive::InitHisto ()
@@ -250,18 +250,18 @@ void PixelAlive::FillHisto ()
 		  theErr[index]->SetBinContent(col+1,row+1,theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fErrors);
 	      }
 	  
-	  for (auto i = 1; i < theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data1.size(); i++)
+	  for (auto i = 1; i < theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1.size(); i++)
 	    {
-	      int deltaBCID = theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data1[i] -
-		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data1[i-1];
+	      int deltaBCID = theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
+		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
 	      
 	      theBCID[index]->Fill((deltaBCID > 0 ? 0 : RD53::SetBits(RD53EvtEncoder::NBIT_BCID)+1) + deltaBCID);
 	    }
 	  
-	  for (auto i = 1; i < theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data2.size(); i++)
+	  for (auto i = 1; i < theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2.size(); i++)
 	    {
-	      int deltaTrgID = theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data2[i] -
-		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data2[i-1];
+	      int deltaTrgID = theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
+		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
 	      
 	      theTrgID[index]->Fill((deltaTrgID > 0 ? 0 : RD53::SetBits(RD53EvtEncoder::NBIT_TRIGID)+1) + deltaTrgID);
 	    }

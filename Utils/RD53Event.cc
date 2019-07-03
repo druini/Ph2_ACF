@@ -42,8 +42,8 @@ namespace Ph2_HwInterface
 	    {
 	      if (vectorRequired == true)
 		{
-		  cChip->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data1.push_back(chip_events[chipIndx].bc_id);
-		  cChip->getSummary<GenericDataVector,OccupancyAndPh>().theSummary_.data2.push_back(chip_events[chipIndx].trigger_id);
+		  cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.push_back(chip_events[chipIndx].bc_id);
+		  cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.push_back(chip_events[chipIndx].trigger_id);
 		}
 
 	      for (const auto& hit : chip_events[chipIndx].data)

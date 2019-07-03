@@ -14,6 +14,7 @@
 
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
+#include "../Utils/EmptyContainer.h"
 #include <iostream>
 #include <vector>
 #include <map>
@@ -87,6 +88,35 @@ public:
 		copyAndInitStructure<T,SC,SC,SC,SC>(original, copy);
 	}
 
+	template<typename T>
+	void copyAndInitChannel(const DetectorContainer& original, DetectorDataContainer& copy)
+	{
+		copyAndInitStructure<T,EmptyContainer,EmptyContainer,EmptyContainer,EmptyContainer>(original, copy);
+	}
+
+	template<typename T>
+	void copyAndInitChip(const DetectorContainer& original, DetectorDataContainer& copy)
+	{
+		copyAndInitStructure<EmptyContainer,T,EmptyContainer,EmptyContainer,EmptyContainer>(original, copy);
+	}
+
+	template<typename T>
+	void copyAndInitModule(const DetectorContainer& original, DetectorDataContainer& copy)
+	{
+		copyAndInitStructure<EmptyContainer,EmptyContainer,T,EmptyContainer,EmptyContainer>(original, copy);
+	}
+
+	template<typename T>
+	void copyAndInitBoard(const DetectorContainer& original, DetectorDataContainer& copy)
+	{
+		copyAndInitStructure<EmptyContainer,EmptyContainer,EmptyContainer,T,EmptyContainer>(original, copy);
+	}
+
+	template<typename T>
+	void copyAndInitDetector(const DetectorContainer& original, DetectorDataContainer& copy)
+	{
+		copyAndInitStructure<EmptyContainer,EmptyContainer,EmptyContainer,EmptyContainer,T>(original, copy);
+	}
 
 
 	template<typename T, typename SC, typename SM, typename SB, typename SD>
@@ -122,6 +152,42 @@ public:
 	{
 		copyAndInitStructure<T,S,S,S,S>(original, copy, channel, summay, summay, summay, summay);
 	}
+
+	template<typename T>
+	void copyAndInitChannel(const DetectorContainer& original, DetectorDataContainer& copy, T& channel)
+	{
+		EmptyContainer theEmpty;
+		copyAndInitStructure<T,EmptyContainer,EmptyContainer,EmptyContainer,EmptyContainer>(original, copy, channel, theEmpty, theEmpty, theEmpty, theEmpty);
+	}
+
+	template<typename T>
+	void copyAndInitChip(const DetectorContainer& original, DetectorDataContainer& copy, T& chipSummary)
+	{
+		EmptyContainer theEmpty;
+		copyAndInitStructure<EmptyContainer,T,EmptyContainer,EmptyContainer,EmptyContainer>(original, copy, theEmpty, chipSummary, theEmpty, theEmpty, theEmpty);
+	}
+
+	template<typename T>
+	void copyAndInitModule(const DetectorContainer& original, DetectorDataContainer& copy, T& moduleSummary)
+	{
+		EmptyContainer theEmpty;
+		copyAndInitStructure<EmptyContainer,EmptyContainer,T,EmptyContainer,EmptyContainer>(original, copy, theEmpty, theEmpty, moduleSummary, theEmpty, theEmpty);
+	}
+
+	template<typename T>
+	void copyAndInitBoard(const DetectorContainer& original, DetectorDataContainer& copy, T& boardSummary)
+	{
+		EmptyContainer theEmpty;
+		copyAndInitStructure<EmptyContainer,EmptyContainer,EmptyContainer,T,EmptyContainer>(original, copy, theEmpty, theEmpty, theEmpty, boardSummary, theEmpty);
+	}
+
+	template<typename T>
+	void copyAndInitDetector(const DetectorContainer& original, DetectorDataContainer& copy, T& detectorSummary)
+	{
+		EmptyContainer theEmpty;
+		copyAndInitStructure<EmptyContainer,EmptyContainer,EmptyContainer,EmptyContainer,T>(original, copy, theEmpty, theEmpty, theEmpty, theEmpty, detectorSummary);
+	}
+
 
 };
 

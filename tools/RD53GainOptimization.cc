@@ -66,7 +66,7 @@ void GainOptimization::Run ()
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,GainAndIntercept>().theSummary_.fRegisterValue = static_cast<RD53*>(cChip)->getReg("KRUM_CURR_LIN");
+	theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,GainAndIntercept>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("KRUM_CURR_LIN");
 }
 
 void GainOptimization::Draw (bool display, bool save)
@@ -129,7 +129,7 @@ void GainOptimization::FillHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  theKrumCurr[index]->Fill(theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,GainAndIntercept>().theSummary_.fRegisterValue);
+	  theKrumCurr[index]->Fill(theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,GainAndIntercept>().fRegisterValue);
 
 	  index++;
 	}

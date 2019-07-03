@@ -38,7 +38,7 @@ void Latency::Run ()
   std::vector<uint32_t> data;
   uint8_t               status;
 
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,GenericDataVector>(*fDetectorContainer, theContainer);
+  theDetectorFactory.copyAndInitChip<GenericDataVector>(*fDetectorContainer, theContainer);
 
   auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
 
@@ -84,7 +84,7 @@ void Latency::Run ()
 		      if (evt.chip_events[j].data.size() != 0) nEvts++;
 		  }
 
-		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data1.push_back(nEvts);
+		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().data1.push_back(nEvts);
 	      }
 	  }
     }
@@ -117,7 +117,7 @@ void Latency::Analyze ()
 	  
 	  for (auto lt = startValue; lt < stopValue; lt++)
 	    {
-	      auto nEvts = cChip->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data1[lt-startValue];
+	      auto nEvts = cChip->getSummary<GenericDataVector>().data1[lt-startValue];
 	      if (nEvts > dataSize)
 		{
 		  latency  = lt;
@@ -169,7 +169,7 @@ void Latency::FillHisto ()
       for (const auto cChip : *cModule)
 	{
 	  for (auto lt = startValue; lt < stopValue; lt++)
-	    theLat[index]->SetBinContent(theLat[index]->FindBin(lt),cChip->getSummary<GenericDataVector,EmptyContainer>().theSummary_.data1[lt-startValue]);
+	    theLat[index]->SetBinContent(theLat[index]->FindBin(lt),cChip->getSummary<GenericDataVector>().data1[lt-startValue]);
 	  
 	  index++;
 	}

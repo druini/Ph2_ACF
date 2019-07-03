@@ -311,7 +311,7 @@ namespace Ph2_HwInterface {
         this->ChipReSync();
         usleep (1);
 
-        //WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
+        WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
 
         usleep (500);
 

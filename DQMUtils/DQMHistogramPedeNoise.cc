@@ -40,19 +40,19 @@ void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &
     
     RootContainerFactory theRootFactory;
     EmptyContainer theEmptyContainer;
-
+    
     //Pedestal
     TH1FContainer theTH1FPedestalContainer("PedestalDistribution", "Pedestal Distribution", 2048, -0.5, 1023.5);
-    theRootFactory.bookHistrogramsFromStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, theDetectorStructure, fDetectorPedestalHistograms, theEmptyContainer, theTH1FPedestalContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
-
+    theRootFactory.bookChipHistrograms<TH1FContainer>(theOutputFile, theDetectorStructure, fDetectorPedestalHistograms, theTH1FPedestalContainer);
+    
     //Noise
     TH1FContainer theTH1FNoiseContainer("NoiseDistribution", "Noise Distribution", 200, 0., 20.);
-    theRootFactory.bookHistrogramsFromStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, theDetectorStructure, fDetectorNoiseHistograms, theEmptyContainer, theTH1FNoiseContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
-
+    theRootFactory.bookChipHistrograms<TH1FContainer>(theOutputFile, theDetectorStructure, fDetectorNoiseHistograms, theTH1FNoiseContainer);
+    
     //Validation
     TH1FContainer theTH1FValidationContainer("Occupancy", "Occupancy", 254, -0.5, 253.5);
-    theRootFactory.bookHistrogramsFromStructure<EmptyContainer,TH1FContainer,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, theDetectorStructure, fDetectorValidationHistograms, theEmptyContainer, theTH1FValidationContainer, theEmptyContainer, theEmptyContainer, theEmptyContainer );
-
+    theRootFactory.bookChipHistrograms<TH1FContainer>(theOutputFile, theDetectorStructure, fDetectorValidationHistograms, theTH1FValidationContainer);
+    
 }
 
 //========================================================================================================================
@@ -86,16 +86,9 @@ void DQMHistogramPedeNoise::process()
 
     for(auto board : fDetectorPedestalHistograms)
     {
-        std::string boardFolder = "Board_" + std::to_string(board->getId());
-        // if(output.TDirectory::GetDirectory(boardFolder.data()) == nullptr) output.mkdir(boardFolder.data());
-        // output.cd(boardFolder.data());
-
+        
         for(auto module: *board)
         {
-            // std::string moduleFolder = boardFolder + "/FE_" + std::to_string(module->getId());
-            // if(output.TDirectory::GetDirectory(moduleFolder.data()) == nullptr) output.mkdir(moduleFolder.data());
-            // output.cd(moduleFolder.data());
-
             TCanvas *cValidation = new TCanvas(("Validation_" + std::to_string(module->getId())).data(),("Validation " + std::to_string(module->getId())).data());
             TCanvas *cPedeNoise = new TCanvas(("PedeNoise_" + std::to_string(module->getId())).data(),("PedeNoise " + std::to_string(module->getId())).data());
 
@@ -106,49 +99,17 @@ void DQMHistogramPedeNoise::process()
 
             for(auto chip: *module)
             {
-                // std::string chipFolder = moduleFolder + "/Chip_" + std::to_string(chip->getId());
-                // if(output.TDirectory::GetDirectory(chipFolder.data()) == nullptr) output.mkdir(chipFolder.data());
-                // output.cd(chipFolder.data());
-
                 cValidation->cd(validationPadId++);
-                TH1F *chipValidationHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
-                    fDetectorValidationHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
-                    )->theSummary_.fTheHistogram;
-                // std::string cHistname = Form ( "Fe%dCBC%d_Occupancy", module->getId(), chip->getId() );
-                // chipValidationHistogram->SetNameTitle(cHistname.data(), cHistname.data());
-                // chipValidationHistogram->Write();
-                chipValidationHistogram->Draw();
+                fDetectorValidationHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram->Draw();
 
                 cPedeNoise->cd(pedeNoisePadId++);
-                TH1F *chipPedestalHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
-                    fDetectorPedestalHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
-                    )->theSummary_.fTheHistogram;
-
-                // cHistname = Form ( "Fe%dCBC%d_Pedestal", module->getId(), chip->getId() );
-                // chipPedestalHistogram->SetNameTitle(cHistname.data(), cHistname.data());
-                // chipPedestalHistogram->Write();
-                chipPedestalHistogram->Draw();
-
+                fDetectorPedestalHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram->Draw();
+                
                 cPedeNoise->cd(pedeNoisePadId++);
-                TH1F *chipNoiseHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
-                    fDetectorNoiseHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
-                    )->theSummary_.fTheHistogram;
-
-                // cHistname = Form ( "Fe%dCBC%d_Noise", module->getId(), chip->getId() );
-                // chipNoiseHistogram->SetNameTitle(cHistname.data(), cHistname.data());
-                // chipNoiseHistogram->Write();
-                chipNoiseHistogram->Draw();
+                fDetectorNoiseHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram->Draw();
             }
-
-            // output.cd(moduleFolder.data());
-
-            // cValidation->Write();
-            // cPedeNoise->Write();
         }
     }
-
-    //delete c1;
-    //output.Close();
 }
 
 //========================================================================================================================
@@ -166,15 +127,11 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer &theOccupa
         {
             for(auto chip: *module)
             {
-                TH1F *chipValidationHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
-                    fDetectorValidationHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
-                    )->theSummary_.fTheHistogram;
-                
+                TH1F *chipValidationHistogram = fDetectorValidationHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
                 uint channelBin=1;
                 if(chip->getChannelContainer<ChannelContainer<Occupancy>>() == nullptr ) continue;
                 for(auto channel : *chip->getChannelContainer<ChannelContainer<Occupancy>>())
                 {
-                    // fDetectorValidationHistograms.at(board->getId()).at(module->getId()).at(chip->getId()).fTheHistogram
                     chipValidationHistogram->SetBinContent(channelBin  ,channel.fOccupancy     );
                     chipValidationHistogram->SetBinError  (channelBin++,channel.fOccupancyError);
                 }
@@ -192,19 +149,12 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer &the
         {
             for(auto chip: *module)
             {
-                TH1F *chipPedestalHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
-                    fDetectorPedestalHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
-                    )->theSummary_.fTheHistogram;
+                TH1F *chipPedestalHistogram = fDetectorPedestalHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
+                TH1F *chipNoiseHistogram    = fDetectorNoiseHistograms   .at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
                 
-                TH1F *chipNoiseHistogram = static_cast<Summary<TH1FContainer,EmptyContainer>*>(
-                    fDetectorNoiseHistograms.at(board->getId())->at(module->getId())->at(chip->getId())->summary_
-                    )->theSummary_.fTheHistogram;
-
-                // uint channelBin=1;
                 if(chip->getChannelContainer<ChannelContainer<ThresholdAndNoise>>() == nullptr ) continue;
                 for(auto channel : *chip->getChannelContainer<ChannelContainer<ThresholdAndNoise>>())
                 {
-                    // fDetectorValidationHistograms.at(board->getId()).at(module->getId()).at(chip->getId()).fTheHistogram
                     chipPedestalHistogram->Fill(channel.fThreshold);
                     chipNoiseHistogram->Fill(channel.fNoise);
                 }
