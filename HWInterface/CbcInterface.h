@@ -57,6 +57,8 @@ namespace Ph2_HwInterface {
 
         bool maskChannelsGroup  (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
 
+        bool maskChannelsAndSetInjectionSchema  (ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop = true ) override;
+
          /*!
          * \brief Reapply the stored mask for the CBC, use it after group masking is applied
          * \param pCbc: pointer to CBC object

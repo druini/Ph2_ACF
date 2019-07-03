@@ -385,6 +385,14 @@ namespace Ph2_HwInterface
     return true;
   }
 
+
+  bool RD53Interface::maskChannelsAndSetInjectionSchema  (ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop)
+  {
+      if(mask)   maskChannelsGroup (pChip,group,pVerifLoop);
+      if(inject) setInjectionSchema(pChip,group,pVerifLoop);
+  }
+
+
   bool RD53Interface::WriteChipAllLocalReg (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);

@@ -65,6 +65,17 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          */
         virtual bool maskChannelsGroup (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true ) = 0;
+        
+        /*!
+         * \brief mask and inject with one function to increase speed
+         * \param pChip: pointer to Chip object
+         * \param group: group of channels under test
+         * \param mask: mask channel not belonging to the group under test
+         * \param inject: inject channels belonging to the group under test
+         * \param pVerifLoop: perform a readback check
+         */
+        virtual bool maskChannelsAndSetInjectionSchema  (ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop = true ) = 0;
+
          /*!
          * \brief Reapply the stored mask for the Chip, use it after group masking is applied
          * \param pChip: pointer to Chip object
