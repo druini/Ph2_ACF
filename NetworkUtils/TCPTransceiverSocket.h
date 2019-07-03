@@ -14,6 +14,8 @@ public:
 	TCPTransceiverSocket(TCPTransceiverSocket const&)  = delete ;
 	TCPTransceiverSocket(TCPTransceiverSocket&& theTCPTransceiverSocket) = default;
 
+	std::string sendAndReceive (const std::string& sendBuffer);
+
 };
 
 #endif

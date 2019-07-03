@@ -12,3 +12,10 @@ TCPTransceiverSocket::~TCPTransceiverSocket(void)
 {
 
 }
+
+//========================================================================================================================
+std::string TCPTransceiverSocket::sendAndReceive(const std::string& sendBuffer)
+{
+	send(sendBuffer);
+	return receive<std::string>();
+}

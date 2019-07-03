@@ -5,24 +5,28 @@
 #include <string>
 #include <vector>
 
-// A class that can write to a socket
-class TCPReceiverSocket: public virtual TCPSocket
+class TCPReceiverSocket : public virtual TCPSocket
 {
 public:
-	TCPReceiverSocket(int socketId=invalidSocketId);
+	TCPReceiverSocket(int socketId = invalidSocketId);
 	virtual ~TCPReceiverSocket();
 	//TCPReceiverSocket(TCPReceiverSocket const&)  = delete ;
-	TCPReceiverSocket(TCPReceiverSocket&& theTCPReceiverSocket) = default;
+	TCPReceiverSocket(TCPReceiverSocket &&theTCPReceiverSocket) = default;
 
-	std::size_t            receive       (char* buffer, std::size_t size);
-	std::string&           receiveMessage(void);
-	//std::vector<uint32_t>& receiveData   (void);
+	std::size_t receive(char* buffer, std::size_t size);
+	template <class T>
+	T receive()
+	{
+		T buffer;
+		buffer.resize(maxSocketSize);
+		int length = receive(static_cast<char *>(&buffer.at(0)), maxSocketSize);
+		buffer.resize(length);
+		//std::cout << __PRETTY_FUNCTION__ << "Message received-" << fBuffer << "-" << std::endl;
+		return buffer; //c++11 doesn't make a copy anymore when returned
+	}
 
 private:
-    static constexpr unsigned int maxSocketSize   = 65536;
-	std::string fBuffer;
-
-
+	static constexpr unsigned int maxSocketSize = 65536;
 };
 
 #endif

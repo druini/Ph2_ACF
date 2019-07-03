@@ -1,7 +1,7 @@
 //#ifndef BEAGLEBONE
-//#include "otsdaq_cmsburninbox/BeagleBone/BeagleBoneUtils/TCPNetworkClient.h"
+//#include "otsdaq_cmsburninbox/BeagleBone/BeagleBoneUtils/TCPClientBase.h"
 //#else
-#include "../NetworkUtils/TCPNetworkClient.h"
+#include "../NetworkUtils/TCPClientBase.h"
 //#endif
 
 #include <iostream>
@@ -34,7 +34,7 @@
 //using namespace ots;
 
 //========================================================================================================================
-//TCPNetworkClient::TCPNetworkClient()
+//TCPClientBase::TCPClientBase()
 //: TCPConnectSocket()
 //, fServerIP      ("")
 //, fServerPort    (-1)
@@ -42,9 +42,7 @@
 //}
 
 //========================================================================================================================
-TCPNetworkClient::TCPNetworkClient(const std::string& serverIP, int serverPort)
-//: TCPTransceiverSocket(::socket(PF_INET, SOCK_STREAM, 0))
-//: TCPTransceiverSocket()
+TCPClientBase::TCPClientBase(const std::string& serverIP, int serverPort)
 : fServerIP  (serverIP)
 , fServerPort(serverPort)
 , fConnected (false)
@@ -52,7 +50,7 @@ TCPNetworkClient::TCPNetworkClient(const std::string& serverIP, int serverPort)
 }
 
 //========================================================================================================================
-TCPNetworkClient::~TCPNetworkClient(void)
+TCPClientBase::~TCPClientBase(void)
 {
 	std::cout << __PRETTY_FUNCTION__ << "Closing TCPSocket #" << getSocketId() << std::endl;
 	if(fConnected)
@@ -61,7 +59,7 @@ TCPNetworkClient::~TCPNetworkClient(void)
 }
 
 //========================================================================================================================
-bool TCPNetworkClient::connect(int retry, unsigned int sleepMSeconds)
+bool TCPClientBase::connect(int retry, unsigned int sleepMSeconds)
 {
 	if(fConnected)
 	{
@@ -125,142 +123,8 @@ bool TCPNetworkClient::connect(int retry, unsigned int sleepMSeconds)
 }
 
 //========================================================================================================================
-int TCPNetworkClient::send(const char* buffer, size_t bufferSize)
-{
-	int status = ::send(getSocketId(), buffer, bufferSize, 0);
-	if (status == -1)
-		std::cout << __PRETTY_FUNCTION__ << "Error writing buffer for socket " << getSocketId() << " : " << strerror(errno) << std::endl;
-
-	return status;
-}
-
-//========================================================================================================================
-int TCPNetworkClient::send(const std::string& buffer)
-{
-	return send(buffer.c_str(), buffer.size());
-}
-
-//========================================================================================================================
-//no connect in receive?
-int TCPNetworkClient::receive(char* buffer, unsigned int timeoutSeconds, unsigned int timeoutUSeconds)
-{
-	if (DEBUG) std::cout << __PRETTY_FUNCTION__ << "Receive method for client with socket #: "<< getSocketId() <<std::endl;
-
-	struct timeval timeout;
-	timeout.tv_sec  = timeoutSeconds;
-	timeout.tv_usec = timeoutUSeconds;
-
-	fd_set fdSet;
-	FD_ZERO(&fdSet);
-	FD_SET(getSocketId(), &fdSet);
-	::select(getSocketId() + 1, &fdSet, 0, 0, &timeout);
-
-	if (FD_ISSET(getSocketId(), &fdSet))
-	{
-		ssize_t bufferLength = -1;
-		if ((bufferLength = ::read(getSocketId(), buffer, MAXPACKETSIZE)) == -1)
-		{
-			std::cout << __PRETTY_FUNCTION__ << "Error reading buffer from socket #: " << getSocketId() << std::endl;
-			return -1;
-		}
-
-		return bufferLength;
-	}
-
-	return -1;
-}
-
-//========================================================================================================================
-int TCPNetworkClient::receive(std::string& buffer, unsigned int timeoutSeconds, unsigned int timeoutUSeconds)
-{
-	buffer.resize(MAXPACKETSIZE);
-	int size = receive(&buffer.at(0), timeoutSeconds, timeoutUSeconds);
-	if (size > 0)
-		buffer.resize(size);
-	else
-		buffer.resize(0);
-	return size;
-}
-
-//========================================================================================================================
-int TCPNetworkClient::receive(std::vector<char>& buffer, unsigned int timeoutSeconds, unsigned int timeoutUSeconds)
-{
-	buffer.resize(MAXPACKETSIZE);
-	int size = receive(&buffer.at(0), timeoutSeconds, timeoutUSeconds);
-	if (size > 0)
-		buffer.resize(size);
-	else
-		buffer.resize(0);
-	return size;
-}
-
-//========================================================================================================================
-int TCPNetworkClient::receive(std::vector<uint16_t>& buffer, uint32_t timeoutSeconds, uint32_t timeoutUSeconds )
-{
-
-	int status = -1;
-	if (!(select(timeoutSeconds, timeoutUSeconds))) return status;
-
-	int recvSize = 2;
-	std::vector<unsigned char> buf_v(recvSize);
-	unsigned char* buf = &buf_v[0];
-
-	int totalSize = MAXPACKETSIZE/recvSize;
-
-	buffer.clear();
-
-	memset (buf, 0, recvSize);
-
-	int bytesReceived = 0;
-	while(bytesReceived < totalSize) {
-
-		status = ::recv ( getSocketId(), buf, recvSize, 0 );
-		bytesReceived += recvSize;
-
-		if      ( status == -1 ) std::cout << __PRETTY_FUNCTION__ << "status == -1   errno == " << errno << "  in Socket::recv\n" << std::endl;
-		else if ( status == 0 )  std::cout << __PRETTY_FUNCTION__ << "status == 0  errno == " << errno << "  in Socket::recv\n" << std::endl;
-		else
-		{
-			uint16_t val = buf[1] << 8 | buf[0];
-			buffer.push_back(val);
-		}
-	}
-
-	buffer.resize(bytesReceived/recvSize);
-	return status;
-
-}
-
-//========================================================================================================================
-int TCPNetworkClient::sendAndReceive(const std::string& sendBuffer, std::string& receiveBuffer, uint32_t timeoutSeconds, uint32_t timeoutUSeconds)
-{
-	std::cout << __PRETTY_FUNCTION__ << "Sending...: " << sendBuffer << std::endl;
-	if(send(sendBuffer) < 0)
-		return -1;
-	receive(receiveBuffer, timeoutSeconds, timeoutUSeconds);
-	std::cout << __PRETTY_FUNCTION__ << "Receiving...: " << receiveBuffer << std::endl;
-	return 1;
-}
-
-//========================================================================================================================
-bool TCPNetworkClient::select (unsigned int timeoutSeconds, unsigned int timeoutUSeconds)
-{
-	struct timeval timeout;
-	timeout.tv_sec = timeoutSeconds;
-	timeout.tv_usec = timeoutUSeconds;
-
-	fd_set fdSet;
-	FD_ZERO(&fdSet);
-	FD_SET(getSocketId(), &fdSet);
-	int retval=::select(getSocketId() + 1, &fdSet, 0, 0, &timeout);
-
-	if (retval > 0) return true;
-	return false;
-}
-
-//========================================================================================================================
 //protected
-int TCPNetworkClient::resolveServer(std::string serverIP, int serverPort, sockaddr_in& serverSocketAddress)
+int TCPClientBase::resolveServer(std::string serverIP, int serverPort, sockaddr_in& serverSocketAddress)
 {
 	std::string     resolvedIP   = serverIP;
 	int             resolvedPort = serverPort;
@@ -315,17 +179,17 @@ int TCPNetworkClient::resolveServer(std::string serverIP, int serverPort, sockad
 }
 
 //========================================================================================================================
-void TCPNetworkClient::setNonBlocking ( const bool noBlock )
-{
-	int opts;
-	opts = fcntl ( getSocketId(), F_GETFL );
+// void TCPClientBase::setNonBlocking ( const bool noBlock )
+// {
+// 	int opts;
+// 	opts = fcntl ( getSocketId(), F_GETFL );
 
-	if (opts < 0) { perror("opts exception");  exit(1); }
-	if ( noBlock )  opts = ( opts | O_NONBLOCK );
-	else  opts = ( opts & ~O_NONBLOCK );
+// 	if (opts < 0) { perror("opts exception");  exit(1); }
+// 	if ( noBlock )  opts = ( opts | O_NONBLOCK );
+// 	else  opts = ( opts & ~O_NONBLOCK );
 
-	fcntl ( getSocketId(), F_SETFL, opts );
+// 	fcntl ( getSocketId(), F_SETFL, opts );
 
-}
+// }
 
 

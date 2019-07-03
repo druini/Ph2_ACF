@@ -7,26 +7,16 @@
 
 //========================================================================================================================
 TCPSocket::TCPSocket(int socketId)
-: fSocketId (socketId)
+	: fSocketId(socketId)
 {
 	if (socketId == invalidSocketId && (fSocketId = ::socket(PF_INET, SOCK_STREAM, 0)) == invalidSocketId)
-	{
-		// std::cout << __PRETTY_FUNCTION__ << "Exception creating new socket!" << std::endl;
-		throw std::runtime_error(buildErrorMessage("TCPSocket::", __func__, ": bad socket: ", strerror(errno)));
-	}
+		throw std::runtime_error(std::string("Bad socket: ") + strerror(errno));
 	// std::cout << __PRETTY_FUNCTION__ << "New socket: " << fSocketId << std::endl;
 }
 
 //========================================================================================================================
 TCPSocket::~TCPSocket()
 {
-	if (fSocketId == invalidSocketId)
-	{
-		// This object has been closed or moved.
-		// So we don't need to call close.
-		return;
-	}
-
 	try
 	{
 		close();
@@ -50,33 +40,29 @@ void TCPSocket::close()
 {
 	if (fSocketId == invalidSocketId)
 	{
-		throw std::logic_error(buildErrorMessage("DataSocket::", __func__, ": accept called on a bad socket object (this object was moved)"));
+		throw std::logic_error("Bad socket object (this object was moved)");
 	}
-	while (true)
+	int state = ::close(fSocketId);
+	std::cout << __PRETTY_FUNCTION__ << "Socket id: " << getSocketId() << " close state: " << state << " errno: " << errno << std::endl;
+	if (state == 0) //0 means socket closed correctly
+		fSocketId = invalidSocketId;
+	else
 	{
-		int state = ::close(fSocketId); //0 means socket closed correctly
-		std::cout << __PRETTY_FUNCTION__ << "Socket id: " << getSocketId() << " close state: " << state << " errno: " << errno << std::endl;
-		if (state == 0)
-		{
-			fSocketId = invalidSocketId;
-			break;
-		}
-
 		switch (errno)
 		{
 		case EBADF:
-			throw std::domain_error(buildErrorMessage("TCPSocket::", __func__, ": close: EBADF: ", fSocketId, " ", strerror(errno)));
+			throw std::domain_error(std::string("Close: EBADF: ") + std::to_string(fSocketId) + " " + strerror(errno));
 		case EIO:
-			throw std::runtime_error(buildErrorMessage("TCPSocket::", __func__, ": close: EIO:  ", fSocketId, " ", strerror(errno)));
+			throw std::runtime_error(std::string("Close: EIO: ") + std::to_string(fSocketId) + " " + strerror(errno));
 		case EINTR:
 		{
 			// TODO: Check for user interrupt flags.
 			//       Beyond the scope of this project
 			//       so continue normal operations.
-			break;
+			return;
 		}
 		default:
-			throw std::runtime_error(buildErrorMessage("TCPSocket::", __func__, ": close: ???:  ", fSocketId, " ", strerror(errno)));
+			throw std::runtime_error(std::string("Close: ???: ") + std::to_string(fSocketId) + " " + strerror(errno));
 		}
 	}
 }
@@ -107,6 +93,6 @@ void TCPSocket::sendClose()
 {
 	if (::shutdown(getSocketId(), SHUT_WR) != 0)
 	{
-		throw std::domain_error(buildErrorMessage("HTTPProtocol::", __func__, ": shutdown: critical error: ", strerror(errno)));
+		throw std::domain_error(std::string("Shutdown: critical error: ") + strerror(errno));
 	}
 }

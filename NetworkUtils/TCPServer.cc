@@ -1,11 +1,13 @@
 #include "../NetworkUtils/TCPServer.h"
 #include "../NetworkUtils/TCPTransceiverSocket.h"
+#include <errno.h>		// errno
+#include <string.h>		// errno
 
 #include <iostream>
 
 //========================================================================================================================
-TCPServer::TCPServer(int serverPort, unsigned int maxNumberOfConnections)
-	: TCPServerBase(serverPort, maxNumberOfConnections)
+TCPServer::TCPServer(int serverPort, unsigned int maxNumberOfClients)
+	: TCPServerBase(serverPort, maxNumberOfClients)
 {
 	//fAcceptFuture = std::async(std::launch::async, &TCPServer::acceptConnections, this);
 }
@@ -29,7 +31,7 @@ void TCPServer::connectClient(TCPTransceiverSocket* socket)
 	while (1)
 	{
 		std::cout << __PRETTY_FUNCTION__ << "Waiting for message for socket  #: " << socket->getSocketId() << std::endl;
-		std::string &message = socket->receiveMessage();
+		std::string message = socket->receive<std::string>();
 		std::cout << __PRETTY_FUNCTION__ << "Receiving from socket  #: " << socket->getSocketId() << " n bytes: " << message.length() << std::endl;
 
 		if (message.length() == 0)
@@ -85,4 +87,5 @@ void TCPServer::acceptConnections()
 				break;
 		}
 	}
+	fAcceptPromise.set_value(true);
 }

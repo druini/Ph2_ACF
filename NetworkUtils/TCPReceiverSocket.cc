@@ -25,7 +25,7 @@ std::size_t TCPReceiverSocket::receive(char* buffer, std::size_t size)
 	std::cout << __PRETTY_FUNCTION__ << "Receiving Message for socket: " << getSocketId() << std::endl;
 	if (getSocketId() == 0)
 	{
-		throw std::logic_error(buildErrorMessage("DataSocket::", __func__, ": accept called on a bad socket object (this object was moved)"));
+		throw std::logic_error("Bad socket object (this object was moved)");
 	}
 	std::cout << __PRETTY_FUNCTION__ << "trying: " << getSocketId() << std::endl;
 	return ::recv(getSocketId(), buffer, maxSocketSize, 0);
@@ -45,14 +45,14 @@ std::size_t TCPReceiverSocket::receive(char* buffer, std::size_t size)
 			case ENXIO:
 			{
 				// Fatal error. Programming bug
-				throw std::domain_error(buildErrorMessage("DataSocket::", __func__, ": read: critical error: ", strerror(errno)));
+				throw std::domain_error(std::string("Read: critical error: ") + strerror(errno));
 			}
 			case EIO:
 			case ENOBUFS:
 			case ENOMEM:
 			{
 				// Resource acquisition failure or device error
-				throw std::runtime_error(buildErrorMessage("DataSocket::", __func__, ": read: resource failure: ", strerror(errno)));
+				throw std::runtime_error(std::string("Read: resource failure: ") + strerror(errno));
 			}
 			case EINTR:
 				// TODO: Check for user interrupt flags.
@@ -76,7 +76,7 @@ std::size_t TCPReceiverSocket::receive(char* buffer, std::size_t size)
 			}
 			default:
 			{
-				throw std::runtime_error(buildErrorMessage("DataSocket::", __func__, ": read: returned -1: ", strerror(errno)));
+				throw std::runtime_error(std::string("Read: returned -1: ") + strerror(errno));
 			}
 			}
 		}
@@ -90,27 +90,5 @@ std::size_t TCPReceiverSocket::receive(char* buffer, std::size_t size)
 			break;
 		}
 	}
-
 	return dataRead;
-
 }
-
-//========================================================================================================================
-std::string& TCPReceiverSocket::receiveMessage(void)
-{
-	std::cout << __PRETTY_FUNCTION__ << "Receiving Message" << std::endl;
-	std::cout << __PRETTY_FUNCTION__ << "Receiving Message" << std::endl;
-	std::cout << __PRETTY_FUNCTION__ << getSocketId() << std::endl;
-	std::cout << __PRETTY_FUNCTION__ << "Receiving Message" << std::endl;
-	fBuffer.resize(maxSocketSize);
-	int length = receive(static_cast<char*>(&fBuffer.at(0)), fBuffer.size());
-	fBuffer.resize(length);
-	std::cout << __PRETTY_FUNCTION__ << "Message received-" << fBuffer << "-" << std::endl;
-	return fBuffer;
-}
-
-////========================================================================================================================
-//std::vector<uint32_t>& TCPReceiverSocket::receive(void)
-//{
-//	receive(dynamic_cast<char*>(&buffer.at(0)), buffer.size());
-//}

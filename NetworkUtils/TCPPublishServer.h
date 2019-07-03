@@ -10,7 +10,7 @@
 class TCPPublishServer : public TCPServerBase
 {
 public:
-	TCPPublishServer(int serverPort, unsigned int maxNumberOfConnections=-1);
+	TCPPublishServer(int serverPort, unsigned int maxNumberOfClients=-1);
 	virtual ~TCPPublishServer(void);
 
 protected:

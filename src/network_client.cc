@@ -1,4 +1,4 @@
-#include "../NetworkUtils/TCPNetworkClient.h"
+#include "../NetworkUtils/TCPClient.h"
 #include <iostream>
 #include "../Utils/easylogging++.h"
 #include <thread>
@@ -6,12 +6,12 @@
 
 INITIALIZE_EASYLOGGINGPP
 
-class MiddlewareInterface: public TCPNetworkClient
+class MiddlewareInterface: public TCPClient
 {
 public:
 
 	MiddlewareInterface(std::string serverIP, int serverPort)
-	: TCPNetworkClient (serverIP, serverPort)
+	: TCPClient (serverIP, serverPort)
 	{
 	}
 	virtual ~MiddlewareInterface(void){;}
@@ -19,21 +19,19 @@ public:
 	void initialize(void)
 	{
 
-		if(!TCPNetworkClient::connect())
+		if(!TCPClient::connect())
 		{
 			std::cout << __PRETTY_FUNCTION__ << "ERROR CAN'T CONNECT TO SERVER!"<< std::endl;
 			abort();
 		}
-		std::string readBuffer="";
-		TCPNetworkClient::sendAndReceive("Initialize", readBuffer, 2);
+		std::string readBuffer = TCPClient::sendAndReceive("Initialize");
 		std::cout << __PRETTY_FUNCTION__ << "DONE WITH Initialize-" << readBuffer << "-"<< std::endl;
 	}
 
 	//========================================================================================================================
 	void configure(std::string calibrationName, std::string configurationFilePath)
 	{
-		std::string readBuffer="";
-		TCPNetworkClient::sendAndReceive("Configure,Calibration:" + calibrationName + ",ConfigurationFile:" + configurationFilePath,readBuffer,10);
+		std::string readBuffer = TCPClient::sendAndReceive("Configure,Calibration:" + calibrationName + ",ConfigurationFile:" + configurationFilePath);
 		std::cout << __PRETTY_FUNCTION__ << "DONE WITH Configure-" << readBuffer << "-"<< std::endl;
 	}
 

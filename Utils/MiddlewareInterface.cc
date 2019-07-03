@@ -3,7 +3,7 @@
 
 //========================================================================================================================
 MiddlewareInterface::MiddlewareInterface(std::string serverIP, int serverPort)
-: TCPNetworkClient (serverIP, serverPort)
+: TCPClient (serverIP, serverPort)
 {
 }
 
@@ -16,21 +16,19 @@ MiddlewareInterface::~MiddlewareInterface(void)
 //========================================================================================================================
 void MiddlewareInterface::initialize(void)
 {
-	if(!TCPNetworkClient::connect())
+	if(!TCPClient::connect())
 	{
 		std::cout << __PRETTY_FUNCTION__ << "ERROR CAN'T CONNECT TO SERVER!"<< std::endl;
 		abort();
 	}
-	std::string readBuffer="";
-	TCPNetworkClient::sendAndReceive("Initialize", readBuffer, 10);
+	std::string readBuffer = TCPClient::sendAndReceive("Initialize");
 	std::cout << __PRETTY_FUNCTION__ << "DONE WITH Initialize-" << readBuffer << "-"<< std::endl;
 }
 
 //========================================================================================================================
 void MiddlewareInterface::configure(std::string calibrationName, std::string configurationFilePath)
 {
-	std::string readBuffer="";
-	TCPNetworkClient::sendAndReceive("Configure,Calibration:" + calibrationName + ",ConfigurationFile:" + configurationFilePath,readBuffer,10);
+	std::string readBuffer = TCPClient::sendAndReceive("Configure,Calibration:" + calibrationName + ",ConfigurationFile:" + configurationFilePath);
 	std::cout << __PRETTY_FUNCTION__ << "DONE WITH Configure-" << readBuffer << "-"<< std::endl;
 }
 
@@ -55,10 +53,7 @@ void MiddlewareInterface::resume(void)
 //========================================================================================================================
 void MiddlewareInterface::start(std::string runNumber)
 {
-	std::string readBuffer="";
-	if(TCPNetworkClient::sendAndReceive("Start:{RunNumber:" + runNumber + "}",readBuffer,200) < 0)
-		std::cout << __PRETTY_FUNCTION__ << "Failed Start communication!" << std::endl;
-
+	std::string readBuffer = TCPClient::sendAndReceive("Start:{RunNumber:" + runNumber + "}");
 	std::cout << __PRETTY_FUNCTION__ << "DONE WITH Start-" << readBuffer << "-"<< std::endl;
 }
 
@@ -66,9 +61,7 @@ void MiddlewareInterface::start(std::string runNumber)
 void MiddlewareInterface::stop(void)
 {
 	std::cout << __PRETTY_FUNCTION__ << "Sending Stop!" << std::endl;
-	std::string readBuffer="";
-	if(TCPNetworkClient::sendAndReceive("Stop",readBuffer,10) < 0)
-		std::cout << __PRETTY_FUNCTION__ << "Failed Stop communication!" << std::endl;
+	std::string readBuffer = TCPClient::sendAndReceive("Stop");
 
 	std::cout << __PRETTY_FUNCTION__ << "DONE WITH Stop-" << readBuffer << "-"<< std::endl;
 

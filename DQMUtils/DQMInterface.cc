@@ -1,4 +1,4 @@
-#include "../NetworkUtils/TCPNetworkClient.h"
+#include "../NetworkUtils/TCPSubscribeClient.h"
 #include "../Utils/ObjectStreamer.h"
 #include "../Utils/Container.h"
 #include "../DQMUtils/DQMInterface.h"
@@ -55,7 +55,7 @@ void DQMInterface::configure(void)
 {
 	std::string serverIP = "127.0.0.1";
 	int serverPort       = 6000;
-	fListener = new TCPNetworkClient(serverIP, serverPort);
+	fListener = new TCPSubscribeClient(serverIP, serverPort);
 	//This can be done in the configure or start stage
 	std::cout << __PRETTY_FUNCTION__ << std::endl;
 	if(!fListener->connect())
@@ -138,8 +138,9 @@ bool DQMInterface::running()
 		//TODO We need to optimize the data readout so we don't do multiple copies
 		//TODO We need to optimize the data readout so we don't do multiple copies
 		//TODO We need to optimize the data readout so we don't do multiple copies
-		if(fListener->receive(tmpDataBuffer, 0, 100000) > 0)
+		//if(fListener->receive(tmpDataBuffer, 0, 100000) > 0)
 		{
+			tmpDataBuffer = fListener->receive<std::vector<char>>();
 			std::cout << __PRETTY_FUNCTION__ << "Got Something" << std::endl;
 			fDataBuffer.insert(fDataBuffer.end(), tmpDataBuffer.begin(), tmpDataBuffer.end());
 			while(fDataBuffer.size() > 0)
@@ -171,11 +172,11 @@ bool DQMInterface::running()
 				if(++packetNumber>=256) packetNumber=0;
 			}
 		}
-		else
-		{
-			std::cout << __PRETTY_FUNCTION__ << "Got Nada" << std::endl;
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		}
+		// else
+		// {
+		// 	std::cout << __PRETTY_FUNCTION__ << "Got Nada" << std::endl;
+		// 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		// }
 
 	}
 

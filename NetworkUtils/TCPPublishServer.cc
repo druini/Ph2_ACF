@@ -4,8 +4,8 @@
 #include <iostream>
 
 //========================================================================================================================
-TCPPublishServer::TCPPublishServer(int serverPort, unsigned int maxNumberOfConnections)
-    : TCPServerBase(serverPort, maxNumberOfConnections)
+TCPPublishServer::TCPPublishServer(int serverPort, unsigned int maxNumberOfClients)
+    : TCPServerBase(serverPort, maxNumberOfClients)
 {
 }
 
@@ -16,8 +16,7 @@ TCPPublishServer::~TCPPublishServer(void)
 
 void TCPPublishServer::acceptConnections()
 {
-    //std::pair<std::unordered_map<int, TCPTransceiverSocket>::iterator, bool> element;
-    while (true)
+    while(true)
     {
         try
         {
@@ -33,4 +32,5 @@ void TCPPublishServer::acceptConnections()
                 break;
         }
     }
+	fAcceptPromise.set_value(true);
 }

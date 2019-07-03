@@ -12,7 +12,7 @@ class TCPTransceiverSocket;
 class TCPServer : public TCPServerBase
 {
 public:
-	TCPServer(int serverPort, unsigned int maxNumberOfConnections=-1);
+	TCPServer(int serverPort, unsigned int maxNumberOfClients=-1);
 	virtual ~TCPServer(void);
 
 	virtual std::string  interpretMessage(const std::string& buffer) = 0;

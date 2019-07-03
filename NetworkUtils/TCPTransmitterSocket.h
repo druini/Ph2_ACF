@@ -14,9 +14,14 @@ public:
 	//TCPTransmitterSocket(TCPTransmitterSocket const&)  = delete ;
 	TCPTransmitterSocket(TCPTransmitterSocket&& theTCPTransmitterSocket) = default;
 
-	void send     (char const*              buffer, std::size_t size);
-	void send     (const std::string&       buffer);
-	void send     (const std::vector<char>& buffer);
+	void send(char const*                  buffer, std::size_t size);
+	void send(const std::string&           buffer);
+	void send(const std::vector<char>&     buffer);
+	template <typename T>
+	void send(const std::vector<T>&        buffer)
+	{
+		send(reinterpret_cast<const char*>(&buffer.at(0)), buffer.size()*sizeof(T));
+	}
 };
 
 #endif
