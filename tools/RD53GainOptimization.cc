@@ -67,6 +67,12 @@ void GainOptimization::Run ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,GainAndIntercept>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("KRUM_CURR_LIN");
+
+
+  // ################
+  // # Error report #
+  // ################
+  this->ChipErrorReport();
 }
 
 void GainOptimization::Draw (bool display, bool save)
@@ -258,4 +264,21 @@ void GainOptimization::bitWiseScan ()
 	fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), "KRUM_CURR_LIN", midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
   static_cast<Gain*>(this)->Run();
   static_cast<Gain*>(this)->Analyze();
+}
+
+void GainOptimization::ChipErrorReport ()
+{
+  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+	{
+	  LOG (INFO) << BOLDGREEN << "\t--> Readout chip error repor for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+	  LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
+	  LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
+	  LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
+	  LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
+	}
+  
 }

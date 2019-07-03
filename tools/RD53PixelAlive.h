@@ -52,10 +52,11 @@ class PixelAlive : public Tool
 
   DetectorDataContainer theContainer;
 
-  void InitHisto ();
-  void FillHisto ();
-  void Display   ();
-  void Save      ();
+  void InitHisto       ();
+  void FillHisto       ();
+  void Display         ();
+  void Save            ();
+  void ChipErrorReport ();
 
 
   // ########

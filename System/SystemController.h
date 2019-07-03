@@ -35,7 +35,7 @@
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/easylogging++.h"
 #include "../Utils/Container.h"
-#include "../Utils/TCPNetworkServer.h"
+#include "../NetworkUtils/TCPPublishServer.h"
 #include <iostream>
 #include <vector>
 #include <map>
@@ -78,7 +78,7 @@ namespace Ph2_System {
         std::string             fRawFileName;
         bool                    fWriteHandlerEnabled;
         bool                    fStreamerEnabled;
-        TCPNetworkServer*       fNetworkStreamer;
+        TCPPublishServer*       fNetworkStreamer;
 
       private:
         FileParser fParser;

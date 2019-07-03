@@ -16,7 +16,7 @@
 
 //========================================================================================================================
 MiddlewareController::MiddlewareController(int serverPort)
-: TCPNetworkServer      (serverPort)
+: TCPServer(serverPort,1)
 {
 }
 //========================================================================================================================
@@ -26,39 +26,39 @@ MiddlewareController::~MiddlewareController(void)
 }
 //========================================================================================================================
 // virtual function to interpret messages
-std::string MiddlewareController::readMessage(const std::string& buffer)
+std::string MiddlewareController::interpretMessage(const std::string& buffer)
 {
 
 	std::cout << __PRETTY_FUNCTION__ << "RECEIVED: " << buffer << std::endl;
 
 	if (buffer == "Initialize") //changing the status changes the mode in threadMain (BBC) function.
 	{
-		sendMessage("InitializeDone");
+		send("InitializeDone");
 	}
 	if (buffer.substr(0,5) == "Start") //changing the status changes the mode in threadMain (BBC) function.
 	{
 		currentRun_ = getVariableValue("RunNumber", buffer);
 		theSystemController_->Start(stoi(currentRun_));
-		sendMessage("StartDone");
+		send("StartDone");
 	}
 	else if (buffer.substr(0,4) == "Stop")
 	{
 		//We need to think :)
 	    theSystemController_->Stop();
 	    std::cout << "Run " << currentRun_ << " stopped!" << std::endl;
-		sendMessage("StopDone");
+		send("StopDone");
 	}
 	else if (buffer == "Pause")
 	{
 		//We need to think :)
 		std::cout << "Paused" << std::endl;
-		sendMessage("PauseDone");
+		send("PauseDone");
 	}
 	else if (buffer == "Resume")
 	{
 		//We need to think :)
 		std::cout << "Resume" << std::endl;
-		sendMessage("ResumeDone");
+		send("ResumeDone");
 	}
 	//CONFIGURE
 	else if (buffer.substr(0,9) == "Configure")
@@ -81,7 +81,7 @@ std::string MiddlewareController::readMessage(const std::string& buffer)
 		// if(buffer.substr(10,7)  == "Physics")              theSystemController_ = new Physics                ();
 	    theSystemController_->Configure(getVariableValue("ConfigurationFile",buffer),true);
 		std::cout << "Out of configuration submodule" << std::endl;
-		sendMessage("ConfigureDone");
+		send("ConfigureDone");
 	}
 
 	if(running_||paused_) //we go through here after start and resume or pause: sending back current status

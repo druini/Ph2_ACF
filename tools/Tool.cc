@@ -920,7 +920,7 @@ void Tool::bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, cons
 {
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
-		bitWiseScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy);
+	  bitWiseScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst);
 	}
 	return;
 }
@@ -1343,7 +1343,7 @@ private:
 
 };
 
-// #define USE_OLD_GROUP_SCAN
+#define USE_OLD_GROUP_SCAN
 
 #ifndef USE_OLD_GROUP_SCAN
 // One dimensional dac scan per BeBoard

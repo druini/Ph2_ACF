@@ -4,7 +4,7 @@
 #include <vector>
 #include <future>
 
-class TCPNetworkClient;
+class TCPSubscribeClient;
 class DQMHistogramBase;
 class TFile;
 
@@ -27,13 +27,13 @@ public:
 private:
 	void destroy(void);
 	void destroyHistogram(void);
-	TCPNetworkClient* fListener;
-	DQMHistogramBase* fDQMHistogram;
-	std::vector<char> fDataBuffer;
-	bool              fRunning;
-	std::future<bool> fRunningFuture;
-	std::string       fConfigurationFile;
-	TFile *fOutputFile;
+	TCPSubscribeClient* fListener;
+	DQMHistogramBase*   fDQMHistogram;
+	std::vector<char>   fDataBuffer;
+	bool                fRunning;
+	std::future<bool>   fRunningFuture;
+	std::string         fConfigurationFile;
+	TFile*              fOutputFile;
 
 };
 

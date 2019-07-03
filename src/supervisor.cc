@@ -16,6 +16,7 @@
 #include "../Utils/MiddlewareInterface.h"
 #include "../DQMUtils/DQMInterface.h"
 #include <TApplication.h>
+#include "../Utils/easylogging++.h"
 
 
 using namespace Ph2_HwDescription;

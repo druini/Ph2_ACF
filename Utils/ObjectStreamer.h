@@ -242,7 +242,7 @@ protected:
 
 };
 
-class TCPNetworkServer;
+class TCPPublishServer;
 class BoardDataContainer;
 
 class VContainerStreamBase
@@ -250,7 +250,7 @@ class VContainerStreamBase
 public:
 	VContainerStreamBase(){;}
 	virtual ~VContainerStreamBase(){;}
-	virtual void streamAndSendBoard(BoardDataContainer* board, TCPNetworkServer* networkStreamer) = 0;
+	virtual void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer) = 0;
 public:
 };
 

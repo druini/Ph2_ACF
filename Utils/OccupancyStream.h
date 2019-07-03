@@ -15,7 +15,7 @@
 #include "../Utils/ObjectStreamer.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/DataContainer.h"
-#include "../Utils/TCPNetworkServer.h"
+#include "../NetworkUtils/TCPPublishServer.h"
 #include "../HWDescription/Chip.h"
 #include <iostream>
 
@@ -89,16 +89,16 @@ public:
 }
 	~OccupancyBoardStream(){;}
 
-	void streamAndSendBoard(BoardDataContainer* board, TCPNetworkServer* networkStreamer) override
+	void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer) override
 	{
 		for(auto module: *board)
 		{
 			for(auto chip: *module)
 			{
 				streamChip(board->getId(), module->getId(), chip);
-				const std::vector<char>& tmp = encodeStream();
+				const std::vector<char>& stream = encodeStream();
 				incrementStreamPacketNumber();
-				networkStreamer->sendMessage(tmp);
+				networkStreamer->broadcast(stream);
 			}
 		}
 	}
