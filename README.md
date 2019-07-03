@@ -158,6 +158,7 @@ Through `CMSIT_miniDAQ`, and with the right command line option, you can run the
 3. Noise scan
 4. SCurve
 5. Threshold equalization
+6. Gain optimization
 ```
 How to setup up and run the IT-system:
 1. `mkdir chose_a_name` under `Ph2_ACF`
