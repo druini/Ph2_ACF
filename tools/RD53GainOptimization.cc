@@ -191,12 +191,12 @@ void GainOptimization::bitWiseScan ()
   for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue = KrumCurrStart;
+	minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = KrumCurrStart;
 
   for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue = (KrumCurrStop != 0 ? KrumCurrStop : RD53::SetBits(numberOfBits));
+	maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (KrumCurrStop != 0 ? KrumCurrStop : RD53::SetBits(numberOfBits));
  
 
   for (auto i = 0; i < numberOfBits; i++)
@@ -204,9 +204,9 @@ void GainOptimization::bitWiseScan ()
       for (const auto cBoard : *fDetectorContainer)
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
-	    static_cast<Summary<RegisterValue,EmptyContainer>*>(midDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
-	      = (static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue + 
-		 static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue) / 2;
+	    midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue =
+	      (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue +
+	       maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue) / 2;
 
 
       // ###########################
@@ -215,7 +215,7 @@ void GainOptimization::bitWiseScan ()
       for (const auto cBoard : *fDetectorContainer)
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
-	    fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), "KRUM_CURR_LIN", static_cast<Summary<RegisterValue,EmptyContainer>*>(midDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue);
+	    fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), "KRUM_CURR_LIN", midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
 
 
       // ################
@@ -233,18 +233,18 @@ void GainOptimization::bitWiseScan ()
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
 	    {
-	      float charge = ((RD53::SetBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)/2 - output->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GainAndIntercept,GainAndIntercept>().theSummary_.fIntercept) /
-			      output->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GainAndIntercept,GainAndIntercept>().theSummary_.fGain);
+	      float charge = (RD53::SetBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)/2 - output->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GainAndIntercept,GainAndIntercept>().fIntercept) /
+		output->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GainAndIntercept,GainAndIntercept>().fGain;
 
 	      if ((charge > targetCharge) || (charge < 0))
 		
-		static_cast<Summary<RegisterValue,EmptyContainer>*>(maxDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
-		  = static_cast<Summary<RegisterValue,EmptyContainer>*>(midDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue;
+		maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue =
+		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue;
 	      
 	      else
-		
-		static_cast<Summary<RegisterValue,EmptyContainer>*>(minDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
-		  = static_cast<Summary<RegisterValue,EmptyContainer>*>(midDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue;
+
+		minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue =
+		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue;
 	    }
     }
 
@@ -255,7 +255,7 @@ void GainOptimization::bitWiseScan ()
   for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), "KRUM_CURR_LIN", static_cast<Summary<RegisterValue,EmptyContainer>*>(midDACcontainer.at(cBoard->getIndex())->at(cModule->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue);
+	fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), "KRUM_CURR_LIN", midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
   static_cast<Gain*>(this)->Run();
   static_cast<Gain*>(this)->Analyze();
 }
