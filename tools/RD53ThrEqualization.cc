@@ -1,5 +1,5 @@
 /*!
-  \file                  RD53ThrOpt.cc
+  \file                  RD53ThrEqualization.cc
   \brief                 Implementaion of threshold equalization
   \author                Mauro DINARDO
   \version               1.0
@@ -7,9 +7,9 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "RD53ThrOpt.h"
+#include "RD53ThrEqualization.h"
 
-ThrOpt::ThrOpt(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents) :
+ThrEqualization::ThrEqualization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, std::shared_ptr<DetectorDataContainer> newVCal) :
   fileRes     (fileRes),
   fileReg     (fileReg),
   rowStart    (rowStart),
@@ -18,6 +18,8 @@ ThrOpt::ThrOpt(const char* fileRes, const char* fileReg, size_t rowStart, size_t
   colEnd      (colEnd),
   nPixels2Inj (nPixels2Inj),
   nEvents     (nEvents),
+  nEvtsBurst  (nEvtsBurst),
+  newVCal     (newVCal),
   Tool        ()
 {
   // ########################
@@ -35,12 +37,11 @@ ThrOpt::ThrOpt(const char* fileRes, const char* fileReg, size_t rowStart, size_t
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
 
-ThrOpt::~ThrOpt()
+ThrEqualization::~ThrEqualization ()
 {
-  theFile->Close();
-  
-  delete fChannelGroupHandler;
-  delete theFile;
+  delete theTDACcontainer;
+  delete fChannelGroupHandler; fChannelGroupHandler = nullptr;
+  delete theFile;              theFile              = nullptr;
 
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -55,13 +56,27 @@ ThrOpt::~ThrOpt()
     }
 }
 
-void ThrOpt::Run()
+void ThrEqualization::Run ()
 {
+  // #######################
+  // # Use new VCal values #
+  // #######################
+  if (newVCal != nullptr)
+    for (const auto cBoard : *fDetectorContainer)
+      for (const auto cModule : *cBoard)
+	for (const auto cChip : *cModule)
+	  {
+	    auto value = static_cast<RD53*>(cChip)->getReg("VCAL_MED") + newVCal->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold;
+	    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", value, true);
+	  }
+  
+
   ContainerFactory theDetectorFactory;
 
   fDetectorDataContainer = &theContainer;
-  theDetectorFactory.copyAndInitStructure<Occupancy>                   (*fDetectorContainer, *fDetectorDataContainer);
-  theDetectorFactory.copyAndInitStructure<RegisterValue,EmptyContainer>(*fDetectorContainer, theTDACcontainer);
+  theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+  theTDACcontainer = new DetectorDataContainer();
+  theDetectorFactory.copyAndInitChannel<RegisterValue>(*fDetectorContainer, *theTDACcontainer);
 
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
@@ -76,10 +91,10 @@ void ThrOpt::Run()
       for (const auto cChip : *cModule)
 	for (auto row = 0; row < RD53::nRows; row++)
 	  for (auto col = 0; col < RD53::nCols; col++)
-	    theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
+	    theTDACcontainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
 }
 
-void ThrOpt::Draw(bool display, bool save)
+void ThrEqualization::Draw (bool display, bool save)
 {
   TApplication* myApp;
 
@@ -91,12 +106,14 @@ void ThrOpt::Draw(bool display, bool save)
 
   if (save    == true) this->Save();
   if (display == true) myApp->Run();
+
+  theFile->Close();
 }
 
-void ThrOpt::InitHisto()
+void ThrEqualization::InitHisto ()
 {
   std::stringstream myString;
-  size_t TDACsize = RD53::SetBits<RD53PixelEncoder::NBIT_TDAC>(RD53PixelEncoder::NBIT_TDAC).to_ulong()+1;
+  size_t TDACsize = RD53::SetBits(RD53PixelEncoder::NBIT_TDAC)+1;
 
 
   // #######################
@@ -111,7 +128,7 @@ void ThrOpt::InitHisto()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "ThrOpt_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+          myString << "ThrEqualization_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
 		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOccupancy.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),nEvents/2 + 1,0,1 + 2./nEvents));
@@ -120,7 +137,7 @@ void ThrOpt::InitHisto()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasOcc_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+          myString << "CanvasThrEqualization_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
 		   << "_Mod"               << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"              << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
@@ -137,16 +154,16 @@ void ThrOpt::InitHisto()
 
 	  myString.clear();
 	  myString.str("");
-          myString << "theCanvasTDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"                << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"               << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+          myString << "CanvasTDAC_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasTDAC.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
-  theFile = new TFile(fileRes, "RECREATE");
+  theFile = new TFile(fileRes, "UPDATE");
 }
 
-void ThrOpt::FillHisto()
+void ThrEqualization::FillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
@@ -159,7 +176,7 @@ void ThrOpt::FillHisto()
 		if (theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy != 0)
 		  {
 		    theOccupancy[index]->Fill(theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
-		    theTDAC[index]->Fill(theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
+		    theTDAC[index]->Fill(theTDACcontainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
 		  }
 	      }
 
@@ -167,12 +184,12 @@ void ThrOpt::FillHisto()
 	}
 }
 
-void ThrOpt::Display()
+void ThrEqualization::Display ()
 {
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
       theCanvasOcc[i]->cd();
-      theOccupancy[i]->Draw("gcolz");
+      theOccupancy[i]->Draw();
       theCanvasOcc[i]->Modified();
       theCanvasOcc[i]->Update();
     }
@@ -180,13 +197,13 @@ void ThrOpt::Display()
   for (auto i = 0; i < theCanvasTDAC.size(); i++)
     {
       theCanvasTDAC[i]->cd();
-      theTDAC[i]->Draw("gcolz");
+      theTDAC[i]->Draw();
       theCanvasTDAC[i]->Modified();
       theCanvasTDAC[i]->Update();
     }
 }
 
-void ThrOpt::Save()
+void ThrEqualization::Save ()
 {
   std::stringstream myString;
 
@@ -218,13 +235,12 @@ void ThrOpt::Save()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  static_cast<RD53*>(cChip)->resetMask();
-	  static_cast<RD53*>(cChip)->enableAllPixels();
+	  static_cast<RD53*>(cChip)->copyMaskFromDefault();
 
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
-		static_cast<RD53*>(cChip)->setTDAC(row,col,theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
+		static_cast<RD53*>(cChip)->setTDAC(row,col,theTDACcontainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
 
 	  static_cast<RD53*>(cChip)->saveRegMap(fileReg);
 	}

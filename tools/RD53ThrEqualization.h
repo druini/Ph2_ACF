@@ -1,14 +1,14 @@
 /*!
-  \file                  RD53ThrOpt.h
-  \brief                 Implementaion of threshold optimization
+  \file                  RD53ThrEqualization.h
+  \brief                 Implementaion of threshold equalization
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53ThrOpt_h_
-#define _RD53ThrOpt_h_
+#ifndef _RD53ThrEqualization_h_
+#define _RD53ThrEqualization_h_
 
 #include "../Utils/Container.h"
 #include "../Utils/Occupancy.h"
@@ -25,7 +25,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define TARGETeff 0.70 // Target efficiency for optimization algorithm
+#define TARGETeff 0.55 // Target efficiency for optimization algorithm
 
 
 using namespace Ph2_System;
@@ -33,11 +33,11 @@ using namespace Ph2_System;
 // #####################################
 // # Threshold equalization test suite #
 // #####################################
-class ThrOpt : public Tool
+class ThrEqualization : public Tool
 {
  public:
-  ThrOpt(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents);
-  ~ThrOpt();
+  ThrEqualization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
+  ~ThrEqualization ();
 
   void Run  ();
   void Draw (bool display, bool save);
@@ -51,10 +51,11 @@ class ThrOpt : public Tool
   size_t colEnd;
   size_t nPixels2Inj;
   size_t nEvents;
-  float  targetTh;
+  size_t nEvtsBurst;  
 
-  DetectorDataContainer theContainer;
-  DetectorDataContainer theTDACcontainer;
+  DetectorDataContainer                  theContainer;
+  DetectorDataContainer*                 theTDACcontainer;
+  std::shared_ptr<DetectorDataContainer> newVCal;
 
   void InitHisto ();
   void FillHisto ();

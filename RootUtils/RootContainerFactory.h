@@ -49,7 +49,7 @@ public:
 
 		SD theDetectorSummary;
 		initializePlot<std::is_base_of<PlotContainer,SD>::value, SD>(&theDetectorSummary,Form("%s_Detector",detectorSummaryHistogramGenericName.data()), Form("%s Detector",detectorSummaryHistogramGenericTitle.data()), &detectorSummary);
-		copy.getSummary<SD,SB>().theSummary_ = std::move(theDetectorSummary);
+		copy.getSummary<SD,SB>() = std::move(theDetectorSummary);
 
 		//Boards
 		// for(const std::vector<BoardContainer*>::iterator board = original.begin(); board != original.end(); board++)
@@ -64,7 +64,7 @@ public:
 
 			SB theBoardSummary;
 			initializePlot<std::is_base_of<PlotContainer,SB>::value, SB>(&theBoardSummary,Form("%s_Board_%d",boardSummaryHistogramGenericName.data(),board->getId()), Form("%s Board_%d",boardSummaryHistogramGenericTitle.data(),board->getId()), &boardSummary);
-			copyBoard->getSummary<SB,SM>().theSummary_ = std::move(theBoardSummary);
+			copyBoard->getSummary<SB,SM>() = std::move(theBoardSummary);
 
 			//Modules
 			for(const ModuleContainer* module : *board)
@@ -78,7 +78,7 @@ public:
 
 				SM theModuleSummary;
 				initializePlot<std::is_base_of<PlotContainer,SM>::value, SM>(&theModuleSummary,Form("%s_module_%d",moduleSummaryHistogramGenericName.data(),module->getId()), Form("%s module_%d",moduleSummaryHistogramGenericTitle.data(),module->getId()), &moduleSummary);
-				copyModule->getSummary<SM,SC>().theSummary_ = std::move(theModuleSummary);
+				copyModule->getSummary<SM,SC>() = std::move(theModuleSummary);
 
 				//Chips
 				for(const ChipContainer* chip : *module)
@@ -92,7 +92,7 @@ public:
 					
 					SC theChipSummary;
 					initializePlot<std::is_base_of<PlotContainer,SC>::value,SC>(&theChipSummary,Form("%s_Chip_%d",chipSummaryHistogramGenericName.data(),chip->getId()), Form("%s Chip_%d",chipSummaryHistogramGenericTitle.data(),chip->getId()), &chipSummary);
-					copyChip->getSummary<SC,T>().theSummary_ = std::move(theChipSummary) ;
+					copyChip->getSummary<SC,T>() = std::move(theChipSummary) ;
 	
 					//Channels
 					std::string channelFolder = "/Channel";
@@ -140,8 +140,46 @@ public:
 	template<typename T, typename S>
 	void bookHistrogramsFromStructure(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, T& channel, S& summay)
 	{
-		bookHistrogramsFromStructure<T,S,S,S,S>(original, copy, channel, summay, summay, summay, summay);
+		bookHistrogramsFromStructure<T,S,S,S,S>(theOutputFile, original, copy, channel, summay, summay, summay, summay);
 	}
+
+
+	template<typename T>
+	void bookChannelHistrograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, T& channel)
+	{
+		EmptyContainer theEmpty;
+		bookHistrogramsFromStructure<T,EmptyContainer,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, original, copy, channel, theEmpty, theEmpty, theEmpty, theEmpty);
+	}
+
+	template<typename T>
+	void bookChipHistrograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, T& chipSummary)
+	{
+		EmptyContainer theEmpty;
+		bookHistrogramsFromStructure<EmptyContainer,T,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, original, copy, theEmpty, chipSummary, theEmpty, theEmpty, theEmpty);
+	}
+
+	template<typename T>
+	void bookModuleHistrograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, T& moduleSummary)
+	{
+		EmptyContainer theEmpty;
+		bookHistrogramsFromStructure<EmptyContainer,EmptyContainer,T,EmptyContainer,EmptyContainer>(theOutputFile, original, copy, theEmpty, theEmpty, moduleSummary, theEmpty, theEmpty);
+	}
+
+	template<typename T>
+	void bookBoardHistrograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, T& boardSummary)
+	{
+		EmptyContainer theEmpty;
+		bookHistrogramsFromStructure<EmptyContainer,EmptyContainer,EmptyContainer,T,EmptyContainer>(theOutputFile, original, copy, theEmpty, theEmpty, theEmpty, boardSummary, theEmpty);
+	}
+
+	template<typename T>
+	void bookDetectorHistrograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, T& detectorSummary)
+	{
+		EmptyContainer theEmpty;
+		bookHistrogramsFromStructure<EmptyContainer,EmptyContainer,EmptyContainer,EmptyContainer,T>(theOutputFile, original, copy, theEmpty, theEmpty, theEmpty, theEmpty, detectorSummary);
+	}
+
+
 
 private:
 	void createAndOpenRootFileFolder(TFile *theOutputFile, std::string &folderName)
