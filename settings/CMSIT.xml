@@ -67,7 +67,7 @@
       DisplayHisto       = 0: don't display;         DisplayHisto             = 1: display
       nPixelInj          = 0: use RD53 prescription; nPixelInj               != 0: override RD53 prescription
       ChipRegDefaultFile = 0: save on different file name; ChipRegDefaultFile = 1: save on same file name
-      targetCharge:           requested charge corresponding to half ToT range
+      targetCharge:           requested charge (electrons) corresponding to half ToT range
   -->
   <Settings>
     <Setting name="nEvents">          100 </Setting>
@@ -77,9 +77,9 @@
     <Setting name="INJtype">            0 </Setting>
 
     <Setting name="ROWstart">          50 </Setting>
-    <Setting name="ROWstop">           81 </Setting>
+    <Setting name="ROWstop">           57 </Setting>
     <Setting name="COLstart">         128 </Setting>
-    <Setting name="COLstop">          159 </Setting>
+    <Setting name="COLstop">          135 </Setting>
     <!--
     <Setting name="nPixelInj">         24 </Setting>
     -->
@@ -88,12 +88,12 @@
     <Setting name="LatencyStop">      511 </Setting>
 
     <Setting name="VCALstart">        160 </Setting>
-    <Setting name="VCALstop">         560 </Setting>
-    <Setting name="VCALnsteps">       400 </Setting>
+    <Setting name="VCALstop">        4000 </Setting>
+    <Setting name="VCALnsteps">        48 </Setting>
 
-    <Setting name="targetCharge">     700 </Setting>
+    <Setting name="targetCharge">    7000 </Setting>
     <Setting name="KrumCurrStart">      0 </Setting>
-    <Setting name="KrumCurrStop">     127 </Setting>
+    <Setting name="KrumCurrStop">      31 </Setting>
 
     <Setting name="DisplayHisto">       0 </Setting>
     <Setting name="ChipRegDefaultFile"> 1 </Setting>
