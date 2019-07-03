@@ -915,37 +915,19 @@ void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacL
 }
 
 
-// // One dimensional dac scan per BeBoard
-// void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorContainer*> detectorContainerVector)
-// {
-// 	if(dacList.size() != detectorContainerVector.size())
-// 	{
-// 		LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
-// 		abort();
-// 	}
-
-// 	for(size_t dacIt = 0; dacIt<dacList.size(); ++dacIt)
-// 	{
-// 		fDetectorDataContainer = detectorContainerVector[dacIt];
-// 		setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents);
-// 	}
-
-// 	return;
-// }
-
 // bit wise scan
-void Tool::bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy)
+void Tool::bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy, int32_t numberOfEventsPerBurst)
 {
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
-		bitWiseScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy);
+	  bitWiseScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst);
 	}
 	return;
 }
 
 
 // bit wise scan per BeBoard
-void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy)
+void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy, int32_t numberOfEventsPerBurst)
 {
 
 	DetectorDataContainer *outputDataContainer = fDetectorDataContainer;
@@ -984,13 +966,13 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 	else setAllGlobalDacBeBoard(boardIndex, dacName, *previousDacList);
 
 	fDetectorDataContainer = previousStepOccupancyContainer;
-	measureBeBoardData(boardIndex, numberOfEvents);
+	measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
 	if(localDAC) setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
 	else setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
 
 	fDetectorDataContainer = currentStepOccupancyContainer;
-	measureBeBoardData(boardIndex, numberOfEvents);
+	measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
 
 	occupanyDirectlyProportionalToDAC = currentStepOccupancyContainer->at(boardIndex)->getSummary<Occupancy,Occupancy>().fOccupancy
@@ -1035,7 +1017,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 		else setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
 
 		fDetectorDataContainer = currentStepOccupancyContainer;
-		measureBeBoardData(boardIndex, numberOfEvents);
+		measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
 		//Determine if it is better or not
 		for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
@@ -1076,7 +1058,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 	else setAllGlobalDacBeBoard(boardIndex, dacName, *previousDacList);
 
 	fDetectorDataContainer = outputDataContainer;
-	measureBeBoardData(boardIndex, numberOfEvents);
+	measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
 	dumpConfigFiles();
 
@@ -1240,14 +1222,10 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 	            {
 	                for ( auto cChip : *cFe )
 	                {
-	                    if(fMaskChannelsFromOtherGroups)
-	                    {
-	                        fReadoutChipInterface->maskChannelsGroup(static_cast<ReadoutChip*>(cChip), group);
-	                    }
-	                    if(fTestPulse)
-	                    {
-	                        fReadoutChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), group);
-	                    }
+	                    if(fMaskChannelsFromOtherGroups || fTestPulse)
+						{
+							fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), group,fMaskChannelsFromOtherGroups,fTestPulse);
+						}
 	                }
 	            }
 	        }
@@ -1368,7 +1346,9 @@ private:
 
 };
 
+#define USE_OLD_GROUP_SCAN
 
+#ifndef USE_OLD_GROUP_SCAN
 // One dimensional dac scan per BeBoard
 void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorDataContainer*> &detectorContainerVector, int32_t numberOfEventsPerBurst)
 {
@@ -1392,7 +1372,25 @@ void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const
 	return;
 }
 
+#else
+// One dimensional dac scan per BeBoard
+void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorDataContainer*> &detectorContainerVector, int32_t numberOfEventsPerBurst)
+{
+	if(dacList.size() != detectorContainerVector.size())
+	{
+		LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
+		abort();
+	}
 
+	for(size_t dacIt = 0; dacIt<dacList.size(); ++dacIt)
+	{
+		fDetectorDataContainer = detectorContainerVector[dacIt];
+		setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents,numberOfEventsPerBurst);
+	}
+
+	return;
+}
+#endif
 
 
 //Set global DAC for all CBCs in the BeBoard

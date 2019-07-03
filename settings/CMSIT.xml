@@ -41,10 +41,16 @@
             GP_LVDS_ROUTE          =     "1"
             LATENCY_CONFIG         =   "136"
             MONITOR_SELECT         =  "8203"
+	    CLK_DATA_DELAY         =     "0"
+
+	    LOCKLOSS_CNT           =     "0"
+	    BITFLIP_WNG_CNT        =     "0"
+	    BITFLIP_ERR_CNT        =     "0"
 	    CMDERR_CNT             =     "0"
 	    />
 	<!--
 	    MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
+	    CLK_DATA_DELAY: [8] clk phase; [7:4] clk delay; [3:0] data delay
 	-->
       </Global>
     </Module>
@@ -77,9 +83,9 @@
     <Setting name="INJtype">            0 </Setting>
 
     <Setting name="ROWstart">          50 </Setting>
-    <Setting name="ROWstop">           57 </Setting>
+    <Setting name="ROWstop">           81 </Setting>
     <Setting name="COLstart">         128 </Setting>
-    <Setting name="COLstop">          135 </Setting>
+    <Setting name="COLstop">          159 </Setting>
     <!--
     <Setting name="nPixelInj">         24 </Setting>
     -->
@@ -88,8 +94,8 @@
     <Setting name="LatencyStop">      511 </Setting>
 
     <Setting name="VCALstart">        160 </Setting>
-    <Setting name="VCALstop">        4000 </Setting>
-    <Setting name="VCALnsteps">        48 </Setting>
+    <Setting name="VCALstop">         560 </Setting>
+    <Setting name="VCALnsteps">        40 </Setting>
 
     <Setting name="targetCharge">    7000 </Setting>
     <Setting name="KrumCurrStart">      0 </Setting>

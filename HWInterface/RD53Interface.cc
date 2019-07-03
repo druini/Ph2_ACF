@@ -359,30 +359,18 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop)
+  bool RD53Interface::maskChannelsAndSetInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
     for (auto row = 0; row < RD53::nRows; row++)
       for (auto col = 0; col < RD53::nCols; col++)
-	pRD53->injectPixel(row,col,group->isChannelEnabled(row,col));
+	{
+	  if (mask   == true) pRD53->enablePixel(row,col,group->isChannelEnabled(row,col));
+	  if (inject == true) pRD53->injectPixel(row,col,group->isChannelEnabled(row,col));
+	}
 
     this->WriteRD53Mask(pRD53, true, false, pVerifLoop);
-
-    return true;
-  }
-
-  bool RD53Interface::maskChannelsGroup (ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop)
-  {
-    RD53* pRD53 = static_cast<RD53*>(pChip);
-    
-    for (auto row = 0; row < RD53::nRows; row++)
-      for (auto col = 0; col < RD53::nCols; col++)
-	pRD53->enablePixel(row,col,group->isChannelEnabled(row,col));
-
-    this->WriteRD53Mask(pRD53, true, false, pVerifLoop);
-
-    return true;
   }
 
   bool RD53Interface::WriteChipAllLocalReg (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop)

@@ -80,7 +80,7 @@ void ThrEqualization::Run ()
 
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
-  this->bitWiseScan("PIX_PORTAL", nEvents, TARGETeff);
+  this->bitWiseScan("PIX_PORTAL", nEvents, TARGETeff, nEvtsBurst);
 
 
   // #######################
