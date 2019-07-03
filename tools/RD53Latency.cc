@@ -88,6 +88,12 @@ void Latency::Run ()
 	      }
 	  }
     }
+
+
+  // ################
+  // # Error report #
+  // ################
+  this->ChipErrorReport();
 }
 
 void Latency::Draw (bool display, bool save)
@@ -198,4 +204,21 @@ void Latency::Save ()
       myString << theLat[i]->GetName() << ".svg";
       theCanvasLat[i]->Print(myString.str().c_str());
     }
+}
+
+void Latency::ChipErrorReport ()
+{
+  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+	{
+	  LOG (INFO) << BOLDGREEN << "\t--> Readout chip error repor for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+	  LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
+	  LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
+	  LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
+	  LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
+	}
+  
 }

@@ -92,6 +92,12 @@ void ThrEqualization::Run ()
 	for (auto row = 0; row < RD53::nRows; row++)
 	  for (auto col = 0; col < RD53::nCols; col++)
 	    theTDACcontainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
+
+
+  // ################
+  // # Error report #
+  // ################
+  this->ChipErrorReport();
 }
 
 void ThrEqualization::Draw (bool display, bool save)
@@ -244,4 +250,21 @@ void ThrEqualization::Save ()
 
 	  static_cast<RD53*>(cChip)->saveRegMap(fileReg);
 	}
+}
+
+void ThrEqualization::ChipErrorReport ()
+{
+  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+	{
+	  LOG (INFO) << BOLDGREEN << "\t--> Readout chip error repor for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+	  LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
+	  LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
+	  LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
+	  LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
+	}
+  
 }
