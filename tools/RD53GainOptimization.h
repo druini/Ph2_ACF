@@ -46,11 +46,12 @@ class GainOptimization : public Gain
 
   DetectorDataContainer theKrumCurrContainer;
 
-  void InitHisto   ();
-  void FillHisto   ();
-  void Display     ();
-  void Save        ();
-  void bitWiseScan ();
+  void InitHisto       ();
+  void FillHisto       ();
+  void Display         ();
+  void Save            ();
+  void bitWiseScan     ();
+  void ChipErrorReport ();
 
 
   // ########

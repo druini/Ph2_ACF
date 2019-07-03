@@ -122,7 +122,7 @@ namespace Ph2_HwInterface
     WriteStackReg (stackRegisters);
   }
 
-  std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53FWInterface::ReadChipRegisters (std::vector<uint32_t>& data, unsigned int nBlocks2Read)
+  std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53FWInterface::ReadChipRegisters (std::vector<uint32_t>& data, unsigned int filter, unsigned int pBlockSize)
   {
     // ##############################
     // # Filter readback data:      #
@@ -131,7 +131,6 @@ namespace Ph2_HwInterface
     // # 2: read "auto" 1st only    #
     // # 3: read "auto" 1st and 2nd #
     // ##############################
-    const unsigned int filter = 0;
 
     std::stringstream myString;
     unsigned int nodeBlocks  = fBoard->getNode("user.readout0.reg_read").getSize();
@@ -164,8 +163,8 @@ namespace Ph2_HwInterface
 	myString.clear(); myString.str("");
 	myString << "user.readout" << i << ".reg_read";
 
-	if (nBlocks2Read <= nodeBlocks) regFIFO = ReadBlockRegValue(myString.str().c_str(), nBlocks2Read);
-	else LOG (ERROR) << BOLDRED << "Number of register blocks to read (" << BOLDYELLOW << nBlocks2Read << BOLDRED << ") exceds FIFO lenght " << BOLDYELLOW << nodeBlocks << RESET;
+	if (pBlockSize <= nodeBlocks) regFIFO = ReadBlockRegValue(myString.str().c_str(), pBlockSize);
+	else LOG (ERROR) << BOLDRED << "Number of register blocks to read (" << BOLDYELLOW << pBlockSize << BOLDRED << ") exceds FIFO lenght " << BOLDYELLOW << nodeBlocks << RESET;
 
 	for (auto i = 0; i < regFIFO.size(); i++)
 	  {
@@ -498,7 +497,7 @@ namespace Ph2_HwInterface
   
   void RD53FWInterface::ResetFastCmdBlk()
   {
-    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset"); // Resets the fast command block --> which should then be reprogrammed
+    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset");
     
     WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBFASTDURATION);
   }
@@ -507,7 +506,7 @@ namespace Ph2_HwInterface
   {
     WriteStackReg({
 	{"user.ctrl_regs.reset_reg.readout_block_rst",1},
-	{"user.ctrl_regs.reset_reg.readout_block_rst",0}}); // Resets the readout block --> which should then be reprogrammed
+	{"user.ctrl_regs.reset_reg.readout_block_rst",0}});
   }
 
   void RD53FWInterface::ChipReset()

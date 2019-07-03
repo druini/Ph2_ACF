@@ -61,11 +61,12 @@ class Gain : public Tool
   std::vector<DetectorDataContainer*>    detectorContainerVector;
   std::shared_ptr<DetectorDataContainer> theGainAndInterceptContainer;
 
-  void InitHisto    ();
-  void FillHisto    ();
-  void Display      ();
-  void Save         ();
-  void ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
+  void InitHisto       ();
+  void FillHisto       ();
+  void Display         ();
+  void Save            ();
+  void ComputeStats    (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
+  void ChipErrorReport ();
 
 
   // ########
