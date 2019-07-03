@@ -35,14 +35,14 @@ namespace Ph2_HwInterface
     RD53Interface (const BeBoardFWMap& pBoardMap);
     ~RD53Interface();
 
-    bool     ConfigureChip                     (const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                 override;
-    bool     WriteChipReg                      (Chip* pChip, const std::string& pRegNode, uint16_t data, bool pVerifLoop = false)                     override;
-    bool     WriteChipMultReg                  (Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop = false) override;
-    bool     WriteChipAllLocalReg              (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = false)       override;
-    uint16_t ReadChipReg                       (Chip* pChip, const std::string& pRegNode)                                                             override;
-    bool     ConfigureChipOriginalMask         (ReadoutChip* pChip, bool pVerifLoop = false, uint32_t pBlockSize = 310)                               override;
-    bool     MaskAllChannels                   (ReadoutChip* pChip, bool mask, bool pVerifLoop = false)                                               override;
-    bool     maskChannelsAndSetInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false)   override;
+    bool     ConfigureChip                     (const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                override;
+    bool     WriteChipReg                      (Chip* pChip, const std::string& pRegNode, uint16_t data, bool pVerifLoop = true)                     override;
+    bool     WriteChipMultReg                  (Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop = true) override;
+    bool     WriteChipAllLocalReg              (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = false)      override;
+    uint16_t ReadChipReg                       (Chip* pChip, const std::string& pRegNode)                                                            override;
+    bool     ConfigureChipOriginalMask         (ReadoutChip* pChip, bool pVerifLoop = false, uint32_t pBlockSize = 310)                              override;
+    bool     MaskAllChannels                   (ReadoutChip* pChip, bool mask, bool pVerifLoop = false)                                              override;
+    bool     maskChannelsAndSetInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false)  override;
     bool     setInjectionSchema                (ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = false) { std::cout << __PRETTY_FUNCTION__ << std::endl; exit(1); }; // @TMP@
     bool     maskChannelsGroup                 (ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = false) { std::cout << __PRETTY_FUNCTION__ << std::endl; exit(1); }; // @TMP@
     
