@@ -55,11 +55,12 @@ class SCurve : public Tool
   std::vector<DetectorDataContainer*>    detectorContainerVector;
   std::shared_ptr<DetectorDataContainer> theThresholdAndNoiseContainer;
 
-  void InitHisto    ();
-  void FillHisto    ();
-  void Display      ();
-  void Save         ();
-  void ComputeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+  void InitHisto       ();
+  void FillHisto       ();
+  void Display         ();
+  void Save            ();
+  void ComputeStats    (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+  void ChipErrorReport ();
 
 
   // ########

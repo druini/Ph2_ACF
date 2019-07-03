@@ -57,10 +57,11 @@ class ThrEqualization : public Tool
   DetectorDataContainer*                 theTDACcontainer;
   std::shared_ptr<DetectorDataContainer> newVCal;
 
-  void InitHisto ();
-  void FillHisto ();
-  void Display   ();
-  void Save      ();
+  void InitHisto       ();
+  void FillHisto       ();
+  void Display         ();
+  void Save            ();
+  void ChipErrorReport ();
 
 
   // ########

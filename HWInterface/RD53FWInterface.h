@@ -106,9 +106,11 @@ namespace Ph2_HwInterface
     void     ReadNEvents (BeBoard* pBoard, uint32_t pNEvents,  std::vector<uint32_t>& pData, bool pWait = false) override;
     uint32_t ReadData    (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = false) override;
 
-    void WriteChipCommand (std::vector<uint32_t>& data, unsigned int nCmd = 1)                                                              override;
-    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadChipRegisters (std::vector<uint32_t>& data, unsigned int nBlocks2Read = 1) override;
-    std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)                                       override;
+    void WriteChipCommand (std::vector<uint32_t>& data, unsigned int nCmd = 1)                                   override;
+    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadChipRegisters (std::vector<uint32_t>& data,
+										unsigned int filter = 0,
+										unsigned int pBlockSize = 1)     override;
+    std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)            override;
 
     void ChipReset()  override;
     void ChipReSync() override;
