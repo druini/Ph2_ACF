@@ -19,7 +19,16 @@ Latency::Latency (const char* fileRes, size_t rowStart, size_t rowEnd, size_t co
   stopValue  (stopValue),
   nEvents    (nEvents),
   Tool       ()
-{}
+{
+  size_t nSteps = stopValue - startValue;
+
+
+  // ##############################
+  // # Initialize dac scan values #
+  // ##############################
+  float step = (stopValue - startValue) / nSteps;
+  for (auto i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
+}
 
 Latency::~Latency ()
 {
@@ -34,60 +43,9 @@ Latency::~Latency ()
 
 void Latency::Run ()
 {
-  ContainerFactory      theDetectorFactory;
-  std::vector<uint32_t> data;
-  uint8_t               status;
-
+  ContainerFactory theDetectorFactory;
   theDetectorFactory.copyAndInitChip<GenericDataVector>(*fDetectorContainer, theContainer);
-
-  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
-
-  for (const auto cBoard : *fDetectorContainer)
-    {
-      auto RD53Board = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getIndex()]);
-
-      for (const auto cModule : *cBoard)
-	for (const auto cChip : *cModule)
-	  {
-	    LOG (INFO) << GREEN << "Performing latency scan for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-
-
-	    // ########################
-	    // # Set pixels to inject #
-	    // ########################
-	    static_cast<RD53*>(cChip)->resetMask();
-
-	    static_cast<RD53*>(cChip)->enablePixel(rowStart,colStart,true);
-	    static_cast<RD53*>(cChip)->injectPixel(rowStart,colStart,true);
-
-	    static_cast<RD53*>(cChip)->enablePixel(rowEnd,colEnd,true);
-	    static_cast<RD53*>(cChip)->injectPixel(rowEnd,colEnd,true);
-
-	    RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(cChip), true, false, false);
-
-
-	    for (auto lt = startValue; lt < stopValue; lt++)
-	      {
-		data.clear();
-
-		LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << lt << RESET;
-		RD53ChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", lt, true);
-
-		this->ReadNEvents(static_cast<BeBoard*>(cBoard), nEvents, data);
-		auto events = RD53FWInterface::DecodeEvents(data,status);
-
-		auto nEvts = 0;
-		for (auto i = 0; i < events.size(); i++)
-		  {
-		    auto& evt = events[i];
-		    for (auto j = 0; j < evt.chip_events.size(); j++)
-		      if (evt.chip_events[j].data.size() != 0) nEvts++;
-		  }
-
-		theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().data1.push_back(nEvts);
-	      }
-	  }
-    }
+  this->scanDac("LATENCY_CONFIG", dacList, nEvents, &theContainer);
 
 
   // ################
@@ -121,12 +79,12 @@ void Latency::Analyze ()
 	  auto dataSize = 0;
 	  auto latency  = 0;
 	  
-	  for (auto lt = startValue; lt < stopValue; lt++)
+	  for (auto dac : dacList)
 	    {
-	      auto nEvts = cChip->getSummary<GenericDataVector>().data1[lt-startValue];
+	      auto nEvts = cChip->getSummary<GenericDataVector>().data1[dac-startValue];
 	      if (nEvts > dataSize)
 		{
-		  latency  = lt;
+		  latency  = dac;
 		  dataSize = nEvts;
 		}
 	    }
@@ -174,8 +132,8 @@ void Latency::FillHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  for (auto lt = startValue; lt < stopValue; lt++)
-	    theLat[index]->SetBinContent(theLat[index]->FindBin(lt),cChip->getSummary<GenericDataVector>().data1[lt-startValue]);
+	  for (auto dac : dacList)
+	    theLat[index]->SetBinContent(theLat[index]->FindBin(dac),cChip->getSummary<GenericDataVector>().data1[dac-startValue]);
 	  
 	  index++;
 	}
@@ -220,5 +178,59 @@ void Latency::ChipErrorReport ()
 	  LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
 	  LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
 	}
-  
+}
+
+void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
+{
+  std::vector<uint32_t> data;
+  uint8_t               status;
+
+  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
+
+  for (const auto cBoard : *fDetectorContainer)
+    {
+      auto RD53Board = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getIndex()]);
+
+      for (const auto cModule : *cBoard)
+	for (const auto cChip : *cModule)
+	  {
+	    LOG (INFO) << GREEN << "Performing latency scan for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+
+
+	    // ########################
+	    // # Set pixels to inject #
+	    // ########################
+	    static_cast<RD53*>(cChip)->resetMask();
+
+	    static_cast<RD53*>(cChip)->enablePixel(rowStart,colStart,true);
+	    static_cast<RD53*>(cChip)->injectPixel(rowStart,colStart,true);
+
+	    static_cast<RD53*>(cChip)->enablePixel(rowEnd,colEnd,true);
+	    static_cast<RD53*>(cChip)->injectPixel(rowEnd,colEnd,true);
+
+	    RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(cChip), true, false, false);
+
+
+	    for (auto dac : dacList)
+	      {
+		data.clear();
+
+		LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << dac << RESET;
+		RD53ChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, dac, true);
+
+		this->ReadNEvents(static_cast<BeBoard*>(cBoard), nEvents, data);
+		auto events = RD53FWInterface::DecodeEvents(data,status);
+
+		auto nEvts = 0;
+		for (auto i = 0; i < events.size(); i++)
+		  {
+		    auto& evt = events[i];
+		    for (auto j = 0; j < evt.chip_events.size(); j++)
+		      if (evt.chip_events[j].data.size() != 0) nEvts++;
+		  }
+
+		theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().data1.push_back(nEvts);
+	      }
+	  }
+    }
 }

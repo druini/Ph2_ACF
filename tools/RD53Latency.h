@@ -45,6 +45,8 @@ class Latency : public Tool
   size_t startValue;
   size_t stopValue;
   size_t nEvents;
+ 
+  std::vector<uint16_t> dacList;
 
   DetectorDataContainer theContainer;
 
@@ -52,6 +54,7 @@ class Latency : public Tool
   void FillHisto       ();
   void Display         ();
   void Save            ();
+  void scanDac         (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
   void ChipErrorReport ();
 
 
