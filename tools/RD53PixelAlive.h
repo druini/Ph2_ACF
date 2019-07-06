@@ -35,10 +35,10 @@ class PixelAlive : public Tool
   PixelAlive  (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
   ~PixelAlive ();
 
-  void Run     ();
-  void Draw    (bool display, bool save);
-  void Analyze ();
-  
+  void Run                                       ();
+  void Draw                                      (bool display, bool save);
+  std::shared_ptr<DetectorDataContainer> Analyze ();
+
  private:
   const char* fileRes;
   size_t rowStart;
@@ -50,7 +50,7 @@ class PixelAlive : public Tool
   size_t nEvtsBurst;  
   bool   inject;
 
-  DetectorDataContainer theContainer;
+  std::shared_ptr<DetectorDataContainer> theOccContainer;
 
   void InitHisto       ();
   void FillHisto       ();

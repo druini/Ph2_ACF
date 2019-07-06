@@ -1,30 +1,31 @@
 /*!
-  \file                  RD53GainOptimization.cc
-  \brief                 Implementaion of gain optimization
+  \file                  RD53ThrMinimization.cc
+  \brief                 Implementaion of threshold minimization
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "RD53GainOptimization.h"
+#include "RD53ThrMinimization.h"
 
-GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetCharge, size_t KrumCurrStart, size_t KrumCurrStop) :
-  fileRes       (fileRes),
-  fileReg       (fileReg),
-  rowStart      (rowStart),
-  rowEnd        (rowEnd),
-  colStart      (colStart),
-  colEnd        (colEnd),
-  nPixels2Inj   (nPixels2Inj),
-  nEvents       (nEvents),
-  startValue    (startValue),
-  stopValue     (stopValue),
-  nSteps        (nSteps),
-  targetCharge  (targetCharge),
-  KrumCurrStart (KrumCurrStart),
-  KrumCurrStop  (KrumCurrStop),
-  Gain          (fileRes, rowStart, rowEnd, colStart, colEnd, nPixels2Inj, nEvents, startValue, stopValue, nSteps)
+ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, bool doThrEqu, size_t ThrStart, size_t ThrStop) :
+  fileRes         (fileRes),
+  fileReg         (fileReg),
+  rowStart        (rowStart),
+  rowEnd          (rowEnd),
+  colStart        (colStart),
+  colEnd          (colEnd),
+  nPixels2Inj     (nPixels2Inj),
+  nEvents         (nEvents),
+  nEvtsBurst      (nEvtsBurst),
+  targetOccupancy (targetOccupancy),
+  doThrEqu        (doThrEqu),
+  ThrStart        (ThrStart),
+  ThrStop         (ThrStop),
+  PixelAlive      (fileRes, rowStart, rowEnd, colStart, colEnd, nPixels2Inj, nEvents, nEvtsBurst, false)
+  // SCurve          (fileRes, rowStart, rowEnd, colStart, colEnd, nPixels2Inj, nEvents, startValue, stopValue, nSteps),
+  // ThrEqualization (fileRes, fileReg, rowStart, rowEnd, colStart, colEnd, nPixels2Inj, nEvents*nSteps, nEvents)
 {
   // ########################
   // # Custom channel group #
@@ -41,32 +42,32 @@ GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, si
   fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
 
-GainOptimization::~GainOptimization ()
+ThrMinimization::~ThrMinimization ()
 {
   delete fChannelGroupHandler; fChannelGroupHandler = nullptr;
   delete theFile;              theFile              = nullptr;
 
-  for (auto i = 0; i < theCanvasKrumCurr.size(); i++)
+  for (auto i = 0; i < theCanvasThr.size(); i++)
     {
-      delete theKrumCurr[i];
-      delete theCanvasKrumCurr[i];
+      delete theThr[i];
+      delete theCanvasThr[i];
     }
 }
 
-void GainOptimization::Run ()
+void ThrMinimization::Run ()
 {
-  this->bitWiseScan("KRUM_CURR_LIN", nEvents, targetCharge, KrumCurrStart, KrumCurrStop);
+  this->bitWiseScan("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop, doThrEqu);
 
 
-  // #######################################
-  // # Fill Krummenacher Current container #
-  // #######################################
+  // ############################
+  // # Fill threshold container #
+  // ############################
   ContainerFactory theDetectorFactory;
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, theKrumCurrContainer);
+  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, theThrContainer);
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,GainAndIntercept>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("KRUM_CURR_LIN");
+	theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,OccupancyAndPh>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("Vthreshold_LIN");
 
 
   // ################
@@ -75,13 +76,13 @@ void GainOptimization::Run ()
   this->ChipErrorReport();
 }
 
-void GainOptimization::Draw (bool display, bool save)
+void ThrMinimization::Draw (bool display, bool save)
 {
   TApplication* myApp;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  static_cast<Gain*>(this)->Draw(false,save);
+  static_cast<PixelAlive*>(this)->Draw(false,save);
 
   this->InitHisto();
   this->FillHisto();
@@ -93,7 +94,7 @@ void GainOptimization::Draw (bool display, bool save)
   theFile->Close();
 }
 
-void GainOptimization::InitHisto ()
+void ThrMinimization::InitHisto ()
 {
   std::stringstream myString;
 
@@ -105,64 +106,64 @@ void GainOptimization::InitHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  size_t KrumCurrSize = RD53::SetBits(static_cast<RD53*>(cChip)->getNumberOfBits("KRUM_CURR_LIN"))+1;
+	  size_t ThrSize = RD53::SetBits(static_cast<RD53*>(cChip)->getNumberOfBits("Vthreshold_LIN"))+1;
 
 
 	  myString.clear();
 	  myString.str("");
-          myString << "KrumCurr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"           << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"          << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theKrumCurr.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),KrumCurrSize,0,KrumCurrSize));
-	  theKrumCurr.back()->SetXTitle("Krummenacher Current");
-	  theKrumCurr.back()->SetYTitle("Entries");
+          myString << "Thr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"      << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"     << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+	  theThr.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),ThrSize,0,ThrSize));
+	  theThr.back()->SetXTitle("Threhsold");
+	  theThr.back()->SetYTitle("Entries");
 
 	  myString.clear();
 	  myString.str("");
-          myString << "CanvasKrumCurr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"                 << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"                << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasKrumCurr.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
+          myString << "CanvasThr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
+		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
+		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
+	  theCanvasThr.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
 
   theFile = new TFile(fileRes, "UPDATE");
 }
 
-void GainOptimization::FillHisto ()
+void ThrMinimization::FillHisto ()
 {
   size_t index = 0;
-  for (const auto cBoard : theKrumCurrContainer)
+  for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  theKrumCurr[index]->Fill(cChip->getSummary<RegisterValue,GainAndIntercept>().fRegisterValue);
+	  theThr[index]->Fill(theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,OccupancyAndPh>().fRegisterValue);
 
 	  index++;
 	}
 }
 
-void GainOptimization::Display ()
+void ThrMinimization::Display ()
 {
-  for (auto i = 0; i < theCanvasKrumCurr.size(); i++)
+  for (auto i = 0; i < theCanvasThr.size(); i++)
     {
-      theCanvasKrumCurr[i]->cd();
-      theKrumCurr[i]->Draw();
-      theCanvasKrumCurr[i]->Modified();
-      theCanvasKrumCurr[i]->Update();
+      theCanvasThr[i]->cd();
+      theThr[i]->Draw();
+      theCanvasThr[i]->Modified();
+      theCanvasThr[i]->Update();
     }
 }
 
-void GainOptimization::Save ()
+void ThrMinimization::Save ()
 {
   std::stringstream myString;
 
-  for (auto i = 0; i < theCanvasKrumCurr.size(); i++)
+  for (auto i = 0; i < theCanvasThr.size(); i++)
     {
-      theCanvasKrumCurr[i]->Write();
+      theCanvasThr[i]->Write();
       myString.clear();
       myString.str("");
-      myString << theKrumCurr[i]->GetName() << ".svg";
-      theCanvasKrumCurr[i]->Print(myString.str().c_str());
+      myString << theThr[i]->GetName() << ".svg";
+      theCanvasThr[i]->Print(myString.str().c_str());
     }
 
   theFile->Write();
@@ -180,11 +181,11 @@ void GainOptimization::Save ()
 	}
 }
 
-void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
+void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue, bool doThrEqu)
 {
-  uint8_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue) + 1 : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName));
-
-
+  uint8_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName);
+  
+  
   ContainerFactory theDetectorFactory;
   DetectorDataContainer minDACcontainer;
   DetectorDataContainer midDACcontainer;
@@ -194,23 +195,23 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
   theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, midDACcontainer);
   theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, maxDACcontainer);
 
-  for (const auto cBoard : minDACcontainer)
+  for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = startValue;
+	minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = startValue;
 
-  for (const auto cBoard : maxDACcontainer)
+  for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::SetBits(numberOfBits));
+	maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::SetBits(numberOfBits));
  
 
   for (auto i = 0; i < numberOfBits; i++)
     {
-      for (const auto cBoard : midDACcontainer)
+      for (const auto cBoard : *fDetectorContainer)
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
-	    cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue =
+	    midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue =
 	      (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue +
 	       maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue) / 2;
 
@@ -221,14 +222,23 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
       for (const auto cBoard : *fDetectorContainer)
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
-	    fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
+	    {
+	      fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
+	      std::cout << "AAA mid " << midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue << std::endl;
+	    }
 
 
       // ################
       // # Run analysis #
       // ################
-      static_cast<Gain*>(this)->Run();
-      auto output = static_cast<Gain*>(this)->Analyze();
+      if (doThrEqu == true)
+	{
+	  // static_cast<SCurve*>(this)->Run();
+	  // auto output = static_cast<SCurve*>(this)->Analyze();
+	  // static_cast<ThrEqualization*>(this)->Run(output);
+	}
+      static_cast<PixelAlive*>(this)->Run();
+      auto output = static_cast<PixelAlive*>(this)->Analyze();
       output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
 
 
@@ -239,11 +249,10 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
 	    {
-	      float charge = (RD53::SetBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)/2 - cChip->getSummary<GainAndIntercept,GainAndIntercept>().fIntercept) /
-		cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGain;
+	      float occ = cChip->getSummary<OccupancyAndPh,OccupancyAndPh>().fOccupancy;
+	      std::cout << "AAA occ = " << occ << std::endl;
+	      if (cChip->getSummary<OccupancyAndPh,OccupancyAndPh>().fOccupancy < target)
 
-	      if ((charge > target) || (charge < 0))
-		
 		maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue =
 		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue;
 	      
@@ -262,11 +271,11 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
 	fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
-  static_cast<Gain*>(this)->Run();
-  static_cast<Gain*>(this)->Analyze();
+  static_cast<PixelAlive*>(this)->Run();
+  static_cast<PixelAlive*>(this)->Analyze();
 }
 
-void GainOptimization::ChipErrorReport ()
+void ThrMinimization::ChipErrorReport ()
 {
   auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
 
