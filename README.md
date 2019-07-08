@@ -172,7 +172,7 @@ How to setup up and run the IT-system:
 
 It might be useful to create one `CMSIT.xml` file for each calibration
 
-- Software git branch / tag : `chipPolymorphism` / `IT-v1.5`
+- Software git branch / tag : `chipPolymorphism` / `IT-v1.6`
 - Firmware tag: `2.5`
 
 
