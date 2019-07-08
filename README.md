@@ -151,14 +151,15 @@ Follow these instructions to install and compile the libraries:
 ### Middleware for the Inner-Tracker (IT) system
 
 The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking. 
-Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following calibrations:
+Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
 ```
 1. Latency scan
 2. PixelAlive
 3. Noise scan
-4. SCurve
-5. Threshold equalization
-6. Gain optimization
+4. SCurve scan
+5. Gain scan
+6. Threshold equalization
+7. Gain optimization
 ```
 How to setup up and run the IT-system:
 1. `mkdir chose_a_name` under `Ph2_ACF`
