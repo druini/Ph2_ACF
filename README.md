@@ -160,6 +160,7 @@ Through `CMSIT_miniDAQ`, and with the right command line option, you can run the
 5. Gain scan
 6. Threshold equalization
 7. Gain optimization
+8. Threshold minimization
 ```
 How to setup up and run the IT-system:
 1. `mkdir chose_a_name` under `Ph2_ACF`
@@ -168,6 +169,8 @@ How to setup up and run the IT-system:
 4. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
 5. `cd chose_a_name`
 6. Run with the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` or run `CMSIT_miniDAQ --help` for help
+
+It might be useful to create one `CMSIT.xml` file for each calibration
 
 - Software git branch / tag : `chipPolymorphism` / `IT-v1.5`
 - Firmware tag: `2.5`
