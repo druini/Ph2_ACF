@@ -29,7 +29,7 @@ using namespace Ph2_System;
 class Latency : public Tool
 {
  public:
-  Latency(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t startValue, size_t stopValue, size_t nEvents);
+  Latency(const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t startValue, size_t stopValue, size_t nEvents);
   ~Latency();
 
   void Run     ();
@@ -39,9 +39,9 @@ class Latency : public Tool
  private:
   const char* fileRes;
   size_t rowStart;
-  size_t rowEnd;
+  size_t rowStop;
   size_t colStart;
-  size_t colEnd;
+  size_t colStop;
   size_t startValue;
   size_t stopValue;
   size_t nEvents;

@@ -9,12 +9,12 @@
 
 #include "RD53PixelAlive.h"
 
-PixelAlive::PixelAlive (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject) :
+PixelAlive::PixelAlive (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject) :
   fileRes     (fileRes),
   rowStart    (rowStart),
-  rowEnd      (rowEnd),
+  rowStop     (rowStop),
   colStart    (colStart),
-  colEnd      (colEnd),
+  colStop     (colStop),
   nPixels2Inj (nPixels2Inj),
   nEvents     (nEvents),
   nEvtsBurst  (nEvtsBurst),
@@ -27,19 +27,19 @@ PixelAlive::PixelAlive (const char* fileRes, size_t rowStart, size_t rowEnd, siz
   ChannelGroup<RD53::nRows,RD53::nCols> customChannelGroup;
   customChannelGroup.disableAllChannels();
 
-  for (auto row = rowStart; row <= rowEnd; row++)
-    for (auto col = colStart; col <= colEnd; col++)
+  for (auto row = rowStart; row <= rowStop; row++)
+    for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  fChannelGroupHandler = new RD53ChannelGroupHandler();
-  fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
-  fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
+  theChnGroupHandler = std::shared_ptr<RD53ChannelGroupHandler>(new RD53ChannelGroupHandler());
+  theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+  theChnGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
 
 PixelAlive::~PixelAlive ()
 {
-  delete fChannelGroupHandler; fChannelGroupHandler = nullptr;
-  delete theFile;              theFile              = nullptr;
+  delete theFile;
+  theFile = nullptr;
 
   for (auto i = 0; i < theCanvasOcc2D.size(); i++)
     {
@@ -64,12 +64,6 @@ PixelAlive::~PixelAlive ()
       delete theBCID[i];
       delete theCanvasBCID[i];
     }
-
-  for (auto i = 0; i < theCanvasToT.size(); i++)
-    {
-      delete theErr[i];
-      delete theCanvasErr[i];
-    }
 }
 
 void PixelAlive::Run ()
@@ -77,9 +71,10 @@ void PixelAlive::Run ()
   ContainerFactory theDetectorFactory;
 
   theOccContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
-  fDetectorDataContainer = theOccContainer.get();
+  this->fDetectorDataContainer = theOccContainer.get();
   theDetectorFactory.copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, *fDetectorDataContainer);
 
+  this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(inject);
   this->fMaskChannelsFromOtherGroups = true;
   this->measureData(nEvents, nEvtsBurst);
@@ -114,7 +109,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::Analyze ()
       for (const auto cChip : *cModule)
 	LOG (INFO) << BOLDGREEN << "\t--> Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
 		   << cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
-
+  
   return theOccContainer;
 }
 
@@ -216,23 +211,6 @@ void PixelAlive::InitHisto ()
 		   << "_Mod"              << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"             << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theCanvasTrgID.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-
-
-	  myString.clear();
-	  myString.str("");
-          myString << "Err_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"      << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"     << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theErr.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
-	  theErr.back()->SetXTitle("Columns");
-	  theErr.back()->SetYTitle("Rows");
-
-	  myString.clear();
-	  myString.str("");
-          myString << "CanvasErr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasErr.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
 	}
   
   theFile = new TFile(fileRes, "UPDATE");
@@ -247,24 +225,19 @@ void PixelAlive::FillHisto ()
 	{
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      {
-		if (cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy != 0)
-		  {
-		    theOcc2D[index]->SetBinContent(col+1,row+1,cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy);
-		    theToT[index]->Fill(cChip->getChannel<OccupancyAndPh>(row,col).fPh);
-		    theOcc1D[index]->Fill(cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy * nEvents);
-		  }
-		
-		if (cChip->getChannel<OccupancyAndPh>(row,col).fErrors != 0)
-		  theErr[index]->SetBinContent(col+1,row+1,cChip->getChannel<OccupancyAndPh>(row,col).fErrors);
-	      }
-	  
+	      if (cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy != 0)
+		{
+		  theOcc2D[index]->SetBinContent(col+1,row+1,cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy);
+		  theOcc1D[index]->Fill(cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy * nEvents);
+		  theToT[index]->Fill(cChip->getChannel<OccupancyAndPh>(row,col).fPh);
+		}
+
 	  for (auto i = 1; i < cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.size(); i++)
 	    {
 	      int deltaBCID = cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];	      
 	      theBCID[index]->Fill((deltaBCID > 0 ? 0 : RD53::SetBits(RD53EvtEncoder::NBIT_BCID)+1) + deltaBCID);
 	    }
-	  
+
 	  for (auto i = 1; i < cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.size(); i++)
 	    {
 	      int deltaTrgID = cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -	cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];	      
@@ -316,14 +289,6 @@ void PixelAlive::Display ()
       theCanvasTrgID[i]->Modified();
       theCanvasTrgID[i]->Update();
     }
-
-  for (auto i = 0; i < theCanvasErr.size(); i++)
-    {
-      theCanvasErr[i]->cd();
-      theErr[i]->Draw();
-      theCanvasErr[i]->Modified();
-      theCanvasErr[i]->Update();
-    }
 }
 
 void PixelAlive::Save ()
@@ -374,20 +339,11 @@ void PixelAlive::Save ()
       myString << theTrgID[i]->GetName() << ".svg";
       theCanvasTrgID[i]->Print(myString.str().c_str());
     }
-
-  for (auto i = 0; i < theCanvasErr.size(); i++)
-    {
-      theCanvasErr[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theErr[i]->GetName() << ".svg";
-      theCanvasErr[i]->Print(myString.str().c_str());
-    }
 }
 
 void PixelAlive::ChipErrorReport ()
 {
-  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
+  auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)

@@ -9,43 +9,26 @@
 
 #include "RD53ThrMinimization.h"
 
-ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, bool doThrEqu, size_t ThrStart, size_t ThrStop) :
+ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart, size_t ThrStop) :
   fileRes         (fileRes),
   fileReg         (fileReg),
   rowStart        (rowStart),
-  rowEnd          (rowEnd),
+  rowStop         (rowStop),
   colStart        (colStart),
-  colEnd          (colEnd),
+  colStop         (colStop),
   nPixels2Inj     (nPixels2Inj),
   nEvents         (nEvents),
   nEvtsBurst      (nEvtsBurst),
   targetOccupancy (targetOccupancy),
-  doThrEqu        (doThrEqu),
   ThrStart        (ThrStart),
   ThrStop         (ThrStop),
-  PixelAlive      (fileRes, rowStart, rowEnd, colStart, colEnd, nPixels2Inj, nEvents, nEvtsBurst, false)
-  // SCurve          (fileRes, rowStart, rowEnd, colStart, colEnd, nPixels2Inj, nEvents, startValue, stopValue, nSteps),
-  // ThrEqualization (fileRes, fileReg, rowStart, rowEnd, colStart, colEnd, nPixels2Inj, nEvents*nSteps, nEvents)
-{
-  // ########################
-  // # Custom channel group #
-  // ########################
-  ChannelGroup<RD53::nRows,RD53::nCols> customChannelGroup;
-  customChannelGroup.disableAllChannels();
-  
-  for (auto row = rowStart; row <= rowEnd; row++)
-    for (auto col = colStart; col <= colEnd; col++)
-      customChannelGroup.enableChannel(row,col);
-  
-  fChannelGroupHandler = new RD53ChannelGroupHandler();
-  fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
-  fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
-}
+  PixelAlive      (fileRes, rowStart, rowStop, colStart, colStop, (rowStop-rowStart+1)*(colStop-colStart+1), nEvents, nEvtsBurst, false)
+{}
 
 ThrMinimization::~ThrMinimization ()
 {
-  delete fChannelGroupHandler; fChannelGroupHandler = nullptr;
-  delete theFile;              theFile              = nullptr;
+  delete theFile;
+  theFile = nullptr;
 
   for (auto i = 0; i < theCanvasThr.size(); i++)
     {
@@ -56,7 +39,7 @@ ThrMinimization::~ThrMinimization ()
 
 void ThrMinimization::Run ()
 {
-  this->bitWiseScan("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop, doThrEqu);
+  this->bitWiseScan("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop);
 
 
   // ############################
@@ -181,7 +164,7 @@ void ThrMinimization::Save ()
 	}
 }
 
-void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue, bool doThrEqu)
+void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
   uint8_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName);
   
@@ -222,21 +205,12 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
       for (const auto cBoard : *fDetectorContainer)
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
-	    {
-	      fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
-	      std::cout << "AAA mid " << midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue << std::endl;
-	    }
+	    this->fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
 
 
       // ################
       // # Run analysis #
       // ################
-      if (doThrEqu == true)
-	{
-	  // static_cast<SCurve*>(this)->Run();
-	  // auto output = static_cast<SCurve*>(this)->Analyze();
-	  // static_cast<ThrEqualization*>(this)->Run(output);
-	}
       static_cast<PixelAlive*>(this)->Run();
       auto output = static_cast<PixelAlive*>(this)->Analyze();
       output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
@@ -249,9 +223,9 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
 	    {
-	      float occ = cChip->getSummary<OccupancyAndPh,OccupancyAndPh>().fOccupancy;
-	      std::cout << "AAA occ = " << occ << std::endl;
-	      if (cChip->getSummary<OccupancyAndPh,OccupancyAndPh>().fOccupancy < target)
+	      float occupancy = cChip->getSummary<OccupancyAndPh,OccupancyAndPh>().fOccupancy * ((rowStop-rowStart+1) * (colStop-colStart+1)) * nEvents;
+
+	      if (occupancy < target)
 
 		maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue =
 		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue;
@@ -270,14 +244,14 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
+	this->fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
   static_cast<PixelAlive*>(this)->Run();
   static_cast<PixelAlive*>(this)->Analyze();
 }
 
 void ThrMinimization::ChipErrorReport ()
 {
-  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
+  auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)

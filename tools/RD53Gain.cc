@@ -9,12 +9,12 @@
 
 #include "RD53Gain.h"
 
-Gain::Gain (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
+Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
   fileRes     (fileRes),
   rowStart    (rowStart),
-  rowEnd      (rowEnd),
+  rowStop     (rowStop),
   colStart    (colStart),
-  colEnd      (colEnd),
+  colStop     (colStop),
   nPixels2Inj (nPixels2Inj),
   nEvents     (nEvents),
   startValue  (startValue),
@@ -28,13 +28,13 @@ Gain::Gain (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart
   ChannelGroup<RD53::nRows,RD53::nCols> customChannelGroup;
   customChannelGroup.disableAllChannels();
 
-  for (auto row = rowStart; row <= rowEnd; row++)
-    for (auto col = colStart; col <= colEnd; col++)
+  for (auto row = rowStart; row <= rowStop; row++)
+    for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  fChannelGroupHandler = new RD53ChannelGroupHandler();
-  fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
-  fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
+  theChnGroupHandler = std::shared_ptr<RD53ChannelGroupHandler>(new RD53ChannelGroupHandler());
+  theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+  theChnGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 
 
   // ##############################
@@ -46,8 +46,8 @@ Gain::Gain (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart
 
 Gain::~Gain ()
 {
-  delete fChannelGroupHandler; fChannelGroupHandler = nullptr;
-  delete theFile;              theFile              = nullptr;
+  delete theFile;
+  theFile = nullptr;
 
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -97,6 +97,7 @@ void Gain::Run ()
       theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *detectorContainerVector.back());
     }
   
+  this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
@@ -510,7 +511,7 @@ void Gain::ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vect
 
 void Gain::ChipErrorReport ()
 {
-  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
+  auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)

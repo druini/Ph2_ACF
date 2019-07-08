@@ -126,7 +126,7 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type, boo
 	    cfgFastCmd.trigger_source   = (hitOr == true ? RD53FWInterface::TriggerSource::HitOr : RD53FWInterface::TriggerSource::FastCMDFSM);
 	    cfgFastCmd.n_triggers       = 0;
 	    cfgFastCmd.trigger_duration = NTRIGxL1A;
-	   
+
 	    if (type == "Digital")
 	      {
 		// #######################################
@@ -236,11 +236,14 @@ int main (int argc, char** argv)
 
   cmd.setHelpOption("h","help","Print this help page");
 
-  cmd.defineOption("file","Hardware description file. Default value: settings/CMSIT.xml",ArgvParser::OptionRequiresValue);
+  cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml",ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
   cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin]. Default: pixelalive", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
+
+  cmd.defineOption ("raw", "Save raw data. Default: disabled", ArgvParser::NoOptionAttribute);
+  cmd.defineOptionAlternative ("raw", "r");
 
   cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("ext", "x");
@@ -256,8 +259,9 @@ int main (int argc, char** argv)
       exit(EXIT_FAILURE);
     }
 
-  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT.xml";
+  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "CMSIT.xml";
   std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
+  bool saveRaw           = cmd.foundOption("raw")    == true ? true : false;
   bool extClkTrg         = cmd.foundOption("ext")    == true ? true : false;
   bool hitOr             = cmd.foundOption("hitor")  == true ? true : false;
 
@@ -281,7 +285,7 @@ int main (int argc, char** argv)
   // ##########################
   // # Initialize output file #
   // ##########################
-  cSystemController.addFileHandler("run_" + runNumber + ".raw", 'w');
+  if (saveRaw == true) cSystemController.addFileHandler("run_" + runNumber + ".raw", 'w');
 
 
   // #######################
@@ -437,7 +441,7 @@ int main (int argc, char** argv)
       std::string chipConfig;
       if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
       else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
-      ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, targetOccupancy, true, ThrStart, ThrStop);
+      ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, targetOccupancy, ThrStart, ThrStop);
       tm.Inherit(&cSystemController);
       tm.Run();
       tm.Draw(display,true);

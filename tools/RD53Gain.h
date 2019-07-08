@@ -37,7 +37,7 @@ using namespace Ph2_System;
 class Gain : public Tool
 {
  public:
-  Gain  (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
+  Gain  (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
   ~Gain ();
 
   void Run                                       ();
@@ -47,9 +47,9 @@ class Gain : public Tool
  private:
   const char* fileRes;
   size_t rowStart;
-  size_t rowEnd;
+  size_t rowStop;
   size_t colStart;
-  size_t colEnd;
+  size_t colStop;
   size_t nPixels2Inj;
   size_t nEvents;
   size_t startValue;
@@ -57,9 +57,10 @@ class Gain : public Tool
   size_t nSteps;
 
   std::vector<uint16_t> dacList;
-
-  std::vector<DetectorDataContainer*>    detectorContainerVector;
-  std::shared_ptr<DetectorDataContainer> theGainAndInterceptContainer;
+  
+  std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
+  std::vector<DetectorDataContainer*>      detectorContainerVector;
+  std::shared_ptr<DetectorDataContainer>   theGainAndInterceptContainer;
 
   void InitHisto       ();
   void FillHisto       ();

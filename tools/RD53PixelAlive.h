@@ -32,7 +32,7 @@ using namespace Ph2_System;
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive  (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
+  PixelAlive  (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
   ~PixelAlive ();
 
   void Run                                       ();
@@ -42,15 +42,16 @@ class PixelAlive : public Tool
  private:
   const char* fileRes;
   size_t rowStart;
-  size_t rowEnd;
+  size_t rowStop;
   size_t colStart;
-  size_t colEnd;
+  size_t colStop;
   size_t nPixels2Inj;
   size_t nEvents;
-  size_t nEvtsBurst;  
+  size_t nEvtsBurst;
   bool   inject;
 
-  std::shared_ptr<DetectorDataContainer> theOccContainer;
+  std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
+  std::shared_ptr<DetectorDataContainer>   theOccContainer;
 
   void InitHisto       ();
   void FillHisto       ();
@@ -73,8 +74,6 @@ class PixelAlive : public Tool
   std::vector<TH1F*>    theBCID;
   std::vector<TCanvas*> theCanvasTrgID;
   std::vector<TH1F*>    theTrgID;
-  std::vector<TCanvas*> theCanvasErr;
-  std::vector<TH2F*>    theErr;
 };
 
 #endif

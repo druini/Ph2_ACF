@@ -11,9 +11,7 @@
 #define _RD53ThrMinimization_h_
 
 #include "../Utils/EmptyContainer.h"
-#include "RD53ThrEqualization.h"
 #include "RD53PixelAlive.h"
-#include "RD53SCurve.h"
 
 
 using namespace Ph2_System;
@@ -24,7 +22,7 @@ using namespace Ph2_System;
 class ThrMinimization : public PixelAlive
 {
  public:
-  ThrMinimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, bool doThrEqu, size_t ThrStart = 0, size_t ThrStop = 0);
+  ThrMinimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart = 0, size_t ThrStop = 0);
   ~ThrMinimization ();
 
   void Run  ();
@@ -34,16 +32,15 @@ class ThrMinimization : public PixelAlive
   const char* fileRes;
   const char* fileReg;
   size_t rowStart;
-  size_t rowEnd;
+  size_t rowStop;
   size_t colStart;
-  size_t colEnd;
+  size_t colStop;
   size_t nPixels2Inj;
   size_t nEvents;
   size_t nEvtsBurst;
   size_t ThrStart;
   size_t ThrStop;
   float  targetOccupancy;
-  bool   doThrEqu;
 
   DetectorDataContainer theThrContainer;
 
@@ -51,7 +48,7 @@ class ThrMinimization : public PixelAlive
   void FillHisto       ();
   void Display         ();
   void Save            ();
-  void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue, bool doThrEqu);
+  void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
   void ChipErrorReport ();
 
 

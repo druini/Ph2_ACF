@@ -9,13 +9,13 @@
 
 #include "RD53GainOptimization.h"
 
-GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetCharge, size_t KrumCurrStart, size_t KrumCurrStop) :
+GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetCharge, size_t KrumCurrStart, size_t KrumCurrStop) :
   fileRes       (fileRes),
   fileReg       (fileReg),
   rowStart      (rowStart),
-  rowEnd        (rowEnd),
+  rowStop       (rowStop),
   colStart      (colStart),
-  colEnd        (colEnd),
+  colStop       (colStop),
   nPixels2Inj   (nPixels2Inj),
   nEvents       (nEvents),
   startValue    (startValue),
@@ -24,27 +24,13 @@ GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, si
   targetCharge  (targetCharge),
   KrumCurrStart (KrumCurrStart),
   KrumCurrStop  (KrumCurrStop),
-  Gain          (fileRes, rowStart, rowEnd, colStart, colEnd, nPixels2Inj, nEvents, startValue, stopValue, nSteps)
-{
-  // ########################
-  // # Custom channel group #
-  // ########################
-  ChannelGroup<RD53::nRows,RD53::nCols> customChannelGroup;
-  customChannelGroup.disableAllChannels();
-  
-  for (auto row = rowStart; row <= rowEnd; row++)
-    for (auto col = colStart; col <= colEnd; col++)
-      customChannelGroup.enableChannel(row,col);
-  
-  fChannelGroupHandler = new RD53ChannelGroupHandler();
-  fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
-  fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
-}
+  Gain          (fileRes, rowStart, rowStop, colStart, colStop, nPixels2Inj, nEvents, startValue, stopValue, nSteps)
+{}
 
 GainOptimization::~GainOptimization ()
 {
-  delete fChannelGroupHandler; fChannelGroupHandler = nullptr;
-  delete theFile;              theFile              = nullptr;
+  delete theFile;
+  theFile = nullptr;
 
   for (auto i = 0; i < theCanvasKrumCurr.size(); i++)
     {
@@ -221,7 +207,7 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
       for (const auto cBoard : *fDetectorContainer)
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
-	    fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
+	    this->fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
 
 
       // ################
@@ -240,7 +226,7 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
 	  for (auto cChip : *cModule)
 	    {
 	      float charge = (RD53::SetBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)/2 - cChip->getSummary<GainAndIntercept,GainAndIntercept>().fIntercept) /
-		cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGain;
+		(cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGain + NSIGMAGAIN * cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGainError);
 
 	      if ((charge > target) || (charge < 0))
 		
@@ -261,14 +247,14 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
   for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
+	this->fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
   static_cast<Gain*>(this)->Run();
   static_cast<Gain*>(this)->Analyze();
 }
 
 void GainOptimization::ChipErrorReport ()
 {
-  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
+  auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
