@@ -14,12 +14,6 @@
 #include "RD53Gain.h"
 
 
-// #############
-// # CONSTANTS #
-// #############
-#define NSIGMAGAIN 3 // Number of sigmas on gain measurement used to set target
-
-
 using namespace Ph2_System;
 
 // ################################

@@ -215,7 +215,7 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
       // ################
       static_cast<Gain*>(this)->Run();
       auto output = static_cast<Gain*>(this)->Analyze();
-      output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
+      output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
 
       // #####################
@@ -225,8 +225,23 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
 	    {
+	      // ##############################################
+	      // # Search for maximum and build discriminator #
+	      // ##############################################
+	      float stdDev = 0;
+	      size_t cnt   = 0;
+	      for (auto row = 0; row < RD53::nRows; row++)
+		for (auto col = 0; col < RD53::nCols; col++)
+		  if (cChip->getChannel<GainAndIntercept>(row,col).fGain != 0)
+		    {
+		      stdDev += cChip->getChannel<GainAndIntercept>(row,col).fGain * cChip->getChannel<GainAndIntercept>(row,col).fGain;
+		      cnt++;
+		    }
+	      stdDev = (cnt != 0 ? stdDev/cnt : 0) - cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGain * cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGain;
+	      stdDev = (stdDev > 0 ? sqrt(stdDev) : 0);
 	      float charge = (RD53::SetBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)/2 - cChip->getSummary<GainAndIntercept,GainAndIntercept>().fIntercept) /
-		(cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGain + NSIGMAGAIN * cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGainError);
+		(cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGain + stdDev);
+
 
 	      if ((charge > target) || (charge < 0))
 		

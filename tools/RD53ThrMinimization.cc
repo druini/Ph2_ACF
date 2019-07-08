@@ -223,7 +223,11 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
 	    {
+	      // #######################
+	      // # Build discriminator #
+	      // #######################
 	      float occupancy = cChip->getSummary<OccupancyAndPh,OccupancyAndPh>().fOccupancy * ((rowStop-rowStart+1) * (colStop-colStart+1)) * nEvents;
+
 
 	      if (occupancy < target)
 
