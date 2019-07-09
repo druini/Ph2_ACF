@@ -65,8 +65,12 @@ void SignalScanFit::Initialize ( )
                 bookHistogram ( cCbc, "Cbc_Clusters_odd", cHist );
 
                 cHistname = Form ( "Fe%dCBC%d_ClusterSize_even",cFeId, cCbcId );
-                cHist = new TH1D ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
+                cProfile = new TProfile ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
                 bookHistogram ( cCbc, "Cbc_ClusterSize_even", cHist );
+
+//                cHistname = Form ( "Fe%dCBC%d_ClusterSize_even",cFeId, cCbcId );
+//                cHist = new TH1D ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
+//                bookHistogram ( cCbc, "Cbc_ClusterSize_even", cHist );
 
                 cHistname = Form ( "Fe%dCBC%d_ClusterSize_odd",cFeId, cCbcId );
                 cHist = new TH1D ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
@@ -153,6 +157,7 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
                         TH1D* cHitsOddHist          = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_odd" ) );
                         TH1D* cClustersEvenHist     = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Clusters_even" ) );
                         TH1D* cClustersOddHist      = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Clusters_odd" ) );
+                        TProfile* cClustersSizeEven = dynamic_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterSize_even" ) );
                         TProfile* cClustersEvenProf = dynamic_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterOccupancy_even" ) );
                         TProfile* cClustersOddProf  = dynamic_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterOccupancy_odd" ) );                     
 
@@ -189,6 +194,8 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
                                 {                              
                                     cClustersEvenHist->Fill ( cVCth );
                                     cClustersEven++;
+                                    //cClustersSizeEven->Fill ( cVCth, cClusterSizeEvenSensor );
+                                    //std::cout << double (cCluster.fClusterWidth) << std::endl;
                                 } 
                                 else if ( cCluster.fSensor == 1 ) 
                                 {
@@ -218,11 +225,11 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
         this->accept (cVisitor);
     }
     // Now do the fit if requested, WARNING this fitting procedure is still under construction (N. Deelen / G. Zevi Della Porta)
-    for ( BeBoard* pBoard : fBoardVector )
-    {    
-        processCurves ( pBoard, "Cbc_ClusterOccupancy_even" );
-        processCurves ( pBoard, "Cbc_ClusterOccupancy_odd" ); 
-    }
+//    for ( BeBoard* pBoard : fBoardVector )
+//    {    
+//        processCurves ( pBoard, "Cbc_ClusterOccupancy_even" );
+//        processCurves ( pBoard, "Cbc_ClusterOccupancy_odd" ); 
+//    }
     // Last but not least, save the results. This also happens in the commissioning.cc but when we only use that some plots do not get saved properly! To be checked!
     SaveResults();
 }
