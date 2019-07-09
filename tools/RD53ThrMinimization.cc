@@ -50,7 +50,7 @@ void ThrMinimization::Run ()
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,OccupancyAndPh>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("Vthreshold_LIN");
+	theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("Vthreshold_LIN");
 
 
   // ################
@@ -115,11 +115,11 @@ void ThrMinimization::InitHisto ()
 void ThrMinimization::FillHisto ()
 {
   size_t index = 0;
-  for (const auto cBoard : *fDetectorContainer)
+  for (const auto cBoard : theThrContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  theThr[index]->Fill(theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,OccupancyAndPh>().fRegisterValue);
+	  theThr[index]->Fill(cChip->getSummary<RegisterValue,OccupancyAndPh>().fRegisterValue);
 
 	  index++;
 	}
@@ -191,21 +191,21 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 
   for (auto i = 0; i < numberOfBits; i++)
     {
-      for (const auto cBoard : *fDetectorContainer)
-	for (auto cModule : *cBoard)
-	  for (auto cChip : *cModule)
-	    midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue =
-	      (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue +
-	       maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue) / 2;
-
-
       // ###########################
       // # Download new DAC values #
       // ###########################
       for (const auto cBoard : *fDetectorContainer)
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
-	    this->fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
+	    {
+	      midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue =
+		(minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue +
+		 maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue) / 2;
+
+	      this->fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue, true);
+	      // std::cout << "AAA " << midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue
+	      // 		<< "\t"   << static_cast<RD53*>(cChip)->getReg(dacName) << std::endl;
+	    }
 
 
       // ################
@@ -240,17 +240,6 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue;
 	    }
     }
-
-
-  // ############################################
-  // # Last measurement with final DAC settings #
-  // ############################################
-  for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
-	this->fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
-  static_cast<PixelAlive*>(this)->Run();
-  static_cast<PixelAlive*>(this)->Analyze();
 }
 
 void ThrMinimization::ChipErrorReport ()
