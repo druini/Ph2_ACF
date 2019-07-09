@@ -188,7 +188,7 @@ echo "gain" >> calibDone.txt
 time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
 echo "gainopt" >> calibDone.txt
 
-# Repeat n-times ###############################                                                                                                                                               
+# Repeat n-times ###############################
 time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
 echo "thrmin" >> calibDone.txt
 
