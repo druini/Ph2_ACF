@@ -10,8 +10,6 @@
 
 #include "RD53PixelAliveHistograms.h"
 
-using namespace Ph2_HwDescription;
-
 void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure)
 {
   size_t ToTsize   = RD53::SetBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION) + 1;
@@ -41,9 +39,9 @@ void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      if (cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != 0)
 		{
+		  Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy * nEvents);
 		  Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
 		  ToTHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
-		  Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy * nEvents);
 		}
 
 	  for (auto i = 1; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.size(); i++)

@@ -20,6 +20,9 @@
 #include <TH1F.h>
 #include <TH2F.h>
 
+
+using namespace Ph2_HwDescription;
+
 class RD53PixelAliveHistograms : RD53HistogramsBase
 {
  public:
