@@ -170,8 +170,7 @@ How to setup up and run the IT-system:
 5. `cd chose_a_name`
 6. Run with the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` or run `CMSIT_miniDAQ --help` for help
 
-It might be useful to create one `CMSIT.xml` file for each calibration
-Suggested sequence of calibrations implemented in bash shell script:
+It might be useful to create one `CMSIT.xml` file for each calibration. Suggested sequence of calibrations implemented in bash shell script:
 ```
 time CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive
 echo "pixelalive" >> calibDone.txt
@@ -192,7 +191,7 @@ echo "gainopt" >> calibDone.txt
 time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
 echo "thrmin" >> calibDone.txt
 
-echo "Choose to accept new threshold (i.e. copy it into the xml file)"
+echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
 read -p "Press any key to continue... " -n1 -s
 
 time CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
