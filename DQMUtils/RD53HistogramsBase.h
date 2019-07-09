@@ -42,10 +42,10 @@ class RD53HistogramsBase
     }
   
   template <typename Hist> 
-    void draw(DetectorDataContainer& HistDataContainer,
-	      const char* opt               = "",
-	      bool electronAxis             = false,
-	      const char* electronAxisTitle = "")
+    void draw (DetectorDataContainer& HistDataContainer,
+	       const char* opt               = "",
+	       bool electronAxis             = false,
+	       const char* electronAxisTitle = "")
     {
       for (auto cBoard : HistDataContainer)
 	for (auto cModule : *cBoard)
@@ -57,6 +57,7 @@ class RD53HistogramsBase
 	      hist->Draw(opt);
 	      canvases.back()->Modified();
 	      canvases.back()->Update();
+
 	      if (electronAxis == true)
 		{
 		  TPad* myPad = static_cast<TPad*>(canvases.back()->GetPad(0));
