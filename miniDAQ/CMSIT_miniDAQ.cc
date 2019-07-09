@@ -357,7 +357,7 @@ int main (int argc, char** argv)
       // #############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_NoiseScan.root");
+      std::string fileName("Run" + runNumber + "_NoiseScan");
       PixelAlive pa(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false);
       pa.Inherit(&cSystemController);
       pa.Run();

@@ -155,7 +155,7 @@ void ThrMinimization::Save ()
 
 void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
-  uint8_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName);
+  uint8_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue) + 1 : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName));
   
   
   ContainerFactory theDetectorFactory;

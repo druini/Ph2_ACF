@@ -25,11 +25,9 @@ class RD53PixelAliveHistograms : RD53HistogramsBase
  public:
  RD53PixelAliveHistograms (size_t nEvents) : nEvents(nEvents) {}
 
-  void book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure);
-  
-  void fill (const DetectorDataContainer& data);
-
-  void process();
+  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure);
+  void fill    (const DetectorDataContainer& data);
+  void process ();
 
  private:
   DetectorDataContainer Occupancy1D;

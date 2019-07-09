@@ -18,9 +18,9 @@ void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContain
   size_t BCIDsize  = RD53::SetBits(RD53EvtEncoder::NBIT_BCID) + 1;
   size_t TrgIDsize = RD53::SetBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
+  bookImplementer(theOutputFile, theDetectorStructure, HistContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, nEvents + 1), Occupancy1D, "Occupancy", "Entries");
   bookImplementer(theOutputFile, theDetectorStructure, HistContainer<TH2F>("PixelAlive", "Pixel Alive", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows), Occupancy2D, "Columns", "Rows");
   bookImplementer(theOutputFile, theDetectorStructure, HistContainer<TH1F>("ToT", "ToT Distribution", ToTsize, 0, ToTsize), ToT, "ToT", "Entries");
-  bookImplementer(theOutputFile, theDetectorStructure, HistContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, nEvents + 1), Occupancy1D, "Occupancy", "Entries");
   bookImplementer(theOutputFile, theDetectorStructure, HistContainer<TH1F>("BCID", "BCID", BCIDsize, 0, BCIDsize), BCID, "#DeltaBCID", "Entries");
   bookImplementer(theOutputFile, theDetectorStructure, HistContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 0, TrgIDsize), TriggerID, "#DeltaTrigger-ID", "Entries");
 }
@@ -34,18 +34,8 @@ void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)
 	  auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 	  auto* Occupancy2DHist = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 	  auto* ToTHist         = ToT.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-	  
-	  auto* BCIDHist = BCID.at(cBoard->getIndex())
-	    ->at(cModule->getIndex())
-	    ->at(cChip->getIndex())
-	    ->getSummary<HistContainer<TH1F> >()
-	    .fTheHistogram;
-	  
-	  auto* TriggerIDHist = TriggerID.at(cBoard->getIndex())
-	    ->at(cModule->getIndex())
-	    ->at(cChip->getIndex())
-	    ->getSummary<HistContainer<TH1F> >()
-	    .fTheHistogram;
+	  auto* BCIDHist        = BCID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+	  auto* TriggerIDHist   = TriggerID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
@@ -72,9 +62,9 @@ void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)
 
 void RD53PixelAliveHistograms::process ()
 {
+  draw<TH1F>(Occupancy1D);
   draw<TH2F>(Occupancy2D, "gcolz");
   draw<TH1F>(ToT);
-  draw<TH1F>(Occupancy1D);
   draw<TH1F>(BCID);
   draw<TH1F>(TriggerID);
 }
