@@ -5,6 +5,7 @@
 #include "TCanvas.h"
 #include "TGraph.h"
 #include "TH1F.h"
+#include "TF1.h"
 
 #include "PedeNoise.h"
 

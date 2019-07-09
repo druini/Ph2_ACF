@@ -266,9 +266,9 @@ class Tool : public SystemController
     // One dimensional dac scan per BeBoard
     void scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorDataContainer*> &detectorContainerVector, int32_t numberOfEventsPerBurst = -1);
     // bit wise scan
-    void bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy);
+    void bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy, int32_t numberOfEventsPerBurst = -1);
     // bit wise scan per BeBoard
-    void bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy);
+    void bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy, int32_t numberOfEventsPerBurst = -1);
     // set dac and measure data
     void setDacAndMeasureData(const std::string &dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
     // set dac and measure data per BeBoard

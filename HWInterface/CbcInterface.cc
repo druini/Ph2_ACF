@@ -97,19 +97,23 @@ namespace Ph2_HwInterface {
     bool CbcInterface::maskChannelsGroup (ReadoutChip* pCbc, const ChannelGroupBase *group, bool pVerifLoop)
     {
         const ChannelGroup<NCHANNELS,1>* originalMask     = static_cast<const ChannelGroup<NCHANNELS,1>*>(pCbc->getChipOriginalMask());
-        const ChannelGroup<NCHANNELS,1>* currentGroupMask = static_cast<const ChannelGroup<NCHANNELS,1>*>(group                       );
-        std::bitset<NCHANNELS> maskToBeSet = originalMask->getBitset() & currentGroupMask->getBitset();
-        LOG (INFO) << BOLDBLUE << "Bitset used for mask has " << maskToBeSet.count() << " active channels." << RESET;
         std::vector< std::pair<std::string, uint16_t> > cRegVec; 
         cRegVec.clear(); 
+        std::bitset<NCHANNELS> tmpBit(255);
         
         for(uint8_t maskGroup=0; maskGroup<32; ++maskGroup)
         {
-            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)(originalMask->getBitset()>>(maskGroup<<3) & std::bitset<NCHANNELS>(255)).to_ulong()));
+            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)(originalMask->getBitset()>>(maskGroup<<3) & tmpBit).to_ulong()));
         }
 
         return WriteChipMultReg ( pCbc , cRegVec, pVerifLoop );
 
+    }
+
+    bool CbcInterface::maskChannelsAndSetInjectionSchema  (ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop)
+    {
+        if(mask)   maskChannelsGroup (pChip,group,pVerifLoop);
+        if(inject) setInjectionSchema(pChip,group,pVerifLoop);
     }
 
 
@@ -120,10 +124,11 @@ namespace Ph2_HwInterface {
         
         std::vector< std::pair<std::string, uint16_t> > cRegVec; 
         cRegVec.clear(); 
-        
+        std::bitset<NCHANNELS> tmpBit(255);
+
         for(uint8_t maskGroup=0; maskGroup<32; ++maskGroup)
         {
-            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)(originalMask->getBitset()>>(maskGroup<<3) & std::bitset<NCHANNELS>(255)).to_ulong()));
+            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)(originalMask->getBitset()>>(maskGroup<<3) & tmpBit).to_ulong()));
         }
 
         return WriteChipMultReg ( pCbc , cRegVec, pVerifLoop );

@@ -32,8 +32,8 @@ using namespace Ph2_System;
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
-  ~PixelAlive();
+  PixelAlive  (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
+  ~PixelAlive ();
 
   void Run     ();
   void Draw    (bool display, bool save);
@@ -52,10 +52,11 @@ class PixelAlive : public Tool
 
   DetectorDataContainer theContainer;
 
-  void InitHisto ();
-  void FillHisto ();
-  void Display   ();
-  void Save      ();
+  void InitHisto       ();
+  void FillHisto       ();
+  void Display         ();
+  void Save            ();
+  void ChipErrorReport ();
 
 
   // ########

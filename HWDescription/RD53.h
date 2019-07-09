@@ -29,7 +29,6 @@
 // ################################
 #define NROWS           192 // Total number of rows
 #define NCOLS           400 // Total number of columns
-#define NOHIT_TOT       0xF // ToT value corresponding to no-hit
 #define NPIXCOL_PROG      2 // Number of pixel columns to program
 #define NDATAMAX_PERPIXEL 6 // Number of data-bit packets used to program the pixel
 #define NPIX_REGION       4 // Number of pixels in a region (1x4)
@@ -39,15 +38,21 @@
 // #################################################################################
 // # Formula: (par0 1e-3 + par1*VCal 1e-3) / electron_charge [C] * capacitance [C] #
 // #################################################################################
-namespace RD53VCal2Charge
+namespace RD53chargeConverter
 {
-  const float par0 = -1.0;
-  const float par1 =  0.195;
-  const float cap  =  8.2;
-  const float ele  =  1.6;
-  constexpr float Convert(float VCal, bool onlySlope = false)
+  constexpr float par0 = -1.0;
+  constexpr float par1 =  0.195;
+  constexpr float cap  =  8.2;
+  constexpr float ele  =  1.6;
+
+  constexpr float VCAl2Charge(float VCal, bool onlySlope = false)
   {
     return ((onlySlope ? 0 : par0) + par1*VCal) / ele * cap * 10.0;
+  }
+
+  constexpr float Charge2VCal(float Charge, bool onlySlope = false)
+  {
+    return (Charge / (cap * 10.0) * ele - par0) / par1;
   }
 }
 
@@ -166,23 +171,23 @@ namespace Ph2_HwDescription
     RD53  (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename);
     ~RD53 ();
 
-    void     loadfRegMap         (const std::string& filename)                                         override;
-    void     saveRegMap          (const std::string& filename)                                         override;
-    //void     setReg              (const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
-    //uint16_t getReg              (const std::string& pReg) const                                       override;
-    uint32_t getNumberOfChannels () const                                                              override;
-    bool     isDACLocal          (const std::string& dacName)                                          override;
-    uint8_t  getNumberOfBits     (const std::string& dacName)                                          override;
+    void     loadfRegMap         (const std::string& filename) override;
+    void     saveRegMap          (const std::string& filename) override;
+    uint32_t getNumberOfChannels () const                      override;
+    bool     isDACLocal          (const std::string& dacName)  override;
+    uint8_t  getNumberOfBits     (const std::string& dacName)  override;
 
     std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
     std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
 
-    void resetMask        ();
-    void enableAllPixels  ();
-    void disableAllPixels ();
-    void enablePixel      (unsigned int row, unsigned int col, bool enable);
-    void injectPixel      (unsigned int row, unsigned int col, bool inject);
-    void setTDAC          (unsigned int row, unsigned int col, uint8_t TDAC);
+    void copyMaskFromDefault ();
+    void copyMaskToDefault   ();
+    void resetMask           ();
+    void enableAllPixels     ();
+    void disableAllPixels    ();
+    void enablePixel         (unsigned int row, unsigned int col, bool enable);
+    void injectPixel         (unsigned int row, unsigned int col, bool inject);
+    void setTDAC             (unsigned int row, unsigned int col, uint8_t TDAC);
 
     void EncodeCMD (const uint16_t               address,
 		    const uint16_t               data,
@@ -241,11 +246,29 @@ namespace Ph2_HwDescription
     };
   
     template<size_t NBITS>
-    static std::bitset<NBITS> SetBits (size_t nBit2Set)
+      static std::bitset<NBITS> SetBits (size_t nBit2Set)
+      {
+    	std::bitset<NBITS> output(0);
+    	for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
+    	return output;
+      }
+
+    static size_t SetBits (size_t nBit2Set)
     {
-      std::bitset<NBITS> output(0);
-      for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
+      auto output = 1 << (nBit2Set-1);
+      for (auto i = 0; i < nBit2Set-1; i++) output |= 1 << i;
       return output;
+    }
+
+    static auto CountBitsOne(size_t num)
+    {
+      auto count = 0;
+      while (num != 0)
+	{
+	  count += (num & 1);
+	  num >>= 1;
+	}
+      return count;
     }
 
   private:

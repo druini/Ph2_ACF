@@ -24,9 +24,9 @@ public:
 
     TH1FContainer(const TH1FContainer& container) = delete;
     TH1FContainer& operator= (const TH1FContainer& container) = delete;
-    TH1FContainer(const char *name, const char *title, Int_t nbinsx, Double_t xlow, Double_t xup) 
+    TH1FContainer(const char *name, const char *title, int nBinsX, double xLow, double xUp) 
     {
-        fTheHistogram = new TH1F(name, title, nbinsx, xlow, xup);
+        fTheHistogram = new TH1F(name, title, nBinsX, xLow, xUp);
         fTheHistogram->SetDirectory(0);  
     }
     ~TH1FContainer() 

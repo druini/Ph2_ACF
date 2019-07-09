@@ -37,12 +37,12 @@ using namespace Ph2_System;
 class Gain : public Tool
 {
  public:
-  Gain(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
-  ~Gain();
+  Gain  (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
+  ~Gain ();
 
-  void Run     ();
-  void Draw    (bool display, bool save);
-  void Analyze ();
+  void Run                                       ();
+  void Draw                                      (bool display, bool save);
+  std::shared_ptr<DetectorDataContainer> Analyze ();
 
  private:
   const char* fileRes;
@@ -58,14 +58,15 @@ class Gain : public Tool
 
   std::vector<uint16_t> dacList;
 
-  std::vector<DetectorDataContainer*> detectorContainerVector;
-  DetectorDataContainer               theGainAndInterceptContainer;
+  std::vector<DetectorDataContainer*>    detectorContainerVector;
+  std::shared_ptr<DetectorDataContainer> theGainAndInterceptContainer;
 
-  void InitHisto    ();
-  void FillHisto    ();
-  void Display      ();
-  void Save         ();
-  void ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
+  void InitHisto       ();
+  void FillHisto       ();
+  void Display         ();
+  void Save            ();
+  void ComputeStats    (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
+  void ChipErrorReport ();
 
 
   // ########

@@ -234,6 +234,7 @@ int main ( int argc, char* argv[] )
     }
 
     cTool.SaveResults();
+    cTool.WriteRootFile();
     cTool.CloseResultFile();
     cTool.Destroy();
 

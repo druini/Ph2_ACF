@@ -31,12 +31,12 @@ using namespace Ph2_System;
 class SCurve : public Tool
 {
  public:
-  SCurve(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
-  ~SCurve();
+  SCurve  (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
+  ~SCurve ();
 
-  void Run     ();
-  void Draw    (bool display, bool save);
-  void Analyze ();
+  void Run                                       ();
+  void Draw                                      (bool display, bool save);
+  std::shared_ptr<DetectorDataContainer> Analyze ();
 
  private:
   const char* fileRes;
@@ -52,14 +52,15 @@ class SCurve : public Tool
 
   std::vector<uint16_t> dacList;
 
-  std::vector<DetectorDataContainer*> detectorContainerVector;
-  DetectorDataContainer               theThresholdAndNoiseContainer;
+  std::vector<DetectorDataContainer*>    detectorContainerVector;
+  std::shared_ptr<DetectorDataContainer> theThresholdAndNoiseContainer;
 
-  void InitHisto    ();
-  void FillHisto    ();
-  void Display      ();
-  void Save         ();
-  void ComputeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+  void InitHisto       ();
+  void FillHisto       ();
+  void Display         ();
+  void Save            ();
+  void ComputeStats    (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+  void ChipErrorReport ();
 
 
   // ########

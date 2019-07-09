@@ -7,12 +7,13 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "../System/SystemController.h"
 #include "../Utils/argvparser.h"
+#include "../System/SystemController.h"
+#include "../tools/RD53GainOptimization.h"
+#include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53PixelAlive.h"
 #include "../tools/RD53Latency.h"
 #include "../tools/RD53SCurve.h"
-#include "../tools/RD53ThrOpt.h"
 #include "../tools/RD53Gain.h"
 
 #include <fstream>
@@ -58,31 +59,41 @@ void InitParameters (const SystemController& sc,
 		     size_t& VCALstop,
 		     size_t& VCALnsteps,
 
-		     size_t& display)
+		     size_t& targetCharge,
+		     size_t& KrumCurrStart,
+		     size_t& KrumCurrStop,
+
+		     size_t& display,
+		     size_t& chipRegDefault)
 {
-  nEvents      = FindValue(sc,"nEvents");
-  nEvtsBurst   = FindValue(sc,"nEvtsBurst");
-  NTRIGxL1A    = FindValue(sc,"NTRIGxL1A");
-  INJtype      = (FindValue(sc,"INJtype") == 0 ? "Analog" : "Digital");
+  nEvents        = FindValue(sc,"nEvents");
+  nEvtsBurst     = FindValue(sc,"nEvtsBurst");
+  NTRIGxL1A      = FindValue(sc,"NTRIGxL1A");
+  INJtype        = (FindValue(sc,"INJtype") == 0 ? "Analog" : "Digital");
 
-  ROWstart     = FindValue(sc,"ROWstart");
-  ROWstop      = FindValue(sc,"ROWstop");
-  COLstart     = FindValue(sc,"COLstart");
-  COLstop      = FindValue(sc,"COLstop");
-  nPixelInj    = FindValue(sc,"nPixelInj");
+  ROWstart       = FindValue(sc,"ROWstart");
+  ROWstop        = FindValue(sc,"ROWstop");
+  COLstart       = FindValue(sc,"COLstart");
+  COLstop        = FindValue(sc,"COLstop");
+  nPixelInj      = FindValue(sc,"nPixelInj");
 
-  LatencyStart = FindValue(sc,"LatencyStart");
-  LatencyStop  = FindValue(sc,"LatencyStop");
+  LatencyStart   = FindValue(sc,"LatencyStart");
+  LatencyStop    = FindValue(sc,"LatencyStop");
 
-  VCALstart    = FindValue(sc,"VCALstart");
-  VCALstop     = FindValue(sc,"VCALstop");
-  VCALnsteps   = FindValue(sc,"VCALnsteps");
+  VCALstart      = FindValue(sc,"VCALstart");
+  VCALstop       = FindValue(sc,"VCALstop");
+  VCALnsteps     = FindValue(sc,"VCALnsteps");
 
-  display      = FindValue(sc,"DisplayHisto");
+  targetCharge   = FindValue(sc,"targetCharge");
+  KrumCurrStart  = FindValue(sc,"KrumCurrStart");
+  KrumCurrStop   = FindValue(sc,"KrumCurrStop");
+
+  display        = FindValue(sc,"DisplayHisto");
+  chipRegDefault = FindValue(sc,"ChipRegDefaultFile");
 }
 
 
-void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type)
+void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type, bool hitOr)
 // ###################
 // # type == Digital #
 // # type == Analog  #
@@ -94,82 +105,82 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type)
 
       for (const auto& cModule : cBoard->fModuleVector)
 	for (const auto& cChip : cModule->fReadoutChipVector)
-	 {
-	   uint8_t chipId = cChip->getChipId();
+	  {
+	    uint8_t chipId = cChip->getChipId();
 
 
-	   // #############################
-	   // # Configuring FastCmd block #
-	   // #############################
-	   RD53FWInterface::FastCommandsConfig cfgFastCmd;
+	    // #############################
+	    // # Configuring FastCmd block #
+	    // #############################
+	    RD53FWInterface::FastCommandsConfig cfgFastCmd;
       
-	   cfgFastCmd.trigger_source   = RD53FWInterface::TriggerSource::FastCMDFSM;
-	   cfgFastCmd.n_triggers       = 0;
-	   cfgFastCmd.trigger_duration = NTRIGxL1A;
+	    cfgFastCmd.trigger_source   = (hitOr == true ? RD53FWInterface::TriggerSource::HitOr : RD53FWInterface::TriggerSource::FastCMDFSM);
+	    cfgFastCmd.n_triggers       = 0;
+	    cfgFastCmd.trigger_duration = NTRIGxL1A;
 	   
-	   if (type == "Digital")
-	     {
-	       // #######################################
-	       // # Configuration for digital injection #
-	       // #######################################
-	       RD53::CalCmd calcmd_first(1,2,8,0,0);
-	       cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
-	       RD53::CalCmd calcmd_second(0,0,0,0,0);
-	       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
+	    if (type == "Digital")
+	      {
+		// #######################################
+		// # Configuration for digital injection #
+		// #######################################
+		RD53::CalCmd calcmd_first(1,2,8,0,0);
+		cfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
+		RD53::CalCmd calcmd_second(0,0,0,0,0);
+		cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 	       
-	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
-	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  0;
-	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 40;
+		cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
+		cfgFastCmd.fast_cmd_fsm.delay_after_second_cal =  0;
+		cfgFastCmd.fast_cmd_fsm.delay_loop             = 40;
 
-	       cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
-	       cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
-	       cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
-	     }
-	   else if (type == "Analog")
-	     {
-	       // ######################################
-	       // # Configuration for analog injection #
-	       // ######################################
-	       RD53::CalCmd calcmd_first(1,0,0,0,0);
-	       cfgFastCmd.fast_cmd_fsm.first_cal_data  = calcmd_first.getCalCmd(chipId);
-	       RD53::CalCmd calcmd_second(0,0,2,0,0);
-	       cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
+		cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
+		cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
+		cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+	      }
+	    else if (type == "Analog")
+	      {
+		// ######################################
+		// # Configuration for analog injection #
+		// ######################################
+		RD53::CalCmd calcmd_first(1,0,0,0,0);
+		cfgFastCmd.fast_cmd_fsm.first_cal_data  = calcmd_first.getCalCmd(chipId);
+		RD53::CalCmd calcmd_second(0,0,2,0,0);
+		cfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 	       
-	       cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
-	       cfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 32;
-	       cfgFastCmd.fast_cmd_fsm.delay_loop             = 40;
+		cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = 32;
+		cfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 32;
+		cfgFastCmd.fast_cmd_fsm.delay_loop             = 40;
 
-	       cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
-	       cfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
-	       cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
-	     }
-	   else LOG (ERROR) << BOLDRED << "Option non recognized " << type << RESET;
+		cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
+		cfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
+		cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+	      }
+	    else LOG (ERROR) << BOLDRED << "Option non recognized " << type << RESET;
 	   
 	   
-	   // ###############################################
-	   // # Copy to RD53FWInterface data member variable #
-	   // ###############################################
-	   RD53Board->getLoaclCfgFastCmd()->trigger_source                      = cfgFastCmd.trigger_source;
-	   RD53Board->getLoaclCfgFastCmd()->n_triggers                          = cfgFastCmd.n_triggers;
-	   RD53Board->getLoaclCfgFastCmd()->trigger_duration                    = cfgFastCmd.trigger_duration;
+	    // ###############################################
+	    // # Copy to RD53FWInterface data member variable #
+	    // ###############################################
+	    RD53Board->getLoaclCfgFastCmd()->trigger_source                      = cfgFastCmd.trigger_source;
+	    RD53Board->getLoaclCfgFastCmd()->n_triggers                          = cfgFastCmd.n_triggers;
+	    RD53Board->getLoaclCfgFastCmd()->trigger_duration                    = cfgFastCmd.trigger_duration;
 	   
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_data         = cfgFastCmd.fast_cmd_fsm.first_cal_data;
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_data        = cfgFastCmd.fast_cmd_fsm.second_cal_data;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_data         = cfgFastCmd.fast_cmd_fsm.first_cal_data;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_data        = cfgFastCmd.fast_cmd_fsm.second_cal_data;
 	   
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_first_cal  = cfgFastCmd.fast_cmd_fsm.delay_after_first_cal;
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_second_cal = cfgFastCmd.fast_cmd_fsm.delay_after_second_cal;
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_loop             = cfgFastCmd.fast_cmd_fsm.delay_loop;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_first_cal  = cfgFastCmd.fast_cmd_fsm.delay_after_first_cal;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_second_cal = cfgFastCmd.fast_cmd_fsm.delay_after_second_cal;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_loop             = cfgFastCmd.fast_cmd_fsm.delay_loop;
 	   
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_en           = cfgFastCmd.fast_cmd_fsm.first_cal_en;
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_en          = cfgFastCmd.fast_cmd_fsm.second_cal_en;
-	   RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.trigger_en             = cfgFastCmd.fast_cmd_fsm.trigger_en;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_en           = cfgFastCmd.fast_cmd_fsm.first_cal_en;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_en          = cfgFastCmd.fast_cmd_fsm.second_cal_en;
+	    RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.trigger_en             = cfgFastCmd.fast_cmd_fsm.trigger_en;
 	   
 	   
-	   // ##############################
-	   // # Download the configuration #
-	   // ##############################
-	   RD53Board->ConfigureFastCommands();
-	 }
+	    // ##############################
+	    // # Download the configuration #
+	    // ##############################
+	    RD53Board->ConfigureFastCommands();
+	  }
     }
 }
 
@@ -203,7 +214,7 @@ int main (int argc, char** argv)
   // ########################
   // # Configure the logger #
   // ########################
-  el::Configurations conf("settings/logger.conf");
+  el::Configurations conf("../settings/logger.conf");
   el::Loggers::reconfigureAllLoggers(conf);
   
   
@@ -219,11 +230,14 @@ int main (int argc, char** argv)
   cmd.defineOption("file","Hardware description file. Default value: settings/CMSIT.xml",ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain thropt gainopt]. Default: pixelalive", ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin]. Default: pixelalive", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
   cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("ext", "x");
+
+  cmd.defineOption ("hitor", "Use Hit-Or signal to trigger. Default: disabled", ArgvParser::NoOptionAttribute);
+  cmd.defineOptionAlternative ("hitor", "o");
 
   int result = cmd.parse(argc,argv);
 
@@ -233,9 +247,10 @@ int main (int argc, char** argv)
       exit(1);
     }
 
-  std::string cHWFile    = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT.xml";
+  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "settings/CMSIT.xml";
   std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
   bool extClkTrg         = cmd.foundOption("ext")    == true ? true : false;
+  bool hitOr             = cmd.foundOption("hitor")  == true ? true : false;
 
 
   // ##################################
@@ -244,9 +259,9 @@ int main (int argc, char** argv)
   SystemController cSystemController;
 
 
-  // #################
-  // Read run number #
-  // #################
+  // ###################
+  // # Read run number #
+  // ###################
   std::ifstream fileRunNumberIn;
   std::string runNumber = RUNNUMBER;
   fileRunNumberIn.open(FileRUNNUMBER, std::ios::in);
@@ -264,16 +279,16 @@ int main (int argc, char** argv)
   // # Initialize Hardware #
   // #######################
   LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-  cSystemController.ConfigureHardware(cHWFile);
+  cSystemController.ConfigureHardware(configFile);
   LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
 
 
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display;
+  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, targetCharge, KrumCurrStart, KrumCurrStop, display, chipRegDefault;
   std::string INJtype;
-  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, display);  
+  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, targetCharge, KrumCurrStart, KrumCurrStop, display, chipRegDefault);
 
   // ######################################
   // # Correct injection pattern for RD53 #
@@ -284,7 +299,7 @@ int main (int argc, char** argv)
   // #####################
   // # Preparing the FSM #
   // #####################
-  ConfigureFSM(cSystemController, NTRIGxL1A, INJtype);
+  ConfigureFSM(cSystemController, NTRIGxL1A, INJtype, hitOr);
 
 
   // ######################
@@ -301,7 +316,7 @@ int main (int argc, char** argv)
       // ###################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
 
-      std::string fileName("LatencyScan_" + runNumber + ".root");
+      std::string fileName("Latency_" + runNumber + ".root");
       Latency la(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
       la.Inherit(&cSystemController);
       la.Run();
@@ -364,25 +379,50 @@ int main (int argc, char** argv)
       ga.Analyze();
       ga.Draw(display,true);
     }
-  else if (whichCalib == "thropt")
+  else if (whichCalib == "threqu")
     {
       // ##############################
-      // # Run Threshold Optimization #
+      // # Run Threshold Equalization #
       // ##############################
-      LOG (INFO) << BOLDMAGENTA << "@@@ Performing threshold optimization @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
-      std::string fileName("ThresholdOptimization_" + runNumber + ".root");
-      ThrOpt to(fileName.c_str(), "./CMSIT_RD53.txt", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents);
-      to.Inherit(&cSystemController);
-      to.Run();
-      to.Draw(display,true);
+      std::string fileName = "ThrEqualization_" + runNumber + ".root";
+      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      sc.Inherit(&cSystemController);
+      sc.Run();
+      auto output = sc.Analyze();
+      sc.Draw(false,true);
+
+      std::string chipConfig;
+      if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
+      else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
+      ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents*VCALnsteps, nEvents, output);
+      te.Inherit(&cSystemController);
+      te.Run();
+      te.Draw(display,true);
     }
   else if (whichCalib == "gainopt")
     {
       // #########################
       // # Run Gain Optimization #
       // #########################
-      LOG (ERROR) << BOLDRED << "@@@ Gain optimization not implemented yet ... coming soon @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
+
+      std::string fileName("GainOptimization_" + runNumber + ".root");
+      std::string chipConfig;
+      if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
+      else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
+      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, RD53chargeConverter::Charge2VCal(targetCharge), KrumCurrStart, KrumCurrStop);
+      go.Inherit(&cSystemController);
+      go.Run();
+      go.Draw(display,true);
+    }
+  else if (whichCalib == "thrmin")
+    {
+      // ##############################
+      // # Run Threshold Minimization #
+      // ##############################
+      LOG (ERROR) << BOLDRED << "@@@ Threshold minimization not implemented yet ... coming soon @@@" << RESET;
     }
   else LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
 

@@ -915,37 +915,19 @@ void Tool::scanDac(const std::string &dacName, const std::vector<uint16_t> &dacL
 }
 
 
-// // One dimensional dac scan per BeBoard
-// void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorContainer*> detectorContainerVector)
-// {
-// 	if(dacList.size() != detectorContainerVector.size())
-// 	{
-// 		LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
-// 		abort();
-// 	}
-
-// 	for(size_t dacIt = 0; dacIt<dacList.size(); ++dacIt)
-// 	{
-// 		fDetectorDataContainer = detectorContainerVector[dacIt];
-// 		setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents);
-// 	}
-
-// 	return;
-// }
-
 // bit wise scan
-void Tool::bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy)
+void Tool::bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy, int32_t numberOfEventsPerBurst)
 {
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
-		bitWiseScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy);
+	  bitWiseScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst);
 	}
 	return;
 }
 
 
 // bit wise scan per BeBoard
-void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy)
+void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy, int32_t numberOfEventsPerBurst)
 {
 
 	DetectorDataContainer *outputDataContainer = fDetectorDataContainer;
@@ -969,33 +951,33 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 
 	RegisterValue allZeroRegister(0);
 	RegisterValue allOneRegister (0xFFFF>>(16-numberOfBits));
-	EmptyContainer empty;
 	if(localDAC)
 	{
-		theDetectorFactory.copyAndInitStructure<RegisterValue,EmptyContainer>(*fDetectorContainer, *previousDacList, allZeroRegister, empty);
-		theDetectorFactory.copyAndInitStructure<RegisterValue,EmptyContainer>(*fDetectorContainer, *currentDacList , allOneRegister , empty);
+		theDetectorFactory.copyAndInitChannel<RegisterValue>(*fDetectorContainer, *previousDacList, allZeroRegister);
+		theDetectorFactory.copyAndInitChannel<RegisterValue>(*fDetectorContainer, *currentDacList , allOneRegister );
 	}
 	else
 	{
-		theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, *previousDacList, empty, allZeroRegister);
-		theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, *currentDacList , empty, allOneRegister);
+		theDetectorFactory.copyAndInitChip<RegisterValue>(*fDetectorContainer, *previousDacList, allZeroRegister);
+		theDetectorFactory.copyAndInitChip<RegisterValue>(*fDetectorContainer, *currentDacList , allOneRegister);
 	}
 
 	if(localDAC) setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList);
 	else setAllGlobalDacBeBoard(boardIndex, dacName, *previousDacList);
 
 	fDetectorDataContainer = previousStepOccupancyContainer;
-	measureBeBoardData(boardIndex, numberOfEvents);
+	measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
 	if(localDAC) setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
 	else setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
 
 	fDetectorDataContainer = currentStepOccupancyContainer;
-	measureBeBoardData(boardIndex, numberOfEvents);
+	measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
-	occupanyDirectlyProportionalToDAC = static_cast<Summary<Occupancy,Occupancy>*>(currentStepOccupancyContainer->at(boardIndex)->summary_)->theSummary_.fOccupancy
-			> static_cast<Summary<Occupancy,Occupancy>*>(previousStepOccupancyContainer->at(boardIndex)->summary_)->theSummary_.fOccupancy;
 
+	occupanyDirectlyProportionalToDAC = currentStepOccupancyContainer->at(boardIndex)->getSummary<Occupancy,Occupancy>().fOccupancy
+			> previousStepOccupancyContainer->at(boardIndex)->getSummary<Occupancy,Occupancy>().fOccupancy;
+			
 	if(!occupanyDirectlyProportionalToDAC)
 	{
 		DetectorDataContainer *tmpPointer = previousDacList;
@@ -1015,18 +997,18 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 					for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 					{
 
-						if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue
-								= previousDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue + (1<<iBit);
-						else currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue
-								= previousDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue & (0xFFFF - (1<<iBit));
+						if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(iChannel).fRegisterValue
+								= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(iChannel).fRegisterValue + (1<<iBit);
+						else currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(iChannel).fRegisterValue
+								= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(iChannel).fRegisterValue & (0xFFFF - (1<<iBit));
 					}
 				}
 				else
 				{
-					if(occupanyDirectlyProportionalToDAC) static_cast<Summary<RegisterValue,EmptyContainer>*>(currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
-							= static_cast<Summary<RegisterValue,EmptyContainer>*>(previousDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue + (1<<iBit);
-					else static_cast<Summary<RegisterValue,EmptyContainer>*>(currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
-							= static_cast<Summary<RegisterValue,EmptyContainer>*>(previousDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue & (0xFFFF - (1<<iBit));
+					if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue
+							= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue + (1<<iBit);
+					else currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue
+							= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue & (0xFFFF - (1<<iBit));
 				}
 			}
 		}
@@ -1035,7 +1017,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 		else setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
 
 		fDetectorDataContainer = currentStepOccupancyContainer;
-		measureBeBoardData(boardIndex, numberOfEvents);
+		measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
 		//Determine if it is better or not
 		for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
@@ -1046,23 +1028,23 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 				{
 					for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 					{
-						if( currentStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
+						if( currentStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
 						{
-							previousDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue
-									= currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<RegisterValue>(iChannel).fRegisterValue;
-							previousStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(iChannel).fOccupancy
-									= currentStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->getChannel<Occupancy>(iChannel).fOccupancy;
+							previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(iChannel).fRegisterValue
+									= currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(iChannel).fRegisterValue;
+							previousStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy
+									= currentStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
 						}
 					}
 				}
 				else
 				{
-					if( static_cast<Summary<Occupancy,Occupancy>*>(currentStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fOccupancy <= targetOccupancy )
+					if( currentStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy <= targetOccupancy )
 					{
-						static_cast<Summary<RegisterValue,EmptyContainer>*>(previousDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue
-								= static_cast<Summary<RegisterValue,EmptyContainer>*>(currentDacList->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue;
-						static_cast<Summary<Occupancy,Occupancy>*>(previousStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fOccupancy
-								= static_cast<Summary<Occupancy,Occupancy>*>(currentStepOccupancyContainer->at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fOccupancy;
+						previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue
+								= currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue;
+						previousStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy
+								= currentStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy;
 					}
 				}
 			}
@@ -1076,7 +1058,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 	else setAllGlobalDacBeBoard(boardIndex, dacName, *previousDacList);
 
 	fDetectorDataContainer = outputDataContainer;
-	measureBeBoardData(boardIndex, numberOfEvents);
+	measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
 	dumpConfigFiles();
 
@@ -1209,7 +1191,7 @@ public:
 	void setDetectorContainer(DetectorContainer *detectorContainer) {fDetectorContainer = detectorContainer;}
 
 protected:
-	uint16_t fNumberOfEvents;
+	uint32_t fNumberOfEvents;
 	int32_t fNumberOfEventsPerBurst {-1};
 	uint32_t fBoardIndex;
 	const ChannelGroupBase *fTestChannelGroup;
@@ -1240,14 +1222,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 	            {
 	                for ( auto cChip : *cFe )
 	                {
-	                    if(fMaskChannelsFromOtherGroups)
-	                    {
-	                        fReadoutChipInterface->maskChannelsGroup(static_cast<ReadoutChip*>(cChip), group);
-	                    }
-	                    if(fTestPulse)
-	                    {
-	                        fReadoutChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), group);
-	                    }
+						fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), group,fMaskChannelsFromOtherGroups,fTestPulse);
 	                }
 	            }
 	        }
@@ -1368,7 +1343,9 @@ private:
 
 };
 
+#define USE_OLD_GROUP_SCAN
 
+#ifndef USE_OLD_GROUP_SCAN
 // One dimensional dac scan per BeBoard
 void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorDataContainer*> &detectorContainerVector, int32_t numberOfEventsPerBurst)
 {
@@ -1392,7 +1369,25 @@ void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const
 	return;
 }
 
+#else
+// One dimensional dac scan per BeBoard
+void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const std::vector<uint16_t> &dacList, uint32_t numberOfEvents, std::vector<DetectorDataContainer*> &detectorContainerVector, int32_t numberOfEventsPerBurst)
+{
+	if(dacList.size() != detectorContainerVector.size())
+	{
+		LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
+		abort();
+	}
 
+	for(size_t dacIt = 0; dacIt<dacList.size(); ++dacIt)
+	{
+		fDetectorDataContainer = detectorContainerVector[dacIt];
+		setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents,numberOfEventsPerBurst);
+	}
+
+	return;
+}
+#endif
 
 
 //Set global DAC for all CBCs in the BeBoard
@@ -1402,9 +1397,7 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacNam
 	{
 		for ( auto cChip : *cFe )
 		{
-			// float cOccupancy = static_cast<Summary<Occupancy,Occupancy>*>(globalDACContainer.at(cBoard->getBeId())->at(cFe->getFeId())->at(cCbc->getChipId())->summary_)->theSummary_.fOccupancy;
-			// Summary<RegisterValue,EmptyContainer>* tmp = static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex))->summary_;
-			fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), dacName, static_cast<Summary<RegisterValue,EmptyContainer>*>(globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId())->summary_)->theSummary_.fRegisterValue);
+			fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), dacName, globalDACContainer.at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue);
 		}
 	}
 	return;
@@ -1418,7 +1411,7 @@ void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName
 		for ( auto cChip : *cFe )
 		{
 			std::vector<uint16_t> dacVector ;//= dacList.at(cFe->getModuleId()).at(cChip->getChipId());
-			fReadoutChipInterface->WriteChipAllLocalReg ( static_cast<ReadoutChip*>(cChip), dacName, *globalDACContainer.at(boardIndex)->at(cFe->getId())->at(cChip->getId()));
+			fReadoutChipInterface->WriteChipAllLocalReg ( static_cast<ReadoutChip*>(cChip), dacName, *globalDACContainer.at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex()));
 		}
 	}
 	return;
@@ -1470,7 +1463,7 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, c
 		for ( auto cChip : cFe->fReadoutChipVector )
 		{
 			ChannelContainer<RegisterValue>* dacVector = new ChannelContainer<RegisterValue>(cChip->getNumberOfChannels(),RegisterValue(dacValue));
-			ChipContainer theChipContainer(cChip->getId(),cChip->getNumberOfRows(),cChip->getNumberOfCols());
+			ChipContainer theChipContainer(cChip->getIndex(),cChip->getNumberOfRows(),cChip->getNumberOfCols());
 			theChipContainer.setChannelContainer(dacVector);
 
 			fReadoutChipInterface->WriteChipAllLocalReg ( cChip, dacName, theChipContainer);
