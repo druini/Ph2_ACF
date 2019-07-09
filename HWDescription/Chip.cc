@@ -80,7 +80,7 @@ namespace Ph2_HwDescription
             return 0;
         }
         else
-            return i->second.fValue & 0xFF;
+            return i->second.fValue & fMaxRegValue;
     }
     void Chip::setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg )
     {

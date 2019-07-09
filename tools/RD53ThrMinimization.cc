@@ -203,8 +203,6 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 		 maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue) / 2;
 
 	      this->fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue, true);
-	      // std::cout << "AAA " << midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue
-	      // 		<< "\t"   << static_cast<RD53*>(cChip)->getReg(dacName) << std::endl;
 	    }
 
 
