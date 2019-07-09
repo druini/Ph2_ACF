@@ -16,6 +16,7 @@
 #include <TCanvas.h>
 #include <TGaxis.h>
 #include <TPad.h>
+#include <TFile.h>
 
 
 class RD53HistogramsBase
@@ -51,7 +52,7 @@ class RD53HistogramsBase
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
 	    {
-	      canvases.emplace_back(new TCanvas(("Canvas_" + std::to_string(canvasId++)).c_str(), "Canvas"));
+	      canvases.emplace_back(new TCanvas(("Canvas_" + std::to_string(canvasId++)).c_str(), "IT Canvas"));
 	      canvases.back()->cd();
 	      Hist* hist = cChip->getSummary<HistContainer<Hist> >().fTheHistogram;
 	      hist->Draw(opt);
