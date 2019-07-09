@@ -117,10 +117,10 @@ public:
     // should be called "draw"
     void process()
     {
-        draw<TH2F>(Scurves2D);
-        draw<TH1F>(Threshold1D);
+        draw<TH2F>(Scurves2D, "gcolz", true, "Charge (electrons)");
+        draw<TH1F>(Threshold1D, "", true, "Threshold (electrons)");
         draw<TH1F>(Noise1D);
-        draw<TH2F>(Threshold2D);
-        draw<TH2F>(Noise2D);
+        draw<TH2F>(Threshold2D, "gcolz");
+        draw<TH2F>(Noise2D, "gcolz");
     }
 };

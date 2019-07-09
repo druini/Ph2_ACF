@@ -95,7 +95,7 @@
 
     <Setting name="VCALstart">        160 </Setting>
     <Setting name="VCALstop">         960 </Setting>
-    <Setting name="VCALnsteps">        40 </Setting>
+    <Setting name="VCALnsteps">        20 </Setting>
 
     <Setting name="targetCharge">    7000 </Setting>
     <Setting name="KrumCurrStart">      0 </Setting>

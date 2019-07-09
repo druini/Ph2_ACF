@@ -82,8 +82,8 @@ void SCurve::Draw(bool display, bool save)
     if (display == true)
         myApp = new TApplication("myApp", nullptr, nullptr);
     if (save) {
-        CreateResultDirectory("Results/Run_PixelAlive");
-        InitResultFile("PixelAliveResults");
+        CreateResultDirectory("Results/Run_Scurve");
+        InitResultFile("ScurveResults");
     }
 
     this->InitHisto();
