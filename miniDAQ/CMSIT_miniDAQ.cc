@@ -343,7 +343,7 @@ int main (int argc, char** argv)
       // ##################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_PixelAlive.root");
+      std::string fileName("Run" + runNumber + "_PixelAlive");
       PixelAlive pa(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, true);
       pa.Inherit(&cSystemController);
       pa.Run();

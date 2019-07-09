@@ -434,7 +434,7 @@ void Tool::WriteRootFile()
 void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool pDate )
 {
 	//Fabio: CBC specific -> to be moved out from Tool - BEGIN
-	bool cCheck;
+	bool cCheck = false;
 	bool cHoleMode;
 	auto cSetting = fSettingsMap.find ( "HoleMode" );
 
