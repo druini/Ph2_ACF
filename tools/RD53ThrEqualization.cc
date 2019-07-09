@@ -209,27 +209,8 @@ void ThrEqualization::Display ()
 
 void ThrEqualization::Save ()
 {
-  std::stringstream myString;
-
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
-    {
-      theCanvasOcc[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theOccupancy[i]->GetName() << ".svg";
-      theCanvasOcc[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasTDAC.size(); i++)
-    {
-      theCanvasTDAC[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theTDAC[i]->GetName() << ".svg";
-      theCanvasTDAC[i]->Print(myString.str().c_str());
-    }
-
-  theFile->Write();
+  for (auto i = 0; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
+  for (auto i = 0; i < theCanvasTDAC.size(); i++) theCanvasTDAC[i]->Write();
 
 
   // ############################

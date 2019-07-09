@@ -389,55 +389,12 @@ void Gain::Display ()
 }
 
 void Gain::Save ()
-{ 
-  std::stringstream myString;
-  
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
-    {
-      theCanvasOcc[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theOccupancy[i]->GetName() << ".svg";
-      theCanvasOcc[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasGa1D.size(); i++)
-    {
-      theCanvasGa1D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theGain1D[i]->GetName() << ".svg";
-      theCanvasGa1D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasIn1D.size(); i++)
-    {
-      theCanvasIn1D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theIntercept1D[i]->GetName() << ".svg";
-      theCanvasIn1D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasGa2D.size(); i++)
-    {
-      theCanvasGa2D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theGain2D[i]->GetName() << ".svg";
-      theCanvasGa2D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasIn2D.size(); i++)
-    {
-      theCanvasIn2D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theIntercept2D[i]->GetName() << ".svg";
-      theCanvasIn2D[i]->Print(myString.str().c_str());
-    }
-
-  theFile->Write();
+{
+  for (auto i = 0; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
+  for (auto i = 0; i < theCanvasGa1D.size(); i++) theCanvasGa1D[i]->Write();
+  for (auto i = 0; i < theCanvasIn1D.size(); i++) theCanvasIn1D[i]->Write();
+  for (auto i = 0; i < theCanvasGa2D.size(); i++) theCanvasGa2D[i]->Write();
+  for (auto i = 0; i < theCanvasIn2D.size(); i++) theCanvasIn2D[i]->Write();
 }
 
 void Gain::ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)

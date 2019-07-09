@@ -140,18 +140,7 @@ void GainOptimization::Display ()
 
 void GainOptimization::Save ()
 {
-  std::stringstream myString;
-
-  for (auto i = 0; i < theCanvasKrumCurr.size(); i++)
-    {
-      theCanvasKrumCurr[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theKrumCurr[i]->GetName() << ".svg";
-      theCanvasKrumCurr[i]->Print(myString.str().c_str());
-    }
-
-  theFile->Write();
+  for (auto i = 0; i < theCanvasKrumCurr.size(); i++) theCanvasKrumCurr[i]->Write();
 
 
   // ############################

@@ -406,54 +406,11 @@ void SCurve::Display ()
 
 void SCurve::Save ()
 {
-  std::stringstream myString;
-
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
-    {
-      theCanvasOcc[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theOccupancy[i]->GetName() << ".svg";
-      theCanvasOcc[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasTh1D.size(); i++)
-    {
-      theCanvasTh1D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theThreshold1D[i]->GetName() << ".svg";
-      theCanvasTh1D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasNo1D.size(); i++)
-    {
-      theCanvasNo1D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theNoise1D[i]->GetName() << ".svg";
-      theCanvasNo1D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasTh2D.size(); i++)
-    {
-      theCanvasTh2D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theThreshold2D[i]->GetName() << ".svg";
-      theCanvasTh2D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasNo2D.size(); i++)
-    {
-      theCanvasNo2D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theNoise2D[i]->GetName() << ".svg";
-      theCanvasNo2D[i]->Print(myString.str().c_str());
-    }
-
-  theFile->Write();
+  for (auto i = 0; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
+  for (auto i = 0; i < theCanvasTh1D.size(); i++) theCanvasTh1D[i]->Write();
+  for (auto i = 0; i < theCanvasNo1D.size(); i++) theCanvasNo1D[i]->Write();
+  for (auto i = 0; i < theCanvasTh2D.size(); i++) theCanvasTh2D[i]->Write();
+  for (auto i = 0; i < theCanvasNo2D.size(); i++) theCanvasNo2D[i]->Write();
 }
 
 void SCurve::ComputeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)

@@ -293,52 +293,11 @@ void PixelAlive::Display ()
 
 void PixelAlive::Save ()
 {
-  std::stringstream myString;
-
-  for (auto i = 0; i < theCanvasOcc2D.size(); i++)
-    {
-      theCanvasOcc2D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theOcc2D[i]->GetName() << ".svg";
-      theCanvasOcc2D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasToT.size(); i++)
-    {
-      theCanvasToT[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theToT[i]->GetName() << ".svg";
-      theCanvasToT[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasOcc1D.size(); i++)
-    {
-      theCanvasOcc1D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theOcc1D[i]->GetName() << ".svg";
-      theCanvasOcc1D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasBCID.size(); i++)
-    {
-      theCanvasBCID[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theBCID[i]->GetName() << ".svg";
-      theCanvasBCID[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasTrgID.size(); i++)
-    {
-      theCanvasTrgID[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theTrgID[i]->GetName() << ".svg";
-      theCanvasTrgID[i]->Print(myString.str().c_str());
-    }
+  for (auto i = 0; i < theCanvasOcc2D.size(); i++) theCanvasOcc2D[i]->Write();
+  for (auto i = 0; i < theCanvasToT.size();   i++) theCanvasToT[i]->Write();
+  for (auto i = 0; i < theCanvasOcc1D.size(); i++) theCanvasOcc1D[i]->Write();
+  for (auto i = 0; i < theCanvasBCID.size();  i++) theCanvasBCID[i]->Write();
+  for (auto i = 0; i < theCanvasTrgID.size(); i++) theCanvasTrgID[i]->Write();
 }
 
 void PixelAlive::ChipErrorReport ()

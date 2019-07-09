@@ -138,18 +138,7 @@ void ThrMinimization::Display ()
 
 void ThrMinimization::Save ()
 {
-  std::stringstream myString;
-
-  for (auto i = 0; i < theCanvasThr.size(); i++)
-    {
-      theCanvasThr[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theThr[i]->GetName() << ".svg";
-      theCanvasThr[i]->Print(myString.str().c_str());
-    }
-
-  theFile->Write();
+  for (auto i = 0; i < theCanvasThr.size(); i++) theCanvasThr[i]->Write();
 
 
   // ############################

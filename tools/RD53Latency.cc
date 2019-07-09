@@ -153,16 +153,7 @@ void Latency::Display ()
 
 void Latency::Save ()
 {
-  std::stringstream myString;
-  
-  for (auto i = 0; i < theCanvasLat.size(); i++)
-    {
-      theCanvasLat[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theLat[i]->GetName() << ".svg";
-      theCanvasLat[i]->Print(myString.str().c_str());
-    }
+  for (auto i = 0; i < theCanvasLat.size(); i++) theCanvasLat[i]->Write();
 }
 
 void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
