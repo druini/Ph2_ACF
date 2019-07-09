@@ -8,8 +8,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef __HistContainer_h_
-#define __HistContainer_h_
+#ifndef _HistContainer_h_
+#define _HistContainer_h_
 
 #include <iostream>
 #include "../Utils/Container.h"
@@ -20,11 +20,11 @@ template <class Hist>
 class HistContainer : public PlotContainer
 {
  public:
- HistContainer() : fTheHistogram(nullptr) {;}
+ HistContainer() : fTheHistogram(nullptr) {}
 
   HistContainer(const HistContainer<Hist>& container) = delete;
   HistContainer<Hist>& operator= (const HistContainer<Hist>& container) = delete;
-    
+
   template <class... Args, typename std::enable_if<std::is_constructible<Hist, Args...>::value, int>::type = 0>
     HistContainer(Args&&... args)
     {
@@ -38,7 +38,6 @@ class HistContainer : public PlotContainer
       fTheHistogram = nullptr;
     }
 
-  //Move contructors
   HistContainer(HistContainer<Hist>&& container)
     {
       fHasToBeDeletedManually = container.fHasToBeDeletedManually;
@@ -58,14 +57,18 @@ class HistContainer : public PlotContainer
   {
     fHasToBeDeletedManually = false;
     fTheHistogram = new Hist(*(static_cast<const HistContainer<Hist>*>(reference)->fTheHistogram));
+    fTheHistogram->SetName(name.data());
+    fTheHistogram->SetTitle(title.data());
   }
-    
+
   void print(void)
   { 
     std::cout << "HistContainer " << fTheHistogram->GetName() << std::endl;
   }
+
   template<typename T>
     void makeAverage(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) {;}
+
   template<typename  T>
     void makeAverage(const std::vector<T>* theTH1FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) {;}
   void normalize(const uint16_t numberOfEvents) {;}
@@ -74,19 +77,18 @@ class HistContainer : public PlotContainer
   {
     fTheHistogram->SetNameTitle(histogramName.data(), histogramTitle.data());
   }
-
-  std::string getName() const override 
+  
+  std::string getName() const override
     {
       return fTheHistogram->GetName();
     }
 
-  std::string getTitle() const override 
+  std::string getTitle() const override
     {
       return fTheHistogram->GetTitle();
     }
-
+  
   Hist* fTheHistogram;
-
 };
 
 #endif
