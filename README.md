@@ -193,6 +193,7 @@ echo "thrmin" >> calibDone.txt
 
 echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
 read -p "Press any key to continue... " -n1 -s
+echo
 
 time CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
 echo "threqu" >> calibDone.txt
@@ -200,7 +201,7 @@ echo "threqu" >> calibDone.txt
 time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
 echo "scurve" >> calibDone.txt
 ```
-- Software git branch / tag : `chipPolymorphism` / `IT-v1.6`
+- Software git branch / tag : `chipPolymorphism` / `IT-v1.7`
 - Firmware tag: `2.5`
 
 
