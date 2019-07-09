@@ -1222,10 +1222,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 	            {
 	                for ( auto cChip : *cFe )
 	                {
-	                    if(fMaskChannelsFromOtherGroups || fTestPulse)
-						{
-							fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), group,fMaskChannelsFromOtherGroups,fTestPulse);
-						}
+						fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), group,fMaskChannelsFromOtherGroups,fTestPulse);
 	                }
 	            }
 	        }

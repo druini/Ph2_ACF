@@ -1,20 +1,23 @@
 #ifndef _MiddlewareController_h_
 #define _MiddlewareController_h_
 
-#include "../Utils/TCPNetworkServer.h"
+#include "../NetworkUtils/TCPServer.h"
 // #include "../CalibrationSelector/CalibrationBase.h"
 #include "../System/SystemController.h"
 
 #include <string>
 
-class MiddlewareController: public TCPNetworkServer
+class MiddlewareController: public TCPServer
 {
 public:
 
 	MiddlewareController(int serverPort);
 	virtual ~MiddlewareController(void);
 
-	std::string readMessage(const std::string& buffer) override;
+	//The MiddlewareController only has 1 client so send is more appropriate than broadcast
+	void send(const std::string& message){broadcast(message);}
+
+	std::string interpretMessage(const std::string& buffer) override;
 
 protected:
 

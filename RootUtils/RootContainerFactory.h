@@ -16,6 +16,7 @@
 #include "../Utils/DataContainer.h"
 #include "../RootUtils/PlotContainer.h"
 #include "../RootUtils/TH1FContainer.h"
+#include "../RootUtils/TH2FContainer.h"
 
 #include "TFile.h"
 #include <iostream>
@@ -104,19 +105,19 @@ public:
 						for(uint32_t col=0; col < chip->getNumberOfCols(); ++col)
 						{
 							T theChannel;
-							if(moduleSummaryHistogramGenericName != "NULL") 
+							if(channelHistogramGenericTitle != "NULL") 
 							{
 								std::string histogramName;
 								std::string histogramTitle;
 								if(chip->getNumberOfCols() == 1)
 								{
-									histogramName  = Form("%s_Channel_%d",chipSummaryHistogramGenericName.data(),col);
-									histogramTitle = Form("%s Channel %d",chipSummaryHistogramGenericName.data(),col);
+									histogramName  = Form("%s_Channel_%d",channelHistogramGenericTitle.data(),row);
+									histogramTitle = Form("%s Channel %d",channelHistogramGenericTitle.data(),row);
 								}
 								else
 								{
-									histogramName  = Form("%s_Row_%d_Col_%d",chipSummaryHistogramGenericName.data(),row,col);
-									histogramTitle = Form("%s Row_%d Col_%d",chipSummaryHistogramGenericName.data(),row,col);
+									histogramName  = Form("%s_Row_%d_Col_%d",channelHistogramGenericTitle.data(),row,col);
+									histogramTitle = Form("%s Row_%d Col_%d",channelHistogramGenericTitle.data(),row,col);
 								}
 								
 								initializePlot<std::is_base_of<PlotContainer,T>::value, T>(&theChannel,histogramName, histogramTitle, &channel);
@@ -219,6 +220,25 @@ std::string RootContainerFactory::getPlotTitle<true,TH1FContainer>(TH1FContainer
 
 template<>
 void RootContainerFactory::initializePlot<true,TH1FContainer>(TH1FContainer *plot, std::string name, std::string title, const TH1FContainer *reference)
+{
+	plot->initialize(name, title, reference);
+}
+
+
+template<>
+std::string RootContainerFactory::getPlotName<true,TH2FContainer>(TH2FContainer *plot)
+{
+	return plot->getName();
+}
+
+template<>
+std::string RootContainerFactory::getPlotTitle<true,TH2FContainer>(TH2FContainer *plot)
+{
+	return plot->getTitle();
+}
+
+template<>
+void RootContainerFactory::initializePlot<true,TH2FContainer>(TH2FContainer *plot, std::string name, std::string title, const TH2FContainer *reference)
 {
 	plot->initialize(name, title, reference);
 }
