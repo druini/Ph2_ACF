@@ -22,7 +22,7 @@ class HistContainer : public PlotContainer
  public:
  HistContainer() : fTheHistogram(nullptr) {}
 
-  HistContainer(const HistContainer<Hist>& container) = delete;
+  HistContainer (const HistContainer<Hist>& container) = delete;
   HistContainer<Hist>& operator= (const HistContainer<Hist>& container) = delete;
 
   template <class... Args, typename std::enable_if<std::is_constructible<Hist, Args...>::value, int>::type = 0>
@@ -34,11 +34,11 @@ class HistContainer : public PlotContainer
 
   ~HistContainer() 
     {
-      if(fHasToBeDeletedManually) delete fTheHistogram;
+      if (fHasToBeDeletedManually) delete fTheHistogram;
       fTheHistogram = nullptr;
     }
 
-  HistContainer(HistContainer<Hist>&& container)
+  HistContainer (HistContainer<Hist>&& container)
     {
       fHasToBeDeletedManually = container.fHasToBeDeletedManually;
       fTheHistogram = container.fTheHistogram;
@@ -53,7 +53,7 @@ class HistContainer : public PlotContainer
       return *this;
     }
 
-  void initialize(std::string name, std::string title, const PlotContainer *reference) override
+  void initialize (std::string name, std::string title, const PlotContainer* reference) override
   {
     fHasToBeDeletedManually = false;
     fTheHistogram = new Hist(*(static_cast<const HistContainer<Hist>*>(reference)->fTheHistogram));
@@ -67,11 +67,11 @@ class HistContainer : public PlotContainer
   }
 
   template<typename T>
-    void makeAverage(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) {;}
+    void makeAverage(const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents) {}
 
   template<typename  T>
-    void makeAverage(const std::vector<T>* theTH1FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) {;}
-  void normalize(const uint16_t numberOfEvents) {;}
+    void makeAverage(const std::vector<T>* theTH1FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) {}
+  void normalize(const uint16_t numberOfEvents) {}
 
   void setNameTitle(std::string histogramName, std::string histogramTitle) override 
   {
