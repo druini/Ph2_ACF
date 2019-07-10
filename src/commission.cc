@@ -61,9 +61,6 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "signalFit", "Scan the threshold and fit for signal Vcth", ArgvParser::OptionRequiresValue );
     cmd.defineOptionAlternative ( "signalFit", "F" );
 
-//    cmd.defineOption ( "hitOR", "To be used with SignalScanFit in case you want to run in hitOR mode", ArgvParser::NoOptionAttribute );
-//    cmd.defineOptionAlternative ( "hitOR", "H" );
-
     cmd.defineOption ( "minimum", "minimum value for latency scan", ArgvParser::OptionRequiresValue );
     cmd.defineOptionAlternative ( "minimum", "m" );
 

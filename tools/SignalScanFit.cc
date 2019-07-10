@@ -39,7 +39,7 @@ void SignalScanFit::Initialize ( )
             bookHistogram ( cFe, "vcth_ClusterSize", cVCthClusterSizeHist );
 
             // 1D-plot with the number of triggers per VCth
-            TProfile* cNumberOfTriggers = new TProfile ( Form("f_module_totalNumberOfTriggers_Fe%d", cFeId), Form ( "Total number of triggers received ; Number of triggers ; Threshold [Vcth]" ), fVCthNbins, fVCthMin, fVCthMax);
+            TProfile* cNumberOfTriggers = new TProfile ( Form("h_module_totalNumberOfTriggers_Fe%d", cFeId), Form ( "Total number of triggers received ; Threshold [Vcth] ; Number of triggers" ), fVCthNbins, fVCthMin, fVCthMax);
             bookHistogram ( cFe, "number_of_triggers", cNumberOfTriggers );
              
             uint32_t cCbcCount = 0;
@@ -56,41 +56,45 @@ void SignalScanFit::Initialize ( )
                 TH1D* cHist;
                 TProfile * cProfile;
 
-                cHistname = Form ( "Fe%dCBC%d_Clusters_even",cFeId, cCbcId );
-                cHist = new TH1D ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
+                cHistname = Form ( "Fe%dCBC%d_Hits_even", cFeId, cCbcId );
+                cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of hits", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
+                bookHistogram ( cCbc, "Cbc_Hits_even", cHist );
+
+                cHistname = Form ( "Fe%dCBC%d_Hits_odd", cFeId, cCbcId );
+                cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of hits", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
+                bookHistogram ( cCbc, "Cbc_Hits_odd", cHist );
+
+                cHistname = Form ( "Fe%dCBC%d_Clusters_even", cFeId, cCbcId );
+                cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
                 bookHistogram ( cCbc, "Cbc_Clusters_even", cHist );
 
-                cHistname = Form ( "Fe%dCBC%d_Clusters_odd",cFeId, cCbcId );
-                cHist = new TH1D ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
+                cHistname = Form ( "Fe%dCBC%d_Clusters_odd", cFeId, cCbcId );
+                cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
                 bookHistogram ( cCbc, "Cbc_Clusters_odd", cHist );
 
-                cHistname = Form ( "Fe%dCBC%d_ClusterSize_even",cFeId, cCbcId );
-                cProfile = new TProfile ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
+                cHistname = Form ( "Fe%dCBC%d_ClusterSize_even", cFeId, cCbcId );
+                cProfile = new TProfile ( cHistname, Form("%s ;  Threshold [Vcth] ; Cluster size [strips]", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
                 bookHistogram ( cCbc, "Cbc_ClusterSize_even", cHist );
+
+                cHistname = Form ( "Fe%dCBC%d_ClusterSize_odd", cFeId, cCbcId );
+                cProfile = new TProfile ( cHistname, Form("%s ; Threshold [Vcth] ; Cluster size [strips]", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
+                bookHistogram ( cCbc, "Cbc_ClusterSize_odd", cHist );
 
 //                cHistname = Form ( "Fe%dCBC%d_ClusterSize_even",cFeId, cCbcId );
 //                cHist = new TH1D ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
 //                bookHistogram ( cCbc, "Cbc_ClusterSize_even", cHist );
 
-                cHistname = Form ( "Fe%dCBC%d_ClusterSize_odd",cFeId, cCbcId );
-                cHist = new TH1D ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
-                bookHistogram ( cCbc, "Cbc_ClusterSize_odd", cHist );
+//                cHistname = Form ( "Fe%dCBC%d_ClusterSize_odd",cFeId, cCbcId );
+//                cHist = new TH1D ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
+//                bookHistogram ( cCbc, "Cbc_ClusterSize_odd", cHist );
 
-                cHistname = Form ( "Fe%dCBC%d_Hits_even",cFeId, cCbcId );
-                cHist = new TH1D ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
-                bookHistogram ( cCbc, "Cbc_Hits_even", cHist );
+//                cHistname = Form ( "Fe%dCBC%d_ClusterOccupancy_even",cFeId, cCbcId );
+//                cProfile = new TProfile ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
+//                bookHistogram ( cCbc, "Cbc_ClusterOccupancy_even", cProfile );
 
-                cHistname = Form ( "Fe%dCBC%d_Hits_odd",cFeId, cCbcId );
-                cHist = new TH1D ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
-                bookHistogram ( cCbc, "Cbc_Hits_odd", cHist );
-
-                cHistname = Form ( "Fe%dCBC%d_ClusterOccupancy_even",cFeId, cCbcId );
-                cProfile = new TProfile ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
-                bookHistogram ( cCbc, "Cbc_ClusterOccupancy_even", cProfile );
-
-                cHistname = Form ( "Fe%dCBC%d_ClusterOccupancy_odd",cFeId, cCbcId );
-                cProfile = new TProfile ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
-                bookHistogram ( cCbc, "Cbc_ClusterOccupancy_odd", cProfile );
+//                cHistname = Form ( "Fe%dCBC%d_ClusterOccupancy_odd",cFeId, cCbcId );
+//                cProfile = new TProfile ( cHistname, cHistname, fVCthNbins, fVCthMin, fVCthMax );
+//                bookHistogram ( cCbc, "Cbc_ClusterOccupancy_odd", cProfile );
             }
         }
     }
@@ -146,9 +150,9 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
                 // Loop over the Modules to get the histos           
                 for ( auto cFe : pBoard->fModuleVector )
                 {
-                    TH2D* cSignalHist       = static_cast<TH2D*> (getHist ( cFe, "module_signal") );
-                    TH2D* cVcthClusters     = static_cast<TH2D*> (getHist ( cFe, "vcth_ClusterSize" ) );
-                    TProfile* cEventsHist   = static_cast<TProfile*> (getHist ( cFe, "number_of_triggers" ) );
+                    TH2D* cSignalHist       = static_cast<TH2D*> ( getHist ( cFe, "module_signal") );
+                    TH2D* cVcthClusters     = static_cast<TH2D*> ( getHist ( cFe, "vcth_ClusterSize" ) );
+                    TProfile* cEventsHist   = static_cast<TProfile*> ( getHist ( cFe, "number_of_triggers" ) );
                   
                     // Loop over the CBCs to get the histos
                     for ( auto cCbc : cFe->fReadoutChipVector )
@@ -157,9 +161,10 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
                         TH1D* cHitsOddHist          = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_odd" ) );
                         TH1D* cClustersEvenHist     = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Clusters_even" ) );
                         TH1D* cClustersOddHist      = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Clusters_odd" ) );
-                        TProfile* cClustersSizeEven = dynamic_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterSize_even" ) );
-                        TProfile* cClustersEvenProf = dynamic_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterOccupancy_even" ) );
-                        TProfile* cClustersOddProf  = dynamic_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterOccupancy_odd" ) );                     
+                        TProfile* cClusterSizeEven  = static_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterSize_even" ) );
+                        TProfile* cClusterSizeOdd   = static_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterSize_odd" ) );
+//                        TProfile* cClustersEvenProf = dynamic_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterOccupancy_even" ) );
+//                        TProfile* cClustersOddProf  = dynamic_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterOccupancy_odd" ) );                     
 
                         // Loop over Events from this Acquisition to fill the histos
                         for ( auto& cEvent : cEvents )
@@ -183,29 +188,31 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
                             cEventClusters += cClusters.size();
 
                             // Now fill the ClusterWidth per VCth plots:
-                            double cClustersEven = 0;
-                            double cClustersOdd = 0;
+                            //double cClustersEven = 0;
+                            //double cClustersOdd = 0;
                             for ( auto& cCluster : cClusters )
                             {
-                                cVcthClusters->Fill( cCluster.fClusterWidth, cVCth ); // Cluster size counter
+                                double cClusterSize = cCluster.fClusterWidth;
+                                cVcthClusters->Fill( cClusterSize, cVCth ); // Cluster size counter
 
                                 // Fill cluster per sensor
                                 if ( cCluster.fSensor == 0 ) 
                                 {                              
                                     cClustersEvenHist->Fill ( cVCth );
-                                    cClustersEven++;
-                                    //cClustersSizeEven->Fill ( cVCth, cClusterSizeEvenSensor );
-                                    //std::cout << double (cCluster.fClusterWidth) << std::endl;
+                                    //std::cout << cCluster.fClusterWidth << std::endl;
+                                    cClusterSizeEven->Fill ( cVCth, 5 );
+                                    //cClustersEven++;
                                 } 
                                 else if ( cCluster.fSensor == 1 ) 
                                 {
                                     cClustersOddHist->Fill ( cVCth );
-                                    cClustersOdd++;
+                                    cClusterSizeOdd->Fill ( cVCth, cClusterSize );
+                                    //cClustersOdd++;
                                 }
                             }//end for cClusters
                             // Fill the cluster profiles
-                            cClustersEvenProf->Fill( cVCth, cClustersEven );
-                            cClustersOddProf->Fill( cVCth, cClustersOdd ); 
+                            //cClustersEvenProf->Fill( cVCth, cClustersEven );
+                            //cClustersOddProf->Fill( cVCth, cClustersOdd ); 
                         }//end for cEvents
                     }//end for cCbc
                     cEventsHist->Fill( cVCth, cTotalEvents );
@@ -288,138 +295,138 @@ void SignalScanFit::parseSettings ()
     LOG (INFO) << "	Fit the scan = " << int ( fFit ) ;
 }
 
-void SignalScanFit::processCurves ( BeBoard *pBoard, std::string pHistName )
-{
-    for ( auto cFe : pBoard->fModuleVector )
-    {
-        for ( auto cCbc : cFe->fReadoutChipVector )
-        {
-            // This one is not used yet?
-            TProfile* cProf = dynamic_cast<TProfile*> ( getHist ( cCbc, pHistName) );
+//void SignalScanFit::processCurves ( BeBoard *pBoard, std::string pHistName )
+//{
+//    for ( auto cFe : pBoard->fModuleVector )
+//    {
+//        for ( auto cCbc : cFe->fReadoutChipVector )
+//        {
+//            // This one is not used yet?
+//            TProfile* cProf = dynamic_cast<TProfile*> ( getHist ( cCbc, pHistName) );
 
-            TString clusters(pHistName);
-            clusters.ReplaceAll("Occupancy", "s");
-            TH1D* cClustersHist = dynamic_cast<TH1D*> ( getHist ( cCbc, clusters.Data()) );
+//            TString clusters(pHistName);
+//            clusters.ReplaceAll("Occupancy", "s");
+//            TH1D* cClustersHist = dynamic_cast<TH1D*> ( getHist ( cCbc, clusters.Data()) );
 
-            TString hits(clusters);
-            hits.ReplaceAll("Clusters", "Hits");
-            TH1D* cHitsHist = dynamic_cast<TH1D*> ( getHist ( cCbc, hits.Data()) );
+//            TString hits(clusters);
+//            hits.ReplaceAll("Clusters", "Hits");
+//            TH1D* cHitsHist = dynamic_cast<TH1D*> ( getHist ( cCbc, hits.Data()) );
 
-            // Make the clusterSize histos
-            TString size(clusters);
-            size.ReplaceAll("Clusters", "ClusterSize"); 
-            TH1D* cClusterSizeHist = dynamic_cast<TH1D*> ( getHist ( cCbc, size.Data()) );
-            for (int i = 1; i <= cClustersHist->GetNbinsX(); i++) 
-            {
-                if (cClustersHist->GetBinContent(i)>0) 
-                cClusterSizeHist->SetBinContent(i, cHitsHist->GetBinContent(i) / cClustersHist->GetBinContent(i));
-                else 
-                cClusterSizeHist->SetBinContent(i, 0);
-            }
+//            // Make the clusterSize histos
+//            TString size(clusters);
+//            size.ReplaceAll("Clusters", "ClusterSize"); 
+//            TH1D* cClusterSizeHist = dynamic_cast<TH1D*> ( getHist ( cCbc, size.Data()) );
+//            for (int i = 1; i <= cClustersHist->GetNbinsX(); i++) 
+//            {
+//                if (cClustersHist->GetBinContent(i)>0) 
+//                cClusterSizeHist->SetBinContent(i, cHitsHist->GetBinContent(i) / cClustersHist->GetBinContent(i));
+//                else 
+//                cClusterSizeHist->SetBinContent(i, 0);
+//            }
 
-            // Make the differential histo
-            // Do this with the histogram, not the profile
-            this->differentiateHist (cCbc, clusters.Data());
-            // Only do this if requested? Yes, see SignalScan and fFit setting!
-            if ( fFit ) this->fitHist (cCbc, pHistName);
-        }
-    }
-}
+//            // Make the differential histo
+//            // Do this with the histogram, not the profile
+//            this->differentiateHist (cCbc, clusters.Data());
+//            // Only do this if requested? Yes, see SignalScan and fFit setting!
+//            if ( fFit ) this->fitHist (cCbc, pHistName);
+//        }
+//    }
+//}
 
-void SignalScanFit::differentiateHist ( Chip* pCbc, std::string pHistName )
-{
-    TH1D* cHist = dynamic_cast<TH1D*> ( getHist ( pCbc, pHistName) );
-    TString cHistname(cHist->GetName());
-    cHistname.ReplaceAll("Clusters", "ClustersDiff");
-    TH1D* cDerivative = (TH1D*) cHist->Clone(cHistname);
-    cDerivative->Sumw2();
-    cDerivative->Reset();
-    bookHistogram ( pCbc, pHistName + "_Diff", cDerivative );
+//void SignalScanFit::differentiateHist ( Chip* pCbc, std::string pHistName )
+//{
+//    TH1D* cHist = dynamic_cast<TH1D*> ( getHist ( pCbc, pHistName) );
+//    TString cHistname(cHist->GetName());
+//    cHistname.ReplaceAll("Clusters", "ClustersDiff");
+//    TH1D* cDerivative = (TH1D*) cHist->Clone(cHistname);
+//    cDerivative->Sumw2();
+//    cDerivative->Reset();
+//    bookHistogram ( pCbc, pHistName + "_Diff", cDerivative );
 
-    double_t cDiff;
-    double_t cCurrent;
-    double_t cPrev;
-    bool cActive; // indicates existence of data points
-    int cStep = 1;
-    int cDiffCounter = 0;
+//    double_t cDiff;
+//    double_t cCurrent;
+//    double_t cPrev;
+//    bool cActive; // indicates existence of data points
+//    int cStep = 1;
+//    int cDiffCounter = 0;
 
-    double cBin = 0;
+//    double cBin = 0;
 
-    cPrev = cHist->GetBinContent ( cHist->FindBin ( 0 ) );
-    cActive = false;
+//    cPrev = cHist->GetBinContent ( cHist->FindBin ( 0 ) );
+//    cActive = false;
 
-    for ( cBin = cHist->FindBin (fVCthMax); cBin >= cHist->FindBin (fVCthMin); cBin-- ) 
-    //for ( cBin = cHist->FindBin (129); cBin >= cHist->FindBin (0); cBin-- ) // Hardcoded Max Vcth, careful...
-    {
+//    for ( cBin = cHist->FindBin (fVCthMax); cBin >= cHist->FindBin (fVCthMin); cBin-- ) 
+//    //for ( cBin = cHist->FindBin (129); cBin >= cHist->FindBin (0); cBin-- ) // Hardcoded Max Vcth, careful...
+//    {
 
-	      cCurrent = cHist->GetBinContent (cBin);
-	      cDiff = cPrev - cCurrent;
-	
-	      if ( cPrev > 0.75 ) cActive = true; // sampling begins
-	
-	      int iBinDerivative = cDerivative->FindBin ( (cHist->GetBinCenter (cBin - 1) + cHist->GetBinCenter (cBin) ) / 2.0);
-	
-	      if ( cActive ) cDerivative->SetBinContent ( iBinDerivative, cDiff  );
-	
-	      if ( cActive && cDiff == 0 && cCurrent == 0 ) cDiffCounter++;
-	
-	      if ( cDiffCounter == 8 ) break;
-	
-	      cPrev = cCurrent;
-    }
-}
+//	      cCurrent = cHist->GetBinContent (cBin);
+//	      cDiff = cPrev - cCurrent;
+//	
+//	      if ( cPrev > 0.75 ) cActive = true; // sampling begins
+//	
+//	      int iBinDerivative = cDerivative->FindBin ( (cHist->GetBinCenter (cBin - 1) + cHist->GetBinCenter (cBin) ) / 2.0);
+//	
+//	      if ( cActive ) cDerivative->SetBinContent ( iBinDerivative, cDiff  );
+//	
+//	      if ( cActive && cDiff == 0 && cCurrent == 0 ) cDiffCounter++;
+//	
+//	      if ( cDiffCounter == 8 ) break;
+//	
+//	      cPrev = cCurrent;
+//    }
+//}
 
-void SignalScanFit::fitHist ( Chip* pCbc, std::string pHistName )
-{
+//void SignalScanFit::fitHist ( Chip* pCbc, std::string pHistName )
+//{
 
-    std::cout << BOLDRED << "WARNING: The fitting precedure is WORK IN PROGRESS and it might not work out of the box therefore the deault is set to disable the automatic fit!" << RESET << std::endl;    
+//    std::cout << BOLDRED << "WARNING: The fitting precedure is WORK IN PROGRESS and it might not work out of the box therefore the deault is set to disable the automatic fit!" << RESET << std::endl;    
 
-    // This fitting procedure is very long-winded, there are better fititng procedures in the making!!!
-    // Fitting depends on variable / single mode for CBC2. We use a fitfunction here that can be used for both in most cases.
+//    // This fitting procedure is very long-winded, there are better fititng procedures in the making!!!
+//    // Fitting depends on variable / single mode for CBC2. We use a fitfunction here that can be used for both in most cases.
 
-    TProfile* cHist = dynamic_cast<TProfile*> ( getHist ( pCbc, pHistName) );
-    double cStart  = 0; 
-    double cStop = 110; // Fit fails if it reaches the noise, this is for low energies!
+//    TProfile* cHist = dynamic_cast<TProfile*> ( getHist ( pCbc, pHistName) );
+//    double cStart  = 0; 
+//    double cStop = 110; // Fit fails if it reaches the noise, this is for low energies!
 
-    // Draw fit parameters
-    TStyle * cStyle = new TStyle();
-    cStyle->SetOptFit(1011);
+//    // Draw fit parameters
+//    TStyle * cStyle = new TStyle();
+//    cStyle->SetOptFit(1011);
 
-    std::string cFitname = "CurveFit";
-    TF1* cFit = dynamic_cast<TF1*> (gROOT->FindObject (cFitname.c_str() ) );
-    if (cFit) delete cFit;
+//    std::string cFitname = "CurveFit";
+//    TF1* cFit = dynamic_cast<TF1*> (gROOT->FindObject (cFitname.c_str() ) );
+//    if (cFit) delete cFit;
 
-    double cMin = 0., cMax = 0., variable = 0., cPlateau = 0., cWidth = 0., cVsignal = 0., cNoise = 0.; 
+//    double cMin = 0., cMax = 0., variable = 0., cPlateau = 0., cWidth = 0., cVsignal = 0., cNoise = 0.; 
 
-    cPlateau = 0.01;
-    cWidth = 15.;
-    cVsignal = 490.;
-    cNoise = 6.;
-    cMin = 0;
-    cMax = 530;
-    cFit = new TF1 ("MyGammaSignal", MyGammaSignal, cMin, cMax, 4);
-    cFit->SetParLimits(0, 0., 50.);
-    cFit->SetParLimits(1, 450., 530.);
-    cFit->SetParLimits(2, 0., 20.);
-    cFit->SetParLimits(3, 0., 20.); 
-            
-    cFit->SetParameter ( 0, cPlateau );
-    cFit->SetParameter ( 1, cWidth );
-    cFit->SetParameter ( 2, cVsignal );
-    cFit->SetParameter ( 3, cNoise );
+//    cPlateau = 0.01;
+//    cWidth = 15.;
+//    cVsignal = 490.;
+//    cNoise = 6.;
+//    cMin = 0;
+//    cMax = 530;
+//    cFit = new TF1 ("MyGammaSignal", MyGammaSignal, cMin, cMax, 4);
+//    cFit->SetParLimits(0, 0., 50.);
+//    cFit->SetParLimits(1, 450., 530.);
+//    cFit->SetParLimits(2, 0., 20.);
+//    cFit->SetParLimits(3, 0., 20.); 
+//            
+//    cFit->SetParameter ( 0, cPlateau );
+//    cFit->SetParameter ( 1, cWidth );
+//    cFit->SetParameter ( 2, cVsignal );
+//    cFit->SetParameter ( 3, cNoise );
 
-    cFit->SetParName(0, "plateau");
-    cFit->SetParName(1, "width");
-    cFit->SetParName(2, "signal");
-    cFit->SetParName(3, "noise???");
+//    cFit->SetParName(0, "plateau");
+//    cFit->SetParName(1, "width");
+//    cFit->SetParName(2, "signal");
+//    cFit->SetParName(3, "noise???");
 
-    cHist->Fit(cFit, "R+", "", cMin, cMax);
-    cFit->Draw("same");
+//    cHist->Fit(cFit, "R+", "", cMin, cMax);
+//    cFit->Draw("same");
 
-    // Would be nice to catch failed fits
-    cHist->Write (cHist->GetName(), TObject::kOverwrite);
+//    // Would be nice to catch failed fits
+//    cHist->Write (cHist->GetName(), TObject::kOverwrite);
 
-}
+//}
 
     /*double cFirst = -999;             // First data point
     double cCurrent = 0;              // Bin content
