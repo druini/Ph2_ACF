@@ -135,24 +135,41 @@ void DQMHistogramPedeNoise::process()
         
         for(auto module: *board)
         {
-            TCanvas *cValidation = new TCanvas(("Validation_" + std::to_string(module->getId())).data(),("Validation " + std::to_string(module->getId())).data());
-            TCanvas *cPedeNoise = new TCanvas(("PedeNoise_" + std::to_string(module->getId())).data(),("PedeNoise " + std::to_string(module->getId())).data());
+            TCanvas *cValidation = new TCanvas(("Validation_module_" + std::to_string(module->getId())).data(),("Validation module " + std::to_string(module->getId())).data(),   0, 0, 650, fPlotSCurve ? 900 : 650 );
+            TCanvas *cPedeNoise  = new TCanvas(("PedeNoise_module_"  + std::to_string(module->getId())).data(),("PedeNoise module "  + std::to_string(module->getId())).data(), 670, 0, 650, 650 );
 
-            cValidation->Divide(module->size());
+            cValidation->Divide(module->size(),fPlotSCurve ? 3 : 2);
             cPedeNoise->Divide(module->size(),2);
-            int  validationPadId= 1;
-            int  pedeNoisePadId= 1;
+            int validationPadId = 1;
+            int pedeNoisePadId = 1;
 
             for(auto chip: *module)
             {
-                cValidation->cd(validationPadId++);
-                fDetectorValidationHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram->Draw();
+                cValidation->cd(chip->getIndex()+1 +module->size()*0);
+                TH1F *validationHistogram = fDetectorValidationHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
+                validationHistogram->SetStats(false);
+                validationHistogram->DrawCopy();
+                gPad->SetLogy();
 
-                cPedeNoise->cd(pedeNoisePadId++);
-                fDetectorPedestalHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram->Draw();
+                cValidation->cd(chip->getIndex()+1 +module->size()*1);
+                TH1F *chipStripNoiseEvenHistogram = fDetectorStripNoiseEvenHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
+                TH1F *chipStripNoiseOddHistogram  = fDetectorStripNoiseOddHistograms .at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
+                chipStripNoiseEvenHistogram->SetLineColor(31);
+                chipStripNoiseEvenHistogram->SetMaximum (10);
+                chipStripNoiseEvenHistogram->SetMinimum (0);
+                chipStripNoiseOddHistogram->SetLineColor(2);
+                chipStripNoiseOddHistogram->SetMaximum (10);
+                chipStripNoiseOddHistogram->SetMinimum (0);
+                chipStripNoiseEvenHistogram->SetStats(false);
+                chipStripNoiseOddHistogram->SetStats(false);
+                chipStripNoiseEvenHistogram->DrawCopy();
+                chipStripNoiseOddHistogram->DrawCopy("same");
+
+                cPedeNoise->cd(chip->getIndex()+1 +module->size()*1);
+                fDetectorPedestalHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram->DrawCopy();
                 
-                cPedeNoise->cd(pedeNoisePadId++);
-                fDetectorNoiseHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram->Draw();
+                cPedeNoise->cd(chip->getIndex()+1 +module->size()*0);
+                fDetectorNoiseHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram->DrawCopy();
 
                 if(fPlotSCurve)
                 {
@@ -160,6 +177,9 @@ void DQMHistogramPedeNoise::process()
                     TH1D* cTmp = cSCurveHist->ProjectionY();
                     cSCurveHist->GetYaxis()->SetRangeUser ( cTmp->GetBinCenter (cTmp->FindFirstBinAbove (0) ) - 10, cTmp->GetBinCenter (cTmp->FindLastBinAbove (0.99) ) + 10 );
                     delete cTmp;
+                    cValidation->cd(chip->getIndex()+1 +module->size()*2);
+                    cSCurveHist->SetStats(false);
+                    cSCurveHist->DrawCopy("colz");
                 }
 
                 fDetectorStripNoiseHistograms    .at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram->GetYaxis()->SetRangeUser(0.,10.);

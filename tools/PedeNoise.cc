@@ -326,7 +326,7 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
 
     cMean /= nCbc;
     
-    LOG (INFO) << BOLDBLUE << "Found Pedestals to be around " << BOLDRED << cMean << " (0x" << std::hex << cMean << std::dec << ", 0b" << std::bitset<10> (cMean) << ")" << BOLDBLUE << RESET;
+    LOG (INFO) << BOLDBLUE << "Found Pedestals to be around " << BOLDRED << cMean << RESET;
 
     return cMean;
 
