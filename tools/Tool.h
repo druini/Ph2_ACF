@@ -283,6 +283,7 @@ class Tool : public SystemController
     void setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer);
     //Set global DAC for all Chips in the BeBoard
     void setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer);
+    void getAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer);
     //Set same global DAC for all Chips
     void setSameGlobalDac(const std::string &dacName, const uint16_t dacValue);
     //Set same global DAC for all Chips in the BeBoard

@@ -181,14 +181,15 @@ namespace Ph2_HwDescription
     std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
     std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
 
-    void copyMaskFromDefault ();
-    void copyMaskToDefault   ();
-    void resetMask           ();
-    void enableAllPixels     ();
-    void disableAllPixels    ();
-    void enablePixel         (unsigned int row, unsigned int col, bool enable);
-    void injectPixel         (unsigned int row, unsigned int col, bool inject);
-    void setTDAC             (unsigned int row, unsigned int col, uint8_t TDAC);
+    void    copyMaskFromDefault ();
+    void    copyMaskToDefault   ();
+    void    resetMask           ();
+    void    enableAllPixels     ();
+    void    disableAllPixels    ();
+    void    enablePixel         (unsigned int row, unsigned int col, bool enable);
+    void    injectPixel         (unsigned int row, unsigned int col, bool inject);
+    void    setTDAC             (unsigned int row, unsigned int col, uint8_t TDAC);
+    uint8_t getTDAC             (unsigned int row, unsigned int col);
 
     void EncodeCMD (const uint16_t               address,
 		    const uint16_t               data,

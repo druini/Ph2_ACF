@@ -385,4 +385,13 @@ namespace Ph2_HwInterface
 
     return true;
   }
+
+  void RD53Interface::ReadChipAllLocalReg (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue)
+  {
+    RD53* pRD53 = static_cast<RD53*>(pChip);
+    
+    for (auto row = 0; row < RD53::nRows; row++)
+      for (auto col = 0; col < RD53::nCols; col++)
+	pValue.getChannel<RegisterValue>(row,col).fRegisterValue = pRD53->getTDAC(row,col);
+  }
 }
