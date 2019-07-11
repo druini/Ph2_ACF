@@ -127,7 +127,7 @@
     <!--[>Calibration<]-->
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>
-    <Setting name="Nevents">2400000000</Setting>
+    <Setting name="Nevents">1000</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
@@ -137,8 +137,8 @@
     <Setting name="SkipMaskedChannels">1</Setting>
 
     <!--Signal Scan Fit-->
-    <Setting name="InitialVcth">0x226</Setting>
-    <Setting name="SignalScanStep">10</Setting>
+    <Setting name="InitialVcth">0x244</Setting>
+    <Setting name="SignalScanStep">4</Setting>
     <Setting name="FitSignal">0</Setting>
 
 </Settings>
