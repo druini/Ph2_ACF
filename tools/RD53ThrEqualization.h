@@ -25,7 +25,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define TARGETeff 0.50 // Target efficiency for optimization algorithm
+#define TARGETeff 0.70 // Target efficiency for optimization algorithm
 
 
 using namespace Ph2_System;

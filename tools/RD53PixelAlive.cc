@@ -88,10 +88,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::Analyze ()
 }
 
 void PixelAlive::InitHisto () { histos.book(fResultFile, *fDetectorContainer); }
-
-void PixelAlive::FillHisto () { histos.fill(*theOccContainer.get()); }
-
-void PixelAlive::Display ()   { histos.process(); }
+void PixelAlive::FillHisto () { histos.fill(*theOccContainer.get());           }
+void PixelAlive::Display   () { histos.process();                              }
 
 void PixelAlive::ChipErrorReport ()
 {

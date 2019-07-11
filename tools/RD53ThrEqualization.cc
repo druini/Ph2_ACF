@@ -117,7 +117,7 @@ void ThrEqualization::Draw (bool display, bool save)
 void ThrEqualization::InitHisto ()
 {
   std::stringstream myString;
-  size_t TDACsize = RD53::SetBits(RD53PixelEncoder::NBIT_TDAC)+1;
+  size_t TDACsize = RD53::SetBits(RD53PixelEncoder::NBIT_TDAC) + 1;
 
 
   // #######################
@@ -177,7 +177,7 @@ void ThrEqualization::FillHisto ()
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
-		if (cChip->getChannel<Occupancy>(row,col).fOccupancy != 0)
+		if (this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
 		  {
 		    theOccupancy[index]->Fill(cChip->getChannel<Occupancy>(row,col).fOccupancy);
 		    theTDAC[index]->Fill(theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
@@ -224,7 +224,7 @@ void ThrEqualization::Save ()
 
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
-	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
 		static_cast<RD53*>(cChip)->setTDAC(row,col,theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
 
 	  static_cast<RD53*>(cChip)->saveRegMap(fileReg);

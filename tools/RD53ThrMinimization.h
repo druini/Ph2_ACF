@@ -25,8 +25,9 @@ class ThrMinimization : public PixelAlive
   ThrMinimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart = 0, size_t ThrStop = 0);
   ~ThrMinimization ();
 
-  void Run  ();
-  void Draw (bool display, bool save);
+  void Run     ();
+  void Draw    (bool display, bool save);
+  void Analyze ();
 
  private:
   const char* fileRes;

@@ -77,6 +77,15 @@ void ThrMinimization::Draw (bool display, bool save)
   theFile->Close();
 }
 
+void ThrMinimization::Analyze ()
+{
+  for (const auto cBoard : theThrContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+	LOG (INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
+		   << cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue << RESET;
+}
+
 void ThrMinimization::InitHisto ()
 {
   std::stringstream myString;
@@ -119,7 +128,7 @@ void ThrMinimization::FillHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  theThr[index]->Fill(cChip->getSummary<RegisterValue,OccupancyAndPh>().fRegisterValue);
+	  theThr[index]->Fill(cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
 
 	  index++;
 	}
@@ -155,9 +164,9 @@ void ThrMinimization::Save ()
 
 void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
-  uint8_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue) + 1 : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName));
-  
-  
+  uint8_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue) : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName)) + 1;
+
+
   ContainerFactory theDetectorFactory;
   DetectorDataContainer minDACcontainer;
   DetectorDataContainer midDACcontainer;
@@ -167,15 +176,15 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, midDACcontainer);
   theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, maxDACcontainer);
 
-  for (const auto cBoard : *fDetectorContainer)
+  for (const auto cBoard : minDACcontainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = startValue;
+	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = startValue;
 
-  for (const auto cBoard : *fDetectorContainer)
+  for (const auto cBoard : maxDACcontainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::SetBits(numberOfBits));
+	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::SetBits(numberOfBits)) + 1;
  
 
   for (auto i = 0; i < numberOfBits; i++)
@@ -213,7 +222,7 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 	      // #######################
 	      // # Build discriminator #
 	      // #######################
-	      float occupancy = cChip->getSummary<OccupancyAndPh,OccupancyAndPh>().fOccupancy * ((rowStop-rowStart+1) * (colStop-colStart+1)) * nEvents;
+	      float occupancy = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy * ((rowStop-rowStart+1) * (colStop-colStart+1)) * nEvents;
 
 
 	      if (occupancy < target)

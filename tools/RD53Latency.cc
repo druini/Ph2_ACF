@@ -205,7 +205,7 @@ void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& 
 		      if (evt.chip_events[j].data.size() != 0) nEvts++;
 		  }
 
-		theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,EmptyContainer>().data1.push_back(nEvts);
+		theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1.push_back(nEvts);
 	      }
 	  }
     }

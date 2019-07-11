@@ -444,6 +444,7 @@ int main (int argc, char** argv)
       ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, targetOccupancy, ThrStart, ThrStop);
       tm.Inherit(&cSystemController);
       tm.Run();
+      tm.Analyze();
       tm.Draw(display,true);
     }
   else LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;

@@ -54,7 +54,7 @@ class RD53HistogramsBase
 	    {
 	      canvases.emplace_back(new TCanvas(("Canvas_" + std::to_string(canvasId++)).c_str(), "IT Canvas"));
 	      canvases.back()->cd();
-	      Hist* hist = cChip->getSummary<HistContainer<Hist> >().fTheHistogram;
+	      Hist* hist = cChip->getSummary<HistContainer<Hist>>().fTheHistogram;
 	      hist->Draw(opt);
 	      canvases.back()->Modified();
 	      canvases.back()->Update();
