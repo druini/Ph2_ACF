@@ -157,7 +157,7 @@ bool DQMInterface::running()
 				{
 					std::cout<< __PRETTY_FUNCTION__ << " Packet Number expected " << --packetNumber << " But received " 
 						<< int(theCurrentStream->getPacketNumber()) << ", Aborting" << std::endl;
-					std::cout<< __PRETTY_FUNCTION__ << " Did you check that the Endianness of the two comupters is the same???"
+					std::cout<< __PRETTY_FUNCTION__ << " Did you check that the Endianness of the two comupters is the same???"  << std::endl;
 					abort();
 				}
 				std::cout << __PRETTY_FUNCTION__ << " vector size "<< fDataBuffer.size() << " extected " << theCurrentStream->getPacketSize()  << std::endl;
