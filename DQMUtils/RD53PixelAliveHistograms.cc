@@ -16,11 +16,20 @@ void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContain
   size_t BCIDsize  = RD53::SetBits(RD53EvtEncoder::NBIT_BCID) + 1;
   size_t TrgIDsize = RD53::SetBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
-  bookImplementer(theOutputFile, theDetectorStructure, HistContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, nEvents + 1), Occupancy1D, "Occupancy", "Entries");
-  bookImplementer(theOutputFile, theDetectorStructure, HistContainer<TH2F>("PixelAlive", "Pixel Alive", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows), Occupancy2D, "Columns", "Rows");
-  bookImplementer(theOutputFile, theDetectorStructure, HistContainer<TH1F>("ToT", "ToT Distribution", ToTsize, 0, ToTsize), ToT, "ToT", "Entries");
-  bookImplementer(theOutputFile, theDetectorStructure, HistContainer<TH1F>("BCID", "BCID", BCIDsize, 0, BCIDsize), BCID, "#DeltaBCID", "Entries");
-  bookImplementer(theOutputFile, theDetectorStructure, HistContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 0, TrgIDsize), TriggerID, "#DeltaTrigger-ID", "Entries");
+  auto hOcc1D = HistContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, nEvents + 1);
+  bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Occupancy", "Entries");
+
+  auto hOcc2D = HistContainer<TH2F>("PixelAlive", "Pixel Alive", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+  bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "Columns", "Rows");
+
+  auto hToT = HistContainer<TH1F>("ToT", "ToT Distribution", ToTsize, 0, ToTsize);
+  bookImplementer(theOutputFile, theDetectorStructure, hToT, ToT, "ToT", "Entries");
+
+  auto hBCID = HistContainer<TH1F>("BCID", "BCID", BCIDsize, 0, BCIDsize);
+  bookImplementer(theOutputFile, theDetectorStructure, hBCID, BCID, "#DeltaBCID", "Entries");
+
+  auto hTrigID = HistContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 0, TrgIDsize);
+  bookImplementer(theOutputFile, theDetectorStructure, hTrigID, TriggerID, "#DeltaTrigger-ID", "Entries");
 }
 
 void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)

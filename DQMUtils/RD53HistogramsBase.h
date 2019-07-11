@@ -11,7 +11,6 @@
 #ifndef _RD53HistogramsBase_h_
 #define _RD53HistogramsBase_h_
 
-#include "../HWDescription/RD53.h"
 
 #include <TCanvas.h>
 #include <TGaxis.h>

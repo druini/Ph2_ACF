@@ -11,11 +11,9 @@
 #ifndef _RD53PixelAliveHistograms_h_
 #define _RD53PixelAliveHistograms_h_
 
-#include "../RootUtils/RootContainerFactory.h"
-#include "../RootUtils/HistContainer.h"
 #include "../Utils/GenericDataVector.h"
 #include "../Utils/OccupancyAndPh.h"
-#include "RD53HistogramsBase.h"
+#include "DQMHistogramBase.h"
 
 #include <TH1F.h>
 #include <TH2F.h>
@@ -23,14 +21,16 @@
 
 using namespace Ph2_HwDescription;
 
-class RD53PixelAliveHistograms : RD53HistogramsBase
+class RD53PixelAliveHistograms : public DQMHistogramBase
 {
  public:
  RD53PixelAliveHistograms (size_t nEvents) : nEvents(nEvents) {}
 
-  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure);
+  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure) override;
   void fill    (const DetectorDataContainer& data);
-  void process ();
+  void process ()                                                                    override;
+  void fill    (std::vector<char>& dataBuffer)                                       override {};
+  void reset   (void)                                                                override {};
 
  private:
   DetectorDataContainer Occupancy1D;
