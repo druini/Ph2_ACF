@@ -172,33 +172,36 @@ How to setup up and run the IT-system:
 
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. Suggested sequence of calibrations implemented in bash shell script:
 ```
-CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive
 echo "pixelalive" >> calibDone.txt
 
-CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
-echo "threqu" >> calibDone.txt
-
-CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
-echo "scurve" >> calibDone.txt
-
-CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
+time CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
 echo "gain" >> calibDone.txt
 
-CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
+time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
 echo "gainopt" >> calibDone.txt
 
-# Repeat n-times ###############################
-CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
 echo "thrmin" >> calibDone.txt
 
 echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
 read -p "Press any key to continue... " -n1 -s
 echo
 
-CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
 echo "threqu" >> calibDone.txt
 
-CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+echo "scurve" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+echo "thrmin" >> calibDone.txt
+
+echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
+read -p "Press any key to continue... " -n1 -s
+echo
+
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
 echo "scurve" >> calibDone.txt
 ```
 - Software git branch / tag : `chipPolymorphism` / `IT-v1.7`
