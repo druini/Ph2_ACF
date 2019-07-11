@@ -29,6 +29,7 @@
 // ################################
 #define NROWS           192 // Total number of rows
 #define NCOLS           400 // Total number of columns
+#define NBITMAXREG       16 // Maximum number of bits for a chip register
 #define NPIXCOL_PROG      2 // Number of pixel columns to program
 #define NDATAMAX_PERPIXEL 6 // Number of data-bit packets used to program the pixel
 #define NPIX_REGION       4 // Number of pixels in a region (1x4)

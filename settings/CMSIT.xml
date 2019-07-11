@@ -2,9 +2,9 @@
 
 <HwDescription>
   <BeBoard Id="0" boardType="FC7" eventType="VR">
-	<connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
+    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
     <!---
-    <connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
+	<connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
     -->
     
     <!-- Frontend chip configuration -->
@@ -74,6 +74,7 @@
       nPixelInj          = 0: use RD53 prescription; nPixelInj               != 0: override RD53 prescription
       ChipRegDefaultFile = 0: save on different file name; ChipRegDefaultFile = 1: save on same file name
       targetCharge:           requested charge (electrons) corresponding to half ToT range
+      targetOccupancy:        total number of acceptable hits
   -->
   <Settings>
     <Setting name="nEvents">          100 </Setting>
@@ -95,11 +96,15 @@
 
     <Setting name="VCALstart">        160 </Setting>
     <Setting name="VCALstop">         560 </Setting>
-    <Setting name="VCALnsteps">        40 </Setting>
+    <Setting name="VCALnsteps">        50 </Setting>
 
-    <Setting name="targetCharge">    7000 </Setting>
+    <Setting name="targetCharge">   11000 </Setting>
     <Setting name="KrumCurrStart">      0 </Setting>
-    <Setting name="KrumCurrStop">      31 </Setting>
+    <Setting name="KrumCurrStop">     127 </Setting>
+
+    <Setting name="targetOccupancy">   10 </Setting>
+    <Setting name="ThrStart">         340 </Setting>
+    <Setting name="ThrStop">          540 </Setting>
 
     <Setting name="DisplayHisto">       0 </Setting>
     <Setting name="ChipRegDefaultFile"> 1 </Setting>

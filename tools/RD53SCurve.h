@@ -31,7 +31,7 @@ using namespace Ph2_System;
 class SCurve : public Tool
 {
  public:
-  SCurve  (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
+  SCurve  (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
   ~SCurve ();
 
   void Run                                       ();
@@ -41,9 +41,9 @@ class SCurve : public Tool
  private:
   const char* fileRes;
   size_t rowStart;
-  size_t rowEnd;
+  size_t rowStop;
   size_t colStart;
-  size_t colEnd;
+  size_t colStop;
   size_t nPixels2Inj;
   size_t nEvents;
   size_t startValue;
@@ -51,9 +51,10 @@ class SCurve : public Tool
   size_t nSteps;
 
   std::vector<uint16_t> dacList;
-
-  std::vector<DetectorDataContainer*>    detectorContainerVector;
-  std::shared_ptr<DetectorDataContainer> theThresholdAndNoiseContainer;
+  
+  std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
+  std::vector<DetectorDataContainer*>      detectorContainerVector;
+  std::shared_ptr<DetectorDataContainer>   theThresholdAndNoiseContainer;
 
   void InitHisto       ();
   void FillHisto       ();

@@ -9,12 +9,12 @@
 
 #include "RD53SCurve.h"
 
-SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
+SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
   fileRes     (fileRes),
   rowStart    (rowStart),
-  rowEnd      (rowEnd),
+  rowStop     (rowStop),
   colStart    (colStart),
-  colEnd      (colEnd),
+  colStop     (colStop),
   nPixels2Inj (nPixels2Inj),
   nEvents     (nEvents),
   startValue  (startValue),
@@ -28,13 +28,13 @@ SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colS
   ChannelGroup<RD53::nRows,RD53::nCols> customChannelGroup;
   customChannelGroup.disableAllChannels();
 
-  for (auto row = rowStart; row <= rowEnd; row++)
-    for (auto col = colStart; col <= colEnd; col++)
+  for (auto row = rowStart; row <= rowStop; row++)
+    for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  fChannelGroupHandler = new RD53ChannelGroupHandler();
-  fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
-  fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
+  theChnGroupHandler = std::shared_ptr<RD53ChannelGroupHandler>(new RD53ChannelGroupHandler());
+  theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+  theChnGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 
 
   // ##############################
@@ -46,8 +46,8 @@ SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colS
 
 SCurve::~SCurve ()
 {
-  delete fChannelGroupHandler; fChannelGroupHandler = nullptr;
-  delete theFile;              theFile              = nullptr;
+  delete theFile;
+  theFile = nullptr;
 
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -97,6 +97,7 @@ void SCurve::Run ()
       theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *detectorContainerVector.back());
     }
   
+  this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
@@ -161,7 +162,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::Analyze ()
 
 	  theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
 	  LOG (INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-		     << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold
+		     << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise>().fThreshold
 		     << BOLDGREEN << " (Delta_VCal)" << RESET;
 	}
 
@@ -205,7 +206,7 @@ void SCurve::InitHisto ()
           myString << "Noise1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
 		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
 		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theNoise1D.push_back( new TH1F(myString.str().c_str(),myString.str().c_str(),100,0,20));
+	  theNoise1D.push_back( new TH1F(myString.str().c_str(),myString.str().c_str(),100,0,30));
 	  theNoise1D.back()->SetXTitle("Noise (#DeltaVCal)");
 	  theNoise1D.back()->SetYTitle("Entries");
 	  
@@ -284,7 +285,7 @@ void SCurve::FillHisto ()
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
 		for (auto i = 0; i < dacList.size(); i++)
-		  if (fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
+		  if (this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
 		    theOccupancy[index]->Fill(dacList[i]-VCalOffset,detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
 
 		if (theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise != 0)
@@ -306,6 +307,26 @@ void SCurve::Display ()
     {
       theCanvasOcc[i]->cd();
       theOccupancy[i]->Draw("gcolz");
+      theCanvasOcc[i]->Modified();
+      theCanvasOcc[i]->Update();
+
+      TPad* myPad = (TPad*)theCanvasOcc[i]->GetPad(0);
+      myPad->SetTopMargin(0.16);
+      theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
+				   RD53chargeConverter::VCAl2Charge(theOccupancy[i]->GetXaxis()->GetBinLowEdge(1)),
+				   RD53chargeConverter::VCAl2Charge(theOccupancy[i]->GetXaxis()->GetBinLowEdge(theOccupancy[i]->GetNbinsX())),
+				   510,"-"));
+      theAxis.back()->SetTitle("Charge (electrons)"); 
+      theAxis.back()->SetTitleOffset(1.2);
+      theAxis.back()->SetTitleSize(0.035);
+      theAxis.back()->SetTitleFont(40);
+      theAxis.back()->SetLabelOffset(0.001);
+      theAxis.back()->SetLabelSize(0.035);
+      theAxis.back()->SetLabelFont(42);
+      theAxis.back()->SetLabelColor(kRed);
+      theAxis.back()->SetLineColor(kRed);
+      theAxis.back()->Draw();
+
       theCanvasOcc[i]->Modified();
       theCanvasOcc[i]->Update();
     }
@@ -385,54 +406,11 @@ void SCurve::Display ()
 
 void SCurve::Save ()
 {
-  std::stringstream myString;
-
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
-    {
-      theCanvasOcc[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theOccupancy[i]->GetName() << ".svg";
-      theCanvasOcc[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasTh1D.size(); i++)
-    {
-      theCanvasTh1D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theThreshold1D[i]->GetName() << ".svg";
-      theCanvasTh1D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasNo1D.size(); i++)
-    {
-      theCanvasNo1D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theNoise1D[i]->GetName() << ".svg";
-      theCanvasNo1D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasTh2D.size(); i++)
-    {
-      theCanvasTh2D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theThreshold2D[i]->GetName() << ".svg";
-      theCanvasTh2D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasNo2D.size(); i++)
-    {
-      theCanvasNo2D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theNoise2D[i]->GetName() << ".svg";
-      theCanvasNo2D[i]->Print(myString.str().c_str());
-    }
-
-  theFile->Write();
+  for (auto i = 0; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
+  for (auto i = 0; i < theCanvasTh1D.size(); i++) theCanvasTh1D[i]->Write();
+  for (auto i = 0; i < theCanvasNo1D.size(); i++) theCanvasNo1D[i]->Write();
+  for (auto i = 0; i < theCanvasTh2D.size(); i++) theCanvasTh2D[i]->Write();
+  for (auto i = 0; i < theCanvasNo2D.size(); i++) theCanvasNo2D[i]->Write();
 }
 
 void SCurve::ComputeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
@@ -465,7 +443,7 @@ void SCurve::ComputeStats (std::vector<float>& measurements, int offset, float& 
 
 void SCurve::ChipErrorReport ()
 {
-  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
+  auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
@@ -477,5 +455,4 @@ void SCurve::ChipErrorReport ()
 	  LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
 	  LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
 	}
-  
 }

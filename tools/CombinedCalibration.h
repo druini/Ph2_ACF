@@ -11,7 +11,7 @@ public:
 };
 
 template<typename T, typename... Rest >
-void privateStart(int currentRun, CombinedCalibration<T, Rest...> calList);
+void privateStart(int currentRun, CombinedCalibration<T, Rest...>& calList);
 
 
 template<class Head, class... Tail> 
@@ -60,13 +60,13 @@ public:
 
 };
 
-void privateStart(int currentRun, CombinedCalibration<> calList) 
+void privateStart(int currentRun, CombinedCalibration<>& calList) 
 {
     std::cout << __PRETTY_FUNCTION__ <<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Private Starting Empty !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
 }
 
 template<typename T, typename... Rest >
-void privateStart(int currentRun, CombinedCalibration<T, Rest...> calList)
+void privateStart(int currentRun, CombinedCalibration<T, Rest...>& calList)
 {
     std::cout << __PRETTY_FUNCTION__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Private Starting !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
     std::cout << __PRETTY_FUNCTION__ << calList.toolPointer<<std::endl;

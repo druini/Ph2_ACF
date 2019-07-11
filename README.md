@@ -194,14 +194,16 @@ Follow these instructions to install and compile the libraries:
 ### Middleware for the Inner-Tracker (IT) system
 
 The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking. 
-Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following calibrations:
+Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
 ```
 1. Latency scan
 2. PixelAlive
 3. Noise scan
-4. SCurve
-5. Threshold equalization
-6. Gain optimization
+4. SCurve scan
+5. Gain scan
+6. Threshold equalization
+7. Gain optimization
+8. Threshold minimization
 ```
 How to setup up and run the IT-system:
 1. `mkdir chose_a_name` under `Ph2_ACF`
@@ -211,7 +213,41 @@ How to setup up and run the IT-system:
 5. `cd chose_a_name`
 6. Run with the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` or run `CMSIT_miniDAQ --help` for help
 
-- Software git branch / tag : `chipPolymorphism` / `IT-v1.5`
+It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. Suggested sequence of calibrations implemented in bash shell script:
+```
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive
+echo "pixelalive" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
+echo "gain" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
+echo "gainopt" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+echo "thrmin" >> calibDone.txt
+
+echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
+read -p "Press any key to continue... " -n1 -s
+echo
+
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
+echo "threqu" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+echo "scurve" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+echo "thrmin" >> calibDone.txt
+
+echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
+read -p "Press any key to continue... " -n1 -s
+echo
+
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+echo "scurve" >> calibDone.txt
+```
+- Software git branch / tag : `chipPolymorphism` / `IT-v1.7`
 - Firmware tag: `2.5`
 
 

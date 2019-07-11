@@ -29,7 +29,7 @@ using namespace Ph2_System;
 class Latency : public Tool
 {
  public:
-  Latency(const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t startValue, size_t stopValue, size_t nEvents);
+  Latency(const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t startValue, size_t stopValue, size_t nEvents);
   ~Latency();
 
   void Run     ();
@@ -39,12 +39,14 @@ class Latency : public Tool
  private:
   const char* fileRes;
   size_t rowStart;
-  size_t rowEnd;
+  size_t rowStop;
   size_t colStart;
-  size_t colEnd;
+  size_t colStop;
   size_t startValue;
   size_t stopValue;
   size_t nEvents;
+ 
+  std::vector<uint16_t> dacList;
 
   DetectorDataContainer theContainer;
 
@@ -52,6 +54,7 @@ class Latency : public Tool
   void FillHisto       ();
   void Display         ();
   void Save            ();
+  void scanDac         (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
   void ChipErrorReport ();
 
 

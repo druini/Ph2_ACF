@@ -60,9 +60,6 @@ namespace Ph2_HwInterface
 				  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fOccupancy++;
 				  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPh      += float(hit.tots[i]);
 				  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPhError += float(hit.tots[i]*hit.tots[i]);
-
-				  if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col+i) == false)
-				    cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fErrors++;
 			      	}
 			      else cChip->getChannel<Occupancy>(hit.row,hit.col+i).fOccupancy++;
 			    }
