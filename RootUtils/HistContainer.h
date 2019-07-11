@@ -25,10 +25,10 @@ class HistContainer : public PlotContainer
   HistContainer (const HistContainer<Hist>& container) = delete;
   HistContainer<Hist>& operator= (const HistContainer<Hist>& container) = delete;
 
-  template <class... Args, typename std::enable_if<std::is_constructible<Hist, Args...>::value, int>::type = 0>
-    HistContainer(Args&&... args)
+  template <class... Args>
+    HistContainer(Args... args)
     {
-      fTheHistogram = new Hist(std::forward<Args>(args)...);
+      fTheHistogram = new Hist(args...);
       fTheHistogram->SetDirectory(0);
     }
 
