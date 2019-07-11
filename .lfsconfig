@@ -1,2 +1,2 @@
 [lfs]
-	url = https://gitlab.cern.ch/fravera/Ph2_ACF.git/info/lfs
+	url = https://:@gitlab.cern.ch:8443/fravera/Ph2_ACF.git/info/lfs
