@@ -175,19 +175,12 @@ It might be useful to create one `CMSIT.xml` file for each "set" of calibrations
 time CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive
 echo "pixelalive" >> calibDone.txt
 
-time CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
-echo "threqu" >> calibDone.txt
-
-time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
-echo "scurve" >> calibDone.txt
-
 time CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
 echo "gain" >> calibDone.txt
 
 time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
 echo "gainopt" >> calibDone.txt
 
-# Repeat n-times ###############################
 time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
 echo "thrmin" >> calibDone.txt
 
@@ -197,6 +190,16 @@ echo
 
 time CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
 echo "threqu" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+echo "scurve" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+echo "thrmin" >> calibDone.txt
+
+echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
+read -p "Press any key to continue... " -n1 -s
+echo
 
 time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
 echo "scurve" >> calibDone.txt
