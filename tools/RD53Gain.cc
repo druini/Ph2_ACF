@@ -9,12 +9,12 @@
 
 #include "RD53Gain.h"
 
-Gain::Gain (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
+Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
   fileRes     (fileRes),
   rowStart    (rowStart),
-  rowEnd      (rowEnd),
+  rowStop     (rowStop),
   colStart    (colStart),
-  colEnd      (colEnd),
+  colStop     (colStop),
   nPixels2Inj (nPixels2Inj),
   nEvents     (nEvents),
   startValue  (startValue),
@@ -28,13 +28,13 @@ Gain::Gain (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart
   ChannelGroup<RD53::nRows,RD53::nCols> customChannelGroup;
   customChannelGroup.disableAllChannels();
 
-  for (auto row = rowStart; row <= rowEnd; row++)
-    for (auto col = colStart; col <= colEnd; col++)
+  for (auto row = rowStart; row <= rowStop; row++)
+    for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  fChannelGroupHandler = new RD53ChannelGroupHandler();
-  fChannelGroupHandler->setCustomChannelGroup(customChannelGroup);
-  fChannelGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
+  theChnGroupHandler = std::shared_ptr<RD53ChannelGroupHandler>(new RD53ChannelGroupHandler());
+  theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+  theChnGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 
 
   // ##############################
@@ -46,8 +46,8 @@ Gain::Gain (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart
 
 Gain::~Gain ()
 {
-  delete fChannelGroupHandler; fChannelGroupHandler = nullptr;
-  delete theFile;              theFile              = nullptr;
+  delete theFile;
+  theFile = nullptr;
 
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -97,6 +97,7 @@ void Gain::Run ()
       theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *detectorContainerVector.back());
     }
   
+  this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
@@ -288,7 +289,7 @@ void Gain::FillHisto ()
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
 		for (auto i = 0; i < dacList.size(); i++)
-		  if (detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh != 0)
+		  if (this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
 		    theOccupancy[index]->Fill(dacList[i]-VCalOffset,detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh);
 		
 		if (theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain != 0)
@@ -310,6 +311,26 @@ void Gain::Display ()
     {
       theCanvasOcc[i]->cd();
       theOccupancy[i]->Draw("gcolz");
+      theCanvasOcc[i]->Modified();
+      theCanvasOcc[i]->Update();
+
+      TPad* myPad = (TPad*)theCanvasOcc[i]->GetPad(0);
+      myPad->SetTopMargin(0.16);
+      theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
+				   RD53chargeConverter::VCAl2Charge(theOccupancy[i]->GetXaxis()->GetBinLowEdge(1)),
+				   RD53chargeConverter::VCAl2Charge(theOccupancy[i]->GetXaxis()->GetBinLowEdge(theOccupancy[i]->GetNbinsX())),
+				   510,"-"));
+      theAxis.back()->SetTitle("Charge (electrons)"); 
+      theAxis.back()->SetTitleOffset(1.2);
+      theAxis.back()->SetTitleSize(0.035);
+      theAxis.back()->SetTitleFont(40);
+      theAxis.back()->SetLabelOffset(0.001);
+      theAxis.back()->SetLabelSize(0.035);
+      theAxis.back()->SetLabelFont(42);
+      theAxis.back()->SetLabelColor(kRed);
+      theAxis.back()->SetLineColor(kRed);
+      theAxis.back()->Draw();
+
       theCanvasOcc[i]->Modified();
       theCanvasOcc[i]->Update();
     }
@@ -368,55 +389,12 @@ void Gain::Display ()
 }
 
 void Gain::Save ()
-{ 
-  std::stringstream myString;
-  
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
-    {
-      theCanvasOcc[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theOccupancy[i]->GetName() << ".svg";
-      theCanvasOcc[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasGa1D.size(); i++)
-    {
-      theCanvasGa1D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theGain1D[i]->GetName() << ".svg";
-      theCanvasGa1D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasIn1D.size(); i++)
-    {
-      theCanvasIn1D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theIntercept1D[i]->GetName() << ".svg";
-      theCanvasIn1D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasGa2D.size(); i++)
-    {
-      theCanvasGa2D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theGain2D[i]->GetName() << ".svg";
-      theCanvasGa2D[i]->Print(myString.str().c_str());
-    }
-
-  for (auto i = 0; i < theCanvasIn2D.size(); i++)
-    {
-      theCanvasIn2D[i]->Write();
-      myString.clear();
-      myString.str("");
-      myString << theIntercept2D[i]->GetName() << ".svg";
-      theCanvasIn2D[i]->Print(myString.str().c_str());
-    }
-
-  theFile->Write();
+{
+  for (auto i = 0; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
+  for (auto i = 0; i < theCanvasGa1D.size(); i++) theCanvasGa1D[i]->Write();
+  for (auto i = 0; i < theCanvasIn1D.size(); i++) theCanvasIn1D[i]->Write();
+  for (auto i = 0; i < theCanvasGa2D.size(); i++) theCanvasGa2D[i]->Write();
+  for (auto i = 0; i < theCanvasIn2D.size(); i++) theCanvasIn2D[i]->Write();
 }
 
 void Gain::ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
@@ -490,7 +468,7 @@ void Gain::ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vect
 
 void Gain::ChipErrorReport ()
 {
-  auto RD53ChipInterface = static_cast<RD53Interface*>(fReadoutChipInterface);
+  auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
@@ -502,5 +480,4 @@ void Gain::ChipErrorReport ()
 	  LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
 	  LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
 	}
-  
 }

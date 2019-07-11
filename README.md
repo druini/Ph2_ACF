@@ -24,9 +24,50 @@ On this Repo, you can find different version of the software :
 
 ### Setup
 
-Firmware for the GLIB can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
+Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
 You'll need Xilinx Impact and a [Xilinx Platform Cable USB II] (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
+For more information on the firmare, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware .
 
+### Setup on CC7 (Scroll down for instructions on setting up on SLC6)
+
+1. Check which version of gcc is installed on your CC7, it should be > 4.8 (could be the default on CC7):
+
+        $> gcc --version
+
+2. On CC7 you also need to install boost v1.53 headers (default on this system) as they don't ship with uHAL any more:
+
+        $> sudo yum install boost-devel
+
+3. Install uHAL. The uHAL version should be 2.5 or lower. Version 2.6 does not work with the middleware at the moment! 
+
+    First create a new ipbus repo for yum:
+
+        $> sudo cat > /etc/yum.repos.d/ipbus-sw.repo << EOF
+        $> [ipbus-sw-base]
+        $> name=IPbus software repository
+        $> baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/base/RPMS
+        $> enabled=1
+        $> gpgcheck=0
+
+        $> [ipbus-sw-updates]
+        $> name=IPbus software repository updates
+        $> baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/updates/RPMS
+        $> enabled=1
+        $> gpgcheck=0
+
+    Then install uHAL as follows:
+
+        $> sudo yum clean all
+        $> sudo yum groupinstall uhal
+
+4. Install CERN ROOT 6.10 on CC7, as well as libusb and xorg:
+
+        $> sudo yum install root
+        $> sudo yum install root-net-http root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+
+5. Install CMAKE > 2.8:
+
+        $> sudo yum install cmake
 
 ### Setup on SLC6
 
@@ -42,36 +83,38 @@ You'll need Xilinx Impact and a [Xilinx Platform Cable USB II] (http://uk.farnel
 
         $> gcc --version
 
-2. Alternatively you can use a gcc version > 4.8 from AFS
- 
-If you are working on CC7, gcc4.8 is the default compiler.
+    Alternatively you can use a gcc version > 4.8 from AFS
 
-3. Install uHAL (latest version [Instructions](http://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html), instructions below for v2.3):
+2. Install uHAL. The uHAL version should be 2.5 or lower. Version 2.6 does not work with the middleware at the moment! 
 
-        $> wget http://svnweb.cern.ch/trac/cactus/export/28265/tags/ipbus_sw/uhal_2_3_0/scripts/release/cactus.slc6.x86_64.repo 
+    First create a new ipbus repo for yum:
 
-    (You may need the --no-check-certificate)
+        $> sudo cat > /etc/yum.repos.d/ipbus-sw.repo << EOF
+        $> [ipbus-sw-base]
+        $> name=IPbus software repository
+        $> baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/base/RPMS
+        $> enabled=1
+        $> gpgcheck=0
 
-        $> sudo cp cactus.slc6.x86_64.repo /etc/yum.repos.d/cactus.repo
+        $> [ipbus-sw-updates]
+        $> name=IPbus software repository updates
+        $> baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/updates/RPMS
+        $> enabled=1
+        $> gpgcheck=0
 
-    then
+    Then install uHAL as follows:
 
         $> sudo yum clean all
         $> sudo yum groupinstall uhal
 
-4. Install CERN ROOT version 5.34.32(SLC6) or 6.10(CC7): [Instructions](http://root.cern.ch/drupal/content/installing-root-source) - make sure to use "fixed location installation" when building yourself. If root is installed on a CERN computer of virtual machine you can use:
+3. Install CERN ROOT version 5.34.32 [Instructions](http://root.cern.ch/drupal/content/installing-root-source) - make sure to use "fixed location installation" when building yourself. If root is installed on a CERN computer of virtual machine you can use:
        
         $> sudo yum install root
         $> sudo yum install root-net-http root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
 
-5. Install CMAKE > 2.8. On SLC6 the default is cmake 2.8
+4. Install CMAKE > 2.8. On SLC6 the default is cmake 2.8
 
         $> sudo yum install cmake
-
-6. On CC7 you also need to install boost v1.53 headers (default on this system) as they don't ship with uHAL any more:
-
-        $> sudo yum install boost-devel
-
 
 ### The Ph2_ACF Software : 
 
@@ -151,14 +194,16 @@ Follow these instructions to install and compile the libraries:
 ### Middleware for the Inner-Tracker (IT) system
 
 The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking. 
-Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following calibrations:
+Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
 ```
 1. Latency scan
 2. PixelAlive
 3. Noise scan
-4. SCurve
-5. Threshold equalization
-6. Gain optimization
+4. SCurve scan
+5. Gain scan
+6. Threshold equalization
+7. Gain optimization
+8. Threshold minimization
 ```
 How to setup up and run the IT-system:
 1. `mkdir chose_a_name` under `Ph2_ACF`
@@ -168,7 +213,41 @@ How to setup up and run the IT-system:
 5. `cd chose_a_name`
 6. Run with the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` or run `CMSIT_miniDAQ --help` for help
 
-- Software git branch / tag : `chipPolymorphism` / `IT-v1.5`
+It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. Suggested sequence of calibrations implemented in bash shell script:
+```
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive
+echo "pixelalive" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
+echo "gain" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
+echo "gainopt" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+echo "thrmin" >> calibDone.txt
+
+echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
+read -p "Press any key to continue... " -n1 -s
+echo
+
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
+echo "threqu" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+echo "scurve" >> calibDone.txt
+
+time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+echo "thrmin" >> calibDone.txt
+
+echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
+read -p "Press any key to continue... " -n1 -s
+echo
+
+time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+echo "scurve" >> calibDone.txt
+```
+- Software git branch / tag : `chipPolymorphism` / `IT-v1.7`
 - Firmware tag: `2.5`
 
 
