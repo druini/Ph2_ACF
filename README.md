@@ -175,16 +175,16 @@ It might be useful to create one `CMSIT.xml` file for each "set" of calibrations
 #!/bin/bash                                                                                                                                                                                     
 if [ $1 == 'step1' ]
 then
-    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive
     echo "pixelalive" >> calibDone.txt
 
-    time CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
+    CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
     echo "gain" >> calibDone.txt
 
-    time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
+    CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
     echo "gainopt" >> calibDone.txt
 
-    time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+    CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
     echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
@@ -192,13 +192,13 @@ then
     echo
 elif [ $1 == 'step2' ]
 then
-    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
     echo "threqu" >> calibDone.txt
 
-    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
     echo "scurve" >> calibDone.txt
 
-    time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+    CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
     echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
@@ -206,7 +206,7 @@ then
     echo
 elif [ $1 == 'step3' ]
 then
-    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
     echo "scurve" >> calibDone.txt
 else
     echo "Option non recognized: $1"
