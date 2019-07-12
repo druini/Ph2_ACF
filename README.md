@@ -170,39 +170,48 @@ How to setup up and run the IT-system:
 5. `cd chose_a_name`
 6. Run with the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` or run `CMSIT_miniDAQ --help` for help
 
-It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. Suggested sequence of calibrations implemented in bash shell script:
+It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
 ```
-time CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive
-echo "pixelalive" >> calibDone.txt
+#!/bin/bash                                                                                                                                                                                     
+if [ $1 == "step1" ]
+then
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive
+    echo "pixelalive" >> calibDone.txt
 
-time CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
-echo "gain" >> calibDone.txt
+    CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
+    echo "gain" >> calibDone.txt
 
-time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
-echo "gainopt" >> calibDone.txt
+    CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
+    echo "gainopt" >> calibDone.txt
 
-time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
-echo "thrmin" >> calibDone.txt
+    CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+    echo "thrmin" >> calibDone.txt
 
-echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
-read -p "Press any key to continue... " -n1 -s
-echo
+    echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
+    read -p "Press any key to continue... " -n1 -s
+    echo
+elif [ $1 == "step2" ]
+then
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
+    echo "threqu" >> calibDone.txt
 
-time CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
-echo "threqu" >> calibDone.txt
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    echo "scurve" >> calibDone.txt
 
-time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
-echo "scurve" >> calibDone.txt
+    CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+    echo "thrmin" >> calibDone.txt
 
-time CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
-echo "thrmin" >> calibDone.txt
-
-echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
-read -p "Press any key to continue... " -n1 -s
-echo
-
-time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
-echo "scurve" >> calibDone.txt
+    echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
+    read -p "Press any key to continue... " -n1 -s
+    echo
+elif [ $1 == "step3" ]
+then
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    echo "scurve" >> calibDone.txt
+else
+    echo "Option non recognized: $1"
+    echo "Available options are: step1, step2, step3"
+fi
 ```
 - Software git branch / tag : `chipPolymorphism` / `IT-v1.7`
 - Firmware tag: `2.5`
