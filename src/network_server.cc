@@ -20,23 +20,23 @@ public:
 	}
 	virtual ~MiddlewareController(void){;}
 
-	void send(const std::string& message){broadcast(message);}
+	void send(const std::string& message){broadcastPacket(message);}
 	//========================================================================================================================
 	// virtual function to interpret messages
 	virtual std::string  interpretMessage(const std::string& buffer) override
 	{
 
-		std::cout << __PRETTY_FUNCTION__ << "RECEIVED: " << buffer << std::endl;
+		//std::cout << __PRETTY_FUNCTION__ << "RECEIVED: " << buffer << std::endl;
 
-		// if (buffer == "Initialize") //changing the status changes the mode in threadMain (BBC) function.
-		// {
-		// 	send("InitializeDone");
-		// }
-		// if (buffer.substr(0,5) == "Start") //changing the status changes the mode in threadMain (BBC) function.
-		// {
-		// 	currentRun_ = getVariableValue("RunNumber", buffer);
-		// 	send("StartDone");
-		// }
+		if (buffer == "Initialize") //changing the status changes the mode in threadMain (BBC) function.
+		{
+			return "InitializeDone";
+		}
+		if (buffer.substr(0,5) == "Start") //changing the status changes the mode in threadMain (BBC) function.
+		{
+			currentRun_ = getVariableValue("RunNumber", buffer);
+			return "StartDone";
+		}
 		// else if (buffer.substr(0,4) == "Stop")
 		// {
 		// 	//We need to think :)
@@ -55,8 +55,14 @@ public:
 		// 	std::cout << "Resume" << std::endl;
 		// 	send("ResumeDone");
 		// }
-
-		// std::string emptyString("");
+		else
+		{
+			return buffer;
+			//return "suca";
+			
+		}
+		
+		std::string emptyString("");
 		return "emptyString";
 
 	}

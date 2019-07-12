@@ -26,12 +26,12 @@ TCPServer::~TCPServer(void)
 //void TCPServer::connectClient(int fdClientSocket)
 void TCPServer::connectClient(TCPTransceiverSocket* socket)
 {
- 	std::cout << __PRETTY_FUNCTION__ << "Waiting 3 seconds" << std::endl;
+ 	//std::cout << __PRETTY_FUNCTION__ << "Waiting 3 seconds" << std::endl;
    	std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 	while (1)
 	{
 		std::cout << __PRETTY_FUNCTION__ << "Waiting for message for socket  #: " << socket->getSocketId() << std::endl;
-		std::string message = socket->receive<std::string>();
+		std::string message = socket->receivePacket();
 		std::cout << __PRETTY_FUNCTION__ << "Receiving from socket  #: " << socket->getSocketId() << " n bytes: " << message.length() << std::endl;
 
 		if (message.length() == 0)
@@ -48,13 +48,17 @@ void TCPServer::connectClient(TCPTransceiverSocket* socket)
 		}
 		else
 		{
-			std::cout << __PRETTY_FUNCTION__ << "Received message:-" << message << "-(nbytes=" << message.length() << ") from socket #: " << socket->getSocketId() << std::endl;
+			std::cout << __PRETTY_FUNCTION__ 
+			//<< "Received message:-" << message 
+			<< "-(nbytes=" << message.length() 
+			<< ") from socket #: " << socket->getSocketId() 
+			<< std::endl;
 			std::string messageToClient = interpretMessage(message);
 
 			if (messageToClient != "")
 			{
-				std::cout << __PRETTY_FUNCTION__ << "Sending back message:-" << messageToClient << "-(nbytes=" << messageToClient.length() << ") to socket #: " << socket->getSocketId() << std::endl;
-				socket->send(messageToClient);
+				//std::cout << __PRETTY_FUNCTION__ << "Sending back message:-" << messageToClient << "-(nbytes=" << messageToClient.length() << ") to socket #: " << socket->getSocketId() << std::endl;
+				socket->sendPacket(messageToClient);
 			}
 			else
 				std::cout << __PRETTY_FUNCTION__ << "Not sending anything back to socket  #: " << socket->getSocketId() << std::endl;

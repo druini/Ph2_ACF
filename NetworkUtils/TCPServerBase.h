@@ -19,8 +19,9 @@ public:
 	virtual ~TCPServerBase(void);
 	
 	void startAccept(void);
-	void broadcast  (const std::string &message);
-	void broadcast  (const std::vector<char> &message);
+	void broadcastPacket (const std::string &message);
+	void broadcast       (const std::string &message);
+	void broadcast       (const std::vector<char> &message);
 
 protected:
 	virtual void acceptConnections() = 0;
@@ -34,7 +35,7 @@ protected:
 		return dynamic_cast<T*>(fConnectedClients[socketId]);
 	}
 	
-	std::promise<bool> fAcceptPromise;
+	std::promise<bool>                  fAcceptPromise;
 	std::unordered_map<int, TCPSocket*> fConnectedClients;
 	const int E_SHUTDOWN = 0;
 

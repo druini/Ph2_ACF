@@ -2,8 +2,8 @@
 #define _ots_TCPReceiverSocket_h_
 
 #include "../NetworkUtils/TCPSocket.h"
+#include "../NetworkUtils/TCPPacket.h"
 #include <string>
-#include <vector>
 
 class TCPReceiverSocket : public virtual TCPSocket
 {
@@ -13,7 +13,7 @@ public:
 	//TCPReceiverSocket(TCPReceiverSocket const&)  = delete ;
 	TCPReceiverSocket(TCPReceiverSocket &&theTCPReceiverSocket) = default;
 
-	std::size_t receive(char* buffer, std::size_t size);
+	std::size_t receive      (char* buffer, std::size_t size);
 	template <class T>
 	T receive()
 	{
@@ -24,9 +24,11 @@ public:
 		//std::cout << __PRETTY_FUNCTION__ << "Message received-" << fBuffer << "-" << std::endl;
 		return buffer; //c++11 doesn't make a copy anymore when returned
 	}
+	std::string receivePacket(void);
 
 private:
 	static constexpr unsigned int maxSocketSize = 65536;
+	TCPPacket fPacket;
 };
 
 #endif

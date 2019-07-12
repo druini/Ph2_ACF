@@ -1,4 +1,5 @@
 #include "../NetworkUtils/TCPTransmitterSocket.h"
+#include "../NetworkUtils/TCPPacket.h"
 #include <sys/socket.h>
 #include <unistd.h>
 #include <stdexcept>
@@ -14,6 +15,12 @@ TCPTransmitterSocket::TCPTransmitterSocket(int socketId)
 //========================================================================================================================
 TCPTransmitterSocket::~TCPTransmitterSocket(void)
 {
+}
+
+//========================================================================================================================
+void TCPTransmitterSocket::sendPacket(const std::string& buffer)
+{
+	send(TCPPacket::encode(buffer));
 }
 
 //========================================================================================================================
