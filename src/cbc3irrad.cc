@@ -289,7 +289,7 @@ int main ( int argc, char* argv[] )
 
         //get the pedestal determined in the step above so I can adjust the threshold for the stub sweep and the DAQ
         Module* cFe = cPedeNoise.fBoardVector.at (0)->fModuleVector.at (0);
-        uint16_t cPedestal = round (cPedeNoise.getPedestal (cFe) );
+        uint16_t cPedestal = 0; //round (cPedeNoise.getPedestal (cFe) );
         //sweep the stubs
         ThresholdVisitor cVisitor (cTool.fReadoutChipInterface, 0);
 

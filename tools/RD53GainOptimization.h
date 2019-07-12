@@ -22,7 +22,7 @@ using namespace Ph2_System;
 class GainOptimization : public Gain
 {
  public:
-  GainOptimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetCharge, size_t KrumCurrStart = 0, size_t KrumCurrStop = 0);
+  GainOptimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetCharge, size_t KrumCurrStart = 0, size_t KrumCurrStop = 0);
   ~GainOptimization ();
 
   void Run  ();
@@ -32,9 +32,9 @@ class GainOptimization : public Gain
   const char* fileRes;
   const char* fileReg;
   size_t rowStart;
-  size_t rowEnd;
+  size_t rowStop;
   size_t colStart;
-  size_t colEnd;
+  size_t colStop;
   size_t nPixels2Inj;
   size_t nEvents;
   size_t startValue;
@@ -43,14 +43,14 @@ class GainOptimization : public Gain
   size_t KrumCurrStart;
   size_t KrumCurrStop;
   float  targetCharge;
-
+  
   DetectorDataContainer theKrumCurrContainer;
 
   void InitHisto       ();
   void FillHisto       ();
   void Display         ();
   void Save            ();
-  void bitWiseScan     ();
+  void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
   void ChipErrorReport ();
 
 

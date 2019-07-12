@@ -16,12 +16,10 @@
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+#include "../DQMUtils/RD53PixelAliveHistograms.h"
 #include "Tool.h"
 
 #include "TApplication.h"
-#include "TStyle.h"
-#include "TGaxis.h"
-#include "TH2F.h"
 
 
 using namespace Ph2_System;
@@ -32,49 +30,36 @@ using namespace Ph2_System;
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive  (const char* fileRes, size_t rowStart, size_t rowEnd, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
-  ~PixelAlive ();
+  PixelAlive  (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
 
-  void Run     ();
-  void Draw    (bool display, bool save);
-  void Analyze ();
-  
+  void Run                                       ();
+  void Draw                                      (bool display, bool save);
+  std::shared_ptr<DetectorDataContainer> Analyze ();
+
  private:
   const char* fileRes;
   size_t rowStart;
-  size_t rowEnd;
+  size_t rowStop;
   size_t colStart;
-  size_t colEnd;
+  size_t colStop;
   size_t nPixels2Inj;
   size_t nEvents;
-  size_t nEvtsBurst;  
+  size_t nEvtsBurst;
   bool   inject;
 
-  DetectorDataContainer theContainer;
+  std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
+  std::shared_ptr<DetectorDataContainer>   theOccContainer;
 
   void InitHisto       ();
   void FillHisto       ();
   void Display         ();
-  void Save            ();
   void ChipErrorReport ();
 
 
   // ########
   // # ROOT #
   // ########
-  TFile* theFile;
-  std::vector<TCanvas*> theCanvasOcc2D;
-  std::vector<TH2F*>    theOcc2D;
-  std::vector<TCanvas*> theCanvasToT;
-  std::vector<TH1F*>    theToT;
-  std::vector<TCanvas*> theCanvasOcc1D;
-  std::vector<TH1F*>    theOcc1D;
-  std::vector<TCanvas*> theCanvasBCID;
-  std::vector<TH1F*>    theBCID;
-  std::vector<TCanvas*> theCanvasTrgID;
-  std::vector<TH1F*>    theTrgID;
-  std::vector<TCanvas*> theCanvasErr;
-  std::vector<TH2F*>    theErr;
+  RD53PixelAliveHistograms histos;
 };
 
 #endif

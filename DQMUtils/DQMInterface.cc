@@ -10,11 +10,10 @@
 #include <string>
 
 //========================================================================================================================
-DQMInterface::DQMInterface(std::string configurationFile)
+DQMInterface::DQMInterface()
 : fListener         (nullptr)
 , fDQMHistogram     (nullptr)
 , fRunning          (false)
-, fConfigurationFile(configurationFile)
 , fOutputFile(nullptr)
 {
 }
@@ -51,7 +50,7 @@ void DQMInterface::destroyHistogram(void)
 }
 
 //========================================================================================================================
-void DQMInterface::configure(void)
+void DQMInterface::configure(std::string calibrationName, std::string configurationFilePath)
 {
 	std::string serverIP = "127.0.0.1";
 	int serverPort       = 6000;
@@ -72,7 +71,7 @@ void DQMInterface::configure(void)
     std::stringstream out;
     DetectorContainer fDetectorStructure;
 
-    fParser.parseHW (fConfigurationFile, fBeBoardFWMap, fBoardVector, &fDetectorStructure, out, true );
+    fParser.parseHW (configurationFilePath, fBeBoardFWMap, fBoardVector, &fDetectorStructure, out, true );
     std::cout << out.str() << std::endl;
     
 	//if calibration type pedenoise
@@ -158,6 +157,7 @@ bool DQMInterface::running()
 				{
 					std::cout<< __PRETTY_FUNCTION__ << " Packet Number expected " << --packetNumber << " But received " 
 						<< int(theCurrentStream->getPacketNumber()) << ", Aborting" << std::endl;
+					std::cout<< __PRETTY_FUNCTION__ << " Did you check that the Endianness of the two comupters is the same???"  << std::endl;
 					abort();
 				}
 				std::cout << __PRETTY_FUNCTION__ << " vector size "<< fDataBuffer.size() << " extected " << theCurrentStream->getPacketSize()  << std::endl;

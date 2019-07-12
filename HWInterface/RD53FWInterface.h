@@ -89,7 +89,7 @@ namespace Ph2_HwInterface
 
   public:
     RD53FWInterface (const char* pId, const char* pUri, const char* pAddressTable);
-    virtual ~RD53FWInterface() { if (fFileHandler) delete fFileHandler; }
+    virtual ~RD53FWInterface() { delete fFileHandler; }
 
     void      setFileHandler (FileHandler* pHandler) override;
     uint32_t  getBoardInfo   ()                      override;
@@ -97,10 +97,10 @@ namespace Ph2_HwInterface
 
     void ConfigureBoard      (const BeBoard* pBoard) override;
 
-    void Start()                  override;
-    void Stop()                   override;
-    void Pause()                  override;
-    void Resume()                 override;
+    void Start                 () override;
+    void Stop                  () override;
+    void Pause                 () override;
+    void Resume                () override;
     bool InitChipCommunication () override;
 
     void     ReadNEvents (BeBoard* pBoard, uint32_t pNEvents,  std::vector<uint32_t>& pData, bool pWait = false) override;
@@ -112,16 +112,16 @@ namespace Ph2_HwInterface
 										unsigned int pBlockSize = 1)     override;
     std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)            override;
 
-    void ChipReset()  override;
-    void ChipReSync() override;
+    void ChipReset  () override;
+    void ChipReSync () override;
 
-    void PrintFWstatus();
+    void PrintFWstatus    ();
     void SerializeSymbols (std::vector<std::vector<uint16_t> >& data, std::vector<uint32_t>& serialData);
-    void TurnOffFMC();
-    void TurnOnFMC();
-    void ResetBoard();
-    void ResetFastCmdBlk();
-    void ResetReadoutBlk();
+    void TurnOffFMC       ();
+    void TurnOnFMC        ();
+    void ResetBoard       ();
+    void ResetFastCmdBlk  ();
+    void ResetReadoutBlk  ();
 
     struct ChipFrame
     {

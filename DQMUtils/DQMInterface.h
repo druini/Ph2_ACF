@@ -12,10 +12,10 @@ class DQMInterface
 {
 public:
 
-	DQMInterface (std::string configurationFileName);
+	DQMInterface ();
 	~DQMInterface(void);
 
-	void configure           (void) ;
+	void configure           (std::string calibrationName, std::string configurationFilePath) ;
 	void startProcessingData (std::string runNumber) ;
 	void stopProcessingData  (void) ;
 	void pauseProcessingData (void) ;
@@ -32,7 +32,6 @@ private:
 	std::vector<char>   fDataBuffer;
 	bool                fRunning;
 	std::future<bool>   fRunningFuture;
-	std::string         fConfigurationFile;
 	TFile*              fOutputFile;
 
 };

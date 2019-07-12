@@ -13,10 +13,20 @@
 
 #include <string>
 #include <vector>
+#include <memory>
+
+#include "../HWDescription/RD53.h"
+#include "../RootUtils/RootContainerFactory.h"
+#include "../RootUtils/HistContainer.h"
 #include <../Utils/Container.h>
 
+#include <TCanvas.h>
+#include <TGaxis.h>
+#include <TPad.h>
+#include <TFile.h>
+
+class DetectorDataContainer;
 class DetectorContainer;
-class TFile;
 
 /*!
  * \class DQMHistogramBase
@@ -61,8 +71,67 @@ class DQMHistogramBase
     virtual void reset(void) = 0;
     //virtual void summarizeHistos();
 
-protected:
-    // DetectorContainer fDetectorStructure;
-    
+ private:
+  int canvasId = 0;
+  std::vector<std::unique_ptr<TCanvas>> canvases;
+  std::vector<std::unique_ptr<TGaxis>>  axes;
+
+ protected:
+  template <typename Hist>
+    void bookImplementer (TFile* theOutputFile,
+			  const DetectorContainer& theDetectorStructure,
+			  const HistContainer<Hist>& histContainer,
+			  DetectorDataContainer& dataContainer,
+			  const char* XTitle = nullptr,
+			  const char* YTitle = nullptr)
+    {
+      if (XTitle != nullptr) histContainer.fTheHistogram->SetXTitle(XTitle);
+      if (YTitle != nullptr) histContainer.fTheHistogram->SetYTitle(YTitle);
+      
+      RootContainerFactory theRootFactory;
+      theRootFactory.bookChipHistrograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
+    }
+  
+  template <typename Hist> 
+    void draw (DetectorDataContainer& HistDataContainer,
+	       const char* opt               = "",
+	       bool electronAxis             = false,
+	       const char* electronAxisTitle = "")
+    {
+      for (auto cBoard : HistDataContainer)
+	for (auto cModule : *cBoard)
+	  for (auto cChip : *cModule)
+	    {
+	      canvases.emplace_back(new TCanvas(("Canvas_" + std::to_string(canvasId++)).c_str(), "IT Canvas"));
+	      canvases.back()->cd();
+	      Hist* hist = cChip->getSummary<HistContainer<Hist>>().fTheHistogram;
+	      hist->Draw(opt);
+	      canvases.back()->Modified();
+	      canvases.back()->Update();
+
+	      if (electronAxis == true)
+		{
+		  TPad* myPad = static_cast<TPad*>(canvases.back()->GetPad(0));
+		  myPad->SetTopMargin(0.16);
+		  
+		  axes.emplace_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
+					       RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(1), true),
+					       RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), true), 510, "-"));
+		  axes.back()->SetTitle(electronAxisTitle);
+		  axes.back()->SetTitleOffset(1.2);
+		  axes.back()->SetTitleSize(0.035);
+		  axes.back()->SetTitleFont(40);
+		  axes.back()->SetLabelOffset(0.001);
+		  axes.back()->SetLabelSize(0.035);
+		  axes.back()->SetLabelFont(42);
+		  axes.back()->SetLabelColor(kRed);
+		  axes.back()->SetLineColor(kRed);
+		  axes.back()->Draw();
+
+		  canvases.back()->Modified();
+		  canvases.back()->Update();
+		}
+	    }
+    }
 };
 #endif

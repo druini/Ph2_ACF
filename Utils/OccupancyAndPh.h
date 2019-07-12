@@ -19,8 +19,8 @@
 class OccupancyAndPh
 {
  public:
- OccupancyAndPh() : fOccupancy(0), fPh(0), fPhError(0), fErrors(0) {}
-  ~OccupancyAndPh()                                                {}
+ OccupancyAndPh() : fOccupancy(0), fPh(0), fPhError(0) {}
+  ~OccupancyAndPh()                                    {}
 
   void print(void)
   {
@@ -36,8 +36,6 @@ class OccupancyAndPh
 
   float fPh;
   float fPhError;
-
-  float fErrors;
 };
 
 template<>
@@ -57,8 +55,6 @@ inline void OccupancyAndPh::makeAverage<OccupancyAndPh> (const ChipContainer* th
 	      fPhError += 1./(theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError * theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError);
 	    }
 
-	  fErrors += theChipContainer->getChannel<OccupancyAndPh>(row,col).fErrors;
-
 	  numberOfEnabledChannels++;
 	}
 
@@ -69,8 +65,6 @@ inline void OccupancyAndPh::makeAverage<OccupancyAndPh> (const ChipContainer* th
       fPh      /= fPhError;
       fPhError /= sqrt(1. / fPhError);
     }
-
-  fErrors /= numberOfEnabledChannels;
 }
 
 #endif

@@ -370,7 +370,7 @@ namespace Ph2_HwInterface
 	  if (inject == true) pRD53->injectPixel(row,col,group->isChannelEnabled(row,col));
 	}
 
-    this->WriteRD53Mask(pRD53, true, false, pVerifLoop);
+    this->WriteRD53Mask(pRD53, true, false, false); // @TMP@
   }
 
   bool RD53Interface::WriteChipAllLocalReg (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop)

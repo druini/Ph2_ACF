@@ -61,9 +61,6 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "signalFit", "Scan the threshold and fit for signal Vcth", ArgvParser::OptionRequiresValue );
     cmd.defineOptionAlternative ( "signalFit", "F" );
 
-    cmd.defineOption ( "hitOR", "To be used with SignalScanFit in case you want to run in hitOR mode", ArgvParser::NoOptionAttribute );
-    cmd.defineOptionAlternative ( "hitOR", "H" );
-
     cmd.defineOption ( "minimum", "minimum value for latency scan", ArgvParser::OptionRequiresValue );
     cmd.defineOptionAlternative ( "minimum", "m" );
 
@@ -94,7 +91,7 @@ int main ( int argc, char* argv[] )
     bool cStubLatency = ( cmd.foundOption ( "stublatency" ) ) ? true : false;
     bool cSignal = ( cmd.foundOption ( "signal" ) ) ? true : false;
     bool cSignalFit = ( cmd.foundOption ( "signalFit" ) ) ? true : false;
-    bool cHitOR = ( cmd.foundOption ( "hitOR" ) ) ? true : false;
+//    bool cHitOR = ( cmd.foundOption ( "hitOR" ) ) ? true : false;
     bool cNoise = ( cmd.foundOption ( "noise" ) ) ? true : false;
     bool cAntenna = (cmd.foundOption ("antenna") )? true : false;
 
@@ -199,7 +196,7 @@ int main ( int argc, char* argv[] )
         SignalScanFit cSignalScanFit;
         cSignalScanFit.Inherit (&cTool);
         cSignalScanFit.Initialize();
-        cSignalScanFit.ScanSignal ( cSignalFitRange, cHitOR ); // Particle means that we trigger on a particle
+        cSignalScanFit.ScanSignal ( cSignalFitRange ); // Particle means that we trigger on a particle
     }
 
     else if ( cNoise )
@@ -234,6 +231,7 @@ int main ( int argc, char* argv[] )
     }
 
     cTool.SaveResults();
+    cTool.WriteRootFile();
     cTool.CloseResultFile();
     cTool.Destroy();
 

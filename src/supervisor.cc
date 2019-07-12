@@ -206,7 +206,7 @@ int main ( int argc, char* argv[] )
 		tAppArgc = 2;
 	TApplication theApp("App", &tAppArgc, tAppArgv);
 
-	DQMInterface        theDQMInterface(cmd.optionValue("file"));
+	DQMInterface theDQMInterface;
 
 	stateMachineStatus = HALTED;
 
@@ -255,7 +255,7 @@ int main ( int argc, char* argv[] )
 			case HALTED:
 				std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
 				theMiddlewareInterface.configure(cmd.optionValue("calibration"), baseDir + cmd.optionValue("file"));
-				theDQMInterface.configure();
+				theDQMInterface.configure(cmd.optionValue("calibration"), baseDir + cmd.optionValue("file"));
 				stateMachineStatus = CONFIGURED;
 				break;
 			case CONFIGURED:

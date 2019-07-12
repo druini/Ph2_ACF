@@ -434,7 +434,7 @@ void Tool::WriteRootFile()
 void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool pDate )
 {
 	//Fabio: CBC specific -> to be moved out from Tool - BEGIN
-	bool cCheck;
+	bool cCheck = false;
 	bool cHoleMode;
 	auto cSetting = fSettingsMap.find ( "HoleMode" );
 
@@ -1222,10 +1222,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 	            {
 	                for ( auto cChip : *cFe )
 	                {
-	                    if(fMaskChannelsFromOtherGroups || fTestPulse)
-						{
-							fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), group,fMaskChannelsFromOtherGroups,fTestPulse);
-						}
+						fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), group,fMaskChannelsFromOtherGroups,fTestPulse);
 	                }
 	            }
 	        }
