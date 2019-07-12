@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53_h_
-#define _RD53_h_
+#ifndef RD53_H
+#define RD53_H
 
 #include "../HWDescription/ReadoutChip.h"
 

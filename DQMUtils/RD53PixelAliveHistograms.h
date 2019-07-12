@@ -8,8 +8,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53PixelAliveHistograms_h_
-#define _RD53PixelAliveHistograms_h_
+#ifndef RD53PixelAliveHistograms_H
+#define RD53PixelAliveHistograms_H
 
 #include "../Utils/GenericDataVector.h"
 #include "../Utils/OccupancyAndPh.h"
@@ -27,10 +27,10 @@ class RD53PixelAliveHistograms : public DQMHistogramBase
  RD53PixelAliveHistograms (size_t nEvents) : nEvents(nEvents) {}
 
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure) override;
-  void fill    (const DetectorDataContainer& data);
   void process ()                                                                    override;
   void fill    (std::vector<char>& dataBuffer)                                       override {};
   void reset   (void)                                                                override {};
+  void fill    (const DetectorDataContainer& data);
 
  private:
   DetectorDataContainer Occupancy1D;

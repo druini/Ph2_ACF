@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53Gain_h_
-#define _RD53Gain_h_
+#ifndef RD53Gain_H
+#define RD53Gain_H
 
 #include "../Utils/Container.h"
 #include "../Utils/OccupancyAndPh.h"

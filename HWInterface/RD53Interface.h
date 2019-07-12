@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53Interface_h_
-#define _RD53Interface_h_
+#ifndef RD53Interface_H
+#define RD53Interface_H
 
 #include "BeBoardFWInterface.h"
 #include "ReadoutChipInterface.h"

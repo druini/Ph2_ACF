@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53ChannelGroupHandler_h_
-#define _RD53ChannelGroupHandler_h_
+#ifndef RD53ChannelGroupHandler_H
+#define RD53ChannelGroupHandler_H
 
 #include "ChannelGroupHandler.h"
 #include "../HWDescription/RD53.h"

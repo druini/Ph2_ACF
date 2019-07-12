@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53SCurve_h_
-#define _RD53SCurve_h_
+#ifndef RD53SCurve_H
+#define RD53SCurve_H
 
 #include "../Utils/Container.h"
 #include "../Utils/Occupancy.h"

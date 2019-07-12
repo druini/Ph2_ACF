@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53Event_h_
-#define _RD53Event_h_
+#ifndef RD53Event_H
+#define RD53Event_H
 
 #include "Event.h"
 #include "Occupancy.h"

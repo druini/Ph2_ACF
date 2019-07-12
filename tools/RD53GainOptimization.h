@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53GainOptimization_h_
-#define _RD53GainOptimization_h_
+#ifndef RD53GainOptimization_H
+#define RD53GainOptimization_H
 
 #include "../Utils/EmptyContainer.h"
 #include "RD53Gain.h"

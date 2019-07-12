@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53PixelAlive_h_
-#define _RD53PixelAlive_h_
+#ifndef RD53PixelAlive_H
+#define RD53PixelAlive_H
 
 #include "../Utils/Container.h"
 #include "../Utils/OccupancyAndPh.h"

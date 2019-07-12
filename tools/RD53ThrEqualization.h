@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53ThrEqualization_h_
-#define _RD53ThrEqualization_h_
+#ifndef RD53ThrEqualization_H
+#define RD53ThrEqualization_H
 
 #include "../Utils/Container.h"
 #include "../Utils/Occupancy.h"

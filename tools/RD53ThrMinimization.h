@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53ThrMinimization_h_
-#define _RD53ThrMinimization_h_
+#ifndef RD53ThrMinimization_H
+#define RD53ThrMinimization_H
 
 #include "../Utils/EmptyContainer.h"
 #include "RD53PixelAlive.h"

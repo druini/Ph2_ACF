@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53Latency_h_
-#define _RD53Latency_h_
+#ifndef RD53Latency_H
+#define RD53Latency_H
 
 #include "../Utils/Container.h"
 #include "../Utils/GenericDataVector.h"
