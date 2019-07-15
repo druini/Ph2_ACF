@@ -5,8 +5,8 @@
 #include "../Utils/Occupancy.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "../Utils/ThresholdAndNoiseStream.h"
-#include "../Utils/OccupancyStream.h"
+#include "../Utils/ContainerStream.h"
+#include "../Utils/ContainerStream.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include <math.h>
 
@@ -70,8 +70,8 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
                 if (fDisableStubLogic)
                 {
                     LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET ;
-                    fStubLogicValue.at(cBoard->getId())->at(cFe->getId())->at(cCbc->getId())->getSummary<RegisterValue>().fRegisterValue = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth");
-                    fHIPCountValue .at(cBoard->getId())->at(cFe->getId())->at(cCbc->getId())->getSummary<RegisterValue>().fRegisterValue = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode"           );
+                    fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<RegisterValue>().fRegisterValue = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth");
+                    fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<RegisterValue>().fRegisterValue = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode"           );
                     fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth", 0x23);
                     fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode", 0x08);
                 }
@@ -203,8 +203,8 @@ void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
                 if (fDisableStubLogic)
                 {
                     LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
-                    cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getId())->at(cFe->getId())->at(cCbc->getId())->getSummary<RegisterValue>().fRegisterValue});
-                    cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getId())->at(cFe->getId())->at(cCbc->getId())->getSummary<RegisterValue>().fRegisterValue});
+                    cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<RegisterValue>().fRegisterValue});
+                    cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<RegisterValue>().fRegisterValue});
                 }
 
                 fReadoutChipInterface->WriteChipMultReg (static_cast<Cbc*>(cCbc), cRegVec);
@@ -240,9 +240,9 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
         //increase threshold to supress noise
         setThresholdtoNSigma (cBoard, 5);
     }
-    DetectorDataContainer     theOccupancyContainer;
-	fDetectorDataContainer = &theOccupancyContainer;
-	OccupancyBoardStream      theOccupancyStream;
+    DetectorDataContainer       theOccupancyContainer;
+	fDetectorDataContainer =   &theOccupancyContainer;
+	ContainerStream<Occupancy>  theOccupancyStream;
     
     ContainerFactory   theDetectorFactory;
 	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -259,7 +259,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     #else
         for(auto board : theOccupancyContainer)
         {
-            if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
+            if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer, getCalibrationName());
         }
     #endif
 
@@ -457,7 +457,6 @@ void PedeNoise::extractPedeNoise ()
     }
 
     //calculate the averages and ship
-    ThresholdAndNoiseBoardStream  theThresholdAndNoiseStream;
     
     for ( auto board : fThresholdAndNoiseContainer)
     {
@@ -481,9 +480,10 @@ void PedeNoise::extractPedeNoise ()
     #ifdef __USE_ROOT__
         if(!fFitted) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
     #else
+        ContainerStream<ThresholdAndNoise> theThresholdAndNoiseStream;
         for(auto board : fThresholdAndNoiseContainer )
         {
-            if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
+            if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer, getCalibrationName());
         }
     #endif
 
@@ -499,8 +499,8 @@ void PedeNoise::setThresholdtoNSigma (BoardContainer* board, uint32_t pNSigma)
         {
             uint32_t cCbcId = chip->getId();
             
-            uint16_t cPedestal = round (fThresholdAndNoiseContainer.at(board->getId())->at(module->getId())->at(chip->getId())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold);
-            uint16_t cNoise    = round (fThresholdAndNoiseContainer.at(board->getId())->at(module->getId())->at(chip->getId())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fNoise);
+            uint16_t cPedestal = round (fThresholdAndNoiseContainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold);
+            uint16_t cNoise    = round (fThresholdAndNoiseContainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fNoise);
             int cDiff = fHoleMode ? pNSigma * cNoise : -pNSigma * cNoise;
             uint16_t cValue = cPedestal + cDiff;
 

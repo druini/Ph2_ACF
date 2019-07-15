@@ -7,6 +7,10 @@ INITIALIZE_EASYLOGGINGPP
 //MAIN
 int main(int argc, char **argv)
 {
+    //configure the logger
+    el::Configurations conf ("settings/logger.conf");
+    el::Loggers::reconfigureAllLoggers (conf);
+
 	MiddlewareController theMiddlewareController(PORT);
 
 	while(1){}

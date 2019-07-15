@@ -1,7 +1,7 @@
 /*
 
-        \file                          OBjectStreamer.h
-        \brief                         OBjectStreamer for DAQ
+        \file                          ObjectStream.h
+        \brief                         ObjectStream for DAQ
         \author                        Fabio Ravera, Lorenzo Uplegger
         \version                       1.0
         \date                          08/04/19
@@ -9,8 +9,8 @@
 
  */
 
-#ifndef __OBJECTSTREAMER_H__
-#define __OBJECTSTREAMER_H__
+#ifndef __OBJECTSTREAM_H__
+#define __OBJECTSTREAM_H__
 // pointers to base class
 #include <iostream>
 #include <sstream>
@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <cstdint>
 #include <cmath>
+#include "../NetworkUtils/TCPPublishServer.h"
 
 // template<class T>
 // class VTableInfo
@@ -46,12 +47,12 @@
 //#define VTABLE_SIZE VTableSize::Size
 
 
-static void MyDump( const char * mem, unsigned int n ) {
-	for ( unsigned int i = 0; i < n; i++ ) {
-		std::cout << std::hex << (int(mem[i]) & 0xFF )<< " ";
-	}
-	std::cout << std::dec << std::endl;
-}
+// static void MyDump( const char * mem, unsigned int n ) {
+// 	for ( unsigned int i = 0; i < n; i++ ) {
+// 		std::cout << std::hex << (int(mem[i]) & 0xFF )<< " ";
+// 	}
+// 	std::cout << std::dec << std::endl;
+// }
 
 
 class DataStreamBase
@@ -127,7 +128,7 @@ private:
 
 
 
-template <class H, class D>
+template <typename H, typename D>
 class ObjectStream
 {
 private:
@@ -185,7 +186,10 @@ public:
 			fMetadataStream->setObjectName(getObjectName());
 		}
 		else
+		{
+			std::cout << __PRETTY_FUNCTION__ << fMetadataStream->size() + fHeaderStream.size() + fDataStream.size() << std::endl;
 			fTheStream->resize(fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
+		}
 
 		fMetadataStream->fStreamSizeAndNumber.setPacketSize(fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
 		fHeaderStream.copyToStream(&fTheStream->at(fMetadataStream->size()));
@@ -213,15 +217,6 @@ public:
 	{
 		fMetadataStream->fStreamSizeAndNumber.incrementPacketNumber();
 	}
-	// H& getHeaderStream() const
-	// {
-	// 	return fHeaderStream;
-	// }
-
-	// D& getDataStream() const
-	// {
-	// 	return fDataStream;
-	// }
 
 protected:
 	H                  fHeaderStream;
@@ -240,18 +235,6 @@ protected:
 		return fObjectName;
 	}
 
-};
-
-class TCPPublishServer;
-class BoardDataContainer;
-
-class VContainerStreamBase
-{
-public:
-	VContainerStreamBase(){;}
-	virtual ~VContainerStreamBase(){;}
-	virtual void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer) = 0;
-public:
-};
+}__attribute__((packed));
 
 #endif

@@ -2,7 +2,7 @@
 #include "TH1.h"
 #include <TSystem.h>
 #include "../HWDescription/Chip.h"
-#include "../Utils/ObjectStreamer.h"
+#include "../Utils/ContainerStream.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
@@ -1497,3 +1497,8 @@ void Tool::setSameDac(const std::string &dacName, const uint16_t dacValue)
 
 }
 
+std::string Tool::getCalibrationName(void)
+{
+	int32_t status;
+	return abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
+}

@@ -8,9 +8,8 @@
  */
 
 #include "../DQMUtils/DQMHistogramPedeNoise.h"
-#include "../Utils/OccupancyStream.h"
+#include "../Utils/ContainerStream.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "../Utils/ThresholdAndNoiseStream.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/EmptyContainer.h"
@@ -103,8 +102,8 @@ void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &
 //========================================================================================================================
 void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
-	OccupancyBoardStream          theOccupancy;
-    ThresholdAndNoiseBoardStream  theThresholdAndNoiseStream;
+	ContainerStream<Occupancy>         theOccupancy;
+    ContainerStream<ThresholdAndNoise> theThresholdAndNoiseStream;
 
 	if(theOccupancy.attachBuffer(&dataBuffer))
 	{
@@ -320,7 +319,7 @@ void DQMHistogramPedeNoise::fitSCurves ()
             for(auto chip: *module)
             {
 
-                ChipDataContainer *theChipThresholdAndNoise = fThresholdAndNoiseContainer.at(board->getId())->at(module->getId())->at(chip->getId());
+                ChipDataContainer *theChipThresholdAndNoise = fThresholdAndNoiseContainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex());
 
                 for (uint32_t cChannel = 0; cChannel < NCHANNELS; cChannel++)
                 {

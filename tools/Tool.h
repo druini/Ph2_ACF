@@ -24,7 +24,6 @@
 
 class DetectorContainer;
 class DetectorDataContainer;
-class VContainerStreamBase;
 class ChannelGroupHandler;
 class ChannelGroupBase;
 class ScanBase;
@@ -65,7 +64,6 @@ class Tool : public SystemController
         // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyPerChannelMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
 
     DetectorDataContainer* fDetectorDataContainer;
-    VContainerStreamBase*  fObjectStream;
     ChannelGroupHandler*   fChannelGroupHandler;
     CanvasMap              fCanvasMap;
     ChipHistogramMap       fChipHistMap;
@@ -345,6 +343,8 @@ private:
     bool fAllChan;
     bool fMaskChannelsFromOtherGroups;
     bool fTestPulse;
+
+    std::string getCalibrationName();
 
 
 };
