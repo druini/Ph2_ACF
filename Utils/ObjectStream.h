@@ -80,14 +80,14 @@ protected:
 	uint32_t fDataSize;
 }__attribute__((packed));
 
-template <class H, class D>
+template <typename H, typename D, size_t N >//, typename I = void >
 class ObjectStream;
 
 class CheckStream
 {
 
 public:
-	template <class H, class D>
+	template <typename H, typename D, size_t N >//, typename I = void >
 	friend class ObjectStream;
 	
 	CheckStream(void) : fPacketNumberAndSize(0) {;}
@@ -128,7 +128,7 @@ private:
 
 
 
-template <typename H, typename D>
+template <typename H, typename D, size_t N >//, typename I = void >
 class ObjectStream
 {
 private:
@@ -136,17 +136,20 @@ private:
 	{
 	public:
 		friend class ObjectStream;
-		Metadata() : fStreamSizeAndNumber(0), fObjectNameLength(0) {}
+		Metadata() 
+			: fStreamSizeAndNumber(0)
+			, fObjectNameLength(0)
+			, fCreatorNameLength(0) {}
 		~Metadata() {};
 
 		static uint32_t size(const std::string& objectName)
 		{
-			return sizeof(fStreamSizeAndNumber) + sizeof(fObjectNameLength) + objectName.size();
+			return sizeof(fStreamSizeAndNumber) + sizeof(fObjectNameLength) + objectName.size() + sizeof(fCreatorNameLength) + N;
 		}
 
 		uint32_t size(void) const
 		{
-			return sizeof(fStreamSizeAndNumber) + sizeof(fObjectNameLength) + fObjectNameLength;
+			return sizeof(fStreamSizeAndNumber) + sizeof(fObjectNameLength) + fObjectNameLength + sizeof(fCreatorNameLength) + N;
 		}
 
 	private:
@@ -156,17 +159,25 @@ private:
 			fObjectNameLength = objectName.size();
 		}
 
+		void setCreatorName(char creatorName[N])
+		{
+			strncpy(fCreatorName, creatorName, N);
+			fCreatorNameLength = N;
+		}
+
 		CheckStream	fStreamSizeAndNumber;
+		size_t		fCreatorNameLength;
+		char		fCreatorName[N];
 		uint8_t     fObjectNameLength;
 		char        fObjectName[size_t(pow(2,(sizeof(fObjectNameLength)*8)))];
 	}__attribute__((packed));
 
 public:
-	ObjectStream()
-	: fMetadataStream(nullptr)
-	, fTheStream     (nullptr)
+	ObjectStream(const char creatorName[N])
+	: fTheStream     (nullptr)
 	, fObjectName    ("")
 	{
+		strncpy(fCreatorName, creatorName, N);
 	};
 	virtual ~ObjectStream()
 	{
@@ -184,6 +195,7 @@ public:
 			fTheStream = new std::vector<char>(Metadata::size(getObjectName()) + fHeaderStream.size() + fDataStream.size());
 			fMetadataStream = reinterpret_cast<Metadata*>(&fTheStream->at(0));
 			fMetadataStream->setObjectName(getObjectName());
+			fMetadataStream->setCreatorName(fCreatorName);
 		}
 		else
 		{
@@ -201,7 +213,12 @@ public:
 	unsigned int attachBuffer(std::vector<char>* bufferBegin)
 	{
 		fMetadataStream = reinterpret_cast<Metadata*>(&bufferBegin->at(0));
-		if(fMetadataStream->fObjectNameLength == getObjectName().size() &&  std::string(fMetadataStream->fObjectName).substr(0,fMetadataStream->fObjectNameLength) == getObjectName())
+		std::cout << __PRETTY_FUNCTION__<< "    "
+			<< +fMetadataStream->fObjectNameLength << " == " << getObjectName().size() << " | " <<  std::string(fMetadataStream->fObjectName).substr(0,fMetadataStream->fObjectNameLength) << " == " << getObjectName()
+			<< " | " << +fMetadataStream->fCreatorNameLength << " == " << N << " | " <<  std::string(fMetadataStream->fCreatorName).substr(0,fMetadataStream->fCreatorNameLength) << " == " << getCreatorName()
+			<< std::endl;
+		if(fMetadataStream->fObjectNameLength == getObjectName().size() &&  std::string(fMetadataStream->fObjectName).substr(0,fMetadataStream->fObjectNameLength) == getObjectName()
+			&& fMetadataStream->fCreatorNameLength == N &&  std::string(fMetadataStream->fCreatorName).substr(0,fMetadataStream->fCreatorNameLength) == getCreatorName())
 		{
 			fHeaderStream.copyFromStream(&bufferBegin->at(fMetadataStream->size()));
 			fDataStream  .copyFromStream(&bufferBegin->at(fMetadataStream->size() + fHeaderStream.size()));
@@ -219,6 +236,7 @@ public:
 	}
 
 protected:
+	char			   fCreatorName[N];
 	H                  fHeaderStream;
 	D                  fDataStream;
 	Metadata*          fMetadataStream;//Metadata is a stream helper and it can only p[oint to the beginning of the stream so if fTheStream = nullptr, then Metadata = nullptr
@@ -234,6 +252,15 @@ protected:
 		}
 		return fObjectName;
 	}
+
+	const std::string getCreatorName(void)
+	{
+		std::string creatorName(fCreatorName);
+		creatorName.resize(N);
+		return creatorName;
+	}
+
+
 
 }__attribute__((packed));
 

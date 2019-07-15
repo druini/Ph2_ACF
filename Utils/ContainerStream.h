@@ -79,11 +79,11 @@ public:
 }__attribute__((packed));
 
 
-template <typename C> 
-class ContainerStream : public ObjectStream<HeaderStreamChipContainer,DataStreamChipContainer<C> >
+template <typename C, size_t N > 
+class ContainerStream : public ObjectStream<HeaderStreamChipContainer,DataStreamChipContainer<C>, N>
 {
 public:
-	ContainerStream(){;}
+	ContainerStream(const char creatorName[N]) : ObjectStream<HeaderStreamChipContainer,DataStreamChipContainer<C>, N>(creatorName) {;}
 	~ContainerStream(){;}
 	
 	void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer, std::string calibrationName)

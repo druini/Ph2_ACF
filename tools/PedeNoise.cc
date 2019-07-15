@@ -242,7 +242,8 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     }
     DetectorDataContainer       theOccupancyContainer;
 	fDetectorDataContainer =   &theOccupancyContainer;
-	ContainerStream<Occupancy>  theOccupancyStream;
+    char name[] = "PedeNoise";
+	ContainerStream<Occupancy,9>  theOccupancyStream(name);
     
     ContainerFactory   theDetectorFactory;
 	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -480,7 +481,8 @@ void PedeNoise::extractPedeNoise ()
     #ifdef __USE_ROOT__
         if(!fFitted) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
     #else
-        ContainerStream<ThresholdAndNoise> theThresholdAndNoiseStream;
+        char name[] = "PedeNoise";
+        ContainerStream<ThresholdAndNoise,9>  theThresholdAndNoiseStream(name);
         for(auto board : fThresholdAndNoiseContainer )
         {
             if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer, getCalibrationName());
