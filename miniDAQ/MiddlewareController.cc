@@ -33,32 +33,32 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 
 	if (buffer == "Initialize") //changing the status changes the mode in threadMain (BBC) function.
 	{
-		send("InitializeDone");
+		return "InitializeDone";
 	}
 	if (buffer.substr(0,5) == "Start") //changing the status changes the mode in threadMain (BBC) function.
 	{
 		currentRun_ = getVariableValue("RunNumber", buffer);
 		theSystemController_->Start(stoi(currentRun_));
-		send("StartDone");
+		return "StartDone";
 	}
 	else if (buffer.substr(0,4) == "Stop")
 	{
 		//We need to think :)
 	    theSystemController_->Stop();
 	    std::cout << "Run " << currentRun_ << " stopped!" << std::endl;
-		send("StopDone");
+		return "StopDone";
 	}
 	else if (buffer == "Pause")
 	{
 		//We need to think :)
 		std::cout << "Paused" << std::endl;
-		send("PauseDone");
+		return "PauseDone";
 	}
 	else if (buffer == "Resume")
 	{
 		//We need to think :)
 		std::cout << "Resume" << std::endl;
-		send("ResumeDone");
+		return "ResumeDone";
 	}
 	//CONFIGURE
 	else if (buffer.substr(0,9) == "Configure")
@@ -81,7 +81,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 		// if(buffer.substr(10,7)  == "Physics")              theSystemController_ = new Physics                ();
 	    theSystemController_->Configure(getVariableValue("ConfigurationFile",buffer),true);
 		std::cout << "Out of configuration submodule" << std::endl;
-		send("ConfigureDone");
+		return "ConfigureDone";
 	}
 
 	if(running_||paused_) //we go through here after start and resume or pause: sending back current status
@@ -91,8 +91,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 	}
 
 
-	std::string emptyString("");
-	return emptyString;
+	return "Didn't understand the message!";
 
 }
 

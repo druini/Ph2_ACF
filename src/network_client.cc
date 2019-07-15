@@ -24,14 +24,41 @@ public:
 			std::cout << __PRETTY_FUNCTION__ << "ERROR CAN'T CONNECT TO SERVER!"<< std::endl;
 			abort();
 		}
-		std::string readBuffer = TCPClient::sendAndReceive("Initialize");
-		std::cout << __PRETTY_FUNCTION__ << "DONE WITH Initialize-" << readBuffer << "-"<< std::endl;
+		std::cout << __PRETTY_FUNCTION__ << "Client connected!" << std::endl;
+		std::string megaStringA(999994,'a');
+		std::string megaStringB(999994,'b');
+		std::string readBufferA;
+		std::string readBufferB;
+		std::cout << __PRETTY_FUNCTION__ << "Sending and receiving A!" << std::endl;
+		readBufferA = TCPClient::sendAndReceivePacket(megaStringA);
+		std::cout << __PRETTY_FUNCTION__ << "Sending and receiving B!" << std::endl;
+		readBufferB = TCPClient::sendAndReceivePacket(megaStringB);
+		for(int l=0; l<1000; l++)
+		{
+		for(int i=10; i<20; i++)
+		{
+		std::cout << __PRETTY_FUNCTION__ << "Sending A! " << i-10 << std::endl;
+		TCPClient::sendPacket(megaStringA + std::to_string(i));
+		//std::cout << __PRETTY_FUNCTION__ << "Sending B!" << std::endl;
+		//TCPClient::sendPacket(megaStringB);
+		}
+		for(int i=10; i<20; i++)
+		{
+		//std::cout << __PRETTY_FUNCTION__ << "Receiving A! " << i << std::endl;
+		readBufferA = TCPClient::receivePacket();
+		//std::cout << __PRETTY_FUNCTION__ << "Receiving B! " << i << std::endl;
+		//readBufferB = TCPClient::receivePacket();
+		}
+		}
+		std::cout << __PRETTY_FUNCTION__ << "DONE WITH Initialize-" 
+		//<< readBufferA 
+		<< "-"<< std::endl;
 	}
 
 	//========================================================================================================================
 	void configure(std::string calibrationName, std::string configurationFilePath)
 	{
-		std::string readBuffer = TCPClient::sendAndReceive("Configure,Calibration:" + calibrationName + ",ConfigurationFile:" + configurationFilePath);
+		std::string readBuffer = TCPClient::sendAndReceivePacket("Configure,Calibration:" + calibrationName + ",ConfigurationFile:" + configurationFilePath);
 		std::cout << __PRETTY_FUNCTION__ << "DONE WITH Configure-" << readBuffer << "-"<< std::endl;
 	}
 
