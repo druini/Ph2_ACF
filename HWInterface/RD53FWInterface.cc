@@ -499,46 +499,6 @@ namespace Ph2_HwInterface
     usleep(DEEPSLEEP);
 
 
-    // #######
-    // # Set #
-    // #######
-    // WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",0);
-    // usleep(200000);
-
-    // WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",0);
-    // usleep(200000);
-
-    // WriteStackReg({
-    // 	{"user.ctrl_regs.reset_reg.global_rst",1},
-    // 	  {"user.ctrl_regs.reset_reg.clk_gen_rst",1},
-    // 	    {"user.ctrl_regs.reset_reg.fmc_pll_rst",0},
-    // 	      {"user.ctrl_regs.reset_reg.cmd_rst",1},
-    // 		{"user.ctrl_regs.reset_reg.i2c_rst",1}});
-
-
-    // #########
-    // # Reset #
-    // #########
-    // WriteStackReg({
-    // 	{"user.ctrl_regs.reset_reg.global_rst",0},
-    // 	  {"user.ctrl_regs.reset_reg.clk_gen_rst",0}});
-    // usleep(400000);
-
-    // WriteStackReg({
-    // 	{"user.ctrl_regs.reset_reg.fmc_pll_rst",1},
-    // 	  {"user.ctrl_regs.reset_reg.cmd_rst",0}});
-    // usleep(400000);
-
-    // WriteReg ("user.ctrl_regs.reset_reg.i2c_rst",0);
-    // usleep(600000);
-
-    // WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",1);
-    // usleep(400000);
-
-    // WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",1);
-    // usleep(200000);
-
-
     // ########
     // # DDR3 #
     // ########

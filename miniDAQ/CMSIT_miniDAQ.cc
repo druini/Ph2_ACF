@@ -17,8 +17,6 @@
 #include "../tools/RD53SCurve.h"
 #include "../tools/RD53Gain.h"
 
-#include <fstream>
-
 
 // ##################
 // # Default values #
@@ -26,9 +24,6 @@
 #define FileRUNNUMBER "./RunNumber.txt"
 #define RUNNUMBER     "0000"
 
-
-using namespace CommandLineProcessing;
-using namespace Ph2_System;
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -38,7 +33,6 @@ auto FindValue (const SystemController& sc, const char* name)
   auto setting = sc.fSettingsMap.find(name);
   return ((setting != std::end(sc.fSettingsMap)) ? setting->second : 0);
 }
-
 
 void InitParameters (const SystemController& sc,
 
@@ -100,7 +94,6 @@ void InitParameters (const SystemController& sc,
   display         = FindValue(sc,"DisplayHisto");
   chipRegDefault  = FindValue(sc,"ChipRegDefaultFile");
 }
-
 
 void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type, bool hitOr)
 // ###################
@@ -193,7 +186,6 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type, boo
     }
 }
 
-
 void ConfigureExtClkTrig (SystemController& sc)
 {
   const uint8_t chnOutEnable = 0b10010;
@@ -217,7 +209,6 @@ void ConfigureExtClkTrig (SystemController& sc)
     }
 }
 
-
 int main (int argc, char** argv)
 {
   // ########################
@@ -230,34 +221,34 @@ int main (int argc, char** argv)
   // #############################
   // # Initialize command parser #
   // #############################
-  ArgvParser cmd;
+  CommandLineProcessing::ArgvParser cmd;
 
   cmd.setIntroductoryDescription("@@@ CMSIT Middleware System Test Application @@@");
 
   cmd.setHelpOption("h","help","Print this help page");
 
-  cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml",ArgvParser::OptionRequiresValue);
+  cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml",CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin]. Default: pixelalive", ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
-  cmd.defineOption ("raw", "Save raw data. Default: disabled", ArgvParser::NoOptionAttribute);
+  cmd.defineOption ("raw", "Save raw data. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("raw", "r");
 
-  cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", ArgvParser::NoOptionAttribute);
+  cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("ext", "x");
 
-  cmd.defineOption ("hitor", "Use Hit-Or signal to trigger. Default: disabled", ArgvParser::NoOptionAttribute);
+  cmd.defineOption ("hitor", "Use Hit-Or signal to trigger. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("hitor", "o");
 
   // @TMP@
-  cmd.defineOption("reset","Reset the hardware", ArgvParser::NoOptionAttribute);
+  cmd.defineOption("reset","Reset the hardware", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative("reset", "s");
 
   int result = cmd.parse(argc,argv);
 
-  if (result != ArgvParser::NoParserError)
+  if (result != CommandLineProcessing::ArgvParser::NoParserError)
     {
       LOG (INFO) << cmd.parseErrorDescription(result);
       exit(EXIT_FAILURE);
