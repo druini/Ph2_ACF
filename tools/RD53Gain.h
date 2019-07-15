@@ -29,8 +29,6 @@
 #define INTERCEPT_HALFRANGE 6 // [ToT]
 
 
-using namespace Ph2_System;
-
 // ##########################
 // # Gain measurement suite #
 // ##########################

@@ -19,14 +19,12 @@
 #include "../HWDescription/RD53.h"
 
 
-using namespace Ph2_HwDescription;
-
 namespace Ph2_HwInterface
 {
   class RD53Event : public Event
   {
   public:
-  RD53Event(std::vector<size_t>&& module_id, std::vector<size_t>&& chip_id, std::vector<RD53::Event>&& events)
+  RD53Event(std::vector<size_t>&& module_id, std::vector<size_t>&& chip_id, std::vector<Ph2_HwDescription::RD53::Event>&& events)
     : module_id_vec(std::move(module_id)), chip_id_vec(std::move(chip_id)), chip_events(std::move(events)) {}
 
   void fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
@@ -56,9 +54,9 @@ namespace Ph2_HwInterface
   private:
   bool isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const;
 
-  std::vector<size_t>      module_id_vec;
-  std::vector<size_t>      chip_id_vec;
-  std::vector<RD53::Event> chip_events;
+  std::vector<size_t> module_id_vec;
+  std::vector<size_t> chip_id_vec;
+  std::vector<Ph2_HwDescription::RD53::Event> chip_events;
 
 
   protected:

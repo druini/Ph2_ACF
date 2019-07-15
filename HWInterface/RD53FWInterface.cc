@@ -42,6 +42,18 @@ namespace Ph2_HwInterface
     return cVersionWord;
   }
 
+  // @TMP@
+  void RD53FWInterface::ResetSequence ()
+  {
+    LOG (INFO) << BOLDMAGENTA << "Resetting the chip... it may take a while" << RESET;
+
+    this->TurnOffFMC();
+    this->TurnOnFMC();
+    this->ResetBoard();
+
+    LOG (INFO) << BOLDMAGENTA << "Powercycle SCC and run again" << RESET;
+  }
+
   void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)
   {
     // @TMP@
@@ -54,9 +66,6 @@ namespace Ph2_HwInterface
     this->ChipReset();
     this->ChipReSync();
 
-    // Wait for user to reset power to the chip
-    // LOG (INFO) << BOLDMAGENTA << "Powercycle SCC and press any key to continue: " << RESET;
-    // system("read");
 
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
 
@@ -348,14 +357,16 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
-    uint8_t     status;
-    bool        retry;
+    uint8_t status;
+    bool    retry;
+    int     nTrials = 0;
     
     this->localCfgFastCmd.n_triggers = pNEvents;
     this->ConfigureFastCommands();
 
     do
       {
+	nTrials++;
 	retry = false;
 	pData.clear();
 
@@ -405,8 +416,13 @@ namespace Ph2_HwInterface
 	    continue;
 	  }
 
-
-      } while (retry == true);
+      } while ((retry == true) && (nTrials < MAXTRIALS));
+    
+    if (retry == true)
+      {
+	LOG (ERROR) << BOLDRED << "Reached the maximum number of trals (" << BOLDYELLOW << MAXTRIALS << BOLDRED << ") without success" << RESET;
+	pData.clear();
+      }
   }
 
   std::vector<uint32_t> RD53FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
@@ -464,7 +480,7 @@ namespace Ph2_HwInterface
     WriteReg ("user.ctrl_regs.reset_reg.global_rst",0);
     usleep(DEEPSLEEP);
 
-    WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",0);
+    WriteReg ("user.ctrl_regs.reset_reg.clk_gen_rst",0);
     usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.fmc_pll_rst",1);
@@ -481,6 +497,46 @@ namespace Ph2_HwInterface
 
     WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",1);
     usleep(DEEPSLEEP);
+
+
+    // #######
+    // # Set #
+    // #######
+    // WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",0);
+    // usleep(200000);
+
+    // WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",0);
+    // usleep(200000);
+
+    // WriteStackReg({
+    // 	{"user.ctrl_regs.reset_reg.global_rst",1},
+    // 	  {"user.ctrl_regs.reset_reg.clk_gen_rst",1},
+    // 	    {"user.ctrl_regs.reset_reg.fmc_pll_rst",0},
+    // 	      {"user.ctrl_regs.reset_reg.cmd_rst",1},
+    // 		{"user.ctrl_regs.reset_reg.i2c_rst",1}});
+
+
+    // #########
+    // # Reset #
+    // #########
+    // WriteStackReg({
+    // 	{"user.ctrl_regs.reset_reg.global_rst",0},
+    // 	  {"user.ctrl_regs.reset_reg.clk_gen_rst",0}});
+    // usleep(400000);
+
+    // WriteStackReg({
+    // 	{"user.ctrl_regs.reset_reg.fmc_pll_rst",1},
+    // 	  {"user.ctrl_regs.reset_reg.cmd_rst",0}});
+    // usleep(400000);
+
+    // WriteReg ("user.ctrl_regs.reset_reg.i2c_rst",0);
+    // usleep(600000);
+
+    // WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",1);
+    // usleep(400000);
+
+    // WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",1);
+    // usleep(200000);
 
 
     // ########

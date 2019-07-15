@@ -21,8 +21,6 @@
 #include "TH1F.h"
 
 
-using namespace Ph2_System;
-
 // ######################
 // # Latency test suite #
 // ######################

@@ -25,6 +25,7 @@
 // ################################
 #define DEEPSLEEP  500000 // [microseconds]
 #define SHALLOWSLEEP   50 // [microseconds]
+#define MAXTRIALS      10 // Maximum number of trials for ReadNEvents
 
 #define NBIT_FWVER     16 // Number of bits for the firmware version
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
@@ -78,8 +79,6 @@ namespace RD53FWEvtEncoder
 }
 
 
-using namespace Ph2_HwDescription;
-
 namespace Ph2_HwInterface
 {
   class RD53FWInterface: public BeBoardFWInterface
@@ -95,6 +94,7 @@ namespace Ph2_HwInterface
     uint32_t  getBoardInfo   ()                      override;
     BoardType getBoardType   () const { return BoardType::FC7; };
 
+    void ResetSequence       (); // @TMP@
     void ConfigureBoard      (const BeBoard* pBoard) override;
 
     void Start                 () override;

@@ -25,8 +25,6 @@
 #define NPIXCMD      40 // Number of pixel commands to stack
 
 
-using namespace Ph2_HwDescription;
-
 namespace Ph2_HwInterface
 {
   class RD53Interface: public ReadoutChipInterface

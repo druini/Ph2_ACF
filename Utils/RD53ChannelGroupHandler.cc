@@ -11,8 +11,8 @@
 
 RD53ChannelGroupHandler::RD53ChannelGroupHandler()
 {
-  allChannelGroup_     = new ChannelGroup<RD53::nRows,RD53::nCols>();
-  currentChannelGroup_ = new ChannelGroup<RD53::nRows,RD53::nCols>();
+  allChannelGroup_     = new ChannelGroup<Ph2_HwDescription::RD53::nRows,Ph2_HwDescription::RD53::nCols>();
+  currentChannelGroup_ = new ChannelGroup<Ph2_HwDescription::RD53::nRows,Ph2_HwDescription::RD53::nCols>();
 }
 
 RD53ChannelGroupHandler::~RD53ChannelGroupHandler()

@@ -14,8 +14,6 @@
 #include "RD53PixelAlive.h"
 
 
-using namespace Ph2_System;
-
 // #####################################
 // # Threshold minimization test suite #
 // #####################################

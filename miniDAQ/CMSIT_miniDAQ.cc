@@ -251,6 +251,10 @@ int main (int argc, char** argv)
   cmd.defineOption ("hitor", "Use Hit-Or signal to trigger. Default: disabled", ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("hitor", "o");
 
+  // @TMP@
+  cmd.defineOption("reset","Reset the hardware", ArgvParser::NoOptionAttribute);
+  cmd.defineOptionAlternative("reset", "s");
+
   int result = cmd.parse(argc,argv);
 
   if (result != ArgvParser::NoParserError)
@@ -259,17 +263,27 @@ int main (int argc, char** argv)
       exit(EXIT_FAILURE);
     }
 
-  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "CMSIT.xml";
-  std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
-  bool saveRaw           = cmd.foundOption("raw")    == true ? true : false;
-  bool extClkTrg         = cmd.foundOption("ext")    == true ? true : false;
-  bool hitOr             = cmd.foundOption("hitor")  == true ? true : false;
+  std::string configFile = cmd.foundOption("file")  == true ? cmd.optionValue("file") : "CMSIT.xml";
+  std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "pixelalive";
+  bool saveRaw           = cmd.foundOption("raw")   == true ? true : false;
+  bool extClkTrg         = cmd.foundOption("ext")   == true ? true : false;
+  bool hitOr             = cmd.foundOption("hitor") == true ? true : false;
+  bool reset             = cmd.foundOption("reset") == true ? true : false; // @TMP@
 
 
   // ##################################
   // # Instantiate a SystemController #
   // ##################################
   SystemController cSystemController;
+  // @TMP@
+  if (reset == true)
+    {
+      std::stringstream outp;
+      cSystemController.InitializeHw(configFile, outp, true, false);
+      cSystemController.InitializeSettings(configFile, outp);
+      static_cast<RD53FWInterface*>(cSystemController.fBeBoardFWMap[cSystemController.fBoardVector[0]->getBeBoardId()])->ResetSequence();
+      exit(EXIT_SUCCESS);
+    }
 
 
   // ###################
@@ -302,6 +316,7 @@ int main (int argc, char** argv)
   size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, targetCharge, KrumCurrStart, KrumCurrStop, targetOccupancy, ThrStart, ThrStop, display, chipRegDefault;
   std::string INJtype;
   InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, targetCharge, KrumCurrStart, KrumCurrStop, targetOccupancy, ThrStart, ThrStop, display, chipRegDefault);
+
 
   // ######################################
   // # Correct injection pattern for RD53 #

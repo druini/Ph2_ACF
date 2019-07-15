@@ -14,8 +14,6 @@
 #include "RD53Gain.h"
 
 
-using namespace Ph2_System;
-
 // ################################
 // # Gain optimization test suite #
 // ################################

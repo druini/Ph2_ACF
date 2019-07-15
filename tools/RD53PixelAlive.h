@@ -22,15 +22,13 @@
 #include "TApplication.h"
 
 
-using namespace Ph2_System;
-
 // #########################
 // # PixelAlive test suite #
 // #########################
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive  (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
+  PixelAlive (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
 
   void Run                                       ();
   void Draw                                      (bool display, bool save);

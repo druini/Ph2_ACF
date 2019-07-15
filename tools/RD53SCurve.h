@@ -23,8 +23,6 @@
 #include "TH2F.h"
 
 
-using namespace Ph2_System;
-
 // #####################
 // # SCurve test suite #
 // #####################
