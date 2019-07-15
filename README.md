@@ -169,7 +169,7 @@ How to setup up and run the IT-system:
 4. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
 5. `cd chose_a_name`
 6. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the frontend chips (just once)
-7. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` or run `CMSIT_miniDAQ --help` for help
+7. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
 
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
 ```
