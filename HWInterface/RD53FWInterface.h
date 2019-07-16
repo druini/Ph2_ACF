@@ -75,7 +75,7 @@ namespace RD53FWEvtEncoder
   const uint8_t EVSIZE = 0x02; // Event status Invalid event size
   const uint8_t EMPTY  = 0x04; // Event status Empty event
   const uint8_t L1A    = 0x08; // Event status L1A counter mismatch
-  const uint8_t FRSIZE = 0x16; // Event status Invalid frame size
+  const uint8_t FRSIZE = 0x10; // Event status Invalid frame size
 }
 
 

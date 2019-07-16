@@ -37,8 +37,8 @@ class ThrEqualization : public Tool
   ThrEqualization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst);
   ~ThrEqualization ();
 
-  void Run  (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
-  void Draw (bool display, bool save);
+  void run  (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
+  void draw (bool display, bool save);
 
  private:
   const char* fileRes;
@@ -55,11 +55,11 @@ class ThrEqualization : public Tool
   DetectorDataContainer theOccContainer;
   DetectorDataContainer theTDACcontainer;
 
-  void InitHisto       ();
-  void FillHisto       ();
-  void Display         ();
-  void Save            ();
-  void ChipErrorReport ();
+  void initHisto       ();
+  void fillHisto       ();
+  void display         ();
+  void save            ();
+  void chipErrorReport ();
 
 
   // ########

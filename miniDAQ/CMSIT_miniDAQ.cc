@@ -318,9 +318,9 @@ int main (int argc, char** argv)
       std::string fileName("Run" + runNumber + "_Latency.root");
       Latency la(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
       la.Inherit(&cSystemController);
-      la.Run();
-      la.Analyze();
-      la.Draw(display,true);
+      la.run();
+      la.analyze();
+      la.draw(display,true);
     }
   else if (whichCalib == "pixelalive")
     {
@@ -332,9 +332,9 @@ int main (int argc, char** argv)
       std::string fileName("Run" + runNumber + "_PixelAlive");
       PixelAlive pa(fileName.c_str(), "", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, true);
       pa.Inherit(&cSystemController);
-      pa.Run();
-      pa.Analyze();
-      pa.Draw(display,true);
+      pa.run();
+      pa.analyze();
+      pa.draw(display,true);
     }
   else if (whichCalib == "noise")
     {
@@ -349,9 +349,9 @@ int main (int argc, char** argv)
       else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
       PixelAlive pa(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false, targetOccupancy);
       pa.Inherit(&cSystemController);
-      pa.Run();
-      pa.Analyze();
-      pa.Draw(display,true);
+      pa.run();
+      pa.analyze();
+      pa.draw(display,true);
     }
   else if (whichCalib == "scurve")
     {
@@ -363,9 +363,9 @@ int main (int argc, char** argv)
       std::string fileName("Run" + runNumber + "_SCurve");
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
       sc.Inherit(&cSystemController);
-      sc.Run();
-      sc.Analyze();
-      sc.Draw(display,true);
+      sc.run();
+      sc.analyze();
+      sc.draw(display,true);
     }
   else if (whichCalib == "gain")
     {
@@ -377,9 +377,9 @@ int main (int argc, char** argv)
       std::string fileName("Run" + runNumber + "_Gain.root");
       Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       ga.Inherit(&cSystemController);
-      ga.Run();
-      ga.Analyze();
-      ga.Draw(display,true);
+      ga.run();
+      ga.analyze();
+      ga.draw(display,true);
     }
   else if (whichCalib == "threqu")
     {
@@ -391,17 +391,17 @@ int main (int argc, char** argv)
       std::string fileName("Run" + runNumber + "_ThrEqualization.root");
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
       sc.Inherit(&cSystemController);
-      sc.Run();
-      auto output = sc.Analyze();
-      sc.Draw(false,true);
+      sc.run();
+      auto output = sc.analyze();
+      sc.draw(false,true);
 
       std::string chipConfig;
       if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
       else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
       ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents*VCALnsteps, nEvents);
       te.Inherit(&cSystemController);
-      te.Run(output);
-      te.Draw(display,true);
+      te.run(output);
+      te.draw(display,true);
     }
   else if (whichCalib == "gainopt")
     {
@@ -416,8 +416,8 @@ int main (int argc, char** argv)
       else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
       GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, RD53chargeConverter::Charge2VCal(targetCharge), KrumCurrStart, KrumCurrStop);
       go.Inherit(&cSystemController);
-      go.Run();
-      go.Draw(display,true);
+      go.run();
+      go.draw(display,true);
     }
   else if (whichCalib == "thrmin")
     {
@@ -432,9 +432,9 @@ int main (int argc, char** argv)
       else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
       ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, targetOccupancy, ThrStart, ThrStop);
       tm.Inherit(&cSystemController);
-      tm.Run();
-      tm.Analyze();
-      tm.Draw(display,true);
+      tm.run();
+      tm.analyze();
+      tm.draw(display,true);
     }
   else LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
 

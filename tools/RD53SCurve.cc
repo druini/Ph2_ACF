@@ -9,20 +9,20 @@
 
 #include "RD53SCurve.h"
 
-SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset) :
-  fileRes     (fileRes),
-  rowStart    (rowStart),
-  rowStop     (rowStop),
-  colStart    (colStart),
-  colStop     (colStop),
-  nPixels2Inj (nPixels2Inj),
-  nEvents     (nEvents),
-  startValue  (startValue),
-  stopValue   (stopValue),
-  nSteps      (nSteps),
-  offset      (offset),
-  histos      (nEvents, startValue-offset, stopValue-offset, nSteps),
-  Tool        ()
+SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset)
+  : fileRes     (fileRes)
+  , rowStart    (rowStart)
+  , rowStop     (rowStop)
+  , colStart    (colStart)
+  , colStop     (colStop)
+  , nPixels2Inj (nPixels2Inj)
+  , nEvents     (nEvents)
+  , startValue  (startValue)
+  , stopValue   (stopValue)
+  , nSteps      (nSteps)
+  , offset      (offset)
+  , histos      (nEvents, startValue-offset, stopValue-offset, nSteps)
+  , Tool        ()
 {
   // ########################
   // # Custom channel group #
@@ -47,15 +47,15 @@ SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t col
 }
 
 
-void SCurve::Run ()
+void SCurve::run ()
 {
-  // ################
-  // # Set VCAL_MED #
-  // ################
-    for (const auto cBoard : *fDetectorContainer)
-      for (const auto cModule : *cBoard)
-	for (const auto cChip : *cModule)
-	    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
+  // ##########################
+  // # Set new VCAL_MED value #
+  // ##########################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+	this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
 
 
   ContainerFactory theDetectorFactory;
@@ -78,29 +78,29 @@ void SCurve::Run ()
   // ################
   // # Error report #
   // ################
-  this->ChipErrorReport();
+  this->chipErrorReport();
 }
 
-void SCurve::Draw (bool display, bool save)
+void SCurve::draw (bool display, bool save)
 {
   TApplication* myApp;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
   if (save    == true)
     {
-      CreateResultDirectory("Results");
-      InitResultFile(fileRes);
+      this->CreateResultDirectory("Results");
+      this->InitResultFile(fileRes);
     }
 
-  this->InitHisto();
-  this->FillHisto();
-  this->Display();
+  this->initHisto();
+  this->fillHisto();
+  this->display();
 
   if (save    == true) this->WriteRootFile();
   if (display == true) myApp->Run();
 }
 
-std::shared_ptr<DetectorDataContainer> SCurve::Analyze ()
+std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 {
   float nHits, mean, rms;
   std::vector<float> measurements(dacList.size(),0);
@@ -114,8 +114,6 @@ std::shared_ptr<DetectorDataContainer> SCurve::Analyze ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
-
 	  for (auto row = 0; row < RD53::nRows; row++)
 	    for (auto col = 0; col < RD53::nCols; col++)
 	      {
@@ -123,7 +121,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::Analyze ()
 		  measurements[i+1] = (detectorContainerVector[i+1]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy - 
 				       detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
 
-		this->ComputeStats(measurements, VCalOffset, nHits, mean, rms);
+		this->computeStats(measurements, offset, nHits, mean, rms);
 
 		if ((rms > 0) && (nHits > 0) && (isnan(rms) == false))
 		  {
@@ -144,21 +142,18 @@ std::shared_ptr<DetectorDataContainer> SCurve::Analyze ()
   return theThresholdAndNoiseContainer;
 }
 
-void SCurve::InitHisto () { 
-    histos.book(fResultFile, *fDetectorContainer); 
+void SCurve::initHisto () { histos.book(fResultFile, *fDetectorContainer); }
+
+void SCurve::fillHisto()
+{
+  for (auto i = 0; i < dacList.size(); i++)
+    histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
+  histos.fillThresholdNoise(*theThresholdAndNoiseContainer); 
 }
 
-void SCurve::FillHisto() { 
-    for (auto i = 0; i < dacList.size(); i++)
-        histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
-    histos.fillThresholdNoise(*theThresholdAndNoiseContainer); 
-}
+void SCurve::display() { histos.process(); }
 
-void SCurve::Display() { 
-    histos.process(); 
-}
-
-void SCurve::ComputeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
+void SCurve::computeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
 {
   float mean2  = 0;
   float weight = 0;
@@ -186,7 +181,7 @@ void SCurve::ComputeStats (std::vector<float>& measurements, int offset, float& 
     }
 }
 
-void SCurve::ChipErrorReport ()
+void SCurve::chipErrorReport ()
 {
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 

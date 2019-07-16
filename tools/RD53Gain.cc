@@ -9,18 +9,18 @@
 
 #include "RD53Gain.h"
 
-Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
-  fileRes     (fileRes),
-  rowStart    (rowStart),
-  rowStop     (rowStop),
-  colStart    (colStart),
-  colStop     (colStop),
-  nPixels2Inj (nPixels2Inj),
-  nEvents     (nEvents),
-  startValue  (startValue),
-  stopValue   (stopValue),
-  nSteps      (nSteps),
-  Tool        ()
+Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps)
+  : fileRes     (fileRes)
+  , rowStart    (rowStart)
+  , rowStop     (rowStop)
+  , colStart    (colStart)
+  , colStop     (colStop)
+  , nPixels2Inj (nPixels2Inj)
+  , nEvents     (nEvents)
+  , startValue  (startValue)
+  , stopValue   (stopValue)
+  , nSteps      (nSteps)
+  , Tool        ()
 {
   // ########################
   // # Custom channel group #
@@ -84,7 +84,7 @@ Gain::~Gain ()
   for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
 }
 
-void Gain::Run ()
+void Gain::run ()
 {
   ContainerFactory theDetectorFactory;
 
@@ -106,27 +106,27 @@ void Gain::Run ()
   // ################
   // # Error report #
   // ################
-  this->ChipErrorReport();
+  this->chipErrorReport();
 
 }
 
-void Gain::Draw (bool display, bool save)
+void Gain::draw (bool display, bool save)
 {
   TApplication* myApp;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  this->InitHisto();
-  this->FillHisto();
-  this->Display();
+  this->initHisto();
+  this->fillHisto();
+  this->display();
 
-  if (save    == true) this->Save();
+  if (save    == true) this->save();
   if (display == true) myApp->Run();
 
   theFile->Close();
 }
 
-std::shared_ptr<DetectorDataContainer> Gain::Analyze ()
+std::shared_ptr<DetectorDataContainer> Gain::analyze ()
 {
   double gain, gainErr, intercept, interceptErr;
   std::vector<float> x(dacList.size(),0);
@@ -154,7 +154,7 @@ std::shared_ptr<DetectorDataContainer> Gain::Analyze ()
 		    e[i] = detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPhError;
 		  }
 		
-		this->ComputeStats(x,y,e,gain,gainErr,intercept,interceptErr);
+		this->computeStats(x,y,e,gain,gainErr,intercept,interceptErr);
 		
 		if (gain != 0)
 		  {
@@ -171,7 +171,7 @@ std::shared_ptr<DetectorDataContainer> Gain::Analyze ()
   return theGainAndInterceptContainer;
 }
 
-void Gain::InitHisto ()
+void Gain::initHisto ()
 {
   std::stringstream myString;
 
@@ -276,7 +276,7 @@ void Gain::InitHisto ()
   theFile = new TFile(fileRes, "UPDATE");
 }
 
-void Gain::FillHisto ()
+void Gain::fillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
@@ -305,7 +305,7 @@ void Gain::FillHisto ()
 	}
 }
 
-void Gain::Display ()
+void Gain::display ()
 {
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -388,7 +388,7 @@ void Gain::Display ()
     }
 }
 
-void Gain::Save ()
+void Gain::save ()
 {
   for (auto i = 0; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
   for (auto i = 0; i < theCanvasGa1D.size(); i++) theCanvasGa1D[i]->Write();
@@ -397,7 +397,7 @@ void Gain::Save ()
   for (auto i = 0; i < theCanvasIn2D.size(); i++) theCanvasIn2D[i]->Write();
 }
 
-void Gain::ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
+void Gain::computeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
 // ##############################################
 // # Linear regression with least-square method #
 // # Model: y = f(x) = q + mx                   #
@@ -466,7 +466,7 @@ void Gain::ComputeStats (std::vector<float>& x, std::vector<float>& y, std::vect
   gainErr      = sqrt(gainErr);
 }
 
-void Gain::ChipErrorReport ()
+void Gain::chipErrorReport ()
 {
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 

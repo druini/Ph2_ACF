@@ -38,9 +38,9 @@ class Gain : public Tool
   Gain  (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
   ~Gain ();
 
-  void Run                                       ();
-  void Draw                                      (bool display, bool save);
-  std::shared_ptr<DetectorDataContainer> Analyze ();
+  void run                                       ();
+  void draw                                      (bool display, bool save);
+  std::shared_ptr<DetectorDataContainer> analyze ();
 
  private:
   const char* fileRes;
@@ -60,12 +60,12 @@ class Gain : public Tool
   std::vector<DetectorDataContainer*>      detectorContainerVector;
   std::shared_ptr<DetectorDataContainer>   theGainAndInterceptContainer;
 
-  void InitHisto       ();
-  void FillHisto       ();
-  void Display         ();
-  void Save            ();
-  void ComputeStats    (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
-  void ChipErrorReport ();
+  void initHisto       ();
+  void fillHisto       ();
+  void display         ();
+  void save            ();
+  void computeStats    (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
+  void chipErrorReport ();
 
 
   // ########

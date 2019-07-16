@@ -9,17 +9,17 @@
 
 #include "RD53ThrEqualization.h"
 
-ThrEqualization::ThrEqualization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst) :
-  fileRes     (fileRes),
-  fileReg     (fileReg),
-  rowStart    (rowStart),
-  rowStop     (rowStop),
-  colStart    (colStart),
-  colStop     (colStop),
-  nPixels2Inj (nPixels2Inj),
-  nEvents     (nEvents),
-  nEvtsBurst  (nEvtsBurst),
-  Tool        ()
+ThrEqualization::ThrEqualization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst)
+  : fileRes     (fileRes)
+  , fileReg     (fileReg)
+  , rowStart    (rowStart)
+  , rowStop     (rowStop)
+  , colStart    (colStart)
+  , colStop     (colStop)
+  , nPixels2Inj (nPixels2Inj)
+  , nEvents     (nEvents)
+  , nEvtsBurst  (nEvtsBurst)
+  , Tool        ()
 {
   // ########################
   // # Custom channel group #
@@ -54,11 +54,11 @@ ThrEqualization::~ThrEqualization ()
     }
 }
 
-void ThrEqualization::Run (std::shared_ptr<DetectorDataContainer> newVCal)
+void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
 {
-  // #######################
-  // # Use new VCal values #
-  // #######################
+  // ############################
+  // # Set new VCAL_HIGH values #
+  // ############################
   if (newVCal != nullptr)
     for (const auto cBoard : *fDetectorContainer)
       for (const auto cModule : *cBoard)
@@ -95,26 +95,26 @@ void ThrEqualization::Run (std::shared_ptr<DetectorDataContainer> newVCal)
   // ################
   // # Error report #
   // ################
-  this->ChipErrorReport();
+  this->chipErrorReport();
 }
 
-void ThrEqualization::Draw (bool display, bool save)
+void ThrEqualization::draw (bool display, bool save)
 {
   TApplication* myApp;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  this->InitHisto();
-  this->FillHisto();
-  this->Display();
+  this->initHisto();
+  this->fillHisto();
+  this->display();
 
-  if (save    == true) this->Save();
+  if (save    == true) this->save();
   if (display == true) myApp->Run();
 
   theFile->Close();
 }
 
-void ThrEqualization::InitHisto ()
+void ThrEqualization::initHisto ()
 {
   std::stringstream myString;
   size_t TDACsize = RD53::SetBits(RD53PixelEncoder::NBIT_TDAC) + 1;
@@ -167,7 +167,7 @@ void ThrEqualization::InitHisto ()
   theFile = new TFile(fileRes, "UPDATE");
 }
 
-void ThrEqualization::FillHisto ()
+void ThrEqualization::fillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : theOccContainer)
@@ -188,7 +188,7 @@ void ThrEqualization::FillHisto ()
 	}
 }
 
-void ThrEqualization::Display ()
+void ThrEqualization::display ()
 {
   for (auto i = 0; i < theCanvasOcc.size(); i++)
     {
@@ -207,7 +207,7 @@ void ThrEqualization::Display ()
     }
 }
 
-void ThrEqualization::Save ()
+void ThrEqualization::save ()
 {
   for (auto i = 0; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
   for (auto i = 0; i < theCanvasTDAC.size(); i++) theCanvasTDAC[i]->Write();
@@ -231,7 +231,7 @@ void ThrEqualization::Save ()
 	}
 }
 
-void ThrEqualization::ChipErrorReport ()
+void ThrEqualization::chipErrorReport ()
 {
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 

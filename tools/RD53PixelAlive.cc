@@ -9,20 +9,20 @@
 
 #include "RD53PixelAlive.h"
 
-PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject, float thresholdOccupancy) :
-  fileRes            (fileRes),
-  fileReg            (fileReg),
-  rowStart           (rowStart),
-  rowStop            (rowStop),
-  colStart           (colStart),
-  colStop            (colStop),
-  nPixels2Inj        (nPixels2Inj),
-  nEvents            (nEvents),
-  nEvtsBurst         (nEvtsBurst),
-  inject             (inject),
-  thresholdOccupancy (thresholdOccupancy),
-  histos             (nEvents),
-  Tool               ()
+PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject, float thresholdOccupancy)
+  : fileRes            (fileRes)
+  , fileReg            (fileReg)
+  , rowStart           (rowStart)
+  , rowStop            (rowStop)
+  , colStart           (colStart)
+  , colStop            (colStop)
+  , nPixels2Inj        (nPixels2Inj)
+  , nEvents            (nEvents)
+  , nEvtsBurst         (nEvtsBurst)
+  , inject             (inject)
+  , thresholdOccupancy (thresholdOccupancy)
+  , histos             (nEvents)
+  , Tool               ()
 {
   // ########################
   // # Custom channel group #
@@ -39,7 +39,7 @@ PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStar
   theChnGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
 
-void PixelAlive::Run ()
+void PixelAlive::run ()
 {
   ContainerFactory theDetectorFactory;
 
@@ -56,29 +56,29 @@ void PixelAlive::Run ()
   // ################
   // # Error report #
   // ################
-  this->ChipErrorReport();
+  this->chipErrorReport();
 }
 
-void PixelAlive::Draw (bool display, bool save)
+void PixelAlive::draw (bool display, bool save)
 {
   TApplication* myApp;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
   if (save    == true)
     {
-      CreateResultDirectory("Results");
-      InitResultFile(fileRes);
+      this->CreateResultDirectory("Results");
+      this->InitResultFile(fileRes);
     }
 
-  this->InitHisto();
-  this->FillHisto();
-  this->Display();
+  this->initHisto();
+  this->fillHisto();
+  this->display();
 
   if (save    == true) this->WriteRootFile();
   if (display == true) myApp->Run();
 }
 
-std::shared_ptr<DetectorDataContainer> PixelAlive::Analyze ()
+std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
 {
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
@@ -101,11 +101,11 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::Analyze ()
   return theOccContainer;
 }
 
-void PixelAlive::InitHisto () { histos.book(fResultFile, *fDetectorContainer); }
-void PixelAlive::FillHisto () { histos.fill(*theOccContainer.get());           }
-void PixelAlive::Display   () { histos.process();                              }
+void PixelAlive::initHisto () { histos.book(fResultFile, *fDetectorContainer); }
+void PixelAlive::fillHisto () { histos.fill(*theOccContainer.get());           }
+void PixelAlive::display   () { histos.process();                              }
 
-void PixelAlive::ChipErrorReport ()
+void PixelAlive::chipErrorReport ()
 {
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 

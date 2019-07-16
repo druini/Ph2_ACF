@@ -394,13 +394,6 @@ namespace Ph2_HwInterface
 	// ##################
 	// # Error checking #
 	// ##################
-	if (pData.size() == 0)
-	  {
-	    LOG (ERROR) << BOLDRED << "Sent " << this->localCfgFastCmd.n_triggers << " triggers, but no data collected " << BOLDYELLOW << "--> retry" << RESET;
-	    retry = true;
-	    continue;
-	  }
-
 	auto events = this->DecodeEvents(pData, status);
 	// this->PrintEvents(events, &pData); // @TMP@
 	if (this->EvtErrorHandler(status) == false)
@@ -433,16 +426,18 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::TurnOffFMC()
   {
-    WriteStackReg({{"system.ctrl_2.fmc_pg_c2m",    0},
-	  {"system.ctrl_2.fmc_l8_pwr_en", 0},
-	  {"system.ctrl_2.fmc_l12_pwr_en",0}});
+    WriteStackReg({
+	{"system.ctrl_2.fmc_pg_c2m",    0},
+	{"system.ctrl_2.fmc_l8_pwr_en", 0},
+	{"system.ctrl_2.fmc_l12_pwr_en",0}});
   }
 
   void RD53FWInterface::TurnOnFMC()
   {
-    WriteStackReg({{"system.ctrl_2.fmc_l12_pwr_en",1},
-	  {"system.ctrl_2.fmc_l8_pwr_en", 1},
-	  {"system.ctrl_2.fmc_pg_c2m",    1}});
+    WriteStackReg({
+	{"system.ctrl_2.fmc_l12_pwr_en",1},
+	{"system.ctrl_2.fmc_l8_pwr_en", 1},
+	{"system.ctrl_2.fmc_pg_c2m",    1}});
 
     usleep(DEEPSLEEP);
   }
@@ -544,15 +539,18 @@ namespace Ph2_HwInterface
   std::vector<RD53FWInterface::Event> RD53FWInterface::DecodeEvents (const std::vector<uint32_t>& data, uint8_t& evtStatus)
   {
     std::vector<size_t> event_start;
-    size_t maxL1Counter = RD53::SetBits(RD53EvtEncoder::NBIT_TRIGID)+1;
+    std::vector<RD53FWInterface::Event> events;
+    size_t maxL1Counter = RD53::SetBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
     if (data.size() != 0) evtStatus = RD53FWEvtEncoder::GOOD;
-    else                  evtStatus = RD53FWEvtEncoder::EMPTY;
+    else
+      {
+	evtStatus = RD53FWEvtEncoder::EMPTY;
+	return events;
+      }
 
     for (auto i = 0; i < data.size(); i++)
       if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) event_start.push_back(i);
-
-    std::vector<RD53FWInterface::Event> events;
     events.reserve(event_start.size());
     
     for (auto i = 0; i < event_start.size(); i++)

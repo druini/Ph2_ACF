@@ -9,22 +9,22 @@
 
 #include "RD53GainOptimization.h"
 
-GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetCharge, size_t KrumCurrStart, size_t KrumCurrStop) :
-  fileRes       (fileRes),
-  fileReg       (fileReg),
-  rowStart      (rowStart),
-  rowStop       (rowStop),
-  colStart      (colStart),
-  colStop       (colStop),
-  nPixels2Inj   (nPixels2Inj),
-  nEvents       (nEvents),
-  startValue    (startValue),
-  stopValue     (stopValue),
-  nSteps        (nSteps),
-  targetCharge  (targetCharge),
-  KrumCurrStart (KrumCurrStart),
-  KrumCurrStop  (KrumCurrStop),
-  Gain          (fileRes, rowStart, rowStop, colStart, colStop, nPixels2Inj, nEvents, startValue, stopValue, nSteps)
+GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetCharge, size_t KrumCurrStart, size_t KrumCurrStop)
+  : fileRes       (fileRes)
+  , fileReg       (fileReg)
+  , rowStart      (rowStart)
+  , rowStop       (rowStop)
+  , colStart      (colStart)
+  , colStop       (colStop)
+  , nPixels2Inj   (nPixels2Inj)
+  , nEvents       (nEvents)
+  , startValue    (startValue)
+  , stopValue     (stopValue)
+  , nSteps        (nSteps)
+  , targetCharge  (targetCharge)
+  , KrumCurrStart (KrumCurrStart)
+  , KrumCurrStop  (KrumCurrStop)
+  , Gain          (fileRes, rowStart, rowStop, colStart, colStop, nPixels2Inj, nEvents, startValue, stopValue, nSteps)
 {}
 
 GainOptimization::~GainOptimization ()
@@ -39,7 +39,7 @@ GainOptimization::~GainOptimization ()
     }
 }
 
-void GainOptimization::Run ()
+void GainOptimization::run ()
 {
   this->bitWiseScan("KRUM_CURR_LIN", nEvents, targetCharge, KrumCurrStart, KrumCurrStop);
 
@@ -58,28 +58,28 @@ void GainOptimization::Run ()
   // ################
   // # Error report #
   // ################
-  this->ChipErrorReport();
+  this->chipErrorReport();
 }
 
-void GainOptimization::Draw (bool display, bool save)
+void GainOptimization::draw (bool display, bool save)
 {
   TApplication* myApp;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  static_cast<Gain*>(this)->Draw(false,save);
+  static_cast<Gain*>(this)->draw(false,save);
 
-  this->InitHisto();
-  this->FillHisto();
-  this->Display();
+  this->initHisto();
+  this->fillHisto();
+  this->display();
 
-  if (save    == true) this->Save();
+  if (save    == true) this->save();
   if (display == true) myApp->Run();
 
   theFile->Close();
 }
 
-void GainOptimization::InitHisto ()
+void GainOptimization::initHisto ()
 {
   std::stringstream myString;
 
@@ -114,7 +114,7 @@ void GainOptimization::InitHisto ()
   theFile = new TFile(fileRes, "UPDATE");
 }
 
-void GainOptimization::FillHisto ()
+void GainOptimization::fillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : theKrumCurrContainer)
@@ -127,7 +127,7 @@ void GainOptimization::FillHisto ()
 	}
 }
 
-void GainOptimization::Display ()
+void GainOptimization::display ()
 {
   for (auto i = 0; i < theCanvasKrumCurr.size(); i++)
     {
@@ -138,7 +138,7 @@ void GainOptimization::Display ()
     }
 }
 
-void GainOptimization::Save ()
+void GainOptimization::save ()
 {
   for (auto i = 0; i < theCanvasKrumCurr.size(); i++) theCanvasKrumCurr[i]->Write();
 
@@ -200,8 +200,8 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
       // ################
       // # Run analysis #
       // ################
-      static_cast<Gain*>(this)->Run();
-      auto output = static_cast<Gain*>(this)->Analyze();
+      static_cast<Gain*>(this)->run();
+      auto output = static_cast<Gain*>(this)->analyze();
       output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
 
@@ -243,7 +243,7 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
     }
 }
 
-void GainOptimization::ChipErrorReport ()
+void GainOptimization::chipErrorReport ()
 {
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 

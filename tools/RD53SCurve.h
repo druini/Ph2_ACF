@@ -11,17 +11,14 @@
 #define RD53SCurve_H
 
 #include "../Utils/Container.h"
-#include "../Utils/Occupancy.h"
+/* #include "../Utils/Occupancy.h" */
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/ThresholdAndNoise.h"
-#include "../DQMUtils/RD53ScurveHistograms.h"
+/* #include "../Utils/ThresholdAndNoise.h" */
+#include "../DQMUtils/RD53SCurveHistograms.h"
 #include "Tool.h"
 
 #include "TApplication.h"
-// #include "TStyle.h"
-// #include "TGaxis.h"
-// #include "TH2F.h"
 
 
 // #####################
@@ -32,9 +29,9 @@ class SCurve : public Tool
  public:
   SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colEnd, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset);
 
-  void Run                                       ();
-  void Draw                                      (bool display, bool save);
-  std::shared_ptr<DetectorDataContainer> Analyze ();
+  void run                                       ();
+  void draw                                      (bool display, bool save);
+  std::shared_ptr<DetectorDataContainer> analyze ();
 
  private:
   const char* fileRes;
@@ -55,17 +52,17 @@ class SCurve : public Tool
   std::vector<DetectorDataContainer*>      detectorContainerVector;
   std::shared_ptr<DetectorDataContainer>   theThresholdAndNoiseContainer;
 
-  void InitHisto       ();
-  void FillHisto       ();
-  void Display         ();
-  void ComputeStats    (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
-  void ChipErrorReport ();
+  void initHisto       ();
+  void fillHisto       ();
+  void display         ();
+  void computeStats    (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+  void chipErrorReport ();
 
 
   // ########
   // # ROOT #
   // ########
-  RD53ScurveHistograms histos;
+  RD53SCurveHistograms histos;
 };
 
 #endif
