@@ -33,7 +33,6 @@ void InitParameters (const SystemController& sc, T arg)
 {
   auto setting = sc.fSettingsMap.find(arg.second);
   arg.first = ((setting != std::end(sc.fSettingsMap)) ? setting->second : 0);
-  // if ((arg.second == "INJtype") && (typeid(arg.first) == typeid(const char*))) arg.first = (setting->second == 0 ? "Analog" : "Digital");
 }
 
 
@@ -42,17 +41,22 @@ void InitParameters (const SystemController& sc, T arg, Ts... args)
 {
   auto setting = sc.fSettingsMap.find(arg.second);
   arg.first = ((setting != std::end(sc.fSettingsMap)) ? setting->second : 0);
-  // if ((arg.second == "INJtype") && (typeid(arg.first) == typeid(const char*))) arg.first = (setting->second == 0 ? "Analog" : "Digital");
   InitParameters(sc,args...);
 }
 
 
-void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type, bool hitOr)
-// ###################
-// # type == Digital #
-// # type == Analog  #
-// ###################
+void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, size_t type, bool hitOr)
+// ######################
+// # type = 0 = Digital #
+// # type = 1 = Analog  #
+// ######################
 {
+  enum INJtype
+  {
+    Analog,
+    Digital
+  };
+ 
   for (const auto& cBoard : sc.fBoardVector)
     {
       auto RD53Board = static_cast<RD53FWInterface*>(sc.fBeBoardFWMap[cBoard->getBeBoardId()]);
@@ -72,7 +76,7 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type, boo
 	    cfgFastCmd.n_triggers       = 0;
 	    cfgFastCmd.trigger_duration = NTRIGxL1A;
 
-	    if (type == "Digital")
+	    if (type == INJtype::Digital)
 	      {
 		// #######################################
 		// # Configuration for digital injection #
@@ -90,7 +94,7 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type, boo
 		cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
 		cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
 	      }
-	    else if (type == "Analog")
+	    else if (type == INJtype::Analog)
 	      {
 		// ######################################
 		// # Configuration for analog injection #
@@ -258,15 +262,12 @@ int main (int argc, char** argv)
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents, nEvtsBurst, NTRIGxL1A, INJtype_, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, targetCharge, KrumCurrStart, KrumCurrStop, targetOccupancy, ThrStart, ThrStop, display, chipRegDefault;
-  // std::string INJtype;
-  // @TMP@
+  size_t nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, VCALoffset, targetCharge, KrumCurrStart, KrumCurrStop, targetOccupancy, ThrStart, ThrStop, display, chipRegDefault;
   InitParameters(cSystemController,
 		 std::pair<size_t&, const char*>(nEvents,        "nEvents"),
 		 std::pair<size_t&, const char*>(nEvtsBurst,     "nEvtsBurst"),
 		 std::pair<size_t&, const char*>(NTRIGxL1A,      "NTRIGxL1A"),
-		 // std::pair<std::string&, const char*>(INJtype,       "INJtype"),
-		 std::pair<size_t&, const char*>(INJtype_,       "INJtype"),
+		 std::pair<size_t&, const char*>(INJtype,        "INJtype"),
 		 std::pair<size_t&, const char*>(ROWstart,       "ROWstart"),
 		 std::pair<size_t&, const char*>(ROWstop,        "ROWstop"),
 		 std::pair<size_t&, const char*>(COLstart,       "COLstart"),
@@ -277,6 +278,7 @@ int main (int argc, char** argv)
 		 std::pair<size_t&, const char*>(VCALstart,      "VCALstart"),
 		 std::pair<size_t&, const char*>(VCALstop,       "VCALstop"),
 		 std::pair<size_t&, const char*>(VCALnsteps,     "VCALnsteps"),
+		 std::pair<size_t&, const char*>(VCALoffset,     "VCALoffset"),
 		 std::pair<size_t&, const char*>(targetCharge,   "targetCharge"),
 		 std::pair<size_t&, const char*>(KrumCurrStart,  "KrumCurrStart"),
 		 std::pair<size_t&, const char*>(KrumCurrStop,   "KrumCurrStop"),
@@ -285,7 +287,6 @@ int main (int argc, char** argv)
 		 std::pair<size_t&, const char*>(ThrStop,        "ThrStop"),
 		 std::pair<size_t&, const char*>(display,        "DisplayHisto"),
 		 std::pair<size_t&, const char*>(chipRegDefault, "ChipRegDefaultFile"));
-  std::string INJtype = (INJtype_ == 0 ? "Analog" : "Digital");
 
 
   // ######################################
@@ -359,8 +360,8 @@ int main (int argc, char** argv)
       // ##############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_SCurve.root");
-      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      std::string fileName("Run" + runNumber + "_SCurve");
+      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
       sc.Inherit(&cSystemController);
       sc.Run();
       sc.Analyze();
@@ -388,7 +389,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
       std::string fileName("Run" + runNumber + "_ThrEqualization.root");
-      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
       sc.Inherit(&cSystemController);
       sc.Run();
       auto output = sc.Analyze();

@@ -9,7 +9,7 @@
 
 #include "RD53SCurve.h"
 
-SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps) :
+SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset) :
   fileRes     (fileRes),
   rowStart    (rowStart),
   rowStop     (rowStop),
@@ -20,6 +20,8 @@ SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t col
   startValue  (startValue),
   stopValue   (stopValue),
   nSteps      (nSteps),
+  offset      (offset),
+  histos      (nEvents, startValue-offset, stopValue-offset, nSteps),
   Tool        ()
 {
   // ########################
@@ -44,48 +46,18 @@ SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t col
   for (auto i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
 
-SCurve::~SCurve ()
-{
-  delete theFile;
-  theFile = nullptr;
-
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
-    {
-      delete theOccupancy[i];
-      delete theCanvasOcc[i];
-    }
- 
-  for (auto i = 0; i < theCanvasTh1D.size(); i++)
-    {
-      delete theThreshold1D[i];
-      delete theCanvasTh1D[i];
-    }
-
-  for (auto i = 0; i < theCanvasNo1D.size(); i++)
-    {
-      delete theNoise1D[i];
-      delete theCanvasNo1D[i];
-    }
-
-  for (auto i = 0; i < theCanvasTh2D.size(); i++)
-    {
-      delete theThreshold2D[i];
-      delete theCanvasTh2D[i];
-    }
-
-  for (auto i = 0; i < theCanvasNo2D.size(); i++)
-    {
-      delete theNoise2D[i];
-      delete theCanvasNo2D[i];
-    }
-
-  for (auto i = 0; i < theAxis.size(); i++) delete theAxis[i];
-
-  for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
-}
 
 void SCurve::Run ()
 {
+  // ################
+  // # Set VCAL_MED #
+  // ################
+    for (const auto cBoard : *fDetectorContainer)
+      for (const auto cModule : *cBoard)
+	for (const auto cChip : *cModule)
+	    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
+
+
   ContainerFactory theDetectorFactory;
 
   for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
@@ -114,15 +86,18 @@ void SCurve::Draw (bool display, bool save)
   TApplication* myApp;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
+  if (save    == true)
+    {
+      CreateResultDirectory("Results");
+      InitResultFile(fileRes);
+    }
 
   this->InitHisto();
   this->FillHisto();
   this->Display();
 
-  if (save    == true) this->Save();
+  if (save    == true) this->WriteRootFile();
   if (display == true) myApp->Run();
-
-  theFile->Close();
 }
 
 std::shared_ptr<DetectorDataContainer> SCurve::Analyze ()
@@ -169,248 +144,18 @@ std::shared_ptr<DetectorDataContainer> SCurve::Analyze ()
   return theThresholdAndNoiseContainer;
 }
 
-void SCurve::InitHisto ()
-{
-  std::stringstream myString;
-
-
-  // #######################
-  // # Allocate histograms #
-  // #######################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-	{
-	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
-
-
-	  myString.clear();
-	  myString.str("");
-          myString << "SCurve_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),nSteps,startValue-VCalOffset,stopValue-VCalOffset,nEvents/2 + 1,0,1 + 2./nEvents));
-	  theOccupancy.back()->SetXTitle("#DeltaVCal");
-	  theOccupancy.back()->SetYTitle("Efficiency");
-
-	  myString.clear();
-	  myString.str("");
-          myString << "CanvaScurve_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"              << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"             << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-
-
-	  myString.clear();
-	  myString.str("");
-          myString << "Noise1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theNoise1D.push_back( new TH1F(myString.str().c_str(),myString.str().c_str(),100,0,30));
-	  theNoise1D.back()->SetXTitle("Noise (#DeltaVCal)");
-	  theNoise1D.back()->SetYTitle("Entries");
-	  
-	  myString.clear();
-          myString.str("");
-          myString << "CanvasNo1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasNo1D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-
-
-	  myString.clear();
-          myString.str("");
-          myString << "Threshold1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"              << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"             << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theThreshold1D.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),1000,0,1000));
-	  theThreshold1D.back()->SetXTitle("Threshold (#DeltaVCal)");
-	  theThreshold1D.back()->SetYTitle("Entries");
-
-	  myString.clear();
-	  myString.str("");
-	  myString << "CanvasTh1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasTh1D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-
-
-	  myString.clear();
-          myString.str("");
-          myString << "Noise2D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theNoise2D.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
-	  theNoise2D.back()->SetXTitle("Columns");
-	  theNoise2D.back()->SetYTitle("Rows");
-
-	  myString.clear();
-	  myString.str("");
-	  myString << "CanvasNo2D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasNo2D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-
-	  
-	  myString.clear();
-          myString.str("");
-          myString << "Threshold_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theThreshold2D.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
-	  theThreshold2D.back()->SetXTitle("Columns");
-	  theThreshold2D.back()->SetYTitle("Rows");
-	  
-	  myString.clear();
-	  myString.str("");
-	  myString << "CanvasTh2D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasTh2D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-	}
-
-  theFile = new TFile(fileRes, "UPDATE");
+void SCurve::InitHisto () { 
+    histos.book(fResultFile, *fDetectorContainer); 
 }
 
-void SCurve::FillHisto ()
-{
-  size_t index = 0;
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-	{
-	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
-	  
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
-	      {
-		for (auto i = 0; i < dacList.size(); i++)
-		  if (this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
-		    theOccupancy[index]->Fill(dacList[i]-VCalOffset,detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
-
-		if (theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise != 0)
-		  {
-		    theThreshold1D[index]->Fill(theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold);
-		    theNoise1D[index]->Fill(theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise);
-		    theThreshold2D[index]->SetBinContent(col+1,row+1,theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold);
-		    theNoise2D[index]->SetBinContent(col+1,row+1,theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise);
-		  }
-	      }
-
-	  index++;
-	}
+void SCurve::FillHisto() { 
+    for (auto i = 0; i < dacList.size(); i++)
+        histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
+    histos.fillThresholdNoise(*theThresholdAndNoiseContainer); 
 }
 
-void SCurve::Display ()
-{
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
-    {
-      theCanvasOcc[i]->cd();
-      theOccupancy[i]->Draw("gcolz");
-      theCanvasOcc[i]->Modified();
-      theCanvasOcc[i]->Update();
-
-      TPad* myPad = (TPad*)theCanvasOcc[i]->GetPad(0);
-      myPad->SetTopMargin(0.16);
-      theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-				   RD53chargeConverter::VCAl2Charge(theOccupancy[i]->GetXaxis()->GetBinLowEdge(1)),
-				   RD53chargeConverter::VCAl2Charge(theOccupancy[i]->GetXaxis()->GetBinLowEdge(theOccupancy[i]->GetNbinsX())),
-				   510,"-"));
-      theAxis.back()->SetTitle("Charge (electrons)"); 
-      theAxis.back()->SetTitleOffset(1.2);
-      theAxis.back()->SetTitleSize(0.035);
-      theAxis.back()->SetTitleFont(40);
-      theAxis.back()->SetLabelOffset(0.001);
-      theAxis.back()->SetLabelSize(0.035);
-      theAxis.back()->SetLabelFont(42);
-      theAxis.back()->SetLabelColor(kRed);
-      theAxis.back()->SetLineColor(kRed);
-      theAxis.back()->Draw();
-
-      theCanvasOcc[i]->Modified();
-      theCanvasOcc[i]->Update();
-    }
-  
-  for (auto i = 0; i < theCanvasTh1D.size(); i++)
-    {
-      theCanvasTh1D[i]->cd();
-      theThreshold1D[i]->Draw();
-      theCanvasTh1D[i]->Modified();
-      theCanvasTh1D[i]->Update();
-
-      TPad* myPad = (TPad*)theCanvasTh1D[i]->GetPad(0);
-      myPad->SetTopMargin(0.16);
-      theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-				   RD53chargeConverter::VCAl2Charge(theThreshold1D[i]->GetBinLowEdge(1)),
-				   RD53chargeConverter::VCAl2Charge(theThreshold1D[i]->GetBinLowEdge(theThreshold1D[i]->GetNbinsX())),
-				   510,"-"));
-      theAxis.back()->SetTitle("Threshold (electrons)"); 
-      theAxis.back()->SetTitleOffset(1.2);
-      theAxis.back()->SetTitleSize(0.035);
-      theAxis.back()->SetTitleFont(40);
-      theAxis.back()->SetLabelOffset(0.001);
-      theAxis.back()->SetLabelSize(0.035);
-      theAxis.back()->SetLabelFont(42);
-      theAxis.back()->SetLabelColor(kRed);
-      theAxis.back()->SetLineColor(kRed);
-      theAxis.back()->Draw();
-
-      theCanvasTh1D[i]->Modified();
-      theCanvasTh1D[i]->Update();
-    }
-
-  for (auto i = 0; i < theCanvasNo1D.size(); i++)
-    {
-      theCanvasNo1D[i]->cd();
-      theNoise1D[i]->Draw();
-      theCanvasNo1D[i]->Modified();
-      theCanvasNo1D[i]->Update();
-
-      TPad* myPad = (TPad*)theCanvasNo1D[i]->GetPad(0);
-      myPad->SetTopMargin(0.16);
-      theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-				   RD53chargeConverter::VCAl2Charge(theNoise1D[i]->GetBinLowEdge(1),true),
-				   RD53chargeConverter::VCAl2Charge(theNoise1D[i]->GetBinLowEdge(theNoise1D[i]->GetNbinsX()),true),
-				   510,"-"));
-      theAxis.back()->SetTitle("Noise (electrons)"); 
-      theAxis.back()->SetTitleOffset(1.2);
-      theAxis.back()->SetTitleSize(0.035);
-      theAxis.back()->SetTitleFont(40);
-      theAxis.back()->SetLabelOffset(0.001);
-      theAxis.back()->SetLabelSize(0.035);
-      theAxis.back()->SetLabelFont(42);
-      theAxis.back()->SetLabelColor(kRed);
-      theAxis.back()->SetLineColor(kRed);
-      theAxis.back()->Draw();
-
-      theCanvasNo1D[i]->Modified();
-      theCanvasNo1D[i]->Update();
-    }
-  
-  for (auto i = 0; i < theCanvasTh2D.size(); i++)
-    {
-      theCanvasTh2D[i]->cd();
-      theThreshold2D[i]->Draw("gcolz");
-      theCanvasTh2D[i]->Modified();
-      theCanvasTh2D[i]->Update();
-    }
- 
-  for (auto i = 0; i < theCanvasNo2D.size(); i++)
-    {
-      theCanvasNo2D[i]->cd();
-      theNoise2D[i]->Draw("gcolz");
-      theCanvasNo2D[i]->Modified();
-      theCanvasNo2D[i]->Update();
-    }
-}
-
-void SCurve::Save ()
-{
-  for (auto i = 0; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
-  for (auto i = 0; i < theCanvasTh1D.size(); i++) theCanvasTh1D[i]->Write();
-  for (auto i = 0; i < theCanvasNo1D.size(); i++) theCanvasNo1D[i]->Write();
-  for (auto i = 0; i < theCanvasTh2D.size(); i++) theCanvasTh2D[i]->Write();
-  for (auto i = 0; i < theCanvasNo2D.size(); i++) theCanvasNo2D[i]->Write();
+void SCurve::Display() { 
+    histos.process(); 
 }
 
 void SCurve::ComputeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
