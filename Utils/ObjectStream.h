@@ -68,7 +68,6 @@ public:
 
 	virtual void copyToStream(char* bufferBegin)
 	{
-		std::cout << __PRETTY_FUNCTION__ << " fDataSize: " << fDataSize << std::endl;
 		memcpy(bufferBegin, &fDataSize, fDataSize);
 	}
 
@@ -80,14 +79,14 @@ protected:
 	uint32_t fDataSize;
 }__attribute__((packed));
 
-template <typename H, typename D, size_t N >//, typename I = void >
+template <typename H, typename D>//, typename I = void >
 class ObjectStream;
 
 class CheckStream
 {
 
 public:
-	template <typename H, typename D, size_t N >//, typename I = void >
+	template <typename H, typename D>//, typename I = void >
 	friend class ObjectStream;
 	
 	CheckStream(void) : fPacketNumberAndSize(0) {;}
@@ -109,7 +108,6 @@ private:
 	{
 		if(packetSize >= 0xFFFFFF)
 		{
-			std::cout<< __PRETTY_FUNCTION__ << " Error: stream size must be less then 2^24 bytes" << std::endl;
 			abort();
 		}
 		fPacketNumberAndSize = (packetSize) | (fPacketNumberAndSize & 0xFF000000);
@@ -128,7 +126,7 @@ private:
 
 
 
-template <typename H, typename D, size_t N >//, typename I = void >
+template <typename H, typename D>//, typename I = void >
 class ObjectStream
 {
 private:
@@ -142,42 +140,52 @@ private:
 			, fCreatorNameLength(0) {}
 		~Metadata() {};
 
-		static uint32_t size(const std::string& objectName)
+		static uint32_t size(const std::string& objectName, const std::string& creatorName)
 		{
-			return sizeof(fStreamSizeAndNumber) + sizeof(fObjectNameLength) + objectName.size() + sizeof(fCreatorNameLength) + N;
+			return sizeof(fStreamSizeAndNumber) + sizeof(fObjectNameLength) + objectName.size() + sizeof(fCreatorNameLength) + creatorName.size();
 		}
 
 		uint32_t size(void) const
 		{
-			return sizeof(fStreamSizeAndNumber) + sizeof(fObjectNameLength) + fObjectNameLength + sizeof(fCreatorNameLength) + N;
+			return sizeof(fStreamSizeAndNumber) + sizeof(fObjectNameLength) + fObjectNameLength + sizeof(fCreatorNameLength) + fCreatorNameLength;
 		}
 
 	private:
 		void setObjectName(const std::string& objectName)
 		{
-			strcpy(fObjectName, objectName.c_str());
+			strcpy(fBuffer, objectName.c_str());
 			fObjectNameLength = objectName.size();
 		}
 
-		void setCreatorName(char creatorName[N])
+		void setCreatorName(const std::string& creatorName)
 		{
-			strncpy(fCreatorName, creatorName, N);
-			fCreatorNameLength = N;
+			char *creatorNamePosition = &fBuffer[fObjectNameLength];
+			strcpy(creatorNamePosition, creatorName.c_str());
+			fCreatorNameLength = creatorName.size();
+		}
+
+		std::string getObjectName()
+		{
+			return std::string(fBuffer).substr(0,fObjectNameLength);
+		}
+
+		std::string getCreatorName()
+		{
+			return std::string(fBuffer).substr(fObjectNameLength,fCreatorNameLength);
 		}
 
 		CheckStream	fStreamSizeAndNumber;
-		size_t		fCreatorNameLength;
-		char		fCreatorName[N];
 		uint8_t     fObjectNameLength;
-		char        fObjectName[size_t(pow(2,(sizeof(fObjectNameLength)*8)))];
+		uint8_t		fCreatorNameLength;
+		char        fBuffer[size_t(pow(2,( (sizeof(fObjectNameLength) + sizeof(fObjectNameLength)) *8)))];
 	}__attribute__((packed));
 
 public:
-	ObjectStream(const char creatorName[N])
+	ObjectStream(const std::string& creatorName)
 	: fTheStream     (nullptr)
 	, fObjectName    ("")
+	, fCreatorName   (creatorName)
 	{
-		strncpy(fCreatorName, creatorName, N);
 	};
 	virtual ~ObjectStream()
 	{
@@ -192,14 +200,13 @@ public:
     {
 		if(fTheStream == nullptr)
 		{
-			fTheStream = new std::vector<char>(Metadata::size(getObjectName()) + fHeaderStream.size() + fDataStream.size());
+			fTheStream = new std::vector<char>(Metadata::size(getObjectName(),fCreatorName) + fHeaderStream.size() + fDataStream.size());
 			fMetadataStream = reinterpret_cast<Metadata*>(&fTheStream->at(0));
 			fMetadataStream->setObjectName(getObjectName());
 			fMetadataStream->setCreatorName(fCreatorName);
 		}
 		else
 		{
-			std::cout << __PRETTY_FUNCTION__ << fMetadataStream->size() + fHeaderStream.size() + fDataStream.size() << std::endl;
 			fTheStream->resize(fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
 		}
 
@@ -214,15 +221,16 @@ public:
 	{
 		fMetadataStream = reinterpret_cast<Metadata*>(&bufferBegin->at(0));
 		std::cout << __PRETTY_FUNCTION__<< "    "
-			<< +fMetadataStream->fObjectNameLength << " == " << getObjectName().size() << " | " <<  std::string(fMetadataStream->fObjectName).substr(0,fMetadataStream->fObjectNameLength) << " == " << getObjectName()
-			<< " | " << +fMetadataStream->fCreatorNameLength << " == " << N << " | " <<  std::string(fMetadataStream->fCreatorName).substr(0,fMetadataStream->fCreatorNameLength) << " == " << getCreatorName()
+			<< +fMetadataStream->fObjectNameLength << " == " << getObjectName().size() << " | " 
+			<<  fMetadataStream->getObjectName() << " == " << getObjectName()
+			<< " | " << +fMetadataStream->fCreatorNameLength << " == " << fCreatorName.size() << " | " 
+			<<  fMetadataStream->getCreatorName() << " == " << fCreatorName
 			<< std::endl;
-		if(fMetadataStream->fObjectNameLength == getObjectName().size() &&  std::string(fMetadataStream->fObjectName).substr(0,fMetadataStream->fObjectNameLength) == getObjectName()
-			&& fMetadataStream->fCreatorNameLength == N &&  std::string(fMetadataStream->fCreatorName).substr(0,fMetadataStream->fCreatorNameLength) == getCreatorName())
+		if(fMetadataStream->fObjectNameLength == getObjectName().size() &&  fMetadataStream->getObjectName() == getObjectName()
+			&& fMetadataStream->fCreatorNameLength == fCreatorName.size() &&  fMetadataStream->getCreatorName() == fCreatorName)
 		{
 			fHeaderStream.copyFromStream(&bufferBegin->at(fMetadataStream->size()));
 			fDataStream  .copyFromStream(&bufferBegin->at(fMetadataStream->size() + fHeaderStream.size()));
-			//bufferBegin->erase(bufferBegin->begin(),bufferBegin->begin() + fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
 			fMetadataStream = nullptr;
 			return true;
 		}
@@ -235,13 +243,23 @@ public:
 		fMetadataStream->fStreamSizeAndNumber.incrementPacketNumber();
 	}
 
+	H* getHeaderStream() 
+	{
+		return &fHeaderStream;
+	}
+
+	D* getDataStream() 
+	{
+		return &fDataStream;
+	}
+
 protected:
-	char			   fCreatorName[N];
 	H                  fHeaderStream;
 	D                  fDataStream;
 	Metadata*          fMetadataStream;//Metadata is a stream helper and it can only p[oint to the beginning of the stream so if fTheStream = nullptr, then Metadata = nullptr
 	std::vector<char>* fTheStream;
 	std::string        fObjectName;
+	std::string        fCreatorName;
 
 	const std::string& getObjectName(void)
 	{
@@ -252,15 +270,6 @@ protected:
 		}
 		return fObjectName;
 	}
-
-	const std::string getCreatorName(void)
-	{
-		std::string creatorName(fCreatorName);
-		creatorName.resize(N);
-		return creatorName;
-	}
-
-
 
 }__attribute__((packed));
 

@@ -70,14 +70,15 @@ void DQMInterface::configure(std::string calibrationName, std::string configurat
     std::vector<Ph2_HwDescription::BeBoard*> fBoardVector;
     std::stringstream out;
     DetectorContainer fDetectorStructure;
+	std::map<std::string, uint32_t> pSettingsMap;
 
     fParser.parseHW (configurationFilePath, fBeBoardFWMap, fBoardVector, &fDetectorStructure, out, true );
-    std::cout << out.str() << std::endl;
+    fParser.parseSettings ( configurationFilePath, pSettingsMap,  out, true);
     
 	//if calibration type pedenoise
 	fDQMHistogram = new DQMHistogramPedeNoise();
 	fOutputFile = new TFile("tmp.root", "RECREATE");
-	fDQMHistogram->book(fOutputFile, fDetectorStructure);
+	fDQMHistogram->book(fOutputFile, fDetectorStructure, pSettingsMap);
 
 }
 

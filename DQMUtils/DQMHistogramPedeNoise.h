@@ -36,7 +36,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure) override;
+    void book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
 
     /*!
      * Fill histogram
@@ -70,18 +70,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
      * \brief Fill SCurve histograms
      * \param fSCurveOccupancyMap : maps of Vthr and DataContainer
      */
-    void fillSCurvePlots(std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap);
-
-    void setFitSCurve (bool flag) 
-    {
-      if(flag){
-        fPlotSCurve = true;
-        fFitSCurve = true;
-      }
-      else fFitSCurve = false;
-    }
-
-    void setPlotSCurve(bool flag) {fPlotSCurve = flag;};
+    void fillSCurvePlots(uint16_t vcthr, DetectorDataContainer &fSCurveOccupancy);
 
   private:
 
@@ -102,7 +91,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     DetectorDataContainer fDetectorModuleStripNoiseHistograms;
     DetectorDataContainer fDetectorData;
 
-    bool fPlotSCurve {false};
-    bool fFitSCurve  {false};
+    bool fPlotSCurves {false};
+    bool fFitSCurves  {false};
 };
 #endif

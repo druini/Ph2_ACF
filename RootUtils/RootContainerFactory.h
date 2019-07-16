@@ -104,19 +104,19 @@ public:
 						for(uint32_t col=0; col < chip->getNumberOfCols(); ++col)
 						{
 							T theChannel;
-							if(moduleSummaryHistogramGenericName != "NULL") 
+							if(channelHistogramGenericName != "NULL") 
 							{
 								std::string histogramName;
 								std::string histogramTitle;
 								if(chip->getNumberOfCols() == 1)
 								{
-									histogramName  = Form("%s_Channel_%d",chipSummaryHistogramGenericName.data(),col);
-									histogramTitle = Form("%s Channel %d",chipSummaryHistogramGenericName.data(),col);
+									histogramName  = Form("%s_Channel_%d",channelHistogramGenericName.data(),row);
+									histogramTitle = Form("%s Channel %d",channelHistogramGenericName.data(),row);
 								}
 								else
 								{
-									histogramName  = Form("%s_Row_%d_Col_%d",chipSummaryHistogramGenericName.data(),row,col);
-									histogramTitle = Form("%s Row_%d Col_%d",chipSummaryHistogramGenericName.data(),row,col);
+									histogramName  = Form("%s_Row_%d_Col_%d",channelHistogramGenericName.data(),row,col);
+									histogramTitle = Form("%s Row_%d Col_%d",channelHistogramGenericName.data(),row,col);
 								}
 								
 								initializePlot(&theChannel,histogramName, histogramTitle, &channel);

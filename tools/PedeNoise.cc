@@ -6,7 +6,6 @@
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/ContainerStream.h"
-#include "../Utils/ContainerStream.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include <math.h>
 
@@ -25,7 +24,8 @@
 PedeNoise::PedeNoise() :
     Tool(),
     fHoleMode (false),
-    fFitted (false),
+    fPlotSCurves (false),
+    fFitSCurves (false),
     fTestPulseAmplitude (0),
     fEventsPerPoint (0)
 {
@@ -52,8 +52,12 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     fMaskChannelsFromOtherGroups = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
     cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
     fSkipMaskedChannels = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-
     this->SetSkipMaskedChannels( fSkipMaskedChannels );
+    cSetting = fSettingsMap.find ( "PlotSCurves" );
+    fPlotSCurves = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
+    cSetting = fSettingsMap.find ( "FitSCurves" );
+    fFitSCurves = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
+    if(fFitSCurves) fPlotSCurves = true;
 
     uint16_t cStartValue = 0x000;
 
@@ -88,12 +92,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     LOG (INFO) << " Nevents = " << fEventsPerPoint ;
 
     #ifdef __USE_ROOT__
-        fDQMHistogramPedeNoise.setPlotSCurve(true);
-        cSetting = fSettingsMap.find ( "FitSCurves" );
-        fFitted = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
-        fDQMHistogramPedeNoise.setFitSCurve(fFitted);
-        LOG (INFO) << " FitSCurves = " << int ( fFitted ) ;
-        fDQMHistogramPedeNoise.book(fResultFile,*fDetectorContainer);
+        fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
     #endif    
 
 
@@ -187,10 +186,6 @@ void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
 
     measureSCurves (cStartValue );
 
-    #ifdef __USE_ROOT__
-        fDQMHistogramPedeNoise.fillSCurvePlots(fSCurveOccupancyMap);
-    #endif
-
     //re-enable stub logic
     for ( auto cBoard : *fDetectorContainer )
     {
@@ -242,8 +237,6 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     }
     DetectorDataContainer       theOccupancyContainer;
 	fDetectorDataContainer =   &theOccupancyContainer;
-    char name[] = "PedeNoise";
-	ContainerStream<Occupancy,9>  theOccupancyStream(name);
     
     ContainerFactory   theDetectorFactory;
 	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -258,9 +251,10 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     #ifdef __USE_ROOT__
         fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
     #else
+        auto theOccupancyStream = prepareContainerStreamer<Occupancy>();
         for(auto board : theOccupancyContainer)
         {
-            if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer, getCalibrationName());
+            if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
         }
     #endif
 
@@ -356,6 +350,23 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         fSCurveOccupancyMap[cValue] = theOccupancyContainer;
 
         this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
+
+
+        #ifdef __USE_ROOT__
+            if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue,*theOccupancyContainer);
+        #else
+            if(fPlotSCurves) 
+            {
+                ContainerStream<Occupancy,uint16_t> theSCurveStreamer("SCurve");
+                theSCurveStreamer.getHeaderStream()->setHeaderInfo(cValue);
+                for(auto board : *theOccupancyContainer )
+                {
+                    if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
+                }
+            }
+
+        #endif
+
 
         float globalOccupancy = theOccupancyContainer->getSummary<Occupancy,Occupancy>().fOccupancy;
         
@@ -479,13 +490,12 @@ void PedeNoise::extractPedeNoise ()
     }
 
     #ifdef __USE_ROOT__
-        if(!fFitted) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
+        if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
     #else
-        char name[] = "PedeNoise";
-        ContainerStream<ThresholdAndNoise,9>  theThresholdAndNoiseStream(name);
+        auto theThresholdAndNoiseStream = prepareContainerStreamer<ThresholdAndNoise>();
         for(auto board : fThresholdAndNoiseContainer )
         {
-            if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer, getCalibrationName());
+            if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
         }
     #endif
 

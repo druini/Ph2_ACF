@@ -10,7 +10,7 @@
 
 #include "RD53PixelAliveHistograms.h"
 
-void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure)
+void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
 {
   size_t ToTsize   = RD53::SetBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION) + 1;
   size_t BCIDsize  = RD53::SetBits(RD53EvtEncoder::NBIT_BCID) + 1;

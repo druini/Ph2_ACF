@@ -14,6 +14,7 @@
 #define __TOOL_H__
 
 #include "../System/SystemController.h"
+#include "../Utils/ContainerStream.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TFile.h"
@@ -293,6 +294,13 @@ class Tool : public SystemController
     void setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue);
     //Set same DAC list for all Chips (it is able to recognize if the dac is local or global)
     void setSameDac(const std::string &dacName, const uint16_t dacValue);
+
+    template<typename T>
+    ContainerStream<T> prepareContainerStreamer()
+    {
+        ContainerStream<T> theContainerStreamer(getCalibrationName());
+        return theContainerStreamer;
+    }
 
 private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase *scanFunctor);

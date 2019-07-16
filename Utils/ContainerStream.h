@@ -20,11 +20,13 @@
 #include <stdexcept>
 #include <cstdint>
 #include <cmath>
+#include <type_traits>
 #include "../Utils/ObjectStream.h"
 #include "../Utils/DataContainer.h"
 #include "../NetworkUtils/TCPPublishServer.h"
 #include "../HWDescription/ReadoutChip.h"
 
+template<typename I>
 class HeaderStreamChipContainer : public DataStreamBase
 {
 public:
@@ -41,10 +43,22 @@ public:
 		return fDataSize;
 	}
 
+    void setHeaderInfo(I theInfo)
+	{
+		fInfo = theInfo;
+	}
+
+    I getHeaderInfo(void)
+	{
+		return fInfo;
+	}
+
 public:
 	uint16_t boardId;
 	uint16_t moduleId;
 	uint16_t fChipId;
+    typename std::enable_if<!std::is_same<I, void>::value, I>::type fInfo; // Enable only if I != void
+
 }__attribute__((packed));
 
 
@@ -78,15 +92,14 @@ public:
 	ChannelContainer<C>* fChannelContainer;
 }__attribute__((packed));
 
-
-template <typename C, size_t N > 
-class ContainerStream : public ObjectStream<HeaderStreamChipContainer,DataStreamChipContainer<C>, N>
+template <typename C, typename I = char> 
+class ContainerStream : public ObjectStream<HeaderStreamChipContainer<I>,DataStreamChipContainer<C> >
 {
 public:
-	ContainerStream(const char creatorName[N]) : ObjectStream<HeaderStreamChipContainer,DataStreamChipContainer<C>, N>(creatorName) {;}
+	ContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamChipContainer<I>,DataStreamChipContainer<C> >(creatorName) {;}
 	~ContainerStream(){;}
 	
-	void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer, std::string calibrationName)
+	void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
 	{
 		for(auto module: *board)
 		{
@@ -119,6 +132,6 @@ protected:
 		this->fDataStream.fChannelContainer = chip->getChannelContainer<ChannelDataContainer<C>>();
 	}
 
-};
+}__attribute__((packed));
 
 #endif

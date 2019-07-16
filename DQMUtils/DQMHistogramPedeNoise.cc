@@ -35,8 +35,16 @@ DQMHistogramPedeNoise::~DQMHistogramPedeNoise ()
 
 
 //========================================================================================================================
-void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure)
+void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
 {
+
+    auto cSetting = pSettingsMap.find ( "PlotSCurves" );
+    fPlotSCurves = ( cSetting != std::end ( pSettingsMap ) ) ? cSetting->second : 0;
+    cSetting = pSettingsMap.find ( "FitSCurves" );
+    fFitSCurves = ( cSetting != std::end ( pSettingsMap ) ) ? cSetting->second : 0;
+    if(fFitSCurves) fPlotSCurves = true;
+
+
     ContainerFactory   theDetectorFactory;
     theDetectorFactory.copyStructure(theDetectorStructure, fDetectorData);
     
@@ -44,14 +52,14 @@ void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &
     EmptyContainer theEmptyContainer;
     
     //SCurve
-    if(fPlotSCurve)
+    if(fPlotSCurves)
     {
         uint16_t nYbins = 1024;
         float    minY   = -0.5;
         float    maxY   = 1023.5;
         TH2FContainer theTH2FSCurve( "SCurve", "SCurve", 254, -0.5, 253.5, nYbins, minY, maxY );
         theRootFactory.bookChipHistrograms<TH2FContainer>(theOutputFile, theDetectorStructure, fDetectorSCurveHistograms, theTH2FSCurve);
-        if(fFitSCurve)
+        if(fFitSCurves)
         {
             TH1FContainer theTH1FSCurveContainer("SCurve", "SCurve", nYbins, minY, maxY);
             theRootFactory.bookChannelHistrograms<TH1FContainer>(theOutputFile, theDetectorStructure, fDetectorChannelSCurveHistograms, theTH1FSCurveContainer);
@@ -102,15 +110,23 @@ void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &
 //========================================================================================================================
 void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
-    const char name[] = "PedeNoise";
-    ContainerStream<Occupancy,9>         theOccupancy(name);
-    ContainerStream<ThresholdAndNoise,9> theThresholdAndNoiseStream(name);
+    ContainerStream<Occupancy>          theOccupancy("PedeNoise");
+    ContainerStream<Occupancy,uint16_t> theSCurve("SCurve");
+    ContainerStream<ThresholdAndNoise>  theThresholdAndNoiseStream("PedeNoise");
 
 	if(theOccupancy.attachBuffer(&dataBuffer))
 	{
 		std::cout<<"Matched Occupancy!!!!!\n";
 		theOccupancy.decodeChipData(fDetectorData);
         fillValidationPlots(fDetectorData);
+        
+	    fDetectorData.cleanDataStored();
+	}
+    if(theSCurve.attachBuffer(&dataBuffer))
+	{
+		std::cout<<"Matched SCurve!!!!!\n";
+		theSCurve.decodeChipData(fDetectorData);
+        fillSCurvePlots(theSCurve.getHeaderStream()->getHeaderInfo(),fDetectorData);
         
 	    fDetectorData.cleanDataStored();
 	}
@@ -129,17 +145,17 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 void DQMHistogramPedeNoise::process()
 {
 
-    if(fFitSCurve) fitSCurves();
+    if(fFitSCurves) fitSCurves();
 
     for(auto board : fDetectorPedestalHistograms)
     {
         
         for(auto module: *board)
         {
-            TCanvas *cValidation = new TCanvas(("Validation_module_" + std::to_string(module->getId())).data(),("Validation module " + std::to_string(module->getId())).data(),   0, 0, 650, fPlotSCurve ? 900 : 650 );
+            TCanvas *cValidation = new TCanvas(("Validation_module_" + std::to_string(module->getId())).data(),("Validation module " + std::to_string(module->getId())).data(),   0, 0, 650, fPlotSCurves ? 900 : 650 );
             TCanvas *cPedeNoise  = new TCanvas(("PedeNoise_module_"  + std::to_string(module->getId())).data(),("PedeNoise module "  + std::to_string(module->getId())).data(), 670, 0, 650, 650 );
 
-            cValidation->Divide(module->size(),fPlotSCurve ? 3 : 2);
+            cValidation->Divide(module->size(),fPlotSCurves ? 3 : 2);
             cPedeNoise->Divide(module->size(),2);
             int validationPadId = 1;
             int pedeNoisePadId = 1;
@@ -172,7 +188,7 @@ void DQMHistogramPedeNoise::process()
                 cPedeNoise->cd(chip->getIndex()+1 +module->size()*0);
                 fDetectorNoiseHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram->DrawCopy();
 
-                if(fPlotSCurve)
+                if(fPlotSCurves)
                 {
                     TH2F* cSCurveHist = fDetectorSCurveHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH2FContainer>().fTheHistogram;
                     TH1D* cTmp = cSCurveHist->ProjectionY();
@@ -277,9 +293,10 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer &the
 }
 
 //========================================================================================================================
-void DQMHistogramPedeNoise::fillSCurvePlots(std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap)
+void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContainer &fSCurveOccupancy)
 {
-    for ( auto board : fDetectorSCurveHistograms )
+
+    for ( auto board : fSCurveOccupancy )
     {
         for ( auto module : *board )
         {
@@ -287,22 +304,22 @@ void DQMHistogramPedeNoise::fillSCurvePlots(std::map<uint16_t, DetectorDataConta
             {
                 TH2F *chipSCurve = fDetectorSCurveHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH2FContainer>().fTheHistogram;
     
-                for( auto & scurveContainer : fSCurveOccupancyMap )
+                if(chip->getChannelContainer<ChannelContainer<ThresholdAndNoise>>() == nullptr ) continue;
+                uint8_t channelNumber = 0;
+                for(auto channel : *chip->getChannelContainer<ChannelContainer<Occupancy>>())
                 {
-                    for (uint32_t cChannel = 0; cChannel < NCHANNELS; cChannel++)
-                    {
-                        float tmpOccupancy      = scurveContainer.second->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(cChannel).fOccupancy     ;
-                        float tmpOccupancyError = scurveContainer.second->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(cChannel).fOccupancyError;
-                        chipSCurve->SetBinContent(cChannel+1, scurveContainer.first+1, tmpOccupancy     );
-                        chipSCurve->SetBinError  (cChannel+1, scurveContainer.first+1, tmpOccupancyError);
+                    float tmpOccupancy      = channel.fOccupancy     ;
+                    float tmpOccupancyError = channel.fOccupancyError;
+                    chipSCurve->SetBinContent(channelNumber+1, vcthr+1, tmpOccupancy     );
+                    chipSCurve->SetBinError  (channelNumber+1, vcthr+1, tmpOccupancyError);
 
-                        if(fFitSCurve)
-                        {
-                            TH1F *channelSCurve = fDetectorChannelSCurveHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<TH1FContainer>(cChannel).fTheHistogram;
-                            channelSCurve->SetBinContent(scurveContainer.first+1, tmpOccupancy     );
-                            channelSCurve->SetBinError  (scurveContainer.first+1, tmpOccupancyError);
-                        }
-                    }                    
+                    if(fFitSCurves)
+                    {
+                        TH1F *channelSCurve = fDetectorChannelSCurveHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<TH1FContainer>(channelNumber).fTheHistogram;
+                        channelSCurve->SetBinContent(vcthr+1, tmpOccupancy     );
+                        channelSCurve->SetBinError  (vcthr+1, tmpOccupancyError);
+                    }
+                    ++channelNumber;
                 }
             }
         }
@@ -354,7 +371,7 @@ void DQMHistogramPedeNoise::fitSCurves ()
                     cFit->SetParameter ( 1, cWidth );
 
                     // Fit
-                    channelSCurve->Fit ( cFit, "RQ+" );
+                    channelSCurve->Fit ( cFit, "RQ+0" );
 
                     theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(cChannel).fThreshold      = cFit->GetParameter(0);
                     theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(cChannel).fNoise          = cFit->GetParameter(1);
@@ -367,4 +384,5 @@ void DQMHistogramPedeNoise::fitSCurves ()
     }
 
     fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
+    
 }

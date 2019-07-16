@@ -56,7 +56,8 @@ class PedeNoise : public Tool
 
     // Settings
     bool fHoleMode;
-    bool fFitted;
+    bool fPlotSCurves;
+    bool fFitSCurves;
     uint8_t fTestPulseAmplitude;
     uint32_t fEventsPerPoint;
     bool fDisableStubLogic;
