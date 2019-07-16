@@ -1,10 +1,6 @@
-//#ifndef BEAGLEBONE
-//#include "otsdaq_cmsburninbox/BeagleBone/BeagleBoneUtils/TCPPacket.h"
-//#else
 #include "../NetworkUtils/TCPPacket.h"
 #include <arpa/inet.h>
 #include <iostream>
-//#endif
 
 //========================================================================================================================
 TCPPacket::TCPPacket()

@@ -1,11 +1,7 @@
-#ifndef _ots_TCPPublishServer_h_
-#define _ots_TCPPublishServer_h_
+#ifndef _TCPPublishServer_h_
+#define _TCPPublishServer_h_
 
 #include "../NetworkUtils/TCPServerBase.h"
-//#include "../NetworkUtils/TCPTransmitterSocket.h"
-
-//namespace ots
-//{
 
 class TCPPublishServer : public TCPServerBase
 {
@@ -15,10 +11,7 @@ public:
 
 protected:
 	void acceptConnections() override;
- 	//std::unordered_map<int, TCPTransmitterSocket> fConnectedClients;
 
 };
-
-//}
 
 #endif
