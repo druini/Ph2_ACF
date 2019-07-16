@@ -28,7 +28,7 @@
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject);
+  PixelAlive (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject, float thresholdOccupancy = 0);
 
   void Run                                       ();
   void Draw                                      (bool display, bool save);
@@ -36,6 +36,7 @@ class PixelAlive : public Tool
 
  private:
   const char* fileRes;
+  const char* fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
@@ -44,6 +45,7 @@ class PixelAlive : public Tool
   size_t nEvents;
   size_t nEvtsBurst;
   bool   inject;
+  float  thresholdOccupancy;
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   std::shared_ptr<DetectorDataContainer>   theOccContainer;

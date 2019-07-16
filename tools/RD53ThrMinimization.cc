@@ -22,7 +22,7 @@ ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size
   targetOccupancy (targetOccupancy),
   ThrStart        (ThrStart),
   ThrStop         (ThrStop),
-  PixelAlive      (fileRes, rowStart, rowStop, colStart, colStop, (rowStop-rowStart+1)*(colStop-colStart+1), nEvents, nEvtsBurst, false)
+  PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, (rowStop-rowStart+1)*(colStop-colStart+1), nEvents, nEvtsBurst, false)
 {}
 
 ThrMinimization::~ThrMinimization ()
