@@ -11,9 +11,8 @@
 #ifndef RD53SCurveHistograms_H
 #define RD53SCurveHistograms_H
 
-#include "../Utils/GenericDataVector.h"
-#include "../Utils/Occupancy.h"
 #include "../Utils/ThresholdAndNoise.h"
+#include "../Utils/Occupancy.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>

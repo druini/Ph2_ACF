@@ -193,7 +193,7 @@ void Gain::initHisto ()
 		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
 	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),
 					  nSteps,startValue-VCalOffset,stopValue-VCalOffset,
-					  nEvents/2,0,RD53::SetBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)));
+					  nEvents/2,0,RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)));
 	  theOccupancy.back()->SetXTitle("#DeltaVCal");
 	  theOccupancy.back()->SetYTitle("ToT");
 

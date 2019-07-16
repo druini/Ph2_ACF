@@ -11,9 +11,6 @@
 #define RD53PixelAlive_H
 
 #include "../Utils/Container.h"
-/* #include "../Utils/OccupancyAndPh.h" */
-/* #include "../Utils/GenericDataVector.h" */
-/* #include "../Utils/EmptyContainer.h" */
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../DQMUtils/RD53PixelAliveHistograms.h"

@@ -91,7 +91,7 @@ void GainOptimization::initHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  size_t KrumCurrSize = RD53::SetBits(static_cast<RD53*>(cChip)->getNumberOfBits("KRUM_CURR_LIN"))+1;
+	  size_t KrumCurrSize = RD53::setBits(static_cast<RD53*>(cChip)->getNumberOfBits("KRUM_CURR_LIN"))+1;
 
 
 	  myString.clear();
@@ -177,7 +177,7 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
   for (const auto cBoard : maxDACcontainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::SetBits(numberOfBits)) + 1;
+	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::setBits(numberOfBits)) + 1;
  
 
   for (auto i = 0; i < numberOfBits; i++)
@@ -226,7 +226,7 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
 		    }
 	      stdDev = (cnt != 0 ? stdDev/cnt : 0) - cChip->getSummary<GainAndIntercept>().fGain * cChip->getSummary<GainAndIntercept>().fGain;
 	      stdDev = (stdDev > 0 ? sqrt(stdDev) : 0);
-	      float charge = (RD53::SetBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)/2 - cChip->getSummary<GainAndIntercept>().fIntercept) /
+	      float charge = (RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)/2 - cChip->getSummary<GainAndIntercept>().fIntercept) /
 		(cChip->getSummary<GainAndIntercept>().fGain + stdDev);
 
 

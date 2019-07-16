@@ -98,7 +98,7 @@ void ThrMinimization::initHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  size_t ThrSize = RD53::SetBits(static_cast<RD53*>(cChip)->getNumberOfBits("Vthreshold_LIN"))+1;
+	  size_t ThrSize = RD53::setBits(static_cast<RD53*>(cChip)->getNumberOfBits("Vthreshold_LIN"))+1;
 
 
 	  myString.clear();
@@ -184,7 +184,7 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   for (const auto cBoard : maxDACcontainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::SetBits(numberOfBits)) + 1;
+	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::setBits(numberOfBits)) + 1;
  
 
   for (auto i = 0; i < numberOfBits; i++)

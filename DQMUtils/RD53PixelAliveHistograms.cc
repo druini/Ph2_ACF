@@ -14,9 +14,9 @@ using namespace Ph2_HwDescription;
 
 void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure)
 {
-  size_t ToTsize   = RD53::SetBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION) + 1;
-  size_t BCIDsize  = RD53::SetBits(RD53EvtEncoder::NBIT_BCID) + 1;
-  size_t TrgIDsize = RD53::SetBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+  size_t ToTsize   = RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION) + 1;
+  size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   auto hOcc1D = HistContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, nEvents + 1);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Occupancy", "Entries");
@@ -58,13 +58,13 @@ void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)
 	  for (auto i = 1; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.size(); i++)
 	    {
 	      int deltaBCID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i-1];
-	      BCIDHist->Fill((deltaBCID > 0 ? 0 : RD53::SetBits(RD53EvtEncoder::NBIT_BCID) + 1) + deltaBCID);
+	      BCIDHist->Fill((deltaBCID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1) + deltaBCID);
 	    }
 	  
 	  for (auto i = 1; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.size(); i++)
 	    {
 	      int deltaTrgID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i-1];
-	      TriggerIDHist->Fill((deltaTrgID > 0 ? 0 : RD53::SetBits(RD53EvtEncoder::NBIT_TRIGID) + 1) + deltaTrgID);
+	      TriggerIDHist->Fill((deltaTrgID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1) + deltaTrgID);
 	    }
 	}
 }

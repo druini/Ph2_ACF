@@ -11,10 +11,8 @@
 #define RD53SCurve_H
 
 #include "../Utils/Container.h"
-/* #include "../Utils/Occupancy.h" */
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-/* #include "../Utils/ThresholdAndNoise.h" */
 #include "../DQMUtils/RD53SCurveHistograms.h"
 #include "Tool.h"
 

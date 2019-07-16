@@ -30,8 +30,7 @@ namespace Ph2_HwInterface
   class RD53Interface: public ReadoutChipInterface
   {
   public:
-    RD53Interface  (const BeBoardFWMap& pBoardMap);
-    ~RD53Interface ();
+    RD53Interface (const BeBoardFWMap& pBoardMap);
 
     bool     ConfigureChip                     (const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                override;
     bool     WriteChipReg                      (Chip* pChip, const std::string& pRegNode, uint16_t data, bool pVerifLoop = true)                     override;
@@ -53,7 +52,7 @@ namespace Ph2_HwInterface
     void     SyncRD53          (RD53* pRD53, unsigned int nSyncWords = 1);
     void     ResetRD53         (RD53* pRD53);
 
-    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadRD53Reg (RD53* pRD53, const std::string& pRegNode);
+    std::vector<std::pair<uint16_t,uint16_t>> ReadRD53Reg (RD53* pRD53, const std::string& pRegNode);
    };
 }
 

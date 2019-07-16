@@ -1003,7 +1003,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
 	for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
-	  cChip->getChannel<RegisterValue>(iChannel).fRegisterValue = RD53::SetBits(4) + 1;
+	  cChip->getChannel<RegisterValue>(iChannel).fRegisterValue = (1 << numberOfBits);
 
 
 
