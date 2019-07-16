@@ -15,8 +15,8 @@ public:
 	DQMInterface ();
 	~DQMInterface(void);
 
-	void configure           (std::string calibrationName, std::string configurationFilePath) ;
-	void startProcessingData (std::string runNumber) ;
+	void configure           (std::string& calibrationName, std::string& configurationFilePath) ;
+	void startProcessingData (std::string& runNumber) ;
 	void stopProcessingData  (void) ;
 	void pauseProcessingData (void) ;
 	void resumeProcessingData(void) ;
@@ -27,12 +27,12 @@ public:
 private:
 	void destroy(void);
 	void destroyHistogram(void);
-	TCPSubscribeClient* fListener;
-	DQMHistogramBase*   fDQMHistogram;
-	std::vector<char>   fDataBuffer;
-	bool                fRunning;
-	std::future<bool>   fRunningFuture;
-	TFile*              fOutputFile;
+	TCPSubscribeClient*            fListener;
+	std::vector<DQMHistogramBase*> fDQMHistogrammerVector;
+	std::vector<char>              fDataBuffer;
+	bool                           fRunning;
+	std::future<bool>              fRunningFuture;
+	TFile*                         fOutputFile;
 
 };
 

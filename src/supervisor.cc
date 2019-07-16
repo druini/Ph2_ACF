@@ -253,27 +253,38 @@ int main ( int argc, char* argv[] )
 			switch(stateMachineStatus)
 			{
 			case HALTED:
-				std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
-				theMiddlewareInterface.configure(cmd.optionValue("calibration"), baseDir + cmd.optionValue("file"));
-				theDQMInterface.configure(cmd.optionValue("calibration"), baseDir + cmd.optionValue("file"));
-				stateMachineStatus = CONFIGURED;
-				break;
+				{
+					std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
+					theMiddlewareInterface.configure(cmd.optionValue("calibration"), baseDir + cmd.optionValue("file"));
+					std::string configurationFile = baseDir + cmd.optionValue("file");
+					std::string calibrationName   = cmd.optionValue("calibration")   ;
+					theDQMInterface.configure(calibrationName, configurationFile);
+					stateMachineStatus = CONFIGURED;
+					break;
+				}
 			case CONFIGURED:
-				std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;
-				theDQMInterface.startProcessingData("5");
-				theMiddlewareInterface.start("5");
-				stateMachineStatus = RUNNING;
-				break;
+				{
+					std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;
+					std::string runNumber = "5";
+					theDQMInterface.startProcessingData(runNumber);
+					theMiddlewareInterface.start(runNumber);
+					stateMachineStatus = RUNNING;
+					break;
+				}
 			case RUNNING:
-				std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
-				theMiddlewareInterface.stop();
-				theDQMInterface.stopProcessingData();
-				stateMachineStatus = STOPPED;
-				break;
+				{
+					std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
+					theMiddlewareInterface.stop();
+					theDQMInterface.stopProcessingData();
+					stateMachineStatus = STOPPED;
+					break;
+				}
 			case STOPPED:
-				std::cout << __PRETTY_FUNCTION__ << "Supervisor Everything Stoped!!! Exiting..." << std::endl;
-				done = true;
-				break;
+				{
+					std::cout << __PRETTY_FUNCTION__ << "Supervisor Everything Stoped!!! Exiting..." << std::endl;
+					done = true;
+					break;
+				}
 			}
 			if(!done)
 			{

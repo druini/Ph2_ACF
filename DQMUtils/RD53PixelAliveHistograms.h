@@ -29,7 +29,7 @@ class RD53PixelAliveHistograms : public DQMHistogramBase
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
   void fill    (const DetectorDataContainer& data);
   void process ()                                                                    override;
-  void fill    (std::vector<char>& dataBuffer)                                       override {};
+  bool fill    (std::vector<char>& dataBuffer)                                       override {return false;};
   void reset   (void)                                                                override {};
 
  private:

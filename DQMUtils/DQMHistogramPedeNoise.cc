@@ -49,7 +49,6 @@ void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &
     theDetectorFactory.copyStructure(theDetectorStructure, fDetectorData);
     
     RootContainerFactory theRootFactory;
-    EmptyContainer theEmptyContainer;
     
     //SCurve
     if(fPlotSCurves)
@@ -108,7 +107,7 @@ void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &
 }
 
 //========================================================================================================================
-void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
     ContainerStream<Occupancy>          theOccupancy("PedeNoise");
     ContainerStream<Occupancy,uint16_t> theSCurve("SCurve");
@@ -121,6 +120,7 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
         fillValidationPlots(fDetectorData);
         
 	    fDetectorData.cleanDataStored();
+        return true;
 	}
     if(theSCurve.attachBuffer(&dataBuffer))
 	{
@@ -129,6 +129,7 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
         fillSCurvePlots(theSCurve.getHeaderStream()->getHeaderInfo(),fDetectorData);
         
 	    fDetectorData.cleanDataStored();
+        return true;
 	}
     else if(theThresholdAndNoiseStream.attachBuffer(&dataBuffer))
     {
@@ -137,8 +138,10 @@ void DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
         fillPedestalAndNoisePlots(fDetectorData);
 
         fDetectorData.cleanDataStored();
+        return true;
     }
 
+        return false;
 }
 
 //========================================================================================================================

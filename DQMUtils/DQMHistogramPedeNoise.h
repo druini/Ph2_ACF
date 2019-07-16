@@ -41,7 +41,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     /*!
      * Fill histogram
      */
-    void fill (std::vector<char>& dataBuffer) override;
+    bool fill (std::vector<char>& dataBuffer) override;
 
     /*!
      * Save histogram

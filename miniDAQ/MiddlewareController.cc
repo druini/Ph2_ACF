@@ -68,7 +68,6 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 		if     (getVariableValue("Calibration",buffer) == "calibration")                  theSystemController_ = new CombinedCalibration<Calibration>;
 		else if(getVariableValue("Calibration",buffer) == "pedenoise")                    theSystemController_ = new CombinedCalibration<PedeNoise>;
 		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoise")      theSystemController_ = new CombinedCalibration<Calibration,PedeNoise>();
-		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoisenoise") theSystemController_ = new CombinedCalibration<Calibration,PedeNoise,PedeNoise>();
 		else
 		{
 			std::cout << __PRETTY_FUNCTION__ << "Calibration type " <<  getVariableValue("Calibration",buffer) << " not found, Aborting" << std::endl;

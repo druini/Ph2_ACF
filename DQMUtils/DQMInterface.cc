@@ -3,6 +3,7 @@
 #include "../Utils/Container.h"
 #include "../DQMUtils/DQMInterface.h"
 #include "../DQMUtils/DQMHistogramPedeNoise.h"
+#include "../DQMUtils/DQMHistogramCalibration.h"
 #include "../System/FileParser.h"
 #include "TFile.h"
 
@@ -12,7 +13,6 @@
 //========================================================================================================================
 DQMInterface::DQMInterface()
 : fListener         (nullptr)
-, fDQMHistogram     (nullptr)
 , fRunning          (false)
 , fOutputFile(nullptr)
 {
@@ -34,7 +34,9 @@ void DQMInterface::destroy(void)
 		delete fListener;
 	destroyHistogram();
 	fListener     = nullptr;
-	fDQMHistogram = nullptr;
+	for(auto dqmHistogrammer : fDQMHistogrammerVector)
+		delete dqmHistogrammer;
+	fDQMHistogrammerVector.clear();
 	delete fOutputFile;
 	fOutputFile = nullptr;
 	std::cout << __PRETTY_FUNCTION__ << "destroy DONE!" << std::endl;
@@ -43,14 +45,14 @@ void DQMInterface::destroy(void)
 //========================================================================================================================
 void DQMInterface::destroyHistogram(void)
 {
-	if(fDQMHistogram != nullptr)
-		delete fDQMHistogram;
-	fDQMHistogram = nullptr;
+	for(auto dqmHistogrammer : fDQMHistogrammerVector)
+		delete dqmHistogrammer;
+	fDQMHistogrammerVector.clear();
 	std::cout << __PRETTY_FUNCTION__ << "destroyHistogram DONE!" << std::endl;
 }
 
 //========================================================================================================================
-void DQMInterface::configure(std::string calibrationName, std::string configurationFilePath)
+void DQMInterface::configure(std::string& calibrationName, std::string& configurationFilePath)
 {
 	std::string serverIP = "127.0.0.1";
 	int serverPort       = 6000;
@@ -76,14 +78,27 @@ void DQMInterface::configure(std::string calibrationName, std::string configurat
     fParser.parseSettings ( configurationFilePath, pSettingsMap,  out, true);
     
 	//if calibration type pedenoise
-	fDQMHistogram = new DQMHistogramPedeNoise();
+	if(calibrationName == "pedenoise")
+	{
+		DQMHistogramPedeNoise *theDQMHistogramPedeNoise = new DQMHistogramPedeNoise();
+		fDQMHistogrammerVector.push_back(theDQMHistogramPedeNoise);
+	}
+	else if(calibrationName == "calibrationandpedenoise")
+	{
+		DQMHistogramCalibration *theDQMHistogramCalibration = new DQMHistogramCalibration();
+		fDQMHistogrammerVector.push_back(theDQMHistogramCalibration);
+		DQMHistogramPedeNoise *theDQMHistogramPedeNoise = new DQMHistogramPedeNoise();
+		fDQMHistogrammerVector.push_back(theDQMHistogramPedeNoise);
+	}
+
 	fOutputFile = new TFile("tmp.root", "RECREATE");
-	fDQMHistogram->book(fOutputFile, fDetectorStructure, pSettingsMap);
+	for(auto dqmHistogrammer : fDQMHistogrammerVector)
+		dqmHistogrammer->book(fOutputFile, fDetectorStructure, pSettingsMap);
 
 }
 
 //========================================================================================================================
-void DQMInterface::startProcessingData (std::string runNumber)
+void DQMInterface::startProcessingData (std::string& runNumber)
 {
 	fRunning = true;
 	fRunningFuture = std::async(std::launch::async, &DQMInterface::running, this);
@@ -106,7 +121,8 @@ void DQMInterface::stopProcessingData  (void)
 		std::cout<< __PRETTY_FUNCTION__ << " Buffer should be empty, some data were not read, Aborting " << std::endl;
 		abort();  
 	}
-	fDQMHistogram->process();
+	for(auto dqmHistogrammer : fDQMHistogrammerVector)
+		dqmHistogrammer->process();
 	fOutputFile->Write();
 }
 
@@ -169,7 +185,10 @@ bool DQMInterface::running()
 				}
 				std::vector<char> streamDataBuffer(fDataBuffer.begin(),fDataBuffer.begin() + theCurrentStream->getPacketSize());
 				fDataBuffer.erase(fDataBuffer.begin(),fDataBuffer.begin() + theCurrentStream->getPacketSize());
-				fDQMHistogram->fill(streamDataBuffer);
+				for(auto dqmHistogrammer : fDQMHistogrammerVector)
+				{
+					if(dqmHistogrammer->fill(streamDataBuffer)) break;
+				}
 				if(++packetNumber>=256) packetNumber=0;
 			}
 		}
