@@ -85,11 +85,9 @@ void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
   // # Fill TDAC container #
   // #######################
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-	for (auto row = 0; row < RD53::nRows; row++)
-	  for (auto col = 0; col < RD53::nCols; col++)
-	    theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = (*static_cast<RD53*>(cChip)->getPixelsMask())[col].TDAC[row];
+    for (auto cModule : *cBoard)
+      for (auto cChip : *cModule)
+	this->fReadoutChipInterface->ReadChipAllLocalReg(static_cast<RD53*>(cChip), "PIX_PORTAL", *theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
 
   // ################
@@ -229,6 +227,125 @@ void ThrEqualization::save ()
 
 	  static_cast<RD53*>(cChip)->saveRegMap(fileReg);
 	}
+}
+
+void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
+{
+  uint8_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName);
+
+
+  ContainerFactory theDetectorFactory;
+  DetectorDataContainer minDACcontainer;
+  DetectorDataContainer midDACcontainer;
+  DetectorDataContainer maxDACcontainer;
+
+  DetectorDataContainer bestDACcontainer;
+  DetectorDataContainer bestOccContainer;
+
+  theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, minDACcontainer);
+  theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, midDACcontainer);
+  theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, maxDACcontainer);
+
+  theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, bestDACcontainer);
+  theDetectorFactory.copyAndInitStructure<Occupancy>    (*fDetectorContainer, bestOccContainer);
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (auto cModule : *cBoard)
+      for (auto cChip : *cModule)
+	for (auto row = 0; row < RD53::nRows; row++)
+	  for (auto col = 0; col < RD53::nCols; col++)
+	    {
+	      minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = 0;
+	      maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = RD53::setBits(numberOfBits) + 1;
+
+	      bestOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy = 0;
+	    }
+
+
+  // ############################
+  // # Read DAC starting values #
+  // ############################
+  for (const auto cBoard : *fDetectorContainer)
+    for (auto cModule : *cBoard)
+      for (auto cChip : *cModule)
+	this->fReadoutChipInterface->ReadChipAllLocalReg(static_cast<RD53*>(cChip), dacName, *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
+
+
+  for (auto i = 0; i < numberOfBits+1; i++)
+    {
+      // ###########################
+      // # Download new DAC values #
+      // ###########################
+      for (const auto cBoard : *fDetectorContainer)
+	for (auto cModule : *cBoard)
+	  for (auto cChip : *cModule)
+	    this->fReadoutChipInterface->WriteChipAllLocalReg(static_cast<RD53*>(cChip), dacName, *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
+
+
+      // ################
+      // # Run analysis #
+      // ################
+      measureData(nEvents, nEvtsBurst);
+
+
+      // #####################
+      // # Compute next step #
+      // #####################
+      for (const auto cBoard : theOccContainer)
+	for (auto cModule : *cBoard)
+	  for (auto cChip : *cModule)
+	    for (auto row = 0; row < RD53::nRows; row++)
+	      for (auto col = 0; col < RD53::nCols; col++)
+		{
+		  // #######################
+		  // # Build discriminator #
+		  // #######################
+		  float occupancy = cChip->getChannel<Occupancy>(row,col).fOccupancy;
+
+
+		  // ########################
+		  // # Save best DAC values #
+		  // ########################
+		  float oldOcc = bestOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy;
+		  if (fabs(occupancy - target) < fabs(oldOcc - target))
+		    {
+		      bestOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy = occupancy;
+		      bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = 
+			midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue;
+		    }
+
+
+		  if (occupancy < target)
+		    
+		    minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue =
+		      midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue;
+
+		  else
+
+		    maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue =
+		      midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue;
+
+
+		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue =
+		    (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue +
+		     maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue) / 2;
+		}
+    }
+
+
+  // ###########################
+  // # Download new DAC values #
+  // ###########################
+  for (const auto cBoard : *fDetectorContainer)
+    for (auto cModule : *cBoard)
+      for (auto cChip : *cModule)
+  	this->fReadoutChipInterface->WriteChipAllLocalReg(static_cast<RD53*>(cChip), dacName, *bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
+
+
+  // ################
+  // # Run analysis #
+  // ################
+  measureData(nEvents, nEvtsBurst);
 }
 
 void ThrEqualization::chipErrorReport ()

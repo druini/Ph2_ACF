@@ -356,7 +356,7 @@ namespace Ph2_HwDescription
 
   uint8_t RD53::getTDAC (unsigned int row, unsigned int col)
   {
-    return fPixelsMaskDefault[col].TDAC[row];
+    return fPixelsMask[col].TDAC[row];
   }
 
   void RD53::encodeCMD (const uint16_t               address,
