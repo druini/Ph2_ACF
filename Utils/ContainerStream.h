@@ -13,6 +13,7 @@
 #define __CONTAINERSTREAM_H__
 // pointers to base class
 #include <iostream>
+#include <type_traits>
 #include <sstream>
 #include <vector>
 #include <cxxabi.h>
@@ -26,40 +27,93 @@
 #include "../NetworkUtils/TCPPublishServer.h"
 #include "../HWDescription/ReadoutChip.h"
 
-template<typename I>
-class HeaderStreamChipContainer : public DataStreamBase
+// workaround missing "is_trivially_copyable" in g++ < 5.0
+#if __cplusplus < 201402
+namespace std
+{
+	template<typename T>
+	struct is_trivially_copyable
+	{
+		static const bool value = __has_trivial_copy(T);
+	};
+}
+#endif
+
+// Here I am using the The Curiously Recurring Template Pattern (CRTP)
+// To avoid another inheritance I create a Header base class which takes as template the Child class
+// (I need this to do the do sizeof(H), otheswise, since no virtual functions are present this will point to HeaderStreamChipContainerBase)
+// In this base class I have all the datamember I need for a base container
+template<typename H>
+class HeaderStreamChipContainerBase : public DataStreamBase
 {
 public:
-	HeaderStreamChipContainer()
+	HeaderStreamChipContainerBase()
 	: boardId (0)
 	, moduleId(0)
 	, fChipId (0)
 	{};
-	~HeaderStreamChipContainer() {};
+	~HeaderStreamChipContainerBase() {};
 
 	uint32_t size(void) override
 	{
-		fDataSize = uint64_t(this) + sizeof(*this) - uint64_t(&fDataSize);
+		fDataSize = uint64_t(this) + sizeof(H) - uint64_t(&fDataSize);
+		std::cout << __PRETTY_FUNCTION__ << " | " << fDataSize << std::endl;
 		return fDataSize;
-	}
-
-    void setHeaderInfo(I theInfo)
-	{
-		fInfo = theInfo;
-	}
-
-    I getHeaderInfo(void)
-	{
-		return fInfo;
 	}
 
 public:
 	uint16_t boardId;
 	uint16_t moduleId;
 	uint16_t fChipId;
-    typename std::enable_if<!std::is_same<I, void>::value, I>::type fInfo; // Enable only if I != void
 
 }__attribute__((packed));
+
+// Generic Header which allows to add other members to the header
+// !!! IMPORTANT: the members that you add need to be continuos in memory or data want to shipped and you will get a crash !!!
+// ContainerStream<Occupancy,int>         -->  OK
+// ComtainerStream<Occupancy,char*>       --> ERROR
+// ComtainerStream<Occupancy,vector<int>> --> ERROR
+#include <type_traits>
+template<typename... I>
+class HeaderStreamChipContainer : public HeaderStreamChipContainerBase<HeaderStreamChipContainer<I...>>
+{
+
+	template <std::size_t N>
+    using TupleElementType = typename std::tuple_element<N, std::tuple<I...>>::type;
+
+	template<typename T>
+	static void constexpr check_if_retrivable() 
+	{
+		static_assert( !std::is_pointer<T>::value, "No pointers can be retreived from the stream" );
+		static_assert( !std::is_reference<T>::value, "No references can be retreived from the stream" );
+		static_assert( std::is_trivially_copyable<T>::value, "No object not continously allocated in memory can be retreived" );
+	}
+
+public:
+	HeaderStreamChipContainer()  {};
+	~HeaderStreamChipContainer() {};
+
+    void setHeaderInfo(I... theInfo)
+	{
+		fInfo = std::make_tuple(theInfo...);
+	}
+
+	template<std::size_t N = 0>
+	TupleElementType<N> getHeaderInfo(void)
+	{
+		check_if_retrivable<TupleElementType<N>>();
+		return std::get<N>(fInfo);
+	}
+
+private:
+	typename std::tuple<I...> fInfo;
+
+}__attribute__((packed));
+
+// Specialized Header class when the parameter pack is empty
+template<>
+class HeaderStreamChipContainer<> : public HeaderStreamChipContainerBase<HeaderStreamChipContainer<>>
+{}__attribute__((packed));
 
 
 template <typename C>
@@ -92,11 +146,11 @@ public:
 	ChannelContainer<C>* fChannelContainer;
 }__attribute__((packed));
 
-template <typename C, typename I = char> 
-class ContainerStream : public ObjectStream<HeaderStreamChipContainer<I>,DataStreamChipContainer<C> >
+template <typename C, typename... I> 
+class ContainerStream : public ObjectStream<HeaderStreamChipContainer<I...>,DataStreamChipContainer<C> >
 {
 public:
-	ContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamChipContainer<I>,DataStreamChipContainer<C> >(creatorName) {;}
+	ContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamChipContainer<I...>,DataStreamChipContainer<C> >(creatorName) {;}
 	~ContainerStream(){;}
 	
 	void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
