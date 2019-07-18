@@ -1,5 +1,5 @@
-#ifndef _ots_TCPSubscribeClient_h_
-#define _ots_TCPSubscribeClient_h_
+#ifndef _TCPSubscribeClient_h_
+#define _TCPSubscribeClient_h_
 
 #include "../NetworkUtils/TCPTransceiverSocket.h"
 #include "../NetworkUtils/TCPClientBase.h"

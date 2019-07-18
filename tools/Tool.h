@@ -14,6 +14,7 @@
 #define __TOOL_H__
 
 #include "../System/SystemController.h"
+#include "../Utils/ContainerStream.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TFile.h"
@@ -24,7 +25,6 @@
 
 class DetectorContainer;
 class DetectorDataContainer;
-class VContainerStreamBase;
 class ChannelGroupHandler;
 class ChannelGroupBase;
 class ScanBase;
@@ -65,7 +65,6 @@ class Tool : public SystemController
         // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyPerChannelMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
 
     DetectorDataContainer* fDetectorDataContainer;
-    VContainerStreamBase*  fObjectStream;
     ChannelGroupHandler*   fChannelGroupHandler;
     CanvasMap              fCanvasMap;
     ChipHistogramMap       fChipHistMap;
@@ -283,7 +282,6 @@ class Tool : public SystemController
     void setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer);
     //Set global DAC for all Chips in the BeBoard
     void setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer);
-    void getAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer);
     //Set same global DAC for all Chips
     void setSameGlobalDac(const std::string &dacName, const uint16_t dacValue);
     //Set same global DAC for all Chips in the BeBoard
@@ -296,6 +294,13 @@ class Tool : public SystemController
     void setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue);
     //Set same DAC list for all Chips (it is able to recognize if the dac is local or global)
     void setSameDac(const std::string &dacName, const uint16_t dacValue);
+
+    template<typename T>
+    ContainerStream<T> prepareContainerStreamer()
+    {
+        ContainerStream<T> theContainerStreamer(getCalibrationName());
+        return theContainerStreamer;
+    }
 
 private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase *scanFunctor);
@@ -346,6 +351,8 @@ private:
     bool fAllChan;
     bool fMaskChannelsFromOtherGroups;
     bool fTestPulse;
+
+    std::string getCalibrationName();
 
 
 };

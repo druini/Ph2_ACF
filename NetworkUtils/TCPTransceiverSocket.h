@@ -1,7 +1,6 @@
-#ifndef _ots_TCPTransceiverSocket_h_
-#define _ots_TCPTransceiverSocket_h_
+#ifndef _TCPTransceiverSocket_h_
+#define _TCPTransceiverSocket_h_
 
-//#include "../NetworkUtils/TCPSocket.h"
 #include "../NetworkUtils/TCPTransmitterSocket.h"
 #include "../NetworkUtils/TCPReceiverSocket.h"
 
@@ -14,7 +13,8 @@ public:
 	TCPTransceiverSocket(TCPTransceiverSocket const&)  = delete ;
 	TCPTransceiverSocket(TCPTransceiverSocket&& theTCPTransceiverSocket) = default;
 
-	std::string sendAndReceive (const std::string& sendBuffer);
+	std::string sendAndReceivePacket(const std::string& sendBuffer);
+	std::string sendAndReceive      (const std::string& sendBuffer);
 
 };
 

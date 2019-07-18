@@ -142,7 +142,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
   return theThresholdAndNoiseContainer;
 }
 
-void SCurve::initHisto () { histos.book(fResultFile, *fDetectorContainer); }
+void SCurve::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
 
 void SCurve::fillHisto()
 {

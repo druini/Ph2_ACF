@@ -156,6 +156,13 @@ void TCPServerBase::closeClientSocket(int socket)
 }
 
 //========================================================================================================================
+void TCPServerBase::broadcastPacket(const std::string &message)
+{
+	for (auto& socket : fConnectedClients)
+		dynamic_cast<TCPTransmitterSocket *>(socket.second)->sendPacket(message);
+}
+
+//========================================================================================================================
 void TCPServerBase::broadcast(const std::string &message)
 {
 	for (auto &socket : fConnectedClients)

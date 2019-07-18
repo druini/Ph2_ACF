@@ -5,8 +5,7 @@
 #include "../Utils/Occupancy.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "../Utils/ThresholdAndNoiseStream.h"
-#include "../Utils/OccupancyStream.h"
+#include "../Utils/ContainerStream.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include <math.h>
 
@@ -25,7 +24,8 @@
 PedeNoise::PedeNoise() :
     Tool(),
     fHoleMode (false),
-    fFitted (false),
+    fPlotSCurves (false),
+    fFitSCurves (false),
     fTestPulseAmplitude (0),
     fEventsPerPoint (0)
 {
@@ -52,8 +52,12 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     fMaskChannelsFromOtherGroups = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
     cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
     fSkipMaskedChannels = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-
     this->SetSkipMaskedChannels( fSkipMaskedChannels );
+    cSetting = fSettingsMap.find ( "PlotSCurves" );
+    fPlotSCurves = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
+    cSetting = fSettingsMap.find ( "FitSCurves" );
+    fFitSCurves = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
+    if(fFitSCurves) fPlotSCurves = true;
 
     uint16_t cStartValue = 0x000;
 
@@ -70,8 +74,8 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
                 if (fDisableStubLogic)
                 {
                     LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET ;
-                    fStubLogicValue.at(cBoard->getId())->at(cFe->getId())->at(cCbc->getId())->getSummary<RegisterValue>().fRegisterValue = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth");
-                    fHIPCountValue .at(cBoard->getId())->at(cFe->getId())->at(cCbc->getId())->getSummary<RegisterValue>().fRegisterValue = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode"           );
+                    fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<RegisterValue>().fRegisterValue = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth");
+                    fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<RegisterValue>().fRegisterValue = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode"           );
                     fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth", 0x23);
                     fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode", 0x08);
                 }
@@ -88,12 +92,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     LOG (INFO) << " Nevents = " << fEventsPerPoint ;
 
     #ifdef __USE_ROOT__
-        fDQMHistogramPedeNoise.setPlotSCurve(true);
-        cSetting = fSettingsMap.find ( "FitSCurves" );
-        fFitted = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
-        fDQMHistogramPedeNoise.setFitSCurve(fFitted);
-        LOG (INFO) << " FitSCurves = " << int ( fFitted ) ;
-        fDQMHistogramPedeNoise.book(fResultFile,*fDetectorContainer);
+        fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
     #endif    
 
 
@@ -187,10 +186,6 @@ void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
 
     measureSCurves (cStartValue );
 
-    #ifdef __USE_ROOT__
-        fDQMHistogramPedeNoise.fillSCurvePlots(fSCurveOccupancyMap);
-    #endif
-
     //re-enable stub logic
     for ( auto cBoard : *fDetectorContainer )
     {
@@ -203,8 +198,8 @@ void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
                 if (fDisableStubLogic)
                 {
                     LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
-                    cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getId())->at(cFe->getId())->at(cCbc->getId())->getSummary<RegisterValue>().fRegisterValue});
-                    cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getId())->at(cFe->getId())->at(cCbc->getId())->getSummary<RegisterValue>().fRegisterValue});
+                    cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<RegisterValue>().fRegisterValue});
+                    cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<RegisterValue>().fRegisterValue});
                 }
 
                 fReadoutChipInterface->WriteChipMultReg (static_cast<Cbc*>(cCbc), cRegVec);
@@ -240,9 +235,8 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
         //increase threshold to supress noise
         setThresholdtoNSigma (cBoard, 5);
     }
-    DetectorDataContainer     theOccupancyContainer;
-	fDetectorDataContainer = &theOccupancyContainer;
-	OccupancyBoardStream      theOccupancyStream;
+    DetectorDataContainer       theOccupancyContainer;
+	fDetectorDataContainer =   &theOccupancyContainer;
     
     ContainerFactory   theDetectorFactory;
 	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -257,6 +251,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     #ifdef __USE_ROOT__
         fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
     #else
+        auto theOccupancyStream = prepareContainerStreamer<Occupancy>();
         for(auto board : theOccupancyContainer)
         {
             if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
@@ -326,7 +321,7 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
 
     cMean /= nCbc;
     
-    LOG (INFO) << BOLDBLUE << "Found Pedestals to be around " << BOLDRED << cMean << " (0x" << std::hex << cMean << std::dec << ", 0b" << std::bitset<10> (cMean) << ")" << BOLDBLUE << RESET;
+    LOG (INFO) << BOLDBLUE << "Found Pedestals to be around " << BOLDRED << cMean << RESET;
 
     return cMean;
 
@@ -355,6 +350,23 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         fSCurveOccupancyMap[cValue] = theOccupancyContainer;
 
         this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
+
+
+        #ifdef __USE_ROOT__
+            if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue,*theOccupancyContainer);
+        #else
+            if(fPlotSCurves) 
+            {
+                ContainerStream<Occupancy,uint16_t> theSCurveStreamer("SCurve");
+                theSCurveStreamer.getHeaderStream()->setHeaderInfo(cValue);
+                for(auto board : *theOccupancyContainer )
+                {
+                    if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
+                }
+            }
+
+        #endif
+
 
         float globalOccupancy = theOccupancyContainer->getSummary<Occupancy,Occupancy>().fOccupancy;
         
@@ -457,7 +469,6 @@ void PedeNoise::extractPedeNoise ()
     }
 
     //calculate the averages and ship
-    ThresholdAndNoiseBoardStream  theThresholdAndNoiseStream;
     
     for ( auto board : fThresholdAndNoiseContainer)
     {
@@ -479,8 +490,9 @@ void PedeNoise::extractPedeNoise ()
     }
 
     #ifdef __USE_ROOT__
-        if(!fFitted) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
+        if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
     #else
+        auto theThresholdAndNoiseStream = prepareContainerStreamer<ThresholdAndNoise>();
         for(auto board : fThresholdAndNoiseContainer )
         {
             if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
@@ -499,8 +511,8 @@ void PedeNoise::setThresholdtoNSigma (BoardContainer* board, uint32_t pNSigma)
         {
             uint32_t cCbcId = chip->getId();
             
-            uint16_t cPedestal = round (fThresholdAndNoiseContainer.at(board->getId())->at(module->getId())->at(chip->getId())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold);
-            uint16_t cNoise    = round (fThresholdAndNoiseContainer.at(board->getId())->at(module->getId())->at(chip->getId())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fNoise);
+            uint16_t cPedestal = round (fThresholdAndNoiseContainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold);
+            uint16_t cNoise    = round (fThresholdAndNoiseContainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fNoise);
             int cDiff = fHoleMode ? pNSigma * cNoise : -pNSigma * cNoise;
             uint16_t cValue = cPedestal + cDiff;
 

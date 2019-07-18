@@ -101,9 +101,9 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
   return theOccContainer;
 }
 
-void PixelAlive::initHisto () { histos.book(fResultFile, *fDetectorContainer); }
-void PixelAlive::fillHisto () { histos.fill(*theOccContainer.get());           }
-void PixelAlive::display   () { histos.process();                              }
+void PixelAlive::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void PixelAlive::fillHisto () { histos.fill(*theOccContainer.get());                         }
+void PixelAlive::display   () { histos.process();                                            }
 
 void PixelAlive::chipErrorReport ()
 {

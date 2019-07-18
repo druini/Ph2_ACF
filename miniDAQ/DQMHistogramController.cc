@@ -52,7 +52,7 @@ bool DQMHistogramController::readMessage(DetectorContainer &theDetectorDataConta
 		if(configBuffer.size()>0)
 		{
 			std::cout<<configBuffer.size()<<std::endl;
-			OccupancyBoardStream theOccupancy;
+			ContainerStream<Occupancy> theOccupancy("PedeNoise");
  			if(theOccupancy.attachBuffer(&configBuffer))
  			{
  				std::cout<<"Matched!!!!!\n";

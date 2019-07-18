@@ -50,13 +50,13 @@ class DQMHistogramBase
      * \brief Book histograms
      * \param theDetectorStructure : Container of the Detector structure
      */
-    virtual void book(TFile *outputFile, const DetectorContainer &theDetectorStructure) = 0;
+    virtual void book(TFile *outputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) = 0;
 
     /*!
      * \brief Book histograms
      * \param configurationFileName : xml configuration file
      */
-    virtual void fill (std::vector<char>& dataBuffer) = 0;
+    virtual bool fill (std::vector<char>& dataBuffer) = 0;
     
     /*!
      * \brief SAve histograms
