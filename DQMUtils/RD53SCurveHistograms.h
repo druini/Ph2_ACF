@@ -11,6 +11,7 @@
 #ifndef RD53SCurveHistograms_H
 #define RD53SCurveHistograms_H
 
+#include "../Utils/ContainerFactory.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/Occupancy.h"
 #include "DQMHistogramBase.h"
@@ -33,6 +34,7 @@ class RD53SCurveHistograms : public DQMHistogramBase
   void process            ()                                                                    override;
   void fill               (std::vector<char>& dataBuffer)                                       override {};
   void reset              (void)                                                                override {};
+
   void fillOccupancy      (const DetectorDataContainer& data, int VCAL_HIGH);
   void fillThresholdNoise (const DetectorDataContainer& data);
 

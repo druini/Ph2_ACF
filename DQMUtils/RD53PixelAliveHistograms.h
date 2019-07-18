@@ -28,6 +28,7 @@ class RD53PixelAliveHistograms : public DQMHistogramBase
   void process ()                                                                    override;
   void fill    (std::vector<char>& dataBuffer)                                       override {};
   void reset   (void)                                                                override {};
+
   void fill    (const DetectorDataContainer& data);
 
  private:

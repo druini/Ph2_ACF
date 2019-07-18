@@ -28,7 +28,7 @@ namespace Ph2_HwInterface
     // ###############################################################
     // # Enable monitoring (needed for AutoRead register monitoring) #
     // ###############################################################
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100, true); // 0x100 = start monitoring
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
     this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x4,   true);
 
     

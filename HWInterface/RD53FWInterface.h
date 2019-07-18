@@ -23,7 +23,7 @@
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
-#define DEEPSLEEP  500000 // [microseconds]
+#define DEEPSLEEP  100000 // [microseconds]
 #define SHALLOWSLEEP   50 // [microseconds]
 #define MAXTRIALS      10 // Maximum number of trials for ReadNEvents
 
