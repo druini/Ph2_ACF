@@ -9,20 +9,20 @@
 
 #include "RD53ThrMinimization.h"
 
-ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart, size_t ThrStop) :
-  fileRes         (fileRes),
-  fileReg         (fileReg),
-  rowStart        (rowStart),
-  rowStop         (rowStop),
-  colStart        (colStart),
-  colStop         (colStop),
-  nPixels2Inj     (nPixels2Inj),
-  nEvents         (nEvents),
-  nEvtsBurst      (nEvtsBurst),
-  targetOccupancy (targetOccupancy),
-  ThrStart        (ThrStart),
-  ThrStop         (ThrStop),
-  PixelAlive      (fileRes, rowStart, rowStop, colStart, colStop, (rowStop-rowStart+1)*(colStop-colStart+1), nEvents, nEvtsBurst, false)
+ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart, size_t ThrStop)
+  : fileRes         (fileRes)
+  , fileReg         (fileReg)
+  , rowStart        (rowStart)
+  , rowStop         (rowStop)
+  , colStart        (colStart)
+  , colStop         (colStop)
+  , nPixels2Inj     (nPixels2Inj)
+  , nEvents         (nEvents)
+  , nEvtsBurst      (nEvtsBurst)
+  , targetOccupancy (targetOccupancy)
+  , ThrStart        (ThrStart)
+  , ThrStop         (ThrStop)
+  , PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, (rowStop-rowStart+1)*(colStop-colStart+1), nEvents, nEvtsBurst, false)
 {}
 
 ThrMinimization::~ThrMinimization ()
@@ -37,7 +37,7 @@ ThrMinimization::~ThrMinimization ()
     }
 }
 
-void ThrMinimization::Run ()
+void ThrMinimization::run ()
 {
   this->bitWiseScan("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop);
 
@@ -56,28 +56,28 @@ void ThrMinimization::Run ()
   // ################
   // # Error report #
   // ################
-  this->ChipErrorReport();
+  this->chipErrorReport();
 }
 
-void ThrMinimization::Draw (bool display, bool save)
+void ThrMinimization::draw (bool display, bool save)
 {
   TApplication* myApp;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  static_cast<PixelAlive*>(this)->Draw(false,save);
+  static_cast<PixelAlive*>(this)->draw(false,save);
 
-  this->InitHisto();
-  this->FillHisto();
-  this->Display();
+  this->initHisto();
+  this->fillHisto();
+  this->display();
 
-  if (save    == true) this->Save();
+  if (save    == true) this->save();
   if (display == true) myApp->Run();
 
   theFile->Close();
 }
 
-void ThrMinimization::Analyze ()
+void ThrMinimization::analyze ()
 {
   for (const auto cBoard : theThrContainer)
     for (const auto cModule : *cBoard)
@@ -86,7 +86,7 @@ void ThrMinimization::Analyze ()
 		   << cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue << RESET;
 }
 
-void ThrMinimization::InitHisto ()
+void ThrMinimization::initHisto ()
 {
   std::stringstream myString;
 
@@ -98,7 +98,7 @@ void ThrMinimization::InitHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  size_t ThrSize = RD53::SetBits(static_cast<RD53*>(cChip)->getNumberOfBits("Vthreshold_LIN"))+1;
+	  size_t ThrSize = RD53::setBits(static_cast<RD53*>(cChip)->getNumberOfBits("Vthreshold_LIN"))+1;
 
 
 	  myString.clear();
@@ -121,7 +121,7 @@ void ThrMinimization::InitHisto ()
   theFile = new TFile(fileRes, "UPDATE");
 }
 
-void ThrMinimization::FillHisto ()
+void ThrMinimization::fillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : theThrContainer)
@@ -134,7 +134,7 @@ void ThrMinimization::FillHisto ()
 	}
 }
 
-void ThrMinimization::Display ()
+void ThrMinimization::display ()
 {
   for (auto i = 0; i < theCanvasThr.size(); i++)
     {
@@ -145,7 +145,7 @@ void ThrMinimization::Display ()
     }
 }
 
-void ThrMinimization::Save ()
+void ThrMinimization::save ()
 {
   for (auto i = 0; i < theCanvasThr.size(); i++) theCanvasThr[i]->Write();
 
@@ -184,7 +184,7 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   for (const auto cBoard : maxDACcontainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::SetBits(numberOfBits)) + 1;
+	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::setBits(numberOfBits)) + 1;
  
 
   for (auto i = 0; i < numberOfBits; i++)
@@ -200,15 +200,15 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 		(minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue +
 		 maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue) / 2;
 
-	      this->fReadoutChipInterface->WriteChipReg (static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue, true);
+	      this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue, true);
 	    }
 
 
       // ################
       // # Run analysis #
       // ################
-      static_cast<PixelAlive*>(this)->Run();
-      auto output = static_cast<PixelAlive*>(this)->Analyze();
+      static_cast<PixelAlive*>(this)->run();
+      auto output = static_cast<PixelAlive*>(this)->analyze();
       output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
 
 
@@ -238,7 +238,7 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
     }
 }
 
-void ThrMinimization::ChipErrorReport ()
+void ThrMinimization::chipErrorReport ()
 {
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 

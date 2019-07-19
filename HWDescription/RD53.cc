@@ -11,29 +11,27 @@
 
 namespace Ph2_HwDescription
 {
-  RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename) : ReadoutChip (pFeDesc, pRD53Id)
+  RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& fileName) : ReadoutChip (pFeDesc, pRD53Id)
   {
-    fMaxRegValue = this->SetBits(NBITMAXREG);
+    fMaxRegValue      = this->setBits(NBITMAXREG);
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
-    loadfRegMap (filename);
-    setFrontEndType (FrontEndType::RD53);
-    fRD53Id = pRD53Id;
+    configFileName    = fileName;
+    loadfRegMap(configFileName);
+    setFrontEndType(FrontEndType::RD53);
   }
 
-  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename) : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id)
+  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& fileName) : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id)
   {
-    fMaxRegValue = this->SetBits(NBITMAXREG);
+    fMaxRegValue      = this->setBits(NBITMAXREG);
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
-    loadfRegMap (filename);
-    setFrontEndType (FrontEndType::RD53);
-    fRD53Id = pRD53Id;
+    configFileName    = fileName;
+    loadfRegMap(configFileName);
+    setFrontEndType(FrontEndType::RD53);
   }
 
-  RD53::~RD53 () {}
-  
-  void RD53::loadfRegMap (const std::string& filename)
+  void RD53::loadfRegMap (const std::string& fileName)
   {
-    std::ifstream     file (filename.c_str(), std::ios::in);
+    std::ifstream     file (fileName.c_str(), std::ios::in);
     std::stringstream myString;
     perPixelData      pixData;
 
@@ -47,15 +45,7 @@ namespace Ph2_HwDescription
 
 	while (getline (file, line))
 	  {
-	    if (line.find_first_not_of (" \t") == std::string::npos)
-	      {
-		fCommentMap[cLineCounter] = line;
-	      }
-	    else if (line.at (0) == '#' || line.at (0) == '*' || line.empty())
-	      {
-		// If it is a comment, save the line mapped to the line number so I can later insert it in the same place
-		fCommentMap[cLineCounter] = line;
-	      }
+	    if (line.find_first_not_of (" \t") == std::string::npos || line.at (0) == '#' || line.at (0) == '*' || line.empty()) fCommentMap[cLineCounter] = line;
 	    else if ((line.find("PIXELCONFIGURATION") != std::string::npos) || (foundPixelConfig == true))
  	      {
 		foundPixelConfig = true;
@@ -218,16 +208,18 @@ namespace Ph2_HwDescription
       }
     else
       {
-	LOG (ERROR) << BOLDRED << "The RD53 file settings " << BOLDYELLOW << filename << BOLDRED << " does not exist" << RESET;
+	LOG (ERROR) << BOLDRED << "The RD53 file settings " << BOLDYELLOW << fileName << BOLDRED << " does not exist" << RESET;
 	exit (1);
       }
   }
 
-  void RD53::saveRegMap (const std::string& filename)
+  void RD53::saveRegMap (const std::string& fName2Append)
   {
     const int Nspaces = 40;
 
-    std::ofstream file (filename.c_str(), std::ios::out | std::ios::trunc);
+    std::string output = configFileName;
+    output.insert(output.find("."),fName2Append);
+    std::ofstream file (output.c_str(), std::ios::out | std::ios::trunc);
 
     if (file)
       {
@@ -292,7 +284,7 @@ namespace Ph2_HwDescription
 	file.close();
       }
     else
-      LOG (ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << filename << RESET;
+      LOG (ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << output << RESET;
   }
   
   void RD53::copyMaskFromDefault ()
@@ -324,7 +316,7 @@ namespace Ph2_HwDescription
 	fPixelsMask[i].Enable.reset();
 	fPixelsMask[i].HitBus.reset();
 	fPixelsMask[i].InjEn .reset();
-	for (auto j = 0; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = this->SetBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION) / 2;
+	for (auto j = 0; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = this->setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION) / 2;
       }
   }
 
@@ -362,7 +354,12 @@ namespace Ph2_HwDescription
     fPixelsMask[col].TDAC[row] = TDAC;
   }
 
-  void RD53::EncodeCMD (const uint16_t               address,
+  uint8_t RD53::getTDAC (unsigned int row, unsigned int col)
+  {
+    return fPixelsMask[col].TDAC[row];
+  }
+
+  void RD53::encodeCMD (const uint16_t               address,
 			const uint16_t               data,
   			const uint8_t                pRD53Id,
   			const uint8_t                pRD53Cmd,
@@ -386,32 +383,32 @@ namespace Ph2_HwDescription
     else if (pRD53Cmd == (RD53CmdEncoder::GLOB_PULSE & 0x00FF))
       {
 	word  = 2 | (pRD53Cmd << NBIT_5BITW);
-	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits(NBIT_ID)) << 1);      // @TMP ID[3..0],isBroadcast
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->setBits(NBIT_ID)) << 1);      // @TMP ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2));
-	frame = 0 | ((data & this->SetBits(NBIT_ID)) << 1);                             // @TMP@ D[3..0],0
+	frame = 0 | ((data & this->setBits(NBIT_ID)) << 1);                             // @TMP@ D[3..0],0
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME));
       }
     else if (pRD53Cmd == (RD53CmdEncoder::CAL & 0x00FF))
       {
 	word  = 4 | (pRD53Cmd << NBIT_5BITW);
-	frame = ((data & (this->SetBits(NBIT_DATA) << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
-	  ((pRD53Id & this->SetBits(NBIT_ID)) << 1);                                    // @TMP@ ID[3..0],D[15]
+	frame = ((data & (this->setBits(NBIT_DATA) << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
+	  ((pRD53Id & this->setBits(NBIT_ID)) << 1);                                    // @TMP@ ID[3..0],D[15]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-	frame = (data & (this->SetBits(NBIT_FRAME*3) << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
+	frame = (data & (this->setBits(NBIT_FRAME*3) << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
-	frame = (data & (this->SetBits(NBIT_FRAME*2) << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]
+	frame = (data & (this->setBits(NBIT_FRAME*2) << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
-	frame = (data & (this->SetBits(NBIT_FRAME*2) << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
+	frame = (data & (this->setBits(NBIT_FRAME*2) << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
       }
     else if (pRD53Cmd == (RD53CmdEncoder::READ & 0x00FF))
       {
 	word  = 4 | (pRD53Cmd << NBIT_5BITW);
-	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits(NBIT_ID)) << 1);      // @TMP@ ID[3..0],isBroadcast
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->setBits(NBIT_ID)) << 1);      // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-	frame = (address & (this->SetBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;           // A[8..4]
+	frame = (address & (this->setBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;           // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
-	frame = (address & this->SetBits(NBIT_ID)) << 1;                                // @TMP@ A[3..0]
+	frame = (address & this->setBits(NBIT_ID)) << 1;                                // @TMP@ A[3..0]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
 	frame = 0;
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
@@ -419,21 +416,21 @@ namespace Ph2_HwDescription
     else if ((pRD53Cmd == (RD53CmdEncoder::WRITE & 0x00FF)) && (dataVec == NULL))
       {
 	word  = 6 | (pRD53Cmd << NBIT_5BITW);
-	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits(NBIT_ID)) << 1);      // @TMP@ ID[3..0],isBroadcast
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->setBits(NBIT_ID)) << 1);      // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-	frame = (address & (this->SetBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;           // A[8..4]
+	frame = (address & (this->setBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;           // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
 
- 	frame = ((data & (this->SetBits(NBIT_DATA) << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
-	  ((address & this->SetBits(NBIT_ID)) << 1);                                    // @TMP@ A[3..0],D[15]
+ 	frame = ((data & (this->setBits(NBIT_DATA) << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
+	  ((address & this->setBits(NBIT_ID)) << 1);                                    // @TMP@ A[3..0],D[15]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));       
-	frame = (data & (this->SetBits(NBIT_FRAME*3) << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
+	frame = (data & (this->setBits(NBIT_FRAME*3) << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
 	pVecReg.push_back(word);
 
-	frame = (data & (this->SetBits(NBIT_FRAME*2) << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]
+	frame = (data & (this->setBits(NBIT_FRAME*2) << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]
 	word  = frame.to_ulong() << NBIT_FRAME*0;
-	frame = (data & (this->SetBits(NBIT_FRAME*1) << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
+	frame = (data & (this->setBits(NBIT_FRAME*1) << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
 	word  = word | (frame.to_ulong() << NBIT_FRAME*1);
       }
     else if ((pRD53Cmd == (RD53CmdEncoder::WRITE & 0x00FF)) && (dataVec != NULL) && (dataVec->size() == NDATAMAX_PERPIXEL))
@@ -447,70 +444,70 @@ namespace Ph2_HwDescription
 	  }
 
 	word  = 7 | (pRD53Cmd << NBIT_5BITW);
-	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->SetBits(NBIT_ID)) << 1);                                            // @TMP@ ID[3..0],isBroadcast
+	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->setBits(NBIT_ID)) << 1);                                            // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-	frame = (address & (this->SetBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;                                                 // A[8..4]
+	frame = (address & (this->setBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;                                                 // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
 
-	tmp   = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(1) << NBIT_DATA*NDATAMAX_PERPIXEL-1)) >> NBIT_FRAME*19;
-	frame = tmp.to_ulong() | ((address & this->SetBits(NBIT_ID)) << 1);                                                   // @TMP@ A[3..0],D[95]
+	tmp   = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(1) << NBIT_DATA*NDATAMAX_PERPIXEL-1)) >> NBIT_FRAME*19;
+	frame = tmp.to_ulong() | ((address & this->setBits(NBIT_ID)) << 1);                                                   // @TMP@ A[3..0],D[95]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
-	tmp   = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*18)) >> NBIT_FRAME*18; // D[94..90]
+	tmp   = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*18)) >> NBIT_FRAME*18; // D[94..90]
 	word  = word | (tmp.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
 	pVecReg.push_back(word);
 
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*17)) >> NBIT_FRAME*17;  // D[89..85]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*17)) >> NBIT_FRAME*17;  // D[89..85]
 	word = tmp.to_ulong() << NBIT_FRAME*0;
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*16)) >> NBIT_FRAME*16;  // D[84..80]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*16)) >> NBIT_FRAME*16;  // D[84..80]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*1);
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*15)) >> NBIT_FRAME*15;  // D[79..75]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*15)) >> NBIT_FRAME*15;  // D[79..75]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*2);
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*14)) >> NBIT_FRAME*14;  // D[74..70]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*14)) >> NBIT_FRAME*14;  // D[74..70]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*3);
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*13)) >> NBIT_FRAME*13;  // D[69..65]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*13)) >> NBIT_FRAME*13;  // D[69..65]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*4);
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*12)) >> NBIT_FRAME*12;  // D[64..60]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*12)) >> NBIT_FRAME*12;  // D[64..60]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*5);
 	pVecReg.push_back(word);
 
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*11)) >> NBIT_FRAME*11;  // D[59..55]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*11)) >> NBIT_FRAME*11;  // D[59..55]
 	word = tmp.to_ulong() << NBIT_FRAME*0;
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*10)) >> NBIT_FRAME*10;  // D[54..50]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*10)) >> NBIT_FRAME*10;  // D[54..50]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*1);
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*9)) >> NBIT_FRAME*9;    // D[49..45]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*9)) >> NBIT_FRAME*9;    // D[49..45]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*2);
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*8)) >> NBIT_FRAME*8;    // D[44..40]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*8)) >> NBIT_FRAME*8;    // D[44..40]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*3);
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*7)) >> NBIT_FRAME*7;    // D[39..35]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*7)) >> NBIT_FRAME*7;    // D[39..35]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*4);
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*6)) >> NBIT_FRAME*6;    // D[34..30]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*6)) >> NBIT_FRAME*6;    // D[34..30]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*5);
 	pVecReg.push_back(word);
 
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*5)) >> NBIT_FRAME*5;    // D[29..25]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*5)) >> NBIT_FRAME*5;    // D[29..25]
 	word = tmp.to_ulong() << NBIT_FRAME*0;
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*4)) >> NBIT_FRAME*4;    // D[24..20]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*4)) >> NBIT_FRAME*4;    // D[24..20]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*1);
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*3)) >> NBIT_FRAME*3;    // D[19..15]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*3)) >> NBIT_FRAME*3;    // D[19..15]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*2);
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*2)) >> NBIT_FRAME*2;    // D[14..10]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*2)) >> NBIT_FRAME*2;    // D[14..10]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*3);
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*1)) >> NBIT_FRAME*1;    // D[9..5]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*1)) >> NBIT_FRAME*1;    // D[9..5]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*4);
-	tmp  = (dataBitStream & (this->SetBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*0)) >> NBIT_FRAME*0;    // D[4..0]
+	tmp  = (dataBitStream & (this->setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*0)) >> NBIT_FRAME*0;    // D[4..0]
 	word = word | (tmp.to_ulong() << NBIT_FRAME*5);
       }
 
     pVecReg.push_back(word);
   }
 
-  void RD53::ConvertRowCol2Cores (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair)
+  void RD53::convertRowCol2Cores (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair)
   {
     colPair = col >> (NPIXCOL_PROG/2);
     row     = _row;
   }
   
-  void RD53::ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side,
+  void RD53::convertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side,
 				   unsigned int& row, unsigned int& col)
   {
     row = coreRowAndRegion;
@@ -544,7 +541,7 @@ namespace Ph2_HwDescription
     std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
     if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHEAD;
 
-    size_t noHitToT = RD53::SetBits(RD53EvtEncoder::NBIT_TOT);
+    size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
     for (auto i = 1; i < n; i++)
       if (data[i] != noHitToT)
 	{
