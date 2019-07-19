@@ -25,7 +25,7 @@
 // ################################
 #define DEEPSLEEP  100000 // [microseconds]
 #define SHALLOWSLEEP   50 // [microseconds]
-#define MAXTRIALS      20 // Maximum number of trials for ReadNEvents
+#define MAXTRIALS      10 // Maximum number of trials for ReadNEvents
 
 #define NBIT_FWVER     16 // Number of bits for the firmware version
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
@@ -76,6 +76,7 @@ namespace RD53FWEvtEncoder
   const uint8_t EMPTY  = 0x04; // Event status Empty event
   const uint8_t L1A    = 0x08; // Event status L1A counter mismatch
   const uint8_t FRSIZE = 0x10; // Event status Invalid frame size
+  const uint8_t FWERR  = 0x20; // Event status Firmware error
 }
 
 

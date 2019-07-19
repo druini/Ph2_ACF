@@ -667,6 +667,12 @@ namespace Ph2_HwInterface
 	isGood = false;
       }
 
+    if (status & RD53FWEvtEncoder::FWERR)
+      {
+	LOG (ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << RESET;
+	isGood = false;
+      }
+
     if (status & RD53EvtEncoder::CHEAD)
       {
 	LOG (ERROR) << BOLDRED << "Bad chip header " << BOLDYELLOW << "--> retry" << RESET;
@@ -689,23 +695,34 @@ namespace Ph2_HwInterface
     std::tie(block_size) = unpack_bits<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);    
     if (block_size * 4 != n) evtStatus |= RD53FWEvtEncoder::EVSIZE;
 
+
+    // #########################
+    // # Decoding event header #
+    // #########################
     bool dummy_size;
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
     std::tie(tdc, l1a_counter) = unpack_bits<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
     bx_counter = data[3];
 
+
     std::vector<size_t> chip_start;
-    for (auto i = 4; i < n; i += 4) if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) chip_start.push_back(i);
+    for (auto i = 4; i < n; i += 2) if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) chip_start.push_back(i);
 
     chip_frames.reserve(chip_start.size());
     chip_events.reserve(chip_start.size());
     for (auto i = 0; i < chip_start.size(); i++)
       {
 	const size_t start = chip_start[i];
-	const size_t end   = ((i == chip_start.size() - 1) ? n : chip_start[i + 1]);
+	const size_t end   = ((i == chip_start.size() - 1) ? n - dummy_size * 4 : chip_start[i + 1]);
 	chip_frames.emplace_back(data[start], data[start + 1]);
 
- 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start))
+	if (chip_frames[i].error_code != 0)
+	  {
+	    evtStatus |= RD53FWEvtEncoder::FWERR;
+	    return;
+	  }
+
+ 	if ((chip_frames[i].l1a_data_size * 4) != (end - start))
 	  {
 	    evtStatus |= RD53FWEvtEncoder::FRSIZE;
 	    chip_frames.clear();
@@ -713,7 +730,7 @@ namespace Ph2_HwInterface
 	    return;
 	  }
 
-	const size_t size = (dummy_size ? chip_frames.back().l1a_data_size * 4 : end - start);
+	const size_t size = chip_frames.back().l1a_data_size * 4;
 	chip_events.emplace_back(&data[start + 2], size - 2);
 
 	if (chip_events[i].evtStatus != RD53EvtEncoder::CGOOD) evtStatus |= chip_events[i].evtStatus;
