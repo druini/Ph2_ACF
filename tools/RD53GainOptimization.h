@@ -7,14 +7,12 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53GainOptimization_h_
-#define _RD53GainOptimization_h_
+#ifndef RD53GainOptimization_H
+#define RD53GainOptimization_H
 
 #include "../Utils/EmptyContainer.h"
 #include "RD53Gain.h"
 
-
-using namespace Ph2_System;
 
 // ################################
 // # Gain optimization test suite #
@@ -25,8 +23,8 @@ class GainOptimization : public Gain
   GainOptimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetCharge, size_t KrumCurrStart = 0, size_t KrumCurrStop = 0);
   ~GainOptimization ();
 
-  void Run  ();
-  void Draw (bool display, bool save);
+  void run  ();
+  void draw (bool display, bool save);
 
  private:
   const char* fileRes;
@@ -46,12 +44,12 @@ class GainOptimization : public Gain
   
   DetectorDataContainer theKrumCurrContainer;
 
-  void InitHisto       ();
-  void FillHisto       ();
-  void Display         ();
-  void Save            ();
+  void initHisto       ();
+  void fillHisto       ();
+  void display         ();
+  void save            ();
   void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-  void ChipErrorReport ();
+  void chipErrorReport ();
 
 
   // ########

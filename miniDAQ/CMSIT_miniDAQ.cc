@@ -17,8 +17,6 @@
 #include "../tools/RD53SCurve.h"
 #include "../tools/RD53Gain.h"
 
-#include <fstream>
-
 
 // ##################
 // # Default values #
@@ -26,9 +24,6 @@
 #define FileRUNNUMBER "./RunNumber.txt"
 #define RUNNUMBER     "0000"
 
-
-using namespace CommandLineProcessing;
-using namespace Ph2_System;
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -40,74 +35,14 @@ auto FindValue (const SystemController& sc, const char* name)
 }
 
 
-void InitParameters (const SystemController& sc,
-
-		     size_t& nEvents,
-		     size_t& nEvtsBurst,
-		     size_t& NTRIGxL1A,
-		     std::string& INJtype,
-
-		     size_t& ROWstart,
-		     size_t& ROWstop,
-		     size_t& COLstart,
-		     size_t& COLstop,
-		     size_t& nPixelInj,
-
-		     size_t& LatencyStart,
-		     size_t& LatencyStop,
-
-		     size_t& VCALstart,
-		     size_t& VCALstop,
-		     size_t& VCALnsteps,
-
-		     size_t& targetCharge,
-		     size_t& KrumCurrStart,
-		     size_t& KrumCurrStop,
-
-		     size_t& targetOccupancy,
-		     size_t& ThrStart,
-		     size_t& ThrStop,
-
-		     size_t& display,
-		     size_t& chipRegDefault)
+void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, size_t type, bool hitOr)
+// #########################
+// # type == 0 --> Digital #
+// # type == 1 --> Analog  #
+// #########################
 {
-  nEvents         = FindValue(sc,"nEvents");
-  nEvtsBurst      = FindValue(sc,"nEvtsBurst");
-  NTRIGxL1A       = FindValue(sc,"NTRIGxL1A");
-  INJtype         = (FindValue(sc,"INJtype") == 0 ? "Analog" : "Digital");
-
-  ROWstart        = FindValue(sc,"ROWstart");
-  ROWstop         = FindValue(sc,"ROWstop");
-  COLstart        = FindValue(sc,"COLstart");
-  COLstop         = FindValue(sc,"COLstop");
-  nPixelInj       = FindValue(sc,"nPixelInj");
-
-  LatencyStart    = FindValue(sc,"LatencyStart");
-  LatencyStop     = FindValue(sc,"LatencyStop");
-
-  VCALstart       = FindValue(sc,"VCALstart");
-  VCALstop        = FindValue(sc,"VCALstop");
-  VCALnsteps      = FindValue(sc,"VCALnsteps");
-
-  targetCharge    = FindValue(sc,"targetCharge");
-  KrumCurrStart   = FindValue(sc,"KrumCurrStart");
-  KrumCurrStop    = FindValue(sc,"KrumCurrStop");
-
-  targetOccupancy = FindValue(sc,"targetOccupancy");
-  ThrStart        = FindValue(sc,"ThrStart");
-  ThrStop         = FindValue(sc,"ThrStop");
-
-  display         = FindValue(sc,"DisplayHisto");
-  chipRegDefault  = FindValue(sc,"ChipRegDefaultFile");
-}
-
-
-void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type, bool hitOr)
-// ###################
-// # type == Digital #
-// # type == Analog  #
-// ###################
-{
+  enum INJtype { Analog, Digital };
+ 
   for (const auto& cBoard : sc.fBoardVector)
     {
       auto RD53Board = static_cast<RD53FWInterface*>(sc.fBeBoardFWMap[cBoard->getBeBoardId()]);
@@ -127,7 +62,7 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type, boo
 	    cfgFastCmd.n_triggers       = 0;
 	    cfgFastCmd.trigger_duration = NTRIGxL1A;
 
-	    if (type == "Digital")
+	    if (type == INJtype::Digital)
 	      {
 		// #######################################
 		// # Configuration for digital injection #
@@ -145,7 +80,7 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, std::string type, boo
 		cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
 		cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
 	      }
-	    else if (type == "Analog")
+	    else if (type == INJtype::Analog)
 	      {
 		// ######################################
 		// # Configuration for analog injection #
@@ -230,46 +165,60 @@ int main (int argc, char** argv)
   // #############################
   // # Initialize command parser #
   // #############################
-  ArgvParser cmd;
+  CommandLineProcessing::ArgvParser cmd;
 
   cmd.setIntroductoryDescription("@@@ CMSIT Middleware System Test Application @@@");
 
   cmd.setHelpOption("h","help","Print this help page");
 
-  cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml",ArgvParser::OptionRequiresValue);
+  cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml",CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin]. Default: pixelalive", ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
-  cmd.defineOption ("raw", "Save raw data. Default: disabled", ArgvParser::NoOptionAttribute);
+  cmd.defineOption ("raw", "Save raw data. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("raw", "r");
 
-  cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", ArgvParser::NoOptionAttribute);
+  cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("ext", "x");
 
-  cmd.defineOption ("hitor", "Use Hit-Or signal to trigger. Default: disabled", ArgvParser::NoOptionAttribute);
+  cmd.defineOption ("hitor", "Use Hit-Or signal to trigger. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("hitor", "o");
+
+  // @TMP@
+  cmd.defineOption("reset","Reset the hardware", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+  cmd.defineOptionAlternative("reset", "s");
 
   int result = cmd.parse(argc,argv);
 
-  if (result != ArgvParser::NoParserError)
+  if (result != CommandLineProcessing::ArgvParser::NoParserError)
     {
       LOG (INFO) << cmd.parseErrorDescription(result);
       exit(EXIT_FAILURE);
     }
 
-  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "CMSIT.xml";
-  std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
-  bool saveRaw           = cmd.foundOption("raw")    == true ? true : false;
-  bool extClkTrg         = cmd.foundOption("ext")    == true ? true : false;
-  bool hitOr             = cmd.foundOption("hitor")  == true ? true : false;
+  std::string configFile = cmd.foundOption("file")  == true ? cmd.optionValue("file") : "CMSIT.xml";
+  std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "pixelalive";
+  bool saveRaw           = cmd.foundOption("raw")   == true ? true : false;
+  bool extClkTrg         = cmd.foundOption("ext")   == true ? true : false;
+  bool hitOr             = cmd.foundOption("hitor") == true ? true : false;
+  bool reset             = cmd.foundOption("reset") == true ? true : false; // @TMP@
 
 
   // ##################################
   // # Instantiate a SystemController #
   // ##################################
   SystemController cSystemController;
+  // @TMP@
+  if (reset == true)
+    {
+      std::stringstream outp;
+      cSystemController.InitializeHw(configFile, outp, true, false);
+      cSystemController.InitializeSettings(configFile, outp);
+      static_cast<RD53FWInterface*>(cSystemController.fBeBoardFWMap[cSystemController.fBoardVector[0]->getBeBoardId()])->ResetSequence();
+      exit(EXIT_SUCCESS);
+    }
 
 
   // ###################
@@ -299,9 +248,36 @@ int main (int argc, char** argv)
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents, nEvtsBurst, NTRIGxL1A, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, targetCharge, KrumCurrStart, KrumCurrStop, targetOccupancy, ThrStart, ThrStop, display, chipRegDefault;
-  std::string INJtype;
-  InitParameters(cSystemController, nEvents, nEvtsBurst, NTRIGxL1A, INJtype, ROWstart, ROWstop, COLstart, COLstop, nPixelInj, LatencyStart, LatencyStop, VCALstart, VCALstop, VCALnsteps, targetCharge, KrumCurrStart, KrumCurrStop, targetOccupancy, ThrStart, ThrStop, display, chipRegDefault);
+  size_t nEvents         = FindValue(cSystemController,"nEvents");
+  size_t nEvtsBurst      = FindValue(cSystemController,"nEvtsBurst");
+  size_t NTRIGxL1A       = FindValue(cSystemController,"NTRIGxL1A");
+  size_t INJtype         = FindValue(cSystemController,"INJtype");
+
+  size_t ROWstart        = FindValue(cSystemController,"ROWstart");
+  size_t ROWstop         = FindValue(cSystemController,"ROWstop");
+  size_t COLstart        = FindValue(cSystemController,"COLstart");
+  size_t COLstop         = FindValue(cSystemController,"COLstop");
+  size_t nPixelInj       = FindValue(cSystemController,"nPixelInj");
+
+  size_t LatencyStart    = FindValue(cSystemController,"LatencyStart");
+  size_t LatencyStop     = FindValue(cSystemController,"LatencyStop");
+
+  size_t VCALstart       = FindValue(cSystemController,"VCALstart");
+  size_t VCALstop        = FindValue(cSystemController,"VCALstop");
+  size_t VCALnsteps      = FindValue(cSystemController,"VCALnsteps");
+  size_t VCALoffset      = FindValue(cSystemController,"VCALoffset");
+
+  size_t targetCharge    = FindValue(cSystemController,"targetCharge");
+  size_t KrumCurrStart   = FindValue(cSystemController,"KrumCurrStart");
+  size_t KrumCurrStop    = FindValue(cSystemController,"KrumCurrStop");
+
+  size_t targetOccupancy = FindValue(cSystemController,"targetOccupancy");
+  size_t ThrStart        = FindValue(cSystemController,"ThrStart");
+  size_t ThrStop         = FindValue(cSystemController,"ThrStop");
+
+  size_t display         = FindValue(cSystemController,"DisplayHisto");
+  size_t chipRegDefault  = FindValue(cSystemController,"ChipRegDefaultFile");
+
 
   // ######################################
   // # Correct injection pattern for RD53 #
@@ -332,9 +308,9 @@ int main (int argc, char** argv)
       std::string fileName("Run" + runNumber + "_Latency.root");
       Latency la(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
       la.Inherit(&cSystemController);
-      la.Run();
-      la.Analyze();
-      la.Draw(display,true);
+      la.run();
+      la.analyze();
+      la.draw(display,true);
     }
   else if (whichCalib == "pixelalive")
     {
@@ -344,11 +320,11 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
       std::string fileName("Run" + runNumber + "_PixelAlive");
-      PixelAlive pa(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, true);
+      PixelAlive pa(fileName.c_str(), "", ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, true);
       pa.Inherit(&cSystemController);
-      pa.Run();
-      pa.Analyze();
-      pa.Draw(display,true);
+      pa.run();
+      pa.analyze();
+      pa.draw(display,true);
     }
   else if (whichCalib == "noise")
     {
@@ -357,12 +333,13 @@ int main (int argc, char** argv)
       // #############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_NoiseScan");
-      PixelAlive pa(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false);
+      std::string fileName("Run" + runNumber + "_NoiseScan"); 
+      std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
+      PixelAlive pa(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false, targetOccupancy);
       pa.Inherit(&cSystemController);
-      pa.Run();
-      pa.Analyze();
-      pa.Draw(display,true);
+      pa.run();
+      pa.analyze();
+      pa.draw(display,true);
     }
   else if (whichCalib == "scurve")
     {
@@ -371,12 +348,12 @@ int main (int argc, char** argv)
       // ##############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_SCurve.root");
-      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      std::string fileName("Run" + runNumber + "_SCurve");
+      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
       sc.Inherit(&cSystemController);
-      sc.Run();
-      sc.Analyze();
-      sc.Draw(display,true);
+      sc.run();
+      sc.analyze();
+      sc.draw(display,true);
     }
   else if (whichCalib == "gain")
     {
@@ -388,9 +365,9 @@ int main (int argc, char** argv)
       std::string fileName("Run" + runNumber + "_Gain.root");
       Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
       ga.Inherit(&cSystemController);
-      ga.Run();
-      ga.Analyze();
-      ga.Draw(display,true);
+      ga.run();
+      ga.analyze();
+      ga.draw(display,true);
     }
   else if (whichCalib == "threqu")
     {
@@ -400,19 +377,17 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
       std::string fileName("Run" + runNumber + "_ThrEqualization.root");
-      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
       sc.Inherit(&cSystemController);
-      sc.Run();
-      auto output = sc.Analyze();
-      sc.Draw(false,true);
+      sc.run();
+      auto output = sc.analyze();
+      sc.draw(false,true);
 
-      std::string chipConfig;
-      if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
-      else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
+      std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
       ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents*VCALnsteps, nEvents);
       te.Inherit(&cSystemController);
-      te.Run(output);
-      te.Draw(display,true);
+      te.run(output);
+      te.draw(display,true);
     }
   else if (whichCalib == "gainopt")
     {
@@ -422,13 +397,11 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
 
       std::string fileName("Run" + runNumber + "_GainOptimization.root");
-      std::string chipConfig;
-      if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
-      else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
+      std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
       GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, RD53chargeConverter::Charge2VCal(targetCharge), KrumCurrStart, KrumCurrStop);
       go.Inherit(&cSystemController);
-      go.Run();
-      go.Draw(display,true);
+      go.run();
+      go.draw(display,true);
     }
   else if (whichCalib == "thrmin")
     {
@@ -438,14 +411,12 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threhsold Minimization @@@" << RESET;
 
       std::string fileName("Run" + runNumber + "_ThrMinimization.root");
-      std::string chipConfig;
-      if (chipRegDefault == true) chipConfig = "./CMSIT_RD53.txt";
-      else                        chipConfig = "./CMSIT_RD53_" + runNumber + ".txt";
+      std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
       ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, targetOccupancy, ThrStart, ThrStop);
       tm.Inherit(&cSystemController);
-      tm.Run();
-      tm.Analyze();
-      tm.Draw(display,true);
+      tm.run();
+      tm.analyze();
+      tm.draw(display,true);
     }
   else LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
 

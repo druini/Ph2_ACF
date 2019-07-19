@@ -353,14 +353,12 @@ namespace Ph2_HwInterface {
         {
 	  LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         }
-
-        virtual std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadChipRegisters (std::vector<uint32_t> & data,
-											    unsigned int filter = 0,
-											    unsigned int pBlockSize = 1)
-	  {
-            LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-            return std::pair< std::vector<uint16_t>,std::vector<uint16_t> >();
-	  }
+	
+        virtual std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (std::vector<uint32_t> & data, uint8_t chipID, uint8_t filter = 0)
+	{
+	  LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+	  return std::vector<std::pair<uint16_t,uint16_t>>();
+	}
 	
         virtual bool InitChipCommunication()
         {
@@ -368,7 +366,7 @@ namespace Ph2_HwInterface {
 	  return false;
         }
 	// ################################################################################################
-
+	
 
     protected:
 
