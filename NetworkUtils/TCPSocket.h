@@ -1,5 +1,5 @@
-#ifndef _ots_TCPSocket_h_
-#define _ots_TCPSocket_h_
+#ifndef _TCPSocket_h_
+#define _TCPSocket_h_
 
 class TCPSocket
 {

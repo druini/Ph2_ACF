@@ -1,5 +1,5 @@
-#ifndef _ots_TCPReceiverSocket_h_
-#define _ots_TCPReceiverSocket_h_
+#ifndef _TCPReceiverSocket_h_
+#define _TCPReceiverSocket_h_
 
 #include "../NetworkUtils/TCPSocket.h"
 #include "../NetworkUtils/TCPPacket.h"
@@ -13,7 +13,7 @@ public:
 	//TCPReceiverSocket(TCPReceiverSocket const&)  = delete ;
 	TCPReceiverSocket(TCPReceiverSocket &&theTCPReceiverSocket) = default;
 
-	std::size_t receive      (char* buffer, std::size_t size);
+	std::size_t receive (char* buffer, std::size_t bufferSize);
 	template <class T>
 	T receive()
 	{

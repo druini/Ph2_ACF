@@ -25,15 +25,15 @@ public:
 			abort();
 		}
 		std::cout << __PRETTY_FUNCTION__ << "Client connected!" << std::endl;
-		std::string megaStringA(999994,'a');
-		std::string megaStringB(999994,'b');
+		std::string megaStringA(9994,'a');
+		std::string megaStringB(9994,'b');
 		std::string readBufferA;
 		std::string readBufferB;
 		std::cout << __PRETTY_FUNCTION__ << "Sending and receiving A!" << std::endl;
 		readBufferA = TCPClient::sendAndReceivePacket(megaStringA);
 		std::cout << __PRETTY_FUNCTION__ << "Sending and receiving B!" << std::endl;
 		readBufferB = TCPClient::sendAndReceivePacket(megaStringB);
-		for(int l=0; l<1000; l++)
+		for(int l=0; l<10; l++)
 		{
 		for(int i=10; i<20; i++)
 		{
@@ -69,6 +69,10 @@ protected:
 int main ( int argc, char* argv[] )
 {
 	MiddlewareInterface theMiddlewareInterface("127.0.0.1",5000);
+	//MiddlewareInterface theMiddlewareInterface("131.225.86.69",5000);
+	//MiddlewareInterface theMiddlewareInterface("192.168.0.100",5000);
+	//MiddlewareInterface theMiddlewareInterface("kenny01.dhcp.fnal.gov",5000);
+	//MiddlewareInterface theMiddlewareInterface("ciao.dhcp.fnal.gov",5000);
 	theMiddlewareInterface.initialize();
 	while(1)
 	{

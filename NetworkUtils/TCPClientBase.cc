@@ -1,37 +1,16 @@
-//#ifndef BEAGLEBONE
-//#include "otsdaq_cmsburninbox/BeagleBone/BeagleBoneUtils/TCPClientBase.h"
-//#else
 #include "../NetworkUtils/TCPClientBase.h"
-//#endif
 
 #include <iostream>
-#include <strings.h>         // bzero
-#include <netinet/in.h>      // inet_aton, struct sockaddr_in
-#include <arpa/inet.h>       // inet_aton
-// #include <sys/socket.h>      // inet_aton, socket, bind, listen, accept
-// #include <cassert>
-// #include <sstream>
-// #include <unistd.h>
-// #include <stdio.h>           // printf
-// #include <stdlib.h>          // exit
-// #include <netdb.h>           // gethostbyname
-// #include <errno.h>           // errno
-// #include <sys/types.h>       // socket, bind, listen, accept
-// #include <string.h>          // bzero
-// #include <fcntl.h>
-// #include <ifaddrs.h>
-// #include <linux/if_link.h>
-#include <regex>
-
-
-// #include <chrono>
+#include <strings.h>	// bzero
+#include <netinet/in.h> // inet_aton, struct sockaddr_in
+#include <arpa/inet.h>  // inet_aton
+#include <netdb.h>
 #include <thread>
+#include <boost/regex.hpp>
 
 //========================================================================================================================
-TCPClientBase::TCPClientBase(const std::string& serverIP, int serverPort)
-: fServerIP  (serverIP)
-, fServerPort(serverPort)
-, fConnected (false)
+TCPClientBase::TCPClientBase(const std::string &serverIP, int serverPort)
+	: fServerIP(serverIP), fServerPort(serverPort), fConnected(false)
 {
 }
 
@@ -39,7 +18,7 @@ TCPClientBase::TCPClientBase(const std::string& serverIP, int serverPort)
 TCPClientBase::~TCPClientBase(void)
 {
 	std::cout << __PRETTY_FUNCTION__ << "Closing TCPSocket #" << getSocketId() << std::endl;
-	if(fConnected)
+	if (fConnected)
 		close();
 	std::cout << __PRETTY_FUNCTION__ << "TCPSocket #" << getSocketId() << " closed." << std::endl;
 }
@@ -47,40 +26,49 @@ TCPClientBase::~TCPClientBase(void)
 //========================================================================================================================
 bool TCPClientBase::connect(int retry, unsigned int sleepMSeconds)
 {
-	if(fConnected)
+	if (fConnected)
 	{
 		std::cout << __PRETTY_FUNCTION__ << "I am already connected...what is going on?" << std::endl;
+		throw std::runtime_error(std::string("I am already connected...what is going on?"));
 		abort();
 	}
 
 
-	std::cout << __PRETTY_FUNCTION__ << "Connecting Client socket to serverIP " << fServerIP << " serverPort: " << fServerPort << std::endl;
-	std::chrono::milliseconds sleepTime(sleepMSeconds);
+	std::cout << __PRETTY_FUNCTION__ << "Connecting Client socket to server name-" << fServerIP << "-serverPort: " << fServerPort << std::endl;
+	std::string serverName = fServerIP;
+	resolveServer(fServerIP);
+	std::cout << __PRETTY_FUNCTION__ << "Connecting Client socket to server ip  -" << fServerIP << "-serverPort: " << fServerPort << std::endl;
 	int status = invalidSocketId;
-	struct sockaddr_in serverSocketAddress{};
-	serverSocketAddress.sin_family       = AF_INET;
-	serverSocketAddress.sin_port         = htons(fServerPort);
-	serverSocketAddress.sin_addr.s_addr  = inet_addr(fServerIP.c_str());
+	struct sockaddr_in serverSocketAddress;
+	serverSocketAddress.sin_family      = AF_INET;
+	serverSocketAddress.sin_port        = htons(fServerPort);
+	serverSocketAddress.sin_addr.s_addr = inet_addr(fServerIP.c_str());
 
-//	status = resolveServer(fServerIP, fServerPort, serverSocketAddress);
-//	if (status == -1)
-//	{
-//		std::cout << __PRETTY_FUNCTION__ << "Can't resolv host abort!" << std::endl;
-//		abort();
-//	}
 
-	while(!fConnected && (unsigned int) retry-- > 0)
+	while (!fConnected && (unsigned int)retry-- > 0)
 	{
 
-		std::cout << __PRETTY_FUNCTION__ << "Trying to connect" << std::endl;
+		//std::cout << __PRETTY_FUNCTION__ << "Trying to connect" << std::endl;
 		status = ::connect(getSocketId(), (struct sockaddr *)&serverSocketAddress, sizeof(serverSocketAddress));
-		std::cout << __PRETTY_FUNCTION__ << "Done Connect" << std::endl;
+		//std::cout << __PRETTY_FUNCTION__ << "Done Connect" << std::endl;
 		if (status == -1)
 		{
-			std::cout << __PRETTY_FUNCTION__ << "Connect ERROR" << std::endl;
-			perror( "connect error" );
-			std::this_thread::sleep_for(sleepTime);//Sleep and retry soon
-			continue;
+			if((unsigned int)retry > 0)
+			{
+				std::cout << __PRETTY_FUNCTION__ 
+				<< "WARNING: Can't connect to " << serverName 
+				<< ". The server might still be down...Sleeping " << sleepMSeconds
+				<< "ms and then retry " << (unsigned int)retry 
+				<< " more times." 
+				<< std::endl;
+				std::this_thread::sleep_for(std::chrono::milliseconds(sleepMSeconds)); 
+				continue;
+			}
+			else
+			{
+				std::cout << __PRETTY_FUNCTION__ << "ERROR: Can't connect to " << serverName  << " aborting!" << std::endl;
+				break;
+			}
 		}
 
 		//		if (sendBufferSize > 0)
@@ -109,73 +97,33 @@ bool TCPClientBase::connect(int retry, unsigned int sleepMSeconds)
 }
 
 //========================================================================================================================
-//protected
-int TCPClientBase::resolveServer(std::string serverIP, int serverPort, sockaddr_in& serverSocketAddress)
+//private
+void TCPClientBase::resolveServer(std::string &serverIP)
 {
-	std::string     resolvedIP   = serverIP;
-	int             resolvedPort = serverPort;
-	struct hostent* hostent_sp;
-	std::smatch     mm;
+	const std::string ipv4(
+		"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+		"\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+		"\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+		"\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)");
+	boost::regex ip_regex(ipv4.c_str());
 
-	//  Note: the regex expression used by regex_match has an implied ^ and $
-	//        at the beginning and end respectively.
-	std::cout << __PRETTY_FUNCTION__ << "Checking exp1: " << serverIP << std::endl;
-	if (regex_match(serverIP, mm, std::regex("([^:]+):(\\d+)")))//IT CRASHES HERE IF THE COMPILER IS < 4.9
+	//std::cout << __PRETTY_FUNCTION__ << "Checking exp1: " << serverIP << std::endl;
+	if (boost::regex_match(serverIP, ip_regex))//It is already in the correct format!
+		return;
+	else if (serverIP == "localhost" || serverIP == "localhost.localdomain")
 	{
-		resolvedIP   = mm[1].str();
-		resolvedPort = strtoul(mm[2].str().c_str(), NULL, 0);
-	}
-	else if (regex_match(serverIP, mm, std::regex(":{0,1}(\\d+)")))
-	{
-		resolvedIP   = std::string("127.0.0.1");
-		resolvedPort = strtoul(mm[1].str().c_str(), NULL, 0);
-	}
-	else if (regex_match(serverIP, mm, std::regex("([^:]+):{0,1}")))
-	{
-		resolvedIP   = mm[1].str();
-		resolvedPort = serverPort;
+		serverIP = "127.0.0.1";
 	}
 	else
 	{
-		resolvedIP   = std::string("127.0.0.1");
-		resolvedPort = serverPort;
+		struct hostent *resolvedHost = ::gethostbyname(serverIP.c_str());
+		if (resolvedHost == NULL)
+		{
+			throw std::runtime_error(serverIP + " is unavailable and can't be resolved!");
+			abort();
+		}
+		in_addr *address = (in_addr *)resolvedHost->h_addr;
+		serverIP = inet_ntoa(*address);
+		std::cout << "IP: (" << serverIP << ")\n";
 	}
-
-	std::cout << __PRETTY_FUNCTION__ << "Resolving server " << resolvedIP << ", on port " << resolvedPort << std::endl;
-
-	if (resolvedIP == "localhost") resolvedIP = "127.0.0.1";
-
-	bzero((char *)&serverSocketAddress, sizeof(serverSocketAddress));
-	serverSocketAddress.sin_family = AF_INET;
-	serverSocketAddress.sin_port = htons(resolvedPort); // just a guess at an open port
-
-	//if (regex_match(resolvedIP, mm, std::regex("\\d+(\\.\\d+){3}")))
-	inet_aton(resolvedIP.c_str(), &serverSocketAddress.sin_addr);
-	//	else
-	//	{
-	//		hostent_sp = gethostbyname(resolvedIP.c_str());
-	//		if (!hostent_sp)
-	//		{
-	//			perror("gethostbyname");
-	//			return (-1);
-	//		}
-	//		serverSocketAddress.sin_addr = *(struct in_addr *)(hostent_sp->h_addr_list[0]);
-	//	}
-	return 0;
 }
-
-//========================================================================================================================
-// void TCPClientBase::setNonBlocking ( const bool noBlock )
-// {
-// 	int opts;
-// 	opts = fcntl ( getSocketId(), F_GETFL );
-
-// 	if (opts < 0) { perror("opts exception");  exit(1); }
-// 	if ( noBlock )  opts = ( opts | O_NONBLOCK );
-// 	else  opts = ( opts & ~O_NONBLOCK );
-
-// 	fcntl ( getSocketId(), F_SETFL, opts );
-
-// }
-
-

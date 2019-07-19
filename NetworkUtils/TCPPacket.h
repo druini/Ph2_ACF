@@ -1,10 +1,7 @@
-#ifndef _ots_TCPPacket_h_
-#define _ots_TCPPacket_h_
+#ifndef _TCPPacket_h_
+#define _TCPPacket_h_
 
 #include <string>
-
-//namespace ots
-//{
 
 class TCPPacket
 {
@@ -32,7 +29,5 @@ private:
 
 	std::string fBuffer; //This is Header + Message
 };
-
-//}
 
 #endif
