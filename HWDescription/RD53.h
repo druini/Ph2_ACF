@@ -190,7 +190,7 @@ namespace Ph2_HwDescription
     void encodeCMD (const uint16_t               address,
 		    const uint16_t               data,
 		    const uint8_t                pRD53Id,
-		    const uint8_t                pRD53Cmd,
+		    const uint16_t               pRD53Cmd,
 		    const bool                   isBroadcast,
 		    std::vector<uint32_t>      & pVecReg,
 		    const std::vector<uint16_t>* dataVec = NULL);

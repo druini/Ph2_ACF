@@ -361,38 +361,47 @@ namespace Ph2_HwDescription
 
   void RD53::encodeCMD (const uint16_t               address,
 			const uint16_t               data,
-  			const uint8_t                pRD53Id,
-  			const uint8_t                pRD53Cmd,
+  			const uint8_t                RD53id,
+  			const uint16_t               RD53cmd,
 			const bool                   isBroadcast,
   			std::vector<uint32_t>      & pVecReg,
 			const std::vector<uint16_t>* dataVec)
   {
+    uint8_t  FWcmd;
     uint32_t word = 0;
     std::bitset<NBIT_FRAME> frame(0);
 
-    if ((pRD53Cmd == (RD53CmdEncoder::RESET_ECR & 0x00FF)) ||
-	(pRD53Cmd == (RD53CmdEncoder::RESET_BCR & 0x00FF)) ||
-	(pRD53Cmd == (RD53CmdEncoder::NOOP      & 0x00FF)))
+    if ((RD53cmd == RD53CmdEncoder::RESET_ECR) ||
+	(RD53cmd == RD53CmdEncoder::RESET_BCR) ||
+	(RD53cmd == RD53CmdEncoder::NOOP))
       {
-	word = 0 | (pRD53Cmd << NBIT_5BITW);
+	FWcmd = RD53cmd & 0x00FF;
+
+	word = 0 | (FWcmd << NBIT_5BITW);
       }
-    else if (pRD53Cmd == (RD53CmdEncoder::SYNC & 0x00FF))
+    else if (RD53cmd == RD53CmdEncoder::SYNC)
       {
-	word = 0 | (pRD53Cmd << NBIT_5BITW);	
+	FWcmd = RD53cmd & 0x00FF;
+
+	word = 0 | (FWcmd << NBIT_5BITW);	
       }
-    else if (pRD53Cmd == (RD53CmdEncoder::GLOB_PULSE & 0x00FF))
+    else if (RD53cmd == RD53CmdEncoder::GLOB_PULSE)
       {
-	word  = 2 | (pRD53Cmd << NBIT_5BITW);
-	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->setBits(NBIT_ID)) << 1);      // @TMP ID[3..0],isBroadcast
+	FWcmd = RD53cmd & 0x00FF;
+
+	word  = 2 | (FWcmd << NBIT_5BITW);
+	frame = (isBroadcast ? 1 : 0) | ((RD53id & this->setBits(NBIT_ID)) << 1);       // @TMP ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2));
 	frame = 0 | ((data & this->setBits(NBIT_ID)) << 1);                             // @TMP@ D[3..0],0
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME));
       }
-    else if (pRD53Cmd == (RD53CmdEncoder::CAL & 0x00FF))
+    else if (RD53cmd == RD53CmdEncoder::CAL)
       {
-	word  = 4 | (pRD53Cmd << NBIT_5BITW);
+	FWcmd = RD53cmd & 0x00FF;
+
+	word  = 4 | (FWcmd << NBIT_5BITW);
 	frame = ((data & (this->setBits(NBIT_DATA) << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
-	  ((pRD53Id & this->setBits(NBIT_ID)) << 1);                                    // @TMP@ ID[3..0],D[15]
+	  ((RD53id & this->setBits(NBIT_ID)) << 1);                                     // @TMP@ ID[3..0],D[15]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (data & (this->setBits(NBIT_FRAME*3) << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
@@ -401,10 +410,12 @@ namespace Ph2_HwDescription
 	frame = (data & (this->setBits(NBIT_FRAME*2) << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
       }
-    else if (pRD53Cmd == (RD53CmdEncoder::READ & 0x00FF))
+    else if (RD53cmd == RD53CmdEncoder::READ)
       {
-	word  = 4 | (pRD53Cmd << NBIT_5BITW);
-	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->setBits(NBIT_ID)) << 1);      // @TMP@ ID[3..0],isBroadcast
+	FWcmd = RD53cmd & 0x00FF;
+
+	word  = 4 | (FWcmd << NBIT_5BITW);
+	frame = (isBroadcast ? 1 : 0) | ((RD53id & this->setBits(NBIT_ID)) << 1);       // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->setBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;           // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
@@ -413,10 +424,12 @@ namespace Ph2_HwDescription
 	frame = 0;
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
       }
-    else if ((pRD53Cmd == (RD53CmdEncoder::WRITE & 0x00FF)) && (dataVec == NULL))
+    else if ((RD53cmd == RD53CmdEncoder::WRITE) && (dataVec == NULL))
       {
-	word  = 6 | (pRD53Cmd << NBIT_5BITW);
-	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->setBits(NBIT_ID)) << 1);      // @TMP@ ID[3..0],isBroadcast
+	FWcmd = RD53cmd & 0x00FF;
+
+	word  = 6 | (FWcmd << NBIT_5BITW);
+	frame = (isBroadcast ? 1 : 0) | ((RD53id & this->setBits(NBIT_ID)) << 1);       // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->setBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;           // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
@@ -433,8 +446,10 @@ namespace Ph2_HwDescription
 	frame = (data & (this->setBits(NBIT_FRAME*1) << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
 	word  = word | (frame.to_ulong() << NBIT_FRAME*1);
       }
-    else if ((pRD53Cmd == (RD53CmdEncoder::WRITE & 0x00FF)) && (dataVec != NULL) && (dataVec->size() == NDATAMAX_PERPIXEL))
+    else if ((RD53cmd == RD53CmdEncoder::WRITE) && (dataVec != NULL) && (dataVec->size() == NDATAMAX_PERPIXEL))
       {
+	FWcmd = RD53cmd & 0x00FF;
+
 	std::bitset<NBIT_DATA*NDATAMAX_PERPIXEL> dataBitStream(0);
 	std::bitset<NBIT_DATA*NDATAMAX_PERPIXEL> tmp(0);
 	for (auto i = 0; i < NDATAMAX_PERPIXEL; i++)
@@ -443,8 +458,8 @@ namespace Ph2_HwDescription
 	    dataBitStream |= (tmp << NBIT_DATA*i);
 	  }
 
-	word  = 7 | (pRD53Cmd << NBIT_5BITW);
-	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->setBits(NBIT_ID)) << 1);                                            // @TMP@ ID[3..0],isBroadcast
+	word  = 7 | (FWcmd << NBIT_5BITW);
+	frame = (isBroadcast ? 1 : 0) | ((RD53id & this->setBits(NBIT_ID)) << 1);                                             // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->setBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;                                                 // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
