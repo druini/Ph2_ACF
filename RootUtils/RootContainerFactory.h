@@ -103,9 +103,9 @@ public:
 					{
 						for(uint32_t col=0; col < chip->getNumberOfCols(); ++col)
 						{
-							T theChannel;
 							if(channelHistogramGenericName != "NULL") 
 							{
+								T theChannel;
 								std::string histogramName;
 								std::string histogramTitle;
 								if(chip->getNumberOfCols() == 1)
@@ -120,8 +120,8 @@ public:
 								}
 								
 								initializePlot(&theChannel,histogramName, histogramTitle, &channel);
+								copyChip->getChannel<T>(row,col) = std::move(theChannel);
 							}
-							copyChip->getChannel<T>(row,col) = std::move(theChannel);
 						}	
 					}
 				}
