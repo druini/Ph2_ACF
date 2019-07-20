@@ -34,7 +34,7 @@ using namespace std;
 namespace RootWeb
 {
 	std::string cleanUpObjectName( const std::string& );
-};
+}
 
 class RootWItem
 {

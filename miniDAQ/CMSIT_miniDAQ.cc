@@ -131,7 +131,7 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, size_t type, bool hit
 
 void ConfigureExtClkTrig (SystemController& sc)
 {
-  const uint8_t chnOutEnable = 0b10010;
+  const uint8_t chnOutEnable = 0x12;
 
   for (const auto& cBoard : sc.fBoardVector)
     {

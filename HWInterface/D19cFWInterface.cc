@@ -608,9 +608,9 @@ namespace Ph2_HwInterface {
             for (unsigned int id = 0; id < fFWNChips; id++) {
             // for chip emulator register width is 8 bits, not 16 as for MPA
                 if(!fCBC3Emulator) {
-                    i2c_slave_map.push_back({0b1000000 + id, 2, 1, 1, 1, 0});
+                    i2c_slave_map.push_back({0x40 + id, 2, 1, 1, 1, 0});
                 } else {
-                    i2c_slave_map.push_back({0b1000000 + id, 1, 1, 1, 1, 0});
+                    i2c_slave_map.push_back({0x40 + id, 1, 1, 1, 1, 0});
                 }
             }
         }
@@ -619,7 +619,7 @@ namespace Ph2_HwInterface {
             LOG (INFO) << BOLDRED << "WE ARE HERE!!! WE ARE HERE!!! WE ARE HERE!!!  " << fFWNChips << RESET;
             for (unsigned int id = 0; id < fFWNChips; id++) 
             {
-                i2c_slave_map.push_back({0b0100000 + id, 2, 1, 1, 1, 0}); // FIXME SSA ??
+                i2c_slave_map.push_back({0x20 + id, 2, 1, 1, 1, 0}); // FIXME SSA ??
             }
         }
         for (unsigned int ism = 0; ism < i2c_slave_map.size(); ism++) {
@@ -2154,22 +2154,22 @@ namespace Ph2_HwInterface {
     {
 
         std::vector< std::vector<uint32_t> >  i2c_slave_map;
-        i2c_slave_map.push_back({0b1110000, 0, 1, 1, 0, 1}); //0  PCA9646
-        i2c_slave_map.push_back({0b0100000, 0, 1, 1, 0, 1}); //1  PCF8574
-        i2c_slave_map.push_back({0b0100100, 0, 1, 1, 0, 1}); //2  PCF8574
-        i2c_slave_map.push_back({0b0010100, 0, 2, 3, 0, 1}); //3  LTC2487
-        i2c_slave_map.push_back({0b1001000, 1, 2, 2, 0, 0}); //4  DAC7678
-        i2c_slave_map.push_back({0b1000000, 1, 2, 2, 0, 1}); //5  INA226
-        i2c_slave_map.push_back({0b1000001, 1, 2, 2, 0, 1}); //6  INA226
-        i2c_slave_map.push_back({0b1000010, 1, 2, 2, 0, 1}); //7  INA226
-        i2c_slave_map.push_back({0b1000100, 1, 2, 2, 0, 1}); //8  INA226
-        i2c_slave_map.push_back({0b1000101, 1, 2, 2, 0, 1}); //9  INA226
-        i2c_slave_map.push_back({0b1000110, 1, 2, 2, 0, 1}); //10  INA226
-        i2c_slave_map.push_back({0b1000000, 2, 1, 1, 1, 0}); //11  ????
-        i2c_slave_map.push_back({0b0100000, 2, 1, 1, 1, 0}); //12  ????
-        i2c_slave_map.push_back({0b0000000, 0, 1, 1, 0, 0}); //13  ????
-        i2c_slave_map.push_back({0b0000000, 0, 1, 1, 0, 0}); //14  ????
-        i2c_slave_map.push_back({0b1011111, 1, 1, 1, 1, 0}); //15  CBC3
+        i2c_slave_map.push_back({0x70, 0, 1, 1, 0, 1}); //0  PCA9646
+        i2c_slave_map.push_back({0x20, 0, 1, 1, 0, 1}); //1  PCF8574
+        i2c_slave_map.push_back({0x24, 0, 1, 1, 0, 1}); //2  PCF8574
+        i2c_slave_map.push_back({0x14, 0, 2, 3, 0, 1}); //3  LTC2487
+        i2c_slave_map.push_back({0x48, 1, 2, 2, 0, 0}); //4  DAC7678
+        i2c_slave_map.push_back({0x40, 1, 2, 2, 0, 1}); //5  INA226
+        i2c_slave_map.push_back({0x41, 1, 2, 2, 0, 1}); //6  INA226
+        i2c_slave_map.push_back({0x42, 1, 2, 2, 0, 1}); //7  INA226
+        i2c_slave_map.push_back({0x44, 1, 2, 2, 0, 1}); //8  INA226
+        i2c_slave_map.push_back({0x45, 1, 2, 2, 0, 1}); //9  INA226
+        i2c_slave_map.push_back({0x46, 1, 2, 2, 0, 1}); //10  INA226
+        i2c_slave_map.push_back({0x40, 2, 1, 1, 1, 0}); //11  ????
+        i2c_slave_map.push_back({0x20, 2, 1, 1, 1, 0}); //12  ????
+        i2c_slave_map.push_back({ 0x0, 0, 1, 1, 0, 0}); //13  ????
+        i2c_slave_map.push_back({ 0x0, 0, 1, 1, 0, 0}); //14  ????
+        i2c_slave_map.push_back({0x5F, 1, 1, 1, 1, 0}); //15  CBC3
 
 
         LOG(INFO) << "Updating the Slave ID Map (mpa ssa board) ";
@@ -2411,9 +2411,9 @@ namespace Ph2_HwInterface {
                 uint32_t line4 = (fifo2_word&0x0000FF)>>0; //to_number(fifo2_word,8,0)
                 uint32_t line5 = (fifo2_word&0x00FF00)>>8; // to_number(fifo2_word,16,8)
 
-                if (((line1 & 0b10000000) == 128) && ((line4 & 0b10000000) == 128))
+                if (((line1 & 0x80) == 128) && ((line4 & 0x80) == 128))
                 {
-                    uint32_t temp = ((line2 & 0b00100000) << 9) | ((line3 & 0b00100000) << 8) | ((line4 & 0b00100000) << 7) | ((line5 & 0b00100000) << 6) | ((line1 & 0b00010000) << 6) | ((line2 & 0b00010000) << 5) | ((line3 & 0b00010000) << 4) | ((line4 & 0b00010000) << 3) | ((line5 & 0b10000000) >> 1) | ((line1 & 0b01000000) >> 1) | ((line2 & 0b01000000) >> 2) | ((line3 & 0b01000000) >> 3) | ((line4 & 0b01000000) >> 4) | ((line5 & 0b01000000) >> 5) | ((line1 & 0b00100000) >> 5);
+                    uint32_t temp = ((line2 & 0x20) << 9) | ((line3 & 0x20) << 8) | ((line4 & 0x20) << 7) | ((line5 & 0x20) << 6) | ((line1 & 0x10) << 6) | ((line2 & 0x10) << 5) | ((line3 & 0x10) << 4) | ((line4 & 0x10) << 3) | ((line5 & 0x80) >> 1) | ((line1 & 0x40) >> 1) | ((line2 & 0x40) >> 2) | ((line3 & 0x40) >> 3) | ((line4 & 0x40) >> 4) | ((line5 & 0x40) >> 5) | ((line1 & 0x20) >> 5);
                     if (temp != 0) 
                     {
                         count[cycle] = temp - 1;
