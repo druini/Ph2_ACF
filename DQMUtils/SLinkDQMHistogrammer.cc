@@ -51,8 +51,6 @@ void SLinkDQMHistogrammer::bookHistograms (const std::vector<std::pair<uint8_t, 
     totalNumberHitsH_ = new TH1I ("tot_hits", "Total Number of Hits", 101, -0.5, 100.5);
     totalNumberStubsH_ = new TH1I ("tot_stubs", "Total Number of Stubs", 101, -0.5, 100.5);
 
-    uint8_t nrou = 0;
-    uint8_t ncol = 0;
     size_t ntot = 0;
 
     for ( auto const& it : fe_mapping )
@@ -198,7 +196,6 @@ void SLinkDQMHistogrammer::fillHistograms (const std::vector<DQMEvent*>& event_l
 }
 void SLinkDQMHistogrammer::fillHistograms (const DQMEvent* event)
 {
-    unsigned long ival = 0; // as the files is read in chunks
 
     std::vector<uint8_t> rouErrs;
     std::vector<uint16_t> rouPLAdds;
@@ -628,7 +625,6 @@ void SLinkDQMHistogrammer::fillStubInformation (FEUHistos& feu_h, const std::vec
     if (!feu_h.bookedHistos) return;
 
     uint8_t nrou = feu_h.nROUs_;
-    uint8_t col = feu_h.nColumns_;
     std::vector<uint8_t> scount;
 
     for (size_t i = 0; i < nrou; i++) scount.push_back (0);

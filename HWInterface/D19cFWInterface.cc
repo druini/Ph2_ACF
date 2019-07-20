@@ -1002,7 +1002,6 @@ namespace Ph2_HwInterface {
     uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
     {
         uint32_t cEventSize = computeEventSize (pBoard);
-        uint32_t cBoardHeader1Size = D19C_EVENT_HEADER1_SIZE_32_CBC3;
         uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
         uint32_t data_handshake = ReadReg ("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
         uint32_t cPackageSize = ReadReg ("fc7_daq_cnfg.readout_block.packet_nbr") + 1;
@@ -1032,7 +1031,7 @@ namespace Ph2_HwInterface {
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
             cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter"); 
             cNtriggers_prev = cNtriggers;
-            uint32_t cNWords_prev = cNWords;
+            // uint32_t cNWords_prev = cNWords;
             uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
 
             cCounter = 0 ; 
@@ -1042,7 +1041,7 @@ namespace Ph2_HwInterface {
                     return 0;
                 }
 
-                cNWords_prev = cNWords;
+                // cNWords_prev = cNWords;
                 cNtriggers_prev = cNtriggers;
 
                 cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
@@ -2015,7 +2014,6 @@ namespace Ph2_HwInterface {
         uint32_t i2cmux = 0;
         uint32_t pcf8574 = 1;
         uint32_t dac7678 = 4;
-        uint32_t powerenable = 2;
         std::this_thread::sleep_for (std::chrono::milliseconds (750) );
 
         PSInterfaceBoard_SetSlaveMap();
@@ -2136,13 +2134,6 @@ namespace Ph2_HwInterface {
     void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA_v2(float VDDPST , float DVDD , float AVDD , float VBG , uint8_t mpaid  , uint8_t ssaid  )
     {
 
-        uint32_t read = 1;
-        uint32_t write = 0;
-        uint32_t SLOW = 2;
-        uint32_t i2cmux = 0;
-        uint32_t pcf8574 = 1;
-        uint32_t dac7678 = 4;
-        uint32_t powerenable = 2;
         std::chrono::milliseconds cWait( 1500 );
     }
 
@@ -2248,7 +2239,7 @@ namespace Ph2_HwInterface {
             readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
         }
 
-        int reply = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply");
+        // int reply = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply");
         int reply_err = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.err");
         int reply_data = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
     //LOG(INFO) << BOLDGREEN << "reply: "<< std::hex << reply << std::dec <<RESET;
@@ -2332,7 +2323,6 @@ namespace Ph2_HwInterface {
     void D19cFWInterface::Pix_write_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
     {
         uint8_t cWriteAttempts = 0;
-        bool rep;
 
         RegItem rowreg =cRegItem;
         rowreg.fAddress  = ((row & 0x0001f) << 11 ) | ((cRegItem.fAddress & 0x000f) << 7 ) | (pixel & 0xfffffff);
@@ -2347,11 +2337,6 @@ namespace Ph2_HwInterface {
     {
         uint8_t cWriteAttempts = 0;
         uint32_t rep;
-
-        RegItem rowreg =cRegItem;
-        rowreg.fAddress  = ((row & 0x0001f) << 11 ) | ((cRegItem.fAddress & 0x000f) << 7 ) | (pixel & 0xfffffff);
-
-
 
         std::vector<uint32_t> cVecReq;
         cVecReq.clear();
@@ -2480,13 +2465,9 @@ namespace Ph2_HwInterface {
     void D19cFWInterface::PSInterfaceBoard_PowerOn( uint8_t mpaid  , uint8_t ssaid  )
     {
 
-        uint32_t val = (mpaid << 5) + (ssaid << 1);
-        uint32_t read = 1;
         uint32_t write = 0;
         uint32_t SLOW = 2;
         uint32_t i2cmux = 0;
-        uint32_t pcf8574 = 1;
-        uint32_t dac7678 = 4;
         uint32_t powerenable = 2;
 
         PSInterfaceBoard_SetSlaveMap();
@@ -2508,12 +2489,9 @@ namespace Ph2_HwInterface {
     {
         std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
 
-        uint32_t read = 1;
         uint32_t write = 0;
         uint32_t SLOW = 2;
         uint32_t i2cmux = 0;
-        uint32_t pcf8574 = 1;
-        uint32_t dac7678 = 4;
         uint32_t powerenable = 2;
 
         PSInterfaceBoard_SetSlaveMap();
@@ -2536,8 +2514,6 @@ namespace Ph2_HwInterface {
         uint32_t write = 0;
         uint32_t SLOW = 2;
         uint32_t i2cmux = 0;
-        uint32_t pcf8574 = 1;
-        uint32_t dac7678 = 4;
         uint32_t ina226_7 = 7;
         uint32_t ina226_6 = 6;
         uint32_t ina226_5 = 5;
@@ -2591,13 +2567,11 @@ namespace Ph2_HwInterface {
     void D19cFWInterface::PSInterfaceBoard_PowerOn_MPA(float VDDPST , float DVDD , float AVDD , float VBG , uint8_t mpaid  , uint8_t ssaid  )
     {
 
-        uint32_t read = 1;
         uint32_t write = 0;
         uint32_t SLOW = 2;
         uint32_t i2cmux = 0;
         uint32_t pcf8574 = 1;
         uint32_t dac7678 = 4;
-        uint32_t powerenable = 2;
         std::chrono::milliseconds cWait( 1500 );
 
         PSInterfaceBoard_SetSlaveMap();
@@ -2669,7 +2643,6 @@ namespace Ph2_HwInterface {
         uint32_t i2cmux = 0;
         uint32_t pcf8574 = 1; // MPA and SSA address and reset 8 bit port
         uint32_t dac7678 = 4;
-        uint32_t powerenable = 2;
         float Vc = 0.0003632813; // V/Dac step
         std::chrono::milliseconds cWait( 1500 );
 
@@ -2722,13 +2695,6 @@ namespace Ph2_HwInterface {
 
     void D19cFWInterface::PSInterfaceBoard_PowerOff_SSA_v2(uint8_t mpaid , uint8_t ssaid )
     {
-        uint32_t write = 0;
-        uint32_t SLOW = 2;
-        uint32_t i2cmux = 0;
-        uint32_t pcf8574 = 1; // MPA and SSA address and reset 8 bit port
-        uint32_t dac7678 = 4;
-        uint32_t powerenable = 2;
-        float Vc = 0.0003632813; // V/Dac step
         std::chrono::milliseconds cWait( 1500 );
     }
 
@@ -2739,7 +2705,6 @@ namespace Ph2_HwInterface {
         uint32_t i2cmux = 0;
         uint32_t pcf8574 = 1; // MPA and SSA address and reset 8 bit port
         uint32_t dac7678 = 4;
-        uint32_t powerenable = 2;
         float Vc = 0.0003632813; // V/Dac step
         std::chrono::milliseconds cWait( 1000 );
 

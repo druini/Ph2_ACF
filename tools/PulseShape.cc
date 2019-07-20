@@ -118,7 +118,7 @@ void PulseShape::ScanVcth ( uint32_t pDelay , int cLow)
     bool cAllOne = false;
     bool cNonZero = false;
     bool cSaturate = false;
-    uint16_t cDoubleVcth;
+    uint16_t cDoubleVcth = 0;
 
     ThresholdVisitor cVisitor (fReadoutChipInterface, 0);
 
@@ -135,7 +135,6 @@ void PulseShape::ScanVcth ( uint32_t pDelay , int cLow)
         }
 
         // then we take fNEvents
-        uint32_t cN = 1;
         uint32_t cNthAcq = 0;
         int cNHits = 0;
 
@@ -469,8 +468,6 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
 
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
     fChannelVector = findChannelsInTestGroup ( fTestGroup );
-    uint8_t cRegValue =  to_reg ( 0, fTestGroup );
-    
     //set the value of test pulsepot registrer and MiscTestPulseCtrl&AnalogMux register
     if ( fHoleMode )
         cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux", 0xC1 ) );

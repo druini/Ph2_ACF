@@ -76,7 +76,6 @@ int main ( int argc, char* argv[] )
     bool cShorts = ( cmd.foundOption ( "shorts" ) ) ? true : false;
     bool cScan = ( cmd.foundOption ( "scan" ) ) ? true : false;
     bool cAntenna = ( cmd.foundOption ( "antenna" ) ) ? true : false;
-    uint8_t cAntennaPotential = ( cmd.foundOption ( "antenna" ) )   ?  convertAnyInt ( cmd.optionValue ( "antenna" ).c_str() ) :  0;
 
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
     cDirectory += "HybridTest";

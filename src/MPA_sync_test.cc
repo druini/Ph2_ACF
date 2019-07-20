@@ -52,7 +52,6 @@ int main( int argc, char* argv[] )
 
 	OuterTrackerModule* MPAM = new OuterTrackerModule();
 	MPAM->addMPA(mpa1);
-	uint8_t nummpa =MPAM->getNMPA();
 	pBoard->addModule(MPAM);
 
 	std::chrono::milliseconds LongPOWait( 500 );
@@ -62,28 +61,13 @@ int main( int argc, char* argv[] )
 	fMPAInterface->PS_Clear_counters();
 	//fMPAInterface->activate_I2C_chip();
 
-
-
-        std::pair<uint32_t, uint32_t> rows = {0,17};
-        std::pair<uint32_t, uint32_t> cols = {0,120};
-        //std::pair<uint32_t, uint32_t> rows = {5,7};
-        //std::pair<uint32_t, uint32_t> cols = {1,5};
-        std::pair<uint32_t, uint32_t> th = {0,250};
+	std::pair<uint32_t, uint32_t> rows = {0,17};
+	std::pair<uint32_t, uint32_t> cols = {0,120};
+	//std::pair<uint32_t, uint32_t> rows = {5,7};
+	//std::pair<uint32_t, uint32_t> cols = {1,5};
 
  	std::vector<TH1F*> scurves;
 	std::string title;
-
-
-
-
-
-
-	uint32_t cdata = 0;
-
-	uint32_t curpnum = 0;
-	uint32_t totalevents = 0;
-	uint32_t totaleventsprev = 0;
-	uint32_t nrep = 0;
 	std::cout <<"Setup"<< std::endl;
 
 	fMPAInterface->Set_threshold(mpa1,100);
@@ -107,7 +91,7 @@ int main( int argc, char* argv[] )
                 //fMPAInterface->ReadData ( pBoard );
                 const std::vector<Event*>& events = mysyscontroller.GetEvents ( pBoard );
 
-                for ( auto& ev : events )
+                for ( __attribute__((unused)) auto& ev : events )
                 {
 				std::cout<<"tst"<<std::endl;
 				}

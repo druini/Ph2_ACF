@@ -198,7 +198,7 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
                         // do this a maximum of fReadBackAttempts times
                         uint32_t cNhits = 0 ;
                         int cCounter = 0 ;
-                        uint8_t cStubPosition, cStubBend ;
+                        uint8_t cStubPosition ;
                         std::vector<Event*> cEvents;
                         std::stringstream outp;
 
@@ -217,7 +217,6 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
                                 cNhits = cEvents[j]->GetNHits ( cFeId, cCbcId );
                                 std::vector<Stub> cStubs = cEvents[j]->StubVector (cFeId, cCbcId );
                                 cStubPosition = cStubs[0].getPosition();
-                                cStubBend = cStubs[0].getBend();
                                 j++;
                             }
                             while ( cNhits != cChannelPair.size() && j < cEvents.size() );
@@ -300,7 +299,7 @@ void StubSweep::updateHists ( std::string pHistname )
 
 uint8_t StubSweep::getStubPosition (std::vector<Event*> pEvents, uint32_t pFeId, uint32_t pCbcId, uint32_t pNEvents)
 {
-    uint8_t cStubPosition, cCenter, cBend ;
+    uint8_t cStubPosition(0), cCenter, cBend ;
     std::stringstream outp;
     uint32_t cN = 1;
 
@@ -333,6 +332,7 @@ uint8_t StubSweep::getStubPosition (std::vector<Event*> pEvents, uint32_t pFeId,
 
     return cStubPosition;
 }
+
 void StubSweep::maskAllChannels (Chip* pCbc)
 {
     uint8_t cRegValue ;
@@ -388,7 +388,7 @@ uint8_t StubSweep::getChanelMask ( Chip* pCbc, uint8_t pChannel )
     else
     {
         //value of the register
-        uint8_t cReadValue;
+        uint8_t cReadValue(0);
 
         if (fType == FrontEndType::CBC3)
         {

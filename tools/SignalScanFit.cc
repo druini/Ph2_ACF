@@ -8,8 +8,6 @@ void SignalScanFit::Initialize ( )
     // Initialize all the plots
     for ( auto& cBoard : fBoardVector )
     {
-        uint32_t cBoardId = cBoard->getBeId();
-
         for ( auto& cFe : cBoard->fModuleVector )
         {
 
@@ -54,7 +52,6 @@ void SignalScanFit::Initialize ( )
 
                 TString cHistname;
                 TH1D* cHist;
-                TProfile * cProfile;
 
                 cHistname = Form ( "Fe%dCBC%d_Hits_even", cFeId, cCbcId );
                 cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of hits", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
@@ -73,11 +70,9 @@ void SignalScanFit::Initialize ( )
                 bookHistogram ( cCbc, "Cbc_Clusters_odd", cHist );
 
                 cHistname = Form ( "Fe%dCBC%d_ClusterSize_even", cFeId, cCbcId );
-                cProfile = new TProfile ( cHistname, Form("%s ;  Threshold [Vcth] ; Cluster size [strips]", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
                 bookHistogram ( cCbc, "Cbc_ClusterSize_even", cHist );
 
                 cHistname = Form ( "Fe%dCBC%d_ClusterSize_odd", cFeId, cCbcId );
-                cProfile = new TProfile ( cHistname, Form("%s ; Threshold [Vcth] ; Cluster size [strips]", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
                 bookHistogram ( cCbc, "Cbc_ClusterSize_odd", cHist );
 
 //                cHistname = Form ( "Fe%dCBC%d_ClusterSize_even",cFeId, cCbcId );

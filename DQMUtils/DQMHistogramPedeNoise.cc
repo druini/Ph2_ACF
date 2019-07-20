@@ -160,8 +160,6 @@ void DQMHistogramPedeNoise::process()
 
             cValidation->Divide(module->size(),fPlotSCurves ? 3 : 2);
             cPedeNoise->Divide(module->size(),2);
-            int validationPadId = 1;
-            int pedeNoisePadId = 1;
 
             for(auto chip: *module)
             {

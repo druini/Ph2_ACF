@@ -67,25 +67,6 @@ void RegisterTester::TestRegisters()
 //If no directory is given use the default files for the different operational modes found in Ph2_ACF/settings
 void RegisterTester::ReconfigureRegisters (std::string pDirectoryName )
 {
-    bool cCheck;
-    bool cHoleMode;
-    auto cSetting = fSettingsMap.find ( "HoleMode" );
-
-    if ( cSetting != std::end ( fSettingsMap ) )
-    {
-        cCheck = true;
-        cHoleMode = ( cSetting->second == 1 ) ? true : false;
-    }
-
-    std::string cMode;
-
-    if ( cCheck )
-    {
-        if ( cHoleMode ) cMode = "hole";
-        else cMode = "electron";
-    }
-
-
 
     for (auto& cBoard : fBoardVector)
     {
@@ -98,7 +79,7 @@ void RegisterTester::ReconfigureRegisters (std::string pDirectoryName )
                 std::string pRegFile ;
 
                 if ( pDirectoryName.empty() )
-                    pRegFile = "settings/CbcFiles/Cbc_default_" +  cMode + ".txt";
+                    pRegFile = "settings/CbcFiles/Cbc_default_electron.txt";
                 else
                 {
                     char buffer[120];

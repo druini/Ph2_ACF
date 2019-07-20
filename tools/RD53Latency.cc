@@ -165,8 +165,6 @@ void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& 
 
   for (const auto cBoard : *fDetectorContainer)
     {
-      auto RD53Board = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getIndex()]);
-
       for (const auto cModule : *cBoard)
 	for (const auto cChip : *cModule)
 	  {

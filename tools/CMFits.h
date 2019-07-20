@@ -37,7 +37,6 @@ double binomialPdf( int n, int k, double p )
 
 double hitProbFunction( double* xStrips, Double_t* par )
 {
-	int NSamplingsCMN = 100;
 
 	const double samplingHalfStep = SIGMARANGE / static_cast<double>( NSAMPLINGSCMN );
 	double& threshold     = par[0];

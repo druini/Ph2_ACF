@@ -628,8 +628,6 @@ namespace Ph2_System {
             }
             pBoard->addModule ( cModule );
 
-            //default  configurations 
-            pugi::xml_node cDefConfigsNode = pModuleNode.child ( "DefaultConfiguration" );
             // now try and do the configruation in a slightly more readable
             std::string cConfigFileDirectory;
             for (pugi::xml_node cChild: pModuleNode.children())

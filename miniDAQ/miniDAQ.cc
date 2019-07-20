@@ -40,7 +40,6 @@ int main ( int argc, char* argv[] )
     el::Loggers::reconfigureAllLoggers (conf);
 
     uint32_t pEventsperVcth;
-    int cVcth;
 
     SystemController cSystemController;
     ArgvParser cmd;

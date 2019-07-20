@@ -62,7 +62,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # set (CMAKE_CXX_FLAGS "-std=c++1y -O3 -Wcpp -pthread -pedantic -Wall -Werror -w -g -fPIC ${CMAKE_CXX_FLAGS}  -D__USE_ROOT__")
 
     # set (CMAKE_CXX_FLAGS "-g -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-maybe-uninitialized -Wno-ignored-qualifiers -Wno-unused-variable -Wno-missing-field-initializers -std=c++1y -Wall -Werror=return-type -Wextra -Wno-long-long -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -pthread  -Wcpp -fPIC ${CMAKE_CXX_FLAGS}  -D__USE_ROOT__")
-    set (CMAKE_CXX_FLAGS "-g -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-maybe-uninitialized -Wno-ignored-qualifiers -Wno-unused-variable -Wno-missing-field-initializers -std=c++1y -Wall -Werror=return-type -Wextra -Wno-long-long -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -pthread  -Wcpp -fPIC ${CMAKE_CXX_FLAGS}  -D__USE_ROOT__")
+      set (CMAKE_CXX_FLAGS "-g -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-error=maybe-uninitialized -Wno-ignored-qualifiers -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-missing-field-initializers -std=c++1y -Wall -Werror=return-type -Wextra -Wno-long-long -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -pthread  -Wcpp -fPIC ${CMAKE_CXX_FLAGS}  -D__USE_ROOT__")
 
     #check for external dependences
     message("--")

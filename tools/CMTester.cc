@@ -16,8 +16,6 @@ void CMTester::Initialize()
     // gStyle->SetTitleOffset( 1.3, "Y" );
     for ( auto& cBoard : fBoardVector )
     {
-        uint32_t cBoardId = cBoard->getBeId();
-
         for ( auto& cFe : cBoard->fModuleVector )
         {
             uint32_t cFeId = cFe->getFeId();
@@ -270,8 +268,7 @@ void CMTester::ScanNoiseChannels()
         else
         {
             double cMean = cNoiseStrips->GetMean ( 2 );
-            double cNoise = cNoiseStrips->GetRMS ( 2 );
-
+            
             LOG (INFO) << "Found average Occupancy of " << cMean ;
 
             for ( int  cBin = 0; cBin < cNoiseStrips->GetNbinsX(); cBin++ )
@@ -466,8 +463,7 @@ void CMTester::FinishRun()
 
 void CMTester::analyze ( BeBoard* pBoard, const Event* pEvent )
 {
-    uint32_t cHitCounter = 0;
-
+   
     for ( auto& cFe : pBoard->fModuleVector )
     {
 
@@ -594,10 +590,10 @@ void CMTester::updateHists ( bool pFinal )
             TH1F* cTmpNHits = dynamic_cast<TH1F*> ( getHist ( cCbc.first, "nhits" ) );
             TProfile2D* cTmpOccProfile = dynamic_cast<TProfile2D*> ( getHist ( cCbc.first, "combinedoccupancy" ) );
             TProfile* cTmpCombinedOcc = dynamic_cast<TProfile*> ( getHist ( cCbc.first, "occupancyprojection" ) );
-            TProfile* cUncorrHitProb;
-            TH1F* cNoCM;
-            TF1* cCMFit;
-            TProfile* cCorrProjection;
+            TProfile* cUncorrHitProb(nullptr);
+            TH1F* cNoCM(nullptr);
+            TF1* cCMFit(nullptr);
+            TProfile* cCorrProjection(nullptr);
 
 
             if ( pFinal )
@@ -616,13 +612,13 @@ void CMTester::updateHists ( bool pFinal )
             {
                 cNoCM->Draw( );
                 cTmpNHits->Draw ( "same" );
-                cCMFit->Draw ( "same" );
+                if(cCorrProjection!=nullptr)  cCMFit->Draw ( "same" );
                 TLegend* cLegend = new TLegend ( 0.13, 0.66, 0.38, 0.88, "" );
                 cLegend->SetBorderSize ( 0 );
                 cLegend->SetFillColor ( kWhite );
                 cLegend->AddEntry ( cTmpNHits, "Data", "f" );
                 cLegend->AddEntry ( cCMFit, Form ( "Fit (CM %4.2f+-%4.2f, THR %4.2f). ", fabs ( cCMFit->GetParameter ( 1 ) ), cCMFit->GetParError ( 1 ), cCMFit->GetParameter ( 0 ) ), "l" );
-                cLegend->AddEntry ( cNoCM, "CM = 0", "l" );
+                if(cNoCM!=nullptr)  cLegend->AddEntry ( cNoCM, "CM = 0", "l" );
 		if (fTotalNoise[iCbc]>0) cLegend->AddEntry ( (TObject*)0, Form ( "Noise: %4.2f (total), %4.2f (CM)", fTotalNoise[iCbc],  fabs ( cCMFit->GetParameter ( 1 ) )*fTotalNoise[iCbc] ), "" );
                 cLegend->SetTextSize ( 0.05 );
                 cLegend->Draw ( "same" );
@@ -638,7 +634,7 @@ void CMTester::updateHists ( bool pFinal )
 
             if ( pFinal )
             {
-                cUncorrHitProb->Draw ( "hist same" );
+                if(cUncorrHitProb!=nullptr) cUncorrHitProb->Draw ( "hist same" );
                 TLegend* cLegend = new TLegend ( 0.13, 0.66, 0.38, 0.88, "" );
                 cLegend->SetBorderSize ( 0 );
                 cLegend->SetFillColor ( kWhite );
@@ -649,7 +645,7 @@ void CMTester::updateHists ( bool pFinal )
 
                 // 4. Correlation projection
                 cCanvas->second->cd ( 4 );
-                cCorrProjection->Draw();
+                if(cCorrProjection!=nullptr) cCorrProjection->Draw();
             }
 
             cCanvas->second->Update();

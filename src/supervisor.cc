@@ -127,16 +127,13 @@ int main ( int argc, char* argv[] )
 	std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
 	cDirectory += cmd.optionValue ( "calibration" );
 
-	bool cAllChan   = (cmd.foundOption ("allChan")) ? true : false;
 	bool batchMode  = (cmd.foundOption ("batch")  ) ? true : false;
 
 
 
 	//pid_t  runControllerPid = -1;
 	//pid_t  dqmControllerPid = -1;
-	int ret = 1;
-	int runControllerPidStatus;
-	int dqmControllerStatus;
+	int runControllerPidStatus = 0;
 
 	std::cout << __PRETTY_FUNCTION__ << "Forking RunController" << std::endl;
 	runControllerPid   = fork();

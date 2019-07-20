@@ -151,8 +151,6 @@ void StubTool::scanStubs()
                         fReadoutChipInterface->WriteChipReg ( cCbcVector.at(iCBC), cRegName,  cRegValue );
                         //LOG (INFO) << fChannelMaskMapCBC3[i] << " " << std::bitset<8> (cRegValue);
                      }
-                     unsigned int mg =iChan/8;
-                     unsigned int mask = 0;
                      //for ( unsigned int smg = 0; smg < 6; smg+=2) //only using masks
                      for ( unsigned int smg = 0; smg < 3; smg++)
                      {  
@@ -459,7 +457,6 @@ void StubTool::scanStubs_wNoise()
                         for (auto& cStub : cEvent->StubVector (cFeId, cCbcVector.at(iCBC)->getChipId() ) )
                         {
                           stubCounter++;
-                          bool stubfinder = false;
                           double stub_position = cStub.getPosition();
                           double stub_bend     = Decoding_stub4(cStub.getBend());
                           double stub_strip    = cStub.getCenter();
@@ -724,7 +721,6 @@ void StubTool::scanStubs_swap()
                         for (auto& cStub : cEvent->StubVector (cFeId, cCbcVector.at(iCBC)->getChipId() ) )
                         {
                           stubCounter++;
-                          bool stubfinder = false;
                           double stub_position = cStub.getPosition();
                           double stub_bend     = Decoding_stub4(cStub.getBend());
                           double stub_strip    = cStub.getCenter();
@@ -807,7 +803,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
         std::vector<std::pair<std::string, uint16_t>> cRegVec;
         uint16_t cRegValue;
         std::string cRegName;
-        double exp_strip = -1;
+        // double exp_strip = -1;
 
         for (uint8_t regClusterWidth = 0; regClusterWidth <= 4; ++regClusterWidth)
         {
@@ -841,7 +837,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
                 {
                   LOG(DEBUG) << "CBC"<< +iCBC << " | RegClusterWidth = " << +regClusterWidth << " - Cluster Width = " << +iClusterWidth << " | Diff Chan = " << -iChan << " | Cond2: masking channel " << +((2*teststrip) - iChan ); 
                   maskChannel(cCbcVector.at(iCBC), ((2*teststrip) - iChan ), false);
-                  exp_strip = teststrip-(iClusterWidth/2);
+                  // exp_strip = teststrip-(iClusterWidth/2);
                 }
               }
               else
@@ -850,7 +846,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
                 {
                   LOG(DEBUG) << "CBC"<< +iCBC << " | RegClusterWidth = " << +regClusterWidth << " - Cluster Width = " << +iClusterWidth << " | Diff Chan = " << +iChan << " | Cond1: masking channel " << +((2*teststrip) + iChan ); 
                   maskChannel(cCbcVector.at(iCBC), ((2*teststrip) + iChan ), false);
-                  exp_strip = teststrip+(iClusterWidth/2);
+                  // exp_strip = teststrip+(iClusterWidth/2);
                 }
               }
 
@@ -882,12 +878,9 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
                 if (cEvent->StubBit (cFeId, cCbcVector.at(iCBC)->getChipId() ) )
                 {
                   uint8_t stubCounter = 0;
-                  uint8_t nstub = cEvent->StubVector (cFeId, cCbcVector.at(iCBC)->getChipId() ).size();
                   for (auto& cStub : cEvent->StubVector (cFeId, cCbcVector.at(iCBC)->getChipId() ) )
                   {
                     stubCounter++;
-                    double stub_position = cStub.getPosition();
-                    double stub_bend     = Decoding_stub4(cStub.getBend());
                     double stub_strip    = cStub.getCenter();
                     //if ( !((teststrip+iClusterWidth>127 && stubCounter == nstub) || (teststrip+iClusterWidth<=127 && stubCounter == 1)) ) continue;
                     //LOG (DEBUG) << RED << "CBC" << +iCBC << " , Stub: " << +(stubCounter) << " | Position: " << stub_position << " | Bend: " << std::bitset<4> (cStub.getBend()) << " -> " << stub_bend << " || Strip: " << stub_strip << " , EXPECTED STRIP : " << +(exp_strip+(iCBC*127)) << " , Filling STRIP: " << +(stub_strip+(iCBC*127)) << RESET;
@@ -1230,7 +1223,6 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
         std::vector<std::pair<std::string, uint16_t>> cRegVec;
         uint16_t cRegValue;
         std::string cRegName;
-        double exp_strip = -1;
 
         for (uint8_t nstubs = 1; nstubs <= 5; ++nstubs)
         {
@@ -1415,11 +1407,8 @@ void StubTool::setInitialOffsets()
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            uint32_t cFeId = cFe->getFeId();
-
             for ( auto cCbc : cFe->fReadoutChipVector )
             {
-                uint32_t cCbcId = cCbc->getChipId();
                 RegisterVector cRegVec;
 
                 for ( uint8_t cChan = 0; cChan < nChan; cChan++ )

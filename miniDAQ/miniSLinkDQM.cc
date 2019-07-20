@@ -150,9 +150,7 @@ int main ( int argc, char* argv[] )
     }
 
     bool cDQMPage  = ( cmd.foundOption ( "dqm" ) ) ? true : false;
-    bool addTree   = ( cmd.foundOption ( "tree" ) ) ? true : false;
     int maxevt     = ( cmd.foundOption ( "nevt" ) ) ? stoi (cmd.optionValue ( "nevt" ) ) : 10;
-    bool skipHist  = ( cmd.foundOption ( "skipDebugHist" ) ) ? true : false;
 
     // read .daq file and build DQMEvents
     std::vector<DQMEvent*> evList;

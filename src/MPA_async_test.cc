@@ -50,7 +50,6 @@ int main( int argc, char* argv[] )
 	MPA* mpa1 = new MPA(0, 0, 0, 0,"settings/MPAFiles/MPA_default.txt");
 	mpa1->loadfRegMap("settings/MPAFiles/MPA_default.txt");
 
-	BeBoard* pBoard = mysyscontroller.fBoardVector.at( 0 );
 	std::chrono::milliseconds LongPOWait( 500 );
 	std::chrono::milliseconds ShortWait( 10 );
 
@@ -85,10 +84,8 @@ int main( int argc, char* argv[] )
 			}
 		}
 	std::cout <<"Numpix -- "<< npixtot <<std::endl;
-	uint32_t cdata = 0;
-	uint16_t counters[2040] = {0};
 	std::vector<uint16_t> countersfifo;
-	uint32_t curpnum = 0;
+	// uint32_t curpnum = 0;
 	uint32_t totalevents = 0;
 	uint32_t totaleventsprev = 0;
 	uint32_t nrep = 0;
@@ -100,7 +97,7 @@ int main( int argc, char* argv[] )
 		std::this_thread::sleep_for( ShortWait );
 		fMPAInterface->Send_pulses(2000);
 		std::this_thread::sleep_for( ShortWait );
-		curpnum = 0;
+		// curpnum = 0;
 		scurvecsv << ith<<",";
 
 		//FIFO readout
@@ -119,8 +116,7 @@ int main( int argc, char* argv[] )
 				totaleventsprev = 0;
 			}
 
-		int icc = 0;
-		for (int icc=0; icc<2040; icc++)
+		for (size_t icc=0; icc<2040u; icc++)
 			{
  			scurves[icc]->SetBinContent(scurves[icc]->FindBin(ith), countersfifo[icc]);
 			scurvecsv << countersfifo[icc]<<",";

@@ -843,7 +843,6 @@ namespace Ph2_HwInterface {
                 cEnabledFe.insert (cFeId);
 
             //now on to the payload
-            uint16_t cCbcPresenceWord = 0;
             int cFirstBitFePayload = cPayload.get_current_write_position();
             int cFirstBitFeStub = cStubPayload.get_current_write_position();
             //cluster counter per FE

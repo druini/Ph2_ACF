@@ -522,13 +522,13 @@ void MPAInterface::Pix_Smode(MPA* pMPA,uint32_t r,uint32_t p, std::string smode 
 {
     uint32_t smodewrite = 0x0;
     if (smode == "edge")
-        uint32_t smodewrite = 0x0;
+        smodewrite = 0x0;
     if (smode == "level")
-        uint32_t smodewrite = 0x1;
+        smodewrite = 0x1;
     if (smode == "or")
-        uint32_t smodewrite = 0x2;
+        smodewrite = 0x2;
     if (smode == "xor")
-        uint32_t smodewrite = 0x3;
+        smodewrite = 0x3;
     Pix_write(pMPA,pMPA->getRegItem("ModeSel"), r, p, smodewrite ) ;
 }
 

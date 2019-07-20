@@ -233,7 +233,6 @@ void Channel::differentiateHist ( uint32_t pEventsperVcth, bool pHole, uint16_t 
         double_t cCurrent;
         double_t cPrev;
         bool cActive; // indicates existence of data points
-        int cStep = 1;
         int cDiffCounter = 0;
 
         double cBin = 0;

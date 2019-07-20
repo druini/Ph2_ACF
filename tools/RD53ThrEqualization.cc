@@ -125,8 +125,6 @@ void ThrEqualization::initHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
-
 
 	  myString.clear();
 	  myString.str("");

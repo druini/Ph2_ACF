@@ -74,8 +74,6 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
     for ( auto cBoard : fBoardVector )
     {
-        uint32_t cBoardId = cBoard->getBeId();
-
         for ( auto cFe : cBoard->fModuleVector )
         {
             uint32_t cFeId = cFe->getFeId();
@@ -120,7 +118,6 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
                 if ( cObj ) delete cObj;
 
                 TH1I* cOffsetHist = new TH1I ( cName, Form ( "Offsets FE%d CBC%d ; Channel; Offset", cFeId, cCbcId ), 254, -.5, 253.5  );
-                uint8_t cOffset = ( fHoleMode ) ? 0x00 : 0xFF;
 
                 bookHistogram ( cCbc, "Offsets", cOffsetHist );
 

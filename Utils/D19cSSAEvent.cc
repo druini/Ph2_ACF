@@ -172,7 +172,6 @@ namespace Ph2_HwInterface {
         if (cNFe_software != cNFe_event)
             LOG (ERROR) << "Number of Modules in event header (" << cNFe_event << ") doesnt match the amount of modules defined in firmware.";
 
-        uint8_t fDummySize = 0x000000FF & list.at (1);
         fEventCount = 0x00FFFFFF &  list.at (2);
         
         fTDC = 0x000000FF & list.at (4);

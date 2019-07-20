@@ -84,7 +84,7 @@ int main ( int argc, char* argv[] )
     std::string cInputFile;
 
     //file handler for reading
-    uint32_t fPlaybackEventSize32;
+    uint32_t fPlaybackEventSize32 = 0;
 
     // now query the parsing results
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/HWDescription_2CBC.xml";

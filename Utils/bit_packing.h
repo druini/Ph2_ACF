@@ -147,7 +147,7 @@ namespace local_detail {
     private:
         template <class Tuple, size_t... Is>
         constexpr void assign(const Tuple& source, std::index_sequence<Is...>) {
-            auto unused = {
+            __attribute__((unused)) auto unused = {
                 (std::get<Is>(tup) = std::get<Is>(source), 0)...
             };
         }
@@ -188,7 +188,7 @@ struct BitPacker
         static_assert(sizeof(T) * 8 >= total_size, "T is too small.");
         T result = 0;
         size_t size = total_size;
-        auto unused = {
+        __attribute__((unused)) auto unused = {
             result |= (args & bit_mask(Sizes)) << (size -= Sizes)...
         };
         return result;
@@ -207,7 +207,7 @@ private:
     static _CONSTEXPR auto unpack_impl(T value, std::index_sequence<Is...>) {
         std::tuple<Identity<T, Is>...> result;
         size_t size = total_size;
-        auto unused = {
+        __attribute__((unused)) auto unused = {
             std::get<Is>(result) = (value >> (size -= Sizes)) & bit_mask(Sizes)...
         };
         return result;
@@ -319,7 +319,7 @@ private:
     template <size_t N, class T, class U, size_t... Is>
     static _CONSTEXPR void unpack_impl(T value, std::array<U, N>& array, std::index_sequence<Is...>) {
         size_t total_size = N * Size;
-        auto unused = {
+        __attribute__((unused)) auto unused = {
             array[Is] = (value >> (total_size -= Size)) & bit_mask(Size)...
         };
     }
@@ -327,7 +327,7 @@ private:
     template <size_t N, class T, class U, size_t... Is>
     static _CONSTEXPR void unpack_impl(T value, U (&array)[N], std::index_sequence<Is...>) {
         size_t total_size = N * Size;
-        auto unused = {
+        __attribute__((unused)) auto unused = {
             array[Is] = (value >> (total_size -= Size)) & bit_mask(Size)...
         };
     }

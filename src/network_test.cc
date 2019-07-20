@@ -100,8 +100,8 @@ int main ( int argc, char* argv[] )
 	std::string binDir  = baseDir + "bin/";
 
 
-	int networkServerPidStatus;
-	int networkClientPidStatus;
+	int networkServerPidStatus = 0;
+	int networkClientPidStatus = 0;
 
 	std::cout << __PRETTY_FUNCTION__ << "Forking network_server" << std::endl;
 	networkServerPid   = fork();

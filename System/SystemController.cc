@@ -168,20 +168,6 @@ namespace Ph2_System {
     {
       LOG (INFO) << BOLDBLUE << "@@@ Configuring HW parsed from .xml file @@@" << RESET;
 
-      bool cHoleMode = false;
-      bool cCheck = false;
-
-      if ( !fSettingsMap.empty() )
-        {
-	  SettingsMap::iterator cSetting = fSettingsMap.find ( "HoleMode" );
-
-	  if ( cSetting != fSettingsMap.end() )
-	    cHoleMode = cSetting->second;
-
-	  cCheck = true;
-        }
-      else cCheck = false;
-
       for (auto& cBoard : fBoardVector)
 	{
 	  // ######################################
@@ -286,7 +272,6 @@ namespace Ph2_System {
      {
         uint32_t cNEventSize32 = 0;
         uint32_t cNCbc = 0;
-        uint32_t cNFe = pBoard->getNFe();
 
         for (const auto& cFe : pBoard->fModuleVector)
             cNCbc += cFe->getNChip();

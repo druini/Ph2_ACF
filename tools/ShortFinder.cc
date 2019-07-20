@@ -50,26 +50,7 @@ ShortFinder::~ShortFinder() {}
 //If no directory is found use the default files for the different operational modes found in Ph2_ACF/settings
 void ShortFinder::ReconfigureRegisters()
 {
-    bool cCheck;
-    bool cHoleMode;
-    auto cSetting = fSettingsMap.find ( "HoleMode" );
-
-    if ( cSetting != std::end ( fSettingsMap ) )
-    {
-        cCheck = true;
-        cHoleMode = ( cSetting->second == 1 ) ? true : false;
-    }
-
-    std::string cMode;
-
-    if ( cCheck )
-    {
-        if ( cHoleMode ) cMode = "hole";
-        else cMode = "electron";
-    }
-
-
-
+    
     for (auto& cBoard : fBoardVector)
     {
         fBeBoardInterface->ChipReset ( cBoard );
@@ -81,7 +62,7 @@ void ShortFinder::ReconfigureRegisters()
                 std::string pRegFile ;
 
                 if ( fDirectoryName.empty() )
-                    pRegFile = "settings/Cbc_default_" +  cMode + ".txt";
+                    pRegFile = "settings/Cbc_default_electron.txt";
                 else
                 {
                     char buffer[120];
