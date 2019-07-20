@@ -403,7 +403,7 @@ Stubs MPAInterface::Format_stubs(std::vector<std::vector<uint8_t>> rawstubs)
 L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1,bool verbose)
 {
     bool found = false;
-    uint8_t header,error,L1_ID,strip_counter,pixel_counter;
+    uint8_t header,error(0),L1_ID,strip_counter,pixel_counter;
     L1data formL1data;
 
     std::vector<uint16_t> strip_data, pixel_data;
@@ -412,7 +412,7 @@ L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1,bool verbose)
 
     for (int i=1; i<200 ;i++)
     {
-        if ((rawl1[i] == 255)&(rawl1[i-1] == 255)&(~found))
+        if ((rawl1[i] == 255)&(rawl1[i-1] == 255)&(!found))
         {
             header = rawl1[i-1] << 11 | rawl1[i-1] << 3 | ((rawl1[i+1] & 0xE0) >> 5);
             error = ((rawl1[i+1] & 0x18) >> 3);
