@@ -10,7 +10,8 @@
 #include "RD53Gain.h"
 
 Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps)
-  : fileRes     (fileRes)
+  : Tool        ()
+  , fileRes     (fileRes)
   , rowStart    (rowStart)
   , rowStop     (rowStop)
   , colStart    (colStart)
@@ -20,7 +21,6 @@ Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStar
   , startValue  (startValue)
   , stopValue   (stopValue)
   , nSteps      (nSteps)
-  , Tool        ()
 {
   // ########################
   // # Custom channel group #
@@ -41,7 +41,7 @@ Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStar
   // # Initialize dac scan values #
   // ##############################
   float step = (stopValue - startValue) / nSteps;
-  for (auto i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
+  for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
 
 Gain::~Gain ()
@@ -49,49 +49,49 @@ Gain::~Gain ()
   delete theFile;
   theFile = nullptr;
 
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
+  for (auto i = 0u; i < theCanvasOcc.size(); i++)
     {
       delete theOccupancy[i];
       delete theCanvasOcc[i];
     }
 
-  for (auto i = 0; i < theCanvasGa1D.size(); i++)
+  for (auto i = 0u; i < theCanvasGa1D.size(); i++)
     {
       delete theGain1D[i];
       delete theCanvasGa1D[i];
     }
   
-  for (auto i = 0; i < theCanvasIn1D.size(); i++)
+  for (auto i = 0u; i < theCanvasIn1D.size(); i++)
     {
       delete theIntercept1D[i];
       delete theCanvasIn1D[i];
     }
   
-  for (auto i = 0; i < theCanvasGa2D.size(); i++)
+  for (auto i = 0u; i < theCanvasGa2D.size(); i++)
     {
       delete theGain2D[i];
       delete theCanvasGa2D[i];
     }
   
-  for (auto i = 0; i < theCanvasIn2D.size(); i++)
+  for (auto i = 0u; i < theCanvasIn2D.size(); i++)
     {
       delete theIntercept2D[i];
       delete theCanvasIn2D[i];
     }
 
-  for (auto i = 0; i < theAxis.size(); i++) delete theAxis[i];
+  for (auto i = 0u; i < theAxis.size(); i++) delete theAxis[i];
 
-  for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
+  for (auto i = 0u; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
 }
 
 void Gain::run ()
 {
   ContainerFactory theDetectorFactory;
 
-  for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
+  for (auto i = 0u; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
   detectorContainerVector.clear();
   detectorContainerVector.reserve(dacList.size());
-  for (auto i = 0; i < dacList.size(); i++)
+  for (auto i = 0u; i < dacList.size(); i++)
     {
       detectorContainerVector.emplace_back(new DetectorDataContainer());
       theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *detectorContainerVector.back());
@@ -144,10 +144,10 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
 	{
 	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
 
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
+	  for (auto row = 0u; row < RD53::nRows; row++)
+	    for (auto col = 0u; col < RD53::nCols; col++)
 	      {
-		for (auto i = 0; i < dacList.size()-1; i++)
+		for (auto i = 0u; i < dacList.size()-1; i++)
 		  {
 		    x[i] = dacList[i]-VCalOffset;
 		    y[i] = detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh;
@@ -285,10 +285,10 @@ void Gain::fillHisto ()
 	{
 	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
 	  
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
+	  for (auto row = 0u; row < RD53::nRows; row++)
+	    for (auto col = 0u; col < RD53::nCols; col++)
 	      {
-		for (auto i = 0; i < dacList.size(); i++)
+		for (auto i = 0u; i < dacList.size(); i++)
 		  if (this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
 		    theOccupancy[index]->Fill(dacList[i]-VCalOffset,detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh);
 		
@@ -307,7 +307,7 @@ void Gain::fillHisto ()
 
 void Gain::display ()
 {
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
+  for (auto i = 0u; i < theCanvasOcc.size(); i++)
     {
       theCanvasOcc[i]->cd();
       theOccupancy[i]->Draw("gcolz");
@@ -335,7 +335,7 @@ void Gain::display ()
       theCanvasOcc[i]->Update();
     }
   
-  for (auto i = 0; i < theCanvasGa1D.size(); i++)
+  for (auto i = 0u; i < theCanvasGa1D.size(); i++)
     {
       theCanvasGa1D[i]->cd();
       theGain1D[i]->Draw();
@@ -363,7 +363,7 @@ void Gain::display ()
       theCanvasGa1D[i]->Update();
     }
   
-  for (auto i = 0; i < theCanvasIn1D.size(); i++)
+  for (auto i = 0u; i < theCanvasIn1D.size(); i++)
     {
       theCanvasIn1D[i]->cd();
       theIntercept1D[i]->Draw();
@@ -371,7 +371,7 @@ void Gain::display ()
       theCanvasIn1D[i]->Update();
     }
 
-  for (auto i = 0; i < theCanvasGa2D.size(); i++)
+  for (auto i = 0u; i < theCanvasGa2D.size(); i++)
     {
       theCanvasGa2D[i]->cd();
       theGain2D[i]->Draw("gcolz");
@@ -379,7 +379,7 @@ void Gain::display ()
       theCanvasGa2D[i]->Update();
     }
   
-  for (auto i = 0; i < theCanvasIn2D.size(); i++)
+  for (auto i = 0u; i < theCanvasIn2D.size(); i++)
     {
       theCanvasIn2D[i]->cd();
       theIntercept2D[i]->Draw("gcolz");
@@ -390,11 +390,11 @@ void Gain::display ()
 
 void Gain::save ()
 {
-  for (auto i = 0; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
-  for (auto i = 0; i < theCanvasGa1D.size(); i++) theCanvasGa1D[i]->Write();
-  for (auto i = 0; i < theCanvasIn1D.size(); i++) theCanvasIn1D[i]->Write();
-  for (auto i = 0; i < theCanvasGa2D.size(); i++) theCanvasGa2D[i]->Write();
-  for (auto i = 0; i < theCanvasIn2D.size(); i++) theCanvasIn2D[i]->Write();
+  for (auto i = 0u; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
+  for (auto i = 0u; i < theCanvasGa1D.size(); i++) theCanvasGa1D[i]->Write();
+  for (auto i = 0u; i < theCanvasIn1D.size(); i++) theCanvasIn1D[i]->Write();
+  for (auto i = 0u; i < theCanvasGa2D.size(); i++) theCanvasGa2D[i]->Write();
+  for (auto i = 0u; i < theCanvasIn2D.size(); i++) theCanvasIn2D[i]->Write();
 }
 
 void Gain::computeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
@@ -425,7 +425,7 @@ void Gain::computeStats (std::vector<float>& x, std::vector<float>& y, std::vect
   // #######
   // # XtX #
   // #######
-  for (auto i = 0; i < x.size(); i++)
+  for (auto i = 0u; i < x.size(); i++)
     if (e[i] != 0)
       {
 	b += x[i];
@@ -452,7 +452,7 @@ void Gain::computeStats (std::vector<float>& x, std::vector<float>& y, std::vect
   // #################
   // # (XtX)^(-1)XtY #
   // #################
-  for (auto i = 0; i < x.size(); i++)
+  for (auto i = 0u; i < x.size(); i++)
     if (e[i] != 0)
       {
 	intercept    += (ai + bi*x[i]) * y[i];

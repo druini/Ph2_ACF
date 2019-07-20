@@ -80,12 +80,10 @@ namespace Ph2_HwInterface {
             fFeMask_software |= 1 << cFeId;
         }
 
-        fDummySize = 0x000000FF & list.at (1);
         fEventCount = 0x00FFFFFF &  list.at (2);
         fBunch = 0xFFFFFFFF & list.at (3);
         fTDC = 0x000000FF & list.at (4);
-        fTLUTriggerID = (0x00FFFF00 & list.at (4) ) >> 8;
-
+        
         fBeId = pBoard->getBeId();
         fBeFWType = 0;
         fCBCDataType = (0x0000FF00 & list.at (1) ) >> 8;
@@ -105,7 +103,6 @@ namespace Ph2_HwInterface {
                 //LOG(INFO) << "Chip data mask: " << std::hex << +chip_data_mask << std::dec;
 
                 uint16_t fe_data_size = static_cast<uint16_t> ( ( (0x0000FFFF) & list.at (address_offset + 0) ) >> 0);
-                uint8_t header2_size = (0x00FF0000 & list.at (address_offset + 0) ) >> 16;
                 //LOG(INFO) << "FE Data Size: " << +fe_data_size;
 
 
@@ -258,7 +255,7 @@ namespace Ph2_HwInterface {
             uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
             uint32_t cGotClusters = 0;
             if (cNclusters > 0) {
-                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                for(size_t word_id = 1; word_id < cDataVector.size(); word_id++) {
                     uint32_t word = cDataVector.at(word_id);
 
                     if(cGotClusters < cNclusters) {
@@ -269,7 +266,7 @@ namespace Ph2_HwInterface {
                         // check parity
                         if( (cClusterAddress-i)%2 == 0 ) {
                             // check if it's in cluster
-                            if ( (i >= cClusterAddress) && (i < (cClusterAddress+2*cClusterWidth)) ) return 1;
+                            if ( (i >= cClusterAddress) && (i < (cClusterAddress+2u*cClusterWidth)) ) return 1;
                         }
 
                         // increment got clusters
@@ -284,7 +281,7 @@ namespace Ph2_HwInterface {
                         // check parity
                         if( (cClusterAddress-i)%2 == 0 ) {
                             // check if it's in cluster
-                            if ( (i >= cClusterAddress) && (i < (cClusterAddress+2*cClusterWidth)) ) return 1;
+                            if ( (i >= cClusterAddress) && (i < (cClusterAddress+2u*cClusterWidth)) ) return 1;
                         }
 
                         // increment got clusters
@@ -322,7 +319,7 @@ namespace Ph2_HwInterface {
             uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
             uint32_t cGotClusters = 0;
             if (cNclusters > 0) {
-                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                for(size_t word_id = 1; word_id < cDataVector.size(); word_id++) {
                     uint32_t word = cDataVector.at(word_id);
 
                     if(cGotClusters < cNclusters) {
@@ -386,7 +383,7 @@ namespace Ph2_HwInterface {
             uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
             uint32_t cGotClusters = 0;
             if (cNclusters > 0) {
-                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                for(size_t word_id = 1; word_id < cDataVector.size(); word_id++) {
                     uint32_t word = cDataVector.at(word_id);
 
                     if(cGotClusters < cNclusters) {
@@ -444,7 +441,7 @@ namespace Ph2_HwInterface {
             uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
             uint32_t cGotClusters = 0;
             if (cNclusters > 0) {
-                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                for(size_t word_id = 1; word_id < cDataVector.size(); word_id++) {
                     uint32_t word = cDataVector.at(word_id);
 
                     if(cGotClusters < cNclusters) {
@@ -556,7 +553,7 @@ namespace Ph2_HwInterface {
             uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
             uint32_t cGotClusters = 0;
             if (cNclusters > 0) {
-                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                for(size_t word_id = 1; word_id < cDataVector.size(); word_id++) {
                     uint32_t word = cDataVector.at(word_id);
 
                     if(cGotClusters < cNclusters) {
@@ -606,7 +603,7 @@ namespace Ph2_HwInterface {
             uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
             uint32_t cGotClusters = 0;
             if (cNclusters > 0) {
-                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                for(size_t word_id = 1; word_id < cDataVector.size(); word_id++) {
                     uint32_t word = cDataVector.at(word_id);
 
                     if(cGotClusters < cNclusters) {
@@ -781,7 +778,7 @@ namespace Ph2_HwInterface {
             uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
             uint32_t cGotClusters = 0;
             if (cNclusters > 0) {
-                for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                for(size_t word_id = 1; word_id < cDataVector.size(); word_id++) {
                     uint32_t word = cDataVector.at(word_id);
 
                     if(cGotClusters < cNclusters) {
@@ -878,7 +875,7 @@ namespace Ph2_HwInterface {
                     uint32_t cNclusters = (0x1FC00000 & cDataVector.at(0)) >> 22;
                     uint32_t cGotClusters = 0;
                     if (cNclusters > 0) {
-                        for(int word_id = 1; word_id < cDataVector.size(); word_id++) {
+                        for(size_t word_id = 1; word_id < cDataVector.size(); word_id++) {
                             uint32_t word = cDataVector.at(word_id);
 
                             if(cGotClusters < cNclusters) {

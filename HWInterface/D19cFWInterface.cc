@@ -19,34 +19,34 @@
 #include "../HWDescription/Module.h"
 #include "../HWDescription/OuterTrackerModule.h"
 
-//#include "ChipInterface.h"
-
-
+#pragma GCC diagnostic ignored "-Wpedantic"
+// #pragma GCC diagnostic pop
 namespace Ph2_HwInterface {
 
     D19cFWInterface::D19cFWInterface ( const char* puHalConfigFileName,
-     uint32_t pBoardId ) :
-    BeBoardFWInterface ( puHalConfigFileName, pBoardId ),
-    fpgaConfig (nullptr),
-    fBroadcastCbcId (0),
-    fNCbc (0),
-    fNMPA (0),
-    fNSSA (0),
-    fFMCId (1)
+     uint32_t pBoardId ) 
+    : BeBoardFWInterface ( puHalConfigFileName, pBoardId )
+    , fpgaConfig (nullptr)
+    , fFileHandler (nullptr)
+    , fBroadcastCbcId (0)
+    , fNCbc (0)
+    , fNMPA (0)
+    , fNSSA (0)
+    , fFMCId (1)
     {fResetAttempts = 0 ; }
 
 
     D19cFWInterface::D19cFWInterface ( const char* puHalConfigFileName,
      uint32_t pBoardId,
-     FileHandler* pFileHandler ) :
-    BeBoardFWInterface ( puHalConfigFileName, pBoardId ),
-    fpgaConfig (nullptr),
-    fBroadcastCbcId (0),
-    fNCbc (0),
-    fNMPA (0),
-    fNSSA (0),
-    fFileHandler ( pFileHandler ),
-    fFMCId (1)
+     FileHandler* pFileHandler ) 
+    : BeBoardFWInterface ( puHalConfigFileName, pBoardId )
+    , fpgaConfig (nullptr)
+    , fFileHandler ( pFileHandler )
+    , fBroadcastCbcId (0)
+    , fNCbc (0)
+    , fNMPA (0)
+    , fNSSA (0)
+    , fFMCId (1)
     {
         if ( fFileHandler == nullptr ) fSaveToFile = false;
         else fSaveToFile = true;
@@ -55,29 +55,29 @@ namespace Ph2_HwInterface {
 
     D19cFWInterface::D19cFWInterface ( const char* pId,
      const char* pUri,
-     const char* pAddressTable ) :
-    BeBoardFWInterface ( pId, pUri, pAddressTable ),
-    fpgaConfig ( nullptr ),
-    fBroadcastCbcId (0),
-    fNCbc (0),
-    fNMPA (0),
-    fNSSA (0),
-    fFMCId (1)
+     const char* pAddressTable ) 
+    : BeBoardFWInterface ( pId, pUri, pAddressTable )
+    , fpgaConfig (nullptr)
+    , fFileHandler (nullptr)
+    , fBroadcastCbcId (0)
+    , fNCbc (0)
+    , fNMPA (0)
+    , fNSSA (0)
+    , fFMCId (1)
     {fResetAttempts = 0 ; }
-
 
     D19cFWInterface::D19cFWInterface ( const char* pId,
      const char* pUri,
      const char* pAddressTable,
-     FileHandler* pFileHandler ) :
-    BeBoardFWInterface ( pId, pUri, pAddressTable ),
-    fpgaConfig ( nullptr ),
-    fBroadcastCbcId (0),
-    fNCbc (0),
-    fNMPA (0),
-    fNSSA (0),
-    fFileHandler ( pFileHandler ),
-    fFMCId (1)
+     FileHandler* pFileHandler ) 
+    : BeBoardFWInterface ( pId, pUri, pAddressTable )
+    , fpgaConfig (nullptr)
+    , fFileHandler ( pFileHandler )
+    , fBroadcastCbcId (0)
+    , fNCbc (0)
+    , fNMPA (0)
+    , fNSSA (0)
+    , fFMCId (1)
     {
         if ( fFileHandler == nullptr ) fSaveToFile = false;
         else fSaveToFile = true;
@@ -605,7 +605,7 @@ namespace Ph2_HwInterface {
         // actually FIXME
             return;
         } else if (fFirmwareFrontEndType == FrontEndType::MPA) {
-            for (int id = 0; id < fFWNChips; id++) {
+            for (unsigned int id = 0; id < fFWNChips; id++) {
             // for chip emulator register width is 8 bits, not 16 as for MPA
                 if(!fCBC3Emulator) {
                     i2c_slave_map.push_back({0b1000000 + id, 2, 1, 1, 1, 0});
@@ -617,12 +617,12 @@ namespace Ph2_HwInterface {
         else if (fFirmwareFrontEndType == FrontEndType::SSA) // MUST BE IN ORDER! CANNOT DO 0, 1, 4
         {
             LOG (INFO) << BOLDRED << "WE ARE HERE!!! WE ARE HERE!!! WE ARE HERE!!!  " << fFWNChips << RESET;
-            for (int id = 0; id < fFWNChips; id++) 
+            for (unsigned int id = 0; id < fFWNChips; id++) 
             {
                 i2c_slave_map.push_back({0b0100000 + id, 2, 1, 1, 1, 0}); // FIXME SSA ??
             }
         }
-        for (int ism = 0; ism < i2c_slave_map.size(); ism++) {
+        for (unsigned int ism = 0; ism < i2c_slave_map.size(); ism++) {
         // setting the params
             uint32_t shifted_i2c_address = i2c_slave_map[ism][0]<<25;
             uint32_t shifted_register_address_nbytes = i2c_slave_map[ism][1]<<10;
@@ -1888,8 +1888,8 @@ namespace Ph2_HwInterface {
     void D19cFWInterface::Manage2SCountersMemory(uint8_t **&pErrorCounters, uint8_t ***&pChannelCounters, bool pAllocate)
     {
         // this will anyway be constant
-        const int NCHIPS_PER_HYBRID_COUNTERS = 8; // data from one CIC
-        const int HYBRIDS_TOTAL = fFWNHybrids; // for allocation
+        const unsigned int NCHIPS_PER_HYBRID_COUNTERS = 8; // data from one CIC
+        const unsigned int HYBRIDS_TOTAL = fFWNHybrids; // for allocation
 
         if (pAllocate) {
             // allocating the array

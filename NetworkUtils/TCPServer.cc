@@ -40,12 +40,6 @@ void TCPServer::connectClient(TCPTransceiverSocket* socket)
 			closeClientSocket(socket->getSocketId());
 			break;
 		}
-		else if (message.length() < 0)
-		{
-			std::cout << __PRETTY_FUNCTION__ << "incorrect close from socket  #: " << socket->getSocketId() << " errno: " << strerror(errno) << std::endl;
-			closeClientSocket(socket->getSocketId());
-			break;
-		}
 		else
 		{
 			std::cout << __PRETTY_FUNCTION__ 

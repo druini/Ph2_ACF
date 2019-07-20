@@ -10,7 +10,8 @@
 #include "RD53Latency.h"
 
 Latency::Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t startValue, size_t stopValue, size_t nEvents)
-  : fileRes    (fileRes)
+  : Tool       ()
+  , fileRes    (fileRes)
   , rowStart   (rowStart)
   , rowStop    (rowStop)
   , colStart   (colStart)
@@ -18,7 +19,6 @@ Latency::Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t c
   , startValue (startValue)
   , stopValue  (stopValue)
   , nEvents    (nEvents)
-  , Tool       ()
 {
   size_t nSteps = stopValue - startValue;
 
@@ -27,7 +27,7 @@ Latency::Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t c
   // # Initialize dac scan values #
   // ##############################
   float step = (stopValue - startValue) / nSteps;
-  for (auto i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
+  for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
 
 Latency::~Latency ()
@@ -35,7 +35,7 @@ Latency::~Latency ()
   delete theFile;
   theFile = nullptr;
 
-  for (auto i = 0; i < theCanvasLat.size(); i++)
+  for (auto i = 0u; i < theCanvasLat.size(); i++)
     {
       delete theLat[i];
       delete theCanvasLat[i];
@@ -142,7 +142,7 @@ void Latency::fillHisto ()
 
 void Latency::display ()
 {
-  for (auto i = 0; i < theCanvasLat.size(); i++)
+  for (auto i = 0u; i < theCanvasLat.size(); i++)
     {
       theCanvasLat[i]->cd();
       theLat[i]->Draw();
@@ -153,7 +153,7 @@ void Latency::display ()
 
 void Latency::save ()
 {
-  for (auto i = 0; i < theCanvasLat.size(); i++) theCanvasLat[i]->Write();
+  for (auto i = 0u; i < theCanvasLat.size(); i++) theCanvasLat[i]->Write();
 }
 
 void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
@@ -198,10 +198,10 @@ void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& 
 		auto events = RD53FWInterface::DecodeEvents(data,status);
 
 		auto nEvts = 0;
-		for (auto i = 0; i < events.size(); i++)
+		for (auto i = 0u; i < events.size(); i++)
 		  {
 		    auto& evt = events[i];
-		    for (auto j = 0; j < evt.chip_events.size(); j++)
+		    for (auto j = 0u; j < evt.chip_events.size(); j++)
 		      if (evt.chip_events[j].data.size() != 0) nEvts++;
 		  }
 

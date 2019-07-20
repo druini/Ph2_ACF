@@ -62,7 +62,7 @@ namespace Ph2_HwInterface {
         /*!
          * \brief Destructor of the ChipInterface Class
          */
-        ~ChipInterface();
+        virtual ~ChipInterface();
         /*!
          * \brief Configure the Chip with the Chip Config File
          * \param pChip: pointer to Chip object

@@ -10,7 +10,8 @@
 #include "RD53ThrMinimization.h"
 
 ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart, size_t ThrStop)
-  : fileRes         (fileRes)
+  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, (rowStop-rowStart+1)*(colStop-colStart+1), nEvents, nEvtsBurst, false)
+  , fileRes         (fileRes)
   , fileReg         (fileReg)
   , rowStart        (rowStart)
   , rowStop         (rowStop)
@@ -19,10 +20,9 @@ ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size
   , nPixels2Inj     (nPixels2Inj)
   , nEvents         (nEvents)
   , nEvtsBurst      (nEvtsBurst)
-  , targetOccupancy (targetOccupancy)
   , ThrStart        (ThrStart)
   , ThrStop         (ThrStop)
-  , PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, (rowStop-rowStart+1)*(colStop-colStart+1), nEvents, nEvtsBurst, false)
+  , targetOccupancy (targetOccupancy)
 {}
 
 ThrMinimization::~ThrMinimization ()
@@ -30,7 +30,7 @@ ThrMinimization::~ThrMinimization ()
   delete theFile;
   theFile = nullptr;
 
-  for (auto i = 0; i < theCanvasThr.size(); i++)
+  for (auto i = 0u; i < theCanvasThr.size(); i++)
     {
       delete theThr[i];
       delete theCanvasThr[i];
@@ -136,7 +136,7 @@ void ThrMinimization::fillHisto ()
 
 void ThrMinimization::display ()
 {
-  for (auto i = 0; i < theCanvasThr.size(); i++)
+  for (auto i = 0u; i < theCanvasThr.size(); i++)
     {
       theCanvasThr[i]->cd();
       theThr[i]->Draw();
@@ -147,7 +147,7 @@ void ThrMinimization::display ()
 
 void ThrMinimization::save ()
 {
-  for (auto i = 0; i < theCanvasThr.size(); i++) theCanvasThr[i]->Write();
+  for (auto i = 0u; i < theCanvasThr.size(); i++) theCanvasThr[i]->Write();
 
 
   // ############################
@@ -187,7 +187,7 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::setBits(numberOfBits)) + 1;
  
 
-  for (auto i = 0; i < numberOfBits; i++)
+  for (auto i = 0u; i < numberOfBits; i++)
     {
       // ###########################
       // # Download new DAC values #

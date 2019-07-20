@@ -36,9 +36,9 @@ namespace fc7
   // http://www.xilinx.com/support/documentation/user_guides/ug191.pdf  - Virtex 5
 
 
-  ExceptionClass ( WrongFileExtension, "File has the wrong file-extension for the class trying to open it" );
-  ExceptionClass ( FileNotFound, "File was not found" );
-  ExceptionClass ( CorruptedFile, "File was corrupted" );
+  ExceptionClass ( WrongFileExtension, "File has the wrong file-extension for the class trying to open it" )
+  ExceptionClass ( FileNotFound, "File was not found" )
+  ExceptionClass ( CorruptedFile, "File was corrupted" )
 
   /**
     Firmware is

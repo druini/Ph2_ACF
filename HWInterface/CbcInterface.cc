@@ -112,8 +112,10 @@ namespace Ph2_HwInterface {
 
     bool CbcInterface::maskChannelsAndSetInjectionSchema  (ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop)
     {
-        if(mask)   maskChannelsGroup (pChip,group,pVerifLoop);
-        if(inject) setInjectionSchema(pChip,group,pVerifLoop);
+        bool success = true;
+        if(mask)   success &= maskChannelsGroup (pChip,group,pVerifLoop);
+        if(inject) success &= setInjectionSchema(pChip,group,pVerifLoop);
+        return success;
     }
 
 

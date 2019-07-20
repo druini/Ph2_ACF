@@ -154,7 +154,7 @@ int main ( int argc, char* argv[] )
 		// filename associated with file being executed
 		// the array pointer must be terminated by NULL
 		// pointer
-		char * argv[] = {"RunController", NULL};
+		char * argv[] = {(char*)"RunController", NULL};
 
 		// the execv() only return if error occured.
 		// The return value is -1
@@ -201,7 +201,7 @@ int main ( int argc, char* argv[] )
 	int tAppArgc = 1;
 	char *tAppArgv[2];
 	tAppArgv[0] = argv[0];
-	tAppArgv[1] = "-b";
+	tAppArgv[1] = (char*)"-b";
 	if(batchMode)
 		tAppArgc = 2;
 	TApplication theApp("App", &tAppArgc, tAppArgv);

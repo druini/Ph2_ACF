@@ -281,7 +281,7 @@ void BiasSweep::SweepBias (std::string pBias, Chip* pCbc)
         //just create objects, sweep and fill and forget about them again!
 
         std::time_t cTime = std::time (nullptr);
-        TString cName = Form ("g_BiasSweep_%s_Fe%d_Cbc%d_TS%d", pBias.c_str(), pCbc->getFeId(), pCbc->getChipId(), cTime );
+        TString cName = Form ("g_BiasSweep_%s_Fe%d_Cbc%d_TS%d", pBias.c_str(), pCbc->getFeId(), pCbc->getChipId(), static_cast<int>(cTime) );
 
         TObject* cObj = gROOT->FindObject (cName);
 

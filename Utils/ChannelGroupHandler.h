@@ -31,15 +31,15 @@ public:
     {};
     virtual ~ChannelGroupBase(){;}
     virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster=1) const = 0 ;
-    inline         uint32_t          getNumberOfEnabledChannels   (void                          ) const {return numberOfEnabledChannels_;}
-    virtual inline uint32_t          getNumberOfEnabledChannels   (const ChannelGroupBase* mask  ) const = 0;
-    virtual inline bool              isChannelEnabled             (uint16_t row, uint16_t col = 0) const = 0;
-    virtual inline void              enableChannel                (uint16_t row, uint16_t col = 0)       = 0;
-    virtual inline void              disableChannel               (uint16_t row, uint16_t col = 0)       = 0;
-    virtual inline void              disableAllChannels           (void                          )       = 0;
-    virtual inline void              enableAllChannels            (void                          )       = 0;
-    virtual inline void              flipAllChannels              (void                          )       = 0;
-    virtual inline bool              areAllChannelsEnabled        (void                          ) const = 0;
+             uint32_t          getNumberOfEnabledChannels   (void                          ) const {return numberOfEnabledChannels_;}
+    virtual uint32_t          getNumberOfEnabledChannels   (const ChannelGroupBase* mask  ) const = 0;
+    virtual bool              isChannelEnabled             (uint16_t row, uint16_t col = 0) const = 0;
+    virtual void              enableChannel                (uint16_t row, uint16_t col = 0)       = 0;
+    virtual void              disableChannel               (uint16_t row, uint16_t col = 0)       = 0;
+    virtual void              disableAllChannels           (void                          )       = 0;
+    virtual void              enableAllChannels            (void                          )       = 0;
+    virtual void              flipAllChannels              (void                          )       = 0;
+    virtual bool              areAllChannelsEnabled        (void                          ) const = 0;
     
 protected:
     uint16_t numberOfRows_           ;

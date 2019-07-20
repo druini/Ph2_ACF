@@ -8,6 +8,7 @@
 */
 
 #include "RD53Interface.h"
+#include "RD53FWInterface.h"
 
 namespace Ph2_HwInterface
 {
@@ -198,7 +199,7 @@ namespace Ph2_HwInterface
     
     size_t size = dataVec.size()/nCmd;
     std::vector<uint32_t> serialSymbols;
-    for (auto i = 0; i < nCmd; i++)
+    for (auto i = 0u; i < nCmd; i++)
       {
 	std::vector<uint16_t> subDataVec(dataVec.begin() + size*i, dataVec.begin() + size*(i+1));
 	pRD53->encodeCMD (pRD53->getRegItem (pRegNode).fAddress, pRD53->getRegItem (pRegNode).fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, true, serialSymbols, &subDataVec);
@@ -218,7 +219,7 @@ namespace Ph2_HwInterface
     pRD53->encodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::READ, false, serialSymbols);
     outputDecoded = fBoardFW->ReadChipRegisters (serialSymbols, pRD53->getChipId());
 
-    for (auto i = 0; i < outputDecoded.size(); i++)
+    for (auto i = 0u; i < outputDecoded.size(); i++)
       // Removing bit related to PIX_PORTAL register identification
       outputDecoded[i].first = outputDecoded[i].first & static_cast<uint16_t>(RD53::setBits(NBIT_ADDR));
 
@@ -272,7 +273,7 @@ namespace Ph2_HwInterface
 	    this->WriteChipReg(pRD53, "REGION_ROW", 0x0,     pVerifLoop && doSparse);
 	  }
 
-	for (auto row = 0; row < RD53::nRows; row++)
+	for (auto row = 0u; row < RD53::nRows; row++)
 	  {
 	    data =
 	      RD53PixelEncoder::HIGHGAIN                                                                                         |
@@ -362,22 +363,24 @@ namespace Ph2_HwInterface
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
-    for (auto row = 0; row < RD53::nRows; row++)
-      for (auto col = 0; col < RD53::nCols; col++)
+    for (auto row = 0u; row < RD53::nRows; row++)
+      for (auto col = 0u; col < RD53::nCols; col++)
 	{
 	  if (mask   == true) pRD53->enablePixel(row,col,group->isChannelEnabled(row,col));
 	  if (inject == true) pRD53->injectPixel(row,col,group->isChannelEnabled(row,col));
 	}
 
     this->WriteRD53Mask(pRD53, true, false, false); // @TMP@
+
+    return true;
   }
 
   bool RD53Interface::WriteChipAllLocalReg (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
     
-    for (auto row = 0; row < RD53::nRows; row++)
-      for (auto col = 0; col < RD53::nCols; col++)
+    for (auto row = 0u; row < RD53::nRows; row++)
+      for (auto col = 0u; col < RD53::nCols; col++)
 	pRD53->setTDAC(row,col,pValue.getChannel<RegisterValue>(row,col).fRegisterValue);
     
     this->WriteRD53Mask(pRD53, false, false, pVerifLoop);
@@ -389,8 +392,8 @@ namespace Ph2_HwInterface
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
     
-    for (auto row = 0; row < RD53::nRows; row++)
-      for (auto col = 0; col < RD53::nCols; col++)
+    for (auto row = 0u; row < RD53::nRows; row++)
+      for (auto col = 0u; col < RD53::nCols; col++)
 	pValue.getChannel<RegisterValue>(row,col).fRegisterValue = pRD53->getTDAC(row,col);
   }
 }

@@ -93,7 +93,7 @@ namespace Ph2_HwInterface
       LOG (ERROR) << BOLDRED << "Command processor FIFO full" << RESET;
 
     size_t size = data.size()/nCmd;
-    for (auto i = 0; i < nCmd; i++)
+    for (auto i = 0u; i < nCmd; i++)
       {
 	switch (size)
 	  {
@@ -184,7 +184,7 @@ namespace Ph2_HwInterface
 	// # Read the FIFO #
 	// #################
 	regFIFO = ReadBlockRegValue(myString.str().c_str(), BLOCKS2READ);
-	for (auto i = 0; i < regFIFO.size(); i++)
+	for (auto i = 0u; i < regFIFO.size(); i++)
 	  {
 	    auto second = (regFIFO[i])                                                                                                             & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_VALUE));
 	    auto first  = (regFIFO[i] >> RD53RegFrameEncoder::NBIT_VALUE)                                                                          & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_ADDRESS));
@@ -562,11 +562,11 @@ namespace Ph2_HwInterface
 	return events;
       }
 
-    for (auto i = 0; i < data.size(); i++)
+    for (auto i = 0u; i < data.size(); i++)
       if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) event_start.push_back(i);
     events.reserve(event_start.size());
     
-    for (auto i = 0; i < event_start.size(); i++)
+    for (auto i = 0u; i < event_start.size(); i++)
       {
 	const size_t start = event_start[i];
 	const size_t end   = ((i == event_start.size() - 1) ? data.size() : event_start[i + 1]);
@@ -577,7 +577,7 @@ namespace Ph2_HwInterface
 	if (evt.evtStatus != RD53FWEvtEncoder::GOOD) evtStatus |= evt.evtStatus;
 	else
 	  {
-	    for (auto j = 0; j < evt.chip_events.size(); j++)
+	    for (auto j = 0u; j < evt.chip_events.size(); j++)
 	      if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evtStatus |= RD53FWEvtEncoder::L1A;
 	  }
       }
@@ -591,7 +591,7 @@ namespace Ph2_HwInterface
     // # Print raw data #
     // ##################
     if (pData != nullptr)
-      for (auto j = 0; j < pData->size(); j++)
+      for (auto j = 0u; j < pData->size(); j++)
 	{
 	  if (j%NWORDS_DDR3 == 0) std::cout << std::dec << j << ":\t";
 	  std::cout << std::hex << std::setfill('0') << std::setw(8) << (*pData)[j] << "\t";
@@ -599,7 +599,7 @@ namespace Ph2_HwInterface
 	}
 
 
-    for (auto i = 0; i < events.size(); i++)
+    for (auto i = 0u; i < events.size(); i++)
       {
 	auto& evt = events[i];
 	LOG (INFO) << BOLDGREEN << "Event           = " << i                   << RESET;
@@ -610,7 +610,7 @@ namespace Ph2_HwInterface
 	LOG (INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter     << RESET;
 	LOG (INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter      << RESET;
 
-	for (auto j = 0; j < evt.chip_events.size(); j++)
+	for (auto j = 0u; j < evt.chip_events.size(); j++)
 	  {
 	    LOG (INFO) << CYAN << "------- Chip Header -------"                            << RESET;
 	    LOG (INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code    << RESET;
@@ -695,17 +695,17 @@ namespace Ph2_HwInterface
     bx_counter = data[3];
 
     std::vector<size_t> chip_start;
-    for (auto i = 4; i < n; i += 4) if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) chip_start.push_back(i);
+    for (auto i = 4u; i < n; i += 4) if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) chip_start.push_back(i);
 
     chip_frames.reserve(chip_start.size());
     chip_events.reserve(chip_start.size());
-    for (auto i = 0; i < chip_start.size(); i++)
+    for (auto i = 0u; i < chip_start.size(); i++)
       {
 	const size_t start = chip_start[i];
 	const size_t end   = ((i == chip_start.size() - 1) ? n : chip_start[i + 1]);
 	chip_frames.emplace_back(data[start], data[start + 1]);
 
- 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start))
+ 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4u != (end - start))
 	  {
 	    evtStatus |= RD53FWEvtEncoder::FRSIZE;
 	    chip_frames.clear();

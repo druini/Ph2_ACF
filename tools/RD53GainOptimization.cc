@@ -10,7 +10,8 @@
 #include "RD53GainOptimization.h"
 
 GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, float targetCharge, size_t KrumCurrStart, size_t KrumCurrStop)
-  : fileRes       (fileRes)
+  : Gain          (fileRes, rowStart, rowStop, colStart, colStop, nPixels2Inj, nEvents, startValue, stopValue, nSteps)
+  , fileRes       (fileRes)
   , fileReg       (fileReg)
   , rowStart      (rowStart)
   , rowStop       (rowStop)
@@ -21,10 +22,9 @@ GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, si
   , startValue    (startValue)
   , stopValue     (stopValue)
   , nSteps        (nSteps)
-  , targetCharge  (targetCharge)
   , KrumCurrStart (KrumCurrStart)
   , KrumCurrStop  (KrumCurrStop)
-  , Gain          (fileRes, rowStart, rowStop, colStart, colStop, nPixels2Inj, nEvents, startValue, stopValue, nSteps)
+  , targetCharge  (targetCharge)
 {}
 
 GainOptimization::~GainOptimization ()
@@ -32,7 +32,7 @@ GainOptimization::~GainOptimization ()
   delete theFile;
   theFile = nullptr;
 
-  for (auto i = 0; i < theCanvasKrumCurr.size(); i++)
+  for (auto i = 0u; i < theCanvasKrumCurr.size(); i++)
     {
       delete theKrumCurr[i];
       delete theCanvasKrumCurr[i];
@@ -129,7 +129,7 @@ void GainOptimization::fillHisto ()
 
 void GainOptimization::display ()
 {
-  for (auto i = 0; i < theCanvasKrumCurr.size(); i++)
+  for (auto i = 0u; i < theCanvasKrumCurr.size(); i++)
     {
       theCanvasKrumCurr[i]->cd();
       theKrumCurr[i]->Draw();
@@ -140,7 +140,7 @@ void GainOptimization::display ()
 
 void GainOptimization::save ()
 {
-  for (auto i = 0; i < theCanvasKrumCurr.size(); i++) theCanvasKrumCurr[i]->Write();
+  for (auto i = 0u; i < theCanvasKrumCurr.size(); i++) theCanvasKrumCurr[i]->Write();
 
 
   // ############################
@@ -180,7 +180,7 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
 	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::setBits(numberOfBits)) + 1;
  
 
-  for (auto i = 0; i < numberOfBits; i++)
+  for (auto i = 0u; i < numberOfBits; i++)
     {
       // ###########################
       // # Download new DAC values #
@@ -217,8 +217,8 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
 	      // ##############################################
 	      float stdDev = 0;
 	      size_t cnt   = 0;
-	      for (auto row = 0; row < RD53::nRows; row++)
-		for (auto col = 0; col < RD53::nCols; col++)
+	      for (auto row = 0u; row < RD53::nRows; row++)
+		for (auto col = 0u; col < RD53::nCols; col++)
 		  if (cChip->getChannel<GainAndIntercept>(row,col).fGain != 0)
 		    {
 		      stdDev += cChip->getChannel<GainAndIntercept>(row,col).fGain * cChip->getChannel<GainAndIntercept>(row,col).fGain;

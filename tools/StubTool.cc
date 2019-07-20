@@ -767,7 +767,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
 {
   std::stringstream outp;
   LOG(DEBUG) << GREEN << "Testing Strip " << +teststrip << RESET;
-  if (teststrip < 0 || teststrip > 127) 
+  if (teststrip > 127) 
   {
     LOG(INFO) << RED << "Strip range values are 0 to 127" << RESET;
     exit (EXIT_FAILURE);
@@ -1190,7 +1190,7 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
 {
   std::stringstream outp;
   LOG(DEBUG) << GREEN << "Testing Strip " << +teststrip << RESET;
-  if (teststrip < 0 || teststrip > 127) 
+  if (teststrip > 127) 
   {
     LOG(INFO) << RED << "Strip range values are 0 to 127" << RESET;
     exit (EXIT_FAILURE);

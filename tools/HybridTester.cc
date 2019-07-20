@@ -435,7 +435,7 @@ void HybridTester::ScanThreshold()
     // Adaptive VCth loop
     ThresholdVisitor cVisitor (fReadoutChipInterface, 0);
 
-    while ( 0x00 <= cVcth && cVcth <= cMaxValue )
+    while ( 0x00 == cVcth && cVcth <= cMaxValue )
     {
         if ( cAllOne ) break;
 
@@ -1113,7 +1113,7 @@ void HybridTester::Measure()
         fBeBoardInterface->Stop ( pBoard);
     }
 
-    for ( int i = 1 ; i < (fNCbc * 254) / 2 ; i++ )
+    for ( uint8_t i = 1 ; i < (fNCbc * 254u) / 2u ; i++ )
     {
         double cOccupancyTop = 100 * fHistTop->GetBinContent (i) / (double) (fTotalEvents);
         double cOccupancyBottom = 100 * fHistBottom->GetBinContent (i) / (double) (fTotalEvents);
@@ -1133,7 +1133,7 @@ void HybridTester::Measure()
 }
 void HybridTester::ClassifyChannels (double pNoiseLevel, double pDeadLevel )
 {
-    for ( int i = 1 ; i < (fNCbc * 254) / 2 ; i++ )
+    for ( uint8_t i = 1 ; i < (fNCbc * 254u) / 2u ; i++ )
     {
         if ( fHistBottom->GetBinContent (i) >= pNoiseLevel ) fNoisyChannelsBottom.push_back (i) ;
 
@@ -1151,7 +1151,7 @@ void HybridTester::DisplayNoisyChannels (std::ostream& os)
 
     line = "# Noisy channels on Bottom Sensor : ";
 
-    for ( int i = 0 ; i <  fNoisyChannelsBottom.size() ; i++ )
+    for ( size_t i = 0 ; i <  fNoisyChannelsBottom.size() ; i++ )
     {
         line += std::to_string ( fNoisyChannelsBottom[i] ) ;
         line +=  ( i < fNoisyChannelsBottom.size() - 1 ) ? "," : "" ;
@@ -1161,7 +1161,7 @@ void HybridTester::DisplayNoisyChannels (std::ostream& os)
 
     line = "# Noisy channels on Top Sensor : ";
 
-    for ( int i = 0 ; i <  fNoisyChannelsTop.size() ; i++ )
+    for ( size_t i = 0 ; i <  fNoisyChannelsTop.size() ; i++ )
     {
         line += std::to_string ( fNoisyChannelsTop[i] ) ;
         line +=  ( i < fNoisyChannelsTop.size() - 1 ) ? "," : "" ;
@@ -1175,7 +1175,7 @@ void HybridTester::DisplayDeadChannels (std::ostream& os)
 
     line = "# Dead channels on Bottom Sensor : ";
 
-    for ( int i = 0 ; i <  fDeadChannelsBottom.size() ; i++ )
+    for ( size_t i = 0 ; i <  fDeadChannelsBottom.size() ; i++ )
     {
         line += std::to_string ( fDeadChannelsBottom[i] ) ;
         line +=  ( i < fDeadChannelsBottom.size() - 1 ) ? "," : "" ;
@@ -1185,7 +1185,7 @@ void HybridTester::DisplayDeadChannels (std::ostream& os)
 
     line = "# Dead channels on Top Sensor : ";
 
-    for ( int i = 0 ; i <  fDeadChannelsTop.size() ; i++ )
+    for ( size_t i = 0 ; i <  fDeadChannelsTop.size() ; i++ )
     {
         line += std::to_string ( fDeadChannelsTop[i] ) ;
         line +=  ( i < fDeadChannelsTop.size() - 1 ) ? "," : "" ;

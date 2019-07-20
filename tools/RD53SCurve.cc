@@ -10,7 +10,8 @@
 #include "RD53SCurve.h"
 
 SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset)
-  : fileRes     (fileRes)
+  : Tool        ()
+  , fileRes     (fileRes)
   , rowStart    (rowStart)
   , rowStop     (rowStop)
   , colStart    (colStart)
@@ -22,7 +23,6 @@ SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t col
   , nSteps      (nSteps)
   , offset      (offset)
   , histos      (nEvents, startValue-offset, stopValue-offset, nSteps)
-  , Tool        ()
 {
   // ########################
   // # Custom channel group #
@@ -43,7 +43,7 @@ SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t col
   // # Initialize dac scan values #
   // ##############################
   float step = (stopValue - startValue) / nSteps;
-  for (auto i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
+  for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
 
 
@@ -60,10 +60,10 @@ void SCurve::run ()
 
   ContainerFactory theDetectorFactory;
 
-  for (auto i = 0; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
+  for (auto i = 0u; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
   detectorContainerVector.clear();
   detectorContainerVector.reserve(dacList.size());
-  for (auto i = 0; i < dacList.size(); i++)
+  for (auto i = 0u; i < dacList.size(); i++)
     {
       detectorContainerVector.emplace_back(new DetectorDataContainer());
       theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *detectorContainerVector.back());
@@ -114,10 +114,10 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
+	  for (auto row = 0u; row < RD53::nRows; row++)
+	    for (auto col = 0u; col < RD53::nCols; col++)
 	      {
-		for (auto i = 0; i < dacList.size()-1; i++)
+		for (auto i = 0u; i < dacList.size()-1u; i++)
 		  measurements[i+1] = (detectorContainerVector[i+1]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy - 
 				       detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
 
@@ -146,7 +146,7 @@ void SCurve::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSetti
 
 void SCurve::fillHisto()
 {
-  for (auto i = 0; i < dacList.size(); i++)
+  for (auto i = 0u; i < dacList.size(); i++)
     histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
   histos.fillThresholdNoise(*theThresholdAndNoiseContainer); 
 }
@@ -159,7 +159,7 @@ void SCurve::computeStats (std::vector<float>& measurements, int offset, float& 
   float weight = 0;
   mean         = 0;
 
-  for (auto i = 0; i < dacList.size(); i++)
+  for (auto i = 0u; i < dacList.size(); i++)
     {
       mean   += measurements[i]*(dacList[i]-offset);
       weight += measurements[i];

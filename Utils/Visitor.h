@@ -44,37 +44,37 @@ class HwDescriptionVisitor
 	 * \brief Visitor for top level System Controller
 	 * \param pSystemController
 	 */
-	virtual void visit( Ph2_System::SystemController& pSystemController ) {}
+	virtual void visitSystemController( Ph2_System::SystemController& pSystemController ) {}
 	// virtual void visit() = 0;
 
 	/*!
 		 * \brief Visitor for top level System Controller in the GUI
 		 * \param pSystemController
 		 */
-	virtual void visit( const GUI::SystemControllerWorker& pSystemControllerWorker ) {}
+	virtual void visitUseless( const GUI::SystemControllerWorker& pSystemControllerWorker ) {}
 
 	/*!
 	 * \brief Visitor for BeBoard Class
 	 * \param pBeBoard
 	 */
-	virtual void visit( Ph2_HwDescription::BeBoard& pBeBoard ) {}
+	virtual void visitBeBoard( Ph2_HwDescription::BeBoard& pBeBoard ) {}
 	/*!
 	 * \brief Visitor for Module Class
 	 * \param pModule
 	 */
-	virtual void visit( Ph2_HwDescription::Module& pModule ) {}
+	virtual void visitModule( Ph2_HwDescription::Module& pModule ) {}
 	/*!
 	 * \brief Visitor for Cbc Class
 	 * \param pCbc
 	 */
-	virtual void visit( Ph2_HwDescription::Chip& pChip ) {}
+	virtual void visitChip( Ph2_HwDescription::Chip& pChip ) {}
 };
 
 class HwInterfaceVisitor
 {
     public:
 	virtual ~HwInterfaceVisitor(){}
-	virtual void visit ( const Ph2_HwInterface::Event& pEvent ) = 0;
+	virtual void visitInterface ( const Ph2_HwInterface::Event& pEvent ) = 0;
 };
 
 #endif

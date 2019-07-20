@@ -1,12 +1,12 @@
 #include "FileHandler.h"
 
 //Constructor
-FileHandler::FileHandler ( const std::string& pBinaryFileName, char pOption ) :
-    fBinaryFileName ( pBinaryFileName ),
-    fOption ( pOption ),
-    fFileIsOpened ( false ),
-    fHeader (),
-    fHeaderPresent (false)
+FileHandler::FileHandler ( const std::string& pBinaryFileName, char pOption )
+    : fHeader ()
+    , fHeaderPresent (false)
+    , fOption ( pOption )
+    , fBinaryFileName ( pBinaryFileName )
+    , fFileIsOpened ( false )
 {
     openFile();
 
@@ -17,12 +17,12 @@ FileHandler::FileHandler ( const std::string& pBinaryFileName, char pOption ) :
     }
 }
 
-FileHandler::FileHandler ( const std::string& pBinaryFileName, char pOption, FileHeader pHeader ) :
-    fBinaryFileName ( pBinaryFileName ),
-    fOption ( pOption ),
-    fFileIsOpened ( false ),
-    fHeader ( pHeader ),
-    fHeaderPresent (true)
+FileHandler::FileHandler ( const std::string& pBinaryFileName, char pOption, FileHeader pHeader )
+    : fHeader ( pHeader )
+    , fHeaderPresent (true)
+    , fOption ( pOption )
+    , fBinaryFileName ( pBinaryFileName )
+    , fFileIsOpened ( false )
 {
     openFile();
 

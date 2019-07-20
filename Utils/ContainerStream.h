@@ -73,7 +73,7 @@ public:
 // ContainerStream<Occupancy,int>         -->  OK
 // ComtainerStream<Occupancy,char*>       --> ERROR
 // ComtainerStream<Occupancy,vector<int>> --> ERROR
-#include <type_traits>
+
 template<typename... I>
 class HeaderStreamChipContainer : public HeaderStreamChipContainerBase<HeaderStreamChipContainer<I...>>
 {
@@ -86,7 +86,7 @@ class HeaderStreamChipContainer : public HeaderStreamChipContainerBase<HeaderStr
 	{
 		static_assert( !std::is_pointer<T>::value, "No pointers can be retreived from the stream" );
 		static_assert( !std::is_reference<T>::value, "No references can be retreived from the stream" );
-		static_assert( std::is_trivially_copyable<T>::value, "No object not continously allocated in memory can be retreived" );
+		static_assert( std::is_pod<T>::value, "No object not continously allocated in memory can be retreived" );
 	}
 
 public:
@@ -108,7 +108,7 @@ public:
 private:
 	typename std::tuple<I...> fInfo;
 
-}__attribute__((packed));
+};
 
 // Specialized Header class when the parameter pack is empty
 template<>
@@ -135,7 +135,7 @@ public:
 		memcpy(&bufferBegin[sizeof(fDataSize)], &fChannelContainer->at(0), fChannelContainer->size()*sizeof(C));
 		fChannelContainer = nullptr;
 	}
-	void copyFromStream(char *bufferBegin)
+	void copyFromStream(const char *bufferBegin)
 	{
 		memcpy(&fDataSize, bufferBegin, sizeof(fDataSize));
 		fChannelContainer = new ChannelContainer<C>((fDataSize-sizeof(fDataSize))/sizeof(C));
@@ -186,6 +186,6 @@ protected:
 		this->fDataStream.fChannelContainer = chip->getChannelContainer<ChannelDataContainer<C>>();
 	}
 
-}__attribute__((packed));
+};
 
 #endif

@@ -137,7 +137,7 @@ int main ( int argc, char* argv[] )
 	if (cManualVcth==0) 
 	{
 	    cVisitor.setThreshold (cPedestal+cPedestalShift);
-	    cVisitor.visit(*cCbc);      // Visit a specific CBC
+	    cVisitor.visitChip(*cCbc);      // Visit a specific CBC
 	    cCbc->accept (cVisitor); // Should probably make a special Visitor to set a vector of Vcth's
 	    LOG (INFO) << BOLDRED << "CBC" << i << ": set threshold to pedestal ("<<cPedestal<<") plus "<<cPedestalShift<<": "<< cPedestal+cPedestalShift << RESET;
 	}

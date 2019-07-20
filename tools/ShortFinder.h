@@ -66,18 +66,18 @@ class ShortFinder : public Tool
     {
         return fNShorts;
     };
-    void GetPercentageShorts()
-    {
-        100 * double (fNShorts) / ( fNCbc / 2 * 254 );
-    };
-    void GetPercentateShorts_TopPad()
-    {
-        100 * double (fNShortsBottom) / ( fNCbc / 2 * 254 );
-    };
-    void GetPercentateShorts_BottomPad()
-    {
-        100 * double (fNShortsBottom) / ( fNCbc / 2 * 254 );
-    };
+    // void GetPercentageShorts()
+    // {
+    //     100 * double (fNShorts) / ( fNCbc / 2 * 254 );
+    // };
+    // void GetPercentateShorts_TopPad()
+    // {
+    //     100 * double (fNShortsBottom) / ( fNCbc / 2 * 254 );
+    // };
+    // void GetPercentateShorts_BottomPad()
+    // {
+    //     100 * double (fNShortsBottom) / ( fNCbc / 2 * 254 );
+    // };
 
   private :
     // Canvases

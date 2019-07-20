@@ -10,7 +10,8 @@
 #include "RD53PixelAlive.h"
 
 PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject, float thresholdOccupancy)
-  : fileRes            (fileRes)
+  : Tool               ()
+  , fileRes            (fileRes)
   , fileReg            (fileReg)
   , rowStart           (rowStart)
   , rowStop            (rowStop)
@@ -22,7 +23,6 @@ PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStar
   , inject             (inject)
   , thresholdOccupancy (thresholdOccupancy)
   , histos             (nEvents)
-  , Tool               ()
 {
   // ########################
   // # Custom channel group #
@@ -89,8 +89,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
 
 	  if (thresholdOccupancy != 0)
 	    {
-	      for (auto row = 0; row < RD53::nRows; row++)
-		for (auto col = 0; col < RD53::nCols; col++)
+	      for (auto row = 0u; row < RD53::nRows; row++)
+		for (auto col = 0u; col < RD53::nCols; col++)
 		  if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
 		    static_cast<RD53*>(cChip)->enablePixel(row,col,(theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy < thresholdOccupancy));
 

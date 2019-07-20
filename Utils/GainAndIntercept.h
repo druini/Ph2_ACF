@@ -42,8 +42,8 @@ class GainAndIntercept
 template<>
 inline void GainAndIntercept::makeAverage<GainAndIntercept>(const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents)
 {
-  for (auto row = 0; row < theChipContainer->getNumberOfRows(); row++)
-    for (auto col = 0; col < theChipContainer->getNumberOfCols(); col++)
+  for (auto row = 0u; row < theChipContainer->getNumberOfRows(); row++)
+    for (auto col = 0u; col < theChipContainer->getNumberOfCols(); col++)
       if (chipOriginalMask->isChannelEnabled(row,col) && cTestChannelGroup->isChannelEnabled(row,col))
 	{
 	  if (theChipContainer->getChannel<GainAndIntercept>(row,col).fGainError > 0)

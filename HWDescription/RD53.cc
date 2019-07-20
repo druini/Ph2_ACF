@@ -254,27 +254,27 @@ namespace Ph2_HwDescription
 	file << "*-------------------------------------------------------------------------------------------------------" << std::endl;
 	file << "PIXELCONFIGURATION" << std::endl;
 	file << "*-------------------------------------------------------------------------------------------------------" << std::endl;
-	for (auto i = 0; i < fPixelsMask.size(); i++)
+	for (auto i = 0u; i < fPixelsMask.size(); i++)
 	  {
 	    file << "COL					" << std::setfill ('0') << std::setw (3) << i << std::endl;
 
 	    file << "ENABLE " << fPixelsMask[i].Enable[0];
-	    for (auto j = 1; j < fPixelsMask[i].Enable.size(); j++)
+	    for (auto j = 1u; j < fPixelsMask[i].Enable.size(); j++)
 	      file << "," << fPixelsMask[i].Enable[j];
 	    file << std::endl;
 
 	    file << "HITBUS " << fPixelsMask[i].HitBus[0];
-	    for (auto j = 1; j < fPixelsMask[i].HitBus.size(); j++)
+	    for (auto j = 1u; j < fPixelsMask[i].HitBus.size(); j++)
 	      file << "," << fPixelsMask[i].HitBus[j];
 	    file << std::endl;
 
 	    file << "INJEN  " << fPixelsMask[i].InjEn[0];
-	    for (auto j = 1; j < fPixelsMask[i].InjEn.size(); j++)
+	    for (auto j = 1u; j < fPixelsMask[i].InjEn.size(); j++)
 	      file << "," << fPixelsMask[i].InjEn[j];
 	    file << std::endl;
 
 	    file << "TDAC   " << unsigned(fPixelsMask[i].TDAC[0]);
-	    for (auto j = 1; j < fPixelsMask[i].TDAC.size(); j++)
+	    for (auto j = 1u; j < fPixelsMask[i].TDAC.size(); j++)
 	      file << "," << unsigned(fPixelsMask[i].TDAC[j]);
 	    file << std::endl;
 
@@ -289,40 +289,40 @@ namespace Ph2_HwDescription
   
   void RD53::copyMaskFromDefault ()
   {
-    for (auto i = 0; i < fPixelsMask.size(); i++)
+    for (auto i = 0u; i < fPixelsMask.size(); i++)
       {
 	fPixelsMask[i].Enable = fPixelsMaskDefault[i].Enable;
 	fPixelsMask[i].HitBus = fPixelsMaskDefault[i].HitBus;
 	fPixelsMask[i].InjEn  = fPixelsMaskDefault[i].InjEn;
-	for (auto j = 0; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = fPixelsMaskDefault[i].TDAC[j];
+	for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = fPixelsMaskDefault[i].TDAC[j];
       }
   }
 
   void RD53::copyMaskToDefault ()
   {
-    for (auto i = 0; i < fPixelsMaskDefault.size(); i++)
+    for (auto i = 0u; i < fPixelsMaskDefault.size(); i++)
       {
 	fPixelsMaskDefault[i].Enable = fPixelsMask[i].Enable;
 	fPixelsMaskDefault[i].HitBus = fPixelsMask[i].HitBus;
 	fPixelsMaskDefault[i].InjEn  = fPixelsMask[i].InjEn;
-	for (auto j = 0; j < fPixelsMaskDefault[i].TDAC.size(); j++) fPixelsMaskDefault[i].TDAC[j] = fPixelsMask[i].TDAC[j];
+	for (auto j = 0u; j < fPixelsMaskDefault[i].TDAC.size(); j++) fPixelsMaskDefault[i].TDAC[j] = fPixelsMask[i].TDAC[j];
       }
   }
 
   void RD53::resetMask ()
   {
-    for (auto i = 0; i < fPixelsMask.size(); i++)
+    for (auto i = 0u; i < fPixelsMask.size(); i++)
       {
 	fPixelsMask[i].Enable.reset();
 	fPixelsMask[i].HitBus.reset();
 	fPixelsMask[i].InjEn .reset();
-	for (auto j = 0; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = this->setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION) / 2;
+	for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = this->setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION) / 2;
       }
   }
 
   void RD53::enableAllPixels ()
   {
-    for (auto i = 0; i < fPixelsMask.size(); i++)
+    for (auto i = 0u; i < fPixelsMask.size(); i++)
       {
 	fPixelsMask[i].Enable.set();
 	fPixelsMask[i].HitBus.set();
@@ -331,7 +331,7 @@ namespace Ph2_HwDescription
 
   void RD53::disableAllPixels ()
   {
-    for (auto i = 0; i < fPixelsMask.size(); i++)
+    for (auto i = 0u; i < fPixelsMask.size(); i++)
       {
 	fPixelsMask[i].Enable.reset();
 	fPixelsMask[i].HitBus.reset();
@@ -362,7 +362,7 @@ namespace Ph2_HwDescription
   void RD53::encodeCMD (const uint16_t               address,
 			const uint16_t               data,
   			const uint8_t                pRD53Id,
-  			const uint8_t                pRD53Cmd,
+  			const uint16_t                pRD53Cmd,
 			const bool                   isBroadcast,
   			std::vector<uint32_t>      & pVecReg,
 			const std::vector<uint16_t>* dataVec)
@@ -542,12 +542,12 @@ namespace Ph2_HwDescription
     if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHEAD;
 
     size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
-    for (auto i = 1; i < n; i++)
+    for (auto i = 1u; i < n; i++)
       if (data[i] != noHitToT)
 	{
 	  this->data.emplace_back(data[i]);
-	  if ((this->data.back().row < 0) || (this->data.back().row >= RD53::nRows) ||
-	      (this->data.back().col < 0) || (this->data.back().col >= RD53::nCols)) evtStatus |= RD53EvtEncoder::CPIX;
+	  if ((this->data.back().row >= RD53::nRows) ||
+	      (this->data.back().col >= RD53::nCols)) evtStatus |= RD53EvtEncoder::CPIX;
 	}
   }
 

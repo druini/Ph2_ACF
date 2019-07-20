@@ -65,7 +65,7 @@ void verifyImageName ( const string& strImage, const vector<string>& lstNames)
     {
         bool bFound = false;
 
-        for (int iName = 0; iName < lstNames.size(); iName++)
+        for (size_t iName = 0; iName < lstNames.size(); iName++)
         {
             if (!strImage.compare (lstNames[iName]) )
             {

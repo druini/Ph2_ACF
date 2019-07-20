@@ -39,9 +39,9 @@ namespace Ph2_HwInterface {
 
     RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddressTable )  :
         fBoard (nullptr),
-        fId (pId),
         fUri (pUri),
-        fAddressTable (pAddressTable)
+        fAddressTable (pAddressTable),
+        fId (pId)
         //fThread ( [ = ]
         //{
         //StackWriteTimeOut();

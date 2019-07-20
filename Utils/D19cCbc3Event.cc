@@ -74,11 +74,10 @@ namespace Ph2_HwInterface {
             LOG (ERROR) << "Vector size doesnt match the BLOCK_SIZE in Header1";
 
         // dummy size
-        fDummySize = (0xFF & list.at (1) ) >> 0;
+        uint8_t fDummySize = (0xFF & list.at (1) ) >> 0;
         fDummySize *= 4;
 
         // counters
-        fTLUTriggerID = (list.at (1) >> 16) >> 0x7FFF;
         fTDC = (list.at(2) >> 24) & 0xFF;
         fEventCount = 0x00FFFFFF &  list.at (2);
         fBunch = 0xFFFFFFFF & list.at (3);
