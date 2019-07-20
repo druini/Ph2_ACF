@@ -24,6 +24,7 @@ namespace Ph2_HwInterface {
          * \param pbbi Reference to the BeBoardFWInterface
          */
         FpgaConfig (BeBoardFWInterface* pbbi);
+        virtual ~FpgaConfig() {};
         /*! \brief Launch the firmware download in a separate thread
          * \param strConfig FPGA configuration number or name
          * \param pstrFile absolute path to the configuration file

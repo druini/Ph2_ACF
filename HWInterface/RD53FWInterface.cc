@@ -42,6 +42,18 @@ namespace Ph2_HwInterface
     return cVersionWord;
   }
 
+  // @TMP@
+  void RD53FWInterface::ResetSequence ()
+  {
+    LOG (INFO) << BOLDMAGENTA << "Resetting the chip... it may take a while" << RESET;
+
+    this->TurnOffFMC();
+    this->TurnOnFMC();
+    this->ResetBoard();
+
+    LOG (INFO) << BOLDMAGENTA << "Powercycle frontend chip(s) and run again" << RESET;
+  }
+
   void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)
   {
     // @TMP@
@@ -54,9 +66,6 @@ namespace Ph2_HwInterface
     this->ChipReset();
     this->ChipReSync();
 
-    // Wait for user to reset power to the chip
-    // LOG (INFO) << BOLDMAGENTA << "Powercycle SCC and press any key to continue: " << RESET;
-    // system("read");
 
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
 
@@ -84,7 +93,7 @@ namespace Ph2_HwInterface
       LOG (ERROR) << BOLDRED << "Command processor FIFO full" << RESET;
 
     size_t size = data.size()/nCmd;
-    for (auto i = 0; i < nCmd; i++)
+    for (auto i = 0u; i < nCmd; i++)
       {
 	switch (size)
 	  {
@@ -122,7 +131,7 @@ namespace Ph2_HwInterface
     WriteStackReg (stackRegisters);
   }
 
-  std::pair< std::vector<uint16_t>,std::vector<uint16_t> > RD53FWInterface::ReadChipRegisters (std::vector<uint32_t>& data, unsigned int filter, unsigned int pBlockSize)
+  std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters (std::vector<uint32_t>& data, uint8_t chipID, uint8_t filter)
   {
     // ##############################
     // # Filter readback data:      #
@@ -131,55 +140,68 @@ namespace Ph2_HwInterface
     // # 2: read "auto" 1st only    #
     // # 3: read "auto" 1st and 2nd #
     // ##############################
+    const unsigned int BLOCKS2READ = 1;
 
     std::stringstream myString;
-    unsigned int nodeBlocks  = fBoard->getNode("user.readout0.reg_read").getSize();
-    unsigned int nActiveChns = ReadReg ("user.stat_regs.aurora.n_ch");
-    std::pair< std::vector<uint16_t>,std::vector<uint16_t> > outputDecoded;
+    unsigned int nodeBlocks;
+    uint8_t nActiveChns = ReadReg ("user.stat_regs.aurora.n_ch");
+    std::vector<std::pair<uint16_t,uint16_t>> outputDecoded;
     std::vector<uint32_t> regFIFO;
 
-    for (auto i = 0; i < nActiveChns; i++)
+
+    if (chipID < nActiveChns)
       {
 	myString.clear(); myString.str("");
-	myString << "user.readout" << i << ".reg_mask";
+	myString << "user.readout" << +chipID << ".reg_mask";
 	WriteReg (myString.str().c_str(), filter);
 
 	myString.clear(); myString.str("");
-	myString << "user.readout" << i << ".sel";
+	myString << "user.readout" << +chipID << ".sel";
 	WriteReg (myString.str().c_str(), 2);
+
 
 	// ##################
 	// # Flush the FIFO #
 	// ##################
 	myString.clear(); myString.str("");
-	myString << "user.readout" << i << ".reg_read";
+	myString << "user.readout" << +chipID << ".reg_read";
+	nodeBlocks = fBoard->getNode(myString.str().c_str()).getSize();
 	ReadBlockRegValue(myString.str().c_str(), nodeBlocks);
-      }
-
-    this->WriteChipCommand(data);
-
-    for (auto i = 0; i < nActiveChns; i++)
-      {
-	myString.clear(); myString.str("");
-	myString << "user.readout" << i << ".reg_read";
-
-	if (pBlockSize <= nodeBlocks) regFIFO = ReadBlockRegValue(myString.str().c_str(), pBlockSize);
-	else LOG (ERROR) << BOLDRED << "Number of register blocks to read (" << BOLDYELLOW << pBlockSize << BOLDRED << ") exceds FIFO lenght " << BOLDYELLOW << nodeBlocks << RESET;
-
-	for (auto i = 0; i < regFIFO.size(); i++)
+	if (nodeBlocks < BLOCKS2READ)
 	  {
-	    outputDecoded.first .push_back((regFIFO[i] >> RD53RegFrameEncoder::NBIT_VALUE)                                                            & static_cast<uint32_t>(RD53::SetBits(RD53RegFrameEncoder::NBIT_ADDRESS)));
-	    outputDecoded.second.push_back(regFIFO[i]                                                                                                 & static_cast<uint32_t>(RD53::SetBits(RD53RegFrameEncoder::NBIT_VALUE)));
-	    uint8_t status = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS))                                    & static_cast<uint32_t>(RD53::SetBits(RD53RegFrameEncoder::NBIT_STATUS));
-	    uint8_t id     = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS + RD53RegFrameEncoder::NBIT_STATUS)) & static_cast<uint32_t>(RD53::SetBits(RD53RegFrameEncoder::NBIT_CHIPID));
+	    LOG (ERROR) << BOLDRED << "Number of register blocks to read (" << BOLDYELLOW << BLOCKS2READ << BOLDRED << ") exceds FIFO lenght " << BOLDYELLOW << nodeBlocks << RESET;
+	    return outputDecoded;
+	  }
+
+
+	// #####################
+	// # Send read command #
+	// #####################
+	this->WriteChipCommand(data);
+
+
+	// #################
+	// # Read the FIFO #
+	// #################
+	regFIFO = ReadBlockRegValue(myString.str().c_str(), BLOCKS2READ);
+	for (auto i = 0u; i < regFIFO.size(); i++)
+	  {
+	    auto second = (regFIFO[i])                                                                                                             & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_VALUE));
+	    auto first  = (regFIFO[i] >> RD53RegFrameEncoder::NBIT_VALUE)                                                                          & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_ADDRESS));
+	    auto status = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS))                                    & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_STATUS));
+	    auto id     = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS + RD53RegFrameEncoder::NBIT_STATUS)) & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_CHIPID));
 
 	    if (status != 0) LOG (ERROR) << BOLDRED << "Status error in chip register readback: " << BOLDYELLOW << std::hex << +status << std::dec << BOLDRED << " from chip ID: " << BOLDYELLOW << std::hex << +id << std::dec << RESET;
+
+	    outputDecoded.push_back(std::pair<uint16_t,uint16_t>(first,second));
 	  }
       }
+    else LOG (ERROR) << BOLDRED << "Request to read chip registers from a non active channel: " << BOLDYELLOW << +chipID << BOLDRED << " (active channels are " << BOLDYELLOW << "0" << BOLDRED << "--" << BOLDYELLOW << +nActiveChns-1 << BOLDRED << ")" << RESET;
 
+    
     return outputDecoded;
   }
-
+  
   void RD53FWInterface::PrintFWstatus()
   {
     LOG (INFO) << GREEN << "Checking Firmware status" << RESET;
@@ -270,15 +292,15 @@ namespace Ph2_HwInterface
     LOG (INFO) << BOLDBLUE << "Aurora number of channels: " << BOLDYELLOW << auroraReg << RESET;
 
     unsigned int bitReg = ReadReg ("user.stat_regs.aurora.lane_up");
-    LOG (INFO) << BOLDBLUE << "Aurora lane up status: " << BOLDYELLOW << RD53::CountBitsOne(bitReg) << RESET;
+    LOG (INFO) << BOLDBLUE << "Aurora lane up status: " << BOLDYELLOW << RD53::countBitsOne(bitReg) << RESET;
 
     bitReg = ReadReg ("user.stat_regs.aurora.channel_up");
-    if (RD53::CountBitsOne(bitReg) == auroraReg)
+    if (RD53::countBitsOne(bitReg) == auroraReg)
       {
-	LOG (INFO) << BOLDGREEN << "\t--> Aurora channels up number as expected: " << BOLDYELLOW << RD53::CountBitsOne(bitReg) << RESET;
+	LOG (INFO) << BOLDGREEN << "\t--> Aurora channels up number as expected: " << BOLDYELLOW << RD53::countBitsOne(bitReg) << RESET;
 	return true;
       }
-    LOG (ERROR) << BOLDRED << "\t--> Aurora channels up number less than expected: " << BOLDYELLOW << RD53::CountBitsOne(bitReg) << RESET;
+    LOG (ERROR) << BOLDRED << "\t--> Aurora channels up number less than expected: " << BOLDYELLOW << RD53::countBitsOne(bitReg) << RESET;
     return false;
   }
 
@@ -348,14 +370,16 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
-    uint8_t     status;
-    bool        retry;
+    uint8_t status;
+    bool    retry;
+    int     nTrials = 0;
     
     this->localCfgFastCmd.n_triggers = pNEvents;
     this->ConfigureFastCommands();
 
     do
       {
+	nTrials++;
 	retry = false;
 	pData.clear();
 
@@ -383,13 +407,6 @@ namespace Ph2_HwInterface
 	// ##################
 	// # Error checking #
 	// ##################
-	if (pData.size() == 0)
-	  {
-	    LOG (ERROR) << BOLDRED << "Sent " << this->localCfgFastCmd.n_triggers << " triggers, but no data collected " << BOLDYELLOW << "--> retry" << RESET;
-	    retry = true;
-	    continue;
-	  }
-
 	auto events = this->DecodeEvents(pData, status);
 	// this->PrintEvents(events, &pData); // @TMP@
 	if (this->EvtErrorHandler(status) == false)
@@ -405,8 +422,13 @@ namespace Ph2_HwInterface
 	    continue;
 	  }
 
-
-      } while (retry == true);
+      } while ((retry == true) && (nTrials < MAXTRIALS));
+    
+    if (retry == true)
+      {
+	LOG (ERROR) << BOLDRED << "Reached the maximum number of trals (" << BOLDYELLOW << MAXTRIALS << BOLDRED << ") without success" << RESET;
+	pData.clear();
+      }
   }
 
   std::vector<uint32_t> RD53FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
@@ -417,16 +439,18 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::TurnOffFMC()
   {
-    WriteStackReg({{"system.ctrl_2.fmc_pg_c2m",    0},
-	  {"system.ctrl_2.fmc_l8_pwr_en", 0},
-	  {"system.ctrl_2.fmc_l12_pwr_en",0}});
+    WriteStackReg({
+	{"system.ctrl_2.fmc_pg_c2m",    0},
+	{"system.ctrl_2.fmc_l8_pwr_en", 0},
+	{"system.ctrl_2.fmc_l12_pwr_en",0}});
   }
 
   void RD53FWInterface::TurnOnFMC()
   {
-    WriteStackReg({{"system.ctrl_2.fmc_l12_pwr_en",1},
-	  {"system.ctrl_2.fmc_l8_pwr_en", 1},
-	  {"system.ctrl_2.fmc_pg_c2m",    1}});
+    WriteStackReg({
+	{"system.ctrl_2.fmc_l12_pwr_en",1},
+	{"system.ctrl_2.fmc_l8_pwr_en", 1},
+	{"system.ctrl_2.fmc_pg_c2m",    1}});
 
     usleep(DEEPSLEEP);
   }
@@ -464,7 +488,7 @@ namespace Ph2_HwInterface
     WriteReg ("user.ctrl_regs.reset_reg.global_rst",0);
     usleep(DEEPSLEEP);
 
-    WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",0);
+    WriteReg ("user.ctrl_regs.reset_reg.clk_gen_rst",0);
     usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.fmc_pll_rst",1);
@@ -528,18 +552,21 @@ namespace Ph2_HwInterface
   std::vector<RD53FWInterface::Event> RD53FWInterface::DecodeEvents (const std::vector<uint32_t>& data, uint8_t& evtStatus)
   {
     std::vector<size_t> event_start;
-    size_t maxL1Counter = RD53::SetBits(RD53EvtEncoder::NBIT_TRIGID)+1;
+    std::vector<RD53FWInterface::Event> events;
+    size_t maxL1Counter = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
     if (data.size() != 0) evtStatus = RD53FWEvtEncoder::GOOD;
-    else                  evtStatus = RD53FWEvtEncoder::EMPTY;
+    else
+      {
+	evtStatus = RD53FWEvtEncoder::EMPTY;
+	return events;
+      }
 
-    for (auto i = 0; i < data.size(); i++)
+    for (auto i = 0u; i < data.size(); i++)
       if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) event_start.push_back(i);
-
-    std::vector<RD53FWInterface::Event> events;
     events.reserve(event_start.size());
     
-    for (auto i = 0; i < event_start.size(); i++)
+    for (auto i = 0u; i < event_start.size(); i++)
       {
 	const size_t start = event_start[i];
 	const size_t end   = ((i == event_start.size() - 1) ? data.size() : event_start[i + 1]);
@@ -550,7 +577,7 @@ namespace Ph2_HwInterface
 	if (evt.evtStatus != RD53FWEvtEncoder::GOOD) evtStatus |= evt.evtStatus;
 	else
 	  {
-	    for (auto j = 0; j < evt.chip_events.size(); j++)
+	    for (auto j = 0u; j < evt.chip_events.size(); j++)
 	      if (evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evtStatus |= RD53FWEvtEncoder::L1A;
 	  }
       }
@@ -564,7 +591,7 @@ namespace Ph2_HwInterface
     // # Print raw data #
     // ##################
     if (pData != nullptr)
-      for (auto j = 0; j < pData->size(); j++)
+      for (auto j = 0u; j < pData->size(); j++)
 	{
 	  if (j%NWORDS_DDR3 == 0) std::cout << std::dec << j << ":\t";
 	  std::cout << std::hex << std::setfill('0') << std::setw(8) << (*pData)[j] << "\t";
@@ -572,7 +599,7 @@ namespace Ph2_HwInterface
 	}
 
 
-    for (auto i = 0; i < events.size(); i++)
+    for (auto i = 0u; i < events.size(); i++)
       {
 	auto& evt = events[i];
 	LOG (INFO) << BOLDGREEN << "Event           = " << i                   << RESET;
@@ -583,7 +610,7 @@ namespace Ph2_HwInterface
 	LOG (INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter     << RESET;
 	LOG (INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter      << RESET;
 
-	for (auto j = 0; j < evt.chip_events.size(); j++)
+	for (auto j = 0u; j < evt.chip_events.size(); j++)
 	  {
 	    LOG (INFO) << CYAN << "------- Chip Header -------"                            << RESET;
 	    LOG (INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code    << RESET;
@@ -668,17 +695,17 @@ namespace Ph2_HwInterface
     bx_counter = data[3];
 
     std::vector<size_t> chip_start;
-    for (auto i = 4; i < n; i += 4) if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) chip_start.push_back(i);
+    for (auto i = 4u; i < n; i += 4) if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) chip_start.push_back(i);
 
     chip_frames.reserve(chip_start.size());
     chip_events.reserve(chip_start.size());
-    for (auto i = 0; i < chip_start.size(); i++)
+    for (auto i = 0u; i < chip_start.size(); i++)
       {
 	const size_t start = chip_start[i];
 	const size_t end   = ((i == chip_start.size() - 1) ? n : chip_start[i + 1]);
 	chip_frames.emplace_back(data[start], data[start + 1]);
 
- 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4 != (end - start))
+ 	if ((chip_frames[i].l1a_data_size+dummy_size) * 4u != (end - start))
 	  {
 	    evtStatus |= RD53FWEvtEncoder::FRSIZE;
 	    chip_frames.clear();

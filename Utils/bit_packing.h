@@ -49,6 +49,7 @@ using std::size_t;
 // if c++14 is not fully supported...
 #if __cplusplus < 201402
 
+    #undef _CONSTEXPR
     #define _CONSTEXPR
     
     namespace std {
@@ -101,7 +102,7 @@ namespace detail {
 
     template <size_t... Is>
     auto make_reverse_impl(std::index_sequence<Is...>)
-        -> std::index_sequence<sizeof...(Is) - 1 - Is...>{};
+        -> std::index_sequence<sizeof...(Is) - 1 - Is...>{}
 
     // used to declare a reveresed index_sequence
     template <size_t N>
@@ -221,7 +222,7 @@ _CONSTEXPR auto pack_bits(Args... args) {
 template <size_t... Sizes, class T>
 _CONSTEXPR auto unpack_bits(T value) {
     return BitPacker<Sizes...>::unpack(value);
-};
+}
 
 // RangePacker
 // For an array/range of size N:

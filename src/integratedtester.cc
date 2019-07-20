@@ -340,7 +340,7 @@ bool check_Shorts (Tool* pTool,  uint32_t cMaxNumShorts)
     cShortFinder.SaveResults();
     uint32_t cNShorts = cShortFinder.GetNShorts() ;
     char line[120];
-    sprintf (line, "# %d shorts found on hybrid = %d", cNShorts );
+    sprintf (line, "# %d shorts found on hybrid", cNShorts);
     cShortFinder.AmmendReport (line);
     cShortFinder.AmmendReport ( ( cNShorts <= cMaxNumShorts) ? ("# Shorts test passed.") : ("# Shorts test failed.") );
 

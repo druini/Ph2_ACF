@@ -1092,7 +1092,7 @@ ostream& RootWTextFile::dump(ostream& output) {
          << fileName_ << "\">"
          << fileName_ << "</a></tt><br/>";
   return output;
-};
+}
 
 
 //*******************************************//
@@ -1126,7 +1126,7 @@ ostream& RootWBinaryFile::dump(ostream& output) {
          << fileName_ << "\">"
          << fileName_ << "</a></tt><br/>";
   return output;
-};
+}
 
 //*******************************************//
 // RootWBinaryFileList                       //

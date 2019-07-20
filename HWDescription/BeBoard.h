@@ -76,7 +76,7 @@ namespace Ph2_HwDescription {
          */
         void accept ( HwDescriptionVisitor& pVisitor )
         {
-            pVisitor.visit ( *this );
+            pVisitor.visitBeBoard ( *this );
 
             for ( auto& cFe : fModuleVector )
                 cFe->accept ( pVisitor );

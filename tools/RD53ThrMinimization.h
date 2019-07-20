@@ -7,14 +7,12 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53ThrMinimization_h_
-#define _RD53ThrMinimization_h_
+#ifndef RD53ThrMinimization_H
+#define RD53ThrMinimization_H
 
 #include "../Utils/EmptyContainer.h"
 #include "RD53PixelAlive.h"
 
-
-using namespace Ph2_System;
 
 // #####################################
 // # Threshold minimization test suite #
@@ -25,9 +23,9 @@ class ThrMinimization : public PixelAlive
   ThrMinimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart = 0, size_t ThrStop = 0);
   ~ThrMinimization ();
 
-  void Run     ();
-  void Draw    (bool display, bool save);
-  void Analyze ();
+  void run     ();
+  void draw    (bool display, bool save);
+  void analyze ();
 
  private:
   const char* fileRes;
@@ -45,12 +43,12 @@ class ThrMinimization : public PixelAlive
 
   DetectorDataContainer theThrContainer;
 
-  void InitHisto       ();
-  void FillHisto       ();
-  void Display         ();
-  void Save            ();
+  void initHisto       ();
+  void fillHisto       ();
+  void display         ();
+  void save            ();
   void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-  void ChipErrorReport ();
+  void chipErrorReport ();
 
 
   // ########

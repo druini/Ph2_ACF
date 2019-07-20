@@ -31,7 +31,7 @@ int main ( int argc, char* argv[] )
     el::Loggers::reconfigureAllLoggers (conf);
 
 
-    int pEventsperVcth;
+    uint32_t pEventsperVcth;
     int cVcth;
 
     SystemController cSystemController;

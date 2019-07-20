@@ -48,7 +48,7 @@ bool InitializeMonitoring (std::string pHostname,  std::string pInstrumentName, 
                 {
                     LOG (INFO) << BOLDBLUE << "Trying to launch server to monitor Temperature with the Ke2110" << RESET ;
 
-                    if ( launch_DMMServer ( pHostname, pPortsInfo, pMonitorInterval, pLogFile) == 1 ) ;
+                    launch_DMMServer ( pHostname, pPortsInfo, pMonitorInterval, pLogFile);
 
                     exit (0);
                 }

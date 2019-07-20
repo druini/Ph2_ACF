@@ -64,25 +64,6 @@ class Tool : public SystemController
     using ModuleGlobalOccupancyMap            = std::map<uint8_t,ChipGlobalOccupancyMap    >; //module       : { cbc    : { strip : occupancy } }
         // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyPerChannelMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
 
-    DetectorDataContainer* fDetectorDataContainer;
-    ChannelGroupHandler*   fChannelGroupHandler;
-    CanvasMap              fCanvasMap;
-    ChipHistogramMap       fChipHistMap;
-    ModuleHistogramMap     fModuleHistMap;
-    BeBoardHistogramMap    fBeBoardHistMap;
-    FrontEndType           fType;
-    TestGroupChannelMap    fTestGroupChannelMap;
-
-    std::map< int, std::vector<uint8_t> > fMaskForTestGroupChannelMap;
-
-    std::string fDirectoryName;             /*< the Directoryname for the Root file with results */
-    TFile*      fResultFile;                /*< the Name for the Root file with results */
-    std::string fResultFileName;
-#ifdef __HTTP__
-    THttpServer* fHttpServer;
-#endif
-
-
     Tool();
 #ifdef __HTTP__
     Tool (THttpServer* pServer);
@@ -347,10 +328,28 @@ private:
     // void setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t, std::vector<uint16_t> > > &dacList);
 
   protected:
+    DetectorDataContainer* fDetectorDataContainer {nullptr};
+    CanvasMap              fCanvasMap;
+    ChipHistogramMap       fChipHistMap;
+    ModuleHistogramMap     fModuleHistMap;
+    BeBoardHistogramMap    fBeBoardHistMap;
+    FrontEndType           fType;
+    TestGroupChannelMap    fTestGroupChannelMap;
+
+    std::map< int, std::vector<uint8_t> > fMaskForTestGroupChannelMap;
+
+    std::string fDirectoryName;             /*< the Directoryname for the Root file with results */
+    TFile*      fResultFile;                /*< the Name for the Root file with results */
+    std::string fResultFileName;
+#ifdef __HTTP__
+    THttpServer* fHttpServer;
+#endif
+
     bool fSkipMaskedChannels;
     bool fAllChan;
     bool fMaskChannelsFromOtherGroups;
     bool fTestPulse;
+    ChannelGroupHandler*   fChannelGroupHandler;
 
     std::string getCalibrationName();
 

@@ -8,8 +8,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _HistContainer_h_
-#define _HistContainer_h_
+#ifndef HistContainer_H
+#define HistContainer_H
 
 #include <iostream>
 #include "../Utils/Container.h"
@@ -26,7 +26,7 @@ class HistContainer : public PlotContainer
   HistContainer<Hist>& operator= (const HistContainer<Hist>& container) = delete;
 
   template <class... Args>
-    HistContainer(Args... args)
+    HistContainer (Args... args)
     {
       fTheHistogram = new Hist(args...);
       fTheHistogram->SetDirectory(0);
@@ -61,19 +61,20 @@ class HistContainer : public PlotContainer
     fTheHistogram->SetTitle(title.data());
   }
 
-  void print(void)
+  void print (void)
   { 
     std::cout << "HistContainer " << fTheHistogram->GetName() << std::endl;
   }
 
   template<typename T>
-    void makeAverage(const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents) {}
+    void makeAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents) {}
 
   template<typename  T>
-    void makeAverage(const std::vector<T>* theTH1FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) {}
-  void normalize(const uint16_t numberOfEvents) {}
+    void makeAverage (const std::vector<T>* theTH1FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) {}
 
-  void setNameTitle(std::string histogramName, std::string histogramTitle) override 
+  void normalize (const uint16_t numberOfEvents) {}
+
+  void setNameTitle (std::string histogramName, std::string histogramTitle) override 
   {
     fTheHistogram->SetNameTitle(histogramName.data(), histogramTitle.data());
   }

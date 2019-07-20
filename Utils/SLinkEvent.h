@@ -78,8 +78,6 @@ class SLinkEvent
     EventType fEventType;
     SLinkDebugMode fDebugMode;
     static CRCCalculator fCalculator;
-
-
     //using a std::deque as it is probably easier to push front and insert randomly
     std::vector<uint64_t> fData;
     //size of the complete event in 64 bit words

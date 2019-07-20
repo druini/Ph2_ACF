@@ -13,11 +13,11 @@ namespace Ph2_HwInterface
 {
   bool RD53Event::isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const
   {
-    for (auto j = 0; j < module_id_vec.size(); j++)
+    for (auto j = 0u; j < module_id_vec.size(); j++)
       {
     	if (module_id == module_id_vec[j])
     	  {
-	    for (auto i = 0; i < chip_events.size(); i++)
+	    for (auto i = 0u; i < chip_events.size(); i++)
 	      if ((chip_id == chip_id_vec[i]) && (chip_events[i].data.size() != 0))
 		{
 		  chipIndx = i;
@@ -48,12 +48,12 @@ namespace Ph2_HwInterface
 
 	      for (const auto& hit : chip_events[chipIndx].data)
 		{
-		  if ((hit.row >= 0) && (hit.row < RD53::nRows) &&
-		      (hit.col >= 0) && (hit.col < RD53::nCols))
+		  if ((hit.row < RD53::nRows) &&
+		      (hit.col < RD53::nCols))
 		    {
 		      for (auto i = 0; i < NPIX_REGION; i++)
 			{
-			  if (hit.tots[i] != RD53::SetBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION))
+			  if (hit.tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION))
 			    {
 			      if (totRequired == true)
 			      	{

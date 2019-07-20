@@ -14,9 +14,9 @@ namespace uhal
 {
   namespace exception
   {
-    ExceptionClass ( TextExceedsSpaceAvailable , "Text exceeds space available for it in the MMC" );
-    ExceptionClass ( ReplyIndicatesError , "Reply value from MMC indicates an error" );
-    ExceptionClass ( GoldenImageIsInvolateError , "An attempt was made to modify the inviolate boot image" );
+    ExceptionClass ( TextExceedsSpaceAvailable , "Text exceeds space available for it in the MMC" )
+    ExceptionClass ( ReplyIndicatesError , "Reply value from MMC indicates an error" )
+    ExceptionClass ( GoldenImageIsInvolateError , "An attempt was made to modify the inviolate boot image" )
   }
 }
 
@@ -36,12 +36,13 @@ namespace fc7
 
   class MmcPipeInterface : public uhal::Node
   {
-      UHAL_DERIVEDNODE ( MmcPipeInterface );
+      UHAL_DERIVEDNODE ( MmcPipeInterface )
     public:
 
       // PUBLIC METHODS
-      MmcPipeInterface ( const uhal::Node& ) ;
+      MmcPipeInterface ( const uhal::Node& );
       virtual ~MmcPipeInterface();
+      using uhal::Node::operator =; // avoid overloading od Node assign operator
 
     public:
       void SetDummySensor ( const uint8_t& aValue );

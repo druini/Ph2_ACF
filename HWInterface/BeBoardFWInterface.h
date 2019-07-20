@@ -59,10 +59,10 @@ namespace Ph2_HwInterface {
 
     public:
 
-        FpgaConfig* fpgaConfig;
-        FileHandler* fFileHandler ;
-        uint32_t fNthAcq, fNpackets;
         bool fSaveToFile;
+        FileHandler* fFileHandler ;
+        FpgaConfig* fFpgaConfig;
+        uint32_t fNthAcq {0}, fNpackets {0};
 
         static const uint32_t cMask1 = 0xff;
         static const uint32_t cMask2 = 0xff00;
@@ -353,14 +353,12 @@ namespace Ph2_HwInterface {
         {
 	  LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         }
-
-        virtual std::pair< std::vector<uint16_t>,std::vector<uint16_t> > ReadChipRegisters (std::vector<uint32_t> & data,
-											    unsigned int filter = 0,
-											    unsigned int pBlockSize = 1)
-	  {
-            LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-            return std::pair< std::vector<uint16_t>,std::vector<uint16_t> >();
-	  }
+	
+        virtual std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (std::vector<uint32_t> & data, uint8_t chipID, uint8_t filter = 0)
+	{
+	  LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+	  return std::vector<std::pair<uint16_t,uint16_t>>();
+	}
 	
         virtual bool InitChipCommunication()
         {
@@ -368,13 +366,16 @@ namespace Ph2_HwInterface {
 	  return false;
         }
 	// ################################################################################################
-
+	
 
     protected:
 
 //bool runningAcquisition;
-        uint32_t fBlockSize, fNPackets, numAcq, nbMaxAcq;
-//boost::thread thrAcq;
+        uint32_t fBlockSize {0};
+        uint32_t  fNPackets {0};
+        uint32_t  numAcq {0};
+        uint32_t  nbMaxAcq {0};
+//boost;:thread thrAcq;
 
 //template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value comparison
 

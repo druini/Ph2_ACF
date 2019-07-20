@@ -115,7 +115,7 @@ int main ( int argc, char** argv )
             uint32_t cN = 0;
             cTool.setFWTestPulse();
 
-            for (int i = 0; i < cNGroups; i++)
+            for (uint8_t i = 0; i < cNGroups; i++)
             {
                 cTool.setSystemTestPulse(cTestPulseAmplitude,i,true,false);
                 cTool.ReadNEvents( pBoard, 1 );

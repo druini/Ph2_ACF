@@ -2,29 +2,29 @@
 
 CRCCalculator SLinkEvent::fCalculator;
 
-SLinkEvent::SLinkEvent () :
-    fSize (0),
-    fCRCVal (0),
-    fCondData (0),
-    fFake (0)
+SLinkEvent::SLinkEvent ()
+    : fSize (0)
+    , fCRCVal (0)
+    , fCondData (0)
+    , fFake (0)
 {
     fData.clear();
 }
 
-SLinkEvent::SLinkEvent (EventType pEventType, SLinkDebugMode pMode, FrontEndType pFrontEndType, uint32_t& pLV1Id, uint16_t& pBXId, int pSourceId) :
-    fEventType (pEventType),
-    fDebugMode (pMode),
-    fFrontEndType (pFrontEndType),
-    fSize (0),
-    fCRCVal (0),
-    fCondData (0),
-    fFake (0)
+SLinkEvent::SLinkEvent (EventType pEventType, SLinkDebugMode pMode, FrontEndType pFrontEndType, uint32_t& pLV1Id, uint16_t& pBXId, int pSourceId)
+    : fFrontEndType (pFrontEndType)
+    , fEventType (pEventType)
+    , fDebugMode (pMode)
+    , fSize (0)
+    , fCRCVal (0)
+    , fCondData (0)
+    , fFake (0)
 {
     fData.clear();
     this->generateDAQHeader (pLV1Id, pBXId, pSourceId);
 }
-SLinkEvent::SLinkEvent (std::vector<uint64_t>& pDataVec) :
-    fSize (pDataVec.size() )
+SLinkEvent::SLinkEvent (std::vector<uint64_t>& pDataVec) 
+    : fSize (pDataVec.size() )
 {
     fData.clear();
     fData = pDataVec;

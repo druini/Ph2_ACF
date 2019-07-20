@@ -161,7 +161,7 @@ void CMTester::Initialize()
 
             if ( cObj ) delete cObj;
 
-            TH2F* c2DHist = new TH2F ( cName, Form ( "Correlation FE%d CBC%d; Strip; Strip; Correlation coefficient", cFeId ), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5, cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5 );
+            TH2F* c2DHist = new TH2F ( cName, Form ( "Correlation FE%d; Strip; Strip; Correlation coefficient", cFeId  ), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5, cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5 );
             bookHistogram ( cFe, "module_correlation", c2DHist );
 
             // 1D projection of the combined odccupancy

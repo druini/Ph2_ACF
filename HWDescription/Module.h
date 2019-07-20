@@ -57,7 +57,7 @@ namespace Ph2_HwDescription {
          */
         void accept ( HwDescriptionVisitor& pVisitor )
         {
-            pVisitor.visit ( *this );
+            pVisitor.visitModule ( *this );
 
             for ( Chip* cChip : fReadoutChipVector )
                 cChip->accept ( pVisitor );

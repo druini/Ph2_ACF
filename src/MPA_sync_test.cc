@@ -93,9 +93,9 @@ int main( int argc, char* argv[] )
 	Stubs curstub;
 	uint32_t npixtot = 0;
     //mysyscontroller.fMPAInterface->Start ( pBoard );
-	for(int row=rows.first; row<rows.second; row++)
+	for(size_t row=rows.first; row<rows.second; row++)
 		{
-		for(int col=cols.first; col<cols.second; col++)
+		for(size_t col=cols.first; col<cols.second; col++)
 			{
 				std::cout <<row<<","<<col<<std::endl;
 				fMPAInterface->Disable_pixel(mpa1,0,0);

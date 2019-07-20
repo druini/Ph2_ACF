@@ -220,7 +220,7 @@ void ShortFinder::InitializeHists()
     fHistShortsTop->SetFillColor ( 3 );
     fHistShortsTop->SetFillStyle ( 3005 );
 
-    for ( int i = 0 ; i < ( cNBinsX ) ; i++ ) fHistShortsTop->Fill (i, 0);
+    for ( uint32_t i = 0 ; i < ( cNBinsX ) ; i++ ) fHistShortsTop->Fill (i, 0);
 
     // fill histogram randomly to check if the ploting/saving works
     // TRandom *eventGenerator = new TRandom();
@@ -243,7 +243,7 @@ void ShortFinder::InitializeHists()
     fHistShortsBottom->SetFillColor ( 4 );
     fHistShortsBottom->SetFillStyle ( 3005 );
 
-    for ( int i = 0 ; i < ( cNBinsX) ; i++ ) fHistShortsBottom->Fill (i, 0);
+    for ( uint32_t i = 0 ; i < ( cNBinsX) ; i++ ) fHistShortsBottom->Fill (i, 0);
 
     // fill histogram randomly to check if the ploting/saving works
     // for( int i = 0 ; i < 100 ; i++)

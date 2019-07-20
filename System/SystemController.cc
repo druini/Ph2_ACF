@@ -21,13 +21,15 @@ namespace Ph2_System {
     : fBeBoardInterface    (nullptr)
     , fReadoutChipInterface(nullptr)
     , fChipInterface       (nullptr)
+    , fDetectorContainer   (nullptr)
     , fBoardVector         ()
     , fSettingsMap         ()
     , fFileHandler         (nullptr)
     , fRawFileName         ("")
     , fWriteHandlerEnabled (false)
-    , fData                (nullptr)
+    , fStreamerEnabled     (false)
     , fNetworkStreamer     (nullptr)//This is the server listening port
+    , fData                (nullptr)
     {
     //      bool fStreamData = true;
     //      if(fStreamData && !fNetworkStreamer->accept(10, 0))
@@ -45,13 +47,14 @@ namespace Ph2_System {
     void SystemController::Inherit (SystemController* pController)
     {
         fBeBoardInterface = pController->fBeBoardInterface;
-        fChipInterface = pController->fChipInterface;
         fReadoutChipInterface = pController->fReadoutChipInterface;
+        fChipInterface = pController->fChipInterface;
         fBoardVector = pController->fBoardVector;
         fBeBoardFWMap = pController->fBeBoardFWMap;
         fSettingsMap = pController->fSettingsMap;
         fFileHandler = pController->fFileHandler;
         fStreamerEnabled = pController->fStreamerEnabled;
+        fNetworkStreamer = pController->fNetworkStreamer;
     }
 
     void SystemController::Destroy()

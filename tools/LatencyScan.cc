@@ -101,7 +101,7 @@ void LatencyScan::MeasureTriggerTDC()
 
     for ( BeBoard* pBoard : fBoardVector ){
         TH1F* cTmpHist = dynamic_cast<TH1F*> ( getHist ( pBoard, "triggerTDC" ) );
-        for(int tdcValue = 0; tdcValue<fTDCBins; ++tdcValue)
+        for(size_t tdcValue = 0; tdcValue<fTDCBins; ++tdcValue)
         {
             cTmpHist->SetBinContent(tdcValue+1, BeBoardTriggerTDCMap[pBoard->getBeId()][tdcValue]);
         }
@@ -284,10 +284,10 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
                     fBeBoardInterface->WriteBoardReg (pBoard, cReg, cStubLatency);
 
                 // I need this to normalize the TDC values I get from the Strasbourg FW
-                int cNevents = 0 ;  
-                int cNEvents_wHit = 0 ; 
-                int cNEvents_wStub = 0 ; 
-                int cNEvents_wBoth = 0; 
+                uint32_t cNevents = 0 ;  
+                uint32_t cNEvents_wHit = 0 ; 
+                uint32_t cNEvents_wStub = 0 ; 
+                uint32_t cNEvents_wBoth = 0; 
                 fBeBoardInterface->Start(pBoard);
                 do
                 {

@@ -198,7 +198,7 @@ void Calibration::FindVplus()
                 TH1I* vPlusHist = static_cast<TH1I*> ( getHist ( cCbc, "Vplus" ) );
                 uint16_t tmpVthr = (cCbc->getReg("VCth1") + (cCbc->getReg("VCth2")<<8));
                 vPlusHist->Fill(0.,tmpVthr);
-                LOG (INFO) << GREEN << "VCth value for BeBoard " << cBoard->getBeId() << " Module " << cFe->getModuleId() << " CBC " << cCbc->getChipId() << " = " << tmpVthr << RESET;
+                LOG (INFO) << GREEN << "VCth value for BeBoard " << +cBoard->getBeId() << " Module " << +cFe->getModuleId() << " CBC " << +cCbc->getChipId() << " = " << tmpVthr << RESET;
                 cMeanValue+=tmpVthr;
                 ++nCbc;
             }

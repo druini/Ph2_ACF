@@ -9,16 +9,16 @@
 
 #include "RD53Latency.h"
 
-Latency::Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t startValue, size_t stopValue, size_t nEvents) :
-  fileRes    (fileRes),
-  rowStart   (rowStart),
-  rowStop    (rowStop),
-  colStart   (colStart),
-  colStop    (colStop),
-  startValue (startValue),
-  stopValue  (stopValue),
-  nEvents    (nEvents),
-  Tool       ()
+Latency::Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t startValue, size_t stopValue, size_t nEvents)
+  : Tool       ()
+  , fileRes    (fileRes)
+  , rowStart   (rowStart)
+  , rowStop    (rowStop)
+  , colStart   (colStart)
+  , colStop    (colStop)
+  , startValue (startValue)
+  , stopValue  (stopValue)
+  , nEvents    (nEvents)
 {
   size_t nSteps = stopValue - startValue;
 
@@ -27,7 +27,7 @@ Latency::Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t c
   // # Initialize dac scan values #
   // ##############################
   float step = (stopValue - startValue) / nSteps;
-  for (auto i = 0; i < nSteps; i++) dacList.push_back(startValue + step * i);
+  for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
 
 Latency::~Latency ()
@@ -35,14 +35,14 @@ Latency::~Latency ()
   delete theFile;
   theFile = nullptr;
 
-  for (auto i = 0; i < theCanvasLat.size(); i++)
+  for (auto i = 0u; i < theCanvasLat.size(); i++)
     {
       delete theLat[i];
       delete theCanvasLat[i];
     }
 }
 
-void Latency::Run ()
+void Latency::run ()
 {
   ContainerFactory theDetectorFactory;
   theDetectorFactory.copyAndInitChip<GenericDataVector>(*fDetectorContainer, theContainer);
@@ -52,26 +52,26 @@ void Latency::Run ()
   // ################
   // # Error report #
   // ################
-  this->ChipErrorReport();
+  this->chipErrorReport();
 }
 
-void Latency::Draw (bool display, bool save)
+void Latency::draw (bool display, bool save)
 {
   TApplication* myApp;
   
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  this->InitHisto();
-  this->FillHisto();
-  this->Display();
+  this->initHisto();
+  this->fillHisto();
+  this->display();
 
-  if (save    == true) this->Save();
+  if (save    == true) this->save();
   if (display == true) myApp->Run();
 
   theFile->Close();
 }
 
-void Latency::Analyze ()
+void Latency::analyze ()
 {
   for (const auto cBoard : theContainer)
     for (const auto cModule : *cBoard)
@@ -94,7 +94,7 @@ void Latency::Analyze ()
 	}
 }
 
-void Latency::InitHisto ()
+void Latency::initHisto ()
 {
   std::stringstream myString;
 
@@ -126,7 +126,7 @@ void Latency::InitHisto ()
   theFile = new TFile(fileRes, "UPDATE");
 }
 
-void Latency::FillHisto ()
+void Latency::fillHisto ()
 {
   size_t index = 0;
   for (const auto cBoard : theContainer)
@@ -140,9 +140,9 @@ void Latency::FillHisto ()
 	}
 }
 
-void Latency::Display ()
+void Latency::display ()
 {
-  for (auto i = 0; i < theCanvasLat.size(); i++)
+  for (auto i = 0u; i < theCanvasLat.size(); i++)
     {
       theCanvasLat[i]->cd();
       theLat[i]->Draw();
@@ -151,9 +151,9 @@ void Latency::Display ()
     }
 }
 
-void Latency::Save ()
+void Latency::save ()
 {
-  for (auto i = 0; i < theCanvasLat.size(); i++) theCanvasLat[i]->Write();
+  for (auto i = 0u; i < theCanvasLat.size(); i++) theCanvasLat[i]->Write();
 }
 
 void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
@@ -198,10 +198,10 @@ void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& 
 		auto events = RD53FWInterface::DecodeEvents(data,status);
 
 		auto nEvts = 0;
-		for (auto i = 0; i < events.size(); i++)
+		for (auto i = 0u; i < events.size(); i++)
 		  {
 		    auto& evt = events[i];
-		    for (auto j = 0; j < evt.chip_events.size(); j++)
+		    for (auto j = 0u; j < evt.chip_events.size(); j++)
 		      if (evt.chip_events[j].data.size() != 0) nEvts++;
 		  }
 
@@ -211,7 +211,7 @@ void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& 
     }
 }
 
-void Latency::ChipErrorReport ()
+void Latency::chipErrorReport ()
 {
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 

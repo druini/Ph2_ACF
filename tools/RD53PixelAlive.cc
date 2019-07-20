@@ -9,18 +9,20 @@
 
 #include "RD53PixelAlive.h"
 
-PixelAlive::PixelAlive (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject) :
-  fileRes     (fileRes),
-  rowStart    (rowStart),
-  rowStop     (rowStop),
-  colStart    (colStart),
-  colStop     (colStop),
-  nPixels2Inj (nPixels2Inj),
-  nEvents     (nEvents),
-  nEvtsBurst  (nEvtsBurst),
-  inject      (inject),
-  histos      (nEvents),
-  Tool        ()
+PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject, float thresholdOccupancy)
+  : Tool               ()
+  , fileRes            (fileRes)
+  , fileReg            (fileReg)
+  , rowStart           (rowStart)
+  , rowStop            (rowStop)
+  , colStart           (colStart)
+  , colStop            (colStop)
+  , nPixels2Inj        (nPixels2Inj)
+  , nEvents            (nEvents)
+  , nEvtsBurst         (nEvtsBurst)
+  , inject             (inject)
+  , thresholdOccupancy (thresholdOccupancy)
+  , histos             (nEvents)
 {
   // ########################
   // # Custom channel group #
@@ -37,7 +39,7 @@ PixelAlive::PixelAlive (const char* fileRes, size_t rowStart, size_t rowStop, si
   theChnGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
 
-void PixelAlive::Run ()
+void PixelAlive::run ()
 {
   ContainerFactory theDetectorFactory;
 
@@ -54,44 +56,56 @@ void PixelAlive::Run ()
   // ################
   // # Error report #
   // ################
-  this->ChipErrorReport();
+  this->chipErrorReport();
 }
 
-void PixelAlive::Draw (bool display, bool save)
+void PixelAlive::draw (bool display, bool save)
 {
   TApplication* myApp;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
   if (save    == true)
     {
-      CreateResultDirectory("Results");
-      InitResultFile(fileRes);
+      this->CreateResultDirectory("Results");
+      this->InitResultFile(fileRes);
     }
 
-  this->InitHisto();
-  this->FillHisto();
-  this->Display();
+  this->initHisto();
+  this->fillHisto();
+  this->display();
 
   if (save    == true) this->WriteRootFile();
   if (display == true) myApp->Run();
 }
 
-std::shared_ptr<DetectorDataContainer> PixelAlive::Analyze ()
+std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
 {
-  for (const auto cBoard : *theOccContainer.get())
+  for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	LOG (INFO) << BOLDGREEN << "\t--> Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-		   << cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
+	{
+	  LOG (INFO) << BOLDGREEN << "\t--> Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
+		     << theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
+
+	  if (thresholdOccupancy != 0)
+	    {
+	      for (auto row = 0u; row < RD53::nRows; row++)
+		for (auto col = 0u; col < RD53::nCols; col++)
+		  if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+		    static_cast<RD53*>(cChip)->enablePixel(row,col,(theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy < thresholdOccupancy));
+
+	      static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+	    }
+	}
 
   return theOccContainer;
 }
 
-void PixelAlive::InitHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-void PixelAlive::FillHisto () { histos.fill(*theOccContainer.get());           }
-void PixelAlive::Display   () { histos.process();                              }
+void PixelAlive::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void PixelAlive::fillHisto () { histos.fill(*theOccContainer.get());                         }
+void PixelAlive::display   () { histos.process();                                            }
 
-void PixelAlive::ChipErrorReport ()
+void PixelAlive::chipErrorReport ()
 {
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 

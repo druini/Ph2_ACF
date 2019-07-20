@@ -249,8 +249,7 @@ class DQMEvent
       const auto& w2 = wordList.at(2);
       std::bitset<8>  a(w1 & MASK_BITS_8);
       std::bitset<64> b(w2);
-      size_t nFE = a.count() + b.count();
-
+      
       // Fill the 72 bit word
       for (size_t i = 0; i < b.size(); ++i)
 	feStatus_.set(i, b[i]);
@@ -458,7 +457,6 @@ class DQMEvent
       // Now store the results properly
       int ipos = 0;
       std::vector<uint8_t> feList;
-      size_t nFE = attachedFE(feStatus, feList);
       for (size_t i = 0; i < feList.size(); ++i) 
       {
 	size_t nstub = getWord(data, ipos, NSTUB_WORD_WIDTH);

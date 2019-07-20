@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53_h_
-#define _RD53_h_
+#ifndef RD53_H
+#define RD53_H
 
 #include "../HWDescription/ReadoutChip.h"
 
@@ -144,8 +144,8 @@ namespace RD53EvtEncoder
   // # Event status #
   // ################
   const uint8_t CGOOD = 0x00; // Chip event status good
-  const uint8_t CHEAD = 0x32; // Chip event status Bad chip header
-  const uint8_t CPIX  = 0x64; // Chip event status Bad pixel row or column
+  const uint8_t CHEAD = 0x20; // Chip event status Bad chip header
+  const uint8_t CPIX  = 0x40; // Chip event status Bad pixel row or column
 }
 
 
@@ -161,45 +161,42 @@ namespace Ph2_HwDescription
 
   class RD53: public ReadoutChip
   {
-  protected:
-    uint8_t fRD53Id;
- 
   public:
     static constexpr size_t nRows = NROWS;
     static constexpr size_t nCols = NCOLS;
 
-    RD53  (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& filename);
-    RD53  (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& filename);
-    ~RD53 ();
+    RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& fileName);
+    RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& fileName);
 
-    void     loadfRegMap         (const std::string& filename) override;
-    void     saveRegMap          (const std::string& filename) override;
-    uint32_t getNumberOfChannels () const                      override;
-    bool     isDACLocal          (const std::string& dacName)  override;
-    uint8_t  getNumberOfBits     (const std::string& dacName)  override;
+    void     loadfRegMap         (const std::string& fileName)     override;
+    void     saveRegMap          (const std::string& fName2Append) override;
+    uint32_t getNumberOfChannels () const                          override;
+    bool     isDACLocal          (const std::string& dacName)      override;
+    uint8_t  getNumberOfBits     (const std::string& dacName)      override;
 
     std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
     std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
 
-    void copyMaskFromDefault ();
-    void copyMaskToDefault   ();
-    void resetMask           ();
-    void enableAllPixels     ();
-    void disableAllPixels    ();
-    void enablePixel         (unsigned int row, unsigned int col, bool enable);
-    void injectPixel         (unsigned int row, unsigned int col, bool inject);
-    void setTDAC             (unsigned int row, unsigned int col, uint8_t TDAC);
+    void    copyMaskFromDefault ();
+    void    copyMaskToDefault   ();
+    void    resetMask           ();
+    void    enableAllPixels     ();
+    void    disableAllPixels    ();
+    void    enablePixel         (unsigned int row, unsigned int col, bool enable);
+    void    injectPixel         (unsigned int row, unsigned int col, bool inject);
+    void    setTDAC             (unsigned int row, unsigned int col, uint8_t TDAC);
+    uint8_t getTDAC             (unsigned int row, unsigned int col);
 
-    void EncodeCMD (const uint16_t               address,
+    void encodeCMD (const uint16_t               address,
 		    const uint16_t               data,
 		    const uint8_t                pRD53Id,
-		    const uint8_t                pRD53Cmd,
+		    const uint16_t                pRD53Cmd,
 		    const bool                   isBroadcast,
 		    std::vector<uint32_t>      & pVecReg,
 		    const std::vector<uint16_t>* dataVec = NULL);
 
-    void ConvertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair);
-    void ConvertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& col);
+    void convertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair);
+    void convertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& col);
 
     struct HitData
     {
@@ -247,23 +244,23 @@ namespace Ph2_HwDescription
     };
   
     template<size_t NBITS>
-      static std::bitset<NBITS> SetBits (size_t nBit2Set)
+      static std::bitset<NBITS> setBits (size_t nBit2Set)
       {
     	std::bitset<NBITS> output(0);
     	for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
     	return output;
       }
 
-    static size_t SetBits (size_t nBit2Set)
+    static size_t setBits (size_t nBit2Set)
     {
       auto output = 1 << (nBit2Set-1);
-      for (auto i = 0; i < nBit2Set-1; i++) output |= 1 << i;
+      for (auto i = 0u; i < nBit2Set-1; i++) output |= 1 << i;
       return output;
     }
 
-    static auto CountBitsOne(size_t num)
+    static auto countBitsOne(size_t num)
     {
-      auto count = 0;
+      auto count = 0u;
       while (num != 0)
 	{
 	  count += (num & 1);
@@ -275,6 +272,7 @@ namespace Ph2_HwDescription
   private:
     std::vector<perPixelData> fPixelsMask;
     std::vector<perPixelData> fPixelsMaskDefault;
+    std::string configFileName;
     CommentMap fCommentMap;
   };
 }

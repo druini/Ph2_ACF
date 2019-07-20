@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _RD53ThrEqualization_h_
-#define _RD53ThrEqualization_h_
+#ifndef RD53ThrEqualization_H
+#define RD53ThrEqualization_H
 
 #include "../Utils/Container.h"
 #include "../Utils/Occupancy.h"
@@ -25,10 +25,8 @@
 // #############
 // # CONSTANTS #
 // #############
-#define TARGETeff 0.70 // Target efficiency for optimization algorithm
+#define TARGETeff 0.50 // Target efficiency for optimization algorithm
 
-
-using namespace Ph2_System;
 
 // #####################################
 // # Threshold equalization test suite #
@@ -39,8 +37,8 @@ class ThrEqualization : public Tool
   ThrEqualization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst);
   ~ThrEqualization ();
 
-  void Run  (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
-  void Draw (bool display, bool save);
+  void run  (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
+  void draw (bool display, bool save);
 
  private:
   const char* fileRes;
@@ -57,11 +55,12 @@ class ThrEqualization : public Tool
   DetectorDataContainer theOccContainer;
   DetectorDataContainer theTDACcontainer;
 
-  void InitHisto       ();
-  void FillHisto       ();
-  void Display         ();
-  void Save            ();
-  void ChipErrorReport ();
+  void initHisto       ();
+  void fillHisto       ();
+  void display         ();
+  void save            ();
+  void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
+  void chipErrorReport ();
 
 
   // ########

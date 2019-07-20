@@ -178,7 +178,7 @@ private:
 		uint8_t     fObjectNameLength;
 		uint8_t		fCreatorNameLength;
 		char        fBuffer[size_t(pow(2,( (sizeof(fObjectNameLength) + sizeof(fObjectNameLength)) *8)))];
-	}__attribute__((packed));
+	};
 
 public:
 	ObjectStream(const std::string& creatorName)
@@ -271,6 +271,6 @@ protected:
 		return fObjectName;
 	}
 
-}__attribute__((packed));
+};
 
 #endif

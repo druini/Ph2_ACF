@@ -43,8 +43,8 @@ inline void OccupancyAndPh::makeAverage<OccupancyAndPh> (const ChipContainer* th
 {
   int numberOfEnabledChannels = 0;
 
-  for (auto row = 0; row < theChipContainer->getNumberOfRows(); row++)
-    for (auto col = 0; col < theChipContainer->getNumberOfCols(); col++)
+  for (auto row = 0u; row < theChipContainer->getNumberOfRows(); row++)
+    for (auto col = 0u; col < theChipContainer->getNumberOfCols(); col++)
       if (chipOriginalMask->isChannelEnabled(row,col) && cTestChannelGroup->isChannelEnabled(row,col))
 	{
 	  fOccupancy += theChipContainer->getChannel<OccupancyAndPh>(row,col).fOccupancy;

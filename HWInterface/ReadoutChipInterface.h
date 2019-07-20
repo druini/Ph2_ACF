@@ -94,6 +94,14 @@ namespace Ph2_HwInterface {
         virtual bool WriteChipAllLocalReg ( ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true ) = 0;
 
         /*!
+         * \brief Read all Local registers on Chip and Chip Config File (able to recognize local parameter names)
+         * \param pCbc
+         * \param pRegNode : Node of the register to write
+         * \param pValue : Readout value
+         */
+	virtual void ReadChipAllLocalReg  ( ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue) {}
+
+        /*!
          * \brief Mask all channels of the chip
          * \param pChip: pointer to Chip object
          * \param mask: if true mask, if false unmask

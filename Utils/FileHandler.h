@@ -26,22 +26,6 @@ class FileHandler
 
 {
   public:
-    FileHeader fHeader;
-    bool fHeaderPresent;
-    char fOption;/*!< option for read or write */
-
-  private:
-
-    std::string fBinaryFileName;
-    std::thread fThread;/*!< a thread for the multitrading */
-    mutable std::mutex fMutex;/*!< Mutex for the queue */
-    mutable std::mutex fMemberMutex;/*!< Mutex for members */
-    std::queue<std::vector<uint32_t>> fQueue; /*!<Queue to populate from set() and depopulate in writeFile() */
-    std::atomic<bool> fFileIsOpened ;/*!< to check if the file is opened */
-    std::condition_variable fSet;/*!< condition variable to notify writer thread of new data*/
-
-
-  public:
 
     std::fstream fBinaryFile;/*!< the stream of the binary file */
     //std::vector<uint32_t> fData;[>!< the vector of data <]
@@ -153,6 +137,20 @@ class FileHandler
 
   private:
     bool dequeue (std::vector<uint32_t>& pData);
+
+ public:
+    FileHeader fHeader;
+    bool fHeaderPresent;
+    char fOption;/*!< option for read or write */
+
+  private:
+    std::string fBinaryFileName;
+    std::thread fThread;/*!< a thread for the multitrading */
+    mutable std::mutex fMutex;/*!< Mutex for the queue */
+    mutable std::mutex fMemberMutex;/*!< Mutex for members */
+    std::queue<std::vector<uint32_t>> fQueue; /*!<Queue to populate from set() and depopulate in writeFile() */
+    std::atomic<bool> fFileIsOpened ;/*!< to check if the file is opened */
+    std::condition_variable fSet;/*!< condition variable to notify writer thread of new data*/
 };
 
 #endif

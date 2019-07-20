@@ -25,21 +25,21 @@ namespace Ph2_HwInterface {
     {
     }
 
-    Event::Event ( const Event& pEvent ) :
-        fBunch ( pEvent.fBunch ),
-        fOrbit ( pEvent.fOrbit ),
-        fLumi ( pEvent.fLumi ),
-        fEventCount ( pEvent.fEventCount ),
-        fEventCountCBC ( pEvent.fEventCountCBC ),
-        fTDC ( pEvent.fTDC ),
-        fBeId (pEvent.fBeId),
-        fBeFWType (pEvent.fBeFWType),
-        fCBCDataType (pEvent.fCBCDataType),
-        fNCbc (pEvent.fNCbc),
-        fEventDataSize (pEvent.fEventDataSize),
-        fBeStatus (pEvent.fBeStatus),
-        fEventSize (pEvent.fEventSize),
-        fEventDataMap ( pEvent.fEventDataMap )
+    Event::Event ( const Event& pEvent ) 
+        : fEventDataMap ( pEvent.fEventDataMap )
+        , fEventCount ( pEvent.fEventCount )
+        , fTDC ( pEvent.fTDC )
+        , fBunch ( pEvent.fBunch )
+        , fOrbit ( pEvent.fOrbit )
+        , fLumi ( pEvent.fLumi )
+        , fEventCountCBC ( pEvent.fEventCountCBC )
+        , fEventSize (pEvent.fEventSize)
+        , fBeId (pEvent.fBeId)
+        , fBeFWType (pEvent.fBeFWType)
+        , fCBCDataType (pEvent.fCBCDataType)
+        , fNCbc (pEvent.fNCbc)
+        , fEventDataSize (pEvent.fEventDataSize)
+        , fBeStatus (pEvent.fBeStatus)
     {
 
     }

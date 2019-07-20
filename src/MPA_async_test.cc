@@ -74,9 +74,9 @@ int main( int argc, char* argv[] )
 	fMPAInterface->Set_calibration(mpa1,50);
 
 	uint32_t npixtot = 0;
-	for(int row=rows.first; row<rows.second; row++)
+	for(uint16_t row=rows.first; row<rows.second; row++)
 		{
-		for(int col=cols.first; col<cols.second; col++)
+		for(uint16_t col=cols.first; col<cols.second; col++)
 			{
 				fMPAInterface->Enable_pix_counter(mpa1,row, col);
 				title = std::to_string(row)+","+std::to_string(col);
@@ -92,7 +92,7 @@ int main( int argc, char* argv[] )
 	uint32_t totalevents = 0;
 	uint32_t totaleventsprev = 0;
 	uint32_t nrep = 0;
-	for(int ith=th.first;ith<th.second;ith++)
+	for(uint16_t ith=th.first;ith<th.second;ith++)
 		{
 		std::cout<<"ITH= "<<ith<<std::endl;
 		fMPAInterface->Set_threshold(mpa1,ith);

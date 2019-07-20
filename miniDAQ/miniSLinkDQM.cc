@@ -25,7 +25,7 @@ INITIALIZE_EASYLOGGINGPP
 
 void dumpEvents (const std::vector<DQMEvent*>& elist, size_t evt_limit, std::ostream& os)
 {
-    for ( int i = 0; i < std::min (elist.size(), evt_limit); ++i)
+    for ( size_t i = 0; i < std::min (elist.size(), evt_limit); ++i)
     {
         os << "Event index: " << i + 1 << std::endl;
         const DQMEvent* ev = elist.at (i);
@@ -65,7 +65,7 @@ void readSLinkFromFile (const std::string& filename, std::vector<DQMEvent*>& evL
             uint64_t word;
             //fh.read ( (char*) &word, sizeof (uint64_t) );
             std::memcpy (&word, buffer, sizeof (uint64_t) );
-            uint64_t correctedWord = (word & 0xFFFFFFFF) << 32 | (word >> 32) & 0xFFFFFFFF;
+            uint64_t correctedWord = ((word & 0xFFFFFFFF) << 32) | ((word >> 32) & 0xFFFFFFFF);
             cData.push_back (correctedWord);
 
             // Now find the last word of the event
