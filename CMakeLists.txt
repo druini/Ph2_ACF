@@ -165,6 +165,8 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
     MESSAGE(STATUS " ") 
 
+    MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
+
     add_subdirectory(Utils)
     add_subdirectory(HWDescription)
     add_subdirectory(HWInterface)

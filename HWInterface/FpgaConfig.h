@@ -29,12 +29,12 @@ namespace Ph2_HwInterface {
          * \param strConfig FPGA configuration number or name
          * \param pstrFile absolute path to the configuration file
          */
-        virtual void runDownload (const std::string& strConfig, const char* pstrFile) throw (std::string) {};
+        virtual void runDownload (const std::string& strConfig, const char* pstrFile) {};
         /*! \brief Launch the firmware upload in a separate thread
          * \param strConfig FPGA configuration number or name
          * \param pstrFile absolute path to the configuration file
          */
-        virtual void runUpload (const std::string& strConfig, const char* pstrFile) throw (std::string) = 0;
+        virtual void runUpload (const std::string& strConfig, const char* pstrFile) = 0;
         /*! \brief Tells if a configuration is currently been uploaded
          * \return Configuration number or 0 if no upload is been processed
          */

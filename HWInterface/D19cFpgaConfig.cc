@@ -38,7 +38,7 @@ namespace Ph2_HwInterface {
     {
     }
 
-    void D19cFpgaConfig::runUpload (const std::string& strImage, const char* szFile) throw (std::string)
+    void D19cFpgaConfig::runUpload (const std::string& strImage, const char* szFile) 
     {
         numUploadingFpga = 1;
         progressValue = 0;
@@ -68,7 +68,7 @@ namespace Ph2_HwInterface {
         lNode.RebootFPGA (strImage, SECURE_MODE_PASSWORD);
     }
 
-    void D19cFpgaConfig::runDownload (const std::string& strImage, const char* szFile) throw (std::string)
+    void D19cFpgaConfig::runDownload (const std::string& strImage, const char* szFile) 
     {
         vector<string> lstNames = lNode.ListFilesOnSD();
 
