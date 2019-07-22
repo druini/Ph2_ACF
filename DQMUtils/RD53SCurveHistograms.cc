@@ -40,7 +40,6 @@ void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int
 
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
-	      // if (this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
 	      hOcc2D->Fill(VCAL_HIGH, cChip->getChannel<Occupancy>(row, col).fOccupancy);
 	}
 }

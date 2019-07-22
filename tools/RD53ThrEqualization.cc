@@ -166,16 +166,16 @@ void ThrEqualization::initHisto ()
 void ThrEqualization::fillHisto ()
 {
   size_t index = 0;
-  for (const auto cBoard : theOccContainer)
+  for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
 	      {
-		if (this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
+		if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
 		  {
-		    theOccupancy[index]->Fill(cChip->getChannel<Occupancy>(row,col).fOccupancy);
+		    theOccupancy[index]->Fill(theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
 		    theTDAC[index]->Fill(theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
 		  }
 	      }
