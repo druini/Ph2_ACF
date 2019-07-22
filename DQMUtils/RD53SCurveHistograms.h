@@ -48,6 +48,11 @@ class RD53SCurveHistograms : public DQMHistogramBase
   int nSteps;
   int startValue;
   int stopValue;
+
+  size_t ROWstart;
+  size_t ROWstop;
+  size_t COLstart;
+  size_t COLstop;
 };
 
 #endif

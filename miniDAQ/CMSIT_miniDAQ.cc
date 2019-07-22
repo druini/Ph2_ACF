@@ -28,14 +28,14 @@
 INITIALIZE_EASYLOGGINGPP
 
 
-auto FindValue (const SystemController& sc, const char* name)
+auto findValue (std::map<std::string, uint32_t>& pSettingsMap, const char* name)
 {
-  auto setting = sc.fSettingsMap.find(name);
-  return ((setting != std::end(sc.fSettingsMap)) ? setting->second : 0);
+  auto setting = pSettingsMap.find(name);
+  return ((setting != std::end(pSettingsMap)) ? setting->second : 0);
 }
 
 
-void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, size_t type, bool hitOr)
+void configureFSM (SystemController& sc, size_t NTRIGxL1A, size_t type, bool hitOr)
 // #########################
 // # type == 0 --> Digital #
 // # type == 1 --> Analog  #
@@ -129,7 +129,7 @@ void ConfigureFSM (SystemController& sc, size_t NTRIGxL1A, size_t type, bool hit
 }
 
 
-void ConfigureExtClkTrig (SystemController& sc)
+void configureExtClkTrig (SystemController& sc)
 {
   const uint8_t chnOutEnable = 0x12;
 
@@ -248,36 +248,36 @@ int main (int argc, char** argv)
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents            = FindValue(cSystemController,"nEvents");
-  size_t nEvtsBurst         = FindValue(cSystemController,"nEvtsBurst");
-  size_t NTRIGxL1A          = FindValue(cSystemController,"NTRIGxL1A");
-  size_t INJtype            = FindValue(cSystemController,"INJtype");
+  size_t nEvents           = findValue(cSystemController.fSettingsMap,"nEvents");
+  size_t nEvtsBurst        = findValue(cSystemController.fSettingsMap,"nEvtsBurst");
+  size_t NTRIGxL1A         = findValue(cSystemController.fSettingsMap,"NTRIGxL1A");
+  size_t INJtype           = findValue(cSystemController.fSettingsMap,"INJtype");
 
-  size_t ROWstart           = FindValue(cSystemController,"ROWstart");
-  size_t ROWstop            = FindValue(cSystemController,"ROWstop");
-  size_t COLstart           = FindValue(cSystemController,"COLstart");
-  size_t COLstop            = FindValue(cSystemController,"COLstop");
-  size_t nPixelInj          = FindValue(cSystemController,"nPixelInj");
+  size_t ROWstart          = findValue(cSystemController.fSettingsMap,"ROWstart");
+  size_t ROWstop           = findValue(cSystemController.fSettingsMap,"ROWstop");
+  size_t COLstart          = findValue(cSystemController.fSettingsMap,"COLstart");
+  size_t COLstop           = findValue(cSystemController.fSettingsMap,"COLstop");
+  size_t nPixelInj         = findValue(cSystemController.fSettingsMap,"nPixelInj");
 
-  size_t LatencyStart       = FindValue(cSystemController,"LatencyStart");
-  size_t LatencyStop        = FindValue(cSystemController,"LatencyStop");
+  size_t LatencyStart      = findValue(cSystemController.fSettingsMap,"LatencyStart");
+  size_t LatencyStop       = findValue(cSystemController.fSettingsMap,"LatencyStop");
 
-  size_t VCALstart          = FindValue(cSystemController,"VCALstart");
-  size_t VCALstop           = FindValue(cSystemController,"VCALstop");
-  size_t VCALnsteps         = FindValue(cSystemController,"VCALnsteps");
-  size_t VCALoffset         = FindValue(cSystemController,"VCALoffset");
+  size_t VCALstart         = findValue(cSystemController.fSettingsMap,"VCALstart");
+  size_t VCALstop          = findValue(cSystemController.fSettingsMap,"VCALstop");
+  size_t VCALnsteps        = findValue(cSystemController.fSettingsMap,"VCALnsteps");
+  size_t VCALoffset        = findValue(cSystemController.fSettingsMap,"VCALoffset");
 
-  size_t ChipTargetCharge   = FindValue(cSystemController,"ChipTargetCharge");
-  size_t KrumCurrStart      = FindValue(cSystemController,"KrumCurrStart");
-  size_t KrumCurrStop       = FindValue(cSystemController,"KrumCurrStop");
+  size_t ChipTargetCharge  = findValue(cSystemController.fSettingsMap,"ChipTargetCharge");
+  size_t KrumCurrStart     = findValue(cSystemController.fSettingsMap,"KrumCurrStart");
+  size_t KrumCurrStop      = findValue(cSystemController.fSettingsMap,"KrumCurrStop");
 
-  size_t PixelThresholdOcc  = FindValue(cSystemController,"PixelThresholdOcc");
-  size_t ChipTargetOcc      = FindValue(cSystemController,"ChipTargetOcc");
-  size_t ThrStart           = FindValue(cSystemController,"ThrStart");
-  size_t ThrStop            = FindValue(cSystemController,"ThrStop");
+  size_t PixelThresholdOcc = findValue(cSystemController.fSettingsMap,"PixelThresholdOcc");
+  size_t ChipTargetOcc     = findValue(cSystemController.fSettingsMap,"ChipTargetOcc");
+  size_t ThrStart          = findValue(cSystemController.fSettingsMap,"ThrStart");
+  size_t ThrStop           = findValue(cSystemController.fSettingsMap,"ThrStop");
 
-  size_t display            = FindValue(cSystemController,"DisplayHisto");
-  size_t chipRegDefault     = FindValue(cSystemController,"ChipRegDefaultFile");
+  size_t display           = findValue(cSystemController.fSettingsMap,"DisplayHisto");
+  size_t chipRegDefault    = findValue(cSystemController.fSettingsMap,"ChipRegDefaultFile");
 
 
   // ######################################
@@ -289,13 +289,13 @@ int main (int argc, char** argv)
   // #####################
   // # Preparing the FSM #
   // #####################
-  ConfigureFSM(cSystemController, NTRIGxL1A, INJtype, hitOr);
+  configureFSM(cSystemController, NTRIGxL1A, INJtype, hitOr);
 
 
   // ######################
   // # Preparing the DIO5 #
   // ######################
-  if (extClkTrg == true) ConfigureExtClkTrig(cSystemController);
+  if (extClkTrg == true) configureExtClkTrig(cSystemController);
 
 
   std::cout << std::endl;

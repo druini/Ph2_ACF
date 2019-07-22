@@ -133,5 +133,11 @@ class DQMHistogramBase
 		}
 	    }
     }
+
+  auto findValue (std::map<std::string, uint32_t>& pSettingsMap, const char* name)
+  {
+    auto setting = pSettingsMap.find(name);
+    return ((setting != std::end(pSettingsMap)) ? setting->second : 0);
+  }
 };
 #endif
