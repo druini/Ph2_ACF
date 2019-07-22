@@ -15,9 +15,12 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <cxxabi.h>
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/Container.h"
 #include "../Utils/EmptyContainer.h"
+#include "../Utils/easylogging++.h"
+
 
 class ChannelDataContainerBase;
 template <typename T>
@@ -30,9 +33,8 @@ class SummaryBase
 public:
 	SummaryBase() {;}
 	virtual ~SummaryBase() {;}
-	virtual void makeSummary(const ChipContainer* theChannelList, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) = 0;
-	virtual void makeSummary(const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) = 0;
-
+	virtual void makeSummaryOfChannels(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) = 0;
+	virtual void makeSummaryOfSummary (const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) = 0;
 };
 
 class SummaryContainerBase 
@@ -53,6 +55,74 @@ public:
 	{
 		std::vector<T*>::emplace_back(theSummary);
 	}
+};
+
+template <class S, class C>
+class Summary;
+
+template<class S, class C, bool hasAverageFunction = false>
+struct ChannelSummarizer{
+	void operator() (Summary<S,C> &theSummary, const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) 
+	{
+		int32_t status;
+		LOG(ERROR) << __PRETTY_FUNCTION__ << " You are probably trying to call normalizeAndAverageContainers, but " << abi::__cxa_demangle(typeid(S).name(),0,0,&status) <<
+			" does not have the method makeChannelAverage";
+	}
+};
+
+template<class S, class C, bool hasAverageFunction = false>
+struct SummarySummarizer{
+	void operator() (Summary<S,C> &theSummary, const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) 
+	{
+		int32_t status;
+		LOG(ERROR) << __PRETTY_FUNCTION__ << " You are probably trying to call normalizeAndAverageContainers, but " << abi::__cxa_demangle(typeid(S).name(),0,0,&status) <<
+			" does not have the method makeSummaryAverage";
+	}
+};
+
+
+// SFINAE makeChannelAverage
+template <typename T, typename S>
+class has_makeChannelAverage
+{
+    typedef char one;
+    struct two { char x[2]; };
+
+    template <typename C, typename D> static one test( decltype(&C::template makeChannelAverage<D>) ) ;
+    template <typename C, typename D> static two test(...);    
+
+public:
+    enum { value = sizeof(test<T,S>(0)) == sizeof(char) };
+};
+
+
+// SFINAE makeSummaryAverage
+template <typename T>
+class has_makeSummaryAverage
+{
+    typedef char one;
+    struct two { char x[2]; };
+
+    template <typename C> static one test( decltype(&C::makeSummaryAverage) ) ;
+    template <typename C> static two test(...);    
+
+public:
+    enum { value = sizeof(test<T>(0)) == sizeof(char) };
+};
+
+
+// SFINAE normalize
+template <typename T>
+class has_normalize
+{
+    typedef char one;
+    struct two { char x[2]; };
+
+    template <typename C> static one test( decltype(&C::normalize) ) ;
+    template <typename C> static two test(...);    
+
+public:
+    enum { value = sizeof(test<T>(0)) == sizeof(char) };
 };
 
 
@@ -86,11 +156,32 @@ public:
 
 	~Summary() {;}
 
-	void makeSummary(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) override
+	void makeSummaryOfChannels(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) override 
 	{
-		theSummary_.template makeAverage<C>(theChipContainer, chipOriginalMask, cTestChannelGroup, numberOfEvents);
+		ChannelSummarizer<S,C,has_makeChannelAverage<S,C>::value> theChannelSummarizer;
+		theChannelSummarizer(*this,theChipContainer, chipOriginalMask, cTestChannelGroup, numberOfEvents);
 	}
-	void makeSummary(const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) override
+	
+	void makeSummaryOfSummary(const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) override
+	{
+		SummarySummarizer<S,C,has_makeSummaryAverage<S>::value> theSummarySummarizer;
+		theSummarySummarizer(*this, theSummaryList, theNumberOfEnabledChannelsList, numberOfEvents);
+	}
+
+	S theSummary_;
+};
+
+template<class S, class C>
+struct ChannelSummarizer<S,C,true>{
+	void operator() (Summary<S,C> &theSummary, const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) 
+	{
+		theSummary.theSummary_.template makeChannelAverage<C>(theChipContainer, chipOriginalMask, cTestChannelGroup, numberOfEvents);
+	}
+};
+
+template<class S, class C>
+struct SummarySummarizer<S,C,true>{
+	void operator() (Summary<S,C> &theSummary, const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) 
 	{
 		const SummaryContainer<SummaryBase>* tmpSummaryContainer = static_cast<const SummaryContainer<SummaryBase>*>(theSummaryList);
 		std::vector<S> tmpSummaryVector;
@@ -98,12 +189,11 @@ public:
 		{
 			tmpSummaryVector.emplace_back(std::move(static_cast<Summary<S,C>*>(summary)->theSummary_));
 		}
-		theSummary_.makeAverage(&tmpSummaryVector,theNumberOfEnabledChannelsList, numberOfEvents);
+		theSummary.theSummary_.makeSummaryAverage(&tmpSummaryVector,theNumberOfEnabledChannelsList, numberOfEvents);
 		delete theSummaryList;
 	}
-
-	S theSummary_;
 };
+
 
 class BaseDataContainer
 {
@@ -122,7 +212,7 @@ public:
 	}
 
 	// virtual void initialize() = 0;
-	virtual uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) = 0;
+	virtual uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) = 0;
 	
 	template<typename T>
 	bool isSummaryContainerType()
@@ -175,7 +265,7 @@ public:
 		return SummaryContainerList;
 	}
 
-	uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents)
+	uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) override
 	{
 
 		int index = 0;
@@ -189,7 +279,7 @@ public:
 			numberOfEnabledChannels_+=numberOfContainerEnabledChannels;
 
 		}
-		if(summary_ != nullptr) summary_->makeSummary(getAllObjectSummaryContainers(),theNumberOfEnabledChannelsList,numberOfEvents);//sum of chip container needed!!!
+		if(summary_ != nullptr) summary_->makeSummaryOfSummary(getAllObjectSummaryContainers(),theNumberOfEnabledChannelsList,numberOfEvents);//sum of chip container needed!!!
 		return numberOfEnabledChannels_;
 	}
 
@@ -205,13 +295,17 @@ public:
 
 };
 
-// class ChannelDataContainerBase
-// {
-// public:
-// 	ChannelDataContainerBase() {;}
-// 	virtual ~ChannelDataContainerBase(){;}
-// 	virtual void normalize(uint16_t numberOfEvents) = 0;
-// };
+template <typename T>
+class ChannelDataContainer;
+
+template<class T, bool hasAverageFunction = false>
+struct ChannelNormalizer{
+	void operator() (ChannelDataContainer<T> &theChannelDataContainer, const uint32_t numberOfEvents) 
+	{
+		int32_t status;
+		LOG(ERROR) << __PRETTY_FUNCTION__ << " normalize function is not defined for " << abi::__cxa_demangle(typeid(T).name(),0,0,&status) ;
+	}
+};
 
 template <typename T>
 class ChannelDataContainer: public ChannelContainer<T> //, public ChannelContainerBase
@@ -221,9 +315,20 @@ public:
 	ChannelDataContainer(int size, T initialValue) : ChannelContainer<T>(size, initialValue) {}
 	ChannelDataContainer() : ChannelContainer<T>() {}
 	
-	void normalize(uint16_t numberOfEvents) override
+    void normalize(uint32_t numberOfEvents) override
 	{
-		for(auto& channel : *this) channel.normalize(numberOfEvents);
+		ChannelNormalizer<T,has_normalize<T>::value> theChannelNormalizer;
+		theChannelNormalizer(*this, numberOfEvents);
+
+	}
+};
+
+
+template<class T>
+struct ChannelNormalizer<T,true>{
+	void operator() (ChannelDataContainer<T> &theChannelDataContainer, const uint32_t numberOfEvents) 
+	{
+		for(auto& channel : theChannelDataContainer) channel.normalize(numberOfEvents);
 	}
 };
 
@@ -254,10 +359,10 @@ public:
 		if(!std::is_same<V, EmptyContainer>::value) container_ = new ChannelDataContainer<V>(nOfRows_*nOfCols_, initialValue);
 	}
 	
-	uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents)
+	uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents)
 	{
 		if(container_ != nullptr) container_->normalize(numberOfEvents);
-		if(summary_ != nullptr)   summary_->makeSummary(this,static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask(), cTestChannelGroup, numberOfEvents);
+		if(summary_ != nullptr)   summary_->makeSummaryOfChannels(this,static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask(), cTestChannelGroup, numberOfEvents);
 		return cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask());
 	}
 

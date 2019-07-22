@@ -63,9 +63,8 @@ public:
         std::cout << "TH2FContainer " << fTheHistogram->GetName() << std::endl;
     }
     template<typename T>
-    void makeAverage(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) {;}
-    template<typename  T>
-    void makeAverage(const std::vector<T>* theTH2FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) {;}
+    void makeChannelAverage(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) {;}
+    void makeSummaryAverage(const std::vector<TH2FContainer>* theTH2FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) {;}
     void normalize(const uint16_t numberOfEvents) {;}
 
     void setNameTitle(std::string histogramName, std::string histogramTitle) override 
