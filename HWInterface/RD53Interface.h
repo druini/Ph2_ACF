@@ -12,10 +12,7 @@
 
 #include "BeBoardFWInterface.h"
 #include "ReadoutChipInterface.h"
-#include "../Utils/ConsoleColor.h"
 #include "../Utils/RegisterValue.h"
-
-#include <vector>
 
 
 // #############

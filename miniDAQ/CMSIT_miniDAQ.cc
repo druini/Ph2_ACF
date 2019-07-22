@@ -248,35 +248,36 @@ int main (int argc, char** argv)
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents         = FindValue(cSystemController,"nEvents");
-  size_t nEvtsBurst      = FindValue(cSystemController,"nEvtsBurst");
-  size_t NTRIGxL1A       = FindValue(cSystemController,"NTRIGxL1A");
-  size_t INJtype         = FindValue(cSystemController,"INJtype");
+  size_t nEvents            = FindValue(cSystemController,"nEvents");
+  size_t nEvtsBurst         = FindValue(cSystemController,"nEvtsBurst");
+  size_t NTRIGxL1A          = FindValue(cSystemController,"NTRIGxL1A");
+  size_t INJtype            = FindValue(cSystemController,"INJtype");
 
-  size_t ROWstart        = FindValue(cSystemController,"ROWstart");
-  size_t ROWstop         = FindValue(cSystemController,"ROWstop");
-  size_t COLstart        = FindValue(cSystemController,"COLstart");
-  size_t COLstop         = FindValue(cSystemController,"COLstop");
-  size_t nPixelInj       = FindValue(cSystemController,"nPixelInj");
+  size_t ROWstart           = FindValue(cSystemController,"ROWstart");
+  size_t ROWstop            = FindValue(cSystemController,"ROWstop");
+  size_t COLstart           = FindValue(cSystemController,"COLstart");
+  size_t COLstop            = FindValue(cSystemController,"COLstop");
+  size_t nPixelInj          = FindValue(cSystemController,"nPixelInj");
 
-  size_t LatencyStart    = FindValue(cSystemController,"LatencyStart");
-  size_t LatencyStop     = FindValue(cSystemController,"LatencyStop");
+  size_t LatencyStart       = FindValue(cSystemController,"LatencyStart");
+  size_t LatencyStop        = FindValue(cSystemController,"LatencyStop");
 
-  size_t VCALstart       = FindValue(cSystemController,"VCALstart");
-  size_t VCALstop        = FindValue(cSystemController,"VCALstop");
-  size_t VCALnsteps      = FindValue(cSystemController,"VCALnsteps");
-  size_t VCALoffset      = FindValue(cSystemController,"VCALoffset");
+  size_t VCALstart          = FindValue(cSystemController,"VCALstart");
+  size_t VCALstop           = FindValue(cSystemController,"VCALstop");
+  size_t VCALnsteps         = FindValue(cSystemController,"VCALnsteps");
+  size_t VCALoffset         = FindValue(cSystemController,"VCALoffset");
 
-  size_t targetCharge    = FindValue(cSystemController,"targetCharge");
-  size_t KrumCurrStart   = FindValue(cSystemController,"KrumCurrStart");
-  size_t KrumCurrStop    = FindValue(cSystemController,"KrumCurrStop");
+  size_t ChipTargetCharge   = FindValue(cSystemController,"ChipTargetCharge");
+  size_t KrumCurrStart      = FindValue(cSystemController,"KrumCurrStart");
+  size_t KrumCurrStop       = FindValue(cSystemController,"KrumCurrStop");
 
-  size_t targetOccupancy = FindValue(cSystemController,"targetOccupancy");
-  size_t ThrStart        = FindValue(cSystemController,"ThrStart");
-  size_t ThrStop         = FindValue(cSystemController,"ThrStop");
+  size_t PixelThresholdOcc  = FindValue(cSystemController,"PixelThresholdOcc");
+  size_t ChipTargetOcc      = FindValue(cSystemController,"ChipTargetOcc");
+  size_t ThrStart           = FindValue(cSystemController,"ThrStart");
+  size_t ThrStop            = FindValue(cSystemController,"ThrStop");
 
-  size_t display         = FindValue(cSystemController,"DisplayHisto");
-  size_t chipRegDefault  = FindValue(cSystemController,"ChipRegDefaultFile");
+  size_t display            = FindValue(cSystemController,"DisplayHisto");
+  size_t chipRegDefault     = FindValue(cSystemController,"ChipRegDefaultFile");
 
 
   // ######################################
@@ -335,7 +336,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + runNumber + "_NoiseScan"); 
       std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
-      PixelAlive pa(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false, targetOccupancy);
+      PixelAlive pa(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, (ROWstop-ROWstart+1)*(COLstop-COLstart+1), nEvents, nEvtsBurst, false, PixelThresholdOcc);
       pa.Inherit(&cSystemController);
       pa.run();
       pa.analyze();
@@ -398,7 +399,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + runNumber + "_GainOptimization.root");
       std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
-      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, RD53chargeConverter::Charge2VCal(targetCharge), KrumCurrStart, KrumCurrStop);
+      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, RD53chargeConverter::Charge2VCal(ChipTargetCharge), KrumCurrStart, KrumCurrStop);
       go.Inherit(&cSystemController);
       go.run();
       go.draw(display,true);
@@ -412,7 +413,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + runNumber + "_ThrMinimization.root");
       std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
-      ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, targetOccupancy, ThrStart, ThrStop);
+      ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, nEvtsBurst, ChipTargetOcc, ThrStart, ThrStop);
       tm.Inherit(&cSystemController);
       tm.run();
       tm.analyze();

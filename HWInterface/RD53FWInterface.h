@@ -11,12 +11,10 @@
 #define RD53FWInterface_H
 
 #include "BeBoardFWInterface.h"
-#include "../HWDescription/Module.h"
 #include "../Utils/easylogging++.h"
 
 #include <uhal/uhal.hpp>
 
-#include <stdexcept>
 #include <sstream>
 
 

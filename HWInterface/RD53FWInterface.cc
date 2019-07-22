@@ -51,7 +51,7 @@ namespace Ph2_HwInterface
     this->TurnOnFMC();
     this->ResetBoard();
 
-    LOG (INFO) << BOLDMAGENTA << "Powercycle frontend chip(s) and run again" << RESET;
+    LOG (INFO) << BOLDMAGENTA << "Powercycle frontend chip(s)" << RESET;
   }
 
   void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)

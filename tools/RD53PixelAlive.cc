@@ -89,10 +89,12 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
 
 	  if (thresholdOccupancy != 0)
 	    {
+	      static_cast<RD53*>(cChip)->copyMaskFromDefault();
+
 	      for (auto row = 0; row < RD53::nRows; row++)
-		for (auto col = 0; col < RD53::nCols; col++)
-		  if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
-		    static_cast<RD53*>(cChip)->enablePixel(row,col,(theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy < thresholdOccupancy));
+	      	for (auto col = 0; col < RD53::nCols; col++)
+	      	  if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+		    static_cast<RD53*>(cChip)->enablePixel(row,col,(theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy * nEvents < thresholdOccupancy));
 
 	      static_cast<RD53*>(cChip)->saveRegMap(fileReg);
 	    }
