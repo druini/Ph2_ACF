@@ -100,8 +100,8 @@ int main ( int argc, char* argv[] )
 	std::string binDir  = baseDir + "bin/";
 
 
-	int networkServerPidStatus;
-	int networkClientPidStatus;
+	int networkServerPidStatus = 0;
+	int networkClientPidStatus = 0;
 
 	std::cout << __PRETTY_FUNCTION__ << "Forking network_server" << std::endl;
 	networkServerPid   = fork();
@@ -119,7 +119,7 @@ int main ( int argc, char* argv[] )
 		// filename associated with file being executed
 		// the array pointer must be terminated by NULL
 		// pointer
-		char * argv[] = {"network_server", NULL};
+		char * argv[] = {(char*)"network_server", NULL};
 
 		// the execv() only return if error occured.
 		// The return value is -1
@@ -145,7 +145,7 @@ int main ( int argc, char* argv[] )
 		// filename associated with file being executed
 		// the array pointer must be terminated by NULL
 		// pointer
-		char * argv[] = {"network_client", NULL};
+		char * argv[] = {(char*)"network_client", NULL};
 
 		// the execv() only return if error occured.
 		// The return value is -1

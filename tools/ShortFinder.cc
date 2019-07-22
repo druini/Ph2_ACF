@@ -50,26 +50,7 @@ ShortFinder::~ShortFinder() {}
 //If no directory is found use the default files for the different operational modes found in Ph2_ACF/settings
 void ShortFinder::ReconfigureRegisters()
 {
-    bool cCheck;
-    bool cHoleMode;
-    auto cSetting = fSettingsMap.find ( "HoleMode" );
-
-    if ( cSetting != std::end ( fSettingsMap ) )
-    {
-        cCheck = true;
-        cHoleMode = ( cSetting->second == 1 ) ? true : false;
-    }
-
-    std::string cMode;
-
-    if ( cCheck )
-    {
-        if ( cHoleMode ) cMode = "hole";
-        else cMode = "electron";
-    }
-
-
-
+    
     for (auto& cBoard : fBoardVector)
     {
         fBeBoardInterface->ChipReset ( cBoard );
@@ -81,7 +62,7 @@ void ShortFinder::ReconfigureRegisters()
                 std::string pRegFile ;
 
                 if ( fDirectoryName.empty() )
-                    pRegFile = "settings/Cbc_default_" +  cMode + ".txt";
+                    pRegFile = "settings/Cbc_default_electron.txt";
                 else
                 {
                     char buffer[120];
@@ -220,7 +201,7 @@ void ShortFinder::InitializeHists()
     fHistShortsTop->SetFillColor ( 3 );
     fHistShortsTop->SetFillStyle ( 3005 );
 
-    for ( int i = 0 ; i < ( cNBinsX ) ; i++ ) fHistShortsTop->Fill (i, 0);
+    for ( uint32_t i = 0 ; i < ( cNBinsX ) ; i++ ) fHistShortsTop->Fill (i, 0);
 
     // fill histogram randomly to check if the ploting/saving works
     // TRandom *eventGenerator = new TRandom();
@@ -243,7 +224,7 @@ void ShortFinder::InitializeHists()
     fHistShortsBottom->SetFillColor ( 4 );
     fHistShortsBottom->SetFillStyle ( 3005 );
 
-    for ( int i = 0 ; i < ( cNBinsX) ; i++ ) fHistShortsBottom->Fill (i, 0);
+    for ( uint32_t i = 0 ; i < ( cNBinsX) ; i++ ) fHistShortsBottom->Fill (i, 0);
 
     // fill histogram randomly to check if the ploting/saving works
     // for( int i = 0 ; i < 100 ; i++)

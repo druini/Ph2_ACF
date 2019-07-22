@@ -366,7 +366,7 @@ Stubs MPAInterface::Format_stubs(std::vector<std::vector<uint8_t>> rawstubs)
     for(int i=0; i<39; i++)
     {
 
-        if ((rawstubs[0][i] & 0b10000000) == 128)
+        if ((rawstubs[0][i] & 0x80) == 128)
         {
             j = i+1;
             formstubs.pos.push_back(std::vector<uint8_t>(5,0));
@@ -374,22 +374,22 @@ Stubs MPAInterface::Format_stubs(std::vector<std::vector<uint8_t>> rawstubs)
             formstubs.cur.push_back(std::vector<uint8_t>(5,0));
 
 
-            formstubs.nst.push_back(((rawstubs[1][i] & 0b10000000) >> 5) | ((rawstubs[2][i] & 0b10000000) >> 6) | ((rawstubs[3][i] & 0b10000000) >> 7));
-            formstubs.pos[cycle][0] = ((rawstubs[4][i] & 0b10000000) << 0) | ((rawstubs[0][i] & 0b01000000) << 0) | ((rawstubs[1][i] & 0b01000000) >> 1) | ((rawstubs[2][i] & 0b01000000) >> 2) | ((rawstubs[3][i] & 0b01000000) >> 3) | ((rawstubs[4][i] & 0b01000000) >> 4) | ((rawstubs[0][i] & 0b00100000) >> 4) | ((rawstubs[1][i] & 0b00100000) >> 5);
-            formstubs.pos[cycle][1] = ((rawstubs[4][i] & 0b00010000) << 3) | ((rawstubs[0][i] & 0b00001000) << 3) | ((rawstubs[1][i] & 0b00001000) << 2) | ((rawstubs[2][i] & 0b00001000) << 1) | ((rawstubs[3][i] & 0b00001000) << 0) | ((rawstubs[4][i] & 0b00001000) >> 1) | ((rawstubs[0][i] & 0b00000100) >> 1) | ((rawstubs[1][i] & 0b00000100) >> 2);
-            formstubs.pos[cycle][2] = ((rawstubs[4][i] & 0b00000010) << 6) | ((rawstubs[0][i] & 0b00000001) << 6) | ((rawstubs[1][i] & 0b00000001) << 5) | ((rawstubs[2][i] & 0b00000001) << 4) | ((rawstubs[3][i] & 0b00000001) << 3) | ((rawstubs[4][i] & 0b00000001) << 3) | ((rawstubs[1][j] & 0b10000000) >> 6) | ((rawstubs[2][j] & 0b10000000) >> 7);
-            formstubs.pos[cycle][3] = ((rawstubs[0][j] & 0b00100000) << 2) | ((rawstubs[1][j] & 0b00100000) << 1) | ((rawstubs[2][j] & 0b00100000) << 0) | ((rawstubs[3][j] & 0b00100000) >> 1) | ((rawstubs[4][j] & 0b00100000) >> 2) | ((rawstubs[0][j] & 0b00010000) >> 2) | ((rawstubs[1][j] & 0b00010000) >> 3) | ((rawstubs[2][j] & 0b00010000) >> 4);
-            formstubs.pos[cycle][4] = ((rawstubs[0][j] & 0b00000100) << 5) | ((rawstubs[1][j] & 0b00000100) << 4) | ((rawstubs[2][j] & 0b00000100) << 3) | ((rawstubs[3][j] & 0b00000100) << 2) | ((rawstubs[4][j] & 0b00000100) << 1) | ((rawstubs[0][j] & 0b00000010) << 1) | ((rawstubs[1][j] & 0b00000010) << 0) | ((rawstubs[2][j] & 0b00000010) >> 1);
-            formstubs.row[cycle][0] = ((rawstubs[0][i] & 0b00010000) >> 1) | ((rawstubs[1][i] & 0b00010000) >> 2) | ((rawstubs[2][i] & 0b00010000) >> 3) | ((rawstubs[3][i] & 0b00010000) >> 4);
-            formstubs.row[cycle][1] = ((rawstubs[0][i] & 0b00000010) << 2) | ((rawstubs[1][i] & 0b00000010) << 1) | ((rawstubs[2][i] & 0b00000010) << 0) | ((rawstubs[3][i] & 0b00000010) >> 1);
-            formstubs.row[cycle][2] = ((rawstubs[1][j] & 0b01000000) >> 3) | ((rawstubs[2][j] & 0b01000000) >> 4) | ((rawstubs[3][j] & 0b01000000) >> 5) | ((rawstubs[4][j] & 0b01000000) >> 6);
-            formstubs.row[cycle][3] = ((rawstubs[1][j] & 0b00001000) >> 0) | ((rawstubs[2][j] & 0b00001000) >> 1) | ((rawstubs[3][j] & 0b00001000) >> 2) | ((rawstubs[4][j] & 0b00001000) >> 3);
-            formstubs.row[cycle][4] = ((rawstubs[1][j] & 0b00000001) << 3) | ((rawstubs[2][j] & 0b00000001) << 2) | ((rawstubs[3][j] & 0b00000001) << 1) | ((rawstubs[4][j] & 0b00000001) << 0);
-            formstubs.cur[cycle][0] = ((rawstubs[2][i] & 0b00100000) >> 3) | ((rawstubs[3][i] & 0b00100000) >> 4) | ((rawstubs[4][i] & 0b00100000) >> 5);
-            formstubs.cur[cycle][1] = ((rawstubs[2][i] & 0b00000100) >> 0) | ((rawstubs[3][i] & 0b00000100) >> 1) | ((rawstubs[4][i] & 0b00000100) >> 2);
-            formstubs.cur[cycle][2] = ((rawstubs[3][j] & 0b10000000) >> 5) | ((rawstubs[4][j] & 0b10000000) >> 6) | ((rawstubs[0][j] & 0b01000000) >> 6);
-            formstubs.cur[cycle][3] = ((rawstubs[3][j] & 0b00010000) >> 2) | ((rawstubs[4][j] & 0b00010000) >> 3) | ((rawstubs[0][j] & 0b00001000) >> 3);
-            formstubs.cur[cycle][4] = ((rawstubs[3][j] & 0b00000010) << 1) | ((rawstubs[4][j] & 0b00000010) >> 0) | ((rawstubs[0][j] & 0b00000001) >> 0);
+            formstubs.nst.push_back(((rawstubs[1][i] & 0x80) >> 5) | ((rawstubs[2][i] & 0x80) >> 6) | ((rawstubs[3][i] & 0x80) >> 7));
+            formstubs.pos[cycle][0] = ((rawstubs[4][i] & 0x80) << 0) | ((rawstubs[0][i] & 0x40) << 0) | ((rawstubs[1][i] & 0x40) >> 1) | ((rawstubs[2][i] & 0x40) >> 2) | ((rawstubs[3][i] & 0x40) >> 3) | ((rawstubs[4][i] & 0x40) >> 4) | ((rawstubs[0][i] & 0x20) >> 4) | ((rawstubs[1][i] & 0x20) >> 5);
+            formstubs.pos[cycle][1] = ((rawstubs[4][i] & 0x10) << 3) | ((rawstubs[0][i] &  0x8) << 3) | ((rawstubs[1][i] &  0x8) << 2) | ((rawstubs[2][i] &  0x8) << 1) | ((rawstubs[3][i] &  0x8) << 0) | ((rawstubs[4][i] &  0x8) >> 1) | ((rawstubs[0][i] &  0x4) >> 1) | ((rawstubs[1][i] &  0x4) >> 2);
+            formstubs.pos[cycle][2] = ((rawstubs[4][i] &  0x2) << 6) | ((rawstubs[0][i] &  0x1) << 6) | ((rawstubs[1][i] &  0x1) << 5) | ((rawstubs[2][i] &  0x1) << 4) | ((rawstubs[3][i] &  0x1) << 3) | ((rawstubs[4][i] &  0x1) << 3) | ((rawstubs[1][j] & 0x80) >> 6) | ((rawstubs[2][j] & 0x80) >> 7);
+            formstubs.pos[cycle][3] = ((rawstubs[0][j] & 0x20) << 2) | ((rawstubs[1][j] & 0x20) << 1) | ((rawstubs[2][j] & 0x20) << 0) | ((rawstubs[3][j] & 0x20) >> 1) | ((rawstubs[4][j] & 0x20) >> 2) | ((rawstubs[0][j] & 0x10) >> 2) | ((rawstubs[1][j] & 0x10) >> 3) | ((rawstubs[2][j] & 0x10) >> 4);
+            formstubs.pos[cycle][4] = ((rawstubs[0][j] &  0x4) << 5) | ((rawstubs[1][j] &  0x4) << 4) | ((rawstubs[2][j] &  0x4) << 3) | ((rawstubs[3][j] &  0x4) << 2) | ((rawstubs[4][j] &  0x4) << 1) | ((rawstubs[0][j] &  0x2) << 1) | ((rawstubs[1][j] &  0x2) << 0) | ((rawstubs[2][j] &  0x2) >> 1);
+            formstubs.row[cycle][0] = ((rawstubs[0][i] & 0x10) >> 1) | ((rawstubs[1][i] & 0x10) >> 2) | ((rawstubs[2][i] & 0x10) >> 3) | ((rawstubs[3][i] & 0x10) >> 4);
+            formstubs.row[cycle][1] = ((rawstubs[0][i] &  0x2) << 2) | ((rawstubs[1][i] &  0x2) << 1) | ((rawstubs[2][i] &  0x2) << 0) | ((rawstubs[3][i] &  0x2) >> 1);
+            formstubs.row[cycle][2] = ((rawstubs[1][j] & 0x40) >> 3) | ((rawstubs[2][j] & 0x40) >> 4) | ((rawstubs[3][j] & 0x40) >> 5) | ((rawstubs[4][j] & 0x40) >> 6);
+            formstubs.row[cycle][3] = ((rawstubs[1][j] &  0x8) >> 0) | ((rawstubs[2][j] &  0x8) >> 1) | ((rawstubs[3][j] &  0x8) >> 2) | ((rawstubs[4][j] &  0x8) >> 3);
+            formstubs.row[cycle][4] = ((rawstubs[1][j] &  0x1) << 3) | ((rawstubs[2][j] &  0x1) << 2) | ((rawstubs[3][j] &  0x1) << 1) | ((rawstubs[4][j] &  0x1) << 0);
+            formstubs.cur[cycle][0] = ((rawstubs[2][i] & 0x20) >> 3) | ((rawstubs[3][i] & 0x20) >> 4) | ((rawstubs[4][i] & 0x20) >> 5);
+            formstubs.cur[cycle][1] = ((rawstubs[2][i] &  0x4) >> 0) | ((rawstubs[3][i] &  0x4) >> 1) | ((rawstubs[4][i] &  0x4) >> 2);
+            formstubs.cur[cycle][2] = ((rawstubs[3][j] & 0x80) >> 5) | ((rawstubs[4][j] & 0x80) >> 6) | ((rawstubs[0][j] & 0x40) >> 6);
+            formstubs.cur[cycle][3] = ((rawstubs[3][j] & 0x10) >> 2) | ((rawstubs[4][j] & 0x10) >> 3) | ((rawstubs[0][j] &  0x8) >> 3);
+            formstubs.cur[cycle][4] = ((rawstubs[3][j] &  0x2) << 1) | ((rawstubs[4][j] &  0x2) >> 0) | ((rawstubs[0][j] &  0x1) >> 0);
             //std::cout<<"RS1 "<<+formstubs.pos[cycle][0]<<std::endl;
             //std::cout<<"RS2 "<<+formstubs.pos[cycle][1]<<std::endl;
             //std::cout<<"RS3 "<<+formstubs.pos[cycle][2]<<std::endl;				std::cout<<"RS01"<<+rawstubs[1][i]<<std::endl;
@@ -403,7 +403,7 @@ Stubs MPAInterface::Format_stubs(std::vector<std::vector<uint8_t>> rawstubs)
 L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1,bool verbose)
 {
     bool found = false;
-    uint8_t header,error,L1_ID,strip_counter,pixel_counter;
+    uint8_t header,error(0),L1_ID,strip_counter,pixel_counter;
     L1data formL1data;
 
     std::vector<uint16_t> strip_data, pixel_data;
@@ -412,17 +412,17 @@ L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1,bool verbose)
 
     for (int i=1; i<200 ;i++)
     {
-        if ((rawl1[i] == 255)&(rawl1[i-1] == 255)&(~found))
+        if ((rawl1[i] == 255)&(rawl1[i-1] == 255)&(!found))
         {
-            header = rawl1[i-1] << 11 | rawl1[i-1] << 3 | ((rawl1[i+1] & 0b11100000) >> 5);
-            error = ((rawl1[i+1] & 0b00011000) >> 3);
-            L1_ID = ((rawl1[i+1] & 0b00000111) << 6) | ((rawl1[i+2] & 0b11111100) >> 2);
-            strip_counter = ((rawl1[i+2] & 0b00000001) << 4) | ((rawl1[i+3] & 0b11110000) >> 4);
-            pixel_counter = ((rawl1[i+3] & 0b00001111) << 1) | ((rawl1[i+4] & 0b10000000) >> 7);
+            header = rawl1[i-1] << 11 | rawl1[i-1] << 3 | ((rawl1[i+1] & 0xE0) >> 5);
+            error = ((rawl1[i+1] & 0x18) >> 3);
+            L1_ID = ((rawl1[i+1] &  0x7) << 6) | ((rawl1[i+2] & 0xFC) >> 2);
+            strip_counter = ((rawl1[i+2] &  0x1) << 4) | ((rawl1[i+3] & 0xF0) >> 4);
+            pixel_counter = ((rawl1[i+3] &  0xF) << 1) | ((rawl1[i+4] & 0x80) >> 7);
 
             uint8_t wordl=11,counter=0;
             bool curbit;
-            uint8_t bitmask = 0b10000000;
+            uint8_t bitmask = 0x80;
             for (int j=4; j<50 ;j++)
             {
                 for(int k=0; k<8 ;k++)
@@ -459,9 +459,9 @@ L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1,bool verbose)
 
         for (auto& sdata : strip_data)
         {
-            formL1data.pos_strip.push_back((sdata & 0b11111110000) >> 4);
-            formL1data.width_strip.push_back((sdata & 0b00000001110) >> 1);
-            formL1data.MIP.push_back((sdata & 0b00000000001));
+            formL1data.pos_strip.push_back((sdata & 0x7F0) >> 4);
+            formL1data.width_strip.push_back((sdata & 0xE) >> 1);
+            formL1data.MIP.push_back((sdata & 0x1));
 
             if (verbose)std::cout<< "\tPosition: "<<formL1data.pos_strip.back()<<"\n\tWidth: "<<formL1data.width_strip.back()<<"\n\tMIP: "<<formL1data.MIP.back()<<std::endl;
         }
@@ -469,9 +469,9 @@ L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1,bool verbose)
 
         for (auto& pdata : pixel_data)
         {
-            formL1data.pos_pixel.push_back((pdata & 0b11111110000000) >> 7);
-            formL1data.width_pixel.push_back((pdata & 0b00000001110000) >> 4);
-            formL1data.Z.push_back((pdata & 0b00000000001111) + 1);
+            formL1data.pos_pixel.push_back((pdata & 0x3F80) >> 7);
+            formL1data.width_pixel.push_back((pdata & 0x70) >> 4);
+            formL1data.Z.push_back((pdata & 0xF) + 1);
 
             if(verbose) std::cout<< "\tPosition: " << formL1data.pos_pixel.back()<<"\n\tWidth: "<<formL1data.width_pixel.back()<<"\n\tRow Number: "<<formL1data.Z.back()<<std::endl;
         }
@@ -485,27 +485,27 @@ L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1,bool verbose)
 
 void MPAInterface::Activate_async(MPA* pMPA)
 {
-    WriteMPAReg( pMPA,"ReadoutMode",0b01);
+    WriteMPAReg( pMPA,"ReadoutMode",0x1);
 }
 
 void MPAInterface::Activate_sync(MPA* pMPA)
 {
-    WriteMPAReg(pMPA,"ReadoutMode",0b00);
+    WriteMPAReg(pMPA,"ReadoutMode",0x0);
 }
 
 void MPAInterface::Activate_pp(MPA* pMPA)
 {
-    WriteMPAReg(pMPA,"ECM",0b10000001);
+    WriteMPAReg(pMPA,"ECM",0x81);
 }
 
 void MPAInterface::Activate_ss(MPA* pMPA)
 {
-    WriteMPAReg(pMPA,"ECM",0b01000001);
+    WriteMPAReg(pMPA,"ECM",0x41);
 }
 
 void MPAInterface::Activate_ps(MPA* pMPA)
 {
-    WriteMPAReg(pMPA,"ECM",0b00001000);
+    WriteMPAReg(pMPA,"ECM", 0x8);
 }
 
 
@@ -520,15 +520,15 @@ void MPAInterface::Pix_Set_enable(MPA* pMPA,uint32_t r,uint32_t p,uint32_t Pixel
 
 void MPAInterface::Pix_Smode(MPA* pMPA,uint32_t r,uint32_t p, std::string smode = "edge")
 {
-    uint32_t smodewrite = 0b00;
+    uint32_t smodewrite = 0x0;
     if (smode == "edge")
-        uint32_t smodewrite = 0b00;
+        smodewrite = 0x0;
     if (smode == "level")
-        uint32_t smodewrite = 0b01;
+        smodewrite = 0x1;
     if (smode == "or")
-        uint32_t smodewrite = 0b10;
+        smodewrite = 0x2;
     if (smode == "xor")
-        uint32_t smodewrite = 0b11;
+        smodewrite = 0x3;
     Pix_write(pMPA,pMPA->getRegItem("ModeSel"), r, p, smodewrite ) ;
 }
 

@@ -254,13 +254,13 @@ namespace Ph2_HwDescription
     static size_t setBits (size_t nBit2Set)
     {
       auto output = 1 << (nBit2Set-1);
-      for (auto i = 0; i < nBit2Set-1; i++) output |= 1 << i;
+      for (auto i = 0u; i < nBit2Set-1; i++) output |= 1 << i;
       return output;
     }
 
     static auto countBitsOne(size_t num)
     {
-      auto count = 0;
+      auto count = 0u;
       while (num != 0)
 	{
 	  count += (num & 1);

@@ -28,7 +28,7 @@
 	    
             PA_IN_BIAS_LIN         =   "350"
 	    FC_BIAS_LIN            =    "20"
-	    KRUM_CURR_LIN          =    "32"
+	    KRUM_CURR_LIN          =    "29"
 	    LDAC_LIN               =   "130"
 	    COMP_LIN               =   "110"
 	    REF_KRUM_LIN           =   "300"

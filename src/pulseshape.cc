@@ -58,8 +58,6 @@ int main ( int argc, char* argv[] )
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
     uint8_t cScanStep = ( cmd.foundOption ( "step" ) ) ? convertAnyInt ( cmd.optionValue ( "step" ).c_str() ) : 1;
 
-    uint32_t cSelectedTestGroup = ( cmd.foundOption ( "testGroup" ) ) ? convertAnyInt ( cmd.optionValue ( "testGroup" ).c_str() ) : 1;
-
     TApplication cApp ( "Root Application", &argc, argv );
 
     if ( batchMode ) gROOT->SetBatch ( true );

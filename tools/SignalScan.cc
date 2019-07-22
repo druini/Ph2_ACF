@@ -11,8 +11,6 @@ void SignalScan::Initialize ()
 {
     for ( auto& cBoard : fBoardVector )
     {
-        uint32_t cBoardId = cBoard->getBeId();
-
         for ( auto& cFe : cBoard->fModuleVector )
         {
             uint32_t cFeId = cFe->getFeId();
@@ -104,8 +102,6 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
                 this->accept ( cVisitor );
 
                 LOG (INFO) << BOLDBLUE <<  "Setting Vcth to " << cVcth << RESET ; 
-                int cNeventsPerLoop = 2500; 
-                int cNloops = cNevents/cNeventsPerLoop;
                 int cTotalHitCounter=0;
                 int cTotalEventCounter=0;
 
@@ -203,13 +199,9 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
                         double k = (double)cHits;
                         double n = (double)cTotalEventCounter;
                         
-                        double cEfficiency_Binomial = k/n;
-                        double cSigmaEfficiency_Binomial = std::sqrt( cEfficiency_Binomial*(1-cEfficiency_Binomial)/n );
-
                         double cEfficiency_Bayesian =  (k+1)/(n+2);
                         double cSigmaEfficiency_Bayesian = std::sqrt( ((k+1)*(k+2))/( (n+2)*(n+3) ) - std::pow((k+1)/(n+2) , 2.0) );
 
-                        
                         cSignalScan->SetBinContent(cBin ,cBinY, cEfficiency_Bayesian*100);
                         cSignalScan->SetBinError(cBin, cBinY, cSigmaEfficiency_Bayesian*100);
                     }

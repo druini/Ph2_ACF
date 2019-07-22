@@ -70,7 +70,7 @@ namespace Ph2_HwDescription {
          */
         virtual void accept ( HwDescriptionVisitor& pVisitor )
         {
-            pVisitor.visit ( *this );
+            pVisitor.visitChip ( *this );
         }
         // void accept( HwDescriptionVisitor& pVisitor ) const {
         //  pVisitor.visit( *this );

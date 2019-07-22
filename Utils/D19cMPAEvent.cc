@@ -55,7 +55,6 @@ namespace Ph2_HwInterface {
         if (cNFe_software != cNFe_event)
             LOG (ERROR) << "Number of Modules in event header (" << cNFe_event << ") doesnt match the amount of modules defined in firmware.";
 
-        fDummySize = 0x000000FF & list.at (1);
         fEventCount = 0x00FFFFFF &  list.at (2);
         fBunch = 0xFFFFFFFF & list.at (3);
 
@@ -63,8 +62,6 @@ namespace Ph2_HwInterface {
         // correct the tdc value
         if (fTDC >= 5) fTDC-=5;
         else fTDC+=3;
-
-        fTLUTriggerID = (0x00FFFF00 & list.at (4) ) >> 8;
 
         fBeId = pBoard->getBeId();
         fBeFWType = 0;

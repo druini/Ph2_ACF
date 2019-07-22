@@ -74,11 +74,10 @@ namespace Ph2_HwInterface {
             LOG (ERROR) << "Vector size doesnt match the BLOCK_SIZE in Header1";
 
         // dummy size
-        fDummySize = (0xFF & list.at (1) ) >> 0;
+        uint8_t fDummySize = (0xFF & list.at (1) ) >> 0;
         fDummySize *= 4;
 
         // counters
-        fTLUTriggerID = (list.at (1) >> 16) >> 0x7FFF;
         fTDC = (list.at(2) >> 24) & 0xFF;
         fEventCount = 0x00FFFFFF &  list.at (2);
         fBunch = 0xFFFFFFFF & list.at (3);
@@ -94,13 +93,13 @@ namespace Ph2_HwInterface {
         uint32_t address_offset = D19C_EVENT_HEADER1_SIZE_32_CBC3;
 
         while(address_offset < fEventSize-fDummySize) {
-            if (((list.at(address_offset) >> 28) & 0xF) == 0b1010) {
+            if (((list.at(address_offset) >> 28) & 0xF) == 0xA) {
                 uint8_t cFeId = (list.at(address_offset) >> 16) & 0xFF;
                 uint8_t cCbcId = (list.at(address_offset) >> 12) & 0xF;
                 uint32_t cL1ADataSize = (list.at(address_offset) >> 0) & 0xFFF;
                 cL1ADataSize *= 4; // now in 128 bit words
                 //now stub
-                if (((list.at(address_offset+cL1ADataSize) >> 28) & 0xF) == 0b0101) {
+                if (((list.at(address_offset+cL1ADataSize) >> 28) & 0xF) == 0x5) {
                     uint32_t cStubDataSize = (list.at(address_offset+cL1ADataSize) >> 0) & 0xFFF;
                     cStubDataSize *= 4; // now in 128 bit words
 

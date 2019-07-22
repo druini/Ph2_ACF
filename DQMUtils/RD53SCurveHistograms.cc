@@ -38,10 +38,10 @@ void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int
 	{
 	  auto* hOcc2D = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
+	  for (auto row = 0u; row < RD53::nRows; row++)
+	    for (auto col = 0u; col < RD53::nCols; col++)
 	      // if (this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
-		hOcc2D->Fill(VCAL_HIGH, cChip->getChannel<Occupancy>(row, col).fOccupancy);
+	      hOcc2D->Fill(VCAL_HIGH, cChip->getChannel<Occupancy>(row, col).fOccupancy);
 	}
 }
 
@@ -56,8 +56,8 @@ void RD53SCurveHistograms::fillThresholdNoise (const DetectorDataContainer& data
 	  auto* Threshold2DHist = Threshold2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 	  auto* Noise2DHist     = Noise2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
+	  for (auto row = 0u; row < RD53::nRows; row++)
+	    for (auto col = 0u; col < RD53::nCols; col++)
 	      if (cChip->getChannel<ThresholdAndNoise>(row, col).fNoise != 0)
 		{
 		  Threshold1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);

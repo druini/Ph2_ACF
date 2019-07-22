@@ -39,26 +39,6 @@ HybridTester::~HybridTester() {}
 
 void HybridTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 {
-    bool cCheck;
-    bool cHoleMode;
-    auto cSetting = fSettingsMap.find ( "HoleMode" );
-
-    if ( cSetting != std::end ( fSettingsMap ) )
-    {
-        cCheck = true;
-        cHoleMode = ( cSetting->second == 1 ) ? true : false;
-    }
-
-    std::string cMode;
-
-    if ( cCheck )
-    {
-        if ( cHoleMode ) cMode = "hole";
-        else cMode = "electron";
-    }
-
-
-
     for (auto& cBoard : fBoardVector)
     {
         fBeBoardInterface->ChipReset ( cBoard );
@@ -169,7 +149,6 @@ void HybridTester::InitializeHists()
     // Now the Histograms for SCurves
     for ( auto cBoard : fBoardVector )
     {
-        uint32_t cBoardId = cBoard->getBeId();
 
         for ( auto cFe : cBoard->fModuleVector )
         {
@@ -303,7 +282,7 @@ uint32_t HybridTester::fillSCurves ( BeBoard* pBoard,  const Event* pEvent, uint
                 std::vector<uint32_t> cHits = pEvent->GetHits (cCbc->getFeId(), cCbc->getChipId() );
                 cHitCounter += cHits.size();
 
-                for (auto cHit : cHits)
+                for (__attribute__((unused)) auto cHit : cHits)
                     cScurve->second->Fill (pValue);
             }
         }
@@ -423,11 +402,8 @@ void HybridTester::ScanThreshold()
     uint32_t cEventsperVcth = fTotalEvents;
     bool cNonZero = false;
     bool cAllOne = false;
-    bool cSlopeZero = false;
     uint32_t cAllOneCounter = 0;
-    uint32_t cSlopeZeroCounter = 0;
-    uint32_t cOldHitCounter = 0;
-    uint16_t  cDoubleVcth;
+    uint16_t  cDoubleVcth = 0;
     uint16_t cMaxValue = 0x03FF;
     uint16_t cVcth = ( fHoleMode ) ?  cMaxValue :  0x00;
     int cStep = ( fHoleMode ) ? -10 : 10;
@@ -435,7 +411,7 @@ void HybridTester::ScanThreshold()
     // Adaptive VCth loop
     ThresholdVisitor cVisitor (fReadoutChipInterface, 0);
 
-    while ( 0x00 <= cVcth && cVcth <= cMaxValue )
+    while ( 0x00 == cVcth && cVcth <= cMaxValue )
     {
         if ( cAllOne ) break;
 
@@ -498,7 +474,6 @@ void HybridTester::ScanThreshold()
                 if ( cHitCounter > 0.95 * cEventsperVcth * fNCbc * NCHANNELS ) cAllOneCounter++;
 
                 // add a second check if the global SCurve slope is 0 for 10 consecutive Vcth values
-                // if ( fabs( cHitCounter - cOldHitCounter ) < 10 && cHitCounter != 0 ) cSlopeZeroCounter++;
             }
 
             if ( cAllOneCounter >= 10 ) cAllOne = true;
@@ -517,7 +492,6 @@ void HybridTester::ScanThreshold()
             //  break;
             // }
 
-            cOldHitCounter = cHitCounter;
             cVcth += cStep;
         }
     }
@@ -1113,7 +1087,7 @@ void HybridTester::Measure()
         fBeBoardInterface->Stop ( pBoard);
     }
 
-    for ( int i = 1 ; i < (fNCbc * 254) / 2 ; i++ )
+    for ( uint8_t i = 1 ; i < (fNCbc * 254u) / 2u ; i++ )
     {
         double cOccupancyTop = 100 * fHistTop->GetBinContent (i) / (double) (fTotalEvents);
         double cOccupancyBottom = 100 * fHistBottom->GetBinContent (i) / (double) (fTotalEvents);
@@ -1133,7 +1107,7 @@ void HybridTester::Measure()
 }
 void HybridTester::ClassifyChannels (double pNoiseLevel, double pDeadLevel )
 {
-    for ( int i = 1 ; i < (fNCbc * 254) / 2 ; i++ )
+    for ( uint8_t i = 1 ; i < (fNCbc * 254u) / 2u ; i++ )
     {
         if ( fHistBottom->GetBinContent (i) >= pNoiseLevel ) fNoisyChannelsBottom.push_back (i) ;
 
@@ -1151,7 +1125,7 @@ void HybridTester::DisplayNoisyChannels (std::ostream& os)
 
     line = "# Noisy channels on Bottom Sensor : ";
 
-    for ( int i = 0 ; i <  fNoisyChannelsBottom.size() ; i++ )
+    for ( size_t i = 0 ; i <  fNoisyChannelsBottom.size() ; i++ )
     {
         line += std::to_string ( fNoisyChannelsBottom[i] ) ;
         line +=  ( i < fNoisyChannelsBottom.size() - 1 ) ? "," : "" ;
@@ -1161,7 +1135,7 @@ void HybridTester::DisplayNoisyChannels (std::ostream& os)
 
     line = "# Noisy channels on Top Sensor : ";
 
-    for ( int i = 0 ; i <  fNoisyChannelsTop.size() ; i++ )
+    for ( size_t i = 0 ; i <  fNoisyChannelsTop.size() ; i++ )
     {
         line += std::to_string ( fNoisyChannelsTop[i] ) ;
         line +=  ( i < fNoisyChannelsTop.size() - 1 ) ? "," : "" ;
@@ -1175,7 +1149,7 @@ void HybridTester::DisplayDeadChannels (std::ostream& os)
 
     line = "# Dead channels on Bottom Sensor : ";
 
-    for ( int i = 0 ; i <  fDeadChannelsBottom.size() ; i++ )
+    for ( size_t i = 0 ; i <  fDeadChannelsBottom.size() ; i++ )
     {
         line += std::to_string ( fDeadChannelsBottom[i] ) ;
         line +=  ( i < fDeadChannelsBottom.size() - 1 ) ? "," : "" ;
@@ -1185,7 +1159,7 @@ void HybridTester::DisplayDeadChannels (std::ostream& os)
 
     line = "# Dead channels on Top Sensor : ";
 
-    for ( int i = 0 ; i <  fDeadChannelsTop.size() ; i++ )
+    for ( size_t i = 0 ; i <  fDeadChannelsTop.size() ; i++ )
     {
         line += std::to_string ( fDeadChannelsTop[i] ) ;
         line +=  ( i < fDeadChannelsTop.size() - 1 ) ? "," : "" ;

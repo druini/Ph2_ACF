@@ -39,8 +39,7 @@ int main ( int argc, char* argv[] )
     el::Configurations conf ("settings/logger.conf");
     el::Loggers::reconfigureAllLoggers (conf);
 
-    int pEventsperVcth;
-    int cVcth;
+    uint32_t pEventsperVcth;
 
     SystemController cSystemController;
     ArgvParser cmd;

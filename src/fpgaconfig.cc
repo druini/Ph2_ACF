@@ -65,7 +65,7 @@ void verifyImageName ( const string& strImage, const vector<string>& lstNames)
     {
         bool bFound = false;
 
-        for (int iName = 0; iName < lstNames.size(); iName++)
+        for (size_t iName = 0; iName < lstNames.size(); iName++)
         {
             if (!strImage.compare (lstNames[iName]) )
             {
@@ -87,10 +87,6 @@ int main ( int argc, char* argv[] )
     //configure the logger
     el::Configurations conf ("settings/logger.conf");
     el::Loggers::reconfigureAllLoggers (conf);
-
-
-    int pEventsperVcth;
-    int cVcth;
 
     SystemController cSystemController;
     ArgvParser cmd;

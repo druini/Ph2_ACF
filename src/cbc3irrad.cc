@@ -110,8 +110,7 @@ int main ( int argc, char* argv[] )
     gResultDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/Irrad_Xrays/";
     std::string cHostname = (cmd.foundOption ( "hostname" ) ) ? cmd.optionValue ("hostname") : "localhost";
 
-    uint32_t pEventsperVcth = ( cmd.foundOption ( "events" ) ) ? convertAnyInt ( cmd.optionValue ( "events" ).c_str() ) : 500000;
-    uint16_t cVcth = ( cmd.foundOption ( "vcth" ) ) ? convertAnyInt ( cmd.optionValue ( "vcth" ).c_str() ) : 500;
+    // uint32_t pEventsperVcth = ( cmd.foundOption ( "events" ) ) ? convertAnyInt ( cmd.optionValue ( "events" ).c_str() ) : 500000;
     uint32_t cHttpPort = (cmd.foundOption ("webmonitor") ) ? convertAnyInt (cmd.optionValue ("webmonitor").c_str() ) : 8090;
     uint32_t cTimout = (cmd.foundOption ("timeout") ) ? convertAnyInt (cmd.optionValue ("timeout").c_str() ) : 1200;
 
@@ -161,13 +160,13 @@ int main ( int argc, char* argv[] )
     std::string currentDir = getcwd (buffer, sizeof (buffer) );
 
     std::string cPowerSupplyOutputFile = currentDir + "/" + gResultDirectory + "/Current_log.txt";
-    PortsInfo cPowerSupplyPortsInfo = std::make_pair (8081, 8080);
     std::string cDMMOutputFile = currentDir + "/" + gResultDirectory  + "/Temperature_log.txt";
-    PortsInfo cDMMPortsInfo = std::make_pair (8083, 8082);
 
     if (!cStandalone)
     {
 #ifdef __USBINST__
+        PortsInfo cPowerSupplyPortsInfo = std::make_pair (8081, 8080);
+        PortsInfo cDMMPortsInfo = std::make_pair (8083, 8082);
         cPSStatus = false;
         cDMMStatus = false;
 
@@ -288,8 +287,7 @@ int main ( int argc, char* argv[] )
         cPedeNoise.writeObjects();
 
         //get the pedestal determined in the step above so I can adjust the threshold for the stub sweep and the DAQ
-        Module* cFe = cPedeNoise.fBoardVector.at (0)->fModuleVector.at (0);
-        uint16_t cPedestal = 0; //round (cPedeNoise.getPedestal (cFe) );
+        uint16_t cPedestal = 0;
         //sweep the stubs
         ThresholdVisitor cVisitor (cTool.fReadoutChipInterface, 0);
 

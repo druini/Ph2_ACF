@@ -8,7 +8,7 @@
 namespace fc7
 {
 
-  UHAL_REGISTER_DERIVED_NODE ( MmcPipeInterface );
+  UHAL_REGISTER_DERIVED_NODE ( MmcPipeInterface )
 
   // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   // PUBLIC METHODS

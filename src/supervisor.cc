@@ -127,16 +127,13 @@ int main ( int argc, char* argv[] )
 	std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
 	cDirectory += cmd.optionValue ( "calibration" );
 
-	bool cAllChan   = (cmd.foundOption ("allChan")) ? true : false;
 	bool batchMode  = (cmd.foundOption ("batch")  ) ? true : false;
 
 
 
 	//pid_t  runControllerPid = -1;
 	//pid_t  dqmControllerPid = -1;
-	int ret = 1;
-	int runControllerPidStatus;
-	int dqmControllerStatus;
+	int runControllerPidStatus = 0;
 
 	std::cout << __PRETTY_FUNCTION__ << "Forking RunController" << std::endl;
 	runControllerPid   = fork();
@@ -154,7 +151,7 @@ int main ( int argc, char* argv[] )
 		// filename associated with file being executed
 		// the array pointer must be terminated by NULL
 		// pointer
-		char * argv[] = {"RunController", NULL};
+		char * argv[] = {(char*)"RunController", NULL};
 
 		// the execv() only return if error occured.
 		// The return value is -1
@@ -201,7 +198,7 @@ int main ( int argc, char* argv[] )
 	int tAppArgc = 1;
 	char *tAppArgv[2];
 	tAppArgv[0] = argv[0];
-	tAppArgv[1] = "-b";
+	tAppArgv[1] = (char*)"-b";
 	if(batchMode)
 		tAppArgc = 2;
 	TApplication theApp("App", &tAppArgc, tAppArgv);

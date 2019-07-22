@@ -39,7 +39,7 @@ class SummaryContainerBase
 {
 public:
 	SummaryContainerBase() {;}
-	~SummaryContainerBase() {;}
+	virtual ~SummaryContainerBase() {;}
 	virtual void emplace_back(SummaryBase* theSummary) = 0;
 };
 
@@ -121,7 +121,7 @@ public:
 		}
 	}
 
-	virtual void initialize(void) {;}
+	// virtual void initialize() = 0;
 	virtual uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) = 0;
 	
 	template<typename T>

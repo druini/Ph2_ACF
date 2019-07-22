@@ -10,7 +10,8 @@
 #include "RD53ThrEqualization.h"
 
 ThrEqualization::ThrEqualization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst)
-  : fileRes     (fileRes)
+  : Tool        ()
+  , fileRes     (fileRes)
   , fileReg     (fileReg)
   , rowStart    (rowStart)
   , rowStop     (rowStop)
@@ -19,7 +20,6 @@ ThrEqualization::ThrEqualization (const char* fileRes, const char* fileReg, size
   , nPixels2Inj (nPixels2Inj)
   , nEvents     (nEvents)
   , nEvtsBurst  (nEvtsBurst)
-  , Tool        ()
 {
   // ########################
   // # Custom channel group #
@@ -41,13 +41,13 @@ ThrEqualization::~ThrEqualization ()
   delete theFile;
   theFile = nullptr;
 
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
+  for (auto i = 0u; i < theCanvasOcc.size(); i++)
     {
       delete theOccupancy[i];
       delete theCanvasOcc[i];
     }
 
-  for (auto i = 0; i < theCanvasTDAC.size(); i++)
+  for (auto i = 0u; i < theCanvasTDAC.size(); i++)
     {
       delete theTDAC[i];
       delete theCanvasTDAC[i];
@@ -125,8 +125,6 @@ void ThrEqualization::initHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
-
 
 	  myString.clear();
 	  myString.str("");
@@ -172,8 +170,8 @@ void ThrEqualization::fillHisto ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
+	  for (auto row = 0u; row < RD53::nRows; row++)
+	    for (auto col = 0u; col < RD53::nCols; col++)
 	      {
 		if (this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col) == true)
 		  {
@@ -188,7 +186,7 @@ void ThrEqualization::fillHisto ()
 
 void ThrEqualization::display ()
 {
-  for (auto i = 0; i < theCanvasOcc.size(); i++)
+  for (auto i = 0u; i < theCanvasOcc.size(); i++)
     {
       theCanvasOcc[i]->cd();
       theOccupancy[i]->Draw();
@@ -196,7 +194,7 @@ void ThrEqualization::display ()
       theCanvasOcc[i]->Update();
     }
 
-  for (auto i = 0; i < theCanvasTDAC.size(); i++)
+  for (auto i = 0u; i < theCanvasTDAC.size(); i++)
     {
       theCanvasTDAC[i]->cd();
       theTDAC[i]->Draw();
@@ -207,8 +205,8 @@ void ThrEqualization::display ()
 
 void ThrEqualization::save ()
 {
-  for (auto i = 0; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
-  for (auto i = 0; i < theCanvasTDAC.size(); i++) theCanvasTDAC[i]->Write();
+  for (auto i = 0u; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
+  for (auto i = 0u; i < theCanvasTDAC.size(); i++) theCanvasTDAC[i]->Write();
 
 
   // ############################
@@ -220,8 +218,8 @@ void ThrEqualization::save ()
 	{
 	  static_cast<RD53*>(cChip)->copyMaskFromDefault();
 
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
+	  for (auto row = 0u; row < RD53::nRows; row++)
+	    for (auto col = 0u; col < RD53::nCols; col++)
 	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
 		static_cast<RD53*>(cChip)->setTDAC(row,col,theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
 
@@ -252,8 +250,8 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	for (auto row = 0; row < RD53::nRows; row++)
-	  for (auto col = 0; col < RD53::nCols; col++)
+	for (auto row = 0u; row < RD53::nRows; row++)
+	  for (auto col = 0u; col < RD53::nCols; col++)
 	    {
 	      minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = 0;
 	      maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = RD53::setBits(numberOfBits) + 1;
@@ -271,7 +269,7 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 	this->fReadoutChipInterface->ReadChipAllLocalReg(static_cast<RD53*>(cChip), dacName, *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
 
-  for (auto i = 0; i < numberOfBits+1; i++)
+  for (auto i = 0u; i < numberOfBits+1u; i++)
     {
       // ###########################
       // # Download new DAC values #
@@ -294,8 +292,8 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
       for (const auto cBoard : theOccContainer)
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
-	    for (auto row = 0; row < RD53::nRows; row++)
-	      for (auto col = 0; col < RD53::nCols; col++)
+	    for (auto row = 0u; row < RD53::nRows; row++)
+	      for (auto col = 0u; col < RD53::nCols; col++)
 		{
 		  // #######################
 		  // # Build discriminator #

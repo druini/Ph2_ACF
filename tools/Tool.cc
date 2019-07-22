@@ -814,15 +814,6 @@ void Tool::unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair)
 {
 	//Fabio: CBC specific but not used by common scans - BEGIN
 
-	FrontEndType cFrontEndType;
-	for ( BeBoard* pBoard : fBoardVector )
-	{
-		for (auto cFe : pBoard->fModuleVector)
-		{
-			cFrontEndType = cFe->getFrontEndType();
-		}
-	}
-
 	// get ready to mask/un-mask channels in pairs...
 	MaskedChannelsList cMaskedList;
 	MaskedChannels cMaskedChannels; cMaskedChannels.clear(); cMaskedChannels.push_back(pPair.first);
@@ -932,7 +923,6 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 
 	DetectorDataContainer *outputDataContainer = fDetectorDataContainer;
 
-	float globalOccupancy = 0.;
 	ReadoutChip *cChip = static_cast<BeBoard*>(fDetectorContainer->at(boardIndex))->fModuleVector.at(0)->fReadoutChipVector.at(0); //assumption: one BeBoard has only one type of chip;
 
 	bool localDAC = cChip->isDACLocal(dacName);

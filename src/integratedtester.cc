@@ -213,22 +213,14 @@ HMP4040_measurement get_HMP4040currents ( std::string pHostname = "localhost", i
 }
 bool check_CurrentConsumption (Tool pTool, int pNCBCs = 2, std::string pHostname = "localhost", int pZmqPortNumber = 8081, int pHttpPortNumber = 8080, int pMeasureInterval_s = 2 )
 {
-    double vLVDS = 5.0 ;
-    double vRegulator = 3.3 ;
-    double vCBC  = 1.2 ;
-
     //nominal currents for the 4 different low voltage lines on the hybrid : all in mA
     //nominal current drawn by one CBC
     double ncCBC = 60;
     HMP4040_currents cCurrentLimits = { {"pLVDS", 14.0}, {"nLVDS", 14.0}, {"VREG", 160.0}, {"CBC", ncCBC * pNCBCs}};
     std::vector<std::string> cChannelNames = { "pLVDS", "nLVDS", "VREG", "CBC"};
 
-    int chkLVDS = 0;
-    int chkRegulator = 0;
-    int chkCBC = 0;
-    int chkCurrent = 0;
-    int cNumReads = 3;
 #ifdef __USBINST__
+    int cNumReads = 3;
     std::string message;
     int iterations = 0 ;
     // get the latest reading from the logged using the HMP4040 monitoring function.
@@ -340,7 +332,7 @@ bool check_Shorts (Tool* pTool,  uint32_t cMaxNumShorts)
     cShortFinder.SaveResults();
     uint32_t cNShorts = cShortFinder.GetNShorts() ;
     char line[120];
-    sprintf (line, "# %d shorts found on hybrid = %d", cNShorts );
+    sprintf (line, "# %d shorts found on hybrid", cNShorts);
     cShortFinder.AmmendReport (line);
     cShortFinder.AmmendReport ( ( cNShorts <= cMaxNumShorts) ? ("# Shorts test passed.") : ("# Shorts test failed.") );
 

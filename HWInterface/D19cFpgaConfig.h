@@ -32,12 +32,12 @@ public:
      * \param strConfig FPGA configuration name
      * \param pstrFile absolute path to the .bit or .bin file
      */
-    void runUpload(const std::string& strConfig, const char* pstrFile) throw (std::string);
+    void runUpload(const std::string& strConfig, const char* pstrFile) ;
     /*! \brief Launch the firmware download in a separate thread
      * \param strConfig FPGA configuration name
      * \param pstrFile absolute path to the .bin file
      */
-    void runDownload(const std::string& strConfig, const char* pstrFile) throw (std::string);
+    void runDownload(const std::string& strConfig, const char* pstrFile) ;
     /*! \brief Jump to an FPGA configuration
      * \param strConfig FPGA configuration name
      */
@@ -52,13 +52,13 @@ public:
     void resetBoard();
 private:
     ///Sets the read mode as asynchronous.
-    void confAsyncRead() throw (std::string);
+    void confAsyncRead() ;
     ///Locks or unlocks a block of the flash (Xilinx DS617(v3.0.1) page 75, figure 43).
-    void blockLockOrUnlock(uint32_t block_number, char operation) throw (std::string);
+    void blockLockOrUnlock(uint32_t block_number, char operation) ;
     ///Erases a block of the flash (Xilinx DS617(v3.0.1) page 73, figure 41).
-    void blockErase(uint32_t block_number) throw (std::string);
+    void blockErase(uint32_t block_number) ;
     ///Writes up to 32 words to the flash (Xilinx DS617(v3.0.1) page 71, figure 39).
-    void bufferProgram(uint32_t block_number, uint32_t data_address, std::vector<uint32_t>& write_buffer, uint32_t words) throw (std::string);
+    void bufferProgram(uint32_t block_number, uint32_t data_address, std::vector<uint32_t>& write_buffer, uint32_t words) ;
     /*! \brief Main uploading loop
      * \param pstrFile Absolute path the .bit configuration file
      */

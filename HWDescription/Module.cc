@@ -15,22 +15,22 @@ namespace Ph2_HwDescription {
 
     // Default C'tor
     Module::Module()
-    : ModuleContainer    (0)
-    , FrontEndDescription( )
+    : FrontEndDescription( )
+    , ModuleContainer    (0)
     , fModuleId          (0)
     {
     }
 
     Module::Module (const FrontEndDescription& pFeDesc, uint8_t pModuleId)
-    : ModuleContainer    (pModuleId)
-    , FrontEndDescription(pFeDesc  )
+    : FrontEndDescription(pFeDesc  )
+    , ModuleContainer    (pModuleId)
     , fModuleId          (pModuleId)
     {
     }
 
     Module::Module (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId)
-    : ModuleContainer    (pModuleId)
-    , FrontEndDescription(pBeId, pFMCId, pFeId)
+    : FrontEndDescription(pBeId, pFMCId, pFeId)
+    , ModuleContainer    (pModuleId)
     , fModuleId          (pModuleId)
     {
     }

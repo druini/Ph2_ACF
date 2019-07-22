@@ -39,7 +39,6 @@ namespace Ph2_HwInterface {
     {
 
       private:
-        struct timeval fStartVeto;
         D19cFpgaConfig* fpgaConfig;
         FileHandler* fFileHandler ;
         uint32_t fBroadcastCbcId;
@@ -49,8 +48,8 @@ namespace Ph2_HwInterface {
         uint32_t fFMCId;
 
         // number of chips and hybrids defined in firmware (compiled for)
-        int fFWNHybrids;
-        int fFWNChips;
+        uint32_t fFWNHybrids;
+        uint32_t fFWNChips;
         FrontEndType fFirmwareFrontEndType;
         bool fCBC3Emulator;
         bool fIsDDR3Readout;

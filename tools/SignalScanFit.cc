@@ -8,8 +8,6 @@ void SignalScanFit::Initialize ( )
     // Initialize all the plots
     for ( auto& cBoard : fBoardVector )
     {
-        uint32_t cBoardId = cBoard->getBeId();
-
         for ( auto& cFe : cBoard->fModuleVector )
         {
 
@@ -31,11 +29,11 @@ void SignalScanFit::Initialize ( )
             if ( cObj ) delete cObj;
 
             // 2D-plot with all the channels on the x-axis, Vcth on the y-axis and #clusters on the z-axis.
-            TH2D* cSignalHist = new TH2D ( cName, Form ( "Signal threshold vs channel ; Channel # ; Threshold; # of Hits", cFeId ), fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, fVCthNbins, fVCthMin, fVCthMax );
+            TH2D* cSignalHist = new TH2D ( cName, "Signal threshold vs channel ; Channel # ; Threshold; # of Hits", fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, fVCthNbins, fVCthMin, fVCthMax );
             bookHistogram ( cFe, "module_signal", cSignalHist );
 
             // 2D-plot with cluster width on the x-axis, Vcth on y-axis, counts of certain clustersize on z-axis.
-            TH2D* cVCthClusterSizeHist = new TH2D ( Form ( "h_module_clusterSize_per_Vcth_Fe%d", cFeId ), Form ( "Cluster size vs Vcth ; Cluster size [strips] ; Threshold [Vcth] ; # clusters", cFeId ), 15, -0.5, 14.5, fVCthNbins, fVCthMin, fVCthMax );
+            TH2D* cVCthClusterSizeHist = new TH2D ( Form ( "h_module_clusterSize_per_Vcth_Fe%d", cFeId ), "Cluster size vs Vcth ; Cluster size [strips] ; Threshold [Vcth] ; # clusters", 15, -0.5, 14.5, fVCthNbins, fVCthMin, fVCthMax );
             bookHistogram ( cFe, "vcth_ClusterSize", cVCthClusterSizeHist );
 
             // 1D-plot with the number of triggers per VCth
@@ -54,7 +52,6 @@ void SignalScanFit::Initialize ( )
 
                 TString cHistname;
                 TH1D* cHist;
-                TProfile * cProfile;
 
                 cHistname = Form ( "Fe%dCBC%d_Hits_even", cFeId, cCbcId );
                 cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of hits", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
@@ -73,11 +70,9 @@ void SignalScanFit::Initialize ( )
                 bookHistogram ( cCbc, "Cbc_Clusters_odd", cHist );
 
                 cHistname = Form ( "Fe%dCBC%d_ClusterSize_even", cFeId, cCbcId );
-                cProfile = new TProfile ( cHistname, Form("%s ;  Threshold [Vcth] ; Cluster size [strips]", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
                 bookHistogram ( cCbc, "Cbc_ClusterSize_even", cHist );
 
                 cHistname = Form ( "Fe%dCBC%d_ClusterSize_odd", cFeId, cCbcId );
-                cProfile = new TProfile ( cHistname, Form("%s ; Threshold [Vcth] ; Cluster size [strips]", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
                 bookHistogram ( cCbc, "Cbc_ClusterSize_odd", cHist );
 
 //                cHistname = Form ( "Fe%dCBC%d_ClusterSize_even",cFeId, cCbcId );

@@ -107,21 +107,18 @@ namespace Ph2_HwInterface {
            id of FeEvent should be the order of FeEvents in data stream starting from 0
            id of CbcEvent also should be the order of CBCEvents in data stream starting from 0
          */
-      protected:
-        //general members for Event Header
-        uint32_t fEventCount;           /*!< Event Counter */
-        uint32_t fTDC;                  /*!< TDC value*/
-
-        // data map for CBC Data
       public:
         EventDataMap fEventDataMap;
 
       protected:
+        uint32_t fEventCount;           /*!< Event Counter */
+        uint32_t fTDC;                  /*!< TDC value*/
         //for CBC2 use
         uint32_t fBunch;                /*!< Bunch value */
         uint32_t fOrbit;                /*!< Orbit value */
         uint32_t fLumi;                 /*!< LuminositySection value */
         uint32_t fEventCountCBC;        /*!< Cbc Event Counter */
+        uint32_t fEventSize;
 
         //for CBC3 use
         uint8_t fBeId;
@@ -130,17 +127,6 @@ namespace Ph2_HwInterface {
         uint8_t fNCbc;
         uint16_t fEventDataSize;
         uint32_t fBeStatus;
-
-        // d19c variables
-        uint16_t fTLUTriggerID;
-        uint8_t fDummySize;
-
-
-      public:
-        // size of an event
-        uint32_t fEventSize;
-
-      protected:
 
         uint16_t encodeId (const uint8_t& pFeId, const uint8_t& pCbcId) const
         {

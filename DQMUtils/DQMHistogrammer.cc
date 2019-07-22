@@ -218,7 +218,7 @@ void DQMHistogrammer::fillHistos (const std::vector<Event*>& event_list, int nev
         // initialize Tree parameters
         cbcErrorVal_->clear();
         cbcPLAddressVal_->clear();
-        int ncbc = 0;
+        uint8_t ncbc = 0;
         const EventDataMap& evmap = ev->GetEventDataMap();
         std::vector<int> oddChVec;
         std::vector<int> evenChVec;

@@ -71,7 +71,7 @@ void StubTool::scanStubs()
       {
          uint32_t cFeId = cFe->getFeId();
          std::vector < ReadoutChip* > cCbcVector = cFe->fReadoutChipVector;
-         uint8_t nCBC = cCbcVector.size();
+         const uint8_t nCBC = cCbcVector.size();
          for (uint8_t iCBC = 0; iCBC< nCBC; iCBC++)
          {
             configureTestPulse (cCbcVector.at(iCBC), 1);
@@ -86,7 +86,7 @@ void StubTool::scanStubs()
          std::string stubscanname_bend = "StubsSCAN_BEND_CBC";
          hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nCBC*127,0,nCBC*127,16,0,8);
          hSTUB_SCAN_bend = new TH2F(stubscanname_bend.c_str(),stubscanname_bend.c_str(),nCBC*127,0,nCBC*127,16,binbend4);
-         std::string vec_stubscanname_bend_offset[nCBC];
+         std::vector<std::string> vec_stubscanname_bend_offset(nCBC,"");
          for (uint8_t iCBC = 0; iCBC< nCBC; iCBC++)
          {
             vec_stubscanname_bend_offset[iCBC] = "StubsSCAN_BEND_OFF_CBC"+std::to_string(iCBC);
@@ -151,8 +151,6 @@ void StubTool::scanStubs()
                         fReadoutChipInterface->WriteChipReg ( cCbcVector.at(iCBC), cRegName,  cRegValue );
                         //LOG (INFO) << fChannelMaskMapCBC3[i] << " " << std::bitset<8> (cRegValue);
                      }
-                     unsigned int mg =iChan/8;
-                     unsigned int mask = 0;
                      //for ( unsigned int smg = 0; smg < 6; smg+=2) //only using masks
                      for ( unsigned int smg = 0; smg < 3; smg++)
                      {  
@@ -248,7 +246,7 @@ void StubTool::scanStubs_wNoise()
       {
         uint32_t cFeId = cFe->getFeId();
         std::vector < ReadoutChip* > cCbcVector = cFe->fReadoutChipVector;
-        uint8_t nCBC = cCbcVector.size();
+        const uint8_t nCBC = cCbcVector.size();
         //Uncoment for Bend uncoding 2
         //hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
         //hSTUB_SCAN_bend = new TH2F(stubscanname_bend.c_str(),stubscanname_bend.c_str(),nChan,0,nChan,16,-6.75,8.25);
@@ -261,7 +259,7 @@ void StubTool::scanStubs_wNoise()
         hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nCBC*127,0,nCBC*127,16,0,8);
         hSTUB_SCAN_bend = new TH2F(stubscanname_bend.c_str(),stubscanname_bend.c_str(),nCBC*127,0,nCBC*127,16,binbend4);
         hSTUB_SCAN_error = new TH2F(stubscanname_error.c_str(),stubscanname_error.c_str(),nCBC*127,0,nCBC*127,16,binbend4);
-        std::string vec_stubscanname_bend_offset[nCBC];
+        std::vector<std::string> vec_stubscanname_bend_offset(nCBC,"");
         for (uint8_t iCBC = 0; iCBC< nCBC; iCBC++)
         {
           vec_stubscanname_bend_offset[iCBC] = "StubsSCAN_BEND_OFF_CBC"+std::to_string(iCBC);
@@ -459,7 +457,6 @@ void StubTool::scanStubs_wNoise()
                         for (auto& cStub : cEvent->StubVector (cFeId, cCbcVector.at(iCBC)->getChipId() ) )
                         {
                           stubCounter++;
-                          bool stubfinder = false;
                           double stub_position = cStub.getPosition();
                           double stub_bend     = Decoding_stub4(cStub.getBend());
                           double stub_strip    = cStub.getCenter();
@@ -507,7 +504,7 @@ void StubTool::scanStubs_swap()
       {
         uint32_t cFeId = cFe->getFeId();
         std::vector < ReadoutChip* > cCbcVector = cFe->fReadoutChipVector;
-        uint8_t nCBC = cCbcVector.size();
+        const uint8_t nCBC = cCbcVector.size();
         //Uncoment for Bend uncoding 2
         //hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
         //hSTUB_SCAN_bend = new TH2F(stubscanname_bend.c_str(),stubscanname_bend.c_str(),nChan,0,nChan,16,-6.75,8.25);
@@ -520,7 +517,7 @@ void StubTool::scanStubs_swap()
         hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nCBC*127,0,nCBC*127,16,0,8);
         hSTUB_SCAN_bend = new TH2F(stubscanname_bend.c_str(),stubscanname_bend.c_str(),nCBC*127,0,nCBC*127,16,binbend4);
         hSTUB_SCAN_error = new TH2F(stubscanname_error.c_str(),stubscanname_error.c_str(),nCBC*127,0,nCBC*127,16,binbend4);
-        std::string vec_stubscanname_bend_offset[nCBC];
+        std::vector<std::string> vec_stubscanname_bend_offset(nCBC,"");
         for (uint8_t iCBC = 0; iCBC< nCBC; iCBC++)
         {
           vec_stubscanname_bend_offset[iCBC] = "StubsSCAN_BEND_OFF_CBC"+std::to_string(iCBC);
@@ -724,7 +721,6 @@ void StubTool::scanStubs_swap()
                         for (auto& cStub : cEvent->StubVector (cFeId, cCbcVector.at(iCBC)->getChipId() ) )
                         {
                           stubCounter++;
-                          bool stubfinder = false;
                           double stub_position = cStub.getPosition();
                           double stub_bend     = Decoding_stub4(cStub.getBend());
                           double stub_strip    = cStub.getCenter();
@@ -767,7 +763,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
 {
   std::stringstream outp;
   LOG(DEBUG) << GREEN << "Testing Strip " << +teststrip << RESET;
-  if (teststrip < 0 || teststrip > 127) 
+  if (teststrip > 127) 
   {
     LOG(INFO) << RED << "Strip range values are 0 to 127" << RESET;
     exit (EXIT_FAILURE);
@@ -778,7 +774,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
       {
         uint32_t cFeId = cFe->getFeId();
         std::vector < ReadoutChip* > cCbcVector = cFe->fReadoutChipVector;
-        uint8_t nCBC = cCbcVector.size();
+        const uint8_t nCBC = cCbcVector.size();
         std::string stubscanname_cw   = "StubsSCAN_ClusterWidth";
         std::string stubscanname_cbc = "StubsSCAN_ClusterWidth_vs_Strips";
         //Uncoment for Bend uncoding 2
@@ -787,7 +783,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
         //Comment for Bend uncoding 4
         hSTUB_SCAN_cw = new TH2F(stubscanname_cw.c_str(),stubscanname_cw.c_str(),4,0.5,4.5,5,-0.5,4.5);
         hSTUB_SCAN_cbc = new TH2F(stubscanname_cbc.c_str(),stubscanname_cbc.c_str(),nCBC*127,0,nCBC*127,4,0.5,4.5);
-        std::string vec_stubscanname_cw[nCBC];
+        std::vector<std::string> vec_stubscanname_cw(nCBC,"");
         for (uint8_t iCBC = 0; iCBC< nCBC; iCBC++)
         {
           vec_stubscanname_cw[iCBC] = "StubsSCAN_ClusterWidth_CBC"+std::to_string(iCBC);
@@ -807,7 +803,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
         std::vector<std::pair<std::string, uint16_t>> cRegVec;
         uint16_t cRegValue;
         std::string cRegName;
-        double exp_strip = -1;
+        // double exp_strip = -1;
 
         for (uint8_t regClusterWidth = 0; regClusterWidth <= 4; ++regClusterWidth)
         {
@@ -841,7 +837,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
                 {
                   LOG(DEBUG) << "CBC"<< +iCBC << " | RegClusterWidth = " << +regClusterWidth << " - Cluster Width = " << +iClusterWidth << " | Diff Chan = " << -iChan << " | Cond2: masking channel " << +((2*teststrip) - iChan ); 
                   maskChannel(cCbcVector.at(iCBC), ((2*teststrip) - iChan ), false);
-                  exp_strip = teststrip-(iClusterWidth/2);
+                  // exp_strip = teststrip-(iClusterWidth/2);
                 }
               }
               else
@@ -850,7 +846,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
                 {
                   LOG(DEBUG) << "CBC"<< +iCBC << " | RegClusterWidth = " << +regClusterWidth << " - Cluster Width = " << +iClusterWidth << " | Diff Chan = " << +iChan << " | Cond1: masking channel " << +((2*teststrip) + iChan ); 
                   maskChannel(cCbcVector.at(iCBC), ((2*teststrip) + iChan ), false);
-                  exp_strip = teststrip+(iClusterWidth/2);
+                  // exp_strip = teststrip+(iClusterWidth/2);
                 }
               }
 
@@ -882,12 +878,9 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
                 if (cEvent->StubBit (cFeId, cCbcVector.at(iCBC)->getChipId() ) )
                 {
                   uint8_t stubCounter = 0;
-                  uint8_t nstub = cEvent->StubVector (cFeId, cCbcVector.at(iCBC)->getChipId() ).size();
                   for (auto& cStub : cEvent->StubVector (cFeId, cCbcVector.at(iCBC)->getChipId() ) )
                   {
                     stubCounter++;
-                    double stub_position = cStub.getPosition();
-                    double stub_bend     = Decoding_stub4(cStub.getBend());
                     double stub_strip    = cStub.getCenter();
                     //if ( !((teststrip+iClusterWidth>127 && stubCounter == nstub) || (teststrip+iClusterWidth<=127 && stubCounter == 1)) ) continue;
                     //LOG (DEBUG) << RED << "CBC" << +iCBC << " , Stub: " << +(stubCounter) << " | Position: " << stub_position << " | Bend: " << std::bitset<4> (cStub.getBend()) << " -> " << stub_bend << " || Strip: " << stub_strip << " , EXPECTED STRIP : " << +(exp_strip+(iCBC*127)) << " , Filling STRIP: " << +(stub_strip+(iCBC*127)) << RESET;
@@ -926,7 +919,7 @@ void StubTool::scanStubs_ptWidth()
       {
         uint32_t cFeId = cFe->getFeId();
         std::vector < ReadoutChip* > cCbcVector = cFe->fReadoutChipVector;
-        uint8_t nCBC = cCbcVector.size();
+        const uint8_t nCBC = cCbcVector.size();
         //Uncoment for Bend uncoding 2
         //hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
         //hSTUB_SCAN_bend = new TH2F(stubscanname_bend.c_str(),stubscanname_bend.c_str(),nChan,0,nChan,16,-6.75,8.25);
@@ -939,8 +932,8 @@ void StubTool::scanStubs_ptWidth()
         hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nCBC*127,0,nCBC*127,16,0,8);
         hSTUB_SCAN_bend = new TH2F(stubscanname_bend.c_str(),stubscanname_bend.c_str(),nCBC*127,0,nCBC*127,16,binbend4);
         hSTUB_SCAN_error = new TH2F(stubscanname_error.c_str(),stubscanname_error.c_str(),nCBC*127,0,nCBC*127,16,binbend4);
-        std::string vec_stubscanname_bend_offset[nCBC];
-        std::string vec_stubscanname_pt[nCBC];
+        std::vector<std::string> vec_stubscanname_bend_offset(nCBC,"");
+        std::vector<std::string> vec_stubscanname_pt(nCBC,"");
         for (uint8_t iCBC = 0; iCBC< nCBC; iCBC++)
         {
           vec_stubscanname_bend_offset[iCBC] = "StubsSCAN_BEND_OFF_CBC"+std::to_string(iCBC);
@@ -1190,7 +1183,7 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
 {
   std::stringstream outp;
   LOG(DEBUG) << GREEN << "Testing Strip " << +teststrip << RESET;
-  if (teststrip < 0 || teststrip > 127) 
+  if (teststrip > 127) 
   {
     LOG(INFO) << RED << "Strip range values are 0 to 127" << RESET;
     exit (EXIT_FAILURE);
@@ -1201,7 +1194,7 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
       {
         uint32_t cFeId = cFe->getFeId();
         std::vector < ReadoutChip* > cCbcVector = cFe->fReadoutChipVector;
-        uint8_t nCBC = cCbcVector.size();
+        const uint8_t nCBC = cCbcVector.size();
         std::string stubscanname_sof = "StubsSCAN_SoF";
         std::string stubscanname_cbc = "StubsSCAN_SoF_vs_Strips";
         //Uncoment for Bend uncoding 2
@@ -1210,7 +1203,7 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
         //Comment for Bend uncoding 4
         hSTUB_SCAN_sof = new TH2F(stubscanname_sof.c_str(),stubscanname_sof.c_str(),5,0.5,5.5,2,-0.5,1.5);
         hSTUB_SCAN_SOF = new TH2F(stubscanname_cbc.c_str(),stubscanname_cbc.c_str(),nCBC*127,0,nCBC*127,2,-0.5,1.5);
-        std::string vec_stubscanname_sof[nCBC];
+        std::vector<std::string> vec_stubscanname_sof(nCBC,"");
         for (uint8_t iCBC = 0; iCBC< nCBC; iCBC++)
         {
           vec_stubscanname_sof[iCBC] = "StubsSCAN_ClusterWidth_CBC"+std::to_string(iCBC);
@@ -1230,7 +1223,6 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
         std::vector<std::pair<std::string, uint16_t>> cRegVec;
         uint16_t cRegValue;
         std::string cRegName;
-        double exp_strip = -1;
 
         for (uint8_t nstubs = 1; nstubs <= 5; ++nstubs)
         {
@@ -1415,11 +1407,8 @@ void StubTool::setInitialOffsets()
     {
         for ( auto cFe : cBoard->fModuleVector )
         {
-            uint32_t cFeId = cFe->getFeId();
-
             for ( auto cCbc : cFe->fReadoutChipVector )
             {
-                uint32_t cCbcId = cCbc->getChipId();
                 RegisterVector cRegVec;
 
                 for ( uint8_t cChan = 0; cChan < nChan; cChan++ )

@@ -52,7 +52,6 @@ void PulseShape::Initialize()
                 ctmpCanvas->cd ( 2 );
                 cFrame->Draw( );
                 bookHistogram ( cCbc, "frame", cFrame );
-                LOG (ERROR) << "Initializing map fCanvasMap[" << Form ( "0x%x", cCbc ) << "] = " << Form ( "0x%x", ctmpCanvas ) ;
                 // Create Multigraph Object for each CBC
                 TString cName =  Form ( "g_cbc_pulseshape_MultiGraph_Fe%dCbc%d", cFeId, cCbcId );
                 TObject* cObj = gROOT->FindObject ( cName );
@@ -88,9 +87,9 @@ void PulseShape::ScanTestPulseDelay ( uint8_t fStepSize )
     LOG(INFO) << " end of toggleTestGroup (true)";
     // initialize the historgram for the channel map
     //should set the histogram boardes frames sane (from config file)!
-    int cCoarseDefault = fDelayAfterPulse;
-    int cLow = ( cCoarseDefault + 3 ) * 25;
-    int cHigh = ( cCoarseDefault + 8 ) * 25;
+    uint32_t cCoarseDefault = fDelayAfterPulse;
+    uint32_t cLow = ( cCoarseDefault + 3 ) * 25;
+    uint32_t cHigh = ( cCoarseDefault + 8 ) * 25;
 
     
     LOG(INFO) << "Starting loop over delays";
@@ -119,12 +118,12 @@ void PulseShape::ScanVcth ( uint32_t pDelay , int cLow)
     bool cAllOne = false;
     bool cNonZero = false;
     bool cSaturate = false;
-    uint16_t cDoubleVcth;
+    uint16_t cDoubleVcth = 0;
 
     ThresholdVisitor cVisitor (fReadoutChipInterface, 0);
 
     // Adaptive VCth loop
-    while ( 0x00 <= cVcth && cVcth <= cMaxValue )
+    while ( 0x00 == cVcth && cVcth <= cMaxValue )
     {
         //LOG (INFO) << "   "<< cVcth ;
         if ( cAllOne ) break;
@@ -136,7 +135,6 @@ void PulseShape::ScanVcth ( uint32_t pDelay , int cLow)
         }
 
         // then we take fNEvents
-        uint32_t cN = 1;
         uint32_t cNthAcq = 0;
         int cNHits = 0;
 
@@ -470,8 +468,6 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
 
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
     fChannelVector = findChannelsInTestGroup ( fTestGroup );
-    uint8_t cRegValue =  to_reg ( 0, fTestGroup );
-    
     //set the value of test pulsepot registrer and MiscTestPulseCtrl&AnalogMux register
     if ( fHoleMode )
         cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux", 0xC1 ) );

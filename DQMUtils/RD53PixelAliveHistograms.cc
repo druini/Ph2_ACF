@@ -46,8 +46,8 @@ void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)
 	  auto* BCIDHist        = BCID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 	  auto* TriggerIDHist   = TriggerID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
-	  for (auto row = 0; row < RD53::nRows; row++)
-	    for (auto col = 0; col < RD53::nCols; col++)
+	  for (auto row = 0u; row < RD53::nRows; row++)
+	    for (auto col = 0u; col < RD53::nCols; col++)
 	      if (cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != 0)
 		{
 		  Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy * nEvents);
@@ -55,13 +55,13 @@ void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)
 		  ToTHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
 		}
 
-	  for (auto i = 1; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.size(); i++)
+	  for (auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.size(); i++)
 	    {
 	      int deltaBCID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i-1];
 	      BCIDHist->Fill((deltaBCID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1) + deltaBCID);
 	    }
 	  
-	  for (auto i = 1; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.size(); i++)
+	  for (auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.size(); i++)
 	    {
 	      int deltaTrgID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i-1];
 	      TriggerIDHist->Fill((deltaTrgID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1) + deltaTrgID);

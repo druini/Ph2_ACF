@@ -140,8 +140,7 @@ namespace Ph2_HwInterface {
 
 			linecount = 0;
 			hits.clear();
-			uint32_t HIPFLAG1 = 0;
-			uint32_t HIPFLAG2 = 0;}
+			}
 	}
         //std::cout << std::endl;
         //for(auto word : list ) std::cout << std::hex << word << std::dec << std::endl;
@@ -173,16 +172,12 @@ namespace Ph2_HwInterface {
         if (cNFe_software != cNFe_event)
             LOG (ERROR) << "Number of Modules in event header (" << cNFe_event << ") doesnt match the amount of modules defined in firmware.";
 
-        fDummySize = 0x000000FF & list.at (1);
         fEventCount = 0x00FFFFFF &  list.at (2);
-        fBunch = 0xFFFFFFFF & list.at (3);
-
+        
         fTDC = 0x000000FF & list.at (4);
         // correct the tdc value
         if (fTDC >= 5) fTDC-=5;
         else fTDC+=3;
-
-        fTLUTriggerID = (0x00FFFF00 & list.at (4) ) >> 8;
 
         fBeId = pBoard->getBeId();
         fBeFWType = 0;
@@ -566,8 +561,7 @@ namespace Ph2_HwInterface {
 		HIPFLAG1 = (r1 & 0xFFFF0000)>>16;
 		HIPFLAG2 = ((r2 & 0xFF)<<16)|HIPFLAG1;
 		os << std::to_string(HIPFLAG2)<<std::endl;
-		uint32_t BXC = (r1 & 0x1FF);
-
+		
 		for (auto& s : hits) os <<"  "<<static_cast<int16_t>(s);
 
 

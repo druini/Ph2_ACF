@@ -18,8 +18,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define DEEPSLEEP 50000 // [microseconds]
-#define NPIXCMD      40 // Number of pixel commands to stack
+#define NPIXCMD 40 // Number of pixel commands to stack
 
 
 namespace Ph2_HwInterface
@@ -50,7 +49,7 @@ namespace Ph2_HwInterface
     void     ResetRD53         (RD53* pRD53);
 
     std::vector<std::pair<uint16_t,uint16_t>> ReadRD53Reg (RD53* pRD53, const std::string& pRegNode);
-   };
+  };
 }
 
 #endif
