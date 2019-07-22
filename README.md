@@ -228,7 +228,7 @@ then
     CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
     echo "gainopt" >> calibDone.txt
 
-    CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+    CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
     echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
@@ -242,7 +242,7 @@ then
     CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
     echo "scurve" >> calibDone.txt
 
-    CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+    CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
     echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
