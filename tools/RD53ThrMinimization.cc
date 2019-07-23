@@ -164,7 +164,7 @@ void ThrMinimization::save ()
 
 void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
-  uint8_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue) : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName)) + 1;
+  uint16_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue)+1 : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName));
 
 
   ContainerFactory theDetectorFactory;
@@ -187,7 +187,7 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::setBits(numberOfBits)) + 1;
  
 
-  for (auto i = 0u; i < numberOfBits; i++)
+  for (auto i = 0u; i <= numberOfBits; i++)
     {
       // ###########################
       // # Download new DAC values #

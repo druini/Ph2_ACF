@@ -229,7 +229,7 @@ void ThrEqualization::save ()
 
 void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {
-  uint8_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName);
+  uint16_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName);
 
 
   ContainerFactory theDetectorFactory;
@@ -269,7 +269,7 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 	this->fReadoutChipInterface->ReadChipAllLocalReg(static_cast<RD53*>(cChip), dacName, *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
 
-  for (auto i = 0u; i < numberOfBits+1u; i++)
+  for (auto i = 0u; i <= numberOfBits; i++)
     {
       // ###########################
       // # Download new DAC values #
