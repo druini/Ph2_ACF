@@ -43,12 +43,11 @@ class RD53SCurveHistograms : public DQMHistogramBase
   DetectorDataContainer Noise1D;
   DetectorDataContainer Threshold2D;
   DetectorDataContainer Noise2D;
-    
-  int nEvents;
-  int nSteps;
-  int startValue;
-  int stopValue;
 
+  size_t nEvents;
+  size_t nSteps;
+  size_t startValue;
+  size_t stopValue;
   size_t ROWstart;
   size_t ROWstop;
   size_t COLstart;
