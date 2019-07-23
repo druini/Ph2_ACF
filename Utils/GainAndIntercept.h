@@ -28,9 +28,9 @@ class GainAndIntercept
   }
 
   template<typename T>
-    void makeAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents) {}
-  void makeAverage   (const std::vector<GainAndIntercept>* theGainAndInterceptVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents);
-  void normalize     (const uint16_t numberOfEvents)                                                                                                                             {}
+    void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
+  void makeSummaryAverage   (const std::vector<GainAndIntercept>* theGainAndInterceptVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
+  void normalize     (const uint32_t numberOfEvents)                                                                                                                             {}
     
   float fGain;
   float fGainError;
@@ -40,7 +40,7 @@ class GainAndIntercept
 };
 
 template<>
-inline void GainAndIntercept::makeAverage<GainAndIntercept>(const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents)
+inline void GainAndIntercept::makeChannelAverage<GainAndIntercept>(const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents)
 {
   for (auto row = 0u; row < theChipContainer->getNumberOfRows(); row++)
     for (auto col = 0u; col < theChipContainer->getNumberOfCols(); col++)

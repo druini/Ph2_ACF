@@ -10,7 +10,7 @@
 
 #include "OccupancyAndPh.h"
 
-void OccupancyAndPh::makeAverage (const std::vector<OccupancyAndPh>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents)
+void OccupancyAndPh::makeSummaryAverage (const std::vector<OccupancyAndPh>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
 {
   if (theOccupancyVector->size() != theNumberOfEnabledChannelsList.size()) 
     {
@@ -43,7 +43,7 @@ void OccupancyAndPh::makeAverage (const std::vector<OccupancyAndPh>* theOccupanc
     }
 }
 
-void OccupancyAndPh::normalize (const uint16_t numberOfEvents)
+void OccupancyAndPh::normalize (const uint32_t numberOfEvents)
 {
   fPh        /= (fOccupancy > 0 ? fOccupancy : 1);
   fPhError    = (fOccupancy > 1 ? sqrt((fPhError / fOccupancy - fPh*fPh) * fOccupancy / (fOccupancy-1)) : 0);

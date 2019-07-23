@@ -22,24 +22,12 @@ using namespace Ph2_HwDescription;
 namespace Ph2_HwInterface {
 
     // Event implementation
-    D19cCbc3Event::D19cCbc3Event ( const BeBoard* pBoard,  uint32_t pNbCbc, const std::vector<uint32_t>& list )
+    D19cCbc3Event::D19cCbc3Event ( const BeBoard* pBoard,  uint32_t pNbCbc, uint32_t pNFe, const std::vector<uint32_t>& list ) 
+    : fEventDataVector(pNbCbc*pNFe)
     {
         SetEvent ( pBoard, pNbCbc, list );
     }
 
-
-    //D19cCbc3Event::D19cCbc3Event ( const Event& pEvent ) :
-    //fBunch ( pEvent.fBunch ),
-    //fOrbit ( pEvent.fOrbit ),
-    //fLumi ( pEvent.fLumi ),
-    //fEventCount ( pEvent.fEventCount ),
-    //fEventCountCBC ( pEvent.fEventCountCBC ),
-    //fTDC ( pEvent.fTDC ),
-    //fEventSize (pEvent.fEventSize),
-    //fEventDataMap ( pEvent.fEventDataMap )
-    //{
-
-    //}
 
     void D19cCbc3Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
     {
@@ -52,7 +40,7 @@ namespace Ph2_HwInterface {
 				{
                     if(cTestChannelGroup->isChannelEnabled(i))
                     {
-    					channel->fOccupancy  += (float)DataBit ( module->getId(), chip->getId(), i);
+    					channel->fOccupancy  += (float)privateDataBit ( module->getId(), chip->getId(), i);
                     }
 				}
     		}
@@ -104,12 +92,11 @@ namespace Ph2_HwInterface {
                     cStubDataSize *= 4; // now in 128 bit words
 
                     // pack now
-                    uint16_t cKey = encodeId (cFeId, cCbcId);
                     uint32_t begin = address_offset;
                     uint32_t end = begin + (cL1ADataSize+cStubDataSize);
                     std::vector<uint32_t> cCbcData (std::next (std::begin (list), begin), std::next (std::begin (list), end) );
-                    fEventDataMap[cKey] = cCbcData;
-
+                    fEventDataVector[encodeVectorIndex(cFeId, cCbcId,fNCbc)] = cCbcData;
+                    
                     // increment
                     address_offset += (cL1ADataSize+cStubDataSize);
                 } else {
@@ -183,123 +170,53 @@ namespace Ph2_HwInterface {
 
     uint32_t D19cCbc3Event::Error ( uint8_t pFeId, uint8_t pCbcId ) const
     {
-        uint16_t cKey = encodeId (pFeId, pCbcId);
-        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
-
-        if (cData != std::end (fEventDataMap) )
+        try 
         {
-            // buf overflow and lat error
-            uint32_t cError = ( (cData->second.at (2) & 0xC0000000) >> 30 );;
+            const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc));
+            uint32_t cError = ( (hitVector.at (2) & 0xC0000000) >> 30 );;
             return cError;
         }
-        else
-        {
-            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
+        catch (const std::out_of_range& outOfRange) {
+            LOG (ERROR) << "Word 2 for FE " << +pFeId << " CBC " << +pCbcId << " is not found:" ;
+            LOG (ERROR) << "Out of Range error: " << outOfRange.what() ;
             return 0;
         }
     }
 
     uint32_t D19cCbc3Event::PipelineAddress ( uint8_t pFeId, uint8_t pCbcId ) const
     {
-        uint16_t cKey = encodeId (pFeId, pCbcId);
-        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
-
-        if (cData != std::end (fEventDataMap) )
+        try 
         {
-            uint32_t cPipeAddress = ( (cData->second.at (2) & 0x000001FF) >> 0 );
+            const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc));
+            uint32_t cPipeAddress = ( (hitVector.at (2) & 0x000001FF) >> 0 );
             return cPipeAddress;
         }
-        else
-        {
-            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
+        catch (const std::out_of_range& outOfRange) {
+            LOG (ERROR) << "Word 2 for FE " << +pFeId << " CBC " << +pCbcId << " is not found:" ;
+            LOG (ERROR) << "Out of Range error: " << outOfRange.what() ;
             return 0;
         }
-    }
 
-    bool D19cCbc3Event::DataBit ( uint8_t pFeId, uint8_t pCbcId, uint32_t i ) const
-    {
-        if ( i >= NCHANNELS )
-            return 0;
-
-        uint32_t cWordP = 0;
-        uint32_t cBitP = 0;
-        calculate_address (cWordP, cBitP, i);
-
-        uint16_t cKey = encodeId (pFeId, pCbcId);
-        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
-
-        if (cData != std::end (fEventDataMap) )
-        {
-            if (cWordP >= cData->second.size() ) return false;
-
-            return ( (cData->second.at (cWordP) >> (cBitP) ) & 0x1);
-        }
-        else
-        {
-            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
-            return false;
-        }
-
-        //return Bit ( pFeId, pCbcId, i + OFFSET_CBCDATA );
     }
 
     std::string D19cCbc3Event::DataBitString ( uint8_t pFeId, uint8_t pCbcId ) const
     {
-        uint16_t cKey = encodeId (pFeId, pCbcId);
-        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
-
-        if (cData != std::end (fEventDataMap) )
+        std::ostringstream os;
+        for ( uint32_t i = 0; i < NCHANNELS; ++i )
         {
-            std::ostringstream os;
-
-            for ( uint32_t i = 0; i < NCHANNELS; ++i )
-            {
-
-                uint32_t cWordP = 0;
-                uint32_t cBitP = 0;
-                calculate_address (cWordP, cBitP, i);
-
-                if ( cWordP >= cData->second.size() ) break;
-
-                os << ( ( cData->second.at (cWordP) >> (cBitP ) ) & 0x1 );
-            }
-
-            return os.str();
-
+            os << privateDataBit(pFeId,pCbcId,i);
         }
-        else
-        {
-            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
-            return "";
-        }
-
-        //return BitString ( pFeId, pCbcId, OFFSET_CBCDATA, WIDTH_CBCDATA );
+        return os.str();
     }
 
     std::vector<bool> D19cCbc3Event::DataBitVector ( uint8_t pFeId, uint8_t pCbcId ) const
     {
         std::vector<bool> blist;
-        uint16_t cKey = encodeId (pFeId, pCbcId);
-        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
-        if (cData != std::end (fEventDataMap) )
+        for ( uint32_t i = 0; i < NCHANNELS; ++i )
         {
-            std::ostringstream os;
-
-            for ( uint32_t i = 0; i < NCHANNELS; ++i )
-            {
-
-                uint32_t cWordP = 0;
-                uint32_t cBitP = 0;
-                calculate_address (cWordP, cBitP, i);
-
-                if ( cWordP >= cData->second.size() ) break;
-
-                blist.push_back ( ( cData->second.at (cWordP) >> (cBitP ) ) & 0x1 );
-            }
+            blist.push_back ( privateDataBit(pFeId,pCbcId,i) );
         }
-        else
-            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
 
         return blist;
     }
@@ -308,25 +225,10 @@ namespace Ph2_HwInterface {
     {
         std::vector<bool> blist;
 
-        uint16_t cKey = encodeId (pFeId, pCbcId);
-        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
-
-        if (cData != std::end (fEventDataMap) )
+        for ( auto i :  channelList )
         {
-            for ( auto i :  channelList )
-            {
-
-                uint32_t cWordP = 0;
-                uint32_t cBitP = 0;
-                calculate_address (cWordP, cBitP, i);
-
-                if ( cWordP >= cData->second.size() ) break;
-
-                blist.push_back ( ( cData->second.at (cWordP) >> (cBitP ) ) & 0x1 );
-            }
+            blist.push_back ( privateDataBit(pFeId,pCbcId,i) );
         }
-        else
-            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
 
         return blist;
     }
@@ -354,20 +256,17 @@ namespace Ph2_HwInterface {
 
     bool D19cCbc3Event::StubBit ( uint8_t pFeId, uint8_t pCbcId ) const
     {
-        //here just OR the stub positions
-        uint16_t cKey = encodeId (pFeId, pCbcId);
-        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
-
-        if (cData != std::end (fEventDataMap) )
+        try 
         {
-            uint8_t pos1 = (cData->second.at (13) & 0x000000FF);
-            uint8_t pos2 = (cData->second.at (13) & 0x0000FF00) >> 8;
-            uint8_t pos3 = (cData->second.at (13) & 0x00FF0000) >> 16;
+            uint32_t stubWord = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc)).at(13);
+            uint8_t pos1 = (stubWord & 0x000000FF);
+            uint8_t pos2 = (stubWord & 0x0000FF00) >> 8;
+            uint8_t pos3 = (stubWord & 0x00FF0000) >> 16;
             return (pos1 || pos2 || pos3);
         }
-        else
-        {
-            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
+        catch (const std::out_of_range& outOfRange) {
+            LOG (ERROR) << "Stub bit for FE " << +pFeId << " CBC " << +pCbcId << " is not found:" ;
+            LOG (ERROR) << "Out of Range error: " << outOfRange.what() ;
             return false;
         }
     }
@@ -375,97 +274,76 @@ namespace Ph2_HwInterface {
     std::vector<Stub> D19cCbc3Event::StubVector (uint8_t pFeId, uint8_t pCbcId) const
     {
         std::vector<Stub> cStubVec;
-        //here create stubs and return the vector
-        uint16_t cKey = encodeId (pFeId, pCbcId);
-        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 
-        if (cData != std::end (fEventDataMap) )
+        try 
         {
-            uint8_t pos1 =  (cData->second.at (13) &  0x000000FF) ;
-            uint8_t pos2 =   (cData->second.at (13) & 0x0000FF00) >> 8;
-            uint8_t pos3 =   (cData->second.at (13) & 0x00FF0000) >> 16;
-            //LOG (DEBUG) << std::bitset<8> (pos1);
-            //LOG (DEBUG) << std::bitset<8> (pos2);
-            //LOG (DEBUG) << std::bitset<8> (pos3);
-            uint8_t bend1 = (cData->second.at (14) & 0x00000F00) >> 8;
-            uint8_t bend2 = (cData->second.at (14) & 0x000F0000) >> 16;
-            uint8_t bend3 = (cData->second.at (14) & 0x0F000000) >> 24;
+            uint32_t stubWord = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc)).at(13);
+            uint8_t pos1 = (stubWord &  0x000000FF) ;
+            uint8_t pos2 = (stubWord & 0x0000FF00) >> 8;
+            uint8_t pos3 = (stubWord & 0x00FF0000) >> 16;
+            
+            uint32_t bendWord = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc)).at(14);
+            uint8_t bend1 = (bendWord & 0x00000F00) >> 8;
+            uint8_t bend2 = (bendWord & 0x000F0000) >> 16;
+            uint8_t bend3 = (bendWord & 0x0F000000) >> 24;
 
             if (pos1 != 0 ) cStubVec.emplace_back (pos1, bend1) ;
-
             if (pos2 != 0 ) cStubVec.emplace_back (pos2, bend2) ;
+            if (pos3 != 0 ) cStubVec.emplace_back (pos3, bend3) ;  
 
-            if (pos3 != 0 ) cStubVec.emplace_back (pos3, bend3) ;
+            return cStubVec;
+
         }
-        else
-            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
-
-        return cStubVec;
+        catch (const std::out_of_range& outOfRange) {
+            LOG (ERROR) << "Stub bit or bend for FE " << +pFeId << " CBC " << +pCbcId << " is not found:" ;
+            LOG (ERROR) << "Out of Range error: " << outOfRange.what() ;
+            return cStubVec;
+        }
     }
 
     uint32_t D19cCbc3Event::GetNHits (uint8_t pFeId, uint8_t pCbcId) const
     {
-        uint32_t cNHits = 0;
-        uint16_t cKey = encodeId (pFeId, pCbcId);
-        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
-
-
-        if (cData != std::end (fEventDataMap) )
+        try 
         {
-            cNHits += __builtin_popcount ( cData->second.at (10) & 0xFFFFFFFC);
-            cNHits += __builtin_popcount ( cData->second.at (9) & 0xFFFFFFFF);
-            cNHits += __builtin_popcount ( cData->second.at (8) & 0xFFFFFFFF);
-            cNHits += __builtin_popcount ( cData->second.at (7) & 0xFFFFFFFF);
+            uint32_t cNHits = 0; 
+            const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc));
+            cNHits += __builtin_popcount ( hitVector.at (10) & 0xFFFFFFFC);
+            cNHits += __builtin_popcount ( hitVector.at (9) & 0xFFFFFFFF);
+            cNHits += __builtin_popcount ( hitVector.at (8) & 0xFFFFFFFF);
+            cNHits += __builtin_popcount ( hitVector.at (7) & 0xFFFFFFFF);
 
-            cNHits += __builtin_popcount ( cData->second.at (6) & 0xFFFFFFFF);
-            cNHits += __builtin_popcount ( cData->second.at (5) & 0xFFFFFFFF);
-            cNHits += __builtin_popcount ( cData->second.at (4) & 0xFFFFFFFF);
-            cNHits += __builtin_popcount ( cData->second.at (3) & 0xFFFFFFFF);
+            cNHits += __builtin_popcount ( hitVector.at (6) & 0xFFFFFFFF);
+            cNHits += __builtin_popcount ( hitVector.at (5) & 0xFFFFFFFF);
+            cNHits += __builtin_popcount ( hitVector.at (4) & 0xFFFFFFFF);
+            cNHits += __builtin_popcount ( hitVector.at (3) & 0xFFFFFFFF);
+
+            return cNHits;
         }
-        else
-            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
-
-        return cNHits;
+        catch (const std::out_of_range& outOfRange) {
+            LOG (ERROR) << "Stub bit or bend for FE " << +pFeId << " CBC " << +pCbcId << " is not found:" ;
+            LOG (ERROR) << "Out of Range error: " << outOfRange.what() ;
+            return 0;
+        }
     }
 
     std::vector<uint32_t> D19cCbc3Event::GetHits (uint8_t pFeId, uint8_t pCbcId) const
     {
         std::vector<uint32_t> cHits;
-        uint16_t cKey = encodeId (pFeId, pCbcId);
-        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
-
-        if (cData != std::end (fEventDataMap) )
+        
+        for ( uint32_t i = 0; i < NCHANNELS; ++i )
         {
-            for ( uint32_t i = 0; i < NCHANNELS; ++i )
-            {
-                uint32_t cWordP = 0;
-                uint32_t cBitP = 0;
-                calculate_address (cWordP, cBitP, i);
-
-                if ( cWordP >= cData->second.size() ) break;
-
-                if ( ( cData->second.at (cWordP) >> ( cBitP ) ) & 0x1) cHits.push_back (i);
-            }
+            cHits.push_back (privateDataBit(pFeId, pCbcId, i));
         }
-        else
-            LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
 
         return cHits;
     }
 
     void D19cCbc3Event::printCbcHeader (std::ostream& os, uint8_t pFeId, uint8_t pCbcId) const
     {
-        uint16_t cKey = encodeId (pFeId, pCbcId);
-        EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
-
-        if (cData != std::end (fEventDataMap) )
+        if ( size_t(pCbcId + fNCbc * pFeId) < fEventDataVector.size() )
         {
-            uint8_t cBeId =  0;
-            uint8_t cFeId =  pFeId;
-            uint8_t cCbcId = pCbcId;
-            uint16_t cCbcDataSize = D19C_EVENT_SIZE_32_CBC3;
             os << GREEN << "CBC Header:" << std::endl;
-            os << "BeId: " << +cBeId << " FeId: " << +cFeId << " CbcId: " << +cCbcId << " DataSize: " << cCbcDataSize << RESET << std::endl;
+            os << " FeId: " << +pFeId << " CbcId: " << +pCbcId << " DataSize: " << D19C_EVENT_SIZE_32_CBC3 << RESET << std::endl;
         }
         else
             LOG (INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found." ;
@@ -492,13 +370,12 @@ namespace Ph2_HwInterface {
         const int LINE_WIDTH = 32;
         const int LAST_LINE_WIDTH = 8;
 
-
-        for (auto const& cKey : this->fEventDataMap)
+        size_t vectorIndex = 0;
+        for (__attribute__((unused)) auto const& hitVector : fEventDataVector)
         {
-            uint8_t cFeId;
-            uint8_t cCbcId;
-            this->decodeId (cKey.first, cFeId, cCbcId);
-
+            uint8_t cFeId = getFeIdFromVectorIndex(vectorIndex,fNCbc);
+            uint8_t cCbcId = getCbcIdFromVectorIndex(vectorIndex++,fNCbc);
+            
             //here display the Cbc Header manually
             this->printCbcHeader (os, cFeId, cCbcId);
 
@@ -653,12 +530,11 @@ namespace Ph2_HwInterface {
             for (auto cCbc : cFe->fReadoutChipVector)
             {
                 uint8_t cCbcId = cCbc->getChipId();
-                uint16_t cKey = encodeId (cFeId, cCbcId);
-                EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
-
-                if (cData != std::end (fEventDataMap) )
+                const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(cFeId, cCbcId,fNCbc));
+                
+                try
                 {
-                    uint16_t cError = ( cData->second.at (2) >> 30 ) & 0x3;
+                    uint16_t cError = ( hitVector.at (2) >> 30 ) & 0x3;
 
                     //now get the CBC status summary
                     if (pBoard->getConditionDataSet()->getDebugMode() == SLinkDebugMode::ERROR)
@@ -667,8 +543,8 @@ namespace Ph2_HwInterface {
                     else if (pBoard->getConditionDataSet()->getDebugMode() == SLinkDebugMode::FULL)
                     {
                         //assemble the error bits (63, 62, pipeline address and L1A counter) into a status word
-                        uint16_t cPipeAddress = (cData->second.at (2) & 0x000001FF) >> 0;
-                        uint16_t cL1ACounter = (cData->second.at (2) &  0x01FF0000) >> 16;
+                        uint16_t cPipeAddress = (hitVector.at (2) & 0x000001FF) >> 0;
+                        uint16_t cL1ACounter = (hitVector.at (2) &  0x01FF0000) >> 16;
                         uint32_t cStatusWord = cError << 18 | cPipeAddress << 9 | cL1ACounter;
                         cStatusPayload.append (cStatusWord, 20);
                     }
@@ -682,23 +558,23 @@ namespace Ph2_HwInterface {
                     // channels 0-223
                     for (size_t i = 3; i < 10; i++)
                     {
-                        uint32_t cWord = (cData->second.at (i));
+                        uint32_t cWord = (hitVector.at (i));
                         cPayload.append (cWord);
                     }
                     //last channel word (last two bits are empty)
-                    uint32_t cLastChanWord = (cData->second.at (10) & 0xFFFFFFFC) >> 2;
+                    uint32_t cLastChanWord = (hitVector.at (10) & 0xFFFFFFFC) >> 2;
                     cPayload.append (cLastChanWord, 30);
 
                     //don't forget the two padding 0s
                     cPayload.padZero (2);
 
                     //stubs
-                    uint8_t pos1 =  (cData->second.at (13) &  0x000000FF) ;
-                    uint8_t pos2 =   (cData->second.at (13) & 0x0000FF00) >> 8;
-                    uint8_t pos3 =   (cData->second.at (13) & 0x00FF0000) >> 16;
-                    uint8_t bend1 = (cData->second.at (14) & 0x00000F00) >> 8;
-                    uint8_t bend2 = (cData->second.at (14) & 0x000F0000) >> 16;
-                    uint8_t bend3 = (cData->second.at (14) & 0x0F000000) >> 24;
+                    uint8_t pos1 =  (hitVector.at (13) &  0x000000FF) ;
+                    uint8_t pos2 =   (hitVector.at (13) & 0x0000FF00) >> 8;
+                    uint8_t pos3 =   (hitVector.at (13) & 0x00FF0000) >> 16;
+                    uint8_t bend1 = (hitVector.at (14) & 0x00000F00) >> 8;
+                    uint8_t bend2 = (hitVector.at (14) & 0x000F0000) >> 16;
+                    uint8_t bend3 = (hitVector.at (14) & 0x0F000000) >> 24;
 
                     if (pos1 != 0)
                     {
@@ -717,6 +593,11 @@ namespace Ph2_HwInterface {
                         cStubPayload.append ( uint16_t ( (cCbcId & 0x0F) << 12 | pos3 << 4 | (bend3 & 0xF)) );
                         cFeStubCounter++;
                     }
+                }
+                catch (const std::out_of_range& outOfRange) {
+                    LOG (ERROR) << "Words for FE " << +cFeId << " CBC " << +cCbcId << " is not found:" ;
+                    LOG (ERROR) << "Out of Range error: " << outOfRange.what() ;
+                    return SLinkEvent();
                 }
 
                 cCbcCounter++;

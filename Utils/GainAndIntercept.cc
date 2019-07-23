@@ -10,7 +10,7 @@
 
 #include "GainAndIntercept.h"
 
-void GainAndIntercept::makeAverage (const std::vector<GainAndIntercept>* theGainAndInterceptVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents)
+void GainAndIntercept::makeSummaryAverage (const std::vector<GainAndIntercept>* theGainAndInterceptVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
 {
   if (theGainAndInterceptVector->size() != theNumberOfEnabledChannelsList.size())
     {

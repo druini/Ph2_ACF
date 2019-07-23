@@ -100,8 +100,7 @@ class ChannelContainerBase
 public:
 	ChannelContainerBase(){;}
 	virtual ~ChannelContainerBase(){;}
-	virtual void print(void) = 0;
-	virtual void normalize(uint16_t numberOfEvents) {;}
+	virtual void normalize(uint32_t numberOfEvents) {;}
 };
 
 template <typename T>
@@ -111,11 +110,6 @@ public:
 	ChannelContainer(int size) : std::vector<T>(size) {}
 	ChannelContainer(int size, T initialValue) : std::vector<T>(size, initialValue) {}
 	ChannelContainer(){}
-	void print(void)
-	{
-		for(auto& channel: *this)
-			channel.print();
-	}
 
 	T& getChannel(unsigned int channel) {return this->at(channel);}
 

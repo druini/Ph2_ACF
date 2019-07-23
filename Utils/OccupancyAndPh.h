@@ -28,9 +28,9 @@ class OccupancyAndPh
   }
   
   template<typename T>
-    void makeAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents) {}
-  void makeAverage   (const std::vector<OccupancyAndPh>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents);
-  void normalize     (const uint16_t numberOfEvents);
+    void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
+  void makeSummaryAverage   (const std::vector<OccupancyAndPh>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
+  void normalize     (const uint32_t numberOfEvents);
   
   float fOccupancy;
 
@@ -39,7 +39,7 @@ class OccupancyAndPh
 };
 
 template<>
-inline void OccupancyAndPh::makeAverage<OccupancyAndPh> (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents)
+inline void OccupancyAndPh::makeChannelAverage<OccupancyAndPh> (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents)
 {
   int numberOfEnabledChannels = 0;
 

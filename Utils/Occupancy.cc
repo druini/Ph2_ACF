@@ -2,7 +2,7 @@
 #include "../Utils/Occupancy.h"
 
 
-void Occupancy::makeAverage(const std::vector<Occupancy>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents)
+void Occupancy::makeSummaryAverage(const std::vector<Occupancy>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
 {
     if(theOccupancyVector->size()!=theNumberOfEnabledChannelsList.size()) 
     {
@@ -20,7 +20,7 @@ void Occupancy::makeAverage(const std::vector<Occupancy>* theOccupancyVector, co
     fOccupancyError =sqrt(float(fOccupancy*(1.-fOccupancy)/numberOfEvents));
 }
 
-void Occupancy::normalize(const uint16_t numberOfEvents) 
+void Occupancy::normalize(const uint32_t numberOfEvents) 
 {
     fOccupancy/=float(numberOfEvents);
     fOccupancyError =sqrt(float(fOccupancy*(1.-fOccupancy)/numberOfEvents));

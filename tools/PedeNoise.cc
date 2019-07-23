@@ -240,7 +240,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     
     ContainerFactory   theDetectorFactory;
 	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-
+    
     bool originalAllChannelFlag = this->fAllChan;
 
     this->SetTestAllChannels(true);
