@@ -57,31 +57,36 @@ public:
 	}
 };
 
+//Summary class forward declaration
 template <class S, class C>
 class Summary;
 
+//Functor for summarize channels - default case
 template<class S, class C, bool hasAverageFunction = false>
 struct ChannelSummarizer{
 	void operator() (Summary<S,C> &theSummary, const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) 
 	{
 		int32_t status;
-		LOG(ERROR) << __PRETTY_FUNCTION__ << " You are probably trying to call normalizeAndAverageContainers, but " << abi::__cxa_demangle(typeid(S).name(),0,0,&status) <<
-			" does not have the method makeChannelAverage";
+		LOG(ERROR) << __PRETTY_FUNCTION__ << " Member function makeChannelAverage<C> does not exist for " << abi::__cxa_demangle(typeid(S).name(),0,0,&status) <<
+			" \nAborting...";
+		abort();
 	}
 };
 
+//Functor for summarize summaries - default case
 template<class S, class C, bool hasAverageFunction = false>
 struct SummarySummarizer{
 	void operator() (Summary<S,C> &theSummary, const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) 
 	{
 		int32_t status;
-		LOG(ERROR) << __PRETTY_FUNCTION__ << " You are probably trying to call normalizeAndAverageContainers, but " << abi::__cxa_demangle(typeid(S).name(),0,0,&status) <<
-			" does not have the method makeSummaryAverage";
+		LOG(ERROR) << __PRETTY_FUNCTION__ << " Member function makeSummaryAverage does not exist for " << abi::__cxa_demangle(typeid(S).name(),0,0,&status) <<
+			" \nAborting...";
+		abort();
 	}
 };
 
 
-// SFINAE makeChannelAverage
+// SFINAE: check if object T has makeChannelAverage<S> member function
 template <typename T, typename S>
 class has_makeChannelAverage
 {
@@ -96,7 +101,7 @@ public:
 };
 
 
-// SFINAE makeSummaryAverage
+// SFINAE: check if object T has makeSummaryAverage member function
 template <typename T>
 class has_makeSummaryAverage
 {
@@ -111,7 +116,7 @@ public:
 };
 
 
-// SFINAE normalize
+// SFINAE: check if object T has normalize member function
 template <typename T>
 class has_normalize
 {
@@ -171,6 +176,7 @@ public:
 	S theSummary_;
 };
 
+//Functor for summarize channels - case when makeChannelAverage<C> is defined
 template<class S, class C>
 struct ChannelSummarizer<S,C,true>{
 	void operator() (Summary<S,C> &theSummary, const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) 
@@ -179,6 +185,7 @@ struct ChannelSummarizer<S,C,true>{
 	}
 };
 
+//Functor for summarize summaries - case when makeSummaryAverage is defined
 template<class S, class C>
 struct SummarySummarizer<S,C,true>{
 	void operator() (Summary<S,C> &theSummary, const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) 
@@ -298,6 +305,7 @@ public:
 template <typename T>
 class ChannelDataContainer;
 
+//Functor for mormalizing channels - default case
 template<class T, bool hasAverageFunction = false>
 struct ChannelNormalizer{
 	void operator() (ChannelDataContainer<T> &theChannelDataContainer, const uint32_t numberOfEvents) 
@@ -323,7 +331,7 @@ public:
 	}
 };
 
-
+//Functor for mormalizing channels - case when normalize is defined
 template<class T>
 struct ChannelNormalizer<T,true>{
 	void operator() (ChannelDataContainer<T> &theChannelDataContainer, const uint32_t numberOfEvents) 

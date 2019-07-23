@@ -1490,5 +1490,13 @@ void Tool::setSameDac(const std::string &dacName, const uint16_t dacValue)
 std::string Tool::getCalibrationName(void)
 {
 	int32_t status;
-	return abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
+	std::string className = abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
+	std::string emptyTemplate = "<> ";
+	size_t found=className.find(emptyTemplate);
+	while(found!=std::string::npos)
+	{
+		className.erase(found,emptyTemplate.length());
+		found=className.find(emptyTemplate);
+	}
+	return className;
 }
