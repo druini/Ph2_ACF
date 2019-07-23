@@ -254,7 +254,7 @@ then
     echo "scurve" >> calibDone.txt
 else
     echo "Option non recognized: $1"
-    echo "Available options are: step1 [pixelalive+gain+gainopt+thrmin], step2 [threqu+scurve+thrmin], step3 [scurve]"
+    echo "Available options are: step1 [pixelalive + gain + gainopt + thrmin], step2 [threqu + scurve + thrmin], step3 [scurve]"
 fi
 ```
 - Software git branch / tag : `chipPolymorphism` / `IT-v1.7`
