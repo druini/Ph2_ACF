@@ -104,11 +104,12 @@ namespace RD53CmdEncoder
 // ###########################
 namespace RD53InjEncoder
 {
-  const uint8_t NBIT_CAL_EDGE_MODE  = 1; // Number of cal_edge_mode bits
-  const uint8_t NBIT_CAL_EDGE_DELAY = 3; // Number of cal_edge_delay bits
-  const uint8_t NBIT_CAL_EDGE_WIDTH = 6; // Number of cal_edge_width bits
-  const uint8_t NBIT_CAL_AUX_MODE   = 1; // Number of cal_aux_mode bits
-  const uint8_t NBIT_CAL_AUX_DELAY  = 5; // Number of cal_aux_mode bits
+  const uint8_t BROADCAST_CHIPID    = 0xF; // Broadcast chip ID used to send the command to multiple chips
+  const uint8_t NBIT_CAL_EDGE_MODE  =   1; // Number of cal_edge_mode bits
+  const uint8_t NBIT_CAL_EDGE_DELAY =   3; // Number of cal_edge_delay bits
+  const uint8_t NBIT_CAL_EDGE_WIDTH =   6; // Number of cal_edge_width bits
+  const uint8_t NBIT_CAL_AUX_MODE   =   1; // Number of cal_aux_mode bits
+  const uint8_t NBIT_CAL_AUX_DELAY  =   5; // Number of cal_aux_mode bits
 }
 
 

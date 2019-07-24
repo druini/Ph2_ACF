@@ -33,10 +33,8 @@
 // #################
 // # Readout block #
 // #################
-#define HANDSHAKE_EN      0
-#define HYBRID_EN         1 
-#define READOUT_CHIP_MASK 1
-#define L1A_TIMEOUT    4000
+#define HANDSHAKE_EN   0
+#define L1A_TIMEOUT 4000
 
 
 namespace RD53FWEvtEncoder

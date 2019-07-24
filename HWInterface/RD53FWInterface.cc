@@ -56,6 +56,7 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)
   {
+    std::stringstream myString;
     // @TMP@
     // this->TurnOffFMC();
     // this->TurnOnFMC();
@@ -67,16 +68,31 @@ namespace Ph2_HwInterface
     this->ChipReSync();
 
 
+    // ###############################################
+    // # FW register initialization from config file #
+    // ###############################################
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
-
-    BeBoardRegMap cRD53FWRegMap = pBoard->getBeBoardRegMap();
     LOG (INFO) << GREEN << "Initializing board's registers:" << RESET;
-
-    for (const auto& it : cRD53FWRegMap)
+    for (const auto& it : pBoard->getBeBoardRegMap())
       {
 	LOG (INFO) << BOLDBLUE << "\t--> " << it.first << " = " << BOLDYELLOW << it.second << RESET;
-	cVecReg.push_back ({it.first, it.second});
+	cVecReg.push_back({it.first, it.second});
       }
+
+
+    // ##############################
+    // # Enabling modules and chips #
+    // ##############################
+    for (const auto& cModule : pBoard->fModuleVector)
+      {
+	myString.clear(); myString.str("");
+	myString << "user.ctrl_regs.Hybrid" << cModule->getIndex() + 1;
+	cVecReg.push_back({myString.str() + ".Hybrid_en", 1});
+	cVecReg.push_back({myString.str() + ".Chips_en", RD53::setBits(cModule->fReadoutChipVector.size())});
+	LOG (INFO) << BOLDBLUE << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << BOLDBLUE << " chips for module " << BOLDYELLOW << cModule->getIndex() << RESET;
+      }
+
+
     if (cVecReg.size() != 0) WriteStackReg (cVecReg);
 
     this->PrintFWstatus();
@@ -805,8 +821,6 @@ namespace Ph2_HwInterface
     WriteStackReg({
 	{"user.ctrl_regs.readout_block.data_handshake_en", HANDSHAKE_EN},
 	{"user.ctrl_regs.readout_block.l1a_timeout_value", L1A_TIMEOUT},
-	{"user.ctrl_regs.Hybrid1.Hybrid_en",               HYBRID_EN},
-	{"user.ctrl_regs.Hybrid1.Chips_en",                READOUT_CHIP_MASK}
       });
   }
 
