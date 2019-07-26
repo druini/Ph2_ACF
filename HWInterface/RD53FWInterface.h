@@ -11,12 +11,10 @@
 #define RD53FWInterface_H
 
 #include "BeBoardFWInterface.h"
-#include "../HWDescription/Module.h"
 #include "../Utils/easylogging++.h"
 
 #include <uhal/uhal.hpp>
 
-#include <stdexcept>
 #include <sstream>
 
 
@@ -25,7 +23,7 @@
 // ################################
 #define DEEPSLEEP  100000 // [microseconds]
 #define SHALLOWSLEEP   50 // [microseconds]
-#define MAXTRIALS      20 // Maximum number of trials for ReadNEvents
+#define MAXTRIALS      10 // Maximum number of trials for ReadNEvents
 
 #define NBIT_FWVER     16 // Number of bits for the firmware version
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
@@ -35,10 +33,8 @@
 // #################
 // # Readout block #
 // #################
-#define HANDSHAKE_EN      0
-#define HYBRID_EN         1 
-#define READOUT_CHIP_MASK 1
-#define L1A_TIMEOUT    4000
+#define HANDSHAKE_EN   0
+#define L1A_TIMEOUT 4000
 
 
 namespace RD53FWEvtEncoder
@@ -76,6 +72,7 @@ namespace RD53FWEvtEncoder
   const uint8_t EMPTY  = 0x04; // Event status Empty event
   const uint8_t L1A    = 0x08; // Event status L1A counter mismatch
   const uint8_t FRSIZE = 0x10; // Event status Invalid frame size
+  const uint8_t FWERR  = 0x20; // Event status Firmware error
 }
 
 
