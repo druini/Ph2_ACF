@@ -41,7 +41,7 @@ public:
 template<>
 inline void RegisterValue::makeChannelAverage<RegisterValue>(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents)
 {
-    for(const auto registerValue : *theChipContainer->getChannelContainer<ChannelContainer<RegisterValue>>()) 
+    for(const auto registerValue : *theChipContainer->getChannelContainer<RegisterValue>()) 
     {
         fRegisterValue+=registerValue.fRegisterValue;
     }

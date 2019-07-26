@@ -230,8 +230,8 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer &theOccupa
             {
                 TH1F *chipValidationHistogram = fDetectorValidationHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
                 uint channelBin=1;
-                if(chip->getChannelContainer<ChannelContainer<Occupancy>>() == nullptr ) continue;
-                for(auto channel : *chip->getChannelContainer<ChannelContainer<Occupancy>>())
+                if(chip->getChannelContainer<Occupancy>() == nullptr ) continue;
+                for(auto channel : *chip->getChannelContainer<Occupancy>())
                 {
                     chipValidationHistogram->SetBinContent(channelBin  ,channel.fOccupancy     );
                     chipValidationHistogram->SetBinError  (channelBin++,channel.fOccupancyError);
@@ -260,9 +260,9 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer &the
                 TH1F *chipStripNoiseEvenHistogram = fDetectorStripNoiseEvenHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
                 TH1F *chipStripNoiseOddHistogram  = fDetectorStripNoiseOddHistograms .at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
 
-                if(chip->getChannelContainer<ChannelContainer<ThresholdAndNoise>>() == nullptr ) continue;
+                if(chip->getChannelContainer<ThresholdAndNoise>() == nullptr ) continue;
                 uint8_t channelNumber = 0;
-                for(auto channel : *chip->getChannelContainer<ChannelContainer<ThresholdAndNoise>>())
+                for(auto channel : *chip->getChannelContainer<ThresholdAndNoise>())
                 {
                     chipPedestalHistogram->Fill(channel.fThreshold);
                     chipNoiseHistogram->Fill(channel.fNoise);
@@ -305,9 +305,9 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContaine
             {
                 TH2F *chipSCurve = fDetectorSCurveHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH2FContainer>().fTheHistogram;
     
-                if(chip->getChannelContainer<ChannelContainer<ThresholdAndNoise>>() == nullptr ) continue;
+                if(chip->getChannelContainer<ThresholdAndNoise>() == nullptr ) continue;
                 uint8_t channelNumber = 0;
-                for(auto channel : *chip->getChannelContainer<ChannelContainer<Occupancy>>())
+                for(auto channel : *chip->getChannelContainer<Occupancy>())
                 {
                     float tmpOccupancy      = channel.fOccupancy     ;
                     float tmpOccupancyError = channel.fOccupancyError;

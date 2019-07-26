@@ -173,10 +173,10 @@ public:
 	}
 
 	template <typename T>
-	T* getChannelContainer() {return static_cast<T*>(container_);}
+	ChannelContainer<T>* getChannelContainer() {return static_cast<ChannelContainer<T>*>(container_);}
 
 	template <typename T>
-	const T* getChannelContainer() const {return static_cast<T*>(container_);}
+	const ChannelContainer<T>* getChannelContainer() const {return static_cast<ChannelContainer<T>*>(container_);}
 
 	template <typename T>
 	void setChannelContainer(T* container) {container_ = container;}

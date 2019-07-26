@@ -64,7 +64,7 @@ bool DQMHistogramController::readMessage(DetectorContainer &theDetectorDataConta
 			        {
 			            for(auto chip: *module)
 			            {
-			                for(auto channel : *chip->getChannelContainer<ChannelContainer<Occupancy>>())
+			                for(auto channel : *chip->getChannelContainer<Occupancy>())
 			                    std::cout<<channel.fOccupancy<<" ";
 			                std::cout<<std::endl;
 			            }
