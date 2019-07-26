@@ -14,6 +14,7 @@
 
 #include "Tool.h"
 #ifdef __USE_ROOT__
+  //Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
   #include "../DQMUtils/DQMHistogramCalibrationExample.h"
 #endif
 
@@ -41,6 +42,7 @@ class CalibrationExample : public Tool
     uint32_t fEventsPerPoint;
 
     #ifdef __USE_ROOT__
+      //Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
       DQMHistogramCalibrationExample fDQMHistogramCalibrationExample;
     #endif
 };

@@ -24,6 +24,7 @@ void CalibrationExample::Initialise ()
     LOG (INFO) << " Nevents = " << fEventsPerPoint ;
 
     #ifdef __USE_ROOT__
+        //Calibration is not running on the SoC: plots are booked during initialization
         fDQMHistogramCalibrationExample.book(fResultFile, *fDetectorContainer, fSettingsMap);
     #endif    
 
@@ -64,12 +65,18 @@ void CalibrationExample::runCalibrationExample ()
     } // for on board - end 
 	
     #ifdef __USE_ROOT__
+        //Calibration is not running on the SoC: plotting directly the data, no shipping is done
         fDQMHistogramCalibrationExample.fillCalibrationExamplePlots(theHitContainer);
     #else
+        //Calibration is running on the SoC: shipping the data!!!
+        //I prepare a stream of an uint32_t container, prepareContainerStreamer adds in the stream also the calibration name
+        // that is used when multiple calibrations are concatenated
         auto theHitStream = prepareContainerStreamer<uint32_t>();
-        for(auto board : theHitContainer)
+        // if the streamer was enabled (the supervisor script enable it) data are streamed
+        if(fStreamerEnabled)
         {
-            if(fStreamerEnabled) theHitStream.streamAndSendBoard(board, fNetworkStreamer);
+            // Disclamer: final MW will not do a for loop on board since each instance will hanlde 1 board only
+            for(auto board : theHitContainer)  theHitStream.streamAndSendBoard(board, fNetworkStreamer);
         }
     #endif
 }
@@ -77,6 +84,7 @@ void CalibrationExample::runCalibrationExample ()
 void CalibrationExample::writeObjects()
 {
     #ifdef __USE_ROOT__
+        //Calibration is not running on the SoC: processing the histograms
         fDQMHistogramCalibrationExample.process();
     #endif
 }
