@@ -16,6 +16,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
+#include "../DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "Tool.h"
 
 #include "TApplication.h"
@@ -35,7 +36,7 @@ class ThrEqualization : public Tool
 {
  public:
   ThrEqualization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst);
-  ~ThrEqualization ();
+//   ~ThrEqualization ();
 
   void run  (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
   void draw (bool display, bool save);
@@ -58,7 +59,7 @@ class ThrEqualization : public Tool
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void save            ();
+//   void save            ();
   void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
   void chipErrorReport ();
 
@@ -66,11 +67,7 @@ class ThrEqualization : public Tool
   // ########
   // # ROOT #
   // ########
-  TFile* theFile;
-  std::vector<TCanvas*> theCanvasOcc;
-  std::vector<TH1F*>    theOccupancy;
-  std::vector<TCanvas*> theCanvasTDAC;
-  std::vector<TH1F*>    theTDAC;
+  RD53ThrEqualizationHistograms histos;
 };
 
 #endif

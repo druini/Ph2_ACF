@@ -15,6 +15,7 @@
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+#include "../DQMUtils/RD53LatencyHistograms.h"
 #include "Tool.h"
 
 #include "TApplication.h"
@@ -28,7 +29,7 @@ class Latency : public Tool
 {
  public:
   Latency(const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t startValue, size_t stopValue, size_t nEvents);
-  ~Latency();
+//   ~Latency();
 
   void run     ();
   void draw    (bool display, bool save);
@@ -51,7 +52,6 @@ class Latency : public Tool
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void save            ();
   void scanDac         (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
   void chipErrorReport ();
 
@@ -59,9 +59,8 @@ class Latency : public Tool
   // ########
   // # ROOT #
   // ########
-  TFile* theFile;
-  std::vector<TCanvas*> theCanvasLat;
-  std::vector<TH1F*>    theLat;
+  RD53LatencyHistograms histos;
+
 };
 
 #endif

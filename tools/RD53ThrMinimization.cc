@@ -23,19 +23,8 @@ ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size
   , ThrStart        (ThrStart)
   , ThrStop         (ThrStop)
   , targetOccupancy (targetOccupancy)
+  , histos()
 {}
-
-ThrMinimization::~ThrMinimization ()
-{
-  delete theFile;
-  theFile = nullptr;
-
-  for (auto i = 0u; i < theCanvasThr.size(); i++)
-    {
-      delete theThr[i];
-      delete theCanvasThr[i];
-    }
-}
 
 void ThrMinimization::run ()
 {
@@ -64,17 +53,18 @@ void ThrMinimization::draw (bool display, bool save)
   TApplication* myApp;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
-
-  static_cast<PixelAlive*>(this)->draw(false,save);
+  if (save    == true)
+    {
+      this->CreateResultDirectory("Results");
+      this->InitResultFile(fileRes);
+    }
 
   this->initHisto();
   this->fillHisto();
   this->display();
 
-  if (save    == true) this->save();
+  if (save    == true) this->WriteRootFile();
   if (display == true) myApp->Run();
-
-  theFile->Close();
 }
 
 void ThrMinimization::analyze ()
@@ -86,81 +76,12 @@ void ThrMinimization::analyze ()
 		   << cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue << RESET;
 }
 
-void ThrMinimization::initHisto ()
-{
-  std::stringstream myString;
+void ThrMinimization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
 
+void ThrMinimization::fillHisto () { histos.fill(theThrContainer);                         }
 
-  // #######################
-  // # Allocate histograms #
-  // #######################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-	{
-	  size_t ThrSize = RD53::setBits(static_cast<RD53*>(cChip)->getNumberOfBits("Vthreshold_LIN"))+1;
+void ThrMinimization::display   () { histos.process();                                            }
 
-
-	  myString.clear();
-	  myString.str("");
-          myString << "Thr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"      << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"     << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theThr.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),ThrSize,0,ThrSize));
-	  theThr.back()->SetXTitle("Threhsold");
-	  theThr.back()->SetYTitle("Entries");
-
-	  myString.clear();
-	  myString.str("");
-          myString << "CanvasThr_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasThr.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-	}
-
-  theFile = new TFile(fileRes, "UPDATE");
-}
-
-void ThrMinimization::fillHisto ()
-{
-  size_t index = 0;
-  for (const auto cBoard : theThrContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-	{
-	  theThr[index]->Fill(cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
-
-	  index++;
-	}
-}
-
-void ThrMinimization::display ()
-{
-  for (auto i = 0u; i < theCanvasThr.size(); i++)
-    {
-      theCanvasThr[i]->cd();
-      theThr[i]->Draw();
-      theCanvasThr[i]->Modified();
-      theCanvasThr[i]->Update();
-    }
-}
-
-void ThrMinimization::save ()
-{
-  for (auto i = 0u; i < theCanvasThr.size(); i++) theCanvasThr[i]->Write();
-
-
-  // ############################
-  // # Save register new values #
-  // ############################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-	{
-	  static_cast<RD53*>(cChip)->copyMaskFromDefault();
-	  static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-	}
-}
 
 void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {

@@ -19,6 +19,7 @@ Latency::Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t c
   , startValue (startValue)
   , stopValue  (stopValue)
   , nEvents    (nEvents)
+  , histos     (startValue, stopValue)
 {
   size_t nSteps = stopValue - startValue;
 
@@ -28,18 +29,6 @@ Latency::Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t c
   // ##############################
   float step = (stopValue - startValue) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
-}
-
-Latency::~Latency ()
-{
-  delete theFile;
-  theFile = nullptr;
-
-  for (auto i = 0u; i < theCanvasLat.size(); i++)
-    {
-      delete theLat[i];
-      delete theCanvasLat[i];
-    }
 }
 
 void Latency::run ()
@@ -58,18 +47,35 @@ void Latency::run ()
 void Latency::draw (bool display, bool save)
 {
   TApplication* myApp;
-  
+
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
+  if (save    == true)
+    {
+      this->CreateResultDirectory("Results");
+      this->InitResultFile(fileRes);
+    }
 
   this->initHisto();
   this->fillHisto();
   this->display();
 
-  if (save    == true) this->save();
+  if (save    == true) this->WriteRootFile();
   if (display == true) myApp->Run();
-
-  theFile->Close();
 }
+// {
+//   TApplication* myApp;
+  
+//   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
+
+//   this->initHisto();
+//   this->fillHisto();
+//   this->display();
+
+//   if (save    == true) this->save();
+//   if (display == true) myApp->Run();
+
+//   theFile->Close();
+// }
 
 void Latency::analyze ()
 {
@@ -94,67 +100,11 @@ void Latency::analyze ()
 	}
 }
 
-void Latency::initHisto ()
-{
-  std::stringstream myString;
+void Latency::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
 
+void Latency::fillHisto () { histos.fill(theContainer);                         }
 
-  // #######################
-  // # Allocate histograms #
-  // #######################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-	  myString.clear();
-	  myString.str("");
-          myString << "Latency_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"          << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"         << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theLat.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),stopValue - startValue,startValue,stopValue));
-	  theLat.back()->SetXTitle("Latency [n.bx]");
-          theLat.back()->SetYTitle("Entries");
-
-	  myString.clear();
-          myString.str("");
-	  myString << "CanvasLat_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"            << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"           << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasLat.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-	}
-  
-  theFile = new TFile(fileRes, "UPDATE");
-}
-
-void Latency::fillHisto ()
-{
-  size_t index = 0;
-  for (const auto cBoard : theContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-	{
-	  for (auto dac : dacList)
-	    theLat[index]->SetBinContent(theLat[index]->FindBin(dac),cChip->getSummary<GenericDataVector>().data1[dac-startValue]);
-	  
-	  index++;
-	}
-}
-
-void Latency::display ()
-{
-  for (auto i = 0u; i < theCanvasLat.size(); i++)
-    {
-      theCanvasLat[i]->cd();
-      theLat[i]->Draw();
-      theCanvasLat[i]->Modified();
-      theCanvasLat[i]->Update();
-    }
-}
-
-void Latency::save ()
-{
-  for (auto i = 0u; i < theCanvasLat.size(); i++) theCanvasLat[i]->Write();
-}
+void Latency::display   () { histos.process();                                            }
 
 void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {

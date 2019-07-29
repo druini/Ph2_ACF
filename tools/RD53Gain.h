@@ -15,6 +15,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/GainAndIntercept.h"
+#include "../DQMUtils/RD53GainHistograms.h"
 #include "Tool.h"
 
 #include "TApplication.h"
@@ -23,20 +24,17 @@
 #include "TH2F.h"
 
 
-// #############
-// # CONSTANTS #
-// #############
-#define INTERCEPT_HALFRANGE 6 // [ToT]
-
-
 // ##########################
 // # Gain measurement suite #
 // ##########################
 class Gain : public Tool
 {
  public:
-  Gain  (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps);
-  ~Gain ();
+  Gain  (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset);
+  ~Gain() {
+      for (auto container : detectorContainerVector)
+        delete container;
+  }
 
   void run                                       ();
   void draw                                      (bool display, bool save);
@@ -53,6 +51,7 @@ class Gain : public Tool
   size_t startValue;
   size_t stopValue;
   size_t nSteps;
+  size_t offset;
 
   std::vector<uint16_t> dacList;
   
@@ -63,7 +62,6 @@ class Gain : public Tool
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void save            ();
   void computeStats    (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
   void chipErrorReport ();
 
@@ -71,19 +69,7 @@ class Gain : public Tool
   // ########
   // # ROOT #
   // ########
-  TFile* theFile;
-  std::vector<TCanvas*> theCanvasOcc;
-  std::vector<TH2F*>    theOccupancy;
-  std::vector<TCanvas*> theCanvasGa1D;
-  std::vector<TH1F*>    theGain1D;
-  std::vector<TCanvas*> theCanvasIn1D;
-  std::vector<TH1F*>    theIntercept1D;
-  std::vector<TCanvas*> theCanvasGa2D;
-  std::vector<TH2F*>    theGain2D;
-  std::vector<TCanvas*> theCanvasIn2D;
-  std::vector<TH2F*>    theIntercept2D;
-
-  std::vector<TGaxis*>  theAxis;
+  RD53GainHistograms histos;
 };
 
 #endif

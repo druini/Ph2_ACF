@@ -365,7 +365,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
       std::string fileName("Run" + runNumber + "_Gain.root");
-      Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps);
+      Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
       ga.Inherit(&cSystemController);
       ga.run();
       ga.analyze();
@@ -400,7 +400,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + runNumber + "_GainOptimization.root");
       std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
-      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, RD53chargeConverter::Charge2VCal(ChipTargetCharge), KrumCurrStart, KrumCurrStop);
+      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset, RD53chargeConverter::Charge2VCal(ChipTargetCharge), KrumCurrStart, KrumCurrStop);
       go.Inherit(&cSystemController);
       go.run();
       go.draw(display,true);
