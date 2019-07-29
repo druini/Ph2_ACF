@@ -47,8 +47,7 @@ void GainOptimization::run ()
   // #######################################
   // # Fill Krummenacher Current container #
   // #######################################
-  ContainerFactory theDetectorFactory;
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, theKrumCurrContainer);
+  ContainerFactory::copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, theKrumCurrContainer);
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
@@ -160,7 +159,6 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
   uint16_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue)+1 : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName));
 
 
-  ContainerFactory theDetectorFactory;
   DetectorDataContainer minDACcontainer;
   DetectorDataContainer midDACcontainer;
   DetectorDataContainer maxDACcontainer;
@@ -168,12 +166,12 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
   DetectorDataContainer bestDACcontainer;
   DetectorDataContainer bestContainer;
 
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue> (*fDetectorContainer, minDACcontainer);
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue> (*fDetectorContainer, midDACcontainer);
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue> (*fDetectorContainer, maxDACcontainer);
+  ContainerFactory::copyAndInitStructure<EmptyContainer,RegisterValue> (*fDetectorContainer, minDACcontainer);
+  ContainerFactory::copyAndInitStructure<EmptyContainer,RegisterValue> (*fDetectorContainer, midDACcontainer);
+  ContainerFactory::copyAndInitStructure<EmptyContainer,RegisterValue> (*fDetectorContainer, maxDACcontainer);
 
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue> (*fDetectorContainer, bestDACcontainer);
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,OccupancyAndPh>(*fDetectorContainer, bestContainer);
+  ContainerFactory::copyAndInitStructure<EmptyContainer,RegisterValue> (*fDetectorContainer, bestDACcontainer);
+  ContainerFactory::copyAndInitStructure<EmptyContainer,OccupancyAndPh>(*fDetectorContainer, bestContainer);
 
   for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)

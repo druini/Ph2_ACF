@@ -36,8 +36,7 @@ void CalibrationExample::runCalibrationExample ()
     LOG (INFO) << "runCalibrationExample: Taking Data with " << fEventsPerPoint << " triggers!" ;
 
     DetectorDataContainer       theHitContainer;
-    ContainerFactory   theDetectorFactory; // to be changed into a singleton
-	theDetectorFactory.copyAndInitChannel<uint32_t>(*fDetectorContainer, theHitContainer);
+    ContainerFactory::copyAndInitChannel<uint32_t>(*fDetectorContainer, theHitContainer);
 	
     //getting n events and filling the container:
     for(auto board : theHitContainer) //for on boards - begin 

@@ -88,8 +88,7 @@ class DQMHistogramBase
       if (XTitle != nullptr) histContainer.fTheHistogram->SetXTitle(XTitle);
       if (YTitle != nullptr) histContainer.fTheHistogram->SetYTitle(YTitle);
       
-      RootContainerFactory theRootFactory;
-      theRootFactory.bookChipHistrograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
+      RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
     }
   
   template <typename Hist> 

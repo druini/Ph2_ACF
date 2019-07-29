@@ -69,11 +69,9 @@ void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
 	  }
 
 
-  ContainerFactory theDetectorFactory;
-
   this->fDetectorDataContainer = &theOccContainer;
-  theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-  theDetectorFactory.copyAndInitChannel<RegisterValue>(*fDetectorContainer, theTDACcontainer);
+  ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+  ContainerFactory::copyAndInitChannel<RegisterValue>(*fDetectorContainer, theTDACcontainer);
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(true);
@@ -232,7 +230,6 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   uint16_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName);
 
 
-  ContainerFactory theDetectorFactory;
   DetectorDataContainer minDACcontainer;
   DetectorDataContainer midDACcontainer;
   DetectorDataContainer maxDACcontainer;
@@ -240,12 +237,12 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   DetectorDataContainer bestDACcontainer;
   DetectorDataContainer bestContainer;
 
-  theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, minDACcontainer);
-  theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, midDACcontainer);
-  theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, maxDACcontainer);
+  ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, minDACcontainer);
+  ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, midDACcontainer);
+  ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, maxDACcontainer);
 
-  theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, bestDACcontainer);
-  theDetectorFactory.copyAndInitStructure<Occupancy>    (*fDetectorContainer, bestContainer);
+  ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, bestDACcontainer);
+  ContainerFactory::copyAndInitStructure<Occupancy>    (*fDetectorContainer, bestContainer);
 
   for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)

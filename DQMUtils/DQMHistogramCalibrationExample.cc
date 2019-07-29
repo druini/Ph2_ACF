@@ -40,18 +40,14 @@ void DQMHistogramCalibrationExample::book(TFile *theOutputFile, const DetectorCo
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
     // make fDetectorData ready to receive the information fromm the stream
-    ContainerFactory   theDetectorFactory; // to be changed into a singleton
-    theDetectorFactory.copyStructure(theDetectorStructure, fDetectorData);
+    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     // SoC utilities only - END
     
-
-    RootContainerFactory theRootFactory; // to be changed into a singleton
-
     // creating the histograms fo all the chips:
     // create the TH1FContainer as you would create a TH1F (it implements some feature needed to avoid memory leaks in copying histograms like the move constructor)
     TH1FContainer theTH1FPedestalContainer("HitPerChannel", "Hit Per Channel", 254, -0.5, 253.5);
-    // create histrograms for all the chips, they will be automatically accosiated to the output file, no need to save them, change the name for every chip or set their directory
-    theRootFactory.bookChipHistrograms<TH1FContainer>(theOutputFile, theDetectorStructure, fDetectorHitHistograms, theTH1FPedestalContainer);
+    // create Histograms for all the chips, they will be automatically accosiated to the output file, no need to save them, change the name for every chip or set their directory
+    RootContainerFactory::bookChipHistograms<TH1FContainer>(theOutputFile, theDetectorStructure, fDetectorHitHistograms, theTH1FPedestalContainer);
     
 
 }

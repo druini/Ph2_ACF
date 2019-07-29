@@ -176,8 +176,7 @@ void Calibration::FindVplus()
     // bitWiseScan("VCth", fEventsPerPoint, 0.56, true, backEndOccupanyPerChannelAtTargetMap, backEndOccupanyAtTargetMap);
     DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
-    ContainerFactory   theDetectorFactory;
-    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
 
     setSameLocalDac("ChannelOffset", ( fHoleMode ) ? 0x00 : 0xFF);
@@ -229,8 +228,7 @@ void Calibration::FindOffsets()
 
     DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
-    ContainerFactory   theDetectorFactory;
-    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56);
 
     // std::map<uint16_t, ModuleOccupancyPerChannelMap> backEndOccupancyPerChannelMap;
