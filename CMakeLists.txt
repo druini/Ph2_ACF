@@ -172,6 +172,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(tools)
     add_subdirectory(RootUtils)
     add_subdirectory(DQMUtils)
+    add_subdirectory(NetworkUtils)
 
     MESSAGE(STATUS " ") 
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
