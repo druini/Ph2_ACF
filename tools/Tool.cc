@@ -930,11 +930,10 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
     LOG (INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
 	bool occupanyDirectlyProportionalToDAC;
 
-	ContainerFactory   theDetectorFactory;
 	DetectorDataContainer *previousStepOccupancyContainer = new DetectorDataContainer();
-	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *previousStepOccupancyContainer);
+	ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *previousStepOccupancyContainer);
 	DetectorDataContainer *currentStepOccupancyContainer = new DetectorDataContainer();
-	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *currentStepOccupancyContainer);
+	ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *currentStepOccupancyContainer);
 
 	DetectorDataContainer *previousDacList = new DetectorDataContainer();
 	DetectorDataContainer *currentDacList = new DetectorDataContainer();
@@ -943,13 +942,13 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 	RegisterValue allOneRegister (0xFFFF>>(16-numberOfBits));
 	if(localDAC)
 	{
-		theDetectorFactory.copyAndInitChannel<RegisterValue>(*fDetectorContainer, *previousDacList, allZeroRegister);
-		theDetectorFactory.copyAndInitChannel<RegisterValue>(*fDetectorContainer, *currentDacList , allOneRegister );
+		ContainerFactory::copyAndInitChannel<RegisterValue>(*fDetectorContainer, *previousDacList, allZeroRegister);
+		ContainerFactory::copyAndInitChannel<RegisterValue>(*fDetectorContainer, *currentDacList , allOneRegister );
 	}
 	else
 	{
-		theDetectorFactory.copyAndInitChip<RegisterValue>(*fDetectorContainer, *previousDacList, allZeroRegister);
-		theDetectorFactory.copyAndInitChip<RegisterValue>(*fDetectorContainer, *currentDacList , allOneRegister);
+		ContainerFactory::copyAndInitChip<RegisterValue>(*fDetectorContainer, *previousDacList, allZeroRegister);
+		ContainerFactory::copyAndInitChip<RegisterValue>(*fDetectorContainer, *currentDacList , allOneRegister);
 	}
 
 	if(localDAC) setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList);

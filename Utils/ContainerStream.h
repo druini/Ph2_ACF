@@ -183,8 +183,8 @@ protected:
 	{
 		this->fHeaderStream.boardId         = boardId;
 		this->fHeaderStream.moduleId        = moduleId;
-		this->fHeaderStream.fChipId         = chip->getIndex()                                                ;
-		this->fDataStream.fChannelContainer = chip->getChannelContainer<ChannelDataContainer<C>>();
+		this->fHeaderStream.fChipId         = chip->getIndex();
+		this->fDataStream.fChannelContainer = chip->getChannelContainer<C>();
 	}
 
 };

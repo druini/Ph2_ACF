@@ -206,11 +206,11 @@ Through `CMSIT_miniDAQ`, and with the right command line option, you can run the
 8. Threshold minimization
 ```
 How to setup up and run the IT-system:
-1. `mkdir chose_a_name` under `Ph2_ACF`
-2. `cp settings/RD53Files/CMSIT_RD53.txt chose_a_name`
-3. `cp settings/CMSIT.xml chose_a_name`
+1. `mkdir choose_a_name` under `Ph2_ACF`
+2. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
+3. `cp settings/CMSIT.xml choose_a_name`
 4. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-5. `cd chose_a_name`
+5. `cd choose_a_name`
 6. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the frontend chips (just once)
 7. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
 
@@ -228,7 +228,7 @@ then
     CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
     echo "gainopt" >> calibDone.txt
 
-    CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+    CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
     echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
@@ -242,7 +242,7 @@ then
     CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
     echo "scurve" >> calibDone.txt
 
-    CMSIT_miniDAQ -f CMSIT_thrmin.xml -c thrmin
+    CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
     echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
@@ -254,7 +254,7 @@ then
     echo "scurve" >> calibDone.txt
 else
     echo "Option non recognized: $1"
-    echo "Available options are: step1, step2, step3"
+    echo "Available options are: step1 [pixelalive + gain + gainopt + thrmin], step2 [threqu + scurve + thrmin], step3 [scurve]"
 fi
 ```
 - Software git branch / tag : `chipPolymorphism` / `IT-v1.7`

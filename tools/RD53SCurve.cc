@@ -57,16 +57,13 @@ void SCurve::run ()
       for (const auto cChip : *cModule)
 	this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
 
-
-  ContainerFactory theDetectorFactory;
-
   for (auto i = 0u; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
   detectorContainerVector.clear();
   detectorContainerVector.reserve(dacList.size());
   for (auto i = 0u; i < dacList.size(); i++)
     {
       detectorContainerVector.emplace_back(new DetectorDataContainer());
-      theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *detectorContainerVector.back());
+      ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *detectorContainerVector.back());
     }
   
   this->fChannelGroupHandler = theChnGroupHandler.get();
@@ -105,9 +102,8 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
   float nHits, mean, rms;
   std::vector<float> measurements(dacList.size(),0);
 
-  ContainerFactory theDetectorFactory;
   theThresholdAndNoiseContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
-  theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
+  ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
 
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
@@ -116,23 +112,24 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 	{
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
-	      {
-		for (auto i = 0u; i < dacList.size()-1u; i++)
-		  measurements[i+1] = (detectorContainerVector[i+1]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy - 
-				       detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
+	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+		{
+		  for (auto i = 0u; i < dacList.size()-1u; i++)
+		    measurements[i+1] = (detectorContainerVector[i+1]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy - 
+					 detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
+		  
+		  this->computeStats(measurements, offset, nHits, mean, rms);
+		  
+		  if ((rms > 0) && (nHits > 0) && (isnan(rms) == false))
+		    {
+		      theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold      = mean;
+		      theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThresholdError = rms / sqrt(nHits);
+		      theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise          = rms;
+		    }
+		}
 
-		this->computeStats(measurements, offset, nHits, mean, rms);
-
-		if ((rms > 0) && (nHits > 0) && (isnan(rms) == false))
-		  {
-		    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold      = mean;
-		    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThresholdError = rms / sqrt(nHits);
-		    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise          = rms;
-		  }
-	      }
-	  
 	  index++;
-
+	  
 	  theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
 	  LOG (INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
 		     << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise>().fThreshold

@@ -104,11 +104,12 @@ namespace RD53CmdEncoder
 // ###########################
 namespace RD53InjEncoder
 {
-  const uint8_t NBIT_CAL_EDGE_MODE  = 1; // Number of cal_edge_mode bits
-  const uint8_t NBIT_CAL_EDGE_DELAY = 3; // Number of cal_edge_delay bits
-  const uint8_t NBIT_CAL_EDGE_WIDTH = 6; // Number of cal_edge_width bits
-  const uint8_t NBIT_CAL_AUX_MODE   = 1; // Number of cal_aux_mode bits
-  const uint8_t NBIT_CAL_AUX_DELAY  = 5; // Number of cal_aux_mode bits
+  const uint8_t BROADCAST_CHIPID    = 0xF; // Broadcast chip ID used to send the command to multiple chips
+  const uint8_t NBIT_CAL_EDGE_MODE  =   1; // Number of cal_edge_mode bits
+  const uint8_t NBIT_CAL_EDGE_DELAY =   3; // Number of cal_edge_delay bits
+  const uint8_t NBIT_CAL_EDGE_WIDTH =   6; // Number of cal_edge_width bits
+  const uint8_t NBIT_CAL_AUX_MODE   =   1; // Number of cal_aux_mode bits
+  const uint8_t NBIT_CAL_AUX_DELAY  =   5; // Number of cal_aux_mode bits
 }
 
 
@@ -144,8 +145,8 @@ namespace RD53EvtEncoder
   // # Event status #
   // ################
   const uint8_t CGOOD = 0x00; // Chip event status good
-  const uint8_t CHEAD = 0x20; // Chip event status Bad chip header
-  const uint8_t CPIX  = 0x40; // Chip event status Bad pixel row or column
+  const uint8_t CHEAD = 0x40; // Chip event status Bad chip header
+  const uint8_t CPIX  = 0x80; // Chip event status Bad pixel row or column
 }
 
 
@@ -190,7 +191,7 @@ namespace Ph2_HwDescription
     void encodeCMD (const uint16_t               address,
 		    const uint16_t               data,
 		    const uint8_t                pRD53Id,
-		    const uint16_t                pRD53Cmd,
+		    const uint16_t               pRD53Cmd,
 		    const bool                   isBroadcast,
 		    std::vector<uint32_t>      & pVecReg,
 		    const std::vector<uint16_t>* dataVec = NULL);

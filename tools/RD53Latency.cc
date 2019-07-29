@@ -44,8 +44,7 @@ Latency::~Latency ()
 
 void Latency::run ()
 {
-  ContainerFactory theDetectorFactory;
-  theDetectorFactory.copyAndInitChip<GenericDataVector>(*fDetectorContainer, theContainer);
+  ContainerFactory::copyAndInitChip<GenericDataVector>(*fDetectorContainer, theContainer);
   this->scanDac("LATENCY_CONFIG", dacList, nEvents, &theContainer);
 
 

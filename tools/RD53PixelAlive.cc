@@ -41,11 +41,10 @@ PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStar
 
 void PixelAlive::run ()
 {
-  ContainerFactory theDetectorFactory;
-
+  
   theOccContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
   this->fDetectorDataContainer = theOccContainer.get();
-  theDetectorFactory.copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, *fDetectorDataContainer);
+  ContainerFactory::copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, *fDetectorDataContainer);
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(inject);
@@ -89,10 +88,12 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
 
 	  if (thresholdOccupancy != 0)
 	    {
+	      static_cast<RD53*>(cChip)->copyMaskFromDefault();
+
 	      for (auto row = 0u; row < RD53::nRows; row++)
-		for (auto col = 0u; col < RD53::nCols; col++)
-		  if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
-		    static_cast<RD53*>(cChip)->enablePixel(row,col,(theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy < thresholdOccupancy));
+	      	for (auto col = 0u; col < RD53::nCols; col++)
+	      	  if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+		    static_cast<RD53*>(cChip)->enablePixel(row,col,(theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy * nEvents < thresholdOccupancy));
 
 	      static_cast<RD53*>(cChip)->saveRegMap(fileReg);
 	    }

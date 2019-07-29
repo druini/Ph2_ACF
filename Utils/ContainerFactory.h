@@ -21,12 +21,8 @@
 
 class ChannelGroupBase;
 
-class ContainerFactory
+namespace ContainerFactory
 {
-public:
-	ContainerFactory(){;}
-	~ContainerFactory(){;}
-
 	void copyStructure(const DetectorContainer& original, DetectorDataContainer& copy);
 
 	template <typename T>
@@ -189,6 +185,6 @@ public:
 	}
 
 
-};
+}
 
 #endif

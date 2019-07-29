@@ -37,12 +37,7 @@ DQMHistogramCalibration::~DQMHistogramCalibration ()
 //========================================================================================================================
 void DQMHistogramCalibration::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
 {
-
-    ContainerFactory   theDetectorFactory;
-    theDetectorFactory.copyStructure(theDetectorStructure, fDetectorData);
-    
-    RootContainerFactory theRootFactory;
-    
+    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);    
 }
 
 //========================================================================================================================

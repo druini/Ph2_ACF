@@ -46,7 +46,7 @@ template<>
 inline void Occupancy::makeChannelAverage<Occupancy>(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents)
 {
 
-    for(const auto occupancy : *theChipContainer->getChannelContainer<ChannelContainer<Occupancy>>()) 
+    for(const auto occupancy : *theChipContainer->getChannelContainer<Occupancy>()) 
     {
         fOccupancy+=occupancy.fOccupancy;
     }

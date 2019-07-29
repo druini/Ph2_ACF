@@ -47,8 +47,7 @@ void GainOptimization::run ()
   // #######################################
   // # Fill Krummenacher Current container #
   // #######################################
-  ContainerFactory theDetectorFactory;
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, theKrumCurrContainer);
+  ContainerFactory::copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, theKrumCurrContainer);
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
@@ -157,30 +156,35 @@ void GainOptimization::save ()
 
 void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
-  uint8_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue) : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName)) + 1;
+  uint16_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue)+1 : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName));
 
 
-  ContainerFactory theDetectorFactory;
   DetectorDataContainer minDACcontainer;
   DetectorDataContainer midDACcontainer;
   DetectorDataContainer maxDACcontainer;
 
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, minDACcontainer);
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, midDACcontainer);
-  theDetectorFactory.copyAndInitStructure<EmptyContainer,RegisterValue>(*fDetectorContainer, maxDACcontainer);
+  DetectorDataContainer bestDACcontainer;
+  DetectorDataContainer bestContainer;
 
-  for (const auto cBoard : minDACcontainer)
+  ContainerFactory::copyAndInitStructure<EmptyContainer,RegisterValue> (*fDetectorContainer, minDACcontainer);
+  ContainerFactory::copyAndInitStructure<EmptyContainer,RegisterValue> (*fDetectorContainer, midDACcontainer);
+  ContainerFactory::copyAndInitStructure<EmptyContainer,RegisterValue> (*fDetectorContainer, maxDACcontainer);
+
+  ContainerFactory::copyAndInitStructure<EmptyContainer,RegisterValue> (*fDetectorContainer, bestDACcontainer);
+  ContainerFactory::copyAndInitStructure<EmptyContainer,OccupancyAndPh>(*fDetectorContainer, bestContainer);
+
+  for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = startValue;
+	{
+	  minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = startValue;
+	  maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::setBits(numberOfBits)) + 1;
 
-  for (const auto cBoard : maxDACcontainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
-	cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = (stopValue != 0 ? stopValue : RD53::setBits(numberOfBits)) + 1;
- 
+	  bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh,EmptyContainer>().fPh = 0;
+	}
 
-  for (auto i = 0u; i < numberOfBits; i++)
+
+  for (auto i = 0u; i <= numberOfBits; i++)
     {
       // ###########################
       // # Download new DAC values #
@@ -226,11 +230,23 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
 		    }
 	      stdDev = (cnt != 0 ? stdDev/cnt : 0) - cChip->getSummary<GainAndIntercept>().fGain * cChip->getSummary<GainAndIntercept>().fGain;
 	      stdDev = (stdDev > 0 ? sqrt(stdDev) : 0);
-	      float charge = (RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)/2 - cChip->getSummary<GainAndIntercept>().fIntercept) /
+	      float newValue = (RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)/2 - cChip->getSummary<GainAndIntercept>().fIntercept) /
 		(cChip->getSummary<GainAndIntercept>().fGain + stdDev);
 
 
-	      if ((charge > target) || (charge < 0))
+	      // ########################
+	      // # Save best DAC values #
+	      // ########################
+	      float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh,EmptyContainer>().fPh;
+	      if (fabs(newValue - target) < fabs(oldValue - target))
+		{
+		  bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh,EmptyContainer>().fPh = newValue;
+		  bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue = 
+		    midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue;
+		}
+
+
+	      if ((newValue > target) || (newValue < 0))
 		
 		maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue =
 		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue;
@@ -241,6 +257,22 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
 		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue;
 	    }
     }
+
+
+  // ###########################
+  // # Download new DAC values #
+  // ###########################
+  for (const auto cBoard : *fDetectorContainer)
+    for (auto cModule : *cBoard)
+      for (auto cChip : *cModule)
+	this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,EmptyContainer>().fRegisterValue, true);
+
+
+  // ################
+  // # Run analysis #
+  // ################
+  static_cast<Gain*>(this)->run();
+  static_cast<Gain*>(this)->analyze();
 }
 
 void GainOptimization::chipErrorReport ()

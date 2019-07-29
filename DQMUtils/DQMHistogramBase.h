@@ -88,8 +88,7 @@ class DQMHistogramBase
       if (XTitle != nullptr) histContainer.fTheHistogram->SetXTitle(XTitle);
       if (YTitle != nullptr) histContainer.fTheHistogram->SetYTitle(YTitle);
       
-      RootContainerFactory theRootFactory;
-      theRootFactory.bookChipHistrograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
+      RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
     }
   
   template <typename Hist> 
@@ -133,5 +132,11 @@ class DQMHistogramBase
 		}
 	    }
     }
+
+  auto findValue (const std::map<std::string, uint32_t>& pSettingsMap, const char* name)
+  {
+    auto setting = pSettingsMap.find(name);
+    return ((setting != std::end(pSettingsMap)) ? setting->second : 0);
+  }
 };
 #endif
