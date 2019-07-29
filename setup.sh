@@ -23,7 +23,8 @@ fi
 # ROOT #
 ########
 #source /opt/local/root/bin/thisroot.sh
-export ROOTSYS=/usr/local/lib/root
+source /usr/local/root/bin/thisroot.sh
+#export ROOTSYS=/usr/local/lib/root
 
 #######
 # ZMQ #
