@@ -4,6 +4,7 @@
 #include "../DQMUtils/DQMInterface.h"
 #include "../DQMUtils/DQMHistogramPedeNoise.h"
 #include "../DQMUtils/DQMHistogramCalibration.h"
+#include "../DQMUtils/DQMHistogramCalibrationExample.h"
 #include "../System/FileParser.h"
 #include "TFile.h"
 
@@ -80,15 +81,16 @@ void DQMInterface::configure(std::string& calibrationName, std::string& configur
 	//if calibration type pedenoise
 	if(calibrationName == "pedenoise")
 	{
-		DQMHistogramPedeNoise *theDQMHistogramPedeNoise = new DQMHistogramPedeNoise();
-		fDQMHistogrammerVector.push_back(theDQMHistogramPedeNoise);
+		fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
 	}
 	else if(calibrationName == "calibrationandpedenoise")
 	{
-		DQMHistogramCalibration *theDQMHistogramCalibration = new DQMHistogramCalibration();
-		fDQMHistogrammerVector.push_back(theDQMHistogramCalibration);
-		DQMHistogramPedeNoise *theDQMHistogramPedeNoise = new DQMHistogramPedeNoise();
-		fDQMHistogrammerVector.push_back(theDQMHistogramPedeNoise);
+		fDQMHistogrammerVector.push_back(new DQMHistogramCalibration());
+		fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
+	}
+	else if(calibrationName == "calibrationexample")
+	{
+		fDQMHistogrammerVector.push_back(new DQMHistogramCalibrationExample());
 	}
 
 	fOutputFile = new TFile("tmp.root", "RECREATE");
@@ -157,13 +159,14 @@ bool DQMInterface::running()
 		//if(fListener->receive(tmpDataBuffer, 0, 100000) > 0)
 		{
 			tmpDataBuffer = fListener->receive<std::vector<char>>();
-			std::cout << __PRETTY_FUNCTION__ << "Got Something" << std::endl;
+			std::cout << __PRETTY_FUNCTION__ << "Got something" << std::endl;
 			fDataBuffer.insert(fDataBuffer.end(), tmpDataBuffer.begin(), tmpDataBuffer.end());
+			std::cout << __PRETTY_FUNCTION__ << "Data buffer size: " << fDataBuffer.size() << std::endl;
 			while(fDataBuffer.size() > 0)
 			{
 				if(fDataBuffer.size() < sizeof(CheckStream))
 				{
-					std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
+					std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << "Not enough bytes to retrieve data stream!" << std::endl;
 					break; // Not enough bytes to retreive the packet size
 				}
 				theCurrentStream = reinterpret_cast<CheckStream*>(&fDataBuffer.at(0));
