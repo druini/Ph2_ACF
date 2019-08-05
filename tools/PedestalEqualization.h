@@ -1,7 +1,7 @@
 /*!
 *
-* \file Calibration.h
-* \brief Calibration class, calibration of the hardware
+* \file PedestalEqualization.h
+* \brief PedestalEqualization class, PedestalEqualization of the hardware
 * \author Georg AUZINGER
 * \date 13 / 11 / 15
 *
@@ -9,23 +9,25 @@
 *
 */
 
-#ifndef Calibration_h__
-#define Calibration_h__
+#ifndef PedestalEqualization_h__
+#define PedestalEqualization_h__
 
-#include "Tool.h"
+#include "Tool.h" 
 #include "Channel.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/CommonVisitors.h"
-
-
 #include <map>
 
-#include "TCanvas.h"
-#include "TProfile.h"
-#include "TString.h"
-#include "TGraphErrors.h"
-#include "TString.h"
-#include "TText.h"
+#ifdef __USE_ROOT__
+  #include "../DQMUtils/DQMHistogramPedestalEqualization.h"
+#endif
+
+
+#include "TCanvas.h"  
+#include "TProfile.h"  
+#include "TString.h"   
+#include "TGraphErrors.h"   
+#include "TText.h"  
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -37,14 +39,12 @@ using namespace Ph2_System;
 // typedef std::map<Chip*, TF1*> FitMap;
 // typedef std::map<Chip*, TH1F*> HistMap;
 
-class Calibration : public Tool
+class PedestalEqualization : public Tool
 {
-    using RegisterVector =  std::vector<std::pair< std::string, uint8_t> >;
-    using TestGroupChannelMap =  std::map< int, std::vector<uint8_t> >;
 
   public:
-    Calibration();
-    ~Calibration();
+    PedestalEqualization();
+    ~PedestalEqualization();
 
     void Initialise ( bool pAllChan = false, bool pDisableStubLogic = true );
     void FindVplus();

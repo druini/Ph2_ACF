@@ -1,12 +1,12 @@
-#include "Calibration.h"
+#include "PedestalEqualization.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
 
 //initialize the static member
-//std::map<Chip*, uint16_t> Calibration::fVplusMap;
+//std::map<Chip*, uint16_t> PedestalEqualization::fVplusMap;
 
-Calibration::Calibration() :
+PedestalEqualization::PedestalEqualization() :
     Tool            (),
     fVplusMap       (),
     fVplusCanvas    (nullptr),
@@ -17,22 +17,16 @@ Calibration::Calibration() :
 {
 }
 
-Calibration::~Calibration()
+PedestalEqualization::~PedestalEqualization()
 {
     // delete fOffsetCanvas;
     // delete fOccupancyCanvas;
 }
 
-void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
+void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
 {
     fDisableStubLogic = pDisableStubLogic;
-    // Initialize the TestGroups
 
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
-    // This new it is dangerous since it may cause a memory leak!!! Please handle it //
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
     fChannelGroupHandler = new CBCChannelGroupHandler();
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
     this->fAllChan = pAllChan;
@@ -158,7 +152,7 @@ void Calibration::Initialise ( bool pAllChan, bool pDisableStubLogic )
 }
 
 
-void Calibration::FindVplus()
+void PedestalEqualization::FindVplus()
 {
     LOG (INFO) << BOLDBLUE << "Identifying optimal Vplus for CBC..." << RESET;
     // first, set VCth to the target value for each CBC
@@ -212,7 +206,7 @@ void Calibration::FindVplus()
 }
 
 
-void Calibration::FindOffsets()
+void PedestalEqualization::FindOffsets()
 {
     LOG (INFO) << BOLDBLUE << "Finding offsets..." << RESET;
     // just to be sure, configure the correct VCth and VPlus values
@@ -265,7 +259,7 @@ void Calibration::FindOffsets()
 }
 
 
-// float Calibration::findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint )
+// float PedestalEqualization::findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint )
 // {
 //     TH1F* cOccHist = static_cast<TH1F*> ( getHist ( pCbc, "Occupancy" ) );
 //     float cOccupancy = cOccHist->GetEntries();
@@ -273,13 +267,13 @@ void Calibration::FindOffsets()
 //     return cOccupancy / ( static_cast<float> ( fTestGroupChannelMap[pTGroup].size() * pEventsPerPoint ) );
 // }
 
-void Calibration::clearOccupancyHists ( Chip* pCbc )
+void PedestalEqualization::clearOccupancyHists ( Chip* pCbc )
 {
     TH1F* cOccHist = static_cast<TH1F*> ( getHist ( pCbc, "Occupancy" ) );
     cOccHist->Reset ( "ICESM" );
 }
 
-void Calibration::updateHists ( std::string pHistname )
+void PedestalEqualization::updateHists ( std::string pHistname )
 {
     // loop the CBCs
     for ( const auto& cCbc : fChipHistMap )
@@ -311,7 +305,7 @@ void Calibration::updateHists ( std::string pHistname )
 }
 
 
-void Calibration::writeObjects()
+void PedestalEqualization::writeObjects()
 {
     this->SaveResults();
     fResultFile->cd();
@@ -328,20 +322,20 @@ void Calibration::writeObjects()
 
 // State machine control functions
 
-void Calibration::ConfigureCalibration()
+void PedestalEqualization::ConfigureCalibration()
 {  
-    CreateResultDirectory ( "Results/Run_Calibration" );
-    InitResultFile ( "CalibrationResults" );
+    CreateResultDirectory ( "Results/Run_PedestalEqualization" );
+    InitResultFile ( "PedestalEqualizationResults" );
 }
 
-void Calibration::Start(int currentRun)
+void PedestalEqualization::Start(int currentRun)
 {
     Initialise ( true, true );
     FindVplus();
     FindOffsets();
 }
 
-void Calibration::Stop()
+void PedestalEqualization::Stop()
 {
     writeObjects();
     dumpConfigFiles();
@@ -351,11 +345,11 @@ void Calibration::Stop()
     Destroy();
 }
 
-void Calibration::Pause()
+void PedestalEqualization::Pause()
 {
 }
 
-void Calibration::Resume()
+void PedestalEqualization::Resume()
 {
 }
 

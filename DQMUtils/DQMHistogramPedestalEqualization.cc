@@ -1,5 +1,5 @@
 /*!
-        \file                DQMHistogramCalibration.h
+        \file                DQMHistogramPedestalEqualization.h
         \brief               base class to create and fill monitoring histograms
         \author              Fabio Ravera, Lorenzo Uplegger
         \version             1.0
@@ -7,7 +7,7 @@
         Support :            mail to : fabio.ravera@cern.ch
  */
 
-#include "../DQMUtils/DQMHistogramCalibration.h"
+#include "../DQMUtils/DQMHistogramPedestalEqualization.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/Utilities.h"
@@ -23,37 +23,37 @@
 #include "TF1.h"
 
 //========================================================================================================================
-DQMHistogramCalibration::DQMHistogramCalibration ()
+DQMHistogramPedestalEqualization::DQMHistogramPedestalEqualization ()
 {
 }
 
 //========================================================================================================================
-DQMHistogramCalibration::~DQMHistogramCalibration ()
+DQMHistogramPedestalEqualization::~DQMHistogramPedestalEqualization ()
 {
 
 }
 
 
 //========================================================================================================================
-void DQMHistogramCalibration::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
+void DQMHistogramPedestalEqualization::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);    
 }
 
 //========================================================================================================================
-bool DQMHistogramCalibration::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramPedestalEqualization::fill(std::vector<char>& dataBuffer)
 {
         return false;
 }
 
 //========================================================================================================================
-void DQMHistogramCalibration::process()
+void DQMHistogramPedestalEqualization::process()
 {
 
 }
 
 //========================================================================================================================
-void DQMHistogramCalibration::reset(void)
+void DQMHistogramPedestalEqualization::reset(void)
 {
 
 }

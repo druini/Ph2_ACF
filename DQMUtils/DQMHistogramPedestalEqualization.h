@@ -1,5 +1,5 @@
 /*!
-        \file                DQMHistogramCalibration.h
+        \file                DQMHistogramPedestalEqualization.h
         \brief               base class to create and fill monitoring histograms
         \author              Fabio Ravera, Lorenzo Uplegger
         \version             1.0
@@ -16,22 +16,22 @@
 class TFile;
 
 /*!
- * \class DQMHistogramCalibration
+ * \class DQMHistogramPedestalEqualization
  * \brief Class for PedeNoise monitoring histograms
  */
-class DQMHistogramCalibration : public DQMHistogramBase
+class DQMHistogramPedestalEqualization : public DQMHistogramBase
 {
 
   public:
     /*!
      * constructor
      */
-    DQMHistogramCalibration ();
+    DQMHistogramPedestalEqualization ();
 
     /*!
      * destructor
      */
-    ~DQMHistogramCalibration();
+    ~DQMHistogramPedestalEqualization();
 
     /*!
      * Book histograms

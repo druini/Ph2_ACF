@@ -6,7 +6,7 @@
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
-#include "../tools/Calibration.h"
+#include "../tools/PedestalEqualization.h"
 #include "../tools/PedeNoise.h"
 #include "../Utils/argvparser.h"
 #include "TROOT.h"
@@ -95,32 +95,32 @@ int main ( int argc, char* argv[] )
     outp.str ("");
     cTool.ConfigureHw ();
     cTool.CreateResultDirectory ( cDirectory );
-    cTool.InitResultFile ( "CalibrationResults" );
+    cTool.InitResultFile ( "PedestalEqualizationResults" );
     cTool.StartHttpServer();
     //cTool.ConfigureHw ();
     //if ( !cOld )
     //{
     t.start();
 
-    // now create a calibration object
-    Calibration cCalibration;
-    cCalibration.Inherit (&cTool);
+    // now create a PedestalEqualization object
+    PedestalEqualization cPedestalEqualization;
+    cPedestalEqualization.Inherit (&cTool);
     //second parameter disables stub logic on CBC3
-    // cCalibration.Initialise ( false, true );
-    cCalibration.Initialise ( cAllChan, true );
+    // cPedestalEqualization.Initialise ( false, true );
+    cPedestalEqualization.Initialise ( cAllChan, true );
 
-    if ( cVplus ) cCalibration.FindVplus();
+    if ( cVplus ) cPedestalEqualization.FindVplus();
 
-    cCalibration.FindOffsets();
-    cCalibration.writeObjects();
-    cCalibration.dumpConfigFiles();
-    cCalibration.resetPointers();
+    cPedestalEqualization.FindOffsets();
+    cPedestalEqualization.writeObjects();
+    cPedestalEqualization.dumpConfigFiles();
+    cPedestalEqualization.resetPointers();
     t.stop();
     t.show ( "Time to Calibrate the system: " );
     if (cNoiseScan)
     {
         t.start();
-        //if this is true, I need to create an object of type PedeNoise from the members of Calibration
+        //if this is true, I need to create an object of type PedeNoise from the members of PedestalEqualization
         //tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit (&cTool);

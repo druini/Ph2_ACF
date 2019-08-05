@@ -3,7 +3,7 @@
 #include "../Utils/Container.h"
 #include "../DQMUtils/DQMInterface.h"
 #include "../DQMUtils/DQMHistogramPedeNoise.h"
-#include "../DQMUtils/DQMHistogramCalibration.h"
+#include "../DQMUtils/DQMHistogramPedestalEqualization.h"
 #include "../System/FileParser.h"
 #include "TFile.h"
 
@@ -85,7 +85,7 @@ void DQMInterface::configure(std::string& calibrationName, std::string& configur
 	}
 	else if(calibrationName == "calibrationandpedenoise")
 	{
-		DQMHistogramCalibration *theDQMHistogramCalibration = new DQMHistogramCalibration();
+		DQMHistogramPedestalEqualization *theDQMHistogramCalibration = new DQMHistogramPedestalEqualization();
 		fDQMHistogrammerVector.push_back(theDQMHistogramCalibration);
 		DQMHistogramPedeNoise *theDQMHistogramPedeNoise = new DQMHistogramPedeNoise();
 		fDQMHistogrammerVector.push_back(theDQMHistogramPedeNoise);
