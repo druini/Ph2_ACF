@@ -4,12 +4,9 @@
 #include "../Utils/Occupancy.h"
 
 //initialize the static member
-//std::map<Chip*, uint16_t> PedestalEqualization::fVplusMap;
 
 PedestalEqualization::PedestalEqualization() :
     Tool            (),
-    fVplusMap       (),
-    fVplusCanvas    (nullptr),
     fOffsetCanvas   (nullptr),
     fOccupancyCanvas(nullptr),
     fNCbc           (0),
@@ -54,9 +51,12 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
     if ( fTestPulseAmplitude == 0 ) fTestPulse = 0;
     else fTestPulse = 1;
+    
+    #ifdef __USE_ROOT__
+        fDQMHistogramPedestalEqualization.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    #endif  
 
     // Canvases
-    //fVplusCanvas = new TCanvas ( "VPlus", "VPlus", 515, 0, 500, 500 );
     fOffsetCanvas    = new TCanvas ( "Offset", "Offset", 10, 0, 500, 500 );
     fOccupancyCanvas = new TCanvas ( "Occupancy", "Occupancy", 10, 525, 500, 500 );
 
@@ -91,29 +91,25 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
                 cCbcCount++;
 
                 if ( cCbcId > cCbcIdMax ) cCbcIdMax = cCbcId;
-                fVplusMap.insert ({cCbc, 0});
-                TString cName = Form ( "h_VplusValues_Fe%dCbc%d", cFeId, cCbcId );
+            
+                TString cName;
+
                 TObject* cObj = gROOT->FindObject ( cName );
 
                 if ( cObj ) delete cObj;
 
                 TString cTitle;
 
-                if (fType == FrontEndType::CBC3) cTitle = Form ( "VCth Values for Test Groups FE%d CBC%d; Vth", cFeId, cCbcId );
-
-                TH1I* cHist = new TH1I ( cName, cTitle, 1, 0, 1 );
-                cHist->SetMarkerStyle ( 20 );
-                // cHist->SetLineWidth( 2 );
-                bookHistogram ( cCbc, "Vplus", cHist );
-
                 cName = Form ( "h_Offsets_Fe%dCbc%d", cFeId, cCbcId );
                 cObj = gROOT->FindObject ( cName );
 
                 if ( cObj ) delete cObj;
 
+
                 TH1I* cOffsetHist = new TH1I ( cName, Form ( "Offsets FE%d CBC%d ; Channel; Offset", cFeId, cCbcId ), 254, -.5, 253.5  );
 
                 bookHistogram ( cCbc, "Offsets", cOffsetHist );
+
 
                 cName = Form ( "h_Occupancy_Fe%dCbc%d", cFeId, cCbcId );
                 cObj = gROOT->FindObject ( cName );
@@ -131,7 +127,6 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
     uint32_t cPads = ( cCbcIdMax > cCbcCount ) ? cCbcIdMax : cCbcCount;
 
-    //fVplusCanvas->DivideSquare ( cPads );
     fOffsetCanvas->DivideSquare ( cPads );
     fOccupancyCanvas->DivideSquare ( cPads );
 
@@ -174,30 +169,45 @@ void PedestalEqualization::FindVplus()
     this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
 
     setSameLocalDac("ChannelOffset", ( fHoleMode ) ? 0x00 : 0xFF);
-    
+
+    DetectorDataContainer theVCthCointainer;
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer,theVCthCointainer);
+
     float cMeanValue = 0.;
     uint32_t nCbc = 0;
 
-    for (auto& cBoard : fBoardVector)
+    for(auto board : theVCthCointainer) //for on boards - begin 
     {
-        for ( auto cFe : cBoard->fModuleVector )
+        for(auto module: *board) // for on module - begin 
         {
-            for ( auto cCbc : cFe->fReadoutChipVector )
+            for(auto chip: *module) // for on chip - begin 
             {
+                ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex()));
+                uint16_t tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2")<<8));
+                chip->getSummary<uint16_t>()=tmpVthr;
 
-                TH1I* vPlusHist = static_cast<TH1I*> ( getHist ( cCbc, "Vplus" ) );
-                uint16_t tmpVthr = (cCbc->getReg("VCth1") + (cCbc->getReg("VCth2")<<8));
-                vPlusHist->Fill(0.,tmpVthr);
-                LOG (INFO) << GREEN << "VCth value for BeBoard " << +cBoard->getBeId() << " Module " << +cFe->getModuleId() << " CBC " << +cCbc->getChipId() << " = " << tmpVthr << RESET;
+                LOG (INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " Module " << +module->getId() << " CBC " << +chip->getId() << " = " << tmpVthr << RESET;
                 cMeanValue+=tmpVthr;
                 ++nCbc;
-            }
-        }
-    }
+            } // for on chip - end 
+        } // for on module - end 
+    } // for on board - end 
 
-    this->HttpServerProcess();
+    #ifdef __USE_ROOT__
+        fDQMHistogramPedestalEqualization.fillVplusPlots(theVCthCointainer);
+    #else
+        //send through ethernet
+        
+        // auto theThresholdAndNoiseStream = prepareContainerStreamer<ThresholdAndNoise>();
 
-    fTargetVcth = static_cast<uint16_t> (cMeanValue / nCbc);
+        // for(auto board : fThresholdAndNoiseContainer )
+        // {
+        //     if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
+        // }
+    #endif
+    
+
+    fTargetVcth = uint16_t(cMeanValue / nCbc);
     cThresholdVisitor.setThreshold (fTargetVcth);
     this->accept (cThresholdVisitor);
     LOG (INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
@@ -229,6 +239,37 @@ void PedestalEqualization::FindOffsets()
     // std::map<uint16_t, ModuleGlobalOccupancyMap > backEndCbcOccupanyMap;
     // float globalOccupancy=0;
     // setSameLocalDac("ChannelOffset", ( fHoleMode ) ? 0x00 : 0xFF);
+
+
+    DetectorDataContainer theOffsetsCointainer;
+    ContainerFactory::copyAndInitChannel<uint8_t>(*fDetectorContainer,theOffsetsCointainer);
+
+    for (auto board : theOffsetsCointainer) //for on boards - begin
+    {
+        for (auto module : *board) // for on module - begin
+        {
+            for (auto chip : *module) // for on chip - begin
+            {
+                unsigned int channelNumber = 1;
+                for (auto &channel : *chip->getChannelContainer<uint8_t>()) // for on channel - begin
+                {
+                    char charRegName[10];
+                    sprintf(charRegName, "Channel%03d", channelNumber++);
+                    std::string cRegName = charRegName;
+                    channel = static_cast<ReadoutChip *>(fDetectorContainer->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex()))->getReg(cRegName);
+                } 
+            } // for on chip - end
+        }     // for on module - end
+    }         // for on board - end
+
+    #ifdef __USE_ROOT__
+        fDQMHistogramPedestalEqualization.fillOccupancyPlots(theOccupancyContainer);
+        fDQMHistogramPedestalEqualization.fillOffsetPlots(theOffsetsCointainer);
+    #else
+    //send through ethernet
+    #endif
+
+
 
     for ( auto cBoard : fBoardVector )
     {
@@ -314,7 +355,6 @@ void PedestalEqualization::writeObjects()
     //Tool::SaveResults();
 
     // save canvases too
-    //fVplusCanvas->Write ( fVplusCanvas->GetName(), TObject::kOverwrite );
     fOffsetCanvas->Write ( fOffsetCanvas->GetName(), TObject::kOverwrite );
     fOccupancyCanvas->Write ( fOccupancyCanvas->GetName(), TObject::kOverwrite );
     fResultFile->Flush();

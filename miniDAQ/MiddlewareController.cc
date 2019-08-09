@@ -8,6 +8,7 @@
 #include "../tools/PedestalEqualization.h"
 #include "../tools/PedeNoise.h"
 #include "../tools/CombinedCalibration.h"
+#include "../tools/CalibrationExample.h"
 
 //#include "BurninBoxController.h"
 
@@ -68,6 +69,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 		if     (getVariableValue("Calibration",buffer) == "calibration")                  theSystemController_ = new CombinedCalibration<PedestalEqualization>;
 		else if(getVariableValue("Calibration",buffer) == "pedenoise")                    theSystemController_ = new CombinedCalibration<PedeNoise>;
 		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoise")      theSystemController_ = new CombinedCalibration<PedestalEqualization,PedeNoise>();
+		else if(getVariableValue("Calibration",buffer) == "calibrationexample")           theSystemController_ = new CombinedCalibration<CalibrationExample>;
 		else
 		{
 			std::cout << __PRETTY_FUNCTION__ << "Calibration type " <<  getVariableValue("Calibration",buffer) << " not found, Aborting" << std::endl;

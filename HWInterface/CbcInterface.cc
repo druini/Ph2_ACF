@@ -83,7 +83,7 @@ namespace Ph2_HwInterface {
         uint8_t channelGroup = 0;
         for(; channelGroup<=8; ++channelGroup)
         {
-            if(static_cast<const ChannelGroup<NCHANNELS,1>*>(group)->getBitset() == baseInjectionChannel)
+            if(static_cast<const ChannelGroup<NCHANNELS>*>(group)->getBitset() == baseInjectionChannel)
             {
                 break;
             }
@@ -96,14 +96,15 @@ namespace Ph2_HwInterface {
 
     bool CbcInterface::maskChannelsGroup (ReadoutChip* pCbc, const ChannelGroupBase *group, bool pVerifLoop)
     {
-        const ChannelGroup<NCHANNELS,1>* originalMask     = static_cast<const ChannelGroup<NCHANNELS,1>*>(pCbc->getChipOriginalMask());
+        const ChannelGroup<NCHANNELS>* originalMask    = static_cast<const ChannelGroup<NCHANNELS>*>(pCbc->getChipOriginalMask());
+        const ChannelGroup<NCHANNELS>* groupToMask     = static_cast<const ChannelGroup<NCHANNELS>*>(group);
         std::vector< std::pair<std::string, uint16_t> > cRegVec; 
         cRegVec.clear(); 
         std::bitset<NCHANNELS> tmpBit(255);
         
         for(uint8_t maskGroup=0; maskGroup<32; ++maskGroup)
         {
-            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)(originalMask->getBitset()>>(maskGroup<<3) & tmpBit).to_ulong()));
+            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)((originalMask->getBitset() & groupToMask->getBitset())>>(maskGroup<<3) & tmpBit).to_ulong()));
         }
 
         return WriteChipMultReg ( pCbc , cRegVec, pVerifLoop );
@@ -121,19 +122,8 @@ namespace Ph2_HwInterface {
 
     bool CbcInterface::ConfigureChipOriginalMask (ReadoutChip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
     {
-        
-        const ChannelGroup<NCHANNELS,1>* originalMask = static_cast<const ChannelGroup<NCHANNELS,1>*>(pCbc->getChipOriginalMask());
-        
-        std::vector< std::pair<std::string, uint16_t> > cRegVec; 
-        cRegVec.clear(); 
-        std::bitset<NCHANNELS> tmpBit(255);
-
-        for(uint8_t maskGroup=0; maskGroup<32; ++maskGroup)
-        {
-            cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)(originalMask->getBitset()>>(maskGroup<<3) & tmpBit).to_ulong()));
-        }
-
-        return WriteChipMultReg ( pCbc , cRegVec, pVerifLoop );
+        ChannelGroup<NCHANNELS> allChannelEnabledGroup;
+        return CbcInterface::maskChannelsGroup (pCbc, &allChannelEnabledGroup, pVerifLoop);
     }
 
 

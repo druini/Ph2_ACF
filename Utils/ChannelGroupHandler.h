@@ -49,7 +49,7 @@ protected:
 };
 
 
-template< size_t R, size_t C >
+template< size_t R, size_t C = 1>
 class ChannelGroup : public ChannelGroupBase
 {
 public:
@@ -60,6 +60,12 @@ public:
         numberOfEnabledChannels_=numberOfRows_*numberOfCols_;
 
     };
+    ChannelGroup(const ChannelGroup& theChannelGroup)
+    : ChannelGroupBase(R,C)
+    {
+        channelsBitset_ = theChannelGroup.channelsBitset_;
+    } 
+
     virtual ~ChannelGroup(){;}
     
     inline bool isChannelEnabled     (uint16_t row, uint16_t col = 0) const override { return channelsBitset_[row+numberOfRows_*col] ; }

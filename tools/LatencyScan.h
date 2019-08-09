@@ -50,7 +50,6 @@ class LatencyScan : public Tool
     void ScanLatency2D(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
 
     void writeObjects();
-    
 
   private:
     int countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency);

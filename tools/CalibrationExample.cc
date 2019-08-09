@@ -14,7 +14,7 @@ CalibrationExample::~CalibrationExample()
 {
 }
 
-void CalibrationExample::Initialise () // Initialise the Calibration procedure taking the default settings from the Xml file
+void CalibrationExample::Initialise (void)
 {
 
     auto cSetting = fSettingsMap.find ( "Nevents" );
@@ -30,10 +30,9 @@ void CalibrationExample::Initialise () // Initialise the Calibration procedure t
 
 }
 
-
-void CalibrationExample::runCalibrationExample () 
+void CalibrationExample::runCalibrationExample(void)
 {
-    LOG (INFO) << "runCalibrationExample: Taking Data with " << fEventsPerPoint << " triggers!" ;
+    LOG (INFO) << "Taking Data with " << fEventsPerPoint << " triggers!" ;
 
     DetectorDataContainer       theHitContainer;
     ContainerFactory::copyAndInitChannel<uint32_t>(*fDetectorContainer, theHitContainer);
@@ -90,3 +89,23 @@ void CalibrationExample::writeObjects()
     #endif
 }
 
+//For system on chip compatibility
+void CalibrationExample::Start(int currentRun)
+{
+	LOG (INFO) << "Starting calibration example measurement.";
+	Initialise ( );
+    runCalibrationExample();
+	LOG (INFO) << "Done with calibration example.";
+}
+
+//For system on chip compatibility
+void CalibrationExample::Stop(void)
+{
+	LOG (INFO) << "Stopping calibration example measurement.";
+    writeObjects();
+    dumpConfigFiles();
+    SaveResults();
+    CloseResultFile();
+    Destroy();
+	LOG (INFO) << "Calibration example stopped.";
+}

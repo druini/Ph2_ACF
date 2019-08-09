@@ -75,11 +75,9 @@ class PedestalEqualization : public Tool
 
   private:
     // Containers
-    //static std::map<Chip*, uint16_t> fVplusMap;
-    std::map<ReadoutChip*, uint16_t> fVplusMap;
+
 
     // Canvases
-    TCanvas* fVplusCanvas;
     TCanvas* fOffsetCanvas;
     TCanvas* fOccupancyCanvas;
 
@@ -101,6 +99,12 @@ class PedestalEqualization : public Tool
     //to hold the original register values
     std::map<Chip*, uint8_t> fStubLogicValue;
     std::map<Chip*, uint8_t> fHIPCountValue;
+
+    #ifdef __USE_ROOT__
+      DQMHistogramPedestalEqualization fDQMHistogramPedestalEqualization;
+    #endif
+
+
 };
 
 
