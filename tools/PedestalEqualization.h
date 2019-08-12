@@ -83,7 +83,6 @@ class PedestalEqualization : public Tool
 
     // Counters
     uint32_t fNCbc;
-    uint32_t fNFe;
 
     // Settings
     bool fHoleMode;

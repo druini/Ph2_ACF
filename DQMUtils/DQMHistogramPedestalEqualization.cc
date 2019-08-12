@@ -30,7 +30,6 @@ DQMHistogramPedestalEqualization::DQMHistogramPedestalEqualization ()
 //========================================================================================================================
 DQMHistogramPedestalEqualization::~DQMHistogramPedestalEqualization ()
 {
-
 }
 
 
@@ -48,8 +47,6 @@ void DQMHistogramPedestalEqualization::book(TFile *theOutputFile, const Detector
     HistContainer<TH1F> hOccupancy("OccupancyAfterOffsetEqualization","Occupancy After Offset Equalization",254, -.5, 253.5 );
     RootContainerFactory::bookChipHistograms(theOutputFile,theDetectorStructure,fDetectorOccupancyHistograms,hOccupancy);
 
-
-
 }
 
 //========================================================================================================================
@@ -61,26 +58,32 @@ bool DQMHistogramPedestalEqualization::fill(std::vector<char>& dataBuffer)
 //========================================================================================================================
 void DQMHistogramPedestalEqualization::process()
 {
-    TCanvas* offsetCanvas    = new TCanvas ( "Offset", "Offset", 10, 0, 500, 500 );
-    TCanvas* occupancyCanvas = new TCanvas ( "Occupancy", "Occupancy", 10, 525, 500, 500 );
-
-
     for(auto board : fDetectorOffsetHistograms)
     { 
         for(auto module: *board)
-        {
-            TCanvas* offsetCanvas    = new TCanvas ( "Offset", "Offset", 10, 0, 500, 500 );
-            TCanvas* occupancyCanvas = new TCanvas ( "Occupancy", "Occupancy", 10, 525, 500, 500 );
+        {   
+            TCanvas *offsetCanvas = new TCanvas(("Offset_" + std::to_string(module->getId())).data(),("Offset " + std::to_string(module->getId())).data(),10, 0, 500, 500 );
+            TCanvas *occupancyCanvas  = new TCanvas(("Occupancy_"  + std::to_string(module->getId())).data(),("Occupancy "  + std::to_string(module->getId())).data(), 10, 525, 500, 500 );
+
+            offsetCanvas   ->DivideSquare (module->size());
+            occupancyCanvas->DivideSquare (module->size());
+            
+            for(auto chip: *module)
+            {
+                offsetCanvas->cd(chip->getIndex()+1);
+                TH1I* offsetHistogram = chip->getSummary<HistContainer<TH1I>>().fTheHistogram;
+                offsetHistogram->GetXaxis()->SetTitle("Channel");
+                offsetHistogram->GetYaxis()->SetTitle("Offset");
+                offsetHistogram->DrawCopy();
+
+                occupancyCanvas->cd(chip->getIndex()+1);
+                TH1F* occupancyHistogram = fDetectorOccupancyHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                occupancyHistogram->GetXaxis()->SetTitle("Channel");
+                occupancyHistogram->GetYaxis()->SetTitle("Occupancy");
+                occupancyHistogram->DrawCopy();
+            }
             
         }
-
-            // for(auto chip: *module)
-            // {
-            //     cValidation->cd(chip->getIndex()+1 +module->size()*0);
-            //     TH1F *validationHistogram = fDetectorValidationHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
-            //     validationHistogram->DrawCopy();
-            // }
-    
     }
 
 }
@@ -102,7 +105,7 @@ void DQMHistogramPedestalEqualization::fillVplusPlots(DetectorDataContainer &the
             for(auto chip: *module)
             {
                 TH1I *chipVplusHistogram = fDetectorVplusHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1I>>().fTheHistogram;
-                chipVplusHistogram->SetBinContent(254, chip->getSummary<uint16_t>());
+                chipVplusHistogram->SetBinContent(1, chip->getSummary<uint16_t>());
             }
         }
     }

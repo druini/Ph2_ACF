@@ -22,6 +22,10 @@ TPCalibration::~TPCalibration()
 
 void TPCalibration::Init(int pStartAmp, int pEndAmp, int pStepsize)
 {
+  #ifdef __USE_ROOT__
+    fDQMHistogramTPCalibration.book(fResultFile, *fDetectorContainer, fSettingsMap);
+  #endif
+
   LOG(INFO) << "Initialize the test pulse calibration" << RESET;
   LOG(INFO) << "Measure for amplitudes from " << pStartAmp << " till "
             << pEndAmp << " in steps of " << pStepsize << RESET;
@@ -236,4 +240,31 @@ float TPCalibration::ConvertAmpToElectrons(float pTPAmp, bool pOffset=true)
     return pTPAmp*537.;
   }
   return -(pTPAmp - 255)*537.;
+}
+
+
+// State machine control functions
+
+void TPCalibration::ConfigureCalibration()
+{  
+    CreateResultDirectory ( "Results/Run_TPCalibration" );
+    InitResultFile ( "TPCalibrationResults" );
+}
+
+void TPCalibration::Start(int currentRun)
+{
+
+}
+
+void TPCalibration::Stop()
+{
+
+}
+
+void TPCalibration::Pause()
+{
+}
+
+void TPCalibration::Resume()
+{
 }

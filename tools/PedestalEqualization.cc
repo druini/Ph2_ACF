@@ -358,6 +358,14 @@ void PedestalEqualization::writeObjects()
     fOffsetCanvas->Write ( fOffsetCanvas->GetName(), TObject::kOverwrite );
     fOccupancyCanvas->Write ( fOccupancyCanvas->GetName(), TObject::kOverwrite );
     fResultFile->Flush();
+
+    #ifdef __USE_ROOT__
+        fDQMHistogramPedestalEqualization.process();
+    #else
+    
+    #endif
+    
+
 }
 
 // State machine control functions

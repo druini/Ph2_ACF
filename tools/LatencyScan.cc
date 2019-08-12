@@ -8,6 +8,10 @@ LatencyScan::~LatencyScan() {}
 
 void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange)
 {
+    #ifdef __USE_ROOT__
+        fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    #endif
+
     for ( auto& cBoard : fBoardVector )
     {
         uint32_t cBoardId = cBoard->getBeId();
@@ -109,7 +113,6 @@ void LatencyScan::MeasureTriggerTDC()
 
     return;
 }
-
 
 std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uint8_t pLatencyRange)
 {    
@@ -562,4 +565,31 @@ void LatencyScan::writeObjects()
     //fPedestalCanvas->Write ( fPedestalCanvas->GetName(), TObject::kOverwrite );
     //fFeSummaryCanvas->Write ( fFeSummaryCanvas->GetName(), TObject::kOverwrite );
     fResultFile->Flush();
+}
+
+
+// State machine control functions
+
+void LatencyScan::ConfigureCalibration()
+{  
+    CreateResultDirectory ( "Results/Run_LatencyScan" );
+    InitResultFile ( "LatencyScanResults" );
+}
+
+void LatencyScan::Start(int currentRun)
+{
+
+}
+
+void LatencyScan::Stop()
+{
+
+}
+
+void LatencyScan::Pause()
+{
+}
+
+void LatencyScan::Resume()
+{
 }
