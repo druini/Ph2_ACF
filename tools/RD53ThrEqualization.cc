@@ -9,232 +9,385 @@
 
 #include "RD53ThrEqualization.h"
 
-ThrEqualization::ThrEqualization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst)
-  : Tool        ()
-  , fileRes     (fileRes)
-  , fileReg     (fileReg)
-  , rowStart    (rowStart)
-  , rowStop     (rowStop)
-  , colStart    (colStart)
-  , colStop     (colStop)
-  , nPixels2Inj (nPixels2Inj)
-  , nEvents     (nEvents)
-  , nEvtsBurst  (nEvtsBurst)
-  , histos      (nEvents)
+#include <fstream>
+#include <stdlib.h>
+
+ThrEqualization::ThrEqualization(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart,
+                                 size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst)
+    : Tool()
+    , fileRes(fileRes)
+    , fileReg(fileReg)
+    , rowStart(rowStart)
+    , rowStop(rowStop)
+    , colStart(colStart)
+    , colStop(colStop)
+    , nPixels2Inj(nPixels2Inj)
+    , nEvents(nEvents)
+    , nEvtsBurst(nEvtsBurst)
+    , histos(nEvents)
 {
-  // ########################
-  // # Custom channel group #
-  // ########################
-  ChannelGroup<RD53::nRows,RD53::nCols> customChannelGroup;
-  customChannelGroup.disableAllChannels();
-  
-  for (auto row = rowStart; row <= rowStop; row++)
-    for (auto col = colStart; col <= colStop; col++)
-      customChannelGroup.enableChannel(row,col);
-  
-  theChnGroupHandler = std::shared_ptr<RD53ChannelGroupHandler>(new RD53ChannelGroupHandler());
-  theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
-  theChnGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
+    // ########################
+    // # Custom channel group #
+    // ########################
+    ChannelGroup<RD53::nRows, RD53::nCols> customChannelGroup;
+    customChannelGroup.disableAllChannels();
+
+    for (auto row = rowStart; row <= rowStop; row++)
+        for (auto col = colStart; col <= colStop; col++)
+            customChannelGroup.enableChannel(row, col);
+
+    theChnGroupHandler = std::shared_ptr<RD53ChannelGroupHandler>(new RD53ChannelGroupHandler());
+    theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+    theChnGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 }
 
-void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
+void ThrEqualization::run(std::shared_ptr<DetectorDataContainer> newVCal)
 {
-  // ############################
-  // # Set new VCAL_HIGH values #
-  // ############################
-  if (newVCal != nullptr)
+    // ############################
+    // # Set new VCAL_HIGH values #
+    // ############################
+    if (newVCal != nullptr)
+        for (const auto cBoard : *fDetectorContainer)
+            for (const auto cModule : *cBoard)
+                for (const auto cChip : *cModule) {
+                    auto value = static_cast<RD53*>(cChip)->getReg("VCAL_MED")
+                                 + newVCal->at(cBoard->getIndex())
+                                       ->at(cModule->getIndex())
+                                       ->at(cChip->getIndex())
+                                       ->getSummary<ThresholdAndNoise, ThresholdAndNoise>()
+                                       .fThreshold;
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", value, true);
+                }
+
+    ContainerFactory theDetectorFactory;
+
+    this->fDetectorDataContainer = &theOccContainer;
+    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    theDetectorFactory.copyAndInitChannel<RegisterValue>(*fDetectorContainer, theTDACcontainer);
+
+    this->fChannelGroupHandler = theChnGroupHandler.get();
+    this->SetTestPulse(true);
+    this->fMaskChannelsFromOtherGroups = true;
+    this->bitWiseScan("PIX_PORTAL", nEvents, TARGETeff, nEvtsBurst);
+
+    // #######################
+    // # Fill TDAC container #
+    // #######################
     for (const auto cBoard : *fDetectorContainer)
-      for (const auto cModule : *cBoard)
-	for (const auto cChip : *cModule)
-	  {
-	    auto value = static_cast<RD53*>(cChip)->getReg("VCAL_MED") + newVCal->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold;
-	    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", value, true);
-	  }
+        for (auto cModule : *cBoard)
+            for (auto cChip : *cModule)
+                this->fReadoutChipInterface->ReadChipAllLocalReg(
+                    static_cast<RD53*>(cChip), "PIX_PORTAL",
+                    *theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
-
-  ContainerFactory theDetectorFactory;
-
-  this->fDetectorDataContainer = &theOccContainer;
-  theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-  theDetectorFactory.copyAndInitChannel<RegisterValue>(*fDetectorContainer, theTDACcontainer);
-
-  this->fChannelGroupHandler = theChnGroupHandler.get();
-  this->SetTestPulse(true);
-  this->fMaskChannelsFromOtherGroups = true;
-  this->bitWiseScan("PIX_PORTAL", nEvents, TARGETeff, nEvtsBurst);
-
-
-  // #######################
-  // # Fill TDAC container #
-  // #######################
-  for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
-	this->fReadoutChipInterface->ReadChipAllLocalReg(static_cast<RD53*>(cChip), "PIX_PORTAL", *theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
-
-
-  // ################
-  // # Error report #
-  // ################
-  this->chipErrorReport();
+    // ################
+    // # Error report #
+    // ################
+    this->chipErrorReport();
 }
 
-void ThrEqualization::draw (bool display, bool save)
+void ThrEqualization::draw(bool display, bool save)
 {
-  TApplication* myApp;
+    TApplication* myApp;
 
-  if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (save    == true)
-    {
-      this->CreateResultDirectory("Results");
-      this->InitResultFile(fileRes);
+    if (display == true)
+        myApp = new TApplication("myApp", nullptr, nullptr);
+    if (save == true) {
+        this->CreateResultDirectory("Results");
+        this->InitResultFile(fileRes);
     }
 
-  this->initHisto();
-  this->fillHisto();
-  this->display();
+    this->initHisto();
+    this->fillHisto();
+    this->display();
 
-  if (save    == true) this->WriteRootFile();
-  if (display == true) myApp->Run();
+    if (save == true) {
+        this->WriteRootFile();
+        for (const auto cBoard : *fDetectorContainer)
+            for (const auto cModule : *cBoard)
+                for (const auto cChip : *cModule) {
+                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
+
+                    for (auto row = 0u; row < RD53::nRows; row++)
+                        for (auto col = 0u; col < RD53::nCols; col++)
+                            if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col)
+                                && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
+                                static_cast<RD53*>(cChip)->setTDAC(row, col,
+                                                                   theTDACcontainer.at(cBoard->getIndex())
+                                                                       ->at(cModule->getIndex())
+                                                                       ->at(cChip->getIndex())
+                                                                       ->getChannel<RegisterValue>(row, col)
+                                                                       .fRegisterValue);
+
+                    static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+                }
+    }
+    if (display == true)
+        myApp->Run();
 }
 
-void ThrEqualization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void ThrEqualization::initHisto() { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
 
-void ThrEqualization::fillHisto () { histos.fill(theOccContainer, theTDACcontainer);                         }
+void ThrEqualization::fillHisto() { histos.fill(theOccContainer, theTDACcontainer); }
 
-void ThrEqualization::display   () { histos.process();                                            }
+void ThrEqualization::display() { histos.process(); }
 
-void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
+void ThrEqualization::bitWiseScan(const std::string& dacName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {
-  uint16_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName);
+    uint16_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))
+                                ->fModuleVector.at(0)
+                                ->fReadoutChipVector.at(0)
+                                ->getNumberOfBits(dacName);
+
+    ContainerFactory theDetectorFactory;
+    DetectorDataContainer minDACcontainer;
+    DetectorDataContainer midDACcontainer;
+    DetectorDataContainer maxDACcontainer;
+
+    DetectorDataContainer bestDACcontainer;
+    DetectorDataContainer bestContainer;
+
+    theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, minDACcontainer);
+    theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, midDACcontainer);
+    theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, maxDACcontainer);
+
+    theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, bestDACcontainer);
+    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, bestContainer);
+
+    char unique_name[] = "bad_pixels_XXXXXX";
+    mkstemp(&unique_name[0]);
+    std::ofstream file((unique_name + std::string(".txt")).c_str());
+
+    for (const auto cBoard : *fDetectorContainer)
+        for (auto cModule : *cBoard)
+            for (auto cChip : *cModule)
+                for (auto row = 0u; row < RD53::nRows; row++)
+                    for (auto col = 0u; col < RD53::nCols; col++) {
+                        minDACcontainer.at(cBoard->getIndex())
+                            ->at(cModule->getIndex())
+                            ->at(cChip->getIndex())
+                            ->getChannel<RegisterValue>(row, col)
+                            .fRegisterValue
+                            = 0;
+                        maxDACcontainer.at(cBoard->getIndex())
+                            ->at(cModule->getIndex())
+                            ->at(cChip->getIndex())
+                            ->getChannel<RegisterValue>(row, col)
+                            .fRegisterValue
+                            = RD53::setBits(numberOfBits) + 1;
+
+                        bestContainer.at(cBoard->getIndex())
+                            ->at(cModule->getIndex())
+                            ->at(cChip->getIndex())
+                            ->getChannel<Occupancy>(row, col)
+                            .fOccupancy
+                            = 0;
+
+                        bestDACcontainer.at(cBoard->getIndex())
+                            ->at(cModule->getIndex())
+                            ->at(cChip->getIndex())
+                            ->getChannel<RegisterValue>(row, col)
+                            .fRegisterValue
+                            = 15;
+                    }
+
+    // ############################
+    // # Read DAC starting values #
+    // ############################
+    for (const auto cBoard : *fDetectorContainer)
+        for (auto cModule : *cBoard)
+            for (auto cChip : *cModule)
+                this->fReadoutChipInterface->ReadChipAllLocalReg(
+                    static_cast<RD53*>(cChip), dacName,
+                    *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
 
-  ContainerFactory theDetectorFactory;
-  DetectorDataContainer minDACcontainer;
-  DetectorDataContainer midDACcontainer;
-  DetectorDataContainer maxDACcontainer;
+    for (auto i = 0u; i <= numberOfBits; i++) {
+        // ###########################
+        // # Download new DAC values #
+        // ###########################
+        for (const auto cBoard : *fDetectorContainer)
+            for (auto cModule : *cBoard)
+                for (auto cChip : *cModule)
+                    this->fReadoutChipInterface->WriteChipAllLocalReg(
+                        static_cast<RD53*>(cChip), dacName,
+                        *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
-  DetectorDataContainer bestDACcontainer;
-  DetectorDataContainer bestContainer;
+        // ################
+        // # Run analysis #
+        // ################
+        measureData(nEvents, nEvtsBurst);
 
-  theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, minDACcontainer);
-  theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, midDACcontainer);
-  theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, maxDACcontainer);
+        // #####################
+        // # Compute next step #
+        // #####################
+        for (const auto cBoard : theOccContainer)
+            for (auto cModule : *cBoard)
+                for (auto cChip : *cModule)
+                    for (auto row = 0u; row < RD53::nRows; row++)
+                        for (auto col = 0u; col < RD53::nCols; col++) {
+                            // #######################
+                            // # Build discriminator #
+                            // #######################
+                            float newValue = cChip->getChannel<Occupancy>(row, col).fOccupancy;
 
-  theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, bestDACcontainer);
-  theDetectorFactory.copyAndInitStructure<Occupancy>    (*fDetectorContainer, bestContainer);
+                            if (col == 128 && row < 16) {
+                                std::cout << "row = " << row << ", col = " << col
+                                    << ", TDAC = " <<
+                                    midDACcontainer.at(cBoard->getIndex())
+                                            ->at(cModule->getIndex())
+                                            ->at(cChip->getIndex())
+                                            ->getChannel<RegisterValue>(row, col)
+                                            .fRegisterValue
+                                    << ", occupancy = " << newValue
+                                    << "\n";
+                            }
 
-  for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
-	for (auto row = 0u; row < RD53::nRows; row++)
-	  for (auto col = 0u; col < RD53::nCols; col++)
-	    {
-	      minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = 0;
-	      maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = RD53::setBits(numberOfBits) + 1;
+                            // ########################
+                            // # Save best DAC values #
+                            // ########################
+                            float oldValue = bestContainer.at(cBoard->getIndex())
+                                                 ->at(cModule->getIndex())
+                                                 ->at(cChip->getIndex())
+                                                 ->getChannel<Occupancy>(row, col)
+                                                 .fOccupancy;
+                            if (newValue >= 0.999 || newValue <= 0.001) {
+                                LOG (INFO) << "newValue = " << newValue << "\n";
+                            }
+                            if (fabs(newValue - target) <= fabs(oldValue - target) || (newValue >= 0.999 && (oldValue >= 0.999 || oldValue <= 0.001))) {
+                                bestContainer.at(cBoard->getIndex())
+                                    ->at(cModule->getIndex())
+                                    ->at(cChip->getIndex())
+                                    ->getChannel<Occupancy>(row, col)
+                                    .fOccupancy
+                                    = newValue;
+                                bestDACcontainer.at(cBoard->getIndex())
+                                    ->at(cModule->getIndex())
+                                    ->at(cChip->getIndex())
+                                    ->getChannel<RegisterValue>(row, col)
+                                    .fRegisterValue
+                                    = midDACcontainer.at(cBoard->getIndex())
+                                          ->at(cModule->getIndex())
+                                          ->at(cChip->getIndex())
+                                          ->getChannel<RegisterValue>(row, col)
+                                          .fRegisterValue;
+                            }
 
-	      bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy = 0;
-	    }
+                            if (newValue < target)
 
+                                minDACcontainer.at(cBoard->getIndex())
+                                    ->at(cModule->getIndex())
+                                    ->at(cChip->getIndex())
+                                    ->getChannel<RegisterValue>(row, col)
+                                    .fRegisterValue
+                                    = midDACcontainer.at(cBoard->getIndex())
+                                          ->at(cModule->getIndex())
+                                          ->at(cChip->getIndex())
+                                          ->getChannel<RegisterValue>(row, col)
+                                          .fRegisterValue;
 
-  // ############################
-  // # Read DAC starting values #
-  // ############################
-  for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
-	this->fReadoutChipInterface->ReadChipAllLocalReg(static_cast<RD53*>(cChip), dacName, *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
+                            else
 
+                                maxDACcontainer.at(cBoard->getIndex())
+                                    ->at(cModule->getIndex())
+                                    ->at(cChip->getIndex())
+                                    ->getChannel<RegisterValue>(row, col)
+                                    .fRegisterValue
+                                    = midDACcontainer.at(cBoard->getIndex())
+                                          ->at(cModule->getIndex())
+                                          ->at(cChip->getIndex())
+                                          ->getChannel<RegisterValue>(row, col)
+                                          .fRegisterValue;
 
-  for (auto i = 0u; i <= numberOfBits; i++)
-    {
-      // ###########################
-      // # Download new DAC values #
-      // ###########################
-      for (const auto cBoard : *fDetectorContainer)
-	for (auto cModule : *cBoard)
-	  for (auto cChip : *cModule)
-	    this->fReadoutChipInterface->WriteChipAllLocalReg(static_cast<RD53*>(cChip), dacName, *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
-
-
-      // ################
-      // # Run analysis #
-      // ################
-      measureData(nEvents, nEvtsBurst);
-
-
-      // #####################
-      // # Compute next step #
-      // #####################
-      for (const auto cBoard : theOccContainer)
-	for (auto cModule : *cBoard)
-	  for (auto cChip : *cModule)
-	    for (auto row = 0u; row < RD53::nRows; row++)
-	      for (auto col = 0u; col < RD53::nCols; col++)
-		{
-		  // #######################
-		  // # Build discriminator #
-		  // #######################
-		  float newValue = cChip->getChannel<Occupancy>(row,col).fOccupancy;
-
-
-		  // ########################
-		  // # Save best DAC values #
-		  // ########################
-		  float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy;
-		  if (fabs(newValue - target) < fabs(oldValue - target))
-		    {
-		      bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy = newValue;
-		      bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue = 
-			midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue;
-		    }
-
-
-		  if (newValue < target)
-		    
-		    minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue =
-		      midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue;
-
-		  else
-
-		    maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue =
-		      midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue;
+                            midDACcontainer.at(cBoard->getIndex())
+                                ->at(cModule->getIndex())
+                                ->at(cChip->getIndex())
+                                ->getChannel<RegisterValue>(row, col)
+                                .fRegisterValue
+                                = (minDACcontainer.at(cBoard->getIndex())
+                                       ->at(cModule->getIndex())
+                                       ->at(cChip->getIndex())
+                                       ->getChannel<RegisterValue>(row, col)
+                                       .fRegisterValue
+                                   + maxDACcontainer.at(cBoard->getIndex())
+                                         ->at(cModule->getIndex())
+                                         ->at(cChip->getIndex())
+                                         ->getChannel<RegisterValue>(row, col)
+                                         .fRegisterValue)
+                                  / 2;
 
 
-		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue =
-		    (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue +
-		     maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue) / 2;
-		}
+                        if (col == 128 && row < 16) {
+                                std::cout << "row = " << row << ", col = " << col
+                                    << ", TDAC_best = " <<
+                                        bestDACcontainer.at(cBoard->getIndex())
+                                        ->at(cModule->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<RegisterValue>(row, col)
+                                        .fRegisterValue
+                                    << ", occupancy_best = " <<
+                                        
+                                        bestContainer.at(cBoard->getIndex())
+                                        ->at(cModule->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<Occupancy>(row, col)
+                                        .fOccupancy
+                                    << "\n";
+                                
+                            }
+                        }
     }
 
+    // ###########################
+    // # Download new DAC values #
+    // ###########################
+    for (const auto cBoard : *fDetectorContainer)
+        for (auto cModule : *cBoard)
+            for (auto cChip : *cModule) {
+                this->fReadoutChipInterface->WriteChipAllLocalReg(
+                    static_cast<RD53*>(cChip), dacName,
+                    *bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
+                for (auto row = 0u; row < RD53::nRows; row++) {
+                    for (auto col = 0u; col < RD53::nCols; col++) {
+                        if (bestContainer.at(cBoard->getIndex())
+                                        ->at(cModule->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<Occupancy>(row, col)
+                                        .fOccupancy == 0 
+                                        &&
+                                        static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col)
+                                        && 
+                                        this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col)
+                                        ) {
+                                            file << "row = " << row << ", col = " << col << "\n";
+                                        }
+                    }
+                }
+            }
 
-  // ###########################
-  // # Download new DAC values #
-  // ###########################
-  for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
-  	this->fReadoutChipInterface->WriteChipAllLocalReg(static_cast<RD53*>(cChip), dacName, *bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
-
-  // ################
-  // # Run analysis #
-  // ################
-  measureData(nEvents, nEvtsBurst);
+    // ################
+    // # Run analysis #
+    // ################
+    measureData(nEvents, nEvtsBurst);
 }
 
-void ThrEqualization::chipErrorReport ()
+void ThrEqualization::chipErrorReport()
 {
-  auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
+    auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-	{
-	  LOG (INFO) << BOLDGREEN << "\t--> Readout chip error repor for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-	  LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
-	  LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
-	  LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
-	  LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
-	}
+    for (const auto cBoard : *fDetectorContainer)
+        for (const auto cModule : *cBoard)
+            for (const auto cChip : *cModule) {
+                LOG(INFO) << BOLDGREEN << "\t--> Readout chip error repor for [board/module/chip = " << BOLDYELLOW
+                          << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+                LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW
+                          << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << RESET;
+                LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW
+                          << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
+                LOG(INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW
+                          << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
+                LOG(INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW
+                          << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "CMDERR_CNT") << RESET;
+            }
 }

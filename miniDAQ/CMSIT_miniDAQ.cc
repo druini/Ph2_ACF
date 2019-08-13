@@ -16,6 +16,8 @@
 #include "../tools/RD53Latency.h"
 #include "../tools/RD53SCurve.h"
 #include "../tools/RD53Gain.h"
+#include "../tools/RD53Source.h"
+#include "../tools/RD53Calibration.h"
 
 
 // ##################
@@ -60,6 +62,10 @@ void configureFSM (SystemController& sc, size_t NTRIGxL1A, size_t type, bool hit
       // #############################
       RD53FWInterface::FastCommandsConfig cfgFastCmd;
       
+      std::cout << "HIT_OR = " << int(hitOr) << "\n";
+      std::cout << "HIT_OR = " << int(hitOr) << "\n";
+      std::cout << "HIT_OR = " << int(hitOr) << "\n";
+      std::cout << "HIT_OR = " << int(hitOr) << "\n";
       cfgFastCmd.trigger_source   = (hitOr == true ? RD53FWInterface::TriggerSource::HitOr : RD53FWInterface::TriggerSource::FastCMDFSM);
       cfgFastCmd.n_triggers       = 0;
       cfgFastCmd.trigger_duration = NTRIGxL1A;
@@ -263,6 +269,11 @@ int main (int argc, char** argv)
   size_t LatencyStart      = findValue(cSystemController.fSettingsMap,"LatencyStart");
   size_t LatencyStop       = findValue(cSystemController.fSettingsMap,"LatencyStop");
 
+  size_t VthresholdStart   = findValue(cSystemController.fSettingsMap,"VthresholdStart");
+  size_t VthresholdStop    = findValue(cSystemController.fSettingsMap,"VthresholdStop");
+  size_t VthresholdNSteps  = findValue(cSystemController.fSettingsMap,"VthresholdNSteps");
+  size_t StepDuration      = findValue(cSystemController.fSettingsMap,"StepDuration");
+
   size_t VCALstart         = findValue(cSystemController.fSettingsMap,"VCALstart");
   size_t VCALstop          = findValue(cSystemController.fSettingsMap,"VCALstop");
   size_t VCALnsteps        = findValue(cSystemController.fSettingsMap,"VCALnsteps");
@@ -280,13 +291,20 @@ int main (int argc, char** argv)
   size_t display           = findValue(cSystemController.fSettingsMap,"DisplayHisto");
   size_t chipRegDefault    = findValue(cSystemController.fSettingsMap,"ChipRegDefaultFile");
 
+//   size_t VthresholdStart    = findValue(cSystemController.fSettingsMap,"VthresholdStart");
+//   size_t VthresholdStop    = findValue(cSystemController.fSettingsMap,"VthresholdStop");
+//   size_t VthresholdNSteps    = findValue(cSystemController.fSettingsMap,"VthresholdNSteps");
+
+  size_t TargetDeltaVCal    = findValue(cSystemController.fSettingsMap,"TargetDeltaVCal");
+
 
   // ######################################
   // # Correct injection pattern for RD53 #
   // ######################################
-  if (nPixelInj == 0) nPixelInj = (ROWstop - ROWstart + 1) * (COLstop  - COLstart + 1) / (ROWstop  - ROWstart + 1 + ((ROWstop  - ROWstart + 1) > NROW_CORE ? NROW_CORE : 0));
+//   if (nPixelInj == 0) nPixelInj = (ROWstop - ROWstart + 1) * (COLstop  - COLstart + 1) / (ROWstop  - ROWstart + 1 + ((ROWstop  - ROWstart + 1) > NROW_CORE ? NROW_CORE : 0));
+    if (nPixelInj == 0) nPixelInj = (ROWstop - ROWstart + 1) * (COLstop  - COLstart + 1) / (ROWstop  - ROWstart + 1 + (ROWstop  - ROWstart + 1) / 8);
 
-
+    LOG (INFO) << "nPixelInj = " << nPixelInj << "\n";
   // #####################
   // # Preparing the FSM #
   // #####################
@@ -343,6 +361,20 @@ int main (int argc, char** argv)
       pa.analyze();
       pa.draw(display,true);
     }
+    else if (whichCalib == "source")
+    {
+      // ##############
+      // # Run SCurve #
+      // ##############
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
+
+      std::string fileName("Run" + runNumber + "_Source");
+      Source src(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, VthresholdStart, VthresholdStop, VthresholdNSteps, StepDuration);
+      src.Inherit(&cSystemController);
+      src.run();
+    //   src.analyze();
+      src.draw(display,true);
+    }
   else if (whichCalib == "scurve")
     {
       // ##############
@@ -386,10 +418,27 @@ int main (int argc, char** argv)
       sc.draw(false,true);
 
       std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
+      std::cout << "chipConfig.c_str() " << chipConfig.c_str() << std::endl;
       ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents*VCALnsteps, nEvents);
       te.Inherit(&cSystemController);
       te.run(output);
       te.draw(display,true);
+    }
+    else if (whichCalib == "threqu2")
+    {
+      // ##############################
+      // # Run Threshold Equalization #
+      // ##############################
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
+
+      std::string fileName("Run" + runNumber + "_ThrEqualization2.root");
+
+      std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
+      std::cout << "chipConfig.c_str() " << chipConfig.c_str() << std::endl;
+      RD53Calibration cal(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nPixelInj, nEvents, VthresholdStart, VthresholdStop, VthresholdNSteps, TargetDeltaVCal, VCALoffset);
+      cal.Inherit(&cSystemController);
+      cal.run();
+      cal.draw(display,true);
     }
   else if (whichCalib == "gainopt")
     {

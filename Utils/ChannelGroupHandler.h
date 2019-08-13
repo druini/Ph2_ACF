@@ -100,6 +100,10 @@ public:
         uint32_t numberOfClusterToSkip = numberOfEnabledChannels_ / (numberOfRowsPerCluster*numberOfColsPerCluster*numberOfClustersPerGroup) - 1;
         if(numberOfEnabledChannels_ % (numberOfRowsPerCluster*numberOfColsPerCluster*numberOfClustersPerGroup) > 0) ++numberOfClusterToSkip;
 
+        std::cout << "numberOfClustersPerGroup = " << numberOfClustersPerGroup << "\n";
+
+        std::cout << "numberOfClusterToSkip = " << numberOfClusterToSkip << "\n";
+
         uint32_t clusterSkipped = numberOfClusterToSkip - groupNumber;
         for(uint16_t col = 0; col<numberOfCols_; col+=numberOfColsPerCluster)
         {
@@ -170,7 +174,7 @@ public:
     ChannelGroupHandler(){};
     virtual ~ChannelGroupHandler(){};
 
-    void setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster=1);
+    virtual void setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster=1);
 
     template<size_t R, size_t C>
     void setCustomChannelGroup(ChannelGroup<R,C> &customChannelGroup)

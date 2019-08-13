@@ -1203,8 +1203,10 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 	}
 	if(!fAllChan)
 	{
+        int i = 0;
 	    for(auto group : *fChannelGroupHandler)
 	    {
+            LOG (INFO) << "GroupNumber = " << ++i << "\n";
 
 	        if(fMaskChannelsFromOtherGroups || fTestPulse)
 	        {
