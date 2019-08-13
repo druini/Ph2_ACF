@@ -10,12 +10,6 @@
 
 #include "RD53GainHistograms.h"
 
-
-// #############
-// # CONSTANTS #
-// #############
-#define INTERCEPT_HALFRANGE 6 // [ToT]
-
 using namespace Ph2_HwDescription;
 
 void RD53GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
@@ -52,11 +46,11 @@ void RD53GainHistograms::fillOccupancy (const DetectorDataContainer& data, int V
       for (const auto cChip : *cModule)
 	{
 	  auto* hOcc2D = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-
+	  
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
 	      if ((row >= ROWstart) && (row <= ROWstop) && (col >= COLstart) && (col <= COLstop))
-            hOcc2D->Fill(VCAL_HIGH, cChip->getChannel<OccupancyAndPh>(row,col).fPh);
+		hOcc2D->Fill(VCAL_HIGH, cChip->getChannel<OccupancyAndPh>(row,col).fPh);
 	}
 }
 

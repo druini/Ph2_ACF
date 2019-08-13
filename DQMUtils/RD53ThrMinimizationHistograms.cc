@@ -1,6 +1,6 @@
 /*!
   \file                  RD53ThrMinimizationHistograms.cc
-  \brief                 Implementation of Gain calibration histograms
+  \brief                 Implementation of ThrMinimization calibration histograms
   \author                Alkiviadis PAPADOPOULOS
   \version               1.0
   \date                  28/06/18
@@ -10,20 +10,11 @@
 
 #include "RD53ThrMinimizationHistograms.h"
 
-
-// #############
-// # CONSTANTS #
-// #############
-#define INTERCEPT_HALFRANGE 6 // [ToT]
-
 using namespace Ph2_HwDescription;
 
 void RD53ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
 {
-  // @TMP@
-  // size_t ThrSize = RD53::setBits(static_cast<RD53*>(cChip)->getNumberOfBits("Vthreshold_LIN"))+1;
-
-  auto hThrehsold = HistContainer<TH1F>("Threhsold", "Threhsold", 1024, 0, 1024);
+  auto hThrehsold = HistContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
   bookImplementer(theOutputFile, theDetectorStructure, hThrehsold, Threhsold, "Threhsold", "Entries");
 }
 
@@ -37,7 +28,6 @@ void RD53ThrMinimizationHistograms::fill(const DetectorDataContainer& data)
 	  hThrehsold->Fill(cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
 	}
 }
-
 
 void RD53ThrMinimizationHistograms::process ()
 {

@@ -73,7 +73,7 @@
       DisplayHisto       = 0: don't display;         DisplayHisto             = 1: display
       ChipRegDefaultFile = 0: save on different file name; ChipRegDefaultFile = 1: save on same file name
       ChipTargetCharge:       requested charge (electrons) per chip corresponding to half ToT range
-      PixelThresholdOcc:      percentage of acceptable hits per pixel
+      PixelThresholdOcc:      number of acceptable hits per pixel
       ChipTargetOcc:          total number of acceptable hits per chip
   -->
   <Settings>

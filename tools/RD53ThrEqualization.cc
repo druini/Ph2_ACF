@@ -9,20 +9,17 @@
 
 #include "RD53ThrEqualization.h"
 
-#include <fstream>
-#include <stdlib.h>
-
-ThrEqualization::ThrEqualization(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst)
-  : Tool()
-  , fileRes(fileRes)
-  , fileReg(fileReg)
-  , rowStart(rowStart)
-  , rowStop(rowStop)
-  , colStart(colStart)
-  , colStop(colStop)
-  , nEvents(nEvents)
-  , nEvtsBurst(nEvtsBurst)
-  , histos(nEvents)
+ThrEqualization::ThrEqualization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst)
+  : Tool       ()
+  , fileRes    (fileRes)
+  , fileReg    (fileReg)
+  , rowStart   (rowStart)
+  , rowStop    (rowStop)
+  , colStart   (colStart)
+  , colStop    (colStop)
+  , nEvents    (nEvents)
+  , nEvtsBurst (nEvtsBurst)
+  , histos     (nEvents)
 {
   // ########################
   // # Custom channel group #
@@ -38,7 +35,7 @@ ThrEqualization::ThrEqualization(const char* fileRes, const char* fileReg, size_
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 }
 
-void ThrEqualization::run(std::shared_ptr<DetectorDataContainer> newVCal)
+void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
 {
   // ############################
   // # Set new VCAL_HIGH values #
@@ -78,7 +75,7 @@ void ThrEqualization::run(std::shared_ptr<DetectorDataContainer> newVCal)
   this->chipErrorReport();
 }
 
-void ThrEqualization::draw(bool display, bool save)
+void ThrEqualization::draw (bool display, bool save)
 {
   TApplication* myApp;
 
@@ -118,7 +115,7 @@ void ThrEqualization::initHisto () { histos.book(fResultFile, *fDetectorContaine
 void ThrEqualization::fillHisto () { histos.fill(theOccContainer, theTDACcontainer);              }
 void ThrEqualization::display   () { histos.process();                                            }
 
-void ThrEqualization::bitWiseScan(const std::string& dacName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
+void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {
   uint16_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName);
 
@@ -143,32 +140,12 @@ void ThrEqualization::bitWiseScan(const std::string& dacName, uint32_t nEvents, 
 	for (auto row = 0u; row < RD53::nRows; row++)
 	  for (auto col = 0u; col < RD53::nCols; col++)
 	    {
-	      minDACcontainer.at(cBoard->getIndex())
-		->at(cModule->getIndex())
-		->at(cChip->getIndex())
-		->getChannel<RegisterValue>(row, col)
-		.fRegisterValue
-		= 0;
-	      maxDACcontainer.at(cBoard->getIndex())
-		->at(cModule->getIndex())
-		->at(cChip->getIndex())
-		->getChannel<RegisterValue>(row, col)
-		.fRegisterValue
-		= RD53::setBits(numberOfBits) + 1;
+	      minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue = 0;
+	      maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue = RD53::setBits(numberOfBits) + 1;
 
-	      bestContainer.at(cBoard->getIndex())
-		->at(cModule->getIndex())
-		->at(cChip->getIndex())
-		->getChannel<Occupancy>(row, col)
-		.fOccupancy
-		= 0;
+	      bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row, col).fOccupancy = 0;
 
-	      bestDACcontainer.at(cBoard->getIndex())
-		->at(cModule->getIndex())
-		->at(cChip->getIndex())
-		->getChannel<RegisterValue>(row, col)
-		.fRegisterValue
-		= RD53::setBits(numberOfBits) + 1;
+	      bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue = RD53::setBits(numberOfBits) + 1;
 	    }
 
 
@@ -214,77 +191,31 @@ void ThrEqualization::bitWiseScan(const std::string& dacName, uint32_t nEvents, 
 		  // ########################
 		  // # Save best DAC values #
 		  // ########################
-		  float oldValue = bestContainer.at(cBoard->getIndex())
-		    ->at(cModule->getIndex())
-		    ->at(cChip->getIndex())
-		    ->getChannel<Occupancy>(row, col)
-		    .fOccupancy;
+		  float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row, col).fOccupancy;
 
-		  if (fabs(newValue - target) <= fabs(oldValue - target) || (newValue >= 1 && (oldValue >= 1 || oldValue <= 0)))
+		  if (fabs(newValue - target) < fabs(oldValue - target) || (newValue == oldValue))
 		    {
-		      bestContainer.at(cBoard->getIndex())
-			->at(cModule->getIndex())
-			->at(cChip->getIndex())
-			->getChannel<Occupancy>(row, col)
-			.fOccupancy
-			= newValue;
-		      bestDACcontainer.at(cBoard->getIndex())
-			->at(cModule->getIndex())
-			->at(cChip->getIndex())
-			->getChannel<RegisterValue>(row, col)
-			.fRegisterValue
-			= midDACcontainer.at(cBoard->getIndex())
-			->at(cModule->getIndex())
-			->at(cChip->getIndex())
-			->getChannel<RegisterValue>(row, col)
-			.fRegisterValue;
+		      bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row, col).fOccupancy = newValue;
+		      bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue =
+			midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue;
 		    }
 	      
 		  if (newValue < target)
 
-		    minDACcontainer.at(cBoard->getIndex())
-		      ->at(cModule->getIndex())
-		      ->at(cChip->getIndex())
-		      ->getChannel<RegisterValue>(row, col)
-		      .fRegisterValue
-		      = midDACcontainer.at(cBoard->getIndex())
-		      ->at(cModule->getIndex())
-		      ->at(cChip->getIndex())
-		      ->getChannel<RegisterValue>(row, col)
-		      .fRegisterValue;
-
+		    minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue =
+		      midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue;
+		  
 		  else
 
-		    maxDACcontainer.at(cBoard->getIndex())
-		      ->at(cModule->getIndex())
-		      ->at(cChip->getIndex())
-		      ->getChannel<RegisterValue>(row, col)
-		      .fRegisterValue
-		      = midDACcontainer.at(cBoard->getIndex())
-		      ->at(cModule->getIndex())
-		      ->at(cChip->getIndex())
-		      ->getChannel<RegisterValue>(row, col)
-		      .fRegisterValue;
+		    maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue =
+		      midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue;
 
-		  midDACcontainer.at(cBoard->getIndex())
-		    ->at(cModule->getIndex())
-		    ->at(cChip->getIndex())
-		    ->getChannel<RegisterValue>(row, col)
-		    .fRegisterValue
-		    = (minDACcontainer.at(cBoard->getIndex())
-		       ->at(cModule->getIndex())
-		       ->at(cChip->getIndex())
-		       ->getChannel<RegisterValue>(row, col)
-		       .fRegisterValue
-		       + maxDACcontainer.at(cBoard->getIndex())
-		       ->at(cModule->getIndex())
-		       ->at(cChip->getIndex())
-		       ->getChannel<RegisterValue>(row, col)
-		       .fRegisterValue)
-		    / 2;
+		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue =
+		    (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue + 
+		     maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue) / 2;
 		}
     }
-
+  
   // ###########################
   // # Download new DAC values #
   // ###########################

@@ -10,16 +10,16 @@
 #ifndef RD53Interface_H
 #define RD53Interface_H
 
+#include "RD53FWInterface.h"
 #include "BeBoardFWInterface.h"
 #include "ReadoutChipInterface.h"
 #include "../Utils/RegisterValue.h"
 
-
 // #############
 // # CONSTANTS #
 // #############
-#define NPIXCMD 40 // Number of pixel commands to stack
-
+#define VCALSLEEP 50000 // [microseconds]                                                                                                                                          
+#define NPIXCMD      40 // Number of pixel commands to stack
 
 namespace Ph2_HwInterface
 {
@@ -40,7 +40,6 @@ namespace Ph2_HwInterface
     bool     setInjectionSchema                (ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) { std::cout << __PRETTY_FUNCTION__ << std::endl; exit(EXIT_FAILURE); }; // @TMP@
     bool     maskChannelsGroup                 (ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) { std::cout << __PRETTY_FUNCTION__ << std::endl; exit(EXIT_FAILURE); }; // @TMP@
     
- 
     void     WriteRD53Mask     (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
     void     WriteRD53RegLong  (RD53* pRD53, const std::string& pRegNode, const std::vector<uint32_t>& dataVec, size_t nCmd = 1);
     void     WriteRD53RegShort (RD53* pRD53, const std::string& pRegNode, uint16_t data, std::vector<uint32_t>& serialSymbols, size_t nCmd, bool download);

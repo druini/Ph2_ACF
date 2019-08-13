@@ -24,7 +24,7 @@ GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, si
   , KrumCurrStart (KrumCurrStart)
   , KrumCurrStop  (KrumCurrStop)
   , targetCharge  (targetCharge)
-  , histos()
+  , histos        (RD53::setBits(static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits("KRUM_CURR_LIN"))+1)
 {}
 
 void GainOptimization::run ()

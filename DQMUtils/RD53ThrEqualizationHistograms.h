@@ -22,7 +22,7 @@
 class RD53ThrEqualizationHistograms : public DQMHistogramBase
 {
  public:
- RD53ThrEqualizationHistograms (size_t nEvents) : nEvents(nEvents) {}
+  RD53ThrEqualizationHistograms (size_t nEvents) : nEvents(nEvents) {}
 
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
   void process ()                                                                                                                  override;

@@ -10,7 +10,6 @@
 
 #include "RD53ThrEqualizationHistograms.h"
 
-
 using namespace Ph2_HwDescription;
 
 void RD53ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)

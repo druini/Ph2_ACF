@@ -1,6 +1,6 @@
 /*!
   \file                  RD53GainOptimizationHistograms.cc
-  \brief                 Implementation of Gain calibration histograms
+  \brief                 Implementation of Gain optimization calibration histograms
   \author                Alkiviadis PAPADOPOULOS
   \version               1.0
   \date                  28/06/18
@@ -10,13 +10,9 @@
 
 #include "RD53GainOptimizationHistograms.h"
 
-
-using namespace Ph2_HwDescription;
-
 void RD53GainOptimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
 {
-  // @TMP@
-  auto hOcc2D = HistContainer<TH1F>("KrumCurr", "KrumCurr", 256, 0, 256);
+  auto hOcc2D = HistContainer<TH1F>("KrumCurr", "KrumCurr", rangeKrumCurr, 0, rangeKrumCurr);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, KrumCurr, "Krummenacher Current", "Entries");
 }
 

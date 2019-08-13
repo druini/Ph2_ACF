@@ -299,7 +299,7 @@ int main (int argc, char** argv)
       // ###################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_Latency.root");
+      std::string fileName("Run" + runNumber + "_Latency");
       Latency la(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
       la.Inherit(&cSystemController);
       la.run();
@@ -356,7 +356,7 @@ int main (int argc, char** argv)
       // ############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_Gain.root");
+      std::string fileName("Run" + runNumber + "_Gain");
       Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
       ga.Inherit(&cSystemController);
       ga.run();
@@ -370,7 +370,7 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_ThrEqualization.root");
+      std::string fileName("Run" + runNumber + "_ThrEqualization");
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
       sc.Inherit(&cSystemController);
       sc.run();
@@ -391,7 +391,7 @@ int main (int argc, char** argv)
       // #########################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_GainOptimization.root");
+      std::string fileName("Run" + runNumber + "_GainOptimization");
       std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
       GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset, RD53chargeConverter::Charge2VCal(ChipTargetCharge), KrumCurrStart, KrumCurrStop);
       go.Inherit(&cSystemController);
@@ -405,7 +405,7 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threhsold Minimization @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_ThrMinimization.root");
+      std::string fileName("Run" + runNumber + "_ThrMinimization");
       std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
       ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, ChipTargetOcc, ThrStart, ThrStop);
       tm.Inherit(&cSystemController);

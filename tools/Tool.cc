@@ -1206,9 +1206,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
         int i = 0;
 	    for(auto group : *fChannelGroupHandler)
 	    {
-            LOG (INFO) << "GroupNumber = " << ++i << "\n";
-
-	        if(fMaskChannelsFromOtherGroups || fTestPulse)
+	      if(fMaskChannelsFromOtherGroups || fTestPulse)
 	        {
 	            for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
 	            {

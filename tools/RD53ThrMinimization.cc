@@ -9,23 +9,23 @@
 
 #include "RD53ThrMinimization.h"
 
-ThrMinimization::ThrMinimization(const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart, size_t ThrStop)
-  : PixelAlive(fileRes, "", rowStart, rowStop, colStart, colStop, (rowStop - rowStart + 1) * (colStop - colStart + 1), nEvents, nEvtsBurst, false)
-  , fileRes(fileRes)
-  , fileReg(fileReg)
-  , rowStart(rowStart)
-  , rowStop(rowStop)
-  , colStart(colStart)
-  , colStop(colStop)
-  , nEvents(nEvents)
-  , nEvtsBurst(nEvtsBurst)
-  , ThrStart(ThrStart)
-  , ThrStop(ThrStop)
-  , targetOccupancy(targetOccupancy)
-  , histos()
+ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart, size_t ThrStop)
+  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, false)
+  , fileRes         (fileRes)
+  , fileReg         (fileReg)
+  , rowStart        (rowStart)
+  , rowStop         (rowStop)
+  , colStart        (colStart)
+  , colStop         (colStop)
+  , nEvents         (nEvents)
+  , nEvtsBurst      (nEvtsBurst)
+  , ThrStart        (ThrStart)
+  , ThrStop         (ThrStop)
+  , targetOccupancy (targetOccupancy)
+  , histos          (RD53::setBits(static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits("Vthreshold_LIN"))+1)
 {}
 
-void ThrMinimization::run()
+void ThrMinimization::run ()
 {
   this->bitWiseScan("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop);
 
@@ -85,8 +85,7 @@ void ThrMinimization::analyze ()
   for (const auto cBoard : theThrContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	LOG(INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId()
-		  << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
+	LOG(INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
 		  << cChip->getSummary<RegisterValue, EmptyContainer>().fRegisterValue << RESET;
 }
 
@@ -94,8 +93,7 @@ void ThrMinimization::initHisto () { histos.book(fResultFile, *fDetectorContaine
 void ThrMinimization::fillHisto () { histos.fill(theThrContainer);                                }
 void ThrMinimization::display   () { histos.process();                                            }
 
-void ThrMinimization::bitWiseScan(const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue,
-                                  uint16_t stopValue)
+void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
   uint16_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue) + 1 : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName));
 
@@ -166,50 +164,21 @@ void ThrMinimization::bitWiseScan(const std::string& dacName, uint32_t nEvents, 
 
 	      if (fabs(newValue - target) < fabs(oldValue - target))
 		{
-		  bestContainer.at(cBoard->getIndex())
-		    ->at(cModule->getIndex())
-		    ->at(cChip->getIndex())
-		    ->getSummary<OccupancyAndPh, EmptyContainer>()
-		    .fPh
-		    = newValue;
+		  bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh, EmptyContainer>().fPh = newValue;
 		  
-		  bestDACcontainer.at(cBoard->getIndex())
-		    ->at(cModule->getIndex())
-		    ->at(cChip->getIndex())
-		    ->getSummary<RegisterValue, EmptyContainer>()
-		    .fRegisterValue
-		    = midDACcontainer.at(cBoard->getIndex())
-		    ->at(cModule->getIndex())
-		    ->at(cChip->getIndex())
-		    ->getSummary<RegisterValue, EmptyContainer>()
-		    .fRegisterValue;
+		  bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue, EmptyContainer>().fRegisterValue =
+		    midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue, EmptyContainer>().fRegisterValue;
 		}
 	      
 	      if (newValue < target)
 		
-		maxDACcontainer.at(cBoard->getIndex())
-		  ->at(cModule->getIndex())
-		  ->at(cChip->getIndex())
-		  ->getSummary<RegisterValue, EmptyContainer>()
-		  .fRegisterValue
-		  = midDACcontainer.at(cBoard->getIndex())
-		  ->at(cModule->getIndex())
-		  ->at(cChip->getIndex())
-		  ->getSummary<RegisterValue, EmptyContainer>()
-		  .fRegisterValue;
+		maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue, EmptyContainer>().fRegisterValue =
+		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue, EmptyContainer>().fRegisterValue;
 	      
 	      else
 		
-		minDACcontainer.at(cBoard->getIndex())
-		  ->at(cModule->getIndex())
-		  ->at(cChip->getIndex())
-		  ->getSummary<RegisterValue, EmptyContainer>()
-		  .fRegisterValue
-		  = midDACcontainer.at(cBoard->getIndex())
-		  ->at(cModule->getIndex())
-		  ->at(cChip->getIndex())
-		  ->getSummary<RegisterValue, EmptyContainer>()
-		  .fRegisterValue;
+		minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue, EmptyContainer>().fRegisterValue =
+		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue, EmptyContainer>().fRegisterValue;
 	    }
     }
   

@@ -19,24 +19,29 @@
 #include <TH1F.h>
 #include <TH2F.h>
 
+// #############
+// # CONSTANTS #
+// #############
+#define INTERCEPT_HALFRANGE 6 // [ToT]
+
 
 class RD53GainHistograms : public DQMHistogramBase
 {
  public:
- RD53GainHistograms(int nEvents, int startValue, int stopValue, int nSteps)
+ RD53GainHistograms (int nEvents, int startValue, int stopValue, int nSteps)
    : nEvents    (nEvents)
-    , nSteps     (nSteps)
-    , startValue (startValue)
-    , stopValue  (stopValue)
+   , nSteps     (nSteps)
+   , startValue (startValue)
+   , stopValue  (stopValue)
   {}
   
-  void book               (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
-  void process            ()                                                                                                                  override;
-  bool fill               (std::vector<char>& dataBuffer)                                                                                     override { return false; };
-  void reset              (void)                                                                                                              override {};
+  void book              (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
+  void process           ()                                                                                                                  override;
+  bool fill              (std::vector<char>& dataBuffer)                                                                                     override { return false; };
+  void reset             (void)                                                                                                              override {};
 
-  void fillOccupancy      (const DetectorDataContainer& data, int VCAL_HIGH);
-  void fillGainIntercept  (const DetectorDataContainer& data);
+  void fillOccupancy     (const DetectorDataContainer& data, int VCAL_HIGH);
+  void fillGainIntercept (const DetectorDataContainer& data);
 
  private:
   DetectorDataContainer Occupancy2D;

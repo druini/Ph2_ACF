@@ -1,6 +1,6 @@
 /*!
   \file                  RD53GainOptimizationHistograms.h
-  \brief                 Header file of Gain calibration histograms
+  \brief                 Header file of Gain optimization calibration histograms
   \author                Alkiviadis PAPADOPOULOS
   \version               1.0
   \date                  28/06/18
@@ -22,17 +22,18 @@
 class RD53GainOptimizationHistograms : public DQMHistogramBase
 {
  public:
-  RD53GainOptimizationHistograms(){}
-
+  RD53GainOptimizationHistograms (float rangeKrumCurr) : rangeKrumCurr(rangeKrumCurr) {}
+  
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
   void process ()                                                                                                                  override;
   bool fill    (std::vector<char>& dataBuffer)                                                                                     override { return false; };
   void reset   (void)                                                                                                              override {};
   
   void fill    (const DetectorDataContainer& data);
-
+  
  private:
   DetectorDataContainer KrumCurr;
+  float rangeKrumCurr;
 };
 
 #endif

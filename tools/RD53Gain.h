@@ -11,17 +11,12 @@
 #define RD53Gain_H
 
 #include "../Utils/Container.h"
-#include "../Utils/OccupancyAndPh.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/GainAndIntercept.h"
 #include "../DQMUtils/RD53GainHistograms.h"
 #include "Tool.h"
 
 #include "TApplication.h"
-#include "TStyle.h"
-#include "TGaxis.h"
-#include "TH2F.h"
 
 
 // ##########################
@@ -31,7 +26,10 @@ class Gain : public Tool
 {
  public:
   Gain  (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset);
-  ~Gain () { for (auto container : detectorContainerVector) delete container; }
+  ~Gain ()
+    {
+      for (auto container : detectorContainerVector) delete container;
+    }
   
   void run                                       ();
   void draw                                      (bool display, bool save);

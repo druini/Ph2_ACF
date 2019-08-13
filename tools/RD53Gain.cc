@@ -135,15 +135,13 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
 }
 
 void Gain::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-
-void Gain::fillHisto()
+void Gain::fillHisto ()
 {
   for (auto i = 0u; i < dacList.size(); i++)
     histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
   histos.fillGainIntercept(*theGainAndInterceptContainer);
 }
-
-void Gain::display() { histos.process(); }
+void Gain::display   () { histos.process(); }
 
 void Gain::computeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
 // ##############################################

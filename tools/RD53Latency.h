@@ -11,15 +11,12 @@
 #define RD53Latency_H
 
 #include "../Utils/Container.h"
-#include "../Utils/GenericDataVector.h"
-#include "../Utils/EmptyContainer.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../DQMUtils/RD53LatencyHistograms.h"
 #include "Tool.h"
 
 #include "TApplication.h"
-#include "TH1F.h"
 
 
 // ######################
@@ -28,8 +25,7 @@
 class Latency : public Tool
 {
  public:
-  Latency(const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t startValue, size_t stopValue, size_t nEvents);
-//   ~Latency();
+  Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t startValue, size_t stopValue, size_t nEvents);
 
   void run     ();
   void draw    (bool display, bool save);
@@ -60,7 +56,6 @@ class Latency : public Tool
   // # ROOT #
   // ########
   RD53LatencyHistograms histos;
-
 };
 
 #endif
