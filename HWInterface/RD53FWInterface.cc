@@ -43,7 +43,7 @@ namespace Ph2_HwInterface
   }
 
   // @TMP@
-  void RD53FWInterface::ResetSequence ()
+  void RD53FWInterface::ResetSequence()
   {
     LOG (INFO) << BOLDMAGENTA << "Resetting the chip... it may take a while" << RESET;
 

@@ -11,9 +11,9 @@
 
 namespace Ph2_HwInterface
 {
-  RD53Interface::RD53Interface(const BeBoardFWMap& pBoardMap): ReadoutChipInterface(pBoardMap) {}
+  RD53Interface::RD53Interface (const BeBoardFWMap& pBoardMap): ReadoutChipInterface(pBoardMap) {}
   
-  bool RD53Interface::ConfigureChip(const Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+  bool RD53Interface::ConfigureChip (const Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
     ChipRegMap pRD53RegMap = pChip->getRegMap();
     RD53* pRD53 = static_cast<RD53*>(const_cast<Chip*>(pChip));
@@ -27,8 +27,8 @@ namespace Ph2_HwInterface
     // # Enable monitoring (needed for AutoRead register monitoring) #
     // ###############################################################
     this->WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
-    this->WriteChipReg(pRD53, "GLOBAL_PULSE", 0x4, true);
-    
+    this->WriteChipReg(pRD53, "GLOBAL_PULSE",       0x4,   true);
+
     // ################################################
     // # Programming global registers from white list #
     // ################################################
@@ -46,7 +46,7 @@ namespace Ph2_HwInterface
     for (auto i = 0u; i < arraySize(registerWhileList); i++)
       {
 	auto it = pRD53RegMap.find(registerWhileList[i]);
-	if (it != pRD53RegMap.end()) this->WriteChipReg(pRD53, it->first, it->second.fValue, true);
+	// if (it != pRD53RegMap.end()) this->WriteChipReg(pRD53, it->first, it->second.fValue, true);
       }
 
     // ###############################
@@ -64,7 +64,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  void RD53Interface::InitRD53Aurora(RD53* pRD53)
+  void RD53Interface::InitRD53Aurora (RD53* pRD53)
   {
     // ##############################
     // # 1 Autora acive lane        #
@@ -94,7 +94,7 @@ namespace Ph2_HwInterface
     usleep(DEEPSLEEP);
   }
 
-  void RD53Interface::SyncRD53(RD53* pRD53, unsigned int nSyncWords) { this->WriteChipReg(pRD53, "SYNC", 0x0, true); }
+  void RD53Interface::SyncRD53 (RD53* pRD53, unsigned int nSyncWords) { this->WriteChipReg(pRD53, "SYNC", 0x0, true); }
   
   bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
   {
@@ -156,7 +156,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop)
+  bool RD53Interface::WriteChipMultReg (Chip* pChip, const std::vector<std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop)
   {
     this->setBoard(pChip->getBeBoardId());
 
@@ -191,8 +191,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  void RD53Interface::WriteRD53RegShort(RD53* pRD53, const std::string& pRegNode, uint16_t data,
-					std::vector<uint32_t>& serialSymbols, size_t nCmd, bool download)
+  void RD53Interface::WriteRD53RegShort (RD53* pRD53, const std::string& pRegNode, uint16_t data, std::vector<uint32_t>& serialSymbols, size_t nCmd, bool download)
   {
     this->setBoard(pRD53->getBeBoardId());
 
@@ -206,7 +205,7 @@ namespace Ph2_HwInterface
     else fBoardFW->WriteChipCommand(serialSymbols, nCmd);
   }
   
-  void RD53Interface::WriteRD53RegLong(RD53* pRD53, const std::string& pRegNode, const std::vector<uint32_t>& dataVec, size_t nCmd)
+  void RD53Interface::WriteRD53RegLong (RD53* pRD53, const std::string& pRegNode, const std::vector<uint32_t>& dataVec, size_t nCmd)
   {
     this->setBoard(pRD53->getBeBoardId());
 
@@ -221,7 +220,7 @@ namespace Ph2_HwInterface
     fBoardFW->WriteChipCommand(serialSymbols, nCmd);
   }
 
-  std::vector<std::pair<uint16_t, uint16_t> > RD53Interface::ReadRD53Reg(RD53* pRD53, const std::string& pRegNode)
+  std::vector<std::pair<uint16_t, uint16_t> > RD53Interface::ReadRD53Reg (RD53* pRD53, const std::string& pRegNode)
   {
     this->setBoard(pRD53->getBeBoardId());
 
@@ -340,18 +339,18 @@ namespace Ph2_HwInterface
       }
   }
 
-  void RD53Interface::ResetRD53(RD53* pRD53)
+  void RD53Interface::ResetRD53 (RD53* pRD53)
   {
     this->WriteChipReg(pRD53, "RESET_EVTCTR", 0x0, true);
     this->WriteChipReg(pRD53, "RESET_BCRCTR", 0x0, true);
   }
 
-  uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
+  uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode)
   {
     return this->ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode)[0].second;
   }
 
-  bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+  bool RD53Interface::ConfigureChipOriginalMask (ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -360,7 +359,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerifLoop)
+  bool RD53Interface::MaskAllChannels (ReadoutChip* pChip, bool mask, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -372,8 +371,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject,
-							bool pVerifLoop)
+  bool RD53Interface::maskChannelsAndSetInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -389,7 +387,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop)
+  bool RD53Interface::WriteChipAllLocalReg (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -402,10 +400,10 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  void RD53Interface::ReadChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue)
+  void RD53Interface::ReadChipAllLocalReg (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
-
+    
     for (auto row = 0u; row < RD53::nRows; row++)
       for (auto col = 0u; col < RD53::nCols; col++)
 	pValue.getChannel<RegisterValue>(row, col).fRegisterValue = pRD53->getTDAC(row, col);

@@ -11,7 +11,7 @@
 
 namespace Ph2_HwDescription
 {
-  RD53::RD53(const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& fileName) : ReadoutChip(pFeDesc, pRD53Id)
+  RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& fileName) : ReadoutChip(pFeDesc, pRD53Id)
   {
     fMaxRegValue      = this->setBits(NBITMAXREG);
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
@@ -20,7 +20,7 @@ namespace Ph2_HwDescription
     setFrontEndType(FrontEndType::RD53);
   }
 
-  RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& fileName) : ReadoutChip(pBeId, pFMCId, pFeId, pRD53Id)
+  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& fileName) : ReadoutChip(pBeId, pFMCId, pFeId, pRD53Id)
   {
     fMaxRegValue      = this->setBits(NBITMAXREG);
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
