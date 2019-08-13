@@ -333,10 +333,10 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     uint32_t handshake = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value();
     uint32_t cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
 
-    // LOG(INFO) << GREEN << "----- Reading  data -----" << RESET;
-    // LOG(INFO) << GREEN << "n. words        = " << cNWords << RESET;
-    // LOG(INFO) << GREEN << "n. triggers     = " << cNtriggers << RESET;
-    // LOG(INFO) << CYAN << "=========================" << RESET;
+    LOG(INFO) << GREEN << "----- Reading  data -----" << RESET;
+    LOG(INFO) << GREEN << "n. words        = " << cNWords << RESET;
+    LOG(INFO) << GREEN << "n. triggers     = " << cNtriggers << RESET;
+    LOG(INFO) << CYAN << "=========================" << RESET;
 
     if (!cNWords)
         return 0;

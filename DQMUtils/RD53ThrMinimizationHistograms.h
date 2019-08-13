@@ -11,9 +11,6 @@
 #ifndef RD53ThrMinimizationHistograms_H
 #define RD53ThrMinimizationHistograms_H
 
-// #include "../Utils/GainAndIntercept.h"
-// #include "../Utils/OccupancyAndPh.h"
-// #include "../Utils/Occupancy.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/RegisterValue.h"
 #include "DQMHistogramBase.h"

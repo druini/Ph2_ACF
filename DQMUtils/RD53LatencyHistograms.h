@@ -12,7 +12,6 @@
 #define RD53LatencyHistograms_H
 
 #include "../Utils/GenericDataVector.h"
-#include "../Utils/OccupancyAndPh.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>

@@ -14,8 +14,7 @@ using namespace Ph2_HwDescription;
 
 void RD53SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
 {
-//   auto hOcc2D = HistContainer<TH2F>("SCurves", "SCurves", nSteps, startValue, stopValue, nEvents / 2 + 1, 0, 1 + 2. / nEvents);
-  auto hOcc2D = HistContainer<TH2F>("SCurves", "SCurves", nSteps, startValue, stopValue, nEvents + 1, 0, 2);
+  auto hOcc2D = HistContainer<TH2F>("SCurves", "SCurves", nSteps, startValue, stopValue, nEvents / 2 + 1, 0, 1 + 2. / nEvents);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "Efficiency");
 
   auto hThreshold1D = HistContainer<TH1F>("Threshold1D", "Threshold Distribution", 1000, startValue, stopValue);

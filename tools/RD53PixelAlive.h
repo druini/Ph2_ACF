@@ -25,7 +25,7 @@
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, bool inject, float thresholdOccupancy = 0);
+  PixelAlive (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, bool inject, float thresholdOccupancy = 0);
 
   void run                                       ();
   void draw                                      (bool display, bool save);
@@ -38,7 +38,6 @@ class PixelAlive : public Tool
   size_t rowStop;
   size_t colStart;
   size_t colStop;
-  size_t nPixels2Inj;
   size_t nEvents;
   size_t nEvtsBurst;
   bool   inject;

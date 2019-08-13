@@ -51,7 +51,7 @@ void Latency::draw (bool display, bool save)
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
   if (save    == true)
     {
-      this->CreateResultDirectory("Results");
+      this->CreateResultDirectory("Results",false,false);
       this->InitResultFile(fileRes);
     }
 
@@ -62,20 +62,6 @@ void Latency::draw (bool display, bool save)
   if (save    == true) this->WriteRootFile();
   if (display == true) myApp->Run();
 }
-// {
-//   TApplication* myApp;
-  
-//   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
-
-//   this->initHisto();
-//   this->fillHisto();
-//   this->display();
-
-//   if (save    == true) this->save();
-//   if (display == true) myApp->Run();
-
-//   theFile->Close();
-// }
 
 void Latency::analyze ()
 {
@@ -101,9 +87,7 @@ void Latency::analyze ()
 }
 
 void Latency::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-
-void Latency::fillHisto () { histos.fill(theContainer);                         }
-
+void Latency::fillHisto () { histos.fill(theContainer);                                   }
 void Latency::display   () { histos.process();                                            }
 
 void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)

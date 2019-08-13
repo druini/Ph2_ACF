@@ -9,15 +9,14 @@
 
 #include "RD53GainOptimization.h"
 
-GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset, float targetCharge, size_t KrumCurrStart, size_t KrumCurrStop)
-  : Gain          (fileRes, rowStart, rowStop, colStart, colStop, nPixels2Inj, nEvents, startValue, stopValue, nSteps, offset)
+GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset, float targetCharge, size_t KrumCurrStart, size_t KrumCurrStop)
+  : Gain          (fileRes, rowStart, rowStop, colStart, colStop, nEvents, startValue, stopValue, nSteps, offset)
   , fileRes       (fileRes)
   , fileReg       (fileReg)
   , rowStart      (rowStart)
   , rowStop       (rowStop)
   , colStart      (colStart)
   , colStop       (colStop)
-  , nPixels2Inj   (nPixels2Inj)
   , nEvents       (nEvents)
   , startValue    (startValue)
   , stopValue     (stopValue)
@@ -27,18 +26,6 @@ GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, si
   , targetCharge  (targetCharge)
   , histos()
 {}
-
-// GainOptimization::~GainOptimization ()
-// {
-//   delete theFile;
-//   theFile = nullptr;
-
-//   for (auto i = 0u; i < theCanvasKrumCurr.size(); i++)
-//     {
-//       delete theKrumCurr[i];
-//       delete theCanvasKrumCurr[i];
-//     }
-// }
 
 void GainOptimization::run ()
 {
@@ -69,7 +56,7 @@ void GainOptimization::draw (bool display, bool save)
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
   if (save    == true)
     {
-      this->CreateResultDirectory("Results");
+      this->CreateResultDirectory("Results",false,false);
       this->InitResultFile(fileRes);
     }
 
@@ -79,16 +66,28 @@ void GainOptimization::draw (bool display, bool save)
   this->fillHisto();
   this->display();
 
-  if (save    == true) this->WriteRootFile();
+  if (save == true)
+    {
+      this->WriteRootFile();
+
+      // ############################
+      // # Save register new values #
+      // ############################
+      for (const auto cBoard : *fDetectorContainer)
+	for (const auto cModule : *cBoard)
+	  for (const auto cChip : *cModule)
+	    {
+	      static_cast<RD53*>(cChip)->copyMaskFromDefault();
+	      static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+	    }
+    }
+
   if (display == true) myApp->Run();
 }
 
 void GainOptimization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-
-void GainOptimization::fillHisto() { histos.fill(theKrumCurrContainer); }
-
-void GainOptimization::display() { histos.process(); }
-
+void GainOptimization::fillHisto () { histos.fill(theKrumCurrContainer);                           }
+void GainOptimization::display   () { histos.process();                                            }
 
 void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {

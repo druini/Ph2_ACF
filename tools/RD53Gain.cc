@@ -9,20 +9,19 @@
 
 #include "RD53Gain.h"
 
-Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset)
-  : Tool        ()
-  , fileRes     (fileRes)
-  , rowStart    (rowStart)
-  , rowStop     (rowStop)
-  , colStart    (colStart)
-  , colStop     (colStop)
-  , nPixels2Inj (nPixels2Inj)
-  , nEvents     (nEvents)
-  , startValue  (startValue)
-  , stopValue   (stopValue)
-  , nSteps      (nSteps)
-  , offset      (offset)
-  , histos      (nEvents, startValue-offset, stopValue-offset, nSteps)
+Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset)
+  : Tool       ()
+  , fileRes    (fileRes)
+  , rowStart   (rowStart)
+  , rowStop    (rowStop)
+  , colStart   (colStart)
+  , colStop    (colStop)
+  , nEvents    (nEvents)
+  , startValue (startValue)
+  , stopValue  (stopValue)
+  , nSteps     (nSteps)
+  , offset     (offset)
+  , histos     (nEvents, startValue-offset, stopValue-offset, nSteps)
 {
   // ########################
   // # Custom channel group #
@@ -33,10 +32,9 @@ Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStar
   for (auto row = rowStart; row <= rowStop; row++)
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
-
+  
   theChnGroupHandler = std::shared_ptr<RD53ChannelGroupHandler>(new RD53ChannelGroupHandler());
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
-  theChnGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 
 
   // ##############################
@@ -69,7 +67,6 @@ void Gain::run ()
   // # Error report #
   // ################
   this->chipErrorReport();
-
 }
 
 void Gain::draw (bool display, bool save)
@@ -79,7 +76,7 @@ void Gain::draw (bool display, bool save)
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
   if (save    == true)
     {
-      this->CreateResultDirectory("Results");
+      this->CreateResultDirectory("Results",false,false);
       this->InitResultFile(fileRes);
     }
 
@@ -90,20 +87,6 @@ void Gain::draw (bool display, bool save)
   if (save    == true) this->WriteRootFile();
   if (display == true) myApp->Run();
 }
-// {
-//   TApplication* myApp;
-
-//   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
-
-//   this->initHisto();
-//   this->fillHisto();
-//   this->display();
-
-//   if (save    == true) this->save();
-//   if (display == true) myApp->Run();
-
-//   theFile->Close();
-// }
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze ()
 {
@@ -151,7 +134,6 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
   return theGainAndInterceptContainer;
 }
 
-
 void Gain::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
 
 void Gain::fillHisto()
@@ -162,7 +144,6 @@ void Gain::fillHisto()
 }
 
 void Gain::display() { histos.process(); }
-
 
 void Gain::computeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
 // ##############################################

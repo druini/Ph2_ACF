@@ -10,7 +10,6 @@
 
 #include "RD53GainHistograms.h"
 
-#include "../HWDescription/RD53.h"
 
 // #############
 // # CONSTANTS #
@@ -21,13 +20,13 @@ using namespace Ph2_HwDescription;
 
 void RD53GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
 {
-  auto hOcc2D = HistContainer<TH2F>("Gain", "Gain", nSteps,startValue,stopValue, nEvents/2,0,RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION));
+  auto hOcc2D = HistContainer<TH2F>("Gain", "Gain", nSteps,startValue,stopValue, nEvents / 2, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION));
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "ToT");
 
   auto hGain1D = HistContainer<TH1F>("Gain1D", "Gain1D", 100, 0, 20e-3);
   bookImplementer(theOutputFile, theDetectorStructure, hGain1D, Gain1D, "Gain (ToT/VCal)", "Entries");
 
-  auto hIntercept1D = HistContainer<TH1F>("Intercept1D", "Intercept1D", 100,-INTERCEPT_HALFRANGE,INTERCEPT_HALFRANGE);
+  auto hIntercept1D = HistContainer<TH1F>("Intercept1D", "Intercept1D", 100, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
   bookImplementer(theOutputFile, theDetectorStructure, hIntercept1D, Intercept1D, "Intercept (ToT)", "Entries");
 
   auto hGain2D = HistContainer<TH2F>("Gain2D", "Gain Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);

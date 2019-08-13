@@ -71,7 +71,7 @@ void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)
 
 void RD53PixelAliveHistograms::process ()
 {
-  draw<TH1F>(Occupancy1D);
+  draw<TH1F>(Occupancy1D);  
   draw<TH2F>(Occupancy2D, "gcolz");
   draw<TH1F>(ToT);
   draw<TH1F>(BCID);

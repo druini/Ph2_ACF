@@ -11,9 +11,6 @@
 #ifndef RD53GainOptimizationHistograms_H
 #define RD53GainOptimizationHistograms_H
 
-// #include "../Utils/GainAndIntercept.h"
-// #include "../Utils/OccupancyAndPh.h"
-// #include "../Utils/Occupancy.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/RegisterValue.h"
 #include "DQMHistogramBase.h"
@@ -25,31 +22,17 @@
 class RD53GainOptimizationHistograms : public DQMHistogramBase
 {
  public:
- RD53GainOptimizationHistograms() //(int nEvents, int startValue, int stopValue, int nSteps)
-//    : nEvents    (nEvents)
-//    , nSteps     (nSteps)
-//    , startValue (startValue)
-//    , stopValue  (stopValue)
-  {}
+  RD53GainOptimizationHistograms(){}
 
-  void book               (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
-  void process            ()                                                                                                                  override;
-  bool fill               (std::vector<char>& dataBuffer)                                                                                     override { return false; };
-  void reset              (void)                                                                                                              override {};
-
-  void fill  (const DetectorDataContainer& data);
+  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
+  void process ()                                                                                                                  override;
+  bool fill    (std::vector<char>& dataBuffer)                                                                                     override { return false; };
+  void reset   (void)                                                                                                              override {};
+  
+  void fill    (const DetectorDataContainer& data);
 
  private:
   DetectorDataContainer KrumCurr;
-
-//   size_t nEvents;
-//   size_t nSteps;
-//   size_t startValue;
-//   size_t stopValue;
-//   size_t ROWstart;
-//   size_t ROWstop;
-//   size_t COLstart;
-//   size_t COLstop;
 };
 
 #endif

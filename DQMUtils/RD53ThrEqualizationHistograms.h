@@ -11,7 +11,6 @@
 #ifndef RD53ThrEqualizationHistograms_H
 #define RD53ThrEqualizationHistograms_H
 
-// #include "../Utils/GenericDataVector.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/RegisterValue.h"
 #include "DQMHistogramBase.h"

@@ -9,14 +9,13 @@
 
 #include "RD53SCurve.h"
 
-SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset)
+SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset)
   : Tool        ()
   , fileRes     (fileRes)
   , rowStart    (rowStart)
   , rowStop     (rowStop)
   , colStart    (colStart)
   , colStop     (colStop)
-  , nPixels2Inj (nPixels2Inj)
   , nEvents     (nEvents)
   , startValue  (startValue)
   , stopValue   (stopValue)
@@ -36,7 +35,6 @@ SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t col
 
   theChnGroupHandler = std::shared_ptr<RD53ChannelGroupHandler>(new RD53ChannelGroupHandler());
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
-  theChnGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 
 
   // ##############################
@@ -88,7 +86,7 @@ void SCurve::draw (bool display, bool save)
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
   if (save    == true)
     {
-      this->CreateResultDirectory("Results");
+      this->CreateResultDirectory("Results",false,false);
       this->InitResultFile(fileRes);
     }
 

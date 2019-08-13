@@ -25,11 +25,11 @@ class RD53GainHistograms : public DQMHistogramBase
  public:
  RD53GainHistograms(int nEvents, int startValue, int stopValue, int nSteps)
    : nEvents    (nEvents)
-   , nSteps     (nSteps)
-   , startValue (startValue)
-   , stopValue  (stopValue)
+    , nSteps     (nSteps)
+    , startValue (startValue)
+    , stopValue  (stopValue)
   {}
-
+  
   void book               (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
   void process            ()                                                                                                                  override;
   bool fill               (std::vector<char>& dataBuffer)                                                                                     override { return false; };
