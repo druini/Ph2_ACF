@@ -46,7 +46,7 @@ namespace Ph2_HwInterface
     for (auto i = 0u; i < arraySize(registerWhileList); i++)
       {
 	auto it = pRD53RegMap.find(registerWhileList[i]);
-	// if (it != pRD53RegMap.end()) this->WriteChipReg(pRD53, it->first, it->second.fValue, true);
+	if (it != pRD53RegMap.end()) this->WriteChipReg(pRD53, it->first, it->second.fValue, true);
       }
 
     // ###############################

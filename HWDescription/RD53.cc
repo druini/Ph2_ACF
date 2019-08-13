@@ -28,7 +28,7 @@ namespace Ph2_HwDescription
     loadfRegMap(configFileName);
     setFrontEndType(FrontEndType::RD53);
   }
-  
+
   void RD53::loadfRegMap (const std::string& fileName)
   {
     std::ifstream     file (fileName.c_str(), std::ios::in);
@@ -47,7 +47,7 @@ namespace Ph2_HwDescription
 	  {
 	    if (line.find_first_not_of (" \t") == std::string::npos || line.at (0) == '#' || line.at (0) == '*' || line.empty()) fCommentMap[cLineCounter] = line;
 	    else if ((line.find("PIXELCONFIGURATION") != std::string::npos) || (foundPixelConfig == true))
-	      {
+ 	      {
 		foundPixelConfig = true;
 		
 		if (line.find("COL") != std::string::npos)
@@ -75,14 +75,14 @@ namespace Ph2_HwDescription
 			    row++;
 			  }
 		      }
-		        
+		    
 		    if (row < nRows)
 		      {
 			myString.str(""); myString.clear();
 			myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
 			throw Exception (myString.str().c_str());
 		      }
-		        
+		    
 		    col++;
 		  }
 		else if (line.find("HITBUS") != std::string::npos)
@@ -227,7 +227,7 @@ namespace Ph2_HwDescription
 	for (const auto& it : fRegMap)
 	  fSetRegItem.insert ({it.first, it.second});
 
-	int cLineCounter = 0;
+	int cLineCounter = 0;	
 	for (const auto& v : fSetRegItem)
 	  {
 	    while (fCommentMap.find (cLineCounter) != std::end (fCommentMap))
@@ -256,7 +256,7 @@ namespace Ph2_HwDescription
 	file << "*-------------------------------------------------------------------------------------------------------" << std::endl;
 	for (auto i = 0u; i < fPixelsMask.size(); i++)
 	  {
-	    file << "COL" << std::setfill ('0') << std::setw (3) << i << std::endl;
+	    file << "COL					" << std::setfill ('0') << std::setw (3) << i << std::endl;
 
 	    file << "ENABLE " << fPixelsMask[i].Enable[0];
 	    for (auto j = 1u; j < fPixelsMask[i].Enable.size(); j++)
@@ -286,44 +286,41 @@ namespace Ph2_HwDescription
     else
       LOG (ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << output << RESET;
   }
-
-  void RD53::copyMaskFromDefault()
+  
+  void RD53::copyMaskFromDefault ()
   {
     for (auto i = 0u; i < fPixelsMask.size(); i++)
       {
 	fPixelsMask[i].Enable = fPixelsMaskDefault[i].Enable;
 	fPixelsMask[i].HitBus = fPixelsMaskDefault[i].HitBus;
-	fPixelsMask[i].InjEn = fPixelsMaskDefault[i].InjEn;
-	for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++)
-	  fPixelsMask[i].TDAC[j] = fPixelsMaskDefault[i].TDAC[j];
+	fPixelsMask[i].InjEn  = fPixelsMaskDefault[i].InjEn;
+	for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = fPixelsMaskDefault[i].TDAC[j];
       }
   }
-  
-  void RD53::copyMaskToDefault()
+
+  void RD53::copyMaskToDefault ()
   {
     for (auto i = 0u; i < fPixelsMaskDefault.size(); i++)
       {
 	fPixelsMaskDefault[i].Enable = fPixelsMask[i].Enable;
 	fPixelsMaskDefault[i].HitBus = fPixelsMask[i].HitBus;
-	fPixelsMaskDefault[i].InjEn = fPixelsMask[i].InjEn;
-	for (auto j = 0u; j < fPixelsMaskDefault[i].TDAC.size(); j++)
-	  fPixelsMaskDefault[i].TDAC[j] = fPixelsMask[i].TDAC[j];
-    }
+	fPixelsMaskDefault[i].InjEn  = fPixelsMask[i].InjEn;
+	for (auto j = 0u; j < fPixelsMaskDefault[i].TDAC.size(); j++) fPixelsMaskDefault[i].TDAC[j] = fPixelsMask[i].TDAC[j];
+      }
   }
-  
-  void RD53::resetMask()
+
+  void RD53::resetMask ()
   {
     for (auto i = 0u; i < fPixelsMask.size(); i++)
       {
 	fPixelsMask[i].Enable.reset();
 	fPixelsMask[i].HitBus.reset();
-	fPixelsMask[i].InjEn.reset();
-	for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++)
-	  fPixelsMask[i].TDAC[j] = this->setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION) / 2;
+	fPixelsMask[i].InjEn .reset();
+	for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = this->setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION) / 2;
       }
   }
-  
-  void RD53::enableAllPixels()
+
+  void RD53::enableAllPixels ()
   {
     for (auto i = 0u; i < fPixelsMask.size(); i++)
       {
@@ -331,8 +328,8 @@ namespace Ph2_HwDescription
 	fPixelsMask[i].HitBus.set();
       }
   }
-  
-  void RD53::disableAllPixels()
+
+  void RD53::disableAllPixels ()
   {
     for (auto i = 0u; i < fPixelsMask.size(); i++)
       {
@@ -351,7 +348,7 @@ namespace Ph2_HwDescription
   {
     fPixelsMask[col].InjEn[row] = inject;
   }
-  
+
   void RD53::setTDAC (unsigned int row, unsigned int col, uint8_t TDAC)
   {
     fPixelsMask[col].TDAC[row] = TDAC;
@@ -362,72 +359,49 @@ namespace Ph2_HwDescription
     return fPixelsMask[col].TDAC[row];
   }
 
-  void RD53::EncodeCMD (const ChipRegItem                   & pRegItem,
-			const uint8_t                         pRD53Id,
-			const uint16_t                        pRD53Cmd,
-			std::vector<std::vector<uint16_t> > & pVecReg)
-  {
-    const unsigned int nBits = NBIT_ID + NBIT_ADDR + NBIT_DATA;
-    
-    std::bitset<nBits> idANDaddANDdata(pRD53Id           << (NBIT_ADDR + NBIT_DATA) |
-				       pRegItem.fAddress << NBIT_DATA               |
-				       pRegItem.fValue);
-
-    std::bitset<nBits> mask = this->setBits(NBIT_ID);
-    std::vector<uint16_t> frame;
-
-    frame.push_back(pRD53Cmd);
-    frame.push_back(pRD53Cmd);
-    
-    std::bitset<nBits> tmp;
-    for (int i = nBits/NBIT_DATA-1; i >= 0; i-=2)
-      {
-	tmp = (idANDaddANDdata & (mask << NBIT_ID*i)) >> NBIT_ID*i;
-	unsigned long long data1 = tmp.to_ullong();
-
-	tmp = (idANDaddANDdata & (mask << NBIT_ID*(i-1))) >> NBIT_ID*(i-1);
-	// unsigned long long data2 = tmp.to_ullong();
-
-	frame.push_back(cmd_data_map[data1] << NBIT_SYMBOL | cmd_data_map[data1]);
-      }
-
-    pVecReg.push_back(frame);
-  }
-
   void RD53::encodeCMD (const uint16_t               address,
 			const uint16_t               data,
-			const uint8_t                pRD53Id,
-			const uint16_t               pRD53Cmd,
+  			const uint8_t                RD53id,
+  			const uint16_t               RD53cmd,
 			const bool                   isBroadcast,
-			std::vector<uint32_t>      & pVecReg,
+  			std::vector<uint32_t>      & pVecReg,
 			const std::vector<uint16_t>* dataVec)
   {
+    uint8_t  FWcmd;
     uint32_t word = 0;
     std::bitset<NBIT_FRAME> frame(0);
 
-    if ((pRD53Cmd == (RD53CmdEncoder::RESET_ECR & 0x00FF)) ||
-	(pRD53Cmd == (RD53CmdEncoder::RESET_BCR & 0x00FF)) ||
-	(pRD53Cmd == (RD53CmdEncoder::NOOP      & 0x00FF)))
+    if ((RD53cmd == RD53CmdEncoder::RESET_ECR) ||
+	(RD53cmd == RD53CmdEncoder::RESET_BCR) ||
+	(RD53cmd == RD53CmdEncoder::NOOP))
       {
-	word = 0 | (pRD53Cmd << NBIT_5BITW);
+	FWcmd = RD53cmd & 0x00FF;
+
+	word = 0 | (FWcmd << NBIT_5BITW);
       }
-    else if (pRD53Cmd == (RD53CmdEncoder::SYNC & 0x00FF))
+    else if (RD53cmd == RD53CmdEncoder::SYNC)
       {
-	word = 0 | (pRD53Cmd << NBIT_5BITW);
+	FWcmd = RD53cmd & 0x00FF;
+
+	word = 0 | (FWcmd << NBIT_5BITW);	
       }
-    else if (pRD53Cmd == (RD53CmdEncoder::GLOB_PULSE & 0x00FF))
+    else if (RD53cmd == RD53CmdEncoder::GLOB_PULSE)
       {
-	word  = 2 | (pRD53Cmd << NBIT_5BITW);
-	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->setBits(NBIT_ID)) << 1);      // @TMP ID[3..0],isBroadcast
+	FWcmd = RD53cmd & 0x00FF;
+
+	word  = 2 | (FWcmd << NBIT_5BITW);
+	frame = (isBroadcast ? 1 : 0) | ((RD53id & this->setBits(NBIT_ID)) << 1);       // @TMP ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2));
 	frame = 0 | ((data & this->setBits(NBIT_ID)) << 1);                             // @TMP@ D[3..0],0
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME));
       }
-    else if (pRD53Cmd == (RD53CmdEncoder::CAL & 0x00FF))
+    else if (RD53cmd == RD53CmdEncoder::CAL)
       {
-	word  = 4 | (pRD53Cmd << NBIT_5BITW);
+	FWcmd = RD53cmd & 0x00FF;
+
+	word  = 4 | (FWcmd << NBIT_5BITW);
 	frame = ((data & (this->setBits(NBIT_DATA) << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
-	  ((pRD53Id & this->setBits(NBIT_ID)) << 1);                                    // @TMP@ ID[3..0],D[15]
+	  ((RD53id & this->setBits(NBIT_ID)) << 1);                                     // @TMP@ ID[3..0],D[15]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (data & (this->setBits(NBIT_FRAME*3) << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
@@ -436,10 +410,12 @@ namespace Ph2_HwDescription
 	frame = (data & (this->setBits(NBIT_FRAME*2) << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
       }
-    else if (pRD53Cmd == (RD53CmdEncoder::READ & 0x00FF))
+    else if (RD53cmd == RD53CmdEncoder::READ)
       {
-	word  = 4 | (pRD53Cmd << NBIT_5BITW);
-	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->setBits(NBIT_ID)) << 1);      // @TMP@ ID[3..0],isBroadcast
+	FWcmd = RD53cmd & 0x00FF;
+
+	word  = 4 | (FWcmd << NBIT_5BITW);
+	frame = (isBroadcast ? 1 : 0) | ((RD53id & this->setBits(NBIT_ID)) << 1);       // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->setBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;           // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
@@ -448,15 +424,17 @@ namespace Ph2_HwDescription
 	frame = 0;
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
       }
-    else if ((pRD53Cmd == (RD53CmdEncoder::WRITE & 0x00FF)) && (dataVec == NULL))
+    else if ((RD53cmd == RD53CmdEncoder::WRITE) && (dataVec == NULL))
       {
-	word  = 6 | (pRD53Cmd << NBIT_5BITW);
-	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->setBits(NBIT_ID)) << 1);      // @TMP@ ID[3..0],isBroadcast
+	FWcmd = RD53cmd & 0x00FF;
+
+	word  = 6 | (FWcmd << NBIT_5BITW);
+	frame = (isBroadcast ? 1 : 0) | ((RD53id & this->setBits(NBIT_ID)) << 1);       // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->setBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;           // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
 
-	frame = ((data & (this->setBits(NBIT_DATA) << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
+ 	frame = ((data & (this->setBits(NBIT_DATA) << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
 	  ((address & this->setBits(NBIT_ID)) << 1);                                    // @TMP@ A[3..0],D[15]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));       
 	frame = (data & (this->setBits(NBIT_FRAME*3) << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
@@ -468,8 +446,10 @@ namespace Ph2_HwDescription
 	frame = (data & (this->setBits(NBIT_FRAME*1) << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
 	word  = word | (frame.to_ulong() << NBIT_FRAME*1);
       }
-    else if ((pRD53Cmd == (RD53CmdEncoder::WRITE & 0x00FF)) && (dataVec != NULL) && (dataVec->size() == NDATAMAX_PERPIXEL))
+    else if ((RD53cmd == RD53CmdEncoder::WRITE) && (dataVec != NULL) && (dataVec->size() == NDATAMAX_PERPIXEL))
       {
+	FWcmd = RD53cmd & 0x00FF;
+
 	std::bitset<NBIT_DATA*NDATAMAX_PERPIXEL> dataBitStream(0);
 	std::bitset<NBIT_DATA*NDATAMAX_PERPIXEL> tmp(0);
 	for (auto i = 0; i < NDATAMAX_PERPIXEL; i++)
@@ -478,8 +458,8 @@ namespace Ph2_HwDescription
 	    dataBitStream |= (tmp << NBIT_DATA*i);
 	  }
 
-	word  = 7 | (pRD53Cmd << NBIT_5BITW);
-	frame = (isBroadcast ? 1 : 0) | ((pRD53Id & this->setBits(NBIT_ID)) << 1);                                            // @TMP@ ID[3..0],isBroadcast
+	word  = 7 | (FWcmd << NBIT_5BITW);
+	frame = (isBroadcast ? 1 : 0) | ((RD53id & this->setBits(NBIT_ID)) << 1);                                             // @TMP@ ID[3..0],isBroadcast
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
 	frame = (address & (this->setBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;                                                 // A[8..4]
 	word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
@@ -538,17 +518,18 @@ namespace Ph2_HwDescription
 
   void RD53::convertRowCol2Cores (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair)
   {
-    colPair = col >> (NPIXCOL_PROG / 2);
+    colPair = col >> (NPIXCOL_PROG/2);
     row     = _row;
   }
-
-  void RD53::convertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& col)
+  
+  void RD53::convertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side,
+				   unsigned int& row, unsigned int& col)
   {
     row = coreRowAndRegion;
     col = NPIX_REGION * ((coreCol << RD53EvtEncoder::NBIT_SIDE) | side);
   }
-
-  uint32_t RD53::getNumberOfChannels() const
+  
+  uint32_t RD53::getNumberOfChannels () const
   {
     return nRows * nCols;
   }
@@ -583,7 +564,7 @@ namespace Ph2_HwDescription
 	  if ((this->data.back().row >= RD53::nRows) || (this->data.back().col >= RD53::nCols)) evtStatus |= RD53EvtEncoder::CPIX;
 	}
   }
-  
+
   RD53::HitData::HitData (const uint32_t data)
   {
     uint32_t core_col, side, all_tots;
@@ -592,16 +573,24 @@ namespace Ph2_HwDescription
     RangePacker<RD53EvtEncoder::NBIT_TOT / NPIX_REGION>::unpack_reverse(all_tots, tots);
     col = NPIX_REGION * pack_bits<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
   }
-  
-  RD53::CalCmd::CalCmd (const uint8_t& cal_edge_mode, const uint8_t& cal_edge_delay, const uint8_t& cal_edge_width, const uint8_t& cal_aux_mode, const uint8_t& cal_aux_delay)
-    : cal_edge_mode(cal_edge_mode)
-    , cal_edge_delay(cal_edge_delay)
-    , cal_edge_width(cal_edge_width)
-    , cal_aux_mode(cal_aux_mode)
-    , cal_aux_delay(cal_aux_delay)
+
+  RD53::CalCmd::CalCmd (const uint8_t& cal_edge_mode,
+			const uint8_t& cal_edge_delay,
+			const uint8_t& cal_edge_width,
+			const uint8_t& cal_aux_mode,
+			const uint8_t& cal_aux_delay)
+    : cal_edge_mode  (cal_edge_mode)
+    , cal_edge_delay (cal_edge_delay)
+    , cal_edge_width (cal_edge_width)
+    , cal_aux_mode   (cal_aux_mode)
+    , cal_aux_delay  (cal_aux_delay)
   {}
 
-  void RD53::CalCmd::setCalCmd (const uint8_t& _cal_edge_mode, const uint8_t& _cal_edge_delay, const uint8_t& _cal_edge_width, const uint8_t& _cal_aux_mode, const uint8_t& _cal_aux_delay)
+  void RD53::CalCmd::setCalCmd (const uint8_t& _cal_edge_mode,
+				const uint8_t& _cal_edge_delay,
+				const uint8_t& _cal_edge_width,
+				const uint8_t& _cal_aux_mode,
+				const uint8_t& _cal_aux_delay)
   {
     cal_edge_mode  = _cal_edge_mode;
     cal_edge_delay = _cal_edge_delay;
@@ -612,6 +601,16 @@ namespace Ph2_HwDescription
 
   uint32_t RD53::CalCmd::getCalCmd (const uint8_t& chipId)
   {
-    return pack_bits<NBIT_ID, RD53InjEncoder::NBIT_CAL_EDGE_MODE, RD53InjEncoder::NBIT_CAL_EDGE_DELAY, RD53InjEncoder::NBIT_CAL_EDGE_WIDTH, RD53InjEncoder::NBIT_CAL_AUX_MODE, RD53InjEncoder::NBIT_CAL_AUX_DELAY>(chipId, cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay);
+    return pack_bits<NBIT_ID,
+		     RD53InjEncoder::NBIT_CAL_EDGE_MODE,
+		     RD53InjEncoder::NBIT_CAL_EDGE_DELAY,
+		     RD53InjEncoder::NBIT_CAL_EDGE_WIDTH,
+		     RD53InjEncoder::NBIT_CAL_AUX_MODE,
+		     RD53InjEncoder::NBIT_CAL_AUX_DELAY>(chipId,
+							 cal_edge_mode,
+							 cal_edge_delay,
+							 cal_edge_width,
+							 cal_aux_mode,
+							 cal_aux_delay);
   }
 }
