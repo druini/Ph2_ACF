@@ -11,7 +11,7 @@
 
 namespace Ph2_HwInterface
 {
-  RD53Interface::RD53Interface (const BeBoardFWMap& pBoardMap): ReadoutChipInterface(pBoardMap) {}
+  RD53Interface::RD53Interface (const BeBoardFWMap& pBoardMap): ReadoutChipInterface (pBoardMap) {}
   
   bool RD53Interface::ConfigureChip (const Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
