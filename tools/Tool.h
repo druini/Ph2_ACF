@@ -277,9 +277,9 @@ class Tool : public SystemController
     void setSameDac(const std::string &dacName, const uint16_t dacValue);
 
     template<typename T>
-    ContainerStream<T> prepareContainerStreamer()
+    ChannelContainerStream<T> prepareChannelContainerStreamer()
     {
-        ContainerStream<T> theContainerStreamer(getCalibrationName());
+        ChannelContainerStream<T> theContainerStreamer(getCalibrationName());
         return theContainerStreamer;
     }
 

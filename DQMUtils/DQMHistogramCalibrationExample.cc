@@ -60,7 +60,7 @@ bool DQMHistogramCalibrationExample::fill(std::vector<char>& dataBuffer)
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     //I'm expecting to receive a data stream from an uint32_t contained from calibration "CalibrationExample"
-    ContainerStream<uint32_t>  theHitStreamer("CalibrationExample");
+    ChannelContainerStream<uint32_t>  theHitStreamer("CalibrationExample");
 
     // Try to see if the char buffer matched what I'm expection (container of uint32_t from CalibrationExample procedure)
     if(theHitStreamer.attachBuffer(&dataBuffer))

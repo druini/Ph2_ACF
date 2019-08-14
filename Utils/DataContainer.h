@@ -250,7 +250,7 @@ template <class T>
 class DataContainer : public Container<T> , public BaseDataContainer
 {
 public:
-	DataContainer(int id) : Container<T>(id)
+	DataContainer(uint16_t id) : Container<T>(id)
 	{;}
 	DataContainer(unsigned int size) : Container<T>(size) {}
 	virtual ~DataContainer() {;}
@@ -275,7 +275,7 @@ public:
 	uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) override
 	{
 
-		int index = 0;
+		uint16_t index = 0;
 		uint32_t numberOfEnabledChannels_ = 0;
 		std::vector<uint32_t> theNumberOfEnabledChannelsList;
 		for(auto container : *this)
@@ -319,8 +319,8 @@ template <typename T>
 class ChannelDataContainer: public ChannelContainer<T> //, public ChannelContainerBase
 {
 public:
-	ChannelDataContainer(int size) : ChannelContainer<T>(size) {}
-	ChannelDataContainer(int size, T initialValue) : ChannelContainer<T>(size, initialValue) {}
+	ChannelDataContainer(uint16_t size) : ChannelContainer<T>(size) {}
+	ChannelDataContainer(uint16_t size, T initialValue) : ChannelContainer<T>(size, initialValue) {}
 	ChannelDataContainer() : ChannelContainer<T>() {}
 	
     void normalize(uint32_t numberOfEvents) override
@@ -344,11 +344,11 @@ struct ChannelNormalizer<T,true>{
 class ChipDataContainer :  public ChipContainer , public BaseDataContainer
 {
 public:
-	ChipDataContainer(int id)
+	ChipDataContainer(uint16_t id)
 	: ChipContainer(id)
 	{}
 
-	ChipDataContainer(int id, unsigned int numberOfRows, unsigned int numberOfCols=1)
+	ChipDataContainer(uint16_t id, unsigned int numberOfRows, unsigned int numberOfCols=1)
 	: ChipContainer(id, numberOfRows, numberOfCols)
 	{}
 
@@ -379,31 +379,31 @@ public:
 class ModuleDataContainer : public DataContainer<ChipDataContainer>
 {
 public:
-	ModuleDataContainer(int id) : DataContainer<ChipDataContainer>(id){}
+	ModuleDataContainer(uint16_t id) : DataContainer<ChipDataContainer>(id){}
 	template <typename T>
-	T*             addChipDataContainer(int id, T* chip)     {return static_cast<T*>(DataContainer<ChipDataContainer>::addObject(id, chip));}
-	ChipDataContainer* addChipDataContainer(int id, int row, int col=1){return DataContainer<ChipDataContainer>::addObject(id, new ChipDataContainer(id, row, col));}
+	T*             addChipDataContainer(uint16_t id, T* chip)     {return static_cast<T*>(DataContainer<ChipDataContainer>::addObject(id, chip));}
+	ChipDataContainer* addChipDataContainer(uint16_t id, uint16_t row, uint16_t col=1){return DataContainer<ChipDataContainer>::addObject(id, new ChipDataContainer(id, row, col));}
 private:
 };
 
 class BoardDataContainer : public DataContainer<ModuleDataContainer>
 {
 public:
-	BoardDataContainer(int id) : DataContainer<ModuleDataContainer>(id){}
+	BoardDataContainer(uint16_t id) : DataContainer<ModuleDataContainer>(id){}
 	template <class T>
-	T*               addModuleDataContainer(int id, T* module){return static_cast<T*>(DataContainer<ModuleDataContainer>::addObject(id, module));}
-	ModuleDataContainer* addModuleDataContainer(int id)                 {return DataContainer<ModuleDataContainer>::addObject(id, new ModuleDataContainer(id));}
+	T*               addModuleDataContainer(uint16_t id, T* module){return static_cast<T*>(DataContainer<ModuleDataContainer>::addObject(id, module));}
+	ModuleDataContainer* addModuleDataContainer(uint16_t id)                 {return DataContainer<ModuleDataContainer>::addObject(id, new ModuleDataContainer(id));}
 private:
 };
 
 class DetectorDataContainer : public DataContainer<BoardDataContainer>
 {
 public:
-	DetectorDataContainer(int id=0) : DataContainer<BoardDataContainer>(id){}
+	DetectorDataContainer(uint16_t id=0) : DataContainer<BoardDataContainer>(id){}
 	~DetectorDataContainer() {}
 	template <class T>
-	T*              addBoardDataContainer(int id, T* board){return static_cast<T*>(DataContainer<BoardDataContainer>::addObject(id, board));}
-	BoardDataContainer* addBoardDataContainer(int id)                {return DataContainer<BoardDataContainer>::addObject(id, new BoardDataContainer(id));}
+	T*              addBoardDataContainer(uint16_t id, T* board){return static_cast<T*>(DataContainer<BoardDataContainer>::addObject(id, board));}
+	BoardDataContainer* addBoardDataContainer(uint16_t id)                {return DataContainer<BoardDataContainer>::addObject(id, new BoardDataContainer(id));}
 private:
 };
 

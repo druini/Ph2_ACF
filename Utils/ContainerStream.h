@@ -28,31 +28,29 @@
 #include "../HWDescription/ReadoutChip.h"
 
 // workaround missing "is_trivially_copyable" in g++ < 5.0
-#if __cplusplus < 201402
-namespace std
-{
-	template<typename T>
-	struct is_trivially_copyable
-	{
-		static const bool value = __has_trivial_copy(T);
-	};
-}
-#endif
+// #if __cplusplus < 201402
+// namespace std
+// {
+// 	template<typename T>
+// 	struct is_trivially_copyable
+// 	{
+// 		static const bool value = __has_trivial_copy(T);
+// 	};
+// }
+// #endif
 
 // Here I am using the The Curiously Recurring Template Pattern (CRTP)
 // To avoid another inheritance I create a Header base class which takes as template the Child class
-// (I need this to do the do sizeof(H), otheswise, since no virtual functions are present this will point to HeaderStreamChipContainerBase)
+// (I need this to do the do sizeof(H), otheswise, since no virtual functions are present this will point to HeaderStreamContainerBase)
 // In this base class I have all the datamember I need for a base container
 template<typename H>
-class HeaderStreamChipContainerBase : public DataStreamBase
+class HeaderStreamContainerBase : public DataStreamBase
 {
 public:
-	HeaderStreamChipContainerBase()
-	: boardId (0)
-	, moduleId(0)
-	, fChipId (0)
+	HeaderStreamContainerBase()
+	: fBoardId (0)
 	{};
-	~HeaderStreamChipContainerBase() {};
+	~HeaderStreamContainerBase() {};
 
 	uint32_t size(void) override
 	{
@@ -62,10 +60,8 @@ public:
 	}
 
 public:
-	uint16_t boardId;
-	uint16_t moduleId;
-	uint16_t fChipId;
-
+	uint16_t fBoardId;
+	
 }__attribute__((packed));
 
 // Generic Header which allows to add other members to the header
@@ -75,7 +71,7 @@ public:
 // ComtainerStream<Occupancy,vector<int>> --> ERROR
 
 template<typename... I>
-class HeaderStreamChipContainer : public HeaderStreamChipContainerBase<HeaderStreamChipContainer<I...>>
+class HeaderStreamContainer : public HeaderStreamContainerBase<HeaderStreamContainer<I...>>
 {
 
 	template <std::size_t N>
@@ -90,29 +86,29 @@ class HeaderStreamChipContainer : public HeaderStreamChipContainerBase<HeaderStr
 	}
 
 public:
-	HeaderStreamChipContainer()  {};
-	~HeaderStreamChipContainer() {};
+	HeaderStreamContainer()  {};
+	~HeaderStreamContainer() {};
 
-    void setHeaderInfo(I... theInfo)
+	template<std::size_t N = 0>
+    void setHeaderInfo(TupleElementType<N> theInfo)
 	{
-		fInfo = std::make_tuple(theInfo...);
+		std::get<N>(fInfo) = theInfo ;
 	}
 
 	template<std::size_t N = 0>
-	TupleElementType<N> getHeaderInfo(void)
+	TupleElementType<N> getHeaderInfo() const
 	{
 		check_if_retrivable<TupleElementType<N>>();
 		return std::get<N>(fInfo);
 	}
 
-private:
 	typename std::tuple<I...> fInfo;
 
 };
 
 // Specialized Header class when the parameter pack is empty
 template<>
-class HeaderStreamChipContainer<> : public HeaderStreamChipContainerBase<HeaderStreamChipContainer<>>
+class HeaderStreamContainer<> : public HeaderStreamContainerBase<HeaderStreamContainer<>>
 {}__attribute__((packed));
 
 
@@ -147,11 +143,14 @@ public:
 }__attribute__((packed));
 
 template <typename C, typename... I> 
-class ContainerStream : public ObjectStream<HeaderStreamChipContainer<I...>,DataStreamChipContainer<C> >
+class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>,DataStreamChipContainer<C> >
 {
+	enum HeaderId {ModuleId , ChipId};
+	static constexpr size_t getEnumSize() {return ChipId+1;}
+
 public:
-	ContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamChipContainer<I...>,DataStreamChipContainer<C> >(creatorName) {;}
-	~ContainerStream(){;}
+	ChannelContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>,DataStreamChipContainer<C> >(creatorName) {;}
+	~ChannelContainerStream(){;}
 	
 	void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
 	{
@@ -169,20 +168,38 @@ public:
 
 	void decodeChipData(DetectorDataContainer& detectorContainer)
 	{
-		detectorContainer.getObject(this->fHeaderStream.boardId)
-						->getObject(this->fHeaderStream.moduleId)
-						->getObject(this->fHeaderStream.fChipId)
+		detectorContainer.getObject(this->fHeaderStream.fBoardId)
+						->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::ModuleId>())
+						->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::ChipId>())
 						->template setChannelContainer<ChannelContainer<C>>(this->fDataStream.fChannelContainer);
 		this->fDataStream.fChannelContainer = nullptr;
 	}
+
+	template <std::size_t N>
+    using TupleElementType = typename std::tuple_element<N, std::tuple<I...>>::type;
+
+	template<std::size_t N = 0>
+	void setHeaderElement(TupleElementType<N> theInfo)
+	{
+		this->fHeaderStream.template setHeaderInfo<N + getEnumSize()>(theInfo);
+	}
+
+	template<std::size_t N = 0>
+	TupleElementType<N> getHeaderElement() const
+	{
+		return this->fHeaderStream.template getHeaderInfo<N + getEnumSize()>();
+	}
+
+	typename std::tuple<I...> fInfo;
+
 
 protected:
 
 	void retrieveChipData(uint16_t boardId, uint16_t moduleId, ChipDataContainer* chip)
 	{
-		this->fHeaderStream.boardId         = boardId;
-		this->fHeaderStream.moduleId        = moduleId;
-		this->fHeaderStream.fChipId         = chip->getIndex();
+		this->fHeaderStream.fBoardId         = boardId;
+		this->fHeaderStream.template setHeaderInfo<HeaderId::ModuleId>(moduleId);
+		this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getIndex());
 		this->fDataStream.fChannelContainer = chip->getChannelContainer<C>();
 	}
 

@@ -241,7 +241,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     #ifdef __USE_ROOT__
         fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
     #else
-        auto theOccupancyStream = prepareContainerStreamer<Occupancy>();
+        auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
         for(auto board : theOccupancyContainer)
         {
             if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
@@ -345,8 +345,8 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         #else
             if(fPlotSCurves) 
             {
-                ContainerStream<Occupancy,uint16_t> theSCurveStreamer("SCurve");
-                theSCurveStreamer.getHeaderStream()->setHeaderInfo(cValue);
+                ChannelContainerStream<Occupancy,uint16_t> theSCurveStreamer("SCurve");
+                theSCurveStreamer.setHeaderElement(cValue);
                 for(auto board : *theOccupancyContainer )
                 {
                     if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
@@ -479,7 +479,7 @@ void PedeNoise::extractPedeNoise ()
     #ifdef __USE_ROOT__
         if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
     #else
-        auto theThresholdAndNoiseStream = prepareContainerStreamer<ThresholdAndNoise>();
+        auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
         for(auto board : fThresholdAndNoiseContainer )
         {
             if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);

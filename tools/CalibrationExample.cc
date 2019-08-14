@@ -67,9 +67,9 @@ void CalibrationExample::runCalibrationExample(void)
         fDQMHistogramCalibrationExample.fillCalibrationExamplePlots(theHitContainer);
     #else
         //Calibration is running on the SoC: shipping the data!!!
-        //I prepare a stream of an uint32_t container, prepareContainerStreamer adds in the stream also the calibration name
+        //I prepare a stream of an uint32_t container, prepareChannelContainerStreamer adds in the stream also the calibration name
         // that is used when multiple calibrations are concatenated
-        auto theHitStream = prepareContainerStreamer<uint32_t>();
+        auto theHitStream = prepareChannelContainerStreamer<uint32_t>();
         // if the streamer was enabled (the supervisor script enable it) data are streamed
         if(fStreamerEnabled)
         {
