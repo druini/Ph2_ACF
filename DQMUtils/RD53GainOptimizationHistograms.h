@@ -22,7 +22,7 @@
 class RD53GainOptimizationHistograms : public DQMHistogramBase
 {
  public:
-  RD53GainOptimizationHistograms (float rangeKrumCurr) : rangeKrumCurr(rangeKrumCurr) {}
+  RD53GainOptimizationHistograms () {}
   
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
   void process ()                                                                                                                  override;
@@ -33,7 +33,6 @@ class RD53GainOptimizationHistograms : public DQMHistogramBase
   
  private:
   DetectorDataContainer KrumCurr;
-  float rangeKrumCurr;
 };
 
 #endif

@@ -108,7 +108,7 @@ void ThrEqualization::draw (bool display, bool save)
 	    }
     }
 
-  if (display == true) myApp->Run();
+  if (display == true) myApp->Run(true);
 }
 
 void ThrEqualization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
@@ -117,7 +117,7 @@ void ThrEqualization::display   () { histos.process();                          
 
 void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {
-  uint16_t numberOfBits = static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName);
+  uint16_t numberOfBits = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(dacName);
 
   ContainerFactory theDetectorFactory;
   DetectorDataContainer minDACcontainer;
@@ -193,7 +193,8 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 		  // ########################
 		  float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row, col).fOccupancy;
 
-		  if (fabs(newValue - target) < fabs(oldValue - target) || (newValue == oldValue))
+		  // if (fabs(newValue - target) < fabs(oldValue - target) || (newValue == oldValue))
+		  if (fabs(newValue - target) < fabs(oldValue - target) || (newValue >= 0.999 && (oldValue >= 0.999 || oldValue <= 0.001)))
 		    {
 		      bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row, col).fOccupancy = newValue;
 		      bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue =

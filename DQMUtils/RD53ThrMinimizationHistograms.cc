@@ -14,6 +14,8 @@ using namespace Ph2_HwDescription;
 
 void RD53ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
 {
+  uint16_t rangeThreshold = RD53::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("Vthreshold_LIN"))+1;
+
   auto hThrehsold = HistContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
   bookImplementer(theOutputFile, theDetectorStructure, hThrehsold, Threhsold, "Threhsold", "Entries");
 }

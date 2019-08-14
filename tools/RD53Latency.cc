@@ -60,7 +60,7 @@ void Latency::draw (bool display, bool save)
   this->display();
 
   if (save    == true) this->WriteRootFile();
-  if (display == true) myApp->Run();
+  if (display == true) myApp->Run(true);
 }
 
 void Latency::analyze ()

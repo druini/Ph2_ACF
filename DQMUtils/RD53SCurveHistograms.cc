@@ -18,10 +18,10 @@ void RD53SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "Efficiency");
 
   auto hThreshold1D = HistContainer<TH1F>("Threshold1D", "Threshold Distribution", 1000, startValue, stopValue);
-  bookImplementer(theOutputFile, theDetectorStructure, hThreshold1D, Threshold1D, "#DeltaVCal", "Entries");
+  bookImplementer(theOutputFile, theDetectorStructure, hThreshold1D, Threshold1D, "Threshold (#DeltaVCal)", "Entries");
 
   auto hNoise1D = HistContainer<TH1F>("Noise1D", "Noise Distribution", 100, 0, 30);
-  bookImplementer(theOutputFile, theDetectorStructure, hNoise1D, Noise1D, "#DeltaVCal", "Entries");
+  bookImplementer(theOutputFile, theDetectorStructure, hNoise1D, Noise1D, "Noise (#DeltaVCal)", "Entries");
 
   auto hThreshold2D = HistContainer<TH2F>("Threshold2D", "Threshold Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hThreshold2D, Threshold2D, "Column", "Row");
@@ -80,8 +80,8 @@ void RD53SCurveHistograms::fillThresholdNoise (const DetectorDataContainer& data
 void RD53SCurveHistograms::process ()
 {
   draw<TH2F>(Occupancy2D, "gcolz", true, "Charge (electrons)");
-  draw<TH1F>(Threshold1D, "", true, "Charge (electrons)");
-  draw<TH1F>(Noise1D, "", true, "Charge (electrons)");
+  draw<TH1F>(Threshold1D, "", true, "Threshold (electrons)");
+  draw<TH1F>(Noise1D, "", true, "Noise (electrons)");
   draw<TH2F>(Threshold2D, "gcolz");
   draw<TH2F>(Noise2D, "gcolz");
 }

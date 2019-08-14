@@ -80,8 +80,8 @@ void RD53GainHistograms::fillGainIntercept (const DetectorDataContainer& data)
 void RD53GainHistograms::process ()
 {
   draw<TH2F>(Occupancy2D, "gcolz", true, "Charge (electrons)");
-  draw<TH1F>(Gain1D, "", true, "Charge (electrons)");
-  draw<TH1F>(Intercept1D, "", true, "Charge (electrons)");
+  draw<TH1F>(Gain1D, "", true, "Gain (ToT/electrons)");
+  draw<TH1F>(Intercept1D);
   draw<TH2F>(Gain2D, "gcolz");
   draw<TH2F>(Intercept2D, "gcolz");
 }

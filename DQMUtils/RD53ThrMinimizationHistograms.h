@@ -21,8 +21,8 @@
 class RD53ThrMinimizationHistograms : public DQMHistogramBase
 {
  public:
-  RD53ThrMinimizationHistograms (float rangeThreshold) : rangeThreshold(rangeThreshold) {}
-  
+  RD53ThrMinimizationHistograms () {}
+
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
   void process ()                                                                                                                  override;
   bool fill    (std::vector<char>& dataBuffer)                                                                                     override { return false; };
@@ -32,7 +32,6 @@ class RD53ThrMinimizationHistograms : public DQMHistogramBase
   
  private:
   DetectorDataContainer Threhsold;
-  float rangeThreshold;
 };
 
 #endif

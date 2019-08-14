@@ -21,8 +21,8 @@
 // ##################
 // # Default values #
 // ##################
-#define FileRUNNUMBER "./RunNumber.txt"
-#define RUNNUMBER     "0000"
+#define FILERUNNUMBER "./RunNumber.txt"
+#define RUNNUMBER 0
 
 
 INITIALIZE_EASYLOGGINGPP
@@ -34,6 +34,12 @@ auto findValue (const std::map<std::string, uint32_t>& pSettingsMap, const char*
   return ((setting != std::end(pSettingsMap)) ? setting->second : 0);
 }
 
+std::string fromInt2Str(int val)
+{
+  std::stringstream myString;
+  myString << std::setfill('0') << std::setw(4) << val;
+  return myString.str();
+}
 
 void configureFSM (SystemController& sc, size_t NTRIGxL1A, size_t type, bool hitOr)
 // #########################
@@ -225,8 +231,8 @@ int main (int argc, char** argv)
   // # Read run number #
   // ###################
   std::ifstream fileRunNumberIn;
-  std::string runNumber = RUNNUMBER;
-  fileRunNumberIn.open(FileRUNNUMBER, std::ios::in);
+  int runNumber = RUNNUMBER;
+  fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
   if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
   fileRunNumberIn.close();
 
@@ -234,7 +240,7 @@ int main (int argc, char** argv)
   // ##########################
   // # Initialize output file #
   // ##########################
-  if (saveRaw == true) cSystemController.addFileHandler("run_" + runNumber + ".raw", 'w');
+  if (saveRaw == true) cSystemController.addFileHandler("run_" + fromInt2Str(runNumber) + ".raw", 'w');
 
 
   // #######################
@@ -299,7 +305,7 @@ int main (int argc, char** argv)
       // ###################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_Latency");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
       Latency la(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
       la.Inherit(&cSystemController);
       la.run();
@@ -313,7 +319,7 @@ int main (int argc, char** argv)
       // ##################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_PixelAlive");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
       PixelAlive pa(fileName.c_str(), "", ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, true);
       pa.Inherit(&cSystemController);
       pa.run();
@@ -327,8 +333,8 @@ int main (int argc, char** argv)
       // #############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_NoiseScan"); 
-      std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan"); 
+      std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       PixelAlive pa(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, false, PixelThresholdOcc);
       pa.Inherit(&cSystemController);
       pa.run();
@@ -342,7 +348,7 @@ int main (int argc, char** argv)
       // ##############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_SCurve");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
       sc.Inherit(&cSystemController);
       sc.run();
@@ -356,7 +362,7 @@ int main (int argc, char** argv)
       // ############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_Gain");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_Gain");
       Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
       ga.Inherit(&cSystemController);
       ga.run();
@@ -370,14 +376,16 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_ThrEqualization");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
       sc.Inherit(&cSystemController);
       sc.run();
       auto output = sc.analyze();
       sc.draw(false,true);
 
-      std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
+      runNumber++;
+      fileName = "Run" + fromInt2Str(runNumber) + "_ThrEqualization";
+      std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       std::cout << "chipConfig.c_str() " << chipConfig.c_str() << std::endl;
       ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents*VCALnsteps, nEvents);
       te.Inherit(&cSystemController);
@@ -391,8 +399,8 @@ int main (int argc, char** argv)
       // #########################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_GainOptimization");
-      std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_GainOptimization");
+      std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset, RD53chargeConverter::Charge2VCal(ChipTargetCharge), KrumCurrStart, KrumCurrStop);
       go.Inherit(&cSystemController);
       go.run();
@@ -405,8 +413,8 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threhsold Minimization @@@" << RESET;
 
-      std::string fileName("Run" + runNumber + "_ThrMinimization");
-      std::string chipConfig(chipRegDefault == false ? "_" + runNumber : "");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
+      std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, ChipTargetOcc, ThrStart, ThrStop);
       tm.Inherit(&cSystemController);
       tm.run();
@@ -420,11 +428,9 @@ int main (int argc, char** argv)
   // # Update run number #
   // #####################
   std::ofstream fileRunNumberOut;
-  std::stringstream ss;
-  ss << std::setfill('0') << std::setw(runNumber.size()) << std::stoi(runNumber) + 1;
-  runNumber = ss.str();
-  fileRunNumberOut.open(FileRUNNUMBER, std::ios::out);
-  if (fileRunNumberOut.is_open() == true) fileRunNumberOut << runNumber << std::endl;
+  runNumber++;
+  fileRunNumberOut.open(FILERUNNUMBER, std::ios::out);
+  if (fileRunNumberOut.is_open() == true) fileRunNumberOut << fromInt2Str(runNumber) << std::endl;
   fileRunNumberOut.close();
 
 

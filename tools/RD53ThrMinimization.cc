@@ -22,7 +22,7 @@ ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size
   , ThrStart        (ThrStart)
   , ThrStop         (ThrStop)
   , targetOccupancy (targetOccupancy)
-  , histos          (RD53::setBits(static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits("Vthreshold_LIN"))+1)
+  , histos          ()
 {}
 
 void ThrMinimization::run ()
@@ -77,7 +77,7 @@ void ThrMinimization::draw (bool display, bool save)
 	    }
     }
 
-  if (display == true) myApp->Run();
+  if (display == true) myApp->Run(true);
 }
 
 void ThrMinimization::analyze ()
@@ -95,7 +95,7 @@ void ThrMinimization::display   () { histos.process();                          
 
 void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
-  uint16_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue) + 1 : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName));
+  uint16_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue) + 1 : static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(dacName));
 
   ContainerFactory theDetectorFactory;
   DetectorDataContainer minDACcontainer;

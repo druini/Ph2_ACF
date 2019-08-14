@@ -301,4 +301,25 @@
     <node id="reg_read"                 	address="0x00000008"    permission="r"      description="Enable read fifo."     mode="non-incremental" size="512"> </node>
   </node>
 
+  <node id="readout1"         address="0x00000200"    permission="rw"     description="Register Readout." >
+    <node id="sel"							address="0x00000000"    permission="rw"      description="Select weather register or data frames are read out. 0x2: Register readout 0x1: Data readout - else: 0xffffffff"> </node>
+    <node id="reg_mask"						address="0x00000001"    permission="rw"      description="Set filter for register readback. 0: cmd only 1: auto 2nd only 2: auto 1st only 3: auto 1st and 2nd"> </node>
+    <node id="dat_read"                 	address="0x00000004"    permission="r"      description="Enable read fifo."     mode="non-incremental" size="512"> </node>
+    <node id="reg_read"                 	address="0x00000008"    permission="r"      description="Enable read fifo."     mode="non-incremental" size="512"> </node>
+  </node>
+
+  <node id="readout2"         address="0x00000400"    permission="rw"     description="Register Readout." >
+    <node id="sel"							address="0x00000000"    permission="rw"      description="Select weather register or data frames are read out. 0x2: Register readout 0x1: Data readout - else: 0xffffffff"> </node>
+    <node id="reg_mask"						address="0x00000001"    permission="rw"      description="Set filter for register readback. 0: cmd only 1: auto 2nd only 2: auto 1st only 3: auto 1st and 2nd"> </node>
+    <node id="dat_read"                 	address="0x00000004"    permission="r"      description="Enable read fifo."     mode="non-incremental" size="512"> </node>
+    <node id="reg_read"                 	address="0x00000008"    permission="r"      description="Enable read fifo."     mode="non-incremental" size="512"> </node>
+  </node>
+
+  <node id="readout3"         address="0x00000800"    permission="rw"     description="Register Readout." >
+    <node id="sel"							address="0x00000000"    permission="rw"      description="Select weather register or data frames are read out. 0x2: Register readout 0x1: Data readout - else: 0xffffffff"> </node>
+    <node id="reg_mask"						address="0x00000001"    permission="rw"      description="Set filter for register readback. 0: cmd only 1: auto 2nd only 2: auto 1st only 3: auto 1st and 2nd"> </node>
+    <node id="dat_read"                 	address="0x00000004"    permission="r"      description="Enable read fifo."     mode="non-incremental" size="512"> </node>
+    <node id="reg_read"                 	address="0x00000008"    permission="r"      description="Enable read fifo."     mode="non-incremental" size="512"> </node>
+  </node>
+
 </node>

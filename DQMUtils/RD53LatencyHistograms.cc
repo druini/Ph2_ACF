@@ -15,7 +15,7 @@ using namespace Ph2_HwDescription;
 void RD53LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
 {
   auto hOcc1D = HistContainer<TH1F>("Latency", "Latency", stopValue - startValue, startValue, stopValue);
-  bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Latency [n.bx]", "Entries");
+  bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Latency (n.bx)", "Entries");
 }
 
 void RD53LatencyHistograms::fill (const DetectorDataContainer& data)

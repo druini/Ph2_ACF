@@ -85,7 +85,7 @@ void PixelAlive::draw (bool display, bool save)
 	    static_cast<RD53*>(cChip)->saveRegMap(fileReg);
     }
 
-  if (display == true) myApp->Run();
+  if (display == true) myApp->Run(true);
 }
 
 std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()

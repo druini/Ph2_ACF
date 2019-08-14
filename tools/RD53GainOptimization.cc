@@ -24,7 +24,7 @@ GainOptimization::GainOptimization (const char* fileRes, const char* fileReg, si
   , KrumCurrStart (KrumCurrStart)
   , KrumCurrStop  (KrumCurrStop)
   , targetCharge  (targetCharge)
-  , histos        (RD53::setBits(static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits("KRUM_CURR_LIN"))+1)
+  , histos        ()
 {}
 
 void GainOptimization::run ()
@@ -60,7 +60,7 @@ void GainOptimization::draw (bool display, bool save)
       this->InitResultFile(fileRes);
     }
 
-  static_cast<Gain*>(this)->draw(false,save);
+  Gain::draw(false,save);
 
   this->initHisto();
   this->fillHisto();
@@ -82,7 +82,7 @@ void GainOptimization::draw (bool display, bool save)
 	    }
     }
 
-  if (display == true) myApp->Run();
+  if (display == true) myApp->Run(true);
 }
 
 void GainOptimization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
@@ -91,8 +91,7 @@ void GainOptimization::display   () { histos.process();                         
 
 void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
-  uint16_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue)+1 : static_cast<BeBoard*>(fDetectorContainer->at(0))->fModuleVector.at(0)->fReadoutChipVector.at(0)->getNumberOfBits(dacName));
-
+  uint16_t numberOfBits = (stopValue != 0 ? log2(stopValue - startValue) + 1 : static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(dacName));
 
   ContainerFactory theDetectorFactory;
   DetectorDataContainer minDACcontainer;

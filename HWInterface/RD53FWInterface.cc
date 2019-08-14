@@ -299,7 +299,7 @@ namespace Ph2_HwInterface
     // # Check RD53 AURORA registers #
     // ###############################
     unsigned int auroraReg = ReadReg ("user.stat_regs.aurora.gtx_lock");
-    LOG (INFO) << BOLDBLUE << "Aurora PLL locking status: " << BOLDYELLOW << auroraReg << RESET;
+    LOG (INFO) << BOLDBLUE << "Aurora number of locked PLLs: " << BOLDYELLOW << RD53::countBitsOne(auroraReg) << RESET;
 
     auroraReg = ReadReg ("user.stat_regs.aurora.speed");
     LOG (INFO) << BOLDBLUE << "Aurora speed: " << BOLDYELLOW << (auroraReg == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;

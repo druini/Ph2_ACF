@@ -72,7 +72,10 @@ class DQMHistogramBase
     //virtual void summarizeHistos();
 
  private:
-  int canvasId = 0;
+    static int& canvasId() {
+      static int value = 0;
+      return value;
+    };
   std::vector<std::unique_ptr<TCanvas>> canvases;
   std::vector<std::unique_ptr<TGaxis>>  axes;
 
@@ -102,7 +105,7 @@ class DQMHistogramBase
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
 	    {
-	      canvases.emplace_back(new TCanvas(("Canvas_" + std::to_string(canvasId++)).c_str(), "IT Canvas"));
+	      canvases.emplace_back(new TCanvas(("Canvas_" + std::to_string(canvasId()++)).c_str(), "IT Canvas"));
 	      canvases.back()->cd();
 	      Hist* hist = cChip->getSummary<HistContainer<Hist>>().fTheHistogram;
 	      hist->Draw(opt);
@@ -140,4 +143,5 @@ class DQMHistogramBase
     return ((setting != std::end(pSettingsMap)) ? setting->second : 0);
   }
 };
+
 #endif
