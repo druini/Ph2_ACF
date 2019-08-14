@@ -123,6 +123,7 @@ namespace RD53PixelEncoder
   const uint8_t NBIT_HITBUS =    1; // Number of hit bust bits
   const uint8_t NBIT_TDAC   =    4; // Number of TDAC bits
   const uint8_t HIGHGAIN    = 0x80; // Set High Gain Linear FE
+  const uint8_t LOWGAIN     = 0x00; // Set Low Gain Linear FE
 }
 
 

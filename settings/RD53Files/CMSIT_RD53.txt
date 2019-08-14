@@ -36,6 +36,7 @@ LDAC_LIN                            	0x11	0d130			0d130			10
 COMP_LIN                               	0x12	0d110			0d110			 9
 REF_KRUM_LIN                           	0x13	0d300			0d300			10
 Vthreshold_LIN                         	0x14	0d300			0d300			10
+HighGain_LIN                            0xA0    0d001			0d001			 1
 
 *-------------------------------------------------------------------------------------------------------
 * Differential Front End

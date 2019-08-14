@@ -52,9 +52,18 @@ namespace Ph2_HwInterface
     // ###############################
     // # Programmig global registers #
     // ###############################
+    static const char* registerBlackList[] =
+      {
+	"HighGain_LIN"
+      };
+
     for (const auto& cRegItem : pRD53RegMap)
       if (cRegItem.second.fPrmptCfg == true)
-	this->WriteChipReg(pRD53, cRegItem.first, cRegItem.second.fValue, true);
+	{
+	  auto i = 0u;
+	  for (i = 0u; i < arraySize(registerBlackList); i++) if (cRegItem.first == registerBlackList[i]) break;
+	  if (i == arraySize(registerBlackList)) this->WriteChipReg(pRD53, cRegItem.first, cRegItem.second.fValue, true);
+	}
 
     // ###################################
     // # Programmig pixel cell registers #
@@ -287,54 +296,55 @@ namespace Ph2_HwInterface
 
 	for (auto row = 0u; row < RD53::nRows; row++)
 	  {
-	        data =
-		  RD53PixelEncoder::HIGHGAIN                                                                                         |
-		  static_cast<uint16_t> ((*mask)[col].Enable[row])                                                                   |
-		  (static_cast<uint16_t>((*mask)[col].InjEn [row]) << RD53PixelEncoder::NBIT_PIXEN)                                  |
-		  (static_cast<uint16_t>((*mask)[col].HitBus[row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN)) |
-		  (static_cast<uint16_t>((*mask)[col].TDAC  [row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN + RD53PixelEncoder::NBIT_HITBUS));
+	    // std::cout << (pRD53->getRegItem("HighGain_LIN").fValue == true ? RD53PixelEncoder::HIGHGAIN : RD53PixelEncoder::LOWGAIN) << std::endl;
+	    data =
+	      (pRD53->getRegItem("HighGain_LIN").fValue == true ? RD53PixelEncoder::HIGHGAIN : RD53PixelEncoder::LOWGAIN)        |
+	      static_cast<uint16_t> ((*mask)[col].Enable[row])                                                                   |
+	      (static_cast<uint16_t>((*mask)[col].InjEn [row]) << RD53PixelEncoder::NBIT_PIXEN)                                  |
+	      (static_cast<uint16_t>((*mask)[col].HitBus[row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN)) |
+	      (static_cast<uint16_t>((*mask)[col].TDAC  [row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN + RD53PixelEncoder::NBIT_HITBUS));
 		    
-		    data = data                                                                                                              |
-		      ((RD53PixelEncoder::HIGHGAIN                                                                                           |
-			static_cast<uint16_t> ((*mask)[col+1].Enable[row])                                                                   |
-			(static_cast<uint16_t>((*mask)[col+1].InjEn [row]) << RD53PixelEncoder::NBIT_PIXEN)                                  |
-			(static_cast<uint16_t>((*mask)[col+1].HitBus[row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN)) |
-			(static_cast<uint16_t>((*mask)[col+1].TDAC  [row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN + RD53PixelEncoder::NBIT_HITBUS))) << (NBIT_CMD/2));
+	    data = data                                                                                                              |
+	      (((pRD53->getRegItem("HighGain_LIN").fValue == true ? RD53PixelEncoder::HIGHGAIN : RD53PixelEncoder::LOWGAIN)          |
+		static_cast<uint16_t> ((*mask)[col+1].Enable[row])                                                                   |
+		(static_cast<uint16_t>((*mask)[col+1].InjEn [row]) << RD53PixelEncoder::NBIT_PIXEN)                                  |
+		(static_cast<uint16_t>((*mask)[col+1].HitBus[row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN)) |
+		(static_cast<uint16_t>((*mask)[col+1].TDAC  [row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN + RD53PixelEncoder::NBIT_HITBUS))) << (NBIT_CMD/2));
 		        
-		    if (doSparse == true)
+	    if (doSparse == true)
+	      {
+		if (((*mask)[col].Enable[row] == 1) || ((*mask)[col+1].Enable[row] == 1))
+		  {
+		    pRD53->convertRowCol2Cores (row,col,row_,colPair);
+		    this->WriteRD53RegShort(pRD53, "REGION_COL", colPair, dataVec, 0, false);
+		    this->WriteRD53RegShort(pRD53, "REGION_ROW", row_,    dataVec, 0, false);
+		    this->WriteRD53RegShort(pRD53, "PIX_PORTAL", data,    dataVec, 0, false);
+		    itPixCmd += 3;
+		  }
+
+		if ((itPixCmd >= NPIXCMD) || ((row == RD53::nRows-1) && (col == 263-1) && (itPixCmd != 0)))
+		  {
+		    this->WriteRD53RegShort(pRD53, "", 0, dataVec, itPixCmd, true);
+		    dataVec.clear();
+		    itPixCmd = 0;
+		  }
+	      }
+	    else
+	      {
+		dataVec.push_back(data);
+
+		if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
+		  {
+		    itPixCmd++;
+
+		    if ((itPixCmd == NPIXCMD) || (row == (RD53::nRows-1)))
 		      {
-			if (((*mask)[col].Enable[row] == 1) || ((*mask)[col+1].Enable[row] == 1))
-			  {
-			    pRD53->convertRowCol2Cores (row,col,row_,colPair);
-			    this->WriteRD53RegShort(pRD53, "REGION_COL", colPair, dataVec, 0, false);
-			    this->WriteRD53RegShort(pRD53, "REGION_ROW", row_,    dataVec, 0, false);
-			    this->WriteRD53RegShort(pRD53, "PIX_PORTAL", data,    dataVec, 0, false);
-			    itPixCmd += 3;
-			  }
-
-			if ((itPixCmd >= NPIXCMD) || ((row == RD53::nRows-1) && (col == 263-1) && (itPixCmd != 0)))
-			  {
-			    this->WriteRD53RegShort(pRD53, "", 0, dataVec, itPixCmd, true);
-			    dataVec.clear();
-			    itPixCmd = 0;
-			  }
+			this->WriteRD53RegLong(pRD53, "PIX_PORTAL", dataVec, itPixCmd);
+			dataVec.clear();
+			itPixCmd = 0;
 		      }
-		    else
-		      {
-			dataVec.push_back(data);
-
-			if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
-			  {
-			    itPixCmd++;
-
-			    if ((itPixCmd == NPIXCMD) || (row == (RD53::nRows-1)))
-			      {
-				this->WriteRD53RegLong(pRD53, "PIX_PORTAL", dataVec, itPixCmd);
-				dataVec.clear();
-				itPixCmd = 0;
-			      }
-			  }
-		      }
+		  }
+	      }
 	  }
       }
   }

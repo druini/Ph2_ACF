@@ -34,7 +34,7 @@ auto findValue (const std::map<std::string, uint32_t>& pSettingsMap, const char*
   return ((setting != std::end(pSettingsMap)) ? setting->second : 0);
 }
 
-std::string fromInt2Str(int val)
+std::string fromInt2Str (int val)
 {
   std::stringstream myString;
   myString << std::setfill('0') << std::setw(4) << val;

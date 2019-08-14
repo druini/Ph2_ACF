@@ -48,8 +48,7 @@ namespace Ph2_HwInterface
 
 	      for (const auto& hit : chip_events[chipIndx].data)
 		{
-		  if ((hit.row < RD53::nRows) &&
-		      (hit.col < RD53::nCols))
+		  if ((hit.row < RD53::nRows) && (hit.col < RD53::nCols))
 		    {
 		      for (auto i = 0; i < NPIX_REGION; i++)
 			{

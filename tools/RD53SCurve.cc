@@ -10,18 +10,18 @@
 #include "RD53SCurve.h"
 
 SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset)
-  : Tool        ()
-  , fileRes     (fileRes)
-  , rowStart    (rowStart)
-  , rowStop     (rowStop)
-  , colStart    (colStart)
-  , colStop     (colStop)
-  , nEvents     (nEvents)
-  , startValue  (startValue)
-  , stopValue   (stopValue)
-  , nSteps      (nSteps)
-  , offset      (offset)
-  , histos      (nEvents, startValue-offset, stopValue-offset, nSteps)
+  : Tool       ()
+  , fileRes    (fileRes)
+  , rowStart   (rowStart)
+  , rowStop    (rowStop)
+  , colStart   (colStart)
+  , colStop    (colStop)
+  , nEvents    (nEvents)
+  , startValue (startValue)
+  , stopValue  (stopValue)
+  , nSteps     (nSteps)
+  , offset     (offset)
+  , histos     (nEvents, startValue-offset, stopValue-offset, nSteps)
 {
   // ########################
   // # Custom channel group #
@@ -142,15 +142,13 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 }
 
 void SCurve::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-
-void SCurve::fillHisto()
+void SCurve::fillHisto ()
 {
   for (auto i = 0u; i < dacList.size(); i++)
     histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
   histos.fillThresholdNoise(*theThresholdAndNoiseContainer); 
 }
-
-void SCurve::display() { histos.process(); }
+void SCurve::display   () { histos.process(); }
 
 void SCurve::computeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
 {
