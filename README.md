@@ -209,8 +209,8 @@ How to setup up and run the IT-system:
 1. `mkdir choose_a_name` under `Ph2_ACF`
 2. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
 3. `cp settings/CMSIT.xml choose_a_name`
-4. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-5. `cd choose_a_name`
+4. `cd choose_a_name`
+5. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
 6. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the frontend chips (just once)
 7. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
 
