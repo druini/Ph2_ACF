@@ -206,17 +206,17 @@ Through `CMSIT_miniDAQ`, and with the right command line option, you can run the
 8. Threshold minimization
 ```
 How to setup up and run the IT-system:
-- Install: CERN ROOT + IPbus `https://ipbus.web.cern.ch/ipbus/`
-- Checkout code: git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git
-- Switch to `chipPolymorhism` branch
-- `cd Ph2_ACF; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
-1. `mkdir choose_a_name` under `Ph2_ACF`
-2. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
-3. `cp settings/CMSIT.xml choose_a_name`
-4. `cd choose_a_name`
-5. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-6. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the frontend chips (just once)
-7. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
+1. Install: `CERN ROOT` from https://root.cern.ch and `IPbus tools` from https://ipbus.web.cern.ch/ipbus/
+2. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
+3. Switch to the `chipPolymorhism` branch
+4. `cd Ph2_ACF; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
+5. `mkdir choose_a_name`
+6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
+7. `cp settings/CMSIT.xml choose_a_name`
+8. `cd choose_a_name`
+9. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
+10. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the frontend chips (just once)
+11. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
 
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
 ```
