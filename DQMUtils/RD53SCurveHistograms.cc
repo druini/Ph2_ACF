@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 
 void RD53SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
-  auto hOcc2D = HistContainer<TH2F>("SCurves", "SCurves", nSteps, startValue, stopValue, nEvents / 2 + 1, 0, 1 + 2. / nEvents);
+  auto hOcc2D = HistContainer<TH2F>("SCurves", "SCurves", nSteps, startValue, stopValue, nEvents + 1, 0, 1 + 1. / nEvents);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "Efficiency");
 
   auto hThreshold1D = HistContainer<TH1F>("Threshold1D", "Threshold Distribution", 1000, startValue, stopValue);
@@ -50,7 +50,7 @@ void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
 	      if ((row >= ROWstart) && (row <= ROWstop) && (col >= COLstart) && (col <= COLstop))
-		hOcc2D->Fill(VCAL_HIGH, cChip->getChannel<Occupancy>(row, col).fOccupancy);
+		hOcc2D->Fill(VCAL_HIGH, cChip->getChannel<Occupancy>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(0) / 2.);
 	}
 }
 
