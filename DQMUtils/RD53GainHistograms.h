@@ -11,9 +11,9 @@
 #ifndef RD53GainHistograms_H
 #define RD53GainHistograms_H
 
+#include "../System/SystemController.h"
 #include "../Utils/GainAndIntercept.h"
 #include "../Utils/OccupancyAndPh.h"
-#include "../Utils/Occupancy.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
@@ -35,10 +35,10 @@ class RD53GainHistograms : public DQMHistogramBase
    , stopValue  (stopValue)
   {}
   
-  void book              (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, double> pSettingsMap) override;
-  void process           ()                                                                                                                  override;
-  bool fill              (std::vector<char>& dataBuffer)                                                                                     override { return false; };
-  void reset             (void)                                                                                                              override {};
+  void book              (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
+  void process           ()                                                                                                          override;
+  bool fill              (std::vector<char>& dataBuffer)                                                                             override { return false; };
+  void reset             (void)                                                                                                      override {};
 
   void fillOccupancy     (const DetectorDataContainer& data, int VCAL_HIGH);
   void fillGainIntercept (const DetectorDataContainer& data);

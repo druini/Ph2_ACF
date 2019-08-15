@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, double> pSettingsMap)
+void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
   size_t ToTsize   = RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION) + 1;
   size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;

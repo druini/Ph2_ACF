@@ -11,6 +11,7 @@
 #ifndef RD53ThrMinimizationHistograms_H
 #define RD53ThrMinimizationHistograms_H
 
+#include "../System/SystemController.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/RegisterValue.h"
 #include "DQMHistogramBase.h"
@@ -23,10 +24,10 @@ class RD53ThrMinimizationHistograms : public DQMHistogramBase
  public:
   RD53ThrMinimizationHistograms () {}
 
-  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, double> pSettingsMap) override;
-  void process ()                                                                                                                  override;
-  bool fill    (std::vector<char>& dataBuffer)                                                                                     override { return false; };
-  void reset   ()                                                                                                                  override {};
+  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
+  void process ()                                                                                                          override;
+  bool fill    (std::vector<char>& dataBuffer)                                                                             override { return false; };
+  void reset   ()                                                                                                          override {};
 
   void fill    (const DetectorDataContainer& data);
   

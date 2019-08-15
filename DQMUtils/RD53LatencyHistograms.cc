@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void RD53LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, double> pSettingsMap)
+void RD53LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
   auto hOcc1D = HistContainer<TH1F>("Latency", "Latency", stopValue - startValue, startValue, stopValue);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Latency (n.bx)", "Entries");

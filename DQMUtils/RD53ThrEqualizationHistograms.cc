@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void RD53ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, double> pSettingsMap)
+void RD53ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
   size_t TDACsize = RD53::setBits(RD53PixelEncoder::NBIT_TDAC) + 1;
   

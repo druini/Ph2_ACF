@@ -11,6 +11,7 @@
 #ifndef RD53PixelAliveHistograms_H
 #define RD53PixelAliveHistograms_H
 
+#include "../System/SystemController.h"
 #include "../Utils/GenericDataVector.h"
 #include "../Utils/OccupancyAndPh.h"
 #include "DQMHistogramBase.h"
@@ -24,10 +25,10 @@ class RD53PixelAliveHistograms : public DQMHistogramBase
  public:
   RD53PixelAliveHistograms (size_t nEvents) : nEvents(nEvents) {}
 
-  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, double> pSettingsMap) override;
-  void process ()                                                                                                                  override;
-  bool fill    (std::vector<char>& dataBuffer)                                                                                     override { return false; };
-  void reset   (void)                                                                                                              override {};
+  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
+  void process ()                                                                                                          override;
+  bool fill    (std::vector<char>& dataBuffer)                                                                             override { return false; };
+  void reset   (void)                                                                                                      override {};
 
   void fill    (const DetectorDataContainer& data);
 
