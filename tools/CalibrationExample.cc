@@ -23,7 +23,7 @@ void CalibrationExample::Initialise (void)
     LOG (INFO) << "Parsed settings:" ;
     LOG (INFO) << " Nevents = " << fEventsPerPoint ;
 
-    #ifdef __USE_ROOT__
+    #ifdef __USE_ROOT__  // to disable and anable ROOT by command 
         //Calibration is not running on the SoC: plots are booked during initialization
         fDQMHistogramCalibrationExample.book(fResultFile, *fDetectorContainer, fSettingsMap);
     #endif    
@@ -44,8 +44,10 @@ void CalibrationExample::runCalibrationExample(void)
         //Send N triggers (as it was in the past)
         ReadNEvents ( theBeBoard, fEventsPerPoint ); 
         //Get the event vector (as it was in the past)
-        const std::vector<Event*>& eventVector = GetEvents ( theBeBoard );
-        for ( auto& event : eventVector ) //for on events - begin 
+
+        const std::vector<Event*> &eventVector = GetEvents ( theBeBoard );
+
+        for ( auto &event : eventVector ) //for on events - begin 
         {
             for(auto module: *board) // for on module - begin 
             {

@@ -538,11 +538,13 @@ void PedeNoise::Start(int currentRun)
 
 void PedeNoise::Stop()
 {
+    LOG (INFO) << "Stopping noise measurement";
     writeObjects();
     dumpConfigFiles();
     SaveResults();
     CloseResultFile();
     Destroy();
+    LOG (INFO) << "Noise measurement stopped.";
 }
 
 void PedeNoise::Pause()

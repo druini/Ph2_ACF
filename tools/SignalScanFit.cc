@@ -2,6 +2,10 @@
 
 void SignalScanFit::Initialize ( )
 {
+    #ifdef __USE_ROOT__
+        fDQMHistogramSignalScanFit.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    #endif
+
     // To read the SignalScanFit-specific stuff
     parseSettings();    
 
@@ -541,3 +545,31 @@ void SignalScanFit::parseSettings ()
     // Would be nice to catch failed fits
     cHist->Write (cHist->GetName(), TObject::kOverwrite);
 }*/
+
+
+
+// State machine control functions
+
+void SignalScanFit::ConfigureCalibration()
+{  
+    CreateResultDirectory ( "Results/Run_SignalScanFit" );
+    InitResultFile ( "SignalScanFitResults" );
+}
+
+void SignalScanFit::Start(int currentRun)
+{
+
+}
+
+void SignalScanFit::Stop()
+{
+
+}
+
+void SignalScanFit::Pause()
+{
+}
+
+void SignalScanFit::Resume()
+{
+}

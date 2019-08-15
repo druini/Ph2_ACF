@@ -22,7 +22,7 @@
 #include "../tools/RegisterTester.h"
 #include "../tools/ShortFinder.h"
 #include "../tools/AntennaTester.h"
-#include "../tools/Calibration.h"
+#include "../tools/PedestalEqualization.h"
 #include "../tools/PedeNoise.h"
 #include "../Utils/argvparser.h"
 #include "TROOT.h"
@@ -304,16 +304,16 @@ bool check_Registers (Tool* pTool)
     return cRegTest;
 }
 // perform the CBC Vplus, Voffset calibration
-void perform_Calibration (Tool* pTool)
+void perform_PedestalEqualization (Tool* pTool)
 {
-    Calibration cCalibration;
-    cCalibration.Inherit (pTool);
-    cCalibration.Initialise ( false );
+    PedestalEqualization cPedestalEqualization;
+    cPedestalEqualization.Inherit (pTool);
+    cPedestalEqualization.Initialise ( false );
 
-    cCalibration.FindVplus();
-    cCalibration.FindOffsets();
-    cCalibration.writeObjects();
-    cCalibration.dumpConfigFiles();
+    cPedestalEqualization.FindVplus();
+    cPedestalEqualization.FindOffsets();
+    cPedestalEqualization.writeObjects();
+    cPedestalEqualization.dumpConfigFiles();
 }
 // find the shorts on the DUT
 bool check_Shorts (Tool* pTool,  uint32_t cMaxNumShorts)
@@ -612,7 +612,7 @@ int main ( int argc, char* argv[] )
             {
                 LOG (INFO) << GREEN << "Hybrid passed register check. Moving on to calibration of the CBCs on the DUT."  << rst ;
                 t.start();
-                perform_Calibration (&cTool);
+                perform_PedestalEqualization (&cTool);
                 LOG (INFO) << "Calibration finished." ;
                 t.stop();
                 sprintf (line, "# %.3f s required to calibrate Vplus,Voffset on CBCs.", t.getElapsedTime() );
@@ -630,7 +630,7 @@ int main ( int argc, char* argv[] )
                 {
                     LOG (INFO) << GREEN << "Calibrating CBCs before starting antenna test of the CBCs on the DUT." << rst ;
                     t.start();
-                    perform_Calibration (&cTool);
+                    perform_PedestalEqualization (&cTool);
                     LOG (INFO) << "Calibration finished." ;
                     t.stop();
                     sprintf (line, "# %.3f s required to calibrate Vplus,Voffset on CBCs.", t.getElapsedTime() );
@@ -669,7 +669,7 @@ int main ( int argc, char* argv[] )
                 {
                     LOG (INFO) << GREEN << "Calibrating CBCs before starting antenna test of the CBCs on the DUT." << rst ;
                     t.start();
-                    perform_Calibration (&cTool);
+                    perform_PedestalEqualization (&cTool);
                     LOG (INFO) << "Calibration finished." ;
                     t.stop();
                     sprintf (line, "# %.3f s required to calibrate Vplus,Voffset on CBCs.", t.getElapsedTime() );
@@ -696,7 +696,7 @@ int main ( int argc, char* argv[] )
                 {
                     LOG (INFO) << GREEN << "Calibrating CBCs before starting antenna test of the CBCs on the DUT."  << rst ;
                     t.start();
-                    perform_Calibration (&cTool);
+                    perform_PedestalEqualization (&cTool);
                     LOG (INFO) << "Calibration finished." ;
                     t.stop();
                     sprintf (line, "# %.3f s required to calibrate Vplus,Voffset on CBCs.", t.getElapsedTime() );
