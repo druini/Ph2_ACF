@@ -5,7 +5,7 @@
 
 #include "MiddlewareController.h"
 #include "../tools/Tool.h"
-#include "../tools/Calibration.h"
+#include "../tools/PedestalEqualization.h"
 #include "../tools/PedeNoise.h"
 #include "../tools/CombinedCalibration.h"
 #include "../tools/CalibrationExample.h"
@@ -66,9 +66,9 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 	{
 
 		std::cout << "We are in the configuration submodule" << std::endl;
-		if     (getVariableValue("Calibration",buffer) == "calibration")                  theSystemController_ = new CombinedCalibration<Calibration>;
+		if     (getVariableValue("Calibration",buffer) == "calibration")                  theSystemController_ = new CombinedCalibration<PedestalEqualization>;
 		else if(getVariableValue("Calibration",buffer) == "pedenoise")                    theSystemController_ = new CombinedCalibration<PedeNoise>;
-		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoise")      theSystemController_ = new CombinedCalibration<Calibration,PedeNoise>();
+		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoise")      theSystemController_ = new CombinedCalibration<PedestalEqualization,PedeNoise>();
 		else if(getVariableValue("Calibration",buffer) == "calibrationexample")           theSystemController_ = new CombinedCalibration<CalibrationExample>;
 		else
 		{

@@ -1,5 +1,5 @@
 /*!
-        \file                DQMHistogramCalibration.h
+        \file                DQMHistogramTPCalibration.h
         \brief               base class to create and fill monitoring histograms
         \author              Fabio Ravera, Lorenzo Uplegger
         \version             1.0
@@ -7,8 +7,8 @@
         Support :            mail to : fabio.ravera@cern.ch
 */
 
-#ifndef __DQMHISTOGRAMCALIBRATION_H__
-#define __DQMHISTOGRAMCALIBRATION_H__
+#ifndef __DQMHISTOGRAMTPCALIBRATION_H__
+#define __DQMHISTOGRAMTPCALIBRATION_H__
 #include "../DQMUtils/DQMHistogramBase.h"
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
@@ -16,22 +16,22 @@
 class TFile;
 
 /*!
- * \class DQMHistogramCalibration
+ * \class DQMHistogramTPCalibration
  * \brief Class for PedeNoise monitoring histograms
  */
-class DQMHistogramCalibration : public DQMHistogramBase
+class DQMHistogramTPCalibration : public DQMHistogramBase
 {
 
   public:
     /*!
      * constructor
      */
-    DQMHistogramCalibration ();
+    DQMHistogramTPCalibration ();
 
     /*!
      * destructor
      */
-    ~DQMHistogramCalibration();
+    ~DQMHistogramTPCalibration();
 
     /*!
      * Book histograms
@@ -54,8 +54,10 @@ class DQMHistogramCalibration : public DQMHistogramBase
     void reset(void) override;
     //virtual void summarizeHistos();
 
+
   private:
     DetectorDataContainer fDetectorData;
+
 
 };
 #endif

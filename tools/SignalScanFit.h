@@ -17,6 +17,10 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/CommonVisitors.h"
 
+#ifdef __USE_ROOT__
+  #include "../DQMUtils/DQMHistogramSignalScanFit.h"
+#endif
+
 
 #include "TString.h"
 #include "TCanvas.h"
@@ -49,6 +53,12 @@ class SignalScanFit : public Tool
     double fVCthMin;
     double fVCthMax;
     double fVCthNbins;
+
+    void Start(int currentRun) override;
+    void Stop() override;
+    void ConfigureCalibration() override;
+    void Pause() override;
+    void Resume() override;
 
   private:
     void updateHists ( std::string pHistName, bool pFinal );
@@ -83,6 +93,11 @@ class SignalScanFit : public Tool
         else if (pBoardIdentifier == "ICGLIB" || pBoardIdentifier == "ICFC7") return "cbc_daq_ctrl.latencies.stub_latency";
         else return "not recognized";
     }*/
+
+
+    #ifdef __USE_ROOT__
+     DQMHistogramSignalScanFit fDQMHistogramSignalScanFit;
+   #endif
 };
 
 #endif
