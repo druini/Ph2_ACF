@@ -110,11 +110,23 @@ void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& 
 	    // ########################
 	    static_cast<RD53*>(cChip)->resetMask();
 
-	    static_cast<RD53*>(cChip)->enablePixel(rowStart,colStart,true);
-	    static_cast<RD53*>(cChip)->injectPixel(rowStart,colStart,true);
-
-	    static_cast<RD53*>(cChip)->enablePixel(rowStop,colStop,true);
-	    static_cast<RD53*>(cChip)->injectPixel(rowStop,colStop,true);
+	    if (static_cast<RD53FWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->getLoaclCfgFastCmd()->trigger_source == RD53FWInterface::TriggerSource::FastCMDFSM)
+	      {
+		static_cast<RD53*>(cChip)->enablePixel(rowStart,colStart,true);
+		static_cast<RD53*>(cChip)->injectPixel(rowStart,colStart,true);
+		
+		static_cast<RD53*>(cChip)->enablePixel(rowStop,colStop,true);
+		static_cast<RD53*>(cChip)->injectPixel(rowStop,colStop,true);
+	      }
+	    else
+	      {
+		for (auto col = colStart; col <= colStop; col++)
+		  for (auto row = rowStart; row <= rowStop; row++)
+		    {
+		      static_cast<RD53*>(cChip)->enablePixel(row,col,true);
+		      static_cast<RD53*>(cChip)->injectPixel(row,col,true);
+		    }
+	      }
 
 	    RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(cChip), true, false, false);
 

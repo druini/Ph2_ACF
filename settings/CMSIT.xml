@@ -38,7 +38,7 @@
 	    VCAL_MED               =   "100"
 			          
 	    INJECTION_SELECT       =     "0"
-            GP_LVDS_ROUTE          =     "1"
+            GP_LVDS_ROUTE          =     "0"
             LATENCY_CONFIG         =   "136"
             MONITOR_SELECT         =  "8203"
 	    CLK_DATA_DELAY         =     "0"

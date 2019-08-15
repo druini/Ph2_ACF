@@ -80,9 +80,6 @@ namespace Ph2_HwInterface
 {
   class RD53FWInterface: public BeBoardFWInterface
   {
-  private:
-    FileHandler* fFileHandler;
-
   public:
     RD53FWInterface (const char* pId, const char* pUri, const char* pAddressTable);
     virtual ~RD53FWInterface() { delete fFileHandler; }
@@ -231,6 +228,7 @@ namespace Ph2_HwInterface
     FastCommandsConfig* getLoaclCfgFastCmd() { return &localCfgFastCmd; }
 
   private:
+    FileHandler* fFileHandler;
     FastCommandsConfig localCfgFastCmd;
     void SendBoardCommand(const std::string& cmd_reg);
   };
