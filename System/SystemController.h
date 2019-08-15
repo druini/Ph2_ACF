@@ -52,7 +52,7 @@ namespace Ph2_System
 {
 
 using BeBoardVec = std::vector<BeBoard *>;           /*!< Vector of Board pointers */
-using SettingsMap = std::map<std::string, uint32_t>; /*!< Maps the settings */
+using SettingsMap = std::map<std::string, double>; /*!< Maps the settings */
 
 /*!
      * \class SystemController

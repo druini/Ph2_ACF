@@ -23,7 +23,7 @@ class RD53LatencyHistograms : public DQMHistogramBase
  public:
  RD53LatencyHistograms (size_t startValue, size_t stopValue) : startValue(startValue), stopValue(stopValue) {}
 
-  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
+  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, double> pSettingsMap) override;
   void process ()                                                                                                                  override;
   bool fill    (std::vector<char>& dataBuffer)                                                                                     override { return false; };
   void reset   (void)                                                                                                              override {};
