@@ -72,7 +72,7 @@ void DQMInterface::configure(std::string& calibrationName, std::string& configur
     std::vector<Ph2_HwDescription::BeBoard*> fBoardVector;
     std::stringstream out;
     DetectorContainer fDetectorStructure;
-	std::map<std::string, uint32_t> pSettingsMap;
+	std::map<std::string, double> pSettingsMap;
 
     fParser.parseHW (configurationFilePath, fBeBoardFWMap, fBoardVector, &fDetectorStructure, out, true );
     fParser.parseSettings ( configurationFilePath, pSettingsMap,  out, true);

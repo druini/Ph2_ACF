@@ -24,7 +24,7 @@ class RD53GainOptimizationHistograms : public DQMHistogramBase
  public:
   RD53GainOptimizationHistograms () {}
   
-  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
+  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, double> pSettingsMap) override;
   void process ()                                                                                                                  override;
   bool fill    (std::vector<char>& dataBuffer)                                                                                     override { return false; };
   void reset   (void)                                                                                                              override {};

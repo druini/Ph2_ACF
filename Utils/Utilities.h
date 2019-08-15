@@ -89,6 +89,8 @@ double MyGammaSignal ( double* x, double* par );
 uint32_t convertAnyInt ( const char* pRegValue );
 //uint8_t convertAnyInt ( const char* pRegValue );
 
+double convertAnyDouble ( const char* pRegValue );
+
 uint8_t reverseBits (const uint8_t cValue);
 
 // tokenize string
