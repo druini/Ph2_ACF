@@ -283,6 +283,13 @@ class Tool : public SystemController
         return theContainerStreamer;
     }
 
+    template<typename T, typename C>
+    ChipContainerStream<T,C> prepareChipContainerStreamer()
+    {
+        ChipContainerStream<T,C> theContainerStreamer(getCalibrationName());
+        return theContainerStreamer;
+    }
+
 private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase *scanFunctor);
 

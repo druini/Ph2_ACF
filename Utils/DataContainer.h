@@ -243,6 +243,15 @@ public:
 		return static_cast<Summary<S,T>*>(summary_)->theSummary_;
 	}	
 
+	template<typename S, typename T = EmptyContainer>
+	Summary<S,T>* getSummaryContainer()
+	{
+		return static_cast<Summary<S,T>*>(summary_);
+	}	
+
+	template <typename T>
+	void setSummaryContainer(T* summary) {summary_ = summary;}	
+
 	SummaryBase *summary_;
 };
 
