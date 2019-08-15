@@ -194,8 +194,8 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 		  float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row, col).fOccupancy;
 
 		  // @TMP@
-		  // if (fabs(newValue - target) < fabs(oldValue - target) || (newValue == oldValue))
-		  if (fabs(newValue - target) < fabs(oldValue - target) || (newValue >= 0.999 && (oldValue >= 0.999 || oldValue <= 0.001)))
+		  if (fabs(newValue - target) < fabs(oldValue - target) || (newValue == oldValue))
+		  // if (fabs(newValue - target) < fabs(oldValue - target) || (newValue >= 0.999 && (oldValue >= 0.999 || oldValue <= 0.001)))
 		    {
 		      bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row, col).fOccupancy = newValue;
 		      bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue =

@@ -60,7 +60,7 @@ void GainOptimization::draw (bool display, bool save)
       this->InitResultFile(fileRes);
     }
 
-  Gain::draw(false,save);
+  Gain::draw(false,false);
 
   this->initHisto();
   this->fillHisto();
