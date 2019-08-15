@@ -99,7 +99,7 @@ else
     echo "Available options are: step1 [pixelalive + gain + gainopt + thrmin], step2 [threqu + scurve + thrmin], step3 [scurve]"
 fi
 ```
-- Software git branch / tag : `chipPolymorphism` / `IT-v1.7`
+- Software git branch / tag : `chipPolymorphism` / `IT-v1.8`
 - Firmware tag: `2.5`
 
 
