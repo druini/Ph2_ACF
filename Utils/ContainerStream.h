@@ -52,6 +52,28 @@ void constexpr check_if_retrivable()
 	static_assert( !std::is_reference<T>::value, "No references can be retreived from the stream" );
 }
 
+class EmptyContainer;
+
+class ContainerCarried
+{
+	public:
+	ContainerCarried() : fContainerCarried(0) {};
+	~ContainerCarried() {};
+
+	void reset() {fContainerCarried=0;}
+
+	void carryChannelContainer() {fContainerCarried |= (1<<0);}
+	void carryChipContainer()    {fContainerCarried |= (1<<1);}
+	void carryModuleContainer()  {fContainerCarried |= (1<<2);}
+	void carryBoardContainer()   {fContainerCarried |= (1<<3);}
+
+	bool isChannelContainerCarried() {return (fContainerCarried>>0) & 1; }
+	bool isChipContainerCarried()    {return (fContainerCarried>>1) & 1; }
+	bool isModuleContainerCarried()  {return (fContainerCarried>>2) & 1; }
+	bool isBoardContainerCarried()   {return (fContainerCarried>>3) & 1; }
+
+	uint8_t fContainerCarried;
+}__attribute__((packed));
 
 template<typename H>
 class HeaderStreamContainerBase : public DataStreamBase
@@ -65,11 +87,9 @@ public:
 	uint32_t size(void) override
 	{
 		fDataSize = uint64_t(this) + sizeof(H) - uint64_t(&fDataSize);
-		std::cout << __PRETTY_FUNCTION__ << " | " << fDataSize << std::endl;
 		return fDataSize;
 	}
 
-public:
 	uint16_t fBoardId;
 	
 }__attribute__((packed));
@@ -113,6 +133,7 @@ template<>
 class HeaderStreamContainer<> : public HeaderStreamContainerBase<HeaderStreamContainer<>>
 {}__attribute__((packed));
 
+// ------------------------------------------- v ------------------------------------------- //
 
 template <typename C>
 class DataStreamChannelContainer : public DataStreamBase
@@ -206,7 +227,7 @@ protected:
 };
 
 
-
+// ------------------------------------------- ChipContainerStream ------------------------------------------- //
 
 template <typename T, typename C>
 class DataStreamChipContainer : public DataStreamBase
@@ -215,7 +236,7 @@ class DataStreamChipContainer : public DataStreamBase
 public:
 	DataStreamChipContainer() 
 	: fChannelContainer(nullptr)
-	, fSummaryContainer(nullptr)
+	, fChipSummaryContainer(nullptr)
 	{
 		check_if_retrivable<T>();
 	}
@@ -224,51 +245,80 @@ public:
 		if(fChannelContainer != nullptr) delete fChannelContainer; 
 		fChannelContainer = nullptr;
 
-		if(fSummaryContainer != nullptr) delete fSummaryContainer; 
-		fSummaryContainer = nullptr;
+		if(fChipSummaryContainer != nullptr) delete fChipSummaryContainer; 
+		fChipSummaryContainer = nullptr;
 	}
 
 	uint32_t size(void) override
 	{
-		fDataSize = sizeof(fDataSize);
-		assert(fSummaryContainer != nullptr); //you are supposed to ship the summary, otherwise use DataStreamChannelContainer!!!
-		fDataSize += sizeof(T);
-		if(fChannelContainer != nullptr) fDataSize += fChannelContainer->size()*sizeof(C);
+		fDataSize = sizeof(fDataSize) + sizeof(fContainerCarried);
+		if(fChipSummaryContainer != nullptr)
+		{
+			fDataSize += sizeof(T);
+		}
+		if(fChannelContainer != nullptr)
+		{
+			fDataSize += fChannelContainer->size()*sizeof(C);
+		}
 		return fDataSize;
 	}
 
 	void copyToStream(char* bufferBegin)
 	{
-		memcpy(bufferBegin, &fDataSize, sizeof(fDataSize));
-		memcpy(&bufferBegin[sizeof(fDataSize)], &(fSummaryContainer->theSummary_), sizeof(T));
-		if(fChannelContainer != nullptr)
+		size_t bufferWritingPosition = 0;
+		
+		memcpy(&bufferBegin[bufferWritingPosition], &fDataSize, sizeof(fDataSize));
+		bufferWritingPosition += sizeof(fDataSize);
+		
+		memcpy(&bufferBegin[bufferWritingPosition], &fContainerCarried, sizeof(fContainerCarried));
+        bufferWritingPosition+=sizeof(fContainerCarried);
+		
+		if(fContainerCarried.isChipContainerCarried())
 		{
-			memcpy(&bufferBegin[sizeof(fDataSize)+sizeof(T)], &fChannelContainer->at(0), fChannelContainer->size()*sizeof(C));
+			memcpy(&bufferBegin[bufferWritingPosition], &(fChipSummaryContainer->theSummary_), sizeof(T));
+			bufferWritingPosition += sizeof(T);
+			fChipSummaryContainer = nullptr;
+		}
+		if(fContainerCarried.isChannelContainerCarried())
+		{
+			memcpy(&bufferBegin[bufferWritingPosition], &fChannelContainer->at(0), fChannelContainer->size()*sizeof(C));
 			fChannelContainer = nullptr;
 		}
-		fSummaryContainer = nullptr;
 	}
 
 	void copyFromStream(const char *bufferBegin)
 	{
-		memcpy(&fDataSize, bufferBegin, sizeof(fDataSize));
-		fSummaryContainer = new Summary<C,T>();
-		memcpy(&(fSummaryContainer->theSummary_), &bufferBegin[sizeof(fDataSize)], sizeof(T));
-		if(fDataSize == sizeof(fDataSize) + sizeof(T)) return; //no Channel information was sent
-		fChannelContainer = new ChannelContainer<T>((fDataSize-sizeof(fDataSize)-sizeof(T))/sizeof(C));
-		memcpy(&fChannelContainer->at(0), &bufferBegin[sizeof(fDataSize) + sizeof(T)], fDataSize-sizeof(fDataSize)-sizeof(T));
+		size_t bufferReadingPosition = 0;
+		
+		memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], sizeof(fDataSize));
+        bufferReadingPosition += sizeof(fDataSize);
+		
+		memcpy(&fContainerCarried, &bufferBegin[bufferReadingPosition], sizeof(fContainerCarried));
+        bufferReadingPosition += sizeof(fContainerCarried);
+
+		if(fContainerCarried.isChipContainerCarried())
+		{
+			fChipSummaryContainer = new Summary<C,T>();
+			memcpy(&(fChipSummaryContainer->theSummary_), &bufferBegin[bufferReadingPosition], sizeof(T));
+			bufferReadingPosition += sizeof(T);
+		}
+		if(fContainerCarried.isChannelContainerCarried())
+		{
+			fChannelContainer = new ChannelContainer<T>((fDataSize-bufferReadingPosition)/sizeof(C));
+			memcpy(&fChannelContainer->at(0), &bufferBegin[bufferReadingPosition], fDataSize-bufferReadingPosition);
+		}
 	}
 
 public:
+	ContainerCarried fContainerCarried;
 	ChannelContainer<T>* fChannelContainer;
-	Summary<C,T>*        fSummaryContainer;
+	Summary<C,T>*        fChipSummaryContainer;
 
 }__attribute__((packed));
 
 
-class EmptyContainer;
 
-template <typename T, typename C = EmptyContainer, typename... I> 
+template <typename T, typename C, typename... I> 
 class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>,DataStreamChipContainer<T,C> >
 {
 	enum HeaderId {ModuleId , ChipId};
@@ -299,10 +349,9 @@ public:
 		uint16_t chipId   = this->fHeaderStream.template getHeaderInfo<HeaderId::ChipId>  ();
 
 		detectorContainer.at(boardId)->at(moduleId)->at(chipId)->setChannelContainer(this->fDataStream.fChannelContainer);
-		detectorContainer.at(boardId)->at(moduleId)->at(chipId)->setSummaryContainer(this->fDataStream.fSummaryContainer);
-        std::cout << __PRETTY_FUNCTION__ << detectorContainer.at(boardId)->at(moduleId)->at(chipId)->getSummaryContainer<C,T>()->theSummary_.fOccupancy << " == " << this->fDataStream.fSummaryContainer->theSummary_.fOccupancy << std::endl;		
-		this->fDataStream.fChannelContainer = nullptr;
-		this->fDataStream.fSummaryContainer = nullptr;
+		detectorContainer.at(boardId)->at(moduleId)->at(chipId)->setSummaryContainer(this->fDataStream.fChipSummaryContainer);
+        this->fDataStream.fChannelContainer     = nullptr;
+		this->fDataStream.fChipSummaryContainer = nullptr;
 	}
 
 	template <std::size_t N>
@@ -327,11 +376,20 @@ protected:
 		this->fHeaderStream.fBoardId         = boardId;
 		this->fHeaderStream.template setHeaderInfo<HeaderId::ModuleId>(moduleId);
 		this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getIndex());
-		this->fDataStream.fChannelContainer = chip->getChannelContainer<C>();
-		this->fDataStream.fSummaryContainer = chip->getSummaryContainer<C,T>();
-        std::cout << __PRETTY_FUNCTION__ << chip->getSummaryContainer<C,T>()->theSummary_.fOccupancy << " == " << this->fDataStream.fSummaryContainer->theSummary_.fOccupancy << std::endl;
-	}
+		if(chip->getChannelContainer<C>() != nullptr)
+		{
+			fDataStream.fContainerCarried.carryChannelContainer();
+			this->fDataStream.fChannelContainer = chip->getChannelContainer<C>();
+
+		}
+		if(chip->getSummaryContainer<C,T>() != nullptr)
+		{
+			fDataStream.fContainerCarried.carryChipContainer();
+			this->fDataStream.fChipSummaryContainer = chip->getSummaryContainer<C,T>();
+		}
+    }
 
 };
+
 
 #endif

@@ -105,7 +105,7 @@ void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &
 //========================================================================================================================
 bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
-    ChannelContainerStream<Occupancy>          theOccupancy("PedeNoise");
+    ChipContainerStream<Occupancy,Occupancy>          theOccupancy("PedeNoise");
     ChannelContainerStream<Occupancy,uint16_t> theSCurve("SCurve");
     ChannelContainerStream<ThresholdAndNoise>  theThresholdAndNoiseStream("PedeNoise");
 
@@ -227,6 +227,26 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer &theOccupa
                 TH1F *chipValidationHistogram = fDetectorValidationHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
                 uint channelBin=1;
                 if(chip->getChannelContainer<Occupancy>() == nullptr ) continue;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " The chip occupancy = " << chip->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+
                 for(auto channel : *chip->getChannelContainer<Occupancy>())
                 {
                     chipValidationHistogram->SetBinContent(channelBin  ,channel.fOccupancy     );
