@@ -9,7 +9,7 @@
 
 #include "RD53ChannelGroupHandler.h"
 
-void RD53ChannelGroupHandler::RD53ChannelGroupAll::makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster) const
+void RD53ChannelGroupHandler::RD53ChannelGroupAll::makeTestGroup (ChannelGroupBase* currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster) const
 {
   static_cast<ChannelGroup*>(currentChannelGroup)->disableAllChannels();
 
@@ -18,7 +18,7 @@ void RD53ChannelGroupHandler::RD53ChannelGroupAll::makeTestGroup (ChannelGroupBa
       if (isChannelEnabled(row,col)) static_cast<RD53ChannelGroupAll*>(currentChannelGroup)->enableChannel(row, col);
 }
 
-void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster) const
+void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup (ChannelGroupBase* currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster) const
 {
   static_cast<ChannelGroup*>(currentChannelGroup)->disableAllChannels();
 
