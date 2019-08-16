@@ -14,6 +14,7 @@
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53PixelAlive.h"
 #include "../tools/RD53Latency.h"
+#include "../tools/RD53Source.h"
 #include "../tools/RD53SCurve.h"
 #include "../tools/RD53Gain.h"
 
@@ -272,6 +273,11 @@ int main (int argc, char** argv)
   size_t VCALnsteps        = findValue(cSystemController.fSettingsMap,"VCALnsteps");
   size_t VCALoffset        = findValue(cSystemController.fSettingsMap,"VCALoffset");
 
+  size_t VthresholdStart   = findValue(cSystemController.fSettingsMap,"VthresholdStart");
+  size_t VthresholdStop    = findValue(cSystemController.fSettingsMap,"VthresholdStop");
+  size_t VthresholdNSteps  = findValue(cSystemController.fSettingsMap,"VthresholdNSteps");
+  size_t StepDuration      = findValue(cSystemController.fSettingsMap,"StepDuration");
+
   size_t ChipTargetCharge  = findValue(cSystemController.fSettingsMap,"ChipTargetCharge");
   size_t KrumCurrStart     = findValue(cSystemController.fSettingsMap,"KrumCurrStart");
   size_t KrumCurrStop      = findValue(cSystemController.fSettingsMap,"KrumCurrStop");
@@ -368,6 +374,20 @@ int main (int argc, char** argv)
       ga.run();
       ga.analyze();
       ga.draw(display,true);
+    }
+  else if (whichCalib == "source")
+    {
+      // ##############
+      // # Run SCurve #
+      // ##############
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
+
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_Source");
+      Source src(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, VthresholdStart, VthresholdStop, VthresholdNSteps, StepDuration);
+      src.Inherit(&cSystemController);
+      src.run();
+    //   src.analyze();
+      src.draw(display,true);
     }
   else if (whichCalib == "threqu")
     {
