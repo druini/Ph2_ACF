@@ -106,7 +106,8 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
   ContainerFactory theDetectorFactory;
   theThresholdAndNoiseContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
   theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
-
+    int n_noisy = 0;
+    int n_errors = 0;
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
@@ -128,6 +129,17 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 		      theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThresholdError = rms / sqrt(nHits);
 		      theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise          = rms;
 		    }
+             else {
+                float min_occ = std::min_element(detectorContainerVector.begin(), detectorContainerVector.end(), [](const DetectorDataContainer* a, const DetectorDataContainer* b) {
+                    return a->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy < b->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy;
+                });
+                if (min_occ >= 0.999) {
+                    ++n_noisy;
+                }
+                else {
+                    ++n_errors;
+                }
+            }
 		}
 
 	  index++;
@@ -136,6 +148,9 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 	  LOG (INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
 		     << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise>().fThreshold
 		     << BOLDGREEN << " (Delta_VCal)" << RESET;
+
+
+        LOG (INFO) << "n_noisy = " << n_noisy << ", n_errors" << n_errors << RESET;
 	}
 
   return theThresholdAndNoiseContainer;
