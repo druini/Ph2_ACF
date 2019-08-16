@@ -378,13 +378,13 @@ protected:
 		this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getIndex());
 		if(chip->getChannelContainer<C>() != nullptr)
 		{
-			fDataStream.fContainerCarried.carryChannelContainer();
+			this->fDataStream.fContainerCarried.carryChannelContainer();
 			this->fDataStream.fChannelContainer = chip->getChannelContainer<C>();
 
 		}
 		if(chip->getSummaryContainer<C,T>() != nullptr)
 		{
-			fDataStream.fContainerCarried.carryChipContainer();
+			this->fDataStream.fContainerCarried.carryChipContainer();
 			this->fDataStream.fChipSummaryContainer = chip->getSummaryContainer<C,T>();
 		}
     }
