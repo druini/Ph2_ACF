@@ -253,7 +253,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     {
         for ( auto cFe : *cBoard )
         {
-            std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+            // std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
 
             for ( auto cCbc : *cFe )
             {

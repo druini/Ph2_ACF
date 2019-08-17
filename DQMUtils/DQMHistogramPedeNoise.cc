@@ -222,7 +222,7 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer &theOccupa
     {
         for(auto module: *board)
         {
-            std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " << module->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+            // std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " << module->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
             for(auto chip: *module)
             {
                 TH1F *chipValidationHistogram = fDetectorValidationHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
@@ -294,8 +294,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer &the
 //========================================================================================================================
 void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContainer &fSCurveOccupancy)
 {
-    std::cout<<__PRETTY_FUNCTION__<<" vcthr = "<< vcthr << std::endl; 
-
+    
     for ( auto board : fSCurveOccupancy )
     {
         for ( auto module : *board )
