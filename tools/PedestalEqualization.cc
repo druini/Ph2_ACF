@@ -115,13 +115,13 @@ void PedestalEqualization::FindVplus()
 
     setSameLocalDac("ChannelOffset", 0xFF);
 
-    DetectorDataContainer theVCthCointainer;
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer,theVCthCointainer);
+    DetectorDataContainer theVcthContainer;
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer,theVcthContainer);
 
     float cMeanValue = 0.;
     uint32_t nCbc = 0;
 
-    for(auto board : theVCthCointainer) //for on boards - begin 
+    for(auto board : theVcthContainer) //for on boards - begin 
     {
         for(auto module: *board) // for on module - begin 
         {
@@ -139,16 +139,13 @@ void PedestalEqualization::FindVplus()
     } // for on board - end 
 
     #ifdef __USE_ROOT__
-        fDQMHistogramPedestalEqualization.fillVplusPlots(theVCthCointainer);
+        fDQMHistogramPedestalEqualization.fillVplusPlots(theVcthContainer);
     #else
-        //send through ethernet
-        
-        // auto theThresholdAndNoiseStream = prepareContainerStreamer<ThresholdAndNoise>();
-
-        // for(auto board : fThresholdAndNoiseContainer )
-        // {
-        //     if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
-        // }
+        auto theVCthStream = prepareModuleContainerStreamer<EmptyContainer,uint16_t,EmptyContainer>();
+        for(auto board : theVcthContainer)
+        {
+            if(fStreamerEnabled) theVCthStream.streamAndSendBoard(board, fNetworkStreamer);
+        }
     #endif
     
 
@@ -215,7 +212,17 @@ void PedestalEqualization::FindOffsets()
         fDQMHistogramPedestalEqualization.fillOccupancyPlots(theOccupancyContainer);
         fDQMHistogramPedestalEqualization.fillOffsetPlots(theOffsetsCointainer);
     #else
-    //send through ethernet
+        auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
+        for(auto board : theOccupancyContainer )
+        {
+            if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
+        }
+
+        auto theOffsetStream = prepareChannelContainerStreamer<uint8_t>();
+        for(auto board : theOffsetsCointainer )
+        {
+            if(fStreamerEnabled) theOffsetStream.streamAndSendBoard(board, fNetworkStreamer);
+        }
     #endif
 
    //a add write original register ;

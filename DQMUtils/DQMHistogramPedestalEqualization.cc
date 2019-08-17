@@ -52,7 +52,36 @@ void DQMHistogramPedestalEqualization::book(TFile *theOutputFile, const Detector
 //========================================================================================================================
 bool DQMHistogramPedestalEqualization::fill(std::vector<char>& dataBuffer)
 {
-        return false;
+    ModuleContainerStream<EmptyContainer,uint16_t,EmptyContainer>  theVcthStreamer("PedestalEqualization");
+    ChannelContainerStream<Occupancy>  theOccupancyStream("PedestalEqualization");
+    ChannelContainerStream<uint8_t>    theOffsetStream("PedestalEqualization");
+    
+    if(theVcthStreamer.attachBuffer(&dataBuffer))
+    {
+        std::cout<<"Matched PedestalEqualization Vcth!!!!!\n";
+        theVcthStreamer.decodeModuleData(fDetectorData);
+        fillVplusPlots(fDetectorData);
+        fDetectorData.cleanDataStored();
+        return true;
+    }
+    else if(theOccupancyStream.attachBuffer(&dataBuffer))
+    {
+        std::cout<<"Matched PedestalEqualization Occupancy!!!!!\n";
+        theOccupancyStream.decodeChipData(fDetectorData);
+        fillOccupancyPlots(fDetectorData);
+        fDetectorData.cleanDataStored();
+        return true;
+    }
+    else if(theOffsetStream.attachBuffer(&dataBuffer))
+    {
+        std::cout<<"Matched PedestalEqualization Offset!!!!!\n";
+        theOffsetStream.decodeChipData(fDetectorData);
+        fillOffsetPlots(fDetectorData);
+        fDetectorData.cleanDataStored();
+        return true;
+    }
+
+    return false;
 }
 
 //========================================================================================================================
@@ -102,6 +131,7 @@ void DQMHistogramPedestalEqualization::fillVplusPlots(DetectorDataContainer &the
     {
         for(auto module: *board)
         {
+            if(module == nullptr) continue;
             for(auto chip: *module)
             {
                 TH1I *chipVplusHistogram = fDetectorVplusHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1I>>().fTheHistogram;
@@ -121,8 +151,8 @@ void DQMHistogramPedestalEqualization::fillOccupancyPlots(DetectorDataContainer 
         {
             for(auto chip: *module)
             {
-                TH1F *chipOccupancyHistogram = fDetectorOccupancyHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 if(chip->getChannelContainer<Occupancy>() == nullptr ) continue;
+                TH1F *chipOccupancyHistogram = fDetectorOccupancyHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 uint channelBin=1;
                 for(auto channel : *chip->getChannelContainer<Occupancy>())
                 {
@@ -145,8 +175,8 @@ void DQMHistogramPedestalEqualization::fillOffsetPlots(DetectorDataContainer &th
         {
             for(auto chip: *module)
             {
-                TH1I *chipOffsetHistogram = fDetectorOffsetHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1I>>().fTheHistogram;
                 if(chip->getChannelContainer<uint8_t>() == nullptr ) continue;
+                TH1I *chipOffsetHistogram = fDetectorOffsetHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1I>>().fTheHistogram;
                 uint channelBin=1;
                 for(auto channel : *chip->getChannelContainer<uint8_t>())
                 {

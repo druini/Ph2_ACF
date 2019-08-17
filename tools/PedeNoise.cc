@@ -241,7 +241,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     #ifdef __USE_ROOT__
         fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
     #else
-        auto theOccupancyStream = prepareChipContainerStreamer<Occupancy,Occupancy>();
+        auto theOccupancyStream = prepareModuleContainerStreamer<Occupancy,Occupancy,Occupancy>();
         // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
         for(auto board : theOccupancyContainer)
         {
@@ -253,26 +253,13 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     {
         for ( auto cFe : *cBoard )
         {
+            std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+
             for ( auto cCbc : *cFe )
             {
                 RegisterVector cRegVec;
 
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                std::cout<<__PRETTY_FUNCTION__ << " Chip average Occupancy " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-            	for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
+                for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
                 {
                     float occupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
                     if( occupancy > float ( pNoiseStripThreshold * 0.001 ) )

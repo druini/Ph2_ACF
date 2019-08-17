@@ -290,6 +290,14 @@ class Tool : public SystemController
         return theContainerStreamer;
     }
 
+    template<typename T, typename C, typename M>
+    ModuleContainerStream<T,C,M> prepareModuleContainerStreamer()
+    {
+        ModuleContainerStream<T,C,M> theContainerStreamer(getCalibrationName());
+        return theContainerStreamer;
+    }
+
+
 private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase *scanFunctor);
 
