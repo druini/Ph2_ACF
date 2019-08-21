@@ -296,7 +296,6 @@ namespace Ph2_HwInterface
 
 	for (auto row = 0u; row < RD53::nRows; row++)
 	  {
-	    // std::cout << (pRD53->getRegItem("HighGain_LIN").fValue == true ? RD53PixelEncoder::HIGHGAIN : RD53PixelEncoder::LOWGAIN) << std::endl;
 	    data =
 	      (pRD53->getRegItem("HighGain_LIN").fValue == true ? RD53PixelEncoder::HIGHGAIN : RD53PixelEncoder::LOWGAIN)        |
 	      static_cast<uint16_t> ((*mask)[col].Enable[row])                                                                   |

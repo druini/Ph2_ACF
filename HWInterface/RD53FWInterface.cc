@@ -826,12 +826,10 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ConfigureDIO5 (const DIO5Config* cfg)
   {
-    bool ext_clk_en;
-    std::tie(ext_clk_en, std::ignore) = unpack_bits<1,4>(cfg->ch_out_en);
-    
     WriteStackReg({
 	{"user.ctrl_regs.ext_tlu_reg1.dio5_en",            (uint32_t)cfg->enable},
 	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en",     (uint32_t)cfg->ch_out_en},
+	{"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)cfg->fiftyohm_en},
 	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr",       (uint32_t)cfg->ch1_thr},
 	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr",       (uint32_t)cfg->ch2_thr},
 	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr",       (uint32_t)cfg->ch3_thr},
@@ -839,11 +837,10 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr",       (uint32_t)cfg->ch5_thr},
 	{"user.ctrl_regs.ext_tlu_reg2.tlu_en",             (uint32_t)cfg->tlu_en},
 	{"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)cfg->tlu_handshake_mode},
+	{"user.ctrl_regs.ext_tlu_reg2.ext_clk_en",         (uint32_t)cfg->ext_clk_en},
 
 	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   1},
-	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   0},
-
-	{"user.ctrl_regs.ext_tlu_reg2.ext_clk_en",         (uint32_t)ext_clk_en}
+	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   0}
       });
   }
 }

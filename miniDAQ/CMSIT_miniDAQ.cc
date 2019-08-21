@@ -137,7 +137,8 @@ void configureFSM (SystemController& sc, size_t NTRIGxL1A, size_t type, bool hit
 
 void configureExtClkTrig (SystemController& sc)
 {
-  const uint8_t chnOutEnable = 0x12;
+  const uint8_t chnOutEnable   = 0x00;
+  const uint8_t fiftyohmEnable = 0x12;
 
   for (const auto& cBoard : sc.fBoardVector)
     {
@@ -150,10 +151,12 @@ void configureExtClkTrig (SystemController& sc)
       LOG (INFO) << GREEN << "Configuring DIO5 for external trigger and external clock for board " << BOLDYELLOW << cBoard->getBeBoardId() << RESET;
 
       RD53Board->getLoaclCfgFastCmd()->trigger_source = RD53FWInterface::TriggerSource::External;
-      
+
       RD53FWInterface::DIO5Config cfgDIO5;
-      cfgDIO5.enable    = true;
-      cfgDIO5.ch_out_en = chnOutEnable;
+      cfgDIO5.enable      = true;
+      cfgDIO5.ext_clk_en  = false;
+      cfgDIO5.ch_out_en   = chnOutEnable;
+      cfgDIO5.fiftyohm_en = fiftyohmEnable;
       RD53Board->ConfigureDIO5(&cfgDIO5);      
     }
 }
