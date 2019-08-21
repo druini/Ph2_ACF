@@ -67,7 +67,7 @@ void configureFSM (SystemController& sc, size_t NTRIGxL1A, size_t type, bool hit
       RD53FWInterface::FastCommandsConfig cfgFastCmd;
       cfgFastCmd.trigger_source   = (hitOr == true ? RD53FWInterface::TriggerSource::HitOr : RD53FWInterface::TriggerSource::FastCMDFSM);
       cfgFastCmd.n_triggers       = 0;
-      cfgFastCmd.trigger_duration = NTRIGxL1A;
+      cfgFastCmd.trigger_duration = NTRIGxL1A - 1;
 
       if (type == INJtype::Digital)
 	{

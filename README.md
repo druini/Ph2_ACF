@@ -43,18 +43,27 @@ Through `CMSIT_miniDAQ`, and with the right command line option, you can run the
 7. Gain optimization
 8. Threshold minimization
 ```
-How to setup up and run the IT-system:
-1. Install: `CERN ROOT` from https://root.cern.ch and `IPbus tools` from https://ipbus.web.cern.ch/ipbus/
-2. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
-3. Switch to the `chipPolymorhism` branch
-4. `cd Ph2_ACF; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
-5. `mkdir choose_a_name`
-6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
-7. `cp settings/CMSIT.xml choose_a_name`
-8. `cd choose_a_name`
-9. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-10. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the frontend chips (just once)
-11. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
+Setup up and run the IT-system:
+1. `yum install epel-release`
+2. `yum install pugixml-devel`
+3. Install: `CERN ROOT` from https://root.cern.ch and `IPbus tools` from https://ipbus.web.cern.ch/ipbus/
+4. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
+5. Switch to the `chipPolymorhism` branch
+6. `cd Ph2_ACF; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
+7. `mkdir choose_a_name`
+8. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
+9. `cp settings/CMSIT.xml choose_a_name`
+10. `cd choose_a_name`
+11. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
+12. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the frontend chips (just once)
+13. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
+Setup up the firmware:
+1. Check whether DIP switches on FC7 board are setup for the use of a microSD card
+2. Insert a microSD card in the PC and run `/sbin/fdisk -l` to check to which dev it is attached (`/dev/sd_card_name`)
+3. Upload a golden firmware on the microSD card (check FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
+4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/releases
+5. Plug the microSD card into the FC7
+6. From Ph2_ACF use the command fpgaconfig to upload the proper IT firmware
 
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
 ```
