@@ -52,7 +52,7 @@ namespace Ph2_HwInterface
     std::vector<std::pair<uint16_t,uint16_t>> ReadRD53Reg (RD53* pRD53, const std::string& pRegNode);
 
   private:
-    template <class T, size_t N>
+    template <typename T, size_t N>
       static size_t arraySize(const T(&)[N])
     {
       return N;

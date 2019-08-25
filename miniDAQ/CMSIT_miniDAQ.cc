@@ -135,30 +135,31 @@ void configureFSM (SystemController& sc, size_t NTRIGxL1A, size_t type, bool hit
 }
 
 
-void configureExtClkTrig (SystemController& sc)
+void configureExtClkTrig (SystemController& sc, bool extClk, bool extTrg)
 {
   const uint8_t chnOutEnable   = 0x00;
   const uint8_t fiftyohmEnable = 0x12;
 
-  for (const auto& cBoard : sc.fBoardVector)
-    {
-      auto RD53Board = static_cast<RD53FWInterface*>(sc.fBeBoardFWMap[cBoard->getBeBoardId()]);
+  if ((extClk == true) || (extTrg == true))
+    for (const auto& cBoard : sc.fBoardVector)
+      {
+	auto RD53Board = static_cast<RD53FWInterface*>(sc.fBeBoardFWMap[cBoard->getBeBoardId()]);
 
 
-      // ####################
-      // # Configuring DIO5 #
-      // ####################
-      LOG (INFO) << GREEN << "Configuring DIO5 for external trigger and external clock for board " << BOLDYELLOW << cBoard->getBeBoardId() << RESET;
-
-      RD53Board->getLoaclCfgFastCmd()->trigger_source = RD53FWInterface::TriggerSource::External;
-
-      RD53FWInterface::DIO5Config cfgDIO5;
-      cfgDIO5.enable      = true;
-      cfgDIO5.ext_clk_en  = false;
-      cfgDIO5.ch_out_en   = chnOutEnable;
-      cfgDIO5.fiftyohm_en = fiftyohmEnable;
-      RD53Board->ConfigureDIO5(&cfgDIO5);      
-    }
+	// ####################
+	// # Configuring DIO5 #
+	// ####################
+	LOG (INFO) << GREEN << "Configuring DIO5 for external trigger and/or external clock for board " << BOLDYELLOW << cBoard->getBeBoardId() << RESET;
+	
+	if (extTrg == true) RD53Board->getLoaclCfgFastCmd()->trigger_source = RD53FWInterface::TriggerSource::External;
+	
+	RD53FWInterface::DIO5Config cfgDIO5;
+	cfgDIO5.enable      = true;
+	cfgDIO5.ext_clk_en  = extClk;
+	cfgDIO5.ch_out_en   = chnOutEnable;
+	cfgDIO5.fiftyohm_en = fiftyohmEnable;
+	RD53Board->ConfigureDIO5(&cfgDIO5);      
+      }
 }
 
 
@@ -189,8 +190,11 @@ int main (int argc, char** argv)
   cmd.defineOption ("raw", "Save raw data. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("raw", "r");
 
-  cmd.defineOption ("ext", "Set external trigger and external clock. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
-  cmd.defineOptionAlternative ("ext", "x");
+  cmd.defineOption ("ext", "Set external trigger. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+  cmd.defineOptionAlternative ("extTrg", "xt");
+
+  cmd.defineOption ("ext", "Set external clock. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+  cmd.defineOptionAlternative ("extClk", "xc");
 
   cmd.defineOption ("hitor", "Use Hit-Or signal to trigger. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("hitor", "o");
@@ -207,12 +211,13 @@ int main (int argc, char** argv)
       exit(EXIT_FAILURE);
     }
 
-  std::string configFile = cmd.foundOption("file")  == true ? cmd.optionValue("file") : "CMSIT.xml";
-  std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "pixelalive";
-  bool saveRaw           = cmd.foundOption("raw")   == true ? true : false;
-  bool extClkTrg         = cmd.foundOption("ext")   == true ? true : false;
-  bool hitOr             = cmd.foundOption("hitor") == true ? true : false;
-  bool reset             = cmd.foundOption("reset") == true ? true : false; // @TMP@
+  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "CMSIT.xml";
+  std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
+  bool saveRaw           = cmd.foundOption("raw")    == true ? true : false;
+  bool extTrg            = cmd.foundOption("extTrg") == true ? true : false;
+  bool extClk            = cmd.foundOption("extClk") == true ? true : false;
+  bool hitOr             = cmd.foundOption("hitor")  == true ? true : false;
+  bool reset             = cmd.foundOption("reset")  == true ? true : false; // @TMP@
 
 
   // ##################################
@@ -297,7 +302,7 @@ int main (int argc, char** argv)
   // ######################
   // # Preparing the DIO5 #
   // ######################
-  if (extClkTrg == true) configureExtClkTrig(cSystemController);
+  configureExtClkTrig(cSystemController, extClk, extTrg);
 
 
   std::cout << std::endl;

@@ -118,8 +118,8 @@ class DQMHistogramBase
 		  myPad->SetTopMargin(0.16);
 		  
 		  axes.emplace_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-					       RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(1), true),
-					       RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), true), 510, "-"));
+					       RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(1)),
+					       RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())), 510, "-"));
 		  axes.back()->SetTitle(electronAxisTitle);
 		  axes.back()->SetTitleOffset(1.2);
 		  axes.back()->SetTitleSize(0.035);
