@@ -31,19 +31,22 @@ For more information on the firmare, please check the doc directory of https://g
 
 ### Middleware for the Inner-Tracker (IT) system
 
-The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking. 
-Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
-```
-1. Latency scan
-2. PixelAlive
-3. Noise scan
-4. SCurve scan
-5. Gain scan
-6. Threshold equalization
-7. Gain optimization
-8. Threshold minimization
-```
-Setup up and run the IT-system:
+Setup up the FC7:
+1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark-gnome`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of of the ethernet card of your PC to which the FC7 is connected to)
+2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
+3. Restart the network: `sudo /etc/init.d/network restart`
+4. Install and then restart the rarpd daemon: `sudo /etc/init.d/rarpd restart`
+5. To start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`
+
+Setup up the firmware:
+1. Checkout whether DIP switches on FC7 board are setup for the use of a microSD card
+2. Insert a microSD card in the PC and run `/sbin/fdisk -l` to check to which dev it is attached to (`/dev/sd_card_name`)
+3. Upload a golden firmware on the microSD card (check FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
+4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/releases
+5. Plug the microSD card in the FC7
+6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware
+
+Setup up and run the IT-DAQ:
 1. `yum install epel-release`
 2. `yum install pugixml-devel`
 3. Install: `CERN ROOT` from https://root.cern.ch and `IPbus tools` from https://ipbus.web.cern.ch/ipbus/
@@ -57,14 +60,19 @@ Setup up and run the IT-system:
 11. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
 12. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the frontend chips (just once)
 13. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
-Setup up the firmware:
-1. Check whether DIP switches on FC7 board are setup for the use of a microSD card
-2. Insert a microSD card in the PC and run `/sbin/fdisk -l` to check to which dev it is attached (`/dev/sd_card_name`)
-3. Upload a golden firmware on the microSD card (check FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
-4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/releases
-5. Plug the microSD card into the FC7
-6. From Ph2_ACF use the command fpgaconfig to upload the proper IT firmware
 
+The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking. 
+Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
+```
+1. Latency scan
+2. PixelAlive
+3. Noise scan
+4. SCurve scan
+5. Gain scan
+6. Threshold equalization
+7. Gain optimization
+8. Threshold minimization
+```
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
 ```
 #!/bin/bash                                                                                                                                                                                     
