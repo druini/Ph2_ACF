@@ -58,7 +58,7 @@ Setup up and run the IT-DAQ:
 9. `cp settings/CMSIT.xml choose_a_name`
 10. `cd choose_a_name`
 11. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-12. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the frontend chips (just once)
+12. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the FC7 (just once)
 13. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
 
 The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking. 
