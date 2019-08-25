@@ -31,14 +31,14 @@ For more information on the firmare, please check the doc directory of https://g
 
 ### Middleware for the Inner-Tracker (IT) system
 
-Setup up the FC7:
+Setup the FC7:
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark-gnome`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of of the ethernet card of your PC to which the FC7 is connected to)
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
 3. Restart the network: `sudo /etc/init.d/network restart`
 4. Install and then restart the rarpd daemon: `sudo /etc/init.d/rarpd restart`
 5. To start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`
 
-Setup up the firmware:
+Setup the firmware:
 1. Checkout whether the DIP switches on FC7 board are setup for the use of a microSD card
 2. Insert a microSD card in the PC and run `/sbin/fdisk -l` to check to which dev it is attached to (`/dev/sd_card_name`)
 3. Upload a golden firmware on the microSD card (check FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
@@ -46,7 +46,7 @@ Setup up the firmware:
 5. Plug the microSD card in the FC7
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware
 
-Setup up and run the IT-DAQ:
+Setup and run the IT-DAQ:
 1. `yum install epel-release`
 2. `yum install pugixml-devel`
 3. Install: `CERN ROOT` from https://root.cern.ch and `IPbus tools` from https://ipbus.web.cern.ch/ipbus/
