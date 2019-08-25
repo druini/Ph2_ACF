@@ -118,6 +118,7 @@ fi
 ```
 - Software git branch / tag : `chipPolymorphism` / `IT-v1.8`
 - Firmware tag: `2.5`
+- Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 
 ### Setup on CC7 (Scroll down for instructions on setting up on SLC6)
