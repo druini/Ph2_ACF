@@ -155,7 +155,7 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 	      // #######################
 	      // # Build discriminator #
 	      // #######################
-	      float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy * ((rowStop - rowStart + 1) * (colStop - colStart + 1)) * nEvents;
+	      float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
 	      
 	      // ########################
 	      // # Save best DAC values #

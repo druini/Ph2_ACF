@@ -104,7 +104,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
 	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
 		{
 		  float occupancy = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
-		  static_cast<RD53*>(cChip)->enablePixel(row,col,(thresholdOccupancy != 0 ? occupancy * nEvents < thresholdOccupancy : occupancy != 0));
+		  std::cout << "AAA " << occupancy << "\t" << thresholdOccupancy << std::endl; // @TMP@
+		  static_cast<RD53*>(cChip)->enablePixel(row,col,(thresholdOccupancy != 0 ? occupancy < thresholdOccupancy : occupancy != 0));
 		}
 	}
 

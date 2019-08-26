@@ -17,8 +17,8 @@
 class RD53ChannelGroupHandler : public ChannelGroupHandler
 {
  public:
-  RD53ChannelGroupHandler(bool doAll = false);
-  ~RD53ChannelGroupHandler();
+  RD53ChannelGroupHandler  (bool doAll = false);
+  ~RD53ChannelGroupHandler ();
 
  private:
   class RD53ChannelGroupAll : public ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>

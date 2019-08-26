@@ -191,10 +191,10 @@ int main (int argc, char** argv)
   cmd.defineOptionAlternative ("raw", "r");
 
   cmd.defineOption ("ext", "Set external trigger. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
-  cmd.defineOptionAlternative ("extTrg", "xt");
+  cmd.defineOptionAlternative ("exttrg", "xt");
 
   cmd.defineOption ("ext", "Set external clock. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
-  cmd.defineOptionAlternative ("extClk", "xc");
+  cmd.defineOptionAlternative ("extclk", "xc");
 
   cmd.defineOption ("hitor", "Use Hit-Or signal to trigger. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("hitor", "o");
@@ -214,8 +214,8 @@ int main (int argc, char** argv)
   std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "CMSIT.xml";
   std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
   bool saveRaw           = cmd.foundOption("raw")    == true ? true : false;
-  bool extTrg            = cmd.foundOption("extTrg") == true ? true : false;
-  bool extClk            = cmd.foundOption("extClk") == true ? true : false;
+  bool extTrg            = cmd.foundOption("exttrg") == true ? true : false;
+  bool extClk            = cmd.foundOption("extclk") == true ? true : false;
   bool hitOr             = cmd.foundOption("hitor")  == true ? true : false;
   bool reset             = cmd.foundOption("reset")  == true ? true : false; // @TMP@
 
@@ -262,35 +262,34 @@ int main (int argc, char** argv)
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents           = findValue(cSystemController.fSettingsMap,"nEvents");
-  size_t nEvtsBurst        = findValue(cSystemController.fSettingsMap,"nEvtsBurst");
-  size_t NTRIGxL1A         = findValue(cSystemController.fSettingsMap,"NTRIGxL1A");
-  size_t INJtype           = findValue(cSystemController.fSettingsMap,"INJtype");
+  size_t nEvents        = findValue(cSystemController.fSettingsMap,"nEvents");
+  size_t nEvtsBurst     = findValue(cSystemController.fSettingsMap,"nEvtsBurst");
+  size_t NTRIGxL1A      = findValue(cSystemController.fSettingsMap,"NTRIGxL1A");
+  size_t INJtype        = findValue(cSystemController.fSettingsMap,"INJtype");
 
-  size_t ROWstart          = findValue(cSystemController.fSettingsMap,"ROWstart");
-  size_t ROWstop           = findValue(cSystemController.fSettingsMap,"ROWstop");
-  size_t COLstart          = findValue(cSystemController.fSettingsMap,"COLstart");
-  size_t COLstop           = findValue(cSystemController.fSettingsMap,"COLstop");
+  size_t ROWstart       = findValue(cSystemController.fSettingsMap,"ROWstart");
+  size_t ROWstop        = findValue(cSystemController.fSettingsMap,"ROWstop");
+  size_t COLstart       = findValue(cSystemController.fSettingsMap,"COLstart");
+  size_t COLstop        = findValue(cSystemController.fSettingsMap,"COLstop");
 
-  size_t LatencyStart      = findValue(cSystemController.fSettingsMap,"LatencyStart");
-  size_t LatencyStop       = findValue(cSystemController.fSettingsMap,"LatencyStop");
+  size_t LatencyStart   = findValue(cSystemController.fSettingsMap,"LatencyStart");
+  size_t LatencyStop    = findValue(cSystemController.fSettingsMap,"LatencyStop");
 
-  size_t VCALstart         = findValue(cSystemController.fSettingsMap,"VCALstart");
-  size_t VCALstop          = findValue(cSystemController.fSettingsMap,"VCALstop");
-  size_t VCALnsteps        = findValue(cSystemController.fSettingsMap,"VCALnsteps");
-  size_t VCALoffset        = findValue(cSystemController.fSettingsMap,"VCALoffset");
+  size_t VCALstart      = findValue(cSystemController.fSettingsMap,"VCALstart");
+  size_t VCALstop       = findValue(cSystemController.fSettingsMap,"VCALstop");
+  size_t VCALnsteps     = findValue(cSystemController.fSettingsMap,"VCALnsteps");
+  size_t VCALoffset     = findValue(cSystemController.fSettingsMap,"VCALoffset");
 
-  size_t ChipTargetCharge  = findValue(cSystemController.fSettingsMap,"ChipTargetCharge");
-  size_t KrumCurrStart     = findValue(cSystemController.fSettingsMap,"KrumCurrStart");
-  size_t KrumCurrStop      = findValue(cSystemController.fSettingsMap,"KrumCurrStop");
+  size_t TargetCharge   = findValue(cSystemController.fSettingsMap,"TargetCharge");
+  size_t KrumCurrStart  = findValue(cSystemController.fSettingsMap,"KrumCurrStart");
+  size_t KrumCurrStop   = findValue(cSystemController.fSettingsMap,"KrumCurrStop");
 
-  size_t PixelThresholdOcc = findValue(cSystemController.fSettingsMap,"PixelThresholdOcc");
-  size_t ChipTargetOcc     = findValue(cSystemController.fSettingsMap,"ChipTargetOcc");
-  size_t ThrStart          = findValue(cSystemController.fSettingsMap,"ThrStart");
-  size_t ThrStop           = findValue(cSystemController.fSettingsMap,"ThrStop");
+  float  TargetOcc      = findValue(cSystemController.fSettingsMap,"TargetOcc");
+  size_t ThrStart       = findValue(cSystemController.fSettingsMap,"ThrStart");
+  size_t ThrStop        = findValue(cSystemController.fSettingsMap,"ThrStop");
 
-  size_t display           = findValue(cSystemController.fSettingsMap,"DisplayHisto");
-  size_t chipRegDefault    = findValue(cSystemController.fSettingsMap,"ChipRegDefaultFile");
+  size_t display        = findValue(cSystemController.fSettingsMap,"DisplayHisto");
+  size_t chipRegDefault = findValue(cSystemController.fSettingsMap,"ChipRegDefaultFile");
 
 
   // #####################
@@ -328,7 +327,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
-      PixelAlive pa(fileName.c_str(), "", ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, true);
+      PixelAlive pa(fileName.c_str(), "", ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, true, TargetOcc); // @TMP@
       pa.Inherit(&cSystemController);
       pa.run();
       pa.analyze();
@@ -343,7 +342,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan"); 
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
-      PixelAlive pa(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, false, PixelThresholdOcc);
+      PixelAlive pa(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, false, TargetOcc);
       pa.Inherit(&cSystemController);
       pa.run();
       pa.analyze();
@@ -409,7 +408,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_GainOptimization");
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
-      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset, RD53chargeConverter::Charge2VCal(ChipTargetCharge), KrumCurrStart, KrumCurrStop);
+      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset, RD53chargeConverter::Charge2VCal(TargetCharge), KrumCurrStart, KrumCurrStop);
       go.Inherit(&cSystemController);
       go.run();
       go.draw(display,true);
@@ -423,7 +422,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
-      ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, ChipTargetOcc, ThrStart, ThrStop);
+      ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, TargetOcc, ThrStart, ThrStop);
       tm.Inherit(&cSystemController);
       tm.run();
       tm.analyze();

@@ -134,8 +134,7 @@ double convertAnyDouble ( const char* pRegValue ) {
         std::bitset<32> cBitset (std::string (pRegValue).erase (0, 2) );
         return static_cast<uint32_t> (cBitset.to_ulong () );
     }
-    else return static_cast<uint32_t> ( strtod ( pRegValue, 0) );
-
+    else return static_cast<double> ( strtod ( pRegValue, 0) );
 }
 
 //uint16_t convertAnyInt ( const char* pRegValue )

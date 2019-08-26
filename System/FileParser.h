@@ -49,7 +49,7 @@ using namespace Ph2_HwInterface;
  */
 namespace Ph2_System {
 
-    using BeBoardVec = std::vector<BeBoard*>;               /*!< Vector of Board pointers */
+    using BeBoardVec = std::vector<BeBoard*>;             /*!< Vector of Board pointers */
     using SettingsMap = std::map<std::string, double>;    /*!< Maps the settings */
     using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>;    /*!< Map of Board connected */
 
