@@ -387,7 +387,7 @@ namespace Ph2_HwInterface
     for (auto row = 0u; row < RD53::nRows; row++)
       for (auto col = 0u; col < RD53::nCols; col++)
 	{
-	  if (mask   == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row, col));
+	  if (mask   == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
 	  if (inject == true) pRD53->injectPixel(row, col, group->isChannelEnabled(row, col));
 	}
 

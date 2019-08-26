@@ -13,7 +13,6 @@
 #include "ChannelGroupHandler.h"
 #include "../HWDescription/RD53.h"
 
-
 class RD53ChannelGroupHandler : public ChannelGroupHandler
 {
  public:

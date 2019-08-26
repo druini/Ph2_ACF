@@ -132,9 +132,9 @@ double convertAnyDouble ( const char* pRegValue ) {
     else if ( std::string ( pRegValue ).find ( "0b" ) != std::string::npos ) //return static_cast<uint32_t> ( strtoul ( pRegValue, 0, 16 ) );
     {
         std::bitset<32> cBitset (std::string (pRegValue).erase (0, 2) );
-        return static_cast<uint32_t> (cBitset.to_ulong () );
+        return cBitset.to_ulong();
     }
-    else return static_cast<double> ( strtod ( pRegValue, 0) );
+    else return strtod(pRegValue,0);
 }
 
 //uint16_t convertAnyInt ( const char* pRegValue )

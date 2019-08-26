@@ -190,10 +190,10 @@ int main (int argc, char** argv)
   cmd.defineOption ("raw", "Save raw data. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("raw", "r");
 
-  cmd.defineOption ("ext", "Set external trigger. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+  cmd.defineOption ("exttrg", "Set external trigger. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("exttrg", "xt");
 
-  cmd.defineOption ("ext", "Set external clock. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+  cmd.defineOption ("extclk", "Set external clock. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("extclk", "xc");
 
   cmd.defineOption ("hitor", "Use Hit-Or signal to trigger. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
@@ -327,7 +327,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
-      PixelAlive pa(fileName.c_str(), "", ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, true, TargetOcc); // @TMP@
+      PixelAlive pa(fileName.c_str(), "", ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, true);
       pa.Inherit(&cSystemController);
       pa.run();
       pa.analyze();

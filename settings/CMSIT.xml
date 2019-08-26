@@ -38,7 +38,7 @@
             HITOR_2_MASK_DIFF_0    = "65535"
             HITOR_2_MASK_DIFF_1    =     "1"
             HITOR_3_MASK_DIFF_0    = "65535"
-            HITOR_4_MASK_DIFF_1    =     "1"
+            HITOR_3_MASK_DIFF_1    =     "1"
 
             PA_IN_BIAS_LIN         =   "350"
 	    FC_BIAS_LIN            =    "20"
