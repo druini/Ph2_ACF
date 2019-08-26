@@ -10,7 +10,7 @@
 #include "RD53ThrMinimization.h"
 
 ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart, size_t ThrStop)
-  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, false)
+  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false)
   , fileRes         (fileRes)
   , fileReg         (fileReg)
   , rowStart        (rowStart)

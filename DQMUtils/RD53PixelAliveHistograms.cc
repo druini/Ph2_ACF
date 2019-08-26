@@ -19,7 +19,7 @@ void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContain
   size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   auto hOcc1D = HistContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, nEvents + 1);
-  bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Occupancy", "Entries");
+  bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Number of hits", "Entries");
 
   auto hOcc2D = HistContainer<TH2F>("PixelAlive", "Pixel Alive", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "Columns", "Rows");

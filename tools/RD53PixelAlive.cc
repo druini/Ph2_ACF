@@ -9,7 +9,7 @@
 
 #include "RD53PixelAlive.h"
 
-PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, bool inject, float thresholdOccupancy)
+PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, size_t nTRIGxL1A, bool inject, float thresholdOccupancy)
   : Tool               ()
   , fileRes            (fileRes)
   , fileReg            (fileReg)
@@ -18,6 +18,7 @@ PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStar
   , colStart           (colStart)
   , colStop            (colStop)
   , nEvents            (nEvents)
+  , nTRIGxL1A          (nTRIGxL1A)
   , nEvtsBurst         (nEvtsBurst)
   , inject             (inject)
   , thresholdOccupancy (thresholdOccupancy)
@@ -48,7 +49,7 @@ void PixelAlive::run ()
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(inject);
   this->fMaskChannelsFromOtherGroups = true;
-  this->measureData(nEvents, nEvtsBurst);
+  this->measureData(nEvents, nEvtsBurst, nTRIGxL1A);
 
 
   // ################

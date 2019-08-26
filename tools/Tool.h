@@ -254,9 +254,9 @@ class Tool : public SystemController
     // set dac and measure data per BeBoard
     void setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string &dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
     // measure data
-    void measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
+    void measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1, uint32_t numberOfTriggersPerL1A = 1);
     // measure data per BeBoard
-    void measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
+    void measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1, uint32_t numberOfTriggersPerL1A = 1);
     // measure data per BeBoard and per group
     // void measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup);
     // set global DAC for all CBCs in the BeBoard

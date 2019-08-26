@@ -359,7 +359,7 @@ namespace Ph2_HwDescription
     return fPixelsMask[col].TDAC[row];
   }
 
-  void RD53::EncodeCMD (const ChipRegItem                   & pRegItem,
+  void RD53::encodeCMD (const ChipRegItem                   & pRegItem,
 			const uint8_t                         pRD53Id,
 			const uint16_t                        pRD53Cmd,
 			std::vector<std::vector<uint16_t> > & pVecReg)

@@ -189,7 +189,7 @@ namespace Ph2_HwDescription
     void    setTDAC             (unsigned int row, unsigned int col, uint8_t TDAC);
     uint8_t getTDAC             (unsigned int row, unsigned int col);
 
-    void EncodeCMD (const ChipRegItem                 & pRegItem,
+    void encodeCMD (const ChipRegItem                 & pRegItem,
 		    const uint8_t                       pRD53Id,
 		    const uint16_t                      pRD53Cmd,
 		    std::vector<std::vector<uint16_t>>& pVecReg);

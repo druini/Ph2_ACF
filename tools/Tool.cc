@@ -1082,11 +1082,11 @@ void Tool::setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string &d
 }
 
 // measure occupancy
-void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
+void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, uint32_t numberOfTriggersPerL1A)
 {
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
-		measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+	  measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst, numberOfTriggersPerL1A);
 		// if(fStreamerEnabled) fObjectStream->streamAndSendBoard(fDetectorDataContainer->at(boardIndex), fNetworkStreamer);
 	}
 
@@ -1291,15 +1291,14 @@ private:
 
 };
 
-void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
+void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, uint32_t numberOfTriggersPerL1A)
 {
 	MeasureBeBoardDataPerGroup theScan(this);
 	theScan.setDataContainer(fDetectorDataContainer);
 
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
 
-	fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
-
+    fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents*numberOfTriggersPerL1A);
 }
 
 
