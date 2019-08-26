@@ -11,6 +11,7 @@
 #define RD53FWInterface_H
 
 #include "BeBoardFWInterface.h"
+#include "D19cFpgaConfig.h"
 #include "../Utils/easylogging++.h"
 
 #include <uhal/uhal.hpp>
@@ -229,10 +230,23 @@ namespace Ph2_HwInterface
 
     FastCommandsConfig* getLoaclCfgFastCmd() { return &localCfgFastCmd; }
 
+    // ###########################################
+    // # Member functions to handle the firmware #
+    // ###########################################
+    void FlashProm                             (const std::string& strConfig, const char* pstrFile);
+    void JumpToFpgaConfig                      (const std::string& strConfig);
+    void DownloadFpgaConfig                    (const std::string& strConfig, const std::string& strDest);
+    std::vector<std::string> getFpgaConfigList ();
+    void DeleteFpgaConfig                      (const std::string& strId);
+    void checkIfUploading                      ();
+    void RebootBoard                           ();
+    const FpgaConfig* getConfiguringFpga       ();
+
   private:
     FileHandler* fFileHandler;
     FastCommandsConfig localCfgFastCmd;
     void SendBoardCommand(const std::string& cmd_reg);
+    D19cFpgaConfig* fpgaConfig;
   };
 }
 

@@ -20,6 +20,7 @@ namespace Ph2_HwInterface
       {
 	fFileHandler = pHandler;
 	fSaveToFile  = true;
+	fpgaConfig   = nullptr;
       }
     else LOG (ERROR) << BOLDRED << "NULL FileHandler" << RESET;
   }
@@ -843,4 +844,53 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   0}
       });
   }
+
+  void RD53FWInterface::FlashProm (const std::string& strConfig, const char* fileName)
+  {
+    checkIfUploading();    
+    fpgaConfig->runUpload(strConfig, fileName);
+  }
+
+  void RD53FWInterface::JumpToFpgaConfig (const std::string& strConfig)
+  {
+    checkIfUploading();  
+    fpgaConfig->jumpToImage(strConfig);
+  }
+
+  void RD53FWInterface::DownloadFpgaConfig (const std::string& strConfig, const std::string& strDest)
+  {
+    checkIfUploading();
+    fpgaConfig->runDownload(strConfig, strDest.c_str());
+  }
+  
+  std::vector<std::string> RD53FWInterface::getFpgaConfigList ()
+  {
+    checkIfUploading();
+    return fpgaConfig->getFirmwareImageNames();
+  }
+
+  void RD53FWInterface::DeleteFpgaConfig (const std::string& strId)
+  {
+    checkIfUploading();
+    fpgaConfig->deleteFirmwareImage(strId);
+  }
+
+  void RD53FWInterface::checkIfUploading ()
+  {
+    if (fpgaConfig && fpgaConfig->getUploadingFpga() > 0)
+      throw Exception ("This board is uploading an FPGA configuration");
+    
+    if (!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
+  }
+
+  void RD53FWInterface::RebootBoard ()
+  {
+    if (!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
+    fpgaConfig->resetBoard();
+  }
+
+  const FpgaConfig* RD53FWInterface::getConfiguringFpga ()
+  {
+    return (const FpgaConfig*) fpgaConfig;
+  }  
 }
