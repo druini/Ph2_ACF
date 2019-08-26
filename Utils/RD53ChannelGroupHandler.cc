@@ -27,7 +27,7 @@ void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup (ChannelGro
       auto row = NROW_CORE * col;
       row += (row/Ph2_HwDescription::RD53::nRows) % NROW_CORE + groupNumber;
       row %= Ph2_HwDescription::RD53::nRows;
-      if (isChannelEnabled(row,col)) static_cast<RD53ChannelGroupPattern*>(currentChannelGroup)->enableChannel(row, col);
+      if (isChannelEnabled(row,col) == true) static_cast<RD53ChannelGroupPattern*>(currentChannelGroup)->enableChannel(row, col);
     }
 }
 
