@@ -275,10 +275,10 @@ int main (int argc, char** argv)
   size_t LatencyStart   = findValue(cSystemController.fSettingsMap,"LatencyStart");
   size_t LatencyStop    = findValue(cSystemController.fSettingsMap,"LatencyStop");
 
-  size_t VCALstart      = findValue(cSystemController.fSettingsMap,"VCALstart");
-  size_t VCALstop       = findValue(cSystemController.fSettingsMap,"VCALstop");
-  size_t VCALnsteps     = findValue(cSystemController.fSettingsMap,"VCALnsteps");
-  size_t VCALoffset     = findValue(cSystemController.fSettingsMap,"VCALoffset");
+  size_t VCalHstart     = findValue(cSystemController.fSettingsMap,"VCalHstart");
+  size_t VCalHstop      = findValue(cSystemController.fSettingsMap,"VCalHstop");
+  size_t VCalHnsteps    = findValue(cSystemController.fSettingsMap,"VCalHnsteps");
+  size_t VCalMED        = findValue(cSystemController.fSettingsMap,"VCalMED");
 
   size_t TargetCharge   = findValue(cSystemController.fSettingsMap,"TargetCharge");
   size_t KrumCurrStart  = findValue(cSystemController.fSettingsMap,"KrumCurrStart");
@@ -356,7 +356,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
-      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
+      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
       sc.Inherit(&cSystemController);
       sc.run();
       sc.analyze();
@@ -370,7 +370,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_Gain");
-      Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
+      Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
       ga.Inherit(&cSystemController);
       ga.run();
       ga.analyze();
@@ -384,7 +384,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
-      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset);
+      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
       sc.Inherit(&cSystemController);
       sc.run();
       auto output = sc.analyze();
@@ -394,7 +394,7 @@ int main (int argc, char** argv)
       fileName = "Run" + fromInt2Str(runNumber) + "_ThrEqualization";
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       std::cout << "chipConfig.c_str() " << chipConfig.c_str() << std::endl;
-      ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents*VCALnsteps, nEvents);
+      ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents*VCalHnsteps, nEvents);
       te.Inherit(&cSystemController);
       te.run(output);
       te.draw(display,true);
@@ -408,7 +408,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_GainOptimization");
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
-      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCALstart, VCALstop, VCALnsteps, VCALoffset, RD53chargeConverter::Charge2VCal(TargetCharge), KrumCurrStart, KrumCurrStop);
+      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, RD53chargeConverter::Charge2VCal(TargetCharge), KrumCurrStart, KrumCurrStop);
       go.Inherit(&cSystemController);
       go.run();
       go.draw(display,true);

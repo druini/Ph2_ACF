@@ -104,7 +104,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
+	  int VCalMED = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
 
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
@@ -112,7 +112,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
 		{
 		  for (auto i = 0u; i < dacList.size()-1; i++)
 		    {
-		      x[i] = dacList[i]-VCalOffset;
+		      x[i] = dacList[i]-VCalMED;
 		      y[i] = detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh;
 		      e[i] = detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPhError;
 		    }
