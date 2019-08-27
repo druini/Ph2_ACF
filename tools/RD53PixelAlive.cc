@@ -34,7 +34,7 @@ PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStar
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(1,!inject);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(!inject);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 }
 

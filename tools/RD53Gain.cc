@@ -33,7 +33,7 @@ Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStar
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
   
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(nSteps);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>();
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
 

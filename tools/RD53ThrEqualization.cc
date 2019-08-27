@@ -31,7 +31,7 @@ ThrEqualization::ThrEqualization (const char* fileRes, const char* fileReg, size
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row, col);
   
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(5); // @TMP@
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>();
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 }
 

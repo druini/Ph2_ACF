@@ -12,6 +12,7 @@
 
 #include "BeBoardFWInterface.h"
 #include "D19cFpgaConfig.h"
+#include "../Utils/RD53RunProgress.h"
 #include "../Utils/easylogging++.h"
 
 #include <uhal/uhal.hpp>

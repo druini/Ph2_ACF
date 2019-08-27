@@ -189,12 +189,12 @@ public:
     }
 
 
-    ChannelGroupIterator begin()
+    virtual ChannelGroupIterator begin()
     {
         return ChannelGroupIterator(*this,0);
     }
 
-    ChannelGroupIterator end()
+    virtual ChannelGroupIterator end()
     {
         return ChannelGroupIterator(*this,numberOfGroups_);
     }

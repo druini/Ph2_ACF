@@ -31,32 +31,20 @@ void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup (ChannelGro
     }
 }
 
-RD53ChannelGroupHandler::RD53ChannelGroupHandler (size_t numberIterations, bool doAll)
+RD53ChannelGroupHandler::RD53ChannelGroupHandler (bool doAll)
 {
   if (doAll == true)
     {
       allChannelGroup_     = new RD53ChannelGroupAll();
       currentChannelGroup_ = new RD53ChannelGroupAll();
-      numberOfGroups_      = 1;
     }
   else
     {
       allChannelGroup_     = new RD53ChannelGroupPattern();
       currentChannelGroup_ = new RD53ChannelGroupPattern();
-      numberOfGroups_      = Ph2_HwDescription::RD53::nRows;
     }
 
-  totalProgress = numberOfGroups_ * numberIterations;
-}
-
-RD53ChannelGroupHandler::RD53ChannelGroupIterator RD53ChannelGroupHandler::begin ()
-{
-  return {*this,0};
-}
-
-RD53ChannelGroupHandler::RD53ChannelGroupIterator RD53ChannelGroupHandler::end ()
-{
-  return {*this,numberOfGroups_};
+  numberOfGroups_ = getNumberOfGroups(doAll);
 }
 
 RD53ChannelGroupHandler::~RD53ChannelGroupHandler()

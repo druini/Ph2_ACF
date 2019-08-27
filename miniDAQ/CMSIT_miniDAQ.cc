@@ -326,9 +326,10 @@ int main (int argc, char** argv)
       // ##################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
+      RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false);
       std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
       PixelAlive pa(fileName.c_str(), "", ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, 1, true);
-      pa.Inherit(&cSystemController);
+      pa.Inherit(&cSystemController);      
       pa.run();
       pa.analyze();
       pa.draw(display,true);
@@ -340,6 +341,7 @@ int main (int argc, char** argv)
       // #############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
+      RD53RunProgress::total() = nEvents/nEvtsBurst;
       std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan"); 
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       PixelAlive pa(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, nTRIGxEvent, false, TargetOcc);
@@ -355,6 +357,7 @@ int main (int argc, char** argv)
       // ##############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
+      RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false)*VCalHnsteps;
       std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
       sc.Inherit(&cSystemController);
@@ -369,6 +372,7 @@ int main (int argc, char** argv)
       // ############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
+      RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false)*VCalHnsteps;
       std::string fileName("Run" + fromInt2Str(runNumber) + "_Gain");
       Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
       ga.Inherit(&cSystemController);
@@ -383,6 +387,7 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
+      RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false)*VCalHnsteps + 5*VCalHnsteps;
       std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
       sc.Inherit(&cSystemController);
@@ -406,6 +411,7 @@ int main (int argc, char** argv)
       // #########################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
 
+      RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false)*VCalHnsteps*(log2(KrumCurrStop - KrumCurrStart) + 2);
       std::string fileName("Run" + fromInt2Str(runNumber) + "_GainOptimization");
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, RD53chargeConverter::Charge2VCal(TargetCharge), KrumCurrStart, KrumCurrStop);
@@ -418,8 +424,9 @@ int main (int argc, char** argv)
       // ##############################
       // # Run Threshold Minimization #
       // ##############################
-      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threhsold Minimization @@@" << RESET;
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Minimization @@@" << RESET;
 
+      RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false)*(log2(ThrStop - ThrStart) + 2);
       std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, TargetOcc, ThrStart, ThrStop);

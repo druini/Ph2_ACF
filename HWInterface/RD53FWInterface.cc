@@ -446,6 +446,8 @@ namespace Ph2_HwInterface
 	LOG (ERROR) << BOLDRED << "Reached the maximum number of trals (" << BOLDYELLOW << MAXTRIALS << BOLDRED << ") without success" << RESET;
 	pData.clear();
       }
+
+    RD53RunProgress::update();
   }
 
   std::vector<uint32_t> RD53FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
