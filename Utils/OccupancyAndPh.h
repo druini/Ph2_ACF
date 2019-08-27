@@ -19,8 +19,13 @@
 class OccupancyAndPh
 {
  public:
- OccupancyAndPh() : fOccupancy(0), fPh(0), fPhError(0) {}
-  ~OccupancyAndPh()                                    {}
+ OccupancyAndPh()
+   : fOccupancy(0)
+   , fPh(0)
+   , fPhError(0)
+   , isEnabled(false)
+   {}
+  ~OccupancyAndPh() {}
 
   void print(void)
   {
@@ -36,6 +41,8 @@ class OccupancyAndPh
 
   float fPh;
   float fPhError;
+
+  bool isEnabled;
 };
 
 template<>

@@ -31,7 +31,6 @@ namespace Ph2_HwInterface
   
   void RD53Event::fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
   {
-    bool   totRequired    = boardContainer->at(0)->at(0)->isChannelContainerType<OccupancyAndPh>();
     bool   vectorRequired = boardContainer->at(0)->at(0)->isSummaryContainerType<Summary<GenericDataVector,OccupancyAndPh>>();
     size_t chipIndx;
 
@@ -54,13 +53,9 @@ namespace Ph2_HwInterface
 			{
 			  if (hit.tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION))
 			    {
-			      if (totRequired == true)
-			      	{
-				  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fOccupancy++;
-				  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPh      += float(hit.tots[i]);
-				  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPhError += float(hit.tots[i]*hit.tots[i]);
-			      	}
-			      else cChip->getChannel<Occupancy>(hit.row,hit.col+i).fOccupancy++;
+			      cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fOccupancy++;
+			      cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPh      += float(hit.tots[i]);
+			      cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPhError += float(hit.tots[i]*hit.tots[i]);
 			    }
 			}
 		    }

@@ -28,15 +28,6 @@ void RD53SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
 
   auto hNoise2D = HistContainer<TH2F>("Noise2D", "Noise Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hNoise2D, Noise2D, "Column", "Row");
-
-
-  // ###########################
-  // # Retrieve scanned region #
-  // ###########################
-  ROWstart = this->findValue(pSettingsMap,"ROWstart");
-  ROWstop  = this->findValue(pSettingsMap,"ROWstop");
-  COLstart = this->findValue(pSettingsMap,"COLstart");
-  COLstop  = this->findValue(pSettingsMap,"COLstop");
 }
 
 void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int VCAL_HIGH)
@@ -49,8 +40,8 @@ void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int
 
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
-	      if ((row >= ROWstart) && (row <= ROWstop) && (col >= COLstart) && (col <= COLstop))
-		hOcc2D->Fill(VCAL_HIGH, cChip->getChannel<Occupancy>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(0) / 2.);
+	      if (cChip->getChannel<OccupancyAndPh>(row, col).isEnabled == true)
+		hOcc2D->Fill(VCAL_HIGH, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(0) / 2.);
 	}
 }
 

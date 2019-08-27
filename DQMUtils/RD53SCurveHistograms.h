@@ -13,7 +13,7 @@
 
 #include "../System/SystemController.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "../Utils/Occupancy.h"
+#include "../Utils/OccupancyAndPh.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
@@ -49,10 +49,6 @@ class RD53SCurveHistograms : public DQMHistogramBase
   size_t nSteps;
   size_t startValue;
   size_t stopValue;
-  size_t ROWstart;
-  size_t ROWstop;
-  size_t COLstart;
-  size_t COLstop;
 };
 
 #endif

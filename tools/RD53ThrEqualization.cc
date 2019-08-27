@@ -51,7 +51,7 @@ void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
   ContainerFactory theDetectorFactory;
 
   this->fDetectorDataContainer = &theOccContainer;
-  theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+  theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *fDetectorDataContainer);
   theDetectorFactory.copyAndInitChannel<RegisterValue>(*fDetectorContainer, theTDACcontainer);
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
@@ -132,7 +132,7 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, maxDACcontainer);
 
   theDetectorFactory.copyAndInitStructure<RegisterValue>(*fDetectorContainer, bestDACcontainer);
-  theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, bestContainer);
+  theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, bestContainer);
 
   for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)
@@ -143,7 +143,7 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 	      minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue = 0;
 	      maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue = RD53::setBits(numberOfBits) + 1;
 
-	      bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row, col).fOccupancy = 0;
+	      bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
 
 	      bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue = RD53::setBits(numberOfBits) + 1;
 	    }
@@ -185,17 +185,17 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
 		  // #######################
 		  // # Build discriminator #
 		  // #######################
-		  float newValue = cChip->getChannel<Occupancy>(row, col).fOccupancy;
+		  float newValue = cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy;
 
 
 		  // ########################
 		  // # Save best DAC values #
 		  // ########################
-		  float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row, col).fOccupancy;
+		  float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy;
 
 		  if (fabs(newValue - target) < fabs(oldValue - target) || (newValue == oldValue))
 		    {
-		      bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row, col).fOccupancy = newValue;
+		      bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy = newValue;
 		      bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue =
 			midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue;
 		    }

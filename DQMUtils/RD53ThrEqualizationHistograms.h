@@ -12,7 +12,7 @@
 #define RD53ThrEqualizationHistograms_H
 
 #include "../System/SystemController.h"
-#include "../Utils/Occupancy.h"
+#include "../Utils/OccupancyAndPh.h"
 #include "../Utils/RegisterValue.h"
 #include "DQMHistogramBase.h"
 

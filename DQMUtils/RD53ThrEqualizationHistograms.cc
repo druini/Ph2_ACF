@@ -44,7 +44,7 @@ void RD53ThrEqualizationHistograms::fill (const DetectorDataContainer& Occupancy
 	    for (auto col = 0u; col < RD53::nCols; col++)
 	      if ((row >= ROWstart) && (row <= ROWstop) && (col >= COLstart) && (col <= COLstop))
 		{
-		  hThrEqualization->Fill(OccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
+		  hThrEqualization->Fill(OccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
 		  hTDAC->Fill(TDACContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
 		}
 	}

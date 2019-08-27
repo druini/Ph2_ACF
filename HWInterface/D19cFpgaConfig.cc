@@ -34,7 +34,7 @@ namespace Ph2_HwInterface {
 
     D19cFpgaConfig::D19cFpgaConfig (BeBoardFWInterface* pbbi) :
         FpgaConfig (pbbi),
-        lNode (dynamic_cast< const fc7::MmcPipeInterface& > (fwManager->getUhalNode ( "user.buf_cta" ) ) )
+        lNode (dynamic_cast< const fc7::MmcPipeInterface& > (fwManager->getUhalNode ( "system.buf_cta" ) ) )
     {
     }
 

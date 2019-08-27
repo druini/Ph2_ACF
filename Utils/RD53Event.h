@@ -11,7 +11,6 @@
 #define RD53Event_H
 
 #include "Event.h"
-#include "Occupancy.h"
 #include "OccupancyAndPh.h"
 #include "GenericDataVector.h"
 #include "EmptyContainer.h"

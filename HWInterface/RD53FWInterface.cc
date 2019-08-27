@@ -845,6 +845,9 @@ namespace Ph2_HwInterface
       });
   }
 
+  // ###########################################
+  // # Member functions to handle the firmware #
+  // ###########################################
   void RD53FWInterface::FlashProm (const std::string& strConfig, const char* fileName)
   {
     checkIfUploading();    
