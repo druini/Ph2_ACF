@@ -30,6 +30,7 @@ class PixelAlive : public Tool
   void run                                       ();
   void draw                                      (bool display, bool save);
   std::shared_ptr<DetectorDataContainer> analyze ();
+  size_t getNumberIterations                     () { return RD53ChannelGroupHandler::getNumberOfGroups(!inject) * nEvents/nEvtsBurst; }
 
  private:
   const char* fileRes;

@@ -34,8 +34,9 @@ class ThrEqualization : public Tool
  public:
   ThrEqualization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst);
 
-  void run  (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
-  void draw (bool display, bool save);
+  void   run                 (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
+  void   draw                (bool display, bool save);
+  size_t getNumberIterations () { return 5 * nEvents/nEvtsBurst; }
 
  private:
   const char* fileRes;

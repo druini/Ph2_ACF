@@ -27,9 +27,10 @@ class Latency : public Tool
  public:
   Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t startValue, size_t stopValue, size_t nEvents);
 
-  void run     ();
-  void draw    (bool display, bool save);
-  void analyze ();
+  void   run                 ();
+  void   draw                (bool display, bool save);
+  void   analyze             ();
+  size_t getNumberIterations () { return (stopValue - startValue); }
 
  private:
   const char* fileRes;

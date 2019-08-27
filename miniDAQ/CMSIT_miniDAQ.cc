@@ -314,6 +314,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
       Latency la(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
+      RD53RunProgress::total() = la.getNumberIterations();
       la.Inherit(&cSystemController);
       la.run();
       la.analyze();
@@ -326,9 +327,9 @@ int main (int argc, char** argv)
       // ##################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-      RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false);
       std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
       PixelAlive pa(fileName.c_str(), "", ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, 1, true);
+      RD53RunProgress::total() = pa.getNumberIterations();
       pa.Inherit(&cSystemController);      
       pa.run();
       pa.analyze();
@@ -341,10 +342,10 @@ int main (int argc, char** argv)
       // #############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
-      RD53RunProgress::total() = nEvents/nEvtsBurst;
       std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan"); 
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       PixelAlive pa(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, nTRIGxEvent, false, TargetOcc);
+      RD53RunProgress::total() = pa.getNumberIterations();
       pa.Inherit(&cSystemController);
       pa.run();
       pa.analyze();
@@ -357,9 +358,9 @@ int main (int argc, char** argv)
       // ##############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
-      RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false)*VCalHnsteps;
       std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
+      RD53RunProgress::total() = sc.getNumberIterations();
       sc.Inherit(&cSystemController);
       sc.run();
       sc.analyze();
@@ -372,9 +373,9 @@ int main (int argc, char** argv)
       // ############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
-      RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false)*VCalHnsteps;
       std::string fileName("Run" + fromInt2Str(runNumber) + "_Gain");
       Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
+      RD53RunProgress::total() = ga.getNumberIterations();
       ga.Inherit(&cSystemController);
       ga.run();
       ga.analyze();
@@ -390,16 +391,20 @@ int main (int argc, char** argv)
       RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false)*VCalHnsteps + 5*VCalHnsteps;
       std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
-      sc.Inherit(&cSystemController);
-      sc.run();
-      auto output = sc.analyze();
-      sc.draw(false,true);
 
       runNumber++;
       fileName = "Run" + fromInt2Str(runNumber) + "_ThrEqualization";
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       std::cout << "chipConfig.c_str() " << chipConfig.c_str() << std::endl;
       ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents*VCalHnsteps, nEvents);
+
+      RD53RunProgress::total() = sc.getNumberIterations() + te.getNumberIterations();
+
+      sc.Inherit(&cSystemController);
+      sc.run();
+      auto output = sc.analyze();
+      sc.draw(false,true);
+
       te.Inherit(&cSystemController);
       te.run(output);
       te.draw(display,true);
@@ -411,10 +416,10 @@ int main (int argc, char** argv)
       // #########################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
 
-      RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false)*VCalHnsteps*(log2(KrumCurrStop - KrumCurrStart) + 2);
       std::string fileName("Run" + fromInt2Str(runNumber) + "_GainOptimization");
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, RD53chargeConverter::Charge2VCal(TargetCharge), KrumCurrStart, KrumCurrStop);
+      RD53RunProgress::total() = go.getNumberIterations();
       go.Inherit(&cSystemController);
       go.run();
       go.draw(display,true);
@@ -426,10 +431,10 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Minimization @@@" << RESET;
 
-      RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false)*(log2(ThrStop - ThrStart) + 2);
       std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, TargetOcc, ThrStart, ThrStop);
+      RD53RunProgress::total() = tm.getNumberIterations();
       tm.Inherit(&cSystemController);
       tm.run();
       tm.analyze();

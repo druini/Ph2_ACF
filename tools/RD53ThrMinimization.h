@@ -20,11 +20,12 @@
 class ThrMinimization : public PixelAlive
 {
  public:
-  ThrMinimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart = 0, size_t ThrStop = 0);
+  ThrMinimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t startValue = 0, size_t stopValue = 0);
 
-  void run     ();
-  void draw    (bool display, bool save);
-  void analyze ();
+  void   run                 ();
+  void   draw                (bool display, bool save);
+  void   analyze             ();
+  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*(log2(stopValue - startValue) + 2) * nEvents/nEvtsBurst; }
 
  private:
   const char* fileRes;
@@ -35,8 +36,8 @@ class ThrMinimization : public PixelAlive
   size_t colStop;
   size_t nEvents;
   size_t nEvtsBurst;
-  size_t ThrStart;
-  size_t ThrStop;
+  size_t startValue;
+  size_t stopValue;
   float  targetOccupancy;
 
   DetectorDataContainer theThrContainer;

@@ -9,7 +9,7 @@
 
 #include "RD53ThrMinimization.h"
 
-ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart, size_t ThrStop)
+ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t startValue, size_t stopValue)
   : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false)
   , fileRes         (fileRes)
   , fileReg         (fileReg)
@@ -19,15 +19,15 @@ ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size
   , colStop         (colStop)
   , nEvents         (nEvents)
   , nEvtsBurst      (nEvtsBurst)
-  , ThrStart        (ThrStart)
-  , ThrStop         (ThrStop)
+  , startValue      (startValue)
+  , stopValue       (stopValue)
   , targetOccupancy (targetOccupancy)
   , histos          ()
 {}
 
 void ThrMinimization::run ()
 {
-  this->bitWiseScan("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop);
+  this->bitWiseScan("Vthreshold_LIN", nEvents, targetOccupancy, startValue, stopValue);
 
   // ############################
   // # Fill threshold container #
