@@ -33,7 +33,7 @@ SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t col
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::shared_ptr<RD53ChannelGroupHandler>(new RD53ChannelGroupHandler());
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(nSteps);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
 
@@ -117,7 +117,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
   std::vector<float> measurements(dacList.size(),0);
 
   ContainerFactory theDetectorFactory;
-  theThresholdAndNoiseContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
+  theThresholdAndNoiseContainer = std::make_shared<DetectorDataContainer>();
   theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
 
   size_t index = 0;

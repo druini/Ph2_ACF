@@ -130,7 +130,7 @@ public:
     }
 
 private:
-    std::bitset<R*C> channelsBitset_         ;
+    std::bitset<R*C> channelsBitset_;
 };
 
 
@@ -165,7 +165,7 @@ public:
             return groupNumber_ != rhs.groupNumber_;
         }
 
-    private:
+    protected:
         ChannelGroupHandler& channelGroupHandler_;
         uint32_t             groupNumber_        ;
     };
@@ -198,13 +198,10 @@ public:
         return allChannelGroup_;
     }
 
-
-
-protected:
     virtual ChannelGroupBase* getTestGroup(uint32_t groupNumber) const
     {
-        allChannelGroup_->makeTestGroup(currentChannelGroup_, groupNumber, numberOfClustersPerGroup_, numberOfRowsPerCluster_,numberOfColsPerCluster_);
-        return currentChannelGroup_;
+      allChannelGroup_->makeTestGroup(currentChannelGroup_, groupNumber, numberOfClustersPerGroup_, numberOfRowsPerCluster_,numberOfColsPerCluster_);
+      return currentChannelGroup_;
     }
 
 protected:

@@ -34,7 +34,7 @@ PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStar
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::shared_ptr<RD53ChannelGroupHandler>(new RD53ChannelGroupHandler(!inject));
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(1,!inject);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 }
 
@@ -42,7 +42,7 @@ void PixelAlive::run ()
 {
   ContainerFactory theDetectorFactory;
 
-  theOccContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
+  theOccContainer = std::make_shared<DetectorDataContainer>();
   this->fDetectorDataContainer = theOccContainer.get();
   theDetectorFactory.copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, *fDetectorDataContainer);
 
