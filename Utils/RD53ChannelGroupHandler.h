@@ -19,21 +19,38 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
   RD53ChannelGroupHandler  (size_t numberIterations, bool doAll = false);
   ~RD53ChannelGroupHandler ();
 
-  class RD53ChannelGroupIterator : public ChannelGroupIterator
-  {
+  class RD53ChannelGroupIterator : public std::iterator<std::output_iterator_tag,uint32_t>
+    {
   public:
-    RD53ChannelGroupIterator(ChannelGroupHandler& channelGroupHandler, uint32_t groupNumber) : ChannelGroupIterator(channelGroupHandler,groupNumber) {};
+    RD53ChannelGroupIterator (RD53ChannelGroupHandler& channelGroupHandler, uint32_t groupNumber)
+      : channelGroupHandler_ (channelGroupHandler)
+      , groupNumber_         (groupNumber)
+    {}
 
-    const ChannelGroupBase* operator*() const
+    RD53ChannelGroupIterator& operator++ ()
+      {
+	return ++(*this);
+      }
+
+    bool operator!= (const RD53ChannelGroupIterator& rhs) const
+    {
+      return groupNumber_ != rhs.groupNumber_;
+    }
+
+    const ChannelGroupBase* operator* () const
     {
       // #####################
       // # Printout progress #
       // #####################
-      std::cout << "Progress: " << 1. * static_cast<RD53ChannelGroupHandler*>(&channelGroupHandler_)->currentProgress / static_cast<RD53ChannelGroupHandler*>(&channelGroupHandler_)->totalProgress << "%" << std::endl;
-      static_cast<RD53ChannelGroupHandler*>(&channelGroupHandler_)->currentProgress++;
+      std::cout << "Progress: " << 1. * channelGroupHandler_.currentProgress / channelGroupHandler_.totalProgress << "%" << std::endl;
+      channelGroupHandler_.currentProgress++;
 
       return channelGroupHandler_.getTestGroup(groupNumber_);      
     }
+
+  protected:
+    RD53ChannelGroupHandler& channelGroupHandler_;
+    uint32_t groupNumber_ ;
   };
   friend class RD53ChannelGroupIterator;
 

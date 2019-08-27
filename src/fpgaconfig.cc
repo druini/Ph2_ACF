@@ -82,12 +82,11 @@ int main ( int argc, char* argv[] )
   SystemController cSystemController;
   ArgvParser cmd;
 
-  // init
   cmd.setIntroductoryDescription ( "CMS Ph2_ACF  Data acquisition test and Data dump" );
-  // error codes
+
   cmd.addErrorCode ( 0, "Success" );
   cmd.addErrorCode ( 1, "Error" );
-  // options
+
   cmd.setHelpOption ( "h", "help", "Print this help page" );
 
   cmd.defineOption ( "list", "Print the list of available firmware images on SD card (works only with CTA boards)" );
@@ -96,7 +95,7 @@ int main ( int argc, char* argv[] )
   cmd.defineOption ( "delete", "Delete a firmware image on SD card (works only with CTA boards)", ArgvParser::OptionRequiresValue );
   cmd.defineOptionAlternative ( "delete", "d" );
 
-  cmd.defineOption ( "file", "FPGA Bitstream (*.mcs format for GLIB or *.bit/*.bin format for CTA boards)", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
+  cmd.defineOption ( "file", "Local FPGA Bitstream file (*.mcs format for GLIB or *.bit/*.bin format for CTA boards)", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
   cmd.defineOptionAlternative ( "file", "f" );
 
   cmd.defineOption ( "download", "Download an FPGA configuration from SD card to file (only for CTA boards)", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
@@ -105,15 +104,15 @@ int main ( int argc, char* argv[] )
   cmd.defineOption ( "config", "Hw Description File . Default value: settings/HWDescription_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
   cmd.defineOptionAlternative ( "config", "c" );
 
-  cmd.defineOption ( "image", "Load to image 1 (golden) or 2 (user) or named image for CTA boards, jump to the given image if no file is specified", ArgvParser::OptionRequiresValue);
+  cmd.defineOption ( "image", "Without -f: load image from SD card to FPGA.\nWith -f: name of image written to SD card (-f specified the source filename).", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("image", "i");
 
-  int result = cmd.parse ( argc, argv );
+  int result = cmd.parse (argc, argv);
 
-  if ( result != ArgvParser::NoParserError )
+  if (result != ArgvParser::NoParserError)
     {
-      LOG (INFO) << cmd.parseErrorDescription ( result );
-      exit ( 1 );
+      LOG (INFO) << cmd.parseErrorDescription (result);
+      exit (1);
     }
 
   std::string cHWFile = ( cmd.foundOption ( "config" ) ) ? cmd.optionValue ( "config" ) : "settings/HWDescription_2CBC.xml";
@@ -124,7 +123,7 @@ int main ( int argc, char* argv[] )
   std::string cFWFile;
   string strImage ("1");
 
-  if (cmd.foundOption ("list") )
+  if (cmd.foundOption ("list"))
     {
       LOG (INFO) << lstNames.size() << " firmware images on SD card:";
 
@@ -133,7 +132,7 @@ int main ( int argc, char* argv[] )
 
       exit (0);
     }
-  else if (cmd.foundOption ("file") )
+  else if (cmd.foundOption ("file"))
     {
       cFWFile = cmd.optionValue ("file");
 
@@ -156,14 +155,14 @@ int main ( int argc, char* argv[] )
       LOG (INFO) << "Firmware image: " << strImage << " deleted from SD card";
       exit (0);
     }
-  else if (!cmd.foundOption ("image") )
+  else if (!cmd.foundOption ("image"))
     {
       cFWFile = "";
       LOG (ERROR) << "Error, no FW image specified" ;
       exit (1);
     }
 
-  if (cmd.foundOption ("image") )
+  if (cmd.foundOption ("image"))
     {
       strImage = cmd.optionValue ("image");
 
@@ -176,9 +175,8 @@ int main ( int argc, char* argv[] )
   Timer t;
   t.start();
 
-
   t.stop();
-  t.show ( "Time to Initialize/configure the system: " );
+  t.show ("Time to Initialize/configure the system: ");
 
   if (!cmd.foundOption ("file") && !cmd.foundOption ("download") )
     {
@@ -213,5 +211,5 @@ int main ( int argc, char* argv[] )
     }
 
   t.stop();
-  t.show ( "Time elapsed:" );
+  t.show ("Time elapsed:");
 }

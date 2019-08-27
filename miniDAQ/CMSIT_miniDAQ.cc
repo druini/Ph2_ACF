@@ -41,7 +41,7 @@ std::string fromInt2Str (int val)
   return myString.str();
 }
 
-void configureFSM (SystemController& sc, size_t nTRIGxL1A, size_t type, bool hitOr)
+void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t type, bool hitOr)
 // #########################
 // # type == 0 --> Digital #
 // # type == 1 --> Analog  #
@@ -67,7 +67,7 @@ void configureFSM (SystemController& sc, size_t nTRIGxL1A, size_t type, bool hit
       RD53FWInterface::FastCommandsConfig cfgFastCmd;
       cfgFastCmd.trigger_source   = (hitOr == true ? RD53FWInterface::TriggerSource::HitOr : RD53FWInterface::TriggerSource::FastCMDFSM);
       cfgFastCmd.n_triggers       = 0;
-      cfgFastCmd.trigger_duration = nTRIGxL1A - 1;
+      cfgFastCmd.trigger_duration = nTRIGxEvent - 1;
 
       if (type == INJtype::Digital)
 	{
@@ -264,7 +264,7 @@ int main (int argc, char** argv)
   // ######################
   size_t nEvents        = findValue(cSystemController.fSettingsMap,"nEvents");
   size_t nEvtsBurst     = findValue(cSystemController.fSettingsMap,"nEvtsBurst");
-  size_t nTRIGxL1A      = findValue(cSystemController.fSettingsMap,"nTRIGxL1A");
+  size_t nTRIGxEvent    = findValue(cSystemController.fSettingsMap,"nTRIGxEvent");
   size_t INJtype        = findValue(cSystemController.fSettingsMap,"INJtype");
 
   size_t ROWstart       = findValue(cSystemController.fSettingsMap,"ROWstart");
@@ -295,7 +295,7 @@ int main (int argc, char** argv)
   // #####################
   // # Preparing the FSM #
   // #####################
-  configureFSM(cSystemController, nTRIGxL1A, INJtype, hitOr);
+  configureFSM(cSystemController, nTRIGxEvent, INJtype, hitOr);
 
 
   // ######################
@@ -342,7 +342,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan"); 
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
-      PixelAlive pa(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, nTRIGxL1A, false, TargetOcc);
+      PixelAlive pa(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, nTRIGxEvent, false, TargetOcc);
       pa.Inherit(&cSystemController);
       pa.run();
       pa.analyze();
