@@ -1,6 +1,6 @@
 #include "../Utils/RegisterValue.h"
 
-void RegisterValue::makeAverage(const std::vector<RegisterValue>* theRegisterValueVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents)
+void RegisterValue::makeSummaryAverage(const std::vector<RegisterValue>* theRegisterValueVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
 {
     if(theRegisterValueVector->size()!=theNumberOfEnabledChannelsList.size()) 
     {

@@ -5,7 +5,7 @@
 #include "Watchdog.h"
 #include "UsbUtilities.h"
 
-#include "Calibration.h"
+#include "PedestalEqualization.h"
 #include "BiasSweep.h"
 #include "StubSweep.h"
 #include "PedeNoise.h"
@@ -263,14 +263,14 @@ int main ( int argc, char* argv[] )
 
         ////first, run offset tuning
         cDog.Reset (50);
-        Calibration cCalibration;
-        cCalibration.Inherit (&cTool);
-        //cCalibration.ConfigureHw();
-        cCalibration.Initialise (false);
-        cCalibration.FindVplus();
-        cCalibration.FindOffsets();
-        cCalibration.writeObjects();
-        cCalibration.dumpConfigFiles();
+        PedestalEqualization cPedestalEqualization;
+        cPedestalEqualization.Inherit (&cTool);
+        //cPedestalEqualization.ConfigureHw();
+        cPedestalEqualization.Initialise (false);
+        cPedestalEqualization.FindVplus();
+        cPedestalEqualization.FindOffsets();
+        cPedestalEqualization.writeObjects();
+        cPedestalEqualization.dumpConfigFiles();
 
         ////now run a noise scan
         cDog.Reset (120);

@@ -10,14 +10,7 @@
 #include <math.h>
 
 #ifdef __USE_ROOT__
-    #include "../RootUtils/RootContainerFactory.h" 
-#include "../RootUtils/RootContainerFactory.h" 
-    #include "../RootUtils/RootContainerFactory.h" 
     #include "../RootUtils/TH1FContainer.h" 
-#include "../RootUtils/TH1FContainer.h" 
-    #include "../RootUtils/TH1FContainer.h" 
-    #include "../DQMUtils/DQMHistogramPedeNoise.h" 
-#include "../DQMUtils/DQMHistogramPedeNoise.h" 
     #include "../DQMUtils/DQMHistogramPedeNoise.h" 
 #endif
 
@@ -61,9 +54,8 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 
     uint16_t cStartValue = 0x000;
 
-    ContainerFactory theContainerFactory;
-    theContainerFactory.copyAndInitChip<RegisterValue>(*fDetectorContainer, fStubLogicValue);
-    theContainerFactory.copyAndInitChip<RegisterValue>(*fDetectorContainer, fHIPCountValue);
+    ContainerFactory::copyAndInitChip<RegisterValue>(*fDetectorContainer, fStubLogicValue);
+    ContainerFactory::copyAndInitChip<RegisterValue>(*fDetectorContainer, fHIPCountValue);
 
     for (auto cBoard : *fDetectorContainer)
     {
@@ -98,8 +90,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 
     DetectorDataContainer         theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
-    ContainerFactory   theDetectorFactory;
-    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(true);
@@ -238,9 +229,8 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     DetectorDataContainer       theOccupancyContainer;
 	fDetectorDataContainer =   &theOccupancyContainer;
     
-    ContainerFactory   theDetectorFactory;
-	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    
     bool originalAllChannelFlag = this->fAllChan;
 
     this->SetTestAllChannels(true);
@@ -251,7 +241,8 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     #ifdef __USE_ROOT__
         fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
     #else
-        auto theOccupancyStream = prepareContainerStreamer<Occupancy>();
+        auto theOccupancyStream = prepareModuleContainerStreamer<Occupancy,Occupancy,Occupancy>();
+        // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
         for(auto board : theOccupancyContainer)
         {
             if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
@@ -262,11 +253,13 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     {
         for ( auto cFe : *cBoard )
         {
+            // std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+
             for ( auto cCbc : *cFe )
             {
                 RegisterVector cRegVec;
 
-            	for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
+                for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
                 {
                     float occupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
                     if( occupancy > float ( pNoiseStripThreshold * 0.001 ) )
@@ -296,8 +289,7 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
     
     DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
-    ContainerFactory   theDetectorFactory;
-    theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
 
     if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
@@ -345,8 +337,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
     {
         DetectorDataContainer *theOccupancyContainer = new DetectorDataContainer();
         fDetectorDataContainer = theOccupancyContainer;
-        ContainerFactory   theDetectorFactory;
-        theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+        ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
         fSCurveOccupancyMap[cValue] = theOccupancyContainer;
 
         this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
@@ -357,8 +348,8 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         #else
             if(fPlotSCurves) 
             {
-                ContainerStream<Occupancy,uint16_t> theSCurveStreamer("SCurve");
-                theSCurveStreamer.getHeaderStream()->setHeaderInfo(cValue);
+                ChannelContainerStream<Occupancy,uint16_t> theSCurveStreamer("SCurve");
+                theSCurveStreamer.setHeaderElement(cValue);
                 for(auto board : *theOccupancyContainer )
                 {
                     if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
@@ -424,8 +415,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
 void PedeNoise::extractPedeNoise ()
 {
 
-    ContainerFactory      theDetectorFactory;
-    theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, fThresholdAndNoiseContainer);
+    ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, fThresholdAndNoiseContainer);
     
     uint16_t counter = 0;
     std::map<uint16_t, DetectorDataContainer*>::reverse_iterator previousIterator = fSCurveOccupancyMap.rend();
@@ -492,7 +482,7 @@ void PedeNoise::extractPedeNoise ()
     #ifdef __USE_ROOT__
         if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
     #else
-        auto theThresholdAndNoiseStream = prepareContainerStreamer<ThresholdAndNoise>();
+        auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
         for(auto board : fThresholdAndNoiseContainer )
         {
             if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
@@ -551,11 +541,13 @@ void PedeNoise::Start(int currentRun)
 
 void PedeNoise::Stop()
 {
+    LOG (INFO) << "Stopping noise measurement";
     writeObjects();
     dumpConfigFiles();
     SaveResults();
     CloseResultFile();
     Destroy();
+    LOG (INFO) << "Noise measurement stopped.";
 }
 
 void PedeNoise::Pause()

@@ -55,16 +55,13 @@ void SCurve::run ()
       for (const auto cChip : *cModule)
 	this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
 
-
-  ContainerFactory theDetectorFactory;
-
   for (auto i = 0u; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
   detectorContainerVector.clear();
   detectorContainerVector.reserve(dacList.size());
   for (auto i = 0u; i < dacList.size(); i++)
     {
       detectorContainerVector.emplace_back(new DetectorDataContainer());
-      theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *detectorContainerVector.back());
+      ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *detectorContainerVector.back());
     }
   
   this->fChannelGroupHandler = theChnGroupHandler.get();
@@ -116,9 +113,8 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
   float nHits, mean, rms;
   std::vector<float> measurements(dacList.size(),0);
 
-  ContainerFactory theDetectorFactory;
-  theThresholdAndNoiseContainer = std::make_shared<DetectorDataContainer>();
-  theDetectorFactory.copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
+  theThresholdAndNoiseContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
+  ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
 
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)

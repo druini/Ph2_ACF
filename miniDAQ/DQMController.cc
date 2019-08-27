@@ -16,8 +16,7 @@ int main(int argc, char **argv)
     cTool.InitializeHw ( "settings/D19CDescription.xml", outp , true, false);
     DetectorContainer         theOccupancyContainer;
     
-    ContainerFactory   theDetectorFactory;
-    theDetectorFactory.copyAndInitStructure<Occupancy>(*cTool.fDetectorContainer, theOccupancyContainer);
+    ContainerFactory::copyAndInitStructure<Occupancy>(*cTool.fDetectorContainer, theOccupancyContainer);
     
 	DQMHistogramController theDQMHistogramController("127.0.0.1",6000);
 //	DQMHistogramController theDQMHistogramController("192.168.0.100",6000);

@@ -277,11 +277,26 @@ class Tool : public SystemController
     void setSameDac(const std::string &dacName, const uint16_t dacValue);
 
     template<typename T>
-    ContainerStream<T> prepareContainerStreamer()
+    ChannelContainerStream<T> prepareChannelContainerStreamer()
     {
-        ContainerStream<T> theContainerStreamer(getCalibrationName());
+        ChannelContainerStream<T> theContainerStreamer(getCalibrationName());
         return theContainerStreamer;
     }
+
+    template<typename T, typename C>
+    ChipContainerStream<T,C> prepareChipContainerStreamer()
+    {
+        ChipContainerStream<T,C> theContainerStreamer(getCalibrationName());
+        return theContainerStreamer;
+    }
+
+    template<typename T, typename C, typename M>
+    ModuleContainerStream<T,C,M> prepareModuleContainerStreamer()
+    {
+        ModuleContainerStream<T,C,M> theContainerStreamer(getCalibrationName());
+        return theContainerStreamer;
+    }
+
 
 private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase *scanFunctor);

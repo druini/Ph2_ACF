@@ -1,5 +1,5 @@
 /*!
-        \file                DQMHistogramCalibration.h
+        \file                DQMHistogramSignalScanFit.h
         \brief               base class to create and fill monitoring histograms
         \author              Fabio Ravera, Lorenzo Uplegger
         \version             1.0
@@ -7,7 +7,7 @@
         Support :            mail to : fabio.ravera@cern.ch
  */
 
-#include "../DQMUtils/DQMHistogramCalibration.h"
+#include "../DQMUtils/DQMHistogramSignalScanFit.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/Utilities.h"
@@ -23,43 +23,38 @@
 #include "TF1.h"
 
 //========================================================================================================================
-DQMHistogramCalibration::DQMHistogramCalibration ()
+DQMHistogramSignalScanFit::DQMHistogramSignalScanFit ()
 {
 }
 
 //========================================================================================================================
-DQMHistogramCalibration::~DQMHistogramCalibration ()
+DQMHistogramSignalScanFit::~DQMHistogramSignalScanFit ()
 {
 
 }
 
 
 //========================================================================================================================
-void DQMHistogramCalibration::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap)
+void DQMHistogramSignalScanFit::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap)
 {
-
-    ContainerFactory   theDetectorFactory;
-    theDetectorFactory.copyStructure(theDetectorStructure, fDetectorData);
-    
-    RootContainerFactory theRootFactory;
-    
+    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 }
 
 //========================================================================================================================
-bool DQMHistogramCalibration::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramSignalScanFit::fill(std::vector<char>& dataBuffer)
 {
         return false;
 }
 
 //========================================================================================================================
-void DQMHistogramCalibration::process()
+void DQMHistogramSignalScanFit::process()
 {
 
 }
 
 //========================================================================================================================
-void DQMHistogramCalibration::reset(void)
+
+void DQMHistogramSignalScanFit::reset(void)
 {
 
 }
-

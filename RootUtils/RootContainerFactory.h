@@ -22,14 +22,54 @@
 #include <vector>
 #include <map>
 
-class RootContainerFactory
+namespace RootContainerFactory
 {
-public:
-	RootContainerFactory(){;}
-	~RootContainerFactory(){;}
+
+	namespace details
+	{
+		inline void createAndOpenRootFileFolder(TFile *theOutputFile, std::string &folderName)
+		{
+			if(theOutputFile->GetDirectory(folderName.data()) == nullptr) theOutputFile->mkdir(folderName.data());
+			theOutputFile->cd(folderName.data());
+		}
+
+		template<typename T, typename std::enable_if<!std::is_base_of<PlotContainer,T >::value, int>::type = 0>
+		std::string getPlotName(T *plot)
+		{
+			return "NULL";
+		}
+
+		template<typename T, typename std::enable_if<std::is_base_of<PlotContainer,T >::value, int>::type = 0>
+		std::string getPlotName(T *plot)
+		{
+			return plot->getName();
+		}
+
+		template<typename T, typename std::enable_if<!std::is_base_of<PlotContainer,T >::value, int>::type = 0>
+		std::string getPlotTitle(T *plot)
+		{
+			return "NULL";
+		}
+
+		template<typename T, typename std::enable_if<std::is_base_of<PlotContainer,T >::value, int>::type = 0>
+		std::string getPlotTitle(T *plot)
+		{
+			return plot->getTitle();
+		}
+
+		template<typename T, typename std::enable_if<!std::is_base_of<PlotContainer,T >::value, int>::type = 0>
+		void initializePlot(T *plot, std::string name, std::string title, const T *reference) {;}
+
+		template<typename T, typename std::enable_if<std::is_base_of<PlotContainer,T >::value, int>::type = 0>
+		void initializePlot(T *plot, std::string name, std::string title, const T *reference) {
+			plot->initialize(name, title, reference);
+		}
+	}
+
+	using namespace details;
 
 	template<typename T, typename SC, typename SM, typename SB, typename SD>
-	void bookHistrogramsFromStructure(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& channel, const SC& chipSummary, const SM& moduleSummary, const SB& boardSummary, const SD& detectorSummary)
+	void bookHistogramsFromStructure(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& channel, const SC& chipSummary, const SM& moduleSummary, const SB& boardSummary, const SD& detectorSummary)
 	{
 		std::string detectorFolder = "Detector";
 		createAndOpenRootFileFolder(theOutputFile,detectorFolder);
@@ -132,94 +172,54 @@ public:
 	}
 
 	template<typename T>
-	void bookHistrogramsFromStructure(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& channel)
+	void bookHistogramsFromStructure(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& channel)
 	{
-		bookHistrogramsFromStructure<T,T,T,T,T>(theOutputFile, original, copy, channel, channel, channel, channel, channel);
+		bookHistogramsFromStructure<T,T,T,T,T>(theOutputFile, original, copy, channel, channel, channel, channel, channel);
 	}
 
 	template<typename T, typename S>
-	void bookHistrogramsFromStructure(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& channel, const S& summay)
+	void bookHistogramsFromStructure(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& channel, const S& summay)
 	{
-		bookHistrogramsFromStructure<T,S,S,S,S>(theOutputFile, original, copy, channel, summay, summay, summay, summay);
+		bookHistogramsFromStructure<T,S,S,S,S>(theOutputFile, original, copy, channel, summay, summay, summay, summay);
 	}
 
 
 	template<typename T>
-	void bookChannelHistrograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& channel)
+	void bookChannelHistograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& channel)
 	{
 		EmptyContainer theEmpty;
-		bookHistrogramsFromStructure<T,EmptyContainer,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, original, copy, channel, theEmpty, theEmpty, theEmpty, theEmpty);
+		bookHistogramsFromStructure<T,EmptyContainer,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, original, copy, channel, theEmpty, theEmpty, theEmpty, theEmpty);
 	}
 
 	template<typename T>
-	void bookChipHistrograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& chipSummary)
+	void bookChipHistograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& chipSummary)
 	{
 		EmptyContainer theEmpty;
-		bookHistrogramsFromStructure<EmptyContainer,T,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, original, copy, theEmpty, chipSummary, theEmpty, theEmpty, theEmpty);
+		bookHistogramsFromStructure<EmptyContainer,T,EmptyContainer,EmptyContainer,EmptyContainer>(theOutputFile, original, copy, theEmpty, chipSummary, theEmpty, theEmpty, theEmpty);
 	}
 
 	template<typename T>
-	void bookModuleHistrograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& moduleSummary)
+	void bookModuleHistograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& moduleSummary)
 	{
 		EmptyContainer theEmpty;
-		bookHistrogramsFromStructure<EmptyContainer,EmptyContainer,T,EmptyContainer,EmptyContainer>(theOutputFile, original, copy, theEmpty, theEmpty, moduleSummary, theEmpty, theEmpty);
+		bookHistogramsFromStructure<EmptyContainer,EmptyContainer,T,EmptyContainer,EmptyContainer>(theOutputFile, original, copy, theEmpty, theEmpty, moduleSummary, theEmpty, theEmpty);
 	}
 
 	template<typename T>
-	void bookBoardHistrograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& boardSummary)
+	void bookBoardHistograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& boardSummary)
 	{
 		EmptyContainer theEmpty;
-		bookHistrogramsFromStructure<EmptyContainer,EmptyContainer,EmptyContainer,T,EmptyContainer>(theOutputFile, original, copy, theEmpty, theEmpty, theEmpty, boardSummary, theEmpty);
+		bookHistogramsFromStructure<EmptyContainer,EmptyContainer,EmptyContainer,T,EmptyContainer>(theOutputFile, original, copy, theEmpty, theEmpty, theEmpty, boardSummary, theEmpty);
 	}
 
 	template<typename T>
-	void bookDetectorHistrograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& detectorSummary)
+	void bookDetectorHistograms(TFile *theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& detectorSummary)
 	{
 		EmptyContainer theEmpty;
-		bookHistrogramsFromStructure<EmptyContainer,EmptyContainer,EmptyContainer,EmptyContainer,T>(theOutputFile, original, copy, theEmpty, theEmpty, theEmpty, theEmpty, detectorSummary);
+		bookHistogramsFromStructure<EmptyContainer,EmptyContainer,EmptyContainer,EmptyContainer,T>(theOutputFile, original, copy, theEmpty, theEmpty, theEmpty, theEmpty, detectorSummary);
 	}
 
-
-
-private:
-	void createAndOpenRootFileFolder(TFile *theOutputFile, std::string &folderName)
-	{
-		if(theOutputFile->GetDirectory(folderName.data()) == nullptr) theOutputFile->mkdir(folderName.data());
-		theOutputFile->cd(folderName.data());
-	}
-
-    template<typename T, typename std::enable_if<!std::is_base_of<PlotContainer,T >::value, int>::type = 0>
-	std::string getPlotName(T *plot)
-	{
-		return "NULL";
-	}
-
-    template<typename T, typename std::enable_if<std::is_base_of<PlotContainer,T >::value, int>::type = 0>
-	std::string getPlotName(T *plot)
-	{
-		return plot->getName();
-	}
-
-    template<typename T, typename std::enable_if<!std::is_base_of<PlotContainer,T >::value, int>::type = 0>
-	std::string getPlotTitle(T *plot)
-	{
-		return "NULL";
-	}
-
-    template<typename T, typename std::enable_if<std::is_base_of<PlotContainer,T >::value, int>::type = 0>
-	std::string getPlotTitle(T *plot)
-	{
-		return plot->getTitle();
-	}
-
-    template<typename T, typename std::enable_if<!std::is_base_of<PlotContainer,T >::value, int>::type = 0>
-	void initializePlot(T *plot, std::string name, std::string title, const T *reference) {;}
-
-    template<typename T, typename std::enable_if<std::is_base_of<PlotContainer,T >::value, int>::type = 0>
-	void initializePlot(T *plot, std::string name, std::string title, const T *reference) {
-        plot->initialize(name, title, reference);
-    }
-};
+}
 
 
 #endif

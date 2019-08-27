@@ -53,7 +53,7 @@ namespace Ph2_HwInterface
 			{
 			  if (hit.tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION))
 			    {
-			      cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fOccupancy++;
+			      cChip->getChannel<OccupancyAndPh>(hit.row+RD53::nRows*(hit.col+i)).fOccupancy++;
 			      cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPh      += float(hit.tots[i]);
 			      cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPhError += float(hit.tots[i]*hit.tots[i]);
 			    }

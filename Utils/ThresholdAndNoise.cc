@@ -1,7 +1,7 @@
 #include <math.h>
 #include "../Utils/ThresholdAndNoise.h"
 
-void ThresholdAndNoise::makeAverage(const std::vector<ThresholdAndNoise>* theThresholdAndNoiseVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents)
+void ThresholdAndNoise::makeSummaryAverage(const std::vector<ThresholdAndNoise>* theThresholdAndNoiseVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
 {
     if(theThresholdAndNoiseVector->size() != theNumberOfEnabledChannelsList.size())
     {

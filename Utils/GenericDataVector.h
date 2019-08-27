@@ -26,23 +26,7 @@ class GenericDataVector : public OccupancyAndPh
     std::cout << data1.size() << "\t" << data2.size() << std::endl;
   }
   
-  template<typename T>
-  void makeAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint16_t numberOfEvents)
-  {
-    OccupancyAndPh::makeAverage<T>(theChipContainer,chipOriginalMask,cTestChannelGroup,numberOfEvents);
-  }
-  
-  void makeAverage (const std::vector<OccupancyAndPh>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents)
-  {
-    OccupancyAndPh::makeAverage(theOccupancyVector, theNumberOfEnabledChannelsList, numberOfEvents);
-  }
-
-  void makeAverage (const std::vector<GenericDataVector>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents) {}
-  
-  void normalize (const uint16_t numberOfEvents)
-  {
-    OccupancyAndPh::normalize(numberOfEvents);
-  }
+  void makeSummaryAverage (const std::vector<GenericDataVector>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
 
   std::vector<float> data1;
   std::vector<float> data2;

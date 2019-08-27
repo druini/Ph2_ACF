@@ -28,11 +28,11 @@ public:
   void print(void) { std::cout << fNoise << std::endl; }
 
   template <typename T>
-  void makeAverage(const ChipContainer *theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) { ; }
+  void makeChannelAverage(const ChipContainer *theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) { ; }
 
-  void makeAverage(const std::vector<ThresholdAndNoise> *theThresholdAndNoiseVector, const std::vector<uint32_t> &theNumberOfEnabledChannelsList, const uint16_t numberOfEvents);
+  void makeSummaryAverage(const std::vector<ThresholdAndNoise> *theThresholdAndNoiseVector, const std::vector<uint32_t> &theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
 
-  void normalize(const uint16_t numberOfEvents) { ; }
+  void normalize(const uint32_t numberOfEvents) { ; }
 
   float fThreshold;
   float fThresholdError;
@@ -41,7 +41,7 @@ public:
 };
 
 template <>
-inline void ThresholdAndNoise::makeAverage<ThresholdAndNoise>(const ChipContainer *theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents)
+inline void ThresholdAndNoise::makeChannelAverage<ThresholdAndNoise>(const ChipContainer *theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents)
 {
   for (size_t row = 0; row < theChipContainer->getNumberOfRows(); ++row)
   {

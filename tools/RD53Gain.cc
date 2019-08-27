@@ -46,15 +46,14 @@ Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStar
 
 void Gain::run ()
 {
-  ContainerFactory theDetectorFactory;
-
+  
   for (auto i = 0u; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
   detectorContainerVector.clear();
   detectorContainerVector.reserve(dacList.size());
   for (auto i = 0u; i < dacList.size(); i++)
     {
       detectorContainerVector.emplace_back(new DetectorDataContainer());
-      theDetectorFactory.copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *detectorContainerVector.back());
+      ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *detectorContainerVector.back());
     }
   
   this->fChannelGroupHandler = theChnGroupHandler.get();
@@ -95,9 +94,8 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
   std::vector<float> y(dacList.size(),0);
   std::vector<float> e(dacList.size(),0);
 
-  ContainerFactory theDetectorFactory;
-  theGainAndInterceptContainer = std::make_shared<DetectorDataContainer>();
-  theDetectorFactory.copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
+  theGainAndInterceptContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
+  ContainerFactory::copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
 
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)

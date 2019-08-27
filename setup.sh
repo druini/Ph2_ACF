@@ -22,7 +22,7 @@ fi
 ########
 # ROOT #
 ########
-#source /opt/local/root/bin/thisroot.sh
+#source /usr/local/root/bin/thisroot.sh
 export ROOTSYS=/usr/local/lib/root
 
 #######

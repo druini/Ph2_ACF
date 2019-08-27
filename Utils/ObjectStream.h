@@ -265,8 +265,16 @@ protected:
 	{
 		if(fObjectName == "")
 		{
-			int32_t status;
-			fObjectName = abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
+				int32_t status;
+				fObjectName = abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
+				std::string emptyTemplate = "<> ";
+				size_t found=fObjectName.find(emptyTemplate);
+				
+				while(found!=std::string::npos)
+				{
+					fObjectName.erase(found,emptyTemplate.length());
+					found=fObjectName.find(emptyTemplate);
+				}
 		}
 		return fObjectName;
 	}

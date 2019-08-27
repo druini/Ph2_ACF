@@ -17,6 +17,10 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/CommonVisitors.h"
 
+#ifdef __USE_ROOT__
+  #include "../DQMUtils/DQMHistogramLatencyScan.h"
+#endif
+
 
 #include "TString.h"
 #include "TCanvas.h"
@@ -50,7 +54,12 @@ class LatencyScan : public Tool
     void ScanLatency2D(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
 
     void writeObjects();
-    
+
+    void Start(int currentRun) override;
+    void Stop() override;
+    void ConfigureCalibration() override;
+    void Pause() override;
+    void Resume() override;
 
   private:
     int countHitsLat ( BeBoard* pBoard,  const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency);
@@ -90,6 +99,10 @@ class LatencyScan : public Tool
 
         return cRegVec;
     }
+  
+   #ifdef __USE_ROOT__
+     DQMHistogramLatencyScan fDQMHistogramLatencyScan;
+   #endif
 
 
 

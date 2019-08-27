@@ -27,11 +27,11 @@ public:
 	void print(void){ std::cout << fOccupancy << std::endl;}
     
     template<typename T>
-    void makeAverage(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents) {;}
+    void makeChannelAverage(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) {;}
     
-    void makeAverage(const std::vector<Occupancy>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint16_t numberOfEvents);
+    void makeSummaryAverage(const std::vector<Occupancy>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
     
-    void normalize(const uint16_t numberOfEvents);
+    void normalize(const uint32_t numberOfEvents);
     
     // Occupancy operator/(const float &denominator) const
     // {
@@ -43,10 +43,10 @@ public:
 };
 
 template<>
-inline void Occupancy::makeAverage<Occupancy>(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint16_t numberOfEvents)
+inline void Occupancy::makeChannelAverage<Occupancy>(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents)
 {
 
-    for(const auto occupancy : *theChipContainer->getChannelContainer<ChannelContainer<Occupancy>>()) 
+    for(const auto occupancy : *theChipContainer->getChannelContainer<Occupancy>()) 
     {
         fOccupancy+=occupancy.fOccupancy;
     }

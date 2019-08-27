@@ -930,11 +930,10 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
     LOG (INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
 	bool occupanyDirectlyProportionalToDAC;
 
-	ContainerFactory   theDetectorFactory;
 	DetectorDataContainer *previousStepOccupancyContainer = new DetectorDataContainer();
-	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *previousStepOccupancyContainer);
+	ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *previousStepOccupancyContainer);
 	DetectorDataContainer *currentStepOccupancyContainer = new DetectorDataContainer();
-	theDetectorFactory.copyAndInitStructure<Occupancy>(*fDetectorContainer, *currentStepOccupancyContainer);
+	ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *currentStepOccupancyContainer);
 
 	DetectorDataContainer *previousDacList = new DetectorDataContainer();
 	DetectorDataContainer *currentDacList = new DetectorDataContainer();
@@ -943,13 +942,13 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 	RegisterValue allOneRegister (0xFFFF>>(16-numberOfBits));
 	if(localDAC)
 	{
-		theDetectorFactory.copyAndInitChannel<RegisterValue>(*fDetectorContainer, *previousDacList, allZeroRegister);
-		theDetectorFactory.copyAndInitChannel<RegisterValue>(*fDetectorContainer, *currentDacList , allOneRegister );
+		ContainerFactory::copyAndInitChannel<RegisterValue>(*fDetectorContainer, *previousDacList, allZeroRegister);
+		ContainerFactory::copyAndInitChannel<RegisterValue>(*fDetectorContainer, *currentDacList , allOneRegister );
 	}
 	else
 	{
-		theDetectorFactory.copyAndInitChip<RegisterValue>(*fDetectorContainer, *previousDacList, allZeroRegister);
-		theDetectorFactory.copyAndInitChip<RegisterValue>(*fDetectorContainer, *currentDacList , allOneRegister);
+		ContainerFactory::copyAndInitChip<RegisterValue>(*fDetectorContainer, *previousDacList, allZeroRegister);
+		ContainerFactory::copyAndInitChip<RegisterValue>(*fDetectorContainer, *currentDacList , allOneRegister);
 	}
 
 	if(localDAC) setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList);
@@ -1082,11 +1081,11 @@ void Tool::setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string &d
 }
 
 // measure occupancy
-void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, uint32_t numberOfTriggersPerL1A)
+void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, uint32_t numberOfTriggersPerEvent)
 {
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
-	  measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst, numberOfTriggersPerL1A);
+	  measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst, numberOfTriggersPerEvent);
 		// if(fStreamerEnabled) fObjectStream->streamAndSendBoard(fDetectorDataContainer->at(boardIndex), fNetworkStreamer);
 	}
 
@@ -1291,14 +1290,14 @@ private:
 
 };
 
-void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, uint32_t numberOfTriggersPerL1A)
+void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, uint32_t numberOfTriggersPerEvent)
 {
 	MeasureBeBoardDataPerGroup theScan(this);
 	theScan.setDataContainer(fDetectorDataContainer);
 
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
 
-    fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents*numberOfTriggersPerL1A);
+    fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents*numberOfTriggersPerEvent);
 }
 
 
@@ -1488,5 +1487,13 @@ void Tool::setSameDac(const std::string &dacName, const uint16_t dacValue)
 std::string Tool::getCalibrationName(void)
 {
 	int32_t status;
-	return abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
+	std::string className = abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
+	std::string emptyTemplate = "<> ";
+	size_t found=className.find(emptyTemplate);
+	while(found!=std::string::npos)
+	{
+		className.erase(found,emptyTemplate.length());
+		found=className.find(emptyTemplate);
+	}
+	return className;
 }

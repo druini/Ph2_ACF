@@ -19,6 +19,14 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface {
 
+    using EventDataVector = std::vector<std::vector<uint32_t>>;
+    // struct Address
+    // {
+    //     Address(uint32_t cWordP, uint32_t cBitP) : fWordP(cWordP), fBitP(cBitP) {}
+    //     uint32_t fWordP;
+    //     uint32_t fBitP;
+    // };
+
     /*!
      * \class Cbc3Event
      * \brief Event container to manipulate event flux from the Cbc2
@@ -32,7 +40,7 @@ namespace Ph2_HwInterface {
          * \param pNbCbc
          * \param pEventBuf : the pointer to the raw Event buffer of this Event
          */
-        D19cCbc3Event ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list );
+        D19cCbc3Event ( const BeBoard* pBoard, uint32_t pNbCbc, uint32_t pNFe, const std::vector<uint32_t>& list );
         /*!
          * \brief Copy Constructor of the Event Class
          */
@@ -126,13 +134,27 @@ namespace Ph2_HwInterface {
          * \param i : pixel bit data number i
          * \return Data Bit
          */
-        bool DataBit ( uint8_t pFeId, uint8_t pCbcId, uint32_t i ) const override;
+        bool DataBit ( uint8_t pFeId, uint8_t pCbcId, uint32_t i ) const override {return privateDataBit(pFeId, pCbcId, i);};
         /*!
          * \brief Function to get bit string of CBC data
          * \param pFeId : FE Id
          * \param pCbcId : Cbc Id
          * \return Data Bit string
          */
+
+        inline bool privateDataBit ( uint8_t pFeId, uint8_t pCbcId, uint32_t i ) const
+        {
+            try 
+            {
+                return  ( fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc)).at( calculateChannelWordPosition(i) ) >> ( calculateChannelBitPosition(i)) ) & 0x1;
+            }
+            catch (const std::out_of_range& outOfRange) {
+                LOG (ERROR) << "Word " << +i << " for FE " << +pFeId << " CBC " << +pCbcId << " is not found:" ;
+                LOG (ERROR) << "Out of Range error: " << outOfRange.what() ;
+                return false;
+            }
+        }
+
         std::string DataBitString ( uint8_t pFeId, uint8_t pCbcId ) const override;
         /*!
          * \brief Function to get bit vector of CBC data
@@ -201,12 +223,14 @@ namespace Ph2_HwInterface {
             n = ( (n >> 16) & 0x0000ffff) | ( (n << 16) & 0xffff0000) ;
             return n;
         }
-        void calculate_address (uint32_t& cWordP, uint32_t& cBitP, uint32_t i) const
-        {
-            // the first 3 words contain header data
-            cWordP = 3 + (i-i%32)/32;
-            cBitP = 31 - i%32;
-        }
+        
+        static constexpr uint32_t calculateChannelWordPosition (uint32_t channel) { return 3 + (channel-channel%32)/32; }
+        static constexpr uint32_t calculateChannelBitPosition  (uint32_t channel) { return 31 - channel%32            ; }
+        static constexpr size_t   encodeVectorIndex         (const uint8_t pFeId, const uint8_t pCbcId, const uint8_t numberOfCBCs) {return pCbcId + pFeId * numberOfCBCs; }
+        static constexpr uint8_t  getCbcIdFromVectorIndex   (const size_t vectorIndex, const uint8_t numberOfCBCs) {return vectorIndex / numberOfCBCs; }
+        static constexpr uint8_t  getFeIdFromVectorIndex    (const size_t vectorIndex, const uint8_t numberOfCBCs) {return vectorIndex % numberOfCBCs; }
+        
+        EventDataVector fEventDataVector;
 
         void printCbcHeader (std::ostream& os, uint8_t pFeId, uint8_t pCbcId) const;
 

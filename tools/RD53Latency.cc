@@ -33,8 +33,7 @@ Latency::Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t c
 
 void Latency::run ()
 {
-  ContainerFactory theDetectorFactory;
-  theDetectorFactory.copyAndInitChip<GenericDataVector>(*fDetectorContainer, theContainer);
+  ContainerFactory::copyAndInitChip<GenericDataVector>(*fDetectorContainer, theContainer);
   this->scanDac("LATENCY_CONFIG", dacList, nEvents, &theContainer);
 
 
