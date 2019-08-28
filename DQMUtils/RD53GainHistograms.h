@@ -45,6 +45,7 @@ class RD53GainHistograms : public DQMHistogramBase
 
  private:
   DetectorDataContainer Occupancy2D;
+  DetectorDataContainer Error2D;
   DetectorDataContainer Gain1D;
   DetectorDataContainer Intercept1D;
   DetectorDataContainer Gain2D;
