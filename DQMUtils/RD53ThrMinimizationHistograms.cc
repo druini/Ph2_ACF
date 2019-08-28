@@ -27,7 +27,7 @@ void RD53ThrMinimizationHistograms::fill(const DetectorDataContainer& data)
       for (const auto cChip : *cModule)
 	{
 	  auto* hThrehsold = Threhsold.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-	  hThrehsold->Fill(cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
+	  hThrehsold->Fill(cChip->getSummary<RegisterValue>().fRegisterValue);
 	}
 }
 

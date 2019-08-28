@@ -27,7 +27,7 @@ void RD53GainOptimizationHistograms::fill(const DetectorDataContainer& data)
       for (const auto cChip : *cModule)
 	{
 	  auto* hKrumCurr = KrumCurr.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-	  hKrumCurr->Fill(cChip->getSummary<RegisterValue,EmptyContainer>().fRegisterValue);
+	  hKrumCurr->Fill(cChip->getSummary<RegisterValue>().fRegisterValue);
 	}
 }
 

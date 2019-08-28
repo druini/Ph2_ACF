@@ -13,7 +13,6 @@
 #include "Event.h"
 #include "OccupancyAndPh.h"
 #include "GenericDataVector.h"
-#include "EmptyContainer.h"
 #include "../Utils/DataContainer.h"
 #include "../HWDescription/RD53.h"
 

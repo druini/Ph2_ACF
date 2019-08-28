@@ -12,7 +12,6 @@
 #define RD53ThrMinimizationHistograms_H
 
 #include "../System/SystemController.h"
-#include "../Utils/EmptyContainer.h"
 #include "../Utils/RegisterValue.h"
 #include "DQMHistogramBase.h"
 

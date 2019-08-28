@@ -20,12 +20,12 @@
 class ThrMinimization : public PixelAlive
 {
  public:
-  ThrMinimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t startValue = 0, size_t stopValue = 0);
+  ThrMinimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart = 0, size_t ThrStop = 0);
 
   void   run                 ();
   void   draw                (bool display, bool save);
   void   analyze             ();
-  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*(log2(stopValue - startValue) + 3) * nEvents/nEvtsBurst; }
+  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*(log2(ThrStop - ThrStart + 1) + 3) * nEvents/nEvtsBurst; }
 
  private:
   const char* fileRes;
@@ -36,8 +36,8 @@ class ThrMinimization : public PixelAlive
   size_t colStop;
   size_t nEvents;
   size_t nEvtsBurst;
-  size_t startValue;
-  size_t stopValue;
+  size_t ThrStart;
+  size_t ThrStop;
   float  targetOccupancy;
 
   DetectorDataContainer theThrContainer;
@@ -45,7 +45,7 @@ class ThrMinimization : public PixelAlive
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+  void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t ThrStart, uint16_t ThrStop);
   void chipErrorReport ();
 
 
