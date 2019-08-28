@@ -14,25 +14,17 @@
 #ifndef __FILEPARSER_H__
 #define __FILEPARSER_H__
 
-//#include "../HWInterface/ChipInterface.h"
-//#include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/BeBoardFWInterface.h"
 #include "../HWInterface/RD53FWInterface.h"
-// #include "../HWInterface/GlibFWInterface.h"
-// #include "../HWInterface/ICGlibFWInterface.h"
-// #include "../HWInterface/CtaFWInterface.h"
-// #include "../HWInterface/ICFc7FWInterface.h"
-// #include "../HWInterface/Cbc3Fc7FWInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
-// #include "../HWInterface/MPAGlibFWInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/Exception.h"
 #include "../Utils/ConditionDataSet.h"
-#include "pugixml/pugixml.hpp"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/easylogging++.h"
 #include "../HWDescription/Chip.h"
+#include "pugixml.hpp"
 #include <iostream>
 #include <vector>
 #include <map>

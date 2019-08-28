@@ -14,7 +14,8 @@
 
 #include <vector>
 #include "../HWInterface/D19cFWInterface.h"
-#include "pugixml/pugixml.hpp"
+#include "pugixml.hpp"
+
 using namespace Ph2_HwDescription;
 
 /*!
