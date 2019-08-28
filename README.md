@@ -49,7 +49,7 @@ Setup the firmware:
 Setup and run the IT-DAQ:
 1. `yum install epel-release`
 2. `yum install pugixml-devel`
-3. Install: `CERN ROOT` from https://root.cern.ch and `IPbus tools` from http://ipbus.web.cern.ch/ipbus/ (either using `yum` or from source)
+3. Install: `CERN ROOT` from https://root.cern.ch and `IPbus tools` from http://ipbus.web.cern.ch/ipbus (either using `yum` or from source)
 4. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
 5. Switch to the `chipPolymorhism` branch
 6. `cd Ph2_ACF; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`

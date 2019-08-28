@@ -24,7 +24,7 @@ class GainOptimization : public Gain
 
   void   run                 ();
   void   draw                (bool display, bool save);
-  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*(log2(stopValue - startValue) + 2); }
+  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*nSteps*(log2(stopValue - startValue) + 3); }
 
  private:
   const char* fileRes;

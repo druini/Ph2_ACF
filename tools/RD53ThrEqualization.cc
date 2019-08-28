@@ -55,7 +55,7 @@ void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
-  this->bitWiseScan("PIX_PORTAL", nEvents, TARGETeff, nEvtsBurst);
+  this->bitWiseScan("PIX_PORTAL", nEvents, TARGETEFF, nEvtsBurst);
 
 
   // #######################

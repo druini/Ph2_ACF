@@ -23,7 +23,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define TARGETeff 0.50 // Target efficiency for optimization algorithm
+#define TARGETEFF 0.50 // Target efficiency for optimization algorithm
 
 
 // #####################################
@@ -36,7 +36,7 @@ class ThrEqualization : public Tool
 
   void   run                 (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
   void   draw                (bool display, bool save);
-  size_t getNumberIterations () { return 5 * nEvents/nEvtsBurst; }
+  size_t getNumberIterations () { return 6*nEvents/nEvtsBurst; }
 
  private:
   const char* fileRes;
