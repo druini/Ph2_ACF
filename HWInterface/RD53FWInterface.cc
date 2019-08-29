@@ -90,7 +90,7 @@ namespace Ph2_HwInterface
 	myString << "user.ctrl_regs.Hybrid" << cModule->getIndex() + 1;
 	cVecReg.push_back({myString.str() + ".Hybrid_en", 1});
 	cVecReg.push_back({myString.str() + ".Chips_en", RD53::setBits(cModule->fReadoutChipVector.size())});
-	LOG (INFO) << BOLDBLUE << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << BOLDBLUE << " chips for module " << BOLDYELLOW << cModule->getIndex() << RESET;
+	LOG (INFO) << BOLDBLUE << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << BOLDBLUE << " chip(s) for module " << BOLDYELLOW << cModule->getIndex() << RESET;
       }
 
 

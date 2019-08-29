@@ -94,7 +94,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
       for (const auto cChip : *cModule)
 	{
 	  LOG (INFO) << BOLDGREEN << "\t--> Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-		     << theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
+		     << std::setprecision(-1) << theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
 
 	  static_cast<RD53*>(cChip)->copyMaskFromDefault();
 
