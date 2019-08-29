@@ -193,7 +193,7 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
       for (auto cChip : *cModule)
 	this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue, true);
 
-  
+
   // ################
   // # Run analysis #
   // ################

@@ -36,7 +36,7 @@ class ThrEqualization : public Tool
 
   void   run                 (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
   void   draw                (bool display, bool save);
-  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*6*nEvents/nEvtsBurst; }
+  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*6 * nEvents/nEvtsBurst; }
 
  private:
   const char* fileRes;

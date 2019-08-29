@@ -25,7 +25,7 @@ class ThrMinimization : public PixelAlive
   void   run                 ();
   void   draw                (bool display, bool save);
   void   analyze             ();
-  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*(log2(ThrStop - ThrStart + 1) + 3) * nEvents/nEvtsBurst; }
+  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(true)*floor(log2(ThrStop - ThrStart + 1) + 3) * nEvents/nEvtsBurst; }
 
  private:
   const char* fileRes;
