@@ -388,7 +388,6 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
-      RD53RunProgress::total() = RD53ChannelGroupHandler::getNumberOfGroups(false)*VCalHnsteps + 5*VCalHnsteps;
       std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
       SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
 
