@@ -74,8 +74,13 @@ Through `CMSIT_miniDAQ`, and with the right command line option, you can run the
 8. Threshold minimization
 ```
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
+```
 #!/bin/bash
-if [ $1 == "step1" ]
+if [ $# -ne 1 ]
+then
+    echo "You should provide one, and only one, argument"
+    echo "Available options are: step1 [noise + pixelalive + thrmin], step2 [threqu + scurve + noise + thrmin], step3 [scurve + gain + gainopt]"
+elif [ $1 == "step1" ]
 then
     time CMSIT_miniDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels
     echo "noise" >> calibDone.txt
@@ -117,7 +122,7 @@ then
     time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
     echo "gainopt" >> calibDone.txt
 else
-    echo "Option non recognized: $1"
+    echo "Argument not recognized: $1"
     echo "Available options are: step1 [noise + pixelalive + thrmin], step2 [threqu + scurve + noise + thrmin], step3 [scurve + gain + gainopt]"
 fi
 ```
