@@ -126,7 +126,7 @@ else
     echo "Available options are: step1 [noise + pixelalive + thrmin], step2 [threqu + scurve + noise + thrmin], step3 [scurve + gain + gainopt]"
 fi
 ```
-- Software git branch / tag : `chipPolymorphism` / `IT-v1.8`
+- Software git branch / tag : `chipPolymorphism` / `IT-v1.9`
 - Firmware tag: `2.5`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
