@@ -51,7 +51,7 @@
 	    VCAL_HIGH              =   "600"
 	    VCAL_MED               =   "100"
 			          
-	    INJECTION_SELECT       =     "0"
+	    INJECTION_SELECT       =    "12"
             GP_LVDS_ROUTE          =     "0"
             LATENCY_CONFIG         =   "136"
             MONITOR_SELECT         =  "8203"
