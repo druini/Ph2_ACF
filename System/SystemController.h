@@ -20,11 +20,6 @@
 #include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/BeBoardFWInterface.h"
-// #include "../HWInterface/GlibFWInterface.h"
-// #include "../HWInterface/ICGlibFWInterface.h"
-// #include "../HWInterface/CtaFWInterface.h"
-// #include "../HWInterface/ICFc7FWInterface.h"
-// #include "../HWInterface/Cbc3Fc7FWInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/Visitor.h"
@@ -51,8 +46,8 @@ using namespace Ph2_HwInterface;
 namespace Ph2_System
 {
 
-using BeBoardVec = std::vector<BeBoard *>;           /*!< Vector of Board pointers */
-using SettingsMap = std::map<std::string, uint32_t>; /*!< Maps the settings */
+using BeBoardVec = std::vector<BeBoard *>;         /*!< Vector of Board pointers */
+using SettingsMap = std::map<std::string, double>; /*!< Maps the settings */
 
 /*!
      * \class SystemController

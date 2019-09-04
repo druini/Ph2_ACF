@@ -10,7 +10,7 @@
 #ifndef RD53ThrMinimization_H
 #define RD53ThrMinimization_H
 
-#include "../Utils/EmptyContainer.h"
+#include "../DQMUtils/RD53ThrMinimizationHistograms.h"
 #include "RD53PixelAlive.h"
 
 
@@ -20,12 +20,12 @@
 class ThrMinimization : public PixelAlive
 {
  public:
-  ThrMinimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart = 0, size_t ThrStop = 0);
-  ~ThrMinimization ();
+  ThrMinimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart = 0, size_t ThrStop = 0);
 
-  void run     ();
-  void draw    (bool display, bool save);
-  void analyze ();
+  void   run                 ();
+  void   draw                (bool display, bool save);
+  void   analyze             ();
+  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(true)*floor(log2(ThrStop - ThrStart + 1) + 3) * nEvents/nEvtsBurst; }
 
  private:
   const char* fileRes;
@@ -34,7 +34,6 @@ class ThrMinimization : public PixelAlive
   size_t rowStop;
   size_t colStart;
   size_t colStop;
-  size_t nPixels2Inj;
   size_t nEvents;
   size_t nEvtsBurst;
   size_t ThrStart;
@@ -46,17 +45,14 @@ class ThrMinimization : public PixelAlive
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void save            ();
-  void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+  void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t ThrStart, uint16_t ThrStop);
   void chipErrorReport ();
 
 
   // ########
   // # ROOT #
   // ########
-  TFile* theFile;
-  std::vector<TCanvas*> theCanvasThr;
-  std::vector<TH1F*>    theThr;
+  RD53ThrMinimizationHistograms histos;
 };
 
 #endif

@@ -18,7 +18,7 @@
     
     # Add the library
     add_library(Ph2_Utils SHARED ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} cactus_extern_pugixml)
+    set(LIBS ${LIBS} pugixml)
     TARGET_LINK_LIBRARIES(Ph2_Utils ${LIBS})
     
     # Check for ZMQ installed

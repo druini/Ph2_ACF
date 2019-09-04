@@ -1,6 +1,6 @@
 /*!
-  \file                  RD53PixelAliveHistograms.h
-  \brief                 Header file of PixelAlive calibration histograms
+  \file                  RD53LatencyHistograms.h
+  \brief                 Header file of Latency calibration histograms
   \author                Alkiviadis PAPADOPOULOS
   \version               1.0
   \date                  28/06/18
@@ -8,22 +8,21 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef RD53PixelAliveHistograms_H
-#define RD53PixelAliveHistograms_H
+#ifndef RD53LatencyHistograms_H
+#define RD53LatencyHistograms_H
 
 #include "../System/SystemController.h"
 #include "../Utils/GenericDataVector.h"
-#include "../Utils/OccupancyAndPh.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
 #include <TH2F.h>
 
 
-class RD53PixelAliveHistograms : public DQMHistogramBase
+class RD53LatencyHistograms : public DQMHistogramBase
 {
  public:
-  RD53PixelAliveHistograms (size_t nEvents) : nEvents(nEvents) {}
+ RD53LatencyHistograms (size_t startValue, size_t stopValue) : startValue(startValue), stopValue(stopValue) {}
 
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
   void process ()                                                                                                          override;
@@ -34,13 +33,9 @@ class RD53PixelAliveHistograms : public DQMHistogramBase
 
  private:
   DetectorDataContainer Occupancy1D;
-  DetectorDataContainer Occupancy2D;
-  DetectorDataContainer Error2D;
-  DetectorDataContainer ToT;
-  DetectorDataContainer BCID;
-  DetectorDataContainer TriggerID;
   
-  size_t nEvents;
+  size_t startValue;
+  size_t stopValue;
 };
 
 #endif

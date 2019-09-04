@@ -1,6 +1,6 @@
 /*!
-  \file                  RD53PixelAliveHistograms.h
-  \brief                 Header file of PixelAlive calibration histograms
+  \file                  RD53ThrEqualizationHistograms.h
+  \brief                 Header file of ThrEqualization calibration histograms
   \author                Alkiviadis PAPADOPOULOS
   \version               1.0
   \date                  28/06/18
@@ -8,39 +8,39 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef RD53PixelAliveHistograms_H
-#define RD53PixelAliveHistograms_H
+#ifndef RD53ThrEqualizationHistograms_H
+#define RD53ThrEqualizationHistograms_H
 
 #include "../System/SystemController.h"
-#include "../Utils/GenericDataVector.h"
 #include "../Utils/OccupancyAndPh.h"
+#include "../Utils/RegisterValue.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
 #include <TH2F.h>
 
 
-class RD53PixelAliveHistograms : public DQMHistogramBase
+class RD53ThrEqualizationHistograms : public DQMHistogramBase
 {
  public:
-  RD53PixelAliveHistograms (size_t nEvents) : nEvents(nEvents) {}
+  RD53ThrEqualizationHistograms (size_t nEvents) : nEvents(nEvents) {}
 
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
   void process ()                                                                                                          override;
   bool fill    (std::vector<char>& dataBuffer)                                                                             override { return false; };
   void reset   (void)                                                                                                      override {};
 
-  void fill    (const DetectorDataContainer& data);
+  void fill    (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& TDACContainer);
 
  private:
-  DetectorDataContainer Occupancy1D;
-  DetectorDataContainer Occupancy2D;
-  DetectorDataContainer Error2D;
-  DetectorDataContainer ToT;
-  DetectorDataContainer BCID;
-  DetectorDataContainer TriggerID;
+  DetectorDataContainer ThrEqualization;
+  DetectorDataContainer TDAC;
   
   size_t nEvents;
+  size_t ROWstart;
+  size_t ROWstop;
+  size_t COLstart;
+  size_t COLstop;
 };
 
 #endif

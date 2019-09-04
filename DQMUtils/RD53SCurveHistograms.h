@@ -11,8 +11,9 @@
 #ifndef RD53SCurveHistograms_H
 #define RD53SCurveHistograms_H
 
+#include "../System/SystemController.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "../Utils/Occupancy.h"
+#include "../Utils/OccupancyAndPh.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
@@ -29,16 +30,17 @@ class RD53SCurveHistograms : public DQMHistogramBase
    , stopValue  (stopValue)
   {}
 
-  void book               (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
-  void process            ()                                                                                                                  override;
-  bool fill               (std::vector<char>& dataBuffer)                                                                                     override { return false; };
-  void reset              (void)                                                                                                              override {};
+  void book               (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
+  void process            ()                                                                                                          override;
+  bool fill               (std::vector<char>& dataBuffer)                                                                             override { return false; };
+  void reset              (void)                                                                                                      override {};
 
   void fillOccupancy      (const DetectorDataContainer& data, int VCAL_HIGH);
   void fillThresholdNoise (const DetectorDataContainer& data);
 
  private:
   DetectorDataContainer Occupancy2D;
+  DetectorDataContainer Error2D;
   DetectorDataContainer Threshold1D;
   DetectorDataContainer Noise1D;
   DetectorDataContainer Threshold2D;
@@ -48,10 +50,6 @@ class RD53SCurveHistograms : public DQMHistogramBase
   size_t nSteps;
   size_t startValue;
   size_t stopValue;
-  size_t ROWstart;
-  size_t ROWstop;
-  size_t COLstart;
-  size_t COLstop;
 };
 
 #endif

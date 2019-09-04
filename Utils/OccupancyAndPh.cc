@@ -7,7 +7,6 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-
 #include "OccupancyAndPh.h"
 
 void OccupancyAndPh::makeSummaryAverage (const std::vector<OccupancyAndPh>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)

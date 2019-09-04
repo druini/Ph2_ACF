@@ -1021,8 +1021,8 @@ namespace Ph2_System {
 
             for ( pugi::xml_node nSetting = nSettings.child ( "Setting" ); nSetting; nSetting = nSetting.next_sibling() )
             {
-                pSettingsMap[nSetting.attribute ( "name" ).value()] = convertAnyInt ( nSetting.first_child().value() );
-                os << BOLDRED << "Setting" << RESET << " --" << BOLDCYAN << nSetting.attribute ( "name" ).value() << RESET << ":" << BOLDYELLOW << convertAnyInt ( nSetting.first_child().value() ) << RESET << std::endl;
+                pSettingsMap[nSetting.attribute ( "name" ).value()] = convertAnyDouble ( nSetting.first_child().value() );
+                os << BOLDRED << "Setting" << RESET << " -- " << BOLDCYAN << nSetting.attribute ( "name" ).value() << RESET << ":" << BOLDYELLOW << convertAnyDouble ( nSetting.first_child().value() ) << RESET << std::endl;
             }
         }
     }
