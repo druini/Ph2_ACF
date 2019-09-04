@@ -47,7 +47,7 @@ Setup the firmware:
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware
 
 Setup and run the IT-DAQ:
-1. `yum install pugixml-devel` (if necesary run `yum install epel-release` before 1.)
+1. `yum install pugixml-devel` (if necesary run `yum install epel-release` before point 1.)
 2. Install: `CERN ROOT` from https://root.cern.ch and `IPbus tools` from http://ipbus.web.cern.ch/ipbus (either using `yum` or from source)
 3. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
 4. Switch to the `chipPolymorhism` branch
