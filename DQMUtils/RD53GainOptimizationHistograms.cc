@@ -16,7 +16,7 @@ void RD53GainOptimizationHistograms::book (TFile* theOutputFile, const DetectorC
 {
   uint16_t rangeKrumCurr = RD53::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("KRUM_CURR_LIN"))+1;
 
-  auto hOcc2D = HistContainer<TH1F>("KrumCurr", "KrumCurr", rangeKrumCurr, 0, rangeKrumCurr);
+  auto hOcc2D = CanvasContainer<TH1F>("KrumCurr", "KrumCurr", rangeKrumCurr, 0, rangeKrumCurr);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, KrumCurr, "Krummenacher Current", "Entries");
 }
 
@@ -26,7 +26,7 @@ void RD53GainOptimizationHistograms::fill(const DetectorDataContainer& data)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  auto* hKrumCurr = KrumCurr.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+	  auto* hKrumCurr = KrumCurr.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 	  hKrumCurr->Fill(cChip->getSummary<RegisterValue>().fRegisterValue);
 	}
 }

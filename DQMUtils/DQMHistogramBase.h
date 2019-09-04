@@ -18,6 +18,7 @@
 #include "../HWDescription/RD53.h"
 #include "../RootUtils/RootContainerFactory.h"
 #include "../RootUtils/HistContainer.h"
+#include "../RootUtils/CanvasContainer.h"
 #include "../Utils/Container.h"
 
 #include <TCanvas.h>
@@ -83,7 +84,7 @@ class DQMHistogramBase
   template <typename Hist>
     void bookImplementer (TFile* theOutputFile,
 			  const DetectorContainer& theDetectorStructure,
-			  const HistContainer<Hist>& histContainer,
+			  const CanvasContainer<Hist>& histContainer,
 			  DetectorDataContainer& dataContainer,
 			  const char* XTitle = nullptr,
 			  const char* YTitle = nullptr)
@@ -104,16 +105,17 @@ class DQMHistogramBase
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
 	    {
-	      canvases.emplace_back(new TCanvas(("Canvas_" + std::to_string(canvasId()++)).c_str(), "IT Canvas"));
-	      canvases.back()->cd();
-	      Hist* hist = cChip->getSummary<HistContainer<Hist>>().fTheHistogram;
+          TCanvas* canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
+	      Hist* hist = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
+
+          canvas->cd();
 	      hist->Draw(opt);
-	      canvases.back()->Modified();
-	      canvases.back()->Update();
+	      canvas->Modified();
+	      canvas->Update();
 
 	      if (electronAxis == true)
 		{
-		  TPad* myPad = static_cast<TPad*>(canvases.back()->GetPad(0));
+		  TPad* myPad = static_cast<TPad*>(canvas->GetPad(0));
 		  myPad->SetTopMargin(0.16);
 		  
 		  axes.emplace_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
@@ -130,8 +132,8 @@ class DQMHistogramBase
 		  axes.back()->SetLineColor(kRed);
 		  axes.back()->Draw();
 
-		  canvases.back()->Modified();
-		  canvases.back()->Update();
+		  canvas->Modified();
+		  canvas->Update();
 		}
 	    }
     }

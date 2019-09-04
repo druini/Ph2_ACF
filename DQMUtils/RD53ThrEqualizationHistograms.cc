@@ -16,10 +16,10 @@ void RD53ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorCo
 {
   size_t TDACsize = RD53::setBits(RD53PixelEncoder::NBIT_TDAC) + 1;
   
-  auto hThrEqualization = HistContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents / 2 + 1, 0, 1 + 2. / nEvents);
+  auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents / 2 + 1, 0, 1 + 2. / nEvents);
   bookImplementer(theOutputFile, theDetectorStructure, hThrEqualization, ThrEqualization, "Efficiency", "Entries");
 
-  auto hTDAC = HistContainer<TH1F>("TDAC", "TDAC", TDACsize, 0, TDACsize);
+  auto hTDAC = CanvasContainer<TH1F>("TDAC", "TDAC", TDACsize, 0, TDACsize);
   bookImplementer(theOutputFile, theDetectorStructure, hTDAC, TDAC, "TDAC", "Entries");
 
   
@@ -38,8 +38,8 @@ void RD53ThrEqualizationHistograms::fill (const DetectorDataContainer& Occupancy
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  auto* hThrEqualization = ThrEqualization.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-	  auto* hTDAC = TDAC.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+	  auto* hThrEqualization = ThrEqualization.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+	  auto* hTDAC = TDAC.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
 	      if ((row >= ROWstart) && (row <= ROWstop) && (col >= COLstart) && (col <= COLstop))

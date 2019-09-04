@@ -14,22 +14,22 @@ using namespace Ph2_HwDescription;
 
 void RD53GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
-  auto hOcc2D = HistContainer<TH2F>("Gain", "Gain", nSteps,startValue,stopValue, nEvents / 2, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION));
+  auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps,startValue,stopValue, nEvents / 2, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION));
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "ToT");
 
-  auto hErr2D = HistContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+  auto hErr2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hErr2D, Error2D, "Columns", "Rows");
 
-  auto hGain1D = HistContainer<TH1F>("Gain1D", "Gain1D", 100, 0, 20e-3);
+  auto hGain1D = CanvasContainer<TH1F>("Gain1D", "Gain1D", 100, 0, 20e-3);
   bookImplementer(theOutputFile, theDetectorStructure, hGain1D, Gain1D, "Gain (ToT/VCal)", "Entries");
 
-  auto hIntercept1D = HistContainer<TH1F>("Intercept1D", "Intercept1D", 100, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
+  auto hIntercept1D = CanvasContainer<TH1F>("Intercept1D", "Intercept1D", 100, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
   bookImplementer(theOutputFile, theDetectorStructure, hIntercept1D, Intercept1D, "Intercept (ToT)", "Entries");
 
-  auto hGain2D = HistContainer<TH2F>("Gain2D", "Gain Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+  auto hGain2D = CanvasContainer<TH2F>("Gain2D", "Gain Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hGain2D, Gain2D, "Column", "Row");
 
-  auto hIntercept2D = HistContainer<TH2F>("Intercept2D", "Intercept Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+  auto hIntercept2D = CanvasContainer<TH2F>("Intercept2D", "Intercept Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hIntercept2D, Intercept2D, "Column", "Row");
 
 
@@ -48,8 +48,8 @@ void RD53GainHistograms::fillOccupancy (const DetectorDataContainer& data, int V
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  auto* hOcc2D      = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-	  auto* Error2DHist = Error2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+	  auto* hOcc2D      = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+	  auto* Error2DHist = Error2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
@@ -67,10 +67,10 @@ void RD53GainHistograms::fillGainIntercept (const DetectorDataContainer& data)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  auto* Gain1DHist = Gain1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-	  auto* Intercept1DHist     = Intercept1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-	  auto* Gain2DHist = Gain2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-	  auto* Intercept2DHist     = Intercept2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+	  auto* Gain1DHist = Gain1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+	  auto* Intercept1DHist     = Intercept1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+	  auto* Gain2DHist = Gain2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+	  auto* Intercept2DHist     = Intercept2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
