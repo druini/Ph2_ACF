@@ -47,19 +47,18 @@ Setup the firmware:
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware
 
 Setup and run the IT-DAQ:
-1. `yum install epel-release`
-2. `yum install pugixml-devel`
-3. Install: `CERN ROOT` from https://root.cern.ch and `IPbus tools` from http://ipbus.web.cern.ch/ipbus (either using `yum` or from source)
-4. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
-5. Switch to the `chipPolymorhism` branch
-6. `cd Ph2_ACF; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
-7. `mkdir choose_a_name`
-8. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
-9. `cp settings/CMSIT.xml choose_a_name`
-10. `cd choose_a_name`
-11. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-12. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the FC7 (just once)
-13. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
+1. `yum install pugixml-devel` (if necesary run `yum install epel-release` before 1.)
+2. Install: `CERN ROOT` from https://root.cern.ch and `IPbus tools` from http://ipbus.web.cern.ch/ipbus (either using `yum` or from source)
+3. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
+4. Switch to the `chipPolymorhism` branch
+5. `cd Ph2_ACF; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
+6. `mkdir choose_a_name`
+7. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
+8. `cp settings/CMSIT.xml choose_a_name`
+9. `cd choose_a_name`
+10. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
+11. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the FC7 (just once)
+12. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
 
 The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking. 
 Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
