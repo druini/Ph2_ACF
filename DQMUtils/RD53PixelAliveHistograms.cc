@@ -58,7 +58,7 @@ void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)
 		    Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy * nEvents);
 		    Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
 		    ToTHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
-		  }		
+		  }
 		if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) Error2DHist->Fill(col + 1, row + 1);
 	      }
 

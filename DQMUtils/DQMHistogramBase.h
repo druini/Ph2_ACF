@@ -1,10 +1,10 @@
 /*!
-        \file                DQMHistogramBase.h
-        \brief               base class to create and fill monitoring histograms
-        \author              Fabio Ravera, Lorenzo Uplegger
-        \version             1.0
-        \date                6/5/19
-        Support :            mail to : fabio.ravera@cern.ch
+  \file                DQMHistogramBase.h
+  \brief               base class to create and fill monitoring histograms
+  \author              Fabio Ravera, Lorenzo Uplegger
+  \version             1.0
+  \date                6/5/19
+  Support :            mail to : fabio.ravera@cern.ch
 
 */
 
@@ -36,49 +36,43 @@ class DetectorContainer;
 class DQMHistogramBase
 {
 
-  public:
-    /*!
-     * constructor
-     */
-    DQMHistogramBase (){;}
+ public:
+  /*!
+   * constructor
+   */
+  DQMHistogramBase (){;}
 
-    /*!
-     * destructor
-     */
-    virtual ~DQMHistogramBase(){;}
+  /*!
+   * destructor
+   */
+  virtual ~DQMHistogramBase(){;}
 
-    /*!
-     * \brief Book histograms
-     * \param theDetectorStructure : Container of the Detector structure
-     */
-    virtual void book(TFile *outputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap) = 0;
+  /*!
+   * \brief Book histograms
+   * \param theDetectorStructure : Container of the Detector structure
+   */
+  virtual void book(TFile *outputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap) = 0;
 
-    /*!
-     * \brief Book histograms
-     * \param configurationFileName : xml configuration file
-     */
-    virtual bool fill (std::vector<char>& dataBuffer) = 0;
+  /*!
+   * \brief Book histograms
+   * \param configurationFileName : xml configuration file
+   */
+  virtual bool fill (std::vector<char>& dataBuffer) = 0;
     
-    /*!
-     * \brief SAve histograms
-     * \param outFile : ouput file name
-     */
-    virtual void process () = 0;
+  /*!
+   * \brief SAve histograms
+   * \param outFile : ouput file name
+   */
+  virtual void process () = 0;
     
-    /*!
-     * \brief Book histograms
-     * \param configurationFileName : xml configuration file
-     */
-    virtual void reset(void) = 0;
-    //virtual void summarizeHistos();
+  /*!
+   * \brief Book histograms
+   * \param configurationFileName : xml configuration file
+   */
+  virtual void reset(void) = 0;
 
  private:
-    static int& canvasId() {
-      static int value = 0;
-      return value;
-    };
-  std::vector<std::unique_ptr<TCanvas>> canvases;
-  std::vector<std::unique_ptr<TGaxis>>  axes;
+  std::vector<std::unique_ptr<TGaxis>> axes;
 
  protected:
   template <typename Hist>
@@ -105,10 +99,10 @@ class DQMHistogramBase
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
 	    {
-          TCanvas* canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
+	      TCanvas* canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
 	      Hist* hist = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
 
-          canvas->cd();
+	      canvas->cd();
 	      hist->Draw(opt);
 	      canvas->Modified();
 	      canvas->Update();

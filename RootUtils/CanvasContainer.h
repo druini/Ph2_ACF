@@ -1,6 +1,6 @@
 /*!
   \file                  CanvasContainer.h
-  \brief                 Header file of histogram container
+  \brief                 Header file of canvas container
   \author                Alkiviadis PAPADOPOULOS
   \version               1.0
   \date                  28/06/18
@@ -11,25 +11,19 @@
 #ifndef CanvasContainer_H
 #define CanvasContainer_H
 
-#include <iostream>
 #include "../Utils/Container.h"
 #include "../RootUtils/PlotContainer.h"
+
 #include <TCanvas.h>
 
+#include <iostream>
 
-class CanvasContainerBase : public PlotContainer {
-protected:
-    static int& canvasId() {
-      static int value = 0;
-      return value;
-    };
-};
 
 template <class Hist>
-class CanvasContainer : public CanvasContainerBase
+class CanvasContainer : public PlotContainer
 {
  public:
- CanvasContainer() : fTheHistogram(nullptr) {}
+ CanvasContainer() : fTheHistogram(nullptr), fCanvas(nullptr) {}
 
   CanvasContainer (const CanvasContainer<Hist>& container) = delete;
   CanvasContainer<Hist>& operator= (const CanvasContainer<Hist>& container) = delete;
@@ -39,35 +33,37 @@ class CanvasContainer : public CanvasContainerBase
     {
       fTheHistogram = new Hist(args...);
       fTheHistogram->SetDirectory(0);
+      fCanvas       = nullptr;
     }
-
+  
   ~CanvasContainer() 
     {
-      if (fHasToBeDeletedManually) {
+      if (fHasToBeDeletedManually)
+	{
           delete fTheHistogram;
-          if (fCanvas)
-            delete fCanvas;
-      }
+          if (fCanvas) delete fCanvas;
+	}
+
       fTheHistogram = nullptr;
-      
+      fCanvas       = nullptr;
     }
 
   CanvasContainer (CanvasContainer<Hist>&& container)
     {
       fHasToBeDeletedManually = container.fHasToBeDeletedManually;
-      fTheHistogram = container.fTheHistogram;
+      fTheHistogram           = container.fTheHistogram;
       container.fTheHistogram = nullptr;
-      fCanvas = container.fCanvas;
-      container.fCanvas = nullptr;
+      fCanvas                 = container.fCanvas;
+      container.fCanvas       = nullptr;
     }
 
   CanvasContainer<Hist>& operator= (CanvasContainer<Hist>&& container)
     {
       fHasToBeDeletedManually = container.fHasToBeDeletedManually;
-      fTheHistogram = container.fTheHistogram;
+      fTheHistogram           = container.fTheHistogram;
       container.fTheHistogram = nullptr;
-      fCanvas = container.fCanvas;
-      container.fCanvas = nullptr;
+      fCanvas                 = container.fCanvas;
+      container.fCanvas       = nullptr;
       return *this;
     }
 
@@ -92,11 +88,11 @@ class CanvasContainer : public CanvasContainerBase
 
   template<typename T>
     void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
-
-    void makeSummaryAverage (const std::vector<CanvasContainer<Hist>>* theTH1FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
-
+  
+  void makeSummaryAverage (const std::vector<CanvasContainer<Hist>>* theTH1FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
+  
   void normalize (const uint32_t numberOfEvents) {}
-
+  
   void setNameTitle (std::string histogramName, std::string histogramTitle) override 
   {
     fTheHistogram->SetNameTitle(histogramName.data(), histogramTitle.data());
@@ -106,14 +102,14 @@ class CanvasContainer : public CanvasContainerBase
     {
       return fTheHistogram->GetName();
     }
-
+  
   std::string getTitle() const override
     {
       return fTheHistogram->GetTitle();
     }
   
-  Hist* fTheHistogram;
-  TCanvas* fCanvas = nullptr;
+  Hist*    fTheHistogram;
+  TCanvas* fCanvas;
 };
 
 #endif
