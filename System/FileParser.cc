@@ -322,7 +322,10 @@ namespace Ph2_System {
             else cBeBoard->setEventType (EventType::VR);
         }
 
-        os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDCYAN << ", EventType: " << BOLDYELLOW << cEventTypeString << RESET << std:: endl;
+        os << BOLDBLUE << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute ( "Id" ).value()
+	   << BOLDBLUE << ", BoardType: " << BOLDYELLOW << cBoardType
+	   << BOLDBLUE << ", EventType: " << BOLDYELLOW << cEventTypeString
+	   << RESET << std:: endl;
 
         pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child ("connection");
 
@@ -339,7 +342,9 @@ namespace Ph2_System {
             pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
         }
 
-        os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
+        os << BOLDCYAN << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl
+	   << BOLDCYAN << "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl
+	   << BOLDCYAN << "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << RESET << std::endl;
 
     // Iterate over the BeBoardRegister Nodes
         for ( pugi::xml_node cBeBoardRegNode = pBeBordNode.child ( "Register" ); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling() )
@@ -348,11 +353,9 @@ namespace Ph2_System {
             {
                 std::string cNameString;
                 uint32_t cValue;
-                this->parseRegister (cBeBoardRegNode, cNameString, cValue, cBeBoard, os);
-            }
+		this->parseRegister (cBeBoardRegNode, cNameString, cValue, cBeBoard, os);
+	    }
         }
-
-        os << BLUE <<  "|\t|" << RESET << std::endl;
 
     // Iterate the module node
         for ( pugi::xml_node pModuleNode = pBeBordNode.child ( "Module" ); pModuleNode; pModuleNode = pModuleNode.next_sibling() )
@@ -398,7 +401,7 @@ namespace Ph2_System {
 
                 pAttributeString += pRegisterNode.attribute ("name").value();
                 pValue = convertAnyInt (pRegisterNode.first_child().value() );
-                os << BLUE << "|" << "\t" << "|" << "----" << pRegisterNode.name() << "  " << pAttributeString << ": " << BOLDYELLOW << pValue << RESET << std:: endl;
+                os << GREEN << "|\t|\t|" << "----" << pAttributeString << ": " << BOLDYELLOW << pValue << RESET << std:: endl;
                 pBoard->setReg ( pAttributeString, pValue );
             }
         }
@@ -613,8 +616,12 @@ namespace Ph2_System {
 
         if ( cStatus )
         {
-            os << BOLDCYAN << "|" << "       " << "|" << "----" << pModuleNode.name() << "  "
-            << pModuleNode.first_attribute().name() << ": " << BOLDYELLOW << pModuleNode.attribute ( "ModuleId" ).value() << RESET << std:: endl;
+            os << BOLDBLUE << "|" << "       " << "|" << "----" << pModuleNode.name() << "  "
+	       << BOLDBLUE << pModuleNode.first_attribute().name() << ": " << BOLDYELLOW << pModuleNode.attribute ( "FeId" ).value()	      
+	       << BOLDBLUE << ", FMCId: " << BOLDYELLOW << expandEnvironmentVariables (pModuleNode.attribute ("FMCId").value())
+	       << BOLDBLUE << ", ModuleId: " << BOLDYELLOW << expandEnvironmentVariables (pModuleNode.attribute ("ModuleId").value())
+	       << BOLDBLUE << ", Status: " << BOLDYELLOW << expandEnvironmentVariables (pModuleNode.attribute ("Status").value())
+	       << RESET << std:: endl;
 
             uint32_t cModuleId = pModuleNode.attribute ( "ModuleId" ).as_int();
             Module* cModule;
@@ -646,17 +653,15 @@ namespace Ph2_System {
                         std::string cFileName = expandEnvironmentVariables (static_cast<std::string> ( cChild.attribute ( "configfile" ).value() ) );
                         LOG (DEBUG) << BOLDBLUE << "Configuration file ...." << cName << " --- " << cConfigFileDirectory << RESET;
                         LOG (DEBUG) << BOLDGREEN << cName << " Id = " << +cChipId << " --- " << cFileName << RESET; 
+
                         if( cName == "RD53") 
-                        {
+			  {
                             this->parseRD53 (cChild, cModule, cConfigFileDirectory, os);
-                            // check if this is the last node with this name 
-                            // check if this is the last node with this name 
-                            if( cNextName.empty() || cNextName!=cName )
-                            {
-                                // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
+                            if (cNextName.empty() || cNextName != cName)
+			      {
                                 this->parseGlobalRD53Settings (pModuleNode, cModule, os);
-                            }
-                        }
+			      }
+			  }
                         else if( cName == "CBC" ) 
                         {    
                             this->parseCbcContainer  (cChild, cModule, cConfigFileDirectory, os);
@@ -1015,7 +1020,7 @@ namespace Ph2_System {
             return;
         }
 
-        for ( pugi::xml_node nSettings = doc.child ( "HwDescription" ).child ("Settings"); nSettings; nSettings = nSettings.next_sibling() )
+        for ( pugi::xml_node nSettings = doc.child ("Settings"); nSettings; nSettings = nSettings.next_sibling() )
         {
             os << "\n" << std::endl;
 
@@ -1033,8 +1038,8 @@ namespace Ph2_System {
   // ########################
   void FileParser::parseRD53 (pugi::xml_node theChipNode, Module* cModule, std::string cFilePrefix, std::ostream& os)
   {
-    os << BOLDCYAN << "|" << "	" << "|" << "	" << "|" << "----" << theChipNode.name() << "  "
-       << theChipNode.first_attribute().name() << ": " << BOLDYELLOW << theChipNode.attribute ("Id").value() << BOLDCYAN
+    os << BOLDBLUE << "|" << "	" << "|" << "	" << "|" << "----" << theChipNode.name() << "  "
+       << theChipNode.first_attribute().name() << ": " << BOLDYELLOW << theChipNode.attribute ("Id").value() << BOLDBLUE
        << ", File: " << BOLDYELLOW << expandEnvironmentVariables (theChipNode.attribute ("configfile").value() ) << RESET << std::endl;
     
     std::string cFileName;
@@ -1046,77 +1051,46 @@ namespace Ph2_System {
       }
     else cFileName = expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
 
-    uint32_t cChipId = theChipNode.attribute ("Id").as_int();
-    ReadoutChip* theChip    = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName));
+    uint32_t cChipId     = theChipNode.attribute ("Id").as_int();
+    ReadoutChip* theChip = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName));
     theChip->setNumberOfChannels(RD53::nRows,RD53::nCols);
-    
-    // Parse the specific Chip settings so that Registers take precedence
-    this->parseRD53Settings (theChipNode, theChip, os);
-    
-    for (pugi::xml_node theChipRegisterNode = theChipNode.child ("Register"); theChipRegisterNode; theChipRegisterNode = theChipRegisterNode.next_sibling())
-      {
-	theChip->setReg (std::string(theChipRegisterNode.attribute ("name").value() ), convertAnyInt (theChipRegisterNode.first_child().value()));
-	os << BLUE << "|\t|\t|\t|----Register: " << std::string (theChipRegisterNode.attribute ("name").value()) << " : " << BOLDYELLOW << std::hex << "0x"
-	   << convertAnyInt (theChipRegisterNode.first_child().value()) << RESET << std::dec << std::endl;
-      }
 
+    this->parseRD53Settings (theChipNode, theChip, os);
+  
     cModule->addReadoutChip(theChip);
   }
 
   void FileParser::parseGlobalRD53Settings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os)
   {
-    pugi::xml_node cGlobalChipSettingsNode = pModuleNode.child ("Global");
-    
-    if (cGlobalChipSettingsNode != nullptr)
+    pugi::xml_node cGlobalChipSettings = pModuleNode.child ("Global");
+    if (cGlobalChipSettings != nullptr)
       {
-	os << BOLDCYAN << "|\t|\t|----Global RD53 Settings:" << RESET <<  std::endl;
+	os << BOLDCYAN << "|\t|\t|----Global RD53 Settings:" << RESET << std::endl;
 	
-	int cCounter = 0;
-	
-	for (auto theChip : pModule->fReadoutChipVector)
+        for (const pugi::xml_attribute& attr : cGlobalChipSettings.attributes())
 	  {
-	    if (cCounter == 0)
-	      this->parseRD53Settings (cGlobalChipSettingsNode, theChip, os);
-	    else
-	      {
-		std::ofstream cDummy;
-		this->parseRD53Settings (cGlobalChipSettingsNode, theChip, cDummy);
-	      }
+	    std::string regname = attr.name();
+	    uint16_t regvalue   = convertAnyInt (attr.value());
+            os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
 	    
-	    cCounter++;
-	  }
-      }
-
-    // Now that global has been applied to each Chip, handle the GlobalChipRegisters
-    for (pugi::xml_node theChipGlobalNode = pModuleNode.child ("Global_RD53_Register"); theChipGlobalNode != pModuleNode.child ("RD53") && theChipGlobalNode != pModuleNode.child ("RD53_Files") && theChipGlobalNode != nullptr; theChipGlobalNode = theChipGlobalNode.next_sibling())
-      {
-	if (theChipGlobalNode != nullptr)
-	  {
-	    std::string regname = std::string   (theChipGlobalNode.attribute ( "name" ).value());
-	    uint32_t regvalue   = convertAnyInt (theChipGlobalNode.first_child().value());
-	    
-	    for (auto theChip : pModule->fReadoutChipVector) theChip->setReg (regname, uint8_t (regvalue));
-	    
-	    os << BOLDGREEN << "|" << "	" << "|" << "	" << "|" << "----" << theChipGlobalNode.name()
-	       << "  " << theChipGlobalNode.first_attribute().name() << " :"
-	       << regname << " =  0x" << std::hex << std::setw (2) << std::setfill ('0') << BOLDYELLOW << regvalue << std::dec << RESET << std:: endl;
+	    for (auto theChip : pModule->fReadoutChipVector) theChip->setReg(regname,regvalue,true);
 	  }
       }
   }
   
   void FileParser::parseRD53Settings (pugi::xml_node theChipNode, ReadoutChip* theChip, std::ostream& os)
   {
-    // Parse the Chip settings here and put them in the corresponding registers of the Chip object
-    os << BOLDBLUE << "|\t|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53" << RESET << std::endl;
-    
-    pugi::xml_node cSettingsChild = theChipNode.child ("Settings");
-    if (cSettingsChild != nullptr)
+    pugi::xml_node cLocalChipSettings = theChipNode.child ("Settings");
+    if (cLocalChipSettings != nullptr)
       {
-        for (const pugi::xml_attribute& attr : cSettingsChild.attributes())
+	os << BOLDCYAN << "|\t|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53" << RESET << std::endl;
+	
+        for (const pugi::xml_attribute& attr : cLocalChipSettings.attributes())
 	  {
-	    uint16_t value = convertAnyInt (attr.value());
-            theChip->setReg(attr.name(),value,true);
-            os << GREEN << "|\t|\t|\t|----" << attr.name() << ": " << BOLDYELLOW << std::hex << "0x" << value << std::dec << " (" << value << ")" << RESET << std::endl;
+	    std::string regname = attr.name();
+	    uint16_t regvalue   = convertAnyInt (attr.value());
+            theChip->setReg(regname,regvalue,true);
+            os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
 	  }
       }
   }
