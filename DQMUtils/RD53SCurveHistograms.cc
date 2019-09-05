@@ -14,22 +14,22 @@ using namespace Ph2_HwDescription;
 
 void RD53SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
-  auto hOcc2D = HistContainer<TH2F>("SCurves", "SCurves", nSteps, startValue, stopValue, nEvents + 1, 0, 1 + 1. / nEvents);
+  auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue, stopValue, nEvents + 1, 0, 1 + 1. / nEvents);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "Efficiency");
 
-  auto hErr2D = HistContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+  auto hErr2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hErr2D, Error2D, "Columns", "Rows");
 
-  auto hThreshold1D = HistContainer<TH1F>("Threshold1D", "Threshold Distribution", 1000, startValue, stopValue);
+  auto hThreshold1D = CanvasContainer<TH1F>("Threshold1D", "Threshold Distribution", 1000, startValue, stopValue);
   bookImplementer(theOutputFile, theDetectorStructure, hThreshold1D, Threshold1D, "Threshold (#DeltaVCal)", "Entries");
 
-  auto hNoise1D = HistContainer<TH1F>("Noise1D", "Noise Distribution", 100, 0, 30);
+  auto hNoise1D = CanvasContainer<TH1F>("Noise1D", "Noise Distribution", 100, 0, 30);
   bookImplementer(theOutputFile, theDetectorStructure, hNoise1D, Noise1D, "Noise (#DeltaVCal)", "Entries");
 
-  auto hThreshold2D = HistContainer<TH2F>("Threshold2D", "Threshold Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+  auto hThreshold2D = CanvasContainer<TH2F>("Threshold2D", "Threshold Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hThreshold2D, Threshold2D, "Column", "Row");
 
-  auto hNoise2D = HistContainer<TH2F>("Noise2D", "Noise Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+  auto hNoise2D = CanvasContainer<TH2F>("Noise2D", "Noise Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hNoise2D, Noise2D, "Column", "Row");
 }
 
@@ -39,8 +39,8 @@ void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  auto* hOcc2D      = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-	  auto* Error2DHist = Error2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+	  auto* hOcc2D      = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+	  auto* Error2DHist = Error2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 	  
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
@@ -58,10 +58,10 @@ void RD53SCurveHistograms::fillThresholdNoise (const DetectorDataContainer& data
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  auto* Threshold1DHist = Threshold1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-	  auto* Noise1DHist     = Noise1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-	  auto* Threshold2DHist = Threshold2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-	  auto* Noise2DHist     = Noise2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+	  auto* Threshold1DHist = Threshold1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+	  auto* Noise1DHist     = Noise1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+	  auto* Threshold2DHist = Threshold2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+	  auto* Noise2DHist     = Noise2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
