@@ -190,24 +190,24 @@ void Gain::computeStats (std::vector<float>& x, std::vector<float>& y, std::vect
       bi = -b/det;
       ci = -c/det;
       di =  a/det;
+
+
+      // #################
+      // # (XtX)^(-1)XtY #
+      // #################
+      for (auto i = 0u; i < x.size(); i++)
+	if (e[i] != 0)
+	  {
+	    intercept    += (ai + bi*x[i]) * y[i];
+	    gain         += (ci + di*x[i]) * y[i];
+	    
+	    interceptErr += (ai + bi*x[i])*(ai + bi*x[i]) * e[i]*e[i];
+	    gainErr      += (ci + di*x[i])*(ci + di*x[i]) * e[i]*e[i];
+	  }
+      
+      interceptErr = sqrt(interceptErr);
+      gainErr      = sqrt(gainErr);
     }
-
-
-  // #################
-  // # (XtX)^(-1)XtY #
-  // #################
-  for (auto i = 0u; i < x.size(); i++)
-    if (e[i] != 0)
-      {
-	intercept    += (ai + bi*x[i]) * y[i];
-	gain         += (ci + di*x[i]) * y[i];
-	
-	interceptErr += (ai + bi*x[i])*(ai + bi*x[i]) * e[i]*e[i];
-	gainErr      += (ci + di*x[i])*(ci + di*x[i]) * e[i]*e[i];
-      }
-  
-  interceptErr = sqrt(interceptErr);
-  gainErr      = sqrt(gainErr);
 }
 
 void Gain::chipErrorReport ()

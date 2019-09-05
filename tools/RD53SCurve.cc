@@ -125,9 +125,9 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 	    for (auto col = 0u; col < RD53::nCols; col++)
 	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
 		{
-		  for (auto i = 0u; i < dacList.size()-1u; i++)
-		    measurements[i+1] = (detectorContainerVector[i+1]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy - 
-					 detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
+		  for (auto i = 1u; i < dacList.size(); i++)
+		    measurements[i] = fabs(detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy - 
+					   detectorContainerVector[i-1]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
 		  
 		  this->computeStats(measurements, offset, nHits, mean, rms);
 		  
