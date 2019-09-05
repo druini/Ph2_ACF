@@ -14,10 +14,10 @@
       <Global>
 	<!-- Overwrite .txt configuration file settings -->
         <Settings
-            EN_CORE_COL_SYNC       = "0"
+            EN_CORE_COL_SYNC       =     "0"
             EN_CORE_COL_LIN_1      = "65535"
             EN_CORE_COL_LIN_2      =     "1"
-            EN_CORE_COL_DIFF_1     = "0"
+            EN_CORE_COL_DIFF_1     =     "0"
             EN_CORE_COL_DIFF_2     =     "0"
 
             EN_MACRO_COL_CAL_LIN_1 = "65535"
@@ -41,26 +41,26 @@
             HITOR_3_MASK_DIFF_1    =     "1"
 
             PA_IN_BIAS_LIN         =   "350"
-	    FC_BIAS_LIN            =    "20"
-	    KRUM_CURR_LIN          =    "29"
-	    LDAC_LIN               =   "130"
-	    COMP_LIN               =   "110"
-	    REF_KRUM_LIN           =   "300"
+            FC_BIAS_LIN            =    "20"
+            KRUM_CURR_LIN          =    "29"
+            LDAC_LIN               =   "130"
+            COMP_LIN               =   "110"
+            REF_KRUM_LIN           =   "300"
             Vthreshold_LIN         =   "400"
 			          
-	    VCAL_HIGH              =   "600"
-	    VCAL_MED               =   "100"
+            VCAL_HIGH              =   "600"
+            VCAL_MED               =   "100"
 			          
-	    INJECTION_SELECT       =    "12"
+            INJECTION_SELECT       =    "12"
             GP_LVDS_ROUTE          =     "0"
             LATENCY_CONFIG         =   "136"
             MONITOR_SELECT         =  "8203"
-	    CLK_DATA_DELAY         =     "0"
+            CLK_DATA_DELAY         =     "0"
 
-	    LOCKLOSS_CNT           =     "0"
-	    BITFLIP_WNG_CNT        =     "0"
-	    BITFLIP_ERR_CNT        =     "0"
-	    CMDERR_CNT             =     "0"
+            LOCKLOSS_CNT           =     "0"
+            BITFLIP_WNG_CNT        =     "0"
+            BITFLIP_ERR_CNT        =     "0"
+            CMDERR_CNT             =     "0"
 	    />
 	<!--
 	    MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
