@@ -143,20 +143,15 @@ namespace Ph2_System {
 
         os << RESET << "\n\n";
 
-        for ( i = 0; i < 80; i++ )
-            os << "*";
-
+        for (i = 0; i < 80; i++) os << "*";
         os << "\n";
 
-        for ( j = 0; j < 40; j++ )
-            os << " ";
-
+        for (j = 0; j < 40; j++) os << " ";
         os << BOLDRED << "HW SUMMARY" << RESET << std::endl;
 
-        for ( i = 0; i < 80; i++ )
-            os << "*";
-
+        for (i = 0; i < 80; i++) os << "*";
         os << "\n";
+
         const std::string strUhalConfig = expandEnvironmentVariables (doc.child ( "HwDescription" ).child ( "Connections" ).attribute ( "name" ).value() );
 
     // Iterate over the BeBoard Nodes

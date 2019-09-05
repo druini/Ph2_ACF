@@ -388,14 +388,14 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
-      std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
-      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
+      std::string fileNameSC("Run" + fromInt2Str(runNumber) + "_SCurve");
+      SCurve sc(fileNameSC.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
 
       runNumber++;
-      fileName = "Run" + fromInt2Str(runNumber) + "_ThrEqualization";
+      std::string fileNameTE = "Run" + fromInt2Str(runNumber) + "_ThrEqualization";
       std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
       std::cout << "chipConfig.c_str() " << chipConfig.c_str() << std::endl;
-      ThrEqualization te(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents*VCalHnsteps, nEvents);
+      ThrEqualization te(fileNameTE.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents*VCalHnsteps, nEvents);
 
       RD53RunProgress::total() = sc.getNumberIterations() + te.getNumberIterations();
 
