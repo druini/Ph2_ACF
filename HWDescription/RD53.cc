@@ -213,12 +213,11 @@ namespace Ph2_HwDescription
       }
   }
 
-  void RD53::saveRegMap (const std::string& fName2Append)
+  void RD53::saveRegMap (const std::string& fName2Add)
   {
     const int Nspaces = 40;
 
-    std::string output = configFileName;
-    output.insert(output.find("."),fName2Append);
+    std::string output = this->composeFileName(configFileName,fName2Add);
     std::ofstream file (output.c_str(), std::ios::out | std::ios::trunc);
 
     if (file)
@@ -286,7 +285,7 @@ namespace Ph2_HwDescription
     else
       LOG (ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << output << RESET;
   }
-  
+
   void RD53::copyMaskFromDefault()
   {
     for (auto i = 0u; i < fPixelsMask.size(); i++)

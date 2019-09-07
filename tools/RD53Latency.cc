@@ -9,9 +9,18 @@
 
 #include "RD53Latency.h"
 
-Latency::Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t startValue, size_t stopValue, size_t nEvents)
+Latency::Latency (std::string fileRes,
+		  std::string fileReg,
+		  size_t rowStart,
+		  size_t rowStop,
+		  size_t colStart,
+		  size_t colStop,
+		  size_t startValue,
+		  size_t stopValue,
+		  size_t nEvents)
   : Tool       ()
   , fileRes    (fileRes)
+  , fileReg    (fileReg)
   , rowStart   (rowStart)
   , rowStop    (rowStop)
   , colStart   (colStart)
@@ -45,12 +54,12 @@ void Latency::run ()
 
 void Latency::draw (bool display, bool save)
 {
-  TApplication* myApp;
+  TApplication* myApp = nullptr;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
   if (save    == true)
     {
-      this->CreateResultDirectory("Results",false,false);
+      this->CreateResultDirectory(RESULTDIR,false,false);
       this->InitResultFile(fileRes);
     }
 
@@ -58,7 +67,25 @@ void Latency::draw (bool display, bool save)
   this->fillHisto();
   this->display();
 
-  if (save    == true) this->WriteRootFile();
+  if (save == true)
+    {
+      this->WriteRootFile();
+      
+      // ############################
+      // # Save register new values #
+      // ############################
+      for (const auto cBoard : *fDetectorContainer)
+	for (const auto cModule : *cBoard)
+	  for (const auto cChip : *cModule)
+	    {
+	      static_cast<RD53*>(cChip)->copyMaskFromDefault();
+	      static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+	      static_cast<RD53*>(cChip)->saveRegMap("");
+	      std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+	      system(command.c_str());
+	    }
+    }
+
   if (display == true) myApp->Run(true);
 }
 

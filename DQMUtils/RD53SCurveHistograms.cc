@@ -17,8 +17,11 @@ void RD53SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
   auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue, stopValue, nEvents + 1, 0, 1 + 1. / nEvents);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "Efficiency");
 
-  auto hErr2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
-  bookImplementer(theOutputFile, theDetectorStructure, hErr2D, Error2D, "Columns", "Rows");
+  auto hErrReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+  bookImplementer(theOutputFile, theDetectorStructure, hErrReadOut2D, ErrorReadOut2D, "Columns", "Rows");
+
+  auto hErrFit2D = CanvasContainer<TH2F>("FitErrors", "Fit Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+  bookImplementer(theOutputFile, theDetectorStructure, hErrFit2D, ErrorFit2D, "Columns", "Rows");
 
   auto hThreshold1D = CanvasContainer<TH1F>("Threshold1D", "Threshold Distribution", 1000, startValue, stopValue);
   bookImplementer(theOutputFile, theDetectorStructure, hThreshold1D, Threshold1D, "Threshold (#DeltaVCal)", "Entries");
@@ -39,15 +42,15 @@ void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  auto* hOcc2D      = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-	  auto* Error2DHist = Error2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+	  auto* hOcc2D             = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+	  auto* ErrorReadOut2DHist = ErrorReadOut2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 	  
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
 	      {
 		if (cChip->getChannel<OccupancyAndPh>(row, col).isEnabled == true)
 		  hOcc2D->Fill(VCAL_HIGH, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(0) / 2.);
-		if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) Error2DHist->Fill(col + 1, row + 1);
+		if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
 	      }
 	}
 }
@@ -62,6 +65,7 @@ void RD53SCurveHistograms::fillThresholdNoise (const DetectorDataContainer& data
 	  auto* Noise1DHist     = Noise1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 	  auto* Threshold2DHist = Threshold2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 	  auto* Noise2DHist     = Noise2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+	  auto* ErrorFit2DHist  = ErrorFit2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
@@ -72,13 +76,15 @@ void RD53SCurveHistograms::fillThresholdNoise (const DetectorDataContainer& data
 		  Threshold2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
 		  Noise2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
 		}
+	      else if (cChip->getChannel<ThresholdAndNoise>(row, col).fitError == true) ErrorFit2DHist->Fill(col + 1, row + 1);
 	}
 }
 
 void RD53SCurveHistograms::process ()
 {
   draw<TH2F>(Occupancy2D, "gcolz", true, "Charge (electrons)");
-  draw<TH2F>(Error2D, "gcolz");
+  draw<TH2F>(ErrorReadOut2D, "gcolz");
+  draw<TH2F>(ErrorFit2D, "gcolz");
   draw<TH1F>(Threshold1D, "", true, "Threshold (electrons)");
   draw<TH1F>(Noise1D, "", true, "Noise (electrons)");
   draw<TH2F>(Threshold2D, "gcolz");

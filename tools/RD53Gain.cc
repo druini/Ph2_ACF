@@ -9,9 +9,20 @@
 
 #include "RD53Gain.h"
 
-Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset)
+Gain::Gain (std::string fileRes,
+	    std::string fileReg,
+	    size_t rowStart,
+	    size_t rowStop,
+	    size_t colStart,
+	    size_t colStop,
+	    size_t nEvents,
+	    size_t startValue,
+	    size_t stopValue,
+	    size_t nSteps,
+	    size_t offset)
   : Tool       ()
   , fileRes    (fileRes)
+  , fileReg    (fileReg)
   , rowStart   (rowStart)
   , rowStop    (rowStop)
   , colStart   (colStart)
@@ -70,12 +81,12 @@ void Gain::run ()
 
 void Gain::draw (bool display, bool save)
 {
-  TApplication* myApp;
+  TApplication* myApp = nullptr;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
   if (save    == true)
     {
-      this->CreateResultDirectory("Results",false,false);
+      this->CreateResultDirectory(RESULTDIR,false,false);
       this->InitResultFile(fileRes);
     }
 
@@ -83,7 +94,25 @@ void Gain::draw (bool display, bool save)
   this->fillHisto();
   this->display();
 
-  if (save    == true) this->WriteRootFile();
+  if (save == true)
+    {
+      this->WriteRootFile();
+
+      // ############################
+      // # Save register new values #
+      // ############################
+      for (const auto cBoard : *fDetectorContainer)
+	for (const auto cModule : *cBoard)
+	  for (const auto cChip : *cModule)
+	    {
+	      static_cast<RD53*>(cChip)->copyMaskFromDefault();
+	      static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+	      static_cast<RD53*>(cChip)->saveRegMap("");
+	      std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+	      system(command.c_str());
+	    }
+    }
+
   if (display == true) myApp->Run(true);
 }
 
@@ -119,13 +148,16 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
 		  
 		  if (gain != 0)
 		    {
+		      theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fitError        = false;
 		      theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain           = gain;
 		      theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGainError      = gainErr;
 		      theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept      = intercept;
 		      theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fInterceptError = interceptErr;
 		    }
+		  else
+		    theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fitError = true;
 		}
-	  
+
 	  index++;
 	}
   

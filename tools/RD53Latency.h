@@ -19,13 +19,27 @@
 #include "TApplication.h"
 
 
+// #############
+// # CONSTANTS #
+// #############
+#define RESULTDIR "Results" // Directory containing the results
+
+
 // ######################
 // # Latency test suite #
 // ######################
 class Latency : public Tool
 {
  public:
-  Latency (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t startValue, size_t stopValue, size_t nEvents);
+  Latency (std::string fileRes,
+	   std::string fileReg,
+	   size_t rowStart,
+	   size_t rowStop,
+	   size_t colStart,
+	   size_t colStop,
+	   size_t startValue,
+	   size_t stopValue,
+	   size_t nEvents);
 
   void   run                 ();
   void   draw                (bool display, bool save);
@@ -33,7 +47,8 @@ class Latency : public Tool
   size_t getNumberIterations () { return (stopValue - startValue); }
 
  private:
-  const char* fileRes;
+  std::string fileRes;
+  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;

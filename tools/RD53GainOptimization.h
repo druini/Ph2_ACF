@@ -14,21 +14,45 @@
 #include "RD53Gain.h"
 
 
+// #############
+// # CONSTANTS #
+// #############
+#define RESULTDIR "Results" // Directory containing the results
+
+
 // ################################
 // # Gain optimization test suite #
 // ################################
 class GainOptimization : public Gain
 {
  public:
-  GainOptimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop,  size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset, float targetCharge, size_t KrumCurrStart = 0, size_t KrumCurrStop = 0);
+  GainOptimization (std::string fileRes,
+		    std::string fileReg,
+		    size_t rowStart,
+		    size_t rowStop,
+		    size_t colStart,
+		    size_t colStop,
+		    size_t nEvents,
+		    size_t startValue,
+		    size_t stopValue,
+		    size_t nSteps,
+		    size_t offset,
+		    float targetCharge,
+		    size_t KrumCurrStart = 0,
+		    size_t KrumCurrStop = 0);
 
   void   run                 ();
   void   draw                (bool display, bool save);
-  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*nSteps*floor(log2(KrumCurrStop - KrumCurrStart + 1) + 3); }
+  size_t getNumberIterations ()
+  {
+    uint16_t nBitKrumCurr   = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 1);
+    uint16_t moreIterations = 2;
+    return RD53ChannelGroupHandler::getNumberOfGroups(false)*nSteps*(nBitKrumCurr + moreIterations);
+  }
 
  private:
-  const char* fileRes;
-  const char* fileReg;
+  std::string fileRes;
+  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;

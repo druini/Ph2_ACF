@@ -35,7 +35,7 @@ class RD53PixelAliveHistograms : public DQMHistogramBase
  private:
   DetectorDataContainer Occupancy1D;
   DetectorDataContainer Occupancy2D;
-  DetectorDataContainer Error2D;
+  DetectorDataContainer ErrorReadOut2D;
   DetectorDataContainer ToT;
   DetectorDataContainer BCID;
   DetectorDataContainer TriggerID;

@@ -40,7 +40,8 @@ class RD53SCurveHistograms : public DQMHistogramBase
 
  private:
   DetectorDataContainer Occupancy2D;
-  DetectorDataContainer Error2D;
+  DetectorDataContainer ErrorReadOut2D;
+  DetectorDataContainer ErrorFit2D;
   DetectorDataContainer Threshold1D;
   DetectorDataContainer Noise1D;
   DetectorDataContainer Threshold2D;

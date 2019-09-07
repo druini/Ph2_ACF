@@ -21,6 +21,7 @@
 // ##################
 // # Default values #
 // ##################
+#define RESULTDIR "Results" // Directory containing the results
 #define FILERUNNUMBER "./RunNumber.txt"
 #define RUNNUMBER 0
 
@@ -289,7 +290,6 @@ int main (int argc, char** argv)
   size_t ThrStop        = findValue(cSystemController.fSettingsMap,"ThrStop");
 
   size_t display        = findValue(cSystemController.fSettingsMap,"DisplayHisto");
-  size_t chipRegDefault = findValue(cSystemController.fSettingsMap,"ChipRegDefaultFile");
 
 
   // #####################
@@ -305,6 +305,7 @@ int main (int argc, char** argv)
 
 
   std::cout << std::endl;
+  std::string chipConfig ("Run" + fromInt2Str(runNumber) + "_");
   if (whichCalib == "latency")
     {
       // ###################
@@ -312,8 +313,8 @@ int main (int argc, char** argv)
       // ###################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
 
-      std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
-      Latency la(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
+      std::string fileName ("Run" + fromInt2Str(runNumber) + "_Latency");
+      Latency la(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
       RD53RunProgress::total() = la.getNumberIterations();
       la.Inherit(&cSystemController);
       la.run();
@@ -327,8 +328,8 @@ int main (int argc, char** argv)
       // ##################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-      std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
-      PixelAlive pa(fileName.c_str(), "", ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, 1, true);
+      std::string fileName ("Run" + fromInt2Str(runNumber) + "_PixelAlive");
+      PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, 1, true);
       RD53RunProgress::total() = pa.getNumberIterations();
       pa.Inherit(&cSystemController);      
       pa.run();
@@ -342,9 +343,8 @@ int main (int argc, char** argv)
       // #############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
-      std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan"); 
-      std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
-      PixelAlive pa(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, nTRIGxEvent, false, TargetOcc);
+      std::string fileName ("Run" + fromInt2Str(runNumber) + "_NoiseScan"); 
+      PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, nTRIGxEvent, false, TargetOcc);
       RD53RunProgress::total() = pa.getNumberIterations();
       pa.Inherit(&cSystemController);
       pa.run();
@@ -358,8 +358,8 @@ int main (int argc, char** argv)
       // ##############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
-      std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
-      SCurve sc(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
+      std::string fileName ("Run" + fromInt2Str(runNumber) + "_SCurve");
+      SCurve sc(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
       RD53RunProgress::total() = sc.getNumberIterations();
       sc.Inherit(&cSystemController);
       sc.run();
@@ -373,8 +373,8 @@ int main (int argc, char** argv)
       // ############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
-      std::string fileName("Run" + fromInt2Str(runNumber) + "_Gain");
-      Gain ga(fileName.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
+      std::string fileName ("Run" + fromInt2Str(runNumber) + "_Gain");
+      Gain ga(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
       RD53RunProgress::total() = ga.getNumberIterations();
       ga.Inherit(&cSystemController);
       ga.run();
@@ -388,14 +388,14 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
-      std::string fileNameSC("Run" + fromInt2Str(runNumber) + "_SCurve");
-      SCurve sc(fileNameSC.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
+      std::string fileName ("Run" + fromInt2Str(runNumber) + "_SCurve");
+      SCurve sc(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED);
 
       runNumber++;
-      std::string fileNameTE = "Run" + fromInt2Str(runNumber) + "_ThrEqualization";
-      std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
+      fileName   = "Run" + fromInt2Str(runNumber) + "_ThrEqualization";
+      chipConfig = "Run" + fromInt2Str(runNumber) + "_";
       std::cout << "chipConfig.c_str() " << chipConfig.c_str() << std::endl;
-      ThrEqualization te(fileNameTE.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents*VCalHnsteps, nEvents);
+      ThrEqualization te(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents*VCalHnsteps, nEvents);
 
       RD53RunProgress::total() = sc.getNumberIterations() + te.getNumberIterations();
 
@@ -415,9 +415,8 @@ int main (int argc, char** argv)
       // #########################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
 
-      std::string fileName("Run" + fromInt2Str(runNumber) + "_GainOptimization");
-      std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
-      GainOptimization go(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, RD53chargeConverter::Charge2VCal(TargetCharge), KrumCurrStart, KrumCurrStop);
+      std::string fileName ("Run" + fromInt2Str(runNumber) + "_GainOptimization");
+      GainOptimization go(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, RD53chargeConverter::Charge2VCal(TargetCharge), KrumCurrStart, KrumCurrStop);
       RD53RunProgress::total() = go.getNumberIterations();
       go.Inherit(&cSystemController);
       go.run();
@@ -430,17 +429,29 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Minimization @@@" << RESET;
 
-      std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
-      std::string chipConfig(chipRegDefault == false ? "_" + fromInt2Str(runNumber) : "");
-      ThrMinimization tm(fileName.c_str(), chipConfig.c_str(), ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, TargetOcc, ThrStart, ThrStop);
+      std::string fileName ("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
+      ThrMinimization tm(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, TargetOcc, ThrStart, ThrStop);
       RD53RunProgress::total() = tm.getNumberIterations();
       tm.Inherit(&cSystemController);
       tm.run();
       tm.analyze();
       tm.draw(display,true);
     }
-  else LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
+  else
+    {
+      LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
+      cSystemController.Destroy();
+      exit(EXIT_FAILURE);
+    }
 
+
+  // ###########################
+  // # Copy configuration file #
+  // ###########################
+  std::string fName2Add (std::string(RESULTDIR) + "/Run" + fromInt2Str(runNumber) + "_");
+  std::string output    (RD53::composeFileName(configFile,fName2Add));
+  std::string command   ("cp " + configFile + " " + output);
+  system(command.c_str());
 
   // #####################
   // # Update run number #

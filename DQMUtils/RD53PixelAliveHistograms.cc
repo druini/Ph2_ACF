@@ -25,7 +25,7 @@ void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContain
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "Columns", "Rows");
 
   auto hErr2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
-  bookImplementer(theOutputFile, theDetectorStructure, hErr2D, Error2D, "Columns", "Rows");
+  bookImplementer(theOutputFile, theDetectorStructure, hErr2D, ErrorReadOut2D, "Columns", "Rows");
 
   auto hToT = CanvasContainer<TH1F>("ToT", "ToT Distribution", ToTsize, 0, ToTsize);
   bookImplementer(theOutputFile, theDetectorStructure, hToT, ToT, "ToT", "Entries");
@@ -43,12 +43,12 @@ void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-	  auto* Occupancy2DHist = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-	  auto* Error2DHist     = Error2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-	  auto* ToTHist         = ToT.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-	  auto* BCIDHist        = BCID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-	  auto* TriggerIDHist   = TriggerID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+	  auto* Occupancy1DHist    = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+	  auto* Occupancy2DHist    = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+	  auto* ErrorReadOut2DHist = ErrorReadOut2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+	  auto* ToTHist            = ToT.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+	  auto* BCIDHist           = BCID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+	  auto* TriggerIDHist      = TriggerID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
@@ -59,7 +59,7 @@ void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)
 		    Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
 		    ToTHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
 		  }
-		if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) Error2DHist->Fill(col + 1, row + 1);
+		if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
 	      }
 
 	  for (auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.size(); i++)
@@ -80,7 +80,7 @@ void RD53PixelAliveHistograms::process ()
 {
   draw<TH1F>(Occupancy1D);  
   draw<TH2F>(Occupancy2D, "gcolz");
-  draw<TH2F>(Error2D, "gcolz");
+  draw<TH2F>(ErrorReadOut2D, "gcolz");
   draw<TH1F>(ToT);
   draw<TH1F>(BCID);
   draw<TH1F>(TriggerID);

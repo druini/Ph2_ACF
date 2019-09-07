@@ -10,7 +10,7 @@
 #ifndef RD53_H
 #define RD53_H
 
-#include "../HWDescription/ReadoutChip.h"
+#include "ReadoutChip.h"
 
 #include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
@@ -170,12 +170,13 @@ namespace Ph2_HwDescription
     RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& fileName);
     RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& fileName);
 
-    void     loadfRegMap         (const std::string& fileName)     override;
-    void     saveRegMap          (const std::string& fName2Append) override;
-    uint32_t getNumberOfChannels () const                          override;
-    bool     isDACLocal          (const std::string& dacName)      override;
-    uint8_t  getNumberOfBits     (const std::string& dacName)      override;
+    void     loadfRegMap         (const std::string& fileName)  override;
+    void     saveRegMap          (const std::string& fName2Add) override;
+    uint32_t getNumberOfChannels () const                       override;
+    bool     isDACLocal          (const std::string& dacName)   override;
+    uint8_t  getNumberOfBits     (const std::string& dacName)   override;
 
+    std::string getFileName      (const std::string& fName2Add) { return this->composeFileName(configFileName,fName2Add); }
     std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
     std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
 
@@ -275,6 +276,13 @@ namespace Ph2_HwDescription
       return count;
     }
 
+    static std::string composeFileName (const std::string& configFileName, const std::string& fName2Add)
+    {
+      std::string output = configFileName;
+      output.insert(output.find("CMSIT"),fName2Add);
+      return output;
+    }
+    
   private:
     std::vector<perPixelData> fPixelsMask;
     std::vector<perPixelData> fPixelsMaskDefault;

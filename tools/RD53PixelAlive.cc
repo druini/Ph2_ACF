@@ -9,7 +9,17 @@
 
 #include "RD53PixelAlive.h"
 
-PixelAlive::PixelAlive (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, size_t nTRIGxL1A, bool inject, float thresholdOccupancy)
+PixelAlive::PixelAlive (const std::string fileRes,
+			const std::string fileReg,
+			size_t rowStart,
+			size_t rowStop,
+			size_t colStart,
+			size_t colStop,
+			size_t nEvents,
+			size_t nEvtsBurst,
+			size_t nTRIGxL1A,
+			bool inject,
+			float thresholdOccupancy)
   : Tool               ()
   , fileRes            (fileRes)
   , fileReg            (fileReg)
@@ -58,12 +68,12 @@ void PixelAlive::run ()
 
 void PixelAlive::draw (bool display, bool save)
 {
-  TApplication* myApp;
+  TApplication* myApp = nullptr;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
   if (save    == true)
     {
-      this->CreateResultDirectory("Results",false,false);
+      this->CreateResultDirectory(RESULTDIR,false,false);
       this->InitResultFile(fileRes);
     }
 
@@ -81,7 +91,12 @@ void PixelAlive::draw (bool display, bool save)
       for (const auto cBoard : *fDetectorContainer)
 	for (const auto cModule : *cBoard)
 	  for (const auto cChip : *cModule)
-	    static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+	    {
+	      static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+	      static_cast<RD53*>(cChip)->saveRegMap("");
+	      std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+	      system(command.c_str());
+	    }
     }
 
   if (display == true) myApp->Run(true);

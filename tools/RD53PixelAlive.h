@@ -19,13 +19,29 @@
 #include "TApplication.h"
 
 
+// #############
+// # CONSTANTS #
+// #############
+#define RESULTDIR "Results" // Directory containing the results
+
+
 // #########################
 // # PixelAlive test suite #
 // #########################
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, size_t nTRIGxL1A, bool inject, float thresholdOccupancy = 0);
+  PixelAlive (std::string fileRes,
+	      std::string fileReg,
+	      size_t rowStart,
+	      size_t rowStop,
+	      size_t colStart,
+	      size_t colStop,
+	      size_t nEvents,
+	      size_t nEvtsBurst,
+	      size_t nTRIGxL1A,
+	      bool inject,
+	      float thresholdOccupancy = 0);
 
   void run                                       ();
   void draw                                      (bool display, bool save);
@@ -33,8 +49,8 @@ class PixelAlive : public Tool
   size_t getNumberIterations                     () { return RD53ChannelGroupHandler::getNumberOfGroups(!inject) * nEvents/nEvtsBurst; }
 
  private:
-  const char* fileRes;
-  const char* fileReg;
+  std::string fileRes;
+  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;

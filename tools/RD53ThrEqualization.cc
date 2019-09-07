@@ -9,7 +9,14 @@
 
 #include "RD53ThrEqualization.h"
 
-ThrEqualization::ThrEqualization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst)
+ThrEqualization::ThrEqualization (std::string fileRes,
+				  std::string fileReg,
+				  size_t rowStart,
+				  size_t rowStop,
+				  size_t colStart,
+				  size_t colStop,
+				  size_t nEvents,
+				  size_t nEvtsBurst)
   : Tool       ()
   , fileRes    (fileRes)
   , fileReg    (fileReg)
@@ -75,12 +82,12 @@ void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
 
 void ThrEqualization::draw (bool display, bool save)
 {
-  TApplication* myApp;
+  TApplication* myApp = nullptr;
 
   if (display == true) myApp = new TApplication("myApp", nullptr, nullptr);
   if (save    == true)
     {
-      this->CreateResultDirectory("Results",false,false);
+      this->CreateResultDirectory(RESULTDIR,false,false);
       this->InitResultFile(fileRes);
     }
 
@@ -101,8 +108,11 @@ void ThrEqualization::draw (bool display, bool save)
 		for (auto col = 0u; col < RD53::nCols; col++)
 		  if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
 		    static_cast<RD53*>(cChip)->setTDAC(row, col, theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue);
-	      
+
 	      static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+	      static_cast<RD53*>(cChip)->saveRegMap("");
+	      std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+	      system(command.c_str());
 	    }
     }
 

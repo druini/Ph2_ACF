@@ -1,16 +1,15 @@
-#include <math.h>
 #include "../Utils/ThresholdAndNoise.h"
 
 void ThresholdAndNoise::makeSummaryAverage(const std::vector<ThresholdAndNoise>* theThresholdAndNoiseVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
 {
-    if(theThresholdAndNoiseVector->size() != theNumberOfEnabledChannelsList.size())
+  if(theThresholdAndNoiseVector->size() != theNumberOfEnabledChannelsList.size())
     {
-        std::cout << __PRETTY_FUNCTION__ << "theThresholdAndNoiseVector size = " << theThresholdAndNoiseVector->size() 
-        << " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
-        abort();
+      std::cout << __PRETTY_FUNCTION__ << "theThresholdAndNoiseVector size = " << theThresholdAndNoiseVector->size() 
+		<< " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
+      abort();
     }
     
-    for(size_t iContainer = 0; iContainer<theThresholdAndNoiseVector->size(); ++iContainer)
+  for(size_t iContainer = 0; iContainer<theThresholdAndNoiseVector->size(); ++iContainer)
     {
       if (theThresholdAndNoiseVector->at(iContainer).fThresholdError > 0)
 	{
@@ -25,15 +24,15 @@ void ThresholdAndNoise::makeSummaryAverage(const std::vector<ThresholdAndNoise>*
 	}
     }
     
-    if (fThresholdError > 0)
-      {
-	fThreshold      /= fThresholdError;
-	fThresholdError /= sqrt(1./ fThresholdError);
-      }
+  if (fThresholdError > 0)
+    {
+      fThreshold      /= fThresholdError;
+      fThresholdError /= sqrt(1./ fThresholdError);
+    }
 
-    if (fNoiseError > 0)
-      {
-	fNoise      /= fNoiseError;
-	fNoiseError /= sqrt(1. / fNoiseError);
-      }
+  if (fNoiseError > 0)
+    {
+      fNoise      /= fNoiseError;
+      fNoiseError /= sqrt(1. / fNoiseError);
+    }
 }

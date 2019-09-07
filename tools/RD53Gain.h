@@ -19,13 +19,29 @@
 #include "TApplication.h"
 
 
+// #############
+// # CONSTANTS #
+// #############
+#define RESULTDIR "Results" // Directory containing the results
+
+
 // ##########################
 // # Gain measurement suite #
 // ##########################
 class Gain : public Tool
 {
  public:
-  Gain  (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset);
+  Gain  (std::string fileRes,
+	 std::string fileReg,
+	 size_t rowStart,
+	 size_t rowStop,
+	 size_t colStart,
+	 size_t colStop,
+	 size_t nEvents,
+	 size_t startValue,
+	 size_t stopValue,
+	 size_t nSteps,
+	 size_t offset);
   ~Gain () { for (auto container : detectorContainerVector) delete container; }
   
   void run                                       ();
@@ -34,7 +50,8 @@ class Gain : public Tool
   size_t getNumberIterations                     () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*nSteps; }
 
  private:
-  const char* fileRes;
+  std::string fileRes;
+  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;

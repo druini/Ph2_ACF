@@ -9,7 +9,17 @@
 
 #include "RD53ThrMinimization.h"
 
-ThrMinimization::ThrMinimization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart, size_t ThrStop)
+ThrMinimization::ThrMinimization (std::string fileRes,
+				  std::string fileReg,
+				  size_t rowStart,
+				  size_t rowStop,
+				  size_t colStart,
+				  size_t colStop,
+				  size_t nEvents,
+				  size_t nEvtsBurst,
+				  float targetOccupancy,
+				  size_t ThrStart,
+				  size_t ThrStop)
   : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false)
   , fileRes         (fileRes)
   , fileReg         (fileReg)
@@ -47,12 +57,12 @@ void ThrMinimization::run ()
 
 void ThrMinimization::draw (bool display, bool save)
 {
-  TApplication* myApp;
+  TApplication* myApp = nullptr;
 
   if (display == true) myApp = new TApplication("myApp", nullptr, nullptr);
   if (save    == true)
     {
-      this->CreateResultDirectory("Results",false,false);
+      this->CreateResultDirectory(RESULTDIR,false,false);
       this->InitResultFile(fileRes);
     }
 
@@ -73,6 +83,9 @@ void ThrMinimization::draw (bool display, bool save)
 	    {
 	      static_cast<RD53*>(cChip)->copyMaskFromDefault();
 	      static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+	      static_cast<RD53*>(cChip)->saveRegMap("");
+	      std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+	      system(command.c_str());
 	    }
     }
 
