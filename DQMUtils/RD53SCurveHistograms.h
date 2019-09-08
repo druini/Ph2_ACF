@@ -35,7 +35,7 @@ class RD53SCurveHistograms : public DQMHistogramBase
   bool fill               (std::vector<char>& dataBuffer)                                                                             override { return false; };
   void reset              (void)                                                                                                      override {};
 
-  void fillOccupancy      (const DetectorDataContainer& data, int VCAL_HIGH);
+  void fillOccupancy      (const DetectorDataContainer& data, int DELTA_VCAL);
   void fillThresholdNoise (const DetectorDataContainer& data);
 
  private:

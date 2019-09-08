@@ -40,7 +40,7 @@ class RD53GainHistograms : public DQMHistogramBase
   bool fill              (std::vector<char>& dataBuffer)                                                                             override { return false; };
   void reset             (void)                                                                                                      override {};
 
-  void fillOccupancy     (const DetectorDataContainer& data, int VCAL_HIGH);
+  void fillOccupancy     (const DetectorDataContainer& data, int DELTA_VCAL);
   void fillGainIntercept (const DetectorDataContainer& data);
 
  private:
@@ -56,10 +56,6 @@ class RD53GainHistograms : public DQMHistogramBase
   size_t nSteps;
   size_t startValue;
   size_t stopValue;
-  size_t ROWstart;
-  size_t ROWstop;
-  size_t COLstart;
-  size_t COLstop;
 };
 
 #endif

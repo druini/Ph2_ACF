@@ -36,7 +36,7 @@ void RD53SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
   bookImplementer(theOutputFile, theDetectorStructure, hNoise2D, Noise2D, "Column", "Row");
 }
 
-void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int VCAL_HIGH)
+void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
@@ -49,8 +49,8 @@ void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int
 	    for (auto col = 0u; col < RD53::nCols; col++)
 	      {
 		if (cChip->getChannel<OccupancyAndPh>(row, col).isEnabled == true)
-		  hOcc2D->Fill(VCAL_HIGH, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(0) / 2.);
-		if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
+		  hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(0) / 2.);
+		else if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
 	      }
 	}
 }
@@ -69,14 +69,14 @@ void RD53SCurveHistograms::fillThresholdNoise (const DetectorDataContainer& data
 
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
-	      if (cChip->getChannel<ThresholdAndNoise>(row, col).fNoise != 0)
+	      if (cChip->getChannel<ThresholdAndNoise>(row, col).fitError == true) ErrorFit2DHist->Fill(col + 1, row + 1);
+	      else if (cChip->getChannel<ThresholdAndNoise>(row, col).fNoise != 0)
 		{
 		  Threshold1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
 		  Noise1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
 		  Threshold2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
 		  Noise2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
 		}
-	      else if (cChip->getChannel<ThresholdAndNoise>(row, col).fitError == true) ErrorFit2DHist->Fill(col + 1, row + 1);
 	}
 }
 

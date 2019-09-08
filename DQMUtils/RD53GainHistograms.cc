@@ -34,18 +34,9 @@ void RD53GainHistograms::book (TFile* theOutputFile, const DetectorContainer& th
 
   auto hIntercept2D = CanvasContainer<TH2F>("Intercept2D", "Intercept Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hIntercept2D, Intercept2D, "Column", "Row");
-
-
-  // ###########################
-  // # Retrieve scanned region #
-  // ###########################
-  ROWstart = this->findValue(pSettingsMap,"ROWstart");
-  ROWstop  = this->findValue(pSettingsMap,"ROWstop");
-  COLstart = this->findValue(pSettingsMap,"COLstart");
-  COLstop  = this->findValue(pSettingsMap,"COLstop");
 }
 
-void RD53GainHistograms::fillOccupancy (const DetectorDataContainer& data, int VCAL_HIGH)
+void RD53GainHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
@@ -57,8 +48,8 @@ void RD53GainHistograms::fillOccupancy (const DetectorDataContainer& data, int V
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
 	      {
-		if ((row >= ROWstart) && (row <= ROWstop) && (col >= COLstart) && (col <= COLstop))
-		  hOcc2D->Fill(VCAL_HIGH, cChip->getChannel<OccupancyAndPh>(row,col).fPh);
+		if (cChip->getChannel<OccupancyAndPh>(row, col).isEnabled == true)
+		  hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row,col).fPh);
 		if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
 	      }
 	}
@@ -78,14 +69,14 @@ void RD53GainHistograms::fillGainIntercept (const DetectorDataContainer& data)
 
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
-	      if (cChip->getChannel<GainAndIntercept>(row, col).fIntercept != 0)
+	      if (cChip->getChannel<GainAndIntercept>(row, col).fitError == true) ErrorFit2DHist->Fill(col + 1, row + 1);
+	      else if (cChip->getChannel<GainAndIntercept>(row, col).fIntercept != 0)
 		{
 		  Gain1DHist->Fill(cChip->getChannel<GainAndIntercept>(row, col).fGain);
 		  Intercept1DHist->Fill(cChip->getChannel<GainAndIntercept>(row, col).fIntercept);
 		  Gain2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainAndIntercept>(row, col).fGain);
 		  Intercept2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainAndIntercept>(row, col).fIntercept);
 		}
-	      else if (cChip->getChannel<GainAndIntercept>(row, col).fitError == true) ErrorFit2DHist->Fill(col + 1, row + 1);
 	}
 }
 
