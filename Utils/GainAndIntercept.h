@@ -19,8 +19,8 @@
 class GainAndIntercept
 {
  public:
-  GainAndIntercept   () : fGain(0), fGainError(0), fIntercept(0), fInterceptError(0), fitError(false) {}
-  ~GainAndIntercept ()                                                                                {}
+  GainAndIntercept   () : fGain(0), fGainError(0), fIntercept(0), fInterceptError(0), fitError(true) {}
+  ~GainAndIntercept ()                                                                               {}
 
   void print(void)
   {
