@@ -120,6 +120,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
 		  float occupancy = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
 		  static_cast<RD53*>(cChip)->enablePixel(row,col,(thresholdOccupancy != 0 ? occupancy < thresholdOccupancy : occupancy != 0));
 		}
+	  
+	  LOG (INFO) << BOLDGREEN << "\t\t--> Number of masked pixels: " << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
 	}
 
   return theOccContainer;

@@ -337,6 +337,17 @@ namespace Ph2_HwDescription
       }
   }
 
+  size_t RD53::getNbMaskedPixels()
+  {
+    size_t cnt = 0;
+
+    for (auto i = 0u; i < fPixelsMask.size(); i++)
+      for (auto j = 0u; j < fPixelsMask[i].Enable.size(); j++)
+	if (fPixelsMask[i].Enable[j] == 0) cnt++;
+
+    return cnt;
+  }
+
   void RD53::enablePixel (unsigned int row, unsigned int col, bool enable)
   {
     fPixelsMask[col].Enable[row] = enable;

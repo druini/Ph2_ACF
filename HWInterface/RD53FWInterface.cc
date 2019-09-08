@@ -76,7 +76,7 @@ namespace Ph2_HwInterface
     LOG (INFO) << GREEN << "Initializing board's registers:" << RESET;
     for (const auto& it : pBoard->getBeBoardRegMap())
       {
-	LOG (INFO) << BOLDBLUE << "\t--> " << it.first << " = " << BOLDYELLOW << it.second << RESET;
+	LOG (INFO) << BOLDGREEN << "\t--> " << it.first << " = " << BOLDYELLOW << it.second << RESET;
 	cVecReg.push_back({it.first, it.second});
       }
 

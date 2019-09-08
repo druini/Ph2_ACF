@@ -185,6 +185,7 @@ namespace Ph2_HwDescription
     void    resetMask           ();
     void    enableAllPixels     ();
     void    disableAllPixels    ();
+    size_t  getNbMaskedPixels   ();
     void    enablePixel         (unsigned int row, unsigned int col, bool enable);
     void    injectPixel         (unsigned int row, unsigned int col, bool inject);
     void    setTDAC             (unsigned int row, unsigned int col, uint8_t TDAC);
