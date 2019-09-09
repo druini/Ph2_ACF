@@ -394,7 +394,6 @@ int main (int argc, char** argv)
       runNumber++;
       fileName   = "Run" + fromInt2Str(runNumber) + "_ThrEqualization";
       chipConfig = "Run" + fromInt2Str(runNumber) + "_";
-      std::cout << "chipConfig.c_str() " << chipConfig.c_str() << std::endl;
       ThrEqualization te(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents*VCalHnsteps, nEvents);
 
       RD53RunProgress::total() = sc.getNumberIterations() + te.getNumberIterations();
