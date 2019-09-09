@@ -419,6 +419,7 @@ int main (int argc, char** argv)
       RD53RunProgress::total() = go.getNumberIterations();
       go.Inherit(&cSystemController);
       go.run();
+      go.analyze();
       go.draw(display,true);
     }
   else if (whichCalib == "thrmin")

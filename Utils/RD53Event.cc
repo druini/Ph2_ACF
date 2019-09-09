@@ -46,22 +46,16 @@ namespace Ph2_HwInterface
 		}
 
 	      for (const auto& hit : chip_events[chipIndx].data)
-		{
-		  if ((hit.row < RD53::nRows) && (hit.col < RD53::nCols))
-		    {
-		      for (auto i = 0; i < NPIX_REGION; i++)
-			{
-			  if (hit.tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION))
-			    {
-			      cChip->getChannel<OccupancyAndPh>(hit.row+RD53::nRows*(hit.col+i)).fOccupancy++;
-			      cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPh      += float(hit.tots[i]);
-			      cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPhError += float(hit.tots[i]*hit.tots[i]);
-			      if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col+i) == false)
-				cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).readoutError = true;
-			    }
-			}
-		    }
-		}
+		if ((hit.row < RD53::nRows) && (hit.col < RD53::nCols))
+		  for (auto i = 0; i < NPIX_REGION; i++)
+		    if (hit.tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION))
+		      {
+			cChip->getChannel<OccupancyAndPh>(hit.row+RD53::nRows*(hit.col+i)).fOccupancy++;
+			cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPh      += float(hit.tots[i]);
+			cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPhError += float(hit.tots[i]*hit.tots[i]);
+			if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col+i) == false)
+			  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).readoutError = true;
+		      }
 	    }
 	}
   }

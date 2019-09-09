@@ -70,7 +70,7 @@ void RD53SCurveHistograms::fillThresholdNoise (const DetectorDataContainer& data
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
 	      if (cChip->getChannel<ThresholdAndNoise>(row, col).fitError == true) ErrorFit2DHist->Fill(col + 1, row + 1);
-	      else
+	      else if (cChip->getChannel<ThresholdAndNoise>(row, col).fNoise != 0)
 		{
 		  Threshold1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
 		  Noise1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);

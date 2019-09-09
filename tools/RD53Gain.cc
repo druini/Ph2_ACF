@@ -73,6 +73,19 @@ void Gain::run ()
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
 
 
+  // #########################
+  // # Mark enabled channels #
+  // #########################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+	for (auto row = 0u; row < RD53::nRows; row++)
+	  for (auto col = 0u; col < RD53::nCols; col++)
+	    if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+	      for (auto i = 0u; i < dacList.size(); i++)
+		detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).isEnabled = true;
+
+
   // ################
   // # Error report #
   // ################

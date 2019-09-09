@@ -52,7 +52,7 @@ void GainOptimization::run ()
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("KRUM_CURR_LIN");
+	  theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("KRUM_CURR_LIN");
 
 
   // ################
@@ -98,6 +98,15 @@ void GainOptimization::draw (bool display, bool save)
     }
 
   if (display == true) myApp->Run(true);
+}
+
+void GainOptimization::analyze ()
+{
+  for (const auto cBoard : theKrumCurrContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+	LOG(INFO) << BOLDGREEN << "\t--> Krummenacher Current for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
+		  << cChip->getSummary<RegisterValue>().fRegisterValue << RESET;
 }
 
 void GainOptimization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }

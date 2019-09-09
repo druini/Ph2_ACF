@@ -70,7 +70,7 @@ void RD53GainHistograms::fillGainIntercept (const DetectorDataContainer& data)
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
 	      if (cChip->getChannel<GainAndIntercept>(row, col).fitError == true) ErrorFit2DHist->Fill(col + 1, row + 1);
-	      else
+	      else if (cChip->getChannel<GainAndIntercept>(row, col).fGain != 0)
 		{
 		  Gain1DHist->Fill(cChip->getChannel<GainAndIntercept>(row, col).fGain);
 		  Intercept1DHist->Fill(cChip->getChannel<GainAndIntercept>(row, col).fIntercept);

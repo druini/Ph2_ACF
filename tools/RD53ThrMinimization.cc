@@ -39,6 +39,7 @@ void ThrMinimization::run ()
 {
   this->bitWiseScan("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop);
 
+
   // ############################
   // # Fill threshold container #
   // ############################
@@ -97,7 +98,7 @@ void ThrMinimization::analyze ()
   for (const auto cBoard : theThrContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	LOG(INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
+	LOG(INFO) << BOLDGREEN << "\t--> Global threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
 		  << cChip->getSummary<RegisterValue>().fRegisterValue << RESET;
 }
 

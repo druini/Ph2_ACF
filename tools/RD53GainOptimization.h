@@ -42,6 +42,7 @@ class GainOptimization : public Gain
 		    size_t KrumCurrStop = 0);
 
   void   run                 ();
+  void   analyze             ();
   void   draw                (bool display, bool save);
   size_t getNumberIterations ()
   {

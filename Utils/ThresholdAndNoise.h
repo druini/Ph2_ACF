@@ -1,34 +1,36 @@
 /*
-
   \file                          ThresholdAndNoise.h
   \brief                         Generic ThresholdAndNoise for DAQ
   \author                        Fabio Ravera, Lorenzo Uplegger
   \version                       1.0
   \date                          08/04/19
   Support :                      mail to : fabio.ravera@cern.ch
-
 */
 
 #ifndef THRESHOLD_AND_NOISE_H
 #define THRESHOLD_AND_NOISE_H
 
-#include <iostream>
-#include <math.h>
 #include "../Utils/Container.h"
+
+#include <iostream>
+#include <cmath>
 
 
 class ThresholdAndNoise
 {
  public:
-  ThresholdAndNoise  () : fThreshold(0), fThresholdError(0), fNoise(0), fNoiseError(0), fitError(true) {}
-  ~ThresholdAndNoise ()                                                                                {}
+  ThresholdAndNoise  () : fThreshold(0), fThresholdError(0), fNoise(0), fNoiseError(0), fitError(false) {}
+  ~ThresholdAndNoise ()                                                                                 {}
 
-  void print(void) { std::cout << fNoise << std::endl; }
+  void print(void)
+  {
+    std::cout << fThreshold << "\t" << fNoise << std::endl;
+  }
   
-  template <typename T>
-    void makeChannelAverage (const ChipContainer *theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) {}
-  void makeSummaryAverage   (const std::vector<ThresholdAndNoise> *theThresholdAndNoiseVector, const std::vector<uint32_t> &theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
-  void normalize            (const uint32_t numberOfEvents) {}
+  template<typename T>
+    void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
+  void makeSummaryAverage   (const std::vector<ThresholdAndNoise>* theThresholdAndNoiseVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
+  void normalize            (const uint32_t numberOfEvents)                                                                                                                             {}
   
   float fThreshold;
   float fThresholdError;
@@ -39,7 +41,7 @@ class ThresholdAndNoise
   bool fitError;
 };
 
-template <>
+template<>
 inline void ThresholdAndNoise::makeChannelAverage<ThresholdAndNoise>(const ChipContainer *theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents)
 {
   for (size_t row = 0; row < theChipContainer->getNumberOfRows(); ++row)

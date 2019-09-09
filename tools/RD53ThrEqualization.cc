@@ -65,13 +65,20 @@ void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
   this->bitWiseScan("PIX_PORTAL", nEvents, TARGETEFF, nEvtsBurst);
 
 
-  // #######################
-  // # Fill TDAC container #
-  // #######################
+  // #################################################
+  // # Fill TDAC container and mark enabled channels #
+  // #################################################
   for (const auto cBoard : *fDetectorContainer)
     for (auto cModule : *cBoard)
       for (auto cChip : *cModule)
-	this->fReadoutChipInterface->ReadChipAllLocalReg(static_cast<RD53*>(cChip), "PIX_PORTAL", *theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
+	{
+	  this->fReadoutChipInterface->ReadChipAllLocalReg(static_cast<RD53*>(cChip), "PIX_PORTAL", *theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
+
+	  for (auto row = 0u; row < RD53::nRows; row++)
+	    for (auto col = 0u; col < RD53::nCols; col++)
+	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+		theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).isEnabled = true;
+	}
 
 
   // ################
