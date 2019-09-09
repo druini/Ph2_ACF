@@ -274,7 +274,6 @@ namespace Ph2_HwInterface
     // bit[1]: broadcast to LIN FE
     // bit[0]: broadcast to DIFF FE
 
-    
     if (doSparse == true)
       {
 	this->WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
@@ -321,7 +320,8 @@ namespace Ph2_HwInterface
 		    itPixCmd += 3;
 		  }
 
-		if ((itPixCmd >= NPIXCMD) || ((row == RD53::nRows-1) && (col == 263-1) && (itPixCmd != 0)))
+		if ((itPixCmd >= NPIXCMD) || ((row == RD53::nRows-1) && (col == 263-1) && (itPixCmd != 0))) // @TMP@
+		// if ((itPixCmd >= NPIXCMD) || ((row == RD53::nRows-1) && (col == RD53::nCols-1) && (itPixCmd != 0)))
 		  {
 		    this->WriteRD53RegShort(pRD53, "", 0, dataVec, itPixCmd, true);
 		    dataVec.clear();
@@ -347,7 +347,7 @@ namespace Ph2_HwInterface
 	  }
       }
   }
-
+  
   void RD53Interface::ResetRD53 (RD53* pRD53)
   {
     this->WriteChipReg(pRD53, "RESET_EVTCTR", 0x0, true);

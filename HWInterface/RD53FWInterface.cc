@@ -443,7 +443,7 @@ namespace Ph2_HwInterface
     
     if (retry == true)
       {
-	LOG (ERROR) << BOLDRED << "Reached the maximum number of trals (" << BOLDYELLOW << MAXTRIALS << BOLDRED << ") without success" << RESET;
+	LOG (ERROR) << BOLDRED << "Reached the maximum number of trials (" << BOLDYELLOW << MAXTRIALS << BOLDRED << ") without success" << RESET;
 	pData.clear();
       }
 
@@ -621,7 +621,9 @@ namespace Ph2_HwInterface
 	  if (j%NWORDS_DDR3 == NWORDS_DDR3-1) std::cout << std::endl;
 	}
 
-
+    // ######################
+    // # Print decoded data #
+    // ######################
     for (auto i = 0u; i < events.size(); i++)
       {
 	auto& evt = events[i];

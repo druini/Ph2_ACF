@@ -21,7 +21,7 @@ void RD53ChannelGroupHandler::RD53ChannelGroupAll::makeTestGroup (ChannelGroupBa
 void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup (ChannelGroupBase* currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster) const
 {
   static_cast<ChannelGroup*>(currentChannelGroup)->disableAllChannels();
-
+  
   for (auto col = 0u; col < Ph2_HwDescription::RD53::nCols; col++)
     {
       auto row = NROW_CORE * col;
