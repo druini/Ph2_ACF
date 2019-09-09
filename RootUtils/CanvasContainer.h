@@ -11,8 +11,8 @@
 #ifndef CanvasContainer_H
 #define CanvasContainer_H
 
+#include "PlotContainer.h"
 #include "../Utils/Container.h"
-#include "../RootUtils/PlotContainer.h"
 
 #include <TCanvas.h>
 
@@ -38,10 +38,10 @@ class CanvasContainer : public PlotContainer
   
   ~CanvasContainer() 
     {
-      if (fHasToBeDeletedManually)
+      if (fHasToBeDeletedManually == true)
 	{
           delete fTheHistogram;
-          if (fCanvas) delete fCanvas;
+          if (fCanvas != nullptr) delete fCanvas;
 	}
 
       fTheHistogram = nullptr;

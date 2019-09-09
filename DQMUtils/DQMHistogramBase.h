@@ -17,8 +17,8 @@
 
 #include "../HWDescription/RD53.h"
 #include "../RootUtils/RootContainerFactory.h"
-#include "../RootUtils/HistContainer.h"
 #include "../RootUtils/CanvasContainer.h"
+#include "../RootUtils/HistContainer.h"
 #include "../Utils/Container.h"
 
 #include <TCanvas.h>
@@ -100,7 +100,7 @@ class DQMHistogramBase
 	  for (auto cChip : *cModule)
 	    {
 	      TCanvas* canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
-	      Hist* hist = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
+	      Hist* hist      = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
 
 	      canvas->cd();
 	      hist->Draw(opt);
@@ -131,12 +131,6 @@ class DQMHistogramBase
 		}
 	    }
     }
-
-  auto findValue (const std::map<std::string, double>& pSettingsMap, const char* name)
-  {
-    auto setting = pSettingsMap.find(name);
-    return ((setting != std::end(pSettingsMap)) ? setting->second : 0);
-  }
 };
 
 #endif

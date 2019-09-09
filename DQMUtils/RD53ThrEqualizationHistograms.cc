@@ -21,15 +21,6 @@ void RD53ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorCo
 
   auto hTDAC = CanvasContainer<TH1F>("TDAC", "TDAC", TDACsize, 0, TDACsize);
   bookImplementer(theOutputFile, theDetectorStructure, hTDAC, TDAC, "TDAC", "Entries");
-
-  
-  // ###########################
-  // # Retrieve scanned region #
-  // ###########################
-  ROWstart = this->findValue(pSettingsMap,"ROWstart");
-  ROWstop  = this->findValue(pSettingsMap,"ROWstop");
-  COLstart = this->findValue(pSettingsMap,"COLstart");
-  COLstop  = this->findValue(pSettingsMap,"COLstop");
 }
 
 void RD53ThrEqualizationHistograms::fill (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& TDACContainer)
@@ -43,7 +34,7 @@ void RD53ThrEqualizationHistograms::fill (const DetectorDataContainer& Occupancy
 
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
-	      if ((row >= ROWstart) && (row <= ROWstop) && (col >= COLstart) && (col <= COLstop))
+	      if (cChip->getChannel<OccupancyAndPh>(row, col).isEnabled == true)
 		{
 		  hThrEqualization->Fill(OccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
 		  hTDAC->Fill(TDACContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
