@@ -23,7 +23,7 @@ GainOptimization::GainOptimization (std::string fileRes,
                                     float targetCharge,
                                     size_t KrumCurrStart,
                                     size_t KrumCurrStop)
-: Gain          (fileRes, fileReg, rowStart, rowStop, colStart, colStop, nEvents, startValue, stopValue, nSteps, offset)
+  : Gain          (fileRes, fileReg, rowStart, rowStop, colStart, colStop, nEvents, startValue, stopValue, nSteps, offset)
   , fileRes       (fileRes)
   , fileReg       (fileReg)
   , rowStart      (rowStart)
@@ -189,7 +189,7 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
               stdDev = (cnt != 0 ? stdDev/cnt : 0) - cChip->getSummary<GainAndIntercept>().fGain * cChip->getSummary<GainAndIntercept>().fGain;
               stdDev = (stdDev > 0 ? sqrt(stdDev) : 0);
               size_t ToTpoint = RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION) - 2;
-              float newValue  = (ToTpoint - cChip->getSummary<GainAndIntercept>().fIntercept) / (cChip->getSummary<GainAndIntercept>().fGain + stdDev);
+              float newValue  = (ToTpoint - cChip->getSummary<GainAndIntercept>().fIntercept) / (cChip->getSummary<GainAndIntercept>().fGain + 3*stdDev);
 
 
               // ########################
@@ -199,7 +199,7 @@ void GainOptimization::bitWiseScan (const std::string& dacName, uint32_t nEvents
               if (fabs(newValue - target) < fabs(oldValue - target))
                 {
                   bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = newValue;
-                  bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = 
+                  bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
                     midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue;
                 }
 

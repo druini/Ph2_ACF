@@ -149,7 +149,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
             for (auto col = 0u; col < RD53::nCols; col++)
               if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
                 {
-                  for (auto i = 0u; i < dacList.size()-1; i++)
+                  for (auto i = 0u; i < dacList.size(); i++)
                     {
                       x[i] = dacList[i]-VCalMED;
                       y[i] = detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh;

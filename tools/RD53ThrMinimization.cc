@@ -20,7 +20,7 @@ ThrMinimization::ThrMinimization (std::string fileRes,
                                   float targetOccupancy,
                                   size_t ThrStart,
                                   size_t ThrStop)
-: PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false)
+  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false)
   , fileRes         (fileRes)
   , fileReg         (fileReg)
   , rowStart        (rowStart)
