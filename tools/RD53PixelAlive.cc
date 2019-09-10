@@ -10,16 +10,16 @@
 #include "RD53PixelAlive.h"
 
 PixelAlive::PixelAlive (const std::string fileRes,
-			const std::string fileReg,
-			size_t rowStart,
-			size_t rowStop,
-			size_t colStart,
-			size_t colStop,
-			size_t nEvents,
-			size_t nEvtsBurst,
-			size_t nTRIGxL1A,
-			bool inject,
-			float thresholdOccupancy)
+                        const std::string fileReg,
+                        size_t rowStart,
+                        size_t rowStop,
+                        size_t colStart,
+                        size_t colStop,
+                        size_t nEvents,
+                        size_t nEvtsBurst,
+                        size_t nTRIGxL1A,
+                        bool inject,
+                        float thresholdOccupancy)
   : Tool               ()
   , fileRes            (fileRes)
   , fileReg            (fileReg)
@@ -89,14 +89,14 @@ void PixelAlive::draw (bool display, bool save)
       // # Save register new values #
       // ############################
       for (const auto cBoard : *fDetectorContainer)
-	for (const auto cModule : *cBoard)
-	  for (const auto cChip : *cModule)
-	    {
-	      static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-	      static_cast<RD53*>(cChip)->saveRegMap("");
-	      std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-	      system(command.c_str());
-	    }
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+              static_cast<RD53*>(cChip)->saveRegMap("");
+              std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+              system(command.c_str());
+            }
     }
 
   if (display == true) myApp->Run(true);
@@ -107,22 +107,22 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	{
-	  LOG (INFO) << BOLDGREEN << "\t--> Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-		     << std::setprecision(-1) << theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
+        {
+          LOG (INFO) << BOLDGREEN << "\t--> Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
+                     << std::setprecision(-1) << theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
 
-	  static_cast<RD53*>(cChip)->copyMaskFromDefault();
+          static_cast<RD53*>(cChip)->copyMaskFromDefault();
 
-	  for (auto row = 0u; row < RD53::nRows; row++)
-	    for (auto col = 0u; col < RD53::nCols; col++)
-	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
-		{
-		  float occupancy = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
-		  static_cast<RD53*>(cChip)->enablePixel(row,col,(thresholdOccupancy != 0 ? occupancy < thresholdOccupancy : occupancy != 0));
-		}
-	  
-	  LOG (INFO) << BOLDGREEN << "\t\t--> Number of masked pixels: " << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
-	}
+          for (auto row = 0u; row < RD53::nRows; row++)
+            for (auto col = 0u; col < RD53::nCols; col++)
+              if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+                {
+                  float occupancy = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
+                  static_cast<RD53*>(cChip)->enablePixel(row,col,(thresholdOccupancy != 0 ? occupancy < thresholdOccupancy : occupancy != 0));
+                }
+
+          LOG (INFO) << BOLDGREEN << "\t\t--> Number of masked pixels: " << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+        }
 
   return theOccContainer;
 }
@@ -138,11 +138,11 @@ void PixelAlive::chipErrorReport ()
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	{
-	  LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-	  LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
-	  LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
-	  LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
-	  LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
-	}
+        {
+          LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
+          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
+        }
 }

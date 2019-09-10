@@ -32,14 +32,14 @@ class Latency : public Tool
 {
  public:
   Latency (std::string fileRes,
-	   std::string fileReg,
-	   size_t rowStart,
-	   size_t rowStop,
-	   size_t colStart,
-	   size_t colStop,
-	   size_t startValue,
-	   size_t stopValue,
-	   size_t nEvents);
+           std::string fileReg,
+           size_t rowStart,
+           size_t rowStop,
+           size_t colStart,
+           size_t colStop,
+           size_t startValue,
+           size_t stopValue,
+           size_t nEvents);
 
   void   run                 ();
   void   draw                (bool display, bool save);
@@ -56,7 +56,7 @@ class Latency : public Tool
   size_t startValue;
   size_t stopValue;
   size_t nEvents;
- 
+
   std::vector<uint16_t> dacList;
 
   DetectorDataContainer theContainer;

@@ -27,19 +27,19 @@ class GainOptimization : public Gain
 {
  public:
   GainOptimization (std::string fileRes,
-		    std::string fileReg,
-		    size_t rowStart,
-		    size_t rowStop,
-		    size_t colStart,
-		    size_t colStop,
-		    size_t nEvents,
-		    size_t startValue,
-		    size_t stopValue,
-		    size_t nSteps,
-		    size_t offset,
-		    float targetCharge,
-		    size_t KrumCurrStart = 0,
-		    size_t KrumCurrStop = 0);
+                    std::string fileReg,
+                    size_t rowStart,
+                    size_t rowStop,
+                    size_t colStart,
+                    size_t colStop,
+                    size_t nEvents,
+                    size_t startValue,
+                    size_t stopValue,
+                    size_t nSteps,
+                    size_t offset,
+                    float targetCharge,
+                    size_t KrumCurrStart = 0,
+                    size_t KrumCurrStop = 0);
 
   void   run                 ();
   void   analyze             ();

@@ -32,16 +32,16 @@ class PixelAlive : public Tool
 {
  public:
   PixelAlive (std::string fileRes,
-	      std::string fileReg,
-	      size_t rowStart,
-	      size_t rowStop,
-	      size_t colStart,
-	      size_t colStop,
-	      size_t nEvents,
-	      size_t nEvtsBurst,
-	      size_t nTRIGxL1A,
-	      bool inject,
-	      float thresholdOccupancy = 0);
+              std::string fileReg,
+              size_t rowStart,
+              size_t rowStop,
+              size_t colStart,
+              size_t colStop,
+              size_t nEvents,
+              size_t nEvtsBurst,
+              size_t nTRIGxL1A,
+              bool inject,
+              float thresholdOccupancy = 0);
 
   void run                                       ();
   void draw                                      (bool display, bool save);

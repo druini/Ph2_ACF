@@ -32,16 +32,16 @@ class Gain : public Tool
 {
  public:
   Gain  (std::string fileRes,
-	 std::string fileReg,
-	 size_t rowStart,
-	 size_t rowStop,
-	 size_t colStart,
-	 size_t colStop,
-	 size_t nEvents,
-	 size_t startValue,
-	 size_t stopValue,
-	 size_t nSteps,
-	 size_t offset);
+         std::string fileReg,
+         size_t rowStart,
+         size_t rowStop,
+         size_t colStart,
+         size_t colStop,
+         size_t nEvents,
+         size_t startValue,
+         size_t stopValue,
+         size_t nSteps,
+         size_t offset);
   ~Gain () { for (auto container : detectorContainerVector) delete container; }
   
   void run                                       ();

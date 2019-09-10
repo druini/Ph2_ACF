@@ -4,7 +4,7 @@
   <BeBoard Id="0" boardType="FC7" eventType="VR">
     <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.1.81:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
     <!---
-	<connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
+        <connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
     -->
 
     <!-- Frontend chip configuration -->
@@ -12,7 +12,7 @@
       <RD53_Files path="./" />
 
       <RD53 Id="0" configfile="CMSIT_RD53.txt">
-	<!-- Overwrite .txt configuration file settings -->
+        <!-- Overwrite .txt configuration file settings -->
         <Settings
             PA_IN_BIAS_LIN       =   "350"
             FC_BIAS_LIN          =    "20"
@@ -21,20 +21,20 @@
             COMP_LIN             =   "110"
             REF_KRUM_LIN         =   "300"
             Vthreshold_LIN       =   "400"
-			        
+
             VCAL_HIGH            =   "600"
             VCAL_MED             =   "100"
-			        
+
             INJECTION_SELECT     =    "12"
             GP_LVDS_ROUTE        =     "0"
             LATENCY_CONFIG       =   "136"
             MONITOR_SELECT       =  "8203"
             CLK_DATA_DELAY       =     "0"
-	    />
-	<!--
-	    MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
-	    CLK_DATA_DELAY: [8] clk phase; [7:4] clk delay; [3:0] data delay
-	-->
+        />
+        <!--
+            MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
+            CLK_DATA_DELAY: [8] clk phase; [7:4] clk delay; [3:0] data delay
+        -->
       </RD53>
 
       <Global
@@ -68,15 +68,15 @@
           BITFLIP_WNG_CNT        =     "0"
           BITFLIP_ERR_CNT        =     "0"
           CMDERR_CNT             =     "0"
-	  />
+          />
     </Module>
-    
+
     <!-- Configuration for backend readout board -->
     <Register name="user">
       <Register name="ctrl_regs">
-	<Register name="reset_reg">
-	  <Register name="i2c_rst"> 0x0 </Register>
-	</Register>
+        <Register name="reset_reg">
+          <Register name="i2c_rst"> 0x0 </Register>
+        </Register>
       </Register>
     </Register>
 
@@ -102,27 +102,27 @@
 
   <Setting name="nTRIGxEvent">     10 </Setting>
   <Setting name="INJtype">          0 </Setting>
-  
+
   <Setting name="ROWstart">         0 </Setting>
   <Setting name="ROWstop">        191 </Setting>
   <Setting name="COLstart">       128 </Setting>
   <Setting name="COLstop">        191 </Setting>
-  
+
   <Setting name="LatencyStart">     0 </Setting>
   <Setting name="LatencyStop">    511 </Setting>
-  
+
   <Setting name="VCalHstart">     100 </Setting>
   <Setting name="VCalHstop">      550 </Setting>
   <Setting name="VCalHnsteps">     45 </Setting>
   <Setting name="VCalMED">        100 </Setting>
-  
+
   <Setting name="TargetCharge"> 20000 </Setting>
   <Setting name="KrumCurrStart">    0 </Setting>
   <Setting name="KrumCurrStop">   127 </Setting>
-  
+
   <Setting name="TargetOcc">        1 </Setting>
   <Setting name="ThrStart">       340 </Setting>
   <Setting name="ThrStop">        440 </Setting>
-  
+
   <Setting name="DisplayHisto">     0 </Setting>
 </Settings>

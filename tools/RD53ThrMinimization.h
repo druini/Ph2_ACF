@@ -27,16 +27,16 @@ class ThrMinimization : public PixelAlive
 {
  public:
   ThrMinimization (std::string fileRes,
-		   std::string fileReg,
-		   size_t rowStart,
-		   size_t rowStop,
-		   size_t colStart,
-		   size_t colStop,
-		   size_t nEvents,
-		   size_t nEvtsBurst,
-		   float targetOccupancy,
-		   size_t ThrStart = 0,
-		   size_t ThrStop = 0);
+                   std::string fileReg,
+                   size_t rowStart,
+                   size_t rowStop,
+                   size_t colStart,
+                   size_t colStop,
+                   size_t nEvents,
+                   size_t nEvtsBurst,
+                   float targetOccupancy,
+                   size_t ThrStart = 0,
+                   size_t ThrStop = 0);
 
   void   run                 ();
   void   draw                (bool display, bool save);

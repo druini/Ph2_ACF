@@ -35,7 +35,7 @@ class RD53ThrEqualizationHistograms : public DQMHistogramBase
  private:
   DetectorDataContainer ThrEqualization;
   DetectorDataContainer TDAC;
-  
+
   size_t nEvents;
 };
 

@@ -10,14 +10,14 @@
 #include "RD53Latency.h"
 
 Latency::Latency (std::string fileRes,
-		  std::string fileReg,
-		  size_t rowStart,
-		  size_t rowStop,
-		  size_t colStart,
-		  size_t colStop,
-		  size_t startValue,
-		  size_t stopValue,
-		  size_t nEvents)
+                  std::string fileReg,
+                  size_t rowStart,
+                  size_t rowStop,
+                  size_t colStart,
+                  size_t colStop,
+                  size_t startValue,
+                  size_t stopValue,
+                  size_t nEvents)
   : Tool       ()
   , fileRes    (fileRes)
   , fileReg    (fileReg)
@@ -70,20 +70,20 @@ void Latency::draw (bool display, bool save)
   if (save == true)
     {
       this->WriteRootFile();
-      
+
       // ############################
       // # Save register new values #
       // ############################
       for (const auto cBoard : *fDetectorContainer)
-	for (const auto cModule : *cBoard)
-	  for (const auto cChip : *cModule)
-	    {
-	      static_cast<RD53*>(cChip)->copyMaskFromDefault();
-	      static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-	      static_cast<RD53*>(cChip)->saveRegMap("");
-	      std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-	      system(command.c_str());
-	    }
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              static_cast<RD53*>(cChip)->copyMaskFromDefault();
+              static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+              static_cast<RD53*>(cChip)->saveRegMap("");
+              std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+              system(command.c_str());
+            }
     }
 
   if (display == true) myApp->Run(true);
@@ -94,22 +94,22 @@ void Latency::analyze ()
   for (const auto cBoard : theContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	{
-	  auto dataSize = 0;
-	  auto latency  = 0;
-	  
-	  for (auto dac : dacList)
-	    {
-	      auto nEvts = cChip->getSummary<GenericDataVector>().data1[dac-startValue];
-	      if (nEvts > dataSize)
-		{
-		  latency  = dac;
-		  dataSize = nEvts;
-		}
-	    }
+        {
+          auto dataSize = 0;
+          auto latency  = 0;
 
-	  LOG (INFO) << BOLDGREEN << "\t--> BEST LATENCY: " << BOLDYELLOW << latency << RESET;
-	}
+          for (auto dac : dacList)
+            {
+              auto nEvts = cChip->getSummary<GenericDataVector>().data1[dac-startValue];
+              if (nEvts > dataSize)
+                {
+                  latency  = dac;
+                  dataSize = nEvts;
+                }
+            }
+
+          LOG (INFO) << BOLDGREEN << "\t--> BEST LATENCY: " << BOLDYELLOW << latency << RESET;
+        }
 }
 
 void Latency::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
@@ -126,58 +126,58 @@ void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& 
   for (const auto cBoard : *fDetectorContainer)
     {
       for (const auto cModule : *cBoard)
-	for (const auto cChip : *cModule)
-	  {
-	    LOG (INFO) << GREEN << "Performing latency scan for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+        for (const auto cChip : *cModule)
+          {
+            LOG (INFO) << GREEN << "Performing latency scan for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
 
 
-	    // ########################
-	    // # Set pixels to inject #
-	    // ########################
-	    static_cast<RD53*>(cChip)->resetMask();
+            // ########################
+            // # Set pixels to inject #
+            // ########################
+            static_cast<RD53*>(cChip)->resetMask();
 
-	    if (static_cast<RD53FWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->getLoaclCfgFastCmd()->trigger_source == RD53FWInterface::TriggerSource::FastCMDFSM)
-	      {
-		static_cast<RD53*>(cChip)->enablePixel(rowStart,colStart,true);
-		static_cast<RD53*>(cChip)->injectPixel(rowStart,colStart,true);
-		
-		static_cast<RD53*>(cChip)->enablePixel(rowStop,colStop,true);
-		static_cast<RD53*>(cChip)->injectPixel(rowStop,colStop,true);
-	      }
-	    else
-	      {
-		for (auto col = colStart; col <= colStop; col++)
-		  for (auto row = rowStart; row <= rowStop; row++)
-		    {
-		      static_cast<RD53*>(cChip)->enablePixel(row,col,true);
-		      static_cast<RD53*>(cChip)->injectPixel(row,col,true);
-		    }
-	      }
+            if (static_cast<RD53FWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->getLoaclCfgFastCmd()->trigger_source == RD53FWInterface::TriggerSource::FastCMDFSM)
+              {
+                static_cast<RD53*>(cChip)->enablePixel(rowStart,colStart,true);
+                static_cast<RD53*>(cChip)->injectPixel(rowStart,colStart,true);
 
-	    RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(cChip), true, false, false);
+                static_cast<RD53*>(cChip)->enablePixel(rowStop,colStop,true);
+                static_cast<RD53*>(cChip)->injectPixel(rowStop,colStop,true);
+              }
+            else
+              {
+                for (auto col = colStart; col <= colStop; col++)
+                  for (auto row = rowStart; row <= rowStop; row++)
+                    {
+                      static_cast<RD53*>(cChip)->enablePixel(row,col,true);
+                      static_cast<RD53*>(cChip)->injectPixel(row,col,true);
+                    }
+              }
+
+            RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(cChip), true, false, false);
 
 
-	    for (auto dac : dacList)
-	      {
-		data.clear();
+            for (auto dac : dacList)
+              {
+                data.clear();
 
-		LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << dac << RESET;
-		RD53ChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, dac, true);
+                LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << dac << RESET;
+                RD53ChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, dac, true);
 
-		this->ReadNEvents(static_cast<BeBoard*>(cBoard), nEvents, data);
-		auto events = RD53FWInterface::DecodeEvents(data,status);
+                this->ReadNEvents(static_cast<BeBoard*>(cBoard), nEvents, data);
+                auto events = RD53FWInterface::DecodeEvents(data,status);
 
-		auto nEvts = 0;
-		for (auto i = 0u; i < events.size(); i++)
-		  {
-		    auto& evt = events[i];
-		    for (auto j = 0u; j < evt.chip_events.size(); j++)
-		      if (evt.chip_events[j].data.size() != 0) nEvts++;
-		  }
+                auto nEvts = 0;
+                for (auto i = 0u; i < events.size(); i++)
+                  {
+                    auto& evt = events[i];
+                    for (auto j = 0u; j < evt.chip_events.size(); j++)
+                      if (evt.chip_events[j].data.size() != 0) nEvts++;
+                  }
 
-		theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1.push_back(nEvts);
-	      }
-	  }
+                theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1.push_back(nEvts);
+              }
+          }
     }
 }
 
@@ -188,11 +188,11 @@ void Latency::chipErrorReport ()
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	{
-	  LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-	  LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
-	  LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
-	  LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
-	  LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
-	}
+        {
+          LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
+          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
+        }
 }

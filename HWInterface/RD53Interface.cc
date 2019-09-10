@@ -12,7 +12,7 @@
 namespace Ph2_HwInterface
 {
   RD53Interface::RD53Interface (const BeBoardFWMap& pBoardMap): ReadoutChipInterface (pBoardMap) {}
-  
+
   bool RD53Interface::ConfigureChip (const Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
     ChipRegMap pRD53RegMap = pChip->getRegMap();
@@ -34,19 +34,19 @@ namespace Ph2_HwInterface
     // ################################################
     static const char* registerWhileList[] =
       {
-	"PA_IN_BIAS_LIN",
-	"FC_BIAS_LIN",
-	"KRUM_CURR_LIN",
-	"LDAC_LIN",
-	"COMP_LIN",
-	"REF_KRUM_LIN",
-	"Vthreshold_LIN"
+        "PA_IN_BIAS_LIN",
+        "FC_BIAS_LIN",
+        "KRUM_CURR_LIN",
+        "LDAC_LIN",
+        "COMP_LIN",
+        "REF_KRUM_LIN",
+        "Vthreshold_LIN"
       };
 
     for (auto i = 0u; i < arraySize(registerWhileList); i++)
       {
-	auto it = pRD53RegMap.find(registerWhileList[i]);
-	if (it != pRD53RegMap.end()) this->WriteChipReg(pRD53, it->first, it->second.fValue, true);
+        auto it = pRD53RegMap.find(registerWhileList[i]);
+        if (it != pRD53RegMap.end()) this->WriteChipReg(pRD53, it->first, it->second.fValue, true);
       }
 
     // ###############################
@@ -54,16 +54,16 @@ namespace Ph2_HwInterface
     // ###############################
     static const char* registerBlackList[] =
       {
-	"HighGain_LIN"
+        "HighGain_LIN"
       };
 
     for (const auto& cRegItem : pRD53RegMap)
       if (cRegItem.second.fPrmptCfg == true)
-	{
-	  auto i = 0u;
-	  for (i = 0u; i < arraySize(registerBlackList); i++) if (cRegItem.first == registerBlackList[i]) break;
-	  if (i == arraySize(registerBlackList)) this->WriteChipReg(pRD53, cRegItem.first, cRegItem.second.fValue, true);
-	}
+        {
+          auto i = 0u;
+          for (i = 0u; i < arraySize(registerBlackList); i++) if (cRegItem.first == registerBlackList[i]) break;
+          if (i == arraySize(registerBlackList)) this->WriteChipReg(pRD53, cRegItem.first, cRegItem.second.fValue, true);
+        }
 
     // ###################################
     // # Programmig pixel cell registers #
@@ -104,7 +104,7 @@ namespace Ph2_HwInterface
   }
 
   void RD53Interface::SyncRD53 (RD53* pRD53, unsigned int nSyncWords) { this->WriteChipReg(pRD53, "SYNC", 0x0, true); }
-  
+
   bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
   {
     this->setBoard(pChip->getBeBoardId());
@@ -128,36 +128,36 @@ namespace Ph2_HwInterface
       pRD53->encodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::CAL,        false, serialSymbols);
     else
       {
-	cRegItem.fAddress = pRD53->getRegItem (pRegNode).fAddress;
-	pRD53->encodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, false, serialSymbols);
+        cRegItem.fAddress = pRD53->getRegItem (pRegNode).fAddress;
+        pRD53->encodeCMD (cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, false, serialSymbols);
 
-	if (pVerifLoop == true)
-	  {
-	    std::vector<std::pair<uint16_t,uint16_t>> outputDecoded;
-	    unsigned int pixMode = 0;
-	    unsigned int row     = 0;
+        if (pVerifLoop == true)
+          {
+            std::vector<std::pair<uint16_t,uint16_t>> outputDecoded;
+            unsigned int pixMode = 0;
+            unsigned int row     = 0;
 
-	    fBoardFW->WriteChipCommand (serialSymbols);
+            fBoardFW->WriteChipCommand (serialSymbols);
 
-	    if (strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0)                     pixMode       = this->ReadRD53Reg (pRD53, "PIX_MODE")[0].second;
-	    if (pixMode == 0)                                                   outputDecoded = this->ReadRD53Reg (pRD53, pRegNode);
-	    if ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (pixMode == 0)) row           = this->ReadRD53Reg (pRD53, "REGION_ROW")[0].second;
+            if (strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0)                     pixMode       = this->ReadRD53Reg (pRD53, "PIX_MODE")[0].second;
+            if (pixMode == 0)                                                   outputDecoded = this->ReadRD53Reg (pRD53, pRegNode);
+            if ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (pixMode == 0)) row           = this->ReadRD53Reg (pRD53, "REGION_ROW")[0].second;
 
-	    if ((pixMode == 0) &&
-		(((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded[0].first != cRegItem.fAddress)) ||
-		 ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded[0].first != row))               ||
-		 (outputDecoded[0].second != cRegItem.fValue)))
-	      {
-		LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
-		return false;
-	      }
-	    else
-	      {
-		pRD53->setReg (pRegNode, cRegItem.fValue);
-		if ((strcmp(pRegNode.c_str(),"VCAL_HIGH") == 0) || (strcmp(pRegNode.c_str(),"VCAL_MED") == 0)) usleep(VCALSLEEP); // @TMP@
-		return true;
-	      }
-	  }
+            if ((pixMode == 0) &&
+                (((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded[0].first != cRegItem.fAddress)) ||
+                 ((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded[0].first != row))               ||
+                 (outputDecoded[0].second != cRegItem.fValue)))
+              {
+                LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
+                return false;
+              }
+            else
+              {
+                pRD53->setReg (pRegNode, cRegItem.fValue);
+                if ((strcmp(pRegNode.c_str(),"VCAL_HIGH") == 0) || (strcmp(pRegNode.c_str(),"VCAL_MED") == 0)) usleep(VCALSLEEP); // @TMP@
+                return true;
+              }
+          }
       }
 
     fBoardFW->WriteChipCommand (serialSymbols);
@@ -176,26 +176,26 @@ namespace Ph2_HwInterface
 
     for (const auto& cReg : pVecReg)
       {
-	cRegItem = pRD53->getRegItem(cReg.first);
-	cRegItem.fValue = cReg.second;
-	
-	if (strcmp(cReg.first.c_str(), "GLOBAL_PULSE") == 0)
-	  pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::GLOB_PULSE, false, serialSymbols);
-	else if (strcmp(cReg.first.c_str(), "SYNC") == 0)
-	  pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::SYNC,       false, serialSymbols);
-	else if (strcmp(cReg.first.c_str(), "RESET_BCRCTR") == 0)
-	  pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::RESET_BCR,  false, serialSymbols);
-	else if (strcmp(cReg.first.c_str(), "RESET_EVTCTR") == 0)
-	  pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::RESET_ECR,  false, serialSymbols);
-	else if (strcmp(cReg.first.c_str(), "CAL") == 0)
-	  pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::CAL,        false, serialSymbols);
-	else
-	  {
-	    pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, false, serialSymbols);
-	    pRD53->setReg(cReg.first, cReg.second);
-	  }
+        cRegItem = pRD53->getRegItem(cReg.first);
+        cRegItem.fValue = cReg.second;
+
+        if (strcmp(cReg.first.c_str(), "GLOBAL_PULSE") == 0)
+          pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::GLOB_PULSE, false, serialSymbols);
+        else if (strcmp(cReg.first.c_str(), "SYNC") == 0)
+          pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::SYNC,       false, serialSymbols);
+        else if (strcmp(cReg.first.c_str(), "RESET_BCRCTR") == 0)
+          pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::RESET_BCR,  false, serialSymbols);
+        else if (strcmp(cReg.first.c_str(), "RESET_EVTCTR") == 0)
+          pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::RESET_ECR,  false, serialSymbols);
+        else if (strcmp(cReg.first.c_str(), "CAL") == 0)
+          pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::CAL,        false, serialSymbols);
+        else
+          {
+            pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, false, serialSymbols);
+            pRD53->setReg(cReg.first, cReg.second);
+          }
       }
-    
+
     fBoardFW->WriteChipCommand(serialSymbols);
     return true;
   }
@@ -206,14 +206,14 @@ namespace Ph2_HwInterface
 
     if (download == false)
       {
-	ChipRegItem cRegItem(0, 0, 0, 0);
-	cRegItem.fValue = data;
-	cRegItem.fAddress = pRD53->getRegItem(pRegNode).fAddress;
-	pRD53->encodeCMD(cRegItem.fAddress, data, pRD53->getChipId(), RD53CmdEncoder::WRITE, false, serialSymbols);
+        ChipRegItem cRegItem(0, 0, 0, 0);
+        cRegItem.fValue = data;
+        cRegItem.fAddress = pRD53->getRegItem(pRegNode).fAddress;
+        pRD53->encodeCMD(cRegItem.fAddress, data, pRD53->getChipId(), RD53CmdEncoder::WRITE, false, serialSymbols);
       }
     else fBoardFW->WriteChipCommand(serialSymbols, nCmd);
   }
-  
+
   void RD53Interface::WriteRD53RegLong (RD53* pRD53, const std::string& pRegNode, const std::vector<uint32_t>& dataVec, size_t nCmd)
   {
     this->setBoard(pRD53->getBeBoardId());
@@ -222,10 +222,10 @@ namespace Ph2_HwInterface
     std::vector<uint32_t> serialSymbols;
     for (auto i = 0u; i < nCmd; i++)
       {
-	std::vector<uint16_t> subDataVec(dataVec.begin() + size * i, dataVec.begin() + size * (i + 1));
-	pRD53->encodeCMD(pRD53->getRegItem(pRegNode).fAddress, pRD53->getRegItem(pRegNode).fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, true, serialSymbols, &subDataVec);
+        std::vector<uint16_t> subDataVec(dataVec.begin() + size * i, dataVec.begin() + size * (i + 1));
+        pRD53->encodeCMD(pRD53->getRegItem(pRegNode).fAddress, pRD53->getRegItem(pRegNode).fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, true, serialSymbols, &subDataVec);
       }
-    
+
     fBoardFW->WriteChipCommand(serialSymbols, nCmd);
   }
 
@@ -239,11 +239,11 @@ namespace Ph2_HwInterface
 
     pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::READ, false, serialSymbols);
     outputDecoded = fBoardFW->ReadChipRegisters(serialSymbols, pRD53->getChipId());
-    
+
     for (auto i = 0u; i < outputDecoded.size(); i++)
       // Removing bit related to PIX_PORTAL register identification
       outputDecoded[i].first = outputDecoded[i].first & static_cast<uint16_t>(RD53::setBits(NBIT_ADDR));
-    
+
     return outputDecoded;
   }
 
@@ -276,78 +276,78 @@ namespace Ph2_HwInterface
 
     if (doSparse == true)
       {
-	this->WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
-	this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0,  pVerifLoop);
-	this->WriteChipReg(pRD53, "PIX_MODE",   0x0,  pVerifLoop);
+        this->WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
+        this->WriteChipReg(pRD53, "PIX_PORTAL", 0x0,  pVerifLoop);
+        this->WriteChipReg(pRD53, "PIX_MODE",   0x0,  pVerifLoop);
       }
     else this->WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
 
     // for (auto col = 0; col < RD53::nCols-1; col+=2) // @TMP@
     for (auto col = 128; col < 263; col+=2)
       {
-	uint16_t row_;
-	pRD53->convertRowCol2Cores (0,col,row_,colPair);
-	if (doSparse == false)
-	  {
-	    this->WriteChipReg(pRD53, "REGION_COL", colPair, pVerifLoop);
-	    this->WriteChipReg(pRD53, "REGION_ROW", 0x0,     pVerifLoop && doSparse);
-	  }
+        uint16_t row_;
+        pRD53->convertRowCol2Cores (0,col,row_,colPair);
+        if (doSparse == false)
+          {
+            this->WriteChipReg(pRD53, "REGION_COL", colPair, pVerifLoop);
+            this->WriteChipReg(pRD53, "REGION_ROW", 0x0,     pVerifLoop && doSparse);
+          }
 
-	for (auto row = 0u; row < RD53::nRows; row++)
-	  {
-	    data =
-	      (pRD53->getRegItem("HighGain_LIN").fValue == true ? RD53PixelEncoder::HIGHGAIN : RD53PixelEncoder::LOWGAIN)        |
-	      static_cast<uint16_t> ((*mask)[col].Enable[row])                                                                   |
-	      (static_cast<uint16_t>((*mask)[col].InjEn [row]) << RD53PixelEncoder::NBIT_PIXEN)                                  |
-	      (static_cast<uint16_t>((*mask)[col].HitBus[row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN)) |
-	      (static_cast<uint16_t>((*mask)[col].TDAC  [row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN + RD53PixelEncoder::NBIT_HITBUS));
-		    
-	    data = data                                                                                                              |
-	      (((pRD53->getRegItem("HighGain_LIN").fValue == true ? RD53PixelEncoder::HIGHGAIN : RD53PixelEncoder::LOWGAIN)          |
-		static_cast<uint16_t> ((*mask)[col+1].Enable[row])                                                                   |
-		(static_cast<uint16_t>((*mask)[col+1].InjEn [row]) << RD53PixelEncoder::NBIT_PIXEN)                                  |
-		(static_cast<uint16_t>((*mask)[col+1].HitBus[row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN)) |
-		(static_cast<uint16_t>((*mask)[col+1].TDAC  [row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN + RD53PixelEncoder::NBIT_HITBUS))) << (NBIT_CMD/2));
-		        
-	    if (doSparse == true)
-	      {
-		if (((*mask)[col].Enable[row] == 1) || ((*mask)[col+1].Enable[row] == 1))
-		  {
-		    pRD53->convertRowCol2Cores (row,col,row_,colPair);
-		    this->WriteRD53RegShort(pRD53, "REGION_COL", colPair, dataVec, 0, false);
-		    this->WriteRD53RegShort(pRD53, "REGION_ROW", row_,    dataVec, 0, false);
-		    this->WriteRD53RegShort(pRD53, "PIX_PORTAL", data,    dataVec, 0, false);
-		    itPixCmd += 3;
-		  }
+        for (auto row = 0u; row < RD53::nRows; row++)
+          {
+            data =
+              (pRD53->getRegItem("HighGain_LIN").fValue == true ? RD53PixelEncoder::HIGHGAIN : RD53PixelEncoder::LOWGAIN)        |
+              static_cast<uint16_t> ((*mask)[col].Enable[row])                                                                   |
+              (static_cast<uint16_t>((*mask)[col].InjEn [row]) << RD53PixelEncoder::NBIT_PIXEN)                                  |
+              (static_cast<uint16_t>((*mask)[col].HitBus[row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN)) |
+              (static_cast<uint16_t>((*mask)[col].TDAC  [row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN + RD53PixelEncoder::NBIT_HITBUS));
 
-		if ((itPixCmd >= NPIXCMD) || ((row == RD53::nRows-1) && (col == 263-1) && (itPixCmd != 0))) // @TMP@
-		// if ((itPixCmd >= NPIXCMD) || ((row == RD53::nRows-1) && (col == RD53::nCols-1) && (itPixCmd != 0)))
-		  {
-		    this->WriteRD53RegShort(pRD53, "", 0, dataVec, itPixCmd, true);
-		    dataVec.clear();
-		    itPixCmd = 0;
-		  }
-	      }
-	    else
-	      {
-		dataVec.push_back(data);
+            data = data                                                                                                              |
+              (((pRD53->getRegItem("HighGain_LIN").fValue == true ? RD53PixelEncoder::HIGHGAIN : RD53PixelEncoder::LOWGAIN)          |
+                static_cast<uint16_t> ((*mask)[col+1].Enable[row])                                                                   |
+                (static_cast<uint16_t>((*mask)[col+1].InjEn [row]) << RD53PixelEncoder::NBIT_PIXEN)                                  |
+                (static_cast<uint16_t>((*mask)[col+1].HitBus[row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN)) |
+                (static_cast<uint16_t>((*mask)[col+1].TDAC  [row]) << (RD53PixelEncoder::NBIT_PIXEN + RD53PixelEncoder::NBIT_INJEN + RD53PixelEncoder::NBIT_HITBUS))) << (NBIT_CMD/2));
 
-		if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
-		  {
-		    itPixCmd++;
+            if (doSparse == true)
+              {
+                if (((*mask)[col].Enable[row] == 1) || ((*mask)[col+1].Enable[row] == 1))
+                  {
+                    pRD53->convertRowCol2Cores (row,col,row_,colPair);
+                    this->WriteRD53RegShort(pRD53, "REGION_COL", colPair, dataVec, 0, false);
+                    this->WriteRD53RegShort(pRD53, "REGION_ROW", row_,    dataVec, 0, false);
+                    this->WriteRD53RegShort(pRD53, "PIX_PORTAL", data,    dataVec, 0, false);
+                    itPixCmd += 3;
+                  }
 
-		    if ((itPixCmd == NPIXCMD) || (row == (RD53::nRows-1)))
-		      {
-			this->WriteRD53RegLong(pRD53, "PIX_PORTAL", dataVec, itPixCmd);
-			dataVec.clear();
-			itPixCmd = 0;
-		      }
-		  }
-	      }
-	  }
+                if ((itPixCmd >= NPIXCMD) || ((row == RD53::nRows-1) && (col == 263-1) && (itPixCmd != 0))) // @TMP@
+                  // if ((itPixCmd >= NPIXCMD) || ((row == RD53::nRows-1) && (col == RD53::nCols-1) && (itPixCmd != 0)))
+                  {
+                    this->WriteRD53RegShort(pRD53, "", 0, dataVec, itPixCmd, true);
+                    dataVec.clear();
+                    itPixCmd = 0;
+                  }
+              }
+            else
+              {
+                dataVec.push_back(data);
+
+                if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
+                  {
+                    itPixCmd++;
+
+                    if ((itPixCmd == NPIXCMD) || (row == (RD53::nRows-1)))
+                      {
+                        this->WriteRD53RegLong(pRD53, "PIX_PORTAL", dataVec, itPixCmd);
+                        dataVec.clear();
+                        itPixCmd = 0;
+                      }
+                  }
+              }
+          }
       }
   }
-  
+
   void RD53Interface::ResetRD53 (RD53* pRD53)
   {
     this->WriteChipReg(pRD53, "RESET_EVTCTR", 0x0, true);
@@ -386,13 +386,13 @@ namespace Ph2_HwInterface
 
     for (auto row = 0u; row < RD53::nRows; row++)
       for (auto col = 0u; col < RD53::nCols; col++)
-	{
-	  if (mask   == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
-	  if (inject == true) pRD53->injectPixel(row, col, group->isChannelEnabled(row, col));
-	}
+        {
+          if (mask   == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
+          if (inject == true) pRD53->injectPixel(row, col, group->isChannelEnabled(row, col));
+        }
 
     this->WriteRD53Mask(pRD53, true, false, pVerifLoop);
-    
+
     return true;
   }
 
@@ -402,7 +402,7 @@ namespace Ph2_HwInterface
 
     for (auto row = 0u; row < RD53::nRows; row++)
       for (auto col = 0u; col < RD53::nCols; col++)
-	pRD53->setTDAC(row, col, pValue.getChannel<RegisterValue>(row, col).fRegisterValue);
+        pRD53->setTDAC(row, col, pValue.getChannel<RegisterValue>(row, col).fRegisterValue);
 
     this->WriteRD53Mask(pRD53, false, false, pVerifLoop);
 
@@ -412,9 +412,9 @@ namespace Ph2_HwInterface
   void RD53Interface::ReadChipAllLocalReg (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
-    
+
     for (auto row = 0u; row < RD53::nRows; row++)
       for (auto col = 0u; col < RD53::nCols; col++)
-	pValue.getChannel<RegisterValue>(row, col).fRegisterValue = pRD53->getTDAC(row, col);
+        pValue.getChannel<RegisterValue>(row, col).fRegisterValue = pRD53->getTDAC(row, col);
   }
 }
