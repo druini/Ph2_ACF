@@ -17,10 +17,11 @@ ThrMinimization::ThrMinimization (std::string fileRes,
                                   size_t colStop,
                                   size_t nEvents,
                                   size_t nEvtsBurst,
-                                  float targetOccupancy,
+                                  float  targetOccupancy,
                                   size_t ThrStart,
-                                  size_t ThrStop)
-  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false)
+                                  size_t ThrStop,
+                                  bool   doFast)
+  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false, doFast)
   , fileRes         (fileRes)
   , fileReg         (fileReg)
   , rowStart        (rowStart)
@@ -32,6 +33,7 @@ ThrMinimization::ThrMinimization (std::string fileRes,
   , ThrStart        (ThrStart)
   , ThrStop         (ThrStop)
   , targetOccupancy (targetOccupancy)
+  , doFast          (doFast)
   , histos          ()
 {}
 
@@ -125,8 +127,8 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, bestContainer);
 
   for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
         {
           minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = ThrStart;
           maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = (ThrStop != 0 ? ThrStop : RD53::setBits(numberOfBits)) + 1;
@@ -141,8 +143,8 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
       // # Download new DAC values #
       // ###########################
       for (const auto cBoard : *fDetectorContainer)
-        for (auto cModule : *cBoard)
-          for (auto cChip : *cModule)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
             {
               midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
                 (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue +
@@ -164,8 +166,8 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
       // # Compute next step #
       // #####################
       for (const auto cBoard : *output)
-        for (auto cModule : *cBoard)
-          for (auto cChip : *cModule)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
             {
               // #######################
               // # Build discriminator #
@@ -203,8 +205,8 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   // # Download new DAC values #
   // ###########################
   for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
         this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue, true);
 
 

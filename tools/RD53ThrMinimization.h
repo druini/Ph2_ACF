@@ -36,7 +36,8 @@ class ThrMinimization : public PixelAlive
                    size_t nEvtsBurst,
                    float targetOccupancy,
                    size_t ThrStart = 0,
-                   size_t ThrStop = 0);
+                   size_t ThrStop = 0,
+                   bool   doFast = false);
 
   void   run                 ();
   void   draw                (bool display, bool save);
@@ -45,7 +46,7 @@ class ThrMinimization : public PixelAlive
   {
     uint16_t nBitThr        = floor(log2(ThrStop - ThrStart + 1) + 1);
     uint16_t moreIterations = 2;
-    return RD53ChannelGroupHandler::getNumberOfGroups(true)*(nBitThr + moreIterations) * nEvents/nEvtsBurst;
+    return PixelAlive::getNumberIterations()*(nBitThr + moreIterations);
   }
 
  private:
@@ -60,6 +61,7 @@ class ThrMinimization : public PixelAlive
   size_t ThrStart;
   size_t ThrStop;
   float  targetOccupancy;
+  bool   doFast;
 
   DetectorDataContainer theThrContainer;
 

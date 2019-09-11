@@ -20,7 +20,7 @@ class RD53RunProgress
     static size_t value;
     return value;
   }
- 
+
   static size_t& current()
   {
     static size_t value = 0;
@@ -29,7 +29,7 @@ class RD53RunProgress
 
   static void update()
   {
-    RD53RunProgress::current()++;    
+    RD53RunProgress::current()++;
     LOG (INFO) << BOLDMAGENTA << ">>> Progress:  " << std::setprecision(1) << std::fixed << 1. * RD53RunProgress::current() / RD53RunProgress::total() * 100 << "% <<<" << RESET;
     /* LOG (INFO) << BOLDMAGENTA << ">>> Iteration n. " << RD53RunProgress::current() << "/" << RD53RunProgress::total() << " <<<" << RESET; */
   }

@@ -31,9 +31,9 @@ void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup (ChannelGro
     }
 }
 
-RD53ChannelGroupHandler::RD53ChannelGroupHandler (bool doAll)
+RD53ChannelGroupHandler::RD53ChannelGroupHandler (uint8_t groupType)
 {
-  if (doAll == true)
+  if (groupType == RD53GroupType::AllPixels)
     {
       allChannelGroup_     = new RD53ChannelGroupAll();
       currentChannelGroup_ = new RD53ChannelGroupAll();
@@ -44,7 +44,7 @@ RD53ChannelGroupHandler::RD53ChannelGroupHandler (bool doAll)
       currentChannelGroup_ = new RD53ChannelGroupPattern();
     }
 
-  numberOfGroups_ = getNumberOfGroups(doAll);
+  numberOfGroups_ = getNumberOfGroups(groupType);
 }
 
 RD53ChannelGroupHandler::~RD53ChannelGroupHandler()

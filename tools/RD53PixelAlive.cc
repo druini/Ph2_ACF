@@ -18,7 +18,8 @@ PixelAlive::PixelAlive (const std::string fileRes,
                         size_t nEvents,
                         size_t nEvtsBurst,
                         size_t nTRIGxL1A,
-                        bool inject,
+                        bool   inject,
+                        bool   doFast,
                         float thresholdOccupancy)
   : Tool               ()
   , fileRes            (fileRes)
@@ -31,6 +32,7 @@ PixelAlive::PixelAlive (const std::string fileRes,
   , nTRIGxL1A          (nTRIGxL1A)
   , nEvtsBurst         (nEvtsBurst)
   , inject             (inject)
+  , doFast             (doFast)
   , thresholdOccupancy (thresholdOccupancy)
   , histos             (nEvents)
 {
@@ -44,7 +46,7 @@ PixelAlive::PixelAlive (const std::string fileRes,
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(!inject);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(inject == true ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 }
 

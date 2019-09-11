@@ -40,13 +40,18 @@ class PixelAlive : public Tool
               size_t nEvents,
               size_t nEvtsBurst,
               size_t nTRIGxL1A,
-              bool inject,
+              bool   inject,
+              bool   doFast = false,
               float thresholdOccupancy = 0);
 
   void run                                       ();
   void draw                                      (bool display, bool save);
   std::shared_ptr<DetectorDataContainer> analyze ();
-  size_t getNumberIterations                     () { return RD53ChannelGroupHandler::getNumberOfGroups(!inject) * nEvents/nEvtsBurst; }
+  size_t getNumberIterations                     ()
+  {
+    return RD53ChannelGroupHandler::getNumberOfGroups(inject == true ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels) *
+      nEvents/nEvtsBurst;
+  }
 
  private:
   std::string fileRes;
@@ -59,6 +64,7 @@ class PixelAlive : public Tool
   size_t nTRIGxL1A;
   size_t nEvtsBurst;
   bool   inject;
+  bool   doFast;
   float  thresholdOccupancy;
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;

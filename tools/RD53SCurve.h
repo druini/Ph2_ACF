@@ -41,13 +41,17 @@ class SCurve : public Tool
            size_t startValue,
            size_t stopValue,
            size_t nSteps,
-           size_t offset);
+           size_t offset,
+           bool   doFast = false);
   ~SCurve () { for (auto container : detectorContainerVector) delete container; }
 
   void run                                       ();
   void draw                                      (bool display, bool save);
   std::shared_ptr<DetectorDataContainer> analyze ();
-  size_t getNumberIterations                     () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*nSteps; }
+  size_t getNumberIterations                     ()
+  {
+    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups)*nSteps;
+  }
 
  private:
   std::string fileRes;
@@ -61,9 +65,10 @@ class SCurve : public Tool
   size_t stopValue;
   size_t nSteps;
   size_t offset;
+  bool   doFast;
 
   std::vector<uint16_t> dacList;
-  
+
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   std::vector<DetectorDataContainer*>      detectorContainerVector;
   std::shared_ptr<DetectorDataContainer>   theThresholdAndNoiseContainer;

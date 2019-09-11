@@ -13,16 +13,23 @@
 #include "ChannelGroupHandler.h"
 #include "../HWDescription/RD53.h"
 
+namespace RD53GroupType
+{
+  constexpr uint8_t AllPixels = 0;
+  constexpr uint8_t AllGroups = 1;
+  constexpr uint8_t OneGroup  = 2;
+}
+
 class RD53ChannelGroupHandler : public ChannelGroupHandler
 {
  public:
-  RD53ChannelGroupHandler  (bool doAll = false);
+  RD53ChannelGroupHandler  (uint8_t groupType = RD53GroupType::AllGroups);
   ~RD53ChannelGroupHandler ();
 
-  static size_t getNumberOfGroups(bool doAll)
+  static size_t getNumberOfGroups (uint8_t groupType)
   {
-    if (doAll == true) return 1;
-    else               return Ph2_HwDescription::RD53::nRows;
+    if (groupType == RD53GroupType::AllGroups) return Ph2_HwDescription::RD53::nRows;
+    else                                       return 1;
   };
 
  private:

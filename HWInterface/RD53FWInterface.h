@@ -151,22 +151,22 @@ namespace Ph2_HwInterface
     enum class TriggerSource : uint32_t
     {
       IPBus = 1,
-        FastCMDFSM,
-        TTC,
-        TLU,
-        External,
-        HitOr,
-        UserDefined,
-        Undefined = 0
-        };
+      FastCMDFSM,
+      TTC,
+      TLU,
+      External,
+      HitOr,
+      UserDefined,
+      Undefined = 0
+    };
 
     enum class AutozeroSource : uint32_t
     {
       IPBus = 1,
-        FastCMDFSM,
-        FreeRunning,
-        Disabled = 0
-        };
+      FastCMDFSM,
+      FreeRunning,
+      Disabled = 0
+    };
 
     struct FastCmdFSMConfig
     {

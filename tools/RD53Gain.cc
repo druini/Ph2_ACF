@@ -19,7 +19,8 @@ Gain::Gain (std::string fileRes,
             size_t startValue,
             size_t stopValue,
             size_t nSteps,
-            size_t offset)
+            size_t offset,
+            bool   doFast)
   : Tool       ()
   , fileRes    (fileRes)
   , fileReg    (fileReg)
@@ -32,6 +33,7 @@ Gain::Gain (std::string fileRes,
   , stopValue  (stopValue)
   , nSteps     (nSteps)
   , offset     (offset)
+  , doFast     (doFast)
   , histos     (nEvents, startValue-offset, stopValue-offset, nSteps)
 {
   // ########################
@@ -44,7 +46,7 @@ Gain::Gain (std::string fileRes,
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>();
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
 

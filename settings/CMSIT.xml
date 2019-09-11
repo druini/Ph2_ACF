@@ -30,7 +30,7 @@
             LATENCY_CONFIG       =   "136"
             MONITOR_SELECT       =  "8203"
             CLK_DATA_DELAY       =     "0"
-        />
+            />
         <!--
             MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
             CLK_DATA_DELAY: [8] clk phase; [7:4] clk delay; [3:0] data delay
@@ -86,12 +86,13 @@
 
 <Settings>
   <!--
-      Parameters for the calibration programs:
-      INJtype            = 0: analog;                INJtype                  = 1: digital
-      DisplayHisto       = 0: don't display;         DisplayHisto             = 1: display
-      ChipRegDefaultFile = 0: save on different file name; ChipRegDefaultFile = 1: save on same file name
-      TargetCharge:           average charge (electrons) corresponding to ToT point: max value - 1
-      TargetOcc:              average fraction of acceptable hits per pixel
+      === Calibration parameters ===
+      INJtype      = 0: analog;                                 INJtype      = 1: digital
+      DoFast       = 0: run on all pixels in the selected area; DoFast       = 1: run on a subset
+      DisplayHisto = 0: don't display;                          DisplayHisto = 1: display
+
+      TargetCharge: average charge (electrons) corresponding to ToT point = max value - 1
+      TargetOcc:    average fraction of acceptable hits per pixel
   -->
   <Setting name="nEvents">        100 </Setting>
   <Setting name="nEvtsBurst">     100 </Setting>
@@ -112,8 +113,8 @@
   <Setting name="LatencyStop">    511 </Setting>
 
   <Setting name="VCalHstart">     100 </Setting>
-  <Setting name="VCalHstop">      550 </Setting>
-  <Setting name="VCalHnsteps">     45 </Setting>
+  <Setting name="VCalHstop">      600 </Setting>
+  <Setting name="VCalHnsteps">     50 </Setting>
   <Setting name="VCalMED">        100 </Setting>
 
   <Setting name="TargetCharge"> 20000 </Setting>
@@ -124,5 +125,6 @@
   <Setting name="ThrStart">       340 </Setting>
   <Setting name="ThrStop">        440 </Setting>
 
+  <Setting name="DoFast">           0 </Setting>
   <Setting name="DisplayHisto">     0 </Setting>
 </Settings>

@@ -69,8 +69,8 @@ void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
   // # Fill TDAC container and mark enabled channels #
   // #################################################
   for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
         {
           this->fReadoutChipInterface->ReadChipAllLocalReg(static_cast<RD53*>(cChip), "PIX_PORTAL", *theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
@@ -149,8 +149,8 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, bestContainer);
 
   for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
         for (auto row = 0u; row < RD53::nRows; row++)
           for (auto col = 0u; col < RD53::nCols; col++)
             {
@@ -167,8 +167,8 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   // # Read DAC starting values #
   // ############################
   for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
         this->fReadoutChipInterface->ReadChipAllLocalReg(static_cast<RD53*>(cChip), dacName, *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
 
@@ -178,8 +178,8 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
       // # Download new DAC values #
       // ###########################
       for (const auto cBoard : *fDetectorContainer)
-        for (auto cModule : *cBoard)
-          for (auto cChip : *cModule)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
             this->fReadoutChipInterface->WriteChipAllLocalReg(static_cast<RD53*>(cChip), dacName, *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
       // ################
@@ -191,8 +191,8 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
       // # Compute next step #
       // #####################
       for (const auto cBoard : theOccContainer)
-        for (auto cModule : *cBoard)
-          for (auto cChip : *cModule)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
             for (auto row = 0u; row < RD53::nRows; row++)
               for (auto col = 0u; col < RD53::nCols; col++)
                 {
@@ -235,8 +235,8 @@ void ThrEqualization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   // # Download new DAC values #
   // ###########################
   for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
         this->fReadoutChipInterface->WriteChipAllLocalReg(static_cast<RD53*>(cChip), dacName, *bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
 
