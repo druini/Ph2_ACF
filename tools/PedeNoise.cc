@@ -247,7 +247,8 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
         std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
         std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
         std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
-        auto theOccupancyStream = prepareContainerStreamer<Occupancy>();
+        auto theOccupancyStream = prepareModuleContainerStreamer<Occupancy,Occupancy,Occupancy>();
+        // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
         for(auto board : theOccupancyContainer)
         {
             if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
@@ -258,11 +259,13 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     {
         for ( auto cFe : *cBoard )
         {
+            // std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
+
             for ( auto cCbc : *cFe )
             {
                 RegisterVector cRegVec;
 
-            	for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
+                for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
                 {
                     float occupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
                     if( occupancy > float ( pNoiseStripThreshold * 0.001 ) )
@@ -351,8 +354,8 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         #else
             if(fPlotSCurves) 
             {
-                ContainerStream<Occupancy,uint16_t> theSCurveStreamer("SCurve");
-                theSCurveStreamer.getHeaderStream()->setHeaderInfo(cValue);
+                ChannelContainerStream<Occupancy,uint16_t> theSCurveStreamer("SCurve");
+                theSCurveStreamer.setHeaderElement(cValue);
                 for(auto board : *theOccupancyContainer )
                 {
                     if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
@@ -485,7 +488,7 @@ void PedeNoise::extractPedeNoise ()
     #ifdef __USE_ROOT__
         if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
     #else
-        auto theThresholdAndNoiseStream = prepareContainerStreamer<ThresholdAndNoise>();
+        auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
         for(auto board : fThresholdAndNoiseContainer )
         {
             if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
@@ -544,11 +547,13 @@ void PedeNoise::Start(int currentRun)
 
 void PedeNoise::Stop()
 {
+    LOG (INFO) << "Stopping noise measurement";
     writeObjects();
     dumpConfigFiles();
     SaveResults();
     CloseResultFile();
     Destroy();
+    LOG (INFO) << "Noise measurement stopped.";
 }
 
 void PedeNoise::Pause()

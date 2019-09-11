@@ -1,5 +1,5 @@
 /*!
-        \file                DQMHistogramCalibration.h
+        \file                DQMHistogramSignalScanFit.h
         \brief               base class to create and fill monitoring histograms
         \author              Fabio Ravera, Lorenzo Uplegger
         \version             1.0
@@ -7,8 +7,8 @@
         Support :            mail to : fabio.ravera@cern.ch
 */
 
-#ifndef __DQMHISTOGRAMCALIBRATION_H__
-#define __DQMHISTOGRAMCALIBRATION_H__
+#ifndef __DQMHISTOGRAMSIGNALSCANFIT_H__
+#define __DQMHISTOGRAMSIGNALSCANFIT_H__
 #include "../DQMUtils/DQMHistogramBase.h"
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
@@ -16,27 +16,27 @@
 class TFile;
 
 /*!
- * \class DQMHistogramCalibration
+ * \class DQMHistogramSignalScanFit
  * \brief Class for PedeNoise monitoring histograms
  */
-class DQMHistogramCalibration : public DQMHistogramBase
+class DQMHistogramSignalScanFit : public DQMHistogramBase
 {
 
   public:
     /*!
      * constructor
      */
-    DQMHistogramCalibration ();
+    DQMHistogramSignalScanFit ();
 
     /*!
      * destructor
      */
-    ~DQMHistogramCalibration();
+    ~DQMHistogramSignalScanFit();
 
     /*!
      * Book histograms
      */
-    void book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) override;
+    void book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap) override;
 
     /*!
      * Fill histogram
@@ -54,8 +54,10 @@ class DQMHistogramCalibration : public DQMHistogramBase
     void reset(void) override;
     //virtual void summarizeHistos();
 
+
   private:
     DetectorDataContainer fDetectorData;
+
 
 };
 #endif

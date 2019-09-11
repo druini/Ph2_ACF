@@ -9,18 +9,19 @@
 
 #include "RD53Gain.h"
 
-Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps)
-  : Tool        ()
-  , fileRes     (fileRes)
-  , rowStart    (rowStart)
-  , rowStop     (rowStop)
-  , colStart    (colStart)
-  , colStop     (colStop)
-  , nPixels2Inj (nPixels2Inj)
-  , nEvents     (nEvents)
-  , startValue  (startValue)
-  , stopValue   (stopValue)
-  , nSteps      (nSteps)
+Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset)
+  : Tool       ()
+  , fileRes    (fileRes)
+  , rowStart   (rowStart)
+  , rowStop    (rowStop)
+  , colStart   (colStart)
+  , colStop    (colStop)
+  , nEvents    (nEvents)
+  , startValue (startValue)
+  , stopValue  (stopValue)
+  , nSteps     (nSteps)
+  , offset     (offset)
+  , histos     (nEvents, startValue-offset, stopValue-offset, nSteps)
 {
   // ########################
   // # Custom channel group #
@@ -31,10 +32,9 @@ Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStar
   for (auto row = rowStart; row <= rowStop; row++)
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
-
-  theChnGroupHandler = std::shared_ptr<RD53ChannelGroupHandler>(new RD53ChannelGroupHandler());
+  
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>();
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
-  theChnGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 
 
   // ##############################
@@ -42,46 +42,6 @@ Gain::Gain (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStar
   // ##############################
   float step = (stopValue - startValue) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
-}
-
-Gain::~Gain ()
-{
-  delete theFile;
-  theFile = nullptr;
-
-  for (auto i = 0u; i < theCanvasOcc.size(); i++)
-    {
-      delete theOccupancy[i];
-      delete theCanvasOcc[i];
-    }
-
-  for (auto i = 0u; i < theCanvasGa1D.size(); i++)
-    {
-      delete theGain1D[i];
-      delete theCanvasGa1D[i];
-    }
-  
-  for (auto i = 0u; i < theCanvasIn1D.size(); i++)
-    {
-      delete theIntercept1D[i];
-      delete theCanvasIn1D[i];
-    }
-  
-  for (auto i = 0u; i < theCanvasGa2D.size(); i++)
-    {
-      delete theGain2D[i];
-      delete theCanvasGa2D[i];
-    }
-  
-  for (auto i = 0u; i < theCanvasIn2D.size(); i++)
-    {
-      delete theIntercept2D[i];
-      delete theCanvasIn2D[i];
-    }
-
-  for (auto i = 0u; i < theAxis.size(); i++) delete theAxis[i];
-
-  for (auto i = 0u; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
 }
 
 void Gain::run ()
@@ -106,7 +66,6 @@ void Gain::run ()
   // # Error report #
   // ################
   this->chipErrorReport();
-
 }
 
 void Gain::draw (bool display, bool save)
@@ -114,15 +73,18 @@ void Gain::draw (bool display, bool save)
   TApplication* myApp;
 
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
+  if (save    == true)
+    {
+      this->CreateResultDirectory("Results",false,false);
+      this->InitResultFile(fileRes);
+    }
 
   this->initHisto();
   this->fillHisto();
   this->display();
 
-  if (save    == true) this->save();
-  if (display == true) myApp->Run();
-
-  theFile->Close();
+  if (save    == true) this->WriteRootFile();
+  if (display == true) myApp->Run(true);
 }
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze ()
@@ -140,7 +102,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
+	  int VCalMED = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
 
 	  for (auto row = 0u; row < RD53::nRows; row++)
 	    for (auto col = 0u; col < RD53::nCols; col++)
@@ -148,7 +110,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
 		{
 		  for (auto i = 0u; i < dacList.size()-1; i++)
 		    {
-		      x[i] = dacList[i]-VCalOffset;
+		      x[i] = dacList[i]-VCalMED;
 		      y[i] = detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh;
 		      e[i] = detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPhError;
 		    }
@@ -170,231 +132,14 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
   return theGainAndInterceptContainer;
 }
 
-void Gain::initHisto ()
-{
-  std::stringstream myString;
-
-
-  // #######################
-  // # Allocate histograms #
-  // #######################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-	{
-	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
-
-
-	  myString.clear();
-	  myString.str("");
-          myString << "Gain_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"       << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"      << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theOccupancy.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),
-					  nSteps,startValue-VCalOffset,stopValue-VCalOffset,
-					  nEvents/2,0,RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION)));
-	  theOccupancy.back()->SetXTitle("#DeltaVCal");
-	  theOccupancy.back()->SetYTitle("ToT");
-
-	  myString.clear();
-	  myString.str("");
-          myString << "CanvasGain_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-		   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-		   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasOcc.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-
-
-	  myString.clear();
-          myString.str("");
-          myString << "Gain1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theGain1D.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),100,0,20e-3));
-	  theGain1D.back()->SetXTitle("Gain (ToT/VCal)");
-	  theGain1D.back()->SetYTitle("Entries");
-  
-	  myString.clear();
-          myString.str("");
-          myString << "CanvasGa1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasGa1D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-
-
-	  myString.clear();
-          myString.str("");
-          myString << "Intercept1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"              << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"             << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theIntercept1D.push_back(new TH1F(myString.str().c_str(),myString.str().c_str(),100,-INTERCEPT_HALFRANGE,INTERCEPT_HALFRANGE));
-	  theIntercept1D.back()->SetXTitle("Intercept (ToT)");
-	  theIntercept1D.back()->SetYTitle("Entries");
-
-	  myString.clear();
-          myString.str("");
-          myString << "CanvasIn1D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasIn1D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-
-
-	  myString.clear();
-          myString.str("");
-          myString << "Gain2D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"         << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"        << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theGain2D.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
-	  theGain2D.back()->SetXTitle("Columns");
-	  theGain2D.back()->SetYTitle("Rows");
-
-	  myString.clear();
-          myString.str("");
-          myString << "CanvasGa2D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasGa2D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-
-
-	  myString.clear();
-          myString.str("");
-          myString << "Intercept2D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"              << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"             << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theIntercept2D.push_back(new TH2F(myString.str().c_str(),myString.str().c_str(),RD53::nCols,0,RD53::nCols,RD53::nRows,0,RD53::nRows));
-	  theIntercept2D.back()->SetXTitle("Columns");
-	  theIntercept2D.back()->SetYTitle("Rows");
-
-	  myString.clear();
-          myString.str("");
-          myString << "CanvasIn2D_Board" << std::setfill ('0') << std::setw (2) << +cBoard->getIndex()
-                   << "_Mod"             << std::setfill ('0') << std::setw (2) << +cModule->getIndex()
-                   << "_Chip"            << std::setfill ('0') << std::setw (2) << +cChip->getIndex();
-	  theCanvasIn2D.push_back(new TCanvas(myString.str().c_str(),myString.str().c_str(),0,0,700,500));
-	}
-
-  theFile = new TFile(fileRes, "UPDATE");
-}
-
+void Gain::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
 void Gain::fillHisto ()
 {
-  size_t index = 0;
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-	{
-	  int VCalOffset = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
-	  
-	  for (auto row = 0u; row < RD53::nRows; row++)
-	    for (auto col = 0u; col < RD53::nCols; col++)
-	      {
-		for (auto i = 0u; i < dacList.size(); i++)
-		  if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
-		    theOccupancy[index]->Fill(dacList[i]-VCalOffset,detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh);
-
-		if (theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain != 0)
-		  {
-		    theGain1D[index]->Fill(theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain);
-		    theIntercept1D[index]->Fill(theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept);
-		    theGain2D[index]->SetBinContent(col+1,row+1,theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain);
-		    theIntercept2D[index]->SetBinContent(col+1,row+1,theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept);
-		  }
-	      }
-
-	  index++;
-	}
+  for (auto i = 0u; i < dacList.size(); i++)
+    histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
+  histos.fillGainIntercept(*theGainAndInterceptContainer);
 }
-
-void Gain::display ()
-{
-  for (auto i = 0u; i < theCanvasOcc.size(); i++)
-    {
-      theCanvasOcc[i]->cd();
-      theOccupancy[i]->Draw("gcolz");
-      theCanvasOcc[i]->Modified();
-      theCanvasOcc[i]->Update();
-
-      TPad* myPad = (TPad*)theCanvasOcc[i]->GetPad(0);
-      myPad->SetTopMargin(0.16);
-      theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-				   RD53chargeConverter::VCAl2Charge(theOccupancy[i]->GetXaxis()->GetBinLowEdge(1)),
-				   RD53chargeConverter::VCAl2Charge(theOccupancy[i]->GetXaxis()->GetBinLowEdge(theOccupancy[i]->GetNbinsX())),
-				   510,"-"));
-      theAxis.back()->SetTitle("Charge (electrons)"); 
-      theAxis.back()->SetTitleOffset(1.2);
-      theAxis.back()->SetTitleSize(0.035);
-      theAxis.back()->SetTitleFont(40);
-      theAxis.back()->SetLabelOffset(0.001);
-      theAxis.back()->SetLabelSize(0.035);
-      theAxis.back()->SetLabelFont(42);
-      theAxis.back()->SetLabelColor(kRed);
-      theAxis.back()->SetLineColor(kRed);
-      theAxis.back()->Draw();
-
-      theCanvasOcc[i]->Modified();
-      theCanvasOcc[i]->Update();
-    }
-  
-  for (auto i = 0u; i < theCanvasGa1D.size(); i++)
-    {
-      theCanvasGa1D[i]->cd();
-      theGain1D[i]->Draw();
-      theCanvasGa1D[i]->Modified();
-      theCanvasGa1D[i]->Update();
-
-      TPad* myPad = (TPad*)theCanvasGa1D[i]->GetPad(0);
-      myPad->SetTopMargin(0.16);
-      theAxis.push_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-				   1./RD53chargeConverter::VCAl2Charge(1./theGain1D[i]->GetBinLowEdge(1),true),
-				   1./RD53chargeConverter::VCAl2Charge(1./theGain1D[i]->GetBinLowEdge(theGain1D[i]->GetNbinsX()),true),
-				   510,"-"));
-      theAxis.back()->SetTitle("Gain (ToT/electrons)");
-      theAxis.back()->SetTitleOffset(1.2);
-      theAxis.back()->SetTitleSize(0.035);
-      theAxis.back()->SetTitleFont(40);
-      theAxis.back()->SetLabelOffset(0.001);
-      theAxis.back()->SetLabelSize(0.035);
-      theAxis.back()->SetLabelFont(42);
-      theAxis.back()->SetLabelColor(kRed);
-      theAxis.back()->SetLineColor(kRed);
-      theAxis.back()->Draw();
-
-      theCanvasGa1D[i]->Modified();
-      theCanvasGa1D[i]->Update();
-    }
-  
-  for (auto i = 0u; i < theCanvasIn1D.size(); i++)
-    {
-      theCanvasIn1D[i]->cd();
-      theIntercept1D[i]->Draw();
-      theCanvasIn1D[i]->Modified();
-      theCanvasIn1D[i]->Update();
-    }
-
-  for (auto i = 0u; i < theCanvasGa2D.size(); i++)
-    {
-      theCanvasGa2D[i]->cd();
-      theGain2D[i]->Draw("gcolz");
-      theCanvasGa2D[i]->Modified();
-      theCanvasGa2D[i]->Update();
-    }
-  
-  for (auto i = 0u; i < theCanvasIn2D.size(); i++)
-    {
-      theCanvasIn2D[i]->cd();
-      theIntercept2D[i]->Draw("gcolz");
-      theCanvasIn2D[i]->Modified();
-      theCanvasIn2D[i]->Update();
-    }
-}
-
-void Gain::save ()
-{
-  for (auto i = 0u; i < theCanvasOcc.size();  i++) theCanvasOcc[i]->Write();
-  for (auto i = 0u; i < theCanvasGa1D.size(); i++) theCanvasGa1D[i]->Write();
-  for (auto i = 0u; i < theCanvasIn1D.size(); i++) theCanvasIn1D[i]->Write();
-  for (auto i = 0u; i < theCanvasGa2D.size(); i++) theCanvasGa2D[i]->Write();
-  for (auto i = 0u; i < theCanvasIn2D.size(); i++) theCanvasIn2D[i]->Write();
-}
+void Gain::display   () { histos.process(); }
 
 void Gain::computeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
 // ##############################################
@@ -473,7 +218,7 @@ void Gain::chipErrorReport ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  LOG (INFO) << BOLDGREEN << "\t--> Readout chip error repor for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+	  LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
 	  LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
 	  LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
 	  LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;

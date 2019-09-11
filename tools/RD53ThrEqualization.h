@@ -11,21 +11,19 @@
 #define RD53ThrEqualization_H
 
 #include "../Utils/Container.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/EmptyContainer.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
+#include "../DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "Tool.h"
 
 #include "TApplication.h"
-#include "TH2F.h"
 
 
 // #############
 // # CONSTANTS #
 // #############
-#define TARGETeff 0.50 // Target efficiency for optimization algorithm
+#define TARGETEFF 0.50 // Target efficiency for optimization algorithm
 
 
 // #####################################
@@ -34,11 +32,11 @@
 class ThrEqualization : public Tool
 {
  public:
-  ThrEqualization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t nEvtsBurst);
-  ~ThrEqualization ();
+  ThrEqualization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst);
 
-  void run  (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
-  void draw (bool display, bool save);
+  void   run                 (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
+  void   draw                (bool display, bool save);
+  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*6 * nEvents/nEvtsBurst; }
 
  private:
   const char* fileRes;
@@ -47,7 +45,6 @@ class ThrEqualization : public Tool
   size_t rowStop;
   size_t colStart;
   size_t colStop;
-  size_t nPixels2Inj;
   size_t nEvents;
   size_t nEvtsBurst;  
   
@@ -58,7 +55,6 @@ class ThrEqualization : public Tool
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void save            ();
   void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
   void chipErrorReport ();
 
@@ -66,11 +62,7 @@ class ThrEqualization : public Tool
   // ########
   // # ROOT #
   // ########
-  TFile* theFile;
-  std::vector<TCanvas*> theCanvasOcc;
-  std::vector<TH1F*>    theOccupancy;
-  std::vector<TCanvas*> theCanvasTDAC;
-  std::vector<TH1F*>    theTDAC;
+  RD53ThrEqualizationHistograms histos;
 };
 
 #endif

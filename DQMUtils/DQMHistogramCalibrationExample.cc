@@ -34,7 +34,7 @@ DQMHistogramCalibrationExample::~DQMHistogramCalibrationExample ()
 
 
 //========================================================================================================================
-void DQMHistogramCalibrationExample::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
+void DQMHistogramCalibrationExample::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
@@ -60,7 +60,7 @@ bool DQMHistogramCalibrationExample::fill(std::vector<char>& dataBuffer)
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     //I'm expecting to receive a data stream from an uint32_t contained from calibration "CalibrationExample"
-    ContainerStream<uint32_t>  theHitStreamer("CalibrationExample");
+    ChannelContainerStream<uint32_t>  theHitStreamer("CalibrationExample");
 
     // Try to see if the char buffer matched what I'm expection (container of uint32_t from CalibrationExample procedure)
     if(theHitStreamer.attachBuffer(&dataBuffer))

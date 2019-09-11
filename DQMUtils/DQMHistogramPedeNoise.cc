@@ -35,7 +35,7 @@ DQMHistogramPedeNoise::~DQMHistogramPedeNoise ()
 
 
 //========================================================================================================================
-void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
+void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap)
 {
 
     auto cSetting = pSettingsMap.find ( "PlotSCurves" );
@@ -105,31 +105,31 @@ void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &
 //========================================================================================================================
 bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
-    ContainerStream<Occupancy>          theOccupancy("PedeNoise");
-    ContainerStream<Occupancy,uint16_t> theSCurve("SCurve");
-    ContainerStream<ThresholdAndNoise>  theThresholdAndNoiseStream("PedeNoise");
+    ModuleContainerStream<Occupancy,Occupancy,Occupancy>          theOccupancy("PedeNoise");
+    ChannelContainerStream<Occupancy,uint16_t> theSCurve("SCurve");
+    ChannelContainerStream<ThresholdAndNoise>  theThresholdAndNoiseStream("PedeNoise");
 
 	if(theOccupancy.attachBuffer(&dataBuffer))
 	{
-		std::cout<<"Matched Occupancy!!!!!\n";
-		theOccupancy.decodeChipData(fDetectorData);
+		std::cout<<"Matched PedeNoise Occupancy!!!!!\n";
+		theOccupancy.decodeModuleData(fDetectorData);
         fillValidationPlots(fDetectorData);
         
 	    fDetectorData.cleanDataStored();
         return true;
 	}
-    if(theSCurve.attachBuffer(&dataBuffer))
+    else if(theSCurve.attachBuffer(&dataBuffer))
 	{
-		std::cout<<"Matched SCurve!!!!!\n";
+		std::cout<<"Matched PedeNoise SCurve!!!!!\n";
 		theSCurve.decodeChipData(fDetectorData);
-        fillSCurvePlots(theSCurve.getHeaderStream()->getHeaderInfo(),fDetectorData);
+        fillSCurvePlots(theSCurve.getHeaderElement(),fDetectorData);
         
 	    fDetectorData.cleanDataStored();
         return true;
 	}
     else if(theThresholdAndNoiseStream.attachBuffer(&dataBuffer))
     {
-        std::cout<<"Matched ThresholdAndNoise!!!!!\n";
+        std::cout<<"Matched PedeNoise ThresholdAndNoise!!!!!\n";
         theThresholdAndNoiseStream.decodeChipData(fDetectorData);
         fillPedestalAndNoisePlots(fDetectorData);
 
@@ -168,10 +168,10 @@ void DQMHistogramPedeNoise::process()
                 cValidation->cd(chip->getIndex()+1 +module->size()*1);
                 TH1F *chipStripNoiseEvenHistogram = fDetectorStripNoiseEvenHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
                 TH1F *chipStripNoiseOddHistogram  = fDetectorStripNoiseOddHistograms .at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
-                chipStripNoiseEvenHistogram->SetLineColor(31);
+                chipStripNoiseEvenHistogram->SetLineColor(kBlue);
                 chipStripNoiseEvenHistogram->SetMaximum (10);
                 chipStripNoiseEvenHistogram->SetMinimum (0);
-                chipStripNoiseOddHistogram->SetLineColor(2);
+                chipStripNoiseOddHistogram->SetLineColor(kRed);
                 chipStripNoiseOddHistogram->SetMaximum (10);
                 chipStripNoiseOddHistogram->SetMinimum (0);
                 chipStripNoiseEvenHistogram->SetStats(false);
@@ -222,10 +222,12 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer &theOccupa
     {
         for(auto module: *board)
         {
+            // std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " << module->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
             for(auto chip: *module)
             {
                 TH1F *chipValidationHistogram = fDetectorValidationHistograms.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<TH1FContainer>().fTheHistogram;
                 uint channelBin=1;
+
                 if(chip->getChannelContainer<Occupancy>() == nullptr ) continue;
                 for(auto channel : *chip->getChannelContainer<Occupancy>())
                 {
@@ -292,7 +294,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer &the
 //========================================================================================================================
 void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContainer &fSCurveOccupancy)
 {
-
+    
     for ( auto board : fSCurveOccupancy )
     {
         for ( auto module : *board )

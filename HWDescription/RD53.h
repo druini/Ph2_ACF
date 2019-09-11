@@ -36,24 +36,24 @@
 #define NROW_CORE         8 // Number of rows in a core
 
 
-// #################################################################################
-// # Formula: (par0 1e-3 + par1*VCal 1e-3) / electron_charge [C] * capacitance [C] #
-// #################################################################################
+// #####################################################################
+// # Formula: par0/par1 * VCal / electron_charge [C] * capacitance [C] #
+// #####################################################################
 namespace RD53chargeConverter
 {
-  constexpr float par0 = -1.0;
-  constexpr float par1 =  0.195;
-  constexpr float cap  =  8.2;
-  constexpr float ele  =  1.6;
+  constexpr float par0 =    0.9; // Vref (V)
+  constexpr float par1 = 4096.0; // VCal total range
+  constexpr float cap  =    8.5; // (fF)
+  constexpr float ele  =    1.6; // (e-19)
 
-  constexpr float VCAl2Charge(float VCal, bool onlySlope = false)
+  constexpr float VCAl2Charge (float VCal)
   {
-    return ((onlySlope ? 0 : par0) + par1*VCal) / ele * cap * 10.0;
+    return (par0/par1) * VCal / ele * cap * 1e4;
   }
 
-  constexpr float Charge2VCal(float Charge, bool onlySlope = false)
+  constexpr float Charge2VCal (float Charge)
   {
-    return (Charge / (cap * 10.0) * ele - par0) / par1;
+    return Charge / (cap * 1e4) * ele / (par0/par1);
   }
 }
 
@@ -123,6 +123,7 @@ namespace RD53PixelEncoder
   const uint8_t NBIT_HITBUS =    1; // Number of hit bust bits
   const uint8_t NBIT_TDAC   =    4; // Number of TDAC bits
   const uint8_t HIGHGAIN    = 0x80; // Set High Gain Linear FE
+  const uint8_t LOWGAIN     = 0x00; // Set Low Gain Linear FE
 }
 
 
@@ -188,6 +189,10 @@ namespace Ph2_HwDescription
     void    setTDAC             (unsigned int row, unsigned int col, uint8_t TDAC);
     uint8_t getTDAC             (unsigned int row, unsigned int col);
 
+    void encodeCMD (const ChipRegItem                 & pRegItem,
+		    const uint8_t                       pRD53Id,
+		    const uint16_t                      pRD53Cmd,
+		    std::vector<std::vector<uint16_t>>& pVecReg);
     void encodeCMD (const uint16_t               address,
 		    const uint16_t               data,
 		    const uint8_t                pRD53Id,
@@ -275,6 +280,62 @@ namespace Ph2_HwDescription
     std::vector<perPixelData> fPixelsMaskDefault;
     std::string configFileName;
     CommentMap fCommentMap;
+
+    std::vector<uint8_t> cmd_data_map =
+      {
+	0x6A, // 00
+	0x6C, // 01
+	0x71, // 02
+	0x72, // 03
+	0x74, // 04
+	0x8B, // 05
+	0x8D, // 06
+	0x8E, // 07
+	0x93, // 08
+	0x95, // 09
+	0x96, // 10
+	0x99, // 11
+	0x9A, // 12
+	0x9C, // 13
+	0x23, // 14
+	0xA5, // 15
+	0xA6, // 16
+	0xA9, // 17
+	0xAA, // 18
+	0xAC, // 19
+	0xB1, // 20
+	0xB2, // 21
+	0xB4, // 22
+	0xC3, // 23
+	0xC5, // 24
+	0xC6, // 25
+	0xC9, // 26
+	0xCA, // 27
+	0xCC, // 28
+	0xD1, // 29
+	0xD2, // 30
+	0xD4  // 31
+      };
+
+    std::vector<uint8_t> trigger_map =
+      {
+	0x2B, // 00
+	0x2B, // 01
+	0x2D, // 02
+	0x2E, // 03
+	0x33, // 04
+	0x35, // 05
+	0x36, // 06
+	0x39, // 07
+	0x3A, // 08
+	0x3C, // 09
+	0x4B, // 10
+	0x4D, // 11
+	0x4E, // 12
+	0x53, // 13
+	0x55, // 14
+	0x56  // 15
+      };
   };
 }
 

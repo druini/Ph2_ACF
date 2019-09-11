@@ -14,7 +14,7 @@ CalibrationExample::~CalibrationExample()
 {
 }
 
-void CalibrationExample::Initialise ()
+void CalibrationExample::Initialise (void)
 {
 
     auto cSetting = fSettingsMap.find ( "Nevents" );
@@ -23,17 +23,16 @@ void CalibrationExample::Initialise ()
     LOG (INFO) << "Parsed settings:" ;
     LOG (INFO) << " Nevents = " << fEventsPerPoint ;
 
-    #ifdef __USE_ROOT__
+    #ifdef __USE_ROOT__  // to disable and anable ROOT by command 
         //Calibration is not running on the SoC: plots are booked during initialization
         fDQMHistogramCalibrationExample.book(fResultFile, *fDetectorContainer, fSettingsMap);
     #endif    
 
 }
 
-
-void CalibrationExample::runCalibrationExample ()
+void CalibrationExample::runCalibrationExample(void)
 {
-    LOG (INFO) << "runCalibrationExample: Taking Data with " << fEventsPerPoint << " triggers!" ;
+    LOG (INFO) << "Taking Data with " << fEventsPerPoint << " triggers!" ;
 
     DetectorDataContainer       theHitContainer;
     ContainerFactory::copyAndInitChannel<uint32_t>(*fDetectorContainer, theHitContainer);
@@ -45,8 +44,10 @@ void CalibrationExample::runCalibrationExample ()
         //Send N triggers (as it was in the past)
         ReadNEvents ( theBeBoard, fEventsPerPoint ); 
         //Get the event vector (as it was in the past)
-        const std::vector<Event*>& eventVector = GetEvents ( theBeBoard );
-        for ( auto& event : eventVector ) //for on events - begin 
+
+        const std::vector<Event*> &eventVector = GetEvents ( theBeBoard );
+
+        for ( auto &event : eventVector ) //for on events - begin 
         {
             for(auto module: *board) // for on module - begin 
             {
@@ -68,9 +69,9 @@ void CalibrationExample::runCalibrationExample ()
         fDQMHistogramCalibrationExample.fillCalibrationExamplePlots(theHitContainer);
     #else
         //Calibration is running on the SoC: shipping the data!!!
-        //I prepare a stream of an uint32_t container, prepareContainerStreamer adds in the stream also the calibration name
+        //I prepare a stream of an uint32_t container, prepareChannelContainerStreamer adds in the stream also the calibration name
         // that is used when multiple calibrations are concatenated
-        auto theHitStream = prepareContainerStreamer<uint32_t>();
+        auto theHitStream = prepareChannelContainerStreamer<uint32_t>();
         // if the streamer was enabled (the supervisor script enable it) data are streamed
         if(fStreamerEnabled)
         {
@@ -88,3 +89,23 @@ void CalibrationExample::writeObjects()
     #endif
 }
 
+//For system on chip compatibility
+void CalibrationExample::Start(int currentRun)
+{
+	LOG (INFO) << "Starting calibration example measurement.";
+	Initialise ( );
+    runCalibrationExample();
+	LOG (INFO) << "Done with calibration example.";
+}
+
+//For system on chip compatibility
+void CalibrationExample::Stop(void)
+{
+	LOG (INFO) << "Stopping calibration example measurement.";
+    writeObjects();
+    dumpConfigFiles();
+    SaveResults();
+    CloseResultFile();
+    Destroy();
+	LOG (INFO) << "Calibration example stopped.";
+}

@@ -27,28 +27,28 @@ class ChipContainer;
 class BaseContainer
 {
 public:
-	BaseContainer(int id=-1) 
+	BaseContainer(uint16_t id=-1) 
 	: id_                        (id)
 	, index_                     (0)
 	{;}
 
 	virtual ~BaseContainer() {;}
-	int getId   (void) const {return id_;}
-	int getIndex(void) const {return index_;}
+	uint16_t getId   (void) const {return id_;}
+	uint16_t getIndex(void) const {return index_;}
 	virtual void     cleanDataStored              (void) = 0;
 
-	void setIndex(int index) {index_ = index;}
+	void setIndex(uint16_t index) {index_ = index;}
 
 private:
-	int id_;
-	int index_;
+	uint16_t id_;
+	uint16_t index_;
 };
 
 template <class T>
 class Container : public std::vector<T*> , public BaseContainer
 {
 public:
-	Container(int id) : BaseContainer(id)
+	Container(uint16_t id) : BaseContainer(id)
 {
 }
 	Container(unsigned int size) : std::vector<T*>(size) {}
@@ -67,9 +67,9 @@ public:
 		idObjectMap_.clear();
 	}
 
-	T* getObject(int id)
+	T* getObject(uint16_t id)
 	{
-		if(idObjectMap_.find(id) == idObjectMap_.end()) throw Ph2_HwDescription::Exception("T* getObject(int id) : Object Id not found");
+		if(idObjectMap_.find(id) == idObjectMap_.end()) throw Ph2_HwDescription::Exception("T* getObject(uint16_t id) : Object Id not found");
 		return idObjectMap_[id];
 	}
 
@@ -83,14 +83,14 @@ public:
 
 
 protected:
-	virtual T* addObject(int objectId, T* object)
+	virtual T* addObject(uint16_t objectId, T* object)
 	{
 		object->setIndex(this->size());
 		std::vector<T*>::push_back(object);
 		Container::idObjectMap_[objectId] = this->back();
 		return this->back();
 	}
-	std::map<int, T*> idObjectMap_;
+	std::map<uint16_t, T*> idObjectMap_;
 };
 
 
@@ -107,8 +107,8 @@ template <typename T>
 class ChannelContainer: public std::vector<T>, public ChannelContainerBase
 {
 public:
-	ChannelContainer(int size) : std::vector<T>(size) {}
-	ChannelContainer(int size, T initialValue) : std::vector<T>(size, initialValue) {}
+	ChannelContainer(uint32_t size) : std::vector<T>(size) {}
+	ChannelContainer(uint32_t size, T initialValue) : std::vector<T>(size, initialValue) {}
 	ChannelContainer(){}
 
 	T& getChannel(unsigned int channel) {return this->at(channel);}
@@ -125,13 +125,13 @@ public:
 class ChipContainer : public BaseContainer
 {
 public:
-	ChipContainer(int id)
+	ChipContainer(uint16_t id)
 	: BaseContainer(id)
 	, nOfRows_  (0)
 	, nOfCols_  (1)
 	,container_ (nullptr)
 	{}
-	ChipContainer(int id, unsigned int numberOfRows, unsigned int numberOfCols=1)
+	ChipContainer(uint16_t id, unsigned int numberOfRows, unsigned int numberOfCols=1)
 	: BaseContainer(id)
 	, nOfRows_  (numberOfRows)
 	, nOfCols_  (numberOfCols)
@@ -221,30 +221,30 @@ protected:
 class ModuleContainer : public Container<ChipContainer>
 {
 public:
-	ModuleContainer(int id) : Container<ChipContainer>(id){}
+	ModuleContainer(uint16_t id) : Container<ChipContainer>(id){}
 	template <typename T>
-	T*             addChipContainer(int id, T* chip)     {return static_cast<T*>(Container<ChipContainer>::addObject(id, chip));}
-	ChipContainer* addChipContainer(int id, int row, int col=1){return Container<ChipContainer>::addObject(id, new ChipContainer(id, row, col));}
+	T*             addChipContainer(uint16_t id, T* chip)     {return static_cast<T*>(Container<ChipContainer>::addObject(id, chip));}
+	ChipContainer* addChipContainer(uint16_t id, uint16_t row, uint16_t col=1){return Container<ChipContainer>::addObject(id, new ChipContainer(id, row, col));}
 private:
 };
 
 class BoardContainer : public Container<ModuleContainer>
 {
 public:
-	BoardContainer(int id) : Container<ModuleContainer>(id){}
+	BoardContainer(uint16_t id) : Container<ModuleContainer>(id){}
 	template <class T>
-	T*               addModuleContainer(int id, T* module){return static_cast<T*>(Container<ModuleContainer>::addObject(id, module));}
-	ModuleContainer* addModuleContainer(int id)                 {return Container<ModuleContainer>::addObject(id, new ModuleContainer(id));}
+	T*               addModuleContainer(uint16_t id, T* module){return static_cast<T*>(Container<ModuleContainer>::addObject(id, module));}
+	ModuleContainer* addModuleContainer(uint16_t id)                 {return Container<ModuleContainer>::addObject(id, new ModuleContainer(id));}
 private:
 };
 
 class DetectorContainer : public Container<BoardContainer>
 {
 public:
-	DetectorContainer(int id=0) : Container<BoardContainer>(id){}
+	DetectorContainer(uint16_t id=0) : Container<BoardContainer>(id){}
 	template <class T>
-	T*              addBoardContainer(int id, T* board){return static_cast<T*>(Container<BoardContainer>::addObject(id, board));}
-	BoardContainer* addBoardContainer(int id)                {return Container<BoardContainer>::addObject(id, new BoardContainer(id));}
+	T*              addBoardContainer(uint16_t id, T* board){return static_cast<T*>(Container<BoardContainer>::addObject(id, board));}
+	BoardContainer* addBoardContainer(uint16_t id)                {return Container<BoardContainer>::addObject(id, new BoardContainer(id));}
 private:
 };
 

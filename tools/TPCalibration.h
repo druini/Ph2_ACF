@@ -2,6 +2,12 @@
 #define TPCalibration_h__
 
 #include "Tool.h"
+
+#ifdef __USE_ROOT__
+  #include "../DQMUtils/DQMHistogramTPCalibration.h"
+#endif
+
+
 #include "TCanvas.h"
 #include "TGraph.h"
 #include "TH1F.h"
@@ -32,9 +38,21 @@ public: //methods
   void SaveResults();
   float ConvertAmpToElectrons(float pTPAmp, bool pOffset);
 
+
+  void Start(int currentRun) override;
+  void Stop() override;
+  void ConfigureCalibration() override;
+  void Pause() override;
+  void Resume() override;
+
 private: //methods
   void FillHistograms(int pTPAmp);
   void FitCorrelations();
+
+
+  #ifdef __USE_ROOT__
+     DQMHistogramTPCalibration fDQMHistogramTPCalibration;
+   #endif
 };
 
 #endif

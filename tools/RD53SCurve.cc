@@ -9,20 +9,19 @@
 
 #include "RD53SCurve.h"
 
-SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nPixels2Inj, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset)
-  : Tool        ()
-  , fileRes     (fileRes)
-  , rowStart    (rowStart)
-  , rowStop     (rowStop)
-  , colStart    (colStart)
-  , colStop     (colStop)
-  , nPixels2Inj (nPixels2Inj)
-  , nEvents     (nEvents)
-  , startValue  (startValue)
-  , stopValue   (stopValue)
-  , nSteps      (nSteps)
-  , offset      (offset)
-  , histos      (nEvents, startValue-offset, stopValue-offset, nSteps)
+SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t startValue, size_t stopValue, size_t nSteps, size_t offset)
+  : Tool       ()
+  , fileRes    (fileRes)
+  , rowStart   (rowStart)
+  , rowStop    (rowStop)
+  , colStart   (colStart)
+  , colStop    (colStop)
+  , nEvents    (nEvents)
+  , startValue (startValue)
+  , stopValue  (stopValue)
+  , nSteps     (nSteps)
+  , offset     (offset)
+  , histos     (nEvents, startValue-offset, stopValue-offset, nSteps)
 {
   // ########################
   // # Custom channel group #
@@ -34,9 +33,8 @@ SCurve::SCurve (const char* fileRes, size_t rowStart, size_t rowStop, size_t col
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::shared_ptr<RD53ChannelGroupHandler>(new RD53ChannelGroupHandler());
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>();
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
-  theChnGroupHandler->setChannelGroupParameters(nPixels2Inj, 1, 1);
 
 
   // ##############################
@@ -63,13 +61,26 @@ void SCurve::run ()
   for (auto i = 0u; i < dacList.size(); i++)
     {
       detectorContainerVector.emplace_back(new DetectorDataContainer());
-      ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *detectorContainerVector.back());
+      ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *detectorContainerVector.back());
     }
   
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
+
+
+  // #########################
+  // # Mark enabled channels #
+  // #########################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+	for (auto row = 0u; row < RD53::nRows; row++)
+	  for (auto col = 0u; col < RD53::nCols; col++)
+	    if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+	      for (auto i = 0u; i < dacList.size(); i++)
+		detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).isEnabled = true;
 
 
   // ################
@@ -85,7 +96,7 @@ void SCurve::draw (bool display, bool save)
   if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
   if (save    == true)
     {
-      this->CreateResultDirectory("Results");
+      this->CreateResultDirectory("Results",false,false);
       this->InitResultFile(fileRes);
     }
 
@@ -94,7 +105,7 @@ void SCurve::draw (bool display, bool save)
   this->display();
 
   if (save    == true) this->WriteRootFile();
-  if (display == true) myApp->Run();
+  if (display == true) myApp->Run(true);
 }
 
 std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
@@ -115,8 +126,8 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 	      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
 		{
 		  for (auto i = 0u; i < dacList.size()-1u; i++)
-		    measurements[i+1] = (detectorContainerVector[i+1]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy - 
-					 detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(row,col).fOccupancy);
+		    measurements[i+1] = (detectorContainerVector[i+1]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy - 
+					 detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
 		  
 		  this->computeStats(measurements, offset, nHits, mean, rms);
 		  
@@ -140,15 +151,13 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 }
 
 void SCurve::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-
-void SCurve::fillHisto()
+void SCurve::fillHisto ()
 {
   for (auto i = 0u; i < dacList.size(); i++)
     histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
   histos.fillThresholdNoise(*theThresholdAndNoiseContainer); 
 }
-
-void SCurve::display() { histos.process(); }
+void SCurve::display   () { histos.process(); }
 
 void SCurve::computeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
 {
@@ -186,7 +195,7 @@ void SCurve::chipErrorReport ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
 	{
-	  LOG (INFO) << BOLDGREEN << "\t--> Readout chip error repor for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+	  LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
 	  LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
 	  LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
 	  LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;

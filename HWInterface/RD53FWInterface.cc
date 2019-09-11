@@ -20,6 +20,7 @@ namespace Ph2_HwInterface
       {
 	fFileHandler = pHandler;
 	fSaveToFile  = true;
+	fpgaConfig   = nullptr;
       }
     else LOG (ERROR) << BOLDRED << "NULL FileHandler" << RESET;
   }
@@ -43,15 +44,15 @@ namespace Ph2_HwInterface
   }
 
   // @TMP@
-  void RD53FWInterface::ResetSequence ()
+  void RD53FWInterface::ResetSequence()
   {
-    LOG (INFO) << BOLDMAGENTA << "Resetting the chip... it may take a while" << RESET;
+    LOG (INFO) << BOLDMAGENTA << "Resetting the backend board... it may take a while" << RESET;
 
     this->TurnOffFMC();
     this->TurnOnFMC();
     this->ResetBoard();
 
-    LOG (INFO) << BOLDMAGENTA << "Powercycle frontend chip(s)" << RESET;
+    LOG (INFO) << BOLDMAGENTA << "You now need to powercycle the frontend chip(s)" << RESET;
   }
 
   void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)
@@ -89,7 +90,7 @@ namespace Ph2_HwInterface
 	myString << "user.ctrl_regs.Hybrid" << cModule->getIndex() + 1;
 	cVecReg.push_back({myString.str() + ".Hybrid_en", 1});
 	cVecReg.push_back({myString.str() + ".Chips_en", RD53::setBits(cModule->fReadoutChipVector.size())});
-	LOG (INFO) << BOLDBLUE << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << BOLDBLUE << " chips for module " << BOLDYELLOW << cModule->getIndex() << RESET;
+	LOG (INFO) << BOLDBLUE << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << BOLDBLUE << " chip(s) for module " << BOLDYELLOW << cModule->getIndex() << RESET;
       }
 
 
@@ -299,7 +300,7 @@ namespace Ph2_HwInterface
     // # Check RD53 AURORA registers #
     // ###############################
     unsigned int auroraReg = ReadReg ("user.stat_regs.aurora.gtx_lock");
-    LOG (INFO) << BOLDBLUE << "Aurora PLL locking status: " << BOLDYELLOW << auroraReg << RESET;
+    LOG (INFO) << BOLDBLUE << "Aurora number of locked PLLs: " << BOLDYELLOW << RD53::countBitsOne(auroraReg) << RESET;
 
     auroraReg = ReadReg ("user.stat_regs.aurora.speed");
     LOG (INFO) << BOLDBLUE << "Aurora speed: " << BOLDYELLOW << (auroraReg == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
@@ -445,6 +446,12 @@ namespace Ph2_HwInterface
 	LOG (ERROR) << BOLDRED << "Reached the maximum number of trals (" << BOLDYELLOW << MAXTRIALS << BOLDRED << ") without success" << RESET;
 	pData.clear();
       }
+
+
+    // #################
+    // # Show progress #
+    // #################
+    RD53RunProgress::update();
   }
 
   std::vector<uint32_t> RD53FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
@@ -826,12 +833,10 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ConfigureDIO5 (const DIO5Config* cfg)
   {
-    bool ext_clk_en;
-    std::tie(ext_clk_en, std::ignore) = unpack_bits<1,4>(cfg->ch_out_en);
-    
     WriteStackReg({
 	{"user.ctrl_regs.ext_tlu_reg1.dio5_en",            (uint32_t)cfg->enable},
 	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en",     (uint32_t)cfg->ch_out_en},
+	{"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)cfg->fiftyohm_en},
 	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr",       (uint32_t)cfg->ch1_thr},
 	{"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr",       (uint32_t)cfg->ch2_thr},
 	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr",       (uint32_t)cfg->ch3_thr},
@@ -839,11 +844,62 @@ namespace Ph2_HwInterface
 	{"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr",       (uint32_t)cfg->ch5_thr},
 	{"user.ctrl_regs.ext_tlu_reg2.tlu_en",             (uint32_t)cfg->tlu_en},
 	{"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)cfg->tlu_handshake_mode},
+	{"user.ctrl_regs.ext_tlu_reg2.ext_clk_en",         (uint32_t)cfg->ext_clk_en},
 
 	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   1},
-	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   0},
-
-	{"user.ctrl_regs.ext_tlu_reg2.ext_clk_en",         (uint32_t)ext_clk_en}
+	{"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   0}
       });
   }
+
+  // ###########################################
+  // # Member functions to handle the firmware #
+  // ###########################################
+  void RD53FWInterface::FlashProm (const std::string& strConfig, const char* fileName)
+  {
+    checkIfUploading();    
+    fpgaConfig->runUpload(strConfig, fileName);
+  }
+
+  void RD53FWInterface::JumpToFpgaConfig (const std::string& strConfig)
+  {
+    checkIfUploading();  
+    fpgaConfig->jumpToImage(strConfig);
+  }
+
+  void RD53FWInterface::DownloadFpgaConfig (const std::string& strConfig, const std::string& strDest)
+  {
+    checkIfUploading();
+    fpgaConfig->runDownload(strConfig, strDest.c_str());
+  }
+  
+  std::vector<std::string> RD53FWInterface::getFpgaConfigList ()
+  {
+    checkIfUploading();
+    return fpgaConfig->getFirmwareImageNames();
+  }
+
+  void RD53FWInterface::DeleteFpgaConfig (const std::string& strId)
+  {
+    checkIfUploading();
+    fpgaConfig->deleteFirmwareImage(strId);
+  }
+
+  void RD53FWInterface::checkIfUploading ()
+  {
+    if (fpgaConfig && fpgaConfig->getUploadingFpga() > 0)
+      throw Exception ("This board is uploading an FPGA configuration");
+    
+    if (!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
+  }
+
+  void RD53FWInterface::RebootBoard ()
+  {
+    if (!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
+    fpgaConfig->resetBoard();
+  }
+
+  const FpgaConfig* RD53FWInterface::getConfiguringFpga ()
+  {
+    return (const FpgaConfig*) fpgaConfig;
+  }  
 }

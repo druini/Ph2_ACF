@@ -50,7 +50,7 @@ class DQMHistogramBase
      * \brief Book histograms
      * \param theDetectorStructure : Container of the Detector structure
      */
-    virtual void book(TFile *outputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap) = 0;
+    virtual void book(TFile *outputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap) = 0;
 
     /*!
      * \brief Book histograms
@@ -72,7 +72,10 @@ class DQMHistogramBase
     //virtual void summarizeHistos();
 
  private:
-  int canvasId = 0;
+    static int& canvasId() {
+      static int value = 0;
+      return value;
+    };
   std::vector<std::unique_ptr<TCanvas>> canvases;
   std::vector<std::unique_ptr<TGaxis>>  axes;
 
@@ -101,7 +104,7 @@ class DQMHistogramBase
 	for (auto cModule : *cBoard)
 	  for (auto cChip : *cModule)
 	    {
-	      canvases.emplace_back(new TCanvas(("Canvas_" + std::to_string(canvasId++)).c_str(), "IT Canvas"));
+	      canvases.emplace_back(new TCanvas(("Canvas_" + std::to_string(canvasId()++)).c_str(), "IT Canvas"));
 	      canvases.back()->cd();
 	      Hist* hist = cChip->getSummary<HistContainer<Hist>>().fTheHistogram;
 	      hist->Draw(opt);
@@ -114,8 +117,8 @@ class DQMHistogramBase
 		  myPad->SetTopMargin(0.16);
 		  
 		  axes.emplace_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-					       RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(1), true),
-					       RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), true), 510, "-"));
+					       RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(1)),
+					       RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())), 510, "-"));
 		  axes.back()->SetTitle(electronAxisTitle);
 		  axes.back()->SetTitleOffset(1.2);
 		  axes.back()->SetTitleSize(0.035);
@@ -133,10 +136,11 @@ class DQMHistogramBase
 	    }
     }
 
-  auto findValue (const std::map<std::string, uint32_t>& pSettingsMap, const char* name)
+  auto findValue (const std::map<std::string, double>& pSettingsMap, const char* name)
   {
     auto setting = pSettingsMap.find(name);
     return ((setting != std::end(pSettingsMap)) ? setting->second : 0);
   }
 };
+
 #endif

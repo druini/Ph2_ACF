@@ -34,10 +34,13 @@ class CalibrationExample : public Tool
     CalibrationExample();
     ~CalibrationExample();
 
-    void Initialise ();
-    void runCalibrationExample ();
-    void writeObjects();
-
+    //State machine 
+    void Initialise           (void);
+    void Start                (int currentRun) override;
+    void Stop                 (void) override;
+    void runCalibrationExample(void);
+    void writeObjects         (void);
+  
   private:
     uint32_t fEventsPerPoint;
 

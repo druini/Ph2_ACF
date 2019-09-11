@@ -7,7 +7,7 @@
 #include "../HWDescription/Definition.h"
 #include "../tools/CMTester.h"
 #include "../tools/PedeNoise.h"
-#include "../tools/Calibration.h"
+#include "../tools/PedestalEqualization.h"
 
 #include <TApplication.h>
 #include "../Utils/argvparser.h"
@@ -103,13 +103,13 @@ int main ( int argc, char* argv[] )
     if (cCalibrate)  // Calibrate Voffset
     {
         // Find offsets
-	Calibration cCalibration;
-	cCalibration.Inherit (&cTool);
-	cCalibration.Initialise (false);
-	cCalibration.FindVplus();
-	cCalibration.FindOffsets();
-	cCalibration.writeObjects();
-	//cCalibration.dumpConfigFiles();
+	PedestalEqualization cPedestalEqualization;
+	cPedestalEqualization.Inherit (&cTool);
+	cPedestalEqualization.Initialise (false);
+	cPedestalEqualization.FindVplus();
+	cPedestalEqualization.FindOffsets();
+	cPedestalEqualization.writeObjects();
+	//cPedestalEqualization.dumpConfigFiles();
     }
 	
     // Measure noise (this is not optional, since it is an input in the CMTest plot)
