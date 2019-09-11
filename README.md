@@ -90,7 +90,7 @@ then
     time CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
-    echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
+    echo "Choose whether to accept new threshold (i.e. copy it into the xml file(s))"
     read -p "Press any key to continue... " -n1 -s
     echo
 elif [ $1 == "step2" ]
@@ -107,7 +107,7 @@ then
     time CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
-    echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
+    echo "Choose whether to accept new threshold (i.e. copy it into the xml file(s))"
     read -p "Press any key to continue... " -n1 -s
     echo
 elif [ $1 == "step3" ]
