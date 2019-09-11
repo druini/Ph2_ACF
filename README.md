@@ -60,7 +60,7 @@ Setup and run the IT-DAQ:
 11. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the FC7 (just once)
 12. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
 
-The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking. 
+The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking.
 Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
 ```
 1. Latency scan
