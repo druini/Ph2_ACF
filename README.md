@@ -71,6 +71,7 @@ Through `CMSIT_miniDAQ`, and with the right command line option, you can run the
 6. Threshold equalization
 7. Gain optimization
 8. Threshold minimization
+9. Injection delay scan
 ```
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
 ```
