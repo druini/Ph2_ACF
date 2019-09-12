@@ -46,7 +46,7 @@ Setup the firmware:
 5. Plug the microSD card in the FC7
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware
 
-*A golden firmware is any stable firmware either from IT or OT and it's needed just to initialize the IPbus communication at bootstrap
+*A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap. If you use the `dd` command you need to convert the `bit` file into `img`
 
 Setup and run the IT-DAQ:
 1. `yum install pugixml-devel` (if necesary run `yum install epel-release` before point 1.)
