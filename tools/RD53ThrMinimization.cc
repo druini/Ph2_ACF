@@ -21,7 +21,7 @@ ThrMinimization::ThrMinimization (std::string fileRes,
                                   size_t ThrStart,
                                   size_t ThrStop,
                                   bool   doFast)
-  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false, doFast)
+  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false, doFast, targetOccupancy)
   , fileRes         (fileRes)
   , fileReg         (fileReg)
   , rowStart        (rowStart)
@@ -108,9 +108,9 @@ void ThrMinimization::initHisto () { histos.book(fResultFile, *fDetectorContaine
 void ThrMinimization::fillHisto () { histos.fill(theThrContainer);                                }
 void ThrMinimization::display   () { histos.process();                                            }
 
-void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t ThrStart, uint16_t ThrStop)
+void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
-  uint16_t numberOfBits = (ThrStop != 0 ? log2(ThrStop - ThrStart + 1) + 1 : static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(dacName));
+  uint16_t numberOfBits = log2(stopValue - startValue + 1) + 1;
 
   DetectorDataContainer minDACcontainer;
   DetectorDataContainer midDACcontainer;
@@ -130,8 +130,8 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = ThrStart;
-          maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = (ThrStop != 0 ? ThrStop : RD53::setBits(numberOfBits)) + 1;
+          minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = startValue;
+          maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = stopValue + 1;
 
           bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = 0;
         }

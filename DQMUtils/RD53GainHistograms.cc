@@ -14,6 +14,15 @@ using namespace Ph2_HwDescription;
 
 void RD53GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
+  // #######################
+  // # Retrieve parameters #
+  // #######################
+  // nEvents    = this->findValue(pSettingsMap,"nEvents");
+  // nSteps     = this->findValue(pSettingsMap,"VCalHnsteps");
+  // startValue = this->findValue(pSettingsMap,"VCalHstart");
+  // stopValue  = this->findValue(pSettingsMap,"VCalHstop");
+
+
   auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps,startValue,stopValue, nEvents / 2, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION));
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "ToT");
 

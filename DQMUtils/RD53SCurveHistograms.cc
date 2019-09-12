@@ -14,6 +14,15 @@ using namespace Ph2_HwDescription;
 
 void RD53SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
+  // #######################
+  // # Retrieve parameters #
+  // #######################
+  // nEvents    = this->findValue(pSettingsMap,"nEvents");
+  // nSteps     = this->findValue(pSettingsMap,"VCalHnsteps");
+  // startValue = this->findValue(pSettingsMap,"VCalHstart");
+  // stopValue  = this->findValue(pSettingsMap,"VCalHstop");
+
+
   auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue, stopValue, nEvents + 1, 0, 1 + 1. / nEvents);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "Efficiency");
 

@@ -14,6 +14,12 @@ using namespace Ph2_HwDescription;
 
 void RD53ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
+  // #######################
+  // # Retrieve parameters #
+  // #######################
+  // nEvents = this->findValue(pSettingsMap,"nEvents");
+
+
   size_t TDACsize = RD53::setBits(RD53PixelEncoder::NBIT_TDAC) + 1;
 
   auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents / 2 + 1, 0, 1 + 2. / nEvents);

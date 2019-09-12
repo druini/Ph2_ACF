@@ -24,9 +24,9 @@ class RD53SCurveHistograms : public DQMHistogramBase
  public:
  RD53SCurveHistograms(int nEvents, int startValue, int stopValue, int nSteps)
    : nEvents    (nEvents)
-    , nSteps     (nSteps)
-    , startValue (startValue)
-    , stopValue  (stopValue)
+   , nSteps     (nSteps)
+   , startValue (startValue)
+   , stopValue  (stopValue)
   {}
 
   void book          (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;

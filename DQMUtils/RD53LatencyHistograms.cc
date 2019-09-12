@@ -14,6 +14,13 @@ using namespace Ph2_HwDescription;
 
 void RD53LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
+  // #######################
+  // # Retrieve parameters #
+  // #######################
+  startValue = this->findValue(pSettingsMap,"LatencyStart");
+  stopValue  = this->findValue(pSettingsMap,"LatencyStop");
+
+
   auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue, startValue, stopValue);
   bookImplementer(theOutputFile, theDetectorStructure, hLatency, Latency, "Latency (n.bx)", "Entries");
 

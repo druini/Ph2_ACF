@@ -20,8 +20,6 @@
 class RD53ThrMinimizationHistograms : public DQMHistogramBase
 {
  public:
-  RD53ThrMinimizationHistograms () {}
-
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
   void process ()                                                                                                          override;
   bool fill    (std::vector<char>& dataBuffer)                                                                             override { return false; };

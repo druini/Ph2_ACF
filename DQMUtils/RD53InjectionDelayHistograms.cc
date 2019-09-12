@@ -14,6 +14,13 @@ using namespace Ph2_HwDescription;
 
 void RD53InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
+  // #######################
+  // # Retrieve parameters #
+  // #######################
+  startValue = this->findValue(pSettingsMap,"InjDelayStart");
+  stopValue  = this->findValue(pSettingsMap,"InjDelayStop");
+
+
   auto hInjectionDelay = CanvasContainer<TH1F>("InjectionDelay", "Injection Delay", stopValue - startValue, startValue, stopValue);
   bookImplementer(theOutputFile, theDetectorStructure, hInjectionDelay, InjectionDelay, "Injection Delay (1.5625 ns)", "Entries");
 

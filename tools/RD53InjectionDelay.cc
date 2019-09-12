@@ -30,7 +30,7 @@ InjectionDelay::InjectionDelay (std::string fileRes,
   , stopValue  (stopValue)
   , nEvents    (nEvents)
   , doFast     (doFast)
-  , histos     (startValue, stopValue)
+  , histos     ()
 {
   size_t nSteps = stopValue - startValue;
 

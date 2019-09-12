@@ -37,9 +37,9 @@ class GainOptimization : public Gain
                     size_t stopValue,
                     size_t nSteps,
                     size_t offset,
-                    float targetCharge,
-                    size_t KrumCurrStart = 0,
-                    size_t KrumCurrStop = 0,
+                    float  targetCharge,
+                    size_t KrumCurrStart,
+                    size_t KrumCurrStop,
                     bool   doFast = false);
 
   void   run                 ();
