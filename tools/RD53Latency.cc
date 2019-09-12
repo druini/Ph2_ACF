@@ -18,7 +18,7 @@ Latency::Latency (std::string fileRes,
                   size_t startValue,
                   size_t stopValue,
                   size_t nEvents)
-  : Tool       ()
+  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, true, true, 1)
   , fileRes    (fileRes)
   , fileReg    (fileReg)
   , rowStart   (rowStart)
@@ -108,7 +108,8 @@ void Latency::analyze ()
                 }
             }
 
-          LOG (INFO) << BOLDGREEN << "\t--> BEST LATENCY: " << BOLDYELLOW << latency << RESET;
+          LOG (INFO) << BOLDGREEN << "\t--> Best latency for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
+                     << BOLDYELLOW << latency << RESET;
         }
 }
 
@@ -118,66 +119,36 @@ void Latency::display   () { histos.process();                                  
 
 void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-  std::vector<uint32_t> data;
-  uint8_t               status;
-
-  auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
-
-  for (const auto cBoard : *fDetectorContainer)
+  for (auto dac : dacList)
     {
-      for (const auto cModule : *cBoard)
-        for (const auto cChip : *cModule)
-          {
-            LOG (INFO) << GREEN << "Performing latency scan for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+      // ###########################
+      // # Download new DAC values #
+      // ###########################
+      LOG (INFO) << BOLDMAGENTA << ">>> Latency = " << BOLDYELLOW << dac << BOLDMAGENTA << " <<<" << RESET;
+      for (const auto cBoard : *fDetectorContainer)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, dac, true);
 
 
-            // ########################
-            // # Set pixels to inject #
-            // ########################
-            static_cast<RD53*>(cChip)->resetMask();
-
-            if (static_cast<RD53FWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->getLoaclCfgFastCmd()->trigger_source == RD53FWInterface::TriggerSource::FastCMDFSM)
-              {
-                static_cast<RD53*>(cChip)->enablePixel(rowStart,colStart,true);
-                static_cast<RD53*>(cChip)->injectPixel(rowStart,colStart,true);
-
-                static_cast<RD53*>(cChip)->enablePixel(rowStop,colStop,true);
-                static_cast<RD53*>(cChip)->injectPixel(rowStop,colStop,true);
-              }
-            else
-              {
-                for (auto col = colStart; col <= colStop; col++)
-                  for (auto row = rowStart; row <= rowStop; row++)
-                    {
-                      static_cast<RD53*>(cChip)->enablePixel(row,col,true);
-                      static_cast<RD53*>(cChip)->injectPixel(row,col,true);
-                    }
-              }
-
-            RD53ChipInterface->WriteRD53Mask(static_cast<RD53*>(cChip), true, false, false);
+      // ################
+      // # Run analysis #
+      // ################
+      static_cast<PixelAlive*>(this)->run();
+      auto output = static_cast<PixelAlive*>(this)->analyze();
+      output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
 
 
-            for (auto dac : dacList)
-              {
-                data.clear();
-
-                LOG (INFO) << BOLDMAGENTA << "\t--> Latency = " << BOLDYELLOW << dac << RESET;
-                RD53ChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, dac, true);
-
-                this->ReadNEvents(static_cast<BeBoard*>(cBoard), nEvents, data);
-                auto events = RD53FWInterface::DecodeEvents(data,status);
-
-                auto nEvts = 0;
-                for (auto i = 0u; i < events.size(); i++)
-                  {
-                    auto& evt = events[i];
-                    for (auto j = 0u; j < evt.chip_events.size(); j++)
-                      if (evt.chip_events[j].data.size() != 0) nEvts++;
-                  }
-
-                theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1.push_back(nEvts);
-              }
-          }
+      // ###############
+      // # Save output #
+      // ###############
+      for (const auto cBoard : *output)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+              theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1.push_back(occ);
+            }
     }
 }
 

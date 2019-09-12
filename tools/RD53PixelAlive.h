@@ -39,10 +39,10 @@ class PixelAlive : public Tool
               size_t colStop,
               size_t nEvents,
               size_t nEvtsBurst,
-              size_t nTRIGxL1A,
+              size_t nTRIGxEvent,
               bool   inject,
               bool   doFast = false,
-              float thresholdOccupancy = 0);
+              float  thresholdOccupancy = 0);
 
   void run                                       ();
   void draw                                      (bool display, bool save);
@@ -61,7 +61,7 @@ class PixelAlive : public Tool
   size_t colStart;
   size_t colStop;
   size_t nEvents;
-  size_t nTRIGxL1A;
+  size_t nTRIGxEvent;
   size_t nEvtsBurst;
   bool   inject;
   bool   doFast;

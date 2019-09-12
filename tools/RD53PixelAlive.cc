@@ -17,10 +17,10 @@ PixelAlive::PixelAlive (const std::string fileRes,
                         size_t colStop,
                         size_t nEvents,
                         size_t nEvtsBurst,
-                        size_t nTRIGxL1A,
+                        size_t nTRIGxEvent,
                         bool   inject,
                         bool   doFast,
-                        float thresholdOccupancy)
+                        float  thresholdOccupancy)
   : Tool               ()
   , fileRes            (fileRes)
   , fileReg            (fileReg)
@@ -29,7 +29,7 @@ PixelAlive::PixelAlive (const std::string fileRes,
   , colStart           (colStart)
   , colStop            (colStop)
   , nEvents            (nEvents)
-  , nTRIGxL1A          (nTRIGxL1A)
+  , nTRIGxEvent        (nTRIGxEvent)
   , nEvtsBurst         (nEvtsBurst)
   , inject             (inject)
   , doFast             (doFast)
@@ -59,7 +59,7 @@ void PixelAlive::run ()
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(inject);
   this->fMaskChannelsFromOtherGroups = true;
-  this->measureData(nEvents, nEvtsBurst, nTRIGxL1A);
+  this->measureData(nEvents, nEvtsBurst, nTRIGxEvent);
 
 
   // ################
@@ -120,7 +120,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
               if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
                 {
                   float occupancy = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
-                  static_cast<RD53*>(cChip)->enablePixel(row,col,(thresholdOccupancy != 0 ? occupancy < thresholdOccupancy : occupancy != 0));
+                  static_cast<RD53*>(cChip)->enablePixel(row,col,thresholdOccupancy != 0 ? occupancy < thresholdOccupancy : occupancy != 0);
                 }
 
           LOG (INFO) << BOLDGREEN << "\t\t--> Number of masked pixels: " << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
