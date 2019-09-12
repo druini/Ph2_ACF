@@ -12,7 +12,6 @@
 #define RD53GainOptimizationHistograms_H
 
 #include "../System/SystemController.h"
-#include "../Utils/RegisterValue.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>

@@ -13,7 +13,6 @@
 
 #include "../System/SystemController.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "../Utils/OccupancyAndPh.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
@@ -30,13 +29,13 @@ class RD53SCurveHistograms : public DQMHistogramBase
     , stopValue  (stopValue)
   {}
 
-  void book               (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
-  void process            ()                                                                                                          override;
-  bool fill               (std::vector<char>& dataBuffer)                                                                             override { return false; };
-  void reset              (void)                                                                                                      override {};
+  void book          (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
+  void process       ()                                                                                                          override;
+  bool fill          (std::vector<char>& dataBuffer)                                                                             override { return false; };
+  void reset         (void)                                                                                                      override {};
 
-  void fillOccupancy      (const DetectorDataContainer& data, int DELTA_VCAL);
-  void fillThresholdNoise (const DetectorDataContainer& data);
+  void fill          (const DetectorDataContainer& data);
+  void fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL);
 
  private:
   DetectorDataContainer Occupancy2D;

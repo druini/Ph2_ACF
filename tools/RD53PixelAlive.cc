@@ -123,11 +123,12 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
                 {
                   float occupancy = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
                   static_cast<RD53*>(cChip)->enablePixel(row,col,thresholdOccupancy != 0 ? occupancy < thresholdOccupancy : occupancy != 0);
-                  if (thresholdOccupancy != 0 && occupancy > thresholdOccupancy) nMaskedPixelsPerCalib++;
+
+                  if (((thresholdOccupancy != 0) && (occupancy >= thresholdOccupancy)) || ((thresholdOccupancy == 0) && (occupancy == 0))) nMaskedPixelsPerCalib++;
                 }
 
-	  LOG (INFO) << BOLDGREEN << "\t\t--> Number of masked pixels in this calibration: " << nMaskedPixelsPerCalib << RESET;
-	  LOG (INFO) << BOLDGREEN << "\t\t--> Total number of masked pixels: " << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+          LOG (INFO) << BOLDGREEN << "\t\t--> Number of masked pixels in this calibration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
+          LOG (INFO) << BOLDGREEN << "\t\t--> Total number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
         }
 
   return theOccContainer;

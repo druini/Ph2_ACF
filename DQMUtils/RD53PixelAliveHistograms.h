@@ -12,8 +12,6 @@
 #define RD53PixelAliveHistograms_H
 
 #include "../System/SystemController.h"
-#include "../Utils/GenericDataVector.h"
-#include "../Utils/OccupancyAndPh.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>

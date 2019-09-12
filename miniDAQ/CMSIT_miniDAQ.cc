@@ -277,6 +277,9 @@ int main (int argc, char** argv)
   size_t LatencyStart  = findValue(cSystemController.fSettingsMap,"LatencyStart");
   size_t LatencyStop   = findValue(cSystemController.fSettingsMap,"LatencyStop");
 
+  size_t InjDelayStart = findValue(cSystemController.fSettingsMap,"InjDelayStart");
+  size_t InjDelayStop  = findValue(cSystemController.fSettingsMap,"InjDelayStop");
+
   size_t VCalHstart    = findValue(cSystemController.fSettingsMap,"VCalHstart");
   size_t VCalHstop     = findValue(cSystemController.fSettingsMap,"VCalHstop");
   size_t VCalHnsteps   = findValue(cSystemController.fSettingsMap,"VCalHnsteps");
@@ -447,7 +450,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Injection Delay scan @@@" << RESET;
 
       std::string fileName ("Run" + fromInt2Str(runNumber) + "_InjectionDelay");
-      InjectionDelay id(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps);
+      InjectionDelay id(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, InjDelayStart, InjDelayStop, nEvents, DoFast);
       RD53RunProgress::total() = id.getNumberIterations();
       id.Inherit(&cSystemController);
       id.run();

@@ -55,7 +55,7 @@ void RD53GainHistograms::fillOccupancy (const DetectorDataContainer& data, int D
         }
 }
 
-void RD53GainHistograms::fillGainIntercept (const DetectorDataContainer& data)
+void RD53GainHistograms::fill (const DetectorDataContainer& data)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)

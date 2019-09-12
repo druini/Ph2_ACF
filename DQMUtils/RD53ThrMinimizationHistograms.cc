@@ -20,7 +20,7 @@ void RD53ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorCo
   bookImplementer(theOutputFile, theDetectorStructure, hThrehsold, Threhsold, "Threhsold", "Entries");
 }
 
-void RD53ThrMinimizationHistograms::fill(const DetectorDataContainer& data)
+void RD53ThrMinimizationHistograms::fill (const DetectorDataContainer& data)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)

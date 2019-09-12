@@ -183,7 +183,7 @@ void Gain::fillHisto ()
 {
   for (auto i = 0u; i < dacList.size(); i++)
     histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
-  histos.fillGainIntercept(*theGainAndInterceptContainer);
+  histos.fill(*theGainAndInterceptContainer);
 }
 void Gain::display   () { histos.process(); }
 

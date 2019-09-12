@@ -13,7 +13,6 @@
 
 #include "../System/SystemController.h"
 #include "../Utils/GainAndIntercept.h"
-#include "../Utils/OccupancyAndPh.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
@@ -35,13 +34,13 @@ class RD53GainHistograms : public DQMHistogramBase
     , stopValue  (stopValue)
   {}
 
-  void book              (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
-  void process           ()                                                                                                          override;
-  bool fill              (std::vector<char>& dataBuffer)                                                                             override { return false; };
-  void reset             (void)                                                                                                      override {};
+  void book          (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
+  void process       ()                                                                                                          override;
+  bool fill          (std::vector<char>& dataBuffer)                                                                             override { return false; };
+  void reset         (void)                                                                                                      override {};
 
-  void fillOccupancy     (const DetectorDataContainer& data, int DELTA_VCAL);
-  void fillGainIntercept (const DetectorDataContainer& data);
+  void fill          (const DetectorDataContainer& data);
+  void fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL);
 
  private:
   DetectorDataContainer Occupancy2D;

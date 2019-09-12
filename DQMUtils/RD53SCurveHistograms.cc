@@ -55,7 +55,7 @@ void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int
         }
 }
 
-void RD53SCurveHistograms::fillThresholdNoise (const DetectorDataContainer& data)
+void RD53SCurveHistograms::fill (const DetectorDataContainer& data)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)

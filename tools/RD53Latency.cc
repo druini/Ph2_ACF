@@ -91,30 +91,39 @@ void Latency::draw (bool display, bool save)
 
 void Latency::analyze ()
 {
-  for (const auto cBoard : theContainer)
+  for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          auto dataSize = 0;
-          auto latency  = 0;
+          auto best   = 0.;
+          auto regVal = 0;
 
           for (auto dac : dacList)
             {
-              auto nEvts = cChip->getSummary<GenericDataVector>().data1[dac-startValue];
-              if (nEvts > dataSize)
+              auto current = theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1[dac-startValue];
+              if (current > best)
                 {
-                  latency  = dac;
-                  dataSize = nEvts;
+                  regVal = dac;
+                  best   = current;
                 }
             }
 
           LOG (INFO) << BOLDGREEN << "\t--> Best latency for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
-                     << BOLDYELLOW << latency << RESET;
+                     << BOLDYELLOW << regVal << RESET;
+
+
+          // ######################################################
+          // # Fill latency container and download new DAC values #
+          // ######################################################
+          ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, theLatencyContainer);
+          theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = regVal;
+
+          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", regVal, true);
         }
 }
 
 void Latency::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-void Latency::fillHisto () { histos.fill(theContainer);                                   }
+void Latency::fillHisto () { histos.fill(theContainer, theLatencyContainer);              }
 void Latency::display   () { histos.process();                                            }
 
 void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
@@ -124,7 +133,7 @@ void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& 
       // ###########################
       // # Download new DAC values #
       // ###########################
-      LOG (INFO) << BOLDMAGENTA << ">>> Latency = " << BOLDYELLOW << dac << BOLDMAGENTA << " <<<" << RESET;
+      LOG (INFO) << BOLDMAGENTA << ">>> Register value = " << BOLDYELLOW << dac << BOLDMAGENTA << " <<<" << RESET;
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)

@@ -10,7 +10,7 @@
 #ifndef RD53InjectionDelay_H
 #define RD53InjectionDelay_H
 
-//#include "../DQMUtils/RD53InjectionDelayHistograms.h"
+#include "../DQMUtils/RD53InjectionDelayHistograms.h"
 #include "RD53PixelAlive.h"
 
 
@@ -20,9 +20,9 @@
 #define RESULTDIR "Results" // Directory containing the results
 
 
-// #####################################
-// # Threshold minimization test suite #
-// #####################################
+// ##############################
+// # Injection delay test suite #
+// ##############################
 class InjectionDelay : public PixelAlive
 {
  public:
@@ -32,16 +32,15 @@ class InjectionDelay : public PixelAlive
                   size_t rowStop,
                   size_t colStart,
                   size_t colStop,
-                  size_t nEvents,
                   size_t startValue,
                   size_t stopValue,
-                  size_t nSteps,
+                  size_t nEvents,
                   bool   doFast = true);
 
   void   run                 ();
   void   draw                (bool display, bool save);
   void   analyze             ();
-  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*nSteps; }
+  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue); }
 
  private:
   std::string fileRes;
@@ -50,16 +49,15 @@ class InjectionDelay : public PixelAlive
   size_t rowStop;
   size_t colStart;
   size_t colStop;
-  size_t nEvents;
   size_t startValue;
   size_t stopValue;
-  size_t nSteps;
+  size_t nEvents;
   bool   doFast;
 
   std::vector<uint16_t> dacList;
 
   DetectorDataContainer theContainer;
-  DetectorDataContainer theInjDelayContainer;
+  DetectorDataContainer theInjectionDelayContainer;
 
   void initHisto       ();
   void fillHisto       ();
@@ -71,7 +69,7 @@ class InjectionDelay : public PixelAlive
   // ########
   // # ROOT #
   // ########
-  /* RD53InjectionDelayHistograms histos; */
+  RD53InjectionDelayHistograms histos;
 };
 
 #endif

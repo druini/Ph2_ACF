@@ -15,24 +15,26 @@ InjectionDelay::InjectionDelay (std::string fileRes,
                                 size_t rowStop,
                                 size_t colStart,
                                 size_t colStop,
-                                size_t nEvents,
                                 size_t startValue,
                                 size_t stopValue,
-                                size_t nSteps,
+                                size_t nEvents,
                                 bool   doFast)
-  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, false, doFast)
+  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, true, doFast, 1)
   , fileRes    (fileRes)
   , fileReg    (fileReg)
   , rowStart   (rowStart)
   , rowStop    (rowStop)
   , colStart   (colStart)
   , colStop    (colStop)
-  , nEvents    (nEvents)
   , startValue (startValue)
   , stopValue  (stopValue)
-  , nSteps     (nSteps)
-  // , histos     ()
+  , nEvents    (nEvents)
+  , doFast     (doFast)
+  , histos     (startValue, stopValue)
 {
+  size_t nSteps = stopValue - startValue;
+
+
   // ##############################
   // # Initialize dac scan values #
   // ##############################
@@ -46,16 +48,6 @@ void InjectionDelay::run ()
   this->scanDac("INJECTION_SELECT", dacList, nEvents, &theContainer);
 
 
-  // ########################
-  // # Fill delay container #
-  // ########################
-  ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, theInjDelayContainer);
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        theInjDelayContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("INJECTION_SELECT");
-
-
   // ################
   // # Error report #
   // ################
@@ -66,7 +58,7 @@ void InjectionDelay::draw (bool display, bool save)
 {
   TApplication* myApp = nullptr;
 
-  if (display == true) myApp = new TApplication("myApp", nullptr, nullptr);
+  if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
   if (save    == true)
     {
       this->CreateResultDirectory(RESULTDIR,false,false);
@@ -101,28 +93,60 @@ void InjectionDelay::draw (bool display, bool save)
 
 void InjectionDelay::analyze ()
 {
-  for (const auto cBoard : theInjDelayContainer)
+  for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        LOG(INFO) << BOLDGREEN << "\t--> Global threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-                  << cChip->getSummary<RegisterValue>().fRegisterValue << RESET;
+        {
+          auto best   = 0.;
+          auto regVal = 0;
+
+          for (auto dac : dacList)
+            {
+              auto current = theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1[dac-startValue];
+              if (current > best)
+                {
+                  regVal = dac;
+                  best   = current;
+                }
+            }
+
+          LOG (INFO) << BOLDGREEN << "\t--> Best delay for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
+                     << BOLDYELLOW << regVal << RESET;
+
+
+          // ####################################################
+          // # Fill delay container and download new DAC values #
+          // ####################################################
+          ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, theInjectionDelayContainer);
+          theInjectionDelayContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = regVal;
+
+          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", regVal, true);
+        }
 }
 
-void InjectionDelay::initHisto () {}
-void InjectionDelay::fillHisto () {}
-void InjectionDelay::display   () {}
+void InjectionDelay::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void InjectionDelay::fillHisto () { histos.fill(theContainer, theInjectionDelayContainer);              }
+void InjectionDelay::display   () { histos.process();                                            }
 
 void InjectionDelay::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-  for (auto ele : dacList)
+  size_t saveVal = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(dacName)) -
+    RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
+  size_t maxVal  = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
+
+  for (auto dac : dacList)
     {
       // ###########################
       // # Download new DAC values #
       // ###########################
+      LOG (INFO) << BOLDMAGENTA << ">>> Register value = " << BOLDYELLOW << dac << BOLDMAGENTA << " <<<" << RESET;
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
-            this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, ele, true);
+            {
+              auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), dacName);
+              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, (val & saveVal) | (dac & maxVal), true);
+            }
 
 
       // ################
@@ -146,7 +170,7 @@ void InjectionDelay::scanDac (const std::string& dacName, const std::vector<uint
     }
 }
 
-void InjectionDelay::chipErrorReport()
+void InjectionDelay::chipErrorReport ()
 {
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 

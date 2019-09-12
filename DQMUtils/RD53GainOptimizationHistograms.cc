@@ -20,7 +20,7 @@ void RD53GainOptimizationHistograms::book (TFile* theOutputFile, const DetectorC
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, KrumCurr, "Krummenacher Current", "Entries");
 }
 
-void RD53GainOptimizationHistograms::fill(const DetectorDataContainer& data)
+void RD53GainOptimizationHistograms::fill (const DetectorDataContainer& data)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
