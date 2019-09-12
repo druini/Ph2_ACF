@@ -45,6 +45,7 @@ Setup the firmware:
 4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/releases
 5. Plug the microSD card in the FC7
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware
+
 *A golden firmware is any stable firmware either from IT or OT and it's needed just to initialize the IPbus communication at bootstrap
 
 Setup and run the IT-DAQ:
