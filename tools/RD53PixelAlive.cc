@@ -36,9 +36,9 @@ PixelAlive::PixelAlive (const std::string fileRes,
   , thresholdOccupancy (thresholdOccupancy)
   , histos             (nEvents)
 {
-  // ########################
-  // # Custom channel group #
-  // ########################
+  // ################################
+  // # Custom channel group handler #
+  // ################################
   ChannelGroup<RD53::nRows,RD53::nCols> customChannelGroup;
   customChannelGroup.disableAllChannels();
 
@@ -46,7 +46,7 @@ PixelAlive::PixelAlive (const std::string fileRes,
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(inject == true ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,inject == true ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 }
 

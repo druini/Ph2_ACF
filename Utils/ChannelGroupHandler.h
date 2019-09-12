@@ -87,9 +87,12 @@ public:
     
     inline void setCustomPattern  (const ChannelGroup<R,C> &customChannelGroup)       
     { 
-        channelsBitset_          = customChannelGroup.channelsBitset_; 
+        channelsBitset_          = customChannelGroup.channelsBitset_;
         customPatternSet_        = true                              ;
         numberOfEnabledChannels_ = channelsBitset_.count()           ;
+
+        numberOfRows_            = customChannelGroup.numberOfRows_  ;
+        numberOfCols_            = customChannelGroup.numberOfCols_  ;
     }
 
     virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster=1) const override

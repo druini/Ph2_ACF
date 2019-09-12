@@ -18,8 +18,9 @@ InjectionDelay::InjectionDelay (std::string fileRes,
                                 size_t nEvents,
                                 size_t startValue,
                                 size_t stopValue,
-                                size_t nSteps)
-  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, false)
+                                size_t nSteps,
+                                bool   doFast)
+  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, false, doFast)
   , fileRes    (fileRes)
   , fileReg    (fileReg)
   , rowStart   (rowStart)
@@ -32,20 +33,6 @@ InjectionDelay::InjectionDelay (std::string fileRes,
   , nSteps     (nSteps)
   // , histos     ()
 {
-  // ########################
-  // # Custom channel group #
-  // ########################
-  ChannelGroup<RD53::nRows,RD53::nCols> customChannelGroup;
-  customChannelGroup.disableAllChannels();
-
-  for (auto row = rowStart; row <= rowStop; row++)
-    for (auto col = colStart; col <= colStop; col++)
-      customChannelGroup.enableChannel(row,col);
-
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>();
-  theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
-
-
   // ##############################
   // # Initialize dac scan values #
   // ##############################
@@ -146,9 +133,9 @@ void InjectionDelay::scanDac (const std::string& dacName, const std::vector<uint
       output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
 
 
-      // #####################
-      // # Compute next step #
-      // #####################
+      // ###############
+      // # Save output #
+      // ###############
       for (const auto cBoard : *output)
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)

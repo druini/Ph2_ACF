@@ -31,7 +31,7 @@ void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup (ChannelGro
     }
 }
 
-RD53ChannelGroupHandler::RD53ChannelGroupHandler (uint8_t groupType)
+RD53ChannelGroupHandler::RD53ChannelGroupHandler (ChannelGroup<Ph2_HwDescription::RD53::nRows,Ph2_HwDescription::RD53::nCols>& customChannelGroup, uint8_t groupType)
 {
   if (groupType == RD53GroupType::AllPixels)
     {
@@ -45,6 +45,23 @@ RD53ChannelGroupHandler::RD53ChannelGroupHandler (uint8_t groupType)
     }
 
   numberOfGroups_ = getNumberOfGroups(groupType);
+
+
+  // ###############################
+  // # Refine custom channel group #
+  // ###############################
+  this->setCustomChannelGroup(customChannelGroup);
+  customChannelGroup.disableAllChannels();
+
+  for (auto it = 0u; it < numberOfGroups_; it++)
+    {
+      allChannelGroup_->makeTestGroup(currentChannelGroup_, it, 1, 1, 1);
+
+      for (auto row = 0u; row < Ph2_HwDescription::RD53::nRows; row++)
+        for (auto col = 0u; col < Ph2_HwDescription::RD53::nCols; col++)
+          if (static_cast<const ChannelGroup<Ph2_HwDescription::RD53::nRows,Ph2_HwDescription::RD53::nCols>*>(currentChannelGroup_)->isChannelEnabled(row,col) == true)
+            customChannelGroup.enableChannel(row,col);
+    }
 }
 
 RD53ChannelGroupHandler::~RD53ChannelGroupHandler()

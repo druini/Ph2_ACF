@@ -35,7 +35,8 @@ class InjectionDelay : public PixelAlive
                   size_t nEvents,
                   size_t startValue,
                   size_t stopValue,
-                  size_t nSteps);
+                  size_t nSteps,
+                  bool   doFast = true);
 
   void   run                 ();
   void   draw                (bool display, bool save);
@@ -53,10 +54,10 @@ class InjectionDelay : public PixelAlive
   size_t startValue;
   size_t stopValue;
   size_t nSteps;
+  bool   doFast;
 
   std::vector<uint16_t> dacList;
 
-  std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   DetectorDataContainer theContainer;
   DetectorDataContainer theInjDelayContainer;
 
