@@ -120,9 +120,36 @@ then
 
     time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
     echo "gainopt" >> calibDone.txt
+elif [ $1 == "step4" ]
+then
+    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c latency
+    echo "latency" >> calibDone.txt
+
+    echo "Choose whether to accept best latency (i.e. copy it into the xml file(s))"
+    echo "- Set nTRIGxEvent to 1 in the xml file(s)"
+    echo "- Set VCAL to MIP value in the xml file(s)"
+    read -p "Press any key to continue... " -n1 -s
+elif [ $1 == "step5" ]
+then
+    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c injdelay
+    echo "injdelay" >> calibDone.txt
+
+    echo "Choose whether to accept best delay (i.e. copy it into the xml file(s))"
+    echo "- Look at the threhsold distribution and set VCAL to lowest possible value in the xml file(s)"
+    read -p "Press any key to continue... " -n1 -s
+elif [ $1 == "step6" ]
+then
+    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive
+    echo "pixelalive" >> calibDone.txt
 else
-    echo "Argument not recognized: $1"
-    echo "Available options are: step1 [noise + pixelalive + thrmin], step2 [threqu + scurve + noise + thrmin], step3 [scurve + gain + gainopt]"
+    echo "=== Argument not recognized: $1 ==="
+    echo "Available options are:"
+    echo "- step1 [noise + pixelalive + thrmin]"
+    echo "- step2 [threqu + scurve + noise + thrmin]"
+    echo "- step3 [scurve + gain + gainopt]"
+    echo "- step4 [latency]"
+    echo "- step5 [injdelay]"
+    echo "- step6 [pixelalive]"
 fi
 ```
 - Software git branch / tag : `chipPolymorphism` / `IT-v1.9`
