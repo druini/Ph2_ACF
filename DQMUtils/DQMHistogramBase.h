@@ -58,13 +58,13 @@ class DQMHistogramBase
    * \param configurationFileName : xml configuration file
    */
   virtual bool fill (std::vector<char>& dataBuffer) = 0;
-    
+
   /*!
    * \brief SAve histograms
    * \param outFile : ouput file name
    */
   virtual void process () = 0;
-    
+
   /*!
    * \brief Book histograms
    * \param configurationFileName : xml configuration file
@@ -77,59 +77,59 @@ class DQMHistogramBase
  protected:
   template <typename Hist>
     void bookImplementer (TFile* theOutputFile,
-			  const DetectorContainer& theDetectorStructure,
-			  const CanvasContainer<Hist>& histContainer,
-			  DetectorDataContainer& dataContainer,
-			  const char* XTitle = nullptr,
-			  const char* YTitle = nullptr)
+                          const DetectorContainer& theDetectorStructure,
+                          const CanvasContainer<Hist>& histContainer,
+                          DetectorDataContainer& dataContainer,
+                          const char* XTitle = nullptr,
+                          const char* YTitle = nullptr)
     {
       if (XTitle != nullptr) histContainer.fTheHistogram->SetXTitle(XTitle);
       if (YTitle != nullptr) histContainer.fTheHistogram->SetYTitle(YTitle);
-      
+
       RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
     }
-  
-  template <typename Hist> 
+
+  template <typename Hist>
     void draw (DetectorDataContainer& HistDataContainer,
-	       const char* opt               = "",
-	       bool electronAxis             = false,
-	       const char* electronAxisTitle = "")
+               const char* opt               = "",
+               bool electronAxis             = false,
+               const char* electronAxisTitle = "")
     {
       for (auto cBoard : HistDataContainer)
-	for (auto cModule : *cBoard)
-	  for (auto cChip : *cModule)
-	    {
-	      TCanvas* canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
-	      Hist* hist      = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
+        for (auto cModule : *cBoard)
+          for (auto cChip : *cModule)
+            {
+              TCanvas* canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
+              Hist* hist      = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
 
-	      canvas->cd();
-	      hist->Draw(opt);
-	      canvas->Modified();
-	      canvas->Update();
+              canvas->cd();
+              hist->Draw(opt);
+              canvas->Modified();
+              canvas->Update();
 
-	      if (electronAxis == true)
-		{
-		  TPad* myPad = static_cast<TPad*>(canvas->GetPad(0));
-		  myPad->SetTopMargin(0.16);
-		  
-		  axes.emplace_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-					       RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(1)),
-					       RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())), 510, "-"));
-		  axes.back()->SetTitle(electronAxisTitle);
-		  axes.back()->SetTitleOffset(1.2);
-		  axes.back()->SetTitleSize(0.035);
-		  axes.back()->SetTitleFont(40);
-		  axes.back()->SetLabelOffset(0.001);
-		  axes.back()->SetLabelSize(0.035);
-		  axes.back()->SetLabelFont(42);
-		  axes.back()->SetLabelColor(kRed);
-		  axes.back()->SetLineColor(kRed);
-		  axes.back()->Draw();
+              if (electronAxis == true)
+                {
+                  TPad* myPad = static_cast<TPad*>(canvas->GetPad(0));
+                  myPad->SetTopMargin(0.16);
 
-		  canvas->Modified();
-		  canvas->Update();
-		}
-	    }
+                  axes.emplace_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
+                                               RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(1)),
+                                               RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())), 510, "-"));
+                  axes.back()->SetTitle(electronAxisTitle);
+                  axes.back()->SetTitleOffset(1.2);
+                  axes.back()->SetTitleSize(0.035);
+                  axes.back()->SetTitleFont(40);
+                  axes.back()->SetLabelOffset(0.001);
+                  axes.back()->SetLabelSize(0.035);
+                  axes.back()->SetLabelFont(42);
+                  axes.back()->SetLabelColor(kRed);
+                  axes.back()->SetLineColor(kRed);
+                  axes.back()->Draw();
+
+                  canvas->Modified();
+                  canvas->Update();
+                }
+            }
     }
 };
 

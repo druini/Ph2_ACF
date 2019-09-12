@@ -25,10 +25,10 @@ void RD53ThrMinimizationHistograms::fill(const DetectorDataContainer& data)
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	{
-	  auto* hThrehsold = Threhsold.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-	  hThrehsold->Fill(cChip->getSummary<RegisterValue>().fRegisterValue);
-	}
+        {
+          auto* hThrehsold = Threhsold.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+          hThrehsold->Fill(cChip->getSummary<RegisterValue>().fRegisterValue);
+        }
 }
 
 void RD53ThrMinimizationHistograms::process ()

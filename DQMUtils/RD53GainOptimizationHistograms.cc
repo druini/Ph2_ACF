@@ -25,10 +25,10 @@ void RD53GainOptimizationHistograms::fill(const DetectorDataContainer& data)
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	{
-	  auto* hKrumCurr = KrumCurr.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-	  hKrumCurr->Fill(cChip->getSummary<RegisterValue>().fRegisterValue);
-	}
+        {
+          auto* hKrumCurr = KrumCurr.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+          hKrumCurr->Fill(cChip->getSummary<RegisterValue>().fRegisterValue);
+        }
 }
 
 void RD53GainOptimizationHistograms::process ()

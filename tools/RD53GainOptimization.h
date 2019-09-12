@@ -27,19 +27,20 @@ class GainOptimization : public Gain
 {
  public:
   GainOptimization (std::string fileRes,
-		    std::string fileReg,
-		    size_t rowStart,
-		    size_t rowStop,
-		    size_t colStart,
-		    size_t colStop,
-		    size_t nEvents,
-		    size_t startValue,
-		    size_t stopValue,
-		    size_t nSteps,
-		    size_t offset,
-		    float targetCharge,
-		    size_t KrumCurrStart = 0,
-		    size_t KrumCurrStop = 0);
+                    std::string fileReg,
+                    size_t rowStart,
+                    size_t rowStop,
+                    size_t colStart,
+                    size_t colStop,
+                    size_t nEvents,
+                    size_t startValue,
+                    size_t stopValue,
+                    size_t nSteps,
+                    size_t offset,
+                    float targetCharge,
+                    size_t KrumCurrStart = 0,
+                    size_t KrumCurrStop = 0,
+                    bool   doFast = false);
 
   void   run                 ();
   void   analyze             ();
@@ -48,7 +49,7 @@ class GainOptimization : public Gain
   {
     uint16_t nBitKrumCurr   = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 1);
     uint16_t moreIterations = 2;
-    return RD53ChannelGroupHandler::getNumberOfGroups(false)*nSteps*(nBitKrumCurr + moreIterations);
+    return Gain::getNumberIterations()*(nBitKrumCurr + moreIterations);
   }
 
  private:
@@ -65,7 +66,8 @@ class GainOptimization : public Gain
   size_t KrumCurrStart;
   size_t KrumCurrStop;
   float  targetCharge;
-  
+  bool   doFast;
+
   DetectorDataContainer theKrumCurrContainer;
 
   void initHisto       ();

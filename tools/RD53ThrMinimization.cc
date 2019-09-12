@@ -10,17 +10,18 @@
 #include "RD53ThrMinimization.h"
 
 ThrMinimization::ThrMinimization (std::string fileRes,
-				  std::string fileReg,
-				  size_t rowStart,
-				  size_t rowStop,
-				  size_t colStart,
-				  size_t colStop,
-				  size_t nEvents,
-				  size_t nEvtsBurst,
-				  float targetOccupancy,
-				  size_t ThrStart,
-				  size_t ThrStop)
-  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false)
+                                  std::string fileReg,
+                                  size_t rowStart,
+                                  size_t rowStop,
+                                  size_t colStart,
+                                  size_t colStop,
+                                  size_t nEvents,
+                                  size_t nEvtsBurst,
+                                  float  targetOccupancy,
+                                  size_t ThrStart,
+                                  size_t ThrStop,
+                                  bool   doFast)
+  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false, doFast)
   , fileRes         (fileRes)
   , fileReg         (fileReg)
   , rowStart        (rowStart)
@@ -32,6 +33,7 @@ ThrMinimization::ThrMinimization (std::string fileRes,
   , ThrStart        (ThrStart)
   , ThrStop         (ThrStop)
   , targetOccupancy (targetOccupancy)
+  , doFast          (doFast)
   , histos          ()
 {}
 
@@ -47,9 +49,9 @@ void ThrMinimization::run ()
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("Vthreshold_LIN");
-  
-  
+        theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("Vthreshold_LIN");
+
+
   // ################
   // # Error report #
   // ################
@@ -79,15 +81,15 @@ void ThrMinimization::draw (bool display, bool save)
       // # Save register new values #
       // ############################
       for (const auto cBoard : *fDetectorContainer)
-	for (const auto cModule : *cBoard)
-	  for (const auto cChip : *cModule)
-	    {
-	      static_cast<RD53*>(cChip)->copyMaskFromDefault();
-	      static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-	      static_cast<RD53*>(cChip)->saveRegMap("");
-	      std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-	      system(command.c_str());
-	    }
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              static_cast<RD53*>(cChip)->copyMaskFromDefault();
+              static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+              static_cast<RD53*>(cChip)->saveRegMap("");
+              std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+              system(command.c_str());
+            }
     }
 
   if (display == true) myApp->Run(true);
@@ -98,8 +100,8 @@ void ThrMinimization::analyze ()
   for (const auto cBoard : theThrContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	LOG(INFO) << BOLDGREEN << "\t--> Global threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-		  << cChip->getSummary<RegisterValue>().fRegisterValue << RESET;
+        LOG(INFO) << BOLDGREEN << "\t--> Global threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
+                  << cChip->getSummary<RegisterValue>().fRegisterValue << RESET;
 }
 
 void ThrMinimization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
@@ -125,87 +127,87 @@ void ThrMinimization::bitWiseScan (const std::string& dacName, uint32_t nEvents,
   ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, bestContainer);
 
   for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
-	{
-	  minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = ThrStart;
-	  maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = (ThrStop != 0 ? ThrStop : RD53::setBits(numberOfBits)) + 1;
-	  
-	  bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = 0;
-	}
-  
-  
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = ThrStart;
+          maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = (ThrStop != 0 ? ThrStop : RD53::setBits(numberOfBits)) + 1;
+
+          bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = 0;
+        }
+
+
   for (auto i = 0u; i <= numberOfBits; i++)
     {
       // ###########################
       // # Download new DAC values #
       // ###########################
       for (const auto cBoard : *fDetectorContainer)
-	for (auto cModule : *cBoard)
-	  for (auto cChip : *cModule)
-	    {
-	      midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
-		(minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue +
-		 maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue) / 2;
-	      
-	      this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue, true);
-	    }
-      
-  
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
+                (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue +
+                 maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue) / 2;
+
+              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue, true);
+            }
+
+
       // ################
       // # Run analysis #
       // ################
       static_cast<PixelAlive*>(this)->run();
       auto output = static_cast<PixelAlive*>(this)->analyze();
       output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
-      
-      
+
+
       // #####################
       // # Compute next step #
       // #####################
       for (const auto cBoard : *output)
-	for (auto cModule : *cBoard)
-	  for (auto cChip : *cModule)
-	    {
-	      // #######################
-	      // # Build discriminator #
-	      // #######################
-	      float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              // #######################
+              // # Build discriminator #
+              // #######################
+              float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
 
-	      
-	      // ########################
-	      // # Save best DAC values #
-	      // ########################
-	      float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh;
 
-	      if (fabs(newValue - target) < fabs(oldValue - target))
-		{
-		  bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = newValue;
-		  
-		  bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
-		    midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue;
-		}
-	      
-	      if (newValue < target)
-		
-		maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
-		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue;
-	      
-	      else
-		
-		minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
-		  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue;
-	    }
+              // ########################
+              // # Save best DAC values #
+              // ########################
+              float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh;
+
+              if (fabs(newValue - target) < fabs(oldValue - target))
+                {
+                  bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = newValue;
+
+                  bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
+                    midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue;
+                }
+
+              if (newValue < target)
+
+                maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
+                  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue;
+
+              else
+
+                minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
+                  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue;
+            }
     }
-  
+
 
   // ###########################
   // # Download new DAC values #
   // ###########################
   for (const auto cBoard : *fDetectorContainer)
-    for (auto cModule : *cBoard)
-      for (auto cChip : *cModule)
-	this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue, true);
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue, true);
 
 
   // ################
@@ -222,11 +224,11 @@ void ThrMinimization::chipErrorReport()
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	{
-	  LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-	  LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
-	  LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
-	  LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
-	  LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
-	}
+        {
+          LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
+          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
+        }
 }

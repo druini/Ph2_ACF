@@ -1,38 +1,38 @@
 /*!
-  \file                  RD53Latency.cc
-  \brief                 Implementaion of Latency scan
+  \file                  RD53InjectionDelay.cc
+  \brief                 Implementaion of Injection Delay scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "RD53Latency.h"
+#include "RD53InjectionDelay.h"
 
-Latency::Latency (std::string fileRes,
-                  std::string fileReg,
-                  size_t rowStart,
-                  size_t rowStop,
-                  size_t colStart,
-                  size_t colStop,
-                  size_t startValue,
-                  size_t stopValue,
-                  size_t nEvents)
-  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, true, true, 1)
+InjectionDelay::InjectionDelay (std::string fileRes,
+                                std::string fileReg,
+                                size_t rowStart,
+                                size_t rowStop,
+                                size_t colStart,
+                                size_t colStop,
+                                size_t nEvents,
+                                size_t startValue,
+                                size_t stopValue,
+                                size_t nSteps,
+                                bool   doFast)
+  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, false, doFast)
   , fileRes    (fileRes)
   , fileReg    (fileReg)
   , rowStart   (rowStart)
   , rowStop    (rowStop)
   , colStart   (colStart)
   , colStop    (colStop)
+  , nEvents    (nEvents)
   , startValue (startValue)
   , stopValue  (stopValue)
-  , nEvents    (nEvents)
-  , histos     (startValue, stopValue)
+  , nSteps     (nSteps)
+  // , histos     ()
 {
-  size_t nSteps = stopValue - startValue;
-
-
   // ##############################
   // # Initialize dac scan values #
   // ##############################
@@ -40,10 +40,20 @@ Latency::Latency (std::string fileRes,
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
 
-void Latency::run ()
+void InjectionDelay::run ()
 {
   ContainerFactory::copyAndInitChip<GenericDataVector>(*fDetectorContainer, theContainer);
-  this->scanDac("LATENCY_CONFIG", dacList, nEvents, &theContainer);
+  this->scanDac("INJECTION_SELECT", dacList, nEvents, &theContainer);
+
+
+  // ########################
+  // # Fill delay container #
+  // ########################
+  ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, theInjDelayContainer);
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        theInjDelayContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("INJECTION_SELECT");
 
 
   // ################
@@ -52,11 +62,11 @@ void Latency::run ()
   this->chipErrorReport();
 }
 
-void Latency::draw (bool display, bool save)
+void InjectionDelay::draw (bool display, bool save)
 {
   TApplication* myApp = nullptr;
 
-  if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
+  if (display == true) myApp = new TApplication("myApp", nullptr, nullptr);
   if (save    == true)
     {
       this->CreateResultDirectory(RESULTDIR,false,false);
@@ -89,46 +99,30 @@ void Latency::draw (bool display, bool save)
   if (display == true) myApp->Run(true);
 }
 
-void Latency::analyze ()
+void InjectionDelay::analyze ()
 {
-  for (const auto cBoard : theContainer)
+  for (const auto cBoard : theInjDelayContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        {
-          auto dataSize = 0;
-          auto latency  = 0;
-
-          for (auto dac : dacList)
-            {
-              auto nEvts = cChip->getSummary<GenericDataVector>().data1[dac-startValue];
-              if (nEvts > dataSize)
-                {
-                  latency  = dac;
-                  dataSize = nEvts;
-                }
-            }
-
-          LOG (INFO) << BOLDGREEN << "\t--> Best latency for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
-                     << BOLDYELLOW << latency << RESET;
-        }
+        LOG(INFO) << BOLDGREEN << "\t--> Global threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
+                  << cChip->getSummary<RegisterValue>().fRegisterValue << RESET;
 }
 
-void Latency::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-void Latency::fillHisto () { histos.fill(theContainer);                                   }
-void Latency::display   () { histos.process();                                            }
+void InjectionDelay::initHisto () {}
+void InjectionDelay::fillHisto () {}
+void InjectionDelay::display   () {}
 
-void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
+void InjectionDelay::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-  for (auto dac : dacList)
+  for (auto ele : dacList)
     {
       // ###########################
       // # Download new DAC values #
       // ###########################
-      LOG (INFO) << BOLDMAGENTA << ">>> Latency = " << BOLDYELLOW << dac << BOLDMAGENTA << " <<<" << RESET;
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
-            this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, dac, true);
+            this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, ele, true);
 
 
       // ################
@@ -152,7 +146,7 @@ void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& 
     }
 }
 
-void Latency::chipErrorReport ()
+void InjectionDelay::chipErrorReport()
 {
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 

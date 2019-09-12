@@ -41,18 +41,18 @@ void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	{
-	  auto* hOcc2D             = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-	  auto* ErrorReadOut2DHist = ErrorReadOut2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-	  
-	  for (auto row = 0u; row < RD53::nRows; row++)
-	    for (auto col = 0u; col < RD53::nCols; col++)
-	      {
-		if (cChip->getChannel<OccupancyAndPh>(row, col).isEnabled == true)
-		  hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(0) / 2.);
-		if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
-	      }
-	}
+        {
+          auto* hOcc2D             = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+          auto* ErrorReadOut2DHist = ErrorReadOut2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+
+          for (auto row = 0u; row < RD53::nRows; row++)
+            for (auto col = 0u; col < RD53::nCols; col++)
+              {
+                if (cChip->getChannel<OccupancyAndPh>(row, col).isEnabled == true)
+                  hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(0) / 2.);
+                if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
+              }
+        }
 }
 
 void RD53SCurveHistograms::fillThresholdNoise (const DetectorDataContainer& data)
@@ -60,24 +60,24 @@ void RD53SCurveHistograms::fillThresholdNoise (const DetectorDataContainer& data
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-	{
-	  auto* Threshold1DHist = Threshold1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-	  auto* Noise1DHist     = Noise1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-	  auto* Threshold2DHist = Threshold2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-	  auto* Noise2DHist     = Noise2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-	  auto* ErrorFit2DHist  = ErrorFit2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+        {
+          auto* Threshold1DHist = Threshold1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+          auto* Noise1DHist     = Noise1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+          auto* Threshold2DHist = Threshold2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+          auto* Noise2DHist     = Noise2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+          auto* ErrorFit2DHist  = ErrorFit2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
-	  for (auto row = 0u; row < RD53::nRows; row++)
-	    for (auto col = 0u; col < RD53::nCols; col++)
-	      if (cChip->getChannel<ThresholdAndNoise>(row, col).fitError == true) ErrorFit2DHist->Fill(col + 1, row + 1);
-	      else if (cChip->getChannel<ThresholdAndNoise>(row, col).fNoise != 0)
-		{
-		  Threshold1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
-		  Noise1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
-		  Threshold2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
-		  Noise2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
-		}
-	}
+          for (auto row = 0u; row < RD53::nRows; row++)
+            for (auto col = 0u; col < RD53::nCols; col++)
+              if (cChip->getChannel<ThresholdAndNoise>(row, col).fitError == true) ErrorFit2DHist->Fill(col + 1, row + 1);
+              else if (cChip->getChannel<ThresholdAndNoise>(row, col).fNoise != 0)
+                {
+                  Threshold1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
+                  Noise1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
+                  Threshold2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
+                  Noise2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
+                }
+        }
 }
 
 void RD53SCurveHistograms::process ()

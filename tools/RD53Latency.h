@@ -10,13 +10,8 @@
 #ifndef RD53Latency_H
 #define RD53Latency_H
 
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
 #include "../DQMUtils/RD53LatencyHistograms.h"
-#include "Tool.h"
-
-#include "TApplication.h"
+#include "RD53PixelAlive.h"
 
 
 // #############
@@ -28,23 +23,23 @@
 // ######################
 // # Latency test suite #
 // ######################
-class Latency : public Tool
+class Latency : public PixelAlive
 {
  public:
   Latency (std::string fileRes,
-	   std::string fileReg,
-	   size_t rowStart,
-	   size_t rowStop,
-	   size_t colStart,
-	   size_t colStop,
-	   size_t startValue,
-	   size_t stopValue,
-	   size_t nEvents);
+           std::string fileReg,
+           size_t rowStart,
+           size_t rowStop,
+           size_t colStart,
+           size_t colStop,
+           size_t startValue,
+           size_t stopValue,
+           size_t nEvents);
 
   void   run                 ();
   void   draw                (bool display, bool save);
   void   analyze             ();
-  size_t getNumberIterations () { return (stopValue - startValue); }
+  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue); }
 
  private:
   std::string fileRes;
@@ -56,7 +51,7 @@ class Latency : public Tool
   size_t startValue;
   size_t stopValue;
   size_t nEvents;
- 
+
   std::vector<uint16_t> dacList;
 
   DetectorDataContainer theContainer;

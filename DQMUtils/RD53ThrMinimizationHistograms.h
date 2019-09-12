@@ -29,7 +29,7 @@ class RD53ThrMinimizationHistograms : public DQMHistogramBase
   void reset   ()                                                                                                          override {};
 
   void fill    (const DetectorDataContainer& data);
-  
+
  private:
   DetectorDataContainer Threhsold;
 };

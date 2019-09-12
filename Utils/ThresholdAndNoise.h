@@ -10,7 +10,7 @@
 #ifndef THRESHOLD_AND_NOISE_H
 #define THRESHOLD_AND_NOISE_H
 
-#include "../Utils/Container.h"
+#include "Container.h"
 
 #include <iostream>
 #include <cmath>
@@ -26,12 +26,12 @@ class ThresholdAndNoise
   {
     std::cout << fThreshold << "\t" << fNoise << std::endl;
   }
-  
+
   template<typename T>
     void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
   void makeSummaryAverage   (const std::vector<ThresholdAndNoise>* theThresholdAndNoiseVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
   void normalize            (const uint32_t numberOfEvents)                                                                                                                             {}
-  
+
   float fThreshold;
   float fThresholdError;
 
@@ -47,22 +47,22 @@ inline void ThresholdAndNoise::makeChannelAverage<ThresholdAndNoise>(const ChipC
   for (size_t row = 0; row < theChipContainer->getNumberOfRows(); ++row)
     {
       for (size_t col = 0; col < theChipContainer->getNumberOfCols(); ++col)
-	{
-	  if (chipOriginalMask->isChannelEnabled(row, col) && cTestChannelGroup->isChannelEnabled(row, col))
-	    {
-	      if (theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThresholdError > 0)
-		{
-		  fThreshold      += theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThreshold / (theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThresholdError * theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThresholdError);
-		  fThresholdError += 1. / (theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThresholdError * theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThresholdError);
-		}
+        {
+          if (chipOriginalMask->isChannelEnabled(row, col) && cTestChannelGroup->isChannelEnabled(row, col))
+            {
+              if (theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThresholdError > 0)
+                {
+                  fThreshold      += theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThreshold / (theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThresholdError * theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThresholdError);
+                  fThresholdError += 1. / (theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThresholdError * theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThresholdError);
+                }
 
-	      if (theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoiseError > 0)
-		{
-		  fNoise      += theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoise / (theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoiseError * theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoiseError);
-		  fNoiseError += 1. / (theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoiseError * theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoiseError);
-		}
-	    }
-	}
+              if (theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoiseError > 0)
+                {
+                  fNoise      += theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoise / (theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoiseError * theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoiseError);
+                  fNoiseError += 1. / (theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoiseError * theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoiseError);
+                }
+            }
+        }
     }
 
   if (fThresholdError > 0)

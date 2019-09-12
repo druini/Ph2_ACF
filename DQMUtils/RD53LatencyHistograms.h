@@ -22,7 +22,7 @@
 class RD53LatencyHistograms : public DQMHistogramBase
 {
  public:
- RD53LatencyHistograms (size_t startValue, size_t stopValue) : startValue(startValue), stopValue(stopValue) {}
+  RD53LatencyHistograms (size_t startValue, size_t stopValue) : startValue(startValue), stopValue(stopValue) {}
 
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
   void process ()                                                                                                          override;
@@ -33,7 +33,7 @@ class RD53LatencyHistograms : public DQMHistogramBase
 
  private:
   DetectorDataContainer Occupancy1D;
-  
+
   size_t startValue;
   size_t stopValue;
 };
