@@ -127,7 +127,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
                   if (((thresholdOccupancy != 0) && (occupancy >= thresholdOccupancy)) || ((thresholdOccupancy == 0) && (occupancy == 0))) nMaskedPixelsPerCalib++;
                 }
 
-          LOG (INFO) << BOLDGREEN << "\t\t--> Number of masked pixels in this calibration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
+          LOG (INFO) << BOLDGREEN << "\t\t--> Number of masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
           LOG (INFO) << BOLDGREEN << "\t\t--> Total number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
         }
 

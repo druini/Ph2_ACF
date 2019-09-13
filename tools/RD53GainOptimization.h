@@ -63,9 +63,9 @@ class GainOptimization : public Gain
   size_t startValue;
   size_t stopValue;
   size_t nSteps;
+  float  targetCharge;
   size_t KrumCurrStart;
   size_t KrumCurrStop;
-  float  targetCharge;
   bool   doFast;
 
   DetectorDataContainer theKrumCurrContainer;

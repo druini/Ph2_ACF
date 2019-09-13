@@ -152,6 +152,8 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          float maxThreshold = 0;
+
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
               if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
@@ -168,6 +170,8 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
                       theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThreshold      = mean;
                       theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThresholdError = rms / sqrt(nHits);
                       theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise          = rms;
+
+                      if (mean > maxThreshold) maxThreshold = mean;
                     }
                   else
                     theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fitError = true;
@@ -179,6 +183,8 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
           LOG (INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
                      << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise>().fThreshold
                      << BOLDGREEN << " (Delta_VCal)" << RESET;
+
+          LOG (INFO) << BOLDGREEN << "\t\t--> Highest threshold: " << BOLDYELLOW << maxThreshold << RESET;
         }
 
   return theThresholdAndNoiseContainer;

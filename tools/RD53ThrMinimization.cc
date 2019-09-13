@@ -19,9 +19,8 @@ ThrMinimization::ThrMinimization (std::string fileRes,
                                   size_t nEvtsBurst,
                                   float  targetOccupancy,
                                   size_t ThrStart,
-                                  size_t ThrStop,
-                                  bool   doFast)
-  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false, doFast, targetOccupancy)
+                                  size_t ThrStop)
+  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false, false, targetOccupancy)
   , fileRes         (fileRes)
   , fileReg         (fileReg)
   , rowStart        (rowStart)
@@ -30,10 +29,9 @@ ThrMinimization::ThrMinimization (std::string fileRes,
   , colStop         (colStop)
   , nEvents         (nEvents)
   , nEvtsBurst      (nEvtsBurst)
+  , targetOccupancy (targetOccupancy)
   , ThrStart        (ThrStart)
   , ThrStop         (ThrStop)
-  , targetOccupancy (targetOccupancy)
-  , doFast          (doFast)
   , histos          ()
 {}
 

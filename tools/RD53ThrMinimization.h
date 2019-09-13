@@ -36,8 +36,7 @@ class ThrMinimization : public PixelAlive
                    size_t nEvtsBurst,
                    float  targetOccupancy,
                    size_t ThrStart,
-                   size_t ThrStop,
-                   bool   doFast = false);
+                   size_t ThrStop);
 
   void   run                 ();
   void   draw                (bool display, bool save);
@@ -58,10 +57,9 @@ class ThrMinimization : public PixelAlive
   size_t colStop;
   size_t nEvents;
   size_t nEvtsBurst;
+  float  targetOccupancy;
   size_t ThrStart;
   size_t ThrStop;
-  float  targetOccupancy;
-  bool   doFast;
 
   DetectorDataContainer theThrContainer;
 

@@ -349,7 +349,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
       std::string fileName ("Run" + fromInt2Str(runNumber) + "_NoiseScan");
-      PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, nTRIGxEvent, false, TargetOcc);
+      PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, nTRIGxEvent, false, false, TargetOcc);
       RD53RunProgress::total() = pa.getNumberIterations();
       pa.Inherit(&cSystemController);
       pa.run();
@@ -435,7 +435,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Minimization @@@" << RESET;
 
       std::string fileName ("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
-      ThrMinimization tm(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, TargetOcc, ThrStart, ThrStop, DoFast);
+      ThrMinimization tm(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, TargetOcc, ThrStart, ThrStop);
       RD53RunProgress::total() = tm.getNumberIterations();
       tm.Inherit(&cSystemController);
       tm.run();

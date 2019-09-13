@@ -35,9 +35,9 @@ GainOptimization::GainOptimization (std::string fileRes,
   , startValue    (startValue)
   , stopValue     (stopValue)
   , nSteps        (nSteps)
+  , targetCharge  (targetCharge)
   , KrumCurrStart (KrumCurrStart)
   , KrumCurrStop  (KrumCurrStop)
-  , targetCharge  (targetCharge)
   , doFast        (doFast)
   , histos        ()
 {}
