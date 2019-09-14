@@ -17,7 +17,7 @@ void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContain
   // #######################
   // # Retrieve parameters #
   // #######################
-  // nEvents = this->findValue(pSettingsMap,"nEvents");
+  nEvents = this->findValue(pSettingsMap,"nEvents");
 
 
   size_t ToTsize   = RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION) + 1;

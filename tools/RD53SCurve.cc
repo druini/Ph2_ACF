@@ -34,7 +34,7 @@ SCurve::SCurve (std::string fileRes,
   , nSteps     (nSteps)
   , offset     (offset)
   , doFast     (doFast)
-  , histos     (nEvents, startValue-offset, stopValue-offset, nSteps)
+  , histos     ()
 {
   // ########################
   // # Custom channel group #

@@ -21,8 +21,6 @@
 class RD53ThrEqualizationHistograms : public DQMHistogramBase
 {
  public:
-  RD53ThrEqualizationHistograms (size_t nEvents) : nEvents(nEvents) {}
-
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
   void process ()                                                                                                          override;
   bool fill    (std::vector<char>& dataBuffer)                                                                             override { return false; };
@@ -35,6 +33,7 @@ class RD53ThrEqualizationHistograms : public DQMHistogramBase
   DetectorDataContainer TDAC;
 
   size_t nEvents;
+  size_t VCalHnsteps;
 };
 
 #endif

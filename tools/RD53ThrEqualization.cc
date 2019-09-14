@@ -26,7 +26,7 @@ ThrEqualization::ThrEqualization (std::string fileRes,
   , colStop    (colStop)
   , nEvents    (nEvents)
   , nEvtsBurst (nEvtsBurst)
-  , histos     (nEvents)
+  , histos     ()
 {
   // ########################
   // # Custom channel group #

@@ -17,13 +17,14 @@ void RD53SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
   // #######################
   // # Retrieve parameters #
   // #######################
-  // nEvents    = this->findValue(pSettingsMap,"nEvents");
-  // nSteps     = this->findValue(pSettingsMap,"VCalHnsteps");
-  // startValue = this->findValue(pSettingsMap,"VCalHstart");
-  // stopValue  = this->findValue(pSettingsMap,"VCalHstop");
+  nEvents    = this->findValue(pSettingsMap,"nEvents");
+  nSteps     = this->findValue(pSettingsMap,"VCalHnsteps");
+  startValue = this->findValue(pSettingsMap,"VCalHstart");
+  stopValue  = this->findValue(pSettingsMap,"VCalHstop");
+  offset     = this->findValue(pSettingsMap,"VCalMED");
 
 
-  auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue, stopValue, nEvents + 1, 0, 1 + 1. / nEvents);
+  auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue-offset, stopValue-offset, nEvents + 1, 0, 1 + 1. / nEvents);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "Efficiency");
 
   auto hErrReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
@@ -32,10 +33,10 @@ void RD53SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
   auto hErrFit2D = CanvasContainer<TH2F>("FitErrors", "Fit Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hErrFit2D, ErrorFit2D, "Columns", "Rows");
 
-  auto hThreshold1D = CanvasContainer<TH1F>("Threshold1D", "Threshold Distribution", 1000, startValue, stopValue);
+  auto hThreshold1D = CanvasContainer<TH1F>("Threshold1D", "Threshold Distribution", 1000, startValue-offset, stopValue-offset);
   bookImplementer(theOutputFile, theDetectorStructure, hThreshold1D, Threshold1D, "Threshold (#DeltaVCal)", "Entries");
 
-  auto hNoise1D = CanvasContainer<TH1F>("Noise1D", "Noise Distribution", 100, 0, 30);
+  auto hNoise1D = CanvasContainer<TH1F>("Noise1D", "Noise Distribution", 100, 0, 50);
   bookImplementer(theOutputFile, theDetectorStructure, hNoise1D, Noise1D, "Noise (#DeltaVCal)", "Entries");
 
   auto hThreshold2D = CanvasContainer<TH2F>("Threshold2D", "Threshold Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);

@@ -17,12 +17,13 @@ void RD53ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorCo
   // #######################
   // # Retrieve parameters #
   // #######################
-  // nEvents = this->findValue(pSettingsMap,"nEvents");
+  nEvents     = this->findValue(pSettingsMap,"nEvents");
+  VCalHnsteps = this->findValue(pSettingsMap,"VCalHnsteps");
 
 
   size_t TDACsize = RD53::setBits(RD53PixelEncoder::NBIT_TDAC) + 1;
 
-  auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents / 2 + 1, 0, 1 + 2. / nEvents);
+  auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents*VCalHnsteps + 1, 0, 1 + 1. / (nEvents*VCalHnsteps));
   bookImplementer(theOutputFile, theDetectorStructure, hThrEqualization, ThrEqualization, "Efficiency", "Entries");
 
   auto hTDAC = CanvasContainer<TH1F>("TDAC", "TDAC", TDACsize, 0, TDACsize);

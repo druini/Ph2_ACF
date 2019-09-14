@@ -17,13 +17,14 @@ void RD53GainHistograms::book (TFile* theOutputFile, const DetectorContainer& th
   // #######################
   // # Retrieve parameters #
   // #######################
-  // nEvents    = this->findValue(pSettingsMap,"nEvents");
-  // nSteps     = this->findValue(pSettingsMap,"VCalHnsteps");
-  // startValue = this->findValue(pSettingsMap,"VCalHstart");
-  // stopValue  = this->findValue(pSettingsMap,"VCalHstop");
+  nEvents    = this->findValue(pSettingsMap,"nEvents");
+  nSteps     = this->findValue(pSettingsMap,"VCalHnsteps");
+  startValue = this->findValue(pSettingsMap,"VCalHstart");
+  stopValue  = this->findValue(pSettingsMap,"VCalHstop");
+  offset     = this->findValue(pSettingsMap,"VCalMED");
 
 
-  auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps,startValue,stopValue, nEvents / 2, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION));
+  auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue-offset, stopValue-offset, nEvents, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION));
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "ToT");
 
   auto hErrReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
