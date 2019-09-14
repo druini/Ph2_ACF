@@ -27,6 +27,7 @@
 // ################################
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
+#define NAMESEARCHinPATH "CMSIT" // Search for this name in config file name for manipulation
 #define NROWS           192 // Total number of rows
 #define NCOLS           400 // Total number of columns
 #define NBITMAXREG       16 // Maximum number of bits for a chip register
@@ -83,9 +84,9 @@ namespace RD53RegFrameEncoder
 }
 
 
-// ############ 
+// ############
 // # Commands #
-// ############ 
+// ############
 namespace RD53CmdEncoder
 {
   const uint16_t RESET_ECR  = 0x5A5A; // Event Counter Reset word
@@ -280,7 +281,7 @@ namespace Ph2_HwDescription
     static std::string composeFileName (const std::string& configFileName, const std::string& fName2Add)
     {
       std::string output = configFileName;
-      output.insert(output.find("CMSIT"),fName2Add);
+      output.insert(output.find(NAMESEARCHinPATH),fName2Add);
       return output;
     }
 
