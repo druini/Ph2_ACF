@@ -575,15 +575,15 @@ namespace Ph2_HwDescription
     return nRows * nCols;
   }
 
-  bool RD53::isDACLocal (const std::string& dacName)
+  bool RD53::isDACLocal (const std::string& regName)
   {
-    if (dacName != "PIX_PORTAL") return false;
+    if (regName != "PIX_PORTAL") return false;
     return true;
   }
 
-  uint8_t RD53::getNumberOfBits (const std::string& dacName)
+  uint8_t RD53::getNumberOfBits (const std::string& regName)
   {
-    auto it = fRegMap.find(dacName);
+    auto it = fRegMap.find(regName);
     if (it == fRegMap.end()) return 0;
     return it->second.fBitSize;
   }

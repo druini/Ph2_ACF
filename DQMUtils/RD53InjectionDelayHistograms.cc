@@ -24,7 +24,7 @@ void RD53InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorCon
   auto hInjectionDelay = CanvasContainer<TH1F>("InjectionDelay", "Injection Delay", stopValue - startValue, startValue, stopValue);
   bookImplementer(theOutputFile, theDetectorStructure, hInjectionDelay, InjectionDelay, "Injection Delay (1.5625 ns)", "Entries");
 
-  auto hOcc1D = CanvasContainer<TH1F>("RegisterScan", "Register Scan", stopValue - startValue, startValue, stopValue);
+  auto hOcc1D = CanvasContainer<TH1F>("InjDelayScan", "Injection Delay Scan", stopValue - startValue, startValue, stopValue);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Injection Delay (1.5625 ns)", "Efficiency");
 }
 

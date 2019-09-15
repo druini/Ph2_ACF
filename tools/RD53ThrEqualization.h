@@ -68,7 +68,7 @@ class ThrEqualization : public Tool
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
+  void bitWiseScan     (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
   void chipErrorReport ();
 
 

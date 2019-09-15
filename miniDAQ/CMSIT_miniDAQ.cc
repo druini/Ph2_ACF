@@ -36,6 +36,14 @@ auto findValue (const std::map<std::string, double>& pSettingsMap, const char* n
   return ((setting != std::end(pSettingsMap)) ? setting->second : 0);
 }
 
+void setReg2AllChip (SystemController& sc, std::string regName, uint16_t regValue)
+{
+  for (const auto cBoard : *sc.fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        sc.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, regValue, true);
+}
+
 std::string fromInt2Str (int val)
 {
   std::stringstream myString;
@@ -449,13 +457,40 @@ int main (int argc, char** argv)
       // #######################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Injection Delay scan @@@" << RESET;
 
-      std::string fileName ("Run" + fromInt2Str(runNumber) + "_InjectionDelay");
+      std::string fileName ("Run" + fromInt2Str(runNumber) + "_Latency");
+      Latency la(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
+
+      runNumber++;
+      fileName   = "Run" + fromInt2Str(runNumber) + "_InjectionDelay";
+      chipConfig = "Run" + fromInt2Str(runNumber) + "_";
       InjectionDelay id(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, InjDelayStart, InjDelayStop, nEvents, DoFast);
-      RD53RunProgress::total() = id.getNumberIterations();
+
+      runNumber++;
+      fileName   = "Run" + fromInt2Str(runNumber) + "_PixelAlive";
+      chipConfig = "Run" + fromInt2Str(runNumber) + "_";
+      PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, 1, true, DoFast);
+
+      RD53RunProgress::total() = la.getNumberIterations() + id.getNumberIterations() + pa.getNumberIterations();
+
+      setReg2AllChip(cSystemController, "VCAL_MED",  VCalMED);
+      setReg2AllChip(cSystemController, "VCAL_HIGH", VCalHstop);
+
+      la.Inherit(&cSystemController);
+      la.run();
+      la.analyze();
+      la.draw(false,true);
+
       id.Inherit(&cSystemController);
       id.run();
       id.analyze();
-      id.draw(Display,true);
+      id.draw(false,true);
+
+      setReg2AllChip(cSystemController, "VCAL_HIGH", VCalHstart);
+
+      pa.Inherit(&cSystemController);
+      pa.run();
+      pa.analyze();
+      pa.draw(Display,true);
     }
   else
     {

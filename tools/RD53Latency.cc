@@ -18,7 +18,7 @@ Latency::Latency (std::string fileRes,
                   size_t startValue,
                   size_t stopValue,
                   size_t nEvents)
-  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, true, true, 1)
+  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, true, true)
   , fileRes    (fileRes)
   , fileReg    (fileReg)
   , rowStart   (rowStart)
@@ -30,13 +30,13 @@ Latency::Latency (std::string fileRes,
   , nEvents    (nEvents)
   , histos     ()
 {
-  size_t nSteps = stopValue - startValue;
+  size_t nSteps = stopValue - startValue + 1;
 
 
   // ##############################
   // # Initialize dac scan values #
   // ##############################
-  float step = (stopValue - startValue) / nSteps;
+  float step = (stopValue - startValue + 1) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
 
@@ -126,7 +126,7 @@ void Latency::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSett
 void Latency::fillHisto () { histos.fill(theContainer, theLatencyContainer);              }
 void Latency::display   () { histos.process();                                            }
 
-void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
+void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
   for (auto dac : dacList)
     {
@@ -137,7 +137,7 @@ void Latency::scanDac (const std::string& dacName, const std::vector<uint16_t>& 
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
-            this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, dac, true);
+            this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, dac, true);
 
 
       // ################

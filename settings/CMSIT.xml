@@ -30,6 +30,9 @@
             LATENCY_CONFIG       =   "136"
             MONITOR_SELECT       =  "8203"
             CLK_DATA_DELAY       =     "0"
+
+            VOLTAGE_TRIM         =   "528"
+            MONITOR_CONFIG       =     "0"
             />
         <!--
             MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)

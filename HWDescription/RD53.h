@@ -174,8 +174,8 @@ namespace Ph2_HwDescription
     void     loadfRegMap         (const std::string& fileName)  override;
     void     saveRegMap          (const std::string& fName2Add) override;
     uint32_t getNumberOfChannels () const                       override;
-    bool     isDACLocal          (const std::string& dacName)   override;
-    uint8_t  getNumberOfBits     (const std::string& dacName)   override;
+    bool     isDACLocal          (const std::string& regName)   override;
+    uint8_t  getNumberOfBits     (const std::string& regName)   override;
 
     std::string getFileName      (const std::string& fName2Add) { return this->composeFileName(configFileName,fName2Add); }
     std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }

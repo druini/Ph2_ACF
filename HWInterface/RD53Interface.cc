@@ -396,7 +396,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  bool RD53Interface::WriteChipAllLocalReg (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop)
+  bool RD53Interface::WriteChipAllLocalReg (ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue, bool pVerifLoop)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -409,7 +409,7 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  void RD53Interface::ReadChipAllLocalReg (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue)
+  void RD53Interface::ReadChipAllLocalReg (ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue)
   {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 

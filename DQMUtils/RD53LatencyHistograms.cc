@@ -24,7 +24,7 @@ void RD53LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer&
   auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue, startValue, stopValue);
   bookImplementer(theOutputFile, theDetectorStructure, hLatency, Latency, "Latency (n.bx)", "Entries");
 
-  auto hOcc1D = CanvasContainer<TH1F>("RegisterScan", "Register Scan", stopValue - startValue, startValue, stopValue);
+  auto hOcc1D = CanvasContainer<TH1F>("LatencyScan", "Latency Scan", stopValue - startValue, startValue, stopValue);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Latency (n.bx)", "Efficiency");
 }
 

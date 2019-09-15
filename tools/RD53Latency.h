@@ -60,7 +60,7 @@ class Latency : public PixelAlive
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void scanDac         (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
+  void scanDac         (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
   void chipErrorReport ();
 
 

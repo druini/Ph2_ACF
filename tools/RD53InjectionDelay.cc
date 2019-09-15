@@ -19,7 +19,7 @@ InjectionDelay::InjectionDelay (std::string fileRes,
                                 size_t stopValue,
                                 size_t nEvents,
                                 bool   doFast)
-  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, true, doFast, 1)
+  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, true, doFast)
   , fileRes    (fileRes)
   , fileReg    (fileReg)
   , rowStart   (rowStart)
@@ -32,13 +32,13 @@ InjectionDelay::InjectionDelay (std::string fileRes,
   , doFast     (doFast)
   , histos     ()
 {
-  size_t nSteps = stopValue - startValue;
+  size_t nSteps = stopValue - startValue + 1;
 
 
   // ##############################
   // # Initialize dac scan values #
   // ##############################
-  float step = (stopValue - startValue) / nSteps;
+  float step = (stopValue - startValue + 1) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
 
@@ -128,9 +128,9 @@ void InjectionDelay::initHisto () { histos.book(fResultFile, *fDetectorContainer
 void InjectionDelay::fillHisto () { histos.fill(theContainer, theInjectionDelayContainer);              }
 void InjectionDelay::display   () { histos.process();                                            }
 
-void InjectionDelay::scanDac (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
+void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-  size_t saveVal = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(dacName)) -
+  size_t saveVal = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(regName)) -
     RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
   size_t maxVal  = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
 
@@ -144,8 +144,8 @@ void InjectionDelay::scanDac (const std::string& dacName, const std::vector<uint
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
             {
-              auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), dacName);
-              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), dacName, (val & saveVal) | (dac & maxVal), true);
+              auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), regName);
+              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, (val & saveVal) | (dac & maxVal), true);
             }
 
 
