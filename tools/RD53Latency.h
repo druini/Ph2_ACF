@@ -39,7 +39,7 @@ class Latency : public PixelAlive
   void   run                 ();
   void   draw                (bool display, bool save);
   void   analyze             ();
-  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue); }
+  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue + 1); }
 
  private:
   std::string fileRes;
