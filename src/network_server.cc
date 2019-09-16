@@ -32,39 +32,39 @@ public:
 		{
 			return "InitializeDone";
 		}
+		if (buffer == "Configure") //changing the status changes the mode in threadMain (BBC) function.
+		{
+			return "ConfiguereDone";
+		}
 		if (buffer.substr(0,5) == "Start") //changing the status changes the mode in threadMain (BBC) function.
 		{
-			currentRun_ = getVariableValue("RunNumber", buffer);
+			//currentRun_ = getVariableValue("RunNumber", buffer);
 			return "StartDone";
 		}
-		// else if (buffer.substr(0,4) == "Stop")
-		// {
-		// 	//We need to think :)
-		//     std::cout << "Run " << currentRun_ << " stopped!" << std::endl;
-		// 	send("StopDone");
-		// }
-		// else if (buffer == "Pause")
-		// {
-		// 	//We need to think :)
-		// 	std::cout << "Paused" << std::endl;
-		// 	send("PauseDone");
-		// }
-		// else if (buffer == "Resume")
-		// {
-		// 	//We need to think :)
-		// 	std::cout << "Resume" << std::endl;
-		// 	send("ResumeDone");
-		// }
+		else if (buffer.substr(0,4) == "Stop")
+		{
+			//We need to think :)
+		    std::cout << "Run " << currentRun_ << " stopped!" << std::endl;
+			return "StopDone";
+		}
+		else if (buffer == "Pause")
+		{
+			//We need to think :)
+			std::cout << "Paused" << std::endl;
+			return "PauseDone";
+		}
+		else if (buffer == "Resume")
+		{
+			//We need to think :)
+			std::cout << "Resume" << std::endl;
+			return "ResumeDone";
+		}
 		else
 		{
 			return buffer;
 			//return "suca";
 			
-		}
-		
-		std::string emptyString("");
-		return "emptyString";
-
+		}		
 	}
 private:
 	std::string currentRun_;
