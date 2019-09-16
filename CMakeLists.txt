@@ -159,11 +159,13 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     MESSAGE(STATUS " ") 
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package") 
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package for OTSDAQ") 
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
     MESSAGE(STATUS " ") 
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
+
+    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_NO_USE_ROOT__")
 
     add_subdirectory(tools)
 #    add_subdirectory(RootWeb)
@@ -174,10 +176,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(HWDescription)
     add_subdirectory(HWInterface)
     add_subdirectory(System)
-    add_subdirectory(tools)
-    add_subdirectory(RootUtils)
-    add_subdirectory(DQMUtils)
-    add_subdirectory(NetworkUtils)
+    add_subdirectory(miniDAQ)
 
     MESSAGE(STATUS " ") 
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
