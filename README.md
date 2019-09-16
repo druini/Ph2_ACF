@@ -80,7 +80,7 @@ It might be useful to create one `CMSIT.xml` file for each "set" of calibrations
 #!/bin/bash
 if [ $# -ne 1 ]
 then
-    echo "You should provide one, and only one, argument [step1, step2, step3, step4, help]"
+    echo "You should provide one, and only one, argument [step1, step2, step3, step4, step5, help]"
 elif [ $1 == "step1" ]
 then
     time CMSIT_miniDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels
@@ -135,6 +135,14 @@ then
     echo "latency" >> calibDone.txt
     echo "injdelay" >> calibDone.txt
     echo "pixelalive" >> calibDone.txt
+    echo "- Set LATENCY_CONFIG and INJECTION_SELECT, as tuned by the injdelay calibraiton, in the xml files(s)"
+    echo "- Set VCalHstart and VCalHstop to measure in-time threshold in the xml file(s)"
+    read -p "Press any key to continue... " -n1 -s
+    echo
+elif [ $1 == "step5" ]
+then
+    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    echo "scurve" >> calibDone.txt
 elif [ $1 == "help" ]
 then
     echo "Available options are:"
@@ -142,6 +150,7 @@ then
     echo "- step2 [(scurve)threqu + scurve + noise + thrmin]"
     echo "- step3 [scurve + gain + gainopt]"
     echo "- step4 [(latency)injdelay(pixelalive)]"
+    echo "- step5 [scurve]"
 else
     echo "Argument not recognized: $1"
 fi
