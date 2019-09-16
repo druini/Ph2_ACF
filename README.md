@@ -135,7 +135,7 @@ then
     echo "latency" >> calibDone.txt
     echo "injdelay" >> calibDone.txt
     echo "pixelalive" >> calibDone.txt
-    echo "- Set LATENCY_CONFIG and INJECTION_SELECT, as tuned by the injdelay calibraiton, in the xml files(s)"
+    echo "- Set LATENCY_CONFIG and INJECTION_SELECT, as tuned by the injdelay calibration, in the xml files(s)"
     echo "- Set VCalHstart and VCalHstop to measure in-time threshold in the xml file(s)"
     read -p "Press any key to continue... " -n1 -s
     echo
