@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void RD53GainOptimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void GainOptimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
   uint16_t rangeKrumCurr = RD53::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("KRUM_CURR_LIN"))+1;
 
@@ -20,7 +20,7 @@ void RD53GainOptimizationHistograms::book (TFile* theOutputFile, const DetectorC
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, KrumCurr, "Krummenacher Current", "Entries");
 }
 
-void RD53GainOptimizationHistograms::fill (const DetectorDataContainer& data)
+void GainOptimizationHistograms::fill (const DetectorDataContainer& data)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
@@ -31,7 +31,7 @@ void RD53GainOptimizationHistograms::fill (const DetectorDataContainer& data)
         }
 }
 
-void RD53GainOptimizationHistograms::process ()
+void GainOptimizationHistograms::process ()
 {
   draw<TH1F>(KrumCurr);
 }

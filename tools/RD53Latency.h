@@ -67,7 +67,7 @@ class Latency : public PixelAlive
   // ########
   // # ROOT #
   // ########
-  RD53LatencyHistograms histos;
+  LatencyHistograms histos;
 };
 
 #endif

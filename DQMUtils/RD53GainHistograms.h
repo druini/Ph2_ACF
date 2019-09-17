@@ -24,7 +24,7 @@
 #define INTERCEPT_HALFRANGE 6 // [ToT]
 
 
-class RD53GainHistograms : public DQMHistogramBase
+class GainHistograms : public DQMHistogramBase
 {
  public:
   void book          (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;

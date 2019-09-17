@@ -19,7 +19,7 @@
 #include <TH2F.h>
 
 
-class RD53SCurveHistograms : public DQMHistogramBase
+class SCurveHistograms : public DQMHistogramBase
 {
  public:
   void book          (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;

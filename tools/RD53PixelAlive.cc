@@ -50,10 +50,27 @@ PixelAlive::PixelAlive (const std::string fileRes,
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 }
 
+void PixelAlive::Start (int currentRun)
+{
+  this->run();
+  this->analyze();
+
+  auto theHitStream = prepareChannelContainerStreamer<OccupancyAndPh>();
+
+  if (fStreamerEnabled == true)
+    for (const auto cBoard : *theOccContainer.get()) theHitStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+}
+
+void PixelAlive::Stop ()
+{
+  this->draw(false,true,false);
+  this->Destroy();
+}
+
 void PixelAlive::run ()
 {
   theOccContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
-  this->fDetectorDataContainer = theOccContainer.get();
+  fDetectorDataContainer = theOccContainer.get();
   ContainerFactory::copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, *fDetectorDataContainer);
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
@@ -68,7 +85,7 @@ void PixelAlive::run ()
   this->chipErrorReport();
 }
 
-void PixelAlive::draw (bool display, bool save)
+void PixelAlive::draw (bool display, bool save, bool runLocal)
 {
   TApplication* myApp = nullptr;
 
@@ -79,13 +96,17 @@ void PixelAlive::draw (bool display, bool save)
       this->InitResultFile(fileRes);
     }
 
-  this->initHisto();
-  this->fillHisto();
-  this->display();
+  if (runLocal == true)
+    {
+      this->initHisto();
+      this->fillHisto();
+      this->display();
+    }
 
   if (save == true)
     {
       this->WriteRootFile();
+      this->CloseResultFile();
 
       // ############################
       // # Save register new values #

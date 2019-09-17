@@ -73,7 +73,7 @@ class ThrMinimization : public PixelAlive
   // ########
   // # ROOT #
   // ########
-  RD53ThrMinimizationHistograms histos;
+  ThrMinimizationHistograms histos;
 };
 
 #endif

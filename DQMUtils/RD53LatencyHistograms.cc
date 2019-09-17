@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void RD53LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
   // #######################
   // # Retrieve parameters #
@@ -28,7 +28,7 @@ void RD53LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer&
   bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Latency (n.bx)", "Efficiency");
 }
 
-void RD53LatencyHistograms::fill (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& LatencyContainer)
+void LatencyHistograms::fill (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& LatencyContainer)
 {
   for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
@@ -43,7 +43,7 @@ void RD53LatencyHistograms::fill (const DetectorDataContainer& OccupancyContaine
         }
 }
 
-void RD53LatencyHistograms::process ()
+void LatencyHistograms::process ()
 {
   draw<TH1F>(Occupancy1D);
   draw<TH1F>(Latency);

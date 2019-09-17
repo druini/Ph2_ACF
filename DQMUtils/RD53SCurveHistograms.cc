@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void RD53SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
   // #######################
   // # Retrieve parameters #
@@ -46,7 +46,7 @@ void RD53SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
   bookImplementer(theOutputFile, theDetectorStructure, hNoise2D, Noise2D, "Column", "Row");
 }
 
-void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL)
+void SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
@@ -65,7 +65,7 @@ void RD53SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int
         }
 }
 
-void RD53SCurveHistograms::fill (const DetectorDataContainer& data)
+void SCurveHistograms::fill (const DetectorDataContainer& data)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
@@ -90,7 +90,7 @@ void RD53SCurveHistograms::fill (const DetectorDataContainer& data)
         }
 }
 
-void RD53SCurveHistograms::process ()
+void SCurveHistograms::process ()
 {
   draw<TH2F>(Occupancy2D, "gcolz", true, "Charge (electrons)");
   draw<TH2F>(ErrorReadOut2D, "gcolz");

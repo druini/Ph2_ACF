@@ -111,6 +111,7 @@ void Gain::draw (bool display, bool save)
   if (save == true)
     {
       this->WriteRootFile();
+      this->CloseResultFile();
 
       // ############################
       // # Save register new values #

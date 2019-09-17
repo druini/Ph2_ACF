@@ -18,7 +18,7 @@
 #include <TH2F.h>
 
 
-class RD53ThrEqualizationHistograms : public DQMHistogramBase
+class ThrEqualizationHistograms : public DQMHistogramBase
 {
  public:
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;

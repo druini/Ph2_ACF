@@ -83,7 +83,7 @@ class Gain : public Tool
   // ########
   // # ROOT #
   // ########
-  RD53GainHistograms histos;
+  GainHistograms histos;
 };
 
 #endif

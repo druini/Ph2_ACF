@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void RD53InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
   // #######################
   // # Retrieve parameters #
@@ -28,7 +28,7 @@ void RD53InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorCon
   bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Injection Delay (1.5625 ns)", "Efficiency");
 }
 
-void RD53InjectionDelayHistograms::fill (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& InjectionDelayContainer)
+void InjectionDelayHistograms::fill (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& InjectionDelayContainer)
 {
   for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
@@ -43,7 +43,7 @@ void RD53InjectionDelayHistograms::fill (const DetectorDataContainer& OccupancyC
         }
 }
 
-void RD53InjectionDelayHistograms::process ()
+void InjectionDelayHistograms::process ()
 {
   draw<TH1F>(Occupancy1D);
   draw<TH1F>(InjectionDelay);

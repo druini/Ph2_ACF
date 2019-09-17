@@ -1,10 +1,11 @@
 #include "../NetworkUtils/TCPSubscribeClient.h"
 #include "../Utils/ObjectStream.h"
 #include "../Utils/Container.h"
-#include "../DQMUtils/DQMInterface.h"
-#include "../DQMUtils/DQMHistogramPedeNoise.h"
-#include "../DQMUtils/DQMHistogramPedestalEqualization.h"
-#include "../DQMUtils/DQMHistogramCalibrationExample.h"
+#include "RD53PixelAliveHistograms.h"
+#include "DQMInterface.h"
+#include "DQMHistogramPedeNoise.h"
+#include "DQMHistogramPedestalEqualization.h"
+#include "DQMHistogramCalibrationExample.h"
 #include "../System/FileParser.h"
 #include "TFile.h"
 
@@ -91,6 +92,10 @@ void DQMInterface::configure(std::string& calibrationName, std::string& configur
 	else if(calibrationName == "calibrationexample")
 	{
 		fDQMHistogrammerVector.push_back(new DQMHistogramCalibrationExample());
+	}
+	else if(calibrationName == "RD53PixelAlive")
+	{
+		fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
 	}
 
 	fOutputFile = new TFile("tmp.root", "RECREATE");

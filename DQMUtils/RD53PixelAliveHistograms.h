@@ -12,23 +12,27 @@
 #define RD53PixelAliveHistograms_H
 
 #include "../System/SystemController.h"
+#include "../Utils/ContainerFactory.h"
+#include "../Utils/ContainerStream.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
 #include <TH2F.h>
 
 
-class RD53PixelAliveHistograms : public DQMHistogramBase
+class PixelAliveHistograms : public DQMHistogramBase
 {
  public:
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
   void process ()                                                                                                          override;
-  bool fill    (std::vector<char>& dataBuffer)                                                                             override { return false; };
-  void reset   (void)                                                                                                      override {};
+  bool fill    (std::vector<char>& dataBuffer)                                                                             override;
+  void reset   ()                                                                                                          override {};
 
   void fill    (const DetectorDataContainer& data);
 
  private:
+  DetectorDataContainer DetectorData;
+
   DetectorDataContainer Occupancy1D;
   DetectorDataContainer Occupancy2D;
   DetectorDataContainer ErrorReadOut2D;

@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void RD53ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
   // #######################
   // # Retrieve parameters #
@@ -30,7 +30,7 @@ void RD53ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorCo
   bookImplementer(theOutputFile, theDetectorStructure, hTDAC, TDAC, "TDAC", "Entries");
 }
 
-void RD53ThrEqualizationHistograms::fill (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& TDACContainer)
+void ThrEqualizationHistograms::fill (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& TDACContainer)
 {
   for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
@@ -49,7 +49,7 @@ void RD53ThrEqualizationHistograms::fill (const DetectorDataContainer& Occupancy
         }
 }
 
-void RD53ThrEqualizationHistograms::process ()
+void ThrEqualizationHistograms::process ()
 {
   draw<TH1F>(ThrEqualization);
   draw<TH2F>(TDAC);

@@ -83,7 +83,7 @@ class SCurve : public Tool
   // ########
   // # ROOT #
   // ########
-  RD53SCurveHistograms histos;
+  SCurveHistograms histos;
 };
 
 #endif

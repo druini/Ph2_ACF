@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void RD53GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
   // #######################
   // # Retrieve parameters #
@@ -46,7 +46,7 @@ void RD53GainHistograms::book (TFile* theOutputFile, const DetectorContainer& th
   bookImplementer(theOutputFile, theDetectorStructure, hIntercept2D, Intercept2D, "Column", "Row");
 }
 
-void RD53GainHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL)
+void GainHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
@@ -65,7 +65,7 @@ void RD53GainHistograms::fillOccupancy (const DetectorDataContainer& data, int D
         }
 }
 
-void RD53GainHistograms::fill (const DetectorDataContainer& data)
+void GainHistograms::fill (const DetectorDataContainer& data)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
@@ -90,7 +90,7 @@ void RD53GainHistograms::fill (const DetectorDataContainer& data)
         }
 }
 
-void RD53GainHistograms::process ()
+void GainHistograms::process ()
 {
   draw<TH2F>(Occupancy2D, "gcolz", true, "Charge (electrons)");
   draw<TH2F>(ErrorReadOut2D, "gcolz");

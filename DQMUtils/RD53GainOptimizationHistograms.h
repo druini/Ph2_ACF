@@ -18,7 +18,7 @@
 #include <TH2F.h>
 
 
-class RD53GainOptimizationHistograms : public DQMHistogramBase
+class GainOptimizationHistograms : public DQMHistogramBase
 {
  public:
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;

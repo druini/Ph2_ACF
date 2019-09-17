@@ -44,8 +44,11 @@ class PixelAlive : public Tool
               bool   doFast = false,
               float  thresholdOccupancy = 0);
 
+  void Start (int currentRun) override;
+  void Stop  ()               override;
+
   void run                                       ();
-  void draw                                      (bool display, bool save);
+  void draw                                      (bool display, bool save, bool runLocal = true);
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
@@ -79,7 +82,7 @@ class PixelAlive : public Tool
   // ########
   // # ROOT #
   // ########
-  RD53PixelAliveHistograms histos;
+  PixelAliveHistograms histos;
 };
 
 #endif

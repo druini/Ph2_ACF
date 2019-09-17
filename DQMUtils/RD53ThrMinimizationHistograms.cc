@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void RD53ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
   uint16_t rangeThreshold = RD53::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("Vthreshold_LIN"))+1;
 
@@ -20,7 +20,7 @@ void RD53ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorCo
   bookImplementer(theOutputFile, theDetectorStructure, hThrehsold, Threhsold, "Threhsold", "Entries");
 }
 
-void RD53ThrMinimizationHistograms::fill (const DetectorDataContainer& data)
+void ThrMinimizationHistograms::fill (const DetectorDataContainer& data)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
@@ -31,7 +31,7 @@ void RD53ThrMinimizationHistograms::fill (const DetectorDataContainer& data)
         }
 }
 
-void RD53ThrMinimizationHistograms::process ()
+void ThrMinimizationHistograms::process ()
 {
   draw<TH1F>(Threhsold);
 }

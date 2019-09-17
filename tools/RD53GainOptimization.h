@@ -80,7 +80,7 @@ class GainOptimization : public Gain
   // ########
   // # ROOT #
   // ########
-  RD53GainOptimizationHistograms histos;
+  GainOptimizationHistograms histos;
 };
 
 #endif

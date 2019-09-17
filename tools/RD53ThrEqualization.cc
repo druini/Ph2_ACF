@@ -105,6 +105,8 @@ void ThrEqualization::draw (bool display, bool save)
   if (save == true)
     {
       this->WriteRootFile();
+      this->CloseResultFile();
+
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)

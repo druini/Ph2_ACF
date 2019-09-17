@@ -12,8 +12,11 @@
 
 using namespace Ph2_HwDescription;
 
-void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
 {
+  ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+
+
   // #######################
   // # Retrieve parameters #
   // #######################
@@ -43,7 +46,22 @@ void RD53PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContain
   bookImplementer(theOutputFile, theDetectorStructure, hTrigID, TriggerID, "#DeltaTrigger-ID", "Entries");
 }
 
-void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)
+bool PixelAliveHistograms::fill (std::vector<char>& dataBuffer)
+{
+  ChannelContainerStream<OccupancyAndPh> theHitStreamer("RD53PixelAlive");
+
+  if(theHitStreamer.attachBuffer(&dataBuffer))
+    {
+      theHitStreamer.decodeChipData(DetectorData);
+      this->fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+
+  return false;
+}
+
+void PixelAliveHistograms::fill (const DetectorDataContainer& data)
 {
   for (const auto cBoard : data)
     for (const auto cModule : *cBoard)
@@ -82,7 +100,7 @@ void RD53PixelAliveHistograms::fill (const DetectorDataContainer& data)
         }
 }
 
-void RD53PixelAliveHistograms::process ()
+void PixelAliveHistograms::process ()
 {
   draw<TH1F>(Occupancy1D);
   draw<TH2F>(Occupancy2D, "gcolz");

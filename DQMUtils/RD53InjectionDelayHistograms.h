@@ -17,7 +17,7 @@
 #include <TH1F.h>
 
 
-class RD53InjectionDelayHistograms : public DQMHistogramBase
+class InjectionDelayHistograms : public DQMHistogramBase
 {
  public:
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;

@@ -69,7 +69,7 @@ class InjectionDelay : public PixelAlive
   // ########
   // # ROOT #
   // ########
-  RD53InjectionDelayHistograms histos;
+  InjectionDelayHistograms histos;
 };
 
 #endif

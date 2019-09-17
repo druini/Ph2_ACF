@@ -17,7 +17,7 @@
 #include <TH1F.h>
 
 
-class RD53ThrMinimizationHistograms : public DQMHistogramBase
+class ThrMinimizationHistograms : public DQMHistogramBase
 {
  public:
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;

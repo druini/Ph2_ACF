@@ -75,7 +75,7 @@ class ThrEqualization : public Tool
   // ########
   // # ROOT #
   // ########
-  RD53ThrEqualizationHistograms histos;
+  ThrEqualizationHistograms histos;
 };
 
 #endif
