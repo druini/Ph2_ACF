@@ -132,10 +132,10 @@ class DQMHistogramBase
             }
     }
 
-  auto findValue (const std::map<std::string, double>& pSettingsMap, const char* name)
+  double findValueInSettings (const std::map<std::string, double>& settingsMap, const char* name)
   {
-    auto setting = pSettingsMap.find(name);
-    return ((setting != std::end(pSettingsMap)) ? setting->second : 0);
+    auto setting = settingsMap.find(name);
+    return ((setting != std::end(settingsMap)) ? setting->second : 0);
   }
 };
 

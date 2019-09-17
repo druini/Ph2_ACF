@@ -242,6 +242,8 @@ public:
     {
         return fData->GetEvents(pBoard);
     }
+
+    double findValueInSettings (const char* name);
 };
 } // namespace Ph2_System
 

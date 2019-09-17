@@ -19,8 +19,7 @@ InjectionDelay::InjectionDelay (std::string fileRes,
                                 size_t stopValue,
                                 size_t nEvents,
                                 bool   doFast)
-  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, true, doFast)
-  , fileRes    (fileRes)
+  : fileRes    (fileRes)
   , fileReg    (fileReg)
   , rowStart   (rowStart)
   , rowStop    (rowStop)
@@ -130,6 +129,8 @@ void InjectionDelay::display   () { histos.process();                           
 
 void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
+  static_cast<PixelAlive*>(this)->initialize(fileRes, "");
+
   size_t saveVal = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(regName)) -
     RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
   size_t maxVal  = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));

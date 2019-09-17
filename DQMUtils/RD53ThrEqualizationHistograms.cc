@@ -12,13 +12,13 @@
 
 using namespace Ph2_HwDescription;
 
-void ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
   // #######################
   // # Retrieve parameters #
   // #######################
-  nEvents     = this->findValue(pSettingsMap,"nEvents");
-  VCalHnsteps = this->findValue(pSettingsMap,"VCalHnsteps");
+  nEvents     = this->findValueInSettings(settingsMap,"nEvents");
+  VCalHnsteps = this->findValueInSettings(settingsMap,"VCalHnsteps");
 
 
   size_t TDACsize = RD53::setBits(RD53PixelEncoder::NBIT_TDAC) + 1;

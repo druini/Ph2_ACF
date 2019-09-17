@@ -12,13 +12,13 @@
 
 using namespace Ph2_HwDescription;
 
-void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
   // #######################
   // # Retrieve parameters #
   // #######################
-  startValue = this->findValue(pSettingsMap,"LatencyStart");
-  stopValue  = this->findValue(pSettingsMap,"LatencyStop");
+  startValue = this->findValueInSettings(settingsMap,"LatencyStart");
+  stopValue  = this->findValueInSettings(settingsMap,"LatencyStop");
 
 
   auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue, startValue, stopValue);

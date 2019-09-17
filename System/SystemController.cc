@@ -410,4 +410,9 @@ namespace Ph2_System {
             this->ReadNEvents (cBoard, pNEvents);
     }
 
+  double SystemController::findValueInSettings (const char* name)
+  {
+    auto setting = fSettingsMap.find(name);
+    return ((setting != std::end(fSettingsMap)) ? setting->second : 0);
+  }
 }

@@ -20,8 +20,7 @@ ThrMinimization::ThrMinimization (std::string fileRes,
                                   float  targetOccupancy,
                                   size_t ThrStart,
                                   size_t ThrStop)
-  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false, false, targetOccupancy)
-  , fileRes         (fileRes)
+  : fileRes         (fileRes)
   , fileReg         (fileReg)
   , rowStart        (rowStart)
   , rowStop         (rowStop)
@@ -134,6 +133,7 @@ void ThrMinimization::bitWiseScan (const std::string& regName, uint32_t nEvents,
           bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = 0;
         }
 
+  static_cast<PixelAlive*>(this)->initialize(fileRes, "");
 
   for (auto i = 0u; i <= numberOfBits; i++)
     {

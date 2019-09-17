@@ -12,16 +12,16 @@
 
 using namespace Ph2_HwDescription;
 
-void SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
   // #######################
   // # Retrieve parameters #
   // #######################
-  nEvents    = this->findValue(pSettingsMap,"nEvents");
-  nSteps     = this->findValue(pSettingsMap,"VCalHnsteps");
-  startValue = this->findValue(pSettingsMap,"VCalHstart");
-  stopValue  = this->findValue(pSettingsMap,"VCalHstop");
-  offset     = this->findValue(pSettingsMap,"VCalMED");
+  nEvents    = this->findValueInSettings(settingsMap,"nEvents");
+  nSteps     = this->findValueInSettings(settingsMap,"VCalHnsteps");
+  startValue = this->findValueInSettings(settingsMap,"VCalHstart");
+  stopValue  = this->findValueInSettings(settingsMap,"VCalHstop");
+  offset     = this->findValueInSettings(settingsMap,"VCalMED");
 
 
   auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue-offset, stopValue-offset, nEvents + 1, 0, 1 + 1. / nEvents);

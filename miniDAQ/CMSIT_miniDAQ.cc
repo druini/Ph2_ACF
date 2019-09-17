@@ -30,12 +30,6 @@
 INITIALIZE_EASYLOGGINGPP
 
 
-auto findValue (const std::map<std::string, double>& pSettingsMap, const char* name)
-{
-  auto setting = pSettingsMap.find(name);
-  return ((setting != std::end(pSettingsMap)) ? setting->second : 0);
-}
-
 void setReg2AllChip (SystemController& sc, std::string regName, uint16_t regValue)
 {
   for (const auto cBoard : *sc.fDetectorContainer)
@@ -51,13 +45,14 @@ std::string fromInt2Str (int val)
   return myString.str();
 }
 
-void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t type, bool hitOr)
-// #########################
-// # type == 0 --> Digital #
-// # type == 1 --> Analog  #
-// #########################
+void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t injType, bool hitOr)
+// ############################
+// # injType == 0 --> None    #
+// # injType == 1 --> Analog  #
+// # injType == 2 --> Digital #
+// ############################
 {
-  enum INJtype { Analog, Digital };
+  enum INJtype { None, Analog , Digital };
   enum INJdelay
   {
     FirstCal  = 32,
@@ -79,7 +74,7 @@ void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t type, bool h
       cfgFastCmd.n_triggers       = 0;
       cfgFastCmd.trigger_duration = nTRIGxEvent - 1;
 
-      if (type == INJtype::Digital)
+      if (injType == INJtype::Digital)
         {
           // #######################################
           // # Configuration for digital injection #
@@ -97,7 +92,7 @@ void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t type, bool h
           cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
           cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
         }
-      else if (type == INJtype::Analog)
+      else if ((injType == INJtype::Analog) || (injType == INJtype::None))
         {
           // ######################################
           // # Configuration for analog injection #
@@ -115,7 +110,7 @@ void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t type, bool h
           cfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
           cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
         }
-      else LOG (ERROR) << BOLDRED << "Option non recognized " << type << RESET;
+      else LOG (ERROR) << BOLDRED << "Option non recognized " << injType << RESET;
 
 
       // ###############################################
@@ -272,37 +267,37 @@ int main (int argc, char** argv)
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents       = findValue(cSystemController.fSettingsMap,"nEvents");
-  size_t nEvtsBurst    = findValue(cSystemController.fSettingsMap,"nEvtsBurst");
-  size_t nTRIGxEvent   = findValue(cSystemController.fSettingsMap,"nTRIGxEvent");
-  bool   INJtype       = findValue(cSystemController.fSettingsMap,"INJtype");
+  size_t nEvents       = cSystemController.findValueInSettings("nEvents");
+  size_t nEvtsBurst    = cSystemController.findValueInSettings("nEvtsBurst");
+  size_t nTRIGxEvent   = cSystemController.findValueInSettings("nTRIGxEvent");
+  size_t INJtype       = cSystemController.findValueInSettings("INJtype");
 
-  size_t ROWstart      = findValue(cSystemController.fSettingsMap,"ROWstart");
-  size_t ROWstop       = findValue(cSystemController.fSettingsMap,"ROWstop");
-  size_t COLstart      = findValue(cSystemController.fSettingsMap,"COLstart");
-  size_t COLstop       = findValue(cSystemController.fSettingsMap,"COLstop");
+  size_t ROWstart      = cSystemController.findValueInSettings("ROWstart");
+  size_t ROWstop       = cSystemController.findValueInSettings("ROWstop");
+  size_t COLstart      = cSystemController.findValueInSettings("COLstart");
+  size_t COLstop       = cSystemController.findValueInSettings("COLstop");
 
-  size_t LatencyStart  = findValue(cSystemController.fSettingsMap,"LatencyStart");
-  size_t LatencyStop   = findValue(cSystemController.fSettingsMap,"LatencyStop");
+  size_t LatencyStart  = cSystemController.findValueInSettings("LatencyStart");
+  size_t LatencyStop   = cSystemController.findValueInSettings("LatencyStop");
 
-  size_t InjDelayStart = findValue(cSystemController.fSettingsMap,"InjDelayStart");
-  size_t InjDelayStop  = findValue(cSystemController.fSettingsMap,"InjDelayStop");
+  size_t InjDelayStart = cSystemController.findValueInSettings("InjDelayStart");
+  size_t InjDelayStop  = cSystemController.findValueInSettings("InjDelayStop");
 
-  size_t VCalHstart    = findValue(cSystemController.fSettingsMap,"VCalHstart");
-  size_t VCalHstop     = findValue(cSystemController.fSettingsMap,"VCalHstop");
-  size_t VCalHnsteps   = findValue(cSystemController.fSettingsMap,"VCalHnsteps");
-  size_t VCalMED       = findValue(cSystemController.fSettingsMap,"VCalMED");
+  size_t VCalHstart    = cSystemController.findValueInSettings("VCalHstart");
+  size_t VCalHstop     = cSystemController.findValueInSettings("VCalHstop");
+  size_t VCalHnsteps   = cSystemController.findValueInSettings("VCalHnsteps");
+  size_t VCalMED       = cSystemController.findValueInSettings("VCalMED");
 
-  size_t TargetCharge  = findValue(cSystemController.fSettingsMap,"TargetCharge");
-  size_t KrumCurrStart = findValue(cSystemController.fSettingsMap,"KrumCurrStart");
-  size_t KrumCurrStop  = findValue(cSystemController.fSettingsMap,"KrumCurrStop");
+  size_t TargetCharge  = cSystemController.findValueInSettings("TargetCharge");
+  size_t KrumCurrStart = cSystemController.findValueInSettings("KrumCurrStart");
+  size_t KrumCurrStop  = cSystemController.findValueInSettings("KrumCurrStop");
 
-  float  TargetOcc     = findValue(cSystemController.fSettingsMap,"TargetOcc");
-  size_t ThrStart      = findValue(cSystemController.fSettingsMap,"ThrStart");
-  size_t ThrStop       = findValue(cSystemController.fSettingsMap,"ThrStop");
+  float  TargetOcc     = cSystemController.findValueInSettings("TargetOcc");
+  size_t ThrStart      = cSystemController.findValueInSettings("ThrStart");
+  size_t ThrStop       = cSystemController.findValueInSettings("ThrStop");
 
-  bool   DoFast        = findValue(cSystemController.fSettingsMap,"DoFast");
-  bool   Display       = findValue(cSystemController.fSettingsMap,"DisplayHisto");
+  bool   DoFast        = cSystemController.findValueInSettings("DoFast");
+  bool   Display       = cSystemController.findValueInSettings("DisplayHisto");
 
 
   // #####################
@@ -342,9 +337,10 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
-      PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, 1, true, DoFast);
-      RD53RunProgress::total() = pa.getNumberIterations();
+      PixelAlive pa;
       pa.Inherit(&cSystemController);
+      pa.initialize(fileName, chipConfig);
+      RD53RunProgress::total() = pa.getNumberIterations();
       pa.run();
       pa.analyze();
       pa.draw(Display,true);
@@ -357,9 +353,10 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan");
-      PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, nTRIGxEvent, false, false, TargetOcc);
-      RD53RunProgress::total() = pa.getNumberIterations();
+      PixelAlive pa;
       pa.Inherit(&cSystemController);
+      pa.initialize(fileName, chipConfig);
+      RD53RunProgress::total() = pa.getNumberIterations();
       pa.run();
       pa.analyze();
       pa.draw(Display,true);
@@ -468,7 +465,7 @@ int main (int argc, char** argv)
       runNumber++;
       fileName   = "Run" + fromInt2Str(runNumber) + "_PixelAlive";
       chipConfig = "Run" + fromInt2Str(runNumber) + "_";
-      PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, 1, true, DoFast);
+      PixelAlive pa;
 
       RD53RunProgress::total() = la.getNumberIterations() + id.getNumberIterations() + pa.getNumberIterations();
 
@@ -488,6 +485,7 @@ int main (int argc, char** argv)
       setReg2AllChip(cSystemController, "VCAL_HIGH", VCalHstart);
 
       pa.Inherit(&cSystemController);
+      pa.initialize(fileName, chipConfig);
       pa.run();
       pa.analyze();
       pa.draw(Display,true);

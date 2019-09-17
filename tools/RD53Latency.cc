@@ -18,8 +18,7 @@ Latency::Latency (std::string fileRes,
                   size_t startValue,
                   size_t stopValue,
                   size_t nEvents)
-  : PixelAlive (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvents, 1, true, true)
-  , fileRes    (fileRes)
+  : fileRes    (fileRes)
   , fileReg    (fileReg)
   , rowStart   (rowStart)
   , rowStop    (rowStop)
@@ -128,6 +127,8 @@ void Latency::display   () { histos.process();                                  
 
 void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
+  static_cast<PixelAlive*>(this)->initialize(fileRes, "");
+
   for (auto dac : dacList)
     {
       // ###########################

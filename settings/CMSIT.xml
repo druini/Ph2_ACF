@@ -90,7 +90,7 @@
 <Settings>
   <!--
       === Calibration parameters ===
-      INJtype      = 0: analog;                                 INJtype      = 1: digital
+      INJtype      = 0: no injection; INJtype = 1: analog; INJtype = 2: digital
       DoFast       = 0: run on all pixels in the selected area; DoFast       = 1: run on a subset
       DisplayHisto = 0: don't display;                          DisplayHisto = 1: display
 
@@ -105,7 +105,7 @@
   -->
 
   <Setting name="nTRIGxEvent">     10 </Setting>
-  <Setting name="INJtype">          0 </Setting>
+  <Setting name="INJtype">          1 </Setting>
 
   <Setting name="ROWstart">         0 </Setting>
   <Setting name="ROWstop">        191 </Setting>

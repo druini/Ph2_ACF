@@ -12,13 +12,13 @@
 
 using namespace Ph2_HwDescription;
 
-void InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
   // #######################
   // # Retrieve parameters #
   // #######################
-  startValue = this->findValue(pSettingsMap,"InjDelayStart");
-  stopValue  = this->findValue(pSettingsMap,"InjDelayStop");
+  startValue = this->findValueInSettings(settingsMap,"InjDelayStart");
+  stopValue  = this->findValueInSettings(settingsMap,"InjDelayStop");
 
 
   auto hInjectionDelay = CanvasContainer<TH1F>("InjectionDelay", "Injection Delay", stopValue - startValue, startValue, stopValue);
