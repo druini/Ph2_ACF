@@ -49,6 +49,8 @@ PixelAlive::PixelAlive (const std::string fileRes,
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 }
 
+void PixelAlive::ConfigureCalibration () {}
+
 void PixelAlive::Start (int currentRun)
 {
   this->run();
@@ -62,7 +64,6 @@ void PixelAlive::Start (int currentRun)
 
 void PixelAlive::Stop ()
 {
-  this->draw(false,true,false);
   this->Destroy();
 }
 
@@ -84,7 +85,7 @@ void PixelAlive::run ()
   this->chipErrorReport();
 }
 
-void PixelAlive::draw (bool display, bool save, bool runLocal)
+void PixelAlive::draw (bool display, bool save)
 {
   TApplication* myApp = nullptr;
 
@@ -95,12 +96,9 @@ void PixelAlive::draw (bool display, bool save, bool runLocal)
       this->InitResultFile(fileRes);
     }
 
-  if (runLocal == true)
-    {
-      this->initHisto();
-      this->fillHisto();
-      this->display();
-    }
+  this->initHisto();
+  this->fillHisto();
+  this->display();
 
   if (save == true)
     {

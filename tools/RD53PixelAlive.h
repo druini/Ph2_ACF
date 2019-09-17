@@ -44,11 +44,12 @@ class PixelAlive : public Tool
               bool   doFast = false,
               float  thresholdOccupancy = 0);
 
-  void Start (int currentRun) override;
-  void Stop  ()               override;
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
   void run                                       ();
-  void draw                                      (bool display, bool save, bool runLocal = true);
+  void draw                                      (bool display, bool save);
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
