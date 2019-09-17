@@ -318,7 +318,7 @@ int main (int argc, char** argv)
 
 
   std::cout << std::endl;
-  std::string chipConfig ("Run" + fromInt2Str(runNumber) + "_");
+  std::string chipConfig("Run" + fromInt2Str(runNumber) + "_");
   if (whichCalib == "latency")
     {
       // ###################
@@ -326,7 +326,7 @@ int main (int argc, char** argv)
       // ###################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
 
-      std::string fileName ("Run" + fromInt2Str(runNumber) + "_Latency");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
       Latency la(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
       RD53RunProgress::total() = la.getNumberIterations();
       la.Inherit(&cSystemController);
@@ -341,7 +341,7 @@ int main (int argc, char** argv)
       // ##################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-      std::string fileName ("Run" + fromInt2Str(runNumber) + "_PixelAlive");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
       PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, 1, true, DoFast);
       RD53RunProgress::total() = pa.getNumberIterations();
       pa.Inherit(&cSystemController);
@@ -356,7 +356,7 @@ int main (int argc, char** argv)
       // #############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
-      std::string fileName ("Run" + fromInt2Str(runNumber) + "_NoiseScan");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan");
       PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, nTRIGxEvent, false, false, TargetOcc);
       RD53RunProgress::total() = pa.getNumberIterations();
       pa.Inherit(&cSystemController);
@@ -371,7 +371,7 @@ int main (int argc, char** argv)
       // ##############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
-      std::string fileName ("Run" + fromInt2Str(runNumber) + "_SCurve");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
       SCurve sc(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, DoFast);
       RD53RunProgress::total() = sc.getNumberIterations();
       sc.Inherit(&cSystemController);
@@ -386,7 +386,7 @@ int main (int argc, char** argv)
       // ############
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
-      std::string fileName ("Run" + fromInt2Str(runNumber) + "_Gain");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_Gain");
       Gain ga(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, DoFast);
       RD53RunProgress::total() = ga.getNumberIterations();
       ga.Inherit(&cSystemController);
@@ -401,7 +401,7 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
-      std::string fileName ("Run" + fromInt2Str(runNumber) + "_SCurve");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
       SCurve sc(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, DoFast);
 
       runNumber++;
@@ -427,7 +427,7 @@ int main (int argc, char** argv)
       // #########################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
 
-      std::string fileName ("Run" + fromInt2Str(runNumber) + "_GainOptimization");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_GainOptimization");
       GainOptimization go(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, RD53chargeConverter::Charge2VCal(TargetCharge), KrumCurrStart, KrumCurrStop, DoFast);
       RD53RunProgress::total() = go.getNumberIterations();
       go.Inherit(&cSystemController);
@@ -442,7 +442,7 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Minimization @@@" << RESET;
 
-      std::string fileName ("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
       ThrMinimization tm(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, TargetOcc, ThrStart, ThrStop);
       RD53RunProgress::total() = tm.getNumberIterations();
       tm.Inherit(&cSystemController);
@@ -457,7 +457,7 @@ int main (int argc, char** argv)
       // #######################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Injection Delay scan @@@" << RESET;
 
-      std::string fileName ("Run" + fromInt2Str(runNumber) + "_Latency");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
       Latency la(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
 
       runNumber++;

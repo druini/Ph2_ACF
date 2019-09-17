@@ -32,7 +32,6 @@ ThrMinimization::ThrMinimization (std::string fileRes,
   , targetOccupancy (targetOccupancy)
   , ThrStart        (ThrStart)
   , ThrStop         (ThrStop)
-  , histos          ()
 {}
 
 void ThrMinimization::run ()

@@ -28,7 +28,6 @@ Latency::Latency (std::string fileRes,
   , startValue (startValue)
   , stopValue  (stopValue)
   , nEvents    (nEvents)
-  , histos     ()
 {
   size_t nSteps = stopValue - startValue + 1;
 

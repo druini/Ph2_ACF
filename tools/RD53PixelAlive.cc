@@ -34,7 +34,6 @@ PixelAlive::PixelAlive (const std::string fileRes,
   , inject             (inject)
   , doFast             (doFast)
   , thresholdOccupancy (thresholdOccupancy)
-  , histos             ()
 {
   // ################################
   // # Custom channel group handler #
