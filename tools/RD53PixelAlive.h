@@ -37,7 +37,7 @@ class PixelAlive : public Tool
 
   void initialize                                (const std::string fileRes_, const std::string fileReg_);
   void run                                       ();
-  void draw                                      (bool display, bool save);
+  void draw                                      ();
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
@@ -45,9 +45,8 @@ class PixelAlive : public Tool
       nEvents/nEvtsBurst;
   }
 
+
  private:
-  std::string fileRes;
-  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
@@ -72,6 +71,13 @@ class PixelAlive : public Tool
   // # ROOT #
   // ########
   PixelAliveHistograms histos;
+
+
+ protected:
+  std::string fileRes;
+  std::string fileReg;
+  bool doDisplay;
+  bool doSave;
 };
 
 #endif

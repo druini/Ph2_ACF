@@ -33,17 +33,13 @@
 class ThrEqualization : public Tool
 {
  public:
-  ThrEqualization (std::string fileRes,
-                   std::string fileReg,
-                   size_t rowStart,
-                   size_t rowStop,
-                   size_t colStart,
-                   size_t colStop,
-                   size_t nEvents,
-                   size_t nEvtsBurst);
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
+  void   initialize          (const std::string fileRes_, const std::string fileReg_);
   void   run                 (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
-  void   draw                (bool display, bool save);
+  void   draw                ();
   size_t getNumberIterations ()
   {
     uint16_t nBitTDAC       = 4;
@@ -51,9 +47,8 @@ class ThrEqualization : public Tool
     return RD53ChannelGroupHandler::getNumberOfGroups(RD53GroupType::AllGroups)*(nBitTDAC + moreIterations) * nEvents/nEvtsBurst;
   }
 
+
  private:
-  std::string fileRes;
-  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
@@ -76,6 +71,13 @@ class ThrEqualization : public Tool
   // # ROOT #
   // ########
   ThrEqualizationHistograms histos;
+
+
+ protected:
+  std::string fileRes;
+  std::string fileReg;
+  bool doDisplay;
+  bool doSave;
 };
 
 #endif

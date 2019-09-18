@@ -14,10 +14,28 @@ using namespace Ph2_HwDescription;
 
 void ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
-  uint16_t rangeThreshold = RD53::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("Vthreshold_LIN"))+1;
+  ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+
+
+  uint16_t rangeThreshold = RD53::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("Vthreshold_LIN")) + 1;
 
   auto hThrehsold = CanvasContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
   bookImplementer(theOutputFile, theDetectorStructure, hThrehsold, Threhsold, "Threhsold", "Entries");
+}
+
+bool ThrMinimizationHistograms::fill (std::vector<char>& dataBuffer)
+{
+  ChannelContainerStream<RegisterValue> theThrStreamer("RD53ThrMinimization");
+
+  if(theThrStreamer.attachBuffer(&dataBuffer))
+    {
+      theThrStreamer.decodeChipData(DetectorData);
+      ThrMinimizationHistograms::fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+
+  return false;
 }
 
 void ThrMinimizationHistograms::fill (const DetectorDataContainer& data)

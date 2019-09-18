@@ -14,6 +14,9 @@ using namespace Ph2_HwDescription;
 
 void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
+  ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+
+
   // #######################
   // # Retrieve parameters #
   // #######################
@@ -26,6 +29,29 @@ void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& the
 
   auto hOcc1D = CanvasContainer<TH1F>("LatencyScan", "Latency Scan", stopValue - startValue, startValue, stopValue);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Latency (n.bx)", "Efficiency");
+}
+
+bool LatencyHistograms::fill (std::vector<char>& dataBuffer)
+{
+  ChannelContainerStream<GenericDataVector> theStreamer       ("RD53Latency");
+  ChannelContainerStream<RegisterValue>     theLatencyStreamer("RD53Latency");
+
+  if (theStreamer.attachBuffer(&dataBuffer))
+    {
+      theStreamer.decodeChipData(DetectorData);
+      // LatencyHistograms::fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+  else if (theLatencyStreamer.attachBuffer(&dataBuffer))
+    {
+      theLatencyStreamer.decodeChipData(DetectorData);
+      // LatencyHistograms::fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+
+  return false;
 }
 
 void LatencyHistograms::fill (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& LatencyContainer)

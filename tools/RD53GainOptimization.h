@@ -26,25 +26,14 @@
 class GainOptimization : public Gain
 {
  public:
-  GainOptimization (std::string fileRes,
-                    std::string fileReg,
-                    size_t rowStart,
-                    size_t rowStop,
-                    size_t colStart,
-                    size_t colStop,
-                    size_t nEvents,
-                    size_t startValue,
-                    size_t stopValue,
-                    size_t nSteps,
-                    size_t offset,
-                    float  targetCharge,
-                    size_t KrumCurrStart,
-                    size_t KrumCurrStop,
-                    bool   doFast = false);
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
+  void   initialize          (const std::string fileRes_, const std::string fileReg_);
   void   run                 ();
   void   analyze             ();
-  void   draw                (bool display, bool save);
+  void   draw                ();
   size_t getNumberIterations ()
   {
     uint16_t nBitKrumCurr   = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 1);
@@ -52,9 +41,8 @@ class GainOptimization : public Gain
     return Gain::getNumberIterations()*(nBitKrumCurr + moreIterations);
   }
 
+
  private:
-  std::string fileRes;
-  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
@@ -62,7 +50,6 @@ class GainOptimization : public Gain
   size_t nEvents;
   size_t startValue;
   size_t stopValue;
-  size_t nSteps;
   float  targetCharge;
   size_t KrumCurrStart;
   size_t KrumCurrStop;
@@ -81,6 +68,13 @@ class GainOptimization : public Gain
   // # ROOT #
   // ########
   GainOptimizationHistograms histos;
+
+
+ protected:
+  std::string fileRes;
+  std::string fileReg;
+  bool doDisplay;
+  bool doSave;
 };
 
 #endif

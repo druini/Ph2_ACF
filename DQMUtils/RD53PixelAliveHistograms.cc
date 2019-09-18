@@ -48,12 +48,12 @@ void PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
 
 bool PixelAliveHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<OccupancyAndPh> theHitStreamer("RD53PixelAlive");
+  ChannelContainerStream<OccupancyAndPh> theOccStreamer("RD53PixelAlive");
 
-  if(theHitStreamer.attachBuffer(&dataBuffer))
+  if (theOccStreamer.attachBuffer(&dataBuffer))
     {
-      theHitStreamer.decodeChipData(DetectorData);
-      this->fill(DetectorData);
+      theOccStreamer.decodeChipData(DetectorData);
+      PixelAliveHistograms::fill(DetectorData);
       DetectorData.cleanDataStored();
       return true;
     }

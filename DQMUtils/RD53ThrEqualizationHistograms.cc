@@ -14,6 +14,9 @@ using namespace Ph2_HwDescription;
 
 void ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
+  ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+
+
   // #######################
   // # Retrieve parameters #
   // #######################
@@ -28,6 +31,29 @@ void ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContai
 
   auto hTDAC = CanvasContainer<TH1F>("TDAC", "TDAC", TDACsize, 0, TDACsize);
   bookImplementer(theOutputFile, theDetectorStructure, hTDAC, TDAC, "TDAC", "Entries");
+}
+
+bool ThrEqualizationHistograms::fill (std::vector<char>& dataBuffer)
+{
+  ChannelContainerStream<OccupancyAndPh> theOccStreamer ("RD53ThrEqualization");
+  ChannelContainerStream<RegisterValue>  theTDACStreamer("RD53ThrEqualization");
+
+  if (theOccStreamer.attachBuffer(&dataBuffer))
+    {
+      theOccStreamer.decodeChipData(DetectorData);
+      // ThrEqualizationHistograms::fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+  else if (theTDACStreamer.attachBuffer(&dataBuffer))
+    {
+      theTDACStreamer.decodeChipData(DetectorData);
+      // ThrEqualizationHistograms::fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+
+  return false;
 }
 
 void ThrEqualizationHistograms::fill (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& TDACContainer)

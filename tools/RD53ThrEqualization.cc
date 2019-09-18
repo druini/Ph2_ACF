@@ -9,24 +9,22 @@
 
 #include "RD53ThrEqualization.h"
 
-ThrEqualization::ThrEqualization (std::string fileRes,
-                                  std::string fileReg,
-                                  size_t rowStart,
-                                  size_t rowStop,
-                                  size_t colStart,
-                                  size_t colStop,
-                                  size_t nEvents,
-                                  size_t nEvtsBurst)
-  : Tool       ()
-  , fileRes    (fileRes)
-  , fileReg    (fileReg)
-  , rowStart   (rowStart)
-  , rowStop    (rowStop)
-  , colStart   (colStart)
-  , colStop    (colStop)
-  , nEvents    (nEvents)
-  , nEvtsBurst (nEvtsBurst)
+void ThrEqualization::ConfigureCalibration ()
 {
+  // #######################
+  // # Retrieve parameters #
+  // #######################
+  rowStart   = this->findValueInSettings("ROWstart");
+  rowStop    = this->findValueInSettings("ROWstop");
+  colStart   = this->findValueInSettings("COLstart");
+  colStop    = this->findValueInSettings("COLstop");
+  nEvents    = this->findValueInSettings("nEvents");
+  nEvtsBurst = nEvents;
+  nEvents   *= this->findValueInSettings("VCalHnsteps");
+  doDisplay  = this->findValueInSettings("DisplayHisto");
+  doSave     = this->findValueInSettings("Save");
+
+
   // ########################
   // # Custom channel group #
   // ########################
@@ -39,6 +37,37 @@ ThrEqualization::ThrEqualization (std::string fileRes,
 
   theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+}
+
+void ThrEqualization::Start (int currentRun)
+{
+  ThrEqualization::run();
+
+
+  // #############
+  // # Send data #
+  // #############
+  auto theOccStream  = prepareChannelContainerStreamer<OccupancyAndPh>();
+  auto theTDACStream = prepareChannelContainerStreamer<RegisterValue>();
+
+  if (fStreamerEnabled == true)
+    {
+      for (const auto cBoard : theOccContainer)  theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+      for (const auto cBoard : theTDACcontainer) theTDACStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    }
+}
+
+void ThrEqualization::Stop ()
+{
+  this->Destroy();
+}
+
+void ThrEqualization::initialize (const std::string fileRes_, const std::string fileReg_)
+{
+  fileRes = fileRes_;
+  fileReg = fileReg_;
+
+  ThrEqualization::ConfigureCalibration();
 }
 
 void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
@@ -61,7 +90,7 @@ void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
-  this->bitWiseScan("PIX_PORTAL", nEvents, TARGETEFF, nEvtsBurst);
+  ThrEqualization::bitWiseScan("PIX_PORTAL", nEvents, TARGETEFF, nEvtsBurst);
 
 
   // #################################################
@@ -83,28 +112,27 @@ void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
   // ################
   // # Error report #
   // ################
-  this->chipErrorReport();
+  ThrEqualization::chipErrorReport();
 }
 
-void ThrEqualization::draw (bool display, bool save)
+void ThrEqualization::draw ()
 {
   TApplication* myApp = nullptr;
 
-  if (display == true) myApp = new TApplication("myApp", nullptr, nullptr);
-  if (save    == true)
+  if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
+  if (doSave    == true)
     {
       this->CreateResultDirectory(RESULTDIR,false,false);
       this->InitResultFile(fileRes);
     }
 
-  this->initHisto();
-  this->fillHisto();
-  this->display();
+  ThrEqualization::initHisto();
+  ThrEqualization::fillHisto();
+  ThrEqualization::display();
 
-  if (save == true)
+  if (doSave == true)
     {
       this->WriteRootFile();
-      this->CloseResultFile();
 
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
@@ -124,7 +152,8 @@ void ThrEqualization::draw (bool display, bool save)
             }
     }
 
-  if (display == true) myApp->Run(true);
+  if (doDisplay == true) myApp->Run(true);
+  if (doSave    == true) this->CloseResultFile();
 }
 
 void ThrEqualization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
@@ -186,7 +215,7 @@ void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents,
       // ################
       // # Run analysis #
       // ################
-      measureData(nEvents, nEvtsBurst);
+      this->measureData(nEvents, nEvtsBurst);
 
       // #####################
       // # Compute next step #
@@ -244,7 +273,7 @@ void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents,
   // ################
   // # Run analysis #
   // ################
-  measureData(nEvents, nEvtsBurst);
+  this->measureData(nEvents, nEvtsBurst);
 }
 
 void ThrEqualization::chipErrorReport()

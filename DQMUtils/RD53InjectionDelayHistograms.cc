@@ -14,6 +14,9 @@ using namespace Ph2_HwDescription;
 
 void InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
+  ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+
+
   // #######################
   // # Retrieve parameters #
   // #######################
@@ -26,6 +29,29 @@ void InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContain
 
   auto hOcc1D = CanvasContainer<TH1F>("InjDelayScan", "Injection Delay Scan", stopValue - startValue, startValue, stopValue);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Injection Delay (1.5625 ns)", "Efficiency");
+}
+
+bool InjectionDelayHistograms::fill (std::vector<char>& dataBuffer)
+{
+  ChannelContainerStream<GenericDataVector> theStreamer              ("RD53InjectionDelay");
+  ChannelContainerStream<RegisterValue>     theInjectionDelayStreamer("RD53InjectionDelay");
+
+  if (theStreamer.attachBuffer(&dataBuffer))
+    {
+      theStreamer.decodeChipData(DetectorData);
+      // InjectionDelayHistograms::fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+  else if (theInjectionDelayStreamer.attachBuffer(&dataBuffer))
+    {
+      theInjectionDelayStreamer.decodeChipData(DetectorData);
+      // InjectionDelayHistograms::fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+
+  return false;
 }
 
 void InjectionDelayHistograms::fill (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& InjectionDelayContainer)

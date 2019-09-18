@@ -14,10 +14,28 @@ using namespace Ph2_HwDescription;
 
 void GainOptimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
-  uint16_t rangeKrumCurr = RD53::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("KRUM_CURR_LIN"))+1;
+  ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+
+
+  uint16_t rangeKrumCurr = RD53::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("KRUM_CURR_LIN")) + 1;
 
   auto hOcc2D = CanvasContainer<TH1F>("KrumCurr", "KrumCurr", rangeKrumCurr, 0, rangeKrumCurr);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, KrumCurr, "Krummenacher Current", "Entries");
+}
+
+bool GainOptimizationHistograms::fill (std::vector<char>& dataBuffer)
+{
+  ChannelContainerStream<RegisterValue> theKrumStreamer("RD53GainOptimization");
+
+  if(theKrumStreamer.attachBuffer(&dataBuffer))
+    {
+      theKrumStreamer.decodeChipData(DetectorData);
+      GainOptimizationHistograms::fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+
+  return false;
 }
 
 void GainOptimizationHistograms::fill (const DetectorDataContainer& data)

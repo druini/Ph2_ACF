@@ -24,8 +24,11 @@ void PixelAlive::ConfigureCalibration ()
   doInjection  = this->findValueInSettings("INJtype");
   doFast       = this->findValueInSettings("DoFast");
   thrOccupancy = this->findValueInSettings("TargetOcc");
+  doDisplay    = this->findValueInSettings("DisplayHisto");
+  doSave       = this->findValueInSettings("Save");
 
   if (doInjection == true) nTRIGxEvent = 1;
+  else                     doFast      = false;
 
 
   // ################################
@@ -44,13 +47,17 @@ void PixelAlive::ConfigureCalibration ()
 
 void PixelAlive::Start (int currentRun)
 {
-  this->run();
-  this->analyze();
+  PixelAlive::run();
+  PixelAlive::analyze();
 
-  auto theHitStream = prepareChannelContainerStreamer<OccupancyAndPh>();
+
+  // #############
+  // # Send data #
+  // #############
+  auto theOccStream = prepareChannelContainerStreamer<OccupancyAndPh>();
 
   if (fStreamerEnabled == true)
-    for (const auto cBoard : *theOccContainer.get()) theHitStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    for (const auto cBoard : *theOccContainer.get()) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
 }
 
 void PixelAlive::Stop ()
@@ -63,7 +70,7 @@ void PixelAlive::initialize (const std::string fileRes_, const std::string fileR
   fileRes = fileRes_;
   fileReg = fileReg_;
 
-  this->ConfigureCalibration();
+  PixelAlive::ConfigureCalibration();
 }
 
 void PixelAlive::run ()
@@ -81,28 +88,27 @@ void PixelAlive::run ()
   // ################
   // # Error report #
   // ################
-  this->chipErrorReport();
+  PixelAlive::chipErrorReport();
 }
 
-void PixelAlive::draw (bool display, bool save)
+void PixelAlive::draw ()
 {
   TApplication* myApp = nullptr;
 
-  if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (save    == true)
+  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+  if (doSave    == true)
     {
       this->CreateResultDirectory(RESULTDIR,false,false);
       this->InitResultFile(fileRes);
     }
 
-  this->initHisto();
-  this->fillHisto();
-  this->display();
+  PixelAlive::initHisto();
+  PixelAlive::fillHisto();
+  PixelAlive::display();
 
-  if (save == true)
+  if (doSave == true)
     {
       this->WriteRootFile();
-      this->CloseResultFile();
 
       // ############################
       // # Save register new values #
@@ -118,7 +124,8 @@ void PixelAlive::draw (bool display, bool save)
             }
     }
 
-  if (display == true) myApp->Run(true);
+  if (doDisplay == true) myApp->Run(true);
+  if (doSave    == true) this->CloseResultFile();
 }
 
 std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
@@ -139,9 +146,9 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
               if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
                 {
                   float occupancy = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
-                  static_cast<RD53*>(cChip)->enablePixel(row,col,thrOccupancy != 0 ? occupancy < thrOccupancy : occupancy != 0);
+                  static_cast<RD53*>(cChip)->enablePixel(row,col,thrOccupancy != 1 ? occupancy < thrOccupancy : occupancy != 0);
 
-                  if (((thrOccupancy != 0) && (occupancy >= thrOccupancy)) || ((thrOccupancy == 0) && (occupancy == 0))) nMaskedPixelsPerCalib++;
+                  if (((thrOccupancy != 1) && (occupancy >= thrOccupancy)) || ((thrOccupancy == 0) && (occupancy == 0))) nMaskedPixelsPerCalib++;
                 }
 
           LOG (INFO) << BOLDGREEN << "\t\t--> Number of masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;

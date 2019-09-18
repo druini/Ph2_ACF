@@ -14,6 +14,9 @@ using namespace Ph2_HwDescription;
 
 void SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
+  ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+
+
   // #######################
   // # Retrieve parameters #
   // #######################
@@ -44,6 +47,29 @@ void SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theD
 
   auto hNoise2D = CanvasContainer<TH2F>("Noise2D", "Noise Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hNoise2D, Noise2D, "Column", "Row");
+}
+
+bool SCurveHistograms::fill (std::vector<char>& dataBuffer)
+{
+  ChannelContainerStream<OccupancyAndPh>    theOccStreamer        ("RD53Scurve");
+  ChannelContainerStream<ThresholdAndNoise> theThrAndNoiseStreamer("RD53Scurve");
+
+  if (theOccStreamer.attachBuffer(&dataBuffer))
+    {
+      theOccStreamer.decodeChipData(DetectorData);
+      // SCurveHistograms::fillOccupancy(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+  else if (theThrAndNoiseStreamer.attachBuffer(&dataBuffer))
+    {
+      theThrAndNoiseStreamer.decodeChipData(DetectorData);
+      // SCurveHistograms::fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+
+  return false;
 }
 
 void SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL)

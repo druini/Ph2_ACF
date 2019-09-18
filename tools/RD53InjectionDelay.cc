@@ -9,68 +9,106 @@
 
 #include "RD53InjectionDelay.h"
 
-InjectionDelay::InjectionDelay (std::string fileRes,
-                                std::string fileReg,
-                                size_t rowStart,
-                                size_t rowStop,
-                                size_t colStart,
-                                size_t colStop,
-                                size_t startValue,
-                                size_t stopValue,
-                                size_t nEvents,
-                                bool   doFast)
-  : fileRes    (fileRes)
-  , fileReg    (fileReg)
-  , rowStart   (rowStart)
-  , rowStop    (rowStop)
-  , colStart   (colStart)
-  , colStop    (colStop)
-  , startValue (startValue)
-  , stopValue  (stopValue)
-  , nEvents    (nEvents)
-  , doFast     (doFast)
+void InjectionDelay::ConfigureCalibration ()
 {
-  size_t nSteps = stopValue - startValue + 1;
+  // ##############################
+  // # Initialize sub-calibration #
+  // ##############################
+  PixelAlive::ConfigureCalibration();
+
+
+  // #######################
+  // # Retrieve parameters #
+  // #######################
+  rowStart   = this->findValueInSettings("ROWstart");
+  rowStop    = this->findValueInSettings("ROWstop");
+  colStart   = this->findValueInSettings("COLstart");
+  colStop    = this->findValueInSettings("COLstop");
+  nEvents    = this->findValueInSettings("nEvents");
+  doFast     = this->findValueInSettings("DoFast");
+  startValue = this->findValueInSettings("InjDelayStart");
+  stopValue  = this->findValueInSettings("InjDelayStop");
+  doDisplay  = this->findValueInSettings("DisplayHisto");
+  doSave     = this->findValueInSettings("Save");
 
 
   // ##############################
   // # Initialize dac scan values #
   // ##############################
-  float step = (stopValue - startValue + 1) / nSteps;
+  size_t nSteps = stopValue - startValue + 1;
+  float step    = (stopValue - startValue + 1) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
+}
+
+void InjectionDelay::Start (int currentRun)
+{
+  InjectionDelay::run();
+  InjectionDelay::analyze();
+
+
+  // #############
+  // # Send data #
+  // #############
+  auto theStream               = prepareChannelContainerStreamer<GenericDataVector>();
+  auto theInjectionDelayStream = prepareChannelContainerStreamer<RegisterValue>();
+
+  if (fStreamerEnabled == true)
+    {
+      for (const auto cBoard : theContainer)               theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+      for (const auto cBoard : theInjectionDelayContainer) theInjectionDelayStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    }
+}
+
+void InjectionDelay::Stop ()
+{
+  this->Destroy();
+}
+
+void InjectionDelay::initialize (const std::string fileRes_, const std::string fileReg_)
+{
+  // ##############################
+  // # Initialize sub-calibration #
+  // ##############################
+  PixelAlive::fileRes = fileRes_;
+  PixelAlive::fileReg = "";
+
+
+  fileRes = fileRes_;
+  fileReg = fileReg_;
+
+  InjectionDelay::ConfigureCalibration();
 }
 
 void InjectionDelay::run ()
 {
   ContainerFactory::copyAndInitChip<GenericDataVector>(*fDetectorContainer, theContainer);
-  this->scanDac("INJECTION_SELECT", dacList, nEvents, &theContainer);
+  InjectionDelay::scanDac("INJECTION_SELECT", dacList, nEvents, &theContainer);
 
 
   // ################
   // # Error report #
   // ################
-  this->chipErrorReport();
+  InjectionDelay::chipErrorReport();
 }
 
-void InjectionDelay::draw (bool display, bool save)
+void InjectionDelay::draw ()
 {
   TApplication* myApp = nullptr;
 
-  if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (save    == true)
+  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+  if (doSave    == true)
     {
       this->CreateResultDirectory(RESULTDIR,false,false);
       this->InitResultFile(fileRes);
     }
 
-  this->initHisto();
-  this->fillHisto();
-  this->display();
+  InjectionDelay::initHisto();
+  InjectionDelay::fillHisto();
+  InjectionDelay::display();
 
-  if (save == true)
+  if (doSave == true)
     {
       this->WriteRootFile();
-      this->CloseResultFile();
 
       // ############################
       // # Save register new values #
@@ -87,7 +125,8 @@ void InjectionDelay::draw (bool display, bool save)
             }
     }
 
-  if (display == true) myApp->Run(true);
+  if (doDisplay == true) myApp->Run(true);
+  if (doSave    == true) this->CloseResultFile();
 }
 
 void InjectionDelay::analyze ()
@@ -129,8 +168,6 @@ void InjectionDelay::display   () { histos.process();                           
 
 void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-  static_cast<PixelAlive*>(this)->initialize(fileRes, "");
-
   size_t saveVal = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(regName)) -
     RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
   size_t maxVal  = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
@@ -153,8 +190,8 @@ void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint
       // ################
       // # Run analysis #
       // ################
-      static_cast<PixelAlive*>(this)->run();
-      auto output = static_cast<PixelAlive*>(this)->analyze();
+      PixelAlive::run();
+      auto output = PixelAlive::analyze();
       output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
 
 

@@ -9,41 +9,72 @@
 
 #include "RD53GainOptimization.h"
 
-GainOptimization::GainOptimization (std::string fileRes,
-                                    std::string fileReg,
-                                    size_t rowStart,
-                                    size_t rowStop,
-                                    size_t colStart,
-                                    size_t colStop,
-                                    size_t nEvents,
-                                    size_t startValue,
-                                    size_t stopValue,
-                                    size_t nSteps,
-                                    size_t offset,
-                                    float  targetCharge,
-                                    size_t KrumCurrStart,
-                                    size_t KrumCurrStop,
-                                    bool   doFast)
-  : Gain          (fileRes, fileReg, rowStart, rowStop, colStart, colStop, nEvents, startValue, stopValue, nSteps, offset, doFast)
-  , fileRes       (fileRes)
-  , fileReg       (fileReg)
-  , rowStart      (rowStart)
-  , rowStop       (rowStop)
-  , colStart      (colStart)
-  , colStop       (colStop)
-  , nEvents       (nEvents)
-  , startValue    (startValue)
-  , stopValue     (stopValue)
-  , nSteps        (nSteps)
-  , targetCharge  (targetCharge)
-  , KrumCurrStart (KrumCurrStart)
-  , KrumCurrStop  (KrumCurrStop)
-  , doFast        (doFast)
-{}
+void GainOptimization::ConfigureCalibration ()
+{
+  // ##############################
+  // # Initialize sub-calibration #
+  // ##############################
+  Gain::ConfigureCalibration();
+  Gain::doDisplay = false;
+  Gain::doSave    = false;
+
+
+  // #######################
+  // # Retrieve parameters #
+  // #######################
+  rowStart      = this->findValueInSettings("ROWstart");
+  rowStop       = this->findValueInSettings("ROWstop");
+  colStart      = this->findValueInSettings("COLstart");
+  colStop       = this->findValueInSettings("COLstop");
+  nEvents       = this->findValueInSettings("nEvents");
+  startValue    = this->findValueInSettings("VCalHstart");
+  stopValue     = this->findValueInSettings("VCalHstop");
+  targetCharge  = RD53chargeConverter::Charge2VCal(this->findValueInSettings("TargetCharge"));
+  KrumCurrStart = this->findValueInSettings("KrumCurrStart");
+  KrumCurrStop  = this->findValueInSettings("KrumCurrStop");;
+  doFast        = this->findValueInSettings("DoFast");
+  doDisplay     = this->findValueInSettings("DisplayHisto");
+  doSave        = this->findValueInSettings("Save");
+}
+
+void GainOptimization::Start (int currentRun)
+{
+  GainOptimization::run();
+  GainOptimization::analyze();
+
+
+  // #############
+  // # Send data #
+  // #############
+  auto theKrumStream = prepareChannelContainerStreamer<RegisterValue>();
+
+  if (fStreamerEnabled == true)
+    for (const auto cBoard : theKrumCurrContainer) theKrumStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+}
+
+void GainOptimization::Stop ()
+{
+  this->Destroy();
+}
+
+void GainOptimization::initialize (const std::string fileRes_, const std::string fileReg_)
+{
+  // ##############################
+  // # Initialize sub-calibration #
+  // ##############################
+  Gain::fileRes = fileRes_;
+  Gain::fileReg = fileReg_;
+
+
+  fileRes = fileRes_;
+  fileReg = fileReg_;
+
+  GainOptimization::ConfigureCalibration();
+}
 
 void GainOptimization::run ()
 {
-  this->bitWiseScan("KRUM_CURR_LIN", nEvents, targetCharge, KrumCurrStart, KrumCurrStop);
+  GainOptimization::bitWiseScan("KRUM_CURR_LIN", nEvents, targetCharge, KrumCurrStart, KrumCurrStop);
 
 
   // #######################################
@@ -59,30 +90,29 @@ void GainOptimization::run ()
   // ################
   // # Error report #
   // ################
-  this->chipErrorReport();
+  GainOptimization::chipErrorReport();
 }
 
-void GainOptimization::draw (bool display, bool save)
+void GainOptimization::draw ()
 {
   TApplication* myApp = nullptr;
 
-  if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (save    == true)
+  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+  if (doSave    == true)
     {
       this->CreateResultDirectory(RESULTDIR,false,false);
       this->InitResultFile(fileRes);
     }
 
-  Gain::draw(false,false);
+  Gain::draw();
 
-  this->initHisto();
-  this->fillHisto();
-  this->display();
+  GainOptimization::initHisto();
+  GainOptimization::fillHisto();
+  GainOptimization::display();
 
-  if (save == true)
+  if (doSave == true)
     {
       this->WriteRootFile();
-      this->CloseResultFile();
 
       // ############################
       // # Save register new values #
@@ -99,7 +129,8 @@ void GainOptimization::draw (bool display, bool save)
             }
     }
 
-  if (display == true) myApp->Run(true);
+  if (doDisplay == true) myApp->Run(true);
+  if (doSave    == true) this->CloseResultFile();
 }
 
 void GainOptimization::analyze ()
@@ -117,6 +148,11 @@ void GainOptimization::display   () { histos.process();                         
 
 void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
+  // #################################
+  // # Number of standard deviations #
+  // #################################
+  float nStDev = 2;
+
   uint16_t numberOfBits = log2(stopValue - startValue + 1) + 1;
 
   DetectorDataContainer minDACcontainer;
@@ -164,8 +200,8 @@ void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents
       // ################
       // # Run analysis #
       // ################
-      static_cast<Gain*>(this)->run();
-      auto output = static_cast<Gain*>(this)->analyze();
+      Gain::run();
+      auto output = Gain::analyze();
       output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
 
@@ -191,7 +227,7 @@ void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents
               stdDev = (cnt != 0 ? stdDev/cnt : 0) - cChip->getSummary<GainAndIntercept>().fGain * cChip->getSummary<GainAndIntercept>().fGain;
               stdDev = (stdDev > 0 ? sqrt(stdDev) : 0);
               size_t ToTpoint = RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION) - 2;
-              float newValue  = (ToTpoint - cChip->getSummary<GainAndIntercept>().fIntercept) / (cChip->getSummary<GainAndIntercept>().fGain + 3*stdDev);
+              float newValue  = (ToTpoint - cChip->getSummary<GainAndIntercept>().fIntercept) / (cChip->getSummary<GainAndIntercept>().fGain + nStDev*stdDev);
 
 
               // ########################
@@ -230,8 +266,8 @@ void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents
   // ################
   // # Run analysis #
   // ################
-  static_cast<Gain*>(this)->run();
-  static_cast<Gain*>(this)->analyze();
+  Gain::run();
+  Gain::analyze();
 }
 
 void GainOptimization::chipErrorReport ()

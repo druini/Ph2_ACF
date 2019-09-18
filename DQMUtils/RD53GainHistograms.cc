@@ -14,6 +14,9 @@ using namespace Ph2_HwDescription;
 
 void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
+  ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+
+
   // #######################
   // # Retrieve parameters #
   // #######################
@@ -44,6 +47,29 @@ void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDet
 
   auto hIntercept2D = CanvasContainer<TH2F>("Intercept2D", "Intercept Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
   bookImplementer(theOutputFile, theDetectorStructure, hIntercept2D, Intercept2D, "Column", "Row");
+}
+
+bool GainHistograms::fill (std::vector<char>& dataBuffer)
+{
+  ChannelContainerStream<OccupancyAndPh>   theOccStreamer             ("RD53Gain");
+  ChannelContainerStream<GainAndIntercept> theGainAndInterceptStreamer("RD53Gain");
+
+  if (theOccStreamer.attachBuffer(&dataBuffer))
+    {
+      theOccStreamer.decodeChipData(DetectorData);
+      // GainHistograms::fillOccupancy(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+  else if (theGainAndInterceptStreamer.attachBuffer(&dataBuffer))
+    {
+      theGainAndInterceptStreamer.decodeChipData(DetectorData);
+      // GainHistograms::fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+
+  return false;
 }
 
 void GainHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL)

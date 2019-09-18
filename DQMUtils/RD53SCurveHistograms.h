@@ -13,6 +13,8 @@
 
 #include "../System/SystemController.h"
 #include "../Utils/ThresholdAndNoise.h"
+#include "../Utils/ContainerFactory.h"
+#include "../Utils/ContainerStream.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
@@ -24,13 +26,15 @@ class SCurveHistograms : public DQMHistogramBase
  public:
   void book          (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap) override;
   void process       ()                                                                                                         override;
-  bool fill          (std::vector<char>& dataBuffer)                                                                            override { return false; };
+  bool fill          (std::vector<char>& dataBuffer)                                                                            override;
   void reset         ()                                                                                                         override {};
 
   void fill          (const DetectorDataContainer& data);
   void fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL);
 
  private:
+  DetectorDataContainer DetectorData;
+
   DetectorDataContainer Occupancy2D;
   DetectorDataContainer ErrorReadOut2D;
   DetectorDataContainer ErrorFit2D;
