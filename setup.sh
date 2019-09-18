@@ -22,7 +22,8 @@ fi
 ########
 # ROOT #
 ########
-source $ROOTSYS/bin/thisroot.sh
+# source $ROOTSYS/bin/thisroot.sh
+source /usr/local/root/bin/thisroot.sh
 
 #######
 # ZMQ #
