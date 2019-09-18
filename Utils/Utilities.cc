@@ -65,7 +65,7 @@ const std::string currentDateTime()
     // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
     // for more information about date/time format
 
-    strftime ( buf, sizeof ( buf ), "_%d-%m-%y_%Hh%M", &tstruct );
+    strftime ( buf, sizeof ( buf ), "_%d-%m-%y_%Hh%Mm%S", &tstruct );
 
     return buf;
 }

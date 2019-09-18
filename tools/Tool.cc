@@ -557,25 +557,43 @@ void Tool::HttpServerProcess()
 void Tool::dumpConfigFiles()
 {
 	// visitor to call dumpRegFile on each Chip
-	struct RegMapDumper : public HwDescriptionVisitor
-	{
-		std::string fDirectoryName;
-		RegMapDumper ( std::string pDirectoryName ) : fDirectoryName ( pDirectoryName ) {};
-		void visit ( Chip& pChip )
-		{
-			if ( !fDirectoryName.empty() )
-			{
-				//Fabio: CBC specific -> to be moved out from Tool
-				TString cFilename = fDirectoryName + Form ( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
-				// cFilename += Form( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
-				pChip.saveRegMap ( cFilename.Data() );
-			}
-			else LOG (INFO) << "Error: no results Directory initialized! "  ;
-		}
-	};
+	// struct RegMapDumper : public HwDescriptionVisitor
+	// {
+	// 	std::string fDirectoryName;
+	// 	RegMapDumper ( std::string pDirectoryName ) : fDirectoryName ( pDirectoryName ) {};
+	// 	void visit ( ReadoutChip& pChip )
+	// 	{
+	// 		if ( !fDirectoryName.empty() )
+	// 		{
+	// 			//Fabio: CBC specific -> to be moved out from Tool
+	// 			TString cFilename = fDirectoryName + Form ( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
+	// 			// cFilename += Form( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
+	// 			pChip.saveRegMap ( cFilename.Data() );
+	// 		}
+	// 		else LOG (INFO) << "Error: no results Directory initialized! "  ;
+	// 	}
+	// };
 
-	RegMapDumper cDumper ( fDirectoryName );
-	accept ( cDumper );
+	// RegMapDumper cDumper ( fDirectoryName );
+	// accept ( cDumper );
+
+	if ( !fDirectoryName.empty() )
+	{
+		//Fabio: CBC specific -> to be moved out from Tool
+		for(auto board : *fDetectorContainer)
+		{
+			for(auto module : *board)
+			{
+				for(auto chip : *module)
+				{
+					TString cFilename = fDirectoryName + Form ( "/BE%d_FE%d_Chip%d.txt", board->getId(), module->getId(), chip->getId() );
+					static_cast<ReadoutChip*>(chip)->saveRegMap ( cFilename.Data() );
+				}
+			}
+		}
+		// cFilename += Form( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
+	}
+	else LOG (INFO) << "Error: no results Directory initialized! "  ;
 
 	LOG (INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fDirectoryName << RESET ;
 }
