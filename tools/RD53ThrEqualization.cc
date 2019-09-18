@@ -21,6 +21,7 @@ void ThrEqualization::ConfigureCalibration ()
   nEvents    = this->findValueInSettings("nEvents");
   nEvtsBurst = nEvents;
   nEvents   *= this->findValueInSettings("VCalHnsteps");
+  doFast     = this->findValueInSettings("DoFast");
   doDisplay  = this->findValueInSettings("DisplayHisto");
   doSave     = this->findValueInSettings("Save");
 
@@ -35,7 +36,7 @@ void ThrEqualization::ConfigureCalibration ()
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row, col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 }
 
@@ -255,7 +256,7 @@ void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents,
                       midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue;
 
                   midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue =
-                    (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue + 
+                    (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue +
                      maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row, col).fRegisterValue) / 2;
                 }
     }

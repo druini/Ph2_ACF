@@ -15,6 +15,8 @@ void ThrMinimization::ConfigureCalibration ()
   // # Initialize sub-calibration #
   // ##############################
   PixelAlive::ConfigureCalibration();
+  PixelAlive::doDisplay = false;
+  PixelAlive::doSave    = false;
 
 
   // #######################
