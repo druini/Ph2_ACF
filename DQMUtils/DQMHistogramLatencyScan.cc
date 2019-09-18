@@ -35,7 +35,7 @@ DQMHistogramLatencyScan::~DQMHistogramLatencyScan ()
 
 
 //========================================================================================================================
-void DQMHistogramLatencyScan::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
+void DQMHistogramLatencyScan::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 

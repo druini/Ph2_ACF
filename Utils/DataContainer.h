@@ -109,7 +109,7 @@ class has_makeSummaryAverage
     struct two { char x[2]; };
 
     template <typename C> static one test( decltype(&C::makeSummaryAverage) ) ;
-    template <typename C> static two test(...);    
+    template <typename C> static two test(...);
 
 public:
     enum { value = sizeof(test<T>(0)) == sizeof(char) };
@@ -328,8 +328,8 @@ template <typename T>
 class ChannelDataContainer: public ChannelContainer<T> //, public ChannelContainerBase
 {
 public:
-	ChannelDataContainer(uint16_t size) : ChannelContainer<T>(size) {}
-	ChannelDataContainer(uint16_t size, T initialValue) : ChannelContainer<T>(size, initialValue) {}
+	ChannelDataContainer(uint32_t size) : ChannelContainer<T>(size) {}
+	ChannelDataContainer(uint32_t size, T initialValue) : ChannelContainer<T>(size, initialValue) {}
 	ChannelDataContainer() : ChannelContainer<T>() {}
 	
     void normalize(uint32_t numberOfEvents) override

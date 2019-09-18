@@ -34,7 +34,7 @@ DQMHistogramPedestalEqualization::~DQMHistogramPedestalEqualization ()
 
 
 //========================================================================================================================
-void DQMHistogramPedestalEqualization::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
+void DQMHistogramPedestalEqualization::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 

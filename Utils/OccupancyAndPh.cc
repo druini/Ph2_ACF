@@ -7,7 +7,6 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-
 #include "OccupancyAndPh.h"
 
 void OccupancyAndPh::makeSummaryAverage (const std::vector<OccupancyAndPh>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
@@ -15,7 +14,7 @@ void OccupancyAndPh::makeSummaryAverage (const std::vector<OccupancyAndPh>* theO
   if (theOccupancyVector->size() != theNumberOfEnabledChannelsList.size()) 
     {
       std::cout << __PRETTY_FUNCTION__ << "theOccupancyVector size = " << theOccupancyVector->size() 
-		<< " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
+                << " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
       abort();
     }
 
@@ -26,10 +25,10 @@ void OccupancyAndPh::makeSummaryAverage (const std::vector<OccupancyAndPh>* theO
       fOccupancy += theOccupancyVector->at(iContainer).fOccupancy * theNumberOfEnabledChannelsList[iContainer];
 
       if (theOccupancyVector->at(iContainer).fPhError > 0)
-	{
-	  fPh      += theOccupancyVector->at(iContainer).fPh * theNumberOfEnabledChannelsList[iContainer] / (theOccupancyVector->at(iContainer).fPhError * theOccupancyVector->at(iContainer).fPhError);
-	  fPhError += theNumberOfEnabledChannelsList[iContainer] / (theOccupancyVector->at(iContainer).fPhError * theOccupancyVector->at(iContainer).fPhError);
-	}
+        {
+          fPh      += theOccupancyVector->at(iContainer).fPh * theNumberOfEnabledChannelsList[iContainer] / (theOccupancyVector->at(iContainer).fPhError * theOccupancyVector->at(iContainer).fPhError);
+          fPhError += theNumberOfEnabledChannelsList[iContainer] / (theOccupancyVector->at(iContainer).fPhError * theOccupancyVector->at(iContainer).fPhError);
+        }
 
       totalNumberOfEnableChannels += theNumberOfEnabledChannelsList[iContainer];
     }

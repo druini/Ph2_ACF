@@ -10,32 +10,40 @@
 #ifndef RD53Latency_H
 #define RD53Latency_H
 
-#include "../Utils/Container.h"
-#include "../Utils/GenericDataVector.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-#include "Tool.h"
+#include "../DQMUtils/RD53LatencyHistograms.h"
+#include "RD53PixelAlive.h"
 
-#include "TApplication.h"
-#include "TH1F.h"
+
+// #############
+// # CONSTANTS #
+// #############
+#define RESULTDIR "Results" // Directory containing the results
 
 
 // ######################
 // # Latency test suite #
 // ######################
-class Latency : public Tool
+class Latency : public PixelAlive
 {
  public:
-  Latency(const char* fileRes, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t startValue, size_t stopValue, size_t nEvents);
-  ~Latency();
+  Latency (std::string fileRes,
+           std::string fileReg,
+           size_t rowStart,
+           size_t rowStop,
+           size_t colStart,
+           size_t colStop,
+           size_t startValue,
+           size_t stopValue,
+           size_t nEvents);
 
-  void run     ();
-  void draw    (bool display, bool save);
-  void analyze ();
+  void   run                 ();
+  void   draw                (bool display, bool save);
+  void   analyze             ();
+  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue + 1); }
 
  private:
-  const char* fileRes;
+  std::string fileRes;
+  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
@@ -43,25 +51,23 @@ class Latency : public Tool
   size_t startValue;
   size_t stopValue;
   size_t nEvents;
- 
+
   std::vector<uint16_t> dacList;
 
   DetectorDataContainer theContainer;
+  DetectorDataContainer theLatencyContainer;
 
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void save            ();
-  void scanDac         (const std::string& dacName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
+  void scanDac         (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
   void chipErrorReport ();
 
 
   // ########
   // # ROOT #
   // ########
-  TFile* theFile;
-  std::vector<TCanvas*> theCanvasLat;
-  std::vector<TH1F*>    theLat;
+  LatencyHistograms histos;
 };
 
 #endif

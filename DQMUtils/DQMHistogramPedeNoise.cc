@@ -35,7 +35,7 @@ DQMHistogramPedeNoise::~DQMHistogramPedeNoise ()
 
 
 //========================================================================================================================
-void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, uint32_t> pSettingsMap)
+void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap)
 {
 
     auto cSetting = pSettingsMap.find ( "PlotSCurves" );

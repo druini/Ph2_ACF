@@ -62,7 +62,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(${ROOT_FOUND})
         include_directories(${ROOT_INCLUDE_DIRS})
         set(LIBS ${LIBS} ${ROOT_LIBRARIES})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__USE_ROOT__")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_NO_USE_ROOT__")
 
         #check for THttpServer
         if(${ROOT_HAS_HTTP})
@@ -102,8 +102,8 @@ else()
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/uhal/uhal/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/uhal/log/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/uhal/grammars/include)
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/otsdaq-cmsinnertracker/Ph2_ACF)
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/extern/pugixml/RPMBUILD/SOURCES/include/)
+    #include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/otsdaq-cmsinnertracker/Ph2_ACF)
+    #include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/extern/pugixml/RPMBUILD/SOURCES/include/)
     
 
     cet_set_compiler_flags(

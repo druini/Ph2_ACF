@@ -2,119 +2,135 @@
 
 <HwDescription>
   <BeBoard Id="0" boardType="FC7" eventType="VR">
-    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
+    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.1.81:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
     <!---
-	<connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
+        <connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
     -->
-    
+
     <!-- Frontend chip configuration -->
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
       <RD53_Files path="./" />
-      <RD53 Id="0" configfile="CMSIT_RD53.txt" />
-      <Global>
-	<!-- Overwrite .txt configuration file settings -->
+
+      <RD53 Id="0" configfile="CMSIT_RD53.txt">
+        <!-- Overwrite .txt configuration file settings -->
         <Settings
-            EN_CORE_COL_SYNC       = "0"
-            EN_CORE_COL_LIN_1      = "65535"
-            EN_CORE_COL_LIN_2      =     "1"
-            EN_CORE_COL_DIFF_1     = "0"
-            EN_CORE_COL_DIFF_2     =     "0"
+            PA_IN_BIAS_LIN       =   "350"
+            FC_BIAS_LIN          =    "20"
+            KRUM_CURR_LIN        =    "29"
+            LDAC_LIN             =   "130"
+            COMP_LIN             =   "110"
+            REF_KRUM_LIN         =   "300"
+            Vthreshold_LIN       =   "400"
 
-            EN_MACRO_COL_CAL_LIN_1 = "65535"
-            EN_MACRO_COL_CAL_LIN_2 = "65535"
-            EN_MACRO_COL_CAL_LIN_3 = "65535"
-            EN_MACRO_COL_CAL_LIN_4 = "65535"
-            EN_MACRO_COL_CAL_LIN_5 =    "15"
-	    
-            PA_IN_BIAS_LIN         =   "350"
-	    FC_BIAS_LIN            =    "20"
-	    KRUM_CURR_LIN          =    "29"
-	    LDAC_LIN               =   "130"
-	    COMP_LIN               =   "110"
-	    REF_KRUM_LIN           =   "300"
-            Vthreshold_LIN         =   "400"
-			          
-	    VCAL_HIGH              =   "600"
-	    VCAL_MED               =   "100"
-			          
-	    INJECTION_SELECT       =     "0"
-            GP_LVDS_ROUTE          =     "1"
-            LATENCY_CONFIG         =   "136"
-            MONITOR_SELECT         =  "8203"
-	    CLK_DATA_DELAY         =     "0"
+            VCAL_HIGH            =   "600"
+            VCAL_MED             =   "100"
 
-	    LOCKLOSS_CNT           =     "0"
-	    BITFLIP_WNG_CNT        =     "0"
-	    BITFLIP_ERR_CNT        =     "0"
-	    CMDERR_CNT             =     "0"
-	    />
-	<!--
-	    MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
-	    CLK_DATA_DELAY: [8] clk phase; [7:4] clk delay; [3:0] data delay
-	-->
-      </Global>
+            INJECTION_SELECT     =    "12"
+            GP_LVDS_ROUTE        =     "0"
+            LATENCY_CONFIG       =   "136"
+            MONITOR_SELECT       =  "8203"
+            CLK_DATA_DELAY       =     "0"
+
+            VOLTAGE_TRIM         =   "528"
+            MONITOR_CONFIG       =     "0"
+            />
+        <!--
+            MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
+            CLK_DATA_DELAY: [8] clk phase; [7:4] clk delay; [3:0] data delay
+        -->
+      </RD53>
+
+      <Global
+          EN_CORE_COL_SYNC       =     "0"
+          EN_CORE_COL_LIN_1      = "65535"
+          EN_CORE_COL_LIN_2      =     "1"
+          EN_CORE_COL_DIFF_1     =     "0"
+          EN_CORE_COL_DIFF_2     =     "0"
+
+          EN_MACRO_COL_CAL_LIN_1 = "65535"
+          EN_MACRO_COL_CAL_LIN_2 = "65535"
+          EN_MACRO_COL_CAL_LIN_3 = "65535"
+          EN_MACRO_COL_CAL_LIN_4 = "65535"
+          EN_MACRO_COL_CAL_LIN_5 =    "15"
+
+          HITOR_0_MASK_SYNC      = "65535"
+          HITOR_1_MASK_SYNC      = "65535"
+          HITOR_2_MASK_SYNC      = "65535"
+          HITOR_3_MASK_SYNC      = "65535"
+
+          HITOR_0_MASK_DIFF_0    = "65535"
+          HITOR_0_MASK_DIFF_1    =     "1"
+          HITOR_1_MASK_DIFF_0    = "65535"
+          HITOR_1_MASK_DIFF_1    =     "1"
+          HITOR_2_MASK_DIFF_0    = "65535"
+          HITOR_2_MASK_DIFF_1    =     "1"
+          HITOR_3_MASK_DIFF_0    = "65535"
+          HITOR_3_MASK_DIFF_1    =     "1"
+
+          LOCKLOSS_CNT           =     "0"
+          BITFLIP_WNG_CNT        =     "0"
+          BITFLIP_ERR_CNT        =     "0"
+          CMDERR_CNT             =     "0"
+          />
     </Module>
 
     <!-- Configuration for backend readout board -->
     <Register name="user">
       <Register name="ctrl_regs">
-	<Register name="reset_reg">
-	  <Register name="i2c_rst"> 0x0 </Register>
-	</Register>
+        <Register name="reset_reg">
+          <Register name="i2c_rst"> 0x0 </Register>
+        </Register>
       </Register>
     </Register>
 
   </BeBoard>
-
-
-  <!--
-      Parameters for the calibration programs:
-      INJtype            = 0: analog;                INJtype                  = 1: digital
-      DisplayHisto       = 0: don't display;         DisplayHisto             = 1: display
-      nPixelInj          = 0: use RD53 prescription; nPixelInj               != 0: override RD53 prescription
-      ChipRegDefaultFile = 0: save on different file name; ChipRegDefaultFile = 1: save on same file name
-      ChipTargetCharge:       requested charge (electrons) per chip corresponding to half ToT range
-      PixelThresholdOcc:      number of acceptable hits per pixel
-      ChipTargetOcc:          total number of acceptable hits per chip
-  -->
-  <Settings>
-    <Setting name="nEvents">            100 </Setting>
-    <Setting name="nEvtsBurst">         100 </Setting>
-    <!-- For Noise and Threshold Minimization
-    <Setting name="nEvents">       10000000 </Setting>
-    <Setting name="nEvtsBurst">       10000 </Setting>
-    -->
-
-    <Setting name="NTRIGxL1A">            9 </Setting>
-    <Setting name="INJtype">              0 </Setting>
-
-    <Setting name="ROWstart">             0 </Setting>
-    <Setting name="ROWstop">            191 </Setting>
-    <Setting name="COLstart">           128 </Setting>
-    <Setting name="COLstop">            263 </Setting>
-    <!--
-    <Setting name="nPixelInj">           24 </Setting>
-    -->
-
-    <Setting name="LatencyStart">         0 </Setting>
-    <Setting name="LatencyStop">        511 </Setting>
-
-    <Setting name="VCALstart">          100 </Setting>
-    <Setting name="VCALstop">           500 </Setting>
-    <Setting name="VCALnsteps">          50 </Setting>
-    <Setting name="VCALoffset">         100 </Setting>
-
-    <Setting name="ChipTargetCharge"> 11000 </Setting>
-    <Setting name="KrumCurrStart">        0 </Setting>
-    <Setting name="KrumCurrStop">       127 </Setting>
-
-    <Setting name="PixelThresholdOcc">    1 </Setting>
-    <Setting name="ChipTargetOcc">    26112 </Setting>
-    <Setting name="ThrStart">           340 </Setting>
-    <Setting name="ThrStop">            440 </Setting>
-
-    <Setting name="DisplayHisto">         0 </Setting>
-    <Setting name="ChipRegDefaultFile">   1 </Setting>
-  </Settings>
-
 </HwDescription>
+
+
+<Settings>
+  <!--
+      === Calibration parameters ===
+      INJtype      = 0: analog;                                 INJtype      = 1: digital
+      DoFast       = 0: run on all pixels in the selected area; DoFast       = 1: run on a subset
+      DisplayHisto = 0: don't display;                          DisplayHisto = 1: display
+
+      TargetCharge: average charge (electrons) corresponding to ToT point = max value - 1
+      TargetOcc:    average fraction of acceptable hits per pixel
+  -->
+  <Setting name="nEvents">        100 </Setting>
+  <Setting name="nEvtsBurst">     100 </Setting>
+  <!-- For Noise and Threshold Minimization
+  <Setting name="nEvents">   10000000 </Setting>
+  <Setting name="nEvtsBurst">   10000 </Setting>
+  -->
+
+  <Setting name="nTRIGxEvent">     10 </Setting>
+  <Setting name="INJtype">          0 </Setting>
+
+  <Setting name="ROWstart">         0 </Setting>
+  <Setting name="ROWstop">        191 </Setting>
+  <Setting name="COLstart">       128 </Setting>
+  <Setting name="COLstop">        191 </Setting>
+
+  <Setting name="LatencyStart">     0 </Setting>
+  <Setting name="LatencyStop">    511 </Setting>
+
+  <Setting name="InjDelayStart">    0 </Setting>
+  <Setting name="InjDelayStop">    15 </Setting>
+
+  <Setting name="VCalHstart">     100 </Setting>
+  <Setting name="VCalHstop">      600 </Setting>
+  <Setting name="VCalHnsteps">     50 </Setting>
+  <Setting name="VCalMED">        100 </Setting>
+
+  <Setting name="TargetCharge"> 20000 </Setting>
+  <Setting name="KrumCurrStart">    0 </Setting>
+  <Setting name="KrumCurrStop">   127 </Setting>
+
+  <Setting name="TargetOcc">        1 </Setting>
+  <Setting name="ThrStart">       340 </Setting>
+  <Setting name="ThrStop">        440 </Setting>
+
+  <Setting name="DoFast">           0 </Setting>
+  <Setting name="DisplayHisto">     0 </Setting>
+</Settings>

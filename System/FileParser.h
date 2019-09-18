@@ -14,25 +14,17 @@
 #ifndef __FILEPARSER_H__
 #define __FILEPARSER_H__
 
-//#include "../HWInterface/ChipInterface.h"
-//#include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/BeBoardFWInterface.h"
 #include "../HWInterface/RD53FWInterface.h"
-// #include "../HWInterface/GlibFWInterface.h"
-// #include "../HWInterface/ICGlibFWInterface.h"
-// #include "../HWInterface/CtaFWInterface.h"
-// #include "../HWInterface/ICFc7FWInterface.h"
-// #include "../HWInterface/Cbc3Fc7FWInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
-// #include "../HWInterface/MPAGlibFWInterface.h"
 #include "../HWDescription/Definition.h"
+#include "../HWDescription/Chip.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/Exception.h"
 #include "../Utils/ConditionDataSet.h"
-#include "pugixml/pugixml.hpp"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/easylogging++.h"
-#include "../HWDescription/Chip.h"
+#include "pugixml.hpp"
 #include <iostream>
 #include <vector>
 #include <map>
@@ -49,8 +41,8 @@ using namespace Ph2_HwInterface;
  */
 namespace Ph2_System {
 
-    using BeBoardVec = std::vector<BeBoard*>;               /*!< Vector of Board pointers */
-    using SettingsMap = std::map<std::string, uint32_t>;    /*!< Maps the settings */
+    using BeBoardVec = std::vector<BeBoard*>;             /*!< Vector of Board pointers */
+    using SettingsMap = std::map<std::string, double>;    /*!< Maps the settings */
     using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>;    /*!< Map of Board connected */
 
     /*!

@@ -7,7 +7,6 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-
 #include "GainAndIntercept.h"
 
 void GainAndIntercept::makeSummaryAverage (const std::vector<GainAndIntercept>* theGainAndInterceptVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
@@ -15,25 +14,25 @@ void GainAndIntercept::makeSummaryAverage (const std::vector<GainAndIntercept>* 
   if (theGainAndInterceptVector->size() != theNumberOfEnabledChannelsList.size())
     {
       std::cout << __PRETTY_FUNCTION__ << "theGainAndInterceptVector size = " << theGainAndInterceptVector->size() 
-		<< " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
+                << " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
       abort();
     }
-    
+
   for (size_t iContainer = 0; iContainer<theGainAndInterceptVector->size(); iContainer++)
     {
       if (theGainAndInterceptVector->at(iContainer).fGainError > 0)
-	{
-	  fGain      += theGainAndInterceptVector->at(iContainer).fGain * theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fGainError * theGainAndInterceptVector->at(iContainer).fGainError);
-	  fGainError += theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fGainError * theGainAndInterceptVector->at(iContainer).fGainError);
-	}
-      
+        {
+          fGain      += theGainAndInterceptVector->at(iContainer).fGain * theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fGainError * theGainAndInterceptVector->at(iContainer).fGainError);
+          fGainError += theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fGainError * theGainAndInterceptVector->at(iContainer).fGainError);
+        }
+
       if (theGainAndInterceptVector->at(iContainer).fInterceptError > 0)
-	{
-	  fIntercept      += theGainAndInterceptVector->at(iContainer).fIntercept * theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fInterceptError * theGainAndInterceptVector->at(iContainer).fInterceptError);
-	  fInterceptError += theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fInterceptError * theGainAndInterceptVector->at(iContainer).fInterceptError);
-	}
+        {
+          fIntercept      += theGainAndInterceptVector->at(iContainer).fIntercept * theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fInterceptError * theGainAndInterceptVector->at(iContainer).fInterceptError);
+          fInterceptError += theNumberOfEnabledChannelsList[iContainer] / (theGainAndInterceptVector->at(iContainer).fInterceptError * theGainAndInterceptVector->at(iContainer).fInterceptError);
+        }
     }
-    
+
   if (fGainError > 0)
     {
       fGain     /= fGainError;

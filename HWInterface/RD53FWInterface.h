@@ -11,6 +11,8 @@
 #define RD53FWInterface_H
 
 #include "BeBoardFWInterface.h"
+#include "D19cFpgaConfig.h"
+#include "../Utils/RD53RunProgress.h"
 #include "../Utils/easylogging++.h"
 
 #include <uhal/uhal.hpp>
@@ -80,9 +82,6 @@ namespace Ph2_HwInterface
 {
   class RD53FWInterface: public BeBoardFWInterface
   {
-  private:
-    FileHandler* fFileHandler;
-
   public:
     RD53FWInterface (const char* pId, const char* pUri, const char* pAddressTable);
     virtual ~RD53FWInterface() { delete fFileHandler; }
@@ -119,7 +118,7 @@ namespace Ph2_HwInterface
     struct ChipFrame
     {
       ChipFrame(const uint32_t data0, const uint32_t data1);
-      
+
       uint16_t error_code;
       uint16_t hybrid_id;
       uint16_t chip_id;
@@ -131,14 +130,14 @@ namespace Ph2_HwInterface
     struct Event
     {
       Event(const uint32_t* data, size_t n);
-      
+
       uint16_t block_size;
       uint16_t tlu_trigger_id;
       uint16_t data_format_ver;
       uint16_t tdc;
       uint16_t l1a_counter;
       uint32_t bx_counter;
-      
+
       std::vector<ChipFrame>   chip_frames;
       std::vector<RD53::Event> chip_events;
 
@@ -160,7 +159,7 @@ namespace Ph2_HwInterface
       UserDefined,
       Undefined = 0
     };
-    
+
     enum class AutozeroSource : uint32_t
     {
       IPBus = 1,
@@ -168,17 +167,17 @@ namespace Ph2_HwInterface
       FreeRunning,
       Disabled = 0
     };
-    
+
     struct FastCmdFSMConfig
     {
       bool ecr_en        = false;
       bool first_cal_en  = false;
       bool second_cal_en = false;
       bool trigger_en    = false;
-      
+
       uint32_t first_cal_data  = 0;
       uint32_t second_cal_data = 0;
-      
+
       uint32_t delay_after_ecr        =  0;
       uint32_t delay_after_autozero   =  0;
       uint32_t delay_after_first_cal  =  0;
@@ -192,13 +191,13 @@ namespace Ph2_HwInterface
 
       uint32_t glb_pulse_data      = 0;
       uint32_t autozero_freq       = 0; // Used when autozero_source == AutozeroSource::UserDefined
-      uint32_t veto_after_autozero = 0; // Used when autozero_source == AutozeroSource::UserDefined      
+      uint32_t veto_after_autozero = 0; // Used when autozero_source == AutozeroSource::UserDefined
     };
-    
+
     struct FastCommandsConfig
     {
       TriggerSource trigger_source = TriggerSource::FastCMDFSM;
-      
+
       bool initial_ecr_en  = false;
       bool backpressure_en = false;
       bool veto_en         = false;
@@ -216,7 +215,9 @@ namespace Ph2_HwInterface
     struct DIO5Config
     {
       bool     enable             = false;
+      bool     ext_clk_en         = false;
       uint32_t ch_out_en          = 0;    // chn-1 = TLU clk input, chn-2 = ext. trigger, chn-3 = TLU busy, chn-4 = TLU reset, chn-5 = ext. clk
+      uint32_t fiftyohm_en        = 0;
       uint32_t ch1_thr            = 0x7F; // [thr/256*3.3V]
       uint32_t ch2_thr            = 0x7F;
       uint32_t ch3_thr            = 0x7F;
@@ -230,9 +231,23 @@ namespace Ph2_HwInterface
 
     FastCommandsConfig* getLoaclCfgFastCmd() { return &localCfgFastCmd; }
 
+    // ###########################################
+    // # Member functions to handle the firmware #
+    // ###########################################
+    void FlashProm                             (const std::string& strConfig, const char* pstrFile);
+    void JumpToFpgaConfig                      (const std::string& strConfig);
+    void DownloadFpgaConfig                    (const std::string& strConfig, const std::string& strDest);
+    std::vector<std::string> getFpgaConfigList ();
+    void DeleteFpgaConfig                      (const std::string& strId);
+    void checkIfUploading                      ();
+    void RebootBoard                           ();
+    const FpgaConfig* getConfiguringFpga       ();
+
   private:
+    FileHandler* fFileHandler;
     FastCommandsConfig localCfgFastCmd;
     void SendBoardCommand(const std::string& cmd_reg);
+    D19cFpgaConfig* fpgaConfig;
   };
 }
 

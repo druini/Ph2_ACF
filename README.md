@@ -1,4 +1,4 @@
-# CMS Ph2 ACF (Acquisition & Control Framework) 
+# CMS Ph2 ACF (Acquisition & Control Framework)
 
 
 ### Contains:
@@ -27,6 +27,138 @@ On this Repo, you can find different version of the software :
 Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
 You'll need Xilinx Impact and a [Xilinx Platform Cable USB II] (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
 For more information on the firmare, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware .
+
+
+### Middleware for the Inner-Tracker (IT) system
+
+Setup the FC7:
+1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
+2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
+3. Restart the network: `sudo /etc/init.d/network restart`
+4. Install and then restart the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo /etc/init.d/rarpd restart`
+5. To start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`
+
+Setup the firmware:
+1. Check whether the DIP switches on FC7 board are setup for the use of a microSD card (`out-in-in-in-out-in-in-in`)
+2. Insert a microSD card in the PC and run `/sbin/fdisk -l` to understand to which dev it's attached to (`/dev/sd_card_name`)
+3. Upload a golden firmware* on the microSD card (read FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
+4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/releases
+5. Plug the microSD card in the FC7
+6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware
+
+*A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap. If you use the `dd` command you need to convert the `bit` file into `img`
+
+Setup and run the IT-DAQ:
+1. `yum install pugixml-devel` (if necesary run `yum install epel-release` before point 1.)
+2. Install: `CERN ROOT` from https://root.cern.ch and `IPbus tools` from http://ipbus.web.cern.ch/ipbus (either using `yum` or from source)
+3. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
+4. Switch to the `chipPolymorhism` branch
+5. `cd Ph2_ACF; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
+6. `mkdir choose_a_name`
+7. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
+8. `cp settings/CMSIT.xml choose_a_name`
+9. `cd choose_a_name`
+10. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
+11. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the FC7 (just once)
+12. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
+
+The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking.
+Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
+```
+1. Latency scan
+2. PixelAlive
+3. Noise scan
+4. SCurve scan
+5. Gain scan
+6. Threshold equalization
+7. Gain optimization
+8. Threshold minimization
+9. Injection delay scan
+```
+It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
+```
+#!/bin/bash
+if [ $# -ne 1 ]
+then
+    echo "You should provide one, and only one, argument [step1, step2, step3, step4, step5, help]"
+elif [ $1 == "step1" ]
+then
+    time CMSIT_miniDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels
+    echo "noise" >> calibDone.txt
+
+    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive # Masks dead pixels
+    echo "pixelalive" >> calibDone.txt
+
+    time CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
+    echo "thrmin" >> calibDone.txt
+
+    echo "Choose whether to accept new threshold (i.e. copy it into the xml file(s))"
+    read -p "Press any key to continue... " -n1 -s
+    echo
+elif [ $1 == "step2" ]
+then
+    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
+    echo "scurve" >> calibDone.txt
+    echo "threqu" >> calibDone.txt
+
+    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    echo "scurve" >> calibDone.txt
+
+    time CMSIT_miniDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels @ new threshold
+    echo "noise" >> calibDone.txt
+
+    time CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
+    echo "thrmin" >> calibDone.txt
+
+    echo "Choose whether to accept new threshold (i.e. copy it into the xml file(s))"
+    read -p "Press any key to continue... " -n1 -s
+    echo
+elif [ $1 == "step3" ]
+then
+    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    echo "scurve" >> calibDone.txt
+
+    time CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
+    echo "gain" >> calibDone.txt
+
+    time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
+    echo "gainopt" >> calibDone.txt
+
+    echo "- Set nTRIGxEvent to 1 in the xml file(s)"
+    echo "- Set VCalHstart to minimum value above threshold distribution in the xml file(s)"
+    echo "- Set VCalHstop to MIP value in the xml file(s)"
+    read -p "Press any key to continue... " -n1 -s
+    echo
+elif [ $1 == "step4" ]
+then
+    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c injdelay
+    echo "latency" >> calibDone.txt
+    echo "injdelay" >> calibDone.txt
+    echo "pixelalive" >> calibDone.txt
+    echo "- Set LATENCY_CONFIG and INJECTION_SELECT, as tuned by the injdelay calibration, in the xml files(s)"
+    echo "- Set VCalHstart and VCalHstop to measure in-time threshold in the xml file(s)"
+    read -p "Press any key to continue... " -n1 -s
+    echo
+elif [ $1 == "step5" ]
+then
+    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    echo "scurve" >> calibDone.txt
+elif [ $1 == "help" ]
+then
+    echo "Available options are:"
+    echo "- step1 [noise + pixelalive + thrmin]"
+    echo "- step2 [(scurve)threqu + scurve + noise + thrmin]"
+    echo "- step3 [scurve + gain + gainopt]"
+    echo "- step4 [(latency)injdelay(pixelalive)]"
+    echo "- step5 [scurve]"
+else
+    echo "Argument not recognized: $1"
+fi
+```
+- Software git branch / tag : `chipPolymorphism` / `IT-v2.0`
+- Firmware tag: `2.5`
+- Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
+
 
 ### Setup on CC7 (Scroll down for instructions on setting up on SLC6)
 
@@ -189,76 +321,6 @@ Follow these instructions to install and compile the libraries:
           $> miniDQM --help
 
     to run the DQM code from the June '15 beamtest
-
-
-### Middleware for the Inner-Tracker (IT) system
-
-The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking. 
-Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
-```
-1. Latency scan
-2. PixelAlive
-3. Noise scan
-4. SCurve scan
-5. Gain scan
-6. Threshold equalization
-7. Gain optimization
-8. Threshold minimization
-```
-How to setup up and run the IT-system:
-1. `mkdir choose_a_name` under `Ph2_ACF`
-2. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
-3. `cp settings/CMSIT.xml choose_a_name`
-4. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-5. `cd choose_a_name`
-6. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the frontend chips (just once)
-7. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
-
-It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
-```
-#!/bin/bash                                                                                                                                                                                     
-if [ $1 == "step1" ]
-then
-    CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive
-    echo "pixelalive" >> calibDone.txt
-
-    CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
-    echo "gain" >> calibDone.txt
-
-    CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
-    echo "gainopt" >> calibDone.txt
-
-    CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
-    echo "thrmin" >> calibDone.txt
-
-    echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
-    read -p "Press any key to continue... " -n1 -s
-    echo
-elif [ $1 == "step2" ]
-then
-    CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
-    echo "threqu" >> calibDone.txt
-
-    CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
-    echo "scurve" >> calibDone.txt
-
-    CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
-    echo "thrmin" >> calibDone.txt
-
-    echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
-    read -p "Press any key to continue... " -n1 -s
-    echo
-elif [ $1 == "step3" ]
-then
-    CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
-    echo "scurve" >> calibDone.txt
-else
-    echo "Option non recognized: $1"
-    echo "Available options are: step1 [pixelalive + gain + gainopt + thrmin], step2 [threqu + scurve + thrmin], step3 [scurve]"
-fi
-```
-- Software git branch / tag : `chipPolymorphism` / `IT-v1.7`
-- Firmware tag: `2.5`
 
 
 ### Nota Bene:

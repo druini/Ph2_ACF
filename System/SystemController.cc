@@ -150,10 +150,10 @@ namespace Ph2_System {
 
         fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
         if (fBoardVector[0]->getBoardType() != BoardType::FC7)
-            fReadoutChipInterface  = new CbcInterface     ( fBeBoardFWMap );
+            fReadoutChipInterface = new CbcInterface  ( fBeBoardFWMap );
         else
-            fReadoutChipInterface  = new RD53Interface    ( fBeBoardFWMap );
-        fMPAInterface     = new MPAInterface     ( fBeBoardFWMap );
+            fReadoutChipInterface = new RD53Interface ( fBeBoardFWMap );
+        fMPAInterface = new MPAInterface ( fBeBoardFWMap );
 
         if (fWriteHandlerEnabled)
             this->initializeFileHandler();
@@ -194,27 +194,28 @@ namespace Ph2_System {
                 }
 	      fBeBoardInterface->ChipReSync ( cBoard );
           LOG (INFO) << BOLDGREEN << "Successfully sent resync." << RESET;
-	    }
-	    else
+	  }
+	  else
 	    {
 	      // ######################################
 	      // # Configuring Inner Tracker hardware #
 	      // ######################################
 	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fReadoutChipInterface);
-
+	      
 	      LOG (INFO) << BOLDGREEN << "\t--> Found an Inner Tracker board" << RESET;
-	      LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << int (cBoard->getBeId()) << RESET;
+	      LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << +cBoard->getBeId() << RESET;
 	      fBeBoardInterface->ConfigureBoard (cBoard);
-
+	      
 	      for (const auto& cModule : cBoard->fModuleVector)
-            {
-            LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << int (cModule->getModuleId()) << RESET;
-            for (const auto& cRD53 : cModule->fReadoutChipVector)
-                {
-                LOG (INFO) << GREEN << "Configuring RD53 " << BOLDYELLOW << int (cRD53->getChipId()) << RESET;
-                fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));
-                }
-            }
+		{
+		  LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << +cModule->getModuleId() << RESET;
+		  for (const auto& cRD53 : cModule->fReadoutChipVector)
+		    {
+		      LOG (INFO) << GREEN << "Configuring RD53 " << BOLDYELLOW << +cRD53->getChipId() << RESET;
+		      fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));
+		      LOG (INFO) << BOLDGREEN << "\t--> Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
+		    }
+		}
 	      
 	      LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
 	      bool commGood = fBeBoardInterface->InitChipCommunication(cBoard);
@@ -222,7 +223,7 @@ namespace Ph2_System {
 	      else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication to all chips" << RESET;
 	    }
 	}
-    } 
+    }
 
 
     void SystemController::initializeFileHandler()

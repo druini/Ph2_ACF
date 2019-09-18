@@ -107,8 +107,8 @@ template <typename T>
 class ChannelContainer: public std::vector<T>, public ChannelContainerBase
 {
 public:
-	ChannelContainer(uint16_t size) : std::vector<T>(size) {}
-	ChannelContainer(uint16_t size, T initialValue) : std::vector<T>(size, initialValue) {}
+	ChannelContainer(uint32_t size) : std::vector<T>(size) {}
+	ChannelContainer(uint32_t size, T initialValue) : std::vector<T>(size, initialValue) {}
 	ChannelContainer(){}
 
 	T& getChannel(unsigned int channel) {return this->at(channel);}

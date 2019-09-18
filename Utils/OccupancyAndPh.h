@@ -7,10 +7,10 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef _OccupancyAndPh_h_
-#define _OccupancyAndPh_h_
+#ifndef OccupancyAndPh_H
+#define OccupancyAndPh_H
 
-#include "../Utils/Container.h"
+#include "Container.h"
 
 #include <iostream>
 #include <cmath>
@@ -19,23 +19,26 @@
 class OccupancyAndPh
 {
  public:
- OccupancyAndPh() : fOccupancy(0), fPh(0), fPhError(0) {}
-  ~OccupancyAndPh()                                    {}
+  OccupancyAndPh  () : fOccupancy(0), fPh(0), fPhError(0), isEnabled(false), readoutError(false) {}
+  ~OccupancyAndPh ()                                                                             {}
 
   void print(void)
   {
     std::cout << fOccupancy << "\t" << fPh << std::endl;
   }
-  
+
   template<typename T>
     void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
   void makeSummaryAverage   (const std::vector<OccupancyAndPh>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
-  void normalize     (const uint32_t numberOfEvents);
-  
+  void normalize            (const uint32_t numberOfEvents);
+
   float fOccupancy;
 
   float fPh;
   float fPhError;
+
+  bool isEnabled;
+  bool readoutError;
 };
 
 template<>
@@ -46,17 +49,17 @@ inline void OccupancyAndPh::makeChannelAverage<OccupancyAndPh> (const ChipContai
   for (auto row = 0u; row < theChipContainer->getNumberOfRows(); row++)
     for (auto col = 0u; col < theChipContainer->getNumberOfCols(); col++)
       if (chipOriginalMask->isChannelEnabled(row,col) && cTestChannelGroup->isChannelEnabled(row,col))
-	{
-	  fOccupancy += theChipContainer->getChannel<OccupancyAndPh>(row,col).fOccupancy;
-	  
-	  if (theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError > 0)
-	    {
-	      fPh      += theChipContainer->getChannel<OccupancyAndPh>(row,col).fPh / (theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError * theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError);
-	      fPhError += 1./(theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError * theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError);
-	    }
+        {
+          fOccupancy += theChipContainer->getChannel<OccupancyAndPh>(row,col).fOccupancy;
 
-	  numberOfEnabledChannels++;
-	}
+          if (theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError > 0)
+            {
+              fPh      += theChipContainer->getChannel<OccupancyAndPh>(row,col).fPh / (theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError * theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError);
+              fPhError += 1./(theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError * theChipContainer->getChannel<OccupancyAndPh>(row,col).fPhError);
+            }
+
+          numberOfEnabledChannels++;
+        }
 
   fOccupancy /= numberOfEnabledChannels;
 

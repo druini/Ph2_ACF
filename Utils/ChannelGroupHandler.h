@@ -87,9 +87,12 @@ public:
     
     inline void setCustomPattern  (const ChannelGroup<R,C> &customChannelGroup)       
     { 
-        channelsBitset_          = customChannelGroup.channelsBitset_; 
+        channelsBitset_          = customChannelGroup.channelsBitset_;
         customPatternSet_        = true                              ;
         numberOfEnabledChannels_ = channelsBitset_.count()           ;
+
+        numberOfRows_            = customChannelGroup.numberOfRows_  ;
+        numberOfCols_            = customChannelGroup.numberOfCols_  ;
     }
 
     virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster=1) const override
@@ -105,6 +108,10 @@ public:
 
         uint32_t numberOfClusterToSkip = numberOfEnabledChannels_ / (numberOfRowsPerCluster*numberOfColsPerCluster*numberOfClustersPerGroup) - 1;
         if(numberOfEnabledChannels_ % (numberOfRowsPerCluster*numberOfColsPerCluster*numberOfClustersPerGroup) > 0) ++numberOfClusterToSkip;
+
+        std::cout << "numberOfClustersPerGroup = " << numberOfClustersPerGroup << "\n";
+
+        std::cout << "numberOfClusterToSkip = " << numberOfClusterToSkip << "\n";
 
         uint32_t clusterSkipped = numberOfClusterToSkip - groupNumber;
         for(uint16_t col = 0; col<numberOfCols_; col+=numberOfColsPerCluster)
@@ -132,7 +139,7 @@ public:
     }
 
 private:
-    std::bitset<R*C> channelsBitset_         ;
+    std::bitset<R*C> channelsBitset_;
 };
 
 
@@ -167,7 +174,7 @@ public:
             return groupNumber_ != rhs.groupNumber_;
         }
 
-    private:
+    protected:
         ChannelGroupHandler& channelGroupHandler_;
         uint32_t             groupNumber_        ;
     };
@@ -176,7 +183,7 @@ public:
     ChannelGroupHandler(){};
     virtual ~ChannelGroupHandler(){};
 
-    void setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster=1);
+    virtual void setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster=1);
 
     template<size_t R, size_t C>
     void setCustomChannelGroup(ChannelGroup<R,C> &customChannelGroup)
@@ -185,12 +192,12 @@ public:
     }
 
 
-    ChannelGroupIterator begin()
+    virtual ChannelGroupIterator begin()
     {
         return ChannelGroupIterator(*this,0);
     }
 
-    ChannelGroupIterator end()
+    virtual ChannelGroupIterator end()
     {
         return ChannelGroupIterator(*this,numberOfGroups_);
     }
@@ -200,13 +207,10 @@ public:
         return allChannelGroup_;
     }
 
-
-
-protected:
     virtual ChannelGroupBase* getTestGroup(uint32_t groupNumber) const
     {
-        allChannelGroup_->makeTestGroup(currentChannelGroup_, groupNumber, numberOfClustersPerGroup_, numberOfRowsPerCluster_,numberOfColsPerCluster_);
-        return currentChannelGroup_;
+      allChannelGroup_->makeTestGroup(currentChannelGroup_, groupNumber, numberOfClustersPerGroup_, numberOfRowsPerCluster_,numberOfColsPerCluster_);
+      return currentChannelGroup_;
     }
 
 protected:
@@ -219,91 +223,4 @@ protected:
 
 };
 
-
-
-
-// class CBCChannelGroupHandler : public ChannelGroupHandler
-// {
-
-// public:
-
-//     CBCChannelGroupHandler()
-//     {
-//         allChannelGroup_     = new ChannelGroup<CBCNumberOfChannels,1>();
-//         currentChannelGroup_ = new ChannelGroup<CBCNumberOfChannels,1>();
-//     };
-//     ~CBCChannelGroupHandler()
-//     {
-//         delete allChannelGroup_    ;
-//         delete currentChannelGroup_;
-//     };
-// };
-
-
-
-// class RD53ChannelGroupHandler : public ChannelGroupHandler
-// {
-
-// public:
-//     class ChannelGroupRD53 : public ChannelGroup<RD53NumberOfCols,RD53NumberOfRows>
-//     {
-//     public:
-//         ChannelGroupRD53(){}
-//         ~ChannelGroupRD53(){}
-
-//         std::string getBitset (void) const override 
-//         { 
-//             std::string output;
-//             std::string bitsetString = channelsBitset_.to_string();
-//             for(int row=0; row<numberOfRows_; ++row)
-//                 output += (bitsetString.substr(row*numberOfCols_,numberOfCols_) + "\n");
-//             return output;           
-//         };
-
-//     };
-
-//     RD53ChannelGroupHandler()
-//     {
-//         allChannelGroup_     = new ChannelGroupRD53();
-//         currentChannelGroup_ = new ChannelGroupRD53();
-//     };
-//     ~RD53ChannelGroupHandler()
-//     {
-//         delete allChannelGroup_    ;
-//         delete currentChannelGroup_;
-//     };
-// };
-
-
-
-
-// int main()
-// {
-
-//     ChannelGroupHandler *theCBCChannelGroupHandler = new CBCChannelGroupHandler();
-//     theCBCChannelGroupHandler->setChannelGroupParameters(16, 2);
-
-//     for( auto group : *theCBCChannelGroupHandler)
-//         std::cout<<":\n"<<static_cast<const ChannelGroupHandler::ChannelGroup<CBCNumberOfChannels,1>*>(group)->getBitset()<<std::endl;
-    
-//     std::cout<<":\n"<<static_cast<const ChannelGroupHandler::ChannelGroup<CBCNumberOfChannels,1>*>(theCBCChannelGroupHandler->allChannelGroup())->getBitset()<<std::endl;
-
-//     delete theCBCChannelGroupHandler;
-
-
-//     ChannelGroupHandler *theRD53ChannelGroupHandler = new RD53ChannelGroupHandler();
-//     theRD53ChannelGroupHandler->setChannelGroupParameters(100, 2, 1);
-
-//     for( auto group : *theRD53ChannelGroupHandler)
-//         std::cout<<":\n"<<static_cast<const RD53ChannelGroupHandler::ChannelGroupRD53*>(group)->getBitset()<<std::endl;
-
-//     std::cout<<":\n"<<static_cast<const RD53ChannelGroupHandler::ChannelGroupRD53*>(theRD53ChannelGroupHandler->allChannelGroup())->getBitset()<<std::endl;
-    
-//     delete theRD53ChannelGroupHandler;
-
-//     return 0;
-// }
-
 #endif
-
-

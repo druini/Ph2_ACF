@@ -459,7 +459,7 @@ void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool
 
 	if ( pDate ) nDirname +=  currentDateTime();
 
-	LOG (INFO)  << "Creating directory: " << nDirname  ;
+	LOG (INFO) << BOLDGREEN << "Creating directory: " << BOLDYELLOW << nDirname << RESET;
 	std::string cCommand = "mkdir -p " + nDirname;
 
 	try
@@ -499,7 +499,7 @@ void Tool::InitResultFile ( const std::string& pFilename )
 
 void Tool::CloseResultFile()
 {
-	LOG (INFO) << BOLDRED << "closing result file!" << RESET;
+  LOG (INFO) << BOLDGREEN << "Closing result file" << RESET;
 
 	if (fResultFile)
 		fResultFile->Close();
@@ -1099,11 +1099,11 @@ void Tool::setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string &d
 }
 
 // measure occupancy
-void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
+void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, uint32_t numberOfTriggersPerEvent)
 {
 	for(unsigned int boardIndex=0; boardIndex<fDetectorContainer->size(); boardIndex++)
 	{
-		measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+	  measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst, numberOfTriggersPerEvent);
 		// if(fStreamerEnabled) fObjectStream->streamAndSendBoard(fDetectorDataContainer->at(boardIndex), fNetworkStreamer);
 	}
 
@@ -1222,8 +1222,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 	{
 	    for(auto group : *fChannelGroupHandler)
 	    {
-
-	        if(fMaskChannelsFromOtherGroups || fTestPulse)
+	      if(fMaskChannelsFromOtherGroups || fTestPulse)
 	        {
 	            for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
 	            {
@@ -1309,15 +1308,14 @@ private:
 
 };
 
-void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
+void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, uint32_t numberOfTriggersPerEvent)
 {
 	MeasureBeBoardDataPerGroup theScan(this);
 	theScan.setDataContainer(fDetectorDataContainer);
 
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
 
-	fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
-
+    fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents*numberOfTriggersPerEvent);
 }
 
 
