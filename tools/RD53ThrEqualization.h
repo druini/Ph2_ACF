@@ -23,7 +23,8 @@
 // #############
 // # CONSTANTS #
 // #############
-#define TARGETEFF 0.50 // Target efficiency for optimization algorithm
+#define TARGETEFF 0.50      // Target efficiency for optimization algorithm
+#define RESULTDIR "Results" // Directory containing the results
 
 
 // #####################################
@@ -32,22 +33,34 @@
 class ThrEqualization : public Tool
 {
  public:
-  ThrEqualization (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst);
+  ThrEqualization (std::string fileRes,
+                   std::string fileReg,
+                   size_t rowStart,
+                   size_t rowStop,
+                   size_t colStart,
+                   size_t colStop,
+                   size_t nEvents,
+                   size_t nEvtsBurst);
 
   void   run                 (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
   void   draw                (bool display, bool save);
-  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(false)*6 * nEvents/nEvtsBurst; }
+  size_t getNumberIterations ()
+  {
+    uint16_t nBitTDAC       = 4;
+    uint16_t moreIterations = 2;
+    return RD53ChannelGroupHandler::getNumberOfGroups(RD53GroupType::AllGroups)*(nBitTDAC + moreIterations) * nEvents/nEvtsBurst;
+  }
 
  private:
-  const char* fileRes;
-  const char* fileReg;
+  std::string fileRes;
+  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
   size_t colStop;
   size_t nEvents;
-  size_t nEvtsBurst;  
-  
+  size_t nEvtsBurst;
+
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   DetectorDataContainer theOccContainer;
   DetectorDataContainer theTDACcontainer;
@@ -55,14 +68,14 @@ class ThrEqualization : public Tool
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
+  void bitWiseScan     (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
   void chipErrorReport ();
 
 
   // ########
   // # ROOT #
   // ########
-  RD53ThrEqualizationHistograms histos;
+  ThrEqualizationHistograms histos;
 };
 
 #endif

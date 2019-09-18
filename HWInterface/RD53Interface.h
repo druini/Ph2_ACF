@@ -18,7 +18,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define VCALSLEEP 50000 // [microseconds]                                                                                                                                          
+#define VCALSLEEP 50000 // [microseconds]
 #define NPIXCMD      40 // Number of pixel commands to stack
 
 namespace Ph2_HwInterface
@@ -31,8 +31,8 @@ namespace Ph2_HwInterface
     bool     ConfigureChip                     (const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                override;
     bool     WriteChipReg                      (Chip* pChip, const std::string& pRegNode, uint16_t data, bool pVerifLoop = true)                     override;
     bool     WriteChipMultReg                  (Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop = true) override;
-    bool     WriteChipAllLocalReg              (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true)       override;
-    void     ReadChipAllLocalReg               (ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue)                               override;
+    bool     WriteChipAllLocalReg              (ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue, bool pVerifLoop = true)       override;
+    void     ReadChipAllLocalReg               (ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue)                               override;
     uint16_t ReadChipReg                       (Chip* pChip, const std::string& pRegNode)                                                            override;
     bool     ConfigureChipOriginalMask         (ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                               override;
     bool     MaskAllChannels                   (ReadoutChip* pChip, bool mask, bool pVerifLoop = true)                                               override;

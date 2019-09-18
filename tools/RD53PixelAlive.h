@@ -19,30 +19,56 @@
 #include "TApplication.h"
 
 
+// #############
+// # CONSTANTS #
+// #############
+#define RESULTDIR "Results" // Directory containing the results
+
+
 // #########################
 // # PixelAlive test suite #
 // #########################
 class PixelAlive : public Tool
 {
  public:
-  PixelAlive (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, size_t nTRIGxL1A, bool inject, float thresholdOccupancy = 0);
+  PixelAlive (std::string fileRes,
+              std::string fileReg,
+              size_t rowStart,
+              size_t rowStop,
+              size_t colStart,
+              size_t colStop,
+              size_t nEvents,
+              size_t nEvtsBurst,
+              size_t nTRIGxEvent,
+              bool   inject,
+              bool   doFast = false,
+              float  thresholdOccupancy = 0);
+
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
   void run                                       ();
   void draw                                      (bool display, bool save);
   std::shared_ptr<DetectorDataContainer> analyze ();
-  size_t getNumberIterations                     () { return RD53ChannelGroupHandler::getNumberOfGroups(!inject) * nEvents/nEvtsBurst; }
+  size_t getNumberIterations                     ()
+  {
+    return RD53ChannelGroupHandler::getNumberOfGroups(inject == true ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels) *
+      nEvents/nEvtsBurst;
+  }
 
  private:
-  const char* fileRes;
-  const char* fileReg;
+  std::string fileRes;
+  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
   size_t colStop;
   size_t nEvents;
-  size_t nTRIGxL1A;
+  size_t nTRIGxEvent;
   size_t nEvtsBurst;
   bool   inject;
+  bool   doFast;
   float  thresholdOccupancy;
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
@@ -57,7 +83,7 @@ class PixelAlive : public Tool
   // ########
   // # ROOT #
   // ########
-  RD53PixelAliveHistograms histos;
+  PixelAliveHistograms histos;
 };
 
 #endif

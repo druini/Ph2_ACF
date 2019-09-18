@@ -1,6 +1,6 @@
 /*!
-  \file                  HistContainer.h
-  \brief                 Header file of histogram container
+  \file                  CanvasContainer.h
+  \brief                 Header file of canvas container
   \author                Alkiviadis PAPADOPOULOS
   \version               1.0
   \date                  28/06/18
@@ -8,49 +8,62 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef HistContainer_H
-#define HistContainer_H
+#ifndef CanvasContainer_H
+#define CanvasContainer_H
 
+#include "PlotContainer.h"
 #include "../Utils/Container.h"
-#include "../RootUtils/PlotContainer.h"
+
+#include <TCanvas.h>
 
 #include <iostream>
 
 
 template <class Hist>
-class HistContainer : public PlotContainer
+class CanvasContainer : public PlotContainer
 {
  public:
- HistContainer() : fTheHistogram(nullptr) {}
+ CanvasContainer() : fTheHistogram(nullptr), fCanvas(nullptr) {}
 
-  HistContainer (const HistContainer<Hist>& container) = delete;
-  HistContainer<Hist>& operator= (const HistContainer<Hist>& container) = delete;
+  CanvasContainer (const CanvasContainer<Hist>& container) = delete;
+  CanvasContainer<Hist>& operator= (const CanvasContainer<Hist>& container) = delete;
 
   template <class... Args>
-    HistContainer (Args... args)
+    CanvasContainer (Args... args)
     {
       fTheHistogram = new Hist(args...);
       fTheHistogram->SetDirectory(0);
+      fCanvas       = nullptr;
     }
 
-  ~HistContainer() 
+  ~CanvasContainer()
     {
-      if (fHasToBeDeletedManually) delete fTheHistogram;
+      if (fHasToBeDeletedManually == true)
+        {
+          delete fTheHistogram;
+          if (fCanvas != nullptr) delete fCanvas;
+        }
+
       fTheHistogram = nullptr;
+      fCanvas       = nullptr;
     }
 
-  HistContainer (HistContainer<Hist>&& container)
+  CanvasContainer (CanvasContainer<Hist>&& container)
     {
       fHasToBeDeletedManually = container.fHasToBeDeletedManually;
       fTheHistogram           = container.fTheHistogram;
       container.fTheHistogram = nullptr;
+      fCanvas                 = container.fCanvas;
+      container.fCanvas       = nullptr;
     }
 
-  HistContainer<Hist>& operator= (HistContainer<Hist>&& container)
+  CanvasContainer<Hist>& operator= (CanvasContainer<Hist>&& container)
     {
       fHasToBeDeletedManually = container.fHasToBeDeletedManually;
       fTheHistogram           = container.fTheHistogram;
       container.fTheHistogram = nullptr;
+      fCanvas                 = container.fCanvas;
+      container.fCanvas       = nullptr;
       return *this;
     }
 
@@ -58,40 +71,45 @@ class HistContainer : public PlotContainer
   {
     fHasToBeDeletedManually = false;
 
-    fTheHistogram = new Hist(*(static_cast<const HistContainer<Hist>*>(reference)->fTheHistogram));
+    fCanvas = new TCanvas(name.data(), title.data());
 
+    fTheHistogram = new Hist(*(static_cast<const CanvasContainer<Hist>*>(reference)->fTheHistogram));
     fTheHistogram->SetName(name.data());
     fTheHistogram->SetTitle(title.data());
+    fTheHistogram->SetDirectory(0);
+
+    gDirectory->Append(fCanvas);
   }
 
   void print (void)
-  { 
-    std::cout << "HistContainer " << fTheHistogram->GetName() << std::endl;
+  {
+    std::cout << "CanvasContainer " << fTheHistogram->GetName() << std::endl;
   }
-  
+
   template<typename T>
     void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
-  
-  void makeSummaryAverage (const std::vector<HistContainer<Hist>>* theTH1FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
-  
+
+  void makeSummaryAverage (const std::vector<CanvasContainer<Hist>>* theTH1FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
+
   void normalize (const uint32_t numberOfEvents) {}
-  
+
   void setNameTitle (std::string histogramName, std::string histogramTitle) override 
   {
     fTheHistogram->SetNameTitle(histogramName.data(), histogramTitle.data());
   }
-  
+
   std::string getName() const override
     {
       return fTheHistogram->GetName();
     }
-  
+
   std::string getTitle() const override
     {
       return fTheHistogram->GetTitle();
     }
-  
-  Hist* fTheHistogram;
+
+  Hist*    fTheHistogram;
+  TCanvas* fCanvas;
 };
 
 #endif

@@ -1,24 +1,23 @@
 /*!
-  \file                  RD53GainOptimizationHistograms.h
-  \brief                 Header file of Gain optimization calibration histograms
-  \author                Alkiviadis PAPADOPOULOS
+  \file                  RD53InjectionDelayHistograms.h
+  \brief                 Header file of InjectionDelay calibration histograms
+  \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to alkiviadis.papadopoulos@cern.ch
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef RD53GainOptimizationHistograms_H
-#define RD53GainOptimizationHistograms_H
+#ifndef RD53InjectionDelayHistograms_H
+#define RD53InjectionDelayHistograms_H
 
 #include "../System/SystemController.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
-#include <TH2F.h>
 
 
-class GainOptimizationHistograms : public DQMHistogramBase
+class InjectionDelayHistograms : public DQMHistogramBase
 {
  public:
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
@@ -26,10 +25,14 @@ class GainOptimizationHistograms : public DQMHistogramBase
   bool fill    (std::vector<char>& dataBuffer)                                                                             override { return false; };
   void reset   (void)                                                                                                      override {};
 
-  void fill    (const DetectorDataContainer& data);
+  void fill    (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& InjectionDelayContainer);
 
  private:
-  DetectorDataContainer KrumCurr;
+  DetectorDataContainer Occupancy1D;
+  DetectorDataContainer InjectionDelay;
+
+  size_t startValue;
+  size_t stopValue;
 };
 
 #endif

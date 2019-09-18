@@ -12,28 +12,25 @@
 #define RD53LatencyHistograms_H
 
 #include "../System/SystemController.h"
-#include "../Utils/GenericDataVector.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
-#include <TH2F.h>
 
 
-class RD53LatencyHistograms : public DQMHistogramBase
+class LatencyHistograms : public DQMHistogramBase
 {
  public:
- RD53LatencyHistograms (size_t startValue, size_t stopValue) : startValue(startValue), stopValue(stopValue) {}
-
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
   void process ()                                                                                                          override;
   bool fill    (std::vector<char>& dataBuffer)                                                                             override { return false; };
   void reset   (void)                                                                                                      override {};
 
-  void fill    (const DetectorDataContainer& data);
+  void fill    (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& LatencyContainer);
 
  private:
   DetectorDataContainer Occupancy1D;
-  
+  DetectorDataContainer Latency;
+
   size_t startValue;
   size_t stopValue;
 };

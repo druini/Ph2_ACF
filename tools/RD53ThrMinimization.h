@@ -14,45 +14,66 @@
 #include "RD53PixelAlive.h"
 
 
+// #############
+// # CONSTANTS #
+// #############
+#define RESULTDIR "Results" // Directory containing the results
+
+
 // #####################################
 // # Threshold minimization test suite #
 // #####################################
 class ThrMinimization : public PixelAlive
 {
  public:
-  ThrMinimization  (const char* fileRes, const char* fileReg, size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nEvents, size_t nEvtsBurst, float targetOccupancy, size_t ThrStart = 0, size_t ThrStop = 0);
+  ThrMinimization (std::string fileRes,
+                   std::string fileReg,
+                   size_t rowStart,
+                   size_t rowStop,
+                   size_t colStart,
+                   size_t colStop,
+                   size_t nEvents,
+                   size_t nEvtsBurst,
+                   float  targetOccupancy,
+                   size_t ThrStart,
+                   size_t ThrStop);
 
   void   run                 ();
   void   draw                (bool display, bool save);
   void   analyze             ();
-  size_t getNumberIterations () { return RD53ChannelGroupHandler::getNumberOfGroups(true)*floor(log2(ThrStop - ThrStart + 1) + 3) * nEvents/nEvtsBurst; }
+  size_t getNumberIterations ()
+  {
+    uint16_t nBitThr        = floor(log2(ThrStop - ThrStart + 1) + 1);
+    uint16_t moreIterations = 2;
+    return PixelAlive::getNumberIterations()*(nBitThr + moreIterations);
+  }
 
  private:
-  const char* fileRes;
-  const char* fileReg;
+  std::string fileRes;
+  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
   size_t colStop;
   size_t nEvents;
   size_t nEvtsBurst;
+  float  targetOccupancy;
   size_t ThrStart;
   size_t ThrStop;
-  float  targetOccupancy;
 
   DetectorDataContainer theThrContainer;
 
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void bitWiseScan     (const std::string& dacName, uint32_t nEvents, const float& target, uint16_t ThrStart, uint16_t ThrStop);
+  void bitWiseScan     (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
   void chipErrorReport ();
 
 
   // ########
   // # ROOT #
   // ########
-  RD53ThrMinimizationHistograms histos;
+  ThrMinimizationHistograms histos;
 };
 
 #endif

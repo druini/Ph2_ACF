@@ -13,7 +13,6 @@
 
 #include "../System/SystemController.h"
 #include "../Utils/GainAndIntercept.h"
-#include "../Utils/OccupancyAndPh.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
@@ -25,27 +24,21 @@
 #define INTERCEPT_HALFRANGE 6 // [ToT]
 
 
-class RD53GainHistograms : public DQMHistogramBase
+class GainHistograms : public DQMHistogramBase
 {
  public:
- RD53GainHistograms (int nEvents, int startValue, int stopValue, int nSteps)
-   : nEvents    (nEvents)
-   , nSteps     (nSteps)
-   , startValue (startValue)
-   , stopValue  (stopValue)
-  {}
-  
-  void book              (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
-  void process           ()                                                                                                          override;
-  bool fill              (std::vector<char>& dataBuffer)                                                                             override { return false; };
-  void reset             (void)                                                                                                      override {};
+  void book          (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
+  void process       ()                                                                                                          override;
+  bool fill          (std::vector<char>& dataBuffer)                                                                             override { return false; };
+  void reset         (void)                                                                                                      override {};
 
-  void fillOccupancy     (const DetectorDataContainer& data, int VCAL_HIGH);
-  void fillGainIntercept (const DetectorDataContainer& data);
+  void fill          (const DetectorDataContainer& data);
+  void fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL);
 
  private:
   DetectorDataContainer Occupancy2D;
-  DetectorDataContainer Error2D;
+  DetectorDataContainer ErrorReadOut2D;
+  DetectorDataContainer ErrorFit2D;
   DetectorDataContainer Gain1D;
   DetectorDataContainer Intercept1D;
   DetectorDataContainer Gain2D;
@@ -55,10 +48,7 @@ class RD53GainHistograms : public DQMHistogramBase
   size_t nSteps;
   size_t startValue;
   size_t stopValue;
-  size_t ROWstart;
-  size_t ROWstop;
-  size_t COLstart;
-  size_t COLstop;
+  size_t offset;
 };
 
 #endif

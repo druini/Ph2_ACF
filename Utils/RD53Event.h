@@ -11,9 +11,9 @@
 #define RD53Event_H
 
 #include "Event.h"
+#include "DataContainer.h"
 #include "OccupancyAndPh.h"
 #include "GenericDataVector.h"
-#include "../Utils/DataContainer.h"
 #include "../HWDescription/RD53.h"
 
 
@@ -27,9 +27,9 @@ namespace Ph2_HwInterface
       , chip_id_vec(std::move(chip_id))
       , chip_events(std::move(events))
       {}
-    
+
     void fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
-    
+
     // @TMP@ not implemented yet
     bool DataBit                     (uint8_t /*module_id*/, uint8_t chip_id, uint32_t channel_id) const         override {return false;}
     void SetEvent                    (const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list) override {}
@@ -51,7 +51,7 @@ namespace Ph2_HwInterface
     SLinkEvent GetSLinkEvent         (BeBoard* pBoard)               const override { return SLinkEvent(); }
     std::vector<Cluster> getClusters (uint8_t pFeId, uint8_t pCbcId) const override { return std::vector<Cluster>(); }
 
-  
+
   private:
     bool isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const;
 

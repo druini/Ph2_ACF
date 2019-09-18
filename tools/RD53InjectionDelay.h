@@ -1,16 +1,16 @@
 /*!
-  \file                  RD53Latency.h
-  \brief                 Implementaion of Latency scan
+  \file                  RD53InjectionDelay.h
+  \brief                 Implementaion of Injection Delay scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef RD53Latency_H
-#define RD53Latency_H
+#ifndef RD53InjectionDelay_H
+#define RD53InjectionDelay_H
 
-#include "../DQMUtils/RD53LatencyHistograms.h"
+#include "../DQMUtils/RD53InjectionDelayHistograms.h"
 #include "RD53PixelAlive.h"
 
 
@@ -20,21 +20,22 @@
 #define RESULTDIR "Results" // Directory containing the results
 
 
-// ######################
-// # Latency test suite #
-// ######################
-class Latency : public PixelAlive
+// ##############################
+// # Injection delay test suite #
+// ##############################
+class InjectionDelay : public PixelAlive
 {
  public:
-  Latency (std::string fileRes,
-           std::string fileReg,
-           size_t rowStart,
-           size_t rowStop,
-           size_t colStart,
-           size_t colStop,
-           size_t startValue,
-           size_t stopValue,
-           size_t nEvents);
+  InjectionDelay (std::string fileRes,
+                  std::string fileReg,
+                  size_t rowStart,
+                  size_t rowStop,
+                  size_t colStart,
+                  size_t colStop,
+                  size_t startValue,
+                  size_t stopValue,
+                  size_t nEvents,
+                  bool   doFast = true);
 
   void   run                 ();
   void   draw                (bool display, bool save);
@@ -51,11 +52,12 @@ class Latency : public PixelAlive
   size_t startValue;
   size_t stopValue;
   size_t nEvents;
+  bool   doFast;
 
   std::vector<uint16_t> dacList;
 
   DetectorDataContainer theContainer;
-  DetectorDataContainer theLatencyContainer;
+  DetectorDataContainer theInjectionDelayContainer;
 
   void initHisto       ();
   void fillHisto       ();
@@ -67,7 +69,7 @@ class Latency : public PixelAlive
   // ########
   // # ROOT #
   // ########
-  LatencyHistograms histos;
+  InjectionDelayHistograms histos;
 };
 
 #endif

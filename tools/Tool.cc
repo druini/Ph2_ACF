@@ -459,7 +459,7 @@ void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool
 
 	if ( pDate ) nDirname +=  currentDateTime();
 
-	LOG (INFO)  << "Creating directory: " << nDirname  ;
+	LOG (INFO) << BOLDGREEN << "Creating directory: " << BOLDYELLOW << nDirname << RESET;
 	std::string cCommand = "mkdir -p " + nDirname;
 
 	try
@@ -499,7 +499,7 @@ void Tool::InitResultFile ( const std::string& pFilename )
 
 void Tool::CloseResultFile()
 {
-	LOG (INFO) << BOLDRED << "closing result file!" << RESET;
+  LOG (INFO) << BOLDGREEN << "Closing result file" << RESET;
 
 	if (fResultFile)
 		fResultFile->Close();

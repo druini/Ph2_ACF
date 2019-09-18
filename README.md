@@ -1,4 +1,4 @@
-# CMS Ph2 ACF (Acquisition & Control Framework) 
+# CMS Ph2 ACF (Acquisition & Control Framework)
 
 
 ### Contains:
@@ -32,19 +32,21 @@ For more information on the firmare, please check the doc directory of https://g
 ### Middleware for the Inner-Tracker (IT) system
 
 Setup the FC7:
-1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of of the ethernet card of your PC to which the FC7 is connected to)
+1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
 3. Restart the network: `sudo /etc/init.d/network restart`
-4. Install and then restart the rarpd daemon (CENTOS6 or Fedora should work just fine even for CENTOS7): `sudo /etc/init.d/rarpd restart`
+4. Install and then restart the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo /etc/init.d/rarpd restart`
 5. To start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`
 
 Setup the firmware:
-1. Checkout whether the DIP switches on FC7 board are setup for the use of a microSD card (`out-in-in-in-out-in-in-in`)
-2. Insert a microSD card in the PC and run `/sbin/fdisk -l` to checkout to which dev it is attached to (`/dev/sd_card_name`)
-3. Upload a golden firmware on the microSD card (checkout FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
+1. Check whether the DIP switches on FC7 board are setup for the use of a microSD card (`out-in-in-in-out-in-in-in`)
+2. Insert a microSD card in the PC and run `/sbin/fdisk -l` to understand to which dev it's attached to (`/dev/sd_card_name`)
+3. Upload a golden firmware* on the microSD card (read FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
 4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/releases
 5. Plug the microSD card in the FC7
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware
+
+*A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap. If you use the `dd` command you need to convert the `bit` file into `img`
 
 Setup and run the IT-DAQ:
 1. `yum install pugixml-devel` (if necesary run `yum install epel-release` before point 1.)
@@ -60,7 +62,7 @@ Setup and run the IT-DAQ:
 11. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the FC7 (just once)
 12. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
 
-The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking. 
+The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking.
 Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
 ```
 1. Latency scan
@@ -71,14 +73,14 @@ Through `CMSIT_miniDAQ`, and with the right command line option, you can run the
 6. Threshold equalization
 7. Gain optimization
 8. Threshold minimization
+9. Injection delay scan
 ```
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
 ```
 #!/bin/bash
 if [ $# -ne 1 ]
 then
-    echo "You should provide one, and only one, argument"
-    echo "Available options are: step1 [noise + pixelalive + thrmin], step2 [threqu + scurve + noise + thrmin], step3 [scurve + gain + gainopt]"
+    echo "You should provide one, and only one, argument [step1, step2, step3, step4, step5, help]"
 elif [ $1 == "step1" ]
 then
     time CMSIT_miniDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels
@@ -90,12 +92,13 @@ then
     time CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
-    echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
+    echo "Choose whether to accept new threshold (i.e. copy it into the xml file(s))"
     read -p "Press any key to continue... " -n1 -s
     echo
 elif [ $1 == "step2" ]
 then
     time CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
+    echo "scurve" >> calibDone.txt
     echo "threqu" >> calibDone.txt
 
     time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
@@ -107,7 +110,7 @@ then
     time CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
-    echo "Choose whether to accept new threshold (i.e. copy it into the CMSIT_scurve.xml file)"
+    echo "Choose whether to accept new threshold (i.e. copy it into the xml file(s))"
     read -p "Press any key to continue... " -n1 -s
     echo
 elif [ $1 == "step3" ]
@@ -120,12 +123,39 @@ then
 
     time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
     echo "gainopt" >> calibDone.txt
+
+    echo "- Set nTRIGxEvent to 1 in the xml file(s)"
+    echo "- Set VCalHstart to minimum value above threshold distribution in the xml file(s)"
+    echo "- Set VCalHstop to MIP value in the xml file(s)"
+    read -p "Press any key to continue... " -n1 -s
+    echo
+elif [ $1 == "step4" ]
+then
+    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c injdelay
+    echo "latency" >> calibDone.txt
+    echo "injdelay" >> calibDone.txt
+    echo "pixelalive" >> calibDone.txt
+    echo "- Set LATENCY_CONFIG and INJECTION_SELECT, as tuned by the injdelay calibration, in the xml files(s)"
+    echo "- Set VCalHstart and VCalHstop to measure in-time threshold in the xml file(s)"
+    read -p "Press any key to continue... " -n1 -s
+    echo
+elif [ $1 == "step5" ]
+then
+    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    echo "scurve" >> calibDone.txt
+elif [ $1 == "help" ]
+then
+    echo "Available options are:"
+    echo "- step1 [noise + pixelalive + thrmin]"
+    echo "- step2 [(scurve)threqu + scurve + noise + thrmin]"
+    echo "- step3 [scurve + gain + gainopt]"
+    echo "- step4 [(latency)injdelay(pixelalive)]"
+    echo "- step5 [scurve]"
 else
     echo "Argument not recognized: $1"
-    echo "Available options are: step1 [noise + pixelalive + thrmin], step2 [threqu + scurve + noise + thrmin], step3 [scurve + gain + gainopt]"
 fi
 ```
-- Software git branch / tag : `chipPolymorphism` / `IT-v1.9`
+- Software git branch / tag : `chipPolymorphism` / `IT-v2.0`
 - Firmware tag: `2.5`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 

@@ -12,19 +12,15 @@
 #define RD53ThrEqualizationHistograms_H
 
 #include "../System/SystemController.h"
-#include "../Utils/OccupancyAndPh.h"
-#include "../Utils/RegisterValue.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
 #include <TH2F.h>
 
 
-class RD53ThrEqualizationHistograms : public DQMHistogramBase
+class ThrEqualizationHistograms : public DQMHistogramBase
 {
  public:
-  RD53ThrEqualizationHistograms (size_t nEvents) : nEvents(nEvents) {}
-
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
   void process ()                                                                                                          override;
   bool fill    (std::vector<char>& dataBuffer)                                                                             override { return false; };
@@ -35,12 +31,9 @@ class RD53ThrEqualizationHistograms : public DQMHistogramBase
  private:
   DetectorDataContainer ThrEqualization;
   DetectorDataContainer TDAC;
-  
+
   size_t nEvents;
-  size_t ROWstart;
-  size_t ROWstop;
-  size_t COLstart;
-  size_t COLstop;
+  size_t VCalHnsteps;
 };
 
 #endif

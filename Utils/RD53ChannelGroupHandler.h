@@ -13,16 +13,23 @@
 #include "ChannelGroupHandler.h"
 #include "../HWDescription/RD53.h"
 
+namespace RD53GroupType
+{
+  constexpr uint8_t AllPixels = 0;
+  constexpr uint8_t AllGroups = 1;
+  constexpr uint8_t OneGroup  = 2;
+}
+
 class RD53ChannelGroupHandler : public ChannelGroupHandler
 {
  public:
-  RD53ChannelGroupHandler  (bool doAll = false);
+  RD53ChannelGroupHandler  (ChannelGroup<Ph2_HwDescription::RD53::nRows,Ph2_HwDescription::RD53::nCols>& customChannelGroup, uint8_t groupType = RD53GroupType::AllGroups);
   ~RD53ChannelGroupHandler ();
 
-  static size_t getNumberOfGroups(bool doAll)
+  static size_t getNumberOfGroups (uint8_t groupType)
   {
-    if (doAll == true) return 1;
-    else               return Ph2_HwDescription::RD53::nRows;
+    if (groupType == RD53GroupType::AllGroups) return Ph2_HwDescription::RD53::nRows;
+    else                                       return 1;
   };
 
  private:
@@ -30,8 +37,8 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
    {
      void makeTestGroup (ChannelGroupBase* currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster = 1) const override;
    };
- 
-  class RD53ChannelGroupPattern : public ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>
+
+ class RD53ChannelGroupPattern : public ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>
    {
      void makeTestGroup (ChannelGroupBase* currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster = 1) const override;
    };

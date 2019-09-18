@@ -18,12 +18,12 @@
 #include "../HWInterface/RD53FWInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
 #include "../HWDescription/Definition.h"
+#include "../HWDescription/Chip.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/Exception.h"
 #include "../Utils/ConditionDataSet.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/easylogging++.h"
-#include "../HWDescription/Chip.h"
 #include "pugixml.hpp"
 #include <iostream>
 #include <vector>
