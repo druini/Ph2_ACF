@@ -75,16 +75,16 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoise") theSystemController_ = new CombinedCalibration<PedestalEqualization,PedeNoise>();
         else if(getVariableValue("Calibration",buffer) == "calibrationexample")      theSystemController_ = new CombinedCalibration<CalibrationExample>;
 
-		else if(getVariableValue("Calibration",buffer) == "RD53PixelAlive")          theSystemController_ = new CombinedCalibration<PixelAlive>;
-		else if(getVariableValue("Calibration",buffer) == "RD53Noise")               theSystemController_ = new CombinedCalibration<PixelAlive>;
-		else if(getVariableValue("Calibration",buffer) == "RD53SCurve")              theSystemController_ = new CombinedCalibration<SCurve>;
-		else if(getVariableValue("Calibration",buffer) == "RD53Gain")                theSystemController_ = new CombinedCalibration<Gain>;
-		else if(getVariableValue("Calibration",buffer) == "RD53Latency")             theSystemController_ = new CombinedCalibration<Latency>;
-		else if(getVariableValue("Calibration",buffer) == "RD53GainOptimization")    theSystemController_ = new CombinedCalibration<GainOptimization>;
-		else if(getVariableValue("Calibration",buffer) == "RD53ThrMinimization")     theSystemController_ = new CombinedCalibration<ThrMinimization>;
+		else if(getVariableValue("Calibration",buffer) == "pixelalive")               theSystemController_ = new CombinedCalibration<PixelAlive>;
+		else if(getVariableValue("Calibration",buffer) == "noise")                    theSystemController_ = new CombinedCalibration<PixelAlive>;
+		else if(getVariableValue("Calibration",buffer) == "scurve")                   theSystemController_ = new CombinedCalibration<SCurve>;
+		else if(getVariableValue("Calibration",buffer) == "gain")                     theSystemController_ = new CombinedCalibration<Gain>;
+		else if(getVariableValue("Calibration",buffer) == "latency")                  theSystemController_ = new CombinedCalibration<Latency>;
+		else if(getVariableValue("Calibration",buffer) == "gainopt")                  theSystemController_ = new CombinedCalibration<GainOptimization>;
+		else if(getVariableValue("Calibration",buffer) == "thrmin")                   theSystemController_ = new CombinedCalibration<ThrMinimization>;
 
-		else if(getVariableValue("Calibration",buffer) == "RD53InjectionDelay")      theSystemController_ = new CombinedCalibration<InjectionDelay>;
-		else if(getVariableValue("Calibration",buffer) == "RD53ThrEqualization")     theSystemController_ = new CombinedCalibration<ThrEqualization>;
+		else if(getVariableValue("Calibration",buffer) == "injdelay")                 theSystemController_ = new CombinedCalibration<InjectionDelay>;
+		else if(getVariableValue("Calibration",buffer) == "threqu")                   theSystemController_ = new CombinedCalibration<ThrEqualization>;
 
 		else
 		{
