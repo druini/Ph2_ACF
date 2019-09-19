@@ -1016,6 +1016,7 @@ namespace Ph2_System {
         }
 
         for ( pugi::xml_node nSettings = doc.child ( "HwDescription" ).child ("Settings"); nSettings; nSettings = nSettings.next_sibling() )
+        // for ( pugi::xml_node nSettings = doc.child ("Settings"); nSettings; nSettings = nSettings.next_sibling() )
         {
             os << "\n" << std::endl;
 

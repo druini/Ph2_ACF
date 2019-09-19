@@ -12,16 +12,19 @@
 
 using namespace Ph2_HwDescription;
 
-void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
+  ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+
+
   // #######################
   // # Retrieve parameters #
   // #######################
-  nEvents    = this->findValue(pSettingsMap,"nEvents");
-  nSteps     = this->findValue(pSettingsMap,"VCalHnsteps");
-  startValue = this->findValue(pSettingsMap,"VCalHstart");
-  stopValue  = this->findValue(pSettingsMap,"VCalHstop");
-  offset     = this->findValue(pSettingsMap,"VCalMED");
+  nEvents    = this->findValueInSettings(settingsMap,"nEvents");
+  nSteps     = this->findValueInSettings(settingsMap,"VCalHnsteps");
+  startValue = this->findValueInSettings(settingsMap,"VCalHstart");
+  stopValue  = this->findValueInSettings(settingsMap,"VCalHstop");
+  offset     = this->findValueInSettings(settingsMap,"VCalMED");
 
 
   auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue-offset, stopValue-offset, nEvents, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION));
@@ -46,9 +49,33 @@ void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDet
   bookImplementer(theOutputFile, theDetectorStructure, hIntercept2D, Intercept2D, "Column", "Row");
 }
 
-void GainHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL)
+bool GainHistograms::fill (std::vector<char>& dataBuffer)
 {
-  for (const auto cBoard : data)
+  ChannelContainerStream<OccupancyAndPh>          theOccStreamer             ("RD53Gain");
+  ChannelContainerStream<OccupancyAndPh,uint16_t> theVCal                    ("RD53Gain");
+  ChannelContainerStream<GainAndIntercept>        theGainAndInterceptStreamer("RD53Gain");
+
+  if (theOccStreamer.attachBuffer(&dataBuffer))
+    {
+      theOccStreamer.decodeChipData(DetectorData);
+      GainHistograms::fillOccupancy(DetectorData,theVCal.getHeaderElement());
+      DetectorData.cleanDataStored();
+      return true;
+    }
+  else if (theGainAndInterceptStreamer.attachBuffer(&dataBuffer))
+    {
+      theGainAndInterceptStreamer.decodeChipData(DetectorData);
+      GainHistograms::fillGainAndIntercept(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+
+  return false;
+}
+
+void GainHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL)
+{
+  for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
@@ -65,9 +92,9 @@ void GainHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA
         }
 }
 
-void GainHistograms::fill (const DetectorDataContainer& data)
+void GainHistograms::fillGainAndIntercept (const DetectorDataContainer& GainAndInterceptContainer)
 {
-  for (const auto cBoard : data)
+  for (const auto cBoard : GainAndInterceptContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {

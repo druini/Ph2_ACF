@@ -12,16 +12,19 @@
 
 using namespace Ph2_HwDescription;
 
-void SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
+  ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+
+
   // #######################
   // # Retrieve parameters #
   // #######################
-  nEvents    = this->findValue(pSettingsMap,"nEvents");
-  nSteps     = this->findValue(pSettingsMap,"VCalHnsteps");
-  startValue = this->findValue(pSettingsMap,"VCalHstart");
-  stopValue  = this->findValue(pSettingsMap,"VCalHstop");
-  offset     = this->findValue(pSettingsMap,"VCalMED");
+  nEvents    = this->findValueInSettings(settingsMap,"nEvents");
+  nSteps     = this->findValueInSettings(settingsMap,"VCalHnsteps");
+  startValue = this->findValueInSettings(settingsMap,"VCalHstart");
+  stopValue  = this->findValueInSettings(settingsMap,"VCalHstop");
+  offset     = this->findValueInSettings(settingsMap,"VCalMED");
 
 
   auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue-offset, stopValue-offset, nEvents + 1, 0, 1 + 1. / nEvents);
@@ -46,9 +49,33 @@ void SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theD
   bookImplementer(theOutputFile, theDetectorStructure, hNoise2D, Noise2D, "Column", "Row");
 }
 
-void SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL)
+bool SCurveHistograms::fill (std::vector<char>& dataBuffer)
 {
-  for (const auto cBoard : data)
+  ChannelContainerStream<OccupancyAndPh>          theOccStreamer        ("RD53Scurve");
+  ChannelContainerStream<OccupancyAndPh,uint16_t> theVCal               ("RD53SCurve");
+  ChannelContainerStream<ThresholdAndNoise>       theThrAndNoiseStreamer("RD53Scurve");
+
+  if (theOccStreamer.attachBuffer(&dataBuffer))
+    {
+      theOccStreamer.decodeChipData(DetectorData);
+      SCurveHistograms::fillOccupancy(DetectorData,theVCal.getHeaderElement());
+      DetectorData.cleanDataStored();
+      return true;
+    }
+  else if (theThrAndNoiseStreamer.attachBuffer(&dataBuffer))
+    {
+      theThrAndNoiseStreamer.decodeChipData(DetectorData);
+      SCurveHistograms::fillThrAndNoise(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+
+  return false;
+}
+
+void SCurveHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL)
+{
+  for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
@@ -65,9 +92,9 @@ void SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int DEL
         }
 }
 
-void SCurveHistograms::fill (const DetectorDataContainer& data)
+void SCurveHistograms::fillThrAndNoise (const DetectorDataContainer& ThrAndNoiseContainer)
 {
-  for (const auto cBoard : data)
+  for (const auto cBoard : ThrAndNoiseContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {

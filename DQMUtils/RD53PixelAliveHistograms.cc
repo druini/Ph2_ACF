@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap)
+void PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
 {
   ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
@@ -20,7 +20,7 @@ void PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
   // #######################
   // # Retrieve parameters #
   // #######################
-  nEvents = this->findValue(pSettingsMap,"nEvents");
+  nEvents = this->findValueInSettings(settingsMap,"nEvents");
 
 
   size_t ToTsize   = RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION) + 1;
@@ -48,12 +48,12 @@ void PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
 
 bool PixelAliveHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<OccupancyAndPh> theHitStreamer("RD53PixelAlive");
+  ChannelContainerStream<OccupancyAndPh> theOccStreamer("RD53PixelAlive");
 
-  if(theHitStreamer.attachBuffer(&dataBuffer))
+  if (theOccStreamer.attachBuffer(&dataBuffer))
     {
-      theHitStreamer.decodeChipData(DetectorData);
-      this->fill(DetectorData);
+      theOccStreamer.decodeChipData(DetectorData);
+      PixelAliveHistograms::fill(DetectorData);
       DetectorData.cleanDataStored();
       return true;
     }
@@ -61,9 +61,9 @@ bool PixelAliveHistograms::fill (std::vector<char>& dataBuffer)
   return false;
 }
 
-void PixelAliveHistograms::fill (const DetectorDataContainer& data)
+void PixelAliveHistograms::fill (const DetectorDataContainer& DataContainer)
 {
-  for (const auto cBoard : data)
+  for (const auto cBoard : DataContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {

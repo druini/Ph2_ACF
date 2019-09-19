@@ -26,20 +26,14 @@
 class ThrMinimization : public PixelAlive
 {
  public:
-  ThrMinimization (std::string fileRes,
-                   std::string fileReg,
-                   size_t rowStart,
-                   size_t rowStop,
-                   size_t colStart,
-                   size_t colStop,
-                   size_t nEvents,
-                   size_t nEvtsBurst,
-                   float  targetOccupancy,
-                   size_t ThrStart,
-                   size_t ThrStop);
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
+  void writeObjects         () {}; // @TMP@
 
+  void   initialize          (const std::string fileRes_, const std::string fileReg_);
   void   run                 ();
-  void   draw                (bool display, bool save);
+  void   draw                ();
   void   analyze             ();
   size_t getNumberIterations ()
   {
@@ -48,15 +42,13 @@ class ThrMinimization : public PixelAlive
     return PixelAlive::getNumberIterations()*(nBitThr + moreIterations);
   }
 
+
  private:
-  std::string fileRes;
-  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
   size_t colStop;
   size_t nEvents;
-  size_t nEvtsBurst;
   float  targetOccupancy;
   size_t ThrStart;
   size_t ThrStop;
@@ -74,6 +66,13 @@ class ThrMinimization : public PixelAlive
   // # ROOT #
   // ########
   ThrMinimizationHistograms histos;
+
+
+ protected:
+  std::string fileRes;
+  std::string fileReg;
+  bool doDisplay;
+  bool doSave;
 };
 
 #endif

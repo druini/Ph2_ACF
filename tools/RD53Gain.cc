@@ -9,32 +9,25 @@
 
 #include "RD53Gain.h"
 
-Gain::Gain (std::string fileRes,
-            std::string fileReg,
-            size_t rowStart,
-            size_t rowStop,
-            size_t colStart,
-            size_t colStop,
-            size_t nEvents,
-            size_t startValue,
-            size_t stopValue,
-            size_t nSteps,
-            size_t offset,
-            bool   doFast)
-  : Tool       ()
-  , fileRes    (fileRes)
-  , fileReg    (fileReg)
-  , rowStart   (rowStart)
-  , rowStop    (rowStop)
-  , colStart   (colStart)
-  , colStop    (colStop)
-  , nEvents    (nEvents)
-  , startValue (startValue)
-  , stopValue  (stopValue)
-  , nSteps     (nSteps)
-  , offset     (offset)
-  , doFast     (doFast)
+void Gain::ConfigureCalibration ()
 {
+  // #######################
+  // # Retrieve parameters #
+  // #######################
+  rowStart   = this->findValueInSettings("ROWstart");
+  rowStop    = this->findValueInSettings("ROWstop");
+  colStart   = this->findValueInSettings("COLstart");
+  colStop    = this->findValueInSettings("COLstop");
+  nEvents    = this->findValueInSettings("nEvents");
+  startValue = this->findValueInSettings("VCalHstart");
+  stopValue  = this->findValueInSettings("VCalHstop");
+  nSteps     = this->findValueInSettings("VCalHnsteps");
+  offset     = this->findValueInSettings("VCalMED");
+  doFast     = this->findValueInSettings("DoFast");
+  doDisplay  = this->findValueInSettings("DisplayHisto");
+  doSave     = this->findValueInSettings("Save");
+
+
   // ########################
   // # Custom channel group #
   // ########################
@@ -56,8 +49,63 @@ Gain::Gain (std::string fileRes,
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
 
+void Gain::Start (int currentRun)
+{
+  Gain::run();
+  Gain::analyze();
+
+
+  // #############
+  // # Send data #
+  // #############
+  auto theOccStream              = prepareChannelContainerStreamer<OccupancyAndPh>();
+  auto theGainAndInterceptStream = prepareChannelContainerStreamer<GainAndIntercept>();
+
+  if (fStreamerEnabled == true)
+    {
+      size_t index = 0;
+      for (const auto theOccContainer : detectorContainerVector)
+        {
+          ChannelContainerStream<OccupancyAndPh,uint16_t> theVCalStream("RD53Gain");
+          theVCalStream.setHeaderElement(dacList[index]-offset);
+
+          for (const auto cBoard : *theOccContainer)
+            {
+              theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+              theVCalStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+            }
+
+          index++;
+        }
+
+      for (const auto cBoard : *theGainAndInterceptContainer.get()) theGainAndInterceptStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    }
+}
+
+void Gain::Stop ()
+{
+  this->Destroy();
+}
+
+void Gain::initialize (const std::string fileRes_, const std::string fileReg_)
+{
+  fileRes = fileRes_;
+  fileReg = fileReg_;
+
+  Gain::ConfigureCalibration();
+}
+
 void Gain::run ()
 {
+  // ##########################
+  // # Set new VCAL_MED value #
+  // ##########################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
+
+
   for (auto i = 0u; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
   detectorContainerVector.clear();
   detectorContainerVector.reserve(dacList.size());
@@ -89,28 +137,27 @@ void Gain::run ()
   // ################
   // # Error report #
   // ################
-  this->chipErrorReport();
+  Gain::chipErrorReport();
 }
 
-void Gain::draw (bool display, bool save)
+void Gain::draw ()
 {
   TApplication* myApp = nullptr;
 
-  if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (save    == true)
+  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+  if (doSave    == true)
     {
       this->CreateResultDirectory(RESULTDIR,false,false);
       this->InitResultFile(fileRes);
     }
 
-  this->initHisto();
-  this->fillHisto();
-  this->display();
+  Gain::initHisto();
+  Gain::fillHisto();
+  Gain::display();
 
-  if (save == true)
+  if (doSave == true)
     {
       this->WriteRootFile();
-      this->CloseResultFile();
 
       // ############################
       // # Save register new values #
@@ -127,7 +174,8 @@ void Gain::draw (bool display, bool save)
             }
     }
 
-  if (display == true) myApp->Run(true);
+  if (doDisplay == true) myApp->Run(true);
+  if (doSave    == true) this->CloseResultFile();
 }
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze ()
@@ -145,15 +193,13 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          int VCalMED = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
-
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
               if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
                 {
                   for (auto i = 0u; i < dacList.size(); i++)
                     {
-                      x[i] = dacList[i]-VCalMED;
+                      x[i] = dacList[i]-offset;
                       y[i] = detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh;
                       e[i] = detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPhError;
                     }
@@ -183,7 +229,7 @@ void Gain::fillHisto ()
 {
   for (auto i = 0u; i < dacList.size(); i++)
     histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
-  histos.fill(*theGainAndInterceptContainer);
+  histos.fillGainAndIntercept(*theGainAndInterceptContainer);
 }
 void Gain::display   () { histos.process(); }
 

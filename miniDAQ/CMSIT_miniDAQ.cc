@@ -30,12 +30,6 @@
 INITIALIZE_EASYLOGGINGPP
 
 
-auto findValue (const std::map<std::string, double>& pSettingsMap, const char* name)
-{
-  auto setting = pSettingsMap.find(name);
-  return ((setting != std::end(pSettingsMap)) ? setting->second : 0);
-}
-
 void setReg2AllChip (SystemController& sc, std::string regName, uint16_t regValue)
 {
   for (const auto cBoard : *sc.fDetectorContainer)
@@ -51,13 +45,14 @@ std::string fromInt2Str (int val)
   return myString.str();
 }
 
-void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t type, bool hitOr)
-// #########################
-// # type == 0 --> Digital #
-// # type == 1 --> Analog  #
-// #########################
+void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t injType, bool hitOr)
+// ############################
+// # injType == 0 --> None    #
+// # injType == 1 --> Analog  #
+// # injType == 2 --> Digital #
+// ############################
 {
-  enum INJtype { Analog, Digital };
+  enum INJtype { None, Analog , Digital };
   enum INJdelay
   {
     FirstCal  = 32,
@@ -79,7 +74,7 @@ void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t type, bool h
       cfgFastCmd.n_triggers       = 0;
       cfgFastCmd.trigger_duration = nTRIGxEvent - 1;
 
-      if (type == INJtype::Digital)
+      if (injType == INJtype::Digital)
         {
           // #######################################
           // # Configuration for digital injection #
@@ -97,7 +92,7 @@ void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t type, bool h
           cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
           cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
         }
-      else if (type == INJtype::Analog)
+      else if ((injType == INJtype::Analog) || (injType == INJtype::None))
         {
           // ######################################
           // # Configuration for analog injection #
@@ -115,7 +110,7 @@ void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t type, bool h
           cfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
           cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
         }
-      else LOG (ERROR) << BOLDRED << "Option non recognized " << type << RESET;
+      else LOG (ERROR) << BOLDRED << "Option non recognized " << injType << RESET;
 
 
       // ###############################################
@@ -272,37 +267,12 @@ int main (int argc, char** argv)
   // ######################
   // # Configure software #
   // ######################
-  size_t nEvents       = findValue(cSystemController.fSettingsMap,"nEvents");
-  size_t nEvtsBurst    = findValue(cSystemController.fSettingsMap,"nEvtsBurst");
-  size_t nTRIGxEvent   = findValue(cSystemController.fSettingsMap,"nTRIGxEvent");
-  bool   INJtype       = findValue(cSystemController.fSettingsMap,"INJtype");
+  size_t nTRIGxEvent   = cSystemController.findValueInSettings("nTRIGxEvent");
+  size_t INJtype       = cSystemController.findValueInSettings("INJtype");
 
-  size_t ROWstart      = findValue(cSystemController.fSettingsMap,"ROWstart");
-  size_t ROWstop       = findValue(cSystemController.fSettingsMap,"ROWstop");
-  size_t COLstart      = findValue(cSystemController.fSettingsMap,"COLstart");
-  size_t COLstop       = findValue(cSystemController.fSettingsMap,"COLstop");
-
-  size_t LatencyStart  = findValue(cSystemController.fSettingsMap,"LatencyStart");
-  size_t LatencyStop   = findValue(cSystemController.fSettingsMap,"LatencyStop");
-
-  size_t InjDelayStart = findValue(cSystemController.fSettingsMap,"InjDelayStart");
-  size_t InjDelayStop  = findValue(cSystemController.fSettingsMap,"InjDelayStop");
-
-  size_t VCalHstart    = findValue(cSystemController.fSettingsMap,"VCalHstart");
-  size_t VCalHstop     = findValue(cSystemController.fSettingsMap,"VCalHstop");
-  size_t VCalHnsteps   = findValue(cSystemController.fSettingsMap,"VCalHnsteps");
-  size_t VCalMED       = findValue(cSystemController.fSettingsMap,"VCalMED");
-
-  size_t TargetCharge  = findValue(cSystemController.fSettingsMap,"TargetCharge");
-  size_t KrumCurrStart = findValue(cSystemController.fSettingsMap,"KrumCurrStart");
-  size_t KrumCurrStop  = findValue(cSystemController.fSettingsMap,"KrumCurrStop");
-
-  float  TargetOcc     = findValue(cSystemController.fSettingsMap,"TargetOcc");
-  size_t ThrStart      = findValue(cSystemController.fSettingsMap,"ThrStart");
-  size_t ThrStop       = findValue(cSystemController.fSettingsMap,"ThrStop");
-
-  bool   DoFast        = findValue(cSystemController.fSettingsMap,"DoFast");
-  bool   Display       = findValue(cSystemController.fSettingsMap,"DisplayHisto");
+  size_t VCalHstart    = cSystemController.findValueInSettings("VCalHstart");
+  size_t VCalHstop     = cSystemController.findValueInSettings("VCalHstop");
+  size_t VCalMED       = cSystemController.findValueInSettings("VCalMED");
 
 
   // #####################
@@ -327,12 +297,13 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
-      Latency la(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
-      RD53RunProgress::total() = la.getNumberIterations();
+      Latency la;
       la.Inherit(&cSystemController);
+      la.initialize(fileName, chipConfig);
+      RD53RunProgress::total() = la.getNumberIterations();
       la.run();
       la.analyze();
-      la.draw(Display,true);
+      la.draw();
     }
   else if (whichCalib == "pixelalive")
     {
@@ -342,12 +313,13 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
-      PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, 1, true, DoFast);
-      RD53RunProgress::total() = pa.getNumberIterations();
+      PixelAlive pa;
       pa.Inherit(&cSystemController);
+      pa.initialize(fileName, chipConfig);
+      RD53RunProgress::total() = pa.getNumberIterations();
       pa.run();
       pa.analyze();
-      pa.draw(Display,true);
+      pa.draw();
     }
   else if (whichCalib == "noise")
     {
@@ -357,12 +329,13 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan");
-      PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, nTRIGxEvent, false, false, TargetOcc);
-      RD53RunProgress::total() = pa.getNumberIterations();
+      PixelAlive pa;
       pa.Inherit(&cSystemController);
+      pa.initialize(fileName, chipConfig);
+      RD53RunProgress::total() = pa.getNumberIterations();
       pa.run();
       pa.analyze();
-      pa.draw(Display,true);
+      pa.draw();
     }
   else if (whichCalib == "scurve")
     {
@@ -372,12 +345,13 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
-      SCurve sc(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, DoFast);
-      RD53RunProgress::total() = sc.getNumberIterations();
+      SCurve sc;
       sc.Inherit(&cSystemController);
+      sc.initialize(fileName, chipConfig);
+      RD53RunProgress::total() = sc.getNumberIterations();
       sc.run();
       sc.analyze();
-      sc.draw(Display,true);
+      sc.draw();
     }
   else if (whichCalib == "gain")
     {
@@ -387,12 +361,13 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_Gain");
-      Gain ga(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, DoFast);
-      RD53RunProgress::total() = ga.getNumberIterations();
+      Gain ga;
       ga.Inherit(&cSystemController);
+      ga.initialize(fileName, chipConfig);
+      RD53RunProgress::total() = ga.getNumberIterations();
       ga.run();
       ga.analyze();
-      ga.draw(Display,true);
+      ga.draw();
     }
   else if (whichCalib == "threqu")
     {
@@ -402,23 +377,25 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
-      SCurve sc(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, DoFast);
+      SCurve sc;
+      sc.Inherit(&cSystemController);
+      sc.initialize(fileName, chipConfig);
 
       runNumber++;
       fileName   = "Run" + fromInt2Str(runNumber) + "_ThrEqualization";
       chipConfig = "Run" + fromInt2Str(runNumber) + "_";
-      ThrEqualization te(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents*VCalHnsteps, nEvents);
+      ThrEqualization te;
+      te.Inherit(&cSystemController);
+      te.initialize(fileName, chipConfig);
 
       RD53RunProgress::total() = sc.getNumberIterations() + te.getNumberIterations();
 
-      sc.Inherit(&cSystemController);
       sc.run();
       auto output = sc.analyze();
-      sc.draw(false,true);
+      sc.draw();
 
-      te.Inherit(&cSystemController);
       te.run(output);
-      te.draw(Display,true);
+      te.draw();
     }
   else if (whichCalib == "gainopt")
     {
@@ -428,12 +405,13 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_GainOptimization");
-      GainOptimization go(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, VCalHstart, VCalHstop, VCalHnsteps, VCalMED, RD53chargeConverter::Charge2VCal(TargetCharge), KrumCurrStart, KrumCurrStop, DoFast);
-      RD53RunProgress::total() = go.getNumberIterations();
+      GainOptimization go;
       go.Inherit(&cSystemController);
+      go.initialize(fileName, chipConfig);
+      RD53RunProgress::total() = go.getNumberIterations();
       go.run();
       go.analyze();
-      go.draw(Display,true);
+      go.draw();
     }
   else if (whichCalib == "thrmin")
     {
@@ -443,12 +421,13 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Minimization @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
-      ThrMinimization tm(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, TargetOcc, ThrStart, ThrStop);
-      RD53RunProgress::total() = tm.getNumberIterations();
+      ThrMinimization tm;
       tm.Inherit(&cSystemController);
+      tm.initialize(fileName, chipConfig);
+      RD53RunProgress::total() = tm.getNumberIterations();
       tm.run();
       tm.analyze();
-      tm.draw(Display,true);
+      tm.draw();
     }
   else if (whichCalib == "injdelay")
     {
@@ -458,39 +437,42 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Injection Delay scan @@@" << RESET;
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
-      Latency la(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, LatencyStart, LatencyStop, nEvents);
+      Latency la;
+      la.Inherit(&cSystemController);
+      la.initialize(fileName, chipConfig);
 
       runNumber++;
       fileName   = "Run" + fromInt2Str(runNumber) + "_InjectionDelay";
       chipConfig = "Run" + fromInt2Str(runNumber) + "_";
-      InjectionDelay id(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, InjDelayStart, InjDelayStop, nEvents, DoFast);
+      InjectionDelay id;
+      id.Inherit(&cSystemController);
+      id.initialize(fileName, chipConfig);
 
       runNumber++;
       fileName   = "Run" + fromInt2Str(runNumber) + "_PixelAlive";
       chipConfig = "Run" + fromInt2Str(runNumber) + "_";
-      PixelAlive pa(fileName, chipConfig, ROWstart, ROWstop, COLstart, COLstop, nEvents, nEvtsBurst, 1, true, DoFast);
+      PixelAlive pa;
+      pa.Inherit(&cSystemController);
+      pa.initialize(fileName, chipConfig);
 
       RD53RunProgress::total() = la.getNumberIterations() + id.getNumberIterations() + pa.getNumberIterations();
 
       setReg2AllChip(cSystemController, "VCAL_MED",  VCalMED);
       setReg2AllChip(cSystemController, "VCAL_HIGH", VCalHstop);
 
-      la.Inherit(&cSystemController);
       la.run();
       la.analyze();
-      la.draw(false,true);
+      la.draw();
 
-      id.Inherit(&cSystemController);
       id.run();
       id.analyze();
-      id.draw(false,true);
+      id.draw();
 
       setReg2AllChip(cSystemController, "VCAL_HIGH", VCalHstart);
 
-      pa.Inherit(&cSystemController);
       pa.run();
       pa.analyze();
-      pa.draw(Display,true);
+      pa.draw();
     }
   else
     {

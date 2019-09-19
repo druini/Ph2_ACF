@@ -9,34 +9,69 @@
 
 #include "RD53ThrMinimization.h"
 
-ThrMinimization::ThrMinimization (std::string fileRes,
-                                  std::string fileReg,
-                                  size_t rowStart,
-                                  size_t rowStop,
-                                  size_t colStart,
-                                  size_t colStop,
-                                  size_t nEvents,
-                                  size_t nEvtsBurst,
-                                  float  targetOccupancy,
-                                  size_t ThrStart,
-                                  size_t ThrStop)
-  : PixelAlive      (fileRes, "", rowStart, rowStop, colStart, colStop, nEvents, nEvtsBurst, 1, false, false, targetOccupancy)
-  , fileRes         (fileRes)
-  , fileReg         (fileReg)
-  , rowStart        (rowStart)
-  , rowStop         (rowStop)
-  , colStart        (colStart)
-  , colStop         (colStop)
-  , nEvents         (nEvents)
-  , nEvtsBurst      (nEvtsBurst)
-  , targetOccupancy (targetOccupancy)
-  , ThrStart        (ThrStart)
-  , ThrStop         (ThrStop)
-{}
+void ThrMinimization::ConfigureCalibration ()
+{
+  // ##############################
+  // # Initialize sub-calibration #
+  // ##############################
+  PixelAlive::ConfigureCalibration();
+  PixelAlive::doDisplay = false;
+  PixelAlive::doSave    = false;
+
+
+  // #######################
+  // # Retrieve parameters #
+  // #######################
+  rowStart        = this->findValueInSettings("ROWstart");
+  rowStop         = this->findValueInSettings("ROWstop");
+  colStart        = this->findValueInSettings("COLstart");
+  colStop         = this->findValueInSettings("COLstop");
+  nEvents         = this->findValueInSettings("nEvents");
+  targetOccupancy = this->findValueInSettings("TargetOcc");
+  ThrStart        = this->findValueInSettings("ThrStart");
+  ThrStop         = this->findValueInSettings("ThrStop");
+  doDisplay       = this->findValueInSettings("DisplayHisto");
+  doSave          = this->findValueInSettings("Save");
+}
+
+void ThrMinimization::Start (int currentRun)
+{
+  ThrMinimization::run();
+  ThrMinimization::analyze();
+
+
+  // #############
+  // # Send data #
+  // #############
+  auto theThrStream = prepareChannelContainerStreamer<RegisterValue>();
+
+  if (fStreamerEnabled == true)
+    for (const auto cBoard : theThrContainer) theThrStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+}
+
+void ThrMinimization::Stop ()
+{
+  this->Destroy();
+}
+
+void ThrMinimization::initialize (const std::string fileRes_, const std::string fileReg_)
+{
+  // ##############################
+  // # Initialize sub-calibration #
+  // ##############################
+  PixelAlive::fileRes = fileRes_;
+  PixelAlive::fileReg = "";
+
+
+  fileRes = fileRes_;
+  fileReg = fileReg_;
+
+  ThrMinimization::ConfigureCalibration();
+}
 
 void ThrMinimization::run ()
 {
-  this->bitWiseScan("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop);
+  ThrMinimization::bitWiseScan("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop);
 
 
   // ############################
@@ -52,28 +87,29 @@ void ThrMinimization::run ()
   // ################
   // # Error report #
   // ################
-  this->chipErrorReport();
+  ThrMinimization::chipErrorReport();
 }
 
-void ThrMinimization::draw (bool display, bool save)
+void ThrMinimization::draw ()
 {
   TApplication* myApp = nullptr;
 
-  if (display == true) myApp = new TApplication("myApp", nullptr, nullptr);
-  if (save    == true)
+  if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
+  if (doSave    == true)
     {
       this->CreateResultDirectory(RESULTDIR,false,false);
       this->InitResultFile(fileRes);
     }
 
-  this->initHisto();
-  this->fillHisto();
-  this->display();
+  PixelAlive::draw();
 
-  if (save == true)
+  ThrMinimization::initHisto();
+  ThrMinimization::fillHisto();
+  ThrMinimization::display();
+
+  if (doSave == true)
     {
       this->WriteRootFile();
-      this->CloseResultFile();
 
       // ############################
       // # Save register new values #
@@ -90,7 +126,8 @@ void ThrMinimization::draw (bool display, bool save)
             }
     }
 
-  if (display == true) myApp->Run(true);
+  if (doDisplay == true) myApp->Run(true);
+  if (doSave    == true) this->CloseResultFile();
 }
 
 void ThrMinimization::analyze ()
@@ -155,8 +192,8 @@ void ThrMinimization::bitWiseScan (const std::string& regName, uint32_t nEvents,
       // ################
       // # Run analysis #
       // ################
-      static_cast<PixelAlive*>(this)->run();
-      auto output = static_cast<PixelAlive*>(this)->analyze();
+      PixelAlive::run();
+      auto output = PixelAlive::analyze();
       output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
 
 
@@ -211,8 +248,8 @@ void ThrMinimization::bitWiseScan (const std::string& regName, uint32_t nEvents,
   // ################
   // # Run analysis #
   // ################
-  static_cast<PixelAlive*>(this)->run();
-  static_cast<PixelAlive*>(this)->analyze();
+  PixelAlive::run();
+  PixelAlive::analyze();
 }
 
 void ThrMinimization::chipErrorReport()

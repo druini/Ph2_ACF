@@ -26,25 +26,19 @@
 class InjectionDelay : public PixelAlive
 {
  public:
-  InjectionDelay (std::string fileRes,
-                  std::string fileReg,
-                  size_t rowStart,
-                  size_t rowStop,
-                  size_t colStart,
-                  size_t colStop,
-                  size_t startValue,
-                  size_t stopValue,
-                  size_t nEvents,
-                  bool   doFast = true);
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
+  void writeObjects         () {}; // @TMP@
 
+  void   initialize          (const std::string fileRes_, const std::string fileReg_);
   void   run                 ();
-  void   draw                (bool display, bool save);
+  void   draw                ();
   void   analyze             ();
   size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue + 1); }
 
+
  private:
-  std::string fileRes;
-  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
@@ -56,7 +50,7 @@ class InjectionDelay : public PixelAlive
 
   std::vector<uint16_t> dacList;
 
-  DetectorDataContainer theContainer;
+  DetectorDataContainer theOccContainer;
   DetectorDataContainer theInjectionDelayContainer;
 
   void initHisto       ();
@@ -70,6 +64,13 @@ class InjectionDelay : public PixelAlive
   // # ROOT #
   // ########
   InjectionDelayHistograms histos;
+
+
+ protected:
+  std::string fileRes;
+  std::string fileReg;
+  bool doDisplay;
+  bool doSave;
 };
 
 #endif

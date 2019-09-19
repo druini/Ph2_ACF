@@ -23,12 +23,12 @@
 class PixelAliveHistograms : public DQMHistogramBase
 {
  public:
-  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
-  void process ()                                                                                                          override;
-  bool fill    (std::vector<char>& dataBuffer)                                                                             override;
-  void reset   ()                                                                                                          override {};
+  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap) override;
+  void process ()                                                                                                         override;
+  bool fill    (std::vector<char>& dataBuffer)                                                                            override;
+  void reset   ()                                                                                                         override {};
 
-  void fill    (const DetectorDataContainer& data);
+  void fill    (const DetectorDataContainer& DataContainer);
 
  private:
   DetectorDataContainer DetectorData;

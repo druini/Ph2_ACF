@@ -12,6 +12,8 @@
 #define RD53InjectionDelayHistograms_H
 
 #include "../System/SystemController.h"
+#include "../Utils/ContainerFactory.h"
+#include "../Utils/ContainerStream.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
@@ -20,14 +22,17 @@
 class InjectionDelayHistograms : public DQMHistogramBase
 {
  public:
-  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap pSettingsMap) override;
-  void process ()                                                                                                          override;
-  bool fill    (std::vector<char>& dataBuffer)                                                                             override { return false; };
-  void reset   (void)                                                                                                      override {};
+  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap) override;
+  void process ()                                                                                                         override;
+  bool fill    (std::vector<char>& dataBuffer)                                                                            override;
+  void reset   ()                                                                                                         override {};
 
-  void fill    (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& InjectionDelayContainer);
+  void fillOccupancy      (const DetectorDataContainer& OccupancyContainer);
+  void fillInjectionDelay (const DetectorDataContainer& InjectionDelayContainer);
 
  private:
+  DetectorDataContainer DetectorData;
+
   DetectorDataContainer Occupancy1D;
   DetectorDataContainer InjectionDelay;
 

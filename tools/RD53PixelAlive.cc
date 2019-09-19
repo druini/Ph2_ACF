@@ -9,32 +9,28 @@
 
 #include "RD53PixelAlive.h"
 
-PixelAlive::PixelAlive (const std::string fileRes,
-                        const std::string fileReg,
-                        size_t rowStart,
-                        size_t rowStop,
-                        size_t colStart,
-                        size_t colStop,
-                        size_t nEvents,
-                        size_t nEvtsBurst,
-                        size_t nTRIGxEvent,
-                        bool   inject,
-                        bool   doFast,
-                        float  thresholdOccupancy)
-  : Tool               ()
-  , fileRes            (fileRes)
-  , fileReg            (fileReg)
-  , rowStart           (rowStart)
-  , rowStop            (rowStop)
-  , colStart           (colStart)
-  , colStop            (colStop)
-  , nEvents            (nEvents)
-  , nTRIGxEvent        (nTRIGxEvent)
-  , nEvtsBurst         (nEvtsBurst)
-  , inject             (inject)
-  , doFast             (doFast)
-  , thresholdOccupancy (thresholdOccupancy)
+void PixelAlive::ConfigureCalibration ()
 {
+  // #######################
+  // # Retrieve parameters #
+  // #######################
+  rowStart     = this->findValueInSettings("ROWstart");
+  rowStop      = this->findValueInSettings("ROWstop");
+  colStart     = this->findValueInSettings("COLstart");
+  colStop      = this->findValueInSettings("COLstop");
+  nEvents      = this->findValueInSettings("nEvents");
+  nEvtsBurst   = this->findValueInSettings("nEvtsBurst");
+  nTRIGxEvent  = this->findValueInSettings("nTRIGxEvent");
+  doInjection  = this->findValueInSettings("INJtype");
+  doFast       = this->findValueInSettings("DoFast");
+  thrOccupancy = this->findValueInSettings("TargetOcc");
+  doDisplay    = this->findValueInSettings("DisplayHisto");
+  doSave       = this->findValueInSettings("Save");
+
+  if (doInjection == true) nTRIGxEvent = 1;
+  else                     doFast      = false;
+
+
   // ################################
   // # Custom channel group handler #
   // ################################
@@ -45,26 +41,36 @@ PixelAlive::PixelAlive (const std::string fileRes,
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,inject == true ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,doInjection == true ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 }
 
-void PixelAlive::ConfigureCalibration () {}
-
 void PixelAlive::Start (int currentRun)
 {
-  this->run();
-  this->analyze();
+  PixelAlive::run();
+  PixelAlive::analyze();
 
-  auto theHitStream = prepareChannelContainerStreamer<OccupancyAndPh>();
+
+  // #############
+  // # Send data #
+  // #############
+  auto theOccStream = prepareChannelContainerStreamer<OccupancyAndPh>();
 
   if (fStreamerEnabled == true)
-    for (const auto cBoard : *theOccContainer.get()) theHitStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    for (const auto cBoard : *theOccContainer.get()) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
 }
 
 void PixelAlive::Stop ()
 {
   this->Destroy();
+}
+
+void PixelAlive::initialize (const std::string fileRes_, const std::string fileReg_)
+{
+  fileRes = fileRes_;
+  fileReg = fileReg_;
+
+  PixelAlive::ConfigureCalibration();
 }
 
 void PixelAlive::run ()
@@ -74,7 +80,7 @@ void PixelAlive::run ()
   ContainerFactory::copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, *fDetectorDataContainer);
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
-  this->SetTestPulse(inject);
+  this->SetTestPulse(doInjection);
   this->fMaskChannelsFromOtherGroups = true;
   this->measureData(nEvents, nEvtsBurst, nTRIGxEvent);
 
@@ -82,28 +88,27 @@ void PixelAlive::run ()
   // ################
   // # Error report #
   // ################
-  this->chipErrorReport();
+  PixelAlive::chipErrorReport();
 }
 
-void PixelAlive::draw (bool display, bool save)
+void PixelAlive::draw ()
 {
   TApplication* myApp = nullptr;
 
-  if (display == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (save    == true)
+  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+  if (doSave    == true)
     {
       this->CreateResultDirectory(RESULTDIR,false,false);
       this->InitResultFile(fileRes);
     }
 
-  this->initHisto();
-  this->fillHisto();
-  this->display();
+  PixelAlive::initHisto();
+  PixelAlive::fillHisto();
+  PixelAlive::display();
 
-  if (save == true)
+  if (doSave == true)
     {
       this->WriteRootFile();
-      this->CloseResultFile();
 
       // ############################
       // # Save register new values #
@@ -119,7 +124,8 @@ void PixelAlive::draw (bool display, bool save)
             }
     }
 
-  if (display == true) myApp->Run(true);
+  if (doDisplay == true) myApp->Run(true);
+  if (doSave    == true) this->CloseResultFile();
 }
 
 std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
@@ -140,9 +146,9 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
               if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
                 {
                   float occupancy = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
-                  static_cast<RD53*>(cChip)->enablePixel(row,col,thresholdOccupancy != 0 ? occupancy < thresholdOccupancy : occupancy != 0);
+                  static_cast<RD53*>(cChip)->enablePixel(row,col,thrOccupancy != 1 ? occupancy < thrOccupancy : occupancy != 0);
 
-                  if (((thresholdOccupancy != 0) && (occupancy >= thresholdOccupancy)) || ((thresholdOccupancy == 0) && (occupancy == 0))) nMaskedPixelsPerCalib++;
+                  if (((thrOccupancy != 1) && (occupancy >= thrOccupancy)) || ((thrOccupancy == 0) && (occupancy == 0))) nMaskedPixelsPerCalib++;
                 }
 
           LOG (INFO) << BOLDGREEN << "\t\t--> Number of masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;

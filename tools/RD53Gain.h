@@ -31,31 +31,24 @@
 class Gain : public Tool
 {
  public:
-  Gain  (std::string fileRes,
-         std::string fileReg,
-         size_t rowStart,
-         size_t rowStop,
-         size_t colStart,
-         size_t colStop,
-         size_t nEvents,
-         size_t startValue,
-         size_t stopValue,
-         size_t nSteps,
-         size_t offset,
-         bool   doFast = false);
   ~Gain () { for (auto container : detectorContainerVector) delete container; }
 
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
+  void writeObjects         () {}; // @TMP@
+
+  void initialize                                (const std::string fileRes_, const std::string fileReg_);
   void run                                       ();
-  void draw                                      (bool display, bool save);
+  void draw                                      ();
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
     return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups)*nSteps;
   }
 
+
  private:
-  std::string fileRes;
-  std::string fileReg;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
@@ -84,6 +77,13 @@ class Gain : public Tool
   // # ROOT #
   // ########
   GainHistograms histos;
+
+
+ protected:
+  std::string fileRes;
+  std::string fileReg;
+  bool doDisplay;
+  bool doSave;
 };
 
 #endif
