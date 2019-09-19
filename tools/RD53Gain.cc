@@ -66,7 +66,7 @@ void Gain::Start (int currentRun)
       size_t index = 0;
       for (const auto theOccContainer : detectorContainerVector)
         {
-          ChannelContainerStream<OccupancyAndPh,uint16_t> theVCalStream("GainVCal");
+          auto theVCalStream = prepareChannelContainerStreamer<OccupancyAndPh,uint16_t>("VCal");
           theVCalStream.setHeaderElement(dacList[index]-offset);
 
           for (const auto cBoard : *theOccContainer)
