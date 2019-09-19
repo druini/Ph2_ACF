@@ -58,15 +58,15 @@ void Gain::Start (int currentRun)
   // #############
   // # Send data #
   // #############
-  auto theOccStream              = prepareChannelContainerStreamer<OccupancyAndPh>();
-  auto theGainAndInterceptStream = prepareChannelContainerStreamer<GainAndIntercept>();
+  auto theOccStream              = prepareChannelContainerStreamer<OccupancyAndPh>  ("Occ");
+  auto theGainAndInterceptStream = prepareChannelContainerStreamer<GainAndIntercept>("GainAndIntercept");
 
   if (fStreamerEnabled == true)
     {
       size_t index = 0;
       for (const auto theOccContainer : detectorContainerVector)
         {
-          ChannelContainerStream<OccupancyAndPh,uint16_t> theVCalStream("RD53Gain");
+          ChannelContainerStream<OccupancyAndPh,uint16_t> theVCalStream("GainVCal");
           theVCalStream.setHeaderElement(dacList[index]-offset);
 
           for (const auto cBoard : *theOccContainer)

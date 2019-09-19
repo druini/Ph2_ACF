@@ -48,7 +48,7 @@ void PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
 
 bool PixelAliveHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<OccupancyAndPh> theOccStreamer("RD53PixelAlive");
+  ChannelContainerStream<OccupancyAndPh> theOccStreamer("PixelAlive");
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
