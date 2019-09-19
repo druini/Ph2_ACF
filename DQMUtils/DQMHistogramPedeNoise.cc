@@ -106,7 +106,7 @@ void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &
 bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
     ModuleContainerStream<Occupancy,Occupancy,Occupancy>          theOccupancy("PedeNoise");
-    ChannelContainerStream<Occupancy,uint16_t> theSCurve("SCurve");
+    ChannelContainerStream<Occupancy,uint16_t> theSCurve("PedeNoiseSCurve");
     ChannelContainerStream<ThresholdAndNoise>  theThresholdAndNoiseStream("PedeNoise");
 
 	if(theOccupancy.attachBuffer(&dataBuffer))

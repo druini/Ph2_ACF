@@ -354,7 +354,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         #else
             if(fPlotSCurves) 
             {
-                ChannelContainerStream<Occupancy,uint16_t> theSCurveStreamer("SCurve");
+                auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy,uint16_t>("SCurve");
                 theSCurveStreamer.setHeaderElement(cValue);
                 for(auto board : *theOccupancyContainer )
                 {

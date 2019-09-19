@@ -276,24 +276,24 @@ class Tool : public SystemController
     //Set same DAC list for all Chips (it is able to recognize if the dac is local or global)
     void setSameDac(const std::string &dacName, const uint16_t dacValue);
 
-    template<typename T>
-    ChannelContainerStream<T> prepareChannelContainerStreamer()
+    template<typename T, typename... H>
+    ChannelContainerStream<T,H...> prepareChannelContainerStreamer(std::string appendName = "")
     {
-        ChannelContainerStream<T> theContainerStreamer(getCalibrationName());
+        ChannelContainerStream<T,H...> theContainerStreamer(getCalibrationName() + appendName);
         return theContainerStreamer;
     }
 
-    template<typename T, typename C>
-    ChipContainerStream<T,C> prepareChipContainerStreamer()
+    template<typename T, typename C, typename... H>
+    ChipContainerStream<T,C,H...> prepareChipContainerStreamer(std::string appendName = "")
     {
-        ChipContainerStream<T,C> theContainerStreamer(getCalibrationName());
+        ChipContainerStream<T,C,H...> theContainerStreamer(getCalibrationName() + appendName);
         return theContainerStreamer;
     }
 
-    template<typename T, typename C, typename M>
-    ModuleContainerStream<T,C,M> prepareModuleContainerStreamer()
+    template<typename T, typename C, typename M, typename... H>
+    ModuleContainerStream<T,C,M,H...> prepareModuleContainerStreamer(std::string appendName = "")
     {
-        ModuleContainerStream<T,C,M> theContainerStreamer(getCalibrationName());
+        ModuleContainerStream<T,C,M,H...> theContainerStreamer(getCalibrationName() + appendName);
         return theContainerStreamer;
     }
 
