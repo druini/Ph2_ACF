@@ -36,6 +36,7 @@ class ThrEqualization : public Tool
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
+  void writeObjects         () {}; // @TMP@
 
   void   initialize          (const std::string fileRes_, const std::string fileReg_);
   void   run                 (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);

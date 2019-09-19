@@ -10,6 +10,13 @@
 #include "../tools/CombinedCalibration.h"
 #include "../tools/CalibrationExample.h"
 #include "../tools/RD53PixelAlive.h"
+#include "../tools/RD53SCurve.h"
+#include "../tools/RD53Gain.h"
+#include "../tools/RD53Latency.h"
+#include "../tools/RD53GainOptimization.h"
+#include "../tools/RD53ThrMinimization.h"
+#include "../tools/RD53InjectionDelay.h"
+#include "../tools/RD53ThrEqualization.h"
 
 
 //========================================================================================================================
@@ -63,11 +70,22 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 	{
 
 		std::cout << "We are in the configuration submodule" << std::endl;
-		if     (getVariableValue("Calibration",buffer) == "calibration")                  theSystemController_ = new CombinedCalibration<PedestalEqualization>;
-		else if(getVariableValue("Calibration",buffer) == "pedenoise")                    theSystemController_ = new CombinedCalibration<PedeNoise>;
-		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoise")      theSystemController_ = new CombinedCalibration<PedestalEqualization,PedeNoise>();
-		else if(getVariableValue("Calibration",buffer) == "calibrationexample")           theSystemController_ = new CombinedCalibration<CalibrationExample>;
-		// else if(getVariableValue("Calibration",buffer) == "RD53PixelAlive")               theSystemController_ = new CombinedCalibration<PixelAlive>;
+		if     (getVariableValue("Calibration",buffer) == "calibration")             theSystemController_ = new CombinedCalibration<PedestalEqualization>;
+		else if(getVariableValue("Calibration",buffer) == "pedenoise")               theSystemController_ = new CombinedCalibration<PedeNoise>;
+		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoise") theSystemController_ = new CombinedCalibration<PedestalEqualization,PedeNoise>();
+        else if(getVariableValue("Calibration",buffer) == "calibrationexample")      theSystemController_ = new CombinedCalibration<CalibrationExample>;
+
+		else if(getVariableValue("Calibration",buffer) == "RD53PixelAlive")          theSystemController_ = new CombinedCalibration<PixelAlive>;
+		else if(getVariableValue("Calibration",buffer) == "RD53Noise")               theSystemController_ = new CombinedCalibration<PixelAlive>;
+		else if(getVariableValue("Calibration",buffer) == "RD53SCurve")              theSystemController_ = new CombinedCalibration<SCurve>;
+		else if(getVariableValue("Calibration",buffer) == "RD53Gain")                theSystemController_ = new CombinedCalibration<Gain>;
+		else if(getVariableValue("Calibration",buffer) == "RD53Latency")             theSystemController_ = new CombinedCalibration<Latency>;
+		else if(getVariableValue("Calibration",buffer) == "RD53GainOptimization")    theSystemController_ = new CombinedCalibration<GainOptimization>;
+		else if(getVariableValue("Calibration",buffer) == "RD53ThrMinimization")     theSystemController_ = new CombinedCalibration<ThrMinimization>;
+
+		else if(getVariableValue("Calibration",buffer) == "RD53InjectionDelay")      theSystemController_ = new CombinedCalibration<InjectionDelay>;
+		else if(getVariableValue("Calibration",buffer) == "RD53ThrEqualization")     theSystemController_ = new CombinedCalibration<ThrEqualization>;
+
 		else
 		{
 			std::cout << __PRETTY_FUNCTION__ << "Calibration type " <<  getVariableValue("Calibration",buffer) << " not found, Aborting" << std::endl;

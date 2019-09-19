@@ -1,11 +1,18 @@
 #include "../NetworkUtils/TCPSubscribeClient.h"
 #include "../Utils/ObjectStream.h"
 #include "../Utils/Container.h"
-#include "RD53PixelAliveHistograms.h"
 #include "DQMInterface.h"
 #include "DQMHistogramPedeNoise.h"
 #include "DQMHistogramPedestalEqualization.h"
 #include "DQMHistogramCalibrationExample.h"
+#include "RD53PixelAliveHistograms.h"
+#include "RD53SCurveHistograms.h"
+#include "RD53GainHistograms.h"
+#include "RD53LatencyHistograms.h"
+#include "RD53GainOptimizationHistograms.h"
+#include "RD53ThrMinimizationHistograms.h"
+#include "RD53InjectionDelayHistograms.h"
+#include "RD53ThrEqualizationHistograms.h"
 #include "../System/FileParser.h"
 #include "TFile.h"
 
@@ -93,10 +100,15 @@ void DQMInterface::configure(std::string& calibrationName, std::string& configur
 	{
 		fDQMHistogrammerVector.push_back(new DQMHistogramCalibrationExample());
 	}
-	else if(calibrationName == "RD53PixelAlive")
-	{
-		fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
-	}
+	else if(calibrationName == "RD53PixelAlive")       fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
+	else if(calibrationName == "RD53Noise")            fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
+	else if(calibrationName == "RD53SCurve")           fDQMHistogrammerVector.push_back(new SCurveHistograms());
+	else if(calibrationName == "RD53Gain")             fDQMHistogrammerVector.push_back(new GainHistograms());
+	else if(calibrationName == "RD53Latency")          fDQMHistogrammerVector.push_back(new LatencyHistograms());
+	else if(calibrationName == "RD53GainOptimization") fDQMHistogrammerVector.push_back(new GainOptimizationHistograms());
+	else if(calibrationName == "RD53ThrMinimization")  fDQMHistogrammerVector.push_back(new ThrMinimizationHistograms());
+	else if(calibrationName == "RD53InjectionDelay")   fDQMHistogrammerVector.push_back(new InjectionDelayHistograms());
+	else if(calibrationName == "RD53ThrEqualization")  fDQMHistogrammerVector.push_back(new ThrEqualizationHistograms());
 
 	fOutputFile = new TFile("tmp.root", "RECREATE");
 	for(auto dqmHistogrammer : fDQMHistogrammerVector)

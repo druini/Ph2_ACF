@@ -29,6 +29,7 @@ class GainOptimization : public Gain
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
+  void writeObjects         () {}; // @TMP@
 
   void   initialize          (const std::string fileRes_, const std::string fileReg_);
   void   run                 ();

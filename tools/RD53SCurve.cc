@@ -63,9 +63,20 @@ void SCurve::Start (int currentRun)
 
   if (fStreamerEnabled == true)
     {
+      size_t index = 0;
       for (const auto theOccContainer : detectorContainerVector)
-        for (const auto cBoard : *theOccContainer)
-          theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        {
+          ChannelContainerStream<OccupancyAndPh,uint16_t> theVCalStream("RD53SCurve");
+          theVCalStream.setHeaderElement(dacList[index]-offset);
+
+          for (const auto cBoard : *theOccContainer)
+            {
+              theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+              theVCalStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+            }
+
+          index++;
+        }
 
       for (const auto cBoard : *theThresholdAndNoiseContainer.get()) theThrAndNoiseStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
