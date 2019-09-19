@@ -48,8 +48,8 @@ void Latency::Start (int currentRun)
   // #############
   // # Send data #
   // #############
-  auto theStream        = prepareChannelContainerStreamer<GenericDataVector>();
-  auto theLatencyStream = prepareChannelContainerStreamer<RegisterValue>();
+  auto theStream        = prepareChannelContainerStreamer<GenericDataVector>("Occ");
+  auto theLatencyStream = prepareChannelContainerStreamer<RegisterValue>    ("Latency");
 
   if (fStreamerEnabled == true)
     {
