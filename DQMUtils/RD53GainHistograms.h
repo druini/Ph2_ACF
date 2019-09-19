@@ -34,8 +34,8 @@ class GainHistograms : public DQMHistogramBase
   bool fill          (std::vector<char>& dataBuffer)                                                                            override;
   void reset         ()                                                                                                         override {};
 
-  void fill          (const DetectorDataContainer& data);
-  void fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL);
+  void fillOccupancy        (const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL);
+  void fillGainAndIntercept (const DetectorDataContainer& GainAndInterceptContainer);
 
  private:
   DetectorDataContainer DetectorData;

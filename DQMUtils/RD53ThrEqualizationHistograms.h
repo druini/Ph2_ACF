@@ -28,7 +28,8 @@ class ThrEqualizationHistograms : public DQMHistogramBase
   bool fill    (std::vector<char>& dataBuffer)                                                                            override;
   void reset   ()                                                                                                         override {};
 
-  void fill    (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& TDACContainer);
+  void fillOccupancy (const DetectorDataContainer& OccupancyContainer);
+  void fillTDAC      (const DetectorDataContainer& TDACContainer);
 
  private:
   DetectorDataContainer DetectorData;

@@ -57,14 +57,14 @@ bool SCurveHistograms::fill (std::vector<char>& dataBuffer)
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
       theOccStreamer.decodeChipData(DetectorData);
-      // SCurveHistograms::fillOccupancy(DetectorData);
+      SCurveHistograms::fillOccupancy(DetectorData,0);
       DetectorData.cleanDataStored();
       return true;
     }
   else if (theThrAndNoiseStreamer.attachBuffer(&dataBuffer))
     {
       theThrAndNoiseStreamer.decodeChipData(DetectorData);
-      // SCurveHistograms::fill(DetectorData);
+      SCurveHistograms::fillThrAndNoise(DetectorData);
       DetectorData.cleanDataStored();
       return true;
     }
@@ -72,9 +72,9 @@ bool SCurveHistograms::fill (std::vector<char>& dataBuffer)
   return false;
 }
 
-void SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL)
+void SCurveHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL)
 {
-  for (const auto cBoard : data)
+  for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
@@ -91,9 +91,9 @@ void SCurveHistograms::fillOccupancy (const DetectorDataContainer& data, int DEL
         }
 }
 
-void SCurveHistograms::fill (const DetectorDataContainer& data)
+void SCurveHistograms::fillThrAndNoise (const DetectorDataContainer& ThrAndNoiseContainer)
 {
-  for (const auto cBoard : data)
+  for (const auto cBoard : ThrAndNoiseContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {

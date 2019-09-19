@@ -57,14 +57,14 @@ bool GainHistograms::fill (std::vector<char>& dataBuffer)
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
       theOccStreamer.decodeChipData(DetectorData);
-      // GainHistograms::fillOccupancy(DetectorData);
+      GainHistograms::fillOccupancy(DetectorData,0);
       DetectorData.cleanDataStored();
       return true;
     }
   else if (theGainAndInterceptStreamer.attachBuffer(&dataBuffer))
     {
       theGainAndInterceptStreamer.decodeChipData(DetectorData);
-      // GainHistograms::fill(DetectorData);
+      GainHistograms::fillGainAndIntercept(DetectorData);
       DetectorData.cleanDataStored();
       return true;
     }
@@ -72,9 +72,9 @@ bool GainHistograms::fill (std::vector<char>& dataBuffer)
   return false;
 }
 
-void GainHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA_VCAL)
+void GainHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL)
 {
-  for (const auto cBoard : data)
+  for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
@@ -91,9 +91,9 @@ void GainHistograms::fillOccupancy (const DetectorDataContainer& data, int DELTA
         }
 }
 
-void GainHistograms::fill (const DetectorDataContainer& data)
+void GainHistograms::fillGainAndIntercept (const DetectorDataContainer& GainAndInterceptContainer)
 {
-  for (const auto cBoard : data)
+  for (const auto cBoard : GainAndInterceptContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {

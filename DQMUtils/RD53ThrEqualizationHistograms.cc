@@ -41,14 +41,14 @@ bool ThrEqualizationHistograms::fill (std::vector<char>& dataBuffer)
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
       theOccStreamer.decodeChipData(DetectorData);
-      // ThrEqualizationHistograms::fill(DetectorData);
+      ThrEqualizationHistograms::fillOccupancy(DetectorData);
       DetectorData.cleanDataStored();
       return true;
     }
   else if (theTDACStreamer.attachBuffer(&dataBuffer))
     {
       theTDACStreamer.decodeChipData(DetectorData);
-      // ThrEqualizationHistograms::fill(DetectorData);
+      ThrEqualizationHistograms::fillTDAC(DetectorData);
       DetectorData.cleanDataStored();
       return true;
     }
@@ -56,22 +56,33 @@ bool ThrEqualizationHistograms::fill (std::vector<char>& dataBuffer)
   return false;
 }
 
-void ThrEqualizationHistograms::fill (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& TDACContainer)
+void ThrEqualizationHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer)
 {
   for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
           auto* hThrEqualization = ThrEqualization.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+
+          for (auto row = 0u; row < RD53::nRows; row++)
+            for (auto col = 0u; col < RD53::nCols; col++)
+              if (cChip->getChannel<OccupancyAndPh>(row, col).isEnabled == true)
+                hThrEqualization->Fill(OccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
+        }
+}
+
+void ThrEqualizationHistograms::fillTDAC (const DetectorDataContainer& TDACContainer)
+{
+  for (const auto cBoard : TDACContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
           auto* hTDAC            = TDAC.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
               if (cChip->getChannel<OccupancyAndPh>(row, col).isEnabled == true)
-                {
-                  hThrEqualization->Fill(OccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
-                  hTDAC->Fill(TDACContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
-                }
+                hTDAC->Fill(TDACContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
         }
 }
 

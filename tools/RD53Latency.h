@@ -48,7 +48,7 @@ class Latency : public PixelAlive
 
   std::vector<uint16_t> dacList;
 
-  DetectorDataContainer theContainer;
+  DetectorDataContainer theOccContainer;
   DetectorDataContainer theLatencyContainer;
 
   void initHisto       ();

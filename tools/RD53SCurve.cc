@@ -223,7 +223,7 @@ void SCurve::fillHisto ()
 {
   for (auto i = 0u; i < dacList.size(); i++)
     histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
-  histos.fill(*theThresholdAndNoiseContainer);
+  histos.fillThrAndNoise(*theThresholdAndNoiseContainer);
 }
 void SCurve::display   () { histos.process(); }
 

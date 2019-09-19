@@ -27,7 +27,8 @@ class InjectionDelayHistograms : public DQMHistogramBase
   bool fill    (std::vector<char>& dataBuffer)                                                                            override;
   void reset   ()                                                                                                         override {};
 
-  void fill    (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& InjectionDelayContainer);
+  void fillOccupancy      (const DetectorDataContainer& OccupancyContainer);
+  void fillInjectionDelay (const DetectorDataContainer& InjectionDelayContainer);
 
  private:
   DetectorDataContainer DetectorData;

@@ -38,13 +38,14 @@ bool GainOptimizationHistograms::fill (std::vector<char>& dataBuffer)
   return false;
 }
 
-void GainOptimizationHistograms::fill (const DetectorDataContainer& data)
+void GainOptimizationHistograms::fill (const DetectorDataContainer& DataContainer)
 {
-  for (const auto cBoard : data)
+  for (const auto cBoard : DataContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
           auto* hKrumCurr = KrumCurr.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+
           hKrumCurr->Fill(cChip->getSummary<RegisterValue>().fRegisterValue);
         }
 }

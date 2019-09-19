@@ -61,9 +61,9 @@ bool PixelAliveHistograms::fill (std::vector<char>& dataBuffer)
   return false;
 }
 
-void PixelAliveHistograms::fill (const DetectorDataContainer& data)
+void PixelAliveHistograms::fill (const DetectorDataContainer& DataContainer)
 {
-  for (const auto cBoard : data)
+  for (const auto cBoard : DataContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {

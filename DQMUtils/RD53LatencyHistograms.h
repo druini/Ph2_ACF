@@ -27,7 +27,8 @@ class LatencyHistograms : public DQMHistogramBase
   bool fill    (std::vector<char>& dataBuffer)                                                                            override;
   void reset   ()                                                                                                         override {};
 
-  void fill    (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& LatencyContainer);
+  void fillOccupancy (const DetectorDataContainer& OccupancyContainer);
+  void fillLatency   (const DetectorDataContainer& LatencyContainer);
 
  private:
   DetectorDataContainer DetectorData;

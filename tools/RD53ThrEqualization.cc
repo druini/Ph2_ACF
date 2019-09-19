@@ -158,8 +158,12 @@ void ThrEqualization::draw ()
 }
 
 void ThrEqualization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-void ThrEqualization::fillHisto () { histos.fill(theOccContainer, theTDACcontainer);              }
-void ThrEqualization::display   () { histos.process();                                            }
+void ThrEqualization::fillHisto ()
+{
+  histos.fillOccupancy(theOccContainer);
+  histos.fillTDAC     (theTDACcontainer);
+}
+void ThrEqualization::display   () { histos.process(); }
 
 void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {

@@ -49,7 +49,7 @@ class InjectionDelay : public PixelAlive
 
   std::vector<uint16_t> dacList;
 
-  DetectorDataContainer theContainer;
+  DetectorDataContainer theOccContainer;
   DetectorDataContainer theInjectionDelayContainer;
 
   void initHisto       ();

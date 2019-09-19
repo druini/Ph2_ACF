@@ -27,7 +27,7 @@ class ThrMinimizationHistograms : public DQMHistogramBase
   bool fill    (std::vector<char>& dataBuffer)                                                                            override;
   void reset   ()                                                                                                         override {};
 
-  void fill    (const DetectorDataContainer& data);
+  void fill    (const DetectorDataContainer& DataContainer);
 
  private:
   DetectorDataContainer DetectorData;

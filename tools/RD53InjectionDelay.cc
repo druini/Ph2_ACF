@@ -54,7 +54,7 @@ void InjectionDelay::Start (int currentRun)
 
   if (fStreamerEnabled == true)
     {
-      for (const auto cBoard : theContainer)               theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+      for (const auto cBoard : theOccContainer)            theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
       for (const auto cBoard : theInjectionDelayContainer) theInjectionDelayStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
@@ -81,8 +81,8 @@ void InjectionDelay::initialize (const std::string fileRes_, const std::string f
 
 void InjectionDelay::run ()
 {
-  ContainerFactory::copyAndInitChip<GenericDataVector>(*fDetectorContainer, theContainer);
-  InjectionDelay::scanDac("INJECTION_SELECT", dacList, nEvents, &theContainer);
+  ContainerFactory::copyAndInitChip<GenericDataVector>(*fDetectorContainer, theOccContainer);
+  InjectionDelay::scanDac("INJECTION_SELECT", dacList, nEvents, &theOccContainer);
 
 
   // ################
@@ -140,7 +140,7 @@ void InjectionDelay::analyze ()
 
           for (auto dac : dacList)
             {
-              auto current = theContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1[dac-startValue];
+              auto current = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1[dac-startValue];
               if (current > best)
                 {
                   regVal = dac;
@@ -163,8 +163,12 @@ void InjectionDelay::analyze ()
 }
 
 void InjectionDelay::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-void InjectionDelay::fillHisto () { histos.fill(theContainer, theInjectionDelayContainer);              }
-void InjectionDelay::display   () { histos.process();                                            }
+void InjectionDelay::fillHisto ()
+{
+  histos.fillOccupancy     (theOccContainer);
+  histos.fillInjectionDelay(theInjectionDelayContainer);
+}
+void InjectionDelay::display   () { histos.process(); }
 
 void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {

@@ -33,20 +33,20 @@ void InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContain
 
 bool InjectionDelayHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<GenericDataVector> theStreamer              ("RD53InjectionDelay");
+  ChannelContainerStream<GenericDataVector> theOccStreamer           ("RD53InjectionDelay");
   ChannelContainerStream<RegisterValue>     theInjectionDelayStreamer("RD53InjectionDelay");
 
-  if (theStreamer.attachBuffer(&dataBuffer))
+  if (theOccStreamer.attachBuffer(&dataBuffer))
     {
-      theStreamer.decodeChipData(DetectorData);
-      // InjectionDelayHistograms::fill(DetectorData);
+      theOccStreamer.decodeChipData(DetectorData);
+      InjectionDelayHistograms::fillOccupancy(DetectorData);
       DetectorData.cleanDataStored();
       return true;
     }
   else if (theInjectionDelayStreamer.attachBuffer(&dataBuffer))
     {
       theInjectionDelayStreamer.decodeChipData(DetectorData);
-      // InjectionDelayHistograms::fill(DetectorData);
+      InjectionDelayHistograms::fillInjectionDelay(DetectorData);
       DetectorData.cleanDataStored();
       return true;
     }
@@ -54,17 +54,27 @@ bool InjectionDelayHistograms::fill (std::vector<char>& dataBuffer)
   return false;
 }
 
-void InjectionDelayHistograms::fill (const DetectorDataContainer& OccupancyContainer, const DetectorDataContainer& InjectionDelayContainer)
+void InjectionDelayHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer)
 {
   for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
           auto* Occupancy1DHist    = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-          auto* InjectionDelayHist = InjectionDelay.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (size_t i = startValue; i < stopValue; i++)
             Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i),cChip->getSummary<GenericDataVector>().data1[i-startValue]);
+        }
+}
+
+void InjectionDelayHistograms::fillInjectionDelay (const DetectorDataContainer& InjectionDelayContainer)
+{
+  for (const auto cBoard : InjectionDelayContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          auto* InjectionDelayHist = InjectionDelay.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+
           InjectionDelayHist->Fill(InjectionDelayContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue);
         }
 }
