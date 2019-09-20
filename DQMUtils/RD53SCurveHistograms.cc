@@ -100,8 +100,8 @@ void SCurveHistograms::fillThrAndNoise (const DetectorDataContainer& ThrAndNoise
         {
           auto* Threshold1DHist = Threshold1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
           auto* Noise1DHist     = Noise1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-          auto* Threshold2DHist = Threshold2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-          auto* Noise2DHist     = Noise2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+          auto* Threshold2DHist = Threshold2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+          auto* Noise2DHist     = Noise2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
           auto* ErrorFit2DHist  = ErrorFit2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
           for (auto row = 0u; row < RD53::nRows; row++)

@@ -148,7 +148,7 @@ then
     echo "- step1 [noise + pixelalive + thrmin]"
     echo "- step2 [(scurve)threqu + scurve + noise + thrmin]"
     echo "- step3 [scurve + gain + gainopt]"
-    echo "- step4 [latency + injdelay]"
+    echo "- step4 [(latency)injdelay]"
     echo "- step5 [scurve]"
 else
     echo "Argument not recognized: $1"
