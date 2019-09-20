@@ -30,14 +30,6 @@
 INITIALIZE_EASYLOGGINGPP
 
 
-void setReg2AllChip (SystemController& sc, std::string regName, uint16_t regValue)
-{
-  for (const auto cBoard : *sc.fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        sc.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, regValue, true);
-}
-
 std::string fromInt2Str (int val)
 {
   std::stringstream myString;
@@ -267,12 +259,8 @@ int main (int argc, char** argv)
   // ######################
   // # Configure software #
   // ######################
-  size_t nTRIGxEvent   = cSystemController.findValueInSettings("nTRIGxEvent");
-  size_t INJtype       = cSystemController.findValueInSettings("INJtype");
-
-  size_t VCalHstart    = cSystemController.findValueInSettings("VCalHstart");
-  size_t VCalHstop     = cSystemController.findValueInSettings("VCalHstop");
-  size_t VCalMED       = cSystemController.findValueInSettings("VCalMED");
+  size_t nTRIGxEvent = cSystemController.findValueInSettings("nTRIGxEvent");
+  size_t INJtype     = cSystemController.findValueInSettings("INJtype");
 
 
   // #####################
@@ -448,17 +436,7 @@ int main (int argc, char** argv)
       id.Inherit(&cSystemController);
       id.initialize(fileName, chipConfig);
 
-      runNumber++;
-      fileName   = "Run" + fromInt2Str(runNumber) + "_PixelAlive";
-      chipConfig = "Run" + fromInt2Str(runNumber) + "_";
-      PixelAlive pa;
-      pa.Inherit(&cSystemController);
-      pa.initialize(fileName, chipConfig);
-
-      RD53RunProgress::total() = la.getNumberIterations() + id.getNumberIterations() + pa.getNumberIterations();
-
-      setReg2AllChip(cSystemController, "VCAL_MED",  VCalMED);
-      setReg2AllChip(cSystemController, "VCAL_HIGH", VCalHstop);
+      RD53RunProgress::total() = la.getNumberIterations() + id.getNumberIterations();
 
       la.run();
       la.analyze();
@@ -467,12 +445,6 @@ int main (int argc, char** argv)
       id.run();
       id.analyze();
       id.draw();
-
-      setReg2AllChip(cSystemController, "VCAL_HIGH", VCalHstart);
-
-      pa.run();
-      pa.analyze();
-      pa.draw();
     }
   else
     {

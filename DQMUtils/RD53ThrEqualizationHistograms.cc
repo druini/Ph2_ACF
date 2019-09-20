@@ -77,11 +77,11 @@ void ThrEqualizationHistograms::fillTDAC (const DetectorDataContainer& TDACConta
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          auto* hTDAC            = TDAC.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+          auto* hTDAC = TDAC.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
-              if (cChip->getChannel<OccupancyAndPh>(row, col).isEnabled == true)
+              if (cChip->getChannel<RegisterValue>(row, col).isEnabled == true)
                 hTDAC->Fill(TDACContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
         }
 }

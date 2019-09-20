@@ -19,7 +19,7 @@ class RegisterValue
 {
 public:
     RegisterValue()
-    : fRegisterValue(0)
+      : fRegisterValue(0), isEnabled(false)
     {;}
     RegisterValue(uint16_t registerValue)
     : fRegisterValue(registerValue)
@@ -35,6 +35,8 @@ public:
     void normalize(const uint32_t numberOfEvents) {;}
 
     uint16_t fRegisterValue;
+
+    bool isEnabled;
 };
 
 

@@ -79,10 +79,11 @@ void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
   if (newVCal != nullptr)
     for (const auto cBoard : *fDetectorContainer)
       for (const auto cModule : *cBoard)
-        for (const auto cChip : *cModule) {
-          auto value = static_cast<RD53*>(cChip)->getReg("VCAL_MED") + newVCal->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold;
-          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", value, true);
-        }
+        for (const auto cChip : *cModule)
+          {
+            auto value = static_cast<RD53*>(cChip)->getReg("VCAL_MED") + newVCal->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise>().fThreshold;
+            this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", value, true);
+          }
 
   this->fDetectorDataContainer = &theOccContainer;
   ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *fDetectorDataContainer);
@@ -106,7 +107,10 @@ void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
               if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
-                theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).isEnabled = true;
+                {
+                  theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).isEnabled  = true;
+                  theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).isEnabled = true;
+                }
         }
 
 
