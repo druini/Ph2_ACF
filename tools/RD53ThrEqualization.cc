@@ -86,7 +86,7 @@ void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
           }
 
   this->fDetectorDataContainer = &theOccContainer;
-  ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *fDetectorDataContainer);
+  ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, theOccContainer);
   ContainerFactory::copyAndInitChannel<RegisterValue>(*fDetectorContainer, theTDACcontainer);
 
   this->fChannelGroupHandler = theChnGroupHandler.get();

@@ -183,7 +183,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
   float nHits, mean, rms;
   std::vector<float> measurements(dacList.size(),0);
 
-  theThresholdAndNoiseContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
+  theThresholdAndNoiseContainer = std::make_shared<DetectorDataContainer>();
   ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
 
   size_t index = 0;
@@ -220,7 +220,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 
           theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
           LOG (INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-                     << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise>().fThreshold
+                     << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold
                      << BOLDGREEN << " (Delta_VCal)" << RESET;
 
           LOG (INFO) << BOLDGREEN << "\t\t--> Highest threshold: " << BOLDYELLOW << maxThreshold << RESET;

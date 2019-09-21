@@ -67,7 +67,7 @@ void ThrEqualizationHistograms::fillOccupancy (const DetectorDataContainer& Occu
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
               if (cChip->getChannel<OccupancyAndPh>(row, col).isEnabled == true)
-                hThrEqualization->Fill(OccupancyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
+                hThrEqualization->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
         }
 }
 
@@ -82,12 +82,12 @@ void ThrEqualizationHistograms::fillTDAC (const DetectorDataContainer& TDACConta
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
               if (cChip->getChannel<RegisterValue>(row, col).isEnabled == true)
-                hTDAC->Fill(TDACContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<RegisterValue>(row,col).fRegisterValue);
+                hTDAC->Fill(cChip->getChannel<RegisterValue>(row, col).fRegisterValue);
         }
 }
 
 void ThrEqualizationHistograms::process ()
 {
   draw<TH1F>(ThrEqualization);
-  draw<TH2F>(TDAC);
+  draw<TH1F>(TDAC);
 }

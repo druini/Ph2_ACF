@@ -62,7 +62,7 @@ void LatencyHistograms::fillOccupancy (const DetectorDataContainer& OccupancyCon
         {
           auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          for (size_t i = startValue; i < stopValue; i++)
+          for (size_t i = startValue; i <= stopValue; i++)
             Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i),cChip->getSummary<GenericDataVector>().data1[i-startValue]);
         }
 }
@@ -75,7 +75,7 @@ void LatencyHistograms::fillLatency (const DetectorDataContainer& LatencyContain
         {
           auto* LatencyHist = Latency.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          LatencyHist->Fill(LatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue);
+          LatencyHist->Fill(cChip->getSummary<RegisterValue,RegisterValue>().fRegisterValue);
         }
 }
 

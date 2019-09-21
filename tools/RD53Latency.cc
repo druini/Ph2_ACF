@@ -155,7 +155,7 @@ void Latency::analyze ()
           // # Fill latency container and download new DAC values #
           // ######################################################
           ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, theLatencyContainer);
-          theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = regVal;
+          theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,RegisterValue>().fRegisterValue = regVal;
 
           this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", regVal, true);
         }
@@ -198,7 +198,7 @@ void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& 
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
             {
-              float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+              float occ = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
               theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1.push_back(occ);
             }
     }

@@ -156,7 +156,7 @@ void InjectionDelay::analyze ()
           // # Fill delay container and download new DAC values #
           // ####################################################
           ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, theInjectionDelayContainer);
-          theInjectionDelayContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = regVal;
+          theInjectionDelayContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,RegisterValue>().fRegisterValue = regVal;
 
           this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", regVal, true);
         }
@@ -206,7 +206,7 @@ void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
             {
-              float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+              float occ = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
               theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1.push_back(occ);
             }
     }

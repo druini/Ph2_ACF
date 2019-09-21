@@ -185,7 +185,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
   std::vector<float> y(dacList.size(),0);
   std::vector<float> e(dacList.size(),0);
 
-  theGainAndInterceptContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
+  theGainAndInterceptContainer = std::make_shared<DetectorDataContainer>();
   ContainerFactory::copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
 
   size_t index = 0;

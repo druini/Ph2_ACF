@@ -151,7 +151,7 @@ void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents
   // #################################
   // # Number of standard deviations #
   // #################################
-  float nStDev = 2;
+  float nStDev = 1;
 
   uint16_t numberOfBits = log2(stopValue - startValue + 1) + 1;
 
