@@ -5,7 +5,6 @@
 #include "TApplication.h"
 #include "../Utils/Timer.h"
 
-
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -38,7 +37,6 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "batch", "b" );
 
-
     int result = cmd.parse ( argc, argv );
 
     if ( result != ArgvParser::NoParserError )
@@ -58,9 +56,7 @@ int main ( int argc, char* argv[] )
     if ( batchMode ) gROOT->SetBatch ( true );
     else TQObject::Connect ( "TCanvas", "Closed()", "TApplication", &cApp, "Terminate()" );
 
-    Timer t;
-
-    //create a genereic Tool Object, I can then construct all other tools from that using the Inherit() method
+    //create a generic Tool Object, I can then construct all other tools from that using the Inherit() method
     //this tool stays on the stack and lives until main finishes - all other tools will update the HWStructure from cTool
     Tool cTool;
     std::stringstream outp;
@@ -71,8 +67,8 @@ int main ( int argc, char* argv[] )
     cTool.ConfigureHw ();
     cTool.CreateResultDirectory ( cDirectory );
     cTool.InitResultFile ( "CalibrationResults" );
-    cTool.StartHttpServer();
     
+    Timer t;
     t.start();
 
     // now create a calibration object
@@ -81,7 +77,6 @@ int main ( int argc, char* argv[] )
     theCalibrationExample.Initialise ();
     theCalibrationExample.runCalibrationExample();
     theCalibrationExample.writeObjects();
-
 
     //Tool old style command (some of them will vanish/merged)
     cTool.dumpConfigFiles();

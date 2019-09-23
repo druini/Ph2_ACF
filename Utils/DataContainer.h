@@ -290,7 +290,7 @@ public:
 		for(auto container : *this)
 		{
 			uint32_t numberOfContainerEnabledChannels = 0;
-			if(container != nullptr) numberOfContainerEnabledChannels = container->normalizeAndAverageContainers(static_cast<const Container<T>*>(theContainer)->at(index++), cTestChannelGroup, numberOfEvents);
+			if(container != nullptr) numberOfContainerEnabledChannels = container->normalizeAndAverageContainers(static_cast<const DataContainer<T>*>(theContainer)->at(index++), cTestChannelGroup, numberOfEvents);
 			theNumberOfEnabledChannelsList.emplace_back(numberOfContainerEnabledChannels);
 			numberOfEnabledChannels_+=numberOfContainerEnabledChannels;
 
