@@ -317,6 +317,8 @@ namespace Ph2_HwInterface {
 
     // read info about current firmware
         uint32_t cFrontEndTypeCode = ReadReg ("fc7_daq_stat.general.info.chip_type");
+        std::cout << __PRETTY_FUNCTION__ << "\t" << cFrontEndTypeCode << std::endl;
+
         std::string cChipName = getChipName (cFrontEndTypeCode);
         fFirmwareFrontEndType = getFrontEndType (cFrontEndTypeCode);
         fFWNHybrids = ReadReg ("fc7_daq_stat.general.info.num_hybrids");
