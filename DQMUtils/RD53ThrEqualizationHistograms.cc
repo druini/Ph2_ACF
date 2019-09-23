@@ -35,8 +35,8 @@ void ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContai
 
 bool ThrEqualizationHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<OccupancyAndPh> theOccStreamer ("RD53ThrEqualization");
-  ChannelContainerStream<RegisterValue>  theTDACStreamer("RD53ThrEqualization");
+  ChannelContainerStream<OccupancyAndPh> theOccStreamer ("ThrEqualizationOcc");
+  ChannelContainerStream<RegisterValue>  theTDACStreamer("ThrEqualizationTDAC");
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {

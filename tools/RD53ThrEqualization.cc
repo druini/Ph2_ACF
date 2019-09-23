@@ -48,8 +48,8 @@ void ThrEqualization::Start (int currentRun)
   // #############
   // # Send data #
   // #############
-  auto theOccStream  = prepareChannelContainerStreamer<OccupancyAndPh>();
-  auto theTDACStream = prepareChannelContainerStreamer<RegisterValue>();
+  auto theOccStream  = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
+  auto theTDACStream = prepareChannelContainerStreamer<RegisterValue> ("TDAC");
 
   if (fStreamerEnabled == true)
     {

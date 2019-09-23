@@ -33,8 +33,8 @@ void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& the
 
 bool LatencyHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<GenericDataVector> theOccStreamer    ("RD53Latency");
-  ChannelContainerStream<RegisterValue>     theLatencyStreamer("RD53Latency");
+  ChannelContainerStream<GenericDataVector> theOccStreamer    ("LatencyOcc");
+  ChannelContainerStream<RegisterValue>     theLatencyStreamer("LatencyLatency");
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {

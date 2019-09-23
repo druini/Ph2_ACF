@@ -49,8 +49,8 @@ void InjectionDelay::Start (int currentRun)
   // #############
   // # Send data #
   // #############
-  auto theStream               = prepareChannelContainerStreamer<GenericDataVector>();
-  auto theInjectionDelayStream = prepareChannelContainerStreamer<RegisterValue>();
+  auto theStream               = prepareChannelContainerStreamer<GenericDataVector>("Occ");
+  auto theInjectionDelayStream = prepareChannelContainerStreamer<RegisterValue>    ("InjDelay");
 
   if (fStreamerEnabled == true)
     {
