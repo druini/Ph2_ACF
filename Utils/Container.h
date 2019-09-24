@@ -36,6 +36,7 @@ public:
 	uint16_t getId   (void) const {return id_;}
 	uint16_t getIndex(void) const {return index_;}
 	virtual void     cleanDataStored              (void) = 0;
+	virtual BaseContainer* getElement(uint16_t index) const = 0;
 
 	void setIndex(uint16_t index) {index_ = index;}
 
@@ -79,6 +80,11 @@ public:
 		{
 			container->cleanDataStored();
 		}
+	}
+
+	BaseContainer* getElement(uint16_t index) const override
+	{
+		return this->at(index);
 	}
 
 
@@ -200,6 +206,14 @@ public:
 	{
 		delete container_;
 		container_ = nullptr;
+	}
+
+
+	BaseContainer* getElement(uint16_t index) const override
+	{
+		std::cout<<__PRETTY_FUNCTION__<<" This function should never be called!!! Aborting...";
+		abort();
+		return nullptr;
 	}
 
 
