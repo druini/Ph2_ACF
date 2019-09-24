@@ -49,7 +49,7 @@ void Latency::Start (int currentRun)
   // # Send data #
   // #############
   auto theStream        = prepareChannelContainerStreamer<GenericDataVector>("Occ");
-  auto theLatencyStream = prepareChannelContainerStreamer<RegisterValue>    ("Latency");
+  auto theLatencyStream = prepareChannelContainerStreamer<uint16_t>         ("Latency");
 
   if (fStreamerEnabled == true)
     {
@@ -130,6 +130,8 @@ void Latency::draw ()
 
 void Latency::analyze ()
 {
+  ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theLatencyContainer);
+
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
@@ -154,9 +156,7 @@ void Latency::analyze ()
           // ######################################################
           // # Fill latency container and download new DAC values #
           // ######################################################
-          ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, theLatencyContainer);
-          theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,RegisterValue>().fRegisterValue = regVal;
-
+          theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
           this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", regVal, true);
         }
 }

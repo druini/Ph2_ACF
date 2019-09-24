@@ -50,7 +50,7 @@ void InjectionDelay::Start (int currentRun)
   // # Send data #
   // #############
   auto theStream               = prepareChannelContainerStreamer<GenericDataVector>("Occ");
-  auto theInjectionDelayStream = prepareChannelContainerStreamer<RegisterValue>    ("InjDelay");
+  auto theInjectionDelayStream = prepareChannelContainerStreamer<uint16_t>         ("InjDelay");
 
   if (fStreamerEnabled == true)
     {
@@ -131,6 +131,8 @@ void InjectionDelay::draw ()
 
 void InjectionDelay::analyze ()
 {
+  ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theInjectionDelayContainer);
+
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
@@ -155,9 +157,7 @@ void InjectionDelay::analyze ()
           // ####################################################
           // # Fill delay container and download new DAC values #
           // ####################################################
-          ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, theInjectionDelayContainer);
-          theInjectionDelayContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue,RegisterValue>().fRegisterValue = regVal;
-
+          theInjectionDelayContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
           this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", regVal, true);
         }
 }

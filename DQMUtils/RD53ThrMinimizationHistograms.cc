@@ -25,7 +25,7 @@ void ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContai
 
 bool ThrMinimizationHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<RegisterValue> theThrStreamer("ThrMinimization");
+  ChannelContainerStream<uint16_t> theThrStreamer("ThrMinimization");
 
   if(theThrStreamer.attachBuffer(&dataBuffer))
     {
@@ -46,7 +46,7 @@ void ThrMinimizationHistograms::fill (const DetectorDataContainer& DataContainer
         {
           auto* hThrehsold = Threhsold.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          hThrehsold->Fill(cChip->getSummary<RegisterValue>().fRegisterValue);
+          hThrehsold->Fill(cChip->getSummary<uint16_t>());
         }
 }
 

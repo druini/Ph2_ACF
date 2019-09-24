@@ -34,7 +34,7 @@ void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& the
 bool LatencyHistograms::fill (std::vector<char>& dataBuffer)
 {
   ChannelContainerStream<GenericDataVector> theOccStreamer    ("LatencyOcc");
-  ChannelContainerStream<RegisterValue>     theLatencyStreamer("LatencyLatency");
+  ChannelContainerStream<uint16_t>          theLatencyStreamer("LatencyLatency");
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
@@ -75,7 +75,7 @@ void LatencyHistograms::fillLatency (const DetectorDataContainer& LatencyContain
         {
           auto* LatencyHist = Latency.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          LatencyHist->Fill(cChip->getSummary<RegisterValue,RegisterValue>().fRegisterValue);
+          LatencyHist->Fill(cChip->getSummary<uint16_t>());
         }
 }
 

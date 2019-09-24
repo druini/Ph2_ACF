@@ -34,7 +34,7 @@ void InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContain
 bool InjectionDelayHistograms::fill (std::vector<char>& dataBuffer)
 {
   ChannelContainerStream<GenericDataVector> theOccStreamer           ("InjectionDelayOcc");
-  ChannelContainerStream<RegisterValue>     theInjectionDelayStreamer("InjectionDelayInjDelay");
+  ChannelContainerStream<uint16_t>          theInjectionDelayStreamer("InjectionDelayInjDelay");
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
@@ -75,7 +75,7 @@ void InjectionDelayHistograms::fillInjectionDelay (const DetectorDataContainer& 
         {
           auto* InjectionDelayHist = InjectionDelay.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          InjectionDelayHist->Fill(cChip->getSummary<RegisterValue,RegisterValue>().fRegisterValue);
+          InjectionDelayHist->Fill(cChip->getSummary<uint16_t>());
         }
 }
 

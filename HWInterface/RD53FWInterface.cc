@@ -341,7 +341,7 @@ namespace Ph2_HwInterface
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
   }
 
-  uint32_t RD53FWInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
+  uint32_t RD53FWInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool asyncWait)
   {
     uint32_t cNWords    = ReadReg("user.stat_regs.words_to_read").value();
     uint32_t handshake  = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value();
@@ -354,7 +354,7 @@ namespace Ph2_HwInterface
 
     if (!cNWords) return 0;
 
-    while (cNWords == 0)
+    while ((cNWords == 0) && (asyncWait == true))
       {
         usleep(DEEPSLEEP);
         cNWords = ReadReg("user.stat_regs.words_to_read").value();

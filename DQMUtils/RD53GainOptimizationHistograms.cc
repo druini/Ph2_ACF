@@ -25,7 +25,7 @@ void GainOptimizationHistograms::book (TFile* theOutputFile, const DetectorConta
 
 bool GainOptimizationHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<RegisterValue> theKrumStreamer("GainOptimization");
+  ChannelContainerStream<uint16_t> theKrumStreamer("GainOptimization");
 
   if(theKrumStreamer.attachBuffer(&dataBuffer))
     {
@@ -46,7 +46,7 @@ void GainOptimizationHistograms::fill (const DetectorDataContainer& DataContaine
         {
           auto* hKrumCurr = KrumCurr.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          hKrumCurr->Fill(cChip->getSummary<RegisterValue>().fRegisterValue);
+          hKrumCurr->Fill(cChip->getSummary<uint16_t>());
         }
 }
 
