@@ -204,7 +204,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
                       e[i] = detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPhError;
                     }
 
-                  this->computeStats(x,y,e,gain,gainErr,intercept,interceptErr);
+                  Gain::computeStats(x,y,e,gain,gainErr,intercept,interceptErr);
 
                   if (gain != 0)
                     {

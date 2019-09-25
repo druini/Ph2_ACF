@@ -48,9 +48,9 @@ namespace Ph2_HwInterface
   {
     LOG (INFO) << BOLDMAGENTA << "Resetting the backend board... it may take a while" << RESET;
 
-    this->TurnOffFMC();
-    this->TurnOnFMC();
-    this->ResetBoard();
+    RD53FWInterface::TurnOffFMC();
+    RD53FWInterface::TurnOnFMC();
+    RD53FWInterface::ResetBoard();
 
     LOG (INFO) << BOLDMAGENTA << "You now need to powercycle the frontend chip(s)" << RESET;
   }
@@ -59,14 +59,14 @@ namespace Ph2_HwInterface
   {
     std::stringstream myString;
     // @TMP@
-    // this->TurnOffFMC();
-    // this->TurnOnFMC();
-    // this->ResetBoard();
-    this->ResetFastCmdBlk();
-    this->ResetReadoutBlk();
-    this->ConfigureFastCommands();
-    this->ChipReset();
-    this->ChipReSync();
+    // RD53FWInterface::TurnOffFMC();
+    // RD53FWInterface::TurnOnFMC();
+    // RD53FWInterface::ResetBoard();
+    RD53FWInterface::ResetFastCmdBlk();
+    RD53FWInterface::ResetReadoutBlk();
+    RD53FWInterface::ConfigureFastCommands();
+    RD53FWInterface::ChipReset();
+    RD53FWInterface::ChipReSync();
 
 
     // ###############################################
@@ -96,7 +96,7 @@ namespace Ph2_HwInterface
 
     if (cVecReg.size() != 0) WriteStackReg (cVecReg);
 
-    this->PrintFWstatus();
+    RD53FWInterface::PrintFWstatus();
   }
 
   void RD53FWInterface::WriteChipCommand (std::vector<uint32_t>& data, unsigned int nCmd)
@@ -194,7 +194,7 @@ namespace Ph2_HwInterface
         // #####################
         // # Send read command #
         // #####################
-        this->WriteChipCommand(data);
+        RD53FWInterface::WriteChipCommand(data);
 
 
         // #################
@@ -391,8 +391,8 @@ namespace Ph2_HwInterface
     bool    retry;
     int     nTrials = 0;
 
-    this->localCfgFastCmd.n_triggers = pNEvents;
-    this->ConfigureFastCommands();
+    RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents;
+    RD53FWInterface::ConfigureFastCommands();
 
     do
       {
@@ -400,16 +400,16 @@ namespace Ph2_HwInterface
         retry = false;
         pData.clear();
 
-        this->ResetReadoutBlk();
-        this->ChipReset();
-        this->ChipReSync();
+        RD53FWInterface::ResetReadoutBlk();
+        RD53FWInterface::ChipReset();
+        RD53FWInterface::ChipReSync();
 
 
         // ####################
         // # Readout sequence #
         // ####################
-        this->Start();
-        while (ReadReg("user.stat_regs.trigger_cntr").value() < pNEvents*(1 + this->localCfgFastCmd.trigger_duration)) usleep (SHALLOWSLEEP);
+        RD53FWInterface::Start();
+        while (ReadReg("user.stat_regs.trigger_cntr").value() < pNEvents*(1 + RD53FWInterface::localCfgFastCmd.trigger_duration)) usleep (SHALLOWSLEEP);
         size_t dataAmountOld, dataAmountNew = ReadReg("user.stat_regs.words_to_read").value();
         do
           {
@@ -417,24 +417,24 @@ namespace Ph2_HwInterface
             usleep(SHALLOWSLEEP);
           }
         while ((dataAmountNew = ReadReg("user.stat_regs.words_to_read").value()) != dataAmountOld);
-        this->ReadData(pBoard, false, pData, pWait);
-        this->Stop();
+        RD53FWInterface::ReadData(pBoard, false, pData, false /*pWait*/); // @TMP@
+        RD53FWInterface::Stop();
 
 
         // ##################
         // # Error checking #
         // ##################
-        auto events = this->DecodeEvents(pData, status);
-        // this->PrintEvents(events, &pData); // @TMP@
-        if (this->EvtErrorHandler(status) == false)
+        auto events = RD53FWInterface::DecodeEvents(pData, status);
+        // RD53FWInterface::PrintEvents(events, &pData); // @TMP@
+        if (RD53FWInterface::EvtErrorHandler(status) == false)
           {
             retry = true;
             continue;
           }
 
-        if (events.size() != this->localCfgFastCmd.n_triggers * (1 + this->localCfgFastCmd.trigger_duration))
+        if (events.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
           {
-            LOG (ERROR) << BOLDRED << "Sent " << this->localCfgFastCmd.n_triggers * (1 + this->localCfgFastCmd.trigger_duration) << " triggers, but collected " << events.size() << " events" << BOLDYELLOW << " --> retry" << RESET;
+            LOG (ERROR) << BOLDRED << "Sent " << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << " triggers, but collected " << events.size() << " events" << BOLDYELLOW << " --> retry" << RESET;
             retry = true;
             continue;
           }

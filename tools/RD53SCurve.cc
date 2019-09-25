@@ -201,7 +201,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
                     measurements[i] = fabs(detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy -
                                            detectorContainerVector[i-1]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy);
 
-                  this->computeStats(measurements, offset, nHits, mean, rms);
+                  SCurve::computeStats(measurements, offset, nHits, mean, rms);
 
                   if ((rms > 0) && (nHits > 0) && (isnan(rms) == false))
                     {
