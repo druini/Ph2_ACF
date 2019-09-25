@@ -150,7 +150,7 @@ void Latency::analyze ()
             }
 
           LOG (INFO) << BOLDGREEN << "\t--> Best latency for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
-                     << BOLDYELLOW << regVal << RESET;
+                     << BOLDYELLOW << regVal << BOLDGREEN << " (n.bx)" << RESET;
 
 
           // ######################################################

@@ -30,6 +30,14 @@
 INITIALIZE_EASYLOGGINGPP
 
 
+void setReg2AllChip (SystemController& sc, std::string regName, uint16_t regValue)
+{
+  for (const auto cBoard : *sc.fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        sc.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, regValue, true);
+}
+
 std::string fromInt2Str (int val)
 {
   std::stringstream myString;
@@ -220,14 +228,14 @@ int main (int argc, char** argv)
   // ##################################
   // # Instantiate a SystemController #
   // ##################################
-  SystemController cSystemController;
+  SystemController mySysCntr;
   // @TMP@
   if (reset == true)
     {
       std::stringstream outp;
-      cSystemController.InitializeHw(configFile, outp, true, false);
-      cSystemController.InitializeSettings(configFile, outp);
-      static_cast<RD53FWInterface*>(cSystemController.fBeBoardFWMap[cSystemController.fBoardVector[0]->getBeBoardId()])->ResetSequence();
+      mySysCntr.InitializeHw(configFile, outp, true, false);
+      mySysCntr.InitializeSettings(configFile, outp);
+      static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fBoardVector[0]->getBeBoardId()])->ResetSequence();
       exit(EXIT_SUCCESS);
     }
 
@@ -245,34 +253,34 @@ int main (int argc, char** argv)
   // ##########################
   // # Initialize output file #
   // ##########################
-  if (saveRaw == true) cSystemController.addFileHandler("run_" + fromInt2Str(runNumber) + ".raw", 'w');
+  if (saveRaw == true) mySysCntr.addFileHandler("run_" + fromInt2Str(runNumber) + ".raw", 'w');
 
 
   // #######################
   // # Initialize Hardware #
   // #######################
   LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-  cSystemController.ConfigureHardware(configFile);
+  mySysCntr.ConfigureHardware(configFile);
   LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
 
 
   // ######################
   // # Configure software #
   // ######################
-  size_t nTRIGxEvent = cSystemController.findValueInSettings("nTRIGxEvent");
-  size_t INJtype     = cSystemController.findValueInSettings("INJtype");
+  size_t nTRIGxEvent = mySysCntr.findValueInSettings("nTRIGxEvent");
+  size_t INJtype     = mySysCntr.findValueInSettings("INJtype");
 
 
   // #####################
   // # Preparing the FSM #
   // #####################
-  configureFSM(cSystemController, nTRIGxEvent, INJtype, hitOr);
+  configureFSM(mySysCntr, nTRIGxEvent, INJtype, hitOr);
 
 
   // ######################
   // # Preparing the DIO5 #
   // ######################
-  configureExtClkTrig(cSystemController, extClk, extTrg);
+  configureExtClkTrig(mySysCntr, extClk, extTrg);
 
 
   std::cout << std::endl;
@@ -286,7 +294,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
       Latency la;
-      la.Inherit(&cSystemController);
+      la.Inherit(&mySysCntr);
       la.initialize(fileName, chipConfig);
       RD53RunProgress::total() = la.getNumberIterations();
       la.run();
@@ -302,7 +310,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
       PixelAlive pa;
-      pa.Inherit(&cSystemController);
+      pa.Inherit(&mySysCntr);
       pa.initialize(fileName, chipConfig);
       RD53RunProgress::total() = pa.getNumberIterations();
       pa.run();
@@ -318,7 +326,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan");
       PixelAlive pa;
-      pa.Inherit(&cSystemController);
+      pa.Inherit(&mySysCntr);
       pa.initialize(fileName, chipConfig);
       RD53RunProgress::total() = pa.getNumberIterations();
       pa.run();
@@ -334,7 +342,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
       SCurve sc;
-      sc.Inherit(&cSystemController);
+      sc.Inherit(&mySysCntr);
       sc.initialize(fileName, chipConfig);
       RD53RunProgress::total() = sc.getNumberIterations();
       sc.run();
@@ -350,7 +358,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_Gain");
       Gain ga;
-      ga.Inherit(&cSystemController);
+      ga.Inherit(&mySysCntr);
       ga.initialize(fileName, chipConfig);
       RD53RunProgress::total() = ga.getNumberIterations();
       ga.run();
@@ -366,14 +374,14 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
       SCurve sc;
-      sc.Inherit(&cSystemController);
+      sc.Inherit(&mySysCntr);
       sc.initialize(fileName, chipConfig);
 
       runNumber++;
       fileName   = "Run" + fromInt2Str(runNumber) + "_ThrEqualization";
       chipConfig = "Run" + fromInt2Str(runNumber) + "_";
       ThrEqualization te;
-      te.Inherit(&cSystemController);
+      te.Inherit(&mySysCntr);
       te.initialize(fileName, chipConfig);
 
       RD53RunProgress::total() = sc.getNumberIterations() + te.getNumberIterations();
@@ -394,7 +402,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_GainOptimization");
       GainOptimization go;
-      go.Inherit(&cSystemController);
+      go.Inherit(&mySysCntr);
       go.initialize(fileName, chipConfig);
       RD53RunProgress::total() = go.getNumberIterations();
       go.run();
@@ -410,7 +418,7 @@ int main (int argc, char** argv)
 
       std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
       ThrMinimization tm;
-      tm.Inherit(&cSystemController);
+      tm.Inherit(&mySysCntr);
       tm.initialize(fileName, chipConfig);
       RD53RunProgress::total() = tm.getNumberIterations();
       tm.run();
@@ -424,16 +432,18 @@ int main (int argc, char** argv)
       // #######################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Injection Delay scan @@@" << RESET;
 
+      setReg2AllChip(mySysCntr, "INJECTION_SELECT", 0);
+
       std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
       Latency la;
-      la.Inherit(&cSystemController);
+      la.Inherit(&mySysCntr);
       la.initialize(fileName, chipConfig);
 
       runNumber++;
       fileName   = "Run" + fromInt2Str(runNumber) + "_InjectionDelay";
       chipConfig = "Run" + fromInt2Str(runNumber) + "_";
       InjectionDelay id;
-      id.Inherit(&cSystemController);
+      id.Inherit(&mySysCntr);
       id.initialize(fileName, chipConfig);
 
       RD53RunProgress::total() = la.getNumberIterations() + id.getNumberIterations();
@@ -449,7 +459,7 @@ int main (int argc, char** argv)
   else
     {
       LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
-      cSystemController.Destroy();
+      mySysCntr.Destroy();
       exit(EXIT_FAILURE);
     }
 
@@ -472,7 +482,7 @@ int main (int argc, char** argv)
   fileRunNumberOut.close();
 
 
-  cSystemController.Destroy();
+  mySysCntr.Destroy();
   LOG (INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
 
   return 0;

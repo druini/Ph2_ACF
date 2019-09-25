@@ -82,7 +82,37 @@ void InjectionDelay::initialize (const std::string fileRes_, const std::string f
 void InjectionDelay::run ()
 {
   ContainerFactory::copyAndInitChip<GenericDataVector>(*fDetectorContainer, theOccContainer);
-  InjectionDelay::scanDac("INJECTION_SELECT", dacList, nEvents, &theOccContainer);
+
+
+  // #######################
+  // # Set Initial latency #
+  // #######################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG");
+          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency - 1, true);
+        }
+
+
+  // ###############################
+  // # Scan two adjacent latencies #
+  // ###############################
+  for (auto i = 0; i < 2; i++)
+    {
+      std::vector<uint16_t> halfDacList(dacList.begin() + i*(dacList.end() - dacList.begin()) / 2, dacList.begin() + (i+1)*(dacList.end() - dacList.begin()) / 2);
+
+      for (const auto cBoard : *fDetectorContainer)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG");
+              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency + i, true);
+            }
+
+      InjectionDelay::scanDac("INJECTION_SELECT", halfDacList, nEvents, &theOccContainer);
+    }
 
 
   // ################
@@ -131,6 +161,10 @@ void InjectionDelay::draw ()
 
 void InjectionDelay::analyze ()
 {
+  size_t saveVal = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT")) -
+    RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
+  size_t maxVal  = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
+
   ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theInjectionDelayContainer);
 
   for (const auto cBoard : *fDetectorContainer)
@@ -151,14 +185,23 @@ void InjectionDelay::analyze ()
             }
 
           LOG (INFO) << BOLDGREEN << "\t--> Best delay for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
-                     << BOLDYELLOW << regVal << RESET;
+                     << BOLDYELLOW << regVal << BOLDGREEN << " (1.5625 ns) computed over two bx" << RESET;
+          LOG (INFO) << BOLDGREEN << "\t--> New delay dac value for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
+                     << BOLDYELLOW << (regVal & maxVal) << RESET;
 
 
           // ####################################################
           // # Fill delay container and download new DAC values #
           // ####################################################
           theInjectionDelayContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
-          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", regVal, true);
+          auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT");
+          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", (val & saveVal) | (regVal & maxVal), true);
+
+          auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG");
+          if (regVal / (maxVal+1) == 0) latency--;
+          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency, true);
+          LOG (INFO) << BOLDGREEN << "\t--> New latency dac value for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
+                     << BOLDYELLOW << latency << RESET;
         }
 }
 
