@@ -341,43 +341,43 @@ namespace Ph2_HwInterface
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
   }
 
-  uint32_t RD53FWInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool asyncWait)
+  uint32_t RD53FWInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
   {
-    uint32_t cNWords    = ReadReg("user.stat_regs.words_to_read").value();
-    uint32_t handshake  = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value();
-    uint32_t cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
+    uint32_t doHandshake = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value();
+    uint32_t nWordsInMemory;
+    uint32_t nTriggersReceived;
 
-    LOG (INFO) << GREEN << "----- Reading  data -----" << RESET;
-    LOG (INFO) << GREEN << "n. words        = "        << cNWords    << RESET;
-    LOG (INFO) << GREEN << "n. triggers     = "        << cNtriggers << RESET;
-    LOG (INFO) << CYAN  << "=========================" << RESET;
-
-    if (!cNWords) return 0;
-
-    while ((cNWords == 0) && (asyncWait == true))
+    if (doHandshake == true)
       {
-        usleep(DEEPSLEEP);
-        cNWords = ReadReg("user.stat_regs.words_to_read").value();
-      }
-
-    if (handshake == true)
-      {
-        uint32_t cReadoutReq = ReadReg("user.stat_regs.readout4.readout_req").value();
-        while (cReadoutReq == 0)
+        while (ReadReg("user.stat_regs.readout4.readout_req").value() == 0)
           {
             uint32_t fsm_status = ReadReg("user.stat_regs.readout4.fsm_status").value();
             LOG (ERROR) << BOLDRED << "Waiting for readout request, FSM status: " << BOLDYELLOW << fsm_status << RESET;
-
             usleep(DEEPSLEEP);
-
-            cReadoutReq = ReadReg("user.stat_regs.readout4.readout_req");
           }
 
-        cNWords    = ReadReg("user.stat_regs.words_to_read").value();
-        cNtriggers = ReadReg("user.stat_regs.trigger_cntr").value();
+        nWordsInMemory    = ReadReg("user.stat_regs.words_to_read").value();
+        nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
+      }
+    else
+      {
+        nWordsInMemory    = ReadReg("user.stat_regs.words_to_read").value();
+        nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
+
+        while ((nWordsInMemory == 0) && (pWait == true))
+          {
+            if (pWait == true) usleep(DEEPSLEEP);
+            nWordsInMemory    = ReadReg("user.stat_regs.words_to_read").value();
+            nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
+          }
       }
 
-    uhal::ValVector<uint32_t> values = ReadBlockReg("ddr3.fc7_daq_ddr3", cNWords);
+    LOG (INFO) << GREEN << "----- Reading  data -----" << RESET;
+    LOG (INFO) << GREEN << "n. words        = "        << nWordsInMemory    << RESET;
+    LOG (INFO) << GREEN << "n. triggers     = "        << nTriggersReceived << RESET;
+    LOG (INFO) << CYAN  << "=========================" << RESET;
+
+    uhal::ValVector<uint32_t> values = ReadBlockReg("ddr3.fc7_daq_ddr3", nWordsInMemory);
     for (const auto& val : values) pData.push_back(val);
 
     if (fSaveToFile == true) fFileHandler->set(pData);
@@ -417,7 +417,7 @@ namespace Ph2_HwInterface
             usleep(SHALLOWSLEEP);
           }
         while ((dataAmountNew = ReadReg("user.stat_regs.words_to_read").value()) != dataAmountOld);
-        this->ReadData(pBoard, false, pData);
+        this->ReadData(pBoard, false, pData, pWait);
         this->Stop();
 
 
