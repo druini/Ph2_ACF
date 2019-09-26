@@ -377,7 +377,8 @@ namespace Ph2_HwInterface
     LOG (INFO) << GREEN << "n. triggers     = "        << nTriggersReceived << RESET;
     LOG (INFO) << CYAN  << "=========================" << RESET;
 
-    uhal::ValVector<uint32_t> values = ReadBlockReg("ddr3.fc7_daq_ddr3", nWordsInMemory);
+    uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
+    ddr3Offset += nWordsInMemory;
     for (const auto& val : values) pData.push_back(val);
 
     if (fSaveToFile == true) fFileHandler->set(pData);
@@ -551,6 +552,7 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ResetReadoutBlk()
   {
+    ddr3Offset = 0;
     WriteStackReg({
         {"user.ctrl_regs.reset_reg.readout_block_rst",1},
         {"user.ctrl_regs.reset_reg.readout_block_rst",0}});
