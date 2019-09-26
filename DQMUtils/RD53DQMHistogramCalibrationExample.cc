@@ -73,7 +73,6 @@ void RD53DQMHistogramCalibrationExample::fillCalibrationExamplePlots(DetectorDat
                 {
                     for (auto col = fColStart; col <= fColStop; col++)
                     {
-                        if(true) // MAURO, metti come si controlla se il canale e' stato colpito
                         chipHitHistogram->Fill(col,row,chip->getChannel<uint32_t>(row,col));
                     }
                 }
