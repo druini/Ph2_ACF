@@ -30,14 +30,6 @@
 INITIALIZE_EASYLOGGINGPP
 
 
-void setReg2AllChip (SystemController& sc, std::string regName, uint16_t regValue)
-{
-  for (const auto cBoard : *sc.fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        sc.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, regValue, true);
-}
-
 std::string fromInt2Str (int val)
 {
   std::stringstream myString;
@@ -113,9 +105,9 @@ void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t injType, boo
       else LOG (ERROR) << BOLDRED << "Option non recognized " << injType << RESET;
 
 
-      // ###############################################
+      // ################################################
       // # Copy to RD53FWInterface data member variable #
-      // ###############################################
+      // ################################################
       RD53Board->getLoaclCfgFastCmd()->trigger_source                      = cfgFastCmd.trigger_source;
       RD53Board->getLoaclCfgFastCmd()->n_triggers                          = cfgFastCmd.n_triggers;
       RD53Board->getLoaclCfgFastCmd()->trigger_duration                    = cfgFastCmd.trigger_duration;
@@ -372,25 +364,12 @@ int main (int argc, char** argv)
       // ##############################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
-      std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
-      SCurve sc;
-      sc.Inherit(&mySysCntr);
-      sc.initialize(fileName, chipConfig);
-
-      runNumber++;
-      fileName   = "Run" + fromInt2Str(runNumber) + "_ThrEqualization";
-      chipConfig = "Run" + fromInt2Str(runNumber) + "_";
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrEqualization");
       ThrEqualization te;
       te.Inherit(&mySysCntr);
       te.initialize(fileName, chipConfig);
-
-      RD53RunProgress::total() = sc.getNumberIterations() + te.getNumberIterations();
-
-      sc.run();
-      auto output = sc.analyze();
-      sc.draw();
-
-      te.run(output);
+      RD53RunProgress::total() = te.getNumberIterations();
+      te.run();
       te.draw();
     }
   else if (whichCalib == "gainopt")
@@ -432,26 +411,11 @@ int main (int argc, char** argv)
       // #######################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Injection Delay scan @@@" << RESET;
 
-      setReg2AllChip(mySysCntr, "INJECTION_SELECT", 0);
-
-      std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
-      Latency la;
-      la.Inherit(&mySysCntr);
-      la.initialize(fileName, chipConfig);
-
-      runNumber++;
-      fileName   = "Run" + fromInt2Str(runNumber) + "_InjectionDelay";
-      chipConfig = "Run" + fromInt2Str(runNumber) + "_";
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_InjectionDelayy");
       InjectionDelay id;
       id.Inherit(&mySysCntr);
       id.initialize(fileName, chipConfig);
-
-      RD53RunProgress::total() = la.getNumberIterations() + id.getNumberIterations();
-
-      la.run();
-      la.analyze();
-      la.draw();
-
+      RD53RunProgress::total() = id.getNumberIterations();
       id.run();
       id.analyze();
       id.draw();

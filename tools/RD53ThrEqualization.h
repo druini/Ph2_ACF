@@ -10,10 +10,10 @@
 #ifndef RD53ThrEqualization_H
 #define RD53ThrEqualization_H
 
+#include "RD53SCurve.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/ThresholdAndNoise.h"
 #include "../DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "Tool.h"
 
@@ -38,19 +38,21 @@ class ThrEqualization : public Tool
   void ConfigureCalibration () override;
   void writeObjects         () {}; // @TMP@
 
+  void   sendData            ();
   void   initialize          (const std::string fileRes_, const std::string fileReg_);
-  void   run                 (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
+  void   run                 ();
   void   draw                ();
   size_t getNumberIterations ()
   {
     uint16_t nBitTDAC       = 4;
     uint16_t moreIterations = 2;
     return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups)*(nBitTDAC + moreIterations) *
-      nEvents/nEvtsBurst;
+      nEvents/nEvtsBurst + sc.getNumberIterations();
   }
 
 
  private:
+  SCurve sc;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;

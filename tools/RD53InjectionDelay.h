@@ -10,6 +10,7 @@
 #ifndef RD53InjectionDelay_H
 #define RD53InjectionDelay_H
 
+#include "RD53Latency.h"
 #include "../DQMUtils/RD53InjectionDelayHistograms.h"
 #include "RD53PixelAlive.h"
 
@@ -31,14 +32,16 @@ class InjectionDelay : public PixelAlive
   void ConfigureCalibration () override;
   void writeObjects         () {}; // @TMP@
 
+  void   sendData            ();
   void   initialize          (const std::string fileRes_, const std::string fileReg_);
   void   run                 ();
   void   draw                ();
   void   analyze             ();
-  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue + 1); }
+  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue + 1) + la.getNumberIterations(); }
 
 
  private:
+  Latency la;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;

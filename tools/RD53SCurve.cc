@@ -53,11 +53,11 @@ void SCurve::Start (int currentRun)
 {
   SCurve::run();
   SCurve::analyze();
+  SCurve::sendData();
+}
 
-
-  // #############
-  // # Send data #
-  // #############
+void SCurve::sendData ()
+{
   auto theOccStream         = prepareChannelContainerStreamer<OccupancyAndPh>   ("Occ");
   auto theThrAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>("ThrAndNoise");
 

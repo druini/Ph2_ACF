@@ -38,11 +38,11 @@ void ThrMinimization::Start (int currentRun)
 {
   ThrMinimization::run();
   ThrMinimization::analyze();
+  ThrMinimization::sendData();
+}
 
-
-  // #############
-  // # Send data #
-  // #############
+void ThrMinimization::sendData ()
+{
   auto theThrStream = prepareChannelContainerStreamer<uint16_t>();
 
   if (fStreamerEnabled == true)

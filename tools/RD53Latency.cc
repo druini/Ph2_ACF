@@ -43,11 +43,11 @@ void Latency::Start (int currentRun)
 {
   Latency::run();
   Latency::analyze();
+  Latency::sendData();
+}
 
-
-  // #############
-  // # Send data #
-  // #############
+void Latency::sendData ()
+{
   auto theStream        = prepareChannelContainerStreamer<GenericDataVector>("Occ");
   auto theLatencyStream = prepareChannelContainerStreamer<uint16_t>         ("Latency");
 

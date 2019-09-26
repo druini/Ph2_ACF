@@ -53,11 +53,11 @@ void Gain::Start (int currentRun)
 {
   Gain::run();
   Gain::analyze();
+  Gain::sendData();
+}
 
-
-  // #############
-  // # Send data #
-  // #############
+void Gain::sendData ()
+{
   auto theOccStream              = prepareChannelContainerStreamer<OccupancyAndPh>  ("Occ");
   auto theGainAndInterceptStream = prepareChannelContainerStreamer<GainAndIntercept>("GainAndIntercept");
 

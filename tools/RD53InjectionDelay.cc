@@ -38,17 +38,27 @@ void InjectionDelay::ConfigureCalibration ()
   size_t nSteps = stopValue - startValue + 1;
   float step    = (stopValue - startValue + 1) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
+
+
+  // ######################
+  // # Initialize Latency #
+  // ######################
+  std::string fileName = fileRes;
+  fileName.replace(fileRes.find("_InjectionDelay"),15,"_Latency");
+  la.Inherit(this);
+  la.initialize(fileName, fileReg);
 }
 
 void InjectionDelay::Start (int currentRun)
 {
   InjectionDelay::run();
   InjectionDelay::analyze();
+  InjectionDelay::sendData();
+  la.sendData();
+}
 
-
-  // #############
-  // # Send data #
-  // #############
+void InjectionDelay::sendData ()
+{
   auto theStream               = prepareChannelContainerStreamer<GenericDataVector>("Occ");
   auto theInjectionDelayStream = prepareChannelContainerStreamer<uint16_t>         ("InjDelay");
 
@@ -81,6 +91,18 @@ void InjectionDelay::initialize (const std::string fileRes_, const std::string f
 
 void InjectionDelay::run ()
 {
+  // ###############
+  // # Run Latency #
+  // ###############
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", 0, true);
+  la.run();
+  la.analyze();
+  la.draw();
+
+
   ContainerFactory::copyAndInitChip<GenericDataVector>(*fDetectorContainer, theOccContainer);
 
 

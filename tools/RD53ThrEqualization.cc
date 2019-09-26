@@ -38,16 +38,26 @@ void ThrEqualization::ConfigureCalibration ()
 
   theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+
+
+  // #####################
+  // # Initialize SCurve #
+  // #####################
+  std::string fileName = fileRes;
+  fileName.replace(fileRes.find("_ThrEqualization"),16,"_SCurve");
+  sc.Inherit(this);
+  sc.initialize(fileName, fileReg);
 }
 
 void ThrEqualization::Start (int currentRun)
 {
   ThrEqualization::run();
+  ThrEqualization::sendData();
+  sc.sendData();
+}
 
-
-  // #############
-  // # Send data #
-  // #############
+void ThrEqualization::sendData ()
+{
   auto theOccStream  = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
   auto theTDACStream = prepareChannelContainerStreamer<uint16_t>      ("TDAC");
 
@@ -71,8 +81,19 @@ void ThrEqualization::initialize (const std::string fileRes_, const std::string 
   ThrEqualization::ConfigureCalibration();
 }
 
-void ThrEqualization::run (std::shared_ptr<DetectorDataContainer> newVCal)
+void ThrEqualization::run ()
 {
+  // ##############
+  // # Run SCurve #
+  // ##############
+  sc.run();
+  auto newVCal = sc.analyze();
+  sc.draw();
+
+
+  // ##############################
+  // # Run threshold equalization #
+  // ##############################
   size_t TDACsize = RD53::setBits(RD53PixelEncoder::NBIT_TDAC) + 1;
 
   // ############################

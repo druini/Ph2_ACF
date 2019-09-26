@@ -41,11 +41,11 @@ void GainOptimization::Start (int currentRun)
 {
   GainOptimization::run();
   GainOptimization::analyze();
+  GainOptimization::sendData();
+}
 
-
-  // #############
-  // # Send data #
-  // #############
+void GainOptimization::sendData ()
+{
   auto theKrumStream = prepareChannelContainerStreamer<uint16_t>();
 
   if (fStreamerEnabled == true)
