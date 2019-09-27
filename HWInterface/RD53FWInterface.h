@@ -248,6 +248,7 @@ namespace Ph2_HwInterface
     FastCommandsConfig localCfgFastCmd;
     void SendBoardCommand(const std::string& cmd_reg);
     D19cFpgaConfig* fpgaConfig;
+    int ddr3Offset = 0;
   };
 }
 
