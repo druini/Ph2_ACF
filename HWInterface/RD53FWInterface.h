@@ -244,11 +244,12 @@ namespace Ph2_HwInterface
     const FpgaConfig* getConfiguringFpga       ();
 
   private:
-    FileHandler* fFileHandler;
+    void SendBoardCommand (const std::string& cmd_reg);
+
+    FileHandler*       fFileHandler;
     FastCommandsConfig localCfgFastCmd;
-    void SendBoardCommand(const std::string& cmd_reg);
-    D19cFpgaConfig* fpgaConfig;
-    int ddr3Offset = 0;
+    D19cFpgaConfig*    fpgaConfig;
+    int                ddr3Offset = 0;
   };
 }
 
