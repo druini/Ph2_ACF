@@ -417,7 +417,7 @@ namespace Ph2_HwInterface
             usleep(SHALLOWSLEEP);
           }
         while ((dataAmountNew = ReadReg("user.stat_regs.words_to_read").value()) != dataAmountOld);
-        RD53FWInterface::ReadData(pBoard, false, pData, false /*pWait*/); // @TMP@
+        RD53FWInterface::ReadData(pBoard, false, pData, false /*pWait*/); // @TMP@ : FW bug triggers are recorded but DDR3 empty
         RD53FWInterface::Stop();
 
 
