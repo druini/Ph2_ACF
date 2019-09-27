@@ -357,21 +357,6 @@ int main (int argc, char** argv)
       ga.analyze();
       ga.draw();
     }
-  else if (whichCalib == "threqu")
-    {
-      // ##############################
-      // # Run Threshold Equalization #
-      // ##############################
-      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
-
-      std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrEqualization");
-      ThrEqualization te;
-      te.Inherit(&mySysCntr);
-      te.initialize(fileName, chipConfig);
-      RD53RunProgress::total() = te.getNumberIterations();
-      te.run();
-      te.draw();
-    }
   else if (whichCalib == "gainopt")
     {
       // #########################
@@ -387,6 +372,21 @@ int main (int argc, char** argv)
       go.run();
       go.analyze();
       go.draw();
+    }
+  else if (whichCalib == "threqu")
+    {
+      // ##############################
+      // # Run Threshold Equalization #
+      // ##############################
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
+
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrEqualization");
+      ThrEqualization te;
+      te.Inherit(&mySysCntr);
+      te.initialize(fileName, chipConfig);
+      RD53RunProgress::total() = te.getNumberIterations();
+      te.run();
+      te.draw();
     }
   else if (whichCalib == "thrmin")
     {
@@ -411,7 +411,7 @@ int main (int argc, char** argv)
       // #######################
       LOG (INFO) << BOLDMAGENTA << "@@@ Performing Injection Delay scan @@@" << RESET;
 
-      std::string fileName("Run" + fromInt2Str(runNumber) + "_InjectionDelayy");
+      std::string fileName("Run" + fromInt2Str(runNumber) + "_InjectionDelay");
       InjectionDelay id;
       id.Inherit(&mySysCntr);
       id.initialize(fileName, chipConfig);

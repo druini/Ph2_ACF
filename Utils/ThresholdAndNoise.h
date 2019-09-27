@@ -7,8 +7,8 @@
   Support :                      mail to : fabio.ravera@cern.ch
 */
 
-#ifndef THRESHOLD_AND_NOISE_H
-#define THRESHOLD_AND_NOISE_H
+#ifndef ThresholdAndNoise_H
+#define ThresholdAndNoise_H
 
 #include "Container.h"
 
