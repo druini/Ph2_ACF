@@ -22,9 +22,9 @@
 // ##################
 // # Default values #
 // ##################
-#define RESULTDIR "Results" // Directory containing the results
+#define RUNNUMBER     0
+#define RESULTDIR     "Results" // Directory containing the results
 #define FILERUNNUMBER "./RunNumber.txt"
-#define RUNNUMBER 0
 
 
 INITIALIZE_EASYLOGGINGPP
@@ -35,128 +35,6 @@ std::string fromInt2Str (int val)
   std::stringstream myString;
   myString << std::setfill('0') << std::setw(4) << val;
   return myString.str();
-}
-
-void configureFSM (SystemController& sc, size_t nTRIGxEvent, size_t injType, bool hitOr)
-// ############################
-// # injType == 0 --> None    #
-// # injType == 1 --> Analog  #
-// # injType == 2 --> Digital #
-// ############################
-{
-  enum INJtype { None, Analog , Digital };
-  enum INJdelay
-  {
-    FirstCal  = 32,
-    SecondCal = 32,
-    Loop      = 40
-  };
-
-  for (const auto& cBoard : sc.fBoardVector)
-    {
-      auto RD53Board = static_cast<RD53FWInterface*>(sc.fBeBoardFWMap[cBoard->getBeBoardId()]);
-      uint8_t chipId = RD53InjEncoder::BROADCAST_CHIPID;
-
-
-      // #############################
-      // # Configuring FastCmd block #
-      // #############################
-      RD53FWInterface::FastCommandsConfig cfgFastCmd;
-      cfgFastCmd.trigger_source   = (hitOr == true ? RD53FWInterface::TriggerSource::HitOr : RD53FWInterface::TriggerSource::FastCMDFSM);
-      cfgFastCmd.n_triggers       = 0;
-      cfgFastCmd.trigger_duration = nTRIGxEvent - 1;
-
-      if (injType == INJtype::Digital)
-        {
-          // #######################################
-          // # Configuration for digital injection #
-          // #######################################
-          RD53::CalCmd calcmd_first(1,2,8,0,0);
-          cfgFastCmd.fast_cmd_fsm.first_cal_data         = calcmd_first.getCalCmd(chipId);
-          RD53::CalCmd calcmd_second(0,0,0,0,0);
-          cfgFastCmd.fast_cmd_fsm.second_cal_data        = calcmd_second.getCalCmd(chipId);
-
-          cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
-          cfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 0;
-          cfgFastCmd.fast_cmd_fsm.delay_loop             = INJdelay::Loop;
-
-          cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
-          cfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
-          cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
-        }
-      else if ((injType == INJtype::Analog) || (injType == INJtype::None))
-        {
-          // ######################################
-          // # Configuration for analog injection #
-          // ######################################
-          RD53::CalCmd calcmd_first(1,0,0,0,0);
-          cfgFastCmd.fast_cmd_fsm.first_cal_data         = calcmd_first.getCalCmd(chipId);
-          RD53::CalCmd calcmd_second(0,0,2,0,0);
-          cfgFastCmd.fast_cmd_fsm.second_cal_data        = calcmd_second.getCalCmd(chipId);
-
-          cfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
-          cfgFastCmd.fast_cmd_fsm.delay_after_second_cal = INJdelay::SecondCal;
-          cfgFastCmd.fast_cmd_fsm.delay_loop             = INJdelay::Loop;
-
-          cfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
-          cfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
-          cfgFastCmd.fast_cmd_fsm.trigger_en             = true;
-        }
-      else LOG (ERROR) << BOLDRED << "Option non recognized " << injType << RESET;
-
-
-      // ################################################
-      // # Copy to RD53FWInterface data member variable #
-      // ################################################
-      RD53Board->getLoaclCfgFastCmd()->trigger_source                      = cfgFastCmd.trigger_source;
-      RD53Board->getLoaclCfgFastCmd()->n_triggers                          = cfgFastCmd.n_triggers;
-      RD53Board->getLoaclCfgFastCmd()->trigger_duration                    = cfgFastCmd.trigger_duration;
-
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_data         = cfgFastCmd.fast_cmd_fsm.first_cal_data;
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_data        = cfgFastCmd.fast_cmd_fsm.second_cal_data;
-
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_first_cal  = cfgFastCmd.fast_cmd_fsm.delay_after_first_cal;
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_after_second_cal = cfgFastCmd.fast_cmd_fsm.delay_after_second_cal;
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.delay_loop             = cfgFastCmd.fast_cmd_fsm.delay_loop;
-
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.first_cal_en           = cfgFastCmd.fast_cmd_fsm.first_cal_en;
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.second_cal_en          = cfgFastCmd.fast_cmd_fsm.second_cal_en;
-      RD53Board->getLoaclCfgFastCmd()->fast_cmd_fsm.trigger_en             = cfgFastCmd.fast_cmd_fsm.trigger_en;
-
-
-      // ##############################
-      // # Download the configuration #
-      // ##############################
-      RD53Board->ConfigureFastCommands();
-    }
-}
-
-
-void configureExtClkTrig (SystemController& sc, bool extClk, bool extTrg)
-{
-  const uint8_t chnOutEnable   = 0x00;
-  const uint8_t fiftyohmEnable = 0x12;
-
-  if ((extClk == true) || (extTrg == true))
-    for (const auto& cBoard : sc.fBoardVector)
-      {
-        auto RD53Board = static_cast<RD53FWInterface*>(sc.fBeBoardFWMap[cBoard->getBeBoardId()]);
-
-
-        // ####################
-        // # Configuring DIO5 #
-        // ####################
-        LOG (INFO) << GREEN << "Configuring DIO5 for external trigger and/or external clock for board " << BOLDYELLOW << cBoard->getBeBoardId() << RESET;
-
-        if (extTrg == true) RD53Board->getLoaclCfgFastCmd()->trigger_source = RD53FWInterface::TriggerSource::External;
-
-        RD53FWInterface::DIO5Config cfgDIO5;
-        cfgDIO5.enable      = true;
-        cfgDIO5.ext_clk_en  = extClk;
-        cfgDIO5.ch_out_en   = chnOutEnable;
-        cfgDIO5.fiftyohm_en = fiftyohmEnable;
-        RD53Board->ConfigureDIO5(&cfgDIO5);
-      }
 }
 
 
@@ -187,17 +65,8 @@ int main (int argc, char** argv)
   cmd.defineOption ("raw", "Save raw data. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("raw", "r");
 
-  cmd.defineOption ("exttrg", "Set external trigger. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
-  cmd.defineOptionAlternative ("exttrg", "xt");
-
-  cmd.defineOption ("extclk", "Set external clock. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
-  cmd.defineOptionAlternative ("extclk", "xc");
-
-  cmd.defineOption ("hitor", "Use Hit-Or signal to trigger. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
-  cmd.defineOptionAlternative ("hitor", "o");
-
   // @TMP@
-  cmd.defineOption("reset","Reset the hardware", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+  cmd.defineOption("reset","Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative("reset", "s");
 
   int result = cmd.parse(argc,argv);
@@ -211,15 +80,12 @@ int main (int argc, char** argv)
   std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "CMSIT.xml";
   std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
   bool saveRaw           = cmd.foundOption("raw")    == true ? true : false;
-  bool extTrg            = cmd.foundOption("exttrg") == true ? true : false;
-  bool extClk            = cmd.foundOption("extclk") == true ? true : false;
-  bool hitOr             = cmd.foundOption("hitor")  == true ? true : false;
   bool reset             = cmd.foundOption("reset")  == true ? true : false; // @TMP@
 
 
-  // ##################################
-  // # Instantiate a SystemController #
-  // ##################################
+  // ################################
+  // # Instantiate SystemController #
+  // ################################
   SystemController mySysCntr;
   // @TMP@
   if (reset == true)
@@ -254,25 +120,6 @@ int main (int argc, char** argv)
   LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
   mySysCntr.ConfigureHardware(configFile);
   LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
-
-
-  // ######################
-  // # Configure software #
-  // ######################
-  size_t nTRIGxEvent = mySysCntr.findValueInSettings("nTRIGxEvent");
-  size_t INJtype     = mySysCntr.findValueInSettings("INJtype");
-
-
-  // #####################
-  // # Preparing the FSM #
-  // #####################
-  configureFSM(mySysCntr, nTRIGxEvent, INJtype, hitOr);
-
-
-  // ######################
-  // # Preparing the DIO5 #
-  // ######################
-  configureExtClkTrig(mySysCntr, extClk, extTrg);
 
 
   std::cout << std::endl;

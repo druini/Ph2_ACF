@@ -52,10 +52,7 @@ namespace Ph2_HwInterface
 
   private:
     template <typename T, size_t N>
-      static size_t arraySize(const T(&)[N])
-    {
-      return N;
-    }
+      static size_t arraySize(const T(&)[N]) { return N; }
   };
 }
 

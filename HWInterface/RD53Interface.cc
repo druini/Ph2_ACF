@@ -137,7 +137,7 @@ namespace Ph2_HwInterface
             unsigned int pixMode = 0;
             unsigned int row     = 0;
 
-            fBoardFW->WriteChipCommand (serialSymbols);
+            static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand (serialSymbols);
 
             if (strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0)                     pixMode       = RD53Interface::ReadRD53Reg (pRD53, "PIX_MODE")[0].second;
             if (pixMode == 0)                                                   outputDecoded = RD53Interface::ReadRD53Reg (pRD53, pRegNode);
@@ -160,7 +160,7 @@ namespace Ph2_HwInterface
           }
       }
 
-    fBoardFW->WriteChipCommand (serialSymbols);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand (serialSymbols);
     if ((strcmp(pRegNode.c_str(),"VCAL_HIGH") == 0) || (strcmp(pRegNode.c_str(),"VCAL_MED") == 0)) usleep(VCALSLEEP); // @TMP@
     return true;
   }
@@ -196,7 +196,7 @@ namespace Ph2_HwInterface
           }
       }
 
-    fBoardFW->WriteChipCommand(serialSymbols);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialSymbols);
     return true;
   }
 
@@ -211,7 +211,7 @@ namespace Ph2_HwInterface
         cRegItem.fAddress = pRD53->getRegItem(pRegNode).fAddress;
         pRD53->encodeCMD(cRegItem.fAddress, data, pRD53->getChipId(), RD53CmdEncoder::WRITE, false, serialSymbols);
       }
-    else fBoardFW->WriteChipCommand(serialSymbols, nCmd);
+    else static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialSymbols, nCmd);
   }
 
   void RD53Interface::WriteRD53RegLong (RD53* pRD53, const std::string& pRegNode, const std::vector<uint32_t>& dataVec, size_t nCmd)
@@ -226,7 +226,7 @@ namespace Ph2_HwInterface
         pRD53->encodeCMD(pRD53->getRegItem(pRegNode).fAddress, pRD53->getRegItem(pRegNode).fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, true, serialSymbols, &subDataVec);
       }
 
-    fBoardFW->WriteChipCommand(serialSymbols, nCmd);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialSymbols, nCmd);
   }
 
   std::vector<std::pair<uint16_t, uint16_t> > RD53Interface::ReadRD53Reg (RD53* pRD53, const std::string& pRegNode)
@@ -238,7 +238,7 @@ namespace Ph2_HwInterface
     ChipRegItem cRegItem = pRD53->getRegItem(pRegNode);
 
     pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::READ, false, serialSymbols);
-    outputDecoded = fBoardFW->ReadChipRegisters(serialSymbols, pRD53->getChipId());
+    outputDecoded = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(serialSymbols, pRD53->getChipId());
 
     for (auto i = 0u; i < outputDecoded.size(); i++)
       // Removing bit related to PIX_PORTAL register identification
