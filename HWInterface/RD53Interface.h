@@ -13,7 +13,6 @@
 #include "RD53FWInterface.h"
 #include "BeBoardFWInterface.h"
 #include "ReadoutChipInterface.h"
-#include "../Utils/RegisterValue.h"
 
 // #############
 // # CONSTANTS #

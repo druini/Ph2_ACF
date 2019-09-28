@@ -1402,7 +1402,7 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacNam
 	{
 		for ( auto cChip : *cFe )
 		{
-			fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), dacName, globalDACContainer.at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue);
+			fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), dacName, globalDACContainer.at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>());
 		}
 	}
 	return;
@@ -1467,7 +1467,7 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, c
 	{
 		for ( auto cChip : cFe->fReadoutChipVector )
 		{
-			ChannelContainer<RegisterValue>* dacVector = new ChannelContainer<RegisterValue>(cChip->getNumberOfChannels(),RegisterValue(dacValue));
+			ChannelContainer<uint16_t>* dacVector = new ChannelContainer<uint16_t>(cChip->getNumberOfChannels(),dacValue);
 			ChipContainer theChipContainer(cChip->getIndex(),cChip->getNumberOfRows(),cChip->getNumberOfCols());
 			theChipContainer.setChannelContainer(dacVector);
 

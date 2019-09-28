@@ -402,7 +402,7 @@ namespace Ph2_HwInterface
 
     for (auto row = 0u; row < RD53::nRows; row++)
       for (auto col = 0u; col < RD53::nCols; col++)
-        pRD53->setTDAC(row, col, pValue.getChannel<RegisterValue>(row, col).fRegisterValue);
+        pRD53->setTDAC(row, col, pValue.getChannel<uint16_t>(row, col));
 
     RD53Interface::WriteRD53Mask(pRD53, false, false, pVerifLoop);
 

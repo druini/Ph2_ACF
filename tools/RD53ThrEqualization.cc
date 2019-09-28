@@ -203,11 +203,11 @@ void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents,
   DetectorDataContainer bestDACcontainer;
   DetectorDataContainer bestContainer;
 
-  ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, minDACcontainer);
-  ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, midDACcontainer);
-  ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, maxDACcontainer);
+  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, minDACcontainer);
+  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, midDACcontainer);
+  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, maxDACcontainer);
 
-  ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, bestDACcontainer);
+  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, bestDACcontainer);
   ContainerFactory::copyAndInitChannel<OccupancyAndPh>(*fDetectorContainer, bestContainer);
 
   for (const auto cBoard : *fDetectorContainer)
