@@ -194,7 +194,7 @@ namespace Ph2_HwInterface
         // ##################
         myString.clear(); myString.str("");
         myString << "user.readout" << +chipID << ".reg_read";
-        nodeBlocks = fBoard->getNode(myString.str().c_str()).getSize();
+        nodeBlocks = getUhalNode(myString.str().c_str()).getSize();
         ReadBlockRegValue(myString.str().c_str(), nodeBlocks);
         if (nodeBlocks < BLOCKS2READ)
           {

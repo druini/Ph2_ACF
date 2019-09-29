@@ -104,16 +104,9 @@ namespace Ph2_HwInterface
     void     ChipReSync  ()                                                                                     override;
     std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)           override;
 
+    bool InitChipCommunication ();
     void WriteChipCommand      (std::vector<uint32_t>& data, unsigned int nCmd = 1);
     std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (std::vector<uint32_t>& data, uint8_t chipID, uint8_t filter = 0);
-    bool InitChipCommunication ();
-    void PrintFWstatus         ();
-    void SerializeSymbols      (std::vector<std::vector<uint16_t> >& data, std::vector<uint32_t>& serialData);
-    void TurnOffFMC            ();
-    void TurnOnFMC             ();
-    void ResetBoard            ();
-    void ResetFastCmdBlk       ();
-    void ResetReadoutBlk       ();
 
     struct ChipFrame
     {
@@ -210,7 +203,6 @@ namespace Ph2_HwInterface
       Autozero         autozero;
     };
 
-    void ConfigureFastCommands       (const FastCommandsConfig* config = nullptr);
     void SetAndConfigureFastCommands (size_t nTRIGxEvent, size_t injType);
 
     struct DIO5Config
@@ -228,8 +220,6 @@ namespace Ph2_HwInterface
       uint32_t tlu_handshake_mode = 0;    // 0 = no handshake, 1 = simple handshake, 2 = data handshake
     };
 
-    void ConfigureDIO5 (const DIO5Config* config);
-
     FastCommandsConfig* getLocalCfgFastCmd() { return &localCfgFastCmd; }
 
     // ###########################################
@@ -245,7 +235,18 @@ namespace Ph2_HwInterface
     const FpgaConfig* getConfiguringFpga       ();
 
   private:
-    void SendBoardCommand (const std::string& cmd_reg);
+    void PrintFWstatus         ();
+    void SerializeSymbols      (std::vector<std::vector<uint16_t> >& data, std::vector<uint32_t>& serialData);
+    void TurnOffFMC            ();
+    void TurnOnFMC             ();
+    void ResetBoard            ();
+    void ResetFastCmdBlk       ();
+    void ResetReadoutBlk       ();
+
+    void ConfigureFastCommands (const FastCommandsConfig* config = nullptr);
+    void ConfigureDIO5         (const DIO5Config* config);
+
+    void SendBoardCommand      (const std::string& cmd_reg);
 
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;

@@ -29,7 +29,6 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include "../HWDescription/SSA.h"
 #include "../HWDescription/MPA.h"
 #include "../HWDescription/BeBoard.h"
-#include "../HWDescription/RD53.h"
 #include "../HWDescription/RegItem.h"
 #include <iostream>
 #include <fstream>
