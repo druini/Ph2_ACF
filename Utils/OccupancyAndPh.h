@@ -19,8 +19,8 @@
 class OccupancyAndPh
 {
  public:
-  OccupancyAndPh  () : fOccupancy(0), fPh(0), fPhError(0), isEnabled(false), readoutError(false) {}
-  ~OccupancyAndPh ()                                                                             {}
+  OccupancyAndPh  () : fOccupancy(0), fPh(0), fPhError(0), readoutError(false) {}
+  ~OccupancyAndPh ()                                                           {}
 
   void print(void)
   {
@@ -37,7 +37,6 @@ class OccupancyAndPh
   float fPh;
   float fPhError;
 
-  bool isEnabled;
   bool readoutError;
 };
 
