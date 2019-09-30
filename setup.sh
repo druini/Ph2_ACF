@@ -71,4 +71,4 @@ export DevFlags='-D__DEV__'
 export Root5Flag='-D__ROOT5__'
 export Root6Flag='-D__ROOT6__'
 
-echo "---DONE---"
+echo "---DONE!---"
