@@ -64,10 +64,10 @@ namespace Ph2_HwInterface
     // RD53FWInterface::TurnOffFMC();
     // RD53FWInterface::TurnOnFMC();
     // RD53FWInterface::ResetBoard();
-    RD53FWInterface::ResetFastCmdBlk();
-    RD53FWInterface::ResetReadoutBlk();
     RD53FWInterface::ChipReset();
     RD53FWInterface::ChipReSync();
+    RD53FWInterface::ResetFastCmdBlk();
+    RD53FWInterface::ResetReadoutBlk();
 
 
     // ###############################################
@@ -413,9 +413,9 @@ namespace Ph2_HwInterface
         retry = false;
         pData.clear();
 
-        RD53FWInterface::ResetReadoutBlk();
         RD53FWInterface::ChipReset();
         RD53FWInterface::ChipReSync();
+        RD53FWInterface::ResetReadoutBlk();
 
 
         // ####################
@@ -430,7 +430,7 @@ namespace Ph2_HwInterface
             usleep(SHALLOWSLEEP);
           }
         while ((dataAmountNew = ReadReg("user.stat_regs.words_to_read").value()) != dataAmountOld);
-        RD53FWInterface::ReadData(pBoard, false, pData, false /*pWait*/); // @TMP@ : FW bug triggers are recorded but DDR3 empty
+        RD53FWInterface::ReadData(pBoard, false, pData, pWait);
         RD53FWInterface::Stop();
 
 
@@ -464,7 +464,7 @@ namespace Ph2_HwInterface
     // #################
     // # Show progress #
     // #################
-    RD53RunProgress::update();
+    RD53RunProgress::update(true);
   }
 
   std::vector<uint32_t> RD53FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
