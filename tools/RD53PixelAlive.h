@@ -36,6 +36,7 @@ class PixelAlive : public Tool
   void ConfigureCalibration () override;
   void writeObjects         () {}; // @TMP@
 
+  void sendData                                  ();
   void initialize                                (const std::string fileRes_, const std::string fileReg_);
   void run                                       ();
   void draw                                      ();

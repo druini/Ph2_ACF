@@ -25,7 +25,7 @@
             VCAL_HIGH            =   "600"
             VCAL_MED             =   "100"
 
-            INJECTION_SELECT     =    "12"
+            INJECTION_SELECT     =     "0"
             GP_LVDS_ROUTE        =     "0"
             LATENCY_CONFIG       =   "136"
             MONITOR_SELECT       =  "8203"
@@ -77,9 +77,16 @@
     <!-- Configuration for backend readout board -->
     <Register name="user">
       <Register name="ctrl_regs">
-        <Register name="reset_reg">
-          <Register name="i2c_rst"> 0x0 </Register>
+
+        <Register name="fast_cmd_reg_2">
+          <Register name="trigger_source"> 2 </Register>
+          <!-- 1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency -->
         </Register>
+
+        <Register name="ext_tlu_reg2">
+          <Register name="ext_clk_en"> 0 </Register>
+        </Register>
+
       </Register>
     </Register>
 
@@ -115,7 +122,7 @@
     <Setting name="LatencyStop">    511 </Setting>
 
     <Setting name="InjDelayStart">    0 </Setting>
-    <Setting name="InjDelayStop">    15 </Setting>
+    <Setting name="InjDelayStop">    31 </Setting>
 
     <Setting name="VCalHstart">     100 </Setting>
     <Setting name="VCalHstop">      600 </Setting>

@@ -43,13 +43,13 @@ void Latency::Start (int currentRun)
 {
   Latency::run();
   Latency::analyze();
+  Latency::sendData();
+}
 
-
-  // #############
-  // # Send data #
-  // #############
+void Latency::sendData ()
+{
   auto theStream        = prepareChannelContainerStreamer<GenericDataVector>("Occ");
-  auto theLatencyStream = prepareChannelContainerStreamer<RegisterValue>    ("Latency");
+  auto theLatencyStream = prepareChannelContainerStreamer<uint16_t>         ("Latency");
 
   if (fStreamerEnabled == true)
     {
@@ -130,6 +130,8 @@ void Latency::draw ()
 
 void Latency::analyze ()
 {
+  ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theLatencyContainer);
+
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
@@ -148,15 +150,13 @@ void Latency::analyze ()
             }
 
           LOG (INFO) << BOLDGREEN << "\t--> Best latency for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
-                     << BOLDYELLOW << regVal << RESET;
+                     << BOLDYELLOW << regVal << BOLDGREEN << " (n.bx)" << RESET;
 
 
           // ######################################################
           // # Fill latency container and download new DAC values #
           // ######################################################
-          ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, theLatencyContainer);
-          theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = regVal;
-
+          theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
           this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", regVal, true);
         }
 }
@@ -198,7 +198,7 @@ void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& 
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
             {
-              float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+              float occ = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
               theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1.push_back(occ);
             }
     }

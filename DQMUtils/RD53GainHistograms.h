@@ -20,10 +20,13 @@
 #include <TH1F.h>
 #include <TH2F.h>
 
+
 // #############
 // # CONSTANTS #
 // #############
 #define INTERCEPT_HALFRANGE 6 // [ToT]
+#define ISDISABLED -1.0       // Encoding disabled channels
+#define FITERROR   -2.0       // Encoding fit errors
 
 
 class GainHistograms : public DQMHistogramBase

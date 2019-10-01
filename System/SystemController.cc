@@ -164,66 +164,73 @@ namespace Ph2_System {
         this->fParser.parseSettings (pFilename, fSettingsMap, os, pIsFile );
     }
 
-    void SystemController::ConfigureHw ( bool bIgnoreI2c )
-    {
-      LOG (INFO) << BOLDBLUE << "@@@ Configuring HW parsed from .xml file @@@" << RESET;
+  void SystemController::ConfigureHw ( bool bIgnoreI2c )
+  {
+    LOG (INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from .xml file @@@" << RESET;
 
-      for (auto& cBoard : fBoardVector)
-	{
-	  // ######################################
-	  // # Configuring Outer Tracker hardware #
-	  // ######################################
+    for (auto& cBoard : fBoardVector)
+      {
+        // ######################################
+        // # Configuring Outer Tracker hardware #
+        // ######################################
 
-	  if (cBoard->getBoardType() != BoardType::FC7)
-	  {
-	      fBeBoardInterface->ConfigureBoard ( cBoard );
+        if (cBoard->getBoardType() != BoardType::FC7)
+          {
+            fBeBoardInterface->ConfigureBoard ( cBoard );
 
-	      LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
+            LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
 
-	      for (auto& cFe : cBoard->fModuleVector)
-                {
-                    LOG (INFO) << "Configuring board.." << RESET;
-		  for (auto& cCbc : cFe->fReadoutChipVector)
-		    {
-		      if ( !bIgnoreI2c )
+            for (auto& cFe : cBoard->fModuleVector)
+              {
+                LOG (INFO) << "Configuring board.." << RESET;
+                for (auto& cCbc : cFe->fReadoutChipVector)
+                  {
+                    if ( !bIgnoreI2c )
                       {
                         fReadoutChipInterface->ConfigureChip ( cCbc );
                         LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
                       }
-		    }
-                }
-	      fBeBoardInterface->ChipReSync ( cBoard );
-          LOG (INFO) << BOLDGREEN << "Successfully sent resync." << RESET;
-	  }
-	  else
-	    {
-	      // ######################################
-	      // # Configuring Inner Tracker hardware #
-	      // ######################################
-	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fReadoutChipInterface);
-	      
-	      LOG (INFO) << BOLDGREEN << "\t--> Found an Inner Tracker board" << RESET;
-	      LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << +cBoard->getBeId() << RESET;
-	      fBeBoardInterface->ConfigureBoard (cBoard);
-	      
-	      for (const auto& cModule : cBoard->fModuleVector)
-		{
-		  LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << +cModule->getModuleId() << RESET;
-		  for (const auto& cRD53 : cModule->fReadoutChipVector)
-		    {
-		      LOG (INFO) << GREEN << "Configuring RD53 " << BOLDYELLOW << +cRD53->getChipId() << RESET;
-		      fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));
-		      LOG (INFO) << BOLDGREEN << "\t--> Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
-		    }
-		}
-	      
-	      LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
-	      bool commGood = fBeBoardInterface->InitChipCommunication(cBoard);
-	      if (commGood == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication to all chips" << RESET;
-	      else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication to all chips" << RESET;
-	    }
-	}
-    }
+                  }
+              }
+            fBeBoardInterface->ChipReSync ( cBoard );
+            LOG (INFO) << BOLDGREEN << "Successfully sent resync." << RESET;
+          }
+        else
+          {
+            // ######################################
+            // # Configuring Inner Tracker hardware #
+            // ######################################
+            LOG (INFO) << BOLDBLUE << "\t--> Found an Inner Tracker board" << RESET;
+            LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << +cBoard->getBeId() << RESET;
+            fBeBoardInterface->ConfigureBoard (cBoard);
+
+            for (const auto& cModule : cBoard->fModuleVector)
+              {
+                LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << +cModule->getModuleId() << RESET;
+                for (const auto& cRD53 : cModule->fReadoutChipVector)
+                  {
+                    LOG (INFO) << GREEN << "Configuring RD53 " << BOLDYELLOW << +cRD53->getChipId() << RESET;
+                    static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip (static_cast<RD53*>(cRD53));
+                    LOG (INFO) << BOLDBLUE << "\t--> Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
+                  }
+              }
+
+            LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
+            bool commGood = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->InitChipCommunication();
+            if (commGood == true) LOG (INFO) << BOLDBLUE << "\t--> Successfully initialized the communication to all chips" << RESET;
+            else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication to all chips" << RESET;
+
+
+            // ###################
+            // # Configuring FSM #
+            // ###################
+            size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
+            size_t injType     = SystemController::findValueInSettings("INJtype");
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands (nTRIGxEvent, injType);
+            LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
+          }
+      }
+  }
 
 
     void SystemController::initializeFileHandler()

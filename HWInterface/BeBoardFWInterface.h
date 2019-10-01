@@ -29,7 +29,6 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include "../HWDescription/SSA.h"
 #include "../HWDescription/MPA.h"
 #include "../HWDescription/BeBoard.h"
-#include "../HWDescription/RD53.h"
 #include "../HWDescription/RegItem.h"
 #include <iostream>
 #include <fstream>
@@ -345,28 +344,6 @@ namespace Ph2_HwInterface {
             LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         }
 
-
-	// ################################################################################################
-	// # Virtual methods which are defined in the concrete implementation of BeBoardFWInterface class #
-	// ################################################################################################
-	virtual void WriteChipCommand (std::vector<uint32_t> & data, unsigned int nCmd = 1)
-        {
-	  LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-        }
-	
-        virtual std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (std::vector<uint32_t> & data, uint8_t chipID, uint8_t filter = 0)
-	{
-	  LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-	  return std::vector<std::pair<uint16_t,uint16_t>>();
-	}
-	
-        virtual bool InitChipCommunication()
-        {
-	  LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-	  return false;
-        }
-	// ################################################################################################
-	
 
     protected:
 

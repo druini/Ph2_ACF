@@ -44,7 +44,7 @@ void RD53DQMHistogramCalibrationExample::book(TFile *theOutputFile, const Detect
 
     // creating the histograms fo all the chips:
     // create the HistContainer<TH2F> as you would create a TH2F (it implements some feature needed to avoid memory leaks in copying histograms like the move constructor)
-    HistContainer<TH2F> theTH2FPedestalContainer("HitPerChannel", "Hit Per Channel", fColStart-fColStop, fColStart, fColStop, fRowStart-fRowStop, fRowStart, fRowStop);
+    HistContainer<TH2F> theTH2FPedestalContainer("HitPerChannel", "Hit Per Channel", fColStop-fColStart, fColStart, fColStop, fRowStop-fRowStart, fRowStart, fRowStop);
     // create Histograms for all the chips, they will be automatically accosiated to the output file, no need to save them, change the name for every chip or set their directory
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, 
         fDetectorHitHistograms, theTH2FPedestalContainer);

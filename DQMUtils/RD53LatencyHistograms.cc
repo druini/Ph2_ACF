@@ -24,17 +24,17 @@ void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& the
   stopValue  = this->findValueInSettings(settingsMap,"LatencyStop");
 
 
-  auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue, startValue, stopValue);
+  auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue + 1, startValue, stopValue + 1);
   bookImplementer(theOutputFile, theDetectorStructure, hLatency, Latency, "Latency (n.bx)", "Entries");
 
-  auto hOcc1D = CanvasContainer<TH1F>("LatencyScan", "Latency Scan", stopValue - startValue, startValue, stopValue);
+  auto hOcc1D = CanvasContainer<TH1F>("LatencyScan", "Latency Scan", stopValue - startValue + 1, startValue, stopValue + 1);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Latency (n.bx)", "Efficiency");
 }
 
 bool LatencyHistograms::fill (std::vector<char>& dataBuffer)
 {
   ChannelContainerStream<GenericDataVector> theOccStreamer    ("LatencyOcc");
-  ChannelContainerStream<RegisterValue>     theLatencyStreamer("LatencyLatency");
+  ChannelContainerStream<uint16_t>          theLatencyStreamer("LatencyLatency");
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
@@ -62,7 +62,7 @@ void LatencyHistograms::fillOccupancy (const DetectorDataContainer& OccupancyCon
         {
           auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          for (size_t i = startValue; i < stopValue; i++)
+          for (size_t i = startValue; i <= stopValue; i++)
             Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i),cChip->getSummary<GenericDataVector>().data1[i-startValue]);
         }
 }
@@ -75,7 +75,7 @@ void LatencyHistograms::fillLatency (const DetectorDataContainer& LatencyContain
         {
           auto* LatencyHist = Latency.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          LatencyHist->Fill(LatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue);
+          LatencyHist->Fill(cChip->getSummary<uint16_t>());
         }
 }
 

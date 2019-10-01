@@ -13,7 +13,6 @@
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/Container.h"
-#include "../Utils/RegisterValue.h"
 #include <bitset>
 
 #define DEV_FLAG 0
@@ -287,7 +286,7 @@ namespace Ph2_HwInterface {
 
         for(uint8_t iChannel=0; iChannel<pCbc->getNumberOfChannels(); ++iChannel){
             if(isMask){
-                if( localRegValues.getChannel<RegisterValue>(iChannel).fRegisterValue ){
+                if( localRegValues.getChannel<uint16_t>(iChannel) ){
                     channelToEnable.enableChannel(iChannel);
                     // listOfChannelToUnMask.emplace_back(iChannel);
                 }
@@ -295,7 +294,7 @@ namespace Ph2_HwInterface {
             else {
                 char dacName1[20];
                 sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
-                cRegVec.emplace_back(dacName1,localRegValues.getChannel<RegisterValue>(iChannel).fRegisterValue);
+                cRegVec.emplace_back(dacName1,localRegValues.getChannel<uint16_t>(iChannel));
             }
         }
 

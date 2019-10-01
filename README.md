@@ -46,7 +46,7 @@ Setup the firmware:
 5. Plug the microSD card in the FC7
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware
 
-*A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap. If you use the `dd` command you need to convert the `bit` file into `img`
+*A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`)
 
 Setup and run the IT-DAQ:
 1. `yum install pugixml-devel` (if necesary run `yum install epel-release` before point 1.)
@@ -124,9 +124,8 @@ then
     time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
     echo "gainopt" >> calibDone.txt
 
-    echo "- Set nTRIGxEvent to 1 in the xml file(s)"
-    echo "- Set VCalHstart to minimum value above threshold distribution in the xml file(s)"
-    echo "- Set VCalHstop to MIP value in the xml file(s)"
+    echo "- Set nTRIGxEvent = 1 and DoFast = 1 in the xml file(s)"
+    echo "- Set VCAL_HIGH to MIP value in the xml file(s)"
     read -p "Press any key to continue... " -n1 -s
     echo
 elif [ $1 == "step4" ]
@@ -134,9 +133,9 @@ then
     time CMSIT_miniDAQ -f CMSIT_scurve.xml -c injdelay
     echo "latency" >> calibDone.txt
     echo "injdelay" >> calibDone.txt
-    echo "pixelalive" >> calibDone.txt
+
     echo "- Set LATENCY_CONFIG and INJECTION_SELECT, as tuned by the injdelay calibration, in the xml files(s)"
-    echo "- Set VCalHstart and VCalHstop to measure in-time threshold in the xml file(s)"
+    echo "- Set DoFast to whatever value you prefer in the xml files(s)"
     read -p "Press any key to continue... " -n1 -s
     echo
 elif [ $1 == "step5" ]
@@ -149,13 +148,13 @@ then
     echo "- step1 [noise + pixelalive + thrmin]"
     echo "- step2 [(scurve)threqu + scurve + noise + thrmin]"
     echo "- step3 [scurve + gain + gainopt]"
-    echo "- step4 [(latency)injdelay(pixelalive)]"
+    echo "- step4 [(latency)injdelay]"
     echo "- step5 [scurve]"
 else
     echo "Argument not recognized: $1"
 fi
 ```
-- Software git branch / tag : `chipPolymorphism` / `IT-v2.0`
+- Software git branch / tag : `chipPolymorphism` / `IT-v2.1`
 - Firmware tag: `2.5`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 

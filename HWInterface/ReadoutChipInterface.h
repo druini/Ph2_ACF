@@ -13,9 +13,6 @@
 #define __READOUTCHIPINTERFACE_H__
 
 #include <vector>
-//#include "../HWInterface/GlibFWInterface.h"
-//#include "../HWInterface/CtaFWInterface.h"
-//#include "../HWInterface/ICGlibFWInterface.h"
 #include "BeBoardFWInterface.h"
 #include "ChipInterface.h"
 
@@ -23,7 +20,6 @@ using namespace Ph2_HwDescription;
 
 template <typename T>
 class ChannelContainer;
-class RegisterValue;
 
 /*!
  * \namespace Ph2_HwInterface

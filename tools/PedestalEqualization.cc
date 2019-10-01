@@ -196,7 +196,7 @@ void PedestalEqualization::FindOffsets()
 
                 for (auto &channel : *chip->getChannelContainer<uint8_t>()) // for on channel - begin
                 {
-                    char charRegName[10];
+                    char charRegName[20];
                     sprintf(charRegName, "Channel%03d", channelNumber++);
                     std::string cRegName = charRegName;
                     channel = static_cast<ReadoutChip *>(fDetectorContainer->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex()))->getReg(cRegName);

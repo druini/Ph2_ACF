@@ -20,6 +20,12 @@
 #include <TH2F.h>
 
 
+// #############
+// # CONSTANTS #
+// #############
+#define ISDISABLED -1.0 // Encoding disabled channels
+
+
 class ThrEqualizationHistograms : public DQMHistogramBase
 {
  public:

@@ -49,11 +49,11 @@ void PixelAlive::Start (int currentRun)
 {
   PixelAlive::run();
   PixelAlive::analyze();
+  PixelAlive::sendData();
+}
 
-
-  // #############
-  // # Send data #
-  // #############
+void PixelAlive::sendData ()
+{
   auto theOccStream = prepareChannelContainerStreamer<OccupancyAndPh>();
 
   if (fStreamerEnabled == true)

@@ -21,6 +21,13 @@
 #include <TH2F.h>
 
 
+// #############
+// # CONSTANTS #
+// #############
+#define ISDISABLED -1.0 // Encoding disabled channels
+#define FITERROR   -2.0 // Encoding fit errors
+
+
 class SCurveHistograms : public DQMHistogramBase
 {
  public:

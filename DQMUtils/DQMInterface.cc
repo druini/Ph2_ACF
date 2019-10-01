@@ -100,15 +100,15 @@ void DQMInterface::configure(std::string& calibrationName, std::string& configur
 	{
 		fDQMHistogrammerVector.push_back(new DQMHistogramCalibrationExample());
 	}
-	else if(calibrationName == "RD53PixelAlive")       fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
-	else if(calibrationName == "RD53Noise")            fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
-	else if(calibrationName == "RD53SCurve")           fDQMHistogrammerVector.push_back(new SCurveHistograms());
-	else if(calibrationName == "RD53Gain")             fDQMHistogrammerVector.push_back(new GainHistograms());
-	else if(calibrationName == "RD53Latency")          fDQMHistogrammerVector.push_back(new LatencyHistograms());
-	else if(calibrationName == "RD53GainOptimization") fDQMHistogrammerVector.push_back(new GainOptimizationHistograms());
-	else if(calibrationName == "RD53ThrMinimization")  fDQMHistogrammerVector.push_back(new ThrMinimizationHistograms());
-	else if(calibrationName == "RD53InjectionDelay")   fDQMHistogrammerVector.push_back(new InjectionDelayHistograms());
-	else if(calibrationName == "RD53ThrEqualization")  fDQMHistogrammerVector.push_back(new ThrEqualizationHistograms());
+	else if(calibrationName == "pixelalive") fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
+	else if(calibrationName == "noise")      fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
+	else if(calibrationName == "scurve")     fDQMHistogrammerVector.push_back(new SCurveHistograms());
+	else if(calibrationName == "gain")       fDQMHistogrammerVector.push_back(new GainHistograms());
+	else if(calibrationName == "latency")    fDQMHistogrammerVector.push_back(new LatencyHistograms());
+	else if(calibrationName == "gainopt")    fDQMHistogrammerVector.push_back(new GainOptimizationHistograms());
+	else if(calibrationName == "thrmin")     fDQMHistogrammerVector.push_back(new ThrMinimizationHistograms());
+	else if(calibrationName == "injdelay")   fDQMHistogrammerVector.push_back(new InjectionDelayHistograms());
+	else if(calibrationName == "threqu")     fDQMHistogrammerVector.push_back(new ThrEqualizationHistograms());
 
 	fOutputFile = new TFile("tmp.root", "RECREATE");
 	for(auto dqmHistogrammer : fDQMHistogrammerVector)

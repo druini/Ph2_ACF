@@ -38,19 +38,29 @@ void InjectionDelay::ConfigureCalibration ()
   size_t nSteps = stopValue - startValue + 1;
   float step    = (stopValue - startValue + 1) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
+
+
+  // ######################
+  // # Initialize Latency #
+  // ######################
+  std::string fileName = fileRes;
+  fileName.replace(fileRes.find("_InjectionDelay"),15,"_Latency");
+  la.Inherit(this);
+  la.initialize(fileName, fileReg);
 }
 
 void InjectionDelay::Start (int currentRun)
 {
   InjectionDelay::run();
   InjectionDelay::analyze();
+  InjectionDelay::sendData();
+  la.sendData();
+}
 
-
-  // #############
-  // # Send data #
-  // #############
+void InjectionDelay::sendData ()
+{
   auto theStream               = prepareChannelContainerStreamer<GenericDataVector>("Occ");
-  auto theInjectionDelayStream = prepareChannelContainerStreamer<RegisterValue>    ("InjDelay");
+  auto theInjectionDelayStream = prepareChannelContainerStreamer<uint16_t>         ("InjDelay");
 
   if (fStreamerEnabled == true)
     {
@@ -81,8 +91,50 @@ void InjectionDelay::initialize (const std::string fileRes_, const std::string f
 
 void InjectionDelay::run ()
 {
+  // ###############
+  // # Run Latency #
+  // ###############
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", 0, true);
+  la.run();
+  la.analyze();
+  la.draw();
+
+
   ContainerFactory::copyAndInitChip<GenericDataVector>(*fDetectorContainer, theOccContainer);
-  InjectionDelay::scanDac("INJECTION_SELECT", dacList, nEvents, &theOccContainer);
+
+
+  // #######################
+  // # Set Initial latency #
+  // #######################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG");
+          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency - 1, true);
+        }
+
+
+  // ###############################
+  // # Scan two adjacent latencies #
+  // ###############################
+  for (auto i = 0; i < 2; i++)
+    {
+      std::vector<uint16_t> halfDacList(dacList.begin() + i*(dacList.end() - dacList.begin()) / 2, dacList.begin() + (i+1)*(dacList.end() - dacList.begin()) / 2);
+
+      for (const auto cBoard : *fDetectorContainer)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG");
+              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency + i, true);
+            }
+
+      InjectionDelay::scanDac("INJECTION_SELECT", halfDacList, nEvents, &theOccContainer);
+    }
 
 
   // ################
@@ -131,6 +183,12 @@ void InjectionDelay::draw ()
 
 void InjectionDelay::analyze ()
 {
+  size_t saveVal = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT")) -
+    RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
+  size_t maxVal  = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
+
+  ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theInjectionDelayContainer);
+
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
@@ -149,16 +207,23 @@ void InjectionDelay::analyze ()
             }
 
           LOG (INFO) << BOLDGREEN << "\t--> Best delay for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
-                     << BOLDYELLOW << regVal << RESET;
+                     << BOLDYELLOW << regVal << BOLDGREEN << " (1.5625 ns) computed over two bx" << RESET;
+          LOG (INFO) << BOLDGREEN << "\t--> New delay dac value for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
+                     << BOLDYELLOW << (regVal & maxVal) << RESET;
 
 
           // ####################################################
           // # Fill delay container and download new DAC values #
           // ####################################################
-          ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, theInjectionDelayContainer);
-          theInjectionDelayContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = regVal;
+          theInjectionDelayContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
+          auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT");
+          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", (val & saveVal) | (regVal & maxVal), true);
 
-          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", regVal, true);
+          auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG");
+          if (regVal / (maxVal+1) == 0) latency--;
+          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency, true);
+          LOG (INFO) << BOLDGREEN << "\t--> New latency dac value for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
+                     << BOLDYELLOW << latency << RESET;
         }
 }
 
@@ -206,7 +271,7 @@ void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
             {
-              float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+              float occ = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
               theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1.push_back(occ);
             }
     }

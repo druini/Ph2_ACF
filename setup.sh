@@ -22,8 +22,10 @@ fi
 ########
 # ROOT #
 ########
-#source $ROOTSYS/bin/thisroot.sh
+# DO NOT DELETE, JUST COMMENT PLEASE
 source /usr/local/root/bin/thisroot.sh
+# source $ROOTSYS/bin/thisroot.sh
+
 
 #######
 # ZMQ #
@@ -71,4 +73,4 @@ export DevFlags='-D__DEV__'
 export Root5Flag='-D__ROOT5__'
 export Root6Flag='-D__ROOT6__'
 
-echo "---DONE---"
+echo "=== DONE ==="
