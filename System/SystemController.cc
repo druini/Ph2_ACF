@@ -150,7 +150,14 @@ namespace Ph2_System {
 
         fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
         if (fBoardVector[0]->getBoardType() != BoardType::FC7)
-            fReadoutChipInterface = new CbcInterface  ( fBeBoardFWMap );
+            if (fBoardVector[0]cBoard->getEventType() != EventType::SSA)
+            {
+                fReadoutChipInterface = new CbcInterface  ( fBeBoardFWMap );
+            }
+            else
+            {
+                fReadoutChipInterface  = new SSAInterface     ( fBeBoardFWMap );
+            }
         else
             fReadoutChipInterface = new RD53Interface ( fBeBoardFWMap );
         fMPAInterface = new MPAInterface ( fBeBoardFWMap );

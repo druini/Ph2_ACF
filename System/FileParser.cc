@@ -312,8 +312,9 @@ namespace Ph2_System {
         else
         {
             cEventTypeString = cEventTypeAttribute.value();
-
             if (cEventTypeString == "ZS") cBeBoard->setEventType (EventType::ZS);
+            else if (cEventTypeString == "SSA") cBeBoard->setEventType (EventType::SSA);
+            else if (cEventTypeString == "MPA") cBeBoard->setEventType (EventType::MPA);
             else cBeBoard->setEventType (EventType::VR);
         }
 
@@ -636,7 +637,7 @@ namespace Ph2_System {
             {
                 std::string cName = cChild.name();
                 std::string cNextName = cChild.next_sibling().name();
-                if ( cName.find("CBC") != std::string::npos || cName.find("RD53") != std::string::npos || cName.find("CIC") != std::string::npos) 
+                if ( cName.find("CBC") != std::string::npos || cName.find("RD53") != std::string::npos || cName.find("CIC") != std::string::npos || cName.find("SSA") != std::string::npos) 
                 {
                     if( cName.find("_Files") != std::string::npos ) 
                     {
@@ -690,11 +691,39 @@ namespace Ph2_System {
                             os << RESET << std::endl;
 
                         }
+                        else if( cName == "SSA" ) 
+                        {
+                            this->parseSSA (cChild, cModule, cConfigFileDirectory);
+                        }
                     }
                 }
             }
         }
         return;
+    }
+
+    void FileParser::parseSSA (pugi::xml_node pModuleNode, Module* pModule, std::string cFilePrefix)
+    { // Get ID of SSA then add to the Module!
+        uint32_t cChipId = pModuleNode.attribute ( "Id" ).as_int();
+        std::string cFileName;
+            if ( !cFilePrefix.empty() )
+            {
+                if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
+                    cFilePrefix.append ("/");
+
+                cFileName = cFilePrefix + expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
+            }
+            else cFileName = expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
+        ReadoutChip* cSSA = pModule->addChipContainer(cChipId, new SSA ( pModule->getBeId(), pModule->getFMCId(), pModule->getFeId(), cChipId, 0, cFileName ));
+            pModule->addReadoutChip (cSSA);
+            cSSA->setNumberOfChannels(120);
+        this->parseSSASettings (pModuleNode, cSSA);
+    }
+
+    void FileParser::parseSSASettings (pugi::xml_node pModuleNode, ReadoutChip* pSSA)
+    {
+        FrontEndType cType = pSSA->getFrontEndType();
+        if (cType == FrontEndType::SSA) LOG (INFO) << RED << "SSA" << RESET;
     }
 
     // void FileParser::parseCbc (pugi::xml_node pCbcNode, Module* cModule, std::string cFilePrefix, std::ostream& os )

@@ -24,7 +24,7 @@
 #include "../Utils/ConditionDataSet.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/easylogging++.h"
-#include "pugixml.hpp"
+#include "pugixml/pugixml.hpp"
 #include <iostream>
 #include <vector>
 #include <map>

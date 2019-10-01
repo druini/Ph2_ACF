@@ -55,8 +55,8 @@ namespace Ph2_HwInterface {
         bool fIsDDR3Readout;
         bool fDDR3Calibrated;
         uint32_t fDDR3Offset;
-	// i2c version of master
-	uint32_t fI2CVersion;	
+    // i2c version of master
+    uint32_t fI2CVersion;   
 
         const uint32_t SINGLE_I2C_WAIT = 200; //used for 1MHz I2C
 
@@ -194,9 +194,9 @@ namespace Ph2_HwInterface {
         // convert code of the chip from firmware
         std::string getChipName(uint32_t pChipCode);
         FrontEndType getFrontEndType(uint32_t pChipCode);
-	// set i2c address table depending on the hybrid
-	void SetI2CAddressTable();
-	void Align_out();
+    // set i2c address table depending on the hybrid
+    void SetI2CAddressTable();
+    void Align_out();
 
 
         //template to copy every nth element out of a vector to another vector
@@ -250,6 +250,8 @@ namespace Ph2_HwInterface {
         * \param pCbcId : Id of the Chip to work with
         * \param pVecReq : Vector to stack the encoded words
         */
+        //bool UserWriteReg();
+
         void EncodeReg (const ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
         void EncodeReg (const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
         void EncodeReg (const RegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
@@ -303,10 +305,8 @@ namespace Ph2_HwInterface {
         void PSInterfaceBoard_PowerOn_MPA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, uint8_t mpaid = 0 , uint8_t ssaid = 0);
         void PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
         /// SSA power on
-        void PSInterfaceBoard_PowerOn_SSA_v1(float VDDPST = 1.25, float DVDD = 1.25, float AVDD = 1.25, float VBF = 0.3, float BG = 0.0, uint8_t mpaid = 0 , uint8_t ssaid = 0);
-        void PSInterfaceBoard_PowerOff_SSA_v1(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
-        void PSInterfaceBoard_PowerOn_SSA_v2(float VDDPST = 1.2, float DVDD = 1.0, float AVDD = 1.2, float VBG = 0.3, uint8_t mpaid = 0 , uint8_t ssaid = 0);
-        void PSInterfaceBoard_PowerOff_SSA_v2(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
+        void PSInterfaceBoard_PowerOn_SSA(float VDDPST = 1.25, float DVDD = 1.25, float AVDD = 1.25, float VBF = 0.3, float BG = 0.0, uint8_t mpaid = 0 , uint8_t ssaid = 0);
+        void PSInterfaceBoard_PowerOff_SSA(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
         void ReadPower_SSA(uint8_t mpaid = 0 , uint8_t ssaid = 0);
         void KillI2C();
         ///

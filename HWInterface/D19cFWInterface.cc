@@ -236,9 +236,9 @@ namespace Ph2_HwInterface {
         int num_chips = ReadReg ("fc7_daq_stat.general.info.num_chips");
         uint32_t fmc1_card_type = ReadReg ("fc7_daq_stat.general.info.fmc1_card_type");
         uint32_t fmc2_card_type = ReadReg ("fc7_daq_stat.general.info.fmc2_card_type");
-        int firmware_timestamp = ReadReg("fc7_daq_stat.general.firmware_timestamp");
 
-        LOG(INFO) << "Compiled on: " << BOLDGREEN << ((firmware_timestamp >> 27) & 0x1F) << "." << ((firmware_timestamp >> 23) & 0xF) << "." << ((firmware_timestamp >> 17) & 0x3F) << " " << ((firmware_timestamp >> 12) & 0x1F) << ":" << ((firmware_timestamp >> 6) & 0x3F) << ":" << ((firmware_timestamp >> 0) & 0x3F) << " (dd.mm.yy hh:mm:ss)" << RESET;
+        //int firmware_timestamp = ReadReg("fc7_daq_stat.general.firmware_timestamp");
+        //LOG(INFO) << "Compiled on: " << BOLDGREEN << ((firmware_timestamp >> 27) & 0x1F) << "." << ((firmware_timestamp >> 23) & 0xF) << "." << ((firmware_timestamp >> 17) & 0x3F) << " " << ((firmware_timestamp >> 12) & 0x1F) << ":" << ((firmware_timestamp >> 6) & 0x3F) << ":" << ((firmware_timestamp >> 0) & 0x3F) << " (dd.mm.yy hh:mm:ss)" << RESET;
 
         if (implementation == 0)
             LOG (INFO) << "Implementation: " << BOLDGREEN << "Optical" << RESET;
@@ -307,6 +307,7 @@ namespace Ph2_HwInterface {
     {
         // after firmware loading it seems that CBC3 is not super stable
         // and it needs fast reset after, so let's be secure and do also the hard one..
+        LOG (INFO) << "PLACE ME !" << RESET;
         this->ChipReset();
         this->ChipReSync();
         usleep (1);
@@ -317,8 +318,6 @@ namespace Ph2_HwInterface {
 
     // read info about current firmware
         uint32_t cFrontEndTypeCode = ReadReg ("fc7_daq_stat.general.info.chip_type");
-        std::cout << __PRETTY_FUNCTION__ << "\t" << cFrontEndTypeCode << std::endl;
-
         std::string cChipName = getChipName (cFrontEndTypeCode);
         fFirmwareFrontEndType = getFrontEndType (cFrontEndTypeCode);
         fFWNHybrids = ReadReg ("fc7_daq_stat.general.info.num_hybrids");
@@ -364,19 +363,19 @@ namespace Ph2_HwInterface {
                 //need to increment the NCbc counter for I2C controller
                         fNCbc++;
                     }
-                } else if (fFirmwareFrontEndType == FrontEndType::MPA) {
+                }/* else if (fFirmwareFrontEndType == FrontEndType::MPA) {
                     for ( MPA* cMPA : static_cast<OuterTrackerModule*>(cFe)->fMPAVector)
                     {
-                        LOG (INFO) << "     Enabling MPA Chip " << (int) cMPA->getMPAId();
-                        chips_enable[cFe->getFeId()] |= 1 << cMPA->getMPAId();
+                        LOG (INFO) << "     Enabling MPA Chip " << (int) cMPA->getChipId(); /FIXMEKEVIN
+                        chips_enable[cFe->getFeId()] |= 1 << cMPA->getChipId();
                 //need to increment the counter for I2C controller
                         fNMPA++;
                     }
-                } else if (fFirmwareFrontEndType == FrontEndType::SSA) {
-                    for (SSA* cSSA : static_cast<OuterTrackerModule*>(cFe)->fSSAVector)
+                }*/ else if (fFirmwareFrontEndType == FrontEndType::SSA) {
+                    for (Chip* cSSA : cFe->fReadoutChipVector)
                     {
-                        LOG (INFO) << "     Enabling SSA Chip " << (int) cSSA->getSSAId();
-                        chips_enable[cFe->getFeId()] |= 1 << cSSA->getSSAId();
+                        LOG (INFO) << "     Enabling SSA Chip " << (int) cSSA->getChipId();
+                        chips_enable[cFe->getFeId()] |= 1 << cSSA->getChipId();
                 //need to increment the counter for I2C controller
                         fNSSA++;
                     }
@@ -433,10 +432,13 @@ namespace Ph2_HwInterface {
         for (Module* cFe : pBoard->fModuleVector)
         {
             std::vector<uint32_t> cVec; 
-            for ( Chip* cCbc : cFe->fReadoutChipVector)
+            for ( Chip* cChip : cFe->fReadoutChipVector)
             {
-                ChipRegItem cRegItem = cCbc->getRegItem ( "FeCtrl&TrgLat2" ); 
-                this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getChipId(), cVec, true, false);
+                ChipRegItem cRegItem;
+                if (fFirmwareFrontEndType == FrontEndType::SSA) cRegItem = cChip->getRegItem ( "ReadoutMode" ); 
+                if (fFirmwareFrontEndType == FrontEndType::CBC3) cRegItem = cChip->getRegItem ( "FeCtrl&TrgLat2" ); 
+
+                this->EncodeReg (cRegItem, cChip->getFeId(), cChip->getChipId(), cVec, true, false);
             }
             
             std::vector<uint32_t> cReplies;
@@ -444,7 +446,7 @@ namespace Ph2_HwInterface {
             bool cSuccess = !WriteI2C ( cVec, cReplies, false, false);
             if( cSuccess ) 
             {
-                LOG (INFO) << BOLDGREEN << " Successfully read back values from " << +cFe->fReadoutChipVector.size() << " CBCs." << RESET;
+                LOG (INFO) << BOLDGREEN << " Successfully read back values from " << +cFe->fReadoutChipVector.size() << " Chipss." << RESET;
                 cVec.clear();
                 if( static_cast<OuterTrackerModule*>(cFe)->fCic != NULL )
                 {
@@ -462,7 +464,7 @@ namespace Ph2_HwInterface {
                     LOG (INFO) << BOLDRED << " FAILED to read back values from CIC." << RESET;
             }
             else
-                LOG (INFO) << BOLDRED << " FAILED to read back values from " << +cFe->fReadoutChipVector.size() << " CBCs." << RESET;
+                LOG (INFO) << BOLDRED << " FAILED to read back values from " << +cFe->fReadoutChipVector.size() << " Chips." << RESET;
         }
 
             this->PhaseTuning (pBoard);
@@ -618,7 +620,6 @@ namespace Ph2_HwInterface {
         }
         else if (fFirmwareFrontEndType == FrontEndType::SSA) // MUST BE IN ORDER! CANNOT DO 0, 1, 4
         {
-            LOG (INFO) << BOLDRED << "WE ARE HERE!!! WE ARE HERE!!! WE ARE HERE!!!  " << fFWNChips << RESET;
             for (unsigned int id = 0; id < fFWNChips; id++) 
             {
                 i2c_slave_map.push_back({0x20 + id, 2, 1, 1, 1, 0}); // FIXME SSA ??
@@ -822,8 +823,8 @@ namespace Ph2_HwInterface {
                             exit (1);
                         }
 
-			this->ChipReSync();
-			usleep (10);
+            this->ChipReSync();
+            usleep (10);
                         // reset  the timing tuning
                         WriteReg ("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
 
@@ -992,7 +993,150 @@ namespace Ph2_HwInterface {
 
             LOG (INFO) << GREEN << "MPA Phase tuning finished succesfully" << RESET;
         }
+        else if (fFirmwareFrontEndType == FrontEndType::SSA) //////////// PHASE TUNING FOR SSA CHIP!!!!!!
+            {
+            LOG (INFO) << GREEN << "Trying Phase Tuning for SSA Chip(s)" << RESET;
+                std::map<Chip*, uint8_t> cReadoutModeMap;
+                std::map<Chip*, uint8_t> cStubModeMap;
+                std::vector<uint32_t> cVecReq;
 
+                cVecReq.clear();
+
+                for (auto cFe : pBoard->fModuleVector)
+                {
+                    for (auto cSsa : cFe->fReadoutChipVector)
+                    {
+                        LOG (INFO) << BLUE << std::bitset<8>(cSsa->getChipId()) << " << SSA ID" << RESET;
+                        uint8_t cOriginalReadoutMode = cSsa->getReg ("ReadoutMode");
+                        uint8_t cOriginalStubMode = cSsa->getReg ("OutPattern0");
+                        cReadoutModeMap[cSsa] = cOriginalReadoutMode;
+                        cStubModeMap[cSsa] = cOriginalStubMode;
+                        LOG (INFO) << std::bitset<8>(cOriginalReadoutMode) << "   " << std::bitset<8>(cOriginalStubMode);       
+
+                        ChipRegItem cRegItem = cSsa->getRegItem ( "ReadoutMode" );
+                        this->EncodeReg ( cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, false );
+                        this->ReadChipBlockReg (  cVecReq );
+                        bool cRead;
+                        bool cFail = false;
+                        uint32_t CVQ = cVecReq[0];
+                        LOG (INFO) << "Start: " << std::bitset<32>(CVQ);
+                                cVecReq.clear();    
+                        cRegItem = cSsa->getRegItem ( "OutPattern0" );
+                        this->EncodeReg ( cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, false );
+                        this->ReadChipBlockReg (  cVecReq );
+                        CVQ = cVecReq[0];
+                        LOG (INFO) << "Start: " << std::bitset<32>(CVQ);
+                        cVecReq.clear();    
+
+                        cSsa->setReg("ReadoutMode", 2);
+                        cSsa->setReg("OutPattern0", 128);
+
+                        //sync mode
+                        cRegItem = cSsa->getRegItem ( "ReadoutMode" );
+                        this->EncodeReg (cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, true);
+
+                        uint8_t cWriteAttempts = 0;
+                        this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
+                        cVecReq.clear();
+
+                        this->EncodeReg ( cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, false );
+                        this->ReadChipBlockReg (  cVecReq );
+                        CVQ = cVecReq[0];
+                        LOG (INFO) << "Changed: " << std::bitset<32>(CVQ);  
+                        cVecReq.clear();
+
+                        //ps stub mode
+                        cRegItem = cSsa->getRegItem ( "OutPattern0" );
+                        this->EncodeReg (cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, true);
+                        cWriteAttempts = 0;
+                        this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
+                        cVecReq.clear();
+
+                        this->EncodeReg ( cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, false );
+                        this->ReadChipBlockReg (  cVecReq );
+                        CVQ = cVecReq[0];
+                        LOG (INFO) << "Changed: " << std::bitset<32>(CVQ);
+                        cVecReq.clear();    
+
+                    }
+                }
+
+                int tries = 0;
+                uint32_t hardware_ready = 0;
+                while (hardware_ready < 1)
+                {
+                    LOG (INFO) << BOLDYELLOW << "====" << RESET;
+                    this->ChipReSync();
+                    usleep (25);
+                    // reset  the timing tuning
+                    WriteReg ("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
+                    //exit(1);
+                    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+                    PhaseTuningGetLineStatus(0,0,1);
+                    PhaseTuningGetLineStatus(0,1,1);
+                    std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+                    hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
+                    tries++;
+                    if (tries > 10)
+                    {
+                        D19cFWInterface::PhaseTuningGetDefaultFSMState();
+                        hardware_ready = 4;
+                    }
+                }
+
+                for (auto cFe : pBoard->fModuleVector)
+                {
+                    for (auto cSsa : cFe->fReadoutChipVector)
+                    {
+                
+                        // sync mode
+                        ChipRegItem cRegItem = cSsa->getRegItem ( "ReadoutMode" );
+                        cRegItem.fValue = cReadoutModeMap[cSsa];
+                        this->EncodeReg (cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, true);
+
+                        uint8_t cWriteAttempts = 0;
+                        this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
+                        cVecReq.clear();
+
+                        // ps stub mode
+                        cRegItem = cSsa->getRegItem ( "OutPattern0" );
+                        cRegItem.fValue = cStubModeMap[cSsa]; 
+                        this->EncodeReg (cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, true);
+
+                        cWriteAttempts = 0;
+                        this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
+                        cVecReq.clear();    
+
+                        cRegItem = cSsa->getRegItem ( "OutPattern0" );
+                        this->EncodeReg ( cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, false );
+                        this->ReadChipBlockReg (  cVecReq );
+                        uint32_t CVQ = cVecReq[0];
+                        LOG (INFO) << "End: " << std::bitset<32>(CVQ);
+                    }
+                }
+                LOG (INFO) << GREEN << "SSA Phase tuning finished succesfully" << RESET;
+                for (auto cFe : pBoard->fModuleVector)
+                {
+                    for (auto cSsa : cFe->fReadoutChipVector)
+                    {
+                        PhaseTuningGetLineStatus(cFe->getFeId(), cSsa->getChipId(), 1);
+                        // const
+                        uint32_t hybrid_raw = (0 & 0xF) << 28; // hybrid id - will be always zero in your case
+                        uint32_t chip_raw = (cSsa->getChipId() & 0xF) << 24; // ? = chip ID
+                        uint32_t line_raw = (0 & 0xF) << 20; // line id has to be 0 - it is the real number of the l1a line
+                        uint32_t command_raw = (2 & 0xF) << 16; // command type - sets the line in manual mode
+
+                        // manual mode
+                        uint32_t mode_raw = (2 & 0x3) << 12; // the manual delays for the line
+                        uint32_t delay_raw = (0 & 0x1F) << 3; // phase should be 0?
+                        uint32_t bitslip_raw = (2 & 0x7) << 0; // bitslip should be 1?
+
+                        // write
+                        uint32_t command_final = command_raw + hybrid_raw + chip_raw + line_raw + mode_raw + delay_raw + bitslip_raw;
+                        WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
+                    }
+                }
+            }
         else
         {
             LOG (INFO) << "No tuning procedure implemented for this chip type.";
@@ -1004,6 +1148,7 @@ namespace Ph2_HwInterface {
     uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
     {
         uint32_t cEventSize = computeEventSize (pBoard);
+        LOG (INFO) << RED << "EVENT SIZE = "<<cEventSize << RESET;
         uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
         uint32_t data_handshake = ReadReg ("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
         uint32_t cPackageSize = ReadReg ("fc7_daq_cnfg.readout_block.packet_nbr") + 1;
@@ -1088,9 +1233,7 @@ namespace Ph2_HwInterface {
                 //in the handshake mode offset is cleared after each handshake
                 fDDR3Offset = 0;
             }
-            else
-                pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
-
+            else pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
         }
         else if(!pFailed)
         {
@@ -1164,6 +1307,9 @@ namespace Ph2_HwInterface {
 
     void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )
     {
+        uint32_t cEventSize = computeEventSize (pBoard);
+        LOG (INFO) << RED << "EVENT SIZE = "<<cEventSize << RESET;
+
         // data hadnshake has to be enabled in that mode
         WriteReg ("fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-1);
         WriteReg ("fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1);
@@ -1206,7 +1352,7 @@ namespace Ph2_HwInterface {
             {
                 if ( (cNWords % computeEventSize (pBoard) ) != 0) {
                     pFailed = true;
-                    LOG (ERROR) << "Data amount (in words) is not multiple to EventSize! (" << cNWords << ")";
+                    LOG (ERROR) << "VR EVENTS: Data amount (in words) is not multiple to EventSize! (" << cNWords << ")";
                 }
             }
             else
@@ -1220,8 +1366,8 @@ namespace Ph2_HwInterface {
                 //in the handshake mode offset is cleared after each handshake
                 fDDR3Offset = 0;
             }
-            else
-                pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
+            else pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
+            for ( auto& L : pData ) LOG (INFO) << RED << std::bitset<32>(L) << RESET;
 
         }
 
@@ -1238,40 +1384,35 @@ namespace Ph2_HwInterface {
 
         if (fSaveToFile)
             fFileHandler->set (pData);
+        LOG (INFO) << "check end of evt get" << RESET;
     }
 
 /** compute the block size according to the number of CBC's on this board
  * this will have to change with a more generic FW */
     uint32_t D19cFWInterface::computeEventSize ( BeBoard* pBoard )
     {
+        uint32_t cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
+        fFirmwareFrontEndType = getFrontEndType(cFrontEndTypeCode);
         uint32_t cNFe = pBoard->getNFe();
-        uint32_t cNCbc = 0;
-        uint32_t cNMPA = 0;
-        uint32_t cNSSA = 0;
+        uint32_t cNChips = 0;
 
         uint32_t cNEventSize32 = 0;
 
         for (const auto& cFe : pBoard->fModuleVector)
         {
-            cNCbc += cFe->getNChip();
-            cNMPA += static_cast<OuterTrackerModule*>(cFe)->getNMPA();
-            cNSSA += static_cast<OuterTrackerModule*>(cFe)->getNSSA();
+            cNChips += cFe->getNChip();
         }
-        if (cNCbc>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNCbc * D19C_EVENT_SIZE_32_CBC3;
-        if (cNMPA>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNMPA * D19C_EVENT_SIZE_32_MPA;
-        if (cNSSA>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNSSA * D19C_EVENT_SIZE_32_SSA;
-        if (cNCbc>0 && cNMPA>0)
-        {
-            LOG(INFO) << "Not configurable for multiple chips";
-            exit (1);
-        }
+        if (fFirmwareFrontEndType == FrontEndType::CBC3) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNChips * D19C_EVENT_SIZE_32_CBC3;
+        if (fFirmwareFrontEndType == FrontEndType::SSA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_SSA + D19C_EVENT_SIZE_32_SSA * cNChips;
+        //LOG (INFO) << RED << cNEventSize32 << RESET;
         if (fIsDDR3Readout) {
+            //LOG (INFO) << BOLDGREEN << "DDR3 Event Size Computing" << RESET;
             uint32_t cNEventSize32_divided_by_8 = ((cNEventSize32 >> 3) << 3);
             if (!(cNEventSize32_divided_by_8 == cNEventSize32)) {
                 cNEventSize32 = cNEventSize32_divided_by_8 + 8;
             }
         }
-
+        //LOG (INFO) << RED << cNEventSize32 << RESET;
         return cNEventSize32;
     }
 
@@ -2007,8 +2148,11 @@ namespace Ph2_HwInterface {
         else return false;
     }
 
-    void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA_v1(float VDDPST , float DVDD , float AVDD , float VBF, float BG, uint8_t mpaid  , uint8_t ssaid  )
+    void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA(float VDDPST , float DVDD , float AVDD , float VBF, float BG, uint8_t mpaid  , uint8_t ssaid  )
     {
+
+        this->getBoardInfo();
+        this->PSInterfaceBoard_PowerOn(mpaid, ssaid);
 
         uint32_t read = 1;
         uint32_t write = 0;
@@ -2133,12 +2277,6 @@ namespace Ph2_HwInterface {
         std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
     }
 
-    void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA_v2(float VDDPST , float DVDD , float AVDD , float VBG , uint8_t mpaid  , uint8_t ssaid  )
-    {
-
-        std::chrono::milliseconds cWait( 1500 );
-    }
-
 ////// MPA/SSA Methods:
 
 
@@ -2176,7 +2314,6 @@ namespace Ph2_HwInterface {
             uint32_t shifted_stop_for_rd_en         = i2c_slave_map[ism][4]<<1;
             uint32_t shifted_nack_en            = i2c_slave_map[ism][5]<<0;
             uint32_t final_command              = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
-
             std::string curreg = "fc7_daq_cnfg.mpa_ssa_board_block.slave_"+std::to_string(ism)+"_config";
             WriteReg(curreg, final_command);
         }
@@ -2198,7 +2335,6 @@ namespace Ph2_HwInterface {
         WriteReg( "fc7_daq_cnfg.physical_interface_block.i2c.master_en", int(not pEnabled) );
         WriteReg( "fc7_daq_cnfg.mpa_ssa_board_block.i2c_master_en", pEnabled);
         WriteReg( "fc7_daq_cnfg.mpa_ssa_board_block.i2c_freq", pFrequency);
-
         std::this_thread::sleep_for( cWait );
 
     // resetting the fifos and the board
@@ -2248,7 +2384,7 @@ namespace Ph2_HwInterface {
     //LOG(INFO) << BOLDGREEN << "reply err: "<< std::hex << reply_err << std::dec <<RESET;
     //LOG(INFO) << BOLDGREEN << "reply data: "<< std::hex << reply_data << std::dec <<RESET;
 
-        if (reply_err == 1) LOG(ERROR) << "Error code: "<< std::hex << reply_data << std::dec;
+        if (reply_err == 1) LOG(INFO) << "Error code: "<< std::hex << reply_data << std::dec;
     //  print "ERROR! Error flag is set to 1. The data is treated as the error code."
     //elif reply_slave_id != slave_id:
     //  print "ERROR! Slave ID doesn't correspond to the one sent"
@@ -2257,7 +2393,7 @@ namespace Ph2_HwInterface {
 
         else
         {
-            if (read == 1) LOG (INFO) << BOLDBLUE <<  "Data that was read is: "<< reply_data << RESET;
+            if (read == 1) LOG (DEBUG) << BOLDBLUE <<  "Data that was read is: "<< reply_data << RESET;
             else LOG (DEBUG) << BOLDBLUE << "Successful write transaction" <<RESET;
         }
     }
@@ -2298,7 +2434,7 @@ namespace Ph2_HwInterface {
         std::cout<<std::endl;
 
         uint32_t reply = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply");
-    //LOG (INFO) << BOLDRED << std::hex << reply << std::dec << RESET;
+        LOG (INFO) << BOLDRED << std::hex << reply << std::dec << RESET;
         uint32_t reply_err = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.err");
         uint32_t reply_data = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
 
@@ -2516,47 +2652,50 @@ namespace Ph2_HwInterface {
         uint32_t write = 0;
         uint32_t SLOW = 2;
         uint32_t i2cmux = 0;
+        uint32_t pcf8574 = 1;
+        uint32_t dac7678 = 4;
         uint32_t ina226_7 = 7;
         uint32_t ina226_6 = 6;
         uint32_t ina226_5 = 5;
 
         LOG (INFO) << BOLDBLUE << "power information:" << RESET;
-        std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (450) );
         PSInterfaceBoard_SetSlaveMap();
         PSInterfaceBoard_ConfigureI2CMaster(1,SLOW);
 
         LOG (INFO) << BOLDBLUE << " - - - VDD:" << RESET;
         PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x08);
-        std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (450) );
         uint32_t dread2 = PSInterfaceBoard_SendI2CCommand_READ(ina226_7, 0, read, 0x02, 0);
-        std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+        LOG (INFO) << BOLDRED << "BIT VAL OF VDD = " << dread2 << RESET;
+        std::this_thread::sleep_for (std::chrono::milliseconds (450) );
         float vret = float(dread2) * 0.00125;
         uint32_t dread1 = PSInterfaceBoard_SendI2CCommand_READ(ina226_7, 0, read, 0x01, 0);
-        std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (450) );
         float iret = float(dread1) * 0.00250 / 0.1;
         float pret = vret * iret;
         LOG (INFO) << BOLDGREEN << "V = " << vret << "V, I = " << iret << "mA, P = " << pret << "mW" << RESET;
 
         LOG (INFO) << BOLDBLUE << " - - - Digital:" << RESET;
         PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x08);
-        std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (450) );
         dread2 = PSInterfaceBoard_SendI2CCommand_READ(ina226_6, 0, read, 0x02, 0);
-        std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (450) );
         vret = float(dread2) * 0.00125;
         dread1 = PSInterfaceBoard_SendI2CCommand_READ(ina226_6, 0, read, 0x01, 0);
-        std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (450) );
         iret = float(dread1) * 0.00250 / 0.1;
         pret = vret * iret;
         LOG (INFO) << BOLDGREEN << "V = " << vret << "V, I = " << iret << "mA, P = " << pret << "mW" << RESET;
 
         LOG (INFO) << BOLDBLUE << " - - - Analog:" << RESET;
         PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x08);
-        std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (450) );
         dread2 = PSInterfaceBoard_SendI2CCommand_READ(ina226_5, 0, read, 0x02, 0);
-        std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (450) );
         vret = float(dread2) * 0.00125;
         dread1 = PSInterfaceBoard_SendI2CCommand_READ(ina226_5, 0, read, 0x01, 0);
-        std::this_thread::sleep_for (std::chrono::milliseconds (750) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (450) );
         iret = float(dread1) * 0.00250 / 0.1;
         pret = vret * iret;
         LOG (INFO) << BOLDGREEN << "V = " << vret << "V, I = " << iret << "mA, P = " << pret << "mW" << RESET;
@@ -2638,7 +2777,7 @@ namespace Ph2_HwInterface {
         PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
     }
 
-    void D19cFWInterface::PSInterfaceBoard_PowerOff_SSA_v1(uint8_t mpaid , uint8_t ssaid )
+    void D19cFWInterface::PSInterfaceBoard_PowerOff_SSA(uint8_t mpaid , uint8_t ssaid )
     {
         uint32_t write = 0;
         uint32_t SLOW = 2;
@@ -2692,12 +2831,8 @@ namespace Ph2_HwInterface {
         PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
         PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x33, 0);  // tx to DAC C
         std::this_thread::sleep_for( cWait );
-    }
 
-
-    void D19cFWInterface::PSInterfaceBoard_PowerOff_SSA_v2(uint8_t mpaid , uint8_t ssaid )
-    {
-        std::chrono::milliseconds cWait( 1500 );
+        this->PSInterfaceBoard_PowerOff();
     }
 
     void D19cFWInterface::PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid , uint8_t ssaid )
@@ -2786,10 +2921,10 @@ namespace Ph2_HwInterface {
         this->ChipReSync();
         usleep (10);
         // reset  the timing tuning
-	WriteReg("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
-	
-	std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-	hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
+    WriteReg("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
+    
+    std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+    hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
         }
     }  
 }
