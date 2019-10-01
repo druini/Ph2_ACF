@@ -663,14 +663,14 @@ namespace Ph2_HwInterface
             LOG (INFO) << CYAN << "trigger_tag     = " << evt.chip_events[j].trigger_tag   << RESET;
             LOG (INFO) << CYAN << "bc_id           = " << evt.chip_events[j].bc_id         << RESET;
 
-            LOG (INFO) << BOLDYELLOW << "-- Region Data (" << evt.chip_events[j].hit_data.size() << " words) --" << RESET;
+            LOG (INFO) << BOLDYELLOW << "-- Hit Data (" << evt.chip_events[j].hit_data.size() << " hits) --" << RESET;
 
-            for (const auto& region_data : evt.chip_events[j].hit_data)
+            for (const auto& hit : evt.chip_events[j].hit_data)
               {
-                LOG(INFO)   << "Column: " << region_data.col
-                            << ", Row: "  << region_data.row
-                            << ", ToT: " << +region_data.tot
-                            << RESET;
+                LOG (INFO) << BOLDYELLOW << "Column: " << std::setw(3) <<  hit.col << std::setw(-1)
+                                         << ", Row: "  << std::setw(3) <<  hit.row << std::setw(-1)
+                                         << ", ToT: "  << std::setw(3) << +hit.tot << std::setw(-1)
+                                         << RESET;
               }
           }
       }

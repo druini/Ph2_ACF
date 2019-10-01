@@ -209,10 +209,10 @@ namespace Ph2_HwDescription
 
     struct HitData
     {
-      HitData(uint16_t row, uint16_t col, uint16_t tot)
-        : row(row)
-        , col(col)
-        , tot(tot)
+      HitData (uint16_t row, uint16_t col, uint8_t tot)
+      : row (row)
+      , col (col)
+      , tot (tot)
       {}
 
       uint16_t row;
@@ -222,12 +222,11 @@ namespace Ph2_HwDescription
 
     struct Event
     {
-      Event(const uint32_t* data, size_t n);
+      Event (const uint32_t* data, size_t n);
 
       uint16_t trigger_id;
       uint16_t trigger_tag;
       uint16_t bc_id;
-
       std::vector<HitData> hit_data;
 
       uint8_t evtStatus;

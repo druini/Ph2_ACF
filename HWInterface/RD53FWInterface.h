@@ -110,7 +110,7 @@ namespace Ph2_HwInterface
 
     struct ChipFrame
     {
-      ChipFrame(const uint32_t data0, const uint32_t data1);
+      ChipFrame (const uint32_t data0, const uint32_t data1);
 
       uint16_t error_code;
       uint16_t hybrid_id;
@@ -122,7 +122,7 @@ namespace Ph2_HwInterface
 
     struct Event
     {
-      Event(const uint32_t* data, size_t n);
+      Event (const uint32_t* data, size_t n);
 
       uint16_t block_size;
       uint16_t tlu_trigger_id;
