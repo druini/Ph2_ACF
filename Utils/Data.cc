@@ -13,6 +13,7 @@
 #include <iostream>
 
 #include "../HWInterface/RD53FWInterface.h"
+#include "D19cSSAEvent.h"
 
 namespace Ph2_HwInterface
 {
@@ -70,6 +71,8 @@ void Data::privateSet(const BeBoard *pBoard, const std::vector<uint32_t> &pData,
 
         if (fEventType == EventType::ZS)
             fNCbc = 0;
+        else if (fEventType == EventType::SSA)
+            fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
         else
             fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
 
@@ -109,8 +112,17 @@ void Data::privateSet(const BeBoard *pBoard, const std::vector<uint32_t> &pData,
                 {
                     //LOG(INFO) << "Packing event # " << fEventList.size() << ", Event size is " << fZSEventSize << " words";
                     if (pType == BoardType::D19C)
-                        fEventList.push_back(new D19cCbc3EventZS(pBoard, fZSEventSize, lvec));
-
+                    {
+                        if (fEventType == EventType::SSA)
+                        {
+                            LOG (INFO) << "<----->";
+                            fEventList.push_back(new D19cSSAEvent(pBoard, fNCbc, fNFe, lvec));
+                        }
+                        else
+                        {
+                            fEventList.push_back(new D19cCbc3Event(pBoard, fNCbc, fNFe, lvec));
+                        }
+                    }
                     lvec.clear();
 
                     if (fEventList.size() >= fNevents)
