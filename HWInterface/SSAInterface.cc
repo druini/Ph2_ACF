@@ -1,237 +1,140 @@
-/*
+/*!
 
-        FileName :                     SSAInterface.cc
-        Content :                      User Interface to the SSAs
-        Programmer :                   Lorenzo BIDEGAIN, Nicolas PIERRE, Georg AUZINGER
-        Version :                      1.0
-        Date of creation :             10/07/14
-        Support :                      mail to : lorenzo.bidegain@gmail.com, nico.pierre@icloud.com
+        \file                                            SSAInterface.cc
+        \brief                                           User Interface to the SSAs
+        \author                                          Marc Osherson
+        \version                                         1.0
+        \date                        31/07/19
+        Support :                    mail to : oshersonmarc@gmail.com
 
  */
 
 #include "SSAInterface.h"
 #include "../Utils/ConsoleColor.h"
-#include <typeinfo>
+#include "../Utils/ChannelGroupHandler.h"
+#include "../Utils/Container.h"
+#include "../Utils/RegisterValue.h"
+#include <bitset>
+
 #define DEV_FLAG 0
-// #define COUNT_FLAG 0
-
-namespace Ph2_HwInterface
-{
-
-SSAInterface::SSAInterface( const BeBoardFWMap& pBoardMap ) :
-    fBoardMap( pBoardMap ),
-    fBoardFW( nullptr ),
-    prevBoardIdentifier( 65535 ),
-    fRegisterCount( 0 ),
-    fTransactionCount( 0 )
-{
-#ifdef COUNT_FLAG
-    std::cout << "Counting number of Transactions!" << std::endl;
-#endif
-}
-
-SSAInterface::~SSAInterface()
-{
-}
-
-void SSAInterface::setBoard( uint16_t pBoardIdentifier )
-{
-    if ( prevBoardIdentifier != pBoardIdentifier )
-    {
-        BeBoardFWMap::iterator i = fBoardMap.find( pBoardIdentifier );
-
-        if ( i == fBoardMap.end() )
-            std::cout << "The Board: " << +( pBoardIdentifier >> 8 ) << "  doesn't exist" << std::endl;
-        else
-        {
-            fBoardFW = i->second;
-	    fSSAFW = dynamic_cast<D19cFWInterface*>(fBoardFW);
-            prevBoardIdentifier = pBoardIdentifier;
-        }
-    }
-}
-
-void SSAInterface::SCurves()
-{
-	std::cout <<  ":::] MEASURING S-CURVES" << std::endl;
-	ssaEnableAsyncRO(true);
-	ssaEnableAsyncRO(false);
-}
-
-
-void SSAInterface::checkRegVals(SSA* pSSA, const std::string& pRegNode)
-{
-	LOG (INFO) << RED << "Checking REG value "<< pRegNode << ": " << RESET;
-	setBoard ( pSSA->getBeBoardId() );
-	uint8_t X = ReadSSAReg(pSSA, pRegNode);
-	std::bitset<8> bX(X);
-	LOG (INFO) << BOLDRED << "\t\t"  << bX << RESET;
-}
-
-
-void SSAInterface::ssaEnableAsyncRO(bool value)
-{
-	std::cout <<  ":::] ASYNC --- Enabled" << std::endl;
-	// write 0b01 to ReadoutMode
-	// write 0 to AsyncRead_StartDel_MSB
-	// write 8 to AsyncRead_StartDel_LSB
-	// read and check last line
-	// tell Fc7 to write 8 to cnfg_phy_slvs_ssa_first_counter_del
-}
-
-
-void SSAInterface::setFileHandler (FileHandler* pHandler)
-{
-	setBoard(0);
-	fSSAFW->setFileHandler ( pHandler);
-}
-
-
-
-/// SSA POWER ON/OFF BLOCK:
-	void SSAInterface::PowerOn(float VDDPST , float DVDD , float AVDD , float VBF, float BG, uint8_t mpaid  , uint8_t ssaid  )
-	{
-		setBoard(0);
-		fSSAFW->PSInterfaceBoard_PowerOn_SSA_v1(VDDPST, DVDD, AVDD, VBF, BG, mpaid, ssaid);
+namespace Ph2_HwInterface {// start namespace
+    	SSAInterface::SSAInterface ( const BeBoardFWMap& pBoardMap ) : ReadoutChipInterface ( pBoardMap ){}
+    	SSAInterface::~SSAInterface(){}
+	//
+	bool SSAInterface::ConfigureChip ( const Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize )
+    	{
+    		uint8_t cWriteAttempts = 0 ;
+		//first, identify the correct BeBoardFWInterface
+        	setBoard ( pSSA->getBeBoardId() );
+			std::vector<uint32_t> cVec;
+			ChipRegMap cSSARegMap = pSSA->getRegMap();
+			int NumReg = 0;
+			for ( auto& cRegItem : cSSARegMap )
+	        	{
+	        	NumReg++;
+				#ifdef COUNT_FLAG
+	                		fRegisterCount++;
+				#endif
+	      		fBoardFW->EncodeReg (cRegItem.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, true);
+	      		bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+	      		LOG (INFO) << BOLDBLUE << cRegItem.first << "  <   " << BOLDRED << cSuccess << RESET;
+	      		if (not cSuccess) return false;
+	            cVec.clear();
+			}
+			LOG (INFO) << BOLDGREEN << "Wrote: " << NumReg << RESET;
+			#ifdef COUNT_FLAG
+	        	fTransactionCount++;
+			#endif
+	        return true;
 	}
-
-	void SSAInterface::PowerDiagnostic(uint8_t mpaid , uint8_t ssaid )
+	//
+	bool SSAInterface::setInjectionSchema (ReadoutChip* pSSA, const ChannelGroupBase *group, bool pVerifLoop)
+	{return true;}
+	//
+	bool SSAInterface::maskChannelsGroup (ReadoutChip* pSSA, const ChannelGroupBase *group, bool pVerifLoop)
+	{return true;}
+	//
+	bool SSAInterface::maskChannelsAndSetInjectionSchema  (ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop)
+	{return true;}
+	//
+	bool SSAInterface::ConfigureChipOriginalMask (ReadoutChip* pSSA, bool pVerifLoop, uint32_t pBlockSize )
+	{return true;}
+	//
+	bool SSAInterface::MaskAllChannels ( ReadoutChip* pSSA, bool mask, bool pVerifLoop )
+	{return true;}
+	// I actually want this one!
+	bool SSAInterface::WriteChipReg ( Chip* pSSA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop )
 	{
-		setBoard(0);
-		fSSAFW->ReadPower_SSA(mpaid , ssaid);
-	}
-	void SSAInterface::KillI2C()
-	{	fSSAFW->KillI2C();	}
-	void SSAInterface::PowerOff(uint8_t mpaid , uint8_t ssaid )
-	{
-		setBoard(0);
-		fSSAFW->PSInterfaceBoard_PowerOff_SSA_v1( );
-	}
-/// END SSA POWER ON/OFF BLOCK
-
-
-/// MAIN POWER ON/OFF BLOCK: (Identical to MPA version of these functions)
-	void SSAInterface::MainPowerOn(uint8_t mpaid , uint8_t ssaid )
-	{
-		setBoard(0);
-		fSSAFW->PSInterfaceBoard_PowerOn(mpaid, ssaid);
-	}
-
-	void SSAInterface::MainPowerOff()
-	{
-		setBoard(0);
-		fSSAFW->PSInterfaceBoard_PowerOff( );
-	}
-/// END MAIN POEWR ON/OFF BLOCK
-
-/// CONFIGURE SSA:
-	bool SSAInterface::ConfigureSSA (const SSA* pSSA, bool pVerifLoop)
-	{
-
-	    LOG (INFO) << BOLDRED << "--- Trying to configure one of the SSAs: "<< RESET;
-	    //first, identify the correct BeBoardFWInterface
-	    setBoard ( pSSA->getBeBoardId() );
-
-	    //vector to encode all the registers into
-	    std::vector<uint32_t> cVec;
-
-	    //Deal with the RegItems and encode them
-
-	    SSARegMap cSSARegMap = pSSA->getRegMap();
-
-	    bool cSuccess;
-
-	    for ( auto& cRegItem : cSSARegMap )
-	    {
-		LOG (INFO) << BOLDBLUE << cRegItem.first << RESET;
-		fBoardFW->EncodeReg (cRegItem.second, pSSA->getFeId(), pSSA->getSSAId(), cVec, pVerifLoop, true);
+		setBoard ( pSSA->getBeBoardId() );
+		ChipRegItem cRegItem = pSSA->getRegItem ( pRegNode );
+		cRegItem.fValue = pValue & 0xFF;
+		std::vector<uint32_t> cVec;
+		fBoardFW->EncodeReg ( cRegItem, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, true );
 		uint8_t cWriteAttempts = 0 ;
-		cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
-		if (not cSuccess) {return cSuccess;}
-		cVec.clear();
-	#ifdef COUNT_FLAG
-		fRegisterCount++;
-	#endif
-	    }
+        	bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
+		if (cSuccess)
+		    pSSA->setReg ( pRegNode, pValue );
 
-	    // write the registers, the answer will be in the same cVec
-	    // the number of times the write operation has been attempted is given by cWriteAttempts
-	    // uint8_t cWriteAttempts = 0 ;
-	    //std::cout << "BEFORE WRITE: " << std::endl;
-	    //for (auto word : cVec) std::cout << "----- Sent words: " << std::hex << word << std::dec << std::endl;
-	    // bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop); // FIXME!!!! :(
-	    // std::cout << "AFTER WRITE: " << std::endl;
-	    // for (auto word : cVec) std::cout << "----- Reply words: " << std::hex << word << std::dec << std::endl;
-
-	#ifdef COUNT_FLAG
-	    fTransactionCount++;
-	#endif
-	    LOG (INFO) << BOLDRED << "--- Done configuring one of the SSAs: "<< RESET;
-	    return cSuccess;
+		#ifdef COUNT_FLAG
+			fRegisterCount++;
+			fTransactionCount++;
+		#endif
+		return cSuccess;		
 	}
-/// END CONFIGURE SSA
-
-/// CLEAR PS COUNTERS:
-	void SSAInterface::PS_Clear_counters(uint32_t duration)
-	{
-		setBoard(0);
-		fSSAFW->PS_Clear_counters(duration);
+	// I actually want this one too!
+	bool SSAInterface::WriteChipMultReg ( Chip* pSSA, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop )
+ 	{
+		
+		setBoard ( pSSA->getBeBoardId() );
+		std::vector<uint32_t> cVec;
+		ChipRegItem cRegItem;
+		for ( const auto& cReg : pVecReq )
+		{
+		    cRegItem = pSSA->getRegItem ( cReg.first );
+		    cRegItem.fValue = cReg.second;
+		    fBoardFW->EncodeReg ( cRegItem, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, true );
+		    #ifdef COUNT_FLAG
+		        fRegisterCount++;
+		    #endif
+		}
+		uint8_t cWriteAttempts = 0 ;
+		bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
+		#ifdef COUNT_FLAG
+			fTransactionCount++;
+		#endif
+		if (cSuccess)
+		{
+		    for ( const auto& cReg : pVecReq )
+		    {
+		        cRegItem = pSSA->getRegItem ( cReg.first );
+		        pSSA->setReg ( cReg.first, cReg.second );
+		    }
+		}
+		return cSuccess;
 	}
-/// END CLEAR PS COUNTERS
+	// NOT REALLY SURE?
+	bool SSAInterface::WriteChipAllLocalReg ( ReadoutChip* pSSA, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop )
+	{return true;}
+	// Definitely needed:
+    	uint16_t SSAInterface::ReadChipReg ( Chip* pSSA, const std::string& pRegNode )
+    	{
+		setBoard ( pSSA->getBeBoardId() );
 
-/// READ/WRITE SSA REGISTER:
-	bool SSAInterface::WriteSSAReg ( SSA* pSSA, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop )
-	{
-	    //first, identify the correct BeBoardFWInterface
-	    setBoard ( pSSA->getBeBoardId() );
+		ChipRegItem cRegItem = pSSA->getRegItem ( pRegNode );
 
-	    //next, get the reg item
-	    RegItem cRegItem = pSSA->getRegItem ( pRegNode );
-	    cRegItem.fValue = pValue;
+		std::vector<uint32_t> cVecReq;
 
-	    //vector for transaction
-	    std::vector<uint32_t> cVec;
+		fBoardFW->EncodeReg ( cRegItem, pSSA->getFeId(), pSSA->getChipId(), cVecReq, true, false );
+		fBoardFW->ReadChipBlockReg (  cVecReq );
 
-	    // encode the reg specific to the FW, pVerifLoop decides if it should be read back, true means to write it
-	    fBoardFW->EncodeReg ( cRegItem, pSSA->getFeId(), pSSA->getSSAId(), cVec, pVerifLoop, true );
-	    // write the registers, the answer will be in the same cVec
-	    // the number of times the write operation has been attempted is given by cWriteAttempts
-	    uint8_t cWriteAttempts = 0 ;
-	    bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
+		//bools to find the values of failed and read
+		bool cFailed = false;
+		bool cRead;
+		uint8_t cSSAId;
+		fBoardFW->DecodeReg ( cRegItem, cSSAId, cVecReq[0], cRead, cFailed );
 
-	    //update the HWDescription object
-	    if (cSuccess)
-		pSSA->setReg ( pRegNode, pValue );
+		if (!cFailed) pSSA->setReg ( pRegNode, cRegItem.fValue );
 
-	#ifdef COUNT_FLAG
-	    fRegisterCount++;
-	    fTransactionCount++;
-	#endif
-
-	    return cSuccess;
-	}
-
-	uint8_t SSAInterface::ReadSSAReg ( SSA* pSSA, const std::string& pRegNode )
-	{
-	    setBoard ( pSSA->getBeBoardId() );
-
-	    RegItem cRegItem = pSSA->getRegItem ( pRegNode );
-	    std::vector<uint32_t> cVecReq;
-
-	    fBoardFW->EncodeReg ( cRegItem, pSSA->getFeId(), pSSA->getSSAId(), cVecReq, true, false );
-            fBoardFW->ReadChipBlockReg (  cVecReq );
-
-	    //bools to find the values of failed and read
-	    bool cFailed = false;
-	    bool cRead;
-	    uint8_t cSSAId;
-	    fBoardFW->DecodeReg ( cRegItem, cSSAId, cVecReq[0], cRead, cFailed );
-
-	    if (!cFailed) pSSA->setReg ( pRegNode, cRegItem.fValue );
-
-	    return cRegItem.fValue;
-	}
-
-/// END READ/WRITE SSA REGISTER
-
-}
+		return cRegItem.fValue & 0xFF;
+    	}
+}// end namespace

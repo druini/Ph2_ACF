@@ -2,10 +2,10 @@
 
         \file                                            SSAInterface.h
         \brief                                           User Interface to the SSAs
-        \author                                          Lorenzo BIDEGAIN, Nicolas PIERRE
+        \author                                          Marc Osherson
         \version                                         1.0
-        \date                        31/07/14
-        Support :                    mail to : lorenzo.bidegain@gmail.com, nico.pierre@icloud.com
+        \date                        31/07/19
+        Support :                    mail to : oshersonmarc@gmail.com
 
  */
 
@@ -13,81 +13,32 @@
 #define __SSAINTERFACE_H__
 
 #include <vector>
-#include "../HWInterface/D19cFWInterface.h"
-#include "pugixml.hpp"
+#include "BeBoardFWInterface.h"
+#include "ReadoutChipInterface.h"
 
 using namespace Ph2_HwDescription;
+namespace Ph2_HwInterface { // start namespace
 
-/*!
- * \namespace Ph2_HwInterface
- * \brief Namespace regrouping all the interfaces to the hardware
- */
-namespace Ph2_HwInterface
-{
-
-	using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>;    /*!< Map of Board connected */
-
-	/*!
-	 * \class SSAInterface
-	 * \brief Class representing the User Interface to the SSA on different boards
-	 */
-	class SSAInterface
-	{
-
-	  private:
-		BeBoardFWMap fBoardMap;                     /*!< Map of Board connected */
-		BeBoardFWInterface* fBoardFW;                     /*!< Board loaded */
-		D19cFWInterface* fSSAFW;                     /*!< Board loaded */
-		uint16_t prevBoardIdentifier;                     /*!< Id of the previous board */
-
-		uint16_t fRegisterCount;                                /*!< Counter for the number of Registers written */
-		uint16_t fTransactionCount;         /*!< Counter for the number of Transactions */
-
-
-	  private:
-		/*!
-		 * \brief Set the board to talk with
-		 * \param pBoardId
-		 */
-		void setBoard( uint16_t pBoardIdentifier );
-
+	class SSAInterface : public ReadoutChipInterface{ // begin class
 	public:
-		/*!
-		* \brief Constructor of the SSAInterface Class
-		* \param pBoardMap
-		*/
-		SSAInterface( const BeBoardFWMap& pBoardMap );
-		/*!
-		* \brief Destructor of the SSAInterface Class
-		*/
-		~SSAInterface();
+        SSAInterface ( const BeBoardFWMap& pBoardMap );
+        ~SSAInterface();
+	bool ConfigureChip ( const Chip* pSSA, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
+	bool setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
+	bool maskChannelsGroup  (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
+	bool maskChannelsAndSetInjectionSchema  (ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop = true ) override;
+	bool ConfigureChipOriginalMask (ReadoutChip* pSSA, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
+	bool MaskAllChannels ( ReadoutChip* pSSA, bool mask, bool pVerifLoop = true ) override;
+	bool WriteChipReg ( Chip* pSSA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true ) override;
+	bool WriteChipMultReg ( Chip* pSSA, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true ) override;
+	bool WriteChipAllLocalReg ( ReadoutChip* pSSA, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true ) override;
+	uint16_t ReadChipReg ( Chip* pSSA, const std::string& pRegNode ) override;
+	private:
+	}; // end class
 
-		void setFileHandler (FileHandler* pHandler);
+} // end namespace
 
-		void PowerOff(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
-		void PowerOn(float VDDPST = 1.25, float DVDD = 1.25, float AVDD = 1.25, float VBF = 0.3, float BG = 0.0, uint8_t mpaid = 0 , uint8_t ssaid = 0);
-		void PowerDiagnostic(uint8_t mpaid = 0 , uint8_t ssaid = 0);
-		void KillI2C();
-		void MainPowerOn(uint8_t mpaid = 0, uint8_t ssaid = 0);
-		void MainPowerOff();
-		bool ConfigureSSA (const SSA* pSSA , bool pVerifLoop = true);
-		
-		bool WriteSSAReg ( SSA* pSSA, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true );
-   		uint8_t ReadSSAReg ( SSA* pSSA, const std::string& pRegNode );
 
-		void PS_Clear_counters(uint32_t duration = 0 );
 
-		void SCurves ();
-
-		void checkRegVals(SSA* pSSA, const std::string& pRegNode);
-
-		void ssaEnableAsyncRO(bool value);
-		/*!
-		* \uploads configuration data to glib
-		*/
-		void ConfigureSSA(std::vector< uint32_t >* conf_upload, int conf ,int nSSA, bool lr);
-
-	};
-}
 
 #endif
