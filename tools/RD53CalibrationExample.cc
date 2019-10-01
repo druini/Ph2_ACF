@@ -17,7 +17,7 @@ RD53CalibrationExample::~RD53CalibrationExample()
 void RD53CalibrationExample::Initialise (void)
 {
 
-    auto cSetting = fSettingsMap.find ( "Nevents" );
+    auto cSetting = fSettingsMap.find ( "nEvents" );
     fEventsPerPoint = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10;
     fRowStart     = fSettingsMap["ROWstart"];
     fRowStop      = fSettingsMap["ROWstop"];
@@ -25,7 +25,7 @@ void RD53CalibrationExample::Initialise (void)
     fColStop      = fSettingsMap["COLstop"];
     
     LOG (INFO) << "Parsed settings:" ;
-    LOG (INFO) << " Nevents = " << fEventsPerPoint ;
+    LOG (INFO) << " nEvents = " << fEventsPerPoint ;
 
     #ifdef __USE_ROOT__  // to disable and anable ROOT by command 
         //Calibration is not running on the SoC: plots are booked during initialization
@@ -49,22 +49,19 @@ void RD53CalibrationExample::runRD53CalibrationExample(void)
         ReadNEvents ( theBeBoard, fEventsPerPoint ); 
         //Get the event vector (as it was in the past)
 
-        const std::vector<Event*> &eventVector = GetEvents ( theBeBoard );
+        const std::vector<Event*>& eventVector = GetEvents ( theBeBoard );
+        size_t chipIndx;
 
-        for ( auto &event : eventVector ) //for on events - begin 
+        for ( auto event : eventVector ) //for on events - begin 
         {
             for(auto module: *board) // for on module - begin 
             {
                 for(auto chip: *module) // for on chip - begin 
                 {
-                    for (auto row = fRowStart; row <= fRowStop; row++)
-                    {
-                        for (auto col = fColStart; col <= fColStop; col++)
-                        {
-                            if(true) // MAURO, metti come si controlla se il canale e' stato colpito
-                            chip->getChannel<uint32_t>(row,col)++;
-                        }
-                    }
+                    auto RD53_event = static_cast<RD53Event*>(event);
+                    if (RD53_event->isHittedChip(module->getId(), chip->getId(), chipIndx) == true)
+                        for (const auto& hit : RD53_event->chip_events[chipIndx].hit_data)
+                            chip->getChannel<uint32_t>(hit.row,hit.col)++;
                 } // for on chip - end 
             } // for on module - end 
         } // for on events - end 

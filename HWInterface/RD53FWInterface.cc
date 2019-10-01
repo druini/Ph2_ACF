@@ -663,13 +663,13 @@ namespace Ph2_HwInterface
             LOG (INFO) << CYAN << "trigger_tag     = " << evt.chip_events[j].trigger_tag   << RESET;
             LOG (INFO) << CYAN << "bc_id           = " << evt.chip_events[j].bc_id         << RESET;
 
-            LOG (INFO) << BOLDYELLOW << "-- Region Data (" << evt.chip_events[j].data.size() << " words) --" << RESET;
+            LOG (INFO) << BOLDYELLOW << "-- Region Data (" << evt.chip_events[j].hit_data.size() << " words) --" << RESET;
 
-            for (const auto& region_data : evt.chip_events[j].data)
+            for (const auto& region_data : evt.chip_events[j].hit_data)
               {
                 LOG(INFO)   << "Column: " << region_data.col
                             << ", Row: "  << region_data.row
-                            << ", ToTs: [" << +region_data.tots[0] << "," << +region_data.tots[1] << "," << +region_data.tots[2] << "," << +region_data.tots[3] << "]"
+                            << ", ToT: " << +region_data.tot
                             << RESET;
               }
           }

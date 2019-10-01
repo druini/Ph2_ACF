@@ -18,7 +18,7 @@ namespace Ph2_HwInterface
         if (module_id == module_id_vec[j])
           {
             for (auto i = 0u; i < chip_events.size(); i++)
-              if ((chip_id == chip_id_vec[i]) && (chip_events[i].data.size() != 0))
+              if ((chip_id == chip_id_vec[i]) && (chip_events[i].hit_data.size() != 0))
                 {
                   chipIndx = i;
                   return true;
@@ -45,16 +45,13 @@ namespace Ph2_HwInterface
                   cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.push_back(chip_events[chipIndx].trigger_id);
                 }
 
-              for (const auto& hit : chip_events[chipIndx].data)
-                if ((hit.row < RD53::nRows) && (hit.col < RD53::nCols))
-                  for (auto i = 0; i < NPIX_REGION; i++)
-                    if (hit.tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION))
+              for (const auto& hit : chip_events[chipIndx].hit_data)
                       {
-                        cChip->getChannel<OccupancyAndPh>(hit.row+RD53::nRows*(hit.col+i)).fOccupancy++;
-                        cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPh      += float(hit.tots[i]);
-                        cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPhError += float(hit.tots[i]*hit.tots[i]);
-                        if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col+i) == false)
-                          cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).readoutError = true;
+                        cChip->getChannel<OccupancyAndPh>(hit.row+RD53::nRows*(hit.col)).fOccupancy++;
+                        cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPh      += float(hit.tot);
+                        cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPhError += float(hit.tot*hit.tot);
+                        if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col) == false)
+                          cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).readoutError = true;
                       }
             }
         }

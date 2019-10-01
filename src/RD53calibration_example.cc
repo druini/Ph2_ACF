@@ -16,7 +16,7 @@ INITIALIZE_EASYLOGGINGPP
 int main ( int argc, char* argv[] )
 {
     //configure the logger
-    el::Configurations conf ("settings/logger.conf");
+    el::Configurations conf ("../settings/logger.conf");
     el::Loggers::reconfigureAllLoggers (conf);
 
     ArgvParser cmd;

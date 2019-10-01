@@ -209,11 +209,15 @@ namespace Ph2_HwDescription
 
     struct HitData
     {
-      HitData (const uint32_t data);
+      HitData(uint16_t row, uint16_t col, uint16_t tot)
+        : row(row)
+        , col(col)
+        , tot(tot)
+      {}
 
       uint16_t row;
       uint16_t col;
-      std::array<uint8_t, NPIX_REGION> tots;
+      uint8_t  tot;
     };
 
     struct Event
@@ -224,9 +228,12 @@ namespace Ph2_HwDescription
       uint16_t trigger_tag;
       uint16_t bc_id;
 
-      std::vector<HitData> data;
+      std::vector<HitData> hit_data;
 
       uint8_t evtStatus;
+
+      private:
+        std::vector<HitData> DecodeQuad(uint32_t data);
     };
 
     struct CalCmd
