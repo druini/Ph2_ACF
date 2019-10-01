@@ -23,7 +23,7 @@
 #include <ios>
 #include <istream>
 #include <limits>
-#include "pugixml.hpp"
+#include "pugixml/pugixml.hpp"
 #include "Utilities.h"
 #include "ConsoleColor.h"
 #include "easylogging++.h"
