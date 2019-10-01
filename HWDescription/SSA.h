@@ -2,10 +2,10 @@
 
         \file                   SSA.h
         \brief                  SSA Description class, config of the SSAs
-        \author                 Lorenzo BIDEGAIN
+        \author                 Marc Osherson (copying from Cbc.h)
         \version                1.0
-        \date                   25/06/14
-        Support :               mail to : lorenzo.bidegain@gmail.com
+        \date                   31/07/19
+        Support :               mail to : oshersonmarc@gmail.com
 
  */
 
@@ -14,103 +14,54 @@
 #define SSA_h__
 
 #include "FrontEndDescription.h"
-#include "RegItem.h"
+#include "ReadoutChip.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
-#include "../Utils/easylogging++.h"
 #include <iostream>
 #include <map>
 #include <string>
 #include <stdint.h>
 #include <utility>
 #include <set>
+#include "../Utils/easylogging++.h"
+//#include "ChipRegItem.h"
 
-// SSA2 Chip HW Description Class
+namespace Ph2_HwDescription { //open namespace 
 
-
-/*!
- * \namespace Ph2_HwDescription
- * \brief Namespace regrouping all the hardware description
- */
-namespace Ph2_HwDescription {
-    using SSARegMap = std::map < std::string, RegItem >;
-    using SSARegPair = std::pair <std::string, RegItem>;
+    using ChipRegMap = std::map < std::string, ChipRegItem >;
+    using SSARegPair = std::pair <std::string, ChipRegItem>;
     using CommentMap = std::map <int, std::string>;
 
-
-    class SSA : public FrontEndDescription
-    {
-
-      public:
-
-        // C'tors which take BeId, FMCId, FeID, SSAId
-        SSA ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t pSSASide, const std::string& filename);
-
-        // C'tors with object FE Description
-        SSA ( const FrontEndDescription& pFeDesc, uint8_t pSSAId , uint8_t pSSASide);
-
-        // Default C'tor
-        SSA();
-
-        // Copy C'tor
-        SSA ( const SSA& SSAobj );
-
-	void loadfRegMap ( const std::string& filename );
-
-        // D'Tor
-        ~SSA();
-
-        uint8_t getSSAId() const
-        {
-            return fSSAId;
-        }
-        /*!
-         * \brief Set the SSA Id
-         * \param pSSAId
-         */
-        void setSSAId ( uint8_t pSSAId )
-        {
-            fSSAId = pSSAId;
-        }
-
-        SSARegMap& getRegMap()
-        {
-            return fRegMap;
-        }
-        const SSARegMap& getRegMap() const
-        {
-            return fRegMap;
-        }
-        uint8_t getReg ( const std::string& pReg ) const;
-        /*!
-        * \brief Set any register of the Map
-        * \param pReg
-        * \param psetValue
-        */
-        void setReg ( const std::string& pReg, uint8_t psetValue );
-       /*!
-        * \brief Get any registeritem of the Map
-        * \param pReg
-        * \return  RegItem
-        */
-        RegItem getRegItem ( const std::string& pReg );
-        /*!
-        * \brief Write the registers of the Map in a file
-        * \param filename
-        */
-	void CheckRegVals();
-	
-      protected:
-
-        SSARegMap fRegMap;
-        uint8_t fSSAId;
-        uint8_t fSSASide;
-        CommentMap fCommentMap;
+    class SSA : public ReadoutChip { // open class def
+	public:
+		// C'tors which take BeId, FMCId, FeID, SSAId
+		SSA ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t pSSASide, const std::string& filename);
+		// C'tors with object FE Description
+		SSA ( const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pSSASide, const std::string& filename);
 
 
-    };
+		virtual void accept ( HwDescriptionVisitor& pVisitor )
+		{
+		    pVisitor.visitChip ( *this );
+		}
+		void loadfRegMap ( const std::string& filename ) override;
+		void saveRegMap ( const std::string& filename ) override;
+		uint32_t getNumberOfChannels() const override { return NCHANNELS; }
+		bool isDACLocal(const std::string &dacName) override {
+		    if(dacName.find("MaskChannel-",0,12)!=std::string::npos || dacName.find("Channel",0,7)!=std::string::npos ) return true;
+		    else return false;
+		}
+		uint8_t getNumberOfBits(const std::string &dacName) override {
+		    if(dacName.find("MaskChannel-",0,12)!=std::string::npos) return 1;
+		    else if(dacName == "VCth") return 10;
+		    else if(dacName == "VCth2") return 2;
+		    else if(dacName == "TriggerLatency" ) return 9;
+		    else return 8;
+		}
+	protected:
+	}; // close class def
 
+} // close namespace
 
-}
 
 #endif
