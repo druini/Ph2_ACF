@@ -109,9 +109,9 @@ public:
         uint32_t numberOfClusterToSkip = numberOfEnabledChannels_ / (numberOfRowsPerCluster*numberOfColsPerCluster*numberOfClustersPerGroup) - 1;
         if(numberOfEnabledChannels_ % (numberOfRowsPerCluster*numberOfColsPerCluster*numberOfClustersPerGroup) > 0) ++numberOfClusterToSkip;
 
-        std::cout << "numberOfClustersPerGroup = " << numberOfClustersPerGroup << "\n";
+        // std::cout << "numberOfClustersPerGroup = " << numberOfClustersPerGroup << "\n";
 
-        std::cout << "numberOfClusterToSkip = " << numberOfClusterToSkip << "\n";
+        // std::cout << "numberOfClusterToSkip = " << numberOfClusterToSkip << "\n";
 
         uint32_t clusterSkipped = numberOfClusterToSkip - groupNumber;
         for(uint16_t col = 0; col<numberOfCols_; col+=numberOfColsPerCluster)
