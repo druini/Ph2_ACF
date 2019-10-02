@@ -50,32 +50,43 @@ int main( int argc, char* argv[] )
 	BeBoard* pBoard = cTool.fBoardVector.at(0);
 	std::vector < ReadoutChip* > &ChipVec = pBoard->getModule(0)->fReadoutChipVector;
 	cTool.setFWTestPulse();
-	for(auto cSSA: ChipVec)
+	TH1I *h1 = new TH1I("h1", "S-CURVE", 256, 0, 256);
+	for (int thd = 0; thd<=256; thd++)
 	{
-		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ReadoutMode", 0x0);
-		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_THDAC", 0x16);
-		for (int i = 1; i<=120;i++ ) // loop over all strips
+		for(auto cSSA: ChipVec)
 		{
-			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S" + std::to_string(i), 0x1);
+			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_CALDAC", 200);
+			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ReadoutMode", 0x0); // sync mode = 0
+			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_THDAC", thd);
+			for (int i = 1; i<=120;i++ ) // loop over all strips
+			{
+				cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S" + std::to_string(i), 0x11); // 0x11 = 10001 (enable strobe)
+			}
+			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "L1-Latency_LSB", 0x44);
 		}
-		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "L1-Latency_LSB", 0x44);
+		cTool.ReadNEvents(pBoard, 100);
+		const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
+
+		for ( auto &event : eventVector ) //for on events - begin 
+	    {
+	        for(auto module: *pBoard) // for on module - begin 
+	        {
+	            for(auto chip: *module) // for on chip - begin 
+	            {
+	                unsigned int channelNumber = 0;
+	                for (int i = 1; i<=120;i++ ) // loop over all strips
+					{
+						h1->Fill(thd, event->DataBit ( module->getId(), chip->getId(), channelNumber));
+						LOG (INFO) << BOLDBLUE << "hits on channel "<<channelNumber<< " = " << event->DataBit ( module->getId(), chip->getId(), channelNumber) <<RESET;
+	                	channelNumber++;
+	                } // for on channel - end 
+	            } // for on chip - end 
+	        } // for on module - end 
+	    } // for on events - end
 	}
-	cTool.ReadNEvents(pBoard, 10);
-	const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
-	for ( auto &event : eventVector ) //for on events - begin 
-    {
-        for(auto module: *pBoard) // for on module - begin 
-        {
-            for(auto chip: *module) // for on chip - begin 
-            {
-                unsigned int channelNumber = 0;
-                for(auto &channel : *chip->getChannelContainer<uint32_t>()) // for on channel - begin 
-                {
-                    //retreive data in the old way and add to the current number of hits of the corresponding channel
-                        channel += event->DataBit ( module->getId(), chip->getId(), channelNumber++);
-                		LOG (INFO) << BOLDBLUE << "hits = " << channel <<RESET;
-                } // for on channel - end 
-            } // for on chip - end 
-        } // for on module - end 
-    } // for on events - end 
+	TCanvas * c1 = new TCanvas("c", "c", 600, 600);
+	c1->cd();
+	h1->Draw("hist");
+	c1->Print("test.png");
+	IB->PSInterfaceBoard_PowerOff_SSA(0, 0);
 }
