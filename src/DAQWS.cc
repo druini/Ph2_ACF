@@ -56,14 +56,15 @@ int main( int argc, char* argv[] )
 		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_THDAC", 0x16);
 		for (int i = 1; i<=120;i++ ) // loop over all strips
 		{
-			UserWriteReg(IB, cSSA, "ENFLAGS_S" + std::to_string(i), 0x1);
+			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S" + std::to_string(i), 0x1);
 		}
-		UserWriteReg(IB, cSSA, "L1-Latency_LSB", 0x44);
+		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "L1-Latency_LSB", 0x44);
 	}
-	ReadNEvents(pBoard, 10);
+	cTool.ReadNEvents(pBoard, 10);
+	const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
 	for ( auto &event : eventVector ) //for on events - begin 
     {
-        for(auto module: *board) // for on module - begin 
+        for(auto module: *pBoard) // for on module - begin 
         {
             for(auto chip: *module) // for on chip - begin 
             {
