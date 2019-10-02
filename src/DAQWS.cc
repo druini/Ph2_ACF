@@ -42,8 +42,8 @@ int main( int argc, char* argv[] )
 	cTool.InitializeHw ( cHWFile, outp);
 	cTool.InitializeSettings ( cHWFile, outp );
 	D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
-	IB->PSInterfaceBoard_PowerOn_SSA(1.25, 1.25, 1.25, 0.3, 0.0, 0, 0);
-	IB->ReadPower_SSA(0, 0);
+	IB->PSInterfaceBoard_PowerOn_SSA(1.25, 1.25, 1.25, 0.3, 0.0, 1);
+	IB->ReadPower_SSA();
 	cTool.ConfigureHw();
 	cTool.ConfigureHw();
 
@@ -60,11 +60,11 @@ int main( int argc, char* argv[] )
 			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_THDAC", thd);
 			for (int i = 1; i<=120;i++ ) // loop over all strips
 			{
-				cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S" + std::to_string(i), 0x11); // 0x11 = 10001 (enable strobe)
+				cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S" + std::to_string(i), 0x11); // 0x19 = 11001 (enable strobe)
 			}
 			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "L1-Latency_LSB", 0x44);
 		}
-		cTool.ReadNEvents(pBoard, 100);
+		cTool.ReadNEvents(pBoard, 10);
 		const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
 
 		for ( auto &event : eventVector ) //for on events - begin 
@@ -88,5 +88,6 @@ int main( int argc, char* argv[] )
 	c1->cd();
 	h1->Draw("hist");
 	c1->Print("test.png");
-	IB->PSInterfaceBoard_PowerOff_SSA(0, 0);
+
+	IB->PSInterfaceBoard_PowerOff_SSA();
 }

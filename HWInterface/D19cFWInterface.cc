@@ -2148,11 +2148,11 @@ namespace Ph2_HwInterface {
         else return false;
     }
 
-    void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA(float VDDPST , float DVDD , float AVDD , float VBF, float BG, uint8_t mpaid  , uint8_t ssaid  )
+    void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA(float VDDPST , float DVDD , float AVDD , float VBF, float BG, uint8_t ENABLE)
     {
 
         this->getBoardInfo();
-        this->PSInterfaceBoard_PowerOn(mpaid, ssaid);
+        this->PSInterfaceBoard_PowerOn(0, 0);
 
         uint32_t read = 1;
         uint32_t write = 0;
@@ -2227,51 +2227,12 @@ namespace Ph2_HwInterface {
         PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x37, setvoltage);  // tx to DAC C
         std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
 
-        std::string DONE = "no";
-        while (not (DONE == "yes" or DONE == "Yes" or DONE == "YES"))
-        {
-            LOG(INFO) << BOLDBLUE << "Write or read? (W/R)" << RESET;
-            std::string RW;
-            std::cin >> RW;
-            if (RW == "W" or RW == "w")
-            {
-                std::string VALSTRING = "0";
-                LOG (INFO) << BOLDBLUE << "What value are you writing?" << RESET;
-                std::cin >> VALSTRING;
-                uint32_t VAL = std::stoi(VALSTRING);
-                LOG (INFO) << BOLDRED << "writing SSA/MPA byte: " << std::bitset<32>(VAL) << RESET;
-                PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
-                std::this_thread::sleep_for (std::chrono::milliseconds (500) );
-                PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, VAL);  // set reset bit
-            }
-            if (RW == "R" or RW == "r")
-            {
-                uint32_t BYTE;
-                BYTE = PSInterfaceBoard_SendI2CCommand_READ(pcf8574, 0, read, 0, 0);
-                LOG(INFO) << BOLDRED << "reading SSA/MPA byte: " << std::bitset<32>(BYTE) << RESET;
-            }
-            LOG( INFO) << BOLDBLUE << "Are you done?" << RESET;
-            std::cin >> DONE;
-        }
+        uint32_t VAL = (ENABLE);
+        LOG (INFO) << BOLDRED << VAL << "  writeme!" << RESET;
+        PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
+        std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+        PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, VAL);  // set reset bit
 
-    /*  LOG (INFO) << "ssa set address"; FIXME Temporarily switched to user input for probe-tests with Ed B.
-        uint32_t val = (mpaid << 5) + (ssaid << 1);
-        PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);  // to SCO on PCA9646
-        std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
-        PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, val);  // tx to DAC C
-        std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
-
-        LOG(INFO) << "ssa enable";
-        uint32_t val2 = (mpaid << 5) + (ssaid << 1) + 1; // reset bit for MPA
-        LOG (INFO) << RED << val2 << RESET;
-        PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);  // route to 2nd PCF8574
-        std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
-        LOG(INFO) << BOLDBLUE << "ssa enable bit: " << std::bitset<32>(val2) << RESET;
-        PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, val2);  // set reset bit
-        std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
-    */
-        // disable the i2c master at the end (first set the mux to the chip)
-     //   PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x04);
         std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
         PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
         std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
