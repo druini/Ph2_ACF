@@ -1003,18 +1003,18 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 					for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 					{
 
-						if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel).fRegisterValue
-								= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel).fRegisterValue + (1<<iBit);
-						else currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel).fRegisterValue
-								= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel).fRegisterValue & (0xFFFF - (1<<iBit));
+						if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)
+								= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) + (1<<iBit);
+						else currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)
+								= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) & (0xFFFF - (1<<iBit));
 					}
 				}
 				else
 				{
-					if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>().fRegisterValue
-							= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>().fRegisterValue + (1<<iBit);
-					else currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>().fRegisterValue
-							= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>().fRegisterValue & (0xFFFF - (1<<iBit));
+					if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
+							= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() + (1<<iBit);
+					else currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
+							= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1<<iBit));
 				}
 			}
 		}
@@ -1036,8 +1036,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 					{
 						if( currentStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
 						{
-							previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel).fRegisterValue
-									= currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel).fRegisterValue;
+							previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)
+									= currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel);
 							previousStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy
 									= currentStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
 						}
@@ -1047,8 +1047,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 				{
 					if( currentStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy <= targetOccupancy )
 					{
-						previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>().fRegisterValue
-								= currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>().fRegisterValue;
+						previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
+								= currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
 						previousStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy
 								= currentStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy;
 					}
