@@ -1030,6 +1030,7 @@ namespace Ph2_HwInterface {
 
                         cSsa->setReg("ReadoutMode", 2);
                         cSsa->setReg("OutPattern0", 128);
+                        cSsa->setReg("SLVS_pad_current", 7);
 
                         //sync mode
                         cRegItem = cSsa->getRegItem ( "ReadoutMode" );
@@ -1056,8 +1057,15 @@ namespace Ph2_HwInterface {
                         this->ReadChipBlockReg (  cVecReq );
                         CVQ = cVecReq[0];
                         LOG (INFO) << "Changed: " << std::bitset<32>(CVQ);
-                        cVecReq.clear();    
+                        cVecReq.clear();  
 
+                        //turn on SLVS pad current
+                        cRegItem = cSsa->getRegItem ( "SLVS_pad_current" );
+                        this->EncodeReg (cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, true);
+
+                        cWriteAttempts = 0;
+                        this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
+                        cVecReq.clear();
                     }
                 }
 
