@@ -40,21 +40,22 @@ int main( int argc, char* argv[] )
 	Tool cTool;
 	cTool.InitializeHw ( cHWFile, outp);
 	cTool.InitializeSettings ( cHWFile, outp );
-	//D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
-	//IB->PSInterfaceBoard_PowerOn_SSA(1.25, 1.25, 1.25, 0.3, 0.0, 1);
-	//IB->ReadPower_SSA();
+	D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
+	IB->PSInterfaceBoard_PowerOn_SSA(1.25, 1.25, 1.25, 0.3, 0.0, 1);
+	IB->ReadPower_SSA();
 	cTool.ConfigureHw();
 
 	BeBoard* pBoard = cTool.fBoardVector.at(0);
 	std::vector < ReadoutChip* > &ChipVec = pBoard->getModule(0)->fReadoutChipVector;
 	cTool.setFWTestPulse();
+	cTool.setSystemTestPulse (200, 0, true, false);
 	TH1I *h1 = new TH1I("h1", ";Latency (lsb)", 256, 0, 256);
 
 	for(auto cSSA: ChipVec)
 	{
-		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_CALDAC", 255);
+		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_CALDAC", 100);
 		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ReadoutMode", 0x0); // sync mode = 0
-		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_THDAC", 100);
+		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_THDAC", 50);
 		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "FE_Calibration", 1);
 		for (int i = 1; i<=120;i++ ) // loop over all strips
 		{
@@ -136,5 +137,5 @@ int main( int argc, char* argv[] )
 	h2->Draw("hist");
 	c2->Print("SCURVE_7.png");
 
-	//IB->PSInterfaceBoard_PowerOff_SSA();
+	IB->PSInterfaceBoard_PowerOff_SSA();
 }
