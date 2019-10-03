@@ -1375,7 +1375,10 @@ namespace Ph2_HwInterface {
                 fDDR3Offset = 0;
             }
             else pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
-            for ( auto& L : pData ) LOG (INFO) << RED << std::bitset<32>(L) << RESET;
+            for ( auto& L : pData )
+            {
+                LOG (INFO) << RED << std::bitset<32>(L) << RESET;
+            }
 
         }
 
