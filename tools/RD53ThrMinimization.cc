@@ -145,6 +145,7 @@ void ThrMinimization::display   () { histos.process();                          
 
 void ThrMinimization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
+  uint16_t init;
   uint16_t numberOfBits = log2(stopValue - startValue + 1) + 1;
 
   DetectorDataContainer minDACcontainer;
@@ -154,9 +155,9 @@ void ThrMinimization::bitWiseScan (const std::string& regName, uint32_t nEvents,
   DetectorDataContainer bestDACcontainer;
   DetectorDataContainer bestContainer;
 
-  ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, minDACcontainer);
+  ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, minDACcontainer, init = startValue);
   ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, midDACcontainer);
-  ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, maxDACcontainer);
+  ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
   ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, bestDACcontainer);
   ContainerFactory::copyAndInitChip<OccupancyAndPh>(*fDetectorContainer, bestContainer);
@@ -164,12 +165,7 @@ void ThrMinimization::bitWiseScan (const std::string& regName, uint32_t nEvents,
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        {
-          minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = startValue;
-          maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = stopValue + 1;
-
-          bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = 0;
-        }
+        bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = 0;
 
 
   for (auto i = 0u; i <= numberOfBits; i++)
@@ -194,7 +190,7 @@ void ThrMinimization::bitWiseScan (const std::string& regName, uint32_t nEvents,
       // ################
       PixelAlive::run();
       auto output = PixelAlive::analyze();
-      output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
+      output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
 
       // #####################
