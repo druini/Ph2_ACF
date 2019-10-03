@@ -48,14 +48,11 @@ namespace Ph2_HwDescription { //open namespace
 		void saveRegMap ( const std::string& filename ) override;
 		uint32_t getNumberOfChannels() const override { return NCHANNELS; }
 		bool isDACLocal(const std::string &dacName) override {
-		    if(dacName.find("MaskChannel-",0,12)!=std::string::npos || dacName.find("Channel",0,7)!=std::string::npos ) return true;
+		    if(dacName.find("THTRIMMING_S",0,12)!=std::string::npos ) return true;
 		    else return false;
 		}
 		uint8_t getNumberOfBits(const std::string &dacName) override {
-		    if(dacName.find("MaskChannel-",0,12)!=std::string::npos) return 1;
-		    else if(dacName == "VCth") return 10;
-		    else if(dacName == "VCth2") return 2;
-		    else if(dacName == "TriggerLatency" ) return 9;
+		    if(dacName.find("THTRIMMING_S",0,12)!=std::string::npos) return 5;
 		    else return 8;
 		}
 	protected:
