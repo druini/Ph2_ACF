@@ -48,6 +48,7 @@ int main( int argc, char* argv[] )
 	IB->ReadPower_SSA();
 	cTool.ConfigureHw();
 	
+	IB->PSInterfaceBoard_PowerOff_SSA();
 	BeBoard* pBoard = cTool.fBoardVector.at(0);
 	std::vector < ReadoutChip* > &ChipVec = pBoard->getModule(0)->fReadoutChipVector;
 	TH2I *strip_v_thdac_31 = new TH2I("strip_v_thdac_31", "All TRIMDACs = 31;strip # ; THDAC (lsb)", 240, 0, 240, 80, 0, 80);
