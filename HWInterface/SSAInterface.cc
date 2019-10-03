@@ -116,25 +116,25 @@ namespace Ph2_HwInterface {// start namespace
 	bool SSAInterface::WriteChipAllLocalReg ( ReadoutChip* pSSA, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop )
 	{return true;}
 	// Definitely needed:
-    	uint16_t SSAInterface::ReadChipReg ( Chip* pSSA, const std::string& pRegNode )
-    	{
-		setBoard ( pSSA->getBeBoardId() );
+	uint16_t SSAInterface::ReadChipReg ( Chip* pSSA, const std::string& pRegNode )
+	{
+	setBoard ( pSSA->getBeBoardId() );
 
-		ChipRegItem cRegItem = pSSA->getRegItem ( pRegNode );
+	ChipRegItem cRegItem = pSSA->getRegItem ( pRegNode );
 
-		std::vector<uint32_t> cVecReq;
+	std::vector<uint32_t> cVecReq;
 
-		fBoardFW->EncodeReg ( cRegItem, pSSA->getFeId(), pSSA->getChipId(), cVecReq, true, false );
-		fBoardFW->ReadChipBlockReg (  cVecReq );
+	fBoardFW->EncodeReg ( cRegItem, pSSA->getFeId(), pSSA->getChipId(), cVecReq, true, false );
+	fBoardFW->ReadChipBlockReg (  cVecReq );
 
-		//bools to find the values of failed and read
-		bool cFailed = false;
-		bool cRead;
-		uint8_t cSSAId;
-		fBoardFW->DecodeReg ( cRegItem, cSSAId, cVecReq[0], cRead, cFailed );
+	//bools to find the values of failed and read
+	bool cFailed = false;
+	bool cRead;
+	uint8_t cSSAId;
+	fBoardFW->DecodeReg ( cRegItem, cSSAId, cVecReq[0], cRead, cFailed );
 
-		if (!cFailed) pSSA->setReg ( pRegNode, cRegItem.fValue );
+	if (!cFailed) pSSA->setReg ( pRegNode, cRegItem.fValue );
 
-		return cRegItem.fValue & 0xFF;
-    	}
+	return cRegItem.fValue & 0xFF;
+	}
 }// end namespace
