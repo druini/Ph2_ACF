@@ -44,7 +44,7 @@ Setup the firmware:
 3. Upload a golden firmware* on the microSD card (read FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
 4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/releases
 5. Plug the microSD card in the FC7
-6. From Ph2_ACF use the command `fpgaconfig**` to upload the proper IT firmware (see instructions: `Setup and run the IT-DAQ` before running the command)
+6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `Setup and run the IT-DAQ` before running the command)
 
 *A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`)
 **Check which firmware is in the microSD card: `fpgaconfig -c CMSIT.xml`
@@ -62,11 +62,11 @@ Setup and run the IT-DAQ:
 10. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the FC7 (just once)
 11. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
 
-**From the `choose_a_name` directory:
-  - Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
-  - Run the command: `fpgaconfig -c CMSIT.xml -f firmware_file_name_on_the_PC -i firmware_file_name_on_the_microSD` to upload a new firmware to the microSD card
-  - Run the command: `fpgaconfig -c CMSIT.xml -i firmware_file_name_on_the_microSD` to load a new firmware from microSD card
-  - Run the command: `fpgaconfig --help` for help
+Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):
+- Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
+- Run the command: `fpgaconfig -c CMSIT.xml -f firmware_file_name_on_the_PC -i firmware_file_name_on_the_microSD` to upload a new firmware to the microSD card
+- Run the command: `fpgaconfig -c CMSIT.xml -i firmware_file_name_on_the_microSD` to load a new firmware from microSD card
+- Run the command: `fpgaconfig --help` for help
 
 The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking.
 Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
