@@ -22,7 +22,6 @@ fi
 ########
 # ROOT #
 ########
-# DO NOT DELETE, JUST COMMENT PLEASE
 #source /usr/local/root/bin/thisroot.sh
 source $ROOTSYS/bin/thisroot.sh
 
