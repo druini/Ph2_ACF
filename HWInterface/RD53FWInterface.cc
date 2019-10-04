@@ -384,10 +384,11 @@ namespace Ph2_HwInterface
           }
       }
 
-    LOG (INFO) << CYAN  << "=========================" << RESET;
-    LOG (INFO) << GREEN << "----- Reading  data -----" << RESET;
+    LOG (INFO) << CYAN  << "-------------------------" << RESET;
+    LOG (INFO) << GREEN << "***** Reading  data *****" << RESET;
     LOG (INFO) << GREEN << "n. words        = "        << nWordsInMemory    << RESET;
     LOG (INFO) << GREEN << "n. triggers     = "        << nTriggersReceived << RESET;
+    LOG (INFO) << CYAN  << "-------------------------" << RESET;
 
     uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
     ddr3Offset += nWordsInMemory;
