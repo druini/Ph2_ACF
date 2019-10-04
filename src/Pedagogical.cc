@@ -43,18 +43,14 @@ int main( int argc, char* argv[] )
 	Tool cTool;
 	cTool.InitializeHw ( cHWFile, outp);
 	cTool.InitializeSettings ( cHWFile, outp );
-	D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
-	IB->PSInterfaceBoard_PowerOn_SSA(1.25, 1.25, 1.25, 0.3, 0.0, 145);
-	IB->ReadPower_SSA();
+	//D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
+	//IB->PSInterfaceBoard_PowerOff_SSA();
 	cTool.ConfigureHw();
 	
-	IB->PSInterfaceBoard_PowerOff_SSA();
 	BeBoard* pBoard = cTool.fBoardVector.at(0);
 	std::vector < ReadoutChip* > &ChipVec = pBoard->getModule(0)->fReadoutChipVector;
-	TH2I *strip_v_thdac_31 = new TH2I("strip_v_thdac_31", "All TRIMDACs = 31;strip # ; THDAC (lsb)", 240, 0, 240, 80, 0, 80);
+	TH2I *strip_v_thdac_31 = new TH2I("strip_v_thdac_31", "All TRIMDACs = 31;strip # ; THDAC (lsb)", 60, 30, 90, 55, 0, 55);
 	strip_v_thdac_31->SetStats(0);
-	TH2I *strip_v_thdac_0 = new TH2I("strip_v_thdac_0", "All TRIMDACs = 0;strip # ; THDAC (lsb)", 240, 0, 240, 80, 0, 80);
-	strip_v_thdac_0->SetStats(0);
 	for(auto cSSA: ChipVec)
 	{
 		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ReadoutMode", 0x0); // sync mode = 0
@@ -64,7 +60,7 @@ int main( int argc, char* argv[] )
 			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S" + std::to_string(i), 1); // ENABLE THE STRIP
 		}
 	}
-	for (int thd = 0; thd<=80; thd++)
+	for (int thd = 0; thd<=55; thd++)
 	{
 		for(auto cSSA: ChipVec)
 		{
@@ -80,7 +76,7 @@ int main( int argc, char* argv[] )
 	            for(auto chip: *module) // for on chip - begin 
 	            {
 	                unsigned int channelNumber = 0;
-	                for (int i = 1; i<=120;i++ ) // loop over all strips
+	                for (int i = 0; i<=120;i++ ) // loop over all strips
 					{
 						strip_v_thdac_31->Fill(channelNumber+(120*int(chip->getId())), thd, event->DataBit ( module->getId(), chip->getId(), channelNumber));
 	                	channelNumber++;
@@ -90,47 +86,10 @@ int main( int argc, char* argv[] )
 	    } // for on events - end
 	}
 
-	for(auto cSSA: ChipVec)
-	{
-		for (int i = 1; i<=120;i++ ) // loop over all strips
-		{
-			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "THTRIMMING_S" + std::to_string(i), 0); // MAXIMIZE THE TRIM
-		}
-	}
-
-	for (int thd = 0; thd<=80; thd++)
-	{
-		for(auto cSSA: ChipVec)
-		{
-			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_THDAC", thd);
-		}
-		cTool.ReadNEvents(pBoard, 25);
-		const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
-
-		for ( auto &event : eventVector ) //for on events - begin 
-	    {
-	        for(auto module: *pBoard) // for on module - begin 
-	        {
-	            for(auto chip: *module) // for on chip - begin 
-	            {
-	                unsigned int channelNumber = 0;
-	                for (int i = 1; i<=120;i++ ) // loop over all strips
-					{
-						strip_v_thdac_0->Fill(channelNumber+(120*int(chip->getId())), thd, event->DataBit ( module->getId(), chip->getId(), channelNumber));
-	                	channelNumber++;
-	                } // for on channel - end 
-	            } // for on chip - end 
-	        } // for on module - end 
-	    } // for on events - end
-	}
-
-	TCanvas * C_svd = new TCanvas("C_svd", "C_svd", 1200, 600);
-	C_svd->Divide(2,1);
-	C_svd->cd(1);
-	strip_v_thdac_0->Draw("col");
-	C_svd->cd(2);
+	TCanvas * C_svd = new TCanvas("C_svd", "C_svd", 600, 600);
+	C_svd->cd();
 	strip_v_thdac_31->Draw("col");
-	C_svd->Print("STRIP_DAC_MAP.png");
+	C_svd->Print("STRIP_DAC_MAP.png");		
 
-	IB->PSInterfaceBoard_PowerOff_SSA();
+	//IB->PSInterfaceBoard_PowerOff_SSA();
 }
