@@ -25,7 +25,6 @@ fi
 #source /usr/local/root/bin/thisroot.sh
 source $ROOTSYS/bin/thisroot.sh
 
-
 #######
 # ZMQ #
 #######
