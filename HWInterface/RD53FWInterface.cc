@@ -98,7 +98,7 @@ namespace Ph2_HwInterface
         myString << "user.ctrl_regs.Hybrid" << cModule->getIndex() + 1;
         cVecReg.push_back({myString.str() + ".Hybrid_en", 1});
         cVecReg.push_back({myString.str() + ".Chips_en", RD53::setBits(cModule->fReadoutChipVector.size())});
-        LOG (INFO) << GREEN << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << GREEN << " chip(s) for module " << BOLDYELLOW << cModule->getIndex() << RESET;
+        LOG (INFO) << GREEN << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << RESET << GREEN << " chip(s) for module " << BOLDYELLOW << cModule->getIndex() << RESET;
       }
 
 
@@ -265,7 +265,7 @@ namespace Ph2_HwInterface
     // # Check status registers associated wih fast command block #
     // ############################################################
     unsigned int fastCMDReg = ReadReg ("user.stat_regs.fast_cmd_1.trigger_source_o");
-    LOG (INFO) << GREEN << "Fast CMD block trigger source: " << BOLDYELLOW << fastCMDReg << GREEN << " (1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency)" << RESET;
+    LOG (INFO) << GREEN << "Fast CMD block trigger source: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency)" << RESET;
 
     fastCMDReg = ReadReg ("user.stat_regs.fast_cmd_1.trigger_state");
     LOG (INFO) << GREEN << "Fast CMD block trigger state: " << BOLDYELLOW << fastCMDReg << RESET;
