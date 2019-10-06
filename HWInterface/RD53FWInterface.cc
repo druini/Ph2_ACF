@@ -384,11 +384,11 @@ namespace Ph2_HwInterface
           }
       }
 
-    LOG (INFO) << CYAN  << "-------------------------" << RESET;
-    LOG (INFO) << GREEN << "***** Reading  data *****" << RESET;
-    LOG (INFO) << GREEN << "n. words        = "        << nWordsInMemory    << RESET;
-    LOG (INFO) << GREEN << "n. triggers     = "        << nTriggersReceived << RESET;
-    LOG (INFO) << CYAN  << "-------------------------" << RESET;
+    LOG (INFO) << CYAN  << "---------------------------" << RESET;
+    LOG (INFO) << GREEN << "****** Reading  data ******" << RESET;
+    LOG (INFO) << GREEN << "N. words        = "          << nWordsInMemory    << RESET;
+    LOG (INFO) << GREEN << "N. triggers     = "          << nTriggersReceived << RESET;
+    LOG (INFO) << CYAN  << "---------------------------" << RESET;
 
     uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
     ddr3Offset += nWordsInMemory;
@@ -642,9 +642,10 @@ namespace Ph2_HwInterface
     for (auto i = 0u; i < events.size(); i++)
       {
         auto& evt = events[i];
-        LOG (INFO) << BOLDGREEN << "Event           = " << i                   << RESET;
+        LOG (INFO) << BOLDGREEN << "==========================="               << RESET;
+        LOG (INFO) << BOLDGREEN << "EVENT           = " << i                   << RESET;
         LOG (INFO) << BOLDGREEN << "block_size      = " << evt.block_size      << RESET;
-        LOG (INFO) << BOLDGREEN << "trigger_id      = " << evt.tlu_trigger_id  << RESET;
+        LOG (INFO) << BOLDGREEN << "tlu_trigger_id  = " << evt.tlu_trigger_id  << RESET;
         LOG (INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
         LOG (INFO) << BOLDGREEN << "tdc             = " << evt.tdc             << RESET;
         LOG (INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter     << RESET;
@@ -664,7 +665,7 @@ namespace Ph2_HwInterface
             LOG (INFO) << CYAN << "trigger_tag     = " << evt.chip_events[j].trigger_tag   << RESET;
             LOG (INFO) << CYAN << "bc_id           = " << evt.chip_events[j].bc_id         << RESET;
 
-            LOG (INFO) << BOLDYELLOW << "-- Hit Data (" << evt.chip_events[j].hit_data.size() << " hits) --" << RESET;
+            LOG (INFO) << BOLDYELLOW << "--- Hit Data (" << evt.chip_events[j].hit_data.size() << " hits) ---" << RESET;
 
             for (const auto& hit : evt.chip_events[j].hit_data)
               {
@@ -675,8 +676,6 @@ namespace Ph2_HwInterface
               }
           }
       }
-
-    std::cout << std::endl;
   }
 
   bool RD53FWInterface::EvtErrorHandler(uint8_t status)

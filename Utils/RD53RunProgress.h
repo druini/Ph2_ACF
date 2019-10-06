@@ -31,7 +31,7 @@ class RD53RunProgress
   {
     RD53RunProgress::current()++;
     if (display == true)
-      LOG (INFO) << BOLDMAGENTA << ">>> Progress:  " << std::setprecision(1) << std::fixed << 1. * RD53RunProgress::current() / RD53RunProgress::total() * 100 << "% <<<" << RESET;
+      LOG (INFO) << BOLDMAGENTA << ">>>> Progress : " << std::setw(5) << std::setprecision(1) << std::fixed << 1. * RD53RunProgress::current() / RD53RunProgress::total() * 100 << "% <<<<" << RESET;
   }
 };
 

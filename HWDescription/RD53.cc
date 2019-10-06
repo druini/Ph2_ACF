@@ -35,7 +35,7 @@ namespace Ph2_HwDescription
     std::stringstream myString;
     perPixelData      pixData;
 
-    if (file)
+    if (file.good() == true)
       {
         std::string line, fName, fAddress_str, fDefValue_str, fValue_str, fBitSize_str;
         bool foundPixelConfig = false;
