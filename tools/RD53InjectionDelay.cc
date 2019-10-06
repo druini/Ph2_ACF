@@ -26,8 +26,8 @@ void InjectionDelay::ConfigureCalibration ()
   colStop    = this->findValueInSettings("COLstop");
   nEvents    = this->findValueInSettings("nEvents");
   doFast     = this->findValueInSettings("DoFast");
-  startValue = this->findValueInSettings("InjDelayStart");
-  stopValue  = this->findValueInSettings("InjDelayStop");
+  startValue = 0;
+  stopValue  = 2*(RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"))+1) - 1;
   doDisplay  = this->findValueInSettings("DisplayHisto");
   doSave     = this->findValueInSettings("Save");
 
