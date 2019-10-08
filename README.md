@@ -130,6 +130,7 @@ then
     time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
     echo "gainopt" >> calibDone.txt
 
+    echo "Choose whether to accept new Krummenacher current (i.e. copy it into the xml file(s))"
     echo "- Set nTRIGxEvent = 1 and DoFast = 1 in the xml file(s)"
     echo "- Set VCAL_HIGH to MIP value in the xml file(s)"
     read -p "Press any key to continue... " -n1 -s
@@ -140,7 +141,7 @@ then
     echo "latency" >> calibDone.txt
     echo "injdelay" >> calibDone.txt
 
-    echo "- Set LATENCY_CONFIG and INJECTION_SELECT, as tuned by the injdelay calibration, in the xml files(s)"
+    echo "Choose whether to accept new LATENCY_CONFIG and INJECTION_SELECT (i.e. copy it into the xml file(s))"
     echo "- Set DoFast to whatever value you prefer in the xml files(s)"
     read -p "Press any key to continue... " -n1 -s
     echo

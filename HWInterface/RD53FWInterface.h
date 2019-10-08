@@ -153,14 +153,6 @@ namespace Ph2_HwInterface
       Undefined = 0
     };
 
-    enum class AutozeroSource : uint32_t
-    {
-      IPBus = 1,
-      FastCMDFSM,
-      FreeRunning,
-      Disabled = 0
-    };
-
     struct FastCmdFSMConfig
     {
       bool ecr_en        = false;
@@ -178,15 +170,6 @@ namespace Ph2_HwInterface
       uint16_t delay_loop             =  0;
     };
 
-    struct Autozero
-    {
-      AutozeroSource autozero_source = AutozeroSource::FastCMDFSM;
-
-      uint32_t glb_pulse_data      = 0;
-      uint32_t autozero_freq       = 0; // Used when autozero_source == AutozeroSource::UserDefined
-      uint32_t veto_after_autozero = 0; // Used when autozero_source == AutozeroSource::UserDefined
-    };
-
     struct FastCommandsConfig
     {
       TriggerSource trigger_source = TriggerSource::FastCMDFSM;
@@ -200,10 +183,9 @@ namespace Ph2_HwInterface
       uint32_t trigger_duration  = 0; // Number of triggers on top of the L1A (maximum value is 31)
 
       FastCmdFSMConfig fast_cmd_fsm;
-      Autozero         autozero;
     };
 
-    void SetAndConfigureFastCommands (size_t nTRIGxEvent, size_t injType);
+    void SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType);
 
     struct DIO5Config
     {

@@ -10,9 +10,9 @@
 #ifndef RD53InjectionDelay_H
 #define RD53InjectionDelay_H
 
+#include "RD53PixelAlive.h"
 #include "RD53Latency.h"
 #include "../DQMUtils/RD53InjectionDelayHistograms.h"
-#include "RD53PixelAlive.h"
 
 
 // #############
@@ -72,6 +72,8 @@ class InjectionDelay : public PixelAlive
  protected:
   std::string fileRes;
   std::string fileReg;
+  size_t saveInjection;
+  size_t maxDelay;
   bool doDisplay;
   bool doSave;
 };

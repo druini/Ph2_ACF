@@ -148,10 +148,6 @@ void GainOptimization::display   () { histos.process();                         
 
 void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
-  // #################################
-  // # Number of standard deviations #
-  // #################################
-  float nStDev = 1;
   uint16_t init;
   uint16_t numberOfBits = log2(stopValue - startValue + 1) + 1;
 
@@ -221,8 +217,8 @@ void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents
                     }
               stdDev = (cnt != 0 ? stdDev/cnt : 0) - cChip->getSummary<GainAndIntercept>().fGain * cChip->getSummary<GainAndIntercept>().fGain;
               stdDev = (stdDev > 0 ? sqrt(stdDev) : 0);
-              size_t ToTpoint = RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION) - 2;
-              float newValue  = (ToTpoint - cChip->getSummary<GainAndIntercept>().fIntercept) / (cChip->getSummary<GainAndIntercept>().fGain + nStDev*stdDev);
+              size_t ToTpoint = RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION) - 1;
+              float newValue  = (ToTpoint - cChip->getSummary<GainAndIntercept>().fIntercept) / (cChip->getSummary<GainAndIntercept>().fGain + NSTDEV*stdDev);
 
 
               // ########################

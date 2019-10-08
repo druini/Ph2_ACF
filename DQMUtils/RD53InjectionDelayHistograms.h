@@ -19,6 +19,12 @@
 #include <TH1F.h>
 
 
+// #############
+// # CONSTANTS #
+// #############
+#define NLATENCYBINS 2 // Number of latencies spanned
+
+
 class InjectionDelayHistograms : public DQMHistogramBase
 {
  public:

@@ -21,14 +21,14 @@ void PixelAlive::ConfigureCalibration ()
   nEvents      = this->findValueInSettings("nEvents");
   nEvtsBurst   = this->findValueInSettings("nEvtsBurst");
   nTRIGxEvent  = this->findValueInSettings("nTRIGxEvent");
-  doInjection  = this->findValueInSettings("INJtype");
+  injType      = this->findValueInSettings("INJtype");
   doFast       = this->findValueInSettings("DoFast");
   thrOccupancy = this->findValueInSettings("TargetOcc");
   doDisplay    = this->findValueInSettings("DisplayHisto");
   doSave       = this->findValueInSettings("Save");
 
-  if (doInjection == true) nTRIGxEvent = 1;
-  else                     doFast      = false;
+  if (injType != INJtype::None) nTRIGxEvent = 1;
+  else                          doFast      = false;
 
 
   // ################################
@@ -41,8 +41,24 @@ void PixelAlive::ConfigureCalibration ()
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,doInjection == true ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+
+
+  // ######################
+  // # Set injection type #
+  // ######################
+  size_t inj = 0;
+  if (injType == INJtype::Digital) inj = 1 << static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY");
+  size_t maxDelay = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT");
+          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", inj | (val & maxDelay), true);
+        }
 }
 
 void PixelAlive::Start (int currentRun)
@@ -80,7 +96,7 @@ void PixelAlive::run ()
   ContainerFactory::copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, *fDetectorDataContainer);
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
-  this->SetTestPulse(doInjection);
+  this->SetTestPulse(injType);
   this->fMaskChannelsFromOtherGroups = true;
   this->measureData(nEvents, nEvtsBurst, nTRIGxEvent);
 
@@ -151,8 +167,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
                   if (((thrOccupancy != 1) && (occupancy >= thrOccupancy)) || ((thrOccupancy == 0) && (occupancy == 0))) nMaskedPixelsPerCalib++;
                 }
 
-          LOG (INFO) << BOLDGREEN << "\t\t--> Number of masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
-          LOG (INFO) << BOLDGREEN << "\t\t--> Total number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+          LOG (INFO) << BOLDGREEN << "\t\t--> Number of potentially masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
+          LOG (INFO) << BOLDGREEN << "\t\t--> Total number of potentially masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
         }
 
   return theOccContainer;

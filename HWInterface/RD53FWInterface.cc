@@ -830,10 +830,10 @@ namespace Ph2_HwInterface
         // ##########################
         // # Autozero configuration #
         // ##########################
-        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",          (uint32_t)cfg->autozero.autozero_source},
-        {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",           (uint32_t)cfg->autozero.glb_pulse_data},
-        {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",            (uint32_t)cfg->autozero.autozero_freq},
-        {"user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",      (uint32_t)cfg->autozero.veto_after_autozero}
+        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",    2},
+        {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",     0},
+        {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",      0},
+        {"user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",0}
       });
 
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
@@ -847,7 +847,7 @@ namespace Ph2_HwInterface
       });
   }
 
-  void RD53FWInterface::SetAndConfigureFastCommands (size_t nTRIGxEvent, size_t injType)
+  void RD53FWInterface::SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType)
   // ############################
   // # injType == 0 --> None    #
   // # injType == 1 --> Analog  #
