@@ -1037,13 +1037,13 @@ namespace Ph2_System {
     os << BOLDBLUE << "|" << "	" << "|" << "	" << "|" << "----" << theChipNode.name() << "  "
        << theChipNode.first_attribute().name() << ": " << BOLDYELLOW << theChipNode.attribute ("Id").value() << BOLDBLUE
        << ", File: " << BOLDYELLOW << expandEnvironmentVariables (theChipNode.attribute ("configfile").value() ) << RESET << std::endl;
-    
+
     std::string cFileName;
 
     if (!cFilePrefix.empty())
       {
-	if (cFilePrefix.at (cFilePrefix.length() - 1) != '/') cFilePrefix.append ("/");
-	cFileName = cFilePrefix + expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
+        if (cFilePrefix.at (cFilePrefix.length() - 1) != '/') cFilePrefix.append ("/");
+        cFileName = cFilePrefix + expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
       }
     else cFileName = expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
 
@@ -1052,7 +1052,7 @@ namespace Ph2_System {
     theChip->setNumberOfChannels(RD53::nRows,RD53::nCols);
 
     this->parseRD53Settings (theChipNode, theChip, os);
-  
+
     cModule->addReadoutChip(theChip);
   }
 
@@ -1061,33 +1061,33 @@ namespace Ph2_System {
     pugi::xml_node cGlobalChipSettings = pModuleNode.child ("Global");
     if (cGlobalChipSettings != nullptr)
       {
-	os << BOLDCYAN << "|\t|\t|----Global RD53 Settings:" << RESET << std::endl;
-	
+        os << BOLDCYAN << "|\t|\t|----Global RD53 Settings:" << RESET << std::endl;
+
         for (const pugi::xml_attribute& attr : cGlobalChipSettings.attributes())
-	  {
-	    std::string regname = attr.name();
-	    uint16_t regvalue   = convertAnyInt (attr.value());
+          {
+            std::string regname = attr.name();
+            uint16_t regvalue   = convertAnyInt (attr.value());
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
-	    
-	    for (auto theChip : pModule->fReadoutChipVector) theChip->setReg(regname,regvalue,true);
-	  }
+
+            for (auto theChip : pModule->fReadoutChipVector) theChip->setReg(regname,regvalue,true);
+          }
       }
   }
-  
+
   void FileParser::parseRD53Settings (pugi::xml_node theChipNode, ReadoutChip* theChip, std::ostream& os)
   {
     pugi::xml_node cLocalChipSettings = theChipNode.child ("Settings");
     if (cLocalChipSettings != nullptr)
       {
-	os << BOLDCYAN << "|\t|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53" << RESET << std::endl;
-	
+        os << BOLDCYAN << "|\t|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53" << RESET << std::endl;
+
         for (const pugi::xml_attribute& attr : cLocalChipSettings.attributes())
-	  {
-	    std::string regname = attr.name();
-	    uint16_t regvalue   = convertAnyInt (attr.value());
+          {
+            std::string regname = attr.name();
+            uint16_t regvalue   = convertAnyInt (attr.value());
             theChip->setReg(regname,regvalue,true);
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
-	  }
+          }
       }
   }
   // ########################
