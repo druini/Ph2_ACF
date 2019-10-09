@@ -185,6 +185,7 @@ void InjectionDelay::draw ()
               static_cast<RD53*>(cChip)->saveRegMap("");
               std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
               system(command.c_str());
+              LOG (INFO) << BOLDGREEN << "\t--> InjectionDelay saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
             }
     }
 

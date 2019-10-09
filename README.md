@@ -141,7 +141,7 @@ then
     echo "latency" >> calibDone.txt
     echo "injdelay" >> calibDone.txt
 
-    echo "Choose whether to accept new LATENCY_CONFIG and INJECTION_SELECT (i.e. copy it into the xml file(s))"
+    echo "Choose whether to accept new LATENCY_CONFIG and INJECTION_SELECT (i.e. copy them into the xml file(s))"
     echo "- Set DoFast to whatever value you prefer in the xml files(s)"
     read -p "Press any key to continue... " -n1 -s
     echo
