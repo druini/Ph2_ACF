@@ -163,9 +163,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
               if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
                 {
                   float occupancy = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
-                  static_cast<RD53*>(cChip)->enablePixel(row,col,thrOccupancy != 1 ? occupancy < thrOccupancy : occupancy != 0);
-
-                  if (((thrOccupancy != 1) && (occupancy >= thrOccupancy)) || ((thrOccupancy == 0) && (occupancy == 0))) nMaskedPixelsPerCalib++;
+                  static_cast<RD53*>(cChip)->enablePixel(row,col,injType == INJtype::None ? occupancy < thrOccupancy : occupancy != 0);
+                  if (((injType == INJtype::None) && (occupancy >= thrOccupancy)) || ((injType != INJtype::None) && (occupancy == 0))) nMaskedPixelsPerCalib++;
                 }
 
           LOG (INFO) << BOLDGREEN << "\t\t--> Number of potentially masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;

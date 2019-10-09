@@ -57,7 +57,6 @@ class PixelAlive : public Tool
   size_t nTRIGxEvent;
   size_t nEvtsBurst;
   size_t injType;
-  bool   doFast;
   float  thrOccupancy;
   enum INJtype { None, Analog , Digital };
 
@@ -81,6 +80,7 @@ class PixelAlive : public Tool
   std::string fileReg;
   bool doDisplay;
   bool doSave;
+  bool doFast;
 };
 
 #endif

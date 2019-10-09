@@ -89,6 +89,7 @@ void InjectionDelay::initialize (const std::string fileRes_, const std::string f
   // ##############################
   PixelAlive::fileRes = fileRes_;
   PixelAlive::fileReg = "";
+  PixelAlive::doFast  = 1;
 
 
   fileRes = fileRes_;
