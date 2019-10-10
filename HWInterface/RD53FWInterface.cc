@@ -111,54 +111,83 @@ namespace Ph2_HwInterface
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
   }
 
-  void RD53FWInterface::WriteChipCommand (std::vector<uint32_t>& data, unsigned int nCmd)
-  {
+  void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, unsigned int nCmd, unsigned int moduleId=0) {
+    const unsigned int n_words = ceil(data.size() / 2);
+    
+    while (!ReadReg("user.ctrl_regs.Slow_cmd.fifo_prog_empty_thr")) {
+      usleep(SHALLOWSLEEP);
+    }
+
     std::vector< std::pair<std::string, uint32_t> > stackRegisters;
+    stackRegisters.reserve(1 + n_words);
 
-    if (ReadReg ("user.stat_regs.cmd_proc.fifo_empty") == false)
-      LOG (ERROR) << BOLDRED << "Command processor FIFO NOT empty before sending new commands" << RESET;
+    // header
+    stackRegisters.emplace_back(
+      "user.cmd_regs.ctrl_reg", 
+      pack_bits<6, 10, 4, 12>(0xFF, moduleId, 0, n_words)
+    );
 
-    if (ReadReg ("user.stat_regs.cmd_proc.fifo_full") == true)
-      LOG (ERROR) << BOLDRED << "Command processor FIFO full" << RESET;
+    // commands
+    for (int i = 0; i < data.size() - 1; i += 2) {
+      stackRegisters.emplace_back("user.cmd_regs.ctrl_reg", pack_bits<16, 16>(data[i], data[i + 1])
+    }
 
-    size_t size = data.size()/nCmd;
-    for (auto i = 0u; i < nCmd; i++)
-      {
-        switch (size)
-          {
-          case 1:
-            {
-              stackRegisters.push_back({"user.cmd_regs.ctrl_reg", data[size*i+0]});
-              break;
-            }
-          case 2:
-            {
-              stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
-              stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
-              break;
-            }
-          case 3:
-            {
-              stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
-              stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
-              stackRegisters.push_back({"user.cmd_regs.data1_reg", data[size*i+2]});
-              break;
-            }
-          case 4:
-            {
-              stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
-              stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
-              stackRegisters.push_back({"user.cmd_regs.data1_reg", data[size*i+2]});
-              stackRegisters.push_back({"user.cmd_regs.data2_reg", data[size*i+3]});
-              break;
-            }
-          }
-
-        if (nCmd != 1) stackRegisters.push_back({"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0}); // @TMP@
-      }
+    // if data.size() is not even, add a sync command
+    if (data.size() % 2 != 0) {
+      stackRegisters.emplace_back("user.cmd_regs.ctrl_reg", pack_bits<16, 16>(data.back(), RD53Cmd::Sync::opCode));
+    }
 
     WriteStackReg (stackRegisters);
   }
+
+  // void RD53FWInterface::WriteChipCommand (std::vector<uint32_t>& data, unsigned int nCmd)
+  // {
+  //   std::vector< std::pair<std::string, uint32_t> > stackRegisters;
+
+  //   if (ReadReg ("user.stat_regs.cmd_proc.fifo_empty") == false)
+  //     LOG (ERROR) << BOLDRED << "Command processor FIFO NOT empty before sending new commands" << RESET;
+
+  //   if (ReadReg ("user.stat_regs.cmd_proc.fifo_full") == true)
+  //     LOG (ERROR) << BOLDRED << "Command processor FIFO full" << RESET;
+
+  //   size_t size = data.size()/nCmd;
+  //   for (auto i = 0u; i < nCmd; i++)
+  //     {
+  //       switch (size)
+  //         {
+  //         case 1:
+  //           {
+  //             stackRegisters.push_back({"user.cmd_regs.ctrl_reg", data[size*i+0]});
+  //             break;
+  //           }
+  //         case 2:
+  //           {
+  //             stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
+  //             stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
+  //             break;
+  //           }
+  //         case 3:
+  //           {
+  //             stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
+  //             stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
+  //             stackRegisters.push_back({"user.cmd_regs.data1_reg", data[size*i+2]});
+  //             break;
+  //           }
+  //         case 4:
+  //           {
+  //             stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
+  //             stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
+  //             stackRegisters.push_back({"user.cmd_regs.data1_reg", data[size*i+2]});
+  //             stackRegisters.push_back({"user.cmd_regs.data2_reg", data[size*i+3]});
+  //             break;
+  //           }
+  //         }
+
+  //       if (nCmd != 1) stackRegisters.push_back({"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0}); // @TMP@
+  //     }
+
+  //   WriteStackReg (stackRegisters);
+  // }
 
   std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters (std::vector<uint32_t>& data, uint8_t chipID, uint8_t filter)
   {

@@ -105,9 +105,24 @@ namespace Ph2_HwInterface
 
   void RD53Interface::SyncRD53 (RD53* pRD53, unsigned int nSyncWords) { RD53Interface::WriteChipReg(pRD53, "SYNC", 0x0, true); }
 
+  template <class Cmd>
+  SendChipCommand()
+
   bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
   {
     this->setBoard(pChip->getBeBoardId());
+
+    uint16_t address = pChip->getRegItem(pRegNode).fAddress;
+
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(
+      RD53Cmd::WrReg(pChip->getChipId(), address).get_data(),
+      1,
+      pChip->getModuleId()
+    );
+
+    if (pVerifLoop) {
+      
+    }
 
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -167,36 +182,36 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::WriteChipMultReg (Chip* pChip, const std::vector<std::pair<std::string, uint16_t> >& pVecReg, bool pVerifLoop)
   {
-    this->setBoard(pChip->getBeBoardId());
+    // this->setBoard(pChip->getBeBoardId());
 
-    RD53* pRD53 = static_cast<RD53*>(pChip);
+    // RD53* pRD53 = static_cast<RD53*>(pChip);
 
-    std::vector<uint32_t> serialSymbols;
-    ChipRegItem cRegItem;
+    // std::vector<uint32_t> serialSymbols;
+    // ChipRegItem cRegItem;
 
-    for (const auto& cReg : pVecReg)
-      {
-        cRegItem = pRD53->getRegItem(cReg.first);
-        cRegItem.fValue = cReg.second;
+    // for (const auto& cReg : pVecReg)
+    //   {
+    //     cRegItem = pRD53->getRegItem(cReg.first);
+    //     cRegItem.fValue = cReg.second;
 
-        if (strcmp(cReg.first.c_str(), "GLOBAL_PULSE") == 0)
-          pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::GLOB_PULSE, false, serialSymbols);
-        else if (strcmp(cReg.first.c_str(), "SYNC") == 0)
-          pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::SYNC,       false, serialSymbols);
-        else if (strcmp(cReg.first.c_str(), "RESET_BCRCTR") == 0)
-          pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::RESET_BCR,  false, serialSymbols);
-        else if (strcmp(cReg.first.c_str(), "RESET_EVTCTR") == 0)
-          pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::RESET_ECR,  false, serialSymbols);
-        else if (strcmp(cReg.first.c_str(), "CAL") == 0)
-          pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::CAL,        false, serialSymbols);
-        else
-          {
-            pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, false, serialSymbols);
-            pRD53->setReg(cReg.first, cReg.second);
-          }
-      }
+    //     if (strcmp(cReg.first.c_str(), "GLOBAL_PULSE") == 0)
+    //       pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::GLOB_PULSE, false, serialSymbols);
+    //     else if (strcmp(cReg.first.c_str(), "SYNC") == 0)
+    //       pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::SYNC,       false, serialSymbols);
+    //     else if (strcmp(cReg.first.c_str(), "RESET_BCRCTR") == 0)
+    //       pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::RESET_BCR,  false, serialSymbols);
+    //     else if (strcmp(cReg.first.c_str(), "RESET_EVTCTR") == 0)
+    //       pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::RESET_ECR,  false, serialSymbols);
+    //     else if (strcmp(cReg.first.c_str(), "CAL") == 0)
+    //       pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::CAL,        false, serialSymbols);
+    //     else
+    //       {
+    //         pRD53->encodeCMD(cRegItem.fAddress, cRegItem.fValue, pRD53->getChipId(), RD53CmdEncoder::WRITE, false, serialSymbols);
+    //         pRD53->setReg(cReg.first, cReg.second);
+    //       }
+    //   }
 
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialSymbols);
+    // static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialSymbols);
     return true;
   }
 
@@ -350,6 +365,7 @@ namespace Ph2_HwInterface
 
   void RD53Interface::ResetRD53 (RD53* pRD53)
   {
+    // SendCommand
     RD53Interface::WriteChipReg(pRD53, "RESET_EVTCTR", 0x0, true);
     RD53Interface::WriteChipReg(pRD53, "RESET_BCRCTR", 0x0, true);
   }

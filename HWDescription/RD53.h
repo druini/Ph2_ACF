@@ -297,43 +297,10 @@ namespace Ph2_HwDescription
     std::string configFileName;
     CommentMap fCommentMap;
 
-    std::vector<uint8_t> cmd_data_map =
-      {
-        0x6A, // 00
-        0x6C, // 01
-        0x71, // 02
-        0x72, // 03
-        0x74, // 04
-        0x8B, // 05
-        0x8D, // 06
-        0x8E, // 07
-        0x93, // 08
-        0x95, // 09
-        0x96, // 10
-        0x99, // 11
-        0x9A, // 12
-        0x9C, // 13
-        0x23, // 14
-        0xA5, // 15
-        0xA6, // 16
-        0xA9, // 17
-        0xAA, // 18
-        0xAC, // 19
-        0xB1, // 20
-        0xB2, // 21
-        0xB4, // 22
-        0xC3, // 23
-        0xC5, // 24
-        0xC6, // 25
-        0xC9, // 26
-        0xCA, // 27
-        0xCC, // 28
-        0xD1, // 29
-        0xD2, // 30
-        0xD4  // 31
-      };
+    static const uint8_t trigger_map[];
+  };
 
-    std::vector<uint8_t> trigger_map =
+  const uint8_t RD53::trigger_map[];
       {
         0x2B, // 00
         0x2B, // 01
@@ -352,7 +319,181 @@ namespace Ph2_HwDescription
         0x55, // 14
         0x56  // 15
       };
-  };
 }
+
+namespace RD53Cmd {
+
+template <uint16_t OpCode, int NFields>
+class Command {
+  static_assert(NFields % 2 == 0, "A command must have an even number of fields");
+
+  static const uint8_t value_map[]; // maps 5-bit to 8-bit fields
+
+public:
+  // size in 16-bit words
+  size_t size() { return 1 + fields.size() / 2; }
+
+  void appendTo(std::vector<uint16_t>& vec) {
+    // insert op code
+    vec.push_back(OpCode);
+
+    // insert fields
+    for (int i = 0; i < NFields; i+=2) {
+      vec.push_back(pack_bits<8, 8>(fields[i], fields[i+1]));
+    }
+  }
+
+  std::vector<uint16_t> get_data() {
+    std::vector<uint16_t> result;
+    result.reserve(size());
+    appendTo(result);
+    return result;
+  }
+
+protected:
+  // pack_bits and encode
+  template <int... Sizes, class... Args>
+  uint8_t pack_encoded(Args&&... args) {
+    return value_map[pack_bits<Sizes...>(std::forward<Args>(args)...)];
+  }
+
+  std::array<uint8_t, NFields> fields;
+};
+
+// command without fields
+template <uint16_t OpCode>
+class Command<OpCode, 0> {
+  static constexpr uint16_t opCode = OpCode;
+  static const uint8_t value_map[];
+
+public:
+  // size in 16-bit words
+  size_t size() { return 1; }
+
+  void appendTo(std::vector<uint16_t>& vec) {
+    vec.push_back(OpCode);
+  }
+
+  std::vector<uint16_t> get_data() {
+    return { OpCode };
+  }
+};
+
+template <uint16_t OpCode, int NFields>
+const uint8_t Command<OpCode, NFields>::value_map[] = {
+  0x6A, // 00: 0b01101010,
+  0x6C, // 01: 0b01101100,
+  0x71, // 02: 0b01110001,
+  0x72, // 03: 0b01110010,
+  0x74, // 04: 0b01110100,
+  0x8B, // 05: 0b10001011,
+  0x8D, // 06: 0b10001101,
+  0x8E, // 07: 0b10001110,
+  0x93, // 08: 0b10010011,
+  0x95, // 09: 0b10010101,
+  0x96, // 10: 0b10010110,
+  0x99, // 11: 0b10011001,
+  0x9A, // 12: 0b10011010,
+  0x9C, // 13: 0b10011100,
+  0x23, // 14: 0b10100011,
+  0xA5, // 15: 0b10100101,
+  0xA6, // 16: 0b10100110,
+  0xA9, // 17: 0b10101001,
+  0xAA, // 18: 0b10101010,
+  0xAC, // 19: 0b10101100,
+  0xB1, // 20: 0b10110001,
+  0xB2, // 21: 0b10110010,
+  0xB4, // 22: 0b10110100,
+  0xC3, // 23: 0b11000011,
+  0xC5, // 24: 0b11000101,
+  0xC6, // 25: 0b11000110,
+  0xC9, // 26: 0b11001001,
+  0xCA, // 27: 0b11001010,
+  0xCC, // 28: 0b11001100,
+  0xD1, // 29: 0b11010001,
+  0xD2, // 30: 0b11010010,
+  0xD4  // 31: 0b11010100
+};
+
+uint16_t constexpr opCode(uint16_t value) {
+  return value > 0xFF ? value : (value << 8 | value);
+}
+
+struct ECR : public Command<opCode(0x5A), 0> {};
+
+struct BCR : public Command<opCode(0x59), 0> {};
+
+struct GlobalPulse : public Command<opCode(0x5C), 2> {
+  GlobalPulse(uint8_t chip_id, uint8_t data) {
+    fields[0] = pack_encoded<4, 1>(chip_id, 0);
+    fields[1] = pack_encoded<4, 1>(data, 0);
+  }
+};
+
+struct Cal : public Command<opCode(0x63), 4> {
+  Cal(bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay) {
+    fields[0] = pack_encoded<4, 1>(chip_id, cal_edge_mode);
+    fields[1] = pack_encoded<4, 1>(cal_edge_delay, cal_edge_width >> 4);
+    fields[2] = pack_encoded<4, 1>(cal_edge_delay, cal_aux_mode);
+    fields[3] = pack_encoded<5>(cal_aux_delay);
+  }
+};
+
+struct WrReg : public Command<opCode(0x66), 6> {
+  WrReg(uint8_t chip_id, uint16_t address, uint16_t value) {
+    fields[0] = pack_encoded<4, 1>(chip_id, 0);
+    fields[1] = pack_encoded<5>(address >> 4);
+    fields[2] = pack_encoded<4, 1>(address, value >> 15);
+    fields[3] = pack_encoded<5>(value >> 10);
+    fields[4] = pack_encoded<5>(value >> 5);
+    fields[5] = pack_encoded<5>(value);
+  }
+};
+
+template <class T>
+constexpr T get_bits(T value, int start, int end) {
+  static constexpr int value_size = 8 * sizeof(T);
+  return value >> (value_size - end) & ((1 << (end - start)) - 1);
+}
+
+struct WrRegLong : public Command<opCode(0x66), 22> {
+  WrReg(uint8_t chip_id, uint16_t address, const uint16_t (& values) [6]) {
+    fields[0] = pack_encoded<4, 1>(chip_id, 1);
+    fields[1] = pack_encoded<5>(address >> 4);
+    fields[2] = pack_encoded<4, 1>(address, values[0] >> 15);
+
+    // we need to encode the remaining 95 bits of the values array
+    int cursor = 1; // number of bits that are already processed
+    for (int i = 3; i < fields.size(); i++) {
+      int index = cursor / 16; // index into values
+      int bit_offset = cursor % 16; // offset into values[index]
+      if (bit_offset <= 11)
+        fields[i] = value_map[get_bits(values[index], offset, offset + 5)];
+      else {
+        int bits_from_next = bit_offset - 11;
+        fields[i] = value_map[
+          (get_bits(values[index], bit_offset, 16) << bits_from_next) | 
+          get_bits(values[index + 1], 0, bits_from_next)
+        ];
+      cursor += 5;
+    }
+  }
+};
+
+struct RdReg : public Command<opCode(0x65), 4> {
+  RdReg(uint8_t chip_id, uint16_t address) {
+    fields[0] = pack_encoded<4, 1>(chip_id, 0);
+    fields[1] = pack_encoded<5>(address >> 4);
+    fields[2] = pack_encoded<4, 1>(address, 0);
+    fields[3] = pack_encoded<5>(0);
+  }
+};
+
+struct NoOp : public Command<opCode(0x69), 0> {};
+
+struct Sync : public Command<opCode(0x817e), 0> {};
+
+} // namespace RD53Cmd
+
 
 #endif
