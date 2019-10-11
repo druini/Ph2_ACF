@@ -74,8 +74,8 @@ class InjectionDelay : public PixelAlive
   std::string fileReg;
   size_t saveInjection;
   size_t maxDelay;
-  bool doDisplay;
-  bool doSave;
+  bool   doUpdateChip;
+  bool   doDisplay;
 };
 
 #endif

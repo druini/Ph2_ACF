@@ -72,8 +72,8 @@ class ThrMinimization : public PixelAlive
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
 };
 
 #endif

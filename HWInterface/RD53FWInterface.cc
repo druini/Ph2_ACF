@@ -357,7 +357,7 @@ namespace Ph2_HwInterface
   {
     uint32_t doHandshake = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value();
     uint32_t nWordsInMemory;
-    uint32_t nTriggersReceived;
+    /*uint32_t nTriggersReceived;*/
 
     if (doHandshake == true)
       {
@@ -369,26 +369,20 @@ namespace Ph2_HwInterface
           }
 
         nWordsInMemory    = ReadReg("user.stat_regs.words_to_read").value();
-        nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
+        /*nTriggersReceived = */ReadReg("user.stat_regs.trigger_cntr").value();
       }
     else
       {
         nWordsInMemory    = ReadReg("user.stat_regs.words_to_read").value();
-        nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
+        /*nTriggersReceived = */ReadReg("user.stat_regs.trigger_cntr").value();
 
         while ((nWordsInMemory == 0) && (pWait == true))
           {
             if (pWait == true) usleep(DEEPSLEEP);
             nWordsInMemory    = ReadReg("user.stat_regs.words_to_read").value();
-            nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
+            /*nTriggersReceived = */ReadReg("user.stat_regs.trigger_cntr").value();
           }
       }
-
-    LOG (INFO) << CYAN  << "---------------------------" << RESET;
-    LOG (INFO) << GREEN << "****** Reading  data ******" << RESET;
-    LOG (INFO) << GREEN << "N. words        = "          << nWordsInMemory    << RESET;
-    LOG (INFO) << GREEN << "N. triggers     = "          << nTriggersReceived << RESET;
-    LOG (INFO) << CYAN  << "---------------------------" << RESET;
 
     uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
     ddr3Offset += nWordsInMemory;
@@ -465,7 +459,7 @@ namespace Ph2_HwInterface
     // #################
     // # Show progress #
     // #################
-    RD53RunProgress::update(true);
+    RD53RunProgress::update(pData.size(),true);
   }
 
   std::vector<uint32_t> RD53FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)

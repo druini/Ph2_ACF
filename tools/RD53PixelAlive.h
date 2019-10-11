@@ -39,7 +39,7 @@ class PixelAlive : public Tool
   void sendData                                  ();
   void initialize                                (const std::string fileRes_, const std::string fileReg_);
   void run                                       ();
-  void draw                                      ();
+  void draw                                      (bool doSave = true);
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
@@ -78,8 +78,8 @@ class PixelAlive : public Tool
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
   bool doFast;
 };
 

@@ -95,10 +95,10 @@
   <Settings>
     <!--
         === Calibration parameters ===
-        INJtype      = 0: no injection;                           INJtype      = 1: analog;         INJtype = 2: digital
-        DoFast       = 0: run on all pixels in the selected area; DoFast       = 1: run on a subset
-        DisplayHisto = 0: don't display;                          DisplayHisto = 1: display
-        Save         = 0: don't save;                             Save         = 1: save
+        INJtype       = 0: no injection;                           INJtype       = 1: analog;         INJtype = 2: digital
+        DoFast        = 0: run on all pixels in the selected area; DoFast        = 1: run on a subset
+        DisplayHisto  = 0: don't display;                          DisplayHisto  = 1: display
+        UpdateChipCfg = 0: don't update;                           UpdateChipCfg = 1: update
 
         TargetCharge: average charge (electrons) corresponding to ToT point = max value - 1
         TargetOcc:    average fraction of acceptable hits per pixel
@@ -136,7 +136,7 @@
 
     <Setting name="DoFast">           0 </Setting>
     <Setting name="DisplayHisto">     0 </Setting>
-    <Setting name="Save">             1 </Setting>
+    <Setting name="UpdateChipCfg">    1 </Setting>
   </Settings>
 
 </HwDescription>
