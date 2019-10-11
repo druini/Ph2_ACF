@@ -35,8 +35,8 @@ Setup the FC7:
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
 3. Restart the network: `sudo /etc/init.d/network restart`
-4. Install and then restart the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo /etc/init.d/rarpd restart`
-5. To start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`
+4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://centos.pkgs.org/6/epel-x86_64/rarpd-ss981107-42.el6.x86_64.rpm.html
+5. Start the rarpd daemon: `sudo systemctl start rarpd` or `rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
 
 Setup the firmware:
 1. Check whether the DIP switches on FC7 board are setup for the use of a microSD card (`out-in-in-in-out-in-in-in`)
@@ -44,23 +44,29 @@ Setup the firmware:
 3. Upload a golden firmware* on the microSD card (read FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
 4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/releases
 5. Plug the microSD card in the FC7
-6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware
+6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `Setup and run the IT-DAQ` before running this command)
 
 *A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`)
+**Check which firmware is in the microSD card: `fpgaconfig -c CMSIT.xml`
 
 Setup and run the IT-DAQ:
-1. `yum install pugixml-devel` (if necesary run `yum install epel-release` before point 1.)
-2. Install: `CERN ROOT` from https://root.cern.ch and `IPbus tools` from http://ipbus.web.cern.ch/ipbus (either using `yum` or from source)
+1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
+2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
 3. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
-4. Switch to the `chipPolymorhism` branch
-5. `cd Ph2_ACF; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
-6. `mkdir choose_a_name`
-7. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
-8. `cp settings/CMSIT.xml choose_a_name`
-9. `cd choose_a_name`
-10. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-11. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the FC7 (just once)
-12. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
+4. `cd Ph2_ACF; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..; source setup.sh`
+5. `mkdir choose_a_name`
+6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
+7. `cp settings/CMSIT.xml choose_a_name`
+8. `cd choose_a_name`
+9. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
+10. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the FC7 (just once)
+11. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
+
+Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):
+- Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
+- Run the command: `fpgaconfig -c CMSIT.xml -f firmware_file_name_on_the_PC -i firmware_file_name_on_the_microSD` to upload a new firmware to the microSD card
+- Run the command: `fpgaconfig -c CMSIT.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card
+- Run the command: `fpgaconfig --help` for help
 
 The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking.
 Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
@@ -124,6 +130,7 @@ then
     time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
     echo "gainopt" >> calibDone.txt
 
+    echo "Choose whether to accept new Krummenacher current (i.e. copy it into the xml file(s))"
     echo "- Set nTRIGxEvent = 1 and DoFast = 1 in the xml file(s)"
     echo "- Set VCAL_HIGH to MIP value in the xml file(s)"
     read -p "Press any key to continue... " -n1 -s
@@ -134,7 +141,7 @@ then
     echo "latency" >> calibDone.txt
     echo "injdelay" >> calibDone.txt
 
-    echo "- Set LATENCY_CONFIG and INJECTION_SELECT, as tuned by the injdelay calibration, in the xml files(s)"
+    echo "Choose whether to accept new LATENCY_CONFIG and INJECTION_SELECT (i.e. copy them into the xml file(s))"
     echo "- Set DoFast to whatever value you prefer in the xml files(s)"
     read -p "Press any key to continue... " -n1 -s
     echo
@@ -154,7 +161,7 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
-- Software git branch / tag : `chipPolymorphism` / `IT-v2.1`
+- Software git branch / tag : `chipPolymorphism` / `IT-v2.4`
 - Firmware tag: `2.5`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 

@@ -13,7 +13,6 @@
 #define __UTILITIES_H__
 
 #include <math.h>
-//#include "easylogging++.h"
 #include <sys/time.h>
 #include <stdint.h>
 #include <ios>
@@ -103,7 +102,5 @@ std::string expandEnvironmentVariables ( std::string s ) ;
 
 // get run number from file
 void getRunNumber (const std::string& pPath, int& pRunNumber, bool pIncrement = true);
-
-
 
 #endif

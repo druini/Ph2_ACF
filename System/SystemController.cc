@@ -202,7 +202,7 @@ namespace Ph2_System {
             // ######################################
             LOG (INFO) << BOLDBLUE << "\t--> Found an Inner Tracker board" << RESET;
             LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << +cBoard->getBeId() << RESET;
-            fBeBoardInterface->ConfigureBoard (cBoard);
+            fBeBoardInterface->ConfigureBoard(cBoard);
 
             for (const auto& cModule : cBoard->fModuleVector)
               {
@@ -210,15 +210,15 @@ namespace Ph2_System {
                 for (const auto& cRD53 : cModule->fReadoutChipVector)
                   {
                     LOG (INFO) << GREEN << "Configuring RD53 " << BOLDYELLOW << +cRD53->getChipId() << RESET;
-                    static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip (static_cast<RD53*>(cRD53));
+                    static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cRD53));
                     LOG (INFO) << BOLDBLUE << "\t--> Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
                   }
               }
 
             LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
             bool commGood = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->InitChipCommunication();
-            if (commGood == true) LOG (INFO) << BOLDBLUE << "\t--> Successfully initialized the communication to all chips" << RESET;
-            else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication to all chips" << RESET;
+            if (commGood == true) LOG (INFO) << BOLDBLUE << "\t--> Successfully initialized the communication to all chips"     << RESET;
+            else                  LOG (INFO) << BOLDRED  << "\t--> I was not able to initialize the communication to all chips" << RESET;
 
 
             // ###################
@@ -226,7 +226,7 @@ namespace Ph2_System {
             // ###################
             size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
             size_t injType     = SystemController::findValueInSettings("INJtype");
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands (nTRIGxEvent, injType);
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType);
             LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
           }
       }

@@ -43,7 +43,7 @@ class PixelAlive : public Tool
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
-    return RD53ChannelGroupHandler::getNumberOfGroups(doInjection == true ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels) *
+    return RD53ChannelGroupHandler::getNumberOfGroups(injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels) *
       nEvents/nEvtsBurst;
   }
 
@@ -56,9 +56,9 @@ class PixelAlive : public Tool
   size_t nEvents;
   size_t nTRIGxEvent;
   size_t nEvtsBurst;
-  bool   doInjection;
-  bool   doFast;
+  size_t injType;
   float  thrOccupancy;
+  enum INJtype { None, Analog , Digital };
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   std::shared_ptr<DetectorDataContainer>   theOccContainer;
@@ -80,6 +80,7 @@ class PixelAlive : public Tool
   std::string fileReg;
   bool doDisplay;
   bool doSave;
+  bool doFast;
 };
 
 #endif

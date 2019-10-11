@@ -18,6 +18,7 @@
 // # CONSTANTS #
 // #############
 #define RESULTDIR "Results" // Directory containing the results
+#define NSTDEV 1            // Number of standard deviations for gain tolerance
 
 
 // ################################

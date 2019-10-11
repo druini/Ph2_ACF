@@ -65,6 +65,9 @@ int main (int argc, char** argv)
   cmd.defineOption ("raw", "Save raw data. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("raw", "r");
 
+  cmd.defineOption ("prog", "Simply program the system components.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+  cmd.defineOptionAlternative ("prog", "p");
+
   // @TMP@
   cmd.defineOption("reset","Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative("reset", "s");
@@ -77,10 +80,11 @@ int main (int argc, char** argv)
       exit(EXIT_FAILURE);
     }
 
-  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "CMSIT.xml";
-  std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
-  bool saveRaw           = cmd.foundOption("raw")    == true ? true : false;
-  bool reset             = cmd.foundOption("reset")  == true ? true : false; // @TMP@
+  std::string configFile = cmd.foundOption("file")  == true ? cmd.optionValue("file") : "CMSIT.xml";
+  std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "pixelalive";
+  bool saveRaw           = cmd.foundOption("raw")   == true ? true : false;
+  bool program           = cmd.foundOption("prog")  == true ? true : false;
+  bool reset             = cmd.foundOption("reset") == true ? true : false; // @TMP@
 
 
   // ################################
@@ -101,17 +105,20 @@ int main (int argc, char** argv)
   // ###################
   // # Read run number #
   // ###################
-  std::ifstream fileRunNumberIn;
   int runNumber = RUNNUMBER;
-  fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
-  if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
-  fileRunNumberIn.close();
+  if (program == false)
+    {
+      std::ifstream fileRunNumberIn;
+      fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
+      if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
+      fileRunNumberIn.close();
 
 
-  // ##########################
-  // # Initialize output file #
-  // ##########################
-  if (saveRaw == true) mySysCntr.addFileHandler("run_" + fromInt2Str(runNumber) + ".raw", 'w');
+      // ##########################
+      // # Initialize output file #
+      // ##########################
+      if (saveRaw == true) mySysCntr.addFileHandler("run_" + fromInt2Str(runNumber) + ".raw", 'w');
+    }
 
 
   // #######################
@@ -120,6 +127,7 @@ int main (int argc, char** argv)
   LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
   mySysCntr.ConfigureHardware(configFile);
   LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
+  if (program == true) exit(EXIT_SUCCESS);
 
 
   std::cout << std::endl;

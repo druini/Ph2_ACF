@@ -27,11 +27,11 @@ class RD53RunProgress
     return value;
   }
 
-  static void update()
+  static void update (bool display = false)
   {
     RD53RunProgress::current()++;
-    LOG (INFO) << BOLDMAGENTA << ">>> Progress:  " << std::setprecision(1) << std::fixed << 1. * RD53RunProgress::current() / RD53RunProgress::total() * 100 << "% <<<" << RESET;
-    /* LOG (INFO) << BOLDMAGENTA << ">>> Iteration n. " << RD53RunProgress::current() << "/" << RD53RunProgress::total() << " <<<" << RESET; */
+    if (display == true)
+      LOG (INFO) << BOLDMAGENTA << ">>>> Progress : " << std::setw(5) << std::setprecision(1) << std::fixed << 1. * RD53RunProgress::current() / RD53RunProgress::total() * 100 << "% <<<<" << RESET;
   }
 };
 

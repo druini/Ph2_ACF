@@ -64,10 +64,10 @@ namespace Ph2_HwInterface
     // RD53FWInterface::TurnOffFMC();
     // RD53FWInterface::TurnOnFMC();
     // RD53FWInterface::ResetBoard();
-    RD53FWInterface::ResetFastCmdBlk();
-    RD53FWInterface::ResetReadoutBlk();
     RD53FWInterface::ChipReset();
     RD53FWInterface::ChipReSync();
+    RD53FWInterface::ResetFastCmdBlk();
+    RD53FWInterface::ResetReadoutBlk();
 
 
     // ###############################################
@@ -98,7 +98,7 @@ namespace Ph2_HwInterface
         myString << "user.ctrl_regs.Hybrid" << cModule->getIndex() + 1;
         cVecReg.push_back({myString.str() + ".Hybrid_en", 1});
         cVecReg.push_back({myString.str() + ".Chips_en", RD53::setBits(cModule->fReadoutChipVector.size())});
-        LOG (INFO) << GREEN << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << GREEN << " chip(s) for module " << BOLDYELLOW << cModule->getIndex() << RESET;
+        LOG (INFO) << GREEN << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << RESET << GREEN << " chip(s) for module " << BOLDYELLOW << cModule->getIndex() << RESET;
       }
 
 
@@ -265,7 +265,7 @@ namespace Ph2_HwInterface
     // # Check status registers associated wih fast command block #
     // ############################################################
     unsigned int fastCMDReg = ReadReg ("user.stat_regs.fast_cmd_1.trigger_source_o");
-    LOG (INFO) << GREEN << "Fast CMD block trigger source: " << BOLDYELLOW << fastCMDReg << GREEN << " (1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency)" << RESET;
+    LOG (INFO) << GREEN << "Fast CMD block trigger source: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency)" << RESET;
 
     fastCMDReg = ReadReg ("user.stat_regs.fast_cmd_1.trigger_state");
     LOG (INFO) << GREEN << "Fast CMD block trigger state: " << BOLDYELLOW << fastCMDReg << RESET;
@@ -384,10 +384,11 @@ namespace Ph2_HwInterface
           }
       }
 
-    LOG (INFO) << GREEN << "----- Reading  data -----" << RESET;
-    LOG (INFO) << GREEN << "n. words        = "        << nWordsInMemory    << RESET;
-    LOG (INFO) << GREEN << "n. triggers     = "        << nTriggersReceived << RESET;
-    LOG (INFO) << CYAN  << "=========================" << RESET;
+    LOG (INFO) << CYAN  << "---------------------------" << RESET;
+    LOG (INFO) << GREEN << "****** Reading  data ******" << RESET;
+    LOG (INFO) << GREEN << "N. words        = "          << nWordsInMemory    << RESET;
+    LOG (INFO) << GREEN << "N. triggers     = "          << nTriggersReceived << RESET;
+    LOG (INFO) << CYAN  << "---------------------------" << RESET;
 
     uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
     ddr3Offset += nWordsInMemory;
@@ -413,9 +414,9 @@ namespace Ph2_HwInterface
         retry = false;
         pData.clear();
 
-        RD53FWInterface::ResetReadoutBlk();
         RD53FWInterface::ChipReset();
         RD53FWInterface::ChipReSync();
+        RD53FWInterface::ResetReadoutBlk();
 
 
         // ####################
@@ -464,7 +465,7 @@ namespace Ph2_HwInterface
     // #################
     // # Show progress #
     // #################
-    RD53RunProgress::update();
+    RD53RunProgress::update(true);
   }
 
   std::vector<uint32_t> RD53FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
@@ -641,9 +642,10 @@ namespace Ph2_HwInterface
     for (auto i = 0u; i < events.size(); i++)
       {
         auto& evt = events[i];
-        LOG (INFO) << BOLDGREEN << "Event           = " << i                   << RESET;
+        LOG (INFO) << BOLDGREEN << "==========================="               << RESET;
+        LOG (INFO) << BOLDGREEN << "EVENT           = " << i                   << RESET;
         LOG (INFO) << BOLDGREEN << "block_size      = " << evt.block_size      << RESET;
-        LOG (INFO) << BOLDGREEN << "trigger_id      = " << evt.tlu_trigger_id  << RESET;
+        LOG (INFO) << BOLDGREEN << "tlu_trigger_id  = " << evt.tlu_trigger_id  << RESET;
         LOG (INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
         LOG (INFO) << BOLDGREEN << "tdc             = " << evt.tdc             << RESET;
         LOG (INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter     << RESET;
@@ -663,19 +665,17 @@ namespace Ph2_HwInterface
             LOG (INFO) << CYAN << "trigger_tag     = " << evt.chip_events[j].trigger_tag   << RESET;
             LOG (INFO) << CYAN << "bc_id           = " << evt.chip_events[j].bc_id         << RESET;
 
-            LOG (INFO) << BOLDYELLOW << "-- Region Data (" << evt.chip_events[j].hit_data.size() << " words) --" << RESET;
+            LOG (INFO) << BOLDYELLOW << "--- Hit Data (" << evt.chip_events[j].hit_data.size() << " hits) ---" << RESET;
 
-            for (const auto& region_data : evt.chip_events[j].hit_data)
+            for (const auto& hit : evt.chip_events[j].hit_data)
               {
-                LOG(INFO)   << "Column: " << region_data.col
-                            << ", Row: "  << region_data.row
-                            << ", ToT: " << +region_data.tot
-                            << RESET;
+                LOG (INFO) << BOLDYELLOW << "Column: " << std::setw(3) <<  hit.col << std::setw(-1)
+                                         << ", Row: "  << std::setw(3) <<  hit.row << std::setw(-1)
+                                         << ", ToT: "  << std::setw(3) << +hit.tot << std::setw(-1)
+                                         << RESET;
               }
           }
       }
-
-    std::cout << std::endl;
   }
 
   bool RD53FWInterface::EvtErrorHandler(uint8_t status)
@@ -830,10 +830,10 @@ namespace Ph2_HwInterface
         // ##########################
         // # Autozero configuration #
         // ##########################
-        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",          (uint32_t)cfg->autozero.autozero_source},
-        {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",           (uint32_t)cfg->autozero.glb_pulse_data},
-        {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",            (uint32_t)cfg->autozero.autozero_freq},
-        {"user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",      (uint32_t)cfg->autozero.veto_after_autozero}
+        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",    2},
+        {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",     0},
+        {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",      0},
+        {"user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",0}
       });
 
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
@@ -847,7 +847,7 @@ namespace Ph2_HwInterface
       });
   }
 
-  void RD53FWInterface::SetAndConfigureFastCommands (size_t nTRIGxEvent, size_t injType)
+  void RD53FWInterface::SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType)
   // ############################
   // # injType == 0 --> None    #
   // # injType == 1 --> Analog  #
@@ -922,12 +922,12 @@ namespace Ph2_HwInterface
   void RD53FWInterface::ConfigureDIO5 (const DIO5Config* cfg)
   {
     const uint8_t chnOutEnable   = 0x00;
-    const uint8_t fiftyohmEnable = 0x12;
+    const uint8_t fiftyOhmEnable = 0x12;
 
     WriteStackReg({
         {"user.ctrl_regs.ext_tlu_reg1.dio5_en",            (uint32_t)cfg->enable},
         {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en",     (uint32_t)chnOutEnable},
-        {"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)fiftyohmEnable},
+        {"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)fiftyOhmEnable},
         {"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr",       (uint32_t)cfg->ch1_thr},
         {"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr",       (uint32_t)cfg->ch2_thr},
         {"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr",       (uint32_t)cfg->ch3_thr},

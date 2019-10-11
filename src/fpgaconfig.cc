@@ -22,8 +22,6 @@ using namespace std;
 
 INITIALIZE_EASYLOGGINGPP
 
-// #define LOGGER "../settings/logger.conf"
-
 class AcqVisitor: public HwInterfaceVisitor
 {
   int cN;

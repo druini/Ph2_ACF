@@ -70,6 +70,7 @@ void Latency::initialize (const std::string fileRes_, const std::string fileReg_
   // ##############################
   PixelAlive::fileRes = fileRes_;
   PixelAlive::fileReg = "";
+  PixelAlive::doFast  = 1;
 
 
   fileRes = fileRes_;
@@ -121,6 +122,7 @@ void Latency::draw ()
               static_cast<RD53*>(cChip)->saveRegMap("");
               std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
               system(command.c_str());
+              LOG (INFO) << BOLDGREEN << "\t--> Latency saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
             }
     }
 

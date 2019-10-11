@@ -177,6 +177,7 @@ void ThrEqualization::draw ()
               static_cast<RD53*>(cChip)->saveRegMap("");
               std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
               system(command.c_str());
+              LOG (INFO) << BOLDGREEN << "\t--> ThrEqualization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
             }
     }
 
@@ -194,6 +195,7 @@ void ThrEqualization::display   () { histos.process(); }
 
 void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {
+  uint16_t init;
   uint16_t numberOfBits = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(regName);
 
   DetectorDataContainer minDACcontainer;
@@ -203,9 +205,9 @@ void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents,
   DetectorDataContainer bestDACcontainer;
   DetectorDataContainer bestContainer;
 
-  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, minDACcontainer);
+  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, minDACcontainer, init = 0);
   ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, midDACcontainer);
-  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, maxDACcontainer);
+  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, maxDACcontainer, init = (RD53::setBits(numberOfBits) + 1));
 
   ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, bestDACcontainer);
   ContainerFactory::copyAndInitChannel<OccupancyAndPh>(*fDetectorContainer, bestContainer);
@@ -215,14 +217,7 @@ void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents,
       for (const auto cChip : *cModule)
         for (auto row = 0u; row < RD53::nRows; row++)
           for (auto col = 0u; col < RD53::nCols; col++)
-            {
-              minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) = 0;
-              maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) = RD53::setBits(numberOfBits) + 1;
-
-              bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
-
-              bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) = RD53::setBits(numberOfBits) + 1;
-            }
+            bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
 
 
   // ############################
@@ -242,15 +237,14 @@ void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents,
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
-            {
-              std::cout << "AAA " << std::endl;
-              this->fReadoutChipInterface->WriteChipAllLocalReg(static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
-            }
+            this->fReadoutChipInterface->WriteChipAllLocalReg(static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
+
 
       // ################
       // # Run analysis #
       // ################
       this->measureData(nEvents, nEvtsBurst);
+
 
       // #####################
       // # Compute next step #

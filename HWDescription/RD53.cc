@@ -35,7 +35,7 @@ namespace Ph2_HwDescription
     std::stringstream myString;
     perPixelData      pixData;
 
-    if (file)
+    if (file.good() == true)
       {
         std::string line, fName, fAddress_str, fDefValue_str, fValue_str, fBitSize_str;
         bool foundPixelConfig = false;
@@ -588,19 +588,18 @@ namespace Ph2_HwDescription
     return it->second.fBitSize;
   }
 
-  std::vector<RD53::HitData> RD53::Event::DecodeQuad(uint32_t data)
+  std::vector<RD53::HitData> RD53::Event::DecodeQuad (uint32_t data)
   {
     std::vector<RD53::HitData> result;
     uint32_t core_col, side, row, col, all_tots;
 
     std::tie(core_col, row, side, all_tots) = unpack_bits<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_ROW, RD53EvtEncoder::NBIT_SIDE, RD53EvtEncoder::NBIT_TOT>(data);
+    col                                     = NPIX_REGION * pack_bits<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
 
-    col = NPIX_REGION * pack_bits<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
+    uint8_t tots[NPIX_REGION];
+    RangePacker<NPIX_REGION>::unpack_reverse(all_tots, tots);
 
-    uint8_t tots[4];
-    RangePacker<RD53EvtEncoder::NBIT_TOT / NPIX_REGION>::unpack_reverse(all_tots, tots);
-
-    for (int i = 0; i < 4; i++) if (tots[i] != 15) result.emplace_back(row, col + i, tots[i]);
+    for (int i = 0; i < NPIX_REGION; i++) if (tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION)) result.emplace_back(row, col + i, tots[i]);
 
     return result;
   }
@@ -618,12 +617,9 @@ namespace Ph2_HwDescription
     for (auto i = 1u; i < n; i++)
       if (data[i] != noHitToT)
         {
-          auto hits = DecodeQuad(data[i]);
+          auto hits = DecodeQuad (data[i]);
           hit_data.insert(hit_data.end(), hits.begin(), hits.end());
-          if ((hits.size() != 0) && (
-                (hits.back().row >= RD53::nRows) || (hits.back().col >= RD53::nCols)
-              ))
-              evtStatus |= RD53EvtEncoder::CPIX;
+          for (auto& hit : hits) if ((hit.row >= RD53::nRows) || (hit.col >= RD53::nCols)) evtStatus |= RD53EvtEncoder::CPIX;
         }
   }
 

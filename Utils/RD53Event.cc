@@ -46,13 +46,13 @@ namespace Ph2_HwInterface
                 }
 
               for (const auto& hit : chip_events[chipIndx].hit_data)
-                      {
-                        cChip->getChannel<OccupancyAndPh>(hit.row+RD53::nRows*(hit.col)).fOccupancy++;
-                        cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPh      += float(hit.tot);
-                        cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPhError += float(hit.tot*hit.tot);
-                        if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col) == false)
-                          cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).readoutError = true;
-                      }
+                {
+                  cChip->getChannel<OccupancyAndPh>(hit.row+RD53::nRows*(hit.col)).fOccupancy++;
+                  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPh      += float(hit.tot);
+                  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPhError += float(hit.tot*hit.tot);
+                  if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col) == false)
+                    cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).readoutError = true;
+                }
             }
         }
   }
