@@ -106,7 +106,7 @@ namespace Ph2_HwInterface
 
     bool InitChipCommunication ();
     void WriteChipCommand      (std::vector<uint32_t>& data, unsigned int nCmd = 1);
-    std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (std::vector<uint32_t>& data, uint8_t chipID, uint8_t filter = 0);
+    std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (uint8_t chipID);
 
     struct ChipFrame
     {

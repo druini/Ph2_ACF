@@ -193,10 +193,10 @@ template <class T = size_t>
       return result;
     }
 
-      template <class T>
-      static CONSTEXPR_ auto unpack(T value) {
-        return unpack_impl(value, std::make_index_sequence<sizeof...(Sizes)>{});
-      }
+    template <class T>
+    static CONSTEXPR_ auto unpack(T value) {
+      return unpack_impl(value, std::make_index_sequence<sizeof...(Sizes)>{});
+    }
 
   private:
     template <class T, size_t...>

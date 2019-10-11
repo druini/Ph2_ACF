@@ -297,11 +297,7 @@ namespace Ph2_HwDescription
     std::string configFileName;
     CommentMap fCommentMap;
 
-    static const uint8_t trigger_map[];
-  };
-
-  const uint8_t RD53::trigger_map[];
-      {
+    static constexpr uint8_t trigger_map[] = {
         0x2B, // 00
         0x2B, // 01
         0x2D, // 02
@@ -319,6 +315,27 @@ namespace Ph2_HwDescription
         0x55, // 14
         0x56  // 15
       };
+  };
+
+  // const uint8_t RD53::trigger_map[];
+  //     {
+  //       0x2B, // 00
+  //       0x2B, // 01
+  //       0x2D, // 02
+  //       0x2E, // 03
+  //       0x33, // 04
+  //       0x35, // 05
+  //       0x36, // 06
+  //       0x39, // 07
+  //       0x3A, // 08
+  //       0x3C, // 09
+  //       0x4B, // 10
+  //       0x4D, // 11
+  //       0x4E, // 12
+  //       0x53, // 13
+  //       0x55, // 14
+  //       0x56  // 15
+  //     };
 }
 
 namespace RD53Cmd {
@@ -457,7 +474,7 @@ constexpr T get_bits(T value, int start, int end) {
 }
 
 struct WrRegLong : public Command<opCode(0x66), 22> {
-  WrReg(uint8_t chip_id, uint16_t address, const uint16_t (& values) [6]) {
+  WrReg(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values) {
     fields[0] = pack_encoded<4, 1>(chip_id, 1);
     fields[1] = pack_encoded<5>(address >> 4);
     fields[2] = pack_encoded<4, 1>(address, values[0] >> 15);

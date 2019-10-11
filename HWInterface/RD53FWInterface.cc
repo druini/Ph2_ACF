@@ -111,7 +111,7 @@ namespace Ph2_HwInterface
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
   }
 
-  void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, unsigned int nCmd, unsigned int moduleId=0) {
+  void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, unsigned int nCmd=1, unsigned int moduleId=0xFF) {
     const unsigned int n_words = ceil(data.size() / 2);
     
     while (!ReadReg("user.ctrl_regs.Slow_cmd.fifo_prog_empty_thr")) {
@@ -189,76 +189,107 @@ namespace Ph2_HwInterface
   //   WriteStackReg (stackRegisters);
   // }
 
-  std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters (std::vector<uint32_t>& data, uint8_t chipID, uint8_t filter)
+  uint8_t lane2chipId(uint8_t chip_id) {
+    switch (chip_id) {
+      case 0:
+        return 0;
+      case 1:
+        return 1;
+      case 2:
+        return 2;
+      case 3:
+        return 3;
+    }
+  }
+
+  std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters (uint8_t chipID)
   {
-    // ##############################
-    // # Filter readback data:      #
-    // # 0: read "cmd" only         #
-    // # 1: read "auto" 2nd only    #
-    // # 2: read "auto" 1st only    #
-    // # 3: read "auto" 1st and 2nd #
-    // ##############################
-    const unsigned int BLOCKS2READ = 1;
-
-    std::stringstream myString;
-    unsigned int nodeBlocks;
-    uint8_t nActiveChns = ReadReg ("user.stat_regs.aurora.n_ch");
     std::vector<std::pair<uint16_t,uint16_t>> outputDecoded;
-    std::vector<uint32_t> regFIFO;
 
+    auto rd_cmd = RD53Cmd::RdReg()
 
-    if (chipID < nActiveChns)
-      {
-        myString.clear(); myString.str("");
-        myString << "user.readout" << +chipID << ".reg_mask";
-        WriteReg (myString.str().c_str(), filter);
+    while (ReadReg("user.stat_regs.Register_Rdback.fifo_empty") == 0) {
+      uint32_t rdback_data = ReadReg("user.stat_regs.Register_Rdback_fifo");
+      
+      uint16_t chip_lane, address, value;
+      std::tie(chip_lane, address, value) = unpack_bits<6, 10, 16>(rdback_data);
 
-        myString.clear(); myString.str("");
-        myString << "user.readout" << +chipID << ".sel";
-        WriteReg (myString.str().c_str(), 2);
-
-
-        // ##################
-        // # Flush the FIFO #
-        // ##################
-        myString.clear(); myString.str("");
-        myString << "user.readout" << +chipID << ".reg_read";
-        nodeBlocks = getUhalNode(myString.str().c_str()).getSize();
-        ReadBlockRegValue(myString.str().c_str(), nodeBlocks);
-        if (nodeBlocks < BLOCKS2READ)
-          {
-            LOG (ERROR) << BOLDRED << "Number of register blocks to read (" << BOLDYELLOW << BLOCKS2READ << BOLDRED << ") exceds FIFO lenght " << BOLDYELLOW << nodeBlocks << RESET;
-            return outputDecoded;
-          }
-
-
-        // #####################
-        // # Send read command #
-        // #####################
-        RD53FWInterface::WriteChipCommand(data);
-
-
-        // #################
-        // # Read the FIFO #
-        // #################
-        regFIFO = ReadBlockRegValue(myString.str().c_str(), BLOCKS2READ);
-        for (auto i = 0u; i < regFIFO.size(); i++)
-          {
-            auto second = (regFIFO[i])                                                                                                             & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_VALUE));
-            auto first  = (regFIFO[i] >> RD53RegFrameEncoder::NBIT_VALUE)                                                                          & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_ADDRESS));
-            auto status = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS))                                    & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_STATUS));
-            auto id     = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS + RD53RegFrameEncoder::NBIT_STATUS)) & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_CHIPID));
-
-            if (status != 0) LOG (ERROR) << BOLDRED << "Status error in chip register readback: " << BOLDYELLOW << std::hex << +status << std::dec << BOLDRED << " from chip ID: " << BOLDYELLOW << std::hex << +id << std::dec << RESET;
-
-            outputDecoded.push_back(std::pair<uint16_t,uint16_t>(first,second));
-          }
+      if (lane2chipId(chip_lane) == chipID) {
+        outputDecoded.emplace_back(address, value);
       }
-    else LOG (ERROR) << BOLDRED << "Request to read chip registers from a non active channel: " << BOLDYELLOW << +chipID << BOLDRED << " (active channels are " << BOLDYELLOW << "0" << BOLDRED << "--" << BOLDYELLOW << +nActiveChns-1 << BOLDRED << ")" << RESET;
-
-
+    }
     return outputDecoded;
   }
+
+    // // ##############################
+    // // # Filter readback data:      #
+    // // # 0: read "cmd" only         #
+    // // # 1: read "auto" 2nd only    #
+    // // # 2: read "auto" 1st only    #
+    // // # 3: read "auto" 1st and 2nd #
+    // // ##############################
+    // const unsigned int BLOCKS2READ = 1;
+
+    // std::stringstream myString;
+    // unsigned int nodeBlocks;
+    // uint8_t nActiveChns = ReadReg ("user.stat_regs.aurora.n_ch");
+    // std::vector<std::pair<uint16_t,uint16_t>> outputDecoded;
+    // std::vector<uint32_t> regFIFO;
+
+
+    // if (chipID < nActiveChns)
+    //   {
+    //     myString.clear(); myString.str("");
+    //     myString << "user.readout" << +chipID << ".reg_mask";
+    //     WriteReg (myString.str().c_str(), filter);
+
+    //     myString.clear(); myString.str("");
+    //     myString << "user.readout" << +chipID << ".sel";
+    //     WriteReg (myString.str().c_str(), 2);
+
+
+    //     // ##################
+    //     // # Flush the FIFO #
+    //     // ##################
+    //     myString.clear(); myString.str("");
+    //     myString << "user.readout" << +chipID << ".reg_read";
+    //     nodeBlocks = getUhalNode(myString.str().c_str()).getSize();
+    //     ReadBlockRegValue(myString.str().c_str(), nodeBlocks);
+    //     if (nodeBlocks < BLOCKS2READ)
+    //       {
+    //         LOG (ERROR) << BOLDRED << "Number of register blocks to read (" << BOLDYELLOW << BLOCKS2READ << BOLDRED << ") exceds FIFO lenght " << BOLDYELLOW << nodeBlocks << RESET;
+    //         return outputDecoded;
+    //       }
+
+
+    //     // #####################
+    //     // # Send read command #
+    //     // #####################
+    //     RD53FWInterface::WriteChipCommand(data);
+
+
+    //     // #################
+    //     // # Read the FIFO #
+    //     // #################
+    //     regFIFO = ReadBlockRegValue(myString.str().c_str(), BLOCKS2READ);
+    //     for (auto i = 0u; i < regFIFO.size(); i++)
+    //       {
+    //         auto second = (regFIFO[i])                                                                                                             & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_VALUE));
+    //         auto first  = (regFIFO[i] >> RD53RegFrameEncoder::NBIT_VALUE)                                                                          & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_ADDRESS));
+    //         auto status = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS))                                    & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_STATUS));
+    //         auto id     = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS + RD53RegFrameEncoder::NBIT_STATUS)) & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_CHIPID));
+
+    //         if (status != 0) LOG (ERROR) << BOLDRED << "Status error in chip register readback: " << BOLDYELLOW << std::hex << +status << std::dec << BOLDRED << " from chip ID: " << BOLDYELLOW << std::hex << +id << std::dec << RESET;
+
+    //         outputDecoded.push_back(std::pair<uint16_t,uint16_t>(first,second));
+    //       }
+    //   }
+    // else LOG (ERROR) << BOLDRED << "Request to read chip registers from a non active channel: " << BOLDYELLOW << +chipID << BOLDRED << " (active channels are " << BOLDYELLOW << "0" << BOLDRED << "--" << BOLDYELLOW << +nActiveChns-1 << BOLDRED << ")" << RESET;
+
+
+  //   return outputDecoded;
+  // }
+
 
   void RD53FWInterface::PrintFWstatus()
   {
