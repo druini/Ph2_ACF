@@ -96,6 +96,7 @@
     <!--
         === Calibration parameters ===
         INJtype       = 0: no injection;                           INJtype       = 1: analog;         INJtype = 2: digital
+        nHITxCol         : number of simultaneously injected hit per column (must be a divider of chip rows)
         DoFast        = 0: run on all pixels in the selected area; DoFast        = 1: run on a subset
         DisplayHisto  = 0: don't display;                          DisplayHisto  = 1: display
         UpdateChipCfg = 0: don't update;                           UpdateChipCfg = 1: update
@@ -134,6 +135,7 @@
     <Setting name="ThrStart">       340 </Setting>
     <Setting name="ThrStop">        440 </Setting>
 
+    <Setting name="nHITxCol">         1 </Setting>
     <Setting name="DoFast">           0 </Setting>
     <Setting name="DisplayHisto">     0 </Setting>
     <Setting name="UpdateChipCfg">    1 </Setting>

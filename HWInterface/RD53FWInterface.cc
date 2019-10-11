@@ -417,12 +417,12 @@ namespace Ph2_HwInterface
         // # Readout sequence #
         // ####################
         RD53FWInterface::Start();
-        while (ReadReg("user.stat_regs.trigger_cntr").value() < pNEvents*(1 + RD53FWInterface::localCfgFastCmd.trigger_duration)) usleep (SHALLOWSLEEP);
+        while (ReadReg("user.stat_regs.trigger_cntr").value() < pNEvents*(1 + RD53FWInterface::localCfgFastCmd.trigger_duration)) usleep (READOUTSLEEP);
         size_t dataAmountOld, dataAmountNew = ReadReg("user.stat_regs.words_to_read").value();
         do
           {
             dataAmountOld = dataAmountNew;
-            usleep(SHALLOWSLEEP);
+            usleep(READOUTSLEEP);
           }
         while ((dataAmountNew = ReadReg("user.stat_regs.words_to_read").value()) != dataAmountOld);
         RD53FWInterface::ReadData(pBoard, false, pData, false /*pWait*/); // @TMP@ : FW bug triggers are recorded but DDR3 empty

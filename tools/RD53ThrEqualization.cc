@@ -21,6 +21,7 @@ void ThrEqualization::ConfigureCalibration ()
   nEvents      = this->findValueInSettings("nEvents");
   nEvtsBurst   = nEvents;
   nEvents     *= this->findValueInSettings("VCalHnsteps");
+  nHITxCol     = this->findValueInSettings("nHITxCol");
   doFast       = this->findValueInSettings("DoFast");
   doDisplay    = this->findValueInSettings("DisplayHisto");
   doUpdateChip = this->findValueInSettings("UpdateChipCfg");
@@ -36,7 +37,7 @@ void ThrEqualization::ConfigureCalibration ()
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row, col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
 

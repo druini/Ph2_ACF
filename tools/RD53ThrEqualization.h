@@ -46,7 +46,7 @@ class ThrEqualization : public Tool
   {
     uint16_t nBitTDAC       = 4;
     uint16_t moreIterations = 2;
-    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups)*(nBitTDAC + moreIterations) *
+    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*(nBitTDAC + moreIterations) *
       nEvents/nEvtsBurst + sc.getNumberIterations();
   }
 
@@ -59,6 +59,7 @@ class ThrEqualization : public Tool
   size_t colStop;
   size_t nEvents;
   size_t nEvtsBurst;
+  size_t nHITxCol;
   bool   doFast;
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;

@@ -23,6 +23,7 @@ void Gain::ConfigureCalibration ()
   stopValue    = this->findValueInSettings("VCalHstop");
   nSteps       = this->findValueInSettings("VCalHnsteps");
   offset       = this->findValueInSettings("VCalMED");
+  nHITxCol     = this->findValueInSettings("nHITxCol");
   doFast       = this->findValueInSettings("DoFast");
   doDisplay    = this->findValueInSettings("DisplayHisto");
   doUpdateChip = this->findValueInSettings("UpdateChipCfg");
@@ -38,7 +39,7 @@ void Gain::ConfigureCalibration ()
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
 

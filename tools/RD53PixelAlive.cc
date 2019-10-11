@@ -22,6 +22,7 @@ void PixelAlive::ConfigureCalibration ()
   nEvtsBurst   = this->findValueInSettings("nEvtsBurst");
   nTRIGxEvent  = this->findValueInSettings("nTRIGxEvent");
   injType      = this->findValueInSettings("INJtype");
+  nHITxCol     = this->findValueInSettings("nHITxCol");
   doFast       = this->findValueInSettings("DoFast");
   thrOccupancy = this->findValueInSettings("TargetOcc");
   doDisplay    = this->findValueInSettings("DisplayHisto");
@@ -41,7 +42,7 @@ void PixelAlive::ConfigureCalibration ()
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
 
