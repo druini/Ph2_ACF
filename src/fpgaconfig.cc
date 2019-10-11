@@ -22,8 +22,7 @@ using namespace std;
 
 INITIALIZE_EASYLOGGINGPP
 
-#define LOGGER "settings/logger.conf"
-
+// #define LOGGER "../settings/logger.conf"
 
 class AcqVisitor: public HwInterfaceVisitor
 {
@@ -76,7 +75,9 @@ void verifyImageName ( const string& strImage, const vector<string>& lstNames)
 int main ( int argc, char* argv[] )
 {
   //configure the logger
-  el::Configurations conf (LOGGER);
+  std::string loggerConfigFile = std::getenv("BASE_DIR");
+  loggerConfigFile += "/settings/logger.conf";
+  el::Configurations conf (loggerConfigFile);
   el::Loggers::reconfigureAllLoggers (conf);
 
   SystemController cSystemController;
