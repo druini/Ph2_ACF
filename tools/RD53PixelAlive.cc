@@ -125,16 +125,19 @@ void PixelAlive::draw (bool doSave)
   // #######################################
   // # Save and Update register new values #
   // #######################################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-          system(command.c_str());
-          LOG (INFO) << BOLDGREEN << "\t--> PixelAlive saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-        }
+  if (doSave == true)
+    {
+      for (const auto cBoard : *fDetectorContainer)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+              static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+              std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+              system(command.c_str());
+              LOG (INFO) << BOLDGREEN << "\t--> PixelAlive saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+            }
+    }
 
   if (doDisplay == true) myApp->Run(true);
   if (doSave    == true)

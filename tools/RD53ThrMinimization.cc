@@ -60,7 +60,7 @@ void ThrMinimization::initialize (const std::string fileRes_, const std::string 
   // # Initialize sub-calibration #
   // ##############################
   PixelAlive::fileRes = fileRes_;
-  PixelAlive::fileReg = "";
+  PixelAlive::fileReg = fileReg_;
 
 
   fileRes = fileRes_;

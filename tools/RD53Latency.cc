@@ -68,9 +68,7 @@ void Latency::initialize (const std::string fileRes_, const std::string fileReg_
   // ##############################
   // # Initialize sub-calibration #
   // ##############################
-  PixelAlive::fileRes = fileRes_;
-  PixelAlive::fileReg = "";
-  PixelAlive::doFast  = 1;
+  PixelAlive::doFast = 1;
 
 
   fileRes = fileRes_;
