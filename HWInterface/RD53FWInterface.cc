@@ -818,12 +818,12 @@ namespace Ph2_HwInterface
         {"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse",  (uint32_t)cfg->fast_cmd_fsm.delay_after_first_cal},
         {"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject",          (uint32_t)cfg->fast_cmd_fsm.second_cal_data},
         {"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_second_cal},
-        {"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero",     (uint32_t)cfg->fast_cmd_fsm.delay_after_autozero},
+        {"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero",     (uint32_t)cfg->fast_cmd_fsm.delay_after_autozero}, // @TMP@
         {"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse",  (uint32_t)cfg->fast_cmd_fsm.delay_loop},
 
-        // ##########################
-        // # Autozero configuration #
-        // ##########################
+        // ################################
+        // # @TMP@ Autozero configuration #
+        // ################################
         {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",    2},
         {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",     0},
         {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",      0},
@@ -841,7 +841,7 @@ namespace Ph2_HwInterface
       });
   }
 
-  void RD53FWInterface::SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType)
+  void RD53FWInterface::SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t n25nsDelays)
   // ############################
   // # injType == 0 --> None    #
   // # injType == 1 --> Analog  #
@@ -877,7 +877,7 @@ namespace Ph2_HwInterface
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 0;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = INJdelay::Loop;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (n25nsDelays == 0 ? (uint32_t)INJdelay::Loop : n25nsDelays);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
@@ -895,7 +895,7 @@ namespace Ph2_HwInterface
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = INJdelay::SecondCal;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = INJdelay::Loop;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (n25nsDelays == 0 ? (uint32_t)INJdelay::Loop : n25nsDelays);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
