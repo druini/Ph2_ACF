@@ -678,43 +678,43 @@ namespace Ph2_HwInterface
 
     if (status & RD53FWEvtEncoder::EVSIZE)
       {
-        LOG (ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     if (status & RD53FWEvtEncoder::EMPTY)
       {
-        LOG (ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     if (status & RD53FWEvtEncoder::L1A)
       {
-        LOG (ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     if (status & RD53FWEvtEncoder::FRSIZE)
       {
-        LOG (ERROR) << BOLDRED << "Invalid frame size " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "Invalid frame size " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     if (status & RD53FWEvtEncoder::FWERR)
       {
-        LOG (ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     if (status & RD53EvtEncoder::CHEAD)
       {
-        LOG (ERROR) << BOLDRED << "Bad chip header " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "Bad chip header " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     if (status & RD53EvtEncoder::CPIX)
       {
-        LOG (ERROR) << BOLDRED << "Bad pixel row or column " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "Bad pixel row or column " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 

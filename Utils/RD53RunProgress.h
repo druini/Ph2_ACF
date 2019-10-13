@@ -32,14 +32,13 @@ class RD53RunProgress
     RD53RunProgress::current()++;
     if (display == true)
       {
-        std::cout << "\r";
+        float fraction = 1. * RD53RunProgress::current() / RD53RunProgress::total();
         LOG (INFO) << CYAN  << "---------------------------" << RESET;
         LOG (INFO) << GREEN << "****** Reading  data ******" << RESET;
         LOG (INFO) << GREEN << "n. 32 bit words = "          << std::setw(9) << std::fixed << dataSize << RESET;
-        LOG (INFO) << BOLDMAGENTA << ">>>> Progress : " << std::setw(5) << std::setprecision(1) << std::fixed << 1. * RD53RunProgress::current() / RD53RunProgress::total() * 100 << "% <<<<" << RESET;
+        LOG (INFO) << BOLDMAGENTA << ">>>> Progress : " << std::setw(5) << std::setprecision(1) << std::fixed << fraction * 100 << "% <<<<" << RESET;
         LOG (INFO) << CYAN  << "---------------------------" << RESET;
-        if (RD53RunProgress::current() / RD53RunProgress::total() != 1)
-          for (int i = 0; i < 5; i++) std::cout << "\x1b[A";
+        if (fraction != 1) for (int i = 0; i < 5; i++) std::cout << "\x1b[A";
       }
   }
 };
