@@ -144,7 +144,7 @@ namespace Ph2_System {
         {
             fNetworkStreamer = new TCPPublishServer(6000,1);
         }
-    // this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, os, pIsFile );
+
         fDetectorContainer = new DetectorContainer;
         this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile );
 
@@ -314,11 +314,11 @@ namespace Ph2_System {
   void SystemController::ConfigureHardware(std::string cHWFile, bool enableStream)
   {
     std::stringstream outp;
-    
+
     InitializeHw ( cHWFile, outp, true, enableStream );
     InitializeSettings ( cHWFile, outp );
-    LOG (INFO) << outp.str();
-    outp.str ("");
+    std::cout << outp.str() << std::endl;
+    outp.str("");
     ConfigureHw();
   }
 

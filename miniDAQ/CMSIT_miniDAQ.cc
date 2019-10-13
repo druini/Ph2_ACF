@@ -44,6 +44,7 @@ int main (int argc, char** argv)
   // # Configure the logger #
   // ########################
   el::Configurations conf("../settings/logger.conf");
+  conf.set(el::Level::Global, el::ConfigurationType::Format, "|%thread|%levshort| %msg");
   el::Loggers::reconfigureAllLoggers(conf);
 
 
