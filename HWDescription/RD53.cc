@@ -663,4 +663,3 @@ namespace Ph2_HwDescription
                                                          cal_aux_delay);
   }
 }
-

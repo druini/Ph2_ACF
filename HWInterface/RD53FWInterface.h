@@ -105,7 +105,7 @@ namespace Ph2_HwInterface
     std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)           override;
 
     bool InitChipCommunication ();
-    void WriteChipCommand      (std::vector<uint32_t>& data, unsigned int nCmd = 1);
+    void WriteChipCommand      (const std::vector<uint16_t>& data, unsigned int nCmd = 1, unsigned int moduleId = 0xFF);
     std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (uint8_t chipID);
 
     struct ChipFrame

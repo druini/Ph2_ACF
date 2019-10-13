@@ -273,6 +273,31 @@ struct RangePacker
     unpack_impl(value, array, local_detail::make_reverse_sequence<N>{});
   }
 
+  // pack range into range
+  template <class InIt, class OutIt>
+  static CONSTEXPR_ void unpack_range(InIt in_first, InIt in_last, OutIt out_first) {
+    using in_type = typename std::iterator_traits<InIt>::value_type;
+    constexpr int in_size = 8 * sizeof(in_type);
+    static_assert(in_size > Size, "The size of the input range's value type is too small.");
+    int offset = 0;
+    int current_size = Size;
+    while (in_first != in_last) {
+      int excess = offset + Size - in_size;
+      if (excess > 0) {
+        *out_first = bit_mask(Size) & (*in_first << excess);
+        current_size = excess;
+        offset = 0;
+        ++in_first;
+      }
+      else {
+        *out_first |= bit_mask(current_size) & (*in_first >> (in_size - offset - current_size));
+        ++out_first;
+        current_size = Size;
+        offset += Size;
+      }
+    }
+  }
+
   // pack range
   template <class T = uint64_t, class It>
     static CONSTEXPR_ T pack(const It& begin, const It& end) {
@@ -296,23 +321,23 @@ struct RangePacker
         return pack_impl<R>(array, std::make_index_sequence<N>{});
       }
 
-      // pack std::array reversed
-        template <class T = void, size_t N, class U, class R = typename std::conditional_t<std::is_void<T>::value, local_detail::uint_t<N * Size>, T>>
+    // pack std::array reversed
+    template <class T = void, size_t N, class U, class R = typename std::conditional_t<std::is_void<T>::value, local_detail::uint_t<N * Size>, T>>
     static CONSTEXPR_ R pack_reverse(const std::array<U, N>& array) {
-          return pack_impl<R>(array, local_detail::make_reverse_sequence<N>{});
-        }
+      return pack_impl<R>(array, local_detail::make_reverse_sequence<N>{});
+    }
 
-        // pack bilt-in array
-          template <class T = void, size_t N, class U, class R = typename std::conditional_t<std::is_void<T>::value, local_detail::uint_t<N * Size>, T>>
+    // pack bilt-in array
+    template <class T = void, size_t N, class U, class R = typename std::conditional_t<std::is_void<T>::value, local_detail::uint_t<N * Size>, T>>
     static CONSTEXPR_ R pack(const U (&array)[N]) {
-            return pack_impl<R>(array, std::make_index_sequence<N>{});
-          }
+      return pack_impl<R>(array, std::make_index_sequence<N>{});
+    }
 
-          // pack bilt-in array reversed
-            template <class T = void, size_t N, class U, class R = typename std::conditional_t<std::is_void<T>::value, local_detail::uint_t<N * Size>, T>>
+    // pack bilt-in array reversed
+    template <class T = void, size_t N, class U, class R = typename std::conditional_t<std::is_void<T>::value, local_detail::uint_t<N * Size>, T>>
     static CONSTEXPR_ R pack_reverse(const U (&array)[N]) {
-              return pack_impl<R>(array, local_detail::make_reverse_sequence<N>{});
-            }
+      return pack_impl<R>(array, local_detail::make_reverse_sequence<N>{});
+    }
 
 private:
   template <size_t N, class T, class U, size_t... Is>
