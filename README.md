@@ -262,7 +262,9 @@ Follow these instructions to install and compile the libraries:
 1. Clone the GitHub repo and run cmake
   
         $> git clone https://:@gitlab.cern.ch:8443/fravera/Ph2_ACF.git
-        $> cd Ph2_ACF/build 
+        $> cd Ph2_ACF
+        $> source setup.sh
+        $> cd build 
         $> cmake ..
 
 2. Do a `make -jN` in the build/ directory or alternatively do `make -C build/ -jN` in the Ph2_ACF root directory.
