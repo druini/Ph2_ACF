@@ -43,8 +43,6 @@ namespace Ph2_HwInterface
 
   private:
     void WriteRD53Mask     (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
-    // void WriteRD53RegLong  (RD53* pRD53, const std::string& pRegNode, const std::vector<uint32_t>& dataVec, size_t nCmd = 1);
-    // void WriteRD53RegShort (RD53* pRD53, const std::string& pRegNode, uint16_t data, std::vector<uint32_t>& serialSymbols, size_t nCmd, bool download);
     void InitRD53Aurora    (RD53* pRD53);
     void SyncRD53          (Chip* pRD53);
     void ResetRD53         (Chip* pRD53);
