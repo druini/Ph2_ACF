@@ -89,21 +89,28 @@ namespace Ph2_HwInterface
       }
 
 
-    // ##############################
-    // # Enabling modules and chips #
-    // ##############################
-    for (const auto& cModule : pBoard->fModuleVector)
-      {
-        myString.clear(); myString.str("");
-        myString << "user.ctrl_regs.Hybrid" << cModule->getIndex() + 1;
-        cVecReg.push_back({myString.str() + ".Hybrid_en", 1});
-        cVecReg.push_back({myString.str() + ".Chips_en", RD53::setBits(cModule->fReadoutChipVector.size())});
-        LOG (INFO) << GREEN << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << RESET << GREEN << " chip(s) for module " << BOLDYELLOW << cModule->getIndex() << RESET;
-      }
+    // // ##############################
+    // // # Enabling modules and chips #
+    // // ##############################
+    // for (const auto& cModule : pBoard->fModuleVector)
+    //   {
+    //     myString.clear(); myString.str("");
+    //     myString << "user.ctrl_regs.Hybrid" << cModule->getIndex() + 1;
+    //     cVecReg.push_back({myString.str() + ".Hybrid_en", 1});
+    //     cVecReg.push_back({myString.str() + ".Chips_en", RD53::setBits(cModule->fReadoutChipVector.size())});
+    //     LOG (INFO) << GREEN << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << RESET << GREEN << " chip(s) for module " << BOLDYELLOW << cModule->getIndex() << RESET;
+    //   }
+
+    cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_prog_empty_thr", 1024});
 
 
     if (cVecReg.size() != 0) WriteStackReg (cVecReg);
 
+    usleep(10000);
+
+    LOG (INFO) << "Module_type = " << ReadReg("user.stat_regs.aurora_rx.Module_type").value() << RESET;
+    LOG (INFO) << "Nb_of_modules = " << ReadReg("user.stat_regs.aurora_rx.Nb_of_modules").value() << RESET;
+    LOG (INFO) << "lane_up = " << ReadReg("user.stat_regs.aurora_rx.lane_up").value() << RESET;
 
     // ####################
     // # Configuring DIO5 #
@@ -113,7 +120,7 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, unsigned int nCmd, unsigned int moduleId) {
     // requires data.size() > 0
-    const unsigned int n_words = ceil(data.size() / 2);
+    const unsigned int n_words = (data.size() >> 1) + (data.size() & 1);
     
     while (!ReadReg("user.ctrl_regs.Slow_cmd.fifo_prog_empty_thr")) {
       usleep(SHALLOWSLEEP);
@@ -124,19 +131,25 @@ namespace Ph2_HwInterface
 
     // header
     stackRegisters.emplace_back(
-      "user.cmd_regs.ctrl_reg", 
+      "user.ctrl_regs.Slow_cmd_fifo_din",
       pack_bits<6, 10, 4, 12>(0xFF, moduleId, 0, n_words)
     );
 
     // commands
     for (unsigned i = 0; i < data.size() - 1; i += 2) {
-      stackRegisters.emplace_back("user.cmd_regs.ctrl_reg", pack_bits<16, 16>(data[i], data[i + 1]));
+      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", pack_bits<16, 16>(data[i], data[i + 1]));
     }
 
     // if data.size() is not even, add a sync command
     if (data.size() % 2 != 0) {
-      stackRegisters.emplace_back("user.cmd_regs.ctrl_reg", pack_bits<16, 16>(data.back(), RD53Cmd::Sync::opCode()));
+      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", pack_bits<16, 16>(data.back(), RD53Cmd::Sync::opCode()));
     }
+
+    std::cout << "WriteChipCommand: " << std::hex;
+    for (const auto& pair : stackRegisters) {
+      std::cout << pair.second << "\n";
+    }
+    std::cout << std::dec;
 
     WriteStackReg (stackRegisters);
   }

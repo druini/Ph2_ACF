@@ -372,8 +372,6 @@ protected:
 public:
   static constexpr uint16_t opCode() { return OpCode; }
 
-  Command() = default;
-
   // size in 16-bit words
   size_t size() const { return 1 + fields.size() / 2; }
 
@@ -433,12 +431,6 @@ struct WrReg : public Command<opCode(0x66), 6> {
   }
 };
 
-template <class T>
-constexpr T get_bits(T value, int start, int end) {
-  static constexpr int value_size = 8 * sizeof(T);
-  return value >> (value_size - end) & ((1 << (end - start)) - 1);
-}
-
 struct WrRegLong : public Command<opCode(0x66), 22> {
   WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values) {
     fields[0] = pack_encoded<4, 1>(chip_id, 1);
@@ -449,7 +441,7 @@ struct WrRegLong : public Command<opCode(0x66), 22> {
     fields[5] = pack_encoded<5>(values[0]);
 
     // unpack the remaining values 5 bits at a time
-    RangePacker<5>::unpack_range(values.begin() + 1, values.end(), fields.begin() + 6);
+    unpack_range<5>(values.begin() + 1, values.end(), fields.begin() + 6);
 
     // apply value_map transform
     for (unsigned i = 6; i < fields.size(); ++i) {

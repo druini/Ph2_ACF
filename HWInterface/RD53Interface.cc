@@ -27,7 +27,8 @@ namespace Ph2_HwInterface
     // # Enable monitoring (needed for AutoRead register monitoring) #
     // ###############################################################
     RD53Interface::WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
-    RD53Interface::WriteChipReg(pRD53, "GLOBAL_PULSE",       0x4,   true);
+    RD53Interface::SendCommand(pRD53, RD53Cmd::GlobalPulse(pRD53->getChipId(), 0x4));
+    // RD53Interface::WriteChipReg(pRD53, "GLOBAL_PULSE",       0x4,   true);
 
     // ################################################
     // # Programming global registers from white list #
@@ -120,16 +121,27 @@ namespace Ph2_HwInterface
 
     uint16_t address = pChip->getRegItem(pRegNode).fAddress;
 
+    std::cout << pRegNode << "(" << address << ") <- " << data << "\n";
+
     SendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, data));
 
     if (pRegNode == "VCAL_HIGH" || pRegNode == "VCAL_MED") {
       usleep(VCALSLEEP);
     }
 
-    if (pVerifLoop) {
-      auto last_readout = ReadRD53Reg(pChip, address).back();
+    while (pVerifLoop) {
+      std::cout << "verifying...\n";
+      auto readout = ReadRD53Reg(pChip, address);
 
-      if (last_readout.second != data) {
+      if (readout.size() == 0) {
+        usleep(10000);
+        continue;
+      }
+
+      if (readout.back().second == data) {
+        return true;
+      }
+      else {
         return false;
       }
     }
@@ -153,6 +165,8 @@ namespace Ph2_HwInterface
     SendCommand(pChip, RD53Cmd::RdReg(pChip->getChipId(), address));
 
     auto readback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip->getChipId());
+
+    std::cout << "ReadRD53Reg: " << readback.size() << "\n";
 
     if (address != 0) { // if not PIX_PORTAL
       std::copy_if(readback.begin(), readback.end(), std::back_inserter(reg_data), 
