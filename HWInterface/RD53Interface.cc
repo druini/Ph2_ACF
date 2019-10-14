@@ -117,11 +117,13 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
   {
+    // static constexpr uint16_t unverifiable_addresses[] = {1, 2, 39};
+
     this->setBoard(pChip->getBeBoardId());
 
     uint16_t address = pChip->getRegItem(pRegNode).fAddress;
 
-    std::cout << pRegNode << "(" << address << ") <- " << data << "\n";
+    // std::cout << pRegNode << "(" << address << ") <- " << data << "\n";
 
     SendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, data));
 
@@ -129,23 +131,29 @@ namespace Ph2_HwInterface
       usleep(VCALSLEEP);
     }
 
-    while (pVerifLoop) {
-      std::cout << "verifying...\n";
-      auto readout = ReadRD53Reg(pChip, address);
+    if (pVerifLoop) { // && std::find(std::begin(unverifiable_addresses), std::end(unverifiable_addresses), address) == std::end(unverifiable_addresses)) {
+      int attempts = 10;
+      while (attempts-->0) {
+        // std::cout << "verifying...\n";
+        auto readout = ReadRD53Reg(pChip, address);
 
-      if (readout.size() == 0) {
-        usleep(10000);
-        continue;
-      }
+        if (readout.size() == 0) {
+          usleep(1000);
+          continue;
+        }
 
-      if (readout.back().second == data) {
-        return true;
+        if (readout.back().second == data) {
+          std::cout << "VERIFICATION OK!" << "\n";
+          return true;
+        }
+        else {
+          std::cout << "VERIFICATION ERROR: wrong data" << "\n";
+          continue;
+        }
       }
-      else {
-        return false;
-      }
+        std::cout << "VERIFICATION ERROR: no readback" << "\n";
+      return false;
     }
-
     return true;
   }
 
@@ -166,7 +174,7 @@ namespace Ph2_HwInterface
 
     auto readback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip->getChipId());
 
-    std::cout << "ReadRD53Reg: " << readback.size() << "\n";
+    // std::cout << "ReadRD53Reg: " << readback.size() << "\n";
 
     if (address != 0) { // if not PIX_PORTAL
       std::copy_if(readback.begin(), readback.end(), std::back_inserter(reg_data), 
@@ -186,21 +194,21 @@ namespace Ph2_HwInterface
     return reg_data;
   }
 
-  uint16_t encode_region_data(const std::vector<perPixelData>& mask, int row, int col, uint8_t gainMode) {
+  uint16_t encode_region_data(const std::vector<perPixelData>& mask, int row, int col, bool highGain) {
     return pack_bits<8, 8>(
       pack_bits<1, 4, 1, 1, 1>(
-        gainMode,
-        mask[col].TDAC[row],
-        mask[col].HitBus[row],
-        mask[col].InjEn[row],
-        mask[col].Enable[row]
-      ),
-      pack_bits<1, 4, 1, 1, 1>(
-        gainMode,
+        highGain,
         mask[col + 1].TDAC[row],
         mask[col + 1].HitBus[row],
         mask[col + 1].InjEn[row],
         mask[col + 1].Enable[row]
+      ),
+      pack_bits<1, 4, 1, 1, 1>(
+        highGain,
+        mask[col].TDAC[row],
+        mask[col].HitBus[row],
+        mask[col].InjEn[row],
+        mask[col].Enable[row]
       )
     );
   }
@@ -214,7 +222,7 @@ namespace Ph2_HwInterface
 
     const uint8_t chipID = pRD53->getChipId();
 
-    const uint8_t gainMode = pRD53->getRegItem("HighGain_LIN").fValue == true ? RD53PixelEncoder::HIGHGAIN : RD53PixelEncoder::LOWGAIN;
+    const uint8_t highGain = pRD53->getRegItem("HighGain_LIN").fValue;
 
     std::vector<uint16_t> command_data;
     size_t   cmd_count = 0;
@@ -246,19 +254,27 @@ namespace Ph2_HwInterface
       { 
         for (auto row = 0u; row < RD53::nRows; row++) {
           if (((mask)[col].Enable[row] == 1) || ((mask)[col+1].Enable[row] == 1)) {
-            uint16_t data = encode_region_data(mask, row, col, gainMode);
-            RD53Cmd::WrReg(pRD53->getChipId(), REGION_COL_ADDR, col / 2).appendTo(command_data);
-            RD53Cmd::WrReg(pRD53->getChipId(), REGION_ROW_ADDR, row).appendTo(command_data);
-            RD53Cmd::WrReg(pRD53->getChipId(), PIX_PORTAL_ADDR, data).appendTo(command_data);
-            cmd_count += 3;
+            uint16_t data = encode_region_data(mask, row, col, highGain);
+
+            // std::cout << "Row: " << row << ", Col: " << col << ", EN: " << mask[col].Enable[row] << "/" << mask[col + 1].Enable[row] << ", Data: " << data << "\n";
+
+            RD53Interface::WriteChipReg(pRD53, "REGION_COL",    col / 2,  pVerifLoop);
+            RD53Interface::WriteChipReg(pRD53, "REGION_ROW",    row,      pVerifLoop);
+            RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL",    data,     pVerifLoop);
+            
+            // RD53Cmd::WrReg(pRD53->getChipId(), REGION_COL_ADDR, col / 2).appendTo(command_data);
+            // RD53Cmd::WrReg(pRD53->getChipId(), REGION_ROW_ADDR, row).appendTo(command_data);
+            // RD53Cmd::WrReg(pRD53->getChipId(), PIX_PORTAL_ADDR, data).appendTo(command_data);
+            
+            // cmd_count += 3;
           }
-          if ((cmd_count >= NPIXCMD) || ((row == RD53::nRows-1) && (col == 263-1) && (cmd_count != 0))) // @TMP@
-          // if ((cmd_count >= NPIXCMD) || ((row == RD53::nRows-1) && (col == RD53::nCols-1) && (cmd_count != 0)))
-          {
-            static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, cmd_count);
-            command_data.clear();
-            cmd_count = 0;
-          }
+          // if ((cmd_count >= NPIXCMD) || ((row == RD53::nRows-1) && (col == 263-1) && (cmd_count != 0))) // @TMP@
+          // // if ((cmd_count >= NPIXCMD) || ((row == RD53::nRows-1) && (col == RD53::nCols-1) && (cmd_count != 0)))
+          // {
+          //   static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, cmd_count);
+          //   command_data.clear();
+          //   cmd_count = 0;
+          // }
         }
       }
     }
@@ -272,7 +288,7 @@ namespace Ph2_HwInterface
         RD53Interface::WriteChipReg(pRD53, "REGION_ROW", 0x0,     false);
 
         for (auto row = 0u; row < RD53::nRows; row++) {
-          region_data.push_back(encode_region_data(mask, row, col, gainMode));
+          region_data.push_back(encode_region_data(mask, row, col, highGain));
 
           if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
           {
@@ -303,7 +319,12 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pChip->getBeBoardId());
     uint16_t address = pChip->getRegItem(pRegNode).fAddress;
-    return RD53Interface::ReadRD53Reg(pChip, address).back().second;
+    // std::cout << "ReadChipReg: " << pRegNode << ", " << address;
+    auto readout = RD53Interface::ReadRD53Reg(pChip, address);
+    if (readout.size() == 0) 
+      return 0;
+    else 
+      return readout.back().second;
   }
 
   bool RD53Interface::ConfigureChipOriginalMask (ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
