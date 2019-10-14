@@ -42,19 +42,20 @@
 // #####################################################################
 namespace RD53chargeConverter
 {
-  constexpr float par0 =    0.9; // Vref (V)
-  constexpr float par1 = 4096.0; // VCal total range
-  constexpr float cap  =    8.5; // (fF)
-  constexpr float ele  =    1.6; // (e-19)
+  constexpr float par0   =    0.9; // Vref (V)
+  constexpr float par1   = 4096.0; // VCal total range
+  constexpr float cap    =    8.5; // (fF)
+  constexpr float ele    =    1.6; // (e-19)
+  constexpr float offset =   63;   // Due to VCal_High vs VCal_Med offset difference (e-)
 
   constexpr float VCAl2Charge (float VCal)
   {
-    return (par0/par1) * VCal / ele * cap * 1e4;
+    return (par0/par1) * VCal / ele * cap * 1e4 + offset;
   }
 
   constexpr float Charge2VCal (float Charge)
   {
-    return Charge / (cap * 1e4) * ele / (par0/par1);
+    return (Charge - offset) / (cap * 1e4) * ele / (par0/par1);
   }
 }
 
