@@ -204,17 +204,17 @@ namespace Ph2_HwInterface
     return pack_bits<8, 8>(
       pack_bits<1, 4, 1, 1, 1>(
         highGain,
-        mask[col].TDAC[row],
-        mask[col].HitBus[row],
-        mask[col].InjEn[row],
-        mask[col].Enable[row]
-      ),
-      pack_bits<1, 4, 1, 1, 1>(
-        highGain,
         mask[col + 1].TDAC[row],
         mask[col + 1].HitBus[row],
         mask[col + 1].InjEn[row],
         mask[col + 1].Enable[row]
+      ),
+      pack_bits<1, 4, 1, 1, 1>(
+        highGain,
+        mask[col].TDAC[row],
+        mask[col].HitBus[row],
+        mask[col].InjEn[row],
+        mask[col].Enable[row]
       )
     );
   }

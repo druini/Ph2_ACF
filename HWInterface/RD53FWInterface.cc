@@ -163,6 +163,7 @@ namespace Ph2_HwInterface
     // std::cout << "WriteChipCommand: "
     //   << " error_flag= " << ReadReg("user.stat_regs.slow_cmd.error_flag")
     //   << ", fifo_packet_dispatched= " << ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched")
+    //   << ", fifo_empty= " << ReadReg("user.stat_regs.slow_cmd.fifo_empty")
     //   << ", fifo_full= " << ReadReg("user.stat_regs.slow_cmd.fifo_full")
     //   << "\n";
 
