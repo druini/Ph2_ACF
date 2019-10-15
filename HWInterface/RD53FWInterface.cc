@@ -157,6 +157,15 @@ namespace Ph2_HwInterface
     // std::cout << std::dec;
 
     WriteStackReg (stackRegisters);
+
+    usleep(10);
+
+    // std::cout << "WriteChipCommand: "
+    //   << " error_flag= " << ReadReg("user.stat_regs.slow_cmd.error_flag")
+    //   << ", fifo_packet_dispatched= " << ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched")
+    //   << ", fifo_full= " << ReadReg("user.stat_regs.slow_cmd.fifo_full")
+    //   << "\n";
+
   }
 
   uint8_t lane2chipId(uint8_t chip_lane) {

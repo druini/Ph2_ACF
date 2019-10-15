@@ -320,47 +320,47 @@ namespace Ph2_HwDescription
 
 namespace RD53Cmd {
 
+// maps 5-bit to 8-bit fields
+constexpr uint8_t value_map[] = { 
+  0x6A, // 00: 0b01101010,
+  0x6C, // 01: 0b01101100,
+  0x71, // 02: 0b01110001,
+  0x72, // 03: 0b01110010,
+  0x74, // 04: 0b01110100,
+  0x8B, // 05: 0b10001011,
+  0x8D, // 06: 0b10001101,
+  0x8E, // 07: 0b10001110,
+  0x93, // 08: 0b10010011,
+  0x95, // 09: 0b10010101,
+  0x96, // 10: 0b10010110,
+  0x99, // 11: 0b10011001,
+  0x9A, // 12: 0b10011010,
+  0x9C, // 13: 0b10011100,
+  0x23, // 14: 0b10100011,
+  0xA5, // 15: 0b10100101,
+  0xA6, // 16: 0b10100110,
+  0xA9, // 17: 0b10101001,
+  0xAA, // 18: 0b10101010,
+  0xAC, // 19: 0b10101100,
+  0xB1, // 20: 0b10110001,
+  0xB2, // 21: 0b10110010,
+  0xB4, // 22: 0b10110100,
+  0xC3, // 23: 0b11000011,
+  0xC5, // 24: 0b11000101,
+  0xC6, // 25: 0b11000110,
+  0xC9, // 26: 0b11001001,
+  0xCA, // 27: 0b11001010,
+  0xCC, // 28: 0b11001100,
+  0xD1, // 29: 0b11010001,
+  0xD2, // 30: 0b11010010,
+  0xD4  // 31: 0b11010100
+};
+
 template <uint16_t OpCode, unsigned int NFields>
 class Command {
   static_assert(NFields % 2 == 0, "A command must have an even number of fields");
 
 protected:
-  // maps 5-bit to 8-bit fields
-  static constexpr uint8_t value_map[] = { 
-    0x6A, // 00: 0b01101010,
-    0x6C, // 01: 0b01101100,
-    0x71, // 02: 0b01110001,
-    0x72, // 03: 0b01110010,
-    0x74, // 04: 0b01110100,
-    0x8B, // 05: 0b10001011,
-    0x8D, // 06: 0b10001101,
-    0x8E, // 07: 0b10001110,
-    0x93, // 08: 0b10010011,
-    0x95, // 09: 0b10010101,
-    0x96, // 10: 0b10010110,
-    0x99, // 11: 0b10011001,
-    0x9A, // 12: 0b10011010,
-    0x9C, // 13: 0b10011100,
-    0x23, // 14: 0b10100011,
-    0xA5, // 15: 0b10100101,
-    0xA6, // 16: 0b10100110,
-    0xA9, // 17: 0b10101001,
-    0xAA, // 18: 0b10101010,
-    0xAC, // 19: 0b10101100,
-    0xB1, // 20: 0b10110001,
-    0xB2, // 21: 0b10110010,
-    0xB4, // 22: 0b10110100,
-    0xC3, // 23: 0b11000011,
-    0xC5, // 24: 0b11000101,
-    0xC6, // 25: 0b11000110,
-    0xC9, // 26: 0b11001001,
-    0xCA, // 27: 0b11001010,
-    0xCC, // 28: 0b11001100,
-    0xD1, // 29: 0b11010001,
-    0xD2, // 30: 0b11010010,
-    0xD4  // 31: 0b11010100
-  };
-  
   // pack_bits and encode
   template <int... Sizes, class... Args>
   uint8_t pack_encoded(Args&&... args) {
@@ -392,9 +392,6 @@ public:
     return result;
   }
 };
-
-template <uint16_t OpCode, unsigned int N>
-constexpr uint8_t Command<OpCode, N>::value_map[];
 
 uint16_t constexpr opCode(uint16_t value) {
   return value > 0xFF ? value : (value << 8 | value);

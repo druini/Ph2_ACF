@@ -123,9 +123,10 @@ namespace Ph2_HwInterface
 
     uint16_t address = pChip->getRegItem(pRegNode).fAddress;
 
-    // std::cout << pRegNode << "(" << address << ") <- " << data << "\n";
+    std::cout << pRegNode << "(" << address << ") <- " << data;
 
-    SendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, data));
+    auto wr_cmd = RD53Cmd::WrReg(pChip->getChipId(), address, data);
+    SendCommand(pChip, wr_cmd);
 
     if (pRegNode == "VCAL_HIGH" || pRegNode == "VCAL_MED") {
       usleep(VCALSLEEP);
@@ -143,17 +144,22 @@ namespace Ph2_HwInterface
         }
 
         if (readout.back().second == data) {
-          std::cout << "VERIFICATION OK!" << "\n";
+          std::cout << " OK!" << "\n";
           return true;
         }
         else {
-          std::cout << "VERIFICATION ERROR: wrong data" << "\n";
+          // std::cout << "VERIFICATION ERROR: wrong data" << "\n";
           continue;
         }
       }
-        std::cout << "VERIFICATION ERROR: no readback" << "\n";
+      std::cout << " ERROR! cmd_data = " << std::hex;
+      auto cmd_data = wr_cmd.get_data();
+      for (uint16_t d : cmd_data)
+        std::cout << d;
+      std::cout << std::dec << "\n";
       return false;
     }
+    std::cout << "\n";
     return true;
   }
 
@@ -198,17 +204,17 @@ namespace Ph2_HwInterface
     return pack_bits<8, 8>(
       pack_bits<1, 4, 1, 1, 1>(
         highGain,
-        mask[col + 1].TDAC[row],
-        mask[col + 1].HitBus[row],
-        mask[col + 1].InjEn[row],
-        mask[col + 1].Enable[row]
-      ),
-      pack_bits<1, 4, 1, 1, 1>(
-        highGain,
         mask[col].TDAC[row],
         mask[col].HitBus[row],
         mask[col].InjEn[row],
         mask[col].Enable[row]
+      ),
+      pack_bits<1, 4, 1, 1, 1>(
+        highGain,
+        mask[col + 1].TDAC[row],
+        mask[col + 1].HitBus[row],
+        mask[col + 1].InjEn[row],
+        mask[col + 1].Enable[row]
       )
     );
   }
@@ -246,23 +252,33 @@ namespace Ph2_HwInterface
 
     if (doSparse == true)
     {
+      // broadcast mode
       RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
+      // disable all pixels
       RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x0,  pVerifLoop);
+      // normal mode
       RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x0,  pVerifLoop);
 
+      int total_enabled = 0;
       for (auto col = 128; col < 263; col+=2)
       { 
+        RD53Interface::WriteChipReg(pRD53, "REGION_COL",    col / 2,  pVerifLoop);
+        // RD53Cmd::WrReg(pRD53->getChipId(), REGION_COL_ADDR, col / 2).appendTo(command_data);
+
         for (auto row = 0u; row < RD53::nRows; row++) {
-          if (((mask)[col].Enable[row] == 1) || ((mask)[col+1].Enable[row] == 1)) {
+          short int n_enabled = ((mask)[col].Enable[row] == 1) + ((mask)[col+1].Enable[row] == 1);
+          total_enabled += n_enabled;
+          if (n_enabled) {
             uint16_t data = encode_region_data(mask, row, col, highGain);
 
-            // std::cout << "Row: " << row << ", Col: " << col << ", EN: " << mask[col].Enable[row] << "/" << mask[col + 1].Enable[row] << ", Data: " << data << "\n";
+            std::cout << "Configuring Pixel Pair: Row= " << row << ", Col= " << col << ", EN= " << mask[col].Enable[row] << "/" << mask[col + 1].Enable[row] << ", Data= " << data << "\n";
 
-            RD53Interface::WriteChipReg(pRD53, "REGION_COL",    col / 2,  pVerifLoop);
+            // while (!RD53Interface::WriteChipReg(pRD53, "REGION_ROW",    row,  pVerifLoop)) {};
+            // while (!RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL",    data,  pVerifLoop)) {};
+
             RD53Interface::WriteChipReg(pRD53, "REGION_ROW",    row,      pVerifLoop);
             RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL",    data,     pVerifLoop);
             
-            // RD53Cmd::WrReg(pRD53->getChipId(), REGION_COL_ADDR, col / 2).appendTo(command_data);
             // RD53Cmd::WrReg(pRD53->getChipId(), REGION_ROW_ADDR, row).appendTo(command_data);
             // RD53Cmd::WrReg(pRD53->getChipId(), PIX_PORTAL_ADDR, data).appendTo(command_data);
             
@@ -277,6 +293,7 @@ namespace Ph2_HwInterface
           // }
         }
       }
+      std::cout << "ENABLED: " << total_enabled << "\n";
     }
     else {
       RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
