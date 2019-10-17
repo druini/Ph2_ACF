@@ -9,6 +9,9 @@
 
 #include "RD53Interface.h"
 
+#include <random>
+// #include <pair>
+
 namespace Ph2_HwInterface
 {
   RD53Interface::RD53Interface (const BeBoardFWMap& pBoardMap): ReadoutChipInterface (pBoardMap) {}
@@ -28,7 +31,6 @@ namespace Ph2_HwInterface
     // ###############################################################
     RD53Interface::WriteChipReg(pRD53, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
     RD53Interface::SendCommand(pRD53, RD53Cmd::GlobalPulse(pRD53->getChipId(), 0x4));
-    // RD53Interface::WriteChipReg(pRD53, "GLOBAL_PULSE",       0x4,   true);
 
     // ################################################
     // # Programming global registers from white list #
@@ -65,6 +67,28 @@ namespace Ph2_HwInterface
           for (i = 0u; i < arraySize(registerBlackList); i++) if (cRegItem.first == registerBlackList[i]) break;
           if (i == arraySize(registerBlackList)) RD53Interface::WriteChipReg(pRD53, cRegItem.first, cRegItem.second.fValue, true);
         }
+
+    // test
+    // {
+    //   uint16_t chip_id = pChip->getChipId();
+
+    //   std::vector<uint16_t> cmd_data;
+    //   for (int i = 0; i < 30; i++) {
+    //     RD53Cmd::WrReg(chip_id, 1, i).appendTo(cmd_data);
+    //     RD53Cmd::WrReg(chip_id, 2, i).appendTo(cmd_data);
+    //   }
+    //   static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd_data);
+
+    //   // WriteChipReg(pRD53, "REGION_COL", 43, false);
+    //   // WriteChipReg(pRD53, "REGION_ROW", 44, false);
+    //   // WriteChipReg(pRD53, "PIX_PORTAL", 42, false);
+
+    //   // std::cout << "PIX_PORTAL = " << ReadChipReg(pRD53, "PIX_PORTAL") << "\n";
+    //   std::cout << "REGION_COL = " << ReadChipReg(pRD53, "REGION_COL") << "\n";
+    //   std::cout << "REGION_ROW = " << ReadChipReg(pRD53, "REGION_ROW") << "\n";
+      
+    //   // exit(0);
+    // }
 
     // ###################################
     // # Programmig pixel cell registers #
@@ -107,7 +131,7 @@ namespace Ph2_HwInterface
 
   template <class Cmd>
   void RD53Interface::SendCommand(Chip* pChip, const Cmd& cmd) {
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.get_data());
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.get_data(), pChip->getFeId());
   }
 
   void RD53Interface::SyncRD53 (Chip* pChip) { 
@@ -117,13 +141,11 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
   {
-    // static constexpr uint16_t unverifiable_addresses[] = {1, 2, 39};
-
     this->setBoard(pChip->getBeBoardId());
 
     uint16_t address = pChip->getRegItem(pRegNode).fAddress;
 
-    std::cout << pRegNode << "(" << address << ") <- " << data;
+    // std::cout << pRegNode << "(" << address << ") <- " << data;
 
     auto wr_cmd = RD53Cmd::WrReg(pChip->getChipId(), address, data);
     SendCommand(pChip, wr_cmd);
@@ -132,34 +154,21 @@ namespace Ph2_HwInterface
       usleep(VCALSLEEP);
     }
 
-    if (pVerifLoop) { // && std::find(std::begin(unverifiable_addresses), std::end(unverifiable_addresses), address) == std::end(unverifiable_addresses)) {
-      int attempts = 10;
-      while (attempts-->0) {
-        // std::cout << "verifying...\n";
+    if (pVerifLoop) { 
+      for (int read_attempt = 0; read_attempt < 10; ++read_attempt) {
         auto readout = ReadRD53Reg(pChip, address);
-
-        if (readout.size() == 0) {
+        if (readout.size() == 0 || readout.back().second != data) {
           usleep(1000);
           continue;
         }
-
-        if (readout.back().second == data) {
-          std::cout << " OK!" << "\n";
+        else {
           return true;
         }
-        else {
-          // std::cout << "VERIFICATION ERROR: wrong data" << "\n";
-          continue;
-        }
       }
-      std::cout << " ERROR! cmd_data = " << std::hex;
-      auto cmd_data = wr_cmd.get_data();
-      for (uint16_t d : cmd_data)
-        std::cout << d;
-      std::cout << std::dec << "\n";
+      std::cout << "Verification Error!\n";
       return false;
     }
-    std::cout << "\n";
+
     return true;
   }
 
@@ -178,9 +187,7 @@ namespace Ph2_HwInterface
 
     SendCommand(pChip, RD53Cmd::RdReg(pChip->getChipId(), address));
 
-    auto readback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip->getChipId());
-
-    // std::cout << "ReadRD53Reg: " << readback.size() << "\n";
+    auto readback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
     if (address != 0) { // if not PIX_PORTAL
       std::copy_if(readback.begin(), readback.end(), std::back_inserter(reg_data), 
@@ -224,14 +231,12 @@ namespace Ph2_HwInterface
     const uint16_t REGION_COL_ADDR  = pRD53->getRegItem("REGION_COL").fAddress;
     const uint16_t REGION_ROW_ADDR  = pRD53->getRegItem("REGION_ROW").fAddress;
     const uint16_t PIX_PORTAL_ADDR  = pRD53->getRegItem("PIX_PORTAL").fAddress;
-    // const uint16_t PIX_MODE_ADDR    = pRD53->getRegItem("PIX_MODE").fAddress;
 
     const uint8_t chipID = pRD53->getChipId();
 
     const uint8_t highGain = pRD53->getRegItem("HighGain_LIN").fValue;
 
     std::vector<uint16_t> command_data;
-    size_t   cmd_count = 0;
 
     std::vector<perPixelData>& mask = doDefault ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
 
@@ -259,41 +264,30 @@ namespace Ph2_HwInterface
       // normal mode
       RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x0,  pVerifLoop);
 
-      int total_enabled = 0;
       for (auto col = 128; col < 263; col+=2)
       { 
-        RD53Interface::WriteChipReg(pRD53, "REGION_COL",    col / 2,  pVerifLoop);
-        // RD53Cmd::WrReg(pRD53->getChipId(), REGION_COL_ADDR, col / 2).appendTo(command_data);
+        // RD53Interface::WriteChipReg(pRD53, "REGION_COL",   col / 2,  pVerifLoop);
+        
+        RD53Cmd::WrReg(pRD53->getChipId(), REGION_COL_ADDR, col / 2).appendTo(command_data);
 
         for (auto row = 0u; row < RD53::nRows; row++) {
-          short int n_enabled = ((mask)[col].Enable[row] == 1) + ((mask)[col+1].Enable[row] == 1);
-          total_enabled += n_enabled;
-          if (n_enabled) {
+          if (((mask)[col].Enable[row] == 1) || ((mask)[col+1].Enable[row] == 1)) {
             uint16_t data = encode_region_data(mask, row, col, highGain);
 
-            std::cout << "Configuring Pixel Pair: Row= " << row << ", Col= " << col << ", EN= " << mask[col].Enable[row] << "/" << mask[col + 1].Enable[row] << ", Data= " << data << "\n";
+          // RD53Interface::WriteChipReg(pRD53, "REGION_ROW",   row,  pVerifLoop);
+          // RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL",   data,  pVerifLoop);
 
-            // while (!RD53Interface::WriteChipReg(pRD53, "REGION_ROW",    row,  pVerifLoop)) {};
-            // while (!RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL",    data,  pVerifLoop)) {};
-
-            RD53Interface::WriteChipReg(pRD53, "REGION_ROW",    row,      pVerifLoop);
-            RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL",    data,     pVerifLoop);
-            
-            // RD53Cmd::WrReg(pRD53->getChipId(), REGION_ROW_ADDR, row).appendTo(command_data);
-            // RD53Cmd::WrReg(pRD53->getChipId(), PIX_PORTAL_ADDR, data).appendTo(command_data);
-            
-            // cmd_count += 3;
+            RD53Cmd::WrReg(pRD53->getChipId(), REGION_ROW_ADDR, row).appendTo(command_data);
+            RD53Cmd::WrReg(pRD53->getChipId(), PIX_PORTAL_ADDR, data).appendTo(command_data);
+            if (command_data.size() > 600) {
+              static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, pRD53->getFeId());
+              command_data.clear();
+            }
           }
-          // if ((cmd_count >= NPIXCMD) || ((row == RD53::nRows-1) && (col == 263-1) && (cmd_count != 0))) // @TMP@
-          // // if ((cmd_count >= NPIXCMD) || ((row == RD53::nRows-1) && (col == RD53::nCols-1) && (cmd_count != 0)))
-          // {
-          //   static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, cmd_count);
-          //   command_data.clear();
-          //   cmd_count = 0;
-          // }
         }
       }
-      std::cout << "ENABLED: " << total_enabled << "\n";
+      if (command_data.size())
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, pRD53->getFeId());
     }
     else {
       RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
@@ -310,19 +304,14 @@ namespace Ph2_HwInterface
           if ((row % NDATAMAX_PERPIXEL) == (NDATAMAX_PERPIXEL-1))
           {
             RD53Cmd::WrRegLong(chipID, PIX_PORTAL_ADDR, region_data).appendTo(command_data);
-            ++cmd_count;
             region_data.clear();
-
-            if ((cmd_count == NPIXCMD) || (row == (RD53::nRows-1)))
-            {
-              static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, cmd_count);
-              cmd_count = 0;
-              command_data.clear();
-            }
           }
         }
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, pRD53->getFeId());
+        command_data.clear();
       }
     }
+    
   }
 
   void RD53Interface::ResetRD53 (Chip* pChip)
@@ -336,7 +325,6 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pChip->getBeBoardId());
     uint16_t address = pChip->getRegItem(pRegNode).fAddress;
-    // std::cout << "ReadChipReg: " << pRegNode << ", " << address;
     auto readout = RD53Interface::ReadRD53Reg(pChip, address);
     if (readout.size() == 0) 
       return 0;

@@ -345,21 +345,26 @@ private:
 // unpack range into range
 template <size_t Size, class InIt, class OutIt>
 static CONSTEXPR_ void unpack_range(InIt in_first, InIt in_last, OutIt out_first) {
-  constexpr size_t in_size = bit_count<typename std::iterator_traits<InIt>::value_type>();
-  static_assert(in_size > Size, "The size of the input range's value type is too small.");
-  int excess = in_size - Size;
+  using input_type = typename std::iterator_traits<OutIt>::value_type;
+  using output_type = typename std::iterator_traits<OutIt>::value_type;
+  constexpr size_t input_size = bit_count<typename std::iterator_traits<InIt>::value_type>();
+  static_assert(input_size > Size, "The size of the input range's value type is too small.");
+  int excess = input_size - Size;
+  output_type value = 0;
   while (in_first != in_last) {
     if (excess > 0) {
-      *out_first |= bit_mask(Size) & (*in_first >> excess);
+      *out_first = value | (bit_mask(Size) & (*in_first >> excess));
+      value = 0;
       ++out_first;
       excess -= Size;
     }
     else {
-      *out_first = bit_mask(Size) & (*in_first << (-excess));
+      value = bit_mask(Size) & (*in_first << (-excess));
       ++in_first;
-      excess += in_size; 
+      excess += input_size; 
     }
   }
+  *out_first = value;
 }
 
 #undef CONSTEXPR_

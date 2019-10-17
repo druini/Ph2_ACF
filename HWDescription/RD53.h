@@ -336,7 +336,7 @@ constexpr uint8_t value_map[] = {
   0x99, // 11: 0b10011001,
   0x9A, // 12: 0b10011010,
   0x9C, // 13: 0b10011100,
-  0x23, // 14: 0b10100011,
+  0xA3, // 14: 0b10100011,
   0xA5, // 15: 0b10100101,
   0xA6, // 16: 0b10100110,
   0xA9, // 17: 0b10101001,
@@ -370,10 +370,14 @@ protected:
   std::array<uint8_t, NFields> fields;
 
 public:
-  static constexpr uint16_t opCode() { return OpCode; }
+  static constexpr uint16_t opCode() { 
+    return OpCode; 
+  }
 
   // size in 16-bit words
-  size_t size() const { return 1 + fields.size() / 2; }
+  size_t size() const { 
+    return 1 + fields.size() / 2; 
+  }
 
   void appendTo(std::vector<uint16_t>& vec) const {
     // insert op code
@@ -402,58 +406,23 @@ struct ECR : public Command<opCode(0x5A), 0> {};
 struct BCR : public Command<opCode(0x59), 0> {};
 
 struct GlobalPulse : public Command<opCode(0x5C), 2> {
-  GlobalPulse(uint8_t chip_id, uint8_t data) {
-    fields[0] = pack_encoded<4, 1>(chip_id, 0);
-    fields[1] = pack_encoded<4, 1>(data, 0);
-  }
+  GlobalPulse(uint8_t chip_id, uint8_t data);
 };
 
 struct Cal : public Command<opCode(0x63), 4> {
-  Cal(uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay) {
-    fields[0] = pack_encoded<4, 1>(chip_id, cal_edge_mode);
-    fields[1] = pack_encoded<4, 1>(cal_edge_delay, cal_edge_width >> 4);
-    fields[2] = pack_encoded<4, 1>(cal_edge_delay, cal_aux_mode);
-    fields[3] = pack_encoded<5>(cal_aux_delay);
-  }
+  Cal(uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay);
 };
 
 struct WrReg : public Command<opCode(0x66), 6> {
-  WrReg(uint8_t chip_id, uint16_t address, uint16_t value) {
-    fields[0] = pack_encoded<4, 1>(chip_id, 0);
-    fields[1] = pack_encoded<5>(address >> 4);
-    fields[2] = pack_encoded<4, 1>(address, value >> 15);
-    fields[3] = pack_encoded<5>(value >> 10);
-    fields[4] = pack_encoded<5>(value >> 5);
-    fields[5] = pack_encoded<5>(value);
-  }
+  WrReg(uint8_t chip_id, uint16_t address, uint16_t value);
 };
 
 struct WrRegLong : public Command<opCode(0x66), 22> {
-  WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values) {
-    fields[0] = pack_encoded<4, 1>(chip_id, 1);
-    fields[1] = pack_encoded<5>(address >> 4);
-    fields[2] = pack_encoded<4, 1>(address, values[0] >> 15);
-    fields[3] = pack_encoded<5>(values[0] >> 10);
-    fields[4] = pack_encoded<5>(values[0] >> 5);
-    fields[5] = pack_encoded<5>(values[0]);
-
-    // unpack the remaining values 5 bits at a time
-    unpack_range<5>(values.begin() + 1, values.end(), fields.begin() + 6);
-
-    // apply value_map transform
-    for (unsigned i = 6; i < fields.size(); ++i) {
-      fields[i] = value_map[fields[i]];
-    }
-  }
+  WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values);
 };
 
 struct RdReg : public Command<opCode(0x65), 4> {
-  RdReg(uint8_t chip_id, uint16_t address) {
-    fields[0] = pack_encoded<4, 1>(chip_id, 0);
-    fields[1] = pack_encoded<5>(address >> 4);
-    fields[2] = pack_encoded<4, 1>(address, 0);
-    fields[3] = pack_encoded<5>(0);
-  }
+  RdReg(uint8_t chip_id, uint16_t address);
 };
 
 struct NoOp : public Command<opCode(0x69), 0> {};
