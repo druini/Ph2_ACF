@@ -11,6 +11,7 @@
 #define OccupancyAndPh_H
 
 #include "Container.h"
+#include "../Utils/EmptyContainer.h"
 
 #include <iostream>
 #include <cmath>
@@ -30,6 +31,7 @@ class OccupancyAndPh
   template<typename T>
     void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
   void makeSummaryAverage   (const std::vector<OccupancyAndPh>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
+  void makeSummaryAverage   (const std::vector<EmptyContainer>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
   void normalize            (const uint32_t numberOfEvents);
 
   float fOccupancy;

@@ -35,6 +35,7 @@ public:
 	virtual ~SummaryBase() {;}
 	virtual void makeSummaryOfChannels(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) = 0;
 	virtual void makeSummaryOfSummary (const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) = 0;
+	virtual void* getSummaryPointer() = 0;
 };
 
 class SummaryContainerBase 
@@ -173,6 +174,11 @@ public:
 		theSummarySummarizer(*this, theSummaryList, theNumberOfEnabledChannelsList, numberOfEvents);
 	}
 
+	void* getSummaryPointer()
+	{
+		return static_cast<void*>(&theSummary_);
+	}
+
 	S theSummary_;
 };
 
@@ -191,10 +197,10 @@ struct SummarySummarizer<S,C,true>{
 	void operator() (Summary<S,C> &theSummary, const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) 
 	{
 		const SummaryContainer<SummaryBase>* tmpSummaryContainer = static_cast<const SummaryContainer<SummaryBase>*>(theSummaryList);
-		std::vector<S> tmpSummaryVector;
+		std::vector<C> tmpSummaryVector;
 		for(auto summary : *tmpSummaryContainer) 
 		{
-			tmpSummaryVector.emplace_back(std::move(static_cast<Summary<S,C>*>(summary)->theSummary_));
+			tmpSummaryVector.emplace_back( std::move( *static_cast<C*>(summary->getSummaryPointer()) ) );
 		}
 		theSummary.theSummary_.makeSummaryAverage(&tmpSummaryVector,theNumberOfEnabledChannelsList, numberOfEvents);
 		delete theSummaryList;
