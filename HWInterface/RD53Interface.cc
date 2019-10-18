@@ -203,6 +203,7 @@ namespace Ph2_HwInterface
 
   void RD53Interface::WriteRD53Mask (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop)
   {
+    static const size_t size_threshold = 3000;
     const uint16_t REGION_COL_ADDR  = pRD53->getRegItem("REGION_COL").fAddress;
     const uint16_t REGION_ROW_ADDR  = pRD53->getRegItem("REGION_ROW").fAddress;
     const uint16_t PIX_PORTAL_ADDR  = pRD53->getRegItem("PIX_PORTAL").fAddress;
@@ -249,16 +250,13 @@ namespace Ph2_HwInterface
 
             RD53Cmd::WrReg(pRD53->getChipId(), REGION_ROW_ADDR, row).appendTo(command_data);
             RD53Cmd::WrReg(pRD53->getChipId(), PIX_PORTAL_ADDR, data).appendTo(command_data);
-
-            if (command_data.size() > 300) {
-              static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, pRD53->getFeId());
-              command_data.clear();
-            }
           }
         }
+        if (command_data.size() > size_threshold) {
+          static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, pRD53->getFeId());
+          command_data.clear();
+        }
       }
-      if (command_data.size())
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, pRD53->getFeId());
     }
     else {
       RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
@@ -278,11 +276,15 @@ namespace Ph2_HwInterface
             region_data.clear();
           }
         }
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, pRD53->getFeId());
-        command_data.clear();
+
+        if (command_data.size() > size_threshold) {
+          static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, pRD53->getFeId());
+          command_data.clear();
+        }
       }
     }
-    
+    if (command_data.size())
+      static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, pRD53->getFeId());
   }
 
   void RD53Interface::ResetRD53 (Chip* pChip)

@@ -116,8 +116,9 @@
     <node id="Slow_cmd_fifo_din"     address="0x0000000D"    permission="rw"      description=""> </node>	
 
     <node id="Slow_cmd"              address="0x0000000E"    permission="rw"      description="">
-      <node id="fifo_prog_empty_thr"  mask="0x00000FFF"       permission="rw"      description="" />
+      <node id="fifo_prog_empty_thr"       mask="0x00000FFF"       permission="rw"      description="" />
       <node id="fifo_reset"                mask="0x00001000"       permission="rw"      description="" />
+      <node id="dispatch_packet"           mask="0x00002000"       permission="rw"      description="" />
     </node>	
 
     <node id="Register_RdBack"       address="0x0000000F"    permission="rw"      description="">
@@ -298,3 +299,4 @@
   </node>
 
 </node>
+
