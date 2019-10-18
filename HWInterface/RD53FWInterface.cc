@@ -110,14 +110,8 @@ namespace Ph2_HwInterface
     
 
     // cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_prog_empty_thr", 1024});
-<<<<<<< HEAD
     cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_reset", 1});
     cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_reset", 0});
-
-    // cVecReg.push_back({"user.ctrl_regs.Slow_cmd.dispatch_packet", 1});
-    // cVecReg.push_back({"user.ctrl_regs.Slow_cmd.dispatch_packet", 0});
-=======
->>>>>>> f3d5b4d825b14aa29bd82a7979d09135425f52c9
 
     cVecReg.push_back({"user.ctrl_regs.Register_RdBack.fifo_reset", 1});
     cVecReg.push_back({"user.ctrl_regs.Register_RdBack.fifo_reset", 0});
