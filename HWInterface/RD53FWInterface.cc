@@ -134,19 +134,15 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, unsigned int moduleId) {
     // requires data.size() > 0
-    static size_t old_size = 0, old_n_words = 0;
-
     const unsigned int n_words = (data.size() >> 1) + (data.size() & 1);
 
     if (ReadReg("user.stat_regs.slow_cmd.error_flag")) {
-      std::cout << "fifo not empty!"
+      std::cout << "fifo error!"
         << ", fifo_full = " << ReadReg("user.stat_regs.slow_cmd.fifo_full")
-        << ", error_flag = " << ReadReg("user.stat_regs.slow_cmd.error_flag")
+        << ", fifo_empty = " << ReadReg("user.stat_regs.slow_cmd.fifo_empty")
         << ", fifo_packet_dispatched = " << ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched")
         << ", data_size = " << data.size()
-        << ", n_words = " << n_words
-        << ", last_size = " << old_size 
-        << ", last_n_words = " << old_n_words << "\n";
+        << ", n_words = " << n_words << "\n";
       exit(0);
     }
     
@@ -156,9 +152,7 @@ namespace Ph2_HwInterface
         << ", error_flag = " << ReadReg("user.stat_regs.slow_cmd.error_flag")
         << ", fifo_packet_dispatched = " << ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched")
         << ", data_size = " << data.size()
-        << ", n_words = " << n_words
-        << ", last_size = " << old_size 
-        << ", last_n_words = " << old_n_words << "\n";
+        << ", n_words = " << n_words << "\n";
       
       usleep(10000);
     }
@@ -183,15 +177,9 @@ namespace Ph2_HwInterface
     }
 
     stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd.dispatch_packet", 1);
-    // stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd.dispatch_packet", 1);
     stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd.dispatch_packet", 0);
 
     WriteStackReg (stackRegisters);
-
-    // usleep(4000000);
-
-    old_n_words = n_words;
-    old_size = data.size();
   }
   
   bool RD53FWInterface::getChipLane(Chip* pChip) {
