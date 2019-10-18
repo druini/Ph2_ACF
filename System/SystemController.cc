@@ -144,7 +144,7 @@ namespace Ph2_System {
         {
             fNetworkStreamer = new TCPPublishServer(6000,1);
         }
-    // this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, os, pIsFile );
+
         fDetectorContainer = new DetectorContainer;
         this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile );
 
@@ -226,7 +226,8 @@ namespace Ph2_System {
             // ###################
             size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
             size_t injType     = SystemController::findValueInSettings("INJtype");
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType);
+            size_t n25nsDelays = SystemController::findValueInSettings("n25nsDelays");
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, n25nsDelays);
             LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
           }
       }
@@ -313,11 +314,11 @@ namespace Ph2_System {
   void SystemController::ConfigureHardware(std::string cHWFile, bool enableStream)
   {
     std::stringstream outp;
-    
+
     InitializeHw ( cHWFile, outp, true, enableStream );
     InitializeSettings ( cHWFile, outp );
-    LOG (INFO) << outp.str();
-    outp.str ("");
+    std::cout << outp.str() << std::endl;
+    outp.str("");
     ConfigureHw();
   }
 

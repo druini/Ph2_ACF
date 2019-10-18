@@ -45,7 +45,7 @@ class SCurve : public Tool
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
-    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups)*nSteps;
+    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*nSteps;
   }
 
 
@@ -59,6 +59,7 @@ class SCurve : public Tool
   size_t stopValue;
   size_t nSteps;
   size_t offset;
+  size_t nHITxCol;
   bool   doFast;
 
   std::vector<uint16_t> dacList;
@@ -83,8 +84,8 @@ class SCurve : public Tool
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
 };
 
 #endif

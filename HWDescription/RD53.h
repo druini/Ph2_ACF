@@ -20,8 +20,6 @@
 #include "../Utils/bit_packing.h"
 
 #include <iomanip>
-#include <bitset>
-#include <cmath>
 
 
 // ################################
@@ -42,19 +40,20 @@
 // #####################################################################
 namespace RD53chargeConverter
 {
-  constexpr float par0 =    0.9; // Vref (V)
-  constexpr float par1 = 4096.0; // VCal total range
-  constexpr float cap  =    8.5; // (fF)
-  constexpr float ele  =    1.6; // (e-19)
+  constexpr float par0   =    0.9; // Vref (V)
+  constexpr float par1   = 4096.0; // VCal total range
+  constexpr float cap    =    8.2; // (fF)
+  constexpr float ele    =    1.6; // (e-19)
+  constexpr float offset =   64;   // Due to VCal_High vs VCal_Med offset difference (e-)
 
   constexpr float VCAl2Charge (float VCal)
   {
-    return (par0/par1) * VCal / ele * cap * 1e4;
+    return (par0/par1) * VCal / ele * cap * 1e4 + offset;
   }
 
   constexpr float Charge2VCal (float Charge)
   {
-    return Charge / (cap * 1e4) * ele / (par0/par1);
+    return (Charge - offset) / (cap * 1e4) * ele / (par0/par1);
   }
 }
 
@@ -296,136 +295,122 @@ namespace Ph2_HwDescription
     std::vector<perPixelData> fPixelsMaskDefault;
     std::string configFileName;
     CommentMap fCommentMap;
-
-    // static constexpr uint8_t trigger_map[] = {
-    //     0x2B, // 00
-    //     0x2B, // 01
-    //     0x2D, // 02
-    //     0x2E, // 03
-    //     0x33, // 04
-    //     0x35, // 05
-    //     0x36, // 06
-    //     0x39, // 07
-    //     0x3A, // 08
-    //     0x3C, // 09
-    //     0x4B, // 10
-    //     0x4D, // 11
-    //     0x4E, // 12
-    //     0x53, // 13
-    //     0x55, // 14
-    //     0x56  // 15
-    //   };
   };
 }
 
-namespace RD53Cmd {
 
-// maps 5-bit to 8-bit fields
-constexpr uint8_t value_map[] = { 
-  0x6A, // 00: 0b01101010,
-  0x6C, // 01: 0b01101100,
-  0x71, // 02: 0b01110001,
-  0x72, // 03: 0b01110010,
-  0x74, // 04: 0b01110100,
-  0x8B, // 05: 0b10001011,
-  0x8D, // 06: 0b10001101,
-  0x8E, // 07: 0b10001110,
-  0x93, // 08: 0b10010011,
-  0x95, // 09: 0b10010101,
-  0x96, // 10: 0b10010110,
-  0x99, // 11: 0b10011001,
-  0x9A, // 12: 0b10011010,
-  0x9C, // 13: 0b10011100,
-  0xA3, // 14: 0b10100011,
-  0xA5, // 15: 0b10100101,
-  0xA6, // 16: 0b10100110,
-  0xA9, // 17: 0b10101001,
-  0xAA, // 18: 0b10101010,
-  0xAC, // 19: 0b10101100,
-  0xB1, // 20: 0b10110001,
-  0xB2, // 21: 0b10110010,
-  0xB4, // 22: 0b10110100,
-  0xC3, // 23: 0b11000011,
-  0xC5, // 24: 0b11000101,
-  0xC6, // 25: 0b11000110,
-  0xC9, // 26: 0b11001001,
-  0xCA, // 27: 0b11001010,
-  0xCC, // 28: 0b11001100,
-  0xD1, // 29: 0b11010001,
-  0xD2, // 30: 0b11010010,
-  0xD4  // 31: 0b11010100
-};
+// ###############################
+// # RD53 command base functions #
+// ###############################
+namespace RD53Cmd
+{
+  // Maps 5-bit to 8-bit fields
+  constexpr uint8_t map5to8bit[] =
+    {
+      0x6A, // 00: 0b01101010,
+      0x6C, // 01: 0b01101100,
+      0x71, // 02: 0b01110001,
+      0x72, // 03: 0b01110010,
+      0x74, // 04: 0b01110100,
+      0x8B, // 05: 0b10001011,
+      0x8D, // 06: 0b10001101,
+      0x8E, // 07: 0b10001110,
+      0x93, // 08: 0b10010011,
+      0x95, // 09: 0b10010101,
+      0x96, // 10: 0b10010110,
+      0x99, // 11: 0b10011001,
+      0x9A, // 12: 0b10011010,
+      0x9C, // 13: 0b10011100,
+      0xA3, // 14: 0b10100011,
+      0xA5, // 15: 0b10100101,
+      0xA6, // 16: 0b10100110,
+      0xA9, // 17: 0b10101001,
+      0xAA, // 18: 0b10101010,
+      0xAC, // 19: 0b10101100,
+      0xB1, // 20: 0b10110001,
+      0xB2, // 21: 0b10110010,
+      0xB4, // 22: 0b10110100,
+      0xC3, // 23: 0b11000011,
+      0xC5, // 24: 0b11000101,
+      0xC6, // 25: 0b11000110,
+      0xC9, // 26: 0b11001001,
+      0xCA, // 27: 0b11001010,
+      0xCC, // 28: 0b11001100,
+      0xD1, // 29: 0b11010001,
+      0xD2, // 30: 0b11010010,
+      0xD4  // 31: 0b11010100
+    };
 
-template <uint16_t OpCode, unsigned int NFields>
-class Command {
-  static_assert(NFields % 2 == 0, "A command must have an even number of fields");
+  template <uint16_t OpCode, unsigned int NFields>
+    class Command
+  {
+    static_assert(NFields % 2 == 0, "RD53Cmd::Command: a command must have an even number of fields");
 
-protected:
-  // pack_bits and encode
-  template <int... Sizes, class... Args>
-  uint8_t pack_encoded(Args&&... args) {
-    return value_map[bits::pack<Sizes...>(std::forward<Args>(args)...)];
-  }
-
-  std::array<uint8_t, NFields> fields;
-
-public:
-  static constexpr uint16_t opCode() { return OpCode; }
-
-  // size in 16-bit words
-  size_t size() const { return 1 + fields.size() / 2; }
-
-  void appendTo(std::vector<uint16_t>& vec) const {
-    // insert op code
-    vec.push_back(OpCode);
-
-    // insert fields
-    for (int i = 0; i < NFields; i+=2) {
-      vec.push_back(bits::pack<8, 8>(fields[i], fields[i+1]));
+  protected:
+    template <int... Sizes, class... Args>
+      uint8_t pack_encoded(Args&&... args)
+    {
+      return map5to8bit[bits::pack<Sizes...>(std::forward<Args>(args)...)];
     }
+
+    std::array<uint8_t, NFields> fields;
+
+  public:
+    static constexpr uint16_t opCode() { return OpCode; }
+
+    // size in 16-bit words
+    size_t size() const { return 1 + fields.size() / 2; }
+
+    void appendTo(std::vector<uint16_t>& vec) const {
+      // insert op code
+      vec.push_back(OpCode);
+
+      // insert fields
+      for (int i = 0; i < NFields; i+=2) {
+        vec.push_back(bits::pack<8, 8>(fields[i], fields[i+1]));
+      }
+    }
+
+    std::vector<uint16_t> get_data() const {
+      std::vector<uint16_t> result;
+      result.reserve(size());
+      appendTo(result);
+      return result;
+    }
+  };
+
+  uint16_t constexpr opCode(uint16_t value) {
+    return value > 0xFF ? value : (value << 8 | value);
   }
 
-  std::vector<uint16_t> get_data() const {
-    std::vector<uint16_t> result;
-    result.reserve(size());
-    appendTo(result);
-    return result;
-  }
-};
+  struct ECR : public Command<opCode(0x5A), 0> {};
 
-uint16_t constexpr opCode(uint16_t value) {
-  return value > 0xFF ? value : (value << 8 | value);
+  struct BCR : public Command<opCode(0x59), 0> {};
+
+  struct GlobalPulse : public Command<opCode(0x5C), 2> {
+    GlobalPulse(uint8_t chip_id, uint8_t data);
+  };
+
+  struct Cal : public Command<opCode(0x63), 4> {
+    Cal(uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay);
+  };
+
+  struct WrReg : public Command<opCode(0x66), 6> {
+    WrReg(uint8_t chip_id, uint16_t address, uint16_t value);
+  };
+
+  struct WrRegLong : public Command<opCode(0x66), 22> {
+    WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values);
+  };
+
+  struct RdReg : public Command<opCode(0x65), 4> {
+    RdReg(uint8_t chip_id, uint16_t address);
+  };
+
+  struct NoOp : public Command<opCode(0x69), 0> {};
+
+  struct Sync : public Command<opCode(0x817e), 0> {};
+
 }
-
-struct ECR : public Command<opCode(0x5A), 0> {};
-
-struct BCR : public Command<opCode(0x59), 0> {};
-
-struct GlobalPulse : public Command<opCode(0x5C), 2> {
-  GlobalPulse(uint8_t chip_id, uint8_t data);
-};
-
-struct Cal : public Command<opCode(0x63), 4> {
-  Cal(uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay);
-};
-
-struct WrReg : public Command<opCode(0x66), 6> {
-  WrReg(uint8_t chip_id, uint16_t address, uint16_t value);
-};
-
-struct WrRegLong : public Command<opCode(0x66), 22> {
-  WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values);
-};
-
-struct RdReg : public Command<opCode(0x65), 4> {
-  RdReg(uint8_t chip_id, uint16_t address);
-};
-
-struct NoOp : public Command<opCode(0x69), 0> {};
-
-struct Sync : public Command<opCode(0x817e), 0> {};
-
-} // namespace RD53Cmd
-
 
 #endif

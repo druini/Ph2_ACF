@@ -24,7 +24,7 @@
 // # CONSTANTS AND BIT DEFINITION #
 // ################################
 #define DEEPSLEEP  100000 // [microseconds]
-#define SHALLOWSLEEP   50 // [microseconds]
+#define READOUTSLEEP   50 // [microseconds]
 #define MAXTRIALS      10 // Maximum number of trials for ReadNEvents
 
 #define NBIT_FWVER     16 // Number of bits for the firmware version
@@ -163,11 +163,11 @@ namespace Ph2_HwInterface
       uint32_t first_cal_data  = 0;
       uint32_t second_cal_data = 0;
 
-      uint32_t delay_after_ecr        =  0;
-      uint32_t delay_after_autozero   =  0;
-      uint32_t delay_after_first_cal  =  0;
-      uint32_t delay_after_second_cal =  0;
-      uint16_t delay_loop             =  0;
+      uint32_t delay_after_ecr        = 0;
+      uint32_t delay_after_autozero   = 0;
+      uint32_t delay_after_first_cal  = 0;
+      uint32_t delay_after_second_cal = 0;
+      uint16_t delay_loop             = 0;
     };
 
     struct FastCommandsConfig
@@ -185,7 +185,7 @@ namespace Ph2_HwInterface
       FastCmdFSMConfig fast_cmd_fsm;
     };
 
-    void SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType);
+    void SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t n25nsDelays = 0);
 
     struct DIO5Config
     {

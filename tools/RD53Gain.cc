@@ -14,18 +14,19 @@ void Gain::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart   = this->findValueInSettings("ROWstart");
-  rowStop    = this->findValueInSettings("ROWstop");
-  colStart   = this->findValueInSettings("COLstart");
-  colStop    = this->findValueInSettings("COLstop");
-  nEvents    = this->findValueInSettings("nEvents");
-  startValue = this->findValueInSettings("VCalHstart");
-  stopValue  = this->findValueInSettings("VCalHstop");
-  nSteps     = this->findValueInSettings("VCalHnsteps");
-  offset     = this->findValueInSettings("VCalMED");
-  doFast     = this->findValueInSettings("DoFast");
-  doDisplay  = this->findValueInSettings("DisplayHisto");
-  doSave     = this->findValueInSettings("Save");
+  rowStart     = this->findValueInSettings("ROWstart");
+  rowStop      = this->findValueInSettings("ROWstop");
+  colStart     = this->findValueInSettings("COLstart");
+  colStop      = this->findValueInSettings("COLstop");
+  nEvents      = this->findValueInSettings("nEvents");
+  startValue   = this->findValueInSettings("VCalHstart");
+  stopValue    = this->findValueInSettings("VCalHstop");
+  nSteps       = this->findValueInSettings("VCalHnsteps");
+  offset       = this->findValueInSettings("VCalMED");
+  nHITxCol     = this->findValueInSettings("nHITxCol");
+  doFast       = this->findValueInSettings("DoFast");
+  doDisplay    = this->findValueInSettings("DisplayHisto");
+  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
 
 
   // ########################
@@ -38,7 +39,7 @@ void Gain::ConfigureCalibration ()
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
 
@@ -140,7 +141,7 @@ void Gain::run ()
   Gain::chipErrorReport();
 }
 
-void Gain::draw ()
+void Gain::draw (bool doSave)
 {
   TApplication* myApp = nullptr;
 
@@ -155,20 +156,18 @@ void Gain::draw ()
   Gain::fillHisto();
   Gain::display();
 
+  // ######################################
+  // # Save or Update register new values #
+  // ######################################
   if (doSave == true)
     {
-      this->WriteRootFile();
-
-      // ############################
-      // # Save register new values #
-      // ############################
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
             {
               static_cast<RD53*>(cChip)->copyMaskFromDefault();
+              if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
               static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-              static_cast<RD53*>(cChip)->saveRegMap("");
               std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
               system(command.c_str());
               LOG (INFO) << BOLDGREEN << "\t--> Gain saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
@@ -176,7 +175,11 @@ void Gain::draw ()
     }
 
   if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true) this->CloseResultFile();
+  if (doSave    == true)
+    {
+      this->WriteRootFile();
+      this->CloseResultFile();
+    }
 }
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze ()
@@ -311,9 +314,9 @@ void Gain::chipErrorReport ()
       for (const auto cChip : *cModule)
         {
           LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
-          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
+          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
         }
 }

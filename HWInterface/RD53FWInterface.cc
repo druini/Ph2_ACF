@@ -110,11 +110,14 @@ namespace Ph2_HwInterface
     
 
     // cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_prog_empty_thr", 1024});
+<<<<<<< HEAD
     cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_reset", 1});
     cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_reset", 0});
 
     // cVecReg.push_back({"user.ctrl_regs.Slow_cmd.dispatch_packet", 1});
     // cVecReg.push_back({"user.ctrl_regs.Slow_cmd.dispatch_packet", 0});
+=======
+>>>>>>> f3d5b4d825b14aa29bd82a7979d09135425f52c9
 
     cVecReg.push_back({"user.ctrl_regs.Register_RdBack.fifo_reset", 1});
     cVecReg.push_back({"user.ctrl_regs.Register_RdBack.fifo_reset", 0});
@@ -350,7 +353,7 @@ namespace Ph2_HwInterface
   {
     uint32_t doHandshake = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value();
     uint32_t nWordsInMemory;
-    uint32_t nTriggersReceived;
+    /*uint32_t nTriggersReceived;*/
 
     if (doHandshake == true)
       {
@@ -362,26 +365,20 @@ namespace Ph2_HwInterface
           }
 
         nWordsInMemory    = ReadReg("user.stat_regs.words_to_read").value();
-        nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
+        /*nTriggersReceived = */ReadReg("user.stat_regs.trigger_cntr").value();
       }
     else
       {
         nWordsInMemory    = ReadReg("user.stat_regs.words_to_read").value();
-        nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
+        /*nTriggersReceived = */ReadReg("user.stat_regs.trigger_cntr").value();
 
         while ((nWordsInMemory == 0) && (pWait == true))
           {
             if (pWait == true) usleep(DEEPSLEEP);
             nWordsInMemory    = ReadReg("user.stat_regs.words_to_read").value();
-            nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
+            /*nTriggersReceived = */ReadReg("user.stat_regs.trigger_cntr").value();
           }
       }
-
-    LOG (INFO) << CYAN  << "---------------------------" << RESET;
-    LOG (INFO) << GREEN << "****** Reading  data ******" << RESET;
-    LOG (INFO) << GREEN << "N. words        = "          << nWordsInMemory    << RESET;
-    LOG (INFO) << GREEN << "N. triggers     = "          << nTriggersReceived << RESET;
-    LOG (INFO) << CYAN  << "---------------------------" << RESET;
 
     uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
     ddr3Offset += nWordsInMemory;
@@ -416,12 +413,12 @@ namespace Ph2_HwInterface
         // # Readout sequence #
         // ####################
         RD53FWInterface::Start();
-        while (ReadReg("user.stat_regs.trigger_cntr").value() < pNEvents*(1 + RD53FWInterface::localCfgFastCmd.trigger_duration)) usleep (SHALLOWSLEEP);
+        while (ReadReg("user.stat_regs.trigger_cntr").value() < pNEvents*(1 + RD53FWInterface::localCfgFastCmd.trigger_duration)) usleep (READOUTSLEEP);
         size_t dataAmountOld, dataAmountNew = ReadReg("user.stat_regs.words_to_read").value();
         do
           {
             dataAmountOld = dataAmountNew;
-            usleep(SHALLOWSLEEP);
+            usleep(READOUTSLEEP);
           }
         while ((dataAmountNew = ReadReg("user.stat_regs.words_to_read").value()) != dataAmountOld);
         RD53FWInterface::ReadData(pBoard, false, pData, false /*pWait*/); // @TMP@ : FW bug triggers are recorded but DDR3 empty
@@ -458,7 +455,7 @@ namespace Ph2_HwInterface
     // #################
     // # Show progress #
     // #################
-    RD53RunProgress::update(true);
+    RD53RunProgress::update(pData.size(),true);
   }
 
   std::vector<uint32_t> RD53FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
@@ -677,61 +674,48 @@ namespace Ph2_HwInterface
 
     if (status & RD53FWEvtEncoder::EVSIZE)
       {
-        LOG (ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     if (status & RD53FWEvtEncoder::EMPTY)
       {
-        LOG (ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     if (status & RD53FWEvtEncoder::L1A)
       {
-        LOG (ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     if (status & RD53FWEvtEncoder::FRSIZE)
       {
-        LOG (ERROR) << BOLDRED << "Invalid frame size " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "Invalid frame size " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     if (status & RD53FWEvtEncoder::FWERR)
       {
-        LOG (ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     if (status & RD53EvtEncoder::CHEAD)
       {
-        LOG (ERROR) << BOLDRED << "Bad chip header " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "Bad chip header " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     if (status & RD53EvtEncoder::CPIX)
       {
-        LOG (ERROR) << BOLDRED << "Bad pixel row or column " << BOLDYELLOW << "--> retry" << RESET;
+        LOG (ERROR) << BOLDRED << "Bad pixel row or column " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
     return isGood;
   }
-
-  // template <class Stream, class It>
-  // void print_data(Stream& s, It begin, It end) {
-  //     int i = 0;
-  //     s << std::dec << i << ":\t";
-  //     for (It it = begin; it != end; it++) {
-  //         s << std::hex << std::setfill('0') << std::setw(8) << *it << "\t";
-  //         if (!(++i & 3)) {
-  //             s << std::dec << "\n" << i << ":\t";
-  //         }
-  //     }
-  //     s << std::endl;
-  // }
 
   RD53FWInterface::Event::Event (const uint32_t* data, size_t n)
   {
@@ -830,12 +814,12 @@ namespace Ph2_HwInterface
         {"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse",  (uint32_t)cfg->fast_cmd_fsm.delay_after_first_cal},
         {"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject",          (uint32_t)cfg->fast_cmd_fsm.second_cal_data},
         {"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_second_cal},
-        {"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero",     (uint32_t)cfg->fast_cmd_fsm.delay_after_autozero},
+        {"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero",     (uint32_t)cfg->fast_cmd_fsm.delay_after_autozero}, // @TMP@
         {"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse",  (uint32_t)cfg->fast_cmd_fsm.delay_loop},
 
-        // ##########################
-        // # Autozero configuration #
-        // ##########################
+        // ################################
+        // # @TMP@ Autozero configuration #
+        // ################################
         {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",    2},
         {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",     0},
         {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",      0},
@@ -853,7 +837,7 @@ namespace Ph2_HwInterface
       });
   }
 
-  void RD53FWInterface::SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType)
+  void RD53FWInterface::SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t n25nsDelays)
   // ############################
   // # injType == 0 --> None    #
   // # injType == 1 --> Analog  #
@@ -889,7 +873,7 @@ namespace Ph2_HwInterface
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 0;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = INJdelay::Loop;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (n25nsDelays == 0 ? (uint32_t)INJdelay::Loop : n25nsDelays);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
@@ -907,7 +891,7 @@ namespace Ph2_HwInterface
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = INJdelay::SecondCal;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = INJdelay::Loop;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (n25nsDelays == 0 ? (uint32_t)INJdelay::Loop : n25nsDelays);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = true;

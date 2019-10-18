@@ -22,10 +22,11 @@ void PixelAlive::ConfigureCalibration ()
   nEvtsBurst   = this->findValueInSettings("nEvtsBurst");
   nTRIGxEvent  = this->findValueInSettings("nTRIGxEvent");
   injType      = this->findValueInSettings("INJtype");
+  nHITxCol     = this->findValueInSettings("nHITxCol");
   doFast       = this->findValueInSettings("DoFast");
   thrOccupancy = this->findValueInSettings("TargetOcc");
   doDisplay    = this->findValueInSettings("DisplayHisto");
-  doSave       = this->findValueInSettings("Save");
+  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
 
   if (injType != INJtype::None) nTRIGxEvent = 1;
   else                          doFast      = false;
@@ -41,7 +42,7 @@ void PixelAlive::ConfigureCalibration ()
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
 
@@ -107,7 +108,7 @@ void PixelAlive::run ()
   PixelAlive::chipErrorReport();
 }
 
-void PixelAlive::draw ()
+void PixelAlive::draw (bool doSave)
 {
   TApplication* myApp = nullptr;
 
@@ -122,19 +123,17 @@ void PixelAlive::draw ()
   PixelAlive::fillHisto();
   PixelAlive::display();
 
+  // #######################################
+  // # Save and Update register new values #
+  // #######################################
   if (doSave == true)
     {
-      this->WriteRootFile();
-
-      // ############################
-      // # Save register new values #
-      // ############################
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
             {
+              if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
               static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-              static_cast<RD53*>(cChip)->saveRegMap("");
               std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
               system(command.c_str());
               LOG (INFO) << BOLDGREEN << "\t--> PixelAlive saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
@@ -142,7 +141,11 @@ void PixelAlive::draw ()
     }
 
   if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true) this->CloseResultFile();
+  if (doSave    == true)
+    {
+      this->WriteRootFile();
+      this->CloseResultFile();
+    }
 }
 
 std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
@@ -187,9 +190,9 @@ void PixelAlive::chipErrorReport ()
       for (const auto cChip : *cModule)
         {
           LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
-          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
+          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
         }
 }
