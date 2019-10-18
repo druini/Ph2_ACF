@@ -404,11 +404,11 @@ namespace Ph2_HwDescription
     std::vector<RD53::HitData> result;
     uint32_t core_col, side, row, col, all_tots;
 
-    std::tie(core_col, row, side, all_tots) = unpack_bits<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_ROW, RD53EvtEncoder::NBIT_SIDE, RD53EvtEncoder::NBIT_TOT>(data);
-    col                                     = NPIX_REGION * pack_bits<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
+    std::tie(core_col, row, side, all_tots) = bits::unpack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_ROW, RD53EvtEncoder::NBIT_SIDE, RD53EvtEncoder::NBIT_TOT>(data);
+    col                                     = NPIX_REGION * bits::pack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
 
     uint8_t tots[NPIX_REGION];
-    RangePacker<NPIX_REGION>::unpack_reverse(all_tots, tots);
+    bits::RangePacker<NPIX_REGION>::unpack_reverse(all_tots, tots);
 
     for (int i = 0; i < NPIX_REGION; i++) if (tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION)) result.emplace_back(row, col + i, tots[i]);
 
@@ -421,7 +421,7 @@ namespace Ph2_HwDescription
 
     evtStatus = RD53EvtEncoder::CGOOD;
 
-    std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
+    std::tie(header, trigger_id, trigger_tag, bc_id) = bits::unpack<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
     if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHEAD;
 
     size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
@@ -461,7 +461,7 @@ namespace Ph2_HwDescription
 
   uint32_t RD53::CalCmd::getCalCmd (const uint8_t& chipId)
   {
-    return pack_bits<NBIT_ID,
+    return bits::pack<NBIT_ID,
                      RD53InjEncoder::NBIT_CAL_EDGE_MODE,
                      RD53InjEncoder::NBIT_CAL_EDGE_DELAY,
                      RD53InjEncoder::NBIT_CAL_EDGE_WIDTH,
@@ -507,7 +507,7 @@ WrRegLong::WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16
   fields[5] = pack_encoded<5>(values[0]);
 
   // unpack the remaining values 5 bits at a time
-  unpack_range<5>(values.begin() + 1, values.end(), fields.begin() + 6);
+  bits::unpack_range<5>(values.begin() + 1, values.end(), fields.begin() + 6);
 
   // apply value_map transform
   for (unsigned i = 6; i < fields.size(); ++i) {

@@ -136,7 +136,11 @@ namespace Ph2_HwInterface
     const unsigned int n_words = (data.size() >> 1) + (data.size() & 1);
     
     while (!ReadReg("user.stat_regs.slow_cmd.fifo_empty")) {
-      std::cout << "fifo not empty!, fifo_full = " << ReadReg("user.stat_regs.slow_cmd.fifo_full") << "\n";
+      std::cout << "fifo not empty!"
+        << ", fifo_full = " << ReadReg("user.stat_regs.slow_cmd.fifo_full")
+        << ", error_flag = " << ReadReg("user.stat_regs.slow_cmd.error_flag")
+        << ", fifo_packet_dispatched = " << ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched") << "\n";
+      
       usleep(10000);
     }
 
@@ -146,35 +150,21 @@ namespace Ph2_HwInterface
     // header
     stackRegisters.emplace_back(
       "user.ctrl_regs.Slow_cmd_fifo_din",
-      pack_bits<6, 10, 4, 12>(0xFF, (1 << moduleId), 0, n_words)
+      bits::pack<6, 10, 4, 12>(0xFF, (1 << moduleId), 0, n_words)
     );
 
     // commands
     for (unsigned i = 0; i < data.size() - 1; i += 2) {
-      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", pack_bits<16, 16>(data[i], data[i + 1]));
+      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<16, 16>(data[i], data[i + 1]));
     }
 
     // if data.size() is not even, add a sync command
     if (data.size() % 2 != 0) {
-      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", pack_bits<16, 16>(data.back(), RD53Cmd::Sync::opCode()));
+      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<16, 16>(data.back(), RD53Cmd::Sync::opCode()));
     }
 
     WriteStackReg (stackRegisters);
   }
-
-  // uint8_t lane2chipId(uint8_t chip_lane) {
-  //   switch (chip_lane) {
-  //     case 0:
-  //       return 0;
-  //     case 1:
-  //       return 1;
-  //     case 2:
-  //       return 2;
-  //     case 3:
-  //       return 3;
-  //   }
-  //   return 0;
-  // }
   
   bool RD53FWInterface::getChipLane(Chip* pChip) {
     if (scc) {
@@ -193,7 +183,7 @@ namespace Ph2_HwInterface
       uint32_t rdback_data = ReadReg("user.stat_regs.Register_Rdback_fifo");
       
       uint16_t lane, address, value;
-      std::tie(lane, address, value) = unpack_bits<6, 10, 16>(rdback_data);
+      std::tie(lane, address, value) = bits::unpack<6, 10, 16>(rdback_data);
 
       if (lane == getChipLane(pChip)) {
         outputDecoded.emplace_back(address, value);
@@ -716,7 +706,7 @@ namespace Ph2_HwInterface
   {
     evtStatus = RD53FWEvtEncoder::GOOD;
 
-    std::tie(block_size) = unpack_bits<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);
+    std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);
     if (block_size * 4 != n) evtStatus |= RD53FWEvtEncoder::EVSIZE;
 
 
@@ -724,8 +714,8 @@ namespace Ph2_HwInterface
     // # Decoding event header #
     // #########################
     bool dummy_size;
-    std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
-    std::tie(tdc, l1a_counter) = unpack_bits<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
+    std::tie(tlu_trigger_id, data_format_ver, dummy_size) = bits::unpack<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
+    std::tie(tdc, l1a_counter) = bits::unpack<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
     bx_counter = data[3];
 
 
@@ -763,8 +753,8 @@ namespace Ph2_HwInterface
 
   RD53FWInterface::ChipFrame::ChipFrame (const uint32_t data0, const uint32_t data1)
   {
-    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = unpack_bits<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
-    std::tie(chip_type, frame_delay)                        = unpack_bits<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
+    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
+    std::tie(chip_type, frame_delay)                        = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
   }
 
   void RD53FWInterface::SendBoardCommand (const std::string& cmd_reg)

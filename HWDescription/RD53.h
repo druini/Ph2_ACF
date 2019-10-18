@@ -364,20 +364,16 @@ protected:
   // pack_bits and encode
   template <int... Sizes, class... Args>
   uint8_t pack_encoded(Args&&... args) {
-    return value_map[pack_bits<Sizes...>(std::forward<Args>(args)...)];
+    return value_map[bits::pack<Sizes...>(std::forward<Args>(args)...)];
   }
 
   std::array<uint8_t, NFields> fields;
 
 public:
-  static constexpr uint16_t opCode() { 
-    return OpCode; 
-  }
+  static constexpr uint16_t opCode() { return OpCode; }
 
   // size in 16-bit words
-  size_t size() const { 
-    return 1 + fields.size() / 2; 
-  }
+  size_t size() const { return 1 + fields.size() / 2; }
 
   void appendTo(std::vector<uint16_t>& vec) const {
     // insert op code
@@ -385,7 +381,7 @@ public:
 
     // insert fields
     for (int i = 0; i < NFields; i+=2) {
-      vec.push_back(pack_bits<8, 8>(fields[i], fields[i+1]));
+      vec.push_back(bits::pack<8, 8>(fields[i], fields[i+1]));
     }
   }
 
