@@ -160,7 +160,7 @@ namespace Ph2_HwInterface
 
     // if data.size() is not even, add a sync command
     if (data.size() % 2 != 0) {
-      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<16, 16>(data.back(), RD53Cmd::Sync::opCode()));
+      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
     }
 
     WriteStackReg (stackRegisters);

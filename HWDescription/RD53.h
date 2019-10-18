@@ -257,14 +257,6 @@ namespace Ph2_HwDescription
       uint8_t cal_aux_delay;
     };
 
-    template<size_t NBITS>
-      static std::bitset<NBITS> setBits (size_t nBit2Set)
-      {
-        std::bitset<NBITS> output(0);
-        for (size_t i = 0; i < nBit2Set; i++) output[i] = 1;
-        return output;
-      }
-
     static size_t setBits (size_t nBit2Set)
     {
       auto output = 1 << (nBit2Set-1);
@@ -272,7 +264,7 @@ namespace Ph2_HwDescription
       return output;
     }
 
-    static auto countBitsOne(size_t num)
+    static auto countBitsOne (size_t num)
     {
       auto count = 0u;
       while (num != 0)
@@ -341,76 +333,49 @@ namespace RD53Cmd
       0xD4  // 31: 0b11010100
     };
 
-  template <uint16_t OpCode, unsigned int NFields>
+  template <uint16_t cmdCode, size_t nFields>
     class Command
   {
-    static_assert(NFields % 2 == 0, "RD53Cmd::Command: a command must have an even number of fields");
+    static_assert(nFields % 2 == 0, "RD53Cmd::Command: a command must have an even number of fields");
+
+  public:
+    void appendTo (std::vector<uint16_t>& frameVector) const
+    {
+      // Insert command code
+      frameVector.push_back(cmdCode);
+
+      // Insert: chip id, address and data
+      for (auto i = 0u; i < nFields; i+=2) // @TMP@ shold be -1
+        frameVector.push_back(bits::pack<8, 8>(fields[i], fields[i+1]));
+    }
+
+    std::vector<uint16_t> get_data() const
+      {
+        std::vector<uint16_t> frameVector;
+        frameVector.reserve(1 + nFields / 2);
+        Command::appendTo(frameVector);
+        return frameVector;
+      }
 
   protected:
     template <int... Sizes, class... Args>
-      uint8_t pack_encoded(Args&&... args)
+      uint8_t pack_encoded (Args&&... args)
     {
       return map5to8bit[bits::pack<Sizes...>(std::forward<Args>(args)...)];
     }
 
-    std::array<uint8_t, NFields> fields;
-
-  public:
-    static constexpr uint16_t opCode() { return OpCode; }
-
-    // size in 16-bit words
-    size_t size() const { return 1 + fields.size() / 2; }
-
-    void appendTo(std::vector<uint16_t>& vec) const {
-      // insert op code
-      vec.push_back(OpCode);
-
-      // insert fields
-      for (int i = 0; i < NFields; i+=2) {
-        vec.push_back(bits::pack<8, 8>(fields[i], fields[i+1]));
-      }
-    }
-
-    std::vector<uint16_t> get_data() const {
-      std::vector<uint16_t> result;
-      result.reserve(size());
-      appendTo(result);
-      return result;
-    }
+    std::array<uint8_t, nFields> fields;
   };
 
-  uint16_t constexpr opCode(uint16_t value) {
-    return value > 0xFF ? value : (value << 8 | value);
-  }
-
-  struct ECR : public Command<opCode(0x5A), 0> {};
-
-  struct BCR : public Command<opCode(0x59), 0> {};
-
-  struct GlobalPulse : public Command<opCode(0x5C), 2> {
-    GlobalPulse(uint8_t chip_id, uint8_t data);
-  };
-
-  struct Cal : public Command<opCode(0x63), 4> {
-    Cal(uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay);
-  };
-
-  struct WrReg : public Command<opCode(0x66), 6> {
-    WrReg(uint8_t chip_id, uint16_t address, uint16_t value);
-  };
-
-  struct WrRegLong : public Command<opCode(0x66), 22> {
-    WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values);
-  };
-
-  struct RdReg : public Command<opCode(0x65), 4> {
-    RdReg(uint8_t chip_id, uint16_t address);
-  };
-
-  struct NoOp : public Command<opCode(0x69), 0> {};
-
-  struct Sync : public Command<opCode(0x817e), 0> {};
-
+  struct ECR         : public Command<RD53CmdEncoder::RESET_ECR,  0> {};
+  struct BCR         : public Command<RD53CmdEncoder::RESET_BCR,  0> {};
+  struct NoOp        : public Command<RD53CmdEncoder::NOOP,       0> {};
+  struct Sync        : public Command<RD53CmdEncoder::SYNC,       0> {};
+  struct GlobalPulse : public Command<RD53CmdEncoder::GLOB_PULSE, 2> { GlobalPulse(uint8_t chip_id, uint8_t data); };
+  struct Cal         : public Command<RD53CmdEncoder::CAL,        4> { Cal(uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay); };
+  struct WrReg       : public Command<RD53CmdEncoder::WRITE,      6> { WrReg(uint8_t chip_id, uint16_t address, uint16_t value); };
+  struct WrRegLong   : public Command<RD53CmdEncoder::WRITE,     22> { WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values); };
+  struct RdReg       : public Command<RD53CmdEncoder::READ,       4> { RdReg(uint8_t chip_id, uint16_t address); };
 }
 
 #endif
