@@ -110,6 +110,8 @@ namespace Ph2_HwInterface
     
 
     // cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_prog_empty_thr", 1024});
+    cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_reset", 1});
+    cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_reset", 0});
 
     cVecReg.push_back({"user.ctrl_regs.Register_RdBack.fifo_reset", 1});
     cVecReg.push_back({"user.ctrl_regs.Register_RdBack.fifo_reset", 0});
@@ -132,14 +134,25 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, unsigned int moduleId) {
     // requires data.size() > 0
-
     const unsigned int n_words = (data.size() >> 1) + (data.size() & 1);
+
+    if (ReadReg("user.stat_regs.slow_cmd.error_flag")) {
+      std::cout << "fifo error!"
+        << ", fifo_full = " << ReadReg("user.stat_regs.slow_cmd.fifo_full")
+        << ", fifo_empty = " << ReadReg("user.stat_regs.slow_cmd.fifo_empty")
+        << ", fifo_packet_dispatched = " << ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched")
+        << ", data_size = " << data.size()
+        << ", n_words = " << n_words << "\n";
+      exit(0);
+    }
     
     while (!ReadReg("user.stat_regs.slow_cmd.fifo_empty")) {
       std::cout << "fifo not empty!"
         << ", fifo_full = " << ReadReg("user.stat_regs.slow_cmd.fifo_full")
         << ", error_flag = " << ReadReg("user.stat_regs.slow_cmd.error_flag")
-        << ", fifo_packet_dispatched = " << ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched") << "\n";
+        << ", fifo_packet_dispatched = " << ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched")
+        << ", data_size = " << data.size()
+        << ", n_words = " << n_words << "\n";
       
       usleep(10000);
     }
@@ -162,6 +175,9 @@ namespace Ph2_HwInterface
     if (data.size() % 2 != 0) {
       stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
     }
+
+    stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd.dispatch_packet", 1);
+    stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd.dispatch_packet", 0);
 
     WriteStackReg (stackRegisters);
   }
