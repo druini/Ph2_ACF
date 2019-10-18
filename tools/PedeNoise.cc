@@ -10,7 +10,6 @@
 #include <math.h>
 
 #ifdef __USE_ROOT__
-    #include "../RootUtils/TH1FContainer.h" 
     #include "../DQMUtils/DQMHistogramPedeNoise.h" 
 #endif
 
