@@ -369,195 +369,6 @@ namespace Ph2_HwDescription
     return fPixelsMask[col].TDAC[row];
   }
 
-  void RD53::encodeCMD (const ChipRegItem                   & pRegItem,
-                        const uint8_t                         pRD53Id,
-                        const uint16_t                        pRD53Cmd,
-                        std::vector<std::vector<uint16_t> > & pVecReg)
-  {
-    const unsigned int nBits = NBIT_ID + NBIT_ADDR + NBIT_DATA;
-
-    std::bitset<nBits> idANDaddANDdata(pRD53Id           << (NBIT_ADDR + NBIT_DATA) |
-                                       pRegItem.fAddress << NBIT_DATA               |
-                                       pRegItem.fValue);
-
-    std::bitset<nBits> mask = RD53::setBits(NBIT_ID);
-    std::vector<uint16_t> frame;
-
-    frame.push_back(pRD53Cmd);
-    frame.push_back(pRD53Cmd);
-
-    std::bitset<nBits> tmp;
-    for (int i = nBits/NBIT_DATA-1; i >= 0; i-=2)
-      {
-        tmp = (idANDaddANDdata & (mask << NBIT_ID*i)) >> NBIT_ID*i;
-        unsigned long long data1 = tmp.to_ullong();
-
-        tmp = (idANDaddANDdata & (mask << NBIT_ID*(i-1))) >> NBIT_ID*(i-1);
-        // unsigned long long data2 = tmp.to_ullong();
-
-        frame.push_back(cmd_data_map[data1] << NBIT_SYMBOL | cmd_data_map[data1]);
-      }
-
-    pVecReg.push_back(frame);
-  }
-
-  void RD53::encodeCMD (const uint16_t               address,
-                        const uint16_t               data,
-                        const uint8_t                RD53id,
-                        const uint16_t               RD53cmd,
-                        const bool                   isBroadcast,
-                        std::vector<uint32_t>      & pVecReg,
-                        const std::vector<uint16_t>* dataVec)
-  {
-    uint8_t  FWcmd;
-    uint32_t word = 0;
-    std::bitset<NBIT_FRAME> frame(0);
-
-    if ((RD53cmd == RD53CmdEncoder::RESET_ECR) ||
-        (RD53cmd == RD53CmdEncoder::RESET_BCR) ||
-        (RD53cmd == RD53CmdEncoder::NOOP))
-      {
-        FWcmd = RD53cmd & 0x00FF;
-
-        word = 0 | (FWcmd << NBIT_5BITW);
-      }
-    else if (RD53cmd == RD53CmdEncoder::SYNC)
-      {
-        FWcmd = RD53cmd & 0x00FF;
-
-        word = 0 | (FWcmd << NBIT_5BITW);
-      }
-    else if (RD53cmd == RD53CmdEncoder::GLOB_PULSE)
-      {
-        FWcmd = RD53cmd & 0x00FF;
-
-        word  = 2 | (FWcmd << NBIT_5BITW);
-        frame = (isBroadcast ? 1 : 0) | ((RD53id & RD53::setBits(NBIT_ID)) << 1);       // @TMP ID[3..0],isBroadcast
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2));
-        frame = 0 | ((data & RD53::setBits(NBIT_ID)) << 1);                             // @TMP@ D[3..0],0
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME));
-      }
-    else if (RD53cmd == RD53CmdEncoder::CAL)
-      {
-        FWcmd = RD53cmd & 0x00FF;
-
-        word  = 4 | (FWcmd << NBIT_5BITW);
-        frame = ((data & (RD53::setBits(NBIT_DATA) << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
-          ((RD53id & RD53::setBits(NBIT_ID)) << 1);                                     // @TMP@ ID[3..0],D[15]
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-        frame = (data & (RD53::setBits(NBIT_FRAME*3) << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
-        frame = (data & (RD53::setBits(NBIT_FRAME*2) << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
-        frame = (data & (RD53::setBits(NBIT_FRAME*2) << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
-      }
-    else if (RD53cmd == RD53CmdEncoder::READ)
-      {
-        FWcmd = RD53cmd & 0x00FF;
-
-        word  = 4 | (FWcmd << NBIT_5BITW);
-        frame = (isBroadcast ? 1 : 0) | ((RD53id & RD53::setBits(NBIT_ID)) << 1);       // @TMP@ ID[3..0],isBroadcast
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-        frame = (address & (RD53::setBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;           // A[8..4]
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
-        frame = (address & RD53::setBits(NBIT_ID)) << 1;                                // @TMP@ A[3..0]
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
-        frame = 0;
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
-      }
-    else if ((RD53cmd == RD53CmdEncoder::WRITE) && (dataVec == NULL))
-      {
-        FWcmd = RD53cmd & 0x00FF;
-
-        word  = 6 | (FWcmd << NBIT_5BITW);
-        frame = (isBroadcast ? 1 : 0) | ((RD53id & RD53::setBits(NBIT_ID)) << 1);       // @TMP@ ID[3..0],isBroadcast
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-        frame = (address & (RD53::setBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;           // A[8..4]
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
-
-        frame = ((data & (RD53::setBits(NBIT_DATA) << NBIT_FRAME*3)) >> NBIT_FRAME*3) |
-          ((address & RD53::setBits(NBIT_ID)) << 1);                                    // @TMP@ A[3..0],D[15]
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
-        frame = (data & (RD53::setBits(NBIT_FRAME*3) << NBIT_FRAME*2)) >> NBIT_FRAME*2; // D[14..10]
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
-        pVecReg.push_back(word);
-
-        frame = (data & (RD53::setBits(NBIT_FRAME*2) << NBIT_FRAME*1)) >> NBIT_FRAME*1; // D[9..5]
-        word  = frame.to_ulong() << NBIT_FRAME*0;
-        frame = (data & (RD53::setBits(NBIT_FRAME*1) << NBIT_FRAME*0)) >> NBIT_FRAME*0; // D[4..0]
-        word  = word | (frame.to_ulong() << NBIT_FRAME*1);
-      }
-    else if ((RD53cmd == RD53CmdEncoder::WRITE) && (dataVec != NULL) && (dataVec->size() == NDATAMAX_PERPIXEL))
-      {
-        FWcmd = RD53cmd & 0x00FF;
-
-        std::bitset<NBIT_DATA*NDATAMAX_PERPIXEL> dataBitStream(0);
-        std::bitset<NBIT_DATA*NDATAMAX_PERPIXEL> tmp(0);
-        for (auto i = 0; i < NDATAMAX_PERPIXEL; i++)
-          {
-            tmp = (*dataVec)[NDATAMAX_PERPIXEL - i - 1];
-            dataBitStream |= (tmp << NBIT_DATA*i);
-          }
-
-        word  = 7 | (FWcmd << NBIT_5BITW);
-        frame = (isBroadcast ? 1 : 0) | ((RD53id & RD53::setBits(NBIT_ID)) << 1);                                             // @TMP@ ID[3..0],isBroadcast
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*0));
-        frame = (address & (RD53::setBits(NBIT_ADDR) << NBIT_ID)) >> NBIT_ID;                                                 // A[8..4]
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*1));
-
-        tmp   = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(1) << NBIT_DATA*NDATAMAX_PERPIXEL-1)) >> NBIT_FRAME*19;
-        frame = tmp.to_ulong() | ((address & RD53::setBits(NBIT_ID)) << 1);                                                   // @TMP@ A[3..0],D[95]
-        word  = word | (frame.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*2));
-        tmp   = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*18)) >> NBIT_FRAME*18; // D[94..90]
-        word  = word | (tmp.to_ulong() << (NBIT_5BITW + NBIT_CMD/2 + NBIT_FRAME*3));
-        pVecReg.push_back(word);
-
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*17)) >> NBIT_FRAME*17;  // D[89..85]
-        word = tmp.to_ulong() << NBIT_FRAME*0;
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*16)) >> NBIT_FRAME*16;  // D[84..80]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*1);
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*15)) >> NBIT_FRAME*15;  // D[79..75]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*2);
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*14)) >> NBIT_FRAME*14;  // D[74..70]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*3);
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*13)) >> NBIT_FRAME*13;  // D[69..65]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*4);
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*12)) >> NBIT_FRAME*12;  // D[64..60]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*5);
-        pVecReg.push_back(word);
-
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*11)) >> NBIT_FRAME*11;  // D[59..55]
-        word = tmp.to_ulong() << NBIT_FRAME*0;
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*10)) >> NBIT_FRAME*10;  // D[54..50]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*1);
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*9)) >> NBIT_FRAME*9;    // D[49..45]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*2);
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*8)) >> NBIT_FRAME*8;    // D[44..40]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*3);
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*7)) >> NBIT_FRAME*7;    // D[39..35]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*4);
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*6)) >> NBIT_FRAME*6;    // D[34..30]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*5);
-        pVecReg.push_back(word);
-
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*5)) >> NBIT_FRAME*5;    // D[29..25]
-        word = tmp.to_ulong() << NBIT_FRAME*0;
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*4)) >> NBIT_FRAME*4;    // D[24..20]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*1);
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*3)) >> NBIT_FRAME*3;    // D[19..15]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*2);
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*2)) >> NBIT_FRAME*2;    // D[14..10]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*3);
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*1)) >> NBIT_FRAME*1;    // D[9..5]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*4);
-        tmp  = (dataBitStream & (RD53::setBits<NBIT_DATA*NDATAMAX_PERPIXEL>(NBIT_FRAME) << NBIT_FRAME*0)) >> NBIT_FRAME*0;    // D[4..0]
-        word = word | (tmp.to_ulong() << NBIT_FRAME*5);
-      }
-
-    pVecReg.push_back(word);
-  }
-
   void RD53::convertRowCol2Cores (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair)
   {
     colPair = col >> (NPIXCOL_PROG / 2);
@@ -593,11 +404,11 @@ namespace Ph2_HwDescription
     std::vector<RD53::HitData> result;
     uint32_t core_col, side, row, col, all_tots;
 
-    std::tie(core_col, row, side, all_tots) = unpack_bits<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_ROW, RD53EvtEncoder::NBIT_SIDE, RD53EvtEncoder::NBIT_TOT>(data);
-    col                                     = NPIX_REGION * pack_bits<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
+    std::tie(core_col, row, side, all_tots) = bits::unpack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_ROW, RD53EvtEncoder::NBIT_SIDE, RD53EvtEncoder::NBIT_TOT>(data);
+    col                                     = NPIX_REGION * bits::pack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
 
     uint8_t tots[NPIX_REGION];
-    RangePacker<NPIX_REGION>::unpack_reverse(all_tots, tots);
+    bits::RangePacker<NPIX_REGION>::unpack_reverse(all_tots, tots);
 
     for (int i = 0; i < NPIX_REGION; i++) if (tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION)) result.emplace_back(row, col + i, tots[i]);
 
@@ -610,7 +421,7 @@ namespace Ph2_HwDescription
 
     evtStatus = RD53EvtEncoder::CGOOD;
 
-    std::tie(header, trigger_id, trigger_tag, bc_id) = unpack_bits<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
+    std::tie(header, trigger_id, trigger_tag, bc_id) = bits::unpack<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
     if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHEAD;
 
     size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
@@ -650,7 +461,7 @@ namespace Ph2_HwDescription
 
   uint32_t RD53::CalCmd::getCalCmd (const uint8_t& chipId)
   {
-    return pack_bits<NBIT_ID,
+    return bits::pack<NBIT_ID,
                      RD53InjEncoder::NBIT_CAL_EDGE_MODE,
                      RD53InjEncoder::NBIT_CAL_EDGE_DELAY,
                      RD53InjEncoder::NBIT_CAL_EDGE_WIDTH,
@@ -662,4 +473,53 @@ namespace Ph2_HwDescription
                                                          cal_aux_mode,
                                                          cal_aux_delay);
   }
+}
+
+namespace RD53Cmd {
+
+GlobalPulse::GlobalPulse(uint8_t chip_id, uint8_t data) {
+  fields[0] = pack_encoded<4, 1>(chip_id, 0);
+  fields[1] = pack_encoded<4, 1>(data, 0);
+}
+
+Cal::Cal(uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay) {
+  fields[0] = pack_encoded<4, 1>(chip_id, cal_edge_mode);
+  fields[1] = pack_encoded<4, 1>(cal_edge_delay, cal_edge_width >> 4);
+  fields[2] = pack_encoded<4, 1>(cal_edge_delay, cal_aux_mode);
+  fields[3] = pack_encoded<5>(cal_aux_delay);
+}
+
+WrReg::WrReg(uint8_t chip_id, uint16_t address, uint16_t value) {
+  fields[0] = pack_encoded<4, 1>(chip_id, 0);
+  fields[1] = pack_encoded<5>(address >> 4);
+  fields[2] = pack_encoded<4, 1>(address, value >> 15);
+  fields[3] = pack_encoded<5>(value >> 10);
+  fields[4] = pack_encoded<5>(value >> 5);
+  fields[5] = pack_encoded<5>(value);
+}
+
+WrRegLong::WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values) {
+  fields[0] = pack_encoded<4, 1>(chip_id, 1);
+  fields[1] = pack_encoded<5>(address >> 4);
+  fields[2] = pack_encoded<4, 1>(address, values[0] >> 15);
+  fields[3] = pack_encoded<5>(values[0] >> 10);
+  fields[4] = pack_encoded<5>(values[0] >> 5);
+  fields[5] = pack_encoded<5>(values[0]);
+
+  // unpack the remaining values 5 bits at a time
+  bits::unpack_range<5>(values.begin() + 1, values.end(), fields.begin() + 6);
+
+  // apply value_map transform
+  for (unsigned i = 6; i < fields.size(); ++i) {
+    fields[i] = value_map[fields[i]];
+  }
+}
+
+RdReg::RdReg(uint8_t chip_id, uint16_t address) {
+  fields[0] = pack_encoded<4, 1>(chip_id, 0);
+  fields[1] = pack_encoded<5>(address >> 4);
+  fields[2] = pack_encoded<4, 1>(address, 0);
+  fields[3] = pack_encoded<5>(0);
+}
+
 }

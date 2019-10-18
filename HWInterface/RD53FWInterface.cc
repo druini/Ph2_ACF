@@ -65,10 +65,8 @@ namespace Ph2_HwInterface
     // RD53FWInterface::TurnOnFMC();
     // RD53FWInterface::ResetBoard();
     RD53FWInterface::ChipReset();
-    RD53FWInterface::ChipReSync();
     RD53FWInterface::ResetFastCmdBlk();
     RD53FWInterface::ResetReadoutBlk();
-
 
     // ###############################################
     // # FW register initialization from config file #
@@ -92,141 +90,105 @@ namespace Ph2_HwInterface
     // ##############################
     // # Enabling modules and chips #
     // ##############################
-    for (const auto& cModule : pBoard->fModuleVector)
-      {
-        myString.clear(); myString.str("");
-        myString << "user.ctrl_regs.Hybrid" << cModule->getIndex() + 1;
-        cVecReg.push_back({myString.str() + ".Hybrid_en", 1});
-        cVecReg.push_back({myString.str() + ".Chips_en", RD53::setBits(cModule->fReadoutChipVector.size())});
-        LOG (INFO) << GREEN << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << RESET << GREEN << " chip(s) for module " << BOLDYELLOW << cModule->getIndex() << RESET;
-      }
+    this->scc = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
+
+    uint16_t modules_en = 0;
+    uint16_t chips_en = 0;
+    for (const auto& cModule : pBoard->fModuleVector) {
+      const int module_id = cModule->getFeId();
+      modules_en |= 1 << module_id;
+      
+      if (scc)
+        chips_en |= 1 << module_id;
+      else 
+        chips_en |= 0xF << (4 * module_id);
+    }
+
+    cVecReg.push_back({"user.ctrl_regs.Hybrids_en", modules_en});
+    cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
+    // LOG (INFO) << GREEN << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << RESET << GREEN << " chip(s) for module " << BOLDYELLOW << cModule->getIndex() << RESET;
+    
+
+    cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_prog_empty_thr", 1024});
+
+    cVecReg.push_back({"user.ctrl_regs.Register_RdBack.fifo_reset", 1});
+    cVecReg.push_back({"user.ctrl_regs.Register_RdBack.fifo_reset", 0});
 
 
     if (cVecReg.size() != 0) WriteStackReg (cVecReg);
+
+    LOG (INFO) << "Module_type = " << ReadReg("user.stat_regs.aurora_rx.Module_type").value() << RESET;
+    LOG (INFO) << "Nb_of_modules = " << ReadReg("user.stat_regs.aurora_rx.Nb_of_modules").value() << RESET;
+    LOG (INFO) << "lane_up = " << ReadReg("user.stat_regs.aurora_rx.lane_up").value() << RESET;
+    LOG (INFO) << "aurora_rx_channel_up = " << ReadReg("user.stat_regs.aurora_rx_channel_up").value() << RESET;
 
 
     // ####################
     // # Configuring DIO5 #
     // ####################
+    RD53FWInterface::ChipReSync();
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
   }
 
-  void RD53FWInterface::WriteChipCommand (std::vector<uint32_t>& data, unsigned int nCmd)
-  {
+  void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, unsigned int moduleId) {
+    // requires data.size() > 0
+
+    const unsigned int n_words = (data.size() >> 1) + (data.size() & 1);
+    
+    while (!ReadReg("user.stat_regs.slow_cmd.fifo_empty")) {
+      std::cout << "fifo not empty!"
+        << ", fifo_full = " << ReadReg("user.stat_regs.slow_cmd.fifo_full")
+        << ", error_flag = " << ReadReg("user.stat_regs.slow_cmd.error_flag")
+        << ", fifo_packet_dispatched = " << ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched") << "\n";
+      
+      usleep(10000);
+    }
+
     std::vector< std::pair<std::string, uint32_t> > stackRegisters;
+    stackRegisters.reserve(1 + n_words);
 
-    if (ReadReg ("user.stat_regs.cmd_proc.fifo_empty") == false)
-      LOG (ERROR) << BOLDRED << "Command processor FIFO NOT empty before sending new commands" << RESET;
+    // header
+    stackRegisters.emplace_back(
+      "user.ctrl_regs.Slow_cmd_fifo_din",
+      bits::pack<6, 10, 4, 12>(0xFF, (1 << moduleId), 0, n_words)
+    );
 
-    if (ReadReg ("user.stat_regs.cmd_proc.fifo_full") == true)
-      LOG (ERROR) << BOLDRED << "Command processor FIFO full" << RESET;
+    // commands
+    for (unsigned i = 0; i < data.size() - 1; i += 2) {
+      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<16, 16>(data[i], data[i + 1]));
+    }
 
-    size_t size = data.size()/nCmd;
-    for (auto i = 0u; i < nCmd; i++)
-      {
-        switch (size)
-          {
-          case 1:
-            {
-              stackRegisters.push_back({"user.cmd_regs.ctrl_reg", data[size*i+0]});
-              break;
-            }
-          case 2:
-            {
-              stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
-              stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
-              break;
-            }
-          case 3:
-            {
-              stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
-              stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
-              stackRegisters.push_back({"user.cmd_regs.data1_reg", data[size*i+2]});
-              break;
-            }
-          case 4:
-            {
-              stackRegisters.push_back({"user.cmd_regs.ctrl_reg",  data[size*i+0]});
-              stackRegisters.push_back({"user.cmd_regs.data0_reg", data[size*i+1]});
-              stackRegisters.push_back({"user.cmd_regs.data1_reg", data[size*i+2]});
-              stackRegisters.push_back({"user.cmd_regs.data2_reg", data[size*i+3]});
-              break;
-            }
-          }
-
-        if (nCmd != 1) stackRegisters.push_back({"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0}); // @TMP@
-      }
+    // if data.size() is not even, add a sync command
+    if (data.size() % 2 != 0) {
+      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<16, 16>(data.back(), RD53Cmd::Sync::opCode()));
+    }
 
     WriteStackReg (stackRegisters);
   }
+  
+  bool RD53FWInterface::getChipLane(Chip* pChip) {
+    if (scc) {
+      return pChip->getFeId();
+    }
+    else {
+      return 4 * pChip->getFeId() + pChip->getChipId();
+    }
+  }
 
-  std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters (std::vector<uint32_t>& data, uint8_t chipID, uint8_t filter)
+  std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters (Chip* pChip)
   {
-    // ##############################
-    // # Filter readback data:      #
-    // # 0: read "cmd" only         #
-    // # 1: read "auto" 2nd only    #
-    // # 2: read "auto" 1st only    #
-    // # 3: read "auto" 1st and 2nd #
-    // ##############################
-    const unsigned int BLOCKS2READ = 1;
-
-    std::stringstream myString;
-    unsigned int nodeBlocks;
-    uint8_t nActiveChns = ReadReg ("user.stat_regs.aurora.n_ch");
     std::vector<std::pair<uint16_t,uint16_t>> outputDecoded;
-    std::vector<uint32_t> regFIFO;
 
+    while (ReadReg("user.stat_regs.Register_Rdback.fifo_empty") == 0) {
+      uint32_t rdback_data = ReadReg("user.stat_regs.Register_Rdback_fifo");
+      
+      uint16_t lane, address, value;
+      std::tie(lane, address, value) = bits::unpack<6, 10, 16>(rdback_data);
 
-    if (chipID < nActiveChns)
-      {
-        myString.clear(); myString.str("");
-        myString << "user.readout" << +chipID << ".reg_mask";
-        WriteReg (myString.str().c_str(), filter);
-
-        myString.clear(); myString.str("");
-        myString << "user.readout" << +chipID << ".sel";
-        WriteReg (myString.str().c_str(), 2);
-
-
-        // ##################
-        // # Flush the FIFO #
-        // ##################
-        myString.clear(); myString.str("");
-        myString << "user.readout" << +chipID << ".reg_read";
-        nodeBlocks = getUhalNode(myString.str().c_str()).getSize();
-        ReadBlockRegValue(myString.str().c_str(), nodeBlocks);
-        if (nodeBlocks < BLOCKS2READ)
-          {
-            LOG (ERROR) << BOLDRED << "Number of register blocks to read (" << BOLDYELLOW << BLOCKS2READ << BOLDRED << ") exceds FIFO lenght " << BOLDYELLOW << nodeBlocks << RESET;
-            return outputDecoded;
-          }
-
-
-        // #####################
-        // # Send read command #
-        // #####################
-        RD53FWInterface::WriteChipCommand(data);
-
-
-        // #################
-        // # Read the FIFO #
-        // #################
-        regFIFO = ReadBlockRegValue(myString.str().c_str(), BLOCKS2READ);
-        for (auto i = 0u; i < regFIFO.size(); i++)
-          {
-            auto second = (regFIFO[i])                                                                                                             & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_VALUE));
-            auto first  = (regFIFO[i] >> RD53RegFrameEncoder::NBIT_VALUE)                                                                          & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_ADDRESS));
-            auto status = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS))                                    & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_STATUS));
-            auto id     = (regFIFO[i] >> (RD53RegFrameEncoder::NBIT_VALUE + RD53RegFrameEncoder::NBIT_ADDRESS + RD53RegFrameEncoder::NBIT_STATUS)) & static_cast<uint32_t>(RD53::setBits(RD53RegFrameEncoder::NBIT_CHIPID));
-
-            if (status != 0) LOG (ERROR) << BOLDRED << "Status error in chip register readback: " << BOLDYELLOW << std::hex << +status << std::dec << BOLDRED << " from chip ID: " << BOLDYELLOW << std::hex << +id << std::dec << RESET;
-
-            outputDecoded.push_back(std::pair<uint16_t,uint16_t>(first,second));
-          }
+      if (lane == getChipLane(pChip)) {
+        outputDecoded.emplace_back(address, value);
       }
-    else LOG (ERROR) << BOLDRED << "Request to read chip registers from a non active channel: " << BOLDYELLOW << +chipID << BOLDRED << " (active channels are " << BOLDYELLOW << "0" << BOLDRED << "--" << BOLDYELLOW << +nActiveChns-1 << BOLDRED << ")" << RESET;
-
+    }
 
     return outputDecoded;
   }
@@ -257,23 +219,23 @@ namespace Ph2_HwInterface
         LOG (ERROR) << BOLDRED << "\t--> I2C initialization status: " << BOLDYELLOW << status << RESET;
       }
 
-    if (ReadReg ("user.stat_regs.global_reg.i2c_aqu_err") == 1)
+    if (ReadReg ("user.stat_regs.global_reg.i2c_acq_err") == 1)
       LOG (INFO) << GREEN << "I2C ack error during analog readout (for KSU FMC only)" << RESET;
 
 
     // ############################################################
     // # Check status registers associated wih fast command block #
     // ############################################################
-    unsigned int fastCMDReg = ReadReg ("user.stat_regs.fast_cmd_1.trigger_source_o");
+    unsigned int fastCMDReg = ReadReg ("user.stat_regs.fast_cmd.trigger_source_o");
     LOG (INFO) << GREEN << "Fast CMD block trigger source: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency)" << RESET;
 
-    fastCMDReg = ReadReg ("user.stat_regs.fast_cmd_1.trigger_state");
+    fastCMDReg = ReadReg ("user.stat_regs.fast_cmd.trigger_state");
     LOG (INFO) << GREEN << "Fast CMD block trigger state: " << BOLDYELLOW << fastCMDReg << RESET;
 
-    fastCMDReg = ReadReg ("user.stat_regs.fast_cmd_1.if_configured");
+    fastCMDReg = ReadReg ("user.stat_regs.fast_cmd.if_configured");
     LOG (INFO) << GREEN << "Fast CMD block check if configuraiton registers have been set: " << BOLDYELLOW << fastCMDReg << RESET;
 
-    fastCMDReg = ReadReg ("user.stat_regs.fast_cmd_1.error_code");
+    fastCMDReg = ReadReg ("user.stat_regs.fast_cmd.error_code");
     LOG (INFO) << GREEN << "Fast CMD block error code (0 = no error): " << BOLDYELLOW << fastCMDReg << RESET;
 
 
@@ -283,27 +245,27 @@ namespace Ph2_HwInterface
     unsigned int trigReg = ReadReg ("user.stat_regs.trigger_cntr");
     LOG (INFO) << GREEN << "Trigger counter: " << BOLDYELLOW << trigReg << RESET;
 
-    trigReg = ReadReg ("user.stat_regs.trigger_tag");
-    LOG (INFO) << GREEN << "Trigger tag: " << BOLDYELLOW << trigReg << RESET;
+    // trigReg = ReadReg ("user.stat_regs.trigger_tag");
+    // LOG (INFO) << GREEN << "Trigger tag: " << BOLDYELLOW << trigReg << RESET;
 
 
     // ##############
     // # Clock rate #
     // ##############
-    unsigned int clkRate = ReadReg ("user.stat_regs.clk_rate_1");
-    LOG (INFO) << GREEN << "Clock rate 1: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
+    // unsigned int clkRate = ReadReg ("user.stat_regs.clk_rate_1");
+    // LOG (INFO) << GREEN << "Clock rate 1: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
 
-    clkRate = ReadReg ("user.stat_regs.clk_rate_2");
-    LOG (INFO) << GREEN << "Clock rate 2: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
+    // clkRate = ReadReg ("user.stat_regs.clk_rate_2");
+    // LOG (INFO) << GREEN << "Clock rate 2: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
 
-    clkRate = ReadReg ("user.stat_regs.clk_rate_3");
-    LOG (INFO) << GREEN << "Clock rate 3: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
+    // clkRate = ReadReg ("user.stat_regs.clk_rate_3");
+    // LOG (INFO) << GREEN << "Clock rate 3: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
 
-    clkRate = ReadReg ("user.stat_regs.clk_rate_4");
-    LOG (INFO) << GREEN << "Clock rate 4: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
+    // clkRate = ReadReg ("user.stat_regs.clk_rate_4");
+    // LOG (INFO) << GREEN << "Clock rate 4: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
 
-    clkRate = ReadReg ("user.stat_regs.clk_rate_5");
-    LOG (INFO) << GREEN << "Clock rate 5: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
+    // clkRate = ReadReg ("user.stat_regs.clk_rate_5");
+    // LOG (INFO) << GREEN << "Clock rate 5: " << BOLDYELLOW << (double)clkRate/1000 << " MHz" << RESET;
   }
 
   bool RD53FWInterface::InitChipCommunication()
@@ -311,19 +273,19 @@ namespace Ph2_HwInterface
     // ###############################
     // # Check RD53 AURORA registers #
     // ###############################
-    unsigned int auroraReg = ReadReg ("user.stat_regs.aurora.gtx_lock");
+    unsigned int auroraReg = ReadReg ("user.stat_regs.aurora_rx_gt_locked");
     LOG (INFO) << GREEN << "Aurora number of locked PLLs: " << BOLDYELLOW << RD53::countBitsOne(auroraReg) << RESET;
 
-    auroraReg = ReadReg ("user.stat_regs.aurora.speed");
+    auroraReg = ReadReg ("user.stat_regs.aurora_rx.speed");
     LOG (INFO) << GREEN << "Aurora speed: " << BOLDYELLOW << (auroraReg == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
 
-    auroraReg = ReadReg ("user.stat_regs.aurora.n_ch");
+    auroraReg = ReadReg ("user.stat_regs.aurora_rx_channel_up");
     LOG (INFO) << GREEN << "Aurora number of channels: " << BOLDYELLOW << auroraReg << RESET;
 
-    unsigned int bitReg = ReadReg ("user.stat_regs.aurora.lane_up");
+    unsigned int bitReg = ReadReg ("user.stat_regs.aurora_rx.lane_up");
     LOG (INFO) << GREEN << "Aurora lane up status: " << BOLDYELLOW << RD53::countBitsOne(bitReg) << RESET;
 
-    bitReg = ReadReg ("user.stat_regs.aurora.channel_up");
+    bitReg = ReadReg ("user.stat_regs.aurora_rx_channel_up");
     if (RD53::countBitsOne(bitReg) == auroraReg)
       {
         LOG (INFO) << BOLDBLUE << "\t--> Aurora channels up number as expected: " << BOLDYELLOW << RD53::countBitsOne(bitReg) << RESET;
@@ -721,11 +683,24 @@ namespace Ph2_HwInterface
     return isGood;
   }
 
+  // template <class Stream, class It>
+  // void print_data(Stream& s, It begin, It end) {
+  //     int i = 0;
+  //     s << std::dec << i << ":\t";
+  //     for (It it = begin; it != end; it++) {
+  //         s << std::hex << std::setfill('0') << std::setw(8) << *it << "\t";
+  //         if (!(++i & 3)) {
+  //             s << std::dec << "\n" << i << ":\t";
+  //         }
+  //     }
+  //     s << std::endl;
+  // }
+
   RD53FWInterface::Event::Event (const uint32_t* data, size_t n)
   {
     evtStatus = RD53FWEvtEncoder::GOOD;
 
-    std::tie(block_size) = unpack_bits<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);
+    std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);
     if (block_size * 4 != n) evtStatus |= RD53FWEvtEncoder::EVSIZE;
 
 
@@ -733,13 +708,13 @@ namespace Ph2_HwInterface
     // # Decoding event header #
     // #########################
     bool dummy_size;
-    std::tie(tlu_trigger_id, data_format_ver, dummy_size) = unpack_bits<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
-    std::tie(tdc, l1a_counter) = unpack_bits<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
+    std::tie(tlu_trigger_id, data_format_ver, dummy_size) = bits::unpack<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
+    std::tie(tdc, l1a_counter) = bits::unpack<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
     bx_counter = data[3];
 
 
     std::vector<size_t> chip_start;
-    for (auto i = 4u; i < n; i += 2) if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) chip_start.push_back(i);
+    for (auto i = 4u; i < n - dummy_size * 4; i += 4) if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) chip_start.push_back(i);
 
     chip_frames.reserve(chip_start.size());
     chip_events.reserve(chip_start.size());
@@ -772,8 +747,8 @@ namespace Ph2_HwInterface
 
   RD53FWInterface::ChipFrame::ChipFrame (const uint32_t data0, const uint32_t data1)
   {
-    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = unpack_bits<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
-    std::tie(chip_type, frame_delay)                        = unpack_bits<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
+    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
+    std::tie(chip_type, frame_delay)                        = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
   }
 
   void RD53FWInterface::SendBoardCommand (const std::string& cmd_reg)
