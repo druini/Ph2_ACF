@@ -69,7 +69,7 @@ class CanvasContainer : public PlotContainer
 
   void initialize (std::string name, std::string title, const PlotContainer* reference) override
   {
-    static size_t uid = 0;
+    static size_t uid = 0; // @TMP@
 
     fHasToBeDeletedManually = false;
 

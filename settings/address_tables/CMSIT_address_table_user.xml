@@ -105,12 +105,8 @@
     </node>	
 
     <node id="Hybrids_en"           address="0x0000000B"    permission="rw"      description="">
-      <!-- <node id="Hybrid_en"            mask="0x000003FF"       permission="rw"      description="" /> -->
-      <!-- <node id="Chips_en"             mask="0x000001FE"       permission="rw"      description="" /> -->
     </node>	
     <node id="Chips_en"             address="0x0000000C"    permission="rw"      description="">
-      <!-- <node id="Hybrid_en"            mask="0x000003FF"       permission="rw"      description="" /> -->
-      <!-- <node id="Chips_en"             mask="0x000001FE"       permission="rw"      description="" /> -->
     </node>	
 
     <node id="Slow_cmd_fifo_din"     address="0x0000000D"    permission="rw"      description=""> </node>	
@@ -130,7 +126,6 @@
       <node id="error_cntr_module_addr"      mask="0x0000000F"       permission="rw"      description="" />
       <node id="error_cntr_chip_addr"        mask="0x00000070"       permission="rw"      description="" />
     </node>	
-    
   </node>
 
   <!-- ================================================ -->
@@ -223,7 +218,7 @@
       <node id="dio5_not_ready"       mask="0x00000001"       permission="r"      description="Still configuring the dio5 thresholds." />
       <node id="dio5_error"           mask="0x00000002"       permission="r"      description="Error when configuring dio5 thresholds via i2c" />
     </node>
-    
+
     <!-- Register Readout -->
     <node id="Register_Rdback_fifo" address="0x00000011"    permission="r"      description="Fifo with Register Read-back data from all chips."> </node>
 
@@ -241,55 +236,11 @@
   </node>
 
   <!-- ================================================ -->
-  <!-- ================ CMD REGISTERS ================= -->
-  <!-- ================================================ -->
-
-  <!-- <node id="cmd_regs"             address="0x00000080"    permission="rw"     description="Command processor." >
-
-    <node id="ctrl_reg"             address="0x00000000"    permission="rw"      description="Control register for command block fifo. Read and short write commands only use this register.">
-      <node id="nfields"              mask="0x00000007"       permission="rw"      description="Number of 5-bit fields to be sent." />
-      <node id="cmd"                  mask="0x000007F8"       permission="rw"      description="Command byte." />
-      <node id="id"                   mask="0x0000F800"       permission="rw"      description="Chip ID field (1st field)." />
-      <node id="field2"               mask="0x001F0000"       permission="rw"      description="Addr/Data (2nd field)." />
-      <node id="field3"               mask="0x03E00000"       permission="rw"      description="Addr/Data (3rd field)." />
-      <node id="field4"               mask="0x7C000000"       permission="rw"      description="Addr/Data (4th field)." />
-    </node>
-
-    <node id="data0_reg"            address="0x00000001"    permission="rw"      description="First address and data register. Only long write commands use this register.">
-      <node id="field5"               mask="0x0000001F"       permission="rw"      description="Addr/Data (5th field)." />
-      <node id="field6"               mask="0x000003E0"       permission="rw"      description="Addr/Data (6th field)." />
-      <node id="field7"               mask="0x00007C00"       permission="rw"      description="Addr/Data (7th field)." />
-      <node id="field8"               mask="0x000F8000"       permission="rw"      description="Addr/Data (8nd field)." />
-      <node id="field9"               mask="0x01F00000"       permission="rw"      description="Addr/Data (9th field)." />
-      <node id="field10"              mask="0x3E000000"       permission="rw"      description="Addr/Data (10th field)." />
-    </node>
-
-    <node id="data1_reg"            address="0x00000002"    permission="rw"      description="Second address and data register. Only long write commands use this register.">
-      <node id="field11"              mask="0x0000001F"       permission="rw"      description="Addr/Data (11th field)." />
-      <node id="field12"              mask="0x000003E0"       permission="rw"      description="Addr/Data (12th field)." />
-      <node id="field13"              mask="0x00007C00"       permission="rw"      description="Addr/Data (13th field)." />
-      <node id="field14"              mask="0x000F8000"       permission="rw"      description="Addr/Data (14nd field)." />
-      <node id="field15"              mask="0x01F00000"       permission="rw"      description="Addr/Data (15th field)." />
-      <node id="field16"              mask="0x3E000000"       permission="rw"      description="Addr/Data (16th field)." />
-    </node>
-
-    <node id="data2_reg"            address="0x00000003"    permission="rw"      description="Third address and data register. Only long write commands use this register.">
-      <node id="field17"              mask="0x0000001F"       permission="rw"      description="Addr/Data (17th field)." />
-      <node id="field18"              mask="0x000003E0"       permission="rw"      description="Addr/Data (18th field)." />
-      <node id="field19"              mask="0x00007C00"       permission="rw"      description="Addr/Data (19th field)." />
-      <node id="field20"              mask="0x000F8000"       permission="rw"      description="Addr/Data (20th field)." />
-      <node id="field21"              mask="0x01F00000"       permission="rw"      description="Addr/Data (21st field)." />
-      <node id="field22"              mask="0x3E000000"       permission="rw"      description="Addr/Data (22nd field)." />
-    </node>
-
-  </node> -->
-
-  <!-- ================================================ -->
   <!-- ============== READOUT REGISTERS =============== -->
   <!-- ================================================ -->
-  
+
   <node id="fc7_daq_ddr3"     address="0x00000600" size="134217728" mode="incremental" permission="r"/> 
-  
+
   <node id="readout0"         address="0x00000100"    permission="rw"     description="Register Readout." >
     <node id="sel"							address="0x00000000"    permission="rw"      description="Select weather register or data frames are read out. 0x2: Register readout 0x1: Data readout - else: 0xffffffff"> </node>
     <node id="reg_mask"						address="0x00000001"    permission="rw"      description="Set filter for register readback. 0: cmd only 1: auto 2nd only 2: auto 1st only 3: auto 1st and 2nd"> </node>

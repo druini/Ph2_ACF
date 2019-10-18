@@ -109,7 +109,7 @@ namespace Ph2_HwInterface
     // LOG (INFO) << GREEN << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << RESET << GREEN << " chip(s) for module " << BOLDYELLOW << cModule->getIndex() << RESET;
     
 
-    cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_prog_empty_thr", 1024});
+    // cVecReg.push_back({"user.ctrl_regs.Slow_cmd.fifo_prog_empty_thr", 1024});
 
     cVecReg.push_back({"user.ctrl_regs.Register_RdBack.fifo_reset", 1});
     cVecReg.push_back({"user.ctrl_regs.Register_RdBack.fifo_reset", 0});
@@ -682,19 +682,6 @@ namespace Ph2_HwInterface
 
     return isGood;
   }
-
-  // template <class Stream, class It>
-  // void print_data(Stream& s, It begin, It end) {
-  //     int i = 0;
-  //     s << std::dec << i << ":\t";
-  //     for (It it = begin; it != end; it++) {
-  //         s << std::hex << std::setfill('0') << std::setw(8) << *it << "\t";
-  //         if (!(++i & 3)) {
-  //             s << std::dec << "\n" << i << ":\t";
-  //         }
-  //     }
-  //     s << std::endl;
-  // }
 
   RD53FWInterface::Event::Event (const uint32_t* data, size_t n)
   {

@@ -475,6 +475,10 @@ namespace Ph2_HwDescription
   }
 }
 
+
+// ###############################
+// # RD53 command base functions #
+// ###############################
 namespace RD53Cmd {
 
 GlobalPulse::GlobalPulse(uint8_t chip_id, uint8_t data) {
@@ -511,7 +515,7 @@ WrRegLong::WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16
 
   // apply value_map transform
   for (unsigned i = 6; i < fields.size(); ++i) {
-    fields[i] = value_map[fields[i]];
+    fields[i] = map5to8bit[fields[i]];
   }
 }
 
