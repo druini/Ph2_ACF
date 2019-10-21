@@ -59,8 +59,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
     # compiler flags
-    # set (CMAKE_CXX_FLAGS "-std=c++1y -O3 -Wcpp -pthread -pedantic -Wall -Werror -w -g -fPIC ${CMAKE_CXX_FLAGS}  -D__USE_ROOT__")
-    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-error=maybe-uninitialized -Wno-ignored-qualifiers -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-missing-field-initializers -std=c++1y -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -pthread  -Wcpp -fPIC ${CMAKE_CXX_FLAGS}  -D__USE_ROOT__")
+    # set (CMAKE_CXX_FLAGS "-std=c++1y -O3 -Wcpp -pthread -pedantic -Wall -Werror -w -g -fPIC ${CMAKE_CXX_FLAGS}  $ENV{UseRootFlag}")
+    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-error=maybe-uninitialized -Wno-ignored-qualifiers -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-missing-field-initializers -std=c++1y -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -pthread  -Wcpp -fPIC ${CMAKE_CXX_FLAGS}  $ENV{UseRootFlag}")
     
     #check for external dependences
     message("--")
@@ -75,7 +75,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         elseif()
             message(STATUS "    ROOT built without THttp Server - disabling compiler flags")
         endif()
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_NO_USE_ROOT__")
+        # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -")
         message(STATUS "    Using ROOT version ${ROOT_VERSION}")
     endif(ROOT_FOUND)
 
@@ -164,8 +164,6 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS " ") 
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
-
-    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_NO_USE_ROOT__")
 
     add_subdirectory(tools)
 #    add_subdirectory(RootWeb)

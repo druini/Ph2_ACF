@@ -70,5 +70,7 @@ export AntennaFlag='-D__ANTENNA__'
 export DevFlags='-D__DEV__'
 export Root5Flag='-D__ROOT5__'
 export Root6Flag='-D__ROOT6__'
+unset UseRootFlag
+export UseRootFlag='-D__USE_ROOT__'
 
 echo "=== DONE ==="

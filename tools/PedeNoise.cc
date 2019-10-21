@@ -10,6 +10,7 @@
 #include <math.h>
 
 #ifdef __USE_ROOT__
+    // static_assert(false,"use root is defined");
     #include "../DQMUtils/DQMHistogramPedeNoise.h" 
 #endif
 
