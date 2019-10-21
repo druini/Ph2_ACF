@@ -483,50 +483,47 @@ namespace RD53Cmd
 {
   GlobalPulse::GlobalPulse (uint8_t chip_id, uint8_t data)
   {
-    fields[0] = pack_encoded<4, 1>(chip_id, 0);
-    fields[1] = pack_encoded<4, 1>(data, 0);
+    fields[0] = packAndEncode<4, 1>(chip_id, 0);
+    fields[1] = packAndEncode<4, 1>(data, 0);
   }
 
   Cal::Cal (uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay)
   {
-    fields[0] = pack_encoded<4, 1>(chip_id, cal_edge_mode);
-    fields[1] = pack_encoded<4, 1>(cal_edge_delay, cal_edge_width >> 4);
-    fields[2] = pack_encoded<4, 1>(cal_edge_delay, cal_aux_mode);
-    fields[3] = pack_encoded<5>(cal_aux_delay);
+    fields[0] = packAndEncode<4, 1>(chip_id, cal_edge_mode);
+    fields[1] = packAndEncode<3, 2>(cal_edge_delay, cal_edge_width >> 4);
+    fields[2] = packAndEncode<4, 1>(cal_edge_width, cal_aux_mode);
+    fields[3] = packAndEncode<5   >(cal_aux_delay);
   }
 
   WrReg::WrReg (uint8_t chip_id, uint16_t address, uint16_t value)
   {
-    fields[0] = pack_encoded<4, 1>(chip_id, 0);
-    fields[1] = pack_encoded<5>(address >> 4);
-    fields[2] = pack_encoded<4, 1>(address, value >> 15);
-    fields[3] = pack_encoded<5>(value >> 10);
-    fields[4] = pack_encoded<5>(value >> 5);
-    fields[5] = pack_encoded<5>(value);
+    fields[0] = packAndEncode<4, 1>(chip_id, 0);
+    fields[1] = packAndEncode<5   >(address >> 4);
+    fields[2] = packAndEncode<4, 1>(address, value >> 15);
+    fields[3] = packAndEncode<5   >(value >> 10);
+    fields[4] = packAndEncode<5   >(value >> 5);
+    fields[5] = packAndEncode<5   >(value);
   }
 
   WrRegLong::WrRegLong (uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values)
   {
-    fields[0] = pack_encoded<4, 1>(chip_id, 1);
-    fields[1] = pack_encoded<5>(address >> 4);
-    fields[2] = pack_encoded<4, 1>(address, values[0] >> 15);
-    fields[3] = pack_encoded<5>(values[0] >> 10);
-    fields[4] = pack_encoded<5>(values[0] >> 5);
-    fields[5] = pack_encoded<5>(values[0]);
+    fields[0] = packAndEncode<4, 1>(chip_id, 1);
+    fields[1] = packAndEncode<5   >(address >> 4);
+    fields[2] = packAndEncode<4, 1>(address, values[0] >> 15);
+    fields[3] = packAndEncode<5   >(values[0] >> 10);
+    fields[4] = packAndEncode<5   >(values[0] >> 5);
+    fields[5] = packAndEncode<5   >(values[0]);
 
-    // unpack the remaining values 5 bits at a time
+    // Unpack the remaining values 5 bits at a time
     bits::unpack_range<5>(values.begin() + 1, values.end(), fields.begin() + 6);
-
-    // apply value_map transform
-    for (unsigned i = 6; i < fields.size(); ++i)
-      fields[i] = map5to8bit[fields[i]];
+    for (auto i = 6u; i < fields.size(); i++) fields[i] = map5to8bit[fields[i]];
   }
 
   RdReg::RdReg (uint8_t chip_id, uint16_t address)
   {
-    fields[0] = pack_encoded<4, 1>(chip_id, 0);
-    fields[1] = pack_encoded<5>(address >> 4);
-    fields[2] = pack_encoded<4, 1>(address, 0);
-    fields[3] = pack_encoded<5>(0);
+    fields[0] = packAndEncode<4, 1>(chip_id, 0);
+    fields[1] = packAndEncode<5   >(address >> 4);
+    fields[2] = packAndEncode<4, 1>(address, 0);
+    fields[3] = packAndEncode<5   >(0);
   }
 }

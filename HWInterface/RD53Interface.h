@@ -42,17 +42,17 @@ namespace Ph2_HwInterface
     { std::cout << __PRETTY_FUNCTION__ << std::endl; exit(EXIT_FAILURE); }; // @TMP@
 
   private:
-    void WriteRD53Mask     (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
-    void InitRD53Aurora    (RD53* pRD53);
-    void SyncRD53          (Chip* pRD53);
-    void ResetRD53         (Chip* pRD53);
     std::vector<std::pair<uint16_t,uint16_t>> ReadRD53Reg (Chip* pRD53, uint16_t address);
+    void WriteRD53Mask  (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
+    void InitRD53Aurora (RD53* pRD53);
+    void SyncRD53       (Chip* pRD53);
+    void ResetRD53      (Chip* pRD53);
 
     template <class Cmd>
-    void SendCommand(Chip* pChip, const Cmd& cmd);
+      void SendCommand(Chip* pChip, const Cmd& cmd);
 
     template <typename T, size_t N>
-    static size_t arraySize(const T(&)[N]) { return N; }
+      static size_t arraySize(const T(&)[N]) { return N; }
   };
 }
 

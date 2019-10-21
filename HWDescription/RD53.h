@@ -71,18 +71,6 @@ namespace RD53chargeConverter
 #define NBIT_FRAME  5 // Number of frame bits
 
 
-// ##################
-// # Register frame #
-// ##################
-namespace RD53RegFrameEncoder
-{
-  const uint8_t NBIT_CHIPID  =  3; // Number of bits for the ID      in the register frame
-  const uint8_t NBIT_STATUS  =  3; // Number of bits for the status  in the register frame
-  const uint8_t NBIT_ADDRESS = 10; // Number of bits for the address in the register frame
-  const uint8_t NBIT_VALUE   = 16; // Number of bits for the value   in the register frame
-}
-
-
 // ############
 // # Commands #
 // ############
@@ -345,11 +333,11 @@ namespace RD53Cmd
       frameVector.push_back(cmdCode);
 
       // Insert: chip id, address and data
-      for (auto i = 0u; i < nFields; i+=2) // @TMP@ shold be -1
+      for (auto i = 0u; i < nFields; i+=2)
         frameVector.push_back(bits::pack<8, 8>(fields[i], fields[i+1]));
     }
 
-    std::vector<uint16_t> get_data() const
+    std::vector<uint16_t> getFrames() const
       {
         std::vector<uint16_t> frameVector;
         frameVector.reserve(1 + nFields / 2);
@@ -359,7 +347,7 @@ namespace RD53Cmd
 
   protected:
     template <int... Sizes, class... Args>
-      uint8_t pack_encoded (Args&&... args)
+      uint8_t packAndEncode (Args&&... args)
     {
       return map5to8bit[bits::pack<Sizes...>(std::forward<Args>(args)...)];
     }
@@ -371,11 +359,11 @@ namespace RD53Cmd
   struct BCR         : public Command<RD53CmdEncoder::RESET_BCR,  0> {};
   struct NoOp        : public Command<RD53CmdEncoder::NOOP,       0> {};
   struct Sync        : public Command<RD53CmdEncoder::SYNC,       0> {};
-  struct GlobalPulse : public Command<RD53CmdEncoder::GLOB_PULSE, 2> { GlobalPulse(uint8_t chip_id, uint8_t data); };
-  struct Cal         : public Command<RD53CmdEncoder::CAL,        4> { Cal(uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay); };
-  struct WrReg       : public Command<RD53CmdEncoder::WRITE,      6> { WrReg(uint8_t chip_id, uint16_t address, uint16_t value); };
-  struct WrRegLong   : public Command<RD53CmdEncoder::WRITE,     22> { WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values); };
-  struct RdReg       : public Command<RD53CmdEncoder::READ,       4> { RdReg(uint8_t chip_id, uint16_t address); };
+  struct GlobalPulse : public Command<RD53CmdEncoder::GLOB_PULSE, 2> { GlobalPulse (uint8_t chip_id, uint8_t data); };
+  struct Cal         : public Command<RD53CmdEncoder::CAL,        4> { Cal         (uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay); };
+  struct WrReg       : public Command<RD53CmdEncoder::WRITE,      6> { WrReg       (uint8_t chip_id, uint16_t address, uint16_t value); };
+  struct WrRegLong   : public Command<RD53CmdEncoder::WRITE,     22> { WrRegLong   (uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values); };
+  struct RdReg       : public Command<RD53CmdEncoder::READ,       4> { RdReg       (uint8_t chip_id, uint16_t address); };
 }
 
 #endif

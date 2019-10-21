@@ -9,9 +9,6 @@
 
 #include "RD53Interface.h"
 
-#include <random>
-// #include <pair>
-
 namespace Ph2_HwInterface
 {
   RD53Interface::RD53Interface (const BeBoardFWMap& pBoardMap): ReadoutChipInterface (pBoardMap) {}
@@ -107,13 +104,24 @@ namespace Ph2_HwInterface
   }
 
   template <class Cmd>
-  void RD53Interface::SendCommand(Chip* pChip, const Cmd& cmd) {
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.get_data(), pChip->getFeId());
+  void RD53Interface::SendCommand (Chip* pChip, const Cmd& cmd)
+  {
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getFeId());
   }
 
-  void RD53Interface::SyncRD53 (Chip* pChip) { 
+  void RD53Interface::SyncRD53 (Chip* pChip)
+  {
     this->setBoard(pChip->getBeBoardId());
-    SendCommand(pChip, RD53Cmd::Sync{});
+
+    SendCommand(pChip, RD53Cmd::Sync());
+  }
+
+  void RD53Interface::ResetRD53 (Chip* pChip)
+  {
+    this->setBoard(pChip->getBeBoardId());
+
+    SendCommand(pChip, RD53Cmd::ECR());
+    SendCommand(pChip, RD53Cmd::BCR());
   }
 
   bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
@@ -285,13 +293,6 @@ namespace Ph2_HwInterface
     }
     if (command_data.size())
       static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(command_data, pRD53->getFeId());
-  }
-
-  void RD53Interface::ResetRD53 (Chip* pChip)
-  {
-    this->setBoard(pChip->getBeBoardId());
-    SendCommand(pChip, RD53Cmd::ECR{});
-    SendCommand(pChip, RD53Cmd::BCR{});
   }
 
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode)
