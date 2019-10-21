@@ -34,8 +34,23 @@ namespace Ph2_HwInterface {
 
     D19cFpgaConfig::D19cFpgaConfig (BeBoardFWInterface* pbbi) :
         FpgaConfig (pbbi),
-        lNode (dynamic_cast< const fc7::MmcPipeInterface& > (fwManager->getUhalNode ( "system.buf_cta" ) ) )
+        lNode(nullptr)
     {
+        //Quick fix for IT - OT incompatibilities
+        try
+        {
+            lNode  = new fc7::MmcPipeInterface(dynamic_cast< const fc7::MmcPipeInterface& > (fwManager->getUhalNode ( "system.buf_cta" ) ) );
+        }
+        catch(const std::exception& lExc)
+        {
+            lNode  = new fc7::MmcPipeInterface(dynamic_cast< const fc7::MmcPipeInterface& > (fwManager->getUhalNode ( "buf_cta" ) ) );
+        }
+        
+    }
+
+    D19cFpgaConfig::~D19cFpgaConfig()
+    {
+        delete lNode;
     }
 
     void D19cFpgaConfig::runUpload (const std::string& strImage, const char* szFile) 
@@ -51,26 +66,26 @@ namespace Ph2_HwInterface {
         if (string (pstrFile).compare (string (pstrFile).length() - 4, 4, ".bit") == 0)
         {
             fc7::XilinxBitFile bitFile (pstrFile);
-            lNode.FileToSD (strImage, bitFile, &progressValue, &progressString);
+            lNode->FileToSD (strImage, bitFile, &progressValue, &progressString);
         }
         else
         {
             fc7::XilinxBinFile binFile (pstrFile);
-            lNode.FileToSD (strImage, binFile, &progressValue, &progressString);
+            lNode->FileToSD (strImage, binFile, &progressValue, &progressString);
         }
 
         progressValue = 100;
-        lNode.RebootFPGA (strImage, SECURE_MODE_PASSWORD);
+        lNode->RebootFPGA (strImage, SECURE_MODE_PASSWORD);
     }
 
     void D19cFpgaConfig::jumpToImage ( const std::string& strImage)
     {
-        lNode.RebootFPGA (strImage, SECURE_MODE_PASSWORD);
+        lNode->RebootFPGA (strImage, SECURE_MODE_PASSWORD);
     }
 
     void D19cFpgaConfig::runDownload (const std::string& strImage, const char* szFile) 
     {
-        vector<string> lstNames = lNode.ListFilesOnSD();
+        vector<string> lstNames = lNode->ListFilesOnSD();
 
         for (size_t iName = 0; iName < lstNames.size(); iName++)
         {
@@ -87,9 +102,9 @@ namespace Ph2_HwInterface {
 
     void D19cFpgaConfig::downloadImage ( const std::string& strImage, const std::string& strDestFile)
     {
-        fc7::Firmware bitStream1 = lNode.FileFromSD (strImage, &progressValue, 0);
+        fc7::Firmware bitStream1 = lNode->FileFromSD (strImage, &progressValue, 0);
         progressString = "Checking download";
-        fc7::Firmware bitStream2 = lNode.FileFromSD (strImage, &progressValue, 33);
+        fc7::Firmware bitStream2 = lNode->FileFromSD (strImage, &progressValue, 33);
         fc7::Firmware bitStream3 ("empty");
         ofstream oFile;
         oFile.open (strDestFile, ios::out | ios::binary);
@@ -102,7 +117,7 @@ namespace Ph2_HwInterface {
                 if (bitStream3.Bitstream().empty() )
                 {
                     progressString = "Errors found, checking again";
-                    bitStream3 = lNode.FileFromSD (strImage, &progressValue, 66);
+                    bitStream3 = lNode->FileFromSD (strImage, &progressValue, 66);
                 }
 
                 if (bitStream1.Bitstream() [idx] == bitStream3.Bitstream() [idx])
@@ -122,17 +137,17 @@ namespace Ph2_HwInterface {
 
     std::vector<std::string>  D19cFpgaConfig::getFirmwareImageNames()
     {
-        return lNode.ListFilesOnSD ();
+        return lNode->ListFilesOnSD ();
 
     }
 
     void D19cFpgaConfig::deleteFirmwareImage (const std::string& strId)
     {
-        lNode.DeleteFromSD (strId, SECURE_MODE_PASSWORD);
+        lNode->DeleteFromSD (strId, SECURE_MODE_PASSWORD);
     }
 
     void D19cFpgaConfig::resetBoard()
     {
-        lNode.BoardHardReset (SECURE_MODE_PASSWORD);
+        lNode->BoardHardReset (SECURE_MODE_PASSWORD);
     }
 }

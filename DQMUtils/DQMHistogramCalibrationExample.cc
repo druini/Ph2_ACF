@@ -12,6 +12,7 @@
 #include "../RootUtils/RootContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "../RootUtils/HistContainer.h"
+#include "TH1F.h"
 #include "TCanvas.h"
 #include "TFile.h"
 
