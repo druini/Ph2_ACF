@@ -12,63 +12,35 @@
 
 #include "ReadoutChip.h"
 
-#include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/bit_packing.h"
 
 #include <iomanip>
 
 
-// ################################
-// # CONSTANTS AND BIT DEFINITION #
-// ################################
+// #############
+// # CONSTANTS #
+// #############
 #define NAMESEARCHinPATH "CMSIT" // Search for this name in config file name for manipulation
-#define NROWS           192 // Total number of rows
-#define NCOLS           400 // Total number of columns
-#define NBITMAXREG       16 // Maximum number of bits for a chip register
-#define NPIXCOL_PROG      2 // Number of pixel columns to program
-#define NDATAMAX_PERPIXEL 6 // Number of data-bit packets used to program the pixel
-#define NPIX_REGION       4 // Number of pixels in a region (1x4)
-#define NROW_CORE         8 // Number of rows in a core
+#define NROWS 192 // Total number of rows
+#define NCOLS 400 // Total number of columns
 
 
-// #####################################################################
-// # Formula: par0/par1 * VCal / electron_charge [C] * capacitance [C] #
-// #####################################################################
-namespace RD53chargeConverter
+// #########################
+// # Chip useful constants #
+// #########################
+namespace RD53Constants
 {
-  constexpr float par0   =    0.9; // Vref (V)
-  constexpr float par1   = 4096.0; // VCal total range
-  constexpr float cap    =    8.2; // (fF)
-  constexpr float ele    =    1.6; // (e-19)
-  constexpr float offset =   64;   // Due to VCal_High vs VCal_Med offset difference (e-)
-
-  constexpr float VCAl2Charge (float VCal)
-  {
-    return (par0/par1) * VCal / ele * cap * 1e4 + offset;
-  }
-
-  constexpr float Charge2VCal (float Charge)
-  {
-    return (Charge - offset) / (cap * 1e4) * ele / (par0/par1);
-  }
+  const uint8_t BROADCAST_CHIPID = 0xF; // Broadcast chip ID used to send the command to multiple chips
+  const uint8_t NREGIONS_LONGCMD =  6;  // Number of regions to program with long write commands
+  const uint8_t FIELDS_SHORTCMD  =  8;  // Number of fields for the short write command
+  const uint8_t NBIT_TDAC        =  4;  // Number of TDAC bits
+  const uint8_t NBIT_MAXREG      = 16;  // Maximum number of bits for a chip register
+  const uint8_t NPIX_REGION      =  4;  // Number of pixels in a region (1x4)
+  const uint8_t NROW_CORE        =  8;  // Number of rows in a core
+  const uint8_t NBIT_ADDR        =  9;  // Number of address bits
 }
-
-
-// #########################
-// # Command configuration #
-// #########################
-#define NBIT_CMD   16 // Number of command bits
-#define NBIT_ID     4 // Number of chip ID bits
-#define NBIT_ADDR   9 // Number of address bits
-#define NBIT_DATA  16 // Number of value bits
-#define NBIT_SYMBOL 8 // Number of symbol bits
-#define NBIT_BROADC 1 // Number of broadcast bits
-#define NBIT_5BITW  3 // Number of 5-bit word counter bits
-#define NBIT_FRAME  5 // Number of frame bits
 
 
 // ############
@@ -84,34 +56,6 @@ namespace RD53CmdEncoder
   const uint16_t READ       = 0x6565; // Read command word
   const uint16_t NOOP       = 0x6969; // No operation word
   const uint16_t SYNC       = 0x817E; // Synchronization word
-}
-
-
-// ###########################
-// # Injection configuration #
-// ###########################
-namespace RD53InjEncoder
-{
-  const uint8_t BROADCAST_CHIPID    = 0xF; // Broadcast chip ID used to send the command to multiple chips
-  const uint8_t NBIT_CAL_EDGE_MODE  =   1; // Number of cal_edge_mode bits
-  const uint8_t NBIT_CAL_EDGE_DELAY =   3; // Number of cal_edge_delay bits
-  const uint8_t NBIT_CAL_EDGE_WIDTH =   6; // Number of cal_edge_width bits
-  const uint8_t NBIT_CAL_AUX_MODE   =   1; // Number of cal_aux_mode bits
-  const uint8_t NBIT_CAL_AUX_DELAY  =   5; // Number of cal_aux_mode bits
-}
-
-
-// ############################
-// # Pixel cell configuration #
-// ############################
-namespace RD53PixelEncoder
-{
-  const uint8_t NBIT_PIXEN  =    1; // Number of pixel enable bits
-  const uint8_t NBIT_INJEN  =    1; // Number of injection enable bits
-  const uint8_t NBIT_HITBUS =    1; // Number of hit bust bits
-  const uint8_t NBIT_TDAC   =    4; // Number of TDAC bits
-  const uint8_t HIGHGAIN    = 0x80; // Set High Gain Linear FE
-  const uint8_t LOWGAIN     = 0x00; // Set Low Gain Linear FE
 }
 
 
@@ -136,6 +80,29 @@ namespace RD53EvtEncoder
   const uint8_t CGOOD = 0x00; // Chip event status Good
   const uint8_t CHEAD = 0x40; // Chip event status Bad chip header
   const uint8_t CPIX  = 0x80; // Chip event status Bad pixel row or column
+}
+
+
+// #####################################################################
+// # Formula: par0/par1 * VCal / electron_charge [C] * capacitance [C] #
+// #####################################################################
+namespace RD53chargeConverter
+{
+  constexpr float par0   =    0.9; // Vref (V)
+  constexpr float par1   = 4096.0; // VCal total range
+  constexpr float cap    =    8.2; // (fF)
+  constexpr float ele    =    1.6; // (e-19)
+  constexpr float offset =   64;   // Due to VCal_High vs VCal_Med offset difference (e-)
+
+  constexpr float VCAl2Charge (float VCal)
+  {
+    return (par0/par1) * VCal / ele * cap * 1e4 + offset;
+  }
+
+  constexpr float Charge2VCal (float Charge)
+  {
+    return (Charge - offset) / (cap * 1e4) * ele / (par0/par1);
+  }
 }
 
 
@@ -178,21 +145,6 @@ namespace Ph2_HwDescription
     void    injectPixel         (unsigned int row, unsigned int col, bool inject);
     void    setTDAC             (unsigned int row, unsigned int col, uint8_t TDAC);
     uint8_t getTDAC             (unsigned int row, unsigned int col);
-
-    void encodeCMD (const ChipRegItem                 & pRegItem,
-                    const uint8_t                       pRD53Id,
-                    const uint16_t                      pRD53Cmd,
-                    std::vector<std::vector<uint16_t>>& pVecReg);
-    void encodeCMD (const uint16_t               address,
-                    const uint16_t               data,
-                    const uint8_t                pRD53Id,
-                    const uint16_t               pRD53Cmd,
-                    const bool                   isBroadcast,
-                    std::vector<uint32_t>      & pVecReg,
-                    const std::vector<uint16_t>* dataVec = NULL);
-
-    void convertRowCol2Cores  (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair);
-    void convertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& col);
 
     struct HitData
     {
@@ -333,21 +285,23 @@ namespace RD53Cmd
       frameVector.push_back(cmdCode);
 
       // Insert: chip id, address and data
-      for (auto i = 0u; i < nFields; i+=2)
+      for (auto i = 0u; i < nFields; i += 2)
         frameVector.push_back(bits::pack<8, 8>(fields[i], fields[i+1]));
     }
 
     std::vector<uint16_t> getFrames() const
       {
         std::vector<uint16_t> frameVector;
+
         frameVector.reserve(1 + nFields / 2);
         Command::appendTo(frameVector);
+
         return frameVector;
       }
 
   protected:
     template <int... Sizes, class... Args>
-      uint8_t packAndEncode (Args&&... args)
+      uint8_t packAndEncode(Args&&... args)
     {
       return map5to8bit[bits::pack<Sizes...>(std::forward<Args>(args)...)];
     }

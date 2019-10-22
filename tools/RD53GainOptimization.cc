@@ -212,7 +212,7 @@ void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents
                     }
               stdDev = (cnt != 0 ? stdDev/cnt : 0) - cChip->getSummary<GainAndIntercept>().fGain * cChip->getSummary<GainAndIntercept>().fGain;
               stdDev = (stdDev > 0 ? sqrt(stdDev) : 0);
-              size_t ToTpoint = RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION) - 2;
+              size_t ToTpoint = RD53::setBits(RD53EvtEncoder::NBIT_TOT/RD53Constants::NPIX_REGION) - 2;
               float newValue  = (ToTpoint - cChip->getSummary<GainAndIntercept>().fIntercept) / (cChip->getSummary<GainAndIntercept>().fGain + NSTDEV*stdDev);
 
 

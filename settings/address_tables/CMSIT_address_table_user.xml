@@ -104,10 +104,9 @@
       <node id="Nb_of_events"         mask="0x3FFFC000"       permission="rw"      description="" />
     </node>	
 
-    <node id="Hybrids_en"           address="0x0000000B"    permission="rw"      description="">
-    </node>	
-    <node id="Chips_en"             address="0x0000000C"    permission="rw"      description="">
-    </node>	
+    <node id="Hybrids_en"           address="0x0000000B"    permission="rw"      description=""> </node>
+
+    <node id="Chips_en"             address="0x0000000C"    permission="rw"      description=""> </node>
 
     <node id="Slow_cmd_fifo_din"     address="0x0000000D"    permission="rw"      description=""> </node>	
 

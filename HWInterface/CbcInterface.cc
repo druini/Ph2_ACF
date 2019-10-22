@@ -29,7 +29,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool CbcInterface::ConfigureChip ( const Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
+    bool CbcInterface::ConfigureChip ( Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
     {
         //std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
         //std::cout << __PRETTY_FUNCTION__ << "!!!!!!!!!!!!!!!!" << std::endl;

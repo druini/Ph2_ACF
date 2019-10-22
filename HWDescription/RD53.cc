@@ -13,7 +13,7 @@ namespace Ph2_HwDescription
 {
   RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& fileName) : ReadoutChip (pFeDesc, pRD53Id)
   {
-    fMaxRegValue      = RD53::setBits(NBITMAXREG);
+    fMaxRegValue      = RD53::setBits(RD53Constants::NBIT_MAXREG);
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     configFileName    = fileName;
     loadfRegMap(configFileName);
@@ -22,7 +22,7 @@ namespace Ph2_HwDescription
 
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& fileName) : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id)
   {
-    fMaxRegValue      = RD53::setBits(NBITMAXREG);
+    fMaxRegValue      = RD53::setBits(RD53Constants::NBIT_MAXREG);
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     configFileName    = fileName;
     loadfRegMap(configFileName);
@@ -315,7 +315,7 @@ namespace Ph2_HwDescription
         fPixelsMask[i].Enable.reset();
         fPixelsMask[i].HitBus.reset();
         fPixelsMask[i].InjEn.reset();
-        for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION) / 2;
+        for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) / 2;
       }
   }
 
@@ -369,18 +369,6 @@ namespace Ph2_HwDescription
     return fPixelsMask[col].TDAC[row];
   }
 
-  void RD53::convertRowCol2Cores (unsigned int _row, unsigned int col, uint16_t& row, uint16_t& colPair)
-  {
-    colPair = col >> (NPIXCOL_PROG / 2);
-    row     = _row;
-  }
-
-  void RD53::convertCores2Col4Row (uint16_t coreCol, uint16_t coreRowAndRegion, uint8_t side, unsigned int& row, unsigned int& col)
-  {
-    row = coreRowAndRegion;
-    col = NPIX_REGION * ((coreCol << RD53EvtEncoder::NBIT_SIDE) | side);
-  }
-
   uint32_t RD53::getNumberOfChannels() const
   {
     return nRows * nCols;
@@ -405,12 +393,12 @@ namespace Ph2_HwDescription
     uint32_t core_col, side, row, col, all_tots;
 
     std::tie(core_col, row, side, all_tots) = bits::unpack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_ROW, RD53EvtEncoder::NBIT_SIDE, RD53EvtEncoder::NBIT_TOT>(data);
-    col                                     = NPIX_REGION * bits::pack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
+    col                                     = RD53Constants::NPIX_REGION * bits::pack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
 
-    uint8_t tots[NPIX_REGION];
-    bits::RangePacker<NPIX_REGION>::unpack_reverse(all_tots, tots);
+    uint8_t tots[RD53Constants::NPIX_REGION];
+    bits::RangePacker<RD53Constants::NPIX_REGION>::unpack_reverse(all_tots, tots);
 
-    for (int i = 0; i < NPIX_REGION; i++) if (tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION)) result.emplace_back(row, col + i, tots[i]);
+    for (int i = 0; i < RD53Constants::NPIX_REGION; i++) if (tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) result.emplace_back(row, col + i, tots[i]);
 
     return result;
   }
@@ -461,17 +449,12 @@ namespace Ph2_HwDescription
 
   uint32_t RD53::CalCmd::getCalCmd (const uint8_t& chipId)
   {
-    return bits::pack<NBIT_ID,
-                     RD53InjEncoder::NBIT_CAL_EDGE_MODE,
-                     RD53InjEncoder::NBIT_CAL_EDGE_DELAY,
-                     RD53InjEncoder::NBIT_CAL_EDGE_WIDTH,
-                     RD53InjEncoder::NBIT_CAL_AUX_MODE,
-                     RD53InjEncoder::NBIT_CAL_AUX_DELAY>(chipId,
-                                                         cal_edge_mode,
-                                                         cal_edge_delay,
-                                                         cal_edge_width,
-                                                         cal_aux_mode,
-                                                         cal_aux_delay);
+    return bits::pack<4, 1 , 3, 6, 1, 5>(chipId,
+                                         cal_edge_mode,
+                                         cal_edge_delay,
+                                         cal_edge_width,
+                                         cal_aux_mode,
+                                         cal_aux_delay);
   }
 }
 
@@ -514,7 +497,6 @@ namespace RD53Cmd
     fields[4] = packAndEncode<5   >(values[0] >> 5);
     fields[5] = packAndEncode<5   >(values[0]);
 
-    // Unpack the remaining values 5 bits at a time
     bits::unpack_range<5>(values.begin() + 1, values.end(), fields.begin() + 6);
     for (auto i = 6u; i < fields.size(); i++) fields[i] = map5to8bit[fields[i]];
   }

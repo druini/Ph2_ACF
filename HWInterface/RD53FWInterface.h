@@ -20,20 +20,23 @@
 #include <sstream>
 
 
-// ################################
-// # CONSTANTS AND BIT DEFINITION #
-// ################################
+// #############
+// # CONSTANTS #
+// #############
 #define DEEPSLEEP  100000 // [microseconds]
 #define READOUTSLEEP   50 // [microseconds]
 #define MAXTRIALS      10 // Maximum number of trials for ReadNEvents
 
-#define NBIT_FWVER     16 // Number of bits for the firmware version
-#define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
-#define NWORDS_DDR3     4 // Number of IPbus words in a DDR3 word
-
+// ##################
+// # BIT DEFINITION #
+// ##################
+#define HEADEAR_WRTCMD 0xFF // Header of chip write command sequence
+#define NBIT_FWVER     16   // Number of bits for the firmware version
+#define IPBFASTDURATION 1   // Duration of a fast command in terms of 40 MHz clk cycles
+#define NWORDS_DDR3     4   // Number of IPbus words in a DDR3 word
 
 // #################
-// # Readout block #
+// # READOUT BLOCK #
 // #################
 #define HANDSHAKE_EN   0
 #define L1A_TIMEOUT 4000
@@ -212,9 +215,9 @@ namespace Ph2_HwInterface
     void DownloadFpgaConfig                    (const std::string& strConfig, const std::string& strDest);
     std::vector<std::string> getFpgaConfigList ();
     void DeleteFpgaConfig                      (const std::string& strId);
-    void checkIfUploading                      ();
+    void CheckIfUploading                      ();
     void RebootBoard                           ();
-    const FpgaConfig* getConfiguringFpga       ();
+    const FpgaConfig* GetConfiguringFpga       ();
 
   private:
     void PrintFWstatus         ();
@@ -223,19 +226,15 @@ namespace Ph2_HwInterface
     void TurnOnFMC             ();
     void ResetBoard            ();
     void ResetFastCmdBlk       ();
+    void ResetSlowCmdBlk       ();
     void ResetReadoutBlk       ();
-
     void ConfigureFastCommands (const FastCommandsConfig* config = nullptr);
     void ConfigureDIO5         (const DIO5Config* config);
-
     void SendBoardCommand      (const std::string& cmd_reg);
-
-    bool getChipLane           (Chip* pChip);
 
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
-    bool               scc;
   };
 }
 

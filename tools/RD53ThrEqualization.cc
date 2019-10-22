@@ -95,7 +95,7 @@ void ThrEqualization::run ()
   // ##############################
   // # Run threshold equalization #
   // ##############################
-  size_t TDACsize = RD53::setBits(RD53PixelEncoder::NBIT_TDAC) + 1;
+  size_t TDACsize = RD53::setBits(RD53Constants::NBIT_TDAC) + 1;
 
   // ############################
   // # Set new VCAL_HIGH values #

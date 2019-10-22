@@ -10,10 +10,7 @@
 #ifndef GenericDataVector_H
 #define GenericDataVector_H
 
-#include "Container.h"
 #include "OccupancyAndPh.h"
-
-#include <iostream>
 
 class GenericDataVector : public OccupancyAndPh
 {
@@ -26,7 +23,11 @@ class GenericDataVector : public OccupancyAndPh
     std::cout << data1.size() << "\t" << data2.size() << std::endl;
   }
 
-  // void makeSummaryAverage (const std::vector<GenericDataVector>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
+  void makeSummaryAverage (const std::vector<EmptyContainer>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
+  {
+    OccupancyAndPh::makeSummaryAverage(theOccupancyVector, theNumberOfEnabledChannelsList, numberOfEvents);
+  }
+  void makeSummaryAverage (const std::vector<GenericDataVector>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
 
   std::vector<float> data1;
   std::vector<float> data2;
