@@ -132,16 +132,18 @@ namespace Ph2_HwInterface
     RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), cRegItem.fAddress, cRegItem.fValue));
     if ((pRegNode == "VCAL_HIGH") || (pRegNode == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
 
+    pVerifLoop = false; // @TMP@
     if (pVerifLoop == true)
       {
         if (pRegNode == "PIX_PORTAL")                     pixMode       = RD53Interface::ReadRD53Reg(pChip, "PIX_MODE")[0].second;
         if (pixMode == 0)                                 outputDecoded = RD53Interface::ReadRD53Reg(pChip, pRegNode);
         if ((pRegNode == "PIX_PORTAL") && (pixMode == 0)) row           = RD53Interface::ReadRD53Reg(pChip, "REGION_ROW")[0].second;
 
-        if ((pixMode == 0) &&
-            (((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded[0].first != row))               ||
-             ((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded[0].first != cRegItem.fAddress)) ||
-             (outputDecoded[0].second != cRegItem.fValue)))
+        if ((outputDecoded.size() == 0) ||
+            ((pixMode == 0) &&
+             (((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded[0].first != row))               ||
+              ((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded[0].first != cRegItem.fAddress)) ||
+              (outputDecoded[0].second != cRegItem.fValue))))
           {
             LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
             return false;
@@ -196,8 +198,8 @@ namespace Ph2_HwInterface
     if (doSparse == true)
       {
         RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
-        RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x0,  pVerifLoop);
-        RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x0,  pVerifLoop);
+        RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x00, pVerifLoop);
+        RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x00, pVerifLoop);
 
         uint16_t data;
 
@@ -219,7 +221,7 @@ namespace Ph2_HwInterface
 
                 if (commandList.size() > RD53Constants::FIELDS_SHORTCMD * NPIXCMD)
                   {
-                    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getFeId());
+                    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getFeId()); // @TMP@
                     commandList.clear();
                   }
               }
@@ -250,14 +252,14 @@ namespace Ph2_HwInterface
 
                 if ((commandList.size() > RD53Constants::FIELDS_SHORTCMD * NPIXCMD) || (row == (RD53::nRows-1)))
                   {
-                    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getFeId());
+                    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getFeId()); // @TMP@
                     commandList.clear();
                   }
               }
           }
       }
 
-    if (commandList.size() != 0) static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getFeId());
+    if (commandList.size() != 0) static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getFeId()); // @TMP@
   }
 
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode)

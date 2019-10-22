@@ -23,17 +23,17 @@
 // #############
 // # CONSTANTS #
 // #############
-#define DEEPSLEEP  100000 // [microseconds]
-#define READOUTSLEEP   50 // [microseconds]
-#define MAXTRIALS      10 // Maximum number of trials for ReadNEvents
+#define DEEPSLEEP 100000 // [microseconds]
+#define READOUTSLEEP  50 // [microseconds]
+#define MAXTRIALS     10 // Maximum number of trials for ReadNEvents
 
 // ##################
 // # BIT DEFINITION #
 // ##################
-#define HEADEAR_WRTCMD 0xFF // Header of chip write command sequence
-#define NBIT_FWVER     16   // Number of bits for the firmware version
-#define IPBFASTDURATION 1   // Duration of a fast command in terms of 40 MHz clk cycles
-#define NWORDS_DDR3     4   // Number of IPbus words in a DDR3 word
+#define HEADEAR_WRTCMD  0xFF // Header of chip write command sequence
+#define NBIT_FWVER        16 // Number of bits for the firmware version
+#define IPBUS_FASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
+#define NWORDS_DDR3        4 // Number of IPbus words in a DDR3 word
 
 // #################
 // # READOUT BLOCK #

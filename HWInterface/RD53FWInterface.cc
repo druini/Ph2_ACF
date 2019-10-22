@@ -123,30 +123,38 @@ namespace Ph2_HwInterface
   {
     size_t n32bitWords = (data.size() / 2) + (data.size() % 2);
 
-    if (ReadReg("user.stat_regs.slow_cmd.error_flag") == true)
-      LOG (ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
 
-    if (ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false)
-      LOG (ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
+    // #####################
+    // # Check if all good # // @TMP@
+    // #####################
+    // if (ReadReg("user.stat_regs.slow_cmd.error_flag") == true)
+    //   LOG (ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
 
+    // if (ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false)
+    //   LOG (ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
+
+
+    // #######################
+    // # Load command vector #
+    // #######################
     std::vector<std::pair<std::string, uint32_t>> stackRegisters;
-    stackRegisters.reserve(1 + n32bitWords);
+    stackRegisters.reserve(n32bitWords + 1);
 
     // Header
     stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<6, 10, 4, 12>(HEADEAR_WRTCMD, (1 << moduleId), 0, n32bitWords));
 
     // Commands
-    for (auto i = 0u; i < data.size(); i += 2)
-      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<16, 16>(data[i], data[i + 1]));
+    for (auto i = 1u; i < data.size(); i += 2)
+      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<16, 16>(data[i - 1], data[i]));
 
     // If data.size() is not even, add a sync command
     if (data.size() % 2 != 0)
       stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
 
 
-    // ###################################
-    // # Send the command(s) to the chip #
-    // ###################################
+    // ###############################
+    // # Send command(s) to the chip #
+    // ###############################
     stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd.dispatch_packet", 1);
     stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd.dispatch_packet", 0);
 
@@ -156,13 +164,21 @@ namespace Ph2_HwInterface
 
   std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters (Chip* pChip)
   {
+    std::vector<std::pair<uint16_t,uint16_t>> outputDecoded;
+
+
+    // #####################
+    // # Get the chip lane #
+    // #####################
     uint16_t chipLane;
     bool singleChip = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
     if (singleChip == true) chipLane = pChip->getFeId();
-    else                    chipLane = 4 * pChip->getFeId() + pChip->getChipId();
+    else                    chipLane = 4 * pChip->getFeId() + pChip->getChipId(); // @TMP@
 
-    std::vector<std::pair<uint16_t,uint16_t>> outputDecoded;
 
+    // #####################
+    // # Read the register #
+    // #####################
     if (ReadReg("user.stat_regs.Register_Rdback.fifo_empty") == true) usleep(DEEPSLEEP);
     while (ReadReg("user.stat_regs.Register_Rdback.fifo_empty") == false)
       {
@@ -173,7 +189,8 @@ namespace Ph2_HwInterface
 
         if (lane == chipLane) outputDecoded.emplace_back(address, value);
       }
-    if (outputDecoded.size() == 0) LOG (ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
+    // if (outputDecoded.size() == 0) LOG (ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@
+
 
     return outputDecoded;
   }
@@ -489,7 +506,7 @@ namespace Ph2_HwInterface
   {
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset");
 
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBFASTDURATION);
+    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBUS_FASTDURATION);
   }
 
   void RD53FWInterface::ResetSlowCmdBlk()

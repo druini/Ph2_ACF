@@ -285,8 +285,8 @@ namespace RD53Cmd
       frameVector.push_back(cmdCode);
 
       // Insert: chip id, address and data
-      for (auto i = 0u; i < nFields; i += 2)
-        frameVector.push_back(bits::pack<8, 8>(fields[i], fields[i+1]));
+      for (auto i = 1u; i < nFields; i += 2)
+        frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
     }
 
     std::vector<uint16_t> getFrames() const
