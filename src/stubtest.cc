@@ -102,15 +102,17 @@ int main ( int argc, char* argv[] )
     cTool.ConfigureHw ();
     std::string::size_type sz;
     t.start();
-    StubTool cStubTool;
-    cStubTool.Inherit (&cTool);
-    cStubTool.Initialize();
-    if (offset)    cStubTool.scanStubs();
-    if (noise)     cStubTool.scanStubs_wNoise();
-    if (ptwidth)   cStubTool.scanStubs_ptWidth();
-    if (clustwidth)cStubTool.scanStubs_clusterWidth(strip_cw);
-    if (sof)       cStubTool.scanStubs_SoF(strip_sof);
-    if (swap)      cStubTool.scanStubs_swap();
+    #ifdef __USE_ROOT__
+        StubTool cStubTool;
+        cStubTool.Inherit (&cTool);
+        cStubTool.Initialize();
+        if (offset)    cStubTool.scanStubs();
+        if (noise)     cStubTool.scanStubs_wNoise();
+        if (ptwidth)   cStubTool.scanStubs_ptWidth();
+        if (clustwidth)cStubTool.scanStubs_clusterWidth(strip_cw);
+        if (sof)       cStubTool.scanStubs_SoF(strip_sof);
+        if (swap)      cStubTool.scanStubs_swap();
+    #endif
 
     t.stop();
     t.show ( "Time to run our code: " );

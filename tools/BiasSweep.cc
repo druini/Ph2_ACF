@@ -1,4 +1,5 @@
 #include "BiasSweep.h"
+#ifdef __USE_ROOT__
 
 void BiasSweep::InitializeAmuxMap()
 {
@@ -754,3 +755,5 @@ void BiasSweep::StopDAQ()
     //if (fThread.joinable() ) fThread.join();
     //}
 }
+
+#endif

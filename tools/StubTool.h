@@ -1,7 +1,9 @@
 #ifndef _MYTOOL_H__
 #define _MYTOOL_H__
 
+
 #include "Tool.h"
+#ifdef __USE_ROOT__
 #include "../Utils/Visitor.h"
 #include "../Utils/CommonVisitors.h"
 #include "Channel.h"
@@ -111,4 +113,5 @@ class StubTool : public Tool
     TH2F* hSTUB_SCAN_bend_pt[8];
 };
 
+#endif
 #endif

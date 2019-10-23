@@ -8,8 +8,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-    include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
-    include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
     include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR})
@@ -70,7 +68,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         endif()
     endif()
 
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
+    set(LIBS ${LIBS} Ph2_Utils )
     TARGET_LINK_LIBRARIES(Ph2_RootUtils ${LIBS})
 
     ####################################

@@ -29,7 +29,6 @@ public:
         toolPointer = this;
         Tool::Configure(cHWFile,enableStream);
         Tool::CreateResultDirectory ( "Results/Run_CombinedCalibration" );
-        Tool::InitResultFile ( "CombinedCalibrationResults" );
     }
 
     void Start(int currentRun) override
@@ -50,7 +49,6 @@ public:
 
         toolPointer->dumpConfigFiles();
         toolPointer->SaveResults();
-        toolPointer->CloseResultFile();
         toolPointer->Destroy();
     }
 

@@ -12,13 +12,16 @@
 
 #include "RD53PixelAlive.h"
 #include "RD53Latency.h"
-#include "../DQMUtils/RD53InjectionDelayHistograms.h"
+#ifdef __USE_ROOT__
+  #include "../DQMUtils/RD53InjectionDelayHistograms.h"
+#endif
 
 
 // #############
 // # CONSTANTS #
 // #############
 #define RESULTDIR "Results" // Directory containing the results
+#define NLATENCYBINS 2 // Number of latencies spanned
 
 
 // ##############################
@@ -66,8 +69,10 @@ class InjectionDelay : public PixelAlive
   // ########
   // # ROOT #
   // ########
-  InjectionDelayHistograms histos;
-
+  #ifdef __USE_ROOT__
+    InjectionDelayHistograms histos;
+  #endif
+  
 
  protected:
   std::string fileRes;

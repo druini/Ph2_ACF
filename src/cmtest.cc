@@ -150,21 +150,23 @@ int main ( int argc, char* argv[] )
     }
 
 
+    #ifdef __USE_ROOT__
 
-    // Runs on 10*Nevents
-    CMTester cTester;
-    cTester.Inherit (&cTool);
-    cTester.StartHttpServer ( 8082 );
-    cTester.Initialize ();
-    cTester.SetTotalNoise( cNoiseV );
+        // Runs on 10*Nevents
+        CMTester cTester;
+        cTester.Inherit (&cTool);
+        cTester.StartHttpServer ( 8082 );
+        cTester.Initialize ();
+        cTester.SetTotalNoise( cNoiseV );
 
-    if ( cScan ) cTester.ScanNoiseChannels();
+        if ( cScan ) cTester.ScanNoiseChannels();
 
-    cTester.TakeData();
-    cTester.FinishRun();
-    cTester.SaveResults();
-    cTester.CloseResultFile();
-    cTester.Destroy();
+        cTester.TakeData();
+        cTester.FinishRun();
+        cTester.SaveResults();
+        cTester.CloseResultFile();
+        cTester.Destroy();
+    #endif
 
     if ( !batchMode ) cApp.Run();
 

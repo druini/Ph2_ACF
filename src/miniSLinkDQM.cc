@@ -14,7 +14,7 @@
 #include "../Utils/easylogging++.h"
 
 #include "TROOT.h"
-#include "publisher.h"
+#include "../RootUtils/publisher.h"
 #include <boost/filesystem.hpp>
 
 #include "../DQMUtils/DQMEvent.h"

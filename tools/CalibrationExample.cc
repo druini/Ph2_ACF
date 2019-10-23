@@ -105,7 +105,6 @@ void CalibrationExample::Stop(void)
     writeObjects();
     dumpConfigFiles();
     SaveResults();
-    CloseResultFile();
     Destroy();
 	LOG (INFO) << "Calibration example stopped.";
 }

@@ -19,6 +19,7 @@
 #include <map>
 
 class TH1I;
+class TH1F;
 class TH1D;
 class TH2I;
 class TProfile;

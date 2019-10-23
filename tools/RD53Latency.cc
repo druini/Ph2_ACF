@@ -93,22 +93,25 @@ void Latency::run ()
 
 void Latency::draw ()
 {
-  TApplication* myApp = nullptr;
+  #ifdef __USE_ROOT__
+    TApplication* myApp = nullptr;
 
-  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (doSave    == true)
-    {
-      this->CreateResultDirectory(RESULTDIR,false,false);
-      this->InitResultFile(fileRes);
-    }
+    if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+    if (doSave    == true)
+      {
+        this->CreateResultDirectory(RESULTDIR,false,false);
+        this->InitResultFile(fileRes);
+      }
 
-  Latency::initHisto();
-  Latency::fillHisto();
-  Latency::display();
+    Latency::initHisto();
+    Latency::fillHisto();
+    Latency::display();
+  #endif
 
   if (doSave == true)
     {
-      this->WriteRootFile();
+      #ifdef __USE_ROOT__
+      #endif
 
       // ############################
       // # Save register new values #
@@ -126,8 +129,10 @@ void Latency::draw ()
             }
     }
 
-  if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true) this->CloseResultFile();
+  #ifdef __USE_ROOT__
+    if (doDisplay == true) myApp->Run(true);
+    if (doSave    == true) this->CloseResultFile();
+  #endif
 }
 
 void Latency::analyze ()
@@ -163,13 +168,25 @@ void Latency::analyze ()
         }
 }
 
-void Latency::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void Latency::initHisto ()
+{
+  #ifdef __USE_ROOT__
+    histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+  #endif
+}
 void Latency::fillHisto ()
 {
-  histos.fillOccupancy(theOccContainer);
-  histos.fillLatency  (theLatencyContainer);
+  #ifdef __USE_ROOT__
+    histos.fillOccupancy(theOccContainer);
+    histos.fillLatency  (theLatencyContainer);
+  #endif
 }
-void Latency::display   () { histos.process(); }
+void Latency::display   ()
+{
+  #ifdef __USE_ROOT__
+    histos.process();
+  #endif
+}
 
 void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {

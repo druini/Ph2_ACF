@@ -1,4 +1,5 @@
 #include "StubSweep.h"
+#ifdef __USE_ROOT__
 
 StubSweep::StubSweep() : Tool()
 {
@@ -417,3 +418,5 @@ void StubSweep::setCorrelationWinodwOffsets ( Chip* pCbc, double pOffsetR1, doub
     LOG (DEBUG) << "\t" << "CoincWind&Offset34" << BOLDBLUE << " set to " << std::bitset<8> (cOffsetRegR34) << " - offsets were supposed to be : " << +cOffsetR3 << " and " << +cOffsetR4 <<  RESET  ;
 
 }
+
+#endif

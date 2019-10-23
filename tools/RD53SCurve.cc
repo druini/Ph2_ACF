@@ -8,6 +8,7 @@
 */
 
 #include "RD53SCurve.h"
+#include "../Utils/ThresholdAndNoise.h"
 
 void SCurve::ConfigureCalibration ()
 {
@@ -142,22 +143,26 @@ void SCurve::run ()
 
 void SCurve::draw ()
 {
-  TApplication* myApp = nullptr;
+  #ifdef __USE_ROOT__
+    TApplication* myApp = nullptr;
 
-  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (doSave    == true)
-    {
-      this->CreateResultDirectory(RESULTDIR,false,false);
-      this->InitResultFile(fileRes);
-    }
+    if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+    if (doSave    == true)
+      {
+        this->CreateResultDirectory(RESULTDIR,false,false);
+        this->InitResultFile(fileRes);
+      }
 
-  SCurve::initHisto();
-  SCurve::fillHisto();
-  SCurve::display();
+    SCurve::initHisto();
+    SCurve::fillHisto();
+    SCurve::display();
+  #endif
 
   if (doSave == true)
     {
-      this->WriteRootFile();
+      #ifdef __USE_ROOT__
+        this->WriteRootFile();
+      #endif
 
       // ############################
       // # Save register new values #
@@ -175,8 +180,10 @@ void SCurve::draw ()
             }
     }
 
-  if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true) this->CloseResultFile();
+  #ifdef __USE_ROOT__
+    if (doDisplay == true) myApp->Run(true);
+    if (doSave    == true) this->CloseResultFile();
+  #endif
 }
 
 std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
@@ -229,14 +236,26 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
   return theThresholdAndNoiseContainer;
 }
 
-void SCurve::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void SCurve::initHisto ()
+{ 
+  #ifdef __USE_ROOT__
+    histos.book(fResultFile, *fDetectorContainer, fSettingsMap); 
+  #endif
+}
 void SCurve::fillHisto ()
 {
-  for (auto i = 0u; i < dacList.size(); i++)
-    histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
-  histos.fillThrAndNoise(*theThresholdAndNoiseContainer);
+  #ifdef __USE_ROOT__
+    for (auto i = 0u; i < dacList.size(); i++)
+      histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
+    histos.fillThrAndNoise(*theThresholdAndNoiseContainer);
+  #endif
 }
-void SCurve::display   () { histos.process(); }
+void SCurve::display   () 
+{
+  #ifdef __USE_ROOT__
+    histos.process(); 
+  #endif
+}
 
 void SCurve::computeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
 {

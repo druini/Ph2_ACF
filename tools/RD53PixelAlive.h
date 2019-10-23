@@ -13,10 +13,12 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../DQMUtils/RD53PixelAliveHistograms.h"
+#ifdef __USE_ROOT__
+  #include "../DQMUtils/RD53PixelAliveHistograms.h"
+  #include "TApplication.h"
+#endif
 #include "Tool.h"
 
-#include "TApplication.h"
 
 
 // #############
@@ -72,7 +74,9 @@ class PixelAlive : public Tool
   // ########
   // # ROOT #
   // ########
-  PixelAliveHistograms histos;
+  #ifdef __USE_ROOT__
+    PixelAliveHistograms histos;
+  #endif
 
 
  protected:

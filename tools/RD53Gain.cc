@@ -8,6 +8,7 @@
 */
 
 #include "RD53Gain.h"
+#include "../Utils/GainAndIntercept.h"
 
 void Gain::ConfigureCalibration ()
 {
@@ -142,6 +143,7 @@ void Gain::run ()
 
 void Gain::draw ()
 {
+  #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
@@ -154,10 +156,13 @@ void Gain::draw ()
   Gain::initHisto();
   Gain::fillHisto();
   Gain::display();
+  #endif
 
   if (doSave == true)
     {
-      this->WriteRootFile();
+      #ifdef __USE_ROOT__
+        this->WriteRootFile();
+      #endif
 
       // ############################
       // # Save register new values #
@@ -175,8 +180,10 @@ void Gain::draw ()
             }
     }
 
-  if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true) this->CloseResultFile();
+  #ifdef __USE_ROOT__
+    if (doDisplay == true) myApp->Run(true);
+    if (doSave    == true) this->CloseResultFile();
+  #endif
 }
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze ()
@@ -224,14 +231,27 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
   return theGainAndInterceptContainer;
 }
 
-void Gain::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void Gain::initHisto () 
+{
+  #ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap); 
+  #endif
+}
 void Gain::fillHisto ()
 {
+  #ifdef __USE_ROOT__
   for (auto i = 0u; i < dacList.size(); i++)
     histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
   histos.fillGainAndIntercept(*theGainAndInterceptContainer);
+  #endif
 }
-void Gain::display   () { histos.process(); }
+
+void Gain::display   ()
+{
+  #ifdef __USE_ROOT__
+  histos.process(); 
+  #endif
+}
 
 void Gain::computeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
 // ##############################################

@@ -12,6 +12,8 @@
 #ifndef RegisterTester_h__
 #define RegisterTester_h__
 
+#ifdef __USE_ROOT__
+
 #include "Tool.h"
 #include "Channel.h"
 #include "../Utils/Visitor.h"
@@ -73,4 +75,5 @@ class RegisterTester : public Tool
     void PrintTestResults (std::ostream& os = std::cout );
 
 };
+#endif
 #endif

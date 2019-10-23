@@ -14,10 +14,12 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../DQMUtils/RD53ThrEqualizationHistograms.h"
+  #ifdef __USE_ROOT__
+  #include "../DQMUtils/RD53ThrEqualizationHistograms.h"
+  #include "TApplication.h"
+#endif
 #include "Tool.h"
 
-#include "TApplication.h"
 
 
 // #############
@@ -25,6 +27,7 @@
 // #############
 #define TARGETEFF 0.50      // Target efficiency for optimization algorithm
 #define RESULTDIR "Results" // Directory containing the results
+#define ISDISABLED -1.0 // Encoding disabled channels
 
 
 // #####################################
@@ -75,7 +78,9 @@ class ThrEqualization : public Tool
   // ########
   // # ROOT #
   // ########
-  ThrEqualizationHistograms histos;
+  #ifdef __USE_ROOT__
+    ThrEqualizationHistograms histos;
+  #endif
 
 
  protected:

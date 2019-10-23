@@ -13,16 +13,21 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../DQMUtils/RD53GainHistograms.h"
+#ifdef __USE_ROOT__
+  #include "../DQMUtils/RD53GainHistograms.h"
+  #include "TApplication.h"
+#endif
 #include "Tool.h"
 
-#include "TApplication.h"
 
 
 // #############
 // # CONSTANTS #
 // #############
 #define RESULTDIR "Results" // Directory containing the results
+#define INTERCEPT_HALFRANGE 6 // [ToT]
+#define ISDISABLED -1.0       // Encoding disabled channels
+#define FITERROR   -2.0       // Encoding fit errors
 
 
 // ##########################
@@ -77,7 +82,9 @@ class Gain : public Tool
   // ########
   // # ROOT #
   // ########
-  GainHistograms histos;
+  #ifdef __USE_ROOT__
+    GainHistograms histos;
+  #endif
 
 
  protected:

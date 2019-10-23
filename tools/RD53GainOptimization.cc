@@ -8,6 +8,7 @@
 */
 
 #include "RD53GainOptimization.h"
+#include "../Utils/GainAndIntercept.h"
 
 void GainOptimization::ConfigureCalibration ()
 {
@@ -95,24 +96,31 @@ void GainOptimization::run ()
 
 void GainOptimization::draw ()
 {
-  TApplication* myApp = nullptr;
 
-  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (doSave    == true)
-    {
-      this->CreateResultDirectory(RESULTDIR,false,false);
-      this->InitResultFile(fileRes);
-    }
+  #ifdef __USE_ROOT__
+    TApplication* myApp = nullptr;
+
+    if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+    if (doSave    == true)
+      {
+        this->CreateResultDirectory(RESULTDIR,false,false);
+        this->InitResultFile(fileRes);
+      }
+  #endif
 
   Gain::draw();
 
-  GainOptimization::initHisto();
-  GainOptimization::fillHisto();
-  GainOptimization::display();
+  #ifdef __USE_ROOT__
+    GainOptimization::initHisto();
+    GainOptimization::fillHisto();
+    GainOptimization::display();
+  #endif
 
   if (doSave == true)
     {
-      this->WriteRootFile();
+      #ifdef __USE_ROOT__
+        this->WriteRootFile();
+      #endif
 
       // ############################
       // # Save register new values #
@@ -130,8 +138,10 @@ void GainOptimization::draw ()
             }
     }
 
-  if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true) this->CloseResultFile();
+  #ifdef __USE_ROOT__
+    if (doDisplay == true) myApp->Run(true);
+    if (doSave    == true) this->CloseResultFile();
+  #endif
 }
 
 void GainOptimization::analyze ()
@@ -143,9 +153,27 @@ void GainOptimization::analyze ()
                   << cChip->getSummary<uint16_t>() << RESET;
 }
 
-void GainOptimization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-void GainOptimization::fillHisto () { histos.fill(theKrumCurrContainer);                           }
-void GainOptimization::display   () { histos.process();                                            }
+void GainOptimization::initHisto () 
+{ 
+  #ifdef __USE_ROOT__
+    histos.book(fResultFile, *fDetectorContainer, fSettingsMap); 
+  #endif
+}
+
+void GainOptimization::fillHisto () 
+{ 
+  #ifdef __USE_ROOT__
+    histos.fill(theKrumCurrContainer);                           
+  #endif
+}
+
+void GainOptimization::display   () 
+{ 
+  #ifdef __USE_ROOT__
+    histos.process();                                            
+  #endif
+}
+
 
 void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {

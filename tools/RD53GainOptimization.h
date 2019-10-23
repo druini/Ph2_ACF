@@ -10,7 +10,10 @@
 #ifndef RD53GainOptimization_H
 #define RD53GainOptimization_H
 
-#include "../DQMUtils/RD53GainOptimizationHistograms.h"
+#ifdef __USE_ROOT__                                         
+  #include "../DQMUtils/RD53GainOptimizationHistograms.h"
+#endif
+
 #include "RD53Gain.h"
 
 
@@ -70,7 +73,11 @@ class GainOptimization : public Gain
   // ########
   // # ROOT #
   // ########
-  GainOptimizationHistograms histos;
+  #ifdef __USE_ROOT__
+    GainOptimizationHistograms histos;
+  #endif
+
+
 
 
  protected:

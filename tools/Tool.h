@@ -15,11 +15,14 @@
 
 #include "../System/SystemController.h"
 #include "../Utils/ContainerStream.h"
-#include "TROOT.h"
-#include "TSystem.h"
-#include "TFile.h"
-#include "TObject.h"
-#include "TCanvas.h"
+
+#ifdef __USE_ROOT__
+    #include "TROOT.h"
+    #include "TSystem.h"
+    #include "TFile.h"
+    #include "TObject.h"
+    #include "TCanvas.h"
+#endif
 //#include "../Utils/Container.h"
 
 
@@ -48,26 +51,30 @@ typedef std::vector<std::pair< std::string, uint16_t> > RegisterVector;
 class Tool : public SystemController
 {
 
-    using ChipHistogramMap = std::map<Chip*, std::map<std::string, TObject*> >;
-    using ModuleHistogramMap = std::map<Module*, std::map<std::string, TObject*> >;
-    using BeBoardHistogramMap = std::map<BeBoard*, std::map<std::string, TObject*> >;
+    #ifdef __USE_ROOT__
+        using ChipHistogramMap = std::map<Chip*, std::map<std::string, TObject*> >;
+        using ModuleHistogramMap = std::map<Module*, std::map<std::string, TObject*> >;
+        using BeBoardHistogramMap = std::map<BeBoard*, std::map<std::string, TObject*> >;
+        using CanvasMap = std::map<Ph2_HwDescription::FrontEndDescription*, TCanvas*>;
+    #endif
 
-    using CanvasMap = std::map<Ph2_HwDescription::FrontEndDescription*, TCanvas*>;
     using TestGroupChannelMap =  std::map< int, std::vector<uint8_t> >;
 
   public:
-    using ChannelOccupancy                    = std::vector<float>; //strip        : occupancy
-    using ChipOccupancyPerChannelMap           = std::map<uint8_t,ChannelOccupancy             >; //cbc          : { strip  : occupancy }
-    using ModuleOccupancyPerChannelMap        = std::map<uint8_t,ChipOccupancyPerChannelMap    >; //module       : { cbc    : { strip : occupancy } }
+    // using ChannelOccupancy                    = std::vector<float>; //strip        : occupancy
+    // using ChipOccupancyPerChannelMap           = std::map<uint8_t,ChannelOccupancy             >; //cbc          : { strip  : occupancy }
+    // using ModuleOccupancyPerChannelMap        = std::map<uint8_t,ChipOccupancyPerChannelMap    >; //module       : { cbc    : { strip : occupancy } }
 
-    using ChipGlobalOccupancyMap               = std::map<uint8_t,float>; //cbc          : { strip  : occupancy }
-    using ModuleGlobalOccupancyMap            = std::map<uint8_t,ChipGlobalOccupancyMap    >; //module       : { cbc    : { strip : occupancy } }
-        // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyPerChannelMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
+    // using ChipGlobalOccupancyMap               = std::map<uint8_t,float>; //cbc          : { strip  : occupancy }
+    // using ModuleGlobalOccupancyMap            = std::map<uint8_t,ChipGlobalOccupancyMap    >; //module       : { cbc    : { strip : occupancy } }
+    // using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyPerChannelMap >; //backEndBoard : { module : { cbc   : { strip : occupancy } } }
 
     Tool();
-#ifdef __HTTP__
-    Tool (THttpServer* pServer);
-#endif
+    #ifdef __USE_ROOT__    
+        #ifdef __HTTP__
+            Tool (THttpServer* pServer);
+        #endif
+    #endif
     Tool (const Tool& pTool);
     ~Tool();
 
@@ -77,21 +84,23 @@ class Tool : public SystemController
     void Destroy      ();
     void SoftDestroy  ();
 
+    #ifdef __USE_ROOT__
+        void bookHistogram ( Chip* pChip, std::string pName, TObject* pObject );
 
-    void bookHistogram ( Chip* pChip, std::string pName, TObject* pObject );
+        void bookHistogram ( Module* pModule, std::string pName, TObject* pObject );
 
-    void bookHistogram ( Module* pModule, std::string pName, TObject* pObject );
+        void bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObject );
 
-    void bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObject );
+        TObject* getHist ( Chip* pChip, std::string pName );
 
-    TObject* getHist ( Chip* pChip, std::string pName );
+        TObject* getHist ( Module* pModule, std::string pName );
+        
+        TObject* getHist ( BeBoard* pBeBoard, std::string pName );
 
-    TObject* getHist ( Module* pModule, std::string pName );
-    
-    TObject* getHist ( BeBoard* pBeBoard, std::string pName );
+        void WriteRootFile();
+    #endif
 
     void SaveResults();
-    void WriteRootFile();
 
     /*!
      * \brief Create a result directory at the specified path + ChargeMode + Timestamp
@@ -104,10 +113,13 @@ class Tool : public SystemController
      * \brief Initialize the result Root file
      * \param pFilename : Root filename
      */
-    void InitResultFile ( const std::string& pFilename );
-    void CloseResultFile();
-    void StartHttpServer ( const int pPort = 8080, bool pReadonly = true );
-    void HttpServerProcess();
+    #ifdef __USE_ROOT__
+        void InitResultFile ( const std::string& pFilename );
+        void CloseResultFile();
+        void StartHttpServer ( const int pPort = 8080, bool pReadonly = true );
+        void HttpServerProcess();
+    #endif
+
     void dumpConfigFiles();
     // general stuff that can be useful
     void setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTPState = false, bool pHoleMode = false );
@@ -127,11 +139,9 @@ class Tool : public SystemController
     // helper methods
     void ProcessRequests()
     {
-#ifdef __HTTP__
-
-        if (fHttpServer) fHttpServer->ProcessRequests();
-
-#endif
+        #ifdef __HTTP__
+            if (fHttpServer) fHttpServer->ProcessRequests();
+        #endif
     }
 
     std::string getResultFileName()
@@ -344,21 +354,26 @@ private:
 
   protected:
     DetectorDataContainer* fDetectorDataContainer {nullptr};
-    CanvasMap              fCanvasMap;
-    ChipHistogramMap       fChipHistMap;
-    ModuleHistogramMap     fModuleHistMap;
-    BeBoardHistogramMap    fBeBoardHistMap;
+    #ifdef __USE_ROOT__    
+        CanvasMap              fCanvasMap;
+        ChipHistogramMap       fChipHistMap;
+        ModuleHistogramMap     fModuleHistMap;
+        BeBoardHistogramMap    fBeBoardHistMap;
+    #endif
+
     FrontEndType           fType;
     TestGroupChannelMap    fTestGroupChannelMap;
 
     std::map< int, std::vector<uint8_t> > fMaskForTestGroupChannelMap;
 
     std::string fDirectoryName;             /*< the Directoryname for the Root file with results */
-    TFile*      fResultFile;                /*< the Name for the Root file with results */
+    #ifdef __USE_ROOT__    
+        TFile*      fResultFile;                /*< the Name for the Root file with results */
+    #endif
     std::string fResultFileName;
-#ifdef __HTTP__
-    THttpServer* fHttpServer;
-#endif
+    #ifdef __HTTP__
+        THttpServer* fHttpServer;
+    #endif
 
     bool fSkipMaskedChannels;
     bool fAllChan;

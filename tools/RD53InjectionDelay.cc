@@ -157,22 +157,26 @@ void InjectionDelay::run ()
 
 void InjectionDelay::draw ()
 {
-  TApplication* myApp = nullptr;
+  #ifdef __USE_ROOT__
+    TApplication* myApp = nullptr;
 
-  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (doSave    == true)
-    {
-      this->CreateResultDirectory(RESULTDIR,false,false);
-      this->InitResultFile(fileRes);
-    }
+    if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+    if (doSave    == true)
+      {
+        this->CreateResultDirectory(RESULTDIR,false,false);
+        this->InitResultFile(fileRes);
+      }
 
-  InjectionDelay::initHisto();
-  InjectionDelay::fillHisto();
-  InjectionDelay::display();
+    InjectionDelay::initHisto();
+    InjectionDelay::fillHisto();
+    InjectionDelay::display();
+  #endif
 
   if (doSave == true)
     {
-      this->WriteRootFile();
+      #ifdef __USE_ROOT__
+        this->WriteRootFile();
+      #endif
 
       // ############################
       // # Save register new values #
@@ -190,8 +194,11 @@ void InjectionDelay::draw ()
             }
     }
 
-  if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true) this->CloseResultFile();
+  #ifdef __USE_ROOT__
+    if (doDisplay == true) myApp->Run(true);
+    if (doSave    == true) this->CloseResultFile();
+  #endif
+
 }
 
 void InjectionDelay::analyze ()
@@ -236,13 +243,25 @@ void InjectionDelay::analyze ()
         }
 }
 
-void InjectionDelay::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void InjectionDelay::initHisto ()
+{ 
+  #ifdef __USE_ROOT__
+    histos.book(fResultFile, *fDetectorContainer, fSettingsMap); 
+  #endif
+}
 void InjectionDelay::fillHisto ()
 {
-  histos.fillOccupancy     (theOccContainer);
-  histos.fillInjectionDelay(theInjectionDelayContainer);
+  #ifdef __USE_ROOT__
+    histos.fillOccupancy     (theOccContainer);
+    histos.fillInjectionDelay(theInjectionDelayContainer);
+  #endif
 }
-void InjectionDelay::display   () { histos.process(); }
+void InjectionDelay::display   () 
+{
+  #ifdef __USE_ROOT__
+    histos.process();
+  #endif
+}
 
 void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {

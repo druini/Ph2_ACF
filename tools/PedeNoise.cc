@@ -270,8 +270,10 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
                     float occupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
                     if( occupancy > float ( pNoiseStripThreshold * 0.001 ) )
                     {
-                        TString cRegName = Form ( "Channel%03d", iChan + 1 );
-                        cRegVec.push_back ({cRegName.Data(), 0xFF });
+                        char cRegName[10];
+                        sprintf(cRegName, "Channel%03d", iChan + 1 );
+                        // cRegName = Form ( "Channel%03d", iChan + 1 );
+                        cRegVec.push_back ({cRegName, 0xFF });
                         LOG (INFO) << RED << "Found a noisy channel on CBC " << +cCbc->getId() << " Channel " << iChan  << " with an occupancy of " << occupancy << "; setting offset to " << +0xFF << RESET ;
                     }
                 }
@@ -533,7 +535,6 @@ void PedeNoise::writeObjects()
 void PedeNoise::ConfigureCalibration()
 {
     CreateResultDirectory ( "Results/Run_PedeNoise" );
-    InitResultFile ( "PedeNoiseResults" );
 }
 
 void PedeNoise::Start(int currentRun)
@@ -551,7 +552,6 @@ void PedeNoise::Stop()
     writeObjects();
     dumpConfigFiles();
     SaveResults();
-    CloseResultFile();
     Destroy();
     LOG (INFO) << "Noise measurement stopped.";
 }

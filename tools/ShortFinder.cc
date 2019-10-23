@@ -1,5 +1,7 @@
 #include "ShortFinder.h"
 
+#ifdef __USE_ROOT__
+
 // fill the Histograms, count the hits and increment Vcth
 struct HistogramFillerShort  : public HwDescriptionVisitor
 {
@@ -609,3 +611,5 @@ bool ShortFinder::CheckChannelInShortPresence ( Short pShortedChannel, ShortsLis
 
     return false;
 }
+
+#endif

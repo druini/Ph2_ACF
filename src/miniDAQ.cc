@@ -21,7 +21,7 @@
 #include "../System/SystemController.h"
 
 #include "TROOT.h"
-#include "publisher.h"
+#include "../RootUtils/publisher.h"
 #include "../DQMUtils/DQMEvent.h"
 #include "../DQMUtils/SLinkDQMHistogrammer.h"
 

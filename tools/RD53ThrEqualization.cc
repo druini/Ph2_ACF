@@ -8,6 +8,7 @@
 */
 
 #include "RD53ThrEqualization.h"
+#include "../Utils/ThresholdAndNoise.h"
 
 void ThrEqualization::ConfigureCalibration ()
 {
@@ -145,22 +146,26 @@ void ThrEqualization::run ()
 
 void ThrEqualization::draw ()
 {
-  TApplication* myApp = nullptr;
+  #ifdef __USE_ROOT__
+    TApplication* myApp = nullptr;
 
-  if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
-  if (doSave    == true)
-    {
-      this->CreateResultDirectory(RESULTDIR,false,false);
-      this->InitResultFile(fileRes);
-    }
+    if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
+    if (doSave    == true)
+      {
+        this->CreateResultDirectory(RESULTDIR,false,false);
+        this->InitResultFile(fileRes);
+      }
 
-  ThrEqualization::initHisto();
-  ThrEqualization::fillHisto();
-  ThrEqualization::display();
+    ThrEqualization::initHisto();
+    ThrEqualization::fillHisto();
+    ThrEqualization::display();
+  #endif
 
   if (doSave == true)
     {
-      this->WriteRootFile();
+      #ifdef __USE_ROOT__
+        this->WriteRootFile();
+      #endif
 
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
@@ -181,17 +186,30 @@ void ThrEqualization::draw ()
             }
     }
 
-  if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true) this->CloseResultFile();
+  #ifdef __USE_ROOT__
+    if (doDisplay == true) myApp->Run(true);
+    if (doSave    == true) this->CloseResultFile();
+  #endif
 }
 
-void ThrEqualization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void ThrEqualization::initHisto () {
+  #ifdef __USE_ROOT__
+    histos.book(fResultFile, *fDetectorContainer, fSettingsMap); 
+  #endif
+}
 void ThrEqualization::fillHisto ()
 {
-  histos.fillOccupancy(theOccContainer);
-  histos.fillTDAC     (theTDACcontainer);
+  #ifdef __USE_ROOT__
+    histos.fillOccupancy(theOccContainer);
+    histos.fillTDAC     (theTDACcontainer);
+  #endif
 }
-void ThrEqualization::display   () { histos.process(); }
+void ThrEqualization::display   () 
+{
+  #ifdef __USE_ROOT__
+    histos.process();
+  #endif
+}
 
 void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {

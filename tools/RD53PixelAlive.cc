@@ -109,22 +109,27 @@ void PixelAlive::run ()
 
 void PixelAlive::draw ()
 {
-  TApplication* myApp = nullptr;
+  #ifdef __USE_ROOT__
+    TApplication* myApp = nullptr;
 
-  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (doSave    == true)
-    {
-      this->CreateResultDirectory(RESULTDIR,false,false);
-      this->InitResultFile(fileRes);
-    }
+    if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+    if (doSave    == true)
+      {
+        this->CreateResultDirectory(RESULTDIR,false,false);
+        this->InitResultFile(fileRes);
+      }
 
-  PixelAlive::initHisto();
-  PixelAlive::fillHisto();
-  PixelAlive::display();
+    PixelAlive::initHisto();
+    PixelAlive::fillHisto();
+    PixelAlive::display();
+  #endif
+
 
   if (doSave == true)
     {
-      this->WriteRootFile();
+      #ifdef __USE_ROOT__
+        this->WriteRootFile();
+      #endif
 
       // ############################
       // # Save register new values #
@@ -141,8 +146,11 @@ void PixelAlive::draw ()
             }
     }
 
-  if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true) this->CloseResultFile();
+  #ifdef __USE_ROOT__
+    if (doDisplay == true) myApp->Run(true);
+    if (doSave    == true) this->CloseResultFile();
+  #endif
+
 }
 
 std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
@@ -174,9 +182,21 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
   return theOccContainer;
 }
 
-void PixelAlive::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-void PixelAlive::fillHisto () { histos.fill(*theOccContainer.get());                         }
-void PixelAlive::display   () { histos.process();                                            }
+void PixelAlive::initHisto () {
+  #ifdef __USE_ROOT__
+    histos.book(fResultFile, *fDetectorContainer, fSettingsMap); 
+  #endif
+}
+void PixelAlive::fillHisto () {
+  #ifdef __USE_ROOT__
+    histos.fill(*theOccContainer.get());                         
+  #endif
+}
+void PixelAlive::display   () {
+  #ifdef __USE_ROOT__
+    histos.process();                                            
+  #endif
+}
 
 void PixelAlive::chipErrorReport ()
 {

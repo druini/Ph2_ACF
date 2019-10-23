@@ -13,17 +13,20 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../DQMUtils/RD53SCurveHistograms.h"
+#ifdef __USE_ROOT__
+  #include "TApplication.h"
+  #include "../DQMUtils/RD53SCurveHistograms.h"
+#endif
 #include "Tool.h"
 
-#include "TApplication.h"
 
 
 // #############
 // # CONSTANTS #
 // #############
 #define RESULTDIR "Results" // Directory containing the results
-
+#define ISDISABLED -1.0 // Encoding disabled channels
+#define FITERROR   -2.0 // Encoding fit errors
 
 // #####################
 // # SCurve test suite #
@@ -77,7 +80,9 @@ class SCurve : public Tool
   // ########
   // # ROOT #
   // ########
-  SCurveHistograms histos;
+  #ifdef __USE_ROOT__
+    SCurveHistograms histos;
+  #endif
 
 
  protected:

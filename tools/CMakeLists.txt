@@ -59,19 +59,25 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif()
 
     #last but not least, find root and link against it
-    if(${ROOT_FOUND})
-        include_directories(${ROOT_INCLUDE_DIRS})
-        set(LIBS ${LIBS} ${ROOT_LIBRARIES})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+    if(NoDataShipping)    
+        if(${ROOT_FOUND})
+            include_directories(${ROOT_INCLUDE_DIRS})
+            set(LIBS ${LIBS} ${ROOT_LIBRARIES})
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
 
-        #check for THttpServer
-        if(${ROOT_HAS_HTTP})
-            set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HTTP__")
+            #check for THttpServer
+            if(${ROOT_HAS_HTTP})
+                set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
+                set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HTTP__")
+            endif()
         endif()
     endif()
 
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_DQMUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
+    if(NoDataShipping)
+        set(LIBS ${LIBS} Ph2_DQMUtils)
+    endif()
+
     TARGET_LINK_LIBRARIES(Ph2_Tools ${LIBS})
 
     ####################################

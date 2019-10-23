@@ -2,11 +2,11 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 #find source files
-#file(GLOB HEADERS include/*.h include/*.hh)
+file(GLOB HEADERS include/*.h include/*.hh)
 file(GLOB SOURCES src/*.cpp)
 
 #add the library
-add_library(RootWeb SHARED ${SOURCES})
+add_library(RootWeb SHARED ${SOURCES} ${HEADERS})
 
 if(${ROOT_FOUND})
     include_directories(${ROOT_INCLUDE_DIRS})

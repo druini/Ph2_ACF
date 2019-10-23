@@ -13,6 +13,8 @@
 #define SIGNALSCAN_H__
 
 #include "Tool.h"
+#ifdef __USE_ROOT__
+
 #include "../Utils/Visitor.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/CommonVisitors.h"
@@ -80,4 +82,5 @@ class SignalScan : public Tool
     }
 };
 
+#endif
 #endif

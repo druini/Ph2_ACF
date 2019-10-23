@@ -13,6 +13,8 @@
 #define HybridTester_h__
 
 #include "Tool.h"
+#ifdef __USE_ROOT__
+
 #include "../Utils/Visitor.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/CommonVisitors.h"
@@ -300,4 +302,5 @@ class HybridTester : public Tool
 };
 
 
+#endif
 #endif
