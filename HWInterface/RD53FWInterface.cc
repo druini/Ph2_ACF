@@ -160,6 +160,10 @@ namespace Ph2_HwInterface
 
 
     WriteStackReg(stackRegisters);
+
+
+    if (ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched") == false)
+      LOG (ERROR) << BOLDRED << "Error while dispatching chip register program" << RESET;
   }
 
   std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters (Chip* pChip)
@@ -190,6 +194,8 @@ namespace Ph2_HwInterface
         if (lane == chipLane) outputDecoded.emplace_back(address, value);
       }
     // if (outputDecoded.size() == 0) LOG (ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@
+    if (ReadReg("user.stat_regs.Register_Rdback.fifo_full") == true)
+      LOG (ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
 
 
     return outputDecoded;
@@ -268,6 +274,9 @@ namespace Ph2_HwInterface
 
     auroraReg = ReadReg ("user.stat_regs.aurora_rx.speed");
     LOG (INFO) << GREEN << "Aurora speed: " << BOLDYELLOW << (auroraReg == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
+
+    auroraReg = ReadReg ("user.stat_regs.aurora_rx.gt_refclk");
+    LOG (INFO) << GREEN << "Aurora GT reference clock: " << BOLDYELLOW << auroraReg << RESET;
 
     auroraReg = ReadReg ("user.stat_regs.aurora_rx_channel_up");
     LOG (INFO) << GREEN << "Aurora number of channels: " << BOLDYELLOW << auroraReg << RESET;
@@ -878,6 +887,12 @@ namespace Ph2_HwInterface
   {
     const uint8_t chnOutEnable   = 0x00;
     const uint8_t fiftyOhmEnable = 0x12;
+
+    if (ReadReg("user.stat_regs.stat_dio5.dio5_not_ready") == true)
+      LOG (ERROR) << BOLDRED << "DIO5 not ready" << RESET;
+
+    if (ReadReg("user.stat_regs.stat_dio5.dio5_error") == true)
+      LOG (ERROR) << BOLDRED << "DIO5 is in error" << RESET;
 
     WriteStackReg({
         {"user.ctrl_regs.ext_tlu_reg1.dio5_en",            (uint32_t)cfg->enable},

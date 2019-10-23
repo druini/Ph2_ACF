@@ -112,14 +112,12 @@ public:
             return nullptr;
     }
 
-public:
     /*!
         * \brief issues a FileHandler for writing files to every BeBoardFWInterface if addFileHandler was called
         */
     void initializeFileHandler();
     uint32_t computeEventSize32(BeBoard *pBoard);
 
-public:
     /*!
         * \brief read file in the a FileHandler object
          * \param pVec : the data vector
