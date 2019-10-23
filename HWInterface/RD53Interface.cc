@@ -145,6 +145,7 @@ namespace Ph2_HwInterface
           continue;
         }
         else {
+          // std::cout << "Verification Ok!\n";
           return true;
         }
       }

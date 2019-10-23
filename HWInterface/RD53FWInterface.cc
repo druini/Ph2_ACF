@@ -92,8 +92,10 @@ namespace Ph2_HwInterface
     // ##############################
     this->scc = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
 
+    std::cout << "scc mode: " << this->scc << "\n";
+
     uint16_t modules_en = 0;
-    uint16_t chips_en = 0;
+    uint32_t chips_en = 0;
     for (const auto& cModule : pBoard->fModuleVector) {
       const int module_id = cModule->getFeId();
       modules_en |= 1 << module_id;
@@ -101,11 +103,12 @@ namespace Ph2_HwInterface
       if (scc)
         chips_en |= 1 << module_id;
       else 
-        chips_en |= 0xF << (4 * module_id);
+        chips_en |= 1; //0xF << (4 * module_id);
     }
 
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", modules_en});
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
+    std::cout << "modules_en = " << modules_en << ", chips_en = " << chips_en << "\n";
     // LOG (INFO) << GREEN << "Enabled " << BOLDYELLOW << pBoard->fModuleVector.size() << RESET << GREEN << " chip(s) for module " << BOLDYELLOW << cModule->getIndex() << RESET;
     
 
@@ -134,7 +137,7 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, unsigned int moduleId) {
     // requires data.size() > 0
-    const unsigned int n_words = (data.size() >> 1) + (data.size() & 1);
+    const unsigned int n_words = (data.size() / 2) + (data.size() % 2);
 
     if (ReadReg("user.stat_regs.slow_cmd.error_flag")) {
       std::cout << "fifo error!"
@@ -182,12 +185,13 @@ namespace Ph2_HwInterface
     WriteStackReg (stackRegisters);
   }
   
-  bool RD53FWInterface::getChipLane(Chip* pChip) {
+  uint8_t RD53FWInterface::getChipLane(Chip* pChip) {
+    auto* pRD53 = static_cast<RD53*>(pChip);
     if (scc) {
-      return pChip->getFeId();
+      return pRD53->getFeId();
     }
     else {
-      return 4 * pChip->getFeId() + pChip->getChipId();
+      return 4 * pRD53->getFeId() + pRD53->getLane();
     }
   }
 
@@ -195,16 +199,21 @@ namespace Ph2_HwInterface
   {
     std::vector<std::pair<uint16_t,uint16_t>> outputDecoded;
 
+    // std::cout << "Register Readback: ";
+
     while (ReadReg("user.stat_regs.Register_Rdback.fifo_empty") == 0) {
       uint32_t rdback_data = ReadReg("user.stat_regs.Register_Rdback_fifo");
       
       uint16_t lane, address, value;
       std::tie(lane, address, value) = bits::unpack<6, 10, 16>(rdback_data);
-
-      if (lane == getChipLane(pChip)) {
+      auto chipLane = getChipLane(pChip);
+      // std::cout << " lane = " << lane << ", chip_lane = " << (int)chipLane << "\n";
+      if (lane == chipLane) {
         outputDecoded.emplace_back(address, value);
       }
     }
+
+    // std::cout << "\n";
 
     return outputDecoded;
   }
@@ -861,7 +870,7 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
       }
-    else if ((injType == INJtype::Analog) || (injType == INJtype::None))
+    else if (injType == INJtype::Analog)
       {
         // ######################################
         // # Configuration for analog injection #
@@ -877,6 +886,10 @@ namespace Ph2_HwInterface
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+      }
+      else if (injType == INJtype::None) {
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (n25nsDelays == 0 ? (uint32_t)INJdelay::Loop : n25nsDelays);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
       }
     else LOG (ERROR) << BOLDRED << "Option non recognized " << injType << RESET;

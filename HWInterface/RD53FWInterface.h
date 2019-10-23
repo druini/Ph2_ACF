@@ -230,7 +230,7 @@ namespace Ph2_HwInterface
 
     void SendBoardCommand      (const std::string& cmd_reg);
 
-    bool getChipLane           (Chip* pChip);
+    uint8_t getChipLane           (Chip* pChip);
 
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
