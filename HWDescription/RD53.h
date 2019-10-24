@@ -171,8 +171,8 @@ namespace Ph2_HwDescription
 
       uint8_t evtStatus;
 
-      private:
-        std::vector<HitData> DecodeQuad(uint32_t data);
+    private:
+      std::vector<HitData> DecodeQuad(uint32_t data);
     };
 
     struct CalCmd

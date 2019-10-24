@@ -810,7 +810,7 @@ namespace Ph2_HwInterface
       });
   }
 
-  void RD53FWInterface::SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t n25nsDelays)
+  void RD53FWInterface::SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays)
   // ############################
   // # injType == 0 --> None    #
   // # injType == 1 --> Analog  #
@@ -846,7 +846,7 @@ namespace Ph2_HwInterface
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 0;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (n25nsDelays == 0 ? (uint32_t)INJdelay::Loop : n25nsDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
@@ -864,7 +864,7 @@ namespace Ph2_HwInterface
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = INJdelay::SecondCal;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (n25nsDelays == 0 ? (uint32_t)INJdelay::Loop : n25nsDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = true;

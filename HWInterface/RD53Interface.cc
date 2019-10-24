@@ -161,7 +161,7 @@ namespace Ph2_HwInterface
         outputDecoded = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
         if (outputDecoded.size() == 0)
           {
-            std::cout << "AAA try: " << attempt << std::endl;
+            std::cout << "AAA : empty register readback, attempt n. " << attempt << std::endl;
             usleep(VCALSLEEP);
           }
         else return outputDecoded[0].second;
