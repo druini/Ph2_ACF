@@ -10,10 +10,11 @@
 #ifndef RD53ThrMinimization_H
 #define RD53ThrMinimization_H
 
+#include "RD53PixelAlive.h"
+
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53ThrMinimizationHistograms.h"
 #endif
-#include "RD53PixelAlive.h"
 
 
 // #############

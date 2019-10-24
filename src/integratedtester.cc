@@ -285,22 +285,26 @@ bool check_CurrentConsumption (Tool pTool, int pNCBCs = 2, std::string pHostname
 // tool tries to write 2 bit patterns (0xAA , 0x55) to the CBCs and checks how many write operations have failed
 bool check_Registers (Tool* pTool)
 {
-    // first check that the registers could be read/written to correctly
-    RegisterTester cRegisterTester;
-    cRegisterTester.Inherit (pTool);
-    LOG (INFO) << "Running registers testing tool ... ";
-    cRegisterTester.TestRegisters();
+    bool cRegTest = false;
+    #ifdef __USE_ROOT__
+        // first check that the registers could be read/written to correctly
+        RegisterTester cRegisterTester;
+        cRegisterTester.Inherit (pTool);
+        LOG (INFO) << "Running registers testing tool ... ";
+        cRegisterTester.TestRegisters();
 
-    cRegisterTester.PrintTestReport();
-    // once we've finished checking the registers reload the default values into the CBCs
-    cRegisterTester.ReconfigureRegisters();
-    // this was here to check that the reconfiguration worked...
-    //cRegisterTester.dumpConfigFiles();
-    //and now get the results (pass/fail) of the register test
-    bool cRegTest = cRegisterTester.PassedTest();
+        cRegisterTester.PrintTestReport();
+        // once we've finished checking the registers reload the default values into the CBCs
+        cRegisterTester.ReconfigureRegisters();
+        // this was here to check that the reconfiguration worked...
+        //cRegisterTester.dumpConfigFiles();
+        //and now get the results (pass/fail) of the register test
+        cRegTest = cRegisterTester.PassedTest();
 
-    std::string line = cRegTest ? ("# Register test passed.") : ("# Register test failed : " + std::to_string (cRegisterTester.GetNumFails() ) + " registers could not be written to.") ;
-    cRegisterTester.AmmendReport ( line );
+        std::string line = cRegTest ? ("# Register test passed.") : ("# Register test failed : " + std::to_string (cRegisterTester.GetNumFails() ) + " registers could not be written to.") ;
+        cRegisterTester.AmmendReport ( line );
+    #endif
+
     return cRegTest;
 }
 // perform the CBC Vplus, Voffset calibration
@@ -318,26 +322,30 @@ void perform_PedestalEqualization (Tool* pTool)
 // find the shorts on the DUT
 bool check_Shorts (Tool* pTool,  uint32_t cMaxNumShorts)
 {
-    ShortFinder cShortFinder;
-    cShortFinder.Inherit (pTool);
-    cShortFinder.ConfigureHw();
-    //reload the calibration values for the CBCs
-    //cShortFinder.ReconfigureRegisters();
-    // I don't think this is neccesary ... but here for now
-    //cShortFinder.ConfigureVcth (0x78);
+    uint32_t cNShorts;
+    #ifdef __USE_ROOT__
+        ShortFinder cShortFinder;
+        cShortFinder.Inherit (pTool);
+        cShortFinder.ConfigureHw();
+        //reload the calibration values for the CBCs
+        //cShortFinder.ReconfigureRegisters();
+        // I don't think this is neccesary ... but here for now
+        //cShortFinder.ConfigureVcth (0x78);
 
-    cShortFinder.Initialize();
-    cShortFinder.FindShorts();
-    //cShortFinder.writeObjects();
-    cShortFinder.SaveResults();
-    uint32_t cNShorts = cShortFinder.GetNShorts() ;
-    char line[120];
-    sprintf (line, "# %d shorts found on hybrid", cNShorts);
-    cShortFinder.AmmendReport (line);
-    cShortFinder.AmmendReport ( ( cNShorts <= cMaxNumShorts) ? ("# Shorts test passed.") : ("# Shorts test failed.") );
+        cShortFinder.Initialize();
+        cShortFinder.FindShorts();
+        //cShortFinder.writeObjects();
+        cShortFinder.SaveResults();
+        cNShorts = cShortFinder.GetNShorts() ;
+        char line[120];
+        sprintf (line, "# %d shorts found on hybrid", cNShorts);
+        cShortFinder.AmmendReport (line);
+        cShortFinder.AmmendReport ( ( cNShorts <= cMaxNumShorts) ? ("# Shorts test passed.") : ("# Shorts test failed.") );
 
 
-    LOG (INFO) << GREEN << "\t\t" + std::to_string (cNShorts) + " shorts found on hybrid." << rst ;
+        LOG (INFO) << GREEN << "\t\t" + std::to_string (cNShorts) + " shorts found on hybrid." << rst ;
+    #endif
+
     return ( cNShorts <= cMaxNumShorts) ? true : false;
 }
 // measure the occupancy on the TOP/BOTTOM pads of the DUT
@@ -345,30 +353,32 @@ void perform_OccupancyMeasurment (Tool* pTool )
 {
     LOG (INFO) << "Starting noise occupancy test." ;
 
-    HybridTester cHybridTester;
-    cHybridTester.Inherit (pTool);
-    cHybridTester.ConfigureHw();
-    cHybridTester.Initialize();
+    #ifdef __USE_ROOT__
+        HybridTester cHybridTester;
+        cHybridTester.Inherit (pTool);
+        cHybridTester.ConfigureHw();
+        cHybridTester.Initialize();
 
-    // re-configure CBC regsiters with values from the calibration
-    //cHybridTester.ReconfigureCBCRegisters();
-    // I don't think this is neccesary ... but here for now
-    //cHybridTester.ConfigureVcth (0x78);
+        // re-configure CBC regsiters with values from the calibration
+        //cHybridTester.ReconfigureCBCRegisters();
+        // I don't think this is neccesary ... but here for now
+        //cHybridTester.ConfigureVcth (0x78);
 
-    // measure occupancy
-    cHybridTester.Measure();
-    // display noisy/dead channels
-    cHybridTester.DisplayNoisyChannels();
-    cHybridTester.DisplayDeadChannels();
+        // measure occupancy
+        cHybridTester.Measure();
+        // display noisy/dead channels
+        cHybridTester.DisplayNoisyChannels();
+        cHybridTester.DisplayDeadChannels();
 
-    // save results
-    cHybridTester.writeObjects();
+        // save results
+        cHybridTester.writeObjects();
 
-    char line[120];
-    sprintf (line, "# Top Pad Occupancy = %.2f ± %.3f", cHybridTester.GetMeanOccupancyTop(), cHybridTester.GetRMSOccupancyTop() );
-    cHybridTester.AmmendReport (line);
-    sprintf (line, "# Bottom Pad Occupancy = %.2f ± %.3f", cHybridTester.GetMeanOccupancyBottom(), cHybridTester.GetRMSOccupancyBottom() );
-    cHybridTester.AmmendReport (line);
+        char line[120];
+        sprintf (line, "# Top Pad Occupancy = %.2f ± %.3f", cHybridTester.GetMeanOccupancyTop(), cHybridTester.GetRMSOccupancyTop() );
+        cHybridTester.AmmendReport (line);
+        sprintf (line, "# Bottom Pad Occupancy = %.2f ± %.3f", cHybridTester.GetMeanOccupancyBottom(), cHybridTester.GetRMSOccupancyBottom() );
+        cHybridTester.AmmendReport (line);
+    #endif
 
     // measure pedestal
 
@@ -377,25 +387,27 @@ void perform_AntennaOccupancyMeasurement (Tool* pTool )
 {
     LOG (INFO) << "Starting occupancy measurement using the antenna." ;
 
-    AntennaTester cAntennaTester;
-    cAntennaTester.Inherit (pTool);
-    cAntennaTester.ConfigureHw ();
-    cAntennaTester.Initialize();
+    #ifdef __USE_ROOT__
+        AntennaTester cAntennaTester;
+        cAntennaTester.Inherit (pTool);
+        cAntennaTester.ConfigureHw ();
+        cAntennaTester.Initialize();
 
-    // re-configure CBC regsiters with values from the calibration
-    //cAntennaTester.ReconfigureCBCRegisters();
-    cAntennaTester.ConfigureVcth (0x78);
+        // re-configure CBC regsiters with values from the calibration
+        //cAntennaTester.ReconfigureCBCRegisters();
+        cAntennaTester.ConfigureVcth (0x78);
 
-    // measure occupancy
-    cAntennaTester.Measure(10);
+        // measure occupancy
+        cAntennaTester.Measure(10);
 
-    // save results
-    cAntennaTester.writeObjects();
-    //char line[120];
-    //sprintf(line, "# Top Pad Occupancy = %.2f ± %.3f" , cHybridTester.GetMeanOccupancyTop() , cHybridTester.GetRMSOccupancyTop() );
-    //cHybridTester.AmmendReport(line);
-    //sprintf(line, "# Bottom Pad Occupancy = %.2f ± %.3f" , cHybridTester.GetMeanOccupancyBottom() , cHybridTester.GetRMSOccupancyBottom() );
-    //cHybridTester.AmmendReport(line);
+        // save results
+        cAntennaTester.writeObjects();
+        //char line[120];
+        //sprintf(line, "# Top Pad Occupancy = %.2f ± %.3f" , cHybridTester.GetMeanOccupancyTop() , cHybridTester.GetRMSOccupancyTop() );
+        //cHybridTester.AmmendReport(line);
+        //sprintf(line, "# Bottom Pad Occupancy = %.2f ± %.3f" , cHybridTester.GetMeanOccupancyBottom() , cHybridTester.GetRMSOccupancyBottom() );
+        //cHybridTester.AmmendReport(line);
+    #endif
 
 }
 

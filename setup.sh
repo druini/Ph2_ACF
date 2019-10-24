@@ -71,4 +71,30 @@ export DevFlags='-D__DEV__'
 export Root5Flag='-D__ROOT5__'
 export Root6Flag='-D__ROOT6__'
 
+################
+# Compilations #
+################
+
+# Stand-alone application, without data streaming
+export UseRootFlag='-D__USE_ROOT__'
+export CompileForHerd=false
+export CompileForShep=false
+
+# Stand-alone application, with data streaming
+# unset UseRootFlag
+# export CompileForHerd=true
+# export CompileForShep=true
+
+# Herd application
+# unset UseRootFlag
+# export CompileForHerd=true
+# export CompileForShep=false
+
+# Shep application
+# unset UseRootFlag
+# export CompileForHerd=false
+# export CompileForShep=true
+
+
+
 echo "=== DONE ==="

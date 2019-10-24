@@ -12,6 +12,8 @@
 #ifndef _CHANNEL_H__
 #define _CHANNEL_H__
 
+#ifdef __USE_ROOT__
+
 #include <map>
 #include <vector>
 #include "TH1F.h"
@@ -169,4 +171,5 @@ struct TestGroupComparer
 typedef std::map< TestGroup, std::vector<Channel>, TestGroupComparer > TestGroupMap;
 typedef std::map< TestGroup, TestGroupGraph, TestGroupComparer > TestGroupGraphMap;
 
+#endif
 #endif

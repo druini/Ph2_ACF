@@ -72,10 +72,6 @@ int main ( int argc, char* argv[] )
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/HybridTest8CBC.xml";
     std::string cHybridId = ( cmd.foundOption ( "id" ) ) ? cmd.optionValue ( "id" ) : "-1";
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
-    bool cRegisters = ( cmd.foundOption ( "registers" ) ) ? true : false;
-    bool cShorts = ( cmd.foundOption ( "shorts" ) ) ? true : false;
-    bool cScan = ( cmd.foundOption ( "scan" ) ) ? true : false;
-    bool cAntenna = ( cmd.foundOption ( "antenna" ) ) ? true : false;
 
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
     cDirectory += "HybridTest";
@@ -85,33 +81,38 @@ int main ( int argc, char* argv[] )
     if ( batchMode ) gROOT->SetBatch ( true );
     else TQObject::Connect ( "TCanvas", "Closed()", "TApplication", &cApp, "Terminate()" );
 
+    #ifdef __USE_ROOT__
+        bool cRegisters = ( cmd.foundOption ( "registers" ) ) ? true : false;
+        bool cShorts = ( cmd.foundOption ( "shorts" ) ) ? true : false;
+        bool cScan = ( cmd.foundOption ( "scan" ) ) ? true : false;
+        bool cAntenna = ( cmd.foundOption ( "antenna" ) ) ? true : false;
 
-    HybridTester cHybridTester;
+        HybridTester cHybridTester;
 
-    std::stringstream outp;
-    cHybridTester.InitializeHw ( cHWFile, outp );
-    cHybridTester.InitializeSettings ( cHWFile, outp );
-    LOG (INFO) << outp.str();
-    cHybridTester.Initialize ( cScan );
-    outp.str ("");
-    cHybridTester.CreateResultDirectory ( cDirectory );
-    cHybridTester.InitResultFile ( "HybridTest" );
-    cHybridTester.StartHttpServer();
-    cHybridTester.ConfigureHw ();
+        std::stringstream outp;
+        cHybridTester.InitializeHw ( cHWFile, outp );
+        cHybridTester.InitializeSettings ( cHWFile, outp );
+        LOG (INFO) << outp.str();
+        cHybridTester.Initialize ( cScan );
+        outp.str ("");
+        cHybridTester.CreateResultDirectory ( cDirectory );
+        cHybridTester.InitResultFile ( "HybridTest" );
+        cHybridTester.StartHttpServer();
+        cHybridTester.ConfigureHw ();
 
 
     // Here comes our Part:
 
     if (cAntenna)
     {
-#ifdef __ANTENNA__
-        //cHybridTester.Initialize( cScan );
-        //cHybridTester.Initialize( cScan );
-        cHybridTester.AntennaScan(cAntennaPotential);
-        cHybridTester.SaveTestingResults ( cHybridId );
-#else
-        LOG (INFO) << "This feature is only available if the CMSPh2_AntennaDriver package is installed. It requires a recent version of libusb -devel and can be downloaded from: 'https://github.com/gauzinge/CMSPh2_AntennaDriver.git'" ;
-#endif
+        #ifdef __ANTENNA__
+            //cHybridTester.Initialize( cScan );
+            //cHybridTester.Initialize( cScan );
+            cHybridTester.AntennaScan(cAntennaPotential);
+            cHybridTester.SaveTestingResults ( cHybridId );
+        #else
+            LOG (INFO) << "This feature is only available if the CMSPh2_AntennaDriver package is installed. It requires a recent version of libusb -devel and can be downloaded from: 'https://github.com/gauzinge/CMSPh2_AntennaDriver.git'" ;
+        #endif
     }
 
     if ( !cAntenna && !cRegisters && !cShorts)
@@ -141,6 +142,7 @@ int main ( int argc, char* argv[] )
     cHybridTester.SaveResults();
     cHybridTester.CloseResultFile();
     cHybridTester.Destroy();
+    #endif
 
     if ( !batchMode ) cApp.Run();
 

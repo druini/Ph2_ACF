@@ -1,6 +1,8 @@
 #ifndef CMFITS_H__
 #define CMFITS_H__
 
+#ifdef __USE_ROOT__
+
 #include "TH1F.h"
 #include "TF1.h"
 #include "TMath.h"
@@ -116,4 +118,5 @@ TH1F* createNoiseDistribution( TH1F* pNoCM, double pThreshold, double pCMNFracti
 }
 
 
+#endif
 #endif

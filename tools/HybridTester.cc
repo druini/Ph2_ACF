@@ -1,4 +1,5 @@
 #include "HybridTester.h"
+#ifdef __USE_ROOT__
 #include <ctime>
 
 // fill the Histograms, count the hits and increment Vcth
@@ -1336,3 +1337,5 @@ void HybridTester::writeObjects()
     this->SaveResults();
     fResultFile->Flush();
 }
+
+#endif

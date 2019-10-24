@@ -12,6 +12,8 @@
 #ifndef AntennaTester_h__
 #define AntennaTester_h__
 
+#ifdef __USE_ROOT__
+
 #include "Tool.h"
 #include "Channel.h"
 #include "../Utils/Visitor.h"
@@ -124,4 +126,5 @@ class AntennaTester : public Tool
 
 
 };
+#endif
 #endif

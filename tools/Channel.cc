@@ -1,4 +1,6 @@
 #include "Channel.h"
+#ifdef __USE_ROOT__
+
 #include "TMath.h"
 #include <cmath>
 
@@ -350,3 +352,5 @@ void TestGroupGraph::FillVplusVcthGraph ( uint8_t& pVplus, double pPedestal, dou
         fVplusVcthGraph->SetPointError ( fVplusVcthGraph->GetN() - 1, pNoise, 0 );
     }
 }
+
+#endif

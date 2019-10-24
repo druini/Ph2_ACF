@@ -1,4 +1,5 @@
 #include "SignalScanFit.h"
+#ifdef __USE_ROOT__
 
 void SignalScanFit::Initialize ( )
 {
@@ -573,3 +574,4 @@ void SignalScanFit::Pause()
 void SignalScanFit::Resume()
 {
 }
+#endif

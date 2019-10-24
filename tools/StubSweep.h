@@ -13,6 +13,8 @@
 #ifndef __STUBSWEEP_H__
 #define __STUBWEEP_H__
 #include "Tool.h"
+#ifdef __USE_ROOT__
+
 #include <map>
 #include <vector>
 
@@ -92,4 +94,5 @@ class StubSweep : public Tool
 
 
 
+#endif
 #endif

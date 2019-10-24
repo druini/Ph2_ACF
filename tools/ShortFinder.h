@@ -12,7 +12,9 @@
 #ifndef ShortFinder_h__
 #define ShortFinder_h__
 
+
 #include "Tool.h"
+#ifdef __USE_ROOT__
 #include "Channel.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/CommonVisitors.h"
@@ -147,4 +149,5 @@ class ShortFinder : public Tool
 
 
 };
+#endif
 #endif

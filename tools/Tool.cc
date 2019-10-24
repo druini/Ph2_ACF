@@ -1,6 +1,7 @@
 #include "Tool.h"
-#include "TH1.h"
-#include <TSystem.h>
+#ifdef __USE_ROOT__    
+	#include "TH1.h"
+#endif
 #include "../HWDescription/Chip.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/ChannelGroupHandler.h"
@@ -13,13 +14,17 @@
 
 Tool::Tool() :
 SystemController            (),
-fCanvasMap                  (),
-fChipHistMap                (),
-fModuleHistMap              (),
+#ifdef __USE_ROOT__    
+	fCanvasMap                  (),
+	fChipHistMap                (),
+	fModuleHistMap              (),
+#endif
 fType                       (),
 fTestGroupChannelMap        (),
 fDirectoryName              (""),
-fResultFile                 (nullptr),
+#ifdef __USE_ROOT__    
+	fResultFile                 (nullptr),
+#endif
 fSkipMaskedChannels         (false),
 fAllChan                    (false),
 fMaskChannelsFromOtherGroups(false),
@@ -31,6 +36,7 @@ fChannelGroupHandler        (nullptr)
 #endif
 }
 
+#ifdef __USE_ROOT__    
 #ifdef __HTTP__
 Tool::Tool (THttpServer* pHttpServer)
 : SystemController            ()
@@ -50,6 +56,8 @@ Tool::Tool (THttpServer* pHttpServer)
 {
 }
 #endif
+#endif
+
 
 Tool::Tool (const Tool& pTool)
 {
@@ -63,12 +71,16 @@ Tool::Tool (const Tool& pTool)
 	fFileHandler                 = pTool.fFileHandler;
 
 	fDirectoryName               = pTool.fDirectoryName;             /*< the Directoryname for the Root file with results */
-	fResultFile                  = pTool.fResultFile;                /*< the Name for the Root file with results */
+	#ifdef __USE_ROOT__    
+		fResultFile                  = pTool.fResultFile;                /*< the Name for the Root file with results */
+	#endif
 	fType                        = pTool.fType;
-	fCanvasMap                   = pTool.fCanvasMap;
-	fChipHistMap                 = pTool.fChipHistMap;
-	fModuleHistMap               = pTool.fModuleHistMap;
-	fBeBoardHistMap              = pTool.fBeBoardHistMap;
+	#ifdef __USE_ROOT__    
+		fCanvasMap                   = pTool.fCanvasMap;
+		fChipHistMap                 = pTool.fChipHistMap;
+		fModuleHistMap               = pTool.fModuleHistMap;
+		fBeBoardHistMap              = pTool.fBeBoardHistMap;
+	#endif
 	fTestGroupChannelMap         = pTool.fTestGroupChannelMap;
 	fNetworkStreamer             = pTool.fNetworkStreamer;
 	fStreamerEnabled             = pTool.fStreamerEnabled;
@@ -78,9 +90,9 @@ Tool::Tool (const Tool& pTool)
 	fTestPulse                   = pTool.fTestPulse;
 	//fChannelGroupHandler         = pTool.fChannelGroupHandler;
 
-#ifdef __HTTP__
-	fHttpServer          = pTool.fHttpServer;
-#endif
+	#ifdef __HTTP__
+		fHttpServer          = pTool.fHttpServer;
+	#endif
 }
 
 Tool::~Tool()
@@ -99,12 +111,16 @@ void Tool::Inherit (Tool* pTool)
 	fSettingsMap                 = pTool->fSettingsMap;
 	fFileHandler                 = pTool->fFileHandler;
 	fDirectoryName               = pTool->fDirectoryName;
-	fResultFile                  = pTool->fResultFile;
+	#ifdef __USE_ROOT__    
+		fResultFile                  = pTool->fResultFile;
+	#endif
 	fType                        = pTool->fType;
-	fCanvasMap                   = pTool->fCanvasMap;
-	fChipHistMap                 = pTool->fChipHistMap;
-	fModuleHistMap               = pTool->fModuleHistMap;
-	fBeBoardHistMap              = pTool->fBeBoardHistMap;
+	#ifdef __USE_ROOT__    
+		fCanvasMap                   = pTool->fCanvasMap;
+		fChipHistMap                 = pTool->fChipHistMap;
+		fModuleHistMap               = pTool->fModuleHistMap;
+		fBeBoardHistMap              = pTool->fBeBoardHistMap;
+	#endif
 	fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
 	fNetworkStreamer             = pTool->fNetworkStreamer;
 	fStreamerEnabled             = pTool->fStreamerEnabled;
@@ -114,9 +130,9 @@ void Tool::Inherit (Tool* pTool)
 	fTestPulse                   = pTool->fTestPulse;
 	//fChannelGroupHandler         = pTool->fChannelGroupHandler;
 
-#ifdef __HTTP__
-	fHttpServer          = pTool->fHttpServer;
-#endif
+	#ifdef __HTTP__
+		fHttpServer          = pTool->fHttpServer;
+	#endif
 }
 
 void Tool::Inherit (SystemController* pSystemController)
@@ -147,11 +163,9 @@ void Tool::Destroy()
 {
 	LOG (INFO) << BOLDRED << "Destroying memory objects" << RESET;
 	SystemController::Destroy();
-#ifdef __HTTP__
-
-	if (fHttpServer) delete fHttpServer;
-
-#endif
+	#ifdef __HTTP__
+		if (fHttpServer) delete fHttpServer;
+	#endif
 
 	SoftDestroy();
 }
@@ -159,274 +173,276 @@ void Tool::Destroy()
 void Tool::SoftDestroy()
 {
 
-	if (fResultFile != nullptr)
-	{
-		if (fResultFile->IsOpen() ) fResultFile->Close();
+	#ifdef __USE_ROOT__    
+		if (fResultFile != nullptr)
+		{
+			if (fResultFile->IsOpen() ) fResultFile->Close();
 
-		if (fResultFile) delete fResultFile;
-	}
+			if (fResultFile) delete fResultFile;
+		}
 
-	for(auto canvas : fCanvasMap)
-	{
-		delete canvas.second;
-		canvas.second = nullptr;
-	}
-	fCanvasMap.clear();
-	for(auto chip : fChipHistMap)
-	{
-		for(auto hist : chip.second)
+		for(auto canvas : fCanvasMap)
 		{
-			delete hist.second;
-			hist.second = nullptr;
+			delete canvas.second;
+			canvas.second = nullptr;
 		}
-	}
-	fChipHistMap.clear();
-	for(auto chip : fModuleHistMap)
-	{
-		for(auto hist : chip.second)
+		fCanvasMap.clear();
+		for(auto chip : fChipHistMap)
 		{
-			delete hist.second;
-			hist.second = nullptr;
+			for(auto hist : chip.second)
+			{
+				delete hist.second;
+				hist.second = nullptr;
+			}
 		}
-	}
-	fModuleHistMap.clear();
-	for(auto chip : fBeBoardHistMap)
-	{
-		for(auto hist : chip.second)
+		fChipHistMap.clear();
+		for(auto chip : fModuleHistMap)
 		{
-			delete hist.second;
-			hist.second = nullptr;
+			for(auto hist : chip.second)
+			{
+				delete hist.second;
+				hist.second = nullptr;
+			}
 		}
-	}
-	fBeBoardHistMap.clear();
+		fModuleHistMap.clear();
+		for(auto chip : fBeBoardHistMap)
+		{
+			for(auto hist : chip.second)
+			{
+				delete hist.second;
+				hist.second = nullptr;
+			}
+		}
+		fBeBoardHistMap.clear();
+	#endif
 	fTestGroupChannelMap.clear();
 
 }
 
-void Tool::bookHistogram ( Chip* pChip, std::string pName, TObject* pObject )
-{
-	TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
-	if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
+#ifdef __USE_ROOT__    
 
-	// find or create map<string,TOBject> for specific CBC
-	auto cChipHistMap = fChipHistMap.find ( pChip );
-
-	if ( cChipHistMap == std::end ( fChipHistMap ) )
+	void Tool::bookHistogram ( Chip* pChip, std::string pName, TObject* pObject )
 	{
-		//Fabio: CBC specific -> to be moved out from Tool
-		LOG (INFO) << "Histo Map for CBC " << int ( pChip->getChipId() ) <<  " (FE " << int ( pChip->getFeId() ) << ") does not exist - creating " ;
-		std::map<std::string, TObject*> cTempChipMap;
+		TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
+		if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
 
-		fChipHistMap[pChip] = cTempChipMap;
-		cChipHistMap = fChipHistMap.find ( pChip );
-	}
+		// find or create map<string,TOBject> for specific CBC
+		auto cChipHistMap = fChipHistMap.find ( pChip );
 
-	// find histogram with given name: if it exists, delete the object, if not create
-	auto cHisto = cChipHistMap->second.find ( pName );
+		if ( cChipHistMap == std::end ( fChipHistMap ) )
+		{
+			//Fabio: CBC specific -> to be moved out from Tool
+			LOG (INFO) << "Histo Map for CBC " << int ( pChip->getChipId() ) <<  " (FE " << int ( pChip->getFeId() ) << ") does not exist - creating " ;
+			std::map<std::string, TObject*> cTempChipMap;
 
-	if ( cHisto != std::end ( cChipHistMap->second ) ) cChipHistMap->second.erase ( cHisto );
+			fChipHistMap[pChip] = cTempChipMap;
+			cChipHistMap = fChipHistMap.find ( pChip );
+		}
 
-	cChipHistMap->second[pName] = pObject;
-#ifdef __HTTP__
-
-	if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
-
-#endif
-}
-
-void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject )
-{
-	TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
-	if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
-
-	// find or create map<string,TOBject> for specific CBC
-	auto cModuleHistMap = fModuleHistMap.find ( pModule );
-
-	if ( cModuleHistMap == std::end ( fModuleHistMap ) )
-	{
-		LOG (INFO) << "Histo Map for Module " << int ( pModule->getFeId() ) << " does not exist - creating " ;
-		std::map<std::string, TObject*> cTempModuleMap;
-
-		fModuleHistMap[pModule] = cTempModuleMap;
-		cModuleHistMap = fModuleHistMap.find ( pModule );
-	}
-
-	// find histogram with given name: if it exists, delete the object, if not create
-	auto cHisto = cModuleHistMap->second.find ( pName );
-
-	if ( cHisto != std::end ( cModuleHistMap->second ) ) cModuleHistMap->second.erase ( cHisto );
-
-	cModuleHistMap->second[pName] = pObject;
-#ifdef __HTTP__
-
-	if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
-
-#endif
-}
-
-void Tool::bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObject )
-{
-	TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
-	if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
-
-	// find or create map<string,TOBject> for specific CBC
-	auto cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
-
-	if ( cBeBoardHistMap == std::end ( fBeBoardHistMap ) )
-	{
-		LOG (INFO) << "Histo Map for Module " << int ( pBeBoard->getBeId() ) << " does not exist - creating " ;
-		std::map<std::string, TObject*> cTempModuleMap;
-
-		fBeBoardHistMap[pBeBoard] = cTempModuleMap;
-		cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
-	}
-
-	// find histogram with given name: if it exists, delete the object, if not create
-	auto cHisto = cBeBoardHistMap->second.find ( pName );
-
-	if ( cHisto != std::end ( cBeBoardHistMap->second ) ) cBeBoardHistMap->second.erase ( cHisto );
-
-	cBeBoardHistMap->second[pName] = pObject;
-#ifdef __HTTP__
-
-	if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
-
-#endif
-}
-
-TObject* Tool::getHist ( Chip* pChip, std::string pName )
-{
-	auto cChipHistMap = fChipHistMap.find ( pChip );
-
-	if ( cChipHistMap == std::end ( fChipHistMap ) )
-	{
-		//Fabio: CBC specific -> to be moved out from Tool
-		LOG (ERROR) << RED << "Error: could not find the Histograms for CBC " << int ( pChip->getChipId() ) <<  " (FE " << int ( pChip->getFeId() ) << ")" << RESET ;
-		return nullptr;
-	}
-	else
-	{
+		// find histogram with given name: if it exists, delete the object, if not create
 		auto cHisto = cChipHistMap->second.find ( pName );
 
-		if ( cHisto == std::end ( cChipHistMap->second ) )
+		if ( cHisto != std::end ( cChipHistMap->second ) ) cChipHistMap->second.erase ( cHisto );
+
+		cChipHistMap->second[pName] = pObject;
+
+		#ifdef __HTTP__
+			if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
+		#endif
+	}
+
+	void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject )
+	{
+		TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
+		if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
+
+		// find or create map<string,TOBject> for specific CBC
+		auto cModuleHistMap = fModuleHistMap.find ( pModule );
+
+		if ( cModuleHistMap == std::end ( fModuleHistMap ) )
 		{
-			LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
+			LOG (INFO) << "Histo Map for Module " << int ( pModule->getFeId() ) << " does not exist - creating " ;
+			std::map<std::string, TObject*> cTempModuleMap;
+
+			fModuleHistMap[pModule] = cTempModuleMap;
+			cModuleHistMap = fModuleHistMap.find ( pModule );
+		}
+
+		// find histogram with given name: if it exists, delete the object, if not create
+		auto cHisto = cModuleHistMap->second.find ( pName );
+
+		if ( cHisto != std::end ( cModuleHistMap->second ) ) cModuleHistMap->second.erase ( cHisto );
+
+		cModuleHistMap->second[pName] = pObject;
+		#ifdef __HTTP__
+			if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
+		#endif
+	}
+
+	void Tool::bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObject )
+	{
+		TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
+		if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
+
+		// find or create map<string,TOBject> for specific CBC
+		auto cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
+
+		if ( cBeBoardHistMap == std::end ( fBeBoardHistMap ) )
+		{
+			LOG (INFO) << "Histo Map for Module " << int ( pBeBoard->getBeId() ) << " does not exist - creating " ;
+			std::map<std::string, TObject*> cTempModuleMap;
+
+			fBeBoardHistMap[pBeBoard] = cTempModuleMap;
+			cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
+		}
+
+		// find histogram with given name: if it exists, delete the object, if not create
+		auto cHisto = cBeBoardHistMap->second.find ( pName );
+
+		if ( cHisto != std::end ( cBeBoardHistMap->second ) ) cBeBoardHistMap->second.erase ( cHisto );
+
+		cBeBoardHistMap->second[pName] = pObject;
+		#ifdef __HTTP__
+			if (fHttpServer) fHttpServer->Register ("/Histograms", pObject);
+		#endif
+	}
+
+	TObject* Tool::getHist ( Chip* pChip, std::string pName )
+	{
+		auto cChipHistMap = fChipHistMap.find ( pChip );
+
+		if ( cChipHistMap == std::end ( fChipHistMap ) )
+		{
+			//Fabio: CBC specific -> to be moved out from Tool
+			LOG (ERROR) << RED << "Error: could not find the Histograms for CBC " << int ( pChip->getChipId() ) <<  " (FE " << int ( pChip->getFeId() ) << ")" << RESET ;
 			return nullptr;
 		}
 		else
-			return cHisto->second;
-	}
-}
-
-TObject* Tool::getHist ( Module* pModule, std::string pName )
-{
-	auto cModuleHistMap = fModuleHistMap.find ( pModule );
-
-	if ( cModuleHistMap == std::end ( fModuleHistMap ) )
-	{
-		LOG (ERROR) << RED << "Error: could not find the Histograms for Module " << int ( pModule->getFeId() ) << RESET ;
-		return nullptr;
-	}
-	else
-	{
-		auto cHisto = cModuleHistMap->second.find ( pName );
-
-		if ( cHisto == std::end ( cModuleHistMap->second ) )
 		{
-			LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
+			auto cHisto = cChipHistMap->second.find ( pName );
+
+			if ( cHisto == std::end ( cChipHistMap->second ) )
+			{
+				LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
+				return nullptr;
+			}
+			else
+				return cHisto->second;
+		}
+	}
+
+	TObject* Tool::getHist ( Module* pModule, std::string pName )
+	{
+		auto cModuleHistMap = fModuleHistMap.find ( pModule );
+
+		if ( cModuleHistMap == std::end ( fModuleHistMap ) )
+		{
+			LOG (ERROR) << RED << "Error: could not find the Histograms for Module " << int ( pModule->getFeId() ) << RESET ;
 			return nullptr;
 		}
-		else return cHisto->second;
-	}
-}
-
-TObject* Tool::getHist ( BeBoard* pBeBoard, std::string pName )
-{
-	auto cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
-
-	if ( cBeBoardHistMap == std::end ( fBeBoardHistMap ) )
-	{
-		LOG (ERROR) << RED << "Error: could not find the Histograms for Module " << int ( pBeBoard->getBeId() ) << RESET ;
-		return nullptr;
-	}
-	else
-	{
-		auto cHisto = cBeBoardHistMap->second.find ( pName );
-
-		if ( cHisto == std::end ( cBeBoardHistMap->second ) )
+		else
 		{
-			LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
+			auto cHisto = cModuleHistMap->second.find ( pName );
+
+			if ( cHisto == std::end ( cModuleHistMap->second ) )
+			{
+				LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
+				return nullptr;
+			}
+			else return cHisto->second;
+		}
+	}
+
+	TObject* Tool::getHist ( BeBoard* pBeBoard, std::string pName )
+	{
+		auto cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
+
+		if ( cBeBoardHistMap == std::end ( fBeBoardHistMap ) )
+		{
+			LOG (ERROR) << RED << "Error: could not find the Histograms for Module " << int ( pBeBoard->getBeId() ) << RESET ;
 			return nullptr;
 		}
-		else return cHisto->second;
+		else
+		{
+			auto cHisto = cBeBoardHistMap->second.find ( pName );
+
+			if ( cHisto == std::end ( cBeBoardHistMap->second ) )
+			{
+				LOG (ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET ;
+				return nullptr;
+			}
+			else return cHisto->second;
+		}
 	}
-}
+
+	void Tool::WriteRootFile()
+	{
+		fResultFile->Write();
+	}
+#endif
 
 void Tool::SaveResults()
 {
-	for ( const auto& cBeBoard : fBeBoardHistMap )
-	{
-		fResultFile->cd();
+	#ifdef __USE_ROOT__    
+		for ( const auto& cBeBoard : fBeBoardHistMap )
+		{
+			fResultFile->cd();
 
-		for ( const auto& cHist : cBeBoard.second )
-			cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
+			for ( const auto& cHist : cBeBoard.second )
+				cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
 
-		fResultFile->cd();
-	}
+			fResultFile->cd();
+		}
 
-	// Now per FE
-	for ( const auto& cFe : fModuleHistMap )
-	{
-		TString cDirName = Form ( "FE%d", cFe.first->getFeId() );
-		TObject* cObj = gROOT->FindObject ( cDirName );
+		// Now per FE
+		for ( const auto& cFe : fModuleHistMap )
+		{
+			TString cDirName = Form ( "FE%d", cFe.first->getFeId() );
+			TObject* cObj = gROOT->FindObject ( cDirName );
 
-		//if ( cObj ) delete cObj;
+			//if ( cObj ) delete cObj;
 
-		if (!cObj) fResultFile->mkdir ( cDirName );
+			if (!cObj) fResultFile->mkdir ( cDirName );
 
-		fResultFile->cd ( cDirName );
+			fResultFile->cd ( cDirName );
 
-		for ( const auto& cHist : cFe.second )
-			cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
+			for ( const auto& cHist : cFe.second )
+				cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
 
-		fResultFile->cd();
-	}
+			fResultFile->cd();
+		}
 
-	for ( const auto& cChip : fChipHistMap )
-	{
-		//Fabio: CBC specific -> to be moved out from Tool
-		TString cDirName = Form ( "FE%dCBC%d", cChip.first->getFeId(), cChip.first->getChipId() );
-		TObject* cObj = gROOT->FindObject ( cDirName );
+		for ( const auto& cChip : fChipHistMap )
+		{
+			//Fabio: CBC specific -> to be moved out from Tool
+			TString cDirName = Form ( "FE%dCBC%d", cChip.first->getFeId(), cChip.first->getChipId() );
+			TObject* cObj = gROOT->FindObject ( cDirName );
 
-		//if ( cObj ) delete cObj;
+			//if ( cObj ) delete cObj;
 
-		if (!cObj) fResultFile->mkdir ( cDirName );
+			if (!cObj) fResultFile->mkdir ( cDirName );
 
-		fResultFile->cd ( cDirName );
+			fResultFile->cd ( cDirName );
 
-		for ( const auto& cHist : cChip.second )
-			cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
+			for ( const auto& cHist : cChip.second )
+				cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
 
-		fResultFile->cd();
-	}
+			fResultFile->cd();
+		}
 
-	// Save Canvasses too
-	for ( const auto& cCanvas : fCanvasMap )
-	{
-		cCanvas.second->Write ( cCanvas.second->GetName(), TObject::kOverwrite );
-		std::string cPdfName = fDirectoryName + "/" + cCanvas.second->GetName() + ".pdf";
-		cCanvas.second->SaveAs ( cPdfName.c_str() );
-	}
+		// Save Canvasses too
+		for ( const auto& cCanvas : fCanvasMap )
+		{
+			cCanvas.second->Write ( cCanvas.second->GetName(), TObject::kOverwrite );
+			std::string cPdfName = fDirectoryName + "/" + cCanvas.second->GetName() + ".pdf";
+			cCanvas.second->SaveAs ( cPdfName.c_str() );
+		}
+	#endif
 
 	// fResultFile->Write();
 	// fResultFile->Close();
 
 	LOG (INFO) << "Results saved!" ;
-}
-
-void Tool::WriteRootFile()
-{
-	fResultFile->Write();
 }
 
 
@@ -476,82 +492,84 @@ void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool
  * \brief Initialize the result Root file
  * \param pFilename : Root filename
  */
-void Tool::InitResultFile ( const std::string& pFilename )
-{
-
-	if ( !fDirectoryName.empty() )
+#ifdef __USE_ROOT__
+	void Tool::InitResultFile ( const std::string& pFilename )
 	{
-		std::string cFilename = fDirectoryName + "/" + pFilename + ".root";
 
-		try
+		if ( !fDirectoryName.empty() )
 		{
-			fResultFile = TFile::Open ( cFilename.c_str(), "RECREATE" );
-			fResultFileName = cFilename;
+			std::string cFilename = fDirectoryName + "/" + pFilename + ".root";
+
+			try
+			{
+				fResultFile = TFile::Open ( cFilename.c_str(), "RECREATE" );
+				fResultFileName = cFilename;
+			}
+			catch (std::exception& e)
+			{
+				LOG (ERROR) << "Exceptin when trying to create Result File: " << e.what();
+			}
 		}
-		catch (std::exception& e)
-		{
-			LOG (ERROR) << "Exceptin when trying to create Result File: " << e.what();
-		}
+		else LOG (INFO) << RED << "ERROR: " << RESET << "No Result Directory initialized - not saving results!" ;
 	}
-	else LOG (INFO) << RED << "ERROR: " << RESET << "No Result Directory initialized - not saving results!" ;
-}
 
-void Tool::CloseResultFile()
-{
-  LOG (INFO) << BOLDGREEN << "Closing result file" << RESET;
-
-	if (fResultFile)
-		fResultFile->Close();
-}
-
-void Tool::StartHttpServer ( const int pPort, bool pReadonly )
-{
-#ifdef __HTTP__
-
-	if (fHttpServer)
-		delete fHttpServer;
-
-	char hostname[HOST_NAME_MAX];
-
-	try
+	void Tool::CloseResultFile()
 	{
-		fHttpServer = new THttpServer ( Form ( "http:%d", pPort ) );
-		fHttpServer->SetReadOnly ( pReadonly );
-		//fHttpServer->SetTimer ( pRefreshTime, kTRUE );
-		fHttpServer->SetTimer (0, kTRUE);
-		fHttpServer->SetJSROOT ("https://root.cern.ch/js/latest/");
+	LOG (INFO) << BOLDGREEN << "Closing result file" << RESET;
 
-		//configure the server
-		// see: https://root.cern.ch/gitweb/?p=root.git;a=blob_plain;f=tutorials/http/httpcontrol.C;hb=HEAD
-		fHttpServer->SetItemField ("/", "_monitoring", "5000");
-		fHttpServer->SetItemField ("/", "_layout", "grid2x2");
-
-		gethostname (hostname, HOST_NAME_MAX);
+		if (fResultFile)
+			fResultFile->Close();
 	}
-	catch (std::exception& e)
+
+	void Tool::StartHttpServer ( const int pPort, bool pReadonly )
 	{
-		LOG (ERROR) << "Exception when trying to start THttpServer: " << e.what();
+		#ifdef __HTTP__
+
+			if (fHttpServer)
+				delete fHttpServer;
+
+			char hostname[HOST_NAME_MAX];
+
+			try
+			{
+				fHttpServer = new THttpServer ( Form ( "http:%d", pPort ) );
+				fHttpServer->SetReadOnly ( pReadonly );
+				//fHttpServer->SetTimer ( pRefreshTime, kTRUE );
+				fHttpServer->SetTimer (0, kTRUE);
+				fHttpServer->SetJSROOT ("https://root.cern.ch/js/latest/");
+
+				//configure the server
+				// see: https://root.cern.ch/gitweb/?p=root.git;a=blob_plain;f=tutorials/http/httpcontrol.C;hb=HEAD
+				fHttpServer->SetItemField ("/", "_monitoring", "5000");
+				fHttpServer->SetItemField ("/", "_layout", "grid2x2");
+
+				gethostname (hostname, HOST_NAME_MAX);
+			}
+			catch (std::exception& e)
+			{
+				LOG (ERROR) << "Exception when trying to start THttpServer: " << e.what();
+			}
+
+			LOG (INFO) << "Opening THttpServer on port " << pPort << ". Point your browser to: " << BOLDGREEN << hostname << ":" << pPort << RESET ;
+		#else
+			LOG (INFO) << "Error, ROOT version < 5.34 detected or not compiled with Http Server support!"  << " No THttpServer available! - The webgui will fail to show plots!" ;
+			LOG (INFO) << "ROOT must be built with '--enable-http' flag to use this feature." ;
+		#endif
 	}
 
-	LOG (INFO) << "Opening THttpServer on port " << pPort << ". Point your browser to: " << BOLDGREEN << hostname << ":" << pPort << RESET ;
-#else
-	LOG (INFO) << "Error, ROOT version < 5.34 detected or not compiled with Http Server support!"  << " No THttpServer available! - The webgui will fail to show plots!" ;
-	LOG (INFO) << "ROOT must be built with '--enable-http' flag to use this feature." ;
+	void Tool::HttpServerProcess()
+	{
+		#ifdef __HTTP__
+
+			if (fHttpServer)
+			{
+				gSystem->ProcessEvents();
+				fHttpServer->ProcessRequests();
+			}
+
+		#endif
+	}
 #endif
-}
-
-void Tool::HttpServerProcess()
-{
-#ifdef __HTTP__
-
-	if (fHttpServer)
-	{
-		gSystem->ProcessEvents();
-		fHttpServer->ProcessRequests();
-	}
-
-#endif
-}
 
 void Tool::dumpConfigFiles()
 {
@@ -585,8 +603,8 @@ void Tool::dumpConfigFiles()
 			{
 				for(auto chip : *module)
 				{
-					TString cFilename = fDirectoryName + Form ( "/BE%d_FE%d_Chip%d.txt", board->getId(), module->getId(), chip->getId() );
-					static_cast<ReadoutChip*>(chip)->saveRegMap ( cFilename.Data() );
+					std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_FE" + std::to_string(module->getId()) + "_Chip" + std::to_string(chip->getId()) + ".txt";
+					static_cast<ReadoutChip*>(chip)->saveRegMap ( cFilename.data() );
 				}
 			}
 		}
@@ -760,8 +778,8 @@ std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pChip)
 	LOG (DEBUG) << BOLDGREEN << "Decoding bend LUT for CBC" << +pChip->getChipId() << " ." << RESET;
 	for( int i = 0 ; i <= 14 ; i++ )
 	{
-		TString cRegName = Form ( "Bend%d", i  );
-		uint8_t cRegValue = fReadoutChipInterface->ReadChipReg (pChip, cRegName.Data() );
+		std::string cRegName = "Bend" + i;
+		uint8_t cRegValue = fReadoutChipInterface->ReadChipReg (pChip, cRegName.data() );
 		//LOG (INFO) << BOLDGREEN << "Reading register " << cRegName.Data() << " - value of 0x" << std::hex <<  +cRegValue << " found [LUT entry for bend of " << cBend << " strips]" <<  RESET;
 
 		uint8_t cLUTvalue_0 = (cRegValue >> 0) & 0x0F;
@@ -863,8 +881,8 @@ void Tool::unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair)
 			uint8_t cBitShift = (cMaskedChannel) & 0x7;
 			cRegValue |=  (1 << cBitShift);
 			std::string cChType =  ( (+cMaskedChannel & 0x1) == 0 ) ? "seed" : "correlation";
-			TString cOut; cOut.Form("Channel %d in the %s layer\t", (int)cMaskedChannel, cChType.c_str() );
-			cOutput += cOut.Data();
+			std::string cOut = "Channel " + std::to_string((int)cMaskedChannel) + " in the " + cChType.c_str() + " layer\t";
+			cOutput += cOut.data();
 		}
 		//LOG (INFO) << GREEN << "\t Writing " << std::bitset<8> (cRegValue) <<  " to " << cMasked.first << " to UNMASK channels for stub sweep : " << cOutput.c_str() << RESET ;
 		fReadoutChipInterface->WriteChipReg ( cChip, cMasked.first ,  cRegValue  );

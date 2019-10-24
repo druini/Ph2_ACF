@@ -13,7 +13,6 @@
 #define PedestalEqualization_h__
 
 #include "Tool.h" 
-#include "Channel.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/DataContainer.h"

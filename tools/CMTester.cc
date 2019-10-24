@@ -1,5 +1,6 @@
 
 #include "CMTester.h"
+#ifdef __USE_ROOT__
 
 // This has no bad-strip masking and does not take a reduced number of active strips into account yet!
 
@@ -744,3 +745,5 @@ void CMTester::parseSettings()
     LOG (INFO) << "	sim. Occupancy (%) = " << int ( fSimOccupancy ) ;
 
 }
+
+#endif

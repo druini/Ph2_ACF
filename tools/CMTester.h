@@ -13,6 +13,8 @@
 
 
 #include "Tool.h"
+#ifdef __USE_ROOT__
+
 #include "../Utils/CommonVisitors.h"
 
 // ROOT
@@ -74,4 +76,5 @@ class CMTester : public Tool
 
 };
 
+#endif
 #endif

@@ -1,4 +1,6 @@
 #include "RegisterTester.h"
+#ifdef __USE_ROOT__
+
 
 RegisterTester::RegisterTester() : Tool()
 {
@@ -122,3 +124,5 @@ bool RegisterTester::PassedTest()
     bool passFlag = ( (int) (fNBadRegisters) == 0) ? true : false;
     return passFlag;
 }
+
+#endif

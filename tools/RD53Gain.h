@@ -10,11 +10,12 @@
 #ifndef RD53Gain_H
 #define RD53Gain_H
 
+#include "Tool.h"
+#include "RD53SharedConstants.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/GainAndIntercept.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "RD53SharedConstants.h"
-#include "Tool.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"

@@ -10,10 +10,11 @@
 #ifndef RD53Latency_H
 #define RD53Latency_H
 
+#include "RD53PixelAlive.h"
+
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53LatencyHistograms.h"
 #endif
-#include "RD53PixelAlive.h"
 
 
 // #############

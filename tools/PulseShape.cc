@@ -1,4 +1,6 @@
 #include "PulseShape.h"
+
+#ifdef __USE_ROOT__
 #include "../HWInterface/CbcInterface.h"
 
 PulseShape::PulseShape() : Tool()
@@ -683,3 +685,5 @@ double pulseshape2(double* x, double* par)
    return Amplitude_offset + Amplitude_stretch* TMath::Exp(-xx/tau)*pow(xx/tau,2)*(f_0+f_1+f_2);
 
 }
+
+#endif

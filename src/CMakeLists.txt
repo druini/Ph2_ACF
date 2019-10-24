@@ -12,7 +12,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
     include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR}/tools)
-    include_directories(${PROJECT_SOURCE_DIR}/CombinedCalibrations)
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -66,7 +65,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(${ROOT_FOUND})
         include_directories(${ROOT_INCLUDE_DIRS})
         set(LIBS ${LIBS} ${ROOT_LIBRARIES})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_NO_USE_ROOT__")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
 
         #check for THttpServer
         if(${ROOT_HAS_HTTP})
@@ -80,16 +79,25 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     ####################################
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src *.cc)
+    
     #to remove binaries
-    list(REMOVE_ITEM BINARIES test.cc)
-
+    if(CompileForShep AND CompileForShep)
+        list(REMOVE_ITEM BINARIES *.cc)
+        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc)
+    else()
+        list(REMOVE_ITEM BINARIES supervisor.cc)
+    endif()
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
     foreach( sourcefile ${BINARIES} )
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
         add_executable(${name} ${sourcefile})
-        target_link_libraries(${name} ${LIBS})
-    endforeach(sourcefile ${BINARIES})
+        if( ("${name}" STREQUAL "miniDAQ") OR ("${name}" STREQUAL "miniSLinkDQM") )
+            target_link_libraries(${name} ${LIBS} RootWeb Ph2_RootUtils)
+        else()
+            target_link_libraries(${name} ${LIBS})
+        endif()
+        endforeach(sourcefile ${BINARIES})
     message("--     ${BoldCyan}#### End ####${Reset}")
 
     MESSAGE(STATUS " ") 

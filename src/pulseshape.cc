@@ -65,34 +65,37 @@ int main ( int argc, char* argv[] )
     
     LOG(INFO) << "Make a PulseShape";
 
-    PulseShape cPulseShape;
+    #ifdef __USE_ROOT__
 
-    std::stringstream outp;
-    cPulseShape.InitializeHw ( cHWFile, outp);
-    cPulseShape.InitializeSettings ( cHWFile, outp );
-    LOG (INFO) << outp.str();
-    outp.str ("");
+        PulseShape cPulseShape;
 
-    LOG(INFO) << "Initialize PulseShape from src";
-    cPulseShape.Initialize();
+        std::stringstream outp;
+        cPulseShape.InitializeHw ( cHWFile, outp);
+        cPulseShape.InitializeSettings ( cHWFile, outp );
+        LOG (INFO) << outp.str();
+        outp.str ("");
 
-	
-    LOG(INFO) << "Initialize PulseShape from src done";
-    cPulseShape.CreateResultDirectory ( cDirectory );
-    std::string cResultfile;
-    cResultfile = "PulseShape";
-    cPulseShape.InitResultFile ( cResultfile );
-    LOG(INFO) << "Initialization fo results file done";
-//    cPulseShape.ConfigureHw (outp);
-   cPulseShape.ConfigureHw ();
-    LOG(INFO) << "Hardware configuration done";
-    LOG (INFO) << outp.str();
+        LOG(INFO) << "Initialize PulseShape from src";
+        cPulseShape.Initialize();
 
-    LOG(INFO) << "Starting ScanTestPulseDelay";
-    cPulseShape.ScanTestPulseDelay ( cScanStep );
-    cPulseShape.SaveResults();
+        
+        LOG(INFO) << "Initialize PulseShape from src done";
+        cPulseShape.CreateResultDirectory ( cDirectory );
+        std::string cResultfile;
+        cResultfile = "PulseShape";
+        cPulseShape.InitResultFile ( cResultfile );
+        LOG(INFO) << "Initialization fo results file done";
+    //    cPulseShape.ConfigureHw (outp);
+    cPulseShape.ConfigureHw ();
+        LOG(INFO) << "Hardware configuration done";
+        LOG (INFO) << outp.str();
 
-    cPulseShape.Destroy();
+        LOG(INFO) << "Starting ScanTestPulseDelay";
+        cPulseShape.ScanTestPulseDelay ( cScanStep );
+        cPulseShape.SaveResults();
+
+        cPulseShape.Destroy();
+    #endif
 
     if ( !batchMode ) cApp.Run();
 

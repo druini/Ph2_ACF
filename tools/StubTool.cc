@@ -1,5 +1,7 @@
 #include "StubTool.h"
 
+#ifdef __USE_ROOT__
+
 StubTool::StubTool ()
 {
 }
@@ -1566,4 +1568,5 @@ uint16_t StubTool::encodeId (uint8_t pFeId, uint8_t pCbcId)
     return (pFeId << 8 | pCbcId);
 }
 
+#endif
 

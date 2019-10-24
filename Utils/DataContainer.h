@@ -16,6 +16,7 @@
 #include <vector>
 #include <map>
 #include <cxxabi.h>
+#include <type_traits>
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/Container.h"
 #include "../Utils/EmptyContainer.h"
@@ -87,49 +88,70 @@ struct SummarySummarizer{
 };
 
 
+// // SFINAE: check if object T has makeChannelAverage<S> member function
+// template <typename T, typename S>
+// class has_makeChannelAverage
+// {
+//     typedef char one;
+//     struct two { char x[2]; };
+
+//     template <typename C, typename D> static one test( decltype(&C::template makeChannelAverage<D>) ) ;
+//     template <typename C, typename D> static two test(...);    
+
+// public:
+//     enum { value = sizeof(test<T,S>(0)) == sizeof(char) };
+// };
+
+namespace detail{
+  template<typename> struct sfinae_true : std::true_type{};
+    
+  template<typename T, typename S, typename... A0>
+  static auto test_makeChannelAverage(int)
+    -> sfinae_true<decltype(std::declval<T>().template makeChannelAverage<S>(std::declval<A0>()...))>;
+  template<typename, typename... A0>
+  static auto test_makeChannelAverage(long) -> std::false_type;
+
+  template<typename T, typename... A0>
+  static auto test_makeSummaryAverage(int)
+    -> sfinae_true<decltype(std::declval<T>().makeSummaryAverage(std::declval<A0>()...))>;
+  template<typename, typename... A0>
+  static auto test_makeSummaryAverage(long) -> std::false_type;
+
+
+  template<typename T, typename... A0>
+  static auto test_normalize(int)
+    -> sfinae_true<decltype(std::declval<T>().normalize(std::declval<A0>()...))>;
+  template<typename, typename... A0>
+  static auto test_normalize(long) -> std::false_type;
+
+} // detail::
+
+class ChannelGroupBase;
+
 // SFINAE: check if object T has makeChannelAverage<S> member function
-template <typename T, typename S>
-class has_makeChannelAverage
-{
-    typedef char one;
-    struct two { char x[2]; };
-
-    template <typename C, typename D> static one test( decltype(&C::template makeChannelAverage<D>) ) ;
-    template <typename C, typename D> static two test(...);    
-
-public:
-    enum { value = sizeof(test<T,S>(0)) == sizeof(char) };
-};
-
+template<typename T, typename S>
+struct has_makeChannelAverage : decltype(detail::test_makeChannelAverage<T, S, const ChipContainer*, const ChannelGroupBase*, const ChannelGroupBase*, const uint32_t>(0)){};
 
 // SFINAE: check if object T has makeSummaryAverage member function
-template <typename T>
-class has_makeSummaryAverage
-{
-    typedef char one;
-    struct two { char x[2]; };
-
-    template <typename C> static one test( decltype(&C::makeSummaryAverage) ) ;
-    template <typename C> static two test(...);
-
-public:
-    enum { value = sizeof(test<T>(0)) == sizeof(char) };
-};
-
+template<typename T, typename Arg>
+struct has_makeSummaryAverage : decltype(detail::test_makeSummaryAverage<T, const std::vector<Arg>*, const std::vector<uint32_t>&, const uint32_t>(0)){};
 
 // SFINAE: check if object T has normalize member function
-template <typename T>
-class has_normalize
-{
-    typedef char one;
-    struct two { char x[2]; };
+template<typename T>
+struct has_normalize : decltype(detail::test_normalize<T, const uint32_t>(0)){};
 
-    template <typename C> static one test( decltype(&C::normalize) ) ;
-    template <typename C> static two test(...);    
+// template <typename T>
+// class has_normalize
+// {
+//     typedef char one;
+//     struct two { char x[2]; };
 
-public:
-    enum { value = sizeof(test<T>(0)) == sizeof(char) };
-};
+//     template <typename C> static one test( decltype(&C::normalize) ) ;
+//     template <typename C> static two test(...);    
+
+// public:
+//     enum { value = sizeof(test<T>(0)) == sizeof(char) };
+// };
 
 
 template <class S, class C>
@@ -170,7 +192,7 @@ public:
 	
 	void makeSummaryOfSummary(const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) override
 	{
-		SummarySummarizer<S,C,has_makeSummaryAverage<S>::value> theSummarySummarizer;
+		SummarySummarizer<S,C,has_makeSummaryAverage<S,C>::value> theSummarySummarizer;
 		theSummarySummarizer(*this, theSummaryList, theNumberOfEnabledChannelsList, numberOfEvents);
 	}
 
