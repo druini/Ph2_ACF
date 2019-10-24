@@ -35,6 +35,7 @@ namespace RD53Constants
   const uint8_t BROADCAST_CHIPID = 0xF; // Broadcast chip ID used to send the command to multiple chips
   const uint8_t NREGIONS_LONGCMD =  6;  // Number of regions to program with long write commands
   const uint8_t FIELDS_SHORTCMD  =  8;  // Number of fields for the short write command
+  const uint8_t FIELDS_LONGCMD   = 24;  // Number of fields for the long write command
   const uint8_t NBIT_TDAC        =  4;  // Number of TDAC bits
   const uint8_t NBIT_MAXREG      = 16;  // Maximum number of bits for a chip register
   const uint8_t NPIX_REGION      =  4;  // Number of pixels in a region (1x4)
@@ -90,7 +91,7 @@ namespace RD53chargeConverter
 {
   constexpr float par0   =    0.9; // Vref (V)
   constexpr float par1   = 4096.0; // VCal total range
-  constexpr float cap    =    8.2; // (fF)
+  constexpr float cap    =    8.5; // (fF)
   constexpr float ele    =    1.6; // (e-19)
   constexpr float offset =   64;   // Due to VCal_High vs VCal_Med offset difference (e-)
 

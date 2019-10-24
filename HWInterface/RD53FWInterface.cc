@@ -66,6 +66,7 @@ namespace Ph2_HwInterface
     // RD53FWInterface::ResetBoard();
     RD53FWInterface::ChipReset();
     RD53FWInterface::ResetFastCmdBlk();
+    RD53FWInterface::ResetSlowCmdBlk();
     RD53FWInterface::ResetReadoutBlk();
 
 
@@ -94,7 +95,7 @@ namespace Ph2_HwInterface
     // # 1 = single chip              #
     // # 4 = module                   #
     // ################################
-    bool singleChip = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
+    bool singleChip     = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
     uint16_t modules_en = 0;
     uint32_t chips_en   = 0;
     for (const auto& cModule : pBoard->fModuleVector)
@@ -114,7 +115,6 @@ namespace Ph2_HwInterface
     // ###########################################
     // # Reset slow cmd block and configure DIO5 #
     // ###########################################
-    RD53FWInterface::ResetSlowCmdBlk();
     RD53FWInterface::ChipReSync();
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
   }
@@ -125,13 +125,13 @@ namespace Ph2_HwInterface
 
 
     // #####################
-    // # Check if all good # // @TMP@
+    // # Check if all good #
     // #####################
-    // if (ReadReg("user.stat_regs.slow_cmd.error_flag") == true)
-    //   LOG (ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
+    if (ReadReg("user.stat_regs.slow_cmd.error_flag") == true)
+      LOG (ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
 
-    // if (ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false)
-    //   LOG (ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
+    if (ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false)
+      LOG (ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
 
 
     // #######################
@@ -183,7 +183,6 @@ namespace Ph2_HwInterface
     // #####################
     // # Read the register #
     // #####################
-    if (ReadReg("user.stat_regs.Register_Rdback.fifo_empty") == true) usleep(DEEPSLEEP);
     while (ReadReg("user.stat_regs.Register_Rdback.fifo_empty") == false)
       {
         uint32_t readBackData = ReadReg("user.stat_regs.Register_Rdback_fifo");
@@ -193,7 +192,7 @@ namespace Ph2_HwInterface
 
         if (lane == chipLane) outputDecoded.emplace_back(address, value);
       }
-    // if (outputDecoded.size() == 0) LOG (ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@
+    if (outputDecoded.size() == 0) LOG (ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
     if (ReadReg("user.stat_regs.Register_Rdback.fifo_full") == true)
       LOG (ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
 
