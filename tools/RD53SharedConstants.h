@@ -7,10 +7,14 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
+#ifndef RD53SharedConstants_H
+#define RD53SharedConstants_H
 
-// #############
-// # CONSTANTS #
-// #############
-#define ISDISABLED  -1.0 // Encoding disabled channels
-#define FITERROR    -2.0 // Encoding fit errors
-#define NLATENCYBINS 2   // Number of latencies spanned
+namespace RD53SharedConstants
+{
+  const double ISDISABLED   = -1.0; // Encoding disabled channels
+  const double FITERROR     = -2.0; // Encoding fit errors
+  const int    NLATENCYBINS =  2;   // Number of latencies spanned
+}
+
+#endif
