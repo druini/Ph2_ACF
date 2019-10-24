@@ -95,6 +95,7 @@ void GainOptimization::run ()
 
 void GainOptimization::draw ()
 {
+#ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
@@ -107,6 +108,7 @@ void GainOptimization::draw ()
   GainOptimization::initHisto();
   GainOptimization::fillHisto();
   GainOptimization::display();
+#endif
 
   // ######################################
   // # Save or Update register new values #
@@ -123,9 +125,11 @@ void GainOptimization::draw ()
           LOG (INFO) << BOLDGREEN << "\t--> GainOptimization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
         }
 
+#ifdef __USE_ROOT__
   if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();
+#endif
 }
 
 void GainOptimization::analyze ()
@@ -137,9 +141,26 @@ void GainOptimization::analyze ()
                   << cChip->getSummary<uint16_t>() << RESET;
 }
 
-void GainOptimization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-void GainOptimization::fillHisto () { histos.fill(theKrumCurrContainer);                           }
-void GainOptimization::display   () { histos.process();                                            }
+void GainOptimization::initHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+
+void GainOptimization::fillHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.fill(theKrumCurrContainer);
+#endif
+}
+
+void GainOptimization::display ()
+{
+#ifdef __USE_ROOT__
+  histos.process();
+#endif
+}
 
 void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {

@@ -10,7 +10,9 @@
 #ifndef RD53ThrMinimization_H
 #define RD53ThrMinimization_H
 
+#ifdef __USE_ROOT__
 #include "../DQMUtils/RD53ThrMinimizationHistograms.h"
+#endif
 #include "RD53PixelAlive.h"
 
 
@@ -66,7 +68,9 @@ class ThrMinimization : public PixelAlive
   // ########
   // # ROOT #
   // ########
+#ifdef __USE_ROOT__
   ThrMinimizationHistograms histos;
+#endif
 
 
  protected:

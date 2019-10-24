@@ -110,6 +110,7 @@ void PixelAlive::run ()
 
 void PixelAlive::draw (bool doSave)
 {
+#ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
@@ -122,6 +123,7 @@ void PixelAlive::draw (bool doSave)
   PixelAlive::initHisto();
   PixelAlive::fillHisto();
   PixelAlive::display();
+#endif
 
   // #######################################
   // # Save and Update register new values #
@@ -140,12 +142,14 @@ void PixelAlive::draw (bool doSave)
             }
     }
 
+#ifdef __USE_ROOT__
   if (doDisplay == true) myApp->Run(true);
   if (doSave    == true)
     {
       this->WriteRootFile();
       this->CloseResultFile();
     }
+#endif
 }
 
 std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
@@ -177,9 +181,26 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
   return theOccContainer;
 }
 
-void PixelAlive::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-void PixelAlive::fillHisto () { histos.fill(*theOccContainer.get());                         }
-void PixelAlive::display   () { histos.process();                                            }
+void PixelAlive::initHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+
+void PixelAlive::fillHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.fill(*theOccContainer.get());
+#endif
+}
+
+void PixelAlive::display ()
+{
+#ifdef __USE_ROOT__
+  histos.process();
+#endif
+}
 
 void PixelAlive::chipErrorReport ()
 {

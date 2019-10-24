@@ -10,7 +10,9 @@
 #ifndef RD53Latency_H
 #define RD53Latency_H
 
+#ifdef __USE_ROOT__
 #include "../DQMUtils/RD53LatencyHistograms.h"
+#endif
 #include "RD53PixelAlive.h"
 
 
@@ -63,7 +65,9 @@ class Latency : public PixelAlive
   // ########
   // # ROOT #
   // ########
+#ifdef __USE_ROOT__
   LatencyHistograms histos;
+#endif
 
 
  protected:

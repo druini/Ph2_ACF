@@ -91,6 +91,7 @@ void Latency::run ()
 
 void Latency::draw ()
 {
+#ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
@@ -101,6 +102,7 @@ void Latency::draw ()
   Latency::initHisto();
   Latency::fillHisto();
   Latency::display();
+#endif
 
   // ######################################
   // # Save or Update register new values #
@@ -117,9 +119,11 @@ void Latency::draw ()
           LOG (INFO) << BOLDGREEN << "\t--> Latency saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
         }
 
+#ifdef __USE_ROOT__
   if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();
+#endif
 }
 
 void Latency::analyze ()
@@ -155,13 +159,27 @@ void Latency::analyze ()
         }
 }
 
-void Latency::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void Latency::initHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+
 void Latency::fillHisto ()
 {
+#ifdef __USE_ROOT__
   histos.fillOccupancy(theOccContainer);
   histos.fillLatency  (theLatencyContainer);
+#endif
 }
-void Latency::display   () { histos.process(); }
+
+void Latency::display ()
+{
+#ifdef __USE_ROOT__
+  histos.process();
+#endif
+}
 
 void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {

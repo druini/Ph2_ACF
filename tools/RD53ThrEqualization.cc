@@ -146,6 +146,7 @@ void ThrEqualization::run ()
 
 void ThrEqualization::draw ()
 {
+#ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
@@ -156,6 +157,7 @@ void ThrEqualization::draw ()
   ThrEqualization::initHisto();
   ThrEqualization::fillHisto();
   ThrEqualization::display();
+#endif
 
   // ######################################
   // # Save or Update register new values #
@@ -179,18 +181,34 @@ void ThrEqualization::draw ()
           LOG (INFO) << BOLDGREEN << "\t--> ThrEqualization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
         }
 
+#ifdef __USE_ROOT__
   if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();
+#endif
 }
 
-void ThrEqualization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void ThrEqualization::initHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+
 void ThrEqualization::fillHisto ()
 {
+#ifdef __USE_ROOT__
   histos.fillOccupancy(theOccContainer);
   histos.fillTDAC     (theTDACcontainer);
+#endif
 }
-void ThrEqualization::display   () { histos.process(); }
+
+void ThrEqualization::display ()
+{
+#ifdef __USE_ROOT__
+  histos.process();
+#endif
+}
 
 void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {

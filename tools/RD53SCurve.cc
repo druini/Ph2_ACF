@@ -143,6 +143,7 @@ void SCurve::run ()
 
 void SCurve::draw ()
 {
+#ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
@@ -153,6 +154,7 @@ void SCurve::draw ()
   SCurve::initHisto();
   SCurve::fillHisto();
   SCurve::display();
+#endif
 
   // ######################################
   // # Save or Update register new values #
@@ -169,9 +171,11 @@ void SCurve::draw ()
           LOG (INFO) << BOLDGREEN << "\t--> SCurve saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
         }
 
+#ifdef __USE_ROOT__
   if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();
+#endif
 }
 
 std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
@@ -224,14 +228,28 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
   return theThresholdAndNoiseContainer;
 }
 
-void SCurve::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void SCurve::initHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+
 void SCurve::fillHisto ()
 {
+#ifdef __USE_ROOT__
   for (auto i = 0u; i < dacList.size(); i++)
     histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
   histos.fillThrAndNoise(*theThresholdAndNoiseContainer);
+#endif
 }
-void SCurve::display   () { histos.process(); }
+
+void SCurve::display ()
+{
+#ifdef __USE_ROOT__
+  histos.process();
+#endif
+}
 
 void SCurve::computeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
 {

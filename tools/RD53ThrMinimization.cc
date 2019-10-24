@@ -92,6 +92,7 @@ void ThrMinimization::run ()
 
 void ThrMinimization::draw ()
 {
+#ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
@@ -104,6 +105,7 @@ void ThrMinimization::draw ()
   ThrMinimization::initHisto();
   ThrMinimization::fillHisto();
   ThrMinimization::display();
+#endif
 
   // ######################################
   // # Save or Update register new values #
@@ -120,9 +122,11 @@ void ThrMinimization::draw ()
           LOG (INFO) << BOLDGREEN << "\t--> ThrMinimization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
         }
 
+#ifdef __USE_ROOT__
   if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();
+#endif
 }
 
 void ThrMinimization::analyze ()
@@ -134,9 +138,25 @@ void ThrMinimization::analyze ()
                   << cChip->getSummary<uint16_t>() << RESET;
 }
 
-void ThrMinimization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-void ThrMinimization::fillHisto () { histos.fill(theThrContainer);                                }
-void ThrMinimization::display   () { histos.process();                                            }
+void ThrMinimization::initHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+void ThrMinimization::fillHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.fill(theThrContainer);
+#endif
+}
+
+void ThrMinimization::display ()
+{
+#ifdef __USE_ROOT__
+  histos.process();
+#endif
+}
 
 void ThrMinimization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {

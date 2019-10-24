@@ -155,6 +155,7 @@ void InjectionDelay::run ()
 
 void InjectionDelay::draw ()
 {
+#ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
@@ -165,6 +166,7 @@ void InjectionDelay::draw ()
   InjectionDelay::initHisto();
   InjectionDelay::fillHisto();
   InjectionDelay::display();
+#endif
 
   // ######################################
   // # Save or Update register new values #
@@ -181,9 +183,11 @@ void InjectionDelay::draw ()
           LOG (INFO) << BOLDGREEN << "\t--> InjectionDelay saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
         }
 
+#ifdef __USE_ROOT__
   if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();
+#endif
 }
 
 void InjectionDelay::analyze ()
@@ -228,13 +232,27 @@ void InjectionDelay::analyze ()
         }
 }
 
-void InjectionDelay::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void InjectionDelay::initHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+
 void InjectionDelay::fillHisto ()
 {
+#ifdef __USE_ROOT__
   histos.fillOccupancy     (theOccContainer);
   histos.fillInjectionDelay(theInjectionDelayContainer);
+#endif
 }
-void InjectionDelay::display   () { histos.process(); }
+
+void InjectionDelay::display ()
+{
+#ifdef __USE_ROOT__
+  histos.process();
+#endif
+}
 
 void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {

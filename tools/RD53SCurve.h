@@ -13,10 +13,13 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../DQMUtils/RD53SCurveHistograms.h"
+#include "RD53SharedConstants.h"
 #include "Tool.h"
 
+#ifdef __USE_ROOT__
 #include "TApplication.h"
+#include "../DQMUtils/RD53SCurveHistograms.h"
+#endif
 
 
 // #############
@@ -78,7 +81,9 @@ class SCurve : public Tool
   // ########
   // # ROOT #
   // ########
+#ifdef __USE_ROOT__
   SCurveHistograms histos;
+#endif
 
 
  protected:

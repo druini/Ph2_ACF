@@ -11,6 +11,7 @@
 #ifndef RD53GainHistograms_H
 #define RD53GainHistograms_H
 
+#include "../tools/RD53SharedConstants.h"
 #include "../System/SystemController.h"
 #include "../Utils/GainAndIntercept.h"
 #include "../Utils/ContainerFactory.h"
@@ -25,8 +26,6 @@
 // # CONSTANTS #
 // #############
 #define INTERCEPT_HALFRANGE 6 // [ToT]
-#define ISDISABLED -1.0       // Encoding disabled channels
-#define FITERROR   -2.0       // Encoding fit errors
 
 
 class GainHistograms : public DQMHistogramBase
