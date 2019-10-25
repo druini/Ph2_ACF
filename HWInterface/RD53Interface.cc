@@ -216,7 +216,7 @@ namespace Ph2_HwInterface
     if (doSparse == true)
       {
         RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
-        RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x00, pVerifLoop);
+        RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x00, pVerifLoop /*false*/); // @TMP@
         RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x00, pVerifLoop);
 
         uint16_t data;
@@ -247,15 +247,15 @@ namespace Ph2_HwInterface
       }
     else
       {
-        RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x8, pVerifLoop);
+        RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x8, false);
 
         std::vector<uint16_t> data;
 
         // for (auto col = 0; col < RD53::nCols-1; col+=2) // @TMP@
         for (auto col = 128; col < 263; col+=2)
           {
-            RD53Interface::WriteChipReg(pRD53, "REGION_COL", col / 2, pVerifLoop);
-            RD53Interface::WriteChipReg(pRD53, "REGION_ROW", 0x0,     false);
+            RD53Cmd::WrReg(pRD53->getChipId(), REGION_COL_ADDR, col / 2).appendTo(commandList);
+            RD53Cmd::WrReg(pRD53->getChipId(), REGION_ROW_ADDR, 0x0).appendTo(commandList);
 
             for (auto row = 0u; row < RD53::nRows; row++)
               {

@@ -95,14 +95,14 @@ namespace Ph2_HwInterface
     // # 1 = single chip              #
     // # 4 = module                   #
     // ################################
-    bool singleChip     = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
+    this->singleChip    = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
     uint16_t modules_en = 0;
     uint32_t chips_en   = 0;
     for (const auto& cModule : pBoard->fModuleVector)
       {
         uint16_t module_id = cModule->getFeId(); // @TMP@
         modules_en |= 1 << module_id;
-        if (singleChip == true) chips_en |= 1 << module_id;
+        if (this->singleChip == true) chips_en |= 1 << module_id;
         else                    chips_en |= 0xF << (4 * module_id);
       }
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", modules_en});
@@ -175,9 +175,8 @@ namespace Ph2_HwInterface
     // # Get the chip lane #
     // #####################
     uint16_t chipLane;
-    bool singleChip = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
-    if (singleChip == true) chipLane = pChip->getFeId();
-    else                    chipLane = 4 * pChip->getFeId() + pChip->getChipId(); // @TMP@
+    if (this->singleChip == true) chipLane = pChip->getFeId();
+    else                          chipLane = 4 * pChip->getFeId() + pChip->getChipId(); // @TMP@
 
 
     // #####################

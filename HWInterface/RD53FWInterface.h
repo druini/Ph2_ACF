@@ -235,6 +235,7 @@ namespace Ph2_HwInterface
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
+    bool               singleChip;
   };
 }
 
