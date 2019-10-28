@@ -37,7 +37,7 @@ namespace Ph2_HwInterface
     for (const auto& cModule : *boardContainer)
       for (const auto& cChip : *cModule)
         {
-          if (RD53Event::isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
+          if (RD53Event::isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true) //@fixme
             {
               if (vectorRequired == true)
                 {

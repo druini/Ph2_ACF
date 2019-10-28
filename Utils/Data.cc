@@ -51,8 +51,21 @@ void Data::privateSet(const BeBoard *pBoard, const std::vector<uint32_t> &pData,
 
             for (auto &chip_frame : evt.chip_frames)
             {
+                // std::cout << "processing: " << chip_frame.hybrid_id << "/" <<  chip_frame.chip_lane << '\n';
+
                 module_id_vec.push_back(chip_frame.hybrid_id);
-                chip_id_vec.push_back(chip_frame.chip_id);
+
+                // translate lane to chip ID
+                Module* module = pBoard->getModule(chip_frame.hybrid_id);
+                auto it = std::find_if(module->fReadoutChipVector.begin(), module->fReadoutChipVector.end(), [=] (ReadoutChip* pChip) {
+                    return static_cast<RD53*>(pChip)->getLane() == chip_frame.chip_lane;
+                });
+                if (it != module->fReadoutChipVector.end()) {
+                    chip_id_vec.push_back((*it)->getChipId());
+                }
+                else {
+                    chip_id_vec.push_back(-1); // chip not found
+                }
             }
 
             fEventList.push_back(new RD53Event(std::move(module_id_vec), std::move(chip_id_vec), std::move(evt.chip_events)));

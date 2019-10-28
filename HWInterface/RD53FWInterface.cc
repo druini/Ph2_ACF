@@ -102,8 +102,11 @@ namespace Ph2_HwInterface
       
       if (scc)
         chips_en |= 1 << module_id;
-      else 
-        chips_en |= 1; //0xF << (4 * module_id);
+      else {
+        for (const auto& cChip : cModule->fReadoutChipVector) {
+          chips_en |= 1 << (4 * module_id + static_cast<RD53*>(cChip)->getLane());
+        }
+      }
     }
 
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", modules_en});
@@ -637,7 +640,7 @@ namespace Ph2_HwInterface
             LOG (INFO) << CYAN << "------- Chip Header -------"                            << RESET;
             LOG (INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code    << RESET;
             LOG (INFO) << CYAN << "hybrid_id       = " << evt.chip_frames[j].hybrid_id     << RESET;
-            LOG (INFO) << CYAN << "chip_id         = " << evt.chip_frames[j].chip_id       << RESET;
+            LOG (INFO) << CYAN << "chip_lane         = " << evt.chip_frames[j].chip_lane       << RESET;
             LOG (INFO) << CYAN << "l1a_data_size   = " << evt.chip_frames[j].l1a_data_size << RESET;
             LOG (INFO) << CYAN << "chip_type       = " << evt.chip_frames[j].chip_type     << RESET;
             LOG (INFO) << CYAN << "frame_delay     = " << evt.chip_frames[j].frame_delay   << RESET;
@@ -726,7 +729,9 @@ namespace Ph2_HwInterface
 
 
     std::vector<size_t> chip_start;
-    for (auto i = 4u; i < n - dummy_size * 4; i += 4) if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) chip_start.push_back(i);
+    for (auto i = 4u; i < n - dummy_size * 4; i += 4) 
+      if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) 
+        chip_start.push_back(i);
 
     chip_frames.reserve(chip_start.size());
     chip_events.reserve(chip_start.size());
@@ -759,7 +764,7 @@ namespace Ph2_HwInterface
 
   RD53FWInterface::ChipFrame::ChipFrame (const uint32_t data0, const uint32_t data1)
   {
-    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
+    std::tie(error_code, hybrid_id, chip_lane, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
     std::tie(chip_type, frame_delay)                        = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
   }
 

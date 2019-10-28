@@ -273,8 +273,11 @@ namespace Ph2_HwInterface
       std::vector<uint16_t> region_data;
       
       for (auto col = 128; col < 263; col+=2) {
-        RD53Interface::WriteChipReg(pRD53, "REGION_COL", col / 2, pVerifLoop);
-        RD53Interface::WriteChipReg(pRD53, "REGION_ROW", 0x0,     false);
+        // RD53Interface::WriteChipReg(pRD53, "REGION_COL", col / 2, pVerifLoop);
+        // RD53Interface::WriteChipReg(pRD53, "REGION_ROW", 0x0,     false);
+
+        RD53Cmd::WrReg(pRD53->getChipId(), REGION_COL_ADDR, col / 2).appendTo(command_data);
+        RD53Cmd::WrReg(pRD53->getChipId(), REGION_ROW_ADDR, 0).appendTo(command_data);
 
         for (auto row = 0u; row < RD53::nRows; row++) {
           region_data.push_back(encode_region_data(mask, row, col, highGain));
