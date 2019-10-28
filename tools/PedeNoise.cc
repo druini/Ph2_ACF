@@ -273,6 +273,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
                         char cRegName[11];
                         sprintf(cRegName, "Channel%03d", iChan + 1 );
                         // cRegName = Form ( "Channel%03d", iChan + 1 );
+                        cRegVec.push_back ({cRegName, 0xFF });
                         LOG (INFO) << RED << "Found a noisy channel on CBC " << +cCbc->getId() << " Channel " << iChan  << " with an occupancy of " << occupancy << "; setting offset to " << +0xFF << RESET ;
                     }
                 }
