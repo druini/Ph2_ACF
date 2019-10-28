@@ -301,26 +301,26 @@ namespace Ph2_HwInterface
     // ###############################
     // # Check RD53 AURORA registers #
     // ###############################
-    unsigned int auroraReg = ReadReg ("user.stat_regs.aurora_rx_gt_locked");
-    LOG (INFO) << GREEN << "Aurora number of locked PLLs: " << BOLDYELLOW << RD53::countBitsOne(auroraReg) << RESET;
 
-    auroraReg = ReadReg ("user.stat_regs.aurora_rx.speed");
-    LOG (INFO) << GREEN << "Aurora speed: " << BOLDYELLOW << (auroraReg == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
+    unsigned int speed_flag = ReadReg ("user.stat_regs.aurora_rx.speed");
+    LOG (INFO) << GREEN << "Aurora speed: " << BOLDYELLOW << (speed_flag == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
 
-    auroraReg = ReadReg ("user.stat_regs.aurora_rx_channel_up");
-    LOG (INFO) << GREEN << "Aurora number of channels: " << BOLDYELLOW << auroraReg << RESET;
+    unsigned int lane_up = ReadReg ("user.stat_regs.aurora_rx.lane_up");
+    LOG (INFO) << GREEN << "Number of available channels: " << BOLDYELLOW << RD53::countBitsOne(lane_up) << "\t(" << std::bitset<14>(lane_up) << ")" << RESET;
 
-    unsigned int bitReg = ReadReg ("user.stat_regs.aurora_rx.lane_up");
-    LOG (INFO) << GREEN << "Aurora lane up status: " << BOLDYELLOW << RD53::countBitsOne(bitReg) << RESET;
+    unsigned int chips_en = ReadReg ("user.ctrl_regs.Chips_en");
+    LOG (INFO) << GREEN << "Number of enabled channels: " << BOLDYELLOW << RD53::countBitsOne(chips_en) << "\t(" << std::bitset<12>(chips_en) << ")" << RESET;
 
-    bitReg = ReadReg ("user.stat_regs.aurora_rx_channel_up");
-    if (RD53::countBitsOne(bitReg) == auroraReg)
-      {
-        LOG (INFO) << BOLDBLUE << "\t--> Aurora channels up number as expected: " << BOLDYELLOW << RD53::countBitsOne(bitReg) << RESET;
-        return true;
-      }
-    LOG (ERROR) << BOLDRED << "\t--> Aurora channels up number less than expected: " << BOLDYELLOW << RD53::countBitsOne(bitReg) << RESET;
-    return false;
+    unsigned int channel_up = ReadReg ("user.stat_regs.aurora_rx_channel_up");
+    LOG (INFO) << GREEN << "Number of active channels: " << BOLDYELLOW << RD53::countBitsOne(channel_up) << "\t(" << std::bitset<12>(channel_up) << ")" << RESET;
+    
+    if (chips_en & ~channel_up)
+    {
+      LOG (ERROR) << BOLDRED << "\t--> Some channels are enabled but inactive." << RESET;
+      return false;    
+    }
+    LOG (INFO) << BOLDBLUE << "\t--> All enabled channels are active." << RESET;
+    return true;
   }
 
   void RD53FWInterface::Start()
