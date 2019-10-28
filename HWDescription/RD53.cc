@@ -387,9 +387,8 @@ namespace Ph2_HwDescription
     return it->second.fBitSize;
   }
 
-  std::vector<RD53::HitData> RD53::Event::DecodeQuad (uint32_t data)
+  void RD53::Event::DecodeQuad (uint32_t data, std::vector<RD53::HitData>& result)
   {
-    std::vector<RD53::HitData> result;
     uint32_t core_col, side, row, col, all_tots;
 
     std::tie(core_col, row, side, all_tots) = bits::unpack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_ROW, RD53EvtEncoder::NBIT_SIDE, RD53EvtEncoder::NBIT_TOT>(data);
@@ -399,8 +398,6 @@ namespace Ph2_HwDescription
     bits::RangePacker<RD53Constants::NPIX_REGION>::unpack_reverse(all_tots, tots);
 
     for (int i = 0; i < RD53Constants::NPIX_REGION; i++) if (tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) result.emplace_back(row, col + i, tots[i]);
-
-    return result;
   }
 
   RD53::Event::Event (const uint32_t* data, size_t n)
@@ -413,10 +410,12 @@ namespace Ph2_HwDescription
     if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHEAD;
 
     size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
+    std::vector<RD53::HitData> hits;
     for (auto i = 1u; i < n; i++)
       if (data[i] != noHitToT)
         {
-          auto hits = DecodeQuad (data[i]);
+          hits.clear();
+          DecodeQuad(data[i], hits);
           hit_data.insert(hit_data.end(), hits.begin(), hits.end());
           for (auto& hit : hits) if ((hit.row >= RD53::nRows) || (hit.col >= RD53::nCols)) evtStatus |= RD53EvtEncoder::CPIX;
         }

@@ -182,6 +182,8 @@ namespace Ph2_HwInterface
     // #####################
     // # Read the register #
     // #####################
+    if (ReadReg("user.stat_regs.Register_Rdback.fifo_full") == true) LOG (ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
+
     while (ReadReg("user.stat_regs.Register_Rdback.fifo_empty") == false)
       {
         uint32_t readBackData = ReadReg("user.stat_regs.Register_Rdback_fifo");
@@ -191,9 +193,8 @@ namespace Ph2_HwInterface
 
         if (lane == chipLane) outputDecoded.emplace_back(address, value);
       }
+
     if (outputDecoded.size() == 0) LOG (ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
-    if (ReadReg("user.stat_regs.Register_Rdback.fifo_full") == true)
-      LOG (ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
 
 
     return outputDecoded;

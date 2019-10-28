@@ -216,6 +216,7 @@ namespace Ph2_HwInterface
     if (doSparse == true)
       {
         RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
+    usleep(10000);
         RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x00, pVerifLoop /*false*/); // @TMP@
         RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x00, pVerifLoop);
 

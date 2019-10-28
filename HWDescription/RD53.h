@@ -15,6 +15,7 @@
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/bit_packing.h"
+#include "../Utils/PackerUnpacker.h"
 
 #include <iomanip>
 
@@ -172,7 +173,7 @@ namespace Ph2_HwDescription
       uint8_t evtStatus;
 
     private:
-      std::vector<HitData> DecodeQuad(uint32_t data);
+      void DecodeQuad (uint32_t data, std::vector<RD53::HitData>& result);
     };
 
     struct CalCmd
