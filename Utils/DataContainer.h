@@ -80,10 +80,10 @@ template<class S, class C, bool hasAverageFunction = false>
 struct SummarySummarizer{
 	void operator() (Summary<S,C> &theSummary, const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) 
 	{
-		/* int32_t status = 0; */
-		/* LOG(ERROR) << __PRETTY_FUNCTION__ << " Member function makeSummaryAverage does not exist for " << abi::__cxa_demangle(typeid(S).name(),0,0,&status) << */
-		/* 	" \nAborting..."; */
-		/* abort(); */
+		int32_t status = 0;
+		LOG(ERROR) << __PRETTY_FUNCTION__ << " Member function makeSummaryAverage does not exist for " << abi::__cxa_demangle(typeid(S).name(),0,0,&status) <<
+			" \nAborting...";
+		abort();
 	}
 };
 
