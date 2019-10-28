@@ -11,7 +11,7 @@
 #ifndef RD53SCurveHistograms_H
 #define RD53SCurveHistograms_H
 
-#include "../tools/RD53SharedConstants.h"
+#include "../Utils/RD53SharedConstants.h"
 #include "../System/SystemController.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/ContainerFactory.h"

@@ -11,7 +11,7 @@
 #define RD53SCurve_H
 
 #include "Tool.h"
-#include "RD53SharedConstants.h"
+#include "../Utils/RD53SharedConstants.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ThresholdAndNoise.h"

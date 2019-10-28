@@ -10,7 +10,7 @@
 #ifndef RD53InjectionDelay_H
 #define RD53InjectionDelay_H
 
-#include "RD53SharedConstants.h"
+#include "../Utils/RD53SharedConstants.h"
 #include "RD53PixelAlive.h"
 #include "RD53Latency.h"
 

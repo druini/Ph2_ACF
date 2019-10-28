@@ -61,25 +61,25 @@ if(Boost_FOUND)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time")
 endif()
 
-#last but not least, find root and link against it
-if(ROOT_FOUND)
-    include_directories(${ROOT_INCLUDE_DIRS})
-    set(LIBS ${LIBS} ${ROOT_LIBRARIES})
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+# #last but not least, find root and link against it
+# if(ROOT_FOUND)
+#     include_directories(${ROOT_INCLUDE_DIRS})
+#     set(LIBS ${LIBS} ${ROOT_LIBRARIES})
+#     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
 
-    #check for THttpServer
-    if(${ROOT_HAS_HTTP})
-        set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HTTP__")
-    endif()
+#     #check for THttpServer
+#     if(${ROOT_HAS_HTTP})
+#         set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
+#         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HTTP__")
+#     endif()
 
-    #check ROOT version
-    if(${ROOT_VERSION} VERSION_GREATER 5)
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ROOT5__")
-    else()
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ROOT6__")
-    endif()
-endif()
+#     #check ROOT version
+#     if(${ROOT_VERSION} VERSION_GREATER 5)
+#         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ROOT5__")
+#     else()
+#         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ROOT6__")
+#     endif()
+# endif()
 
 ####################################
 ## EXECUTABLES
