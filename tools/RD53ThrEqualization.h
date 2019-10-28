@@ -10,16 +10,17 @@
 #ifndef RD53ThrEqualization_H
 #define RD53ThrEqualization_H
 
+#include "Tool.h"
 #include "RD53SCurve.h"
+#include "RD53SharedConstants.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-  #ifdef __USE_ROOT__
-  #include "../DQMUtils/RD53ThrEqualizationHistograms.h"
-  #include "TApplication.h"
-#endif
-#include "Tool.h"
 
+#ifdef __USE_ROOT__
+#include "TApplication.h"
+#include "../DQMUtils/RD53ThrEqualizationHistograms.h"
+#endif
 
 
 // #############
@@ -27,7 +28,6 @@
 // #############
 #define TARGETEFF 0.50      // Target efficiency for optimization algorithm
 #define RESULTDIR "Results" // Directory containing the results
-#define ISDISABLED -1.0 // Encoding disabled channels
 
 
 // #####################################
@@ -49,7 +49,7 @@ class ThrEqualization : public Tool
   {
     uint16_t nBitTDAC       = 4;
     uint16_t moreIterations = 2;
-    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups)*(nBitTDAC + moreIterations) *
+    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*(nBitTDAC + moreIterations) *
       nEvents/nEvtsBurst + sc.getNumberIterations();
   }
 
@@ -62,6 +62,7 @@ class ThrEqualization : public Tool
   size_t colStop;
   size_t nEvents;
   size_t nEvtsBurst;
+  size_t nHITxCol;
   bool   doFast;
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
@@ -78,16 +79,16 @@ class ThrEqualization : public Tool
   // ########
   // # ROOT #
   // ########
-  #ifdef __USE_ROOT__
-    ThrEqualizationHistograms histos;
-  #endif
+#ifdef __USE_ROOT__
+  ThrEqualizationHistograms histos;
+#endif
 
 
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
 };
 
 #endif

@@ -646,19 +646,19 @@ namespace Ph2_System {
                     {
                         int cChipId = cChild.attribute("Id").as_int();
                         std::string cFileName = expandEnvironmentVariables (static_cast<std::string> ( cChild.attribute ( "configfile" ).value() ) );
-                        LOG (DEBUG) << BOLDBLUE << "Configuration file ...." << cName << " --- " << cConfigFileDirectory << RESET;
-                        LOG (DEBUG) << BOLDGREEN << cName << " Id = " << +cChipId << " --- " << cFileName << RESET; 
+                        LOG (DEBUG) << BOLDBLUE << "Configuration file ... " << cName << " --- " << cConfigFileDirectory << RESET;
+                        LOG (DEBUG) << BOLDGREEN << cName << " Id = " << +cChipId << " --- " << cFileName << RESET;
 
-                        if( cName == "RD53") 
-			  {
+                        if( cName == "RD53")
+                          {
                             this->parseRD53 (cChild, cModule, cConfigFileDirectory, os);
                             if (cNextName.empty() || cNextName != cName)
-			      {
+                              {
                                 this->parseGlobalRD53Settings (pModuleNode, cModule, os);
-			      }
-			  }
-                        else if( cName == "CBC" ) 
-                        {    
+                              }
+                          }
+                        else if( cName == "CBC" )
+                          {
                             this->parseCbcContainer  (cChild, cModule, cConfigFileDirectory, os);
                             // check if this is the last node with this name 
                             if( cNextName.empty() || cNextName!=cName )
@@ -668,7 +668,7 @@ namespace Ph2_System {
                             }
 
                         }
-                        else if( cName == "CIC" ) 
+                        else if( cName == "CIC" )
                         {
                             if ( !cConfigFileDirectory.empty() )
                             {

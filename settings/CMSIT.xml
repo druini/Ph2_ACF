@@ -95,10 +95,10 @@
   <Settings>
     <!--
         === Calibration parameters ===
-        INJtype      = 0: no injection;                           INJtype      = 1: analog;         INJtype = 2: digital
-        DoFast       = 0: run on all pixels in the selected area; DoFast       = 1: run on a subset
-        DisplayHisto = 0: don't display;                          DisplayHisto = 1: display
-        Save         = 0: don't save;                             Save         = 1: save
+        INJtype       = 0: no injection;                           INJtype       = 1: analog;         INJtype = 2: digital
+        DoFast        = 0: run on all pixels in the selected area; DoFast        = 1: run on a subset
+        DisplayHisto  = 0: don't display;                          DisplayHisto  = 1: display
+        UpdateChipCfg = 0: don't update;                           UpdateChipCfg = 1: update
 
         TargetCharge: average charge (electrons) corresponding to ToT point = max value - 1
         TargetOcc:    average fraction of acceptable hits per pixel
@@ -116,7 +116,7 @@
     <Setting name="ROWstart">         0 </Setting>
     <Setting name="ROWstop">        191 </Setting>
     <Setting name="COLstart">       128 </Setting>
-    <Setting name="COLstop">        191 </Setting>
+    <Setting name="COLstop">        263 </Setting>
 
     <Setting name="LatencyStart">     0 </Setting>
     <Setting name="LatencyStop">    511 </Setting>
@@ -130,13 +130,20 @@
     <Setting name="KrumCurrStart">    0 </Setting>
     <Setting name="KrumCurrStop">   127 </Setting>
 
-    <Setting name="TargetOcc">        1 </Setting>
+    <Setting name="TargetOcc">     1e-6 </Setting>
     <Setting name="ThrStart">       340 </Setting>
     <Setting name="ThrStop">        440 </Setting>
 
     <Setting name="DoFast">           0 </Setting>
     <Setting name="DisplayHisto">     0 </Setting>
-    <Setting name="Save">             1 </Setting>
+    <Setting name="UpdateChipCfg">    1 </Setting>
+
+    <!-- === Expert settings ===
+         nHITxCol:    number of simultaneously injected hit per column (must be a divider of chip rows)
+         n25nsDelays: delay between two consecutive injections in terms of 100ns period
+    -->
+    <Setting name="nHITxCol">         1 </Setting>
+    <Setting name="n25nsDelays">    300 </Setting>
   </Settings>
 
 </HwDescription>

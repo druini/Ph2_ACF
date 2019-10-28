@@ -10,10 +10,12 @@
 #ifndef RD53InjectionDelay_H
 #define RD53InjectionDelay_H
 
+#include "RD53SharedConstants.h"
 #include "RD53PixelAlive.h"
 #include "RD53Latency.h"
+
 #ifdef __USE_ROOT__
-  #include "../DQMUtils/RD53InjectionDelayHistograms.h"
+#include "../DQMUtils/RD53InjectionDelayHistograms.h"
 #endif
 
 
@@ -21,7 +23,6 @@
 // # CONSTANTS #
 // #############
 #define RESULTDIR "Results" // Directory containing the results
-#define NLATENCYBINS 2 // Number of latencies spanned
 
 
 // ##############################
@@ -69,18 +70,18 @@ class InjectionDelay : public PixelAlive
   // ########
   // # ROOT #
   // ########
-  #ifdef __USE_ROOT__
-    InjectionDelayHistograms histos;
-  #endif
-  
+#ifdef __USE_ROOT__
+  InjectionDelayHistograms histos;
+#endif
+
 
  protected:
   std::string fileRes;
   std::string fileReg;
   size_t saveInjection;
   size_t maxDelay;
-  bool doDisplay;
-  bool doSave;
+  bool   doUpdateChip;
+  bool   doDisplay;
 };
 
 #endif

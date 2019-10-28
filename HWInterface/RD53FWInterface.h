@@ -20,20 +20,23 @@
 #include <sstream>
 
 
-// ################################
-// # CONSTANTS AND BIT DEFINITION #
-// ################################
-#define DEEPSLEEP  100000 // [microseconds]
-#define SHALLOWSLEEP   50 // [microseconds]
-#define MAXTRIALS      10 // Maximum number of trials for ReadNEvents
+// #############
+// # CONSTANTS #
+// #############
+#define DEEPSLEEP 100000 // [microseconds]
+#define READOUTSLEEP  50 // [microseconds]
+#define MAXTRIALS     10 // Maximum number of trials for ReadNEvents
 
-#define NBIT_FWVER     16 // Number of bits for the firmware version
-#define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
-#define NWORDS_DDR3     4 // Number of IPbus words in a DDR3 word
-
+// ##################
+// # BIT DEFINITION #
+// ##################
+#define HEADEAR_WRTCMD  0xFF // Header of chip write command sequence
+#define NBIT_FWVER        16 // Number of bits for the firmware version
+#define IPBUS_FASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
+#define NWORDS_DDR3        4 // Number of IPbus words in a DDR3 word
 
 // #################
-// # Readout block #
+// # READOUT BLOCK #
 // #################
 #define HANDSHAKE_EN   0
 #define L1A_TIMEOUT 4000
@@ -105,8 +108,8 @@ namespace Ph2_HwInterface
     std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)           override;
 
     bool InitChipCommunication ();
-    void WriteChipCommand      (std::vector<uint32_t>& data, unsigned int nCmd = 1);
-    std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (std::vector<uint32_t>& data, uint8_t chipID, uint8_t filter = 0);
+    void WriteChipCommand      (const std::vector<uint16_t>& data, unsigned int moduleId);
+    std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Chip* pChip);
 
     struct ChipFrame
     {
@@ -163,11 +166,11 @@ namespace Ph2_HwInterface
       uint32_t first_cal_data  = 0;
       uint32_t second_cal_data = 0;
 
-      uint32_t delay_after_ecr        =  0;
-      uint32_t delay_after_autozero   =  0;
-      uint32_t delay_after_first_cal  =  0;
-      uint32_t delay_after_second_cal =  0;
-      uint16_t delay_loop             =  0;
+      uint32_t delay_after_ecr        = 0;
+      uint32_t delay_after_autozero   = 0;
+      uint32_t delay_after_first_cal  = 0;
+      uint32_t delay_after_second_cal = 0;
+      uint16_t delay_loop             = 0;
     };
 
     struct FastCommandsConfig
@@ -185,7 +188,7 @@ namespace Ph2_HwInterface
       FastCmdFSMConfig fast_cmd_fsm;
     };
 
-    void SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType);
+    void SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0);
 
     struct DIO5Config
     {
@@ -212,9 +215,9 @@ namespace Ph2_HwInterface
     void DownloadFpgaConfig                    (const std::string& strConfig, const std::string& strDest);
     std::vector<std::string> getFpgaConfigList ();
     void DeleteFpgaConfig                      (const std::string& strId);
-    void checkIfUploading                      ();
+    void CheckIfUploading                      ();
     void RebootBoard                           ();
-    const FpgaConfig* getConfiguringFpga       ();
+    const FpgaConfig* GetConfiguringFpga       ();
 
   private:
     void PrintFWstatus         ();
@@ -223,16 +226,16 @@ namespace Ph2_HwInterface
     void TurnOnFMC             ();
     void ResetBoard            ();
     void ResetFastCmdBlk       ();
+    void ResetSlowCmdBlk       ();
     void ResetReadoutBlk       ();
-
     void ConfigureFastCommands (const FastCommandsConfig* config = nullptr);
     void ConfigureDIO5         (const DIO5Config* config);
-
     void SendBoardCommand      (const std::string& cmd_reg);
 
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
+    bool               singleChip;
   };
 }
 

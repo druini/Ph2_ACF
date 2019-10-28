@@ -10,23 +10,24 @@
 #ifndef RD53SCurve_H
 #define RD53SCurve_H
 
+#include "Tool.h"
+#include "RD53SharedConstants.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#ifdef __USE_ROOT__
-  #include "TApplication.h"
-  #include "../DQMUtils/RD53SCurveHistograms.h"
-#endif
-#include "Tool.h"
 
+#ifdef __USE_ROOT__
+#include "TApplication.h"
+#include "../DQMUtils/RD53SCurveHistograms.h"
+#endif
 
 
 // #############
 // # CONSTANTS #
 // #############
 #define RESULTDIR "Results" // Directory containing the results
-#define ISDISABLED -1.0 // Encoding disabled channels
-#define FITERROR   -2.0 // Encoding fit errors
+
 
 // #####################
 // # SCurve test suite #
@@ -48,7 +49,7 @@ class SCurve : public Tool
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
-    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups)*nSteps;
+    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*nSteps;
   }
 
 
@@ -62,6 +63,7 @@ class SCurve : public Tool
   size_t stopValue;
   size_t nSteps;
   size_t offset;
+  size_t nHITxCol;
   bool   doFast;
 
   std::vector<uint16_t> dacList;
@@ -80,16 +82,16 @@ class SCurve : public Tool
   // ########
   // # ROOT #
   // ########
-  #ifdef __USE_ROOT__
-    SCurveHistograms histos;
-  #endif
+#ifdef __USE_ROOT__
+  SCurveHistograms histos;
+#endif
 
 
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
 };
 
 #endif

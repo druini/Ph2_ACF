@@ -10,10 +10,11 @@
 #ifndef RD53Latency_H
 #define RD53Latency_H
 
-#ifdef __USE_ROOT__
-  #include "../DQMUtils/RD53LatencyHistograms.h"
-#endif
 #include "RD53PixelAlive.h"
+
+#ifdef __USE_ROOT__
+#include "../DQMUtils/RD53LatencyHistograms.h"
+#endif
 
 
 // #############
@@ -65,16 +66,16 @@ class Latency : public PixelAlive
   // ########
   // # ROOT #
   // ########
-  #ifdef __USE_ROOT__
-    LatencyHistograms histos;
-  #endif
+#ifdef __USE_ROOT__
+  LatencyHistograms histos;
+#endif
 
 
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
 };
 
 #endif

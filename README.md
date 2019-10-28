@@ -161,7 +161,7 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
-- Software git branch / tag : `chipPolymorphism` / `IT-v2.4`
+- Software git branch / tag : `chipPolymorphism` / `IT-v2.5`
 - Firmware tag: `2.5`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 

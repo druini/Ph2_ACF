@@ -11,18 +11,13 @@
 #ifndef RD53InjectionDelayHistograms_H
 #define RD53InjectionDelayHistograms_H
 
+#include "../tools/RD53SharedConstants.h"
 #include "../System/SystemController.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
-
-
-// #############
-// # CONSTANTS #
-// #############
-#define NLATENCYBINS 2 // Number of latencies spanned
 
 
 class InjectionDelayHistograms : public DQMHistogramBase

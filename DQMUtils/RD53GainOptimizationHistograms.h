@@ -14,7 +14,6 @@
 #include "../System/SystemController.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
-#include "../tools/RD53Gain.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>

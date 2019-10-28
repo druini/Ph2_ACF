@@ -24,7 +24,7 @@ void ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContai
   VCalHnsteps = this->findValueInSettings(settingsMap,"VCalHnsteps");
 
 
-  size_t TDACsize = RD53::setBits(RD53PixelEncoder::NBIT_TDAC) + 1;
+  size_t TDACsize = RD53::setBits(RD53Constants::NBIT_TDAC) + 1;
 
   auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents*VCalHnsteps + 1, 0, 1 + 1. / (nEvents*VCalHnsteps));
   bookImplementer(theOutputFile, theDetectorStructure, hThrEqualization, ThrEqualization, "Efficiency", "Entries");
@@ -66,14 +66,14 @@ void ThrEqualizationHistograms::fillOccupancy (const DetectorDataContainer& Occu
 
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
-              if (cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != ISDISABLED)
+              if (cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53SharedConstants::ISDISABLED)
                 hThrEqualization->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
         }
 }
 
 void ThrEqualizationHistograms::fillTDAC (const DetectorDataContainer& TDACContainer)
 {
-  size_t TDACsize = RD53::setBits(RD53PixelEncoder::NBIT_TDAC) + 1;
+  size_t TDACsize = RD53::setBits(RD53Constants::NBIT_TDAC) + 1;
 
   for (const auto cBoard : TDACContainer)
     for (const auto cModule : *cBoard)

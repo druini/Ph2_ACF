@@ -51,7 +51,7 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        bool ConfigureChip ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
+        bool ConfigureChip ( Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
         
         bool setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
 

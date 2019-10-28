@@ -13,12 +13,12 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#ifdef __USE_ROOT__
-  #include "../DQMUtils/RD53PixelAliveHistograms.h"
-  #include "TApplication.h"
-#endif
 #include "Tool.h"
 
+#ifdef __USE_ROOT__
+#include "TApplication.h"
+#include "../DQMUtils/RD53PixelAliveHistograms.h"
+#endif
 
 
 // #############
@@ -41,12 +41,11 @@ class PixelAlive : public Tool
   void sendData                                  ();
   void initialize                                (const std::string fileRes_, const std::string fileReg_);
   void run                                       ();
-  void draw                                      ();
+  void draw                                      (bool doSave = true);
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
-    return RD53ChannelGroupHandler::getNumberOfGroups(injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels) *
-      nEvents/nEvtsBurst;
+    return RD53ChannelGroupHandler::getNumberOfGroups(injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol) * nEvents/nEvtsBurst;
   }
 
 
@@ -59,6 +58,7 @@ class PixelAlive : public Tool
   size_t nTRIGxEvent;
   size_t nEvtsBurst;
   size_t injType;
+  size_t nHITxCol;
   float  thrOccupancy;
   enum INJtype { None, Analog , Digital };
 
@@ -74,16 +74,16 @@ class PixelAlive : public Tool
   // ########
   // # ROOT #
   // ########
-  #ifdef __USE_ROOT__
-    PixelAliveHistograms histos;
-  #endif
+#ifdef __USE_ROOT__
+  PixelAliveHistograms histos;
+#endif
 
 
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
   bool doFast;
 };
 

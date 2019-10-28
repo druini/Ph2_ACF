@@ -11,6 +11,7 @@
 #ifndef RD53SCurveHistograms_H
 #define RD53SCurveHistograms_H
 
+#include "../tools/RD53SharedConstants.h"
 #include "../System/SystemController.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/ContainerFactory.h"
@@ -19,13 +20,6 @@
 
 #include <TH1F.h>
 #include <TH2F.h>
-
-
-// #############
-// # CONSTANTS #
-// #############
-#define ISDISABLED -1.0 // Encoding disabled channels
-#define FITERROR   -2.0 // Encoding fit errors
 
 
 class SCurveHistograms : public DQMHistogramBase

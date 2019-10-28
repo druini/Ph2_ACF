@@ -10,10 +10,11 @@
 #ifndef RD53ThrMinimization_H
 #define RD53ThrMinimization_H
 
-#ifdef __USE_ROOT__
-  #include "../DQMUtils/RD53ThrMinimizationHistograms.h"
-#endif
 #include "RD53PixelAlive.h"
+
+#ifdef __USE_ROOT__
+#include "../DQMUtils/RD53ThrMinimizationHistograms.h"
+#endif
 
 
 // #############
@@ -68,16 +69,16 @@ class ThrMinimization : public PixelAlive
   // ########
   // # ROOT #
   // ########
-  #ifdef __USE_ROOT__
-    ThrMinimizationHistograms histos;
-  #endif
+#ifdef __USE_ROOT__
+  ThrMinimizationHistograms histos;
+#endif
 
 
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
 };
 
 #endif

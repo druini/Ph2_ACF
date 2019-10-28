@@ -8,25 +8,25 @@
 */
 
 #include "RD53SCurve.h"
-#include "../Utils/ThresholdAndNoise.h"
 
 void SCurve::ConfigureCalibration ()
 {
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart   = this->findValueInSettings("ROWstart");
-  rowStop    = this->findValueInSettings("ROWstop");
-  colStart   = this->findValueInSettings("COLstart");
-  colStop    = this->findValueInSettings("COLstop");
-  nEvents    = this->findValueInSettings("nEvents");
-  startValue = this->findValueInSettings("VCalHstart");
-  stopValue  = this->findValueInSettings("VCalHstop");
-  nSteps     = this->findValueInSettings("VCalHnsteps");
-  offset     = this->findValueInSettings("VCalMED");
-  doFast     = this->findValueInSettings("DoFast");
-  doDisplay  = this->findValueInSettings("DisplayHisto");
-  doSave     = this->findValueInSettings("Save");
+  rowStart     = this->findValueInSettings("ROWstart");
+  rowStop      = this->findValueInSettings("ROWstop");
+  colStart     = this->findValueInSettings("COLstart");
+  colStop      = this->findValueInSettings("COLstop");
+  nEvents      = this->findValueInSettings("nEvents");
+  startValue   = this->findValueInSettings("VCalHstart");
+  stopValue    = this->findValueInSettings("VCalHstop");
+  nSteps       = this->findValueInSettings("VCalHnsteps");
+  offset       = this->findValueInSettings("VCalMED");
+  nHITxCol     = this->findValueInSettings("nHITxCol");
+  doFast       = this->findValueInSettings("DoFast");
+  doDisplay    = this->findValueInSettings("DisplayHisto");
+  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
 
 
   // ########################
@@ -39,7 +39,7 @@ void SCurve::ConfigureCalibration ()
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
 
@@ -132,7 +132,7 @@ void SCurve::run ()
           for (auto col = 0u; col < RD53::nCols; col++)
             if (!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) || !this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
               for (auto i = 0u; i < dacList.size(); i++)
-                detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy = ISDISABLED;
+                detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy = RD53SharedConstants::ISDISABLED;
 
 
   // ################
@@ -143,47 +143,39 @@ void SCurve::run ()
 
 void SCurve::draw ()
 {
-  #ifdef __USE_ROOT__
-    TApplication* myApp = nullptr;
+#ifdef __USE_ROOT__
+  TApplication* myApp = nullptr;
 
-    if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
-    if (doSave    == true)
-      {
-        this->CreateResultDirectory(RESULTDIR,false,false);
-        this->InitResultFile(fileRes);
-      }
+  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-    SCurve::initHisto();
-    SCurve::fillHisto();
-    SCurve::display();
-  #endif
+  this->CreateResultDirectory(RESULTDIR,false,false);
+  this->InitResultFile(fileRes);
 
-  if (doSave == true)
-    {
-      #ifdef __USE_ROOT__
-        this->WriteRootFile();
-      #endif
+  SCurve::initHisto();
+  SCurve::fillHisto();
+  SCurve::display();
+#endif
 
-      // ############################
-      // # Save register new values #
-      // ############################
-      for (const auto cBoard : *fDetectorContainer)
-        for (const auto cModule : *cBoard)
-          for (const auto cChip : *cModule)
-            {
-              static_cast<RD53*>(cChip)->copyMaskFromDefault();
-              static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-              static_cast<RD53*>(cChip)->saveRegMap("");
-              std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-              system(command.c_str());
-              LOG (INFO) << BOLDGREEN << "\t--> SCurve saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-            }
-    }
+  // ######################################
+  // # Save or Update register new values #
+  // ######################################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          static_cast<RD53*>(cChip)->copyMaskFromDefault();
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDGREEN << "\t--> SCurve saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+        }
 
-  #ifdef __USE_ROOT__
-    if (doDisplay == true) myApp->Run(true);
-    if (doSave    == true) this->CloseResultFile();
-  #endif
+#ifdef __USE_ROOT__
+  if (doDisplay == true) myApp->Run(true);
+  this->WriteRootFile();
+  this->CloseResultFile();
+#endif
 }
 
 std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
@@ -220,7 +212,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
                       if (mean > maxThreshold) maxThreshold = mean;
                     }
                   else
-                    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise = FITERROR;
+                    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise = RD53SharedConstants::FITERROR;
                 }
 
           index++;
@@ -237,24 +229,26 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 }
 
 void SCurve::initHisto ()
-{ 
-  #ifdef __USE_ROOT__
-    histos.book(fResultFile, *fDetectorContainer, fSettingsMap); 
-  #endif
+{
+#ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
 }
+
 void SCurve::fillHisto ()
 {
-  #ifdef __USE_ROOT__
-    for (auto i = 0u; i < dacList.size(); i++)
-      histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
-    histos.fillThrAndNoise(*theThresholdAndNoiseContainer);
-  #endif
+#ifdef __USE_ROOT__
+  for (auto i = 0u; i < dacList.size(); i++)
+    histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
+  histos.fillThrAndNoise(*theThresholdAndNoiseContainer);
+#endif
 }
-void SCurve::display   () 
+
+void SCurve::display ()
 {
-  #ifdef __USE_ROOT__
-    histos.process(); 
-  #endif
+#ifdef __USE_ROOT__
+  histos.process();
+#endif
 }
 
 void SCurve::computeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
@@ -294,9 +288,9 @@ void SCurve::chipErrorReport ()
       for (const auto cChip : *cModule)
         {
           LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
-          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
+          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
         }
 }

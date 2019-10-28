@@ -1,13 +1,13 @@
 /*
 
-        FileName :                    SystemController.cc
-        Content :                     Controller of the System, overall wrapper of the framework
-        Programmer :                  Nicolas PIERRE
-        Version :                     1.0
-        Date of creation :            10/08/14
-        Support :                     mail to : nicolas.pierre@cern.ch
+  FileName :                    SystemController.cc
+  Content :                     Controller of the System, overall wrapper of the framework
+  Programmer :                  Nicolas PIERRE
+  Version :                     1.0
+  Date of creation :            10/08/14
+  Support :                     mail to : nicolas.pierre@cern.ch
 
- */
+*/
 
 #include "SystemController.h"
 #include "../HWInterface/CbcInterface.h"
@@ -17,7 +17,7 @@ using namespace Ph2_HwInterface;
 
 namespace Ph2_System {
 
-    SystemController::SystemController()
+  SystemController::SystemController()
     : fBeBoardInterface    (nullptr)
     , fReadoutChipInterface(nullptr)
     , fChipInterface       (nullptr)
@@ -28,141 +28,127 @@ namespace Ph2_System {
     , fRawFileName         ("")
     , fWriteHandlerEnabled (false)
     , fStreamerEnabled     (false)
-    , fNetworkStreamer     (nullptr)//This is the server listening port
+    , fNetworkStreamer     (nullptr) // This is the server listening port
     , fData                (nullptr)
-    {
-    //      bool fStreamData = true;
-    //      if(fStreamData && !fNetworkStreamer->accept(10, 0))
-    //      {
-    //          std::cout << "NOBODY IS LISTENING FOR MY OCCUPANCY DATA!!!!!!!! CRASHING!" << std::endl;
-    //          abort();
-    //      }
+  {}
 
-    }
+  SystemController::~SystemController() {}
 
-    SystemController::~SystemController()
-    {
-    }
+  void SystemController::Inherit (SystemController* pController)
+  {
+    fBeBoardInterface = pController->fBeBoardInterface;
+    fReadoutChipInterface = pController->fReadoutChipInterface;
+    fChipInterface = pController->fChipInterface;
+    fBoardVector = pController->fBoardVector;
+    fBeBoardFWMap = pController->fBeBoardFWMap;
+    fSettingsMap = pController->fSettingsMap;
+    fFileHandler = pController->fFileHandler;
+    fStreamerEnabled = pController->fStreamerEnabled;
+    fNetworkStreamer = pController->fNetworkStreamer;
+  }
 
-    void SystemController::Inherit (SystemController* pController)
-    {
-        fBeBoardInterface = pController->fBeBoardInterface;
-        fReadoutChipInterface = pController->fReadoutChipInterface;
-        fChipInterface = pController->fChipInterface;
-        fBoardVector = pController->fBoardVector;
-        fBeBoardFWMap = pController->fBeBoardFWMap;
-        fSettingsMap = pController->fSettingsMap;
-        fFileHandler = pController->fFileHandler;
-        fStreamerEnabled = pController->fStreamerEnabled;
-        fNetworkStreamer = pController->fNetworkStreamer;
-    }
+  void SystemController::Destroy()
+  {
+    if (fFileHandler)
+      {
+        if (fFileHandler->file_open() ) fFileHandler->closeFile();
 
-    void SystemController::Destroy()
-    {
-        if (fFileHandler)
-        {
-            if (fFileHandler->file_open() ) fFileHandler->closeFile();
+        if (fFileHandler!=nullptr) delete fFileHandler;
+      }
 
-            if (fFileHandler!=nullptr) delete fFileHandler;
-        }
+    if (fBeBoardInterface!=nullptr) delete fBeBoardInterface;
 
-        if (fBeBoardInterface!=nullptr) delete fBeBoardInterface;
+    if (fReadoutChipInterface!=nullptr)  delete fReadoutChipInterface;
+    if (fChipInterface!=nullptr)  delete fChipInterface;
+    if (fMPAInterface!=nullptr)  delete fMPAInterface;
+    if(fDetectorContainer!=nullptr) delete fDetectorContainer;
 
-        if (fReadoutChipInterface!=nullptr)  delete fReadoutChipInterface;
-        if (fChipInterface!=nullptr)  delete fChipInterface;
-        if (fMPAInterface!=nullptr)  delete fMPAInterface;
-        if(fDetectorContainer!=nullptr) delete fDetectorContainer;
+    // It crash if I try to delete them !!!!!!!!!!
+    // for (auto& it : fBeBoardFWMap) {
+    //     if (it.second)
+    //         delete it.second;
+    // }
+    fBeBoardFWMap.clear();
 
-        // It crash if I try to delete them !!!!!!!!!!
-        // for (auto& it : fBeBoardFWMap) {
-        //     if (it.second)
-        //         delete it.second;
-        // }
-        fBeBoardFWMap.clear();
-
-        fSettingsMap.clear();
-        if(fNetworkStreamer!=nullptr) delete fNetworkStreamer;
+    fSettingsMap.clear();
+    if(fNetworkStreamer!=nullptr) delete fNetworkStreamer;
     // for ( auto& el : fBoardVector )
     //  if (el) delete el;
 
     // fBoardVector.clear();
 
-        if (fData!=nullptr) delete fData;
-    }
+    if (fData!=nullptr) delete fData;
+  }
 
-    void SystemController::addFileHandler ( const std::string& pFilename, char pOption )
-    {
+  void SystemController::addFileHandler ( const std::string& pFilename, char pOption )
+  {
     //if the opion is read, create a handler object and use it to read the
     //file in the method below!
 
-        if (pOption == 'r')
-            fFileHandler = new FileHandler ( pFilename, pOption );
+    if (pOption == 'r')
+      fFileHandler = new FileHandler ( pFilename, pOption );
     //if the option is w, remember the filename and construct a new
     //fileHandler for every Interface
-        else if (pOption == 'w')
-        {
-            fRawFileName = pFilename;
-            fWriteHandlerEnabled = true;
-        }
+    else if (pOption == 'w')
+      {
+        fRawFileName = pFilename;
+        fWriteHandlerEnabled = true;
+      }
 
-    }
+  }
 
-    void SystemController::closeFileHandler()
-    {
-        if (fFileHandler)
-        {
-            if (fFileHandler->file_open() ) fFileHandler->closeFile();
+  void SystemController::closeFileHandler()
+  {
+    if (fFileHandler)
+      {
+        if (fFileHandler->file_open() ) fFileHandler->closeFile();
 
-            if (fFileHandler) delete fFileHandler;
+        if (fFileHandler) delete fFileHandler;
 
-            fFileHandler = nullptr;
-        }
-    }
+        fFileHandler = nullptr;
+      }
+  }
 
-    void SystemController::readFile ( std::vector<uint32_t>& pVec, uint32_t pNWords32 )
-    {
-        if (pNWords32 == 0) pVec = fFileHandler->readFile( );
-        else pVec = fFileHandler->readFileChunks (pNWords32);
-    }
+  void SystemController::readFile ( std::vector<uint32_t>& pVec, uint32_t pNWords32 )
+  {
+    if (pNWords32 == 0) pVec = fFileHandler->readFile( );
+    else pVec = fFileHandler->readFileChunks (pNWords32);
+  }
 
-    void SystemController::setData (BeBoard* pBoard, std::vector<uint32_t>& pData, uint32_t pNEvents)
-    {
-    //reset the data object
-        if (fData!=nullptr) delete fData;
+  void SystemController::setData (BeBoard* pBoard, std::vector<uint32_t>& pData, uint32_t pNEvents)
+  {
+    if (fData!=nullptr) delete fData;
+    fData = new Data();
 
-        fData = new Data();
+    fData->DecodeEvents(pBoard, pData, pNEvents, pBoard->getBoardType());
+  }
 
-    //pass data by reference to set and let it know what board we are dealing with
-        fData->Set (pBoard, pData, pNEvents, pBoard->getBoardType () );
-    //return the packet size
-    }
+  void SystemController::InitializeHw ( const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
+  {
+    fStreamerEnabled = streamData;
+    if(streamData)
+      {
+        fNetworkStreamer = new TCPPublishServer(6000,1);
+      }
 
-    void SystemController::InitializeHw ( const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
-    {
-        fStreamerEnabled = streamData;
-        if(streamData)
-        {
-            fNetworkStreamer = new TCPPublishServer(6000,1);
-        }
-    // this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, os, pIsFile );
-        fDetectorContainer = new DetectorContainer;
-        this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile );
+    fDetectorContainer = new DetectorContainer;
+    this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile );
 
-        fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
-        if (fBoardVector[0]->getBoardType() != BoardType::FC7)
-            fReadoutChipInterface = new CbcInterface  ( fBeBoardFWMap );
-        else
-            fReadoutChipInterface = new RD53Interface ( fBeBoardFWMap );
-        fMPAInterface = new MPAInterface ( fBeBoardFWMap );
+    fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
+    if (fBoardVector[0]->getBoardType() != BoardType::FC7)
+      fReadoutChipInterface = new CbcInterface  ( fBeBoardFWMap );
+    else
+      fReadoutChipInterface = new RD53Interface ( fBeBoardFWMap );
+    fMPAInterface = new MPAInterface ( fBeBoardFWMap );
 
-        if (fWriteHandlerEnabled)
-            this->initializeFileHandler();
-    }
+    if (fWriteHandlerEnabled)
+      this->initializeFileHandler();
+  }
 
-    void SystemController::InitializeSettings ( const std::string& pFilename, std::ostream& os, bool pIsFile )
-    {
-        this->fParser.parseSettings (pFilename, fSettingsMap, os, pIsFile );
-    }
+  void SystemController::InitializeSettings ( const std::string& pFilename, std::ostream& os, bool pIsFile )
+  {
+    this->fParser.parseSettings (pFilename, fSettingsMap, os, pIsFile );
+  }
 
   void SystemController::ConfigureHw ( bool bIgnoreI2c )
   {
@@ -226,196 +212,170 @@ namespace Ph2_System {
             // ###################
             size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
             size_t injType     = SystemController::findValueInSettings("INJtype");
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType);
+            size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays);
             LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
           }
       }
   }
 
-
-    void SystemController::initializeFileHandler()
-    {
+  void SystemController::initializeFileHandler()
+  {
     // here would be the ideal position to fill the file Header and call openFile when in read mode
-        for (const auto& cBoard : fBoardVector)
-        {
-            uint32_t cBeId = cBoard->getBeId();
-            uint32_t cNChip = 0;
+    for (const auto& cBoard : fBoardVector)
+      {
+        uint32_t cBeId = cBoard->getBeId();
+        uint32_t cNChip = 0;
 
         //uint32_t cNFe = cBoard->getNFe();
-            uint32_t cNEventSize32 = this->computeEventSize32 (cBoard);
+        uint32_t cNEventSize32 = this->computeEventSize32 (cBoard);
 
-            std::string cBoardTypeString;
-            BoardType cBoardType = cBoard->getBoardType();
+        std::string cBoardTypeString;
+        BoardType cBoardType = cBoard->getBoardType();
 
-            for (const auto& cFe : cBoard->fModuleVector) cNChip += cFe->getNChip();
+        for (const auto& cFe : cBoard->fModuleVector) cNChip += cFe->getNChip();
 
-              if (cBoardType == BoardType::D19C)
-                 cBoardTypeString = "D19C";
-             else if (cBoardType == BoardType::FC7)
-                 cBoardTypeString = "FC7";
+        if (cBoardType == BoardType::D19C)
+          cBoardTypeString = "D19C";
+        else if (cBoardType == BoardType::FC7)
+          cBoardTypeString = "FC7";
 
-             uint32_t cFWWord = fBeBoardInterface->getBoardInfo (cBoard);
-             uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
-             uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
+        uint32_t cFWWord = fBeBoardInterface->getBoardInfo (cBoard);
+        uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
+        uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
 
         //with the above info fill the header
-             FileHeader cHeader (cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType() );
+        FileHeader cHeader (cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType() );
 
         //construct a Handler
-             std::stringstream cBeBoardString;
-             cBeBoardString << "_Board" << std::setw (3) << std::setfill ('0') << cBeId;
-             std::string cFilename = fRawFileName;
+        std::stringstream cBeBoardString;
+        cBeBoardString << "_Board" << std::setw (3) << std::setfill ('0') << cBeId;
+        std::string cFilename = fRawFileName;
 
-             if (fRawFileName.find (".raw") != std::string::npos)
-                 cFilename.insert (fRawFileName.find (".raw"), cBeBoardString.str() );
+        if (fRawFileName.find (".raw") != std::string::npos)
+          cFilename.insert (fRawFileName.find (".raw"), cBeBoardString.str() );
 
-             FileHandler* cHandler = new FileHandler (cFilename, 'w', cHeader);
+        FileHandler* cHandler = new FileHandler (cFilename, 'w', cHeader);
 
         //finally set the handler
-             fBeBoardInterface->SetFileHandler (cBoard, cHandler);
-             LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << BOLDYELLOW << cFilename << RESET;
-         }
-     }
-     uint32_t SystemController::computeEventSize32 (BeBoard* pBoard)
-     {
-        uint32_t cNEventSize32 = 0;
-        uint32_t cNCbc = 0;
+        fBeBoardInterface->SetFileHandler (cBoard, cHandler);
+        LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << BOLDYELLOW << cFilename << RESET;
+      }
+  }
+  uint32_t SystemController::computeEventSize32 (BeBoard* pBoard)
+  {
+    uint32_t cNEventSize32 = 0;
+    uint32_t cNCbc = 0;
 
-        for (const auto& cFe : pBoard->fModuleVector)
-            cNCbc += cFe->getNChip();
-        if (pBoard->getBoardType() == BoardType::D19C)
-            cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNCbc * D19C_EVENT_SIZE_32_CBC3;
+    for (const auto& cFe : pBoard->fModuleVector)
+      cNCbc += cFe->getNChip();
+    if (pBoard->getBoardType() == BoardType::D19C)
+      cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNCbc * D19C_EVENT_SIZE_32_CBC3;
 
-        return cNEventSize32;
-    }
+    return cNEventSize32;
+  }
 
-    void SystemController::Start(int currentRun)
-    {
-        for (auto& cBoard : fBoardVector)
-            fBeBoardInterface->Start (cBoard);
-    }
-    void SystemController::Stop()
-    {
-        for (auto& cBoard : fBoardVector)
-            fBeBoardInterface->Stop (cBoard);
-    }
-    void SystemController::Pause()
-    {
-        for (auto& cBoard : fBoardVector)
-            fBeBoardInterface->Pause (cBoard);
-    }
-    void SystemController::Resume()
-    {
-        for (auto& cBoard : fBoardVector)
-            fBeBoardInterface->Resume (cBoard);
-    }
+  void SystemController::Start(int currentRun)
+  {
+    for (auto& cBoard : fBoardVector)
+      fBeBoardInterface->Start (cBoard);
+  }
+  void SystemController::Stop()
+  {
+    for (auto& cBoard : fBoardVector)
+      fBeBoardInterface->Stop (cBoard);
+  }
+  void SystemController::Pause()
+  {
+    for (auto& cBoard : fBoardVector)
+      fBeBoardInterface->Pause (cBoard);
+  }
+  void SystemController::Resume()
+  {
+    for (auto& cBoard : fBoardVector)
+      fBeBoardInterface->Resume (cBoard);
+  }
 
   void SystemController::ConfigureHardware(std::string cHWFile, bool enableStream)
   {
     std::stringstream outp;
-    
+
     InitializeHw ( cHWFile, outp, true, enableStream );
     InitializeSettings ( cHWFile, outp );
-    LOG (INFO) << outp.str();
-    outp.str ("");
+    std::cout << outp.str() << std::endl;
+    outp.str("");
     ConfigureHw();
   }
 
-    void SystemController::ConfigureCalibration()
-    {
-    }
+  void SystemController::ConfigureCalibration() {}
 
-    void SystemController::Configure(std::string cHWFile, bool enableStream)
-    {
-        ConfigureHardware(cHWFile, enableStream);
-        ConfigureCalibration();
-    }
+  void SystemController::Configure(std::string cHWFile, bool enableStream)
+  {
+    ConfigureHardware(cHWFile, enableStream);
+    ConfigureCalibration();
+  }
 
-    void SystemController::Start (BeBoard* pBoard)
-    {
-        fBeBoardInterface->Start (pBoard);
-    }
+  void SystemController::Start (BeBoard* pBoard)
+  {
+    fBeBoardInterface->Start (pBoard);
+  }
 
-    void SystemController::Stop (BeBoard* pBoard)
-    {
-        fBeBoardInterface->Stop (pBoard);
-    }
-    void SystemController::Pause (BeBoard* pBoard)
-    {
-        fBeBoardInterface->Pause (pBoard);
-    }
-    void SystemController::Resume (BeBoard* pBoard)
-    {
-        fBeBoardInterface->Resume (pBoard);
-    }
+  void SystemController::Stop (BeBoard* pBoard)
+  {
+    fBeBoardInterface->Stop (pBoard);
+  }
+  void SystemController::Pause (BeBoard* pBoard)
+  {
+    fBeBoardInterface->Pause (pBoard);
+  }
+  void SystemController::Resume (BeBoard* pBoard)
+  {
+    fBeBoardInterface->Resume (pBoard);
+  }
 
-//method to read data standalone
-    uint32_t SystemController::ReadData (BeBoard* pBoard, bool pWait)
-    {
-    //reset the data object
-    //if (fData) delete fData;
+  uint32_t SystemController::ReadData (BeBoard* pBoard, bool pWait)
+  {
+    std::vector<uint32_t> cData;
+    return this->ReadData (pBoard, cData, pWait);
+  }
 
-    //fData = new Data();
+  void SystemController::ReadData (bool pWait)
+  {
+    for (auto cBoard : fBoardVector)
+      this->ReadData (cBoard, pWait);
+  }
 
-    //std::vector<uint32_t> cData;
-    //read the data and get it by reference
-    //uint32_t cNPackets = fBeBoardInterface->ReadData (pBoard, false, cData);
-    //pass data by reference to set and let it know what board we are dealing with
-    //fData->Set (pBoard, cData, cNPackets, fBeBoardInterface->getBoardType (pBoard) );
-    //return the packet size
-    //return cNPackets;
-        std::vector<uint32_t> cData;
-        return this->ReadData (pBoard, cData, pWait);
-    }
+  uint32_t SystemController::ReadData (BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
+  {
+    if (fData) delete fData;
+    fData = new Data();
 
-// for OTSDAQ
-    uint32_t SystemController::ReadData (BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
-    {
-    //reset the data object
-        if (fData) delete fData;
+    uint32_t cNPackets = fBeBoardInterface->ReadData (pBoard, false, pData, pWait);
+    fData->DecodeEvents(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType (pBoard));
 
-        fData = new Data();
+    return cNPackets;
+  }
 
-    //read the data and get it by reference
-        uint32_t cNPackets = fBeBoardInterface->ReadData (pBoard, false, pData, pWait);
-    //pass data by reference to set and let it know what board we are dealing with
-        fData->Set (pBoard, pData, cNPackets, fBeBoardInterface->getBoardType (pBoard) );
-    //return the packet size
-        return cNPackets;
-    }
+  void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents)
+  {
+    std::vector<uint32_t> cData;
+    return this->ReadNEvents (pBoard, pNEvents, cData, true);
+  }
 
-    void SystemController::ReadData (bool pWait)
-    {
-        for (auto cBoard : fBoardVector)
-            this->ReadData (cBoard, pWait);
-    }
+  void SystemController::ReadNEvents (uint32_t pNEvents)
+  {
+    for (auto cBoard : fBoardVector)
+      this->ReadNEvents (cBoard, pNEvents);
+  }
 
-//standalone
-    void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents)
-    {
-        std::vector<uint32_t> cData;
-        return this->ReadNEvents (pBoard, pNEvents, cData, true);
-    }
+  void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
+  {
+    if (fData) delete fData;
+    fData = new Data();
 
-//for OTSDAQ
-    void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
-    {
-    //reset the data object
-        if (fData) delete fData;
-
-        fData = new Data();
-    //read the data and get it by reference
-        fBeBoardInterface->ReadNEvents (pBoard, pNEvents, pData, pWait);
-    //pass data by reference to set and let it know what board we are dealing with
-        fData->Set (pBoard, pData, pNEvents, fBeBoardInterface->getBoardType (pBoard) );
-    //return the packet size
-    }
-
-    void SystemController::ReadNEvents (uint32_t pNEvents)
-    {
-        for (auto cBoard : fBoardVector)
-            this->ReadNEvents (cBoard, pNEvents);
-    }
+    fBeBoardInterface->ReadNEvents (pBoard, pNEvents, pData, pWait);
+    fData->DecodeEvents(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType (pBoard));
+  }
 
   double SystemController::findValueInSettings (const char* name)
   {

@@ -27,7 +27,7 @@ void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDet
   offset     = this->findValueInSettings(settingsMap,"VCalMED");
 
 
-  auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue-offset, stopValue-offset, nEvents, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION));
+  auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue-offset, stopValue-offset, nEvents, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION));
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "ToT");
 
   auto hErrReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
@@ -85,7 +85,7 @@ void GainHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContai
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
               {
-                if (cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != ISDISABLED)
+                if (cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53SharedConstants::ISDISABLED)
                   hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row,col).fPh);
                 if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
               }
@@ -106,7 +106,7 @@ void GainHistograms::fillGainAndIntercept (const DetectorDataContainer& GainAndI
 
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
-              if (cChip->getChannel<GainAndIntercept>(row, col).fGain == FITERROR) ErrorFit2DHist->Fill(col + 1, row + 1);
+              if (cChip->getChannel<GainAndIntercept>(row, col).fGain == RD53SharedConstants::FITERROR) ErrorFit2DHist->Fill(col + 1, row + 1);
               else if (cChip->getChannel<GainAndIntercept>(row, col).fGain != 0)
                 {
                   Gain1DHist->Fill(cChip->getChannel<GainAndIntercept>(row, col).fGain);

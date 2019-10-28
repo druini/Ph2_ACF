@@ -11,6 +11,7 @@
 #ifndef RD53ThrEqualizationHistograms_H
 #define RD53ThrEqualizationHistograms_H
 
+#include "../tools/RD53SharedConstants.h"
 #include "../System/SystemController.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
@@ -18,12 +19,6 @@
 
 #include <TH1F.h>
 #include <TH2F.h>
-
-
-// #############
-// # CONSTANTS #
-// #############
-#define ISDISABLED -1.0 // Encoding disabled channels
 
 
 class ThrEqualizationHistograms : public DQMHistogramBase

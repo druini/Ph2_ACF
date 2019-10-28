@@ -10,24 +10,23 @@
 #ifndef RD53Gain_H
 #define RD53Gain_H
 
+#include "Tool.h"
+#include "RD53SharedConstants.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/GainAndIntercept.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#ifdef __USE_ROOT__
-  #include "../DQMUtils/RD53GainHistograms.h"
-  #include "TApplication.h"
-#endif
-#include "Tool.h"
 
+#ifdef __USE_ROOT__
+#include "TApplication.h"
+#include "../DQMUtils/RD53GainHistograms.h"
+#endif
 
 
 // #############
 // # CONSTANTS #
 // #############
 #define RESULTDIR "Results" // Directory containing the results
-#define INTERCEPT_HALFRANGE 6 // [ToT]
-#define ISDISABLED -1.0       // Encoding disabled channels
-#define FITERROR   -2.0       // Encoding fit errors
 
 
 // ##########################
@@ -46,11 +45,11 @@ class Gain : public Tool
   void sendData                                  ();
   void initialize                                (const std::string fileRes_, const std::string fileReg_);
   void run                                       ();
-  void draw                                      ();
+  void draw                                      (bool doSave = true);
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
-    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups)*nSteps;
+    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*nSteps;
   }
 
 
@@ -64,6 +63,7 @@ class Gain : public Tool
   size_t stopValue;
   size_t nSteps;
   size_t offset;
+  size_t nHITxCol;
   bool   doFast;
 
   std::vector<uint16_t> dacList;
@@ -82,16 +82,16 @@ class Gain : public Tool
   // ########
   // # ROOT #
   // ########
-  #ifdef __USE_ROOT__
-    GainHistograms histos;
-  #endif
+#ifdef __USE_ROOT__
+  GainHistograms histos;
+#endif
 
 
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
 };
 
 #endif
