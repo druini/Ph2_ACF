@@ -395,7 +395,7 @@ namespace Ph2_HwDescription
     col                                     = RD53Constants::NPIX_REGION * bits::pack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
 
     uint8_t tots[RD53Constants::NPIX_REGION];
-    bits::RangePacker<RD53Constants::NPIX_REGION>::unpack_reverse(all_tots, tots);
+    bits::RangePacker<RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION>::unpack_reverse(all_tots, tots);
 
     for (int i = 0; i < RD53Constants::NPIX_REGION; i++) if (tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) result.emplace_back(row, col + i, tots[i]);
   }

@@ -66,13 +66,13 @@ endif()
 #     include_directories(${ROOT_INCLUDE_DIRS})
 #     set(LIBS ${LIBS} ${ROOT_LIBRARIES})
 #     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
-
+#
 #     #check for THttpServer
 #     if(${ROOT_HAS_HTTP})
 #         set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
 #         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HTTP__")
 #     endif()
-
+#
 #     #check ROOT version
 #     if(${ROOT_VERSION} VERSION_GREATER 5)
 #         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ROOT5__")

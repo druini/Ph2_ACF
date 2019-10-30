@@ -139,11 +139,11 @@
     <Setting name="UpdateChipCfg">    1 </Setting>
 
     <!-- === Expert settings ===
-         nHITxCol:    number of simultaneously injected hit per column (must be a divider of chip rows)
-         n25nsDelays: delay between two consecutive injections in terms of 100ns period
+         nHITxCol:   number of simultaneously injected hit per column (must be a divider of chip rows)
+         nClkDelays: delay between two consecutive injections in terms of 100ns period
     -->
     <Setting name="nHITxCol">         1 </Setting>
-    <Setting name="n25nsDelays">    300 </Setting>
+    <Setting name="nClkDelays">     300 </Setting>
   </Settings>
 
 </HwDescription>

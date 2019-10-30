@@ -11,11 +11,11 @@
 #define RD53SCurve_H
 
 #include "Tool.h"
-#include "../Utils/RD53SharedConstants.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+#include "../Utils/RD53SharedConstants.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"

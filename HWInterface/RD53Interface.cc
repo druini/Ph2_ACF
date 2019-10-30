@@ -154,20 +154,21 @@ namespace Ph2_HwInterface
 
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode) // @TMP@
   {
-    std::vector<std::pair<uint16_t, uint16_t>> outputDecoded;
+    const int totalAttempts = 2;
 
-    for (auto attempt = 0; attempt < 2; attempt++)
+    std::vector<std::pair<uint16_t, uint16_t>> outputDecoded;
+    for (auto attempt = 0; attempt < totalAttempts; attempt++)
       {
         outputDecoded = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
         if (outputDecoded.size() == 0)
           {
-            std::cout << "AAA : empty register readback, attempt n. " << attempt << std::endl;
+            LOG (WARNING) << BLUE << "Empty register readback, attempt n. " << BOLDYELLOW << attempt << RESET;
             usleep(VCALSLEEP);
           }
         else return outputDecoded[0].second;
       }
 
-    LOG (ERROR) << BOLDRED << "Empty register readback FIFO" << RESET;
+    LOG (ERROR) << BOLDRED << "Empty register readback FIFO in " << BOLDYELLOW << totalAttempts << BOLDRED " attempts" << RESET;
     return 0;
     // return RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode)[0].second;
   }
@@ -216,7 +217,6 @@ namespace Ph2_HwInterface
     if (doSparse == true)
       {
         RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
-    usleep(10000);
         RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x00, pVerifLoop /*false*/); // @TMP@
         RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x00, pVerifLoop);
 

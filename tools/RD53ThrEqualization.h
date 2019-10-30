@@ -12,10 +12,10 @@
 
 #include "Tool.h"
 #include "RD53SCurve.h"
-#include "../Utils/RD53SharedConstants.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+#include "../Utils/RD53SharedConstants.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
