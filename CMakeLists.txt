@@ -147,12 +147,15 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         add_subdirectory(AMC13)
     endif()
 
-    MESSAGE(STATUS " ") 
-    if(CompileForHerd OR NoDataShipping) 
+    MESSAGE(STATUS " ")
+    if(CompileForHerd OR NoDataShipping)
         add_subdirectory(tools)
         add_subdirectory(HWDescription)
         add_subdirectory(HWInterface)
         add_subdirectory(System)
+    endif()
+
+    if(CompileForShep OR (NoDataShipping AND CompileForHerd))
         add_subdirectory(miniDAQ)
     endif()
 
@@ -161,7 +164,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         add_subdirectory(RootUtils)
     endif()
 
-    if(NoDataShipping OR (CompileForShep AND CompileForHerd) )
+    if(NoDataShipping OR (CompileForShep AND CompileForHerd))
         add_subdirectory(src)
     endif()
 

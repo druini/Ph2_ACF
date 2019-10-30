@@ -11,8 +11,8 @@
 #ifndef RD53InjectionDelayHistograms_H
 #define RD53InjectionDelayHistograms_H
 
-#include "../Utils/RD53SharedConstants.h"
 #include "../System/SystemController.h"
+#include "../Utils/RD53SharedConstants.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "DQMHistogramBase.h"
