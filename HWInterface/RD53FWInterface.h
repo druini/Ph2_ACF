@@ -25,7 +25,7 @@
 // #############
 #define DEEPSLEEP 100000 // [microseconds]
 #define READOUTSLEEP  50 // [microseconds]
-#define MAXTRIALS     10 // Maximum number of trials for ReadNEvents
+#define MAXATTEMPTS    2 // Maximum number of attempts for ReadNEvents
 
 // ##################
 // # BIT DEFINITION #
@@ -109,7 +109,7 @@ namespace Ph2_HwInterface
 
     bool InitChipCommunication ();
     void WriteChipCommand      (const std::vector<uint16_t>& data, unsigned int moduleId);
-    std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Chip* pChip);
+    void ReadChipRegisters     (Chip* pChip, std::vector<std::pair<uint16_t,uint16_t>>& regReadBack);
 
     struct ChipFrame
     {
@@ -140,9 +140,9 @@ namespace Ph2_HwInterface
       uint8_t evtStatus;
     };
 
-    static std::vector<Event> DecodeEvents (const std::vector<uint32_t>& data, uint8_t& status);
-    static void PrintEvents                (const std::vector<RD53FWInterface::Event>& events, std::vector<uint32_t>* pData = nullptr);
-    static bool EvtErrorHandler            (uint8_t status);
+    void DecodeEvents    (const std::vector<uint32_t>& data, uint8_t& status, std::vector<RD53FWInterface::Event>& events);
+    void PrintEvents     (const std::vector<RD53FWInterface::Event>& events, std::vector<uint32_t>* pData = nullptr);
+    bool EvtErrorHandler (uint8_t status);
 
     enum class TriggerSource : uint32_t
     {
@@ -237,6 +237,12 @@ namespace Ph2_HwInterface
     size_t             ddr3Offset;
     bool               singleChip;
   };
+
+
+  // ########################################
+  // # Vector containing the decoded events #
+  // ########################################
+  extern std::vector<RD53FWInterface::Event> RD53eventVector;
 }
 
 #endif

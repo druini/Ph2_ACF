@@ -37,7 +37,6 @@
 #include <string.h>
 
 using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
 
 /*!
  * \namespace Ph2_System

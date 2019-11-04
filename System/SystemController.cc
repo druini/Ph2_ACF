@@ -120,7 +120,7 @@ namespace Ph2_System {
     if (fData!=nullptr) delete fData;
     fData = new Data();
 
-    fData->DecodeEvents(pBoard, pData, pNEvents, pBoard->getBoardType());
+    fData->DecodeData(pBoard, pData, pNEvents, pBoard->getBoardType());
   }
 
   void SystemController::InitializeHw ( const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
@@ -262,6 +262,7 @@ namespace Ph2_System {
         LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << BOLDYELLOW << cFilename << RESET;
       }
   }
+
   uint32_t SystemController::computeEventSize32 (BeBoard* pBoard)
   {
     uint32_t cNEventSize32 = 0;
@@ -317,32 +318,32 @@ namespace Ph2_System {
 
   void SystemController::Start (BeBoard* pBoard)
   {
-    fBeBoardInterface->Start (pBoard);
+    fBeBoardInterface->Start(pBoard);
   }
 
   void SystemController::Stop (BeBoard* pBoard)
   {
-    fBeBoardInterface->Stop (pBoard);
+    fBeBoardInterface->Stop(pBoard);
   }
   void SystemController::Pause (BeBoard* pBoard)
   {
-    fBeBoardInterface->Pause (pBoard);
+    fBeBoardInterface->Pause(pBoard);
   }
   void SystemController::Resume (BeBoard* pBoard)
   {
-    fBeBoardInterface->Resume (pBoard);
+    fBeBoardInterface->Resume(pBoard);
   }
 
   uint32_t SystemController::ReadData (BeBoard* pBoard, bool pWait)
   {
     std::vector<uint32_t> cData;
-    return this->ReadData (pBoard, cData, pWait);
+    return this->ReadData(pBoard, cData, pWait);
   }
 
   void SystemController::ReadData (bool pWait)
   {
     for (auto cBoard : fBoardVector)
-      this->ReadData (cBoard, pWait);
+      this->ReadData(cBoard, pWait);
   }
 
   uint32_t SystemController::ReadData (BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
@@ -351,7 +352,7 @@ namespace Ph2_System {
     fData = new Data();
 
     uint32_t cNPackets = fBeBoardInterface->ReadData (pBoard, false, pData, pWait);
-    fData->DecodeEvents(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType (pBoard));
+    fData->DecodeData(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType(pBoard));
 
     return cNPackets;
   }
@@ -359,13 +360,13 @@ namespace Ph2_System {
   void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents)
   {
     std::vector<uint32_t> cData;
-    return this->ReadNEvents (pBoard, pNEvents, cData, true);
+    return this->ReadNEvents(pBoard, pNEvents, cData, true);
   }
 
   void SystemController::ReadNEvents (uint32_t pNEvents)
   {
     for (auto cBoard : fBoardVector)
-      this->ReadNEvents (cBoard, pNEvents);
+      this->ReadNEvents(cBoard, pNEvents);
   }
 
   void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
@@ -373,8 +374,8 @@ namespace Ph2_System {
     if (fData) delete fData;
     fData = new Data();
 
-    fBeBoardInterface->ReadNEvents (pBoard, pNEvents, pData, pWait);
-    fData->DecodeEvents(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType (pBoard));
+    fBeBoardInterface->ReadNEvents(pBoard, pNEvents, pData, pWait);
+    fData->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
   }
 
   double SystemController::findValueInSettings (const char* name)

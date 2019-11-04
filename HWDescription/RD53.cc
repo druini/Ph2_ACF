@@ -404,20 +404,19 @@ namespace Ph2_HwDescription
   {
     uint32_t header;
 
-    evtStatus = RD53EvtEncoder::CGOOD;
+    evtStatus = RD53EvtEncoder::CHIPGOOD;
 
     std::tie(header, trigger_id, trigger_tag, bc_id) = bits::unpack<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
-    if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHEAD;
+    if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHIPHEAD;
 
     size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
-    std::vector<RD53::HitData> hits;
     for (auto i = 1u; i < n; i++)
       if (data[i] != noHitToT)
         {
-          hits.clear();
+          std::vector<RD53::HitData> hits;
           DecodeQuad(data[i], hits);
           hit_data.insert(hit_data.end(), hits.begin(), hits.end());
-          for (auto& hit : hits) if ((hit.row >= RD53::nRows) || (hit.col >= RD53::nCols)) evtStatus |= RD53EvtEncoder::CPIX;
+          for (auto& hit : hits) if ((hit.row >= RD53::nRows) || (hit.col >= RD53::nCols)) evtStatus |= RD53EvtEncoder::CHIPPIX;
         }
   }
 

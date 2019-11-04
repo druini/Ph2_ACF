@@ -11,7 +11,6 @@
 #define RD53_H
 
 #include "ReadoutChip.h"
-
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/bit_packing.h"
@@ -78,9 +77,9 @@ namespace RD53EvtEncoder
   // ################
   // # Event status #
   // ################
-  const uint8_t CGOOD = 0x00; // Chip event status Good
-  const uint8_t CHEAD = 0x40; // Chip event status Bad chip header
-  const uint8_t CPIX  = 0x80; // Chip event status Bad pixel row or column
+  const uint8_t CHIPGOOD = 0x00; // Chip event status Good
+  const uint8_t CHIPHEAD = 0x40; // Chip event status Bad chip header
+  const uint8_t CHIPPIX  = 0x80; // Chip event status Bad pixel row or column
 }
 
 

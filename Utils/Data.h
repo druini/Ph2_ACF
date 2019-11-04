@@ -102,7 +102,7 @@ namespace Ph2_HwInterface {
      */
     void Reset();
 
-    void DecodeEvents (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+    void DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
     const Event* GetNextEvent (const BeBoard* pBoard)
     {
