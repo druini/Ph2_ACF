@@ -19,11 +19,13 @@
 #include "easylogging++.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
+#include "../HWInterface/RD53FWInterface.h"
 
 
 using namespace Ph2_HwDescription;
-namespace Ph2_HwInterface {
 
+namespace Ph2_HwInterface
+{
   /*!
    * \class Data
    * \brief Data buffer class for CBC data

@@ -10,7 +10,6 @@
 */
 
 #include "Data.h"
-#include "../HWInterface/RD53FWInterface.h"
 
 namespace Ph2_HwInterface
 {
