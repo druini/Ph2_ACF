@@ -291,7 +291,7 @@ namespace Ph2_HwInterface
     unsigned int channel_up = ReadReg ("user.stat_regs.aurora_rx_channel_up");
     LOG (INFO) << GREEN << "Number of active channels: " << BOLDYELLOW << RD53::countBitsOne(channel_up) << "\t(" << std::bitset<12>(channel_up) << ")" << RESET;
     
-    if (chips_en == channel_up)
+    if (chips_en & ~channel_up)
     {
       LOG (ERROR) << BOLDRED << "\t--> Some channels are enabled but inactive." << RESET;
       return false;    
