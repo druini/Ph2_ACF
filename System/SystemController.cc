@@ -190,6 +190,20 @@ namespace Ph2_System {
             LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << +cBoard->getBeId() << RESET;
             fBeBoardInterface->ConfigureBoard(cBoard);
 
+
+            // ###################
+            // # Configuring FSM #
+            // ###################
+            size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
+            size_t injType     = SystemController::findValueInSettings("INJtype");
+            size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays);
+            LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
+
+
+            // #################
+            // Configure chips #
+            // #################
             for (const auto& cModule : cBoard->fModuleVector)
               {
                 LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << +cModule->getModuleId() << RESET;
@@ -200,16 +214,6 @@ namespace Ph2_System {
                     LOG (INFO) << BOLDBLUE << "\t--> Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
                   }
               }
-
-
-            // ###################
-            // # Configuring FSM #
-            // ###################
-            size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
-            size_t injType     = SystemController::findValueInSettings("INJtype");
-            size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays);
-            LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
           }
       }
   }

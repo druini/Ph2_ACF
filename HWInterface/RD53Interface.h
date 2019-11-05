@@ -47,13 +47,13 @@ namespace Ph2_HwInterface
 
   private:
     void WriteRD53Mask  (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
-    void ReadRD53Reg    (Chip* pChip, const std::string& pRegNode, std::vector<std::pair<uint16_t,uint16_t>>& regReadBack);
+    std::vector<std::pair<uint16_t,uint16_t>> ReadRD53Reg (Chip* pChip, const std::string& pRegNode);
     void InitRD53Aurora (Chip* pChip);
     void SyncRD53       (Chip* pChip);
     void ResetRD53      (Chip* pChip);
 
-    template <class Cmd>
-      void sendCommand (Chip* pChip, const Cmd& cmd) { static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getFeId()); }
+    template <typename T>
+      void sendCommand (Chip* pChip, const T& cmd) { static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getFeId()); }
 
     template <typename T, size_t N>
       static size_t arraySize (const T(&)[N]) { return N; }

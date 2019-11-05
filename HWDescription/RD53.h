@@ -135,6 +135,7 @@ namespace Ph2_HwDescription
     std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
     std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
 
+    uint8_t getLane             () { return fLane; }
     void    copyMaskFromDefault ();
     void    copyMaskToDefault   ();
     void    resetMask           ();
@@ -197,12 +198,7 @@ namespace Ph2_HwDescription
       uint8_t cal_aux_delay;
     };
 
-    static size_t setBits (size_t nBit2Set)
-    {
-      auto output = 1 << (nBit2Set-1);
-      for (auto i = 0u; i < nBit2Set-1; i++) output |= 1 << i;
-      return output;
-    }
+    static size_t setBits (size_t nBit2Set) { return (1 << nBit2Set) - 1; }
 
     static auto countBitsOne (size_t num)
     {
@@ -221,8 +217,6 @@ namespace Ph2_HwDescription
       output.insert(output.find(NAMESEARCHinPATH),fName2Add);
       return output;
     }
-
-    uint8_t getLane() { return fLane; }
 
   private:
     std::vector<perPixelData> fPixelsMask;

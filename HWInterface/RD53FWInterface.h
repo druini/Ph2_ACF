@@ -106,9 +106,9 @@ namespace Ph2_HwInterface
     void     ChipReSync  ()                                                                                     override;
     std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)           override;
 
-    bool InitChipCommunication ();
-    void WriteChipCommand      (const std::vector<uint16_t>& data, unsigned int moduleId);
-    void ReadChipRegisters     (Chip* pChip, std::vector<std::pair<uint16_t,uint16_t>>& regReadBack);
+    bool CheckChipCommunication ();
+    void WriteChipCommand       (const std::vector<uint16_t>& data, unsigned int moduleId);
+    std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Chip* pChip);
 
     struct ChipFrame
     {
@@ -139,9 +139,9 @@ namespace Ph2_HwInterface
       uint8_t evtStatus;
     };
 
-    void DecodeEvents    (const std::vector<uint32_t>& data, uint8_t& status, std::vector<RD53FWInterface::Event>& events);
-    void PrintEvents     (const std::vector<RD53FWInterface::Event>& events, std::vector<uint32_t>* pData = nullptr);
-    bool EvtErrorHandler (uint8_t status);
+    void DecodeEvents       (const std::vector<uint32_t>& data, uint8_t& status, std::vector<RD53FWInterface::Event>& events);
+    bool EvtErrorHandler    (uint8_t status);
+    static void PrintEvents (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
 
     enum class TriggerSource : uint32_t
     {
@@ -220,7 +220,6 @@ namespace Ph2_HwInterface
 
   private:
     void PrintFWstatus         ();
-    void SerializeSymbols      (std::vector<std::vector<uint16_t> >& data, std::vector<uint32_t>& serialData);
     void TurnOffFMC            ();
     void TurnOnFMC             ();
     void ResetBoard            ();
@@ -230,8 +229,6 @@ namespace Ph2_HwInterface
     void ConfigureFastCommands (const FastCommandsConfig* config = nullptr);
     void ConfigureDIO5         (const DIO5Config* config);
     void SendBoardCommand      (const std::string& cmd_reg);
-
-    uint8_t getChipLane        (Chip* pChip);
 
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;

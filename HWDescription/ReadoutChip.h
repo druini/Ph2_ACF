@@ -16,14 +16,15 @@
 #include "Chip.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
+#include "../Utils/easylogging++.h"
+#include "../Utils/Container.h"
+
 #include <iostream>
 #include <map>
 #include <string>
 #include <stdint.h>
 #include <utility>
 #include <set>
-#include "../Utils/easylogging++.h"
-#include "../Utils/Container.h"
 
 /*!
  * \namespace Ph2_HwDescription

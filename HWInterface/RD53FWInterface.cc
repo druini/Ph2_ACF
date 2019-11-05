@@ -65,6 +65,7 @@ namespace Ph2_HwInterface
     // RD53FWInterface::TurnOnFMC();
     // RD53FWInterface::ResetBoard();
     RD53FWInterface::ChipReset();
+    RD53FWInterface::ChipReSync();
     RD53FWInterface::ResetFastCmdBlk();
     RD53FWInterface::ResetSlowCmdBlk();
     RD53FWInterface::ResetReadoutBlk();
@@ -105,7 +106,6 @@ namespace Ph2_HwInterface
         if (this->singleChip == true) chips_en |= 1 << module_id;
         else
           {
-            // chips_en |= 0xF << (RD53FWEvtEncoder::NBIT_CHIPID * module_id); // @TMP@
             uint16_t mod_chips_en = 0;
             for (const auto cChip : *cModule)
               {
@@ -121,15 +121,17 @@ namespace Ph2_HwInterface
     if (cVecReg.size() != 0) WriteStackReg(cVecReg);
 
 
-    // ###########################################
-    // # Reset slow cmd block and configure DIO5 #
-    // ###########################################
-    RD53FWInterface::ChipReSync();
+    // ##################
+    // # Configure DIO5 #
+    // ##################
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
 
 
+    // ########################################
+    // # Check communication with the chip(s) #
+    // ########################################
     LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
-    bool commGood = RD53FWInterface::InitChipCommunication();
+    bool commGood = RD53FWInterface::CheckChipCommunication();
     if (commGood == true) LOG (INFO) << BOLDBLUE << "\t--> Successfully initialized the communication to all chips"     << RESET;
     else                  LOG (INFO) << BOLDRED  << "\t--> I was not able to initialize the communication to all chips" << RESET;
   }
@@ -174,20 +176,21 @@ namespace Ph2_HwInterface
     stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd.dispatch_packet", 0);
 
     WriteStackReg(stackRegisters);
-    
+
     if (ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched") == false)
       LOG (ERROR) << BOLDRED << "Error while dispatching chip register program" << RESET;
   }
-  
-  uint8_t RD53FWInterface::getChipLane(Chip* pChip)
-  {
-    auto* pRD53 = static_cast<RD53*>(pChip);
-    if (this->singleChip == true) return pRD53->getFeId();
-    return 4 * pRD53->getFeId() + pRD53->getLane();
-  }
 
-  void RD53FWInterface::ReadChipRegisters (Chip* pChip, std::vector<std::pair<uint16_t,uint16_t>>& regReadBack)
+  std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters (Chip* pChip)
   {
+    std::vector<std::pair<uint16_t,uint16_t>> regReadback;
+
+    auto* pRD53 = static_cast<RD53*>(pChip);
+    uint32_t chipLane;
+    if (this->singleChip == true) chipLane = pRD53->getFeId(); // @TMP@
+    chipLane = RD53FWEvtEncoder::NBIT_CHIPID * pRD53->getFeId() + pRD53->getLane(); // @TMP@
+
+
     // #####################
     // # Read the register #
     // #####################
@@ -199,12 +202,14 @@ namespace Ph2_HwInterface
 
         uint16_t lane, address, value;
         std::tie(lane, address, value) = bits::unpack<6, 10, 16>(readBackData);
-	auto chipLane = getChipLane(pChip);
 
-        if (lane == chipLane) regReadBack.emplace_back(address, value);
+        if (lane == chipLane) regReadback.emplace_back(address, value);
       }
 
-    if (regReadBack.size() == 0) LOG (ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
+    if (regReadback.size() == 0) LOG (ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
+
+
+    return regReadback;
   }
 
   void RD53FWInterface::PrintFWstatus()
@@ -264,13 +269,13 @@ namespace Ph2_HwInterface
     // # Check module registers #
     // ##########################
     unsigned int modules = ReadReg("user.stat_regs.aurora_rx.Module_type");
-    LOG (INFO) << GREEN << "Module type: " << BOLDYELLOW << modules << RESET;
+    LOG (INFO) << GREEN << "Module type: " << BOLDYELLOW << modules << RESET << GREEN " (1 = single chip)" << RESET;
 
     modules = ReadReg("user.stat_regs.aurora_rx.Nb_of_modules");
-    LOG (INFO) << GREEN << "Number of modules: " << BOLDYELLOW << modules << RESET;
+    LOG (INFO) << GREEN << "Number of modules: " << BOLDYELLOW << modules << RESET << GREEN << " (4 = default)" << RESET;
   }
 
-  bool RD53FWInterface::InitChipCommunication()
+  bool RD53FWInterface::CheckChipCommunication()
   {
     // ###############################
     // # Check RD53 AURORA registers #
@@ -280,24 +285,24 @@ namespace Ph2_HwInterface
     LOG (INFO) << GREEN << "Aurora speed: " << BOLDYELLOW << (speed_flag == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
 
     unsigned int aurora_clk = ReadReg ("user.stat_regs.aurora_rx.gt_refclk");
-    LOG (INFO) << GREEN << "Aurora GT reference clock: " << BOLDYELLOW << aurora_clk << RESET;
+    LOG (INFO) << GREEN << "Aurora GT reference clock: " << BOLDYELLOW << (aurora_clk == 0 ? "bad" : "good") << RESET;
 
     unsigned int lane_up = ReadReg ("user.stat_regs.aurora_rx.lane_up");
-    LOG (INFO) << GREEN << "Number of available channels: " << BOLDYELLOW << RD53::countBitsOne(lane_up) << "\t(" << std::bitset<14>(lane_up) << ")" << RESET;
+    LOG (INFO) << GREEN << "Number of available data lanes: " << BOLDYELLOW << RD53::countBitsOne(lane_up) << GREEN << " i.e. " << BOLDYELLOW << std::bitset<20>(lane_up) << RESET;
 
     unsigned int chips_en = ReadReg ("user.ctrl_regs.Chips_en");
-    LOG (INFO) << GREEN << "Number of enabled channels: " << BOLDYELLOW << RD53::countBitsOne(chips_en) << "\t(" << std::bitset<12>(chips_en) << ")" << RESET;
+    LOG (INFO) << GREEN << "Number of enabled data lanes: " << BOLDYELLOW << RD53::countBitsOne(chips_en) << GREEN << " i.e. " << BOLDYELLOW << std::bitset<12>(chips_en) << RESET;
 
     unsigned int channel_up = ReadReg ("user.stat_regs.aurora_rx_channel_up");
-    LOG (INFO) << GREEN << "Number of active channels: " << BOLDYELLOW << RD53::countBitsOne(channel_up) << "\t(" << std::bitset<12>(channel_up) << ")" << RESET;
-    
+    LOG (INFO) << GREEN << "Number of active data lanes: " << BOLDYELLOW << RD53::countBitsOne(channel_up) << GREEN << "  i.e. " << BOLDYELLOW << std::bitset<12>(channel_up) << RESET;
+
     if (chips_en & ~channel_up)
     {
-      LOG (ERROR) << BOLDRED << "\t--> Some channels are enabled but inactive." << RESET;
-      return false;    
+      LOG (ERROR) << BOLDRED << "\t--> Some data lanes are enabled but inactive" << RESET;
+      return false;
     }
 
-    LOG (INFO) << BOLDBLUE << "\t--> All enabled channels are active." << RESET;
+    LOG (INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
     return true;
   }
 
@@ -449,16 +454,16 @@ namespace Ph2_HwInterface
         {"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0}});
   }
 
-  void RD53FWInterface::PrintEvents (const std::vector<RD53FWInterface::Event>& events, std::vector<uint32_t>* pData)
+  void RD53FWInterface::PrintEvents (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData)
   {
     // ##################
     // # Print raw data #
     // ##################
-    if (pData != nullptr)
-      for (auto j = 0u; j < pData->size(); j++)
+    if (pData.size() != 0)
+      for (auto j = 0u; j < pData.size(); j++)
         {
           if (j%NWORDS_DDR3 == 0) std::cout << std::dec << j << ":\t";
-          std::cout << std::hex << std::setfill('0') << std::setw(8) << (*pData)[j] << "\t";
+          std::cout << std::hex << std::setfill('0') << std::setw(8) << pData[j] << "\t";
           if (j%NWORDS_DDR3 == NWORDS_DDR3-1) std::cout << std::endl;
         }
 
@@ -634,7 +639,7 @@ namespace Ph2_HwInterface
         // ##################
         RD53eventVector.clear();
         RD53FWInterface::DecodeEvents(pData, status, RD53eventVector);
-        // RD53FWInterface::PrintEvents(RD53eventVector, &pData); // @TMP@
+        // RD53FWInterface::PrintEvents(RD53eventVector, pData); // @TMP@
         if (RD53FWInterface::EvtErrorHandler(status) == false)
           {
             retry = true;
@@ -712,8 +717,8 @@ namespace Ph2_HwInterface
 
 
     std::vector<size_t> chip_start;
-    for (auto i = 4u; i < n - dummy_size * 4; i += 4) 
-      if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) 
+    for (auto i = 4u; i < n - dummy_size * 4; i += 4)
+      if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER)
         chip_start.push_back(i);
 
 
@@ -883,7 +888,7 @@ namespace Ph2_HwInterface
     else if (injType == INJtype::None)
       {
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
-	RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
       }
     else LOG (ERROR) << BOLDRED << "Option non recognized " << injType << RESET;
 
@@ -892,8 +897,6 @@ namespace Ph2_HwInterface
     // # Download the configuration #
     // ##############################
     RD53FWInterface::ConfigureFastCommands();
-
-
     RD53FWInterface::PrintFWstatus();
   }
 

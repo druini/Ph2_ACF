@@ -413,8 +413,7 @@ namespace Ph2_HwDescription
     if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHIPHEAD;
 
     size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
-    for (auto i = 1u; i < n; i++)
-      if (data[i] != noHitToT) DecodeQuad(data[i]);
+    for (auto i = 1u; i < n; i++) if (data[i] != noHitToT) DecodeQuad(data[i]);
   }
 
   RD53::CalCmd::CalCmd (const uint8_t& cal_edge_mode,
