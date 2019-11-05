@@ -201,11 +201,6 @@ namespace Ph2_System {
                   }
               }
 
-            LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
-            bool commGood = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->InitChipCommunication();
-            if (commGood == true) LOG (INFO) << BOLDBLUE << "\t--> Successfully initialized the communication to all chips"     << RESET;
-            else                  LOG (INFO) << BOLDRED  << "\t--> I was not able to initialize the communication to all chips" << RESET;
-
 
             // ###################
             // # Configuring FSM #

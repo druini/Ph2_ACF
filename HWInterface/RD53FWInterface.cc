@@ -126,6 +126,12 @@ namespace Ph2_HwInterface
     // ###########################################
     RD53FWInterface::ChipReSync();
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
+
+
+    LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
+    bool commGood = RD53FWInterface::InitChipCommunication();
+    if (commGood == true) LOG (INFO) << BOLDBLUE << "\t--> Successfully initialized the communication to all chips"     << RESET;
+    else                  LOG (INFO) << BOLDRED  << "\t--> I was not able to initialize the communication to all chips" << RESET;
   }
 
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, unsigned int moduleId)
