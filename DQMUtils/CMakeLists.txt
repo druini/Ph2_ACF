@@ -28,7 +28,7 @@ endif()
 
 #find source files
 file(GLOB SOURCES *.cc)
-add_library(Ph2_DQMUtils SHARED ${SOURCES})
+add_library(Ph2_DQMUtils STATIC ${SOURCES})
 
 file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/RootUtils *.cc)
 

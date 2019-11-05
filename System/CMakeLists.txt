@@ -21,7 +21,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     file(GLOB SOURCES *.cc)
     
     #add the library
-    add_library(Ph2_System SHARED ${SOURCES} ${HEADERS})
+    add_library(Ph2_System STATIC ${SOURCES} ${HEADERS})
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils)
     TARGET_LINK_LIBRARIES(Ph2_System ${LIBS})
 
