@@ -199,9 +199,7 @@ namespace Ph2_HwDescription
 
     static size_t setBits (size_t nBit2Set)
     {
-      auto output = 1 << (nBit2Set-1);
-      for (auto i = 0u; i < nBit2Set-1; i++) output |= 1 << i;
-      return output;
+      return (1 << nBit2Set) - 1;
     }
 
     static auto countBitsOne (size_t num)
