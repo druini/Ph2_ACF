@@ -105,19 +105,18 @@ namespace Ph2_HwInterface
         if (this->singleChip == true) chips_en |= 1 << module_id;
         else
           {
-            chips_en |= 0xF << (RD53FWEvtEncoder::NBIT_CHIPID * module_id); // @TMP@
-            // uint16_t mod_chips_en = 0;
-            // for (const auto cChip : *cModule)
-            //   {
-            //     uint16_t chip_id = static_cast<RD53*>(cChip)->getChipId();
-            //     mod_chips_en |= 1 << chip_id;
-            //   }
-            // chips_en |= mod_chips_en << (RD53FWEvtEncoder::NBIT_CHIPID * module_id);
+            // chips_en |= 0xF << (RD53FWEvtEncoder::NBIT_CHIPID * module_id); // @TMP@
+            uint16_t mod_chips_en = 0;
+            for (const auto cChip : *cModule)
+              {
+                uint16_t chip_id = static_cast<RD53*>(cChip)->getLane();
+                mod_chips_en |= 1 << chip_id;
+              }
+            chips_en |= mod_chips_en << (RD53FWEvtEncoder::NBIT_CHIPID * module_id);
           }
       }
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", modules_en});
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
-
 
     if (cVecReg.size() != 0) WriteStackReg(cVecReg);
 
@@ -168,24 +167,21 @@ namespace Ph2_HwInterface
     stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd.dispatch_packet", 1);
     stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd.dispatch_packet", 0);
 
-
     WriteStackReg(stackRegisters);
-
-
+    
     if (ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched") == false)
       LOG (ERROR) << BOLDRED << "Error while dispatching chip register program" << RESET;
+  }
+  
+  uint8_t RD53FWInterface::getChipLane(Chip* pChip)
+  {
+    auto* pRD53 = static_cast<RD53*>(pChip);
+    if (this->singleChip == true) return pRD53->getFeId();
+    return 4 * pRD53->getFeId() + pRD53->getLane();
   }
 
   void RD53FWInterface::ReadChipRegisters (Chip* pChip, std::vector<std::pair<uint16_t,uint16_t>>& regReadBack)
   {
-    // #####################
-    // # Get the chip lane #
-    // #####################
-    uint16_t chipLane;
-    if (this->singleChip == true) chipLane = pChip->getFeId();
-    else                          chipLane = RD53FWEvtEncoder::NBIT_CHIPID * pChip->getFeId() + pChip->getChipId(); // @TMP@
-
-
     // #####################
     // # Read the register #
     // #####################
@@ -197,6 +193,7 @@ namespace Ph2_HwInterface
 
         uint16_t lane, address, value;
         std::tie(lane, address, value) = bits::unpack<6, 10, 16>(readBackData);
+	auto chipLane = getChipLane(pChip);
 
         if (lane == chipLane) regReadBack.emplace_back(address, value);
       }
@@ -272,29 +269,30 @@ namespace Ph2_HwInterface
     // ###############################
     // # Check RD53 AURORA registers #
     // ###############################
-    unsigned int auroraReg = ReadReg ("user.stat_regs.aurora_rx_gt_locked");
-    LOG (INFO) << GREEN << "Aurora number of locked PLLs: " << BOLDYELLOW << RD53::countBitsOne(auroraReg) << RESET;
 
-    auroraReg = ReadReg ("user.stat_regs.aurora_rx.speed");
-    LOG (INFO) << GREEN << "Aurora speed: " << BOLDYELLOW << (auroraReg == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
+    unsigned int speed_flag = ReadReg ("user.stat_regs.aurora_rx.speed");
+    LOG (INFO) << GREEN << "Aurora speed: " << BOLDYELLOW << (speed_flag == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
 
-    auroraReg = ReadReg ("user.stat_regs.aurora_rx.gt_refclk");
-    LOG (INFO) << GREEN << "Aurora GT reference clock: " << BOLDYELLOW << auroraReg << RESET;
+    unsigned int aurora_clk = ReadReg ("user.stat_regs.aurora_rx.gt_refclk");
+    LOG (INFO) << GREEN << "Aurora GT reference clock: " << BOLDYELLOW << aurora_clk << RESET;
 
-    auroraReg = ReadReg ("user.stat_regs.aurora_rx_channel_up");
-    LOG (INFO) << GREEN << "Aurora number of channels: " << BOLDYELLOW << auroraReg << RESET;
+    unsigned int lane_up = ReadReg ("user.stat_regs.aurora_rx.lane_up");
+    LOG (INFO) << GREEN << "Number of available channels: " << BOLDYELLOW << RD53::countBitsOne(lane_up) << "\t(" << std::bitset<14>(lane_up) << ")" << RESET;
 
-    unsigned int bitReg = ReadReg ("user.stat_regs.aurora_rx.lane_up");
-    LOG (INFO) << GREEN << "Aurora lane up status: " << BOLDYELLOW << RD53::countBitsOne(bitReg) << RESET;
+    unsigned int chips_en = ReadReg ("user.ctrl_regs.Chips_en");
+    LOG (INFO) << GREEN << "Number of enabled channels: " << BOLDYELLOW << RD53::countBitsOne(chips_en) << "\t(" << std::bitset<12>(chips_en) << ")" << RESET;
 
-    bitReg = ReadReg ("user.stat_regs.aurora_rx_channel_up");
-    if (RD53::countBitsOne(bitReg) == auroraReg)
-      {
-        LOG (INFO) << BOLDBLUE << "\t--> Aurora channels up number as expected: " << BOLDYELLOW << RD53::countBitsOne(bitReg) << RESET;
-        return true;
-      }
-    LOG (ERROR) << BOLDRED << "\t--> Aurora channels up number less than expected: " << BOLDYELLOW << RD53::countBitsOne(bitReg) << RESET;
-    return false;
+    unsigned int channel_up = ReadReg ("user.stat_regs.aurora_rx_channel_up");
+    LOG (INFO) << GREEN << "Number of active channels: " << BOLDYELLOW << RD53::countBitsOne(channel_up) << "\t(" << std::bitset<12>(channel_up) << ")" << RESET;
+    
+    if (chips_en == channel_up)
+    {
+      LOG (ERROR) << BOLDRED << "\t--> Some channels are enabled but inactive." << RESET;
+      return false;    
+    }
+
+    LOG (INFO) << BOLDBLUE << "\t--> All enabled channels are active." << RESET;
+    return true;
   }
 
   void RD53FWInterface::Start()
@@ -478,7 +476,7 @@ namespace Ph2_HwInterface
             LOG (INFO) << CYAN << "------- Chip Header -------"                            << RESET;
             LOG (INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code    << RESET;
             LOG (INFO) << CYAN << "hybrid_id       = " << evt.chip_frames[j].hybrid_id     << RESET;
-            LOG (INFO) << CYAN << "chip_id         = " << evt.chip_frames[j].chip_id       << RESET;
+            LOG (INFO) << CYAN << "chip_lane         = " << evt.chip_frames[j].chip_lane       << RESET;
             LOG (INFO) << CYAN << "l1a_data_size   = " << evt.chip_frames[j].l1a_data_size << RESET;
             LOG (INFO) << CYAN << "chip_type       = " << evt.chip_frames[j].chip_type     << RESET;
             LOG (INFO) << CYAN << "frame_delay     = " << evt.chip_frames[j].frame_delay   << RESET;
@@ -708,7 +706,9 @@ namespace Ph2_HwInterface
 
 
     std::vector<size_t> chip_start;
-    for (auto i = 4u; i < n - dummy_size * 4; i += 4) if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) chip_start.push_back(i);
+    for (auto i = 4u; i < n - dummy_size * 4; i += 4) 
+      if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER) 
+        chip_start.push_back(i);
 
 
     // #################################
@@ -745,7 +745,7 @@ namespace Ph2_HwInterface
 
   RD53FWInterface::ChipFrame::ChipFrame (const uint32_t data0, const uint32_t data1)
   {
-    std::tie(error_code, hybrid_id, chip_id, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
+    std::tie(error_code, hybrid_id, chip_lane, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
     std::tie(chip_type, frame_delay)                        = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
   }
 
@@ -856,7 +856,7 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
       }
-    else if ((injType == INJtype::Analog) || (injType == INJtype::None))
+    else if (injType == INJtype::Analog)
       {
         // ######################################
         // # Configuration for analog injection #
@@ -873,6 +873,11 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+      }
+    else if (injType == INJtype::None)
+      {
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+	RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
       }
     else LOG (ERROR) << BOLDRED << "Option non recognized " << injType << RESET;
 

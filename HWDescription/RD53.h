@@ -122,7 +122,7 @@ namespace Ph2_HwDescription
     static constexpr size_t nRows = NROWS;
     static constexpr size_t nCols = NCOLS;
 
-    RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& fileName);
+    RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t lane, const std::string& fileName);
     RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& fileName);
 
     void     loadfRegMap         (const std::string& fileName)  override;
@@ -171,7 +171,7 @@ namespace Ph2_HwDescription
       uint8_t evtStatus;
 
     private:
-      void DecodeQuad (uint32_t data, std::vector<RD53::HitData>& result);
+      void DecodeQuad (uint32_t data);
     };
 
     struct CalCmd
@@ -222,11 +222,14 @@ namespace Ph2_HwDescription
       return output;
     }
 
+    uint8_t getLane() { return fLane; }
+
   private:
     std::vector<perPixelData> fPixelsMask;
     std::vector<perPixelData> fPixelsMaskDefault;
     std::string configFileName;
     CommentMap fCommentMap;
+    uint8_t fLane;
   };
 }
 

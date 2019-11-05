@@ -1048,7 +1048,8 @@ namespace Ph2_System {
     else cFileName = expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
 
     uint32_t cChipId     = theChipNode.attribute ("Id").as_int();
-    ReadoutChip* theChip = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName));
+    uint32_t chipLane     = theChipNode.attribute ("Lane").as_int();
+    ReadoutChip* theChip = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, chipLane, cFileName));
     theChip->setNumberOfChannels(RD53::nRows,RD53::nCols);
 
     this->parseRD53Settings (theChipNode, theChip, os);

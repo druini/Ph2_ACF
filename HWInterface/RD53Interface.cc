@@ -139,8 +139,8 @@ namespace Ph2_HwInterface
         if ((pRegNode == "PIX_PORTAL") && (pixMode == 0)) row     = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
 
         if ((pixMode == 0) &&
-            (((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (regReadBack[0].first != row))               ||
-             ((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (regReadBack[0].first != cRegItem.fAddress)) ||
+            (((pRegNode == "PIX_PORTAL") && (regReadBack[0].first != row))               ||
+             ((pRegNode != "PIX_PORTAL") && (regReadBack[0].first != cRegItem.fAddress)) ||
              (regReadBack[0].second != cRegItem.fValue)))
           {
             LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;

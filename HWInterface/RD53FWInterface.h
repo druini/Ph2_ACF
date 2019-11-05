@@ -116,7 +116,7 @@ namespace Ph2_HwInterface
 
       uint16_t error_code;
       uint16_t hybrid_id;
-      uint16_t chip_id;
+      uint16_t chip_lane;
       uint16_t l1a_data_size;
       uint16_t chip_type;
       uint16_t frame_delay;
@@ -230,6 +230,8 @@ namespace Ph2_HwInterface
     void ConfigureFastCommands (const FastCommandsConfig* config = nullptr);
     void ConfigureDIO5         (const DIO5Config* config);
     void SendBoardCommand      (const std::string& cmd_reg);
+
+    uint8_t getChipLane        (Chip* pChip);
 
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
