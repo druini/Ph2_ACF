@@ -57,23 +57,26 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     #set the cmakeL module path
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-
-    # compiler flags
-    # set (CMAKE_CXX_FLAGS "-std=c++1y -O3 -Wcpp -pthread -pedantic -Wall -Werror -w -g -fPIC ${CMAKE_CXX_FLAGS}  $ENV{UseRootFlag}")
-    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-error=maybe-uninitialized -Wno-ignored-qualifiers -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-missing-field-initializers -std=c++1y -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -pthread  -Wcpp ${CMAKE_CXX_FLAGS}  $ENV{UseRootFlag}")
     
     set(CompileForShep "$ENV{CompileForShep}")
     set(CompileForHerd "$ENV{CompileForHerd}")
     if( (NOT CompileForShep) AND (NOT CompileForHerd) )
-        set(NoDataShipping TRUE)
+    set(NoDataShipping TRUE)
     else()
-        set(NoDataShipping FALSE)
+    set(NoDataShipping FALSE)
     endif()
     
     MESSAGE(STATUS "CompileForShep = ${CompileForShep}")
     MESSAGE(STATUS "CompileForHerd = ${CompileForHerd}")
     MESSAGE(STATUS "NoDataShipping = ${NoDataShipping}")
-    
+
+    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-error=maybe-uninitialized -Wno-ignored-qualifiers -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-missing-field-initializers -std=c++1y -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -pthread  -Wcpp -fPIC ${CMAKE_CXX_FLAGS}")
+    if(NoDataShipping)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+    endif()
+
+
+
     #check for external dependences
     message("--")
     message("--     ${BoldCyan}#### Checking for external Dependencies ####${Reset}")
@@ -155,7 +158,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         add_subdirectory(System)
     endif()
 
-    if(CompileForShep OR (NoDataShipping AND CompileForHerd))
+    if(CompileForHerd)
         add_subdirectory(miniDAQ)
     endif()
 
