@@ -93,8 +93,9 @@ namespace Ph2_HwInterface
     // ################################
     // # Enabling modules and chips   #
     // # Module_type hard coded in FW #
-    // # 1 = single chip              #
-    // # 4 = module                   #
+    // # 1 = single chip module       #
+    // # 2 = double chip module       #
+    // # 4 = quad chip module         #
     // ################################
     this->singleChip    = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
     uint16_t modules_en = 0;
@@ -269,10 +270,10 @@ namespace Ph2_HwInterface
     // # Check module registers #
     // ##########################
     unsigned int modules = ReadReg("user.stat_regs.aurora_rx.Module_type");
-    LOG (INFO) << GREEN << "Module type: " << BOLDYELLOW << modules << RESET << GREEN " (1 = single chip)" << RESET;
+    LOG (INFO) << GREEN << "Module type: " << BOLDYELLOW << modules << RESET << GREEN " (1=single chip, 2=double chip, 4=quad chip)" << RESET;
 
     modules = ReadReg("user.stat_regs.aurora_rx.Nb_of_modules");
-    LOG (INFO) << GREEN << "Number of modules: " << BOLDYELLOW << modules << RESET << GREEN << " (4 = default)" << RESET;
+    LOG (INFO) << GREEN << "Number of modules which can be potentially readout: " << BOLDYELLOW << modules << RESET;
   }
 
   bool RD53FWInterface::CheckChipCommunication()
