@@ -35,12 +35,8 @@
  * \namespace Ph2_HwDescription
  * \brief Namespace regrouping all the hardware description
  */
-namespace Ph2_HwDescription {
-
-  // using ChipRegMap  = std::map < std::string, ChipRegItem >;
-  // using ChipRegPair = std::pair <std::string, ChipRegItem>;
-  // using CommentMap  = std::map <int, std::string>;
-
+namespace Ph2_HwDescription
+{
   /*!
    * \class ReadoutChip
    * \brief Read/Write Chip's registers on a file, contains a register map

@@ -33,8 +33,8 @@
 #include "../NetworkUtils/TCPPublishServer.h"
 
 #include <iostream>
+#include <unordered_map>
 #include <vector>
-#include <map>
 #include <stdlib.h>
 #include <string.h>
 
@@ -44,8 +44,8 @@
  */
 namespace Ph2_System
 {
-  using BeBoardVec = std::vector<BeBoard *>;         /*!< Vector of Board pointers */
-  using SettingsMap = std::map<std::string, double>; /*!< Maps the settings */
+  using BeBoardVec  = std::vector<BeBoard *>;                  /*!< Vector of Board pointers */
+  using SettingsMap = std::unordered_map<std::string, double>; /*!< Maps the settings */
 
   /*!
    * \class SystemController

@@ -38,7 +38,7 @@ namespace Ph2_System {
 
     }
 
-    void FileParser::parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
+  void FileParser::parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
     {
 
     //FIXME-FR
@@ -506,19 +506,8 @@ namespace Ph2_System {
                 }
 
             }
-
-        //only add if there is condition data defined
-        //pBoard->addConditionDataSet (cSet);
         }
 
-    //else
-    //{
-
-    //}
-
-    //LOG (ERROR) << "No Slink node found for Board " << +pBoard->getBeId() << " - continuing with default debug mode!";
-    //add ConditionDataSet to pBoard in any case, even if there is no SLink node in the xml, that way at least
-    //an SLinkDebugMode property is set for this board (SUMMARY)
         pBoard->addConditionDataSet (cSet);
     }
 
@@ -993,7 +982,7 @@ namespace Ph2_System {
         }
     }
 
-    void FileParser::parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
+  void FileParser::parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
     {
         pugi::xml_document doc;
         pugi::xml_parse_result result;

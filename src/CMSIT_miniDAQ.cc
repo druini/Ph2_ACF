@@ -17,6 +17,7 @@
 #include "../tools/RD53Latency.h"
 #include "../tools/RD53SCurve.h"
 #include "../tools/RD53Gain.h"
+#include "../tools/RD53Physics.h"
 
 
 // ##################
@@ -60,7 +61,7 @@ int main (int argc, char** argv)
   cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml",CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin injdelay]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin injdelay physics]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
   cmd.defineOption ("raw", "Save raw data. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
@@ -275,6 +276,19 @@ int main (int argc, char** argv)
       id.run();
       id.analyze();
       id.draw();
+    }
+  else if (whichCalib == "physics")
+    {
+      // ###############
+      // # Run Physics #
+      // ###############
+      LOG (INFO) << BOLDMAGENTA << "@@@ Performing Phsyics data taking @@@" << RESET;
+
+      Physics ph;
+      ph.Inherit(&mySysCntr);
+      ph.Start(runNumber);
+      usleep(1000);
+      ph.Stop();
     }
   else
     {

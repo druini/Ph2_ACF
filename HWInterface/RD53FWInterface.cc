@@ -591,7 +591,7 @@ namespace Ph2_HwInterface
         usleep(READOUTSLEEP);
       }
     while ((nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value()) != nWordsInMemoryOld);
-    auto nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
+    // auto nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
 
 
     uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory - ddr3Offset, ddr3Offset);

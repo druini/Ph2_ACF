@@ -1,6 +1,8 @@
 #include "../NetworkUtils/TCPSubscribeClient.h"
 #include "../Utils/ObjectStream.h"
 #include "../Utils/Container.h"
+#include "../System/FileParser.h"
+#include "../System/SystemController.h"
 #include "DQMInterface.h"
 #include "DQMHistogramPedeNoise.h"
 #include "DQMHistogramPedestalEqualization.h"
@@ -13,7 +15,8 @@
 #include "RD53ThrMinimizationHistograms.h"
 #include "RD53InjectionDelayHistograms.h"
 #include "RD53ThrEqualizationHistograms.h"
-#include "../System/FileParser.h"
+
+
 #include "TFile.h"
 
 #include <iostream>
@@ -81,7 +84,7 @@ void DQMInterface::configure(std::string& calibrationName, std::string& configur
     std::vector<Ph2_HwDescription::BeBoard*> fBoardVector;
     std::stringstream out;
     DetectorContainer fDetectorStructure;
-	std::map<std::string, double> pSettingsMap;
+	Ph2_System::SettingsMap pSettingsMap;
 
     fParser.parseHW (configurationFilePath, fBeBoardFWMap, fBoardVector, &fDetectorStructure, out, true );
     fParser.parseSettings ( configurationFilePath, pSettingsMap,  out, true);

@@ -11,15 +11,6 @@
 
 namespace Ph2_HwDescription
 {
-  RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& fileName) : ReadoutChip (pFeDesc, pRD53Id)
-  {
-    fMaxRegValue      = RD53::setBits(RD53Constants::NBIT_MAXREG);
-    fChipOriginalMask = new ChannelGroup<nRows, nCols>;
-    configFileName    = fileName;
-    loadfRegMap(configFileName);
-    setFrontEndType(FrontEndType::RD53);
-  }
-
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName)
     : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id, pRD53Lane)
   {
