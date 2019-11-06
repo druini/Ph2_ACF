@@ -436,8 +436,8 @@ namespace Ph2_HwInterface
   void RD53FWInterface::ChipReset()
   {
     WriteStackReg({
-        {"user.ctrl_regs.reset_reg.scc_rst",1},
-        {"user.ctrl_regs.reset_reg.scc_rst",0},
+        {"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",1},
+        {"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",0},
         {"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",1},
         {"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",0}});
   }
@@ -569,18 +569,22 @@ namespace Ph2_HwInterface
           }
 
         nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value();
-        /*nTriggersReceived = */ReadReg("user.stat_regs.trigger_cntr").value();
+        // nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
       }
     else
       {
         nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value();
-        /*nTriggersReceived = */ReadReg("user.stat_regs.trigger_cntr").value();
+        if (nWordsInMemory == 0) {
+          LOG(ERROR) << BOLDRED << ">> No Data! Press Enter to continue..." << RESET;
+          system("read");
+        }
+        // nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
 
         while ((nWordsInMemory == 0) && (pWait == true))
           {
             if (pWait == true) usleep(DEEPSLEEP);
             nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value();
-            /*nTriggersReceived = */ReadReg("user.stat_regs.trigger_cntr").value();
+            //nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
           }
       }
 
@@ -600,7 +604,6 @@ namespace Ph2_HwInterface
     int     nAttempts = 0;
 
     RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents;
-    RD53FWInterface::ConfigureFastCommands();
 
     do
       {
@@ -612,12 +615,19 @@ namespace Ph2_HwInterface
         RD53FWInterface::ChipReSync();
         RD53FWInterface::ResetReadoutBlk();
 
+        RD53FWInterface::ConfigureFastCommands();
+
+        usleep(10000);
 
         // ####################
         // # Readout sequence #
         // ####################
         RD53FWInterface::Start();
+        
+        // wait until trigger_cntr reaches the expected value
         while (ReadReg("user.stat_regs.trigger_cntr").value() < pNEvents*(1 + RD53FWInterface::localCfgFastCmd.trigger_duration)) usleep (READOUTSLEEP);
+        
+        // wait until words_to_read stops changing
         size_t dataAmountOld, dataAmountNew = ReadReg("user.stat_regs.words_to_read").value();
         do
           {
@@ -625,6 +635,8 @@ namespace Ph2_HwInterface
             usleep(READOUTSLEEP);
           }
         while ((dataAmountNew = ReadReg("user.stat_regs.words_to_read").value()) != dataAmountOld);
+        
+        // readout
         RD53FWInterface::ReadData(pBoard, false, pData, false /*pWait*/); // @TMP@ : FW bug triggers are recorded but DDR3 empty
         RD53FWInterface::Stop();
 
