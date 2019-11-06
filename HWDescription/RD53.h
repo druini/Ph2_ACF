@@ -122,7 +122,7 @@ namespace Ph2_HwDescription
     static constexpr size_t nRows = NROWS;
     static constexpr size_t nCols = NCOLS;
 
-    RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t lane, const std::string& fileName);
+    RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName);
     RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& fileName);
 
     void     loadfRegMap         (const std::string& fileName)  override;
@@ -135,7 +135,6 @@ namespace Ph2_HwDescription
     std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
     std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
 
-    uint8_t getLane             () { return fLane; }
     void    copyMaskFromDefault ();
     void    copyMaskToDefault   ();
     void    resetMask           ();
@@ -223,7 +222,6 @@ namespace Ph2_HwDescription
     std::vector<perPixelData> fPixelsMaskDefault;
     std::string configFileName;
     CommentMap fCommentMap;
-    uint8_t fLane;
   };
 }
 

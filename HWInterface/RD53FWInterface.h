@@ -33,6 +33,7 @@
 #define NBIT_FWVER        16 // Number of bits for the firmware version
 #define IPBUS_FASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 #define NWORDS_DDR3        4 // Number of IPbus words in a DDR3 word
+#define NLANE_MODULE       4 // Number of lanes per module
 
 // #################
 // # READOUT BLOCK #
@@ -240,7 +241,7 @@ namespace Ph2_HwInterface
   // ########################################
   // # Vector containing the decoded events #
   // ########################################
-  extern std::vector<RD53FWInterface::Event> RD53eventVector;
+  extern std::vector<RD53FWInterface::Event> RD53decodedEvents;
 }
 
 #endif

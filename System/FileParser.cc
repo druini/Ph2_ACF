@@ -334,7 +334,7 @@ namespace Ph2_System {
         }
         else if (cBeBoard->getBoardType() == BoardType::FC7)
         {
-            pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+          pBeBoardFWMap[cBeBoard->getBeBoardId()] = new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
         }
 
         os << BOLDCYAN << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl
