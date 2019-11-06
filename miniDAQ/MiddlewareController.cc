@@ -17,6 +17,7 @@
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53InjectionDelay.h"
 #include "../tools/RD53ThrEqualization.h"
+#include "../tools/RD53Physics.h"
 
 
 //========================================================================================================================
@@ -81,9 +82,9 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
       else if (getVariableValue("Calibration",buffer) == "latency")                 theSystemController_ = new CombinedCalibration<Latency>;
       else if (getVariableValue("Calibration",buffer) == "gainopt")                 theSystemController_ = new CombinedCalibration<GainOptimization>;
       else if (getVariableValue("Calibration",buffer) == "thrmin")                  theSystemController_ = new CombinedCalibration<ThrMinimization>;
-
       else if (getVariableValue("Calibration",buffer) == "injdelay")                theSystemController_ = new CombinedCalibration<InjectionDelay>;
       else if (getVariableValue("Calibration",buffer) == "threqu")                  theSystemController_ = new CombinedCalibration<ThrEqualization>;
+      else if (getVariableValue("Calibration",buffer) == "physics")                 theSystemController_ = new CombinedCalibration<Physics>;
 
       else
         {
