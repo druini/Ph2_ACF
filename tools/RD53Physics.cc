@@ -82,16 +82,32 @@ void Physics::Stop ()
 
 void Physics::run ()
 {
+  // uint8_t status;
   unsigned int dataSize = 0;
 
   while (keepRunning == true)
     {
       for (const auto cBoard : *fDetectorContainer)
         {
+          RD53decodedEvents.clear();
           dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
+
+
+          // #####################
+          // # ReadData for RD53 #
+          // #####################
+          // Data theData;
+          // std::vector<uint32_t> data;
+          // BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+          // dataSize = fBeBoardInterface->ReadData(theBoard, false, data, false);
+
 
           if (dataSize != 0)
             {
+              // RD53decodedEvents.clear();
+              // RD53FWInterface::DecodeEvents(data, status, RD53decodedEvents);
+              // theData.DecodeData(theBoard, data, dataSize, fBeBoardInterface->getBoardType(theBoard));
+
               Physics::fillDataContainer(cBoard);
               Physics::sendData(cBoard);
             }

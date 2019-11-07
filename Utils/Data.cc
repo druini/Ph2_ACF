@@ -21,18 +21,21 @@ namespace Ph2_HwInterface
     , fEventSize    (pD.fEventSize)
   {}
 
-  void Data::DecodeData (const BeBoard *pBoard, const std::vector<uint32_t> &pData, uint32_t pNevents, BoardType pType)
+  void Data::DecodeData (const BeBoard *pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
   {
+    uint8_t status;
     Reset();
 
     if (pType == BoardType::FC7)
       {
-        for (auto &evt : RD53decodedEvents)
+        if (RD53decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, status, RD53decodedEvents);
+
+        for (auto& evt : RD53decodedEvents)
           {
             std::vector<size_t> chip_id_vec;
             std::vector<size_t> module_id_vec;
 
-            for (auto &chip_frame : evt.chip_frames)
+            for (const auto& chip_frame : evt.chip_frames)
               {
                 module_id_vec.push_back(chip_frame.hybrid_id);
 

@@ -140,9 +140,9 @@ namespace Ph2_HwInterface
       uint8_t evtStatus;
     };
 
-    void DecodeEvents       (const std::vector<uint32_t>& data, uint8_t& status, std::vector<RD53FWInterface::Event>& events);
-    bool EvtErrorHandler    (uint8_t status);
-    static void PrintEvents (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
+    static void DecodeEvents    (const std::vector<uint32_t>& data, uint8_t& status, std::vector<RD53FWInterface::Event>& events);
+    static bool EvtErrorHandler (uint8_t status);
+    static void PrintEvents     (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
 
     enum class TriggerSource : uint32_t
     {
