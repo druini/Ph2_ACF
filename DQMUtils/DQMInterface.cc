@@ -15,7 +15,7 @@
 #include "RD53ThrMinimizationHistograms.h"
 #include "RD53InjectionDelayHistograms.h"
 #include "RD53ThrEqualizationHistograms.h"
-
+#include "RD53PhysicsHistograms.h"
 
 #include "TFile.h"
 
@@ -88,35 +88,35 @@ void DQMInterface::configure(std::string& calibrationName, std::string& configur
 
     fParser.parseHW (configurationFilePath, fBeBoardFWMap, fBoardVector, &fDetectorStructure, out, true );
     fParser.parseSettings ( configurationFilePath, pSettingsMap,  out, true);
-    
-	//if calibration type pedenoise
-	if(calibrationName == "pedenoise")
-	{
-		fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
-	}
-	else if(calibrationName == "calibrationandpedenoise")
-	{
-		fDQMHistogrammerVector.push_back(new DQMHistogramPedestalEqualization());
-		fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
-	}
-	else if(calibrationName == "calibrationexample")
-	{
-		fDQMHistogrammerVector.push_back(new DQMHistogramCalibrationExample());
-	}
-	else if(calibrationName == "pixelalive") fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
-	else if(calibrationName == "noise")      fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
-	else if(calibrationName == "scurve")     fDQMHistogrammerVector.push_back(new SCurveHistograms());
-	else if(calibrationName == "gain")       fDQMHistogrammerVector.push_back(new GainHistograms());
-	else if(calibrationName == "latency")    fDQMHistogrammerVector.push_back(new LatencyHistograms());
-	else if(calibrationName == "gainopt")    fDQMHistogrammerVector.push_back(new GainOptimizationHistograms());
-	else if(calibrationName == "thrmin")     fDQMHistogrammerVector.push_back(new ThrMinimizationHistograms());
-	else if(calibrationName == "injdelay")   fDQMHistogrammerVector.push_back(new InjectionDelayHistograms());
-	else if(calibrationName == "threqu")     fDQMHistogrammerVector.push_back(new ThrEqualizationHistograms());
 
-	fOutputFile = new TFile("tmp.root", "RECREATE");
-	for(auto dqmHistogrammer : fDQMHistogrammerVector)
-		dqmHistogrammer->book(fOutputFile, fDetectorStructure, pSettingsMap);
+    //if calibration type pedenoise
+    if(calibrationName == "pedenoise")
+      {
+        fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
+      }
+    else if(calibrationName == "calibrationandpedenoise")
+      {
+        fDQMHistogrammerVector.push_back(new DQMHistogramPedestalEqualization());
+        fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
+      }
+    else if(calibrationName == "calibrationexample")
+      {
+        fDQMHistogrammerVector.push_back(new DQMHistogramCalibrationExample());
+      }
+    else if(calibrationName == "pixelalive") fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
+    else if(calibrationName == "noise")      fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
+    else if(calibrationName == "scurve")     fDQMHistogrammerVector.push_back(new SCurveHistograms());
+    else if(calibrationName == "gain")       fDQMHistogrammerVector.push_back(new GainHistograms());
+    else if(calibrationName == "latency")    fDQMHistogrammerVector.push_back(new LatencyHistograms());
+    else if(calibrationName == "gainopt")    fDQMHistogrammerVector.push_back(new GainOptimizationHistograms());
+    else if(calibrationName == "thrmin")     fDQMHistogrammerVector.push_back(new ThrMinimizationHistograms());
+    else if(calibrationName == "injdelay")   fDQMHistogrammerVector.push_back(new InjectionDelayHistograms());
+    else if(calibrationName == "threqu")     fDQMHistogrammerVector.push_back(new ThrEqualizationHistograms());
+    else if(calibrationName == "physics")    fDQMHistogrammerVector.push_back(new PhysicsHistograms());
 
+    fOutputFile = new TFile("tmp.root", "RECREATE");
+    for(auto dqmHistogrammer : fDQMHistogrammerVector)
+      dqmHistogrammer->book(fOutputFile, fDetectorStructure, pSettingsMap);
 }
 
 //========================================================================================================================

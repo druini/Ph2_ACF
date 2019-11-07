@@ -38,17 +38,31 @@ void Physics::ConfigureCalibration ()
       for (const auto cModule : *cBoard)
         for (const auto cChip : *cModule)
           fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), group, true, false);
+
+
+  // ###########################################
+  // # Initialize directory and data container #
+  // ###########################################
+  this->CreateResultDirectory(RESULTDIR,false,false);
+  this->fChannelGroupHandler = theChnGroupHandler.get();
+  ContainerFactory::copyAndInitChannel<OccupancyAndPh>(*fDetectorContainer, theOccContainer);
 }
 
 void Physics::Start (int currentRun)
 {
-  this->CreateResultDirectory(RESULTDIR,false,false);
-
   SystemController::Start(currentRun);
 
   keepRunning = true;
   std::thread thrRun_(&Physics::run, this);
   thrRun.swap(thrRun_);
+}
+
+void Physics::sendData (BoardContainer* const& cBoard)
+{
+  ChannelContainerStream<OccupancyAndPh> theOccStream = prepareChannelContainerStreamer<OccupancyAndPh>();
+
+  if (fStreamerEnabled == true)
+    theOccStream.streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fNetworkStreamer);
 }
 
 void Physics::Stop ()
@@ -73,12 +87,46 @@ void Physics::run ()
   while (keepRunning == true)
     {
       for (const auto cBoard : *fDetectorContainer)
-        dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
+        {
+          dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
+
+          if (dataSize != 0)
+            {
+              Physics::fillDataContainer(cBoard);
+              Physics::sendData(cBoard);
+            }
+        }
 
       usleep(READOUTSLEEP);
     }
 
   if (dataSize == 0) LOG (WARNING) << BOLDBLUE << "No data collected" << RESET;
+}
+
+void Physics::fillDataContainer (BoardContainer* const& cBoard)
+{
+  // ###################
+  // # Clear container #
+  // ###################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        for (auto row = 0u; row < RD53::nRows; row++)
+          for (auto col = 0u; col < RD53::nCols; col++)
+            {
+              theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy   = 0;
+              theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh          = 0;
+              theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPhError     = 0;
+              theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).readoutError = false;
+            }
+
+
+  // ##################
+  // # Fill container #
+  // ##################
+  const std::vector<Event*>& events = SystemController::GetEvents(static_cast<BeBoard*>(cBoard));
+  for (const auto& event : events)
+    event->fillDataContainer(theOccContainer.at(cBoard->getIndex()), this->fChannelGroupHandler->allChannelGroup());
 }
 
 void Physics::chipErrorReport ()

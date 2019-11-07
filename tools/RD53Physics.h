@@ -14,7 +14,6 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53SharedConstants.h"
 #include "../HWInterface/RD53FWInterface.h"
 
 #include <thread>
@@ -37,7 +36,9 @@ class Physics : public Tool
   void ConfigureCalibration () override;
   void writeObjects         () {}; // @TMP@
 
-  void run ();
+  void sendData          (BoardContainer* const& cBoard);
+  void run               ();
+  void fillDataContainer (BoardContainer* const& cBoard);
 
 
  private:
@@ -47,6 +48,7 @@ class Physics : public Tool
   size_t colStop;
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
+  DetectorDataContainer theOccContainer;
 
   void chipErrorReport ();
 
