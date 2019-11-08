@@ -24,3 +24,6 @@ consoledump.log
 src/test.cc
 build/
 rundir/
+gui/*
+!gui/*.py
+!gui/*.cpp
