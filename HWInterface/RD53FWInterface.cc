@@ -585,13 +585,12 @@ namespace Ph2_HwInterface
     // #############################################
     // # Wait for a stable number of words to read #
     // #############################################
-    // do
+    do
       {
         nWordsInMemoryOld = nWordsInMemory;
         usleep(READOUTSLEEP);
       }
-      nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value();
-    // while ((nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value()) != nWordsInMemoryOld);
+    while (((nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value()) != nWordsInMemoryOld) && (pWait == true));
     // auto nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
 
 
