@@ -513,7 +513,7 @@ namespace Ph2_HwInterface
       }
   }
 
-  bool RD53FWInterface::EvtErrorHandler(uint8_t status)
+  bool RD53FWInterface::EvtErrorHandler(uint16_t status)
   {
     bool isGood = true;
 
@@ -585,12 +585,13 @@ namespace Ph2_HwInterface
     // #############################################
     // # Wait for a stable number of words to read #
     // #############################################
-    do
+    // do
       {
         nWordsInMemoryOld = nWordsInMemory;
         usleep(READOUTSLEEP);
       }
-    while ((nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value()) != nWordsInMemoryOld);
+      nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value();
+    // while ((nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value()) != nWordsInMemoryOld);
     // auto nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
 
 
@@ -605,9 +606,9 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
-    uint8_t status;
-    bool    retry;
-    int     nAttempts = 0;
+    uint16_t status;
+    bool     retry;
+    int      nAttempts = 0;
 
     RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents;
     RD53FWInterface::ConfigureFastCommands();
@@ -662,7 +663,7 @@ namespace Ph2_HwInterface
     RD53RunProgress::update(pData.size(),true);
   }
 
-  void RD53FWInterface::DecodeEvents (const std::vector<uint32_t>& data, uint8_t& evtStatus, std::vector<RD53FWInterface::Event>& events)
+  void RD53FWInterface::DecodeEvents (const std::vector<uint32_t>& data, uint16_t& evtStatus, std::vector<RD53FWInterface::Event>& events)
   {
     std::vector<size_t> event_start;
     size_t maxL1Counter = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;

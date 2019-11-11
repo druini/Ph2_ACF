@@ -93,8 +93,8 @@ void PixelAlive::initialize (const std::string fileRes_, const std::string fileR
 void PixelAlive::run ()
 {
   theOccContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
-  fDetectorDataContainer = theOccContainer.get();
-  ContainerFactory::copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, *fDetectorDataContainer);
+  this->fDetectorDataContainer = theOccContainer.get();
+  ContainerFactory::copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, *this->fDetectorDataContainer);
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(injType);

@@ -33,11 +33,10 @@ void Physics::ConfigureCalibration ()
   theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, RD53GroupType::AllPixels);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
-  for (const auto group : *theChnGroupHandler)
-    for (const auto cBoard : *fDetectorContainer)
-      for (const auto cModule : *cBoard)
-        for (const auto cChip : *cModule)
-          fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), group, true, false);
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), theChnGroupHandler->allChannelGroup(), true, false);
 
 
   // ###########################################
@@ -45,11 +44,12 @@ void Physics::ConfigureCalibration ()
   // ###########################################
   this->CreateResultDirectory(RESULTDIR,false,false);
   this->fChannelGroupHandler = theChnGroupHandler.get();
-  ContainerFactory::copyAndInitChannel<OccupancyAndPh>(*fDetectorContainer, theOccContainer);
+  ContainerFactory::copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, theOccContainer);
 }
 
 void Physics::Start (int currentRun)
 {
+  Physics::ConfigureCalibration(); // @TMP@
   SystemController::Start(currentRun);
 
   keepRunning = true;
@@ -107,7 +107,6 @@ void Physics::run ()
               // RD53decodedEvents.clear();
               // RD53FWInterface::DecodeEvents(data, status, RD53decodedEvents);
               // theData.DecodeData(theBoard, data, dataSize, fBeBoardInterface->getBoardType(theBoard));
-
               Physics::fillDataContainer(cBoard);
               Physics::sendData(cBoard);
             }

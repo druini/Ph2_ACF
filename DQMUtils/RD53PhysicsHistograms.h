@@ -14,6 +14,7 @@
 #include "../Utils/ContainerStream.h"
 #include "DQMHistogramBase.h"
 
+#include <TH1F.h>
 #include <TH2F.h>
 
 
@@ -30,9 +31,12 @@ class PhysicsHistograms : public DQMHistogramBase
  private:
   DetectorDataContainer DetectorData;
 
-  DetectorDataContainer Ph2D;
+  DetectorDataContainer ToT1D;
+  DetectorDataContainer ToT2D;
   DetectorDataContainer Occupancy2D;
   DetectorDataContainer ErrorReadOut2D;
+  DetectorDataContainer BCID;
+  DetectorDataContainer TriggerID;
 };
 
 #endif

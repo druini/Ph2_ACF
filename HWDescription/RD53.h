@@ -77,9 +77,9 @@ namespace RD53EvtEncoder
   // ################
   // # Event status #
   // ################
-  const uint8_t CHIPGOOD = 0x00; // Chip event status Good
-  const uint8_t CHIPHEAD = 0x40; // Chip event status Bad chip header
-  const uint8_t CHIPPIX  = 0x80; // Chip event status Bad pixel row or column
+  const uint16_t CHIPGOOD = 0x0000; // Chip event status Good
+  const uint16_t CHIPHEAD = 0x0100; // Chip event status Bad chip header
+  const uint16_t CHIPPIX  = 0x0200; // Chip event status Bad pixel row or column
 }
 
 
@@ -167,7 +167,7 @@ namespace Ph2_HwDescription
       uint16_t bc_id;
       std::vector<HitData> hit_data;
 
-      uint8_t evtStatus;
+      uint16_t evtStatus;
 
     private:
       void DecodeQuad (uint32_t data);

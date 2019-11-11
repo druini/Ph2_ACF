@@ -110,7 +110,7 @@ void ThrEqualization::run ()
           }
 
   this->fDetectorDataContainer = &theOccContainer;
-  ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *fDetectorDataContainer);
+  ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *this->fDetectorDataContainer);
   ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
 
   this->fChannelGroupHandler = theChnGroupHandler.get();

@@ -276,7 +276,7 @@ void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint
       // ################
       PixelAlive::run();
       auto output = PixelAlive::analyze();
-      output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
+      output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
 
       // ###############

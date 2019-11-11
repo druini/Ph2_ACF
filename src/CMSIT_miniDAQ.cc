@@ -286,8 +286,9 @@ int main (int argc, char** argv)
 
       Physics ph;
       ph.Inherit(&mySysCntr);
+      ph.ConfigureCalibration();
       ph.Start(runNumber);
-      usleep(1000);
+      usleep(2e6);
       ph.Stop();
     }
   else

@@ -217,7 +217,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 
           index++;
 
-          theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
+          theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
           LOG (INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
                      << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold
                      << BOLDGREEN << " (Delta_VCal)" << RESET;

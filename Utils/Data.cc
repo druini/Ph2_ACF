@@ -23,7 +23,7 @@ namespace Ph2_HwInterface
 
   void Data::DecodeData (const BeBoard *pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
   {
-    uint8_t status;
+    uint16_t status;
     Reset();
 
     if (pType == BoardType::FC7)
@@ -39,7 +39,9 @@ namespace Ph2_HwInterface
               {
                 module_id_vec.push_back(chip_frame.hybrid_id);
 
-                // Translate lane to chip ID
+                // #############################
+                // # Translate lane to chip ID #
+                // #############################
                 Module* module = pBoard->getModule(chip_frame.hybrid_id);
                 auto it = std::find_if(module->fReadoutChipVector.begin(), module->fReadoutChipVector.end(), [=] (ReadoutChip* pChip)
                                        { return pChip->getChipLane() == chip_frame.chip_lane; });

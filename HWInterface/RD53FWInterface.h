@@ -72,12 +72,12 @@ namespace RD53FWEvtEncoder
   // ################
   // # Event status #
   // ################
-  const uint8_t GOOD   = 0x00; // Event status Good
-  const uint8_t EVSIZE = 0x02; // Event status Invalid event size
-  const uint8_t EMPTY  = 0x04; // Event status Empty event
-  const uint8_t L1A    = 0x08; // Event status L1A counter mismatch
-  const uint8_t FRSIZE = 0x10; // Event status Invalid frame size
-  const uint8_t FWERR  = 0x20; // Event status Firmware error
+  const uint16_t GOOD   = 0x0000; // Event status Good
+  const uint16_t EVSIZE = 0x0001; // Event status Invalid event size
+  const uint16_t EMPTY  = 0x0002; // Event status Empty event
+  const uint16_t L1A    = 0x0004; // Event status L1A counter mismatch
+  const uint16_t FRSIZE = 0x0008; // Event status Invalid frame size
+  const uint16_t FWERR  = 0x0010; // Event status Firmware error
 }
 
 
@@ -137,11 +137,11 @@ namespace Ph2_HwInterface
       std::vector<ChipFrame>   chip_frames;
       std::vector<RD53::Event> chip_events;
 
-      uint8_t evtStatus;
+      uint16_t evtStatus;
     };
 
-    static void DecodeEvents    (const std::vector<uint32_t>& data, uint8_t& status, std::vector<RD53FWInterface::Event>& events);
-    static bool EvtErrorHandler (uint8_t status);
+    static void DecodeEvents    (const std::vector<uint32_t>& data, uint16_t& status, std::vector<RD53FWInterface::Event>& events);
+    static bool EvtErrorHandler (uint16_t status);
     static void PrintEvents     (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
 
     enum class TriggerSource : uint32_t
