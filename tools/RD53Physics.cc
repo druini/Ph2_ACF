@@ -43,7 +43,6 @@ void Physics::ConfigureCalibration ()
   // # Initialize directory and data container #
   // ###########################################
   this->CreateResultDirectory(RESULTDIR,false,false);
-  this->fChannelGroupHandler = theChnGroupHandler.get();
   ContainerFactory::copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, theOccContainer);
 }
 
@@ -82,7 +81,6 @@ void Physics::Stop ()
 
 void Physics::run ()
 {
-  // uint8_t status;
   unsigned int dataSize = 0;
 
   while (keepRunning == true)
@@ -92,21 +90,8 @@ void Physics::run ()
           RD53decodedEvents.clear();
           dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
 
-
-          // #####################
-          // # ReadData for RD53 #
-          // #####################
-          // Data theData;
-          // std::vector<uint32_t> data;
-          // BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-          // dataSize = fBeBoardInterface->ReadData(theBoard, false, data, false);
-
-
           if (dataSize != 0)
             {
-              // RD53decodedEvents.clear();
-              // RD53FWInterface::DecodeEvents(data, status, RD53decodedEvents);
-              // theData.DecodeData(theBoard, data, dataSize, fBeBoardInterface->getBoardType(theBoard));
               Physics::fillDataContainer(cBoard);
               Physics::sendData(cBoard);
             }
@@ -141,7 +126,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
   // ##################
   const std::vector<Event*>& events = SystemController::GetEvents(static_cast<BeBoard*>(cBoard));
   for (const auto& event : events)
-    event->fillDataContainer(theOccContainer.at(cBoard->getIndex()), this->fChannelGroupHandler->allChannelGroup());
+    event->fillDataContainer(theOccContainer.at(cBoard->getIndex()), theChnGroupHandler->allChannelGroup());
 }
 
 void Physics::chipErrorReport ()
