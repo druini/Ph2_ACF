@@ -10,13 +10,12 @@
 */
 
 #include "SystemController.h"
-#include "../HWInterface/CbcInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-namespace Ph2_System {
-
+namespace Ph2_System
+{
   SystemController::SystemController()
     : fBeBoardInterface    (nullptr)
     , fReadoutChipInterface(nullptr)
@@ -51,17 +50,15 @@ namespace Ph2_System {
   {
     if (fFileHandler)
       {
-        if (fFileHandler->file_open() ) fFileHandler->closeFile();
-
+        if (fFileHandler->file_open()) fFileHandler->closeFile();
         if (fFileHandler!=nullptr) delete fFileHandler;
       }
 
-    if (fBeBoardInterface!=nullptr) delete fBeBoardInterface;
-
+    if (fBeBoardInterface!=nullptr)      delete fBeBoardInterface;
     if (fReadoutChipInterface!=nullptr)  delete fReadoutChipInterface;
-    if (fChipInterface!=nullptr)  delete fChipInterface;
-    if (fMPAInterface!=nullptr)  delete fMPAInterface;
-    if(fDetectorContainer!=nullptr) delete fDetectorContainer;
+    if (fChipInterface!=nullptr)         delete fChipInterface;
+    if (fMPAInterface!=nullptr)          delete fMPAInterface;
+    if (fDetectorContainer!=nullptr)     delete fDetectorContainer;
 
     // It crash if I try to delete them !!!!!!!!!!
     // for (auto& it : fBeBoardFWMap) {
@@ -69,50 +66,35 @@ namespace Ph2_System {
     //         delete it.second;
     // }
     fBeBoardFWMap.clear();
-
     fSettingsMap.clear();
     if(fNetworkStreamer!=nullptr) delete fNetworkStreamer;
-    // for ( auto& el : fBoardVector )
-    //  if (el) delete el;
-
-    // fBoardVector.clear();
-
     if (fData!=nullptr) delete fData;
   }
 
   void SystemController::addFileHandler ( const std::string& pFilename, char pOption )
   {
-    //if the opion is read, create a handler object and use it to read the
-    //file in the method below!
-
-    if (pOption == 'r')
-      fFileHandler = new FileHandler ( pFilename, pOption );
-    //if the option is w, remember the filename and construct a new
-    //fileHandler for every Interface
+    if (pOption == 'r') fFileHandler = new FileHandler ( pFilename, pOption );
     else if (pOption == 'w')
       {
         fRawFileName = pFilename;
         fWriteHandlerEnabled = true;
       }
-
   }
 
   void SystemController::closeFileHandler()
   {
     if (fFileHandler)
       {
-        if (fFileHandler->file_open() ) fFileHandler->closeFile();
-
+        if (fFileHandler->file_open()) fFileHandler->closeFile();
         if (fFileHandler) delete fFileHandler;
-
         fFileHandler = nullptr;
       }
   }
 
   void SystemController::readFile ( std::vector<uint32_t>& pVec, uint32_t pNWords32 )
   {
-    if (pNWords32 == 0) pVec = fFileHandler->readFile( );
-    else pVec = fFileHandler->readFileChunks (pNWords32);
+    if (pNWords32 == 0) pVec = fFileHandler->readFile();
+    else pVec = fFileHandler->readFileChunks(pNWords32);
   }
 
   void SystemController::setData (BeBoard* pBoard, std::vector<uint32_t>& pData, uint32_t pNEvents)
@@ -120,7 +102,7 @@ namespace Ph2_System {
     if (fData!=nullptr) delete fData;
     fData = new Data();
 
-    fData->DecodeEvents(pBoard, pData, pNEvents, pBoard->getBoardType());
+    fData->DecodeData(pBoard, pData, pNEvents, pBoard->getBoardType());
   }
 
   void SystemController::InitializeHw ( const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
@@ -134,12 +116,12 @@ namespace Ph2_System {
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile );
 
-    fBeBoardInterface = new BeBoardInterface ( fBeBoardFWMap );
+    fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     if (fBoardVector[0]->getBoardType() != BoardType::FC7)
-      fReadoutChipInterface = new CbcInterface  ( fBeBoardFWMap );
+      fReadoutChipInterface = new CbcInterface (fBeBoardFWMap);
     else
-      fReadoutChipInterface = new RD53Interface ( fBeBoardFWMap );
-    fMPAInterface = new MPAInterface ( fBeBoardFWMap );
+      fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
+    fMPAInterface = new MPAInterface(fBeBoardFWMap);
 
     if (fWriteHandlerEnabled)
       this->initializeFileHandler();
@@ -187,24 +169,8 @@ namespace Ph2_System {
             // # Configuring Inner Tracker hardware #
             // ######################################
             LOG (INFO) << BOLDBLUE << "\t--> Found an Inner Tracker board" << RESET;
-            LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << +cBoard->getBeId() << RESET;
+            LOG (INFO) << GREEN << "Configuring Board: " << BOLDYELLOW << +cBoard->getBeId() << RESET;
             fBeBoardInterface->ConfigureBoard(cBoard);
-
-            for (const auto& cModule : cBoard->fModuleVector)
-              {
-                LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << +cModule->getModuleId() << RESET;
-                for (const auto& cRD53 : cModule->fReadoutChipVector)
-                  {
-                    LOG (INFO) << GREEN << "Configuring RD53 " << BOLDYELLOW << +cRD53->getChipId() << RESET;
-                    static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cRD53));
-                    LOG (INFO) << BOLDBLUE << "\t--> Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
-                  }
-              }
-
-            LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
-            bool commGood = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->InitChipCommunication();
-            if (commGood == true) LOG (INFO) << BOLDBLUE << "\t--> Successfully initialized the communication to all chips"     << RESET;
-            else                  LOG (INFO) << BOLDRED  << "\t--> I was not able to initialize the communication to all chips" << RESET;
 
 
             // ###################
@@ -215,6 +181,21 @@ namespace Ph2_System {
             size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays);
             LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
+
+
+            // #################
+            // Configure chips #
+            // #################
+            for (const auto& cModule : cBoard->fModuleVector)
+              {
+                LOG (INFO) << GREEN << "Initializing communication to Module: " << BOLDYELLOW << +cModule->getModuleId() << RESET;
+                for (const auto& cRD53 : cModule->fReadoutChipVector)
+                  {
+                    LOG (INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cRD53->getChipId() << RESET;
+                    static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cRD53));
+                    LOG (INFO) << BOLDBLUE << "\t--> Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
+                  }
+              }
           }
       }
   }
@@ -262,6 +243,7 @@ namespace Ph2_System {
         LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << BOLDYELLOW << cFilename << RESET;
       }
   }
+
   uint32_t SystemController::computeEventSize32 (BeBoard* pBoard)
   {
     uint32_t cNEventSize32 = 0;
@@ -278,30 +260,30 @@ namespace Ph2_System {
   void SystemController::Start(int currentRun)
   {
     for (auto& cBoard : fBoardVector)
-      fBeBoardInterface->Start (cBoard);
+      fBeBoardInterface->Start(cBoard);
   }
   void SystemController::Stop()
   {
     for (auto& cBoard : fBoardVector)
-      fBeBoardInterface->Stop (cBoard);
+      fBeBoardInterface->Stop(cBoard);
   }
   void SystemController::Pause()
   {
     for (auto& cBoard : fBoardVector)
-      fBeBoardInterface->Pause (cBoard);
+      fBeBoardInterface->Pause(cBoard);
   }
   void SystemController::Resume()
   {
     for (auto& cBoard : fBoardVector)
-      fBeBoardInterface->Resume (cBoard);
+      fBeBoardInterface->Resume(cBoard);
   }
 
   void SystemController::ConfigureHardware(std::string cHWFile, bool enableStream)
   {
     std::stringstream outp;
 
-    InitializeHw ( cHWFile, outp, true, enableStream );
-    InitializeSettings ( cHWFile, outp );
+    InitializeHw(cHWFile, outp, true, enableStream);
+    InitializeSettings(cHWFile, outp);
     std::cout << outp.str() << std::endl;
     outp.str("");
     ConfigureHw();
@@ -317,32 +299,32 @@ namespace Ph2_System {
 
   void SystemController::Start (BeBoard* pBoard)
   {
-    fBeBoardInterface->Start (pBoard);
+    fBeBoardInterface->Start(pBoard);
   }
 
   void SystemController::Stop (BeBoard* pBoard)
   {
-    fBeBoardInterface->Stop (pBoard);
+    fBeBoardInterface->Stop(pBoard);
   }
   void SystemController::Pause (BeBoard* pBoard)
   {
-    fBeBoardInterface->Pause (pBoard);
+    fBeBoardInterface->Pause(pBoard);
   }
   void SystemController::Resume (BeBoard* pBoard)
   {
-    fBeBoardInterface->Resume (pBoard);
+    fBeBoardInterface->Resume(pBoard);
   }
 
   uint32_t SystemController::ReadData (BeBoard* pBoard, bool pWait)
   {
     std::vector<uint32_t> cData;
-    return this->ReadData (pBoard, cData, pWait);
+    return this->ReadData(pBoard, cData, pWait);
   }
 
   void SystemController::ReadData (bool pWait)
   {
     for (auto cBoard : fBoardVector)
-      this->ReadData (cBoard, pWait);
+      this->ReadData(cBoard, pWait);
   }
 
   uint32_t SystemController::ReadData (BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
@@ -350,8 +332,8 @@ namespace Ph2_System {
     if (fData) delete fData;
     fData = new Data();
 
-    uint32_t cNPackets = fBeBoardInterface->ReadData (pBoard, false, pData, pWait);
-    fData->DecodeEvents(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType (pBoard));
+    uint32_t cNPackets = fBeBoardInterface->ReadData(pBoard, false, pData, pWait);
+    fData->DecodeData(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType(pBoard));
 
     return cNPackets;
   }
@@ -359,13 +341,13 @@ namespace Ph2_System {
   void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents)
   {
     std::vector<uint32_t> cData;
-    return this->ReadNEvents (pBoard, pNEvents, cData, true);
+    return this->ReadNEvents(pBoard, pNEvents, cData, true);
   }
 
   void SystemController::ReadNEvents (uint32_t pNEvents)
   {
     for (auto cBoard : fBoardVector)
-      this->ReadNEvents (cBoard, pNEvents);
+      this->ReadNEvents(cBoard, pNEvents);
   }
 
   void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
@@ -373,8 +355,8 @@ namespace Ph2_System {
     if (fData) delete fData;
     fData = new Data();
 
-    fBeBoardInterface->ReadNEvents (pBoard, pNEvents, pData, pWait);
-    fData->DecodeEvents(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType (pBoard));
+    fBeBoardInterface->ReadNEvents(pBoard, pNEvents, pData, pWait);
+    fData->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
   }
 
   double SystemController::findValueInSettings (const char* name)

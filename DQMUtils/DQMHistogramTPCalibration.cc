@@ -33,7 +33,7 @@ DQMHistogramTPCalibration::~DQMHistogramTPCalibration ()
 
 
 //========================================================================================================================
-void DQMHistogramTPCalibration::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap)
+void DQMHistogramTPCalibration::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 

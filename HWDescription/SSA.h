@@ -18,6 +18,7 @@
 #include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
+
 #include <iostream>
 #include <map>
 #include <string>
@@ -25,22 +26,19 @@
 #include <utility>
 #include <set>
 
-// SSA2 Chip HW Description Class
-
 
 /*!
  * \namespace Ph2_HwDescription
  * \brief Namespace regrouping all the hardware description
  */
-namespace Ph2_HwDescription {
-    using SSARegMap = std::map < std::string, RegItem >;
+namespace Ph2_HwDescription
+ {
+    using SSARegMap  = std::map  <std::string, RegItem>;
     using SSARegPair = std::pair <std::string, RegItem>;
-    using CommentMap = std::map <int, std::string>;
-
+    using CommentMap = std::map  <int, std::string>;
 
     class SSA : public FrontEndDescription
     {
-
       public:
 
         // C'tors which take BeId, FMCId, FeID, SSAId
@@ -55,7 +53,7 @@ namespace Ph2_HwDescription {
         // Copy C'tor
         SSA ( const SSA& SSAobj );
 
-	void loadfRegMap ( const std::string& filename );
+        void loadfRegMap ( const std::string& filename );
 
         // D'Tor
         ~SSA();
@@ -98,19 +96,15 @@ namespace Ph2_HwDescription {
         * \brief Write the registers of the Map in a file
         * \param filename
         */
-	void CheckRegVals();
-	
+        void CheckRegVals();
+
       protected:
 
         SSARegMap fRegMap;
         uint8_t fSSAId;
         uint8_t fSSASide;
         CommentMap fCommentMap;
-
-
     };
-
-
 }
 
 #endif

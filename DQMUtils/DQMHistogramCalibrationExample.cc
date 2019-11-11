@@ -28,7 +28,7 @@ DQMHistogramCalibrationExample::~DQMHistogramCalibrationExample ()
 }
 
 //========================================================================================================================
-void DQMHistogramCalibrationExample::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap)
+void DQMHistogramCalibrationExample::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC

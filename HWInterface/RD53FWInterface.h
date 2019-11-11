@@ -12,12 +12,11 @@
 
 #include "BeBoardFWInterface.h"
 #include "D19cFpgaConfig.h"
+#include "../HWDescription/RD53.h"
 #include "../Utils/RD53RunProgress.h"
 #include "../Utils/easylogging++.h"
 
 #include <uhal/uhal.hpp>
-
-#include <sstream>
 
 
 // #############
@@ -25,7 +24,7 @@
 // #############
 #define DEEPSLEEP 100000 // [microseconds]
 #define READOUTSLEEP  50 // [microseconds]
-#define MAXTRIALS     10 // Maximum number of trials for ReadNEvents
+#define MAXATTEMPTS    2 // Maximum number of attempts for ReadNEvents
 
 // ##################
 // # BIT DEFINITION #
@@ -34,6 +33,7 @@
 #define NBIT_FWVER        16 // Number of bits for the firmware version
 #define IPBUS_FASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 #define NWORDS_DDR3        4 // Number of IPbus words in a DDR3 word
+#define NLANE_MODULE       4 // Number of lanes per module
 
 // #################
 // # READOUT BLOCK #
@@ -72,12 +72,12 @@ namespace RD53FWEvtEncoder
   // ################
   // # Event status #
   // ################
-  const uint8_t GOOD   = 0x00; // Event status Good
-  const uint8_t EVSIZE = 0x02; // Event status Invalid event size
-  const uint8_t EMPTY  = 0x04; // Event status Empty event
-  const uint8_t L1A    = 0x08; // Event status L1A counter mismatch
-  const uint8_t FRSIZE = 0x10; // Event status Invalid frame size
-  const uint8_t FWERR  = 0x20; // Event status Firmware error
+  const uint16_t GOOD   = 0x0000; // Event status Good
+  const uint16_t EVSIZE = 0x0001; // Event status Invalid event size
+  const uint16_t EMPTY  = 0x0002; // Event status Empty event
+  const uint16_t L1A    = 0x0004; // Event status L1A counter mismatch
+  const uint16_t FRSIZE = 0x0008; // Event status Invalid frame size
+  const uint16_t FWERR  = 0x0010; // Event status Firmware error
 }
 
 
@@ -107,8 +107,8 @@ namespace Ph2_HwInterface
     void     ChipReSync  ()                                                                                     override;
     std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)           override;
 
-    bool InitChipCommunication ();
-    void WriteChipCommand      (const std::vector<uint16_t>& data, unsigned int moduleId);
+    bool CheckChipCommunication ();
+    void WriteChipCommand       (const std::vector<uint16_t>& data, unsigned int moduleId);
     std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Chip* pChip);
 
     struct ChipFrame
@@ -117,7 +117,7 @@ namespace Ph2_HwInterface
 
       uint16_t error_code;
       uint16_t hybrid_id;
-      uint16_t chip_id;
+      uint16_t chip_lane;
       uint16_t l1a_data_size;
       uint16_t chip_type;
       uint16_t frame_delay;
@@ -137,12 +137,12 @@ namespace Ph2_HwInterface
       std::vector<ChipFrame>   chip_frames;
       std::vector<RD53::Event> chip_events;
 
-      uint8_t evtStatus;
+      uint16_t evtStatus;
     };
 
-    static std::vector<Event> DecodeEvents (const std::vector<uint32_t>& data, uint8_t& status);
-    static void PrintEvents                (const std::vector<RD53FWInterface::Event>& events, std::vector<uint32_t>* pData = nullptr);
-    static bool EvtErrorHandler            (uint8_t status);
+    static void DecodeEvents    (const std::vector<uint32_t>& data, uint16_t& status, std::vector<RD53FWInterface::Event>& events);
+    static bool EvtErrorHandler (uint16_t status);
+    static void PrintEvents     (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
 
     enum class TriggerSource : uint32_t
     {
@@ -221,7 +221,6 @@ namespace Ph2_HwInterface
 
   private:
     void PrintFWstatus         ();
-    void SerializeSymbols      (std::vector<std::vector<uint16_t> >& data, std::vector<uint32_t>& serialData);
     void TurnOffFMC            ();
     void TurnOnFMC             ();
     void ResetBoard            ();
@@ -237,6 +236,12 @@ namespace Ph2_HwInterface
     size_t             ddr3Offset;
     bool               singleChip;
   };
+
+
+  // ########################################
+  // # Vector containing the decoded events #
+  // ########################################
+  extern std::vector<RD53FWInterface::Event> RD53decodedEvents;
 }
 
 #endif

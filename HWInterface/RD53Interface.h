@@ -52,8 +52,8 @@ namespace Ph2_HwInterface
     void SyncRD53       (Chip* pChip);
     void ResetRD53      (Chip* pChip);
 
-    template <class Cmd>
-      void sendCommand (Chip* pChip, const Cmd& cmd) { static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getFeId()); }
+    template <typename T>
+      void sendCommand (Chip* pChip, const T& cmd) { static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getFeId()); }
 
     template <typename T, size_t N>
       static size_t arraySize (const T(&)[N]) { return N; }

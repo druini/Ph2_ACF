@@ -23,9 +23,9 @@ namespace Ph2_HwInterface
   {
   public:
     RD53Event (std::vector<size_t>&& module_id, std::vector<size_t>&& chip_id, std::vector<Ph2_HwDescription::RD53::Event>&& events)
-      : chip_events(std::move(events))
-      , module_id_vec(std::move(module_id))
-      , chip_id_vec(std::move(chip_id))
+      : chip_events   (std::move(events))
+      , module_id_vec (std::move(module_id))
+      , chip_id_vec   (std::move(chip_id))
       {}
 
     void fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;

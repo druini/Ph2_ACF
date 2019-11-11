@@ -38,7 +38,7 @@ namespace Ph2_System {
 
     }
 
-    void FileParser::parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
+  void FileParser::parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
     {
 
     //FIXME-FR
@@ -334,7 +334,7 @@ namespace Ph2_System {
         }
         else if (cBeBoard->getBoardType() == BoardType::FC7)
         {
-            pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+          pBeBoardFWMap[cBeBoard->getBeBoardId()] = new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
         }
 
         os << BOLDCYAN << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl
@@ -506,19 +506,8 @@ namespace Ph2_System {
                 }
 
             }
-
-        //only add if there is condition data defined
-        //pBoard->addConditionDataSet (cSet);
         }
 
-    //else
-    //{
-
-    //}
-
-    //LOG (ERROR) << "No Slink node found for Board " << +pBoard->getBeId() << " - continuing with default debug mode!";
-    //add ConditionDataSet to pBoard in any case, even if there is no SLink node in the xml, that way at least
-    //an SLinkDebugMode property is set for this board (SUMMARY)
         pBoard->addConditionDataSet (cSet);
     }
 
@@ -993,7 +982,7 @@ namespace Ph2_System {
         }
     }
 
-    void FileParser::parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
+  void FileParser::parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
     {
         pugi::xml_document doc;
         pugi::xml_parse_result result;
@@ -1047,8 +1036,9 @@ namespace Ph2_System {
       }
     else cFileName = expandEnvironmentVariables (theChipNode.attribute ("configfile").value());
 
-    uint32_t cChipId     = theChipNode.attribute ("Id").as_int();
-    ReadoutChip* theChip = cModule->addChipContainer(cChipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName));
+    uint32_t chipId      = theChipNode.attribute ("Id").as_int();
+    uint32_t chipLane    = theChipNode.attribute ("Lane").as_int();
+    ReadoutChip* theChip = cModule->addChipContainer(chipId, new RD53 (cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), chipId, chipLane, cFileName));
     theChip->setNumberOfChannels(RD53::nRows,RD53::nCols);
 
     this->parseRD53Settings (theChipNode, theChip, os);

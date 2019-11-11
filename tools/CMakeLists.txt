@@ -23,7 +23,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     file(GLOB SOURCES *.cc)
 
     #add the library
-    add_library(Ph2_Tools SHARED ${SOURCES} ${HEADERS})
+    add_library(Ph2_Tools STATIC ${SOURCES} ${HEADERS})
 
     #check for ZMQ installed
     if(ZMQ_FOUND)

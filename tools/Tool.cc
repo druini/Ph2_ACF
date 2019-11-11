@@ -153,7 +153,7 @@ void Tool::resetPointers()
 {
 	if(fChannelGroupHandler != nullptr)
 	{
-		delete fChannelGroupHandler;
+		// delete fChannelGroupHandler;
 		fChannelGroupHandler = nullptr;
 	}
 

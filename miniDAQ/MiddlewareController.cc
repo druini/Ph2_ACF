@@ -17,6 +17,7 @@
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53InjectionDelay.h"
 #include "../tools/RD53ThrEqualization.h"
+#include "../tools/RD53Physics.h"
 
 
 //========================================================================================================================
@@ -68,29 +69,28 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 	//CONFIGURE
 	else if (buffer.substr(0,9) == "Configure")
 	{
+      std::cout << "We are in the configuration submodule" << std::endl;
+      if      (getVariableValue("Calibration",buffer) == "calibration")             theSystemController_ = new CombinedCalibration<PedestalEqualization>;
+      else if (getVariableValue("Calibration",buffer) == "pedenoise")               theSystemController_ = new CombinedCalibration<PedeNoise>;
+      else if (getVariableValue("Calibration",buffer) == "calibrationandpedenoise") theSystemController_ = new CombinedCalibration<PedestalEqualization,PedeNoise>();
+      else if (getVariableValue("Calibration",buffer) == "calibrationexample")      theSystemController_ = new CombinedCalibration<CalibrationExample>;
 
-		std::cout << "We are in the configuration submodule" << std::endl;
-		if     (getVariableValue("Calibration",buffer) == "calibration")             theSystemController_ = new CombinedCalibration<PedestalEqualization>;
-		else if(getVariableValue("Calibration",buffer) == "pedenoise")               theSystemController_ = new CombinedCalibration<PedeNoise>;
-		else if(getVariableValue("Calibration",buffer) == "calibrationandpedenoise") theSystemController_ = new CombinedCalibration<PedestalEqualization,PedeNoise>();
-        else if(getVariableValue("Calibration",buffer) == "calibrationexample")      theSystemController_ = new CombinedCalibration<CalibrationExample>;
+      else if (getVariableValue("Calibration",buffer) == "pixelalive")              theSystemController_ = new CombinedCalibration<PixelAlive>;
+      else if (getVariableValue("Calibration",buffer) == "noise")                   theSystemController_ = new CombinedCalibration<PixelAlive>;
+      else if (getVariableValue("Calibration",buffer) == "scurve")                  theSystemController_ = new CombinedCalibration<SCurve>;
+      else if (getVariableValue("Calibration",buffer) == "gain")                    theSystemController_ = new CombinedCalibration<Gain>;
+      else if (getVariableValue("Calibration",buffer) == "latency")                 theSystemController_ = new CombinedCalibration<Latency>;
+      else if (getVariableValue("Calibration",buffer) == "gainopt")                 theSystemController_ = new CombinedCalibration<GainOptimization>;
+      else if (getVariableValue("Calibration",buffer) == "thrmin")                  theSystemController_ = new CombinedCalibration<ThrMinimization>;
+      else if (getVariableValue("Calibration",buffer) == "injdelay")                theSystemController_ = new CombinedCalibration<InjectionDelay>;
+      else if (getVariableValue("Calibration",buffer) == "threqu")                  theSystemController_ = new CombinedCalibration<ThrEqualization>;
+      else if (getVariableValue("Calibration",buffer) == "physics")                 theSystemController_ = new CombinedCalibration<Physics>;
 
-		else if(getVariableValue("Calibration",buffer) == "pixelalive")               theSystemController_ = new CombinedCalibration<PixelAlive>;
-		else if(getVariableValue("Calibration",buffer) == "noise")                    theSystemController_ = new CombinedCalibration<PixelAlive>;
-		else if(getVariableValue("Calibration",buffer) == "scurve")                   theSystemController_ = new CombinedCalibration<SCurve>;
-		else if(getVariableValue("Calibration",buffer) == "gain")                     theSystemController_ = new CombinedCalibration<Gain>;
-		else if(getVariableValue("Calibration",buffer) == "latency")                  theSystemController_ = new CombinedCalibration<Latency>;
-		else if(getVariableValue("Calibration",buffer) == "gainopt")                  theSystemController_ = new CombinedCalibration<GainOptimization>;
-		else if(getVariableValue("Calibration",buffer) == "thrmin")                   theSystemController_ = new CombinedCalibration<ThrMinimization>;
-
-		else if(getVariableValue("Calibration",buffer) == "injdelay")                 theSystemController_ = new CombinedCalibration<InjectionDelay>;
-		else if(getVariableValue("Calibration",buffer) == "threqu")                   theSystemController_ = new CombinedCalibration<ThrEqualization>;
-
-		else
-		{
-			std::cout << __PRETTY_FUNCTION__ << "Calibration type " <<  getVariableValue("Calibration",buffer) << " not found, Aborting" << std::endl;
-			abort();
-		}
+      else
+        {
+          std::cout << __PRETTY_FUNCTION__ << "Calibration type " <<  getVariableValue("Calibration",buffer) << " not found, Aborting" << std::endl;
+          abort();
+        }
 
 		std::cout << "sys created" << std::endl;
 		// quick (idiot) idea "CONFIGURE:ThresholdCalibration"
@@ -107,9 +107,6 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 
 	}
 
-
 	return "Didn't understand the message!";
 
 }
-
-

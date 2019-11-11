@@ -19,11 +19,13 @@
 #include "easylogging++.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
+#include "../HWInterface/RD53FWInterface.h"
 
 
 using namespace Ph2_HwDescription;
-namespace Ph2_HwInterface {
 
+namespace Ph2_HwInterface
+{
   /*!
    * \class Data
    * \brief Data buffer class for CBC data
@@ -102,7 +104,7 @@ namespace Ph2_HwInterface {
      */
     void Reset();
 
-    void DecodeEvents (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+    void DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
     const Event* GetNextEvent (const BeBoard* pBoard)
     {

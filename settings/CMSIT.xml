@@ -11,7 +11,7 @@
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
       <RD53_Files path="./" />
 
-      <RD53 Id="0" configfile="CMSIT_RD53.txt">
+      <RD53 Id="0" Lane="0" configfile="CMSIT_RD53.txt">
         <!-- Overwrite .txt configuration file settings -->
         <Settings
             PA_IN_BIAS_LIN       =   "350"

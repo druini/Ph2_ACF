@@ -11,16 +11,8 @@
 
 namespace Ph2_HwDescription
 {
-  RD53::RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& fileName) : ReadoutChip (pFeDesc, pRD53Id)
-  {
-    fMaxRegValue      = RD53::setBits(RD53Constants::NBIT_MAXREG);
-    fChipOriginalMask = new ChannelGroup<nRows, nCols>;
-    configFileName    = fileName;
-    loadfRegMap(configFileName);
-    setFrontEndType(FrontEndType::RD53);
-  }
-
-  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& fileName) : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id)
+  RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName)
+    : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id, pRD53Lane)
   {
     fMaxRegValue      = RD53::setBits(RD53Constants::NBIT_MAXREG);
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
@@ -387,7 +379,7 @@ namespace Ph2_HwDescription
     return it->second.fBitSize;
   }
 
-  void RD53::Event::DecodeQuad (uint32_t data, std::vector<RD53::HitData>& result)
+  void RD53::Event::DecodeQuad (uint32_t data)
   {
     uint32_t core_col, side, row, col, all_tots;
 
@@ -397,28 +389,21 @@ namespace Ph2_HwDescription
     uint8_t tots[RD53Constants::NPIX_REGION];
     bits::RangePacker<RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION>::unpack_reverse(all_tots, tots);
 
-    for (int i = 0; i < RD53Constants::NPIX_REGION; i++) if (tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) result.emplace_back(row, col + i, tots[i]);
+    for (int i = 0; i < RD53Constants::NPIX_REGION; i++) if (tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) hit_data.emplace_back(row, col + i, tots[i]);
+    if ((row >= RD53::nRows) || (col >= (RD53::nCols - (RD53Constants::NPIX_REGION-1)))) evtStatus |= RD53EvtEncoder::CHIPPIX;
   }
 
   RD53::Event::Event (const uint32_t* data, size_t n)
   {
     uint32_t header;
 
-    evtStatus = RD53EvtEncoder::CGOOD;
+    evtStatus = RD53EvtEncoder::CHIPGOOD;
 
     std::tie(header, trigger_id, trigger_tag, bc_id) = bits::unpack<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
-    if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHEAD;
+    if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHIPHEAD;
 
     size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
-    std::vector<RD53::HitData> hits;
-    for (auto i = 1u; i < n; i++)
-      if (data[i] != noHitToT)
-        {
-          hits.clear();
-          DecodeQuad(data[i], hits);
-          hit_data.insert(hit_data.end(), hits.begin(), hits.end());
-          for (auto& hit : hits) if ((hit.row >= RD53::nRows) || (hit.col >= RD53::nCols)) evtStatus |= RD53EvtEncoder::CPIX;
-        }
+    for (auto i = 1u; i < n; i++) if (data[i] != noHitToT) DecodeQuad(data[i]);
   }
 
   RD53::CalCmd::CalCmd (const uint8_t& cal_edge_mode,

@@ -9,29 +9,30 @@
 
  */
 
-#ifndef _ChipRegItem_h__
-#define _ChipRegItem_h__
+#ifndef ChipRegItem_H
+#define ChipRegItem_H
 
 #include <stdint.h>
 
-namespace Ph2_HwDescription {
+namespace Ph2_HwDescription
+{
+  struct ChipRegItem
+  {
+    ChipRegItem() {};
+    ChipRegItem (uint8_t pPage, uint16_t pAddress, uint16_t pDefValue, uint16_t pValue)
+    : fPage (pPage)
+    , fAddress (pAddress)
+    , fDefValue (pDefValue)
+    , fValue (pValue)
+    {}
 
-    /*!
-     * \struct ChipRegItem
-     * \brief Struct for CbcRegisterItem that is identified by Page, Address, DefaultValue, Value
-     */
-    struct ChipRegItem
-    {
-        ChipRegItem() {};
-        ChipRegItem (uint8_t pPage, uint16_t pAddress, uint16_t pDefValue, uint16_t pValue) : fPage (pPage), fAddress (pAddress), fDefValue (pDefValue), fValue (pValue) {}
-
-        uint8_t  fPage;
-        uint16_t fAddress;
-        uint16_t fDefValue;
-        uint16_t fValue;
-        bool     fPrmptCfg = false;
-        uint8_t  fBitSize  = 0;
-    };
+    uint8_t  fPage;
+    uint16_t fAddress;
+    uint16_t fDefValue;
+    uint16_t fValue;
+    bool     fPrmptCfg = false;
+    uint8_t  fBitSize  = 0;
+  };
 }
 
 #endif

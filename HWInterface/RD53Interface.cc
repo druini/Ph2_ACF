@@ -121,7 +121,7 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pChip->getBeBoardId());
 
-    std::vector<std::pair<uint16_t,uint16_t>> outputDecoded;
+    std::vector<std::pair<uint16_t,uint16_t>> regReadback;
     unsigned int pixMode = 0;
     unsigned int row     = 0;
 
@@ -134,14 +134,14 @@ namespace Ph2_HwInterface
 
     if (pVerifLoop == true)
       {
-        if (pRegNode == "PIX_PORTAL")                     pixMode       = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
-        if (pixMode == 0)                                 outputDecoded = RD53Interface::ReadRD53Reg(pChip, pRegNode);
-        if ((pRegNode == "PIX_PORTAL") && (pixMode == 0)) row           = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
+        if (pRegNode == "PIX_PORTAL")                     pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
+        if (pixMode == 0)                             regReadback = RD53Interface::ReadRD53Reg(pChip, pRegNode);
+        if ((pRegNode == "PIX_PORTAL") && (pixMode == 0)) row     = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
 
         if ((pixMode == 0) &&
-            (((strcmp(pRegNode.c_str(),"PIX_PORTAL") == 0) && (outputDecoded[0].first != row))               ||
-             ((strcmp(pRegNode.c_str(),"PIX_PORTAL") != 0) && (outputDecoded[0].first != cRegItem.fAddress)) ||
-             (outputDecoded[0].second != cRegItem.fValue)))
+            (((pRegNode == "PIX_PORTAL") && (regReadback[0].first != row))               ||
+             ((pRegNode != "PIX_PORTAL") && (regReadback[0].first != cRegItem.fAddress)) ||
+             (regReadback[0].second != cRegItem.fValue)))
           {
             LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
             return false;
@@ -154,23 +154,24 @@ namespace Ph2_HwInterface
 
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode) // @TMP@
   {
-    const int totalAttempts = 2;
+    // auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
+    // return regReadback[0].second;
 
-    std::vector<std::pair<uint16_t, uint16_t>> outputDecoded;
-    for (auto attempt = 0; attempt < totalAttempts; attempt++)
+    const int nAttempts = 2;
+
+    for (auto attempt = 0; attempt < nAttempts; attempt++)
       {
-        outputDecoded = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
-        if (outputDecoded.size() == 0)
+        auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
+        if (regReadback.size() == 0)
           {
             LOG (WARNING) << BLUE << "Empty register readback, attempt n. " << BOLDYELLOW << attempt << RESET;
             usleep(VCALSLEEP);
           }
-        else return outputDecoded[0].second;
+        else return regReadback[0].second;
       }
 
-    LOG (ERROR) << BOLDRED << "Empty register readback FIFO in " << BOLDYELLOW << totalAttempts << BOLDRED " attempts" << RESET;
+    LOG (ERROR) << BOLDRED << "Empty register readback FIFO in " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
     return 0;
-    // return RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode)[0].second;
   }
 
   std::vector<std::pair<uint16_t, uint16_t>> RD53Interface::ReadRD53Reg (Chip* pChip, const std::string& pRegNode)
@@ -178,13 +179,13 @@ namespace Ph2_HwInterface
     this->setBoard(pChip->getBeBoardId());
 
     RD53Interface::sendCommand(pChip, RD53Cmd::RdReg(pChip->getChipId(), pChip->getRegItem(pRegNode).fAddress));
-    auto outputDecoded = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
+    auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
-    for (auto i = 0u; i < outputDecoded.size(); i++)
+    for (auto i = 0u; i < regReadback.size(); i++)
       // Removing bit related to PIX_PORTAL register identification
-      outputDecoded[i].first = outputDecoded[i].first & static_cast<uint16_t>(RD53::setBits(RD53Constants::NBIT_ADDR));
+      regReadback[i].first = regReadback[i].first & static_cast<uint16_t>(RD53::setBits(RD53Constants::NBIT_ADDR));
 
-    return outputDecoded;
+    return regReadback;
   }
 
   void RD53Interface::WriteRD53Mask (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop)

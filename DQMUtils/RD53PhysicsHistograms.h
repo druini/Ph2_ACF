@@ -1,26 +1,24 @@
 /*!
-  \file                  RD53InjectionDelayHistograms.h
-  \brief                 Header file of InjectionDelay calibration histograms
+  \file                  RD53PhysicsHistograms.h
+  \brief                 Header file of Physics histograms
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
-  Support:               email to alkiviadis.papadopoulos@cern.ch
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef RD53InjectionDelayHistograms_H
-#define RD53InjectionDelayHistograms_H
+#ifndef RD53PhysicsHistograms_H
+#define RD53PhysicsHistograms_H
 
-#include "../System/SystemController.h"
-#include "../Utils/RD53SharedConstants.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
+#include <TH2F.h>
 
 
-class InjectionDelayHistograms : public DQMHistogramBase
+class PhysicsHistograms : public DQMHistogramBase
 {
  public:
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
@@ -28,17 +26,17 @@ class InjectionDelayHistograms : public DQMHistogramBase
   bool fill    (std::vector<char>& dataBuffer)                                                                                   override;
   void reset   ()                                                                                                                override {};
 
-  void fillOccupancy      (const DetectorDataContainer& OccupancyContainer);
-  void fillInjectionDelay (const DetectorDataContainer& InjectionDelayContainer);
+  void fill    (const DetectorDataContainer& DataContainer);
 
  private:
   DetectorDataContainer DetectorData;
 
-  DetectorDataContainer Occupancy1D;
-  DetectorDataContainer InjectionDelay;
-
-  size_t startValue;
-  size_t stopValue;
+  DetectorDataContainer ToT1D;
+  DetectorDataContainer ToT2D;
+  DetectorDataContainer Occupancy2D;
+  DetectorDataContainer ErrorReadOut2D;
+  DetectorDataContainer BCID;
+  DetectorDataContainer TriggerID;
 };
 
 #endif
