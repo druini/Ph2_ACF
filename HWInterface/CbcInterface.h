@@ -80,7 +80,7 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true ) override;
+        bool WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true, bool doBroadcast = false) override;
 
         /*!
          * \brief Write the designated register in both Chip and Chip Config File

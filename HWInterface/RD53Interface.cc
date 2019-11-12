@@ -117,7 +117,7 @@ namespace Ph2_HwInterface
     RD53Interface::sendCommand(pChip, RD53Cmd::BCR());
   }
 
-  bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
+  bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop, bool doBroadcast)
   {
     this->setBoard(pChip->getBeBoardId());
 
@@ -129,10 +129,10 @@ namespace Ph2_HwInterface
     cRegItem.fValue   = data;
     cRegItem.fAddress = pChip->getRegItem(pRegNode).fAddress;
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), cRegItem.fAddress, cRegItem.fValue));
+    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg((doBroadcast ? RD53Constants::BROADCAST_CHIPID : pChip->getChipId()), cRegItem.fAddress, cRegItem.fValue));
     if ((pRegNode == "VCAL_HIGH") || (pRegNode == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
 
-    if (pVerifLoop == true)
+    if ((pVerifLoop == true) && (doBroadcast == false))
       {
         if (pRegNode == "PIX_PORTAL")                     pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
         if (pixMode == 0)                             regReadback = RD53Interface::ReadRD53Reg(pChip, pRegNode);

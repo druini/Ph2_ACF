@@ -140,7 +140,7 @@ namespace Ph2_HwInterface {
         return WriteChipMultReg ( pCbc, cRegVec, pVerifLoop );
     }
 
-    bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop )
+  bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop, bool doBroadcast)
     {
         if(dacName=="VCth"){
             if (pCbc->getFrontEndType() == FrontEndType::CBC3)

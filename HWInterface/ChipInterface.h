@@ -73,7 +73,7 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        virtual bool WriteChipReg ( Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true ) = 0;
+        virtual bool WriteChipReg ( Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true, bool doBroadcast = false) = 0;
 
         /*!
          * \brief Write several registers in both Chip and Chip Config File

@@ -57,7 +57,7 @@ namespace Ph2_HwDescription
     Chip();
 
     // Copy C'tor
-    Chip (const Chip& cbcobj);
+    Chip (const Chip& chipObj);
 
     // D'Tor
     virtual ~Chip();
