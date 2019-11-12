@@ -10,8 +10,8 @@
 #ifndef RD53FWInterface_H
 #define RD53FWInterface_H
 
-#include "BeBoardFWInterface.h"
 #include "D19cFpgaConfig.h"
+#include "BeBoardFWInterface.h"
 #include "../HWDescription/RD53.h"
 #include "../Utils/RD53RunProgress.h"
 #include "../Utils/easylogging++.h"
@@ -140,9 +140,20 @@ namespace Ph2_HwInterface
       uint16_t evtStatus;
     };
 
-    static void DecodeEvents    (const std::vector<uint32_t>& data, uint16_t& status, std::vector<RD53FWInterface::Event>& events);
-    static bool EvtErrorHandler (uint16_t status);
-    static void PrintEvents     (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
+    static void    DecodeEvents    (const std::vector<uint32_t>& data, uint16_t& status, std::vector<RD53FWInterface::Event>& events);
+    static bool    EvtErrorHandler (uint16_t status);
+    static void    PrintEvents     (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
+    static uint8_t lane2chipId     (const BeBoard* pBoard, uint16_t hybrid_id, uint16_t chip_lane)
+    {
+      // #############################
+      // # Translate lane to chip ID #
+      // #############################
+      Module* module = pBoard->getModule(hybrid_id);
+      auto it = std::find_if(module->fReadoutChipVector.begin(), module->fReadoutChipVector.end(), [=] (ReadoutChip* pChip)
+                             { return pChip->getChipLane() == chip_lane; });
+      if (it != module->fReadoutChipVector.end()) return (*it)->getChipId();
+      return -1; // Chip not found
+    }
 
     enum class TriggerSource : uint32_t
     {
