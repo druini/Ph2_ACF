@@ -251,7 +251,7 @@ void SCurve::display ()
 #endif
 }
 
-void SCurve::computeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
+void SCurve::computeStats (const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
 {
   float mean2  = 0;
   float weight = 0;

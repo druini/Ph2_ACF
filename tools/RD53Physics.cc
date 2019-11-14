@@ -58,7 +58,7 @@ void Physics::Start (int currentRun)
 
 void Physics::sendData (BoardContainer* const& cBoard)
 {
-  ChannelContainerStream<OccupancyAndPh> theOccStream = prepareChannelContainerStreamer<OccupancyAndPh>();
+  ChannelContainerStream<OccupancyAndPh,GenericDataVector> theOccStream = prepareChannelContainerStreamer<OccupancyAndPh,GenericDataVector>();
 
   if (fStreamerEnabled == true)
     theOccStream.streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fNetworkStreamer);

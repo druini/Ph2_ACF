@@ -254,7 +254,7 @@ void Gain::display ()
 #endif
 }
 
-void Gain::computeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
+void Gain::computeStats (const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
 // ##############################################
 // # Linear regression with least-square method #
 // # Model: y = f(x) = q + mx                   #

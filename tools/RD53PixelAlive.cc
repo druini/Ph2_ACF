@@ -154,12 +154,12 @@ void PixelAlive::draw (bool doSave)
 
 std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
 {
-  size_t nMaskedPixelsPerCalib = 0;
-
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          size_t nMaskedPixelsPerCalib = 0;
+
           LOG (INFO) << BOLDGREEN << "\t--> Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
                      << std::setprecision(-1) << theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
 

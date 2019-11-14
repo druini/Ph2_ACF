@@ -490,7 +490,7 @@ namespace Ph2_HwInterface
           {
             LOG (INFO) << CYAN << "------- Chip Header -------"                            << RESET;
             LOG (INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code    << RESET;
-            LOG (INFO) << CYAN << "hybrid_id       = " << evt.chip_frames[j].hybrid_id     << RESET;
+            LOG (INFO) << CYAN << "module_id       = " << evt.chip_frames[j].module_id     << RESET;
             LOG (INFO) << CYAN << "chip_lane       = " << evt.chip_frames[j].chip_lane     << RESET;
             LOG (INFO) << CYAN << "l1a_data_size   = " << evt.chip_frames[j].l1a_data_size << RESET;
             LOG (INFO) << CYAN << "chip_type       = " << evt.chip_frames[j].chip_type     << RESET;
@@ -741,8 +741,7 @@ namespace Ph2_HwInterface
             return;
           }
 
-        const size_t size = chip_frames.back().l1a_data_size * NWORDS_DDR3;
-        chip_events.emplace_back(&data[start + 2], size - 2);
+        chip_events.emplace_back(&data[start + 2], chip_frames.back().l1a_data_size * NWORDS_DDR3 - 2);
 
         if (chip_events[i].evtStatus != RD53EvtEncoder::CHIPGOOD) evtStatus |= chip_events[i].evtStatus;
       }
@@ -750,7 +749,7 @@ namespace Ph2_HwInterface
 
   RD53FWInterface::ChipFrame::ChipFrame (const uint32_t data0, const uint32_t data1)
   {
-    std::tie(error_code, hybrid_id, chip_lane, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
+    std::tie(error_code, module_id, chip_lane, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
     std::tie(chip_type, frame_delay)                          = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
   }
 
