@@ -105,7 +105,7 @@ namespace Ph2_HwInterface
 
     virtual void DownloadFpgaConfig ( const std::string& strConfig, const std::string& strDest ) {}
     /*! \brief Current FPGA configuration*/
-    virtual const FpgaConfig* getConfiguringFpga()
+    virtual const FpgaConfig* GetConfiguringFpga()
     {
       return nullptr;
     }

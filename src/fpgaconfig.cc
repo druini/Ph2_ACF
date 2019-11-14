@@ -195,7 +195,7 @@ int main ( int argc, char* argv[] )
 
   while (cDone == 0)
     {
-      progress = cSystemController.fBeBoardInterface->getConfiguringFpga (pBoard)->getProgressValue();
+      progress = cSystemController.fBeBoardInterface->GetConfiguringFpga (pBoard)->getProgressValue();
 
       if (progress == 100)
         {
@@ -204,7 +204,7 @@ int main ( int argc, char* argv[] )
         }
       else
         {
-          LOG (INFO) << progress << "%  " << cSystemController.fBeBoardInterface->getConfiguringFpga (pBoard)->getProgressString() << "                 \r" << flush;
+          LOG (INFO) << progress << "%  " << cSystemController.fBeBoardInterface->GetConfiguringFpga (pBoard)->getProgressString() << "                 \r" << flush;
           sleep (1);
         }
     }
