@@ -70,7 +70,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS "CompileForHerd = ${CompileForHerd}")
     MESSAGE(STATUS "NoDataShipping = ${NoDataShipping}")
 
-    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-error=maybe-uninitialized -Wno-ignored-qualifiers -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-missing-field-initializers -std=c++1y -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -pthread  -Wcpp -fPIC ${CMAKE_CXX_FLAGS}")
+    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-error=maybe-uninitialized -Wno-ignored-qualifiers -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-missing-field-initializers -std=c++1y -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -Wno-expansion-to-defined -Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=misleading-indentation -Wno-error=unused-result -Wno-error=deprecated-declarations -pthread  -Wcpp -fPIC ${CMAKE_CXX_FLAGS}")
     if(NoDataShipping)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     endif()
