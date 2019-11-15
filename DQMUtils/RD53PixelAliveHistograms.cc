@@ -48,12 +48,31 @@ void PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
 
 bool PixelAliveHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<OccupancyAndPh> theOccStreamer("PixelAlive");
+  const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+
+  ChannelContainerStream<OccupancyAndPh>                          theOccStreamer  ("PixelAlive");
+  ChipContainerStream<EmptyContainer,GenericDataArray<BCIDsize>>  theBCIDStreamer ("PixelAliveBCID");  // @TMP@
+  ChipContainerStream<EmptyContainer,GenericDataArray<TrgIDsize>> theTrgIDStreamer("PixelAliveTrgID"); // @TMP@
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
       theOccStreamer.decodeChipData(DetectorData);
       PixelAliveHistograms::fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+  else if (theBCIDStreamer.attachBuffer(&dataBuffer))
+    {
+      theBCIDStreamer.decodeChipData(DetectorData);
+      PixelAliveHistograms::fillBCID(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+  else if (theTrgIDStreamer.attachBuffer(&dataBuffer))
+    {
+      theTrgIDStreamer.decodeChipData(DetectorData);
+      PixelAliveHistograms::fillTrgID(DetectorData);
       DetectorData.cleanDataStored();
       return true;
     }
@@ -71,8 +90,6 @@ void PixelAliveHistograms::fill (const DetectorDataContainer& DataContainer)
           auto* Occupancy2DHist    = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
           auto* ErrorReadOut2DHist = ErrorReadOut2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
           auto* ToTHist            = ToT.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-          auto* BCIDHist           = BCID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-          auto* TriggerIDHist      = TriggerID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
@@ -85,18 +102,34 @@ void PixelAliveHistograms::fill (const DetectorDataContainer& DataContainer)
                   }
                 if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
               }
+        }
+}
 
-          for (auto i = 1u; i < cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.size(); i++)
-            {
-              int deltaBCID = cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
-              BCIDHist->Fill((deltaBCID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1) + deltaBCID);
-            }
+void PixelAliveHistograms::fillBCID (const DetectorDataContainer& DataContainer)
+{
+  const size_t BCIDsize = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
 
-          for (auto i = 1u; i < cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.size(); i++)
-            {
-              int deltaTrgID = cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] - cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
-              TriggerIDHist->Fill((deltaTrgID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1) + deltaTrgID);
-            }
+  for (const auto cBoard : DataContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          auto* BCIDHist = BCID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+
+          for (auto i = 0u; i < BCIDsize; i++) BCIDHist->SetBinContent(i+1, cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
+        }
+}
+
+void PixelAliveHistograms::fillTrgID (const DetectorDataContainer& DataContainer)
+{
+  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+
+  for (const auto cBoard : DataContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          auto* TriggerIDHist = TriggerID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+
+          for (auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent(i+1, cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
         }
 }
 

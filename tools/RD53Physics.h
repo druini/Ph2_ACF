@@ -13,6 +13,7 @@
 #include "Tool.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../HWInterface/RD53FWInterface.h"
 
@@ -49,6 +50,8 @@ class Physics : public Tool
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   DetectorDataContainer theOccContainer;
+  DetectorDataContainer theBCIDContainer;
+  DetectorDataContainer theTrgIDContainer;
 
   void chipErrorReport ();
 

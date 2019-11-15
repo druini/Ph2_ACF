@@ -196,7 +196,7 @@ namespace Ph2_HwDescription
       uint8_t cal_aux_delay;
     };
 
-    static size_t setBits (size_t nBit2Set) { return (1 << nBit2Set) - 1; }
+    static constexpr size_t setBits (size_t nBit2Set) { return (1 << nBit2Set) - 1; }
 
     static auto countBitsOne (size_t num)
     {

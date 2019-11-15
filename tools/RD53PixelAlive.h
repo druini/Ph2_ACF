@@ -64,6 +64,8 @@ class PixelAlive : public Tool
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   std::shared_ptr<DetectorDataContainer>   theOccContainer;
+  DetectorDataContainer theBCIDContainer;
+  DetectorDataContainer theTrgIDContainer;
 
   void initHisto       ();
   void fillHisto       ();

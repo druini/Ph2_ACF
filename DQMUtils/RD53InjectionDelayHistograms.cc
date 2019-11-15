@@ -33,8 +33,10 @@ void InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContain
 
 bool InjectionDelayHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<GenericDataVector> theOccStreamer           ("InjectionDelayOcc");
-  ChannelContainerStream<uint16_t>          theInjectionDelayStreamer("InjectionDelayInjDelay");
+  const size_t InjDelaySize = RD53::setBits(16) + 1;
+
+  ChipContainerStream<EmptyContainer,GenericDataArray<InjDelaySize>> theOccStreamer           ("InjectionDelayOcc"); // @TMP@
+  ChipContainerStream<EmptyContainer,uint16_t>                       theInjectionDelayStreamer("InjectionDelayInjDelay"); // @TMP@
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {

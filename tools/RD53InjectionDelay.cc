@@ -67,12 +67,14 @@ void InjectionDelay::Start (int currentRun)
 
 void InjectionDelay::sendData ()
 {
-  auto theStream               = prepareChannelContainerStreamer<GenericDataVector>("Occ");
-  auto theInjectionDelayStream = prepareChannelContainerStreamer<uint16_t>         ("InjDelay");
+  const size_t InjDelaySize = RD53::setBits(16) + 1;
+
+  auto theStream               = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<InjDelaySize>>("Occ"); // @TMP@
+  auto theInjectionDelayStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>                      ("InjDelay"); // @TMP@
 
   if (fStreamerEnabled == true)
     {
-      for (const auto cBoard : theOccContainer)            theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+      for (const auto cBoard : theOccContainer)            theStream              .streamAndSendBoard(cBoard, fNetworkStreamer);
       for (const auto cBoard : theInjectionDelayContainer) theInjectionDelayStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
@@ -98,6 +100,9 @@ void InjectionDelay::initialize (const std::string fileRes_, const std::string f
 
 void InjectionDelay::run ()
 {
+  const size_t InjDelaySize = RD53::setBits(16) + 1;
+
+
   // ###############
   // # Run Latency #
   // ###############
@@ -113,7 +118,7 @@ void InjectionDelay::run ()
   la.draw();
 
 
-  ContainerFactory::copyAndInitChip<GenericDataVector>(*fDetectorContainer, theOccContainer);
+  ContainerFactory::copyAndInitChip<GenericDataArray<InjDelaySize>>(*fDetectorContainer, theOccContainer);
 
 
   // #######################
@@ -192,6 +197,8 @@ void InjectionDelay::draw ()
 
 void InjectionDelay::analyze ()
 {
+  const size_t InjDelaySize = RD53::setBits(16) + 1;
+
   ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theInjectionDelayContainer);
 
   for (const auto cBoard : *fDetectorContainer)
@@ -203,7 +210,7 @@ void InjectionDelay::analyze ()
 
           for (auto dac : dacList)
             {
-              auto current = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1[dac-startValue];
+              auto current = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<InjDelaySize>>().data[dac-startValue];
               if (current > best)
                 {
                   regVal = dac;
@@ -256,18 +263,20 @@ void InjectionDelay::display ()
 
 void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-  for (auto dac : dacList)
+  const size_t InjDelaySize = RD53::setBits(16) + 1;
+
+  for (auto i = 0u; i < dacList.size(); i++)
     {
       // ###########################
       // # Download new DAC values #
       // ###########################
-      LOG (INFO) << BOLDMAGENTA << ">>> Register value = " << BOLDYELLOW << dac << BOLDMAGENTA << " <<<" << RESET;
+      LOG (INFO) << BOLDMAGENTA << ">>> Register value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
             {
               auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), regName);
-              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, (val & saveInjection) | (dac & maxDelay), true);
+              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, (val & saveInjection) | (dacList[i] & maxDelay), true);
             }
 
 
@@ -287,7 +296,7 @@ void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint
           for (const auto cChip : *cModule)
             {
               float occ = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
-              theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1.push_back(occ);
+              theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<InjDelaySize>>().data[i] = occ;
             }
     }
 }

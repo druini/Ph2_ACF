@@ -25,7 +25,7 @@ void ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContai
 
 bool ThrMinimizationHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<uint16_t> theThrStreamer("ThrMinimization");
+  ChipContainerStream<EmptyContainer,uint16_t> theThrStreamer("ThrMinimization"); //@TMP@
 
   if(theThrStreamer.attachBuffer(&dataBuffer))
     {

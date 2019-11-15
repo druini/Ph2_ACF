@@ -43,7 +43,7 @@ void ThrMinimization::Start (int currentRun)
 
 void ThrMinimization::sendData ()
 {
-  auto theThrStream = prepareChannelContainerStreamer<uint16_t>();
+  auto theThrStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>(); // @TMP@
 
   if (fStreamerEnabled == true)
     for (const auto cBoard : theThrContainer) theThrStream.streamAndSendBoard(cBoard, fNetworkStreamer);

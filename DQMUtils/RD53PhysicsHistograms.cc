@@ -40,12 +40,31 @@ void PhysicsHistograms::book (TFile* theOutputFile, const DetectorContainer& the
 
 bool PhysicsHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<OccupancyAndPh> theOccStreamer("Physics");
+  const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+
+  ChannelContainerStream<OccupancyAndPh>                          theOccStreamer  ("Physics");
+  ChipContainerStream<EmptyContainer,GenericDataArray<BCIDsize>>  theBCIDStreamer ("PhysicsBCID");  // @TMP@
+  ChipContainerStream<EmptyContainer,GenericDataArray<TrgIDsize>> theTrgIDStreamer("PhysicsTrgID"); // @TMP@
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
       theOccStreamer.decodeChipData(DetectorData);
       PhysicsHistograms::fill(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+  else if (theBCIDStreamer.attachBuffer(&dataBuffer))
+    {
+      theBCIDStreamer.decodeChipData(DetectorData);
+      PhysicsHistograms::fillBCID(DetectorData);
+      DetectorData.cleanDataStored();
+      return true;
+    }
+  else if (theTrgIDStreamer.attachBuffer(&dataBuffer))
+    {
+      theTrgIDStreamer.decodeChipData(DetectorData);
+      PhysicsHistograms::fillTrgID(DetectorData);
       DetectorData.cleanDataStored();
       return true;
     }
@@ -63,8 +82,6 @@ void PhysicsHistograms::fill (const DetectorDataContainer& DataContainer)
           auto* ToT2DHist          = ToT2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
           auto* Occupancy2DHist    = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
           auto* ErrorReadOut2DHist = ErrorReadOut2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-          auto* BCIDHist           = BCID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-          auto* TriggerIDHist      = TriggerID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
@@ -78,19 +95,34 @@ void PhysicsHistograms::fill (const DetectorDataContainer& DataContainer)
 
                 if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
               }
+        }
+}
 
-          for (auto i = 1u; i < cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.size(); i++)
-            {
-              int deltaBCID = cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
-              BCIDHist->Fill((deltaBCID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1) + deltaBCID);
-            }
+void PhysicsHistograms::fillBCID (const DetectorDataContainer& DataContainer)
+{
+  const size_t BCIDsize = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
 
-          for (auto i = 1u; i < cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.size(); i++)
-            {
-              int deltaTrgID = cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] - cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
-              TriggerIDHist->Fill((deltaTrgID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1) + deltaTrgID);
-            }
+  for (const auto cBoard : DataContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          auto* BCIDHist = BCID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
+          for (auto i = 0u; i < BCIDsize; i++) BCIDHist->SetBinContent(i+1, BCIDHist->GetBinContent(i+1) + cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
+        }
+}
+
+void PhysicsHistograms::fillTrgID (const DetectorDataContainer& DataContainer)
+{
+  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+
+  for (const auto cBoard : DataContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          auto* TriggerIDHist = TriggerID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+
+          for (auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent(i+1, TriggerIDHist->GetBinContent(i+1) + cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
         }
 }
 

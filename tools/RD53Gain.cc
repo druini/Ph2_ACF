@@ -72,7 +72,7 @@ void Gain::sendData ()
 
           for (const auto cBoard : *theOccContainer)
             {
-              theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+              theOccStream .streamAndSendBoard(cBoard, fNetworkStreamer);
               theVCalStream.streamAndSendBoard(cBoard, fNetworkStreamer);
             }
 

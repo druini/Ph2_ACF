@@ -71,10 +71,19 @@ void PixelAlive::Start (int currentRun)
 
 void PixelAlive::sendData ()
 {
-  auto theOccStream = prepareChannelContainerStreamer<OccupancyAndPh>();
+  const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+
+  auto theOccStream   = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
+  auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<BCIDsize>>("BCID"); // @TMP@
+  auto theTrgIDStream = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<TrgIDsize>>("TrgID"); // @TMP@
 
   if (fStreamerEnabled == true)
-    for (const auto cBoard : *theOccContainer.get()) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    {
+      for (const auto cBoard : *theOccContainer.get()) theOccStream  .streamAndSendBoard(cBoard, fNetworkStreamer);
+      for (const auto cBoard :  theBCIDContainer)      theBCIDStream .streamAndSendBoard(cBoard, fNetworkStreamer);
+      for (const auto cBoard :  theTrgIDContainer)     theTrgIDStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    }
 }
 
 void PixelAlive::Stop ()
@@ -154,6 +163,12 @@ void PixelAlive::draw (bool doSave)
 
 std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
 {
+  const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+
+  ContainerFactory::copyAndInitChip<GenericDataArray<BCIDsize>> (*fDetectorContainer, theBCIDContainer);
+  ContainerFactory::copyAndInitChip<GenericDataArray<TrgIDsize>>(*fDetectorContainer, theTrgIDContainer);
+
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
@@ -176,6 +191,29 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
 
           LOG (INFO) << BOLDGREEN << "\t\t--> Number of potentially masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
           LOG (INFO) << BOLDGREEN << "\t\t--> Total number of potentially masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+
+
+          // ######################################
+          // # Copy register values for streaming #
+          // ######################################
+          for (auto i = 0u; i < BCIDsize; i++)  theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i]   = 0;
+          for (auto i = 0u; i < TrgIDsize; i++) theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
+
+          for (auto i = 1u; i < theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1.size(); i++)
+            {
+              int deltaBCID = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
+                theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
+              deltaBCID += (deltaBCID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
+              theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
+            }
+
+          for (auto i = 1u; i < theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2.size(); i++)
+            {
+              int deltaTrgID = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
+                theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
+              deltaTrgID += (deltaTrgID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
+              theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
+            }
         }
 
   return theOccContainer;
@@ -191,7 +229,9 @@ void PixelAlive::initHisto ()
 void PixelAlive::fillHisto ()
 {
 #ifdef __USE_ROOT__
-  histos.fill(*theOccContainer.get());
+  histos.fill     (*theOccContainer.get());
+  histos.fillBCID (theBCIDContainer);
+  histos.fillTrgID(theTrgIDContainer);
 #endif
 }
 
