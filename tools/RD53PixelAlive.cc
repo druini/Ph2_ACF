@@ -203,7 +203,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
             {
               int deltaBCID = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
                 theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
-              deltaBCID += (deltaBCID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
+              deltaBCID += (deltaBCID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
               theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
             }
 
@@ -211,7 +211,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
             {
               int deltaTrgID = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
                 theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
-              deltaTrgID += (deltaTrgID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
+              deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
               theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
             }
         }

@@ -30,18 +30,14 @@ namespace Ph2_HwInterface
         uint16_t status;
         if (RD53decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, status, RD53decodedEvents);
 
-        for (auto& evt : RD53decodedEvents)
+        for (const auto& evt : RD53decodedEvents)
           {
-            std::vector<size_t> chip_id_vec;
-            std::vector<size_t> module_id_vec;
+            std::vector<std::pair<size_t,size_t>> moduleAndChipIDs;
 
             for (const auto& chip_frame : evt.chip_frames)
-              {
-                module_id_vec.push_back (chip_frame.module_id);
-                chip_id_vec  .push_back (RD53FWInterface::lane2chipId(pBoard, chip_frame.module_id, chip_frame.chip_lane));
-              }
+              moduleAndChipIDs.push_back(std::pair<size_t,size_t>(chip_frame.module_id, RD53FWInterface::lane2chipId(pBoard, chip_frame.module_id, chip_frame.chip_lane)));
 
-            fEventList.push_back(new RD53Event(std::move(module_id_vec), std::move(chip_id_vec), std::move(evt.chip_events)));
+            fEventList.push_back(new RD53Event(std::move(moduleAndChipIDs), evt.chip_events));
           }
       }
     else

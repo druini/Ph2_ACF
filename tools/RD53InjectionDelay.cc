@@ -208,12 +208,12 @@ void InjectionDelay::analyze ()
           auto best   = 0.;
           auto regVal = 0;
 
-          for (auto dac : dacList)
+          for (auto i = 0u; i < dacList.size(); i++)
             {
-              auto current = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<InjDelaySize>>().data[dac-startValue];
+              auto current = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<InjDelaySize>>().data[dacList[i]-startValue];
               if (current > best)
                 {
-                  regVal = dac;
+                  regVal = dacList[i];
                   best   = current;
                 }
             }
