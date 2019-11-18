@@ -64,6 +64,7 @@ void PixelAlive::ConfigureCalibration ()
 
 void PixelAlive::Start (int currentRun)
 {
+  PixelAlive::ConfigureCalibration(); // @TMP@
   PixelAlive::run();
   PixelAlive::analyze();
   PixelAlive::sendData();

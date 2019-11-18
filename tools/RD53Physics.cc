@@ -67,14 +67,14 @@ void Physics::sendData (BoardContainer* const& cBoard)
   const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
   const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
-  auto theOccStream   = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
-  auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<BCIDsize>>("BCID");
+  auto theOccStream   = prepareChannelContainerStreamer<OccupancyAndPh>                         ("Occ");
+  auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<BCIDsize>> ("BCID");
   auto theTrgIDStream = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<TrgIDsize>>("TrgID");
 
   if (fStreamerEnabled == true)
     {
-      theOccStream  .streamAndSendBoard(theOccContainer.at(cBoard->getIndex()),   fNetworkStreamer);
-      theBCIDStream .streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()),  fNetworkStreamer);
+      theOccStream  .streamAndSendBoard(theOccContainer  .at(cBoard->getIndex()), fNetworkStreamer);
+      theBCIDStream .streamAndSendBoard(theBCIDContainer .at(cBoard->getIndex()), fNetworkStreamer);
       theTrgIDStream.streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fNetworkStreamer);
     }
 }
@@ -164,7 +164,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
             {
               int deltaBCID = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
                 theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
-              deltaBCID += (deltaBCID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
+              deltaBCID += (deltaBCID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
               theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
             }
 
@@ -172,7 +172,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
             {
               int deltaTrgID = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
                 theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
-              deltaTrgID += (deltaTrgID > 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
+              deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
               theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
             }
         }

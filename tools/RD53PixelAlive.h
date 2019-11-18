@@ -12,6 +12,7 @@
 
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"
 
