@@ -12,9 +12,10 @@
 
 namespace RD53SharedConstants
 {
-  const double ISDISABLED   = -1.0; // Encoding disabled channels
-  const double FITERROR     = -2.0; // Encoding fit errors
-  const int    NLATENCYBINS =  2;   // Number of latencies spanned
+  const double ISDISABLED    = -1.0; // Encoding disabled channels
+  const double FITERROR      = -2.0; // Encoding fit errors
+  const int    NLATENCYBINS  =  2;   // Number of latencies spanned
+  const int    MAXBITCHIPREG = 16;   // Maximum number of bits of a chp register
 }
 
 #endif

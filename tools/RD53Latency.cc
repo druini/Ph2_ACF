@@ -34,7 +34,7 @@ void Latency::ConfigureCalibration ()
   // ##############################
   // # Initialize dac scan values #
   // ##############################
-  size_t nSteps = stopValue - startValue + 1;
+  size_t nSteps = (stopValue - startValue + 1 <= RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1);
   float step    = (stopValue - startValue + 1) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 }
@@ -48,7 +48,7 @@ void Latency::Start (int currentRun)
 
 void Latency::sendData ()
 {
-  const size_t LatencySize = RD53::setBits(16) + 1;
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
 
   auto theStream        = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<LatencySize>>("Occ"); // @TMP@
   auto theLatencyStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>                     ("Latency"); // @TMP@
@@ -81,7 +81,7 @@ void Latency::initialize (const std::string fileRes_, const std::string fileReg_
 
 void Latency::run ()
 {
-  const size_t LatencySize = RD53::setBits(16) + 1;
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
 
   ContainerFactory::copyAndInitChip<GenericDataArray<LatencySize>>(*fDetectorContainer, theOccContainer);
   Latency::scanDac("LATENCY_CONFIG", dacList, nEvents, &theOccContainer);
@@ -132,7 +132,7 @@ void Latency::draw ()
 
 void Latency::analyze ()
 {
-  const size_t LatencySize = RD53::setBits(16) + 1;
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
 
   ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theLatencyContainer);
 
@@ -145,7 +145,7 @@ void Latency::analyze ()
 
           for (auto i = 0u; i < dacList.size(); i++)
             {
-              auto current = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[dacList[i]-startValue];
+              auto current = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i];
               if (current > best)
                 {
                   regVal = dacList[i];
@@ -189,7 +189,7 @@ void Latency::display ()
 
 void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-  const size_t LatencySize = RD53::setBits(16) + 1;
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
 
   for (auto i = 0u; i < dacList.size(); i++)
     {

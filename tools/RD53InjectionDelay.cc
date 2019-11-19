@@ -35,7 +35,7 @@ void InjectionDelay::ConfigureCalibration ()
   // ##############################
   // # Initialize dac scan values #
   // ##############################
-  size_t nSteps = stopValue - startValue + 1;
+  size_t nSteps = (stopValue - startValue + 1 <= RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1);
   float step    = (stopValue - startValue + 1) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
@@ -67,7 +67,7 @@ void InjectionDelay::Start (int currentRun)
 
 void InjectionDelay::sendData ()
 {
-  const size_t InjDelaySize = RD53::setBits(16) + 1;
+  const size_t InjDelaySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
 
   auto theStream               = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<InjDelaySize>>("Occ"); // @TMP@
   auto theInjectionDelayStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>                      ("InjDelay"); // @TMP@
@@ -100,7 +100,7 @@ void InjectionDelay::initialize (const std::string fileRes_, const std::string f
 
 void InjectionDelay::run ()
 {
-  const size_t InjDelaySize = RD53::setBits(16) + 1;
+  const size_t InjDelaySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
 
 
   // ###############
@@ -197,7 +197,7 @@ void InjectionDelay::draw ()
 
 void InjectionDelay::analyze ()
 {
-  const size_t InjDelaySize = RD53::setBits(16) + 1;
+  const size_t InjDelaySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
 
   ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theInjectionDelayContainer);
 
@@ -210,7 +210,7 @@ void InjectionDelay::analyze ()
 
           for (auto i = 0u; i < dacList.size(); i++)
             {
-              auto current = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<InjDelaySize>>().data[dacList[i]-startValue];
+              auto current = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<InjDelaySize>>().data[i];
               if (current > best)
                 {
                   regVal = dacList[i];
@@ -263,7 +263,7 @@ void InjectionDelay::display ()
 
 void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-  const size_t InjDelaySize = RD53::setBits(16) + 1;
+  const size_t InjDelaySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
 
   for (auto i = 0u; i < dacList.size(); i++)
     {

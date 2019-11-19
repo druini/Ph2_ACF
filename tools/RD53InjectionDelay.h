@@ -10,9 +10,7 @@
 #ifndef RD53InjectionDelay_H
 #define RD53InjectionDelay_H
 
-#include "RD53PixelAlive.h"
 #include "RD53Latency.h"
-#include "../Utils/RD53SharedConstants.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53InjectionDelayHistograms.h"
