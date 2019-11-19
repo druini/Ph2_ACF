@@ -88,14 +88,13 @@ namespace Ph2_HwInterface
     // # CML_CONFIG    = 0b00001111 #
     // ##############################
 
-    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG",      0x04, false);
+    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG",      0x04, false); // Number of active lanes [5:2]
     // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x01, false); // Default: 00_11_1111
-    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0",  0xF1, false);
-    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1",  0x0F, false);
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x01, false); // CML_EN_LANE[3:0]
+    RD53Interface::WriteChipReg(pChip, "AURORA_CC_CONFIG",   0x27, false);
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false); // 0x30 = reset Aurora AND Serializer
     RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x1));
 
