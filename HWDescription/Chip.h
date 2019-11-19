@@ -1,12 +1,10 @@
 /*!
-
   \file                   Chip.h
   \brief                  Chip Description class, config of the Chips
   \author                 Lorenzo BIDEGAIN
   \version                1.0
   \date                   25/06/14
   Support :               mail to : lorenzo.bidegain@gmail.com
-
 */
 
 #ifndef Chip_h__

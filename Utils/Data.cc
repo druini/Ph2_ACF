@@ -1,12 +1,10 @@
 /*
-
   FileName :                     Data.cc
   Content :                      Data handling from DAQ
   Programmer :                   Nicolas PIERRE
   Version :                      1.0
   Date of creation :             10/07/14
   Support :                      mail to : nicolas.pierre@icloud.com
-
 */
 
 #include "Data.h"
