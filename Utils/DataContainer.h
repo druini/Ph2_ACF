@@ -102,7 +102,7 @@ struct SummarySummarizer{
 //     enum { value = sizeof(test<T,S>(0)) == sizeof(char) };
 // };
 
-namespace detail{
+namespace user_detail{
   template<typename> struct sfinae_true : std::true_type{};
     
   template<typename T, typename S, typename... A0>
@@ -124,21 +124,21 @@ namespace detail{
   template<typename, typename... A0>
   static auto test_normalize(long) -> std::false_type;
 
-} // detail::
+} // user_detail::
 
 class ChannelGroupBase;
 
 // SFINAE: check if object T has makeChannelAverage<S> member function
 template<typename T, typename S>
-struct has_makeChannelAverage : decltype(detail::test_makeChannelAverage<T, S, const ChipContainer*, const ChannelGroupBase*, const ChannelGroupBase*, const uint32_t>(0)){};
+struct has_makeChannelAverage : decltype(user_detail::test_makeChannelAverage<T, S, const ChipContainer*, const ChannelGroupBase*, const ChannelGroupBase*, const uint32_t>(0)){};
 
 // SFINAE: check if object T has makeSummaryAverage member function
 template<typename T, typename Arg>
-struct has_makeSummaryAverage : decltype(detail::test_makeSummaryAverage<T, const std::vector<Arg>*, const std::vector<uint32_t>&, const uint32_t>(0)){};
+struct has_makeSummaryAverage : decltype(user_detail::test_makeSummaryAverage<T, const std::vector<Arg>*, const std::vector<uint32_t>&, const uint32_t>(0)){};
 
 // SFINAE: check if object T has normalize member function
 template<typename T>
-struct has_normalize : decltype(detail::test_normalize<T, const uint32_t>(0)){};
+struct has_normalize : decltype(user_detail::test_normalize<T, const uint32_t>(0)){};
 
 // template <typename T>
 // class has_normalize
