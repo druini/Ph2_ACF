@@ -35,7 +35,6 @@ class Physics : public Tool
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
-  void writeObjects         () {}; // @TMP@
 
   void sendData          (BoardContainer* const& cBoard);
   void run               ();

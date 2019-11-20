@@ -140,7 +140,7 @@ namespace Ph2_HwInterface {
         return WriteChipMultReg ( pCbc, cRegVec, pVerifLoop );
     }
 
-  bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop, bool doBroadcast)
+  bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop)
     {
         if(dacName=="VCth"){
             if (pCbc->getFrontEndType() == FrontEndType::CBC3)
@@ -332,7 +332,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    void CbcInterface::WriteBroadcastCbcReg ( const Module* pModule, const std::string& pRegNode, uint32_t pValue )
+    void CbcInterface::WriteBroadcastChipReg ( const Module* pModule, const std::string& pRegNode, uint16_t pValue )
     {
         //first set the correct BeBoard
         setBoard ( pModule->getBeBoardId() );

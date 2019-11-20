@@ -199,8 +199,7 @@ void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& 
       LOG (INFO) << BOLDMAGENTA << ">>> Register value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
-          for (const auto cChip : *cModule)
-            this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, dacList[i], true);
+          this->fReadoutChipInterface->WriteBroadcastChipReg(static_cast<Module*>(cModule), regName, dacList[i]);
 
 
       // ################

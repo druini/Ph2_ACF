@@ -64,7 +64,6 @@ void PixelAlive::ConfigureCalibration ()
 
 void PixelAlive::Start (int currentRun)
 {
-  PixelAlive::ConfigureCalibration(); // @TMP@
   PixelAlive::run();
   PixelAlive::analyze();
   PixelAlive::sendData();
@@ -205,9 +204,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
               int deltaBCID = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
                 theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
               deltaBCID += (deltaBCID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
-              if ((deltaBCID) > 0 && (deltaBCID < int(BCIDsize)))
-                theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
-              else LOG (ERROR) << BOLDRED << "[PixelAlive::analyze]\t" << deltaBCID << RESET;
+              theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
             }
 
           for (auto i = 1u; i < theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2.size(); i++)
@@ -215,9 +212,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
               int deltaTrgID = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
                 theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
               deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
-              if ((deltaTrgID) > 0 && (deltaTrgID < int(TrgIDsize)))
-                theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
-              else LOG (ERROR) << BOLDRED << "[PixelAlive::analyze]\t" << deltaTrgID << RESET;
+              theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
             }
         }
 

@@ -123,6 +123,7 @@ namespace Ph2_HwDescription
     static constexpr size_t nCols = NCOLS;
 
     RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName);
+    RD53 (const RD53& chipObj);
 
     void     loadfRegMap         (const std::string& fileName)  override;
     void     saveRegMap          (const std::string& fName2Add) override;

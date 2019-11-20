@@ -117,6 +117,7 @@ void SCurve::run ()
     }
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
+  this->SetBroadcast(true);
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);

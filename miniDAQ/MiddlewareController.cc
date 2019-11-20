@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 #include <iostream>
 #include <unistd.h>
 
@@ -21,27 +20,24 @@
 
 
 //========================================================================================================================
-MiddlewareController::MiddlewareController(int serverPort)
-  : TCPServer(serverPort,1)
-{
-}
+MiddlewareController::MiddlewareController(int serverPort) : TCPServer(serverPort,1) {}
+
 //========================================================================================================================
 MiddlewareController::~MiddlewareController(void)
 {
-  std::cout << __PRETTY_FUNCTION__ << "DESTRUCTOR" << std::endl;
+  LOG (INFO) << __PRETTY_FUNCTION__ << " DESTRUCTOR" << RESET;
 }
+
 //========================================================================================================================
-// virtual function to interpret messages
 std::string MiddlewareController::interpretMessage(const std::string& buffer)
 {
+  LOG (INFO) << __PRETTY_FUNCTION__ << " RECEIVED: " << buffer << RESET;
 
-  std::cout << __PRETTY_FUNCTION__ << "RECEIVED: " << buffer << std::endl;
-
-  if (buffer == "Initialize") //changing the status changes the mode in threadMain (BBC) function.
+  if (buffer == "Initialize") // Changing the status changes the mode in threadMain (BBC) function
     {
       return "InitializeDone";
     }
-  if (buffer.substr(0,5) == "Start") //changing the status changes the mode in threadMain (BBC) function.
+  if (buffer.substr(0,5) == "Start") // Changing the status changes the mode in threadMain (BBC) function
     {
       currentRun_ = getVariableValue("RunNumber", buffer);
       theSystemController_->Start(stoi(currentRun_));
@@ -49,27 +45,24 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
     }
   else if (buffer.substr(0,4) == "Stop")
     {
-      //We need to think :)
       theSystemController_->Stop();
-      std::cout << "Run " << currentRun_ << " stopped!" << std::endl;
+      LOG (INFO) << "Run " << currentRun_ << " stopped" << RESET;
       return "StopDone";
     }
   else if (buffer == "Pause")
     {
-      //We need to think :)
-      std::cout << "Paused" << std::endl;
+      LOG (INFO) << BOLDBLUE << "Paused" << RESET;
       return "PauseDone";
     }
   else if (buffer == "Resume")
     {
-      //We need to think :)
-      std::cout << "Resume" << std::endl;
+      LOG (INFO) << BOLDBLUE << "Resumed" << RESET;
       return "ResumeDone";
     }
-  //CONFIGURE
   else if (buffer.substr(0,9) == "Configure")
     {
-      std::cout << "We are in the configuration submodule" << std::endl;
+      LOG (INFO) << BOLDBLUE << "Configuring" << RESET;
+
       if      (getVariableValue("Calibration",buffer) == "calibration")             theSystemController_ = new CombinedCalibration<PedestalEqualization>;
       else if (getVariableValue("Calibration",buffer) == "pedenoise")               theSystemController_ = new CombinedCalibration<PedeNoise>;
       else if (getVariableValue("Calibration",buffer) == "calibrationandpedenoise") theSystemController_ = new CombinedCalibration<PedestalEqualization,PedeNoise>();
@@ -88,25 +81,19 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 
       else
         {
-          std::cout << __PRETTY_FUNCTION__ << "Calibration type " <<  getVariableValue("Calibration",buffer) << " not found, Aborting" << std::endl;
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Calibration type " << getVariableValue("Calibration",buffer) << " not found, Aborting" << RESET;
           abort();
         }
 
-      std::cout << "sys created" << std::endl;
-      // quick (idiot) idea "CONFIGURE:ThresholdCalibration"
-      // if(buffer.substr(10,20) == "ThresholdCalibration") theSystemController_ = new Calibration();
-      // if(buffer.substr(10,7)  == "Physics")              theSystemController_ = new Physics                ();
+      LOG (INFO) << BOLDBLUE << "SystemController created" << RESET;
       theSystemController_->Configure(getVariableValue("ConfigurationFile",buffer),true);
-      std::cout << "Out of configuration submodule" << std::endl;
       return "ConfigureDone";
     }
 
-  if(running_||paused_) //we go through here after start and resume or pause: sending back current status
+  if (running_ || paused_) // We go through here after start and resume or pause: sending back current status
     {
-      std::cout << "getting time and status here" << std::endl;
-
+      LOG (INFO) << BOLDBLUE << "Getting time and status here" << RESET;
     }
 
   return "Didn't understand the message!";
-
 }

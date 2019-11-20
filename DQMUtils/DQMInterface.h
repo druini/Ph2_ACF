@@ -8,22 +8,19 @@ class TCPSubscribeClient;
 class DQMHistogramBase;
 class TFile;
 
-
 class DQMInterface
 {
  public:
   DQMInterface ();
   ~DQMInterface(void);
 
-  void configure           (std::string& calibrationName, std::string& configurationFilePath) ;
-  void startProcessingData (std::string& runNumber) ;
+  void configure           (std::string const& calibrationName, std::string const& configurationFilePath) ;
+  void startProcessingData (std::string const& runNumber) ;
   void stopProcessingData  (void) ;
-  void pauseProcessingData (void) ;
-  void resumeProcessingData(void) ;
-  //void load(std::string fileName){;}
+  void pauseProcessingData (void) {}
+  void resumeProcessingData(void) {}
 
   bool running(void);
-
 
  private:
   void destroy(void);

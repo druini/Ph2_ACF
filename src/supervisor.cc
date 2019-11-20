@@ -271,12 +271,8 @@ int main ( int argc, char* argv[] )
             case RUNNING:
               {
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
-                usleep(1e7); // @TMP@
-
-                // @TMP@ : shoule be inverted but it does not work
-                theMiddlewareInterface.stop();
                 theDQMInterface.stopProcessingData();
-
+                theMiddlewareInterface.stop();
                 stateMachineStatus = STOPPED;
                 break;
               }

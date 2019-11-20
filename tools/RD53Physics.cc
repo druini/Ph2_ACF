@@ -54,7 +54,6 @@ void Physics::ConfigureCalibration ()
 
 void Physics::Start (int currentRun)
 {
-  Physics::ConfigureCalibration(); // @TMP@
   SystemController::Start(currentRun);
 
   keepRunning = true;
@@ -165,9 +164,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
               int deltaBCID = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
                 theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
               deltaBCID += (deltaBCID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
-              if ((deltaBCID) > 0 && (deltaBCID < int(BCIDsize)))
-                theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
-              else LOG (ERROR) << BOLDRED << "[Pysics::analyze]\t" << deltaBCID << RESET;
+              theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
             }
 
           for (auto i = 1u; i < theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2.size(); i++)
@@ -175,9 +172,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
               int deltaTrgID = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
                 theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
               deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
-              if ((deltaTrgID) > 0 && (deltaTrgID < int(TrgIDsize)))
-                theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
-              else LOG (ERROR) << BOLDRED << "[Physics::analyze]\t" << deltaTrgID << RESET;
+              theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
             }
         }
 }
