@@ -33,7 +33,7 @@ void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& the
 
 bool LatencyHistograms::fill (std::vector<char>& dataBuffer)
 {
-  const size_t LatencySize = RD53::setBits(16) + 1;
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
 
   ChipContainerStream<EmptyContainer,GenericDataArray<LatencySize>> theOccStreamer    ("LatencyOcc"); // @TMP@
   ChipContainerStream<EmptyContainer,uint16_t>                      theLatencyStreamer("LatencyLatency"); // @TMP@
@@ -58,7 +58,7 @@ bool LatencyHistograms::fill (std::vector<char>& dataBuffer)
 
 void LatencyHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer)
 {
-  const size_t LatencySize = RD53::setBits(16) + 1;
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
 
   for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
@@ -69,7 +69,7 @@ void LatencyHistograms::fillOccupancy (const DetectorDataContainer& OccupancyCon
           auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (size_t i = startValue; i <= stopValue; i++)
-            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i),cChip->getSummary<GenericDataArray<LatencySize>>().data[i]);
+            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i),cChip->getSummary<GenericDataArray<LatencySize>>().data[i-startValue]);
         }
 }
 

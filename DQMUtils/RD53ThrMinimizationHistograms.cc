@@ -44,6 +44,8 @@ void ThrMinimizationHistograms::fill (const DetectorDataContainer& DataContainer
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+
           auto* hThrehsold = Threhsold.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           hThrehsold->Fill(cChip->getSummary<uint16_t>());

@@ -12,6 +12,7 @@
 #define RD53LatencyHistograms_H
 
 #include "../System/SystemController.h"
+#include "../Utils/RD53SharedConstants.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/GenericDataArray.h"
