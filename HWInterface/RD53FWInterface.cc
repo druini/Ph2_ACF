@@ -9,8 +9,20 @@
 
 #include "RD53FWInterface.h"
 
+
 namespace Ph2_HwInterface
 {
+
+  struct ErrCounter {
+    int cnt = 0;
+
+    ~ErrCounter() {
+      std::cout << "ERROR CNT = " << cnt << "\n";
+    }
+  };
+
+  ErrCounter error_counter;
+
   RD53FWInterface::RD53FWInterface (const char* pId, const char* pUri, const char* pAddressTable)
     : BeBoardFWInterface (pId, pUri, pAddressTable)
     , fpgaConfig         (nullptr)
@@ -426,6 +438,7 @@ namespace Ph2_HwInterface
         // RD53FWInterface::PrintEvents(events, &pData); // @TMP@
         if (RD53FWInterface::EvtErrorHandler(status) == false)
           {
+            Ph2_HwInterface::error_counter.cnt++;
             retry = true;
             continue;
           }

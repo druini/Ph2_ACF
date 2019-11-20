@@ -204,6 +204,10 @@ namespace Ph2_System {
             LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << +cBoard->getBeId() << RESET;
             fBeBoardInterface->ConfigureBoard(cBoard);
 
+
+            LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
+            bool commGood = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->InitChipCommunication();
+
             for (const auto& cModule : cBoard->fModuleVector)
               {
                 LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << +cModule->getModuleId() << RESET;
@@ -215,8 +219,6 @@ namespace Ph2_System {
                   }
               }
 
-            LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
-            bool commGood = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->InitChipCommunication();
             if (commGood == true) LOG (INFO) << BOLDBLUE << "\t--> Successfully initialized the communication to all chips"     << RESET;
             else                  LOG (INFO) << BOLDRED  << "\t--> I was not able to initialize the communication to all chips" << RESET;
 

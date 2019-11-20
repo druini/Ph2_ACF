@@ -13,18 +13,14 @@ namespace Ph2_HwInterface
 {
   bool RD53Event::isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const
   {
-    for (auto j = 0u; j < module_id_vec.size(); j++)
+    for (auto i = 0u; i < module_id_vec.size(); i++)
+    {
+      if ((module_id == module_id_vec[i]) && (chip_id == chip_id_vec[i]) && (chip_events[i].hit_data.size() != 0))
       {
-        if (module_id == module_id_vec[j])
-          {
-            for (auto i = 0u; i < chip_events.size(); i++)
-              if ((chip_id == chip_id_vec[i]) && (chip_events[i].hit_data.size() != 0))
-                {
-                  chipIndx = i;
-                  return true;
-                }
-          }
+        chipIndx = i;
+        return true;
       }
+    }
 
     return false;
   }

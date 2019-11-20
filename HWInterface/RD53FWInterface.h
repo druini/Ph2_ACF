@@ -25,7 +25,7 @@
 // ################################
 #define DEEPSLEEP  100000 // [microseconds]
 #define READOUTSLEEP   50 // [microseconds]
-#define MAXTRIALS      10 // Maximum number of trials for ReadNEvents
+#define MAXTRIALS      200 // Maximum number of trials for ReadNEvents
 
 #define NBIT_FWVER     16 // Number of bits for the firmware version
 #define IPBFASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
