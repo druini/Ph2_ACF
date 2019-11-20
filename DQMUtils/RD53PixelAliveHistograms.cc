@@ -52,7 +52,7 @@ bool PixelAliveHistograms::fill (std::vector<char>& dataBuffer)
   const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   ChannelContainerStream<OccupancyAndPh>                          theOccStreamer  ("PixelAliveOcc");
-  ChipContainerStream<EmptyContainer,GenericDataArray<BCIDsize>>  theBCIDStreamer ("PixelAliveBCID");  // @TMP@
+  ChipContainerStream<EmptyContainer,GenericDataArray<BCIDsize>>  theBCIDStreamer ("PixelAliveBCID"); // @TMP@
   ChipContainerStream<EmptyContainer,GenericDataArray<TrgIDsize>> theTrgIDStreamer("PixelAliveTrgID"); // @TMP@
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
@@ -86,6 +86,8 @@ void PixelAliveHistograms::fill (const DetectorDataContainer& DataContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
+
           auto* Occupancy1DHist    = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
           auto* Occupancy2DHist    = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
           auto* ErrorReadOut2DHist = ErrorReadOut2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
@@ -113,6 +115,8 @@ void PixelAliveHistograms::fillBCID (const DetectorDataContainer& DataContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<GenericDataArray<BCIDsize>>() == nullptr) continue;
+
           auto* BCIDHist = BCID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (auto i = 0u; i < BCIDsize; i++) BCIDHist->SetBinContent(i+1, cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
@@ -127,6 +131,8 @@ void PixelAliveHistograms::fillTrgID (const DetectorDataContainer& DataContainer
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<GenericDataArray<TrgIDsize>>() == nullptr) continue;
+
           auto* TriggerIDHist = TriggerID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent(i+1, cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);

@@ -22,9 +22,7 @@
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53Physics.h"
 
-#ifdef __USE_ROOT__
 #include "TApplication.h"
-#endif
 
 #include <sys/wait.h>
 
@@ -234,7 +232,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDBLUE << "Out of supervisor state machine. Run Controller status: " << BOLDYELLOW << runControllerStatus << RESET;
       theApp.Run();
 #else
-      LOG (WARNING) << BOLDBLUE << "ROOT flag was off during compilation" << RESET;
+      LOG (WARNING) << BOLDBLUE << "ROOT flag was on during compilation" << RESET;
 #endif
     }
   else

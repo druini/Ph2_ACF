@@ -44,6 +44,8 @@ void GainOptimizationHistograms::fill (const DetectorDataContainer& DataContaine
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+
           auto* hKrumCurr = KrumCurr.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           hKrumCurr->Fill(cChip->getSummary<uint16_t>());
