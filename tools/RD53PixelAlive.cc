@@ -60,6 +60,12 @@ void PixelAlive::ConfigureCalibration ()
           auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT");
           this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", inj | (val & maxDelay), true);
         }
+
+
+  // #######################
+  // # Initialize progress #
+  // #######################
+  RD53RunProgress::total() += PixelAlive::getNumberIterations();
 }
 
 void PixelAlive::Start (int currentRun)

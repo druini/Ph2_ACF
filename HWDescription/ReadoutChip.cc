@@ -29,8 +29,9 @@ namespace Ph2_HwDescription
 
   // Copy C'tor
   ReadoutChip::ReadoutChip (const ReadoutChip& chipObj)
-    : Chip          (chipObj)
-    , ChipContainer (chipObj.fChipId)
+    : Chip              (chipObj)
+    , ChipContainer     (chipObj.fChipId)
+    , fChipOriginalMask (nullptr)
   {}
 
   ReadoutChip::~ReadoutChip()

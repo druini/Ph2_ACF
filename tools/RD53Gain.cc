@@ -48,6 +48,12 @@ void Gain::ConfigureCalibration ()
   // ##############################
   float step = (stopValue - startValue) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
+
+
+  // #######################
+  // # Initialize progress #
+  // #######################
+  RD53RunProgress::total() += Gain::getNumberIterations();
 }
 
 void Gain::Start (int currentRun)

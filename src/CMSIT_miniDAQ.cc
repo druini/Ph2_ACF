@@ -22,7 +22,9 @@
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53Physics.h"
 
+#ifdef __USE_ROOT__
 #include "TApplication.h"
+#endif
 
 #include <sys/wait.h>
 
@@ -232,7 +234,7 @@ int main (int argc, char** argv)
       LOG (INFO) << BOLDBLUE << "Out of supervisor state machine. Run Controller status: " << BOLDYELLOW << runControllerStatus << RESET;
       theApp.Run();
 #else
-      LOG (WARNING) << BOLDBLUE << "ROOT flag was on during compilation" << RESET;
+      LOG (WARNING) << BOLDBLUE << "ROOT flag was OFF during compilation" << RESET;
 #endif
     }
   else
@@ -282,7 +284,6 @@ int main (int argc, char** argv)
           Latency la;
           la.Inherit(&mySysCntr);
           la.initialize(fileName, chipConfig);
-          RD53RunProgress::total() = la.getNumberIterations();
           la.run();
           la.analyze();
           la.draw();
@@ -298,7 +299,6 @@ int main (int argc, char** argv)
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
           pa.initialize(fileName, chipConfig);
-          RD53RunProgress::total() = pa.getNumberIterations();
           pa.run();
           pa.analyze();
           pa.draw();
@@ -314,7 +314,6 @@ int main (int argc, char** argv)
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
           pa.initialize(fileName, chipConfig);
-          RD53RunProgress::total() = pa.getNumberIterations();
           pa.run();
           pa.analyze();
           pa.draw();
@@ -330,7 +329,6 @@ int main (int argc, char** argv)
           SCurve sc;
           sc.Inherit(&mySysCntr);
           sc.initialize(fileName, chipConfig);
-          RD53RunProgress::total() = sc.getNumberIterations();
           sc.run();
           sc.analyze();
           sc.draw();
@@ -346,7 +344,6 @@ int main (int argc, char** argv)
           Gain ga;
           ga.Inherit(&mySysCntr);
           ga.initialize(fileName, chipConfig);
-          RD53RunProgress::total() = ga.getNumberIterations();
           ga.run();
           ga.analyze();
           ga.draw();
@@ -362,7 +359,6 @@ int main (int argc, char** argv)
           GainOptimization go;
           go.Inherit(&mySysCntr);
           go.initialize(fileName, chipConfig);
-          RD53RunProgress::total() = go.getNumberIterations();
           go.run();
           go.analyze();
           go.draw();
@@ -378,7 +374,6 @@ int main (int argc, char** argv)
           ThrEqualization te;
           te.Inherit(&mySysCntr);
           te.initialize(fileName, chipConfig);
-          RD53RunProgress::total() = te.getNumberIterations();
           te.run();
           te.draw();
         }
@@ -393,7 +388,6 @@ int main (int argc, char** argv)
           ThrMinimization tm;
           tm.Inherit(&mySysCntr);
           tm.initialize(fileName, chipConfig);
-          RD53RunProgress::total() = tm.getNumberIterations();
           tm.run();
           tm.analyze();
           tm.draw();
@@ -409,7 +403,6 @@ int main (int argc, char** argv)
           InjectionDelay id;
           id.Inherit(&mySysCntr);
           id.initialize(fileName, chipConfig);
-          RD53RunProgress::total() = id.getNumberIterations();
           id.run();
           id.analyze();
           id.draw();

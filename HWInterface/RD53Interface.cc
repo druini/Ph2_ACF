@@ -75,15 +75,15 @@ namespace Ph2_HwInterface
   void RD53Interface::InitRD53Aurora (Chip* pChip)
   {
     // ##############################
-    // # 1 Autora acive lane        #
+    // # 1 Autora active lane       #
     // # OUTPUT_CONFIG = 0b00000100 #
     // # CML_CONFIG    = 0b00000001 #
 
-    // # 2 Autora acive lanes       #
+    // # 2 Autora active lanes      #
     // # OUTPUT_CONFIG = 0b00001100 #
     // # CML_CONFIG    = 0b00000011 #
 
-    // # 4 Autora acive lanes       #
+    // # 4 Autora active lanes      #
     // # OUTPUT_CONFIG = 0b00111100 #
     // # CML_CONFIG    = 0b00001111 #
     // ##############################
@@ -95,9 +95,22 @@ namespace Ph2_HwInterface
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
     RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x01, false); // CML_EN_LANE[3:0]
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false); // 0x30 = reset Aurora AND Serializer
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x1));
+    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
 
     usleep(DEEPSLEEP);
+
+
+    // #################################################
+    // # Establish proper communication with the chips #
+    // #################################################
+    /* @TMP@
+      while (static_cast<RD53FWInterface*>(fBoardFW)->CheckChipCommunication() == false)
+      {
+      RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false);
+      RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
+      usleep(DEEPSLEEP);
+      }
+    */
   }
 
   void RD53Interface::SyncRD53 (Chip* pChip)

@@ -32,6 +32,12 @@ void ThrMinimization::ConfigureCalibration ()
   ThrStop         = this->findValueInSettings("ThrStop");
   doDisplay       = this->findValueInSettings("DisplayHisto");
   doUpdateChip    = this->findValueInSettings("UpdateChipCfg");
+
+
+  // #######################
+  // # Initialize progress #
+  // #######################
+  RD53RunProgress::total() += ThrMinimization::getNumberIterations();
 }
 
 void ThrMinimization::Start (int currentRun)

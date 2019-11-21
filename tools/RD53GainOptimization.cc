@@ -35,6 +35,12 @@ void GainOptimization::ConfigureCalibration ()
   doFast        = this->findValueInSettings("DoFast");
   doDisplay     = this->findValueInSettings("DisplayHisto");
   doUpdateChip  = this->findValueInSettings("UpdateChipCfg");
+
+
+  // #######################
+  // # Initialize progress #
+  // #######################
+  RD53RunProgress::total() += GainOptimization::getNumberIterations();
 }
 
 void GainOptimization::Start (int currentRun)
