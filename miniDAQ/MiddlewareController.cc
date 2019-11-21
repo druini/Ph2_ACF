@@ -77,7 +77,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
       else if (getVariableValue("Calibration",buffer) == "thrmin")                  theSystemController_ = new CombinedCalibration<ThrMinimization>;
       else if (getVariableValue("Calibration",buffer) == "injdelay")                theSystemController_ = new CombinedCalibration<InjectionDelay>;
       else if (getVariableValue("Calibration",buffer) == "threqu")                  theSystemController_ = new CombinedCalibration<ThrEqualization>;
-      else if (getVariableValue("Calibration",buffer) == "physics")                 theSystemController_ = new CombinedCalibration<Physics>;
+      else if (getVariableValue("Calibration",buffer) == "physics")                 theSystemController_ = new Physics;
 
       else
         {
