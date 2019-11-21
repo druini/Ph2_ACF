@@ -78,6 +78,8 @@ void PhysicsHistograms::fill (const DetectorDataContainer& DataContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
+
           auto* ToT1DHist          = ToT1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
           auto* ToT2DHist          = ToT2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
           auto* Occupancy2DHist    = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
@@ -106,6 +108,8 @@ void PhysicsHistograms::fillBCID (const DetectorDataContainer& DataContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<GenericDataArray<BCIDsize>>() == nullptr) continue;
+
           auto* BCIDHist = BCID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (auto i = 0u; i < BCIDsize; i++) BCIDHist->SetBinContent(i+1, BCIDHist->GetBinContent(i+1) + cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
@@ -120,6 +124,8 @@ void PhysicsHistograms::fillTrgID (const DetectorDataContainer& DataContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<GenericDataArray<TrgIDsize>>() == nullptr) continue;
+
           auto* TriggerIDHist = TriggerID.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent(i+1, TriggerIDHist->GetBinContent(i+1) + cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);

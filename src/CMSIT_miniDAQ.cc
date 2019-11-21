@@ -217,7 +217,8 @@ int main (int argc, char** argv)
                     usleep(1e7); // @TMP@
                     // @TMP@ : shoule be inverted but it does not work
                     theMiddlewareInterface.stop();
-                    theDQMInterface       .stopProcessingData();
+                    usleep(1e6); // @TMP@
+                    theDQMInterface.stopProcessingData();
 
                     stateMachineStatus = STOPPED;
                     break;

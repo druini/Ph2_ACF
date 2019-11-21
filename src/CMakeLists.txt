@@ -81,7 +81,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     ####################################
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src *.cc)
-    
+
     #to remove binaries
     if(CompileForShep AND CompileForHerd)
         list(REMOVE_ITEM BINARIES *.cc)
