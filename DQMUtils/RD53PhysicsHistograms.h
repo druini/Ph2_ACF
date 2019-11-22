@@ -12,6 +12,7 @@
 
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
+#include "../Utils/GenericDataArray.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
@@ -26,7 +27,9 @@ class PhysicsHistograms : public DQMHistogramBase
   bool fill    (std::vector<char>& dataBuffer)                                                                                   override;
   void reset   ()                                                                                                                override {};
 
-  void fill    (const DetectorDataContainer& DataContainer);
+  void fill      (const DetectorDataContainer& DataContainer);
+  void fillBCID  (const DetectorDataContainer& DataContainer);
+  void fillTrgID (const DetectorDataContainer& DataContainer);
 
  private:
   DetectorDataContainer DetectorData;

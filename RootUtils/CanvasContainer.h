@@ -69,11 +69,9 @@ class CanvasContainer : public PlotContainer
 
   void initialize (std::string name, std::string title, const PlotContainer* reference) override
   {
-    static size_t uid = 0; // @TMP@
-
     fHasToBeDeletedManually = false;
 
-    fCanvas = new TCanvas((name + '_' + std::to_string(uid++)).data(), title.data());
+    fCanvas = new TCanvas(name.data(), title.data());
 
     fTheHistogram = new Hist(*(static_cast<const CanvasContainer<Hist>*>(reference)->fTheHistogram));
     fTheHistogram->SetName(name.data());
@@ -88,14 +86,7 @@ class CanvasContainer : public PlotContainer
     std::cout << "CanvasContainer " << fTheHistogram->GetName() << std::endl;
   }
 
-  // template<typename T>
-  //   void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
-
-  // void makeSummaryAverage (const std::vector<CanvasContainer<Hist>>* theTH1FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
-
-  // void normalize (const uint32_t numberOfEvents) {}
-
-  void setNameTitle (std::string histogramName, std::string histogramTitle) override 
+  void setNameTitle (std::string histogramName, std::string histogramTitle) override
   {
     fTheHistogram->SetNameTitle(histogramName.data(), histogramTitle.data());
   }

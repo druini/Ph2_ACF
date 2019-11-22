@@ -1,12 +1,10 @@
 /*!
-
   \file                   Chip.h
   \brief                  Chip Description class, config of the Chips
   \author                 Lorenzo BIDEGAIN
   \version                1.0
   \date                   25/06/14
   Support :               mail to : lorenzo.bidegain@gmail.com
-
 */
 
 #ifndef Chip_h__
@@ -57,7 +55,7 @@ namespace Ph2_HwDescription
     Chip();
 
     // Copy C'tor
-    Chip (const Chip& cbcobj);
+    Chip (const Chip& chipObj);
 
     // D'Tor
     virtual ~Chip();

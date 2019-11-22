@@ -48,6 +48,12 @@ void Gain::ConfigureCalibration ()
   // ##############################
   float step = (stopValue - startValue) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
+
+
+  // #######################
+  // # Initialize progress #
+  // #######################
+  RD53RunProgress::total() += Gain::getNumberIterations();
 }
 
 void Gain::Start (int currentRun)
@@ -72,7 +78,7 @@ void Gain::sendData ()
 
           for (const auto cBoard : *theOccContainer)
             {
-              theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+              theOccStream .streamAndSendBoard(cBoard, fNetworkStreamer);
               theVCalStream.streamAndSendBoard(cBoard, fNetworkStreamer);
             }
 
@@ -117,6 +123,7 @@ void Gain::run ()
     }
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
+  this->SetBroadcast(true);
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
@@ -254,7 +261,7 @@ void Gain::display ()
 #endif
 }
 
-void Gain::computeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
+void Gain::computeStats (const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
 // ##############################################
 // # Linear regression with least-square method #
 // # Model: y = f(x) = q + mx                   #

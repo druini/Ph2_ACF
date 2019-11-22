@@ -2,40 +2,37 @@
 #define _MiddlewareController_h_
 
 #include "../NetworkUtils/TCPServer.h"
-// #include "../CalibrationSelector/CalibrationBase.h"
 #include "../System/SystemController.h"
 
 #include <string>
 
+
 class MiddlewareController: public TCPServer
 {
-public:
+ public:
+  MiddlewareController(int serverPort);
+  virtual ~MiddlewareController(void);
 
-	MiddlewareController(int serverPort);
-	virtual ~MiddlewareController(void);
+  // The MiddlewareController only has 1 client so send is more appropriate than broadcast
+  void send(const std::string& message) { broadcast(message); }
 
-	//The MiddlewareController only has 1 client so send is more appropriate than broadcast
-	void send(const std::string& message){broadcast(message);}
+  std::string interpretMessage(const std::string& buffer) override;
 
-	std::string interpretMessage(const std::string& buffer) override;
+ protected:
+  std::string getVariableValue(std::string variable, std::string buffer)
+    {
+      size_t begin = buffer.find(variable) + variable.size() + 1;
+      size_t end   = buffer.find(',', begin);
+      if(end == std::string::npos) end = buffer.size();
+      return buffer.substr(begin,end-begin);
+    }
 
-protected:
+  std::string currentRun_= "0";
+  bool        running_   = false;
+  bool        paused_    = false;
 
-	std::string getVariableValue(std::string variable, std::string buffer)
-	{
-		size_t begin = buffer.find(variable)+variable.size()+1;
-		size_t end   = buffer.find(',', begin);
-		if(end == std::string::npos)
-			end = buffer.size();
-		return buffer.substr(begin,end-begin);
-	}
-	std::string             currentRun_= "0";
-	bool                    running_   = false;
-	bool                    paused_    = false;
-
-  private:
-  	Ph2_System::SystemController *theSystemController_;
-
+ private:
+  Ph2_System::SystemController *theSystemController_;
 };
 
 #endif

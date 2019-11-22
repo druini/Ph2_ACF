@@ -248,7 +248,7 @@ namespace Ph2_HwInterface {
      * \param pBoard pointer to a board description
      * \return const pointer to an FPGA uploading process. NULL means that no upload is been processed.
      */
-    const FpgaConfig* getConfiguringFpga ( BeBoard* pBoard );
+    const FpgaConfig* GetConfiguringFpga ( BeBoard* pBoard );
 
     /*! \brief Get the list of available FPGA configuration (or firmware images)
      * \param pBoard pointer to a board description */

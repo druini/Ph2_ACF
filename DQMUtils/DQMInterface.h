@@ -10,30 +10,27 @@ class TFile;
 
 class DQMInterface
 {
-public:
+ public:
+  DQMInterface ();
+  ~DQMInterface(void);
 
-	DQMInterface ();
-	~DQMInterface(void);
+  void configure           (std::string const& calibrationName, std::string const& configurationFilePath) ;
+  void startProcessingData (std::string const& runNumber) ;
+  void stopProcessingData  (void) ;
+  void pauseProcessingData (void) {}
+  void resumeProcessingData(void) {}
 
-	void configure           (std::string& calibrationName, std::string& configurationFilePath) ;
-	void startProcessingData (std::string& runNumber) ;
-	void stopProcessingData  (void) ;
-	void pauseProcessingData (void) ;
-	void resumeProcessingData(void) ;
-	//void load(std::string fileName){;}
+  bool running(void);
 
-	bool running(void);
-
-private:
-	void destroy(void);
-	void destroyHistogram(void);
-	TCPSubscribeClient*            fListener;
-	std::vector<DQMHistogramBase*> fDQMHistogrammerVector;
-	std::vector<char>              fDataBuffer;
-	bool                           fRunning;
-	std::future<bool>              fRunningFuture;
-	TFile*                         fOutputFile;
-
+ private:
+  void destroy(void);
+  void destroyHistogram(void);
+  TCPSubscribeClient*            fListener;
+  std::vector<DQMHistogramBase*> fDQMHistogrammerVector;
+  std::vector<char>              fDataBuffer;
+  bool                           fRunning;
+  std::future<bool>              fRunningFuture;
+  TFile*                         fOutputFile;
 };
 
 #endif

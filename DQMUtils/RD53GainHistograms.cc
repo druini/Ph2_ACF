@@ -79,6 +79,8 @@ void GainHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContai
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
+
           auto* hOcc2D             = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
           auto* ErrorReadOut2DHist = ErrorReadOut2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
@@ -98,6 +100,8 @@ void GainHistograms::fillGainAndIntercept (const DetectorDataContainer& GainAndI
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getChannelContainer<GainAndIntercept>() == nullptr) continue;
+
           auto* Gain1DHist      = Gain1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
           auto* Intercept1DHist = Intercept1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
           auto* Gain2DHist      = Gain2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;

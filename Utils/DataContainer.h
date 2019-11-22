@@ -411,6 +411,12 @@ public:
 		return cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask());
 	}
 
+    void cleanDataStored() override
+    {
+      delete summary_;
+      summary_ = nullptr;
+      ChipContainer::cleanDataStored();
+    }
 };
 
 class ModuleDataContainer : public DataContainer<ChipDataContainer>

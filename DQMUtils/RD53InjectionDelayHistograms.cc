@@ -33,8 +33,10 @@ void InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContain
 
 bool InjectionDelayHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<GenericDataVector> theOccStreamer           ("InjectionDelayOcc");
-  ChannelContainerStream<uint16_t>          theInjectionDelayStreamer("InjectionDelayInjDelay");
+  const size_t InjDelaySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+
+  ChipContainerStream<EmptyContainer,GenericDataArray<InjDelaySize>> theOccStreamer           ("InjectionDelayOcc"); // @TMP@
+  ChipContainerStream<EmptyContainer,uint16_t>                       theInjectionDelayStreamer("InjectionDelayInjDelay"); // @TMP@
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
@@ -56,14 +58,18 @@ bool InjectionDelayHistograms::fill (std::vector<char>& dataBuffer)
 
 void InjectionDelayHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer)
 {
+  const size_t InjDelaySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+
   for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<GenericDataArray<InjDelaySize>>() == nullptr) continue;
+
           auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (size_t i = startValue; i <= stopValue; i++)
-            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i),cChip->getSummary<GenericDataVector>().data1[i-startValue]);
+            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i),cChip->getSummary<GenericDataArray<InjDelaySize>>().data[i-startValue]);
         }
 }
 
@@ -73,6 +79,8 @@ void InjectionDelayHistograms::fillInjectionDelay (const DetectorDataContainer& 
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+
           auto* InjectionDelayHist = InjectionDelay.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           InjectionDelayHist->Fill(cChip->getSummary<uint16_t>());

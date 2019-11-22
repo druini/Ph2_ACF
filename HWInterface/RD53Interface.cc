@@ -75,31 +75,42 @@ namespace Ph2_HwInterface
   void RD53Interface::InitRD53Aurora (Chip* pChip)
   {
     // ##############################
-    // # 1 Autora acive lane        #
+    // # 1 Autora active lane       #
     // # OUTPUT_CONFIG = 0b00000100 #
     // # CML_CONFIG    = 0b00000001 #
 
-    // # 2 Autora acive lanes       #
+    // # 2 Autora active lanes      #
     // # OUTPUT_CONFIG = 0b00001100 #
     // # CML_CONFIG    = 0b00000011 #
 
-    // # 4 Autora acive lanes       #
+    // # 4 Autora active lanes      #
     // # OUTPUT_CONFIG = 0b00111100 #
     // # CML_CONFIG    = 0b00001111 #
     // ##############################
 
-    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG",      0x4,  false);
+    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG",      0x04, false); // Number of active lanes [5:2]
     // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x1,  false); // Default: 00_11_1111
-    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0",  0xF1, false);
-    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1",  0xF,  false);
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x01, false); // CML_EN_LANE[3:0]
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false); // 0x30 = reset Aurora AND Serializer
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x1));
+    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
 
     usleep(DEEPSLEEP);
+
+
+    // #################################################
+    // # Establish proper communication with the chips #
+    // #################################################
+    /* @TMP@
+      while (static_cast<RD53FWInterface*>(fBoardFW)->CheckChipCommunication() == false)
+      {
+      RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false);
+      RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
+      usleep(DEEPSLEEP);
+      }
+    */
   }
 
   void RD53Interface::SyncRD53 (Chip* pChip)
@@ -124,12 +135,10 @@ namespace Ph2_HwInterface
     std::vector<std::pair<uint16_t,uint16_t>> regReadback;
     unsigned int pixMode = 0;
     unsigned int row     = 0;
+    uint16_t value       = data;
+    uint16_t address     = pChip->getRegItem(pRegNode).fAddress;
 
-    ChipRegItem cRegItem(0,0,0,0);
-    cRegItem.fValue   = data;
-    cRegItem.fAddress = pChip->getRegItem(pRegNode).fAddress;
-
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), cRegItem.fAddress, cRegItem.fValue));
+    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, value));
     if ((pRegNode == "VCAL_HIGH") || (pRegNode == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
 
     if (pVerifLoop == true)
@@ -139,17 +148,25 @@ namespace Ph2_HwInterface
         if ((pRegNode == "PIX_PORTAL") && (pixMode == 0)) row     = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
 
         if ((pixMode == 0) &&
-            (((pRegNode == "PIX_PORTAL") && (regReadback[0].first != row))               ||
-             ((pRegNode != "PIX_PORTAL") && (regReadback[0].first != cRegItem.fAddress)) ||
-             (regReadback[0].second != cRegItem.fValue)))
+            (((pRegNode == "PIX_PORTAL") && (regReadback[0].first != row))     ||
+             ((pRegNode != "PIX_PORTAL") && (regReadback[0].first != address)) ||
+             (regReadback[0].second != value)))
           {
             LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
             return false;
           }
-        else pChip->setReg(pRegNode, cRegItem.fValue);
+        else pChip->setReg(pRegNode, value);
       }
 
     return true;
+  }
+
+  void RD53Interface::WriteBroadcastChipReg (const Module* pModule, const std::string& pRegNode, const uint16_t data)
+  {
+    RD53 myChip(*static_cast<RD53*>(pModule->fReadoutChipVector.at(0)));
+    myChip.setChipId(RD53Constants::BROADCAST_CHIPID);
+
+    RD53Interface::WriteChipReg(&myChip, pRegNode, data, false);
   }
 
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode) // @TMP@

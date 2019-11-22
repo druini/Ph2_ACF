@@ -32,6 +32,12 @@ void ThrMinimization::ConfigureCalibration ()
   ThrStop         = this->findValueInSettings("ThrStop");
   doDisplay       = this->findValueInSettings("DisplayHisto");
   doUpdateChip    = this->findValueInSettings("UpdateChipCfg");
+
+
+  // #######################
+  // # Initialize progress #
+  // #######################
+  RD53RunProgress::total() += ThrMinimization::getNumberIterations();
 }
 
 void ThrMinimization::Start (int currentRun)
@@ -43,7 +49,7 @@ void ThrMinimization::Start (int currentRun)
 
 void ThrMinimization::sendData ()
 {
-  auto theThrStream = prepareChannelContainerStreamer<uint16_t>();
+  auto theThrStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>(); // @TMP@
 
   if (fStreamerEnabled == true)
     for (const auto cBoard : theThrContainer) theThrStream.streamAndSendBoard(cBoard, fNetworkStreamer);

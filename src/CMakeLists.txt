@@ -1,9 +1,9 @@
 if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}") 
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}") 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
 
     #includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
@@ -81,11 +81,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     ####################################
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src *.cc)
-    
+
     #to remove binaries
     if(CompileForShep AND CompileForHerd)
         list(REMOVE_ITEM BINARIES *.cc)
-        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc)
+        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc CMSIT_miniDAQ.cc)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     else()
         list(REMOVE_ITEM BINARIES supervisor.cc)
     endif()
