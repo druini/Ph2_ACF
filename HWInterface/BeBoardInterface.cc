@@ -222,10 +222,10 @@ namespace Ph2_HwInterface {
     fBoardFW->DownloadFpgaConfig ( strConfig, strDest );
   }
 
-  const FpgaConfig* BeBoardInterface::getConfiguringFpga ( BeBoard* pBoard )
+  const FpgaConfig* BeBoardInterface::GetConfiguringFpga ( BeBoard* pBoard )
   {
     setBoard ( pBoard->getBeBoardId() );
-    return fBoardFW->getConfiguringFpga();
+    return fBoardFW->GetConfiguringFpga();
   }
 
   std::vector<std::string> BeBoardInterface::getFpgaConfigList ( BeBoard* pBoard)

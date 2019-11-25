@@ -1,6 +1,6 @@
 #include "Tool.h"
-#ifdef __USE_ROOT__    
-	#include "TH1.h"
+#ifdef __USE_ROOT__
+#include "TH1.h"
 #endif
 #include "../HWDescription/Chip.h"
 #include "../Utils/ContainerStream.h"
@@ -14,7 +14,7 @@
 
 Tool::Tool() :
 SystemController            (),
-#ifdef __USE_ROOT__    
+#ifdef __USE_ROOT__
 	fCanvasMap                  (),
 	fChipHistMap                (),
 	fModuleHistMap              (),
@@ -22,13 +22,14 @@ SystemController            (),
 fType                       (),
 fTestGroupChannelMap        (),
 fDirectoryName              (""),
-#ifdef __USE_ROOT__    
+#ifdef __USE_ROOT__
 	fResultFile                 (nullptr),
 #endif
 fSkipMaskedChannels         (false),
 fAllChan                    (false),
 fMaskChannelsFromOtherGroups(false),
 fTestPulse                  (false),
+fDoBroadcast                (false),
 fChannelGroupHandler        (nullptr)
 {
 #ifdef __HTTP__
@@ -52,6 +53,7 @@ Tool::Tool (THttpServer* pHttpServer)
 , fAllChan                    (false)
 , fMaskChannelsFromOtherGroups(false)
 , fTestPulse                  (false)
+, fDoBroadcast                (false)
 , fChannelGroupHandler        (nullptr)
 {
 }
@@ -88,6 +90,7 @@ Tool::Tool (const Tool& pTool)
 	fAllChan                     = pTool.fAllChan;
 	fMaskChannelsFromOtherGroups = pTool.fMaskChannelsFromOtherGroups;
 	fTestPulse                   = pTool.fTestPulse;
+	fDoBroadcast                 = pTool.fDoBroadcast;
 	//fChannelGroupHandler         = pTool.fChannelGroupHandler;
 
 	#ifdef __HTTP__
@@ -128,6 +131,7 @@ void Tool::Inherit (Tool* pTool)
 	fAllChan                     = pTool->fAllChan;
 	fMaskChannelsFromOtherGroups = pTool->fMaskChannelsFromOtherGroups;
 	fTestPulse                   = pTool->fTestPulse;
+	fDoBroadcast                 = pTool->fDoBroadcast;
 	//fChannelGroupHandler         = pTool->fChannelGroupHandler;
 
 	#ifdef __HTTP__
@@ -1439,29 +1443,23 @@ void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName
 	return;
 }
 
-//Set same global DAC for all CBCs
-void Tool::setSameGlobalDac(const std::string &dacName, const uint16_t dacValue){
-
-	for (auto& cBoard : fBoardVector)
-	{
-		setSameGlobalDacBeBoard(cBoard, dacName, dacValue);
-	}
-
-	return;
+//Set same global DAC for all chips
+void Tool::setSameGlobalDac(const std::string &dacName, const uint16_t dacValue)
+{
+  for (auto& cBoard : fBoardVector)
+    setSameGlobalDacBeBoard(cBoard, dacName, dacValue);
 }
 
-
-//Set same global DAC for all CBCs in the BeBoard
+//Set same global DAC for all chips in the BeBoard
 void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
 {
-	for ( auto cFe : pBoard->fModuleVector )
-	{
-		for ( auto cChip : cFe->fReadoutChipVector )
-		{
-			fReadoutChipInterface->WriteChipReg ( cChip, dacName, dacValue );
-		}
-	}
-	return;
+  for (auto cFe : pBoard->fModuleVector)
+    {
+      if (fDoBroadcast == false)
+        for (auto cChip : cFe->fReadoutChipVector)
+          fReadoutChipInterface->WriteChipReg(cChip, dacName, dacValue);
+      else fReadoutChipInterface->WriteBroadcastChipReg(cFe, dacName, dacValue);
+    }
 }
 
 // set same local dac for all BeBoard

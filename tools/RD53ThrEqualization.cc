@@ -48,6 +48,12 @@ void ThrEqualization::ConfigureCalibration ()
   fileName.replace(fileRes.find("_ThrEqualization"),16,"_SCurve");
   sc.Inherit(this);
   sc.initialize(fileName, fileReg);
+
+
+  // #######################
+  // # Initialize progress #
+  // #######################
+  RD53RunProgress::total() += ThrEqualization::getNumberIterations();
 }
 
 void ThrEqualization::Start (int currentRun)
@@ -64,7 +70,7 @@ void ThrEqualization::sendData ()
 
   if (fStreamerEnabled == true)
     {
-      for (const auto cBoard : theOccContainer)  theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+      for (const auto cBoard : theOccContainer)  theOccStream.streamAndSendBoard (cBoard, fNetworkStreamer);
       for (const auto cBoard : theTDACcontainer) theTDACStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }

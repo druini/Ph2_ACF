@@ -1,12 +1,10 @@
 /*
-
   \file                          Data.h
   \brief                         Data handling from DAQ
   \author                        Nicolas PIERRE
   \version                       1.0
   \date                          10/07/14
   Support :                      mail to : nicolas.pierre@icloud.com
-
 */
 
 #ifndef DATA_H

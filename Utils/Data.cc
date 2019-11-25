@@ -1,12 +1,10 @@
 /*
-
   FileName :                     Data.cc
   Content :                      Data handling from DAQ
   Programmer :                   Nicolas PIERRE
   Version :                      1.0
   Date of creation :             10/07/14
   Support :                      mail to : nicolas.pierre@icloud.com
-
 */
 
 #include "Data.h"
@@ -21,36 +19,23 @@ namespace Ph2_HwInterface
     , fEventSize    (pD.fEventSize)
   {}
 
-  void Data::DecodeData (const BeBoard *pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
+  void Data::DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
   {
-    uint16_t status;
     Reset();
 
     if (pType == BoardType::FC7)
       {
+        uint16_t status;
         if (RD53decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, status, RD53decodedEvents);
 
-        for (auto& evt : RD53decodedEvents)
+        for (const auto& evt : RD53decodedEvents)
           {
-            std::vector<size_t> chip_id_vec;
-            std::vector<size_t> module_id_vec;
+            std::vector<std::pair<size_t,size_t>> moduleAndChipIDs;
 
             for (const auto& chip_frame : evt.chip_frames)
-              {
-                module_id_vec.push_back(chip_frame.hybrid_id);
+              moduleAndChipIDs.push_back(std::pair<size_t,size_t>(chip_frame.module_id, RD53FWInterface::lane2chipId(pBoard, chip_frame.module_id, chip_frame.chip_lane)));
 
-                // #############################
-                // # Translate lane to chip ID #
-                // #############################
-                Module* module = pBoard->getModule(chip_frame.hybrid_id);
-                auto it = std::find_if(module->fReadoutChipVector.begin(), module->fReadoutChipVector.end(), [=] (ReadoutChip* pChip)
-                                       { return pChip->getChipLane() == chip_frame.chip_lane; });
-
-                if (it != module->fReadoutChipVector.end()) chip_id_vec.push_back((*it)->getChipId());
-                else                                        chip_id_vec.push_back(-1); // Chip not found
-              }
-
-            fEventList.push_back(new RD53Event(std::move(module_id_vec), std::move(chip_id_vec), std::move(evt.chip_events)));
+            fEventList.push_back(new RD53Event(std::move(moduleAndChipIDs), evt.chip_events));
           }
       }
     else

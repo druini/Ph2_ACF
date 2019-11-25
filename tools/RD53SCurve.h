@@ -40,7 +40,6 @@ class SCurve : public Tool
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
-  void writeObjects         () {}; // @TMP@
 
   void sendData                                  ();
   void initialize                                (const std::string fileRes_, const std::string fileReg_);
@@ -75,7 +74,7 @@ class SCurve : public Tool
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void computeStats    (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+  void computeStats    (const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
   void chipErrorReport ();
 
 

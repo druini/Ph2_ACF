@@ -48,6 +48,12 @@ void SCurve::ConfigureCalibration ()
   // ##############################
   float step = (stopValue - startValue) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
+
+
+  // #######################
+  // # Initialize progress #
+  // #######################
+  RD53RunProgress::total() += SCurve::getNumberIterations();
 }
 
 void SCurve::Start (int currentRun)
@@ -72,7 +78,7 @@ void SCurve::sendData ()
 
           for (const auto cBoard : *theOccContainer)
             {
-              theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+              theOccStream.streamAndSendBoard (cBoard, fNetworkStreamer);
               theVCalStream.streamAndSendBoard(cBoard, fNetworkStreamer);
             }
 
@@ -117,6 +123,7 @@ void SCurve::run ()
     }
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
+  this->SetBroadcast(true);
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
@@ -251,7 +258,7 @@ void SCurve::display ()
 #endif
 }
 
-void SCurve::computeStats (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
+void SCurve::computeStats (const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
 {
   float mean2  = 0;
   float weight = 0;

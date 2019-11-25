@@ -40,7 +40,7 @@ void MiddlewareInterface::initialize(void)
 }
 
 //========================================================================================================================
-void MiddlewareInterface::configure(std::string calibrationName, std::string configurationFilePath)
+void MiddlewareInterface::configure(std::string const& calibrationName, std::string const& configurationFilePath)
 {
 	std::string readBuffer = sendCommand("Configure,Calibration:" + calibrationName + ",ConfigurationFile:" + configurationFilePath);
 	std::cout << __PRETTY_FUNCTION__ << "DONE WITH Configure-" << readBuffer << "-"<< std::endl;

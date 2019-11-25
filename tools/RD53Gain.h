@@ -40,7 +40,6 @@ class Gain : public Tool
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
-  void writeObjects         () {}; // @TMP@
 
   void sendData                                  ();
   void initialize                                (const std::string fileRes_, const std::string fileReg_);
@@ -75,7 +74,7 @@ class Gain : public Tool
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void computeStats    (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
+  void computeStats    (const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
   void chipErrorReport ();
 
 

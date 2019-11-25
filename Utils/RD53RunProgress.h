@@ -17,7 +17,7 @@ class RD53RunProgress
  public:
   static size_t& total()
   {
-    static size_t value;
+    static size_t value = 0;
     return value;
   }
 

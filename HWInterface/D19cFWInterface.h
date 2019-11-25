@@ -337,7 +337,7 @@ namespace Ph2_HwInterface {
         void DownloadFpgaConfig ( const std::string& strConfig, const std::string& strDest );
         /*! \brief Is the FPGA being configured ?
          * \return FPGA configuring process or NULL if configuration occurs */
-        const FpgaConfig* getConfiguringFpga()
+        const FpgaConfig* GetConfiguringFpga()
         {
             return (const FpgaConfig*) fpgaConfig;
         }

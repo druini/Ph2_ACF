@@ -33,8 +33,10 @@ void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& the
 
 bool LatencyHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<GenericDataVector> theOccStreamer    ("LatencyOcc");
-  ChannelContainerStream<uint16_t>          theLatencyStreamer("LatencyLatency");
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+
+  ChipContainerStream<EmptyContainer,GenericDataArray<LatencySize>> theOccStreamer    ("LatencyOcc"); // @TMP@
+  ChipContainerStream<EmptyContainer,uint16_t>                      theLatencyStreamer("LatencyLatency"); // @TMP@
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
@@ -56,14 +58,18 @@ bool LatencyHistograms::fill (std::vector<char>& dataBuffer)
 
 void LatencyHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer)
 {
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+
   for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<GenericDataArray<LatencySize>>() == nullptr) continue;
+
           auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (size_t i = startValue; i <= stopValue; i++)
-            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i),cChip->getSummary<GenericDataVector>().data1[i-startValue]);
+            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i),cChip->getSummary<GenericDataArray<LatencySize>>().data[i-startValue]);
         }
 }
 
@@ -73,6 +79,8 @@ void LatencyHistograms::fillLatency (const DetectorDataContainer& LatencyContain
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+
           auto* LatencyHist = Latency.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           LatencyHist->Fill(cChip->getSummary<uint16_t>());

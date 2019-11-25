@@ -123,6 +123,7 @@ namespace Ph2_HwDescription
     static constexpr size_t nCols = NCOLS;
 
     RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName);
+    RD53 (const RD53& chipObj);
 
     void     loadfRegMap         (const std::string& fileName)  override;
     void     saveRegMap          (const std::string& fName2Add) override;
@@ -196,7 +197,7 @@ namespace Ph2_HwDescription
       uint8_t cal_aux_delay;
     };
 
-    static size_t setBits (size_t nBit2Set) { return (1 << nBit2Set) - 1; }
+    static constexpr size_t setBits (size_t nBit2Set) { return (1 << nBit2Set) - 1; }
 
     static auto countBitsOne (size_t num)
     {

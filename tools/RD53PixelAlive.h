@@ -12,6 +12,7 @@
 
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"
 
@@ -36,7 +37,6 @@ class PixelAlive : public Tool
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
-  void writeObjects         () {}; // @TMP@
 
   void sendData                                  ();
   void initialize                                (const std::string fileRes_, const std::string fileReg_);
@@ -64,6 +64,8 @@ class PixelAlive : public Tool
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   std::shared_ptr<DetectorDataContainer>   theOccContainer;
+  DetectorDataContainer theBCIDContainer;
+  DetectorDataContainer theTrgIDContainer;
 
   void initHisto       ();
   void fillHisto       ();

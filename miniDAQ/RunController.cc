@@ -4,16 +4,16 @@ INITIALIZE_EASYLOGGINGPP
 
 #define PORT 5000 // The server listening port
 
-//MAIN
-int main(int argc, char **argv)
+int main (int argc, char **argv)
 {
-    //configure the logger
-    el::Configurations conf ("settings/logger.conf");
-    el::Loggers::reconfigureAllLoggers (conf);
+  std::string loggerConfigFile = std::getenv("BASE_DIR");
+  loggerConfigFile += "/settings/logger.conf";
+  el::Configurations conf (loggerConfigFile);
+  el::Loggers::reconfigureAllLoggers (conf);
 
-	MiddlewareController theMiddlewareController(PORT);
+  MiddlewareController theMiddlewareController(PORT);
 
-	while(1){}
+  while(1){}
 
-	return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }

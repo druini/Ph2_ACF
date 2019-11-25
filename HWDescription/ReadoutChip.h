@@ -72,7 +72,7 @@ namespace Ph2_HwDescription
     const ChannelGroupBase* getChipOriginalMask() const override {return fChipOriginalMask;}
 
   protected:
-    ChannelGroupBase*     fChipOriginalMask;
+    ChannelGroupBase* fChipOriginalMask;
   };
 }
 

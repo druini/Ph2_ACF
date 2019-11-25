@@ -11,6 +11,7 @@
 #define RD53Latency_H
 
 #include "RD53PixelAlive.h"
+#include "../Utils/RD53SharedConstants.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53LatencyHistograms.h"
@@ -32,7 +33,6 @@ class Latency : public PixelAlive
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
-  void writeObjects         () {}; // @TMP@
 
   void   sendData            ();
   void   initialize          (const std::string fileRes_, const std::string fileReg_);

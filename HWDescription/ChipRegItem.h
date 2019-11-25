@@ -20,10 +20,10 @@ namespace Ph2_HwDescription
   {
     ChipRegItem() {};
     ChipRegItem (uint8_t pPage, uint16_t pAddress, uint16_t pDefValue, uint16_t pValue)
-    : fPage (pPage)
-    , fAddress (pAddress)
+    : fPage     (pPage)
+    , fAddress  (pAddress)
     , fDefValue (pDefValue)
-    , fValue (pValue)
+    , fValue    (pValue)
     {}
 
     uint8_t  fPage;

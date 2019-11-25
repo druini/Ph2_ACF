@@ -87,7 +87,12 @@ namespace RootContainerFactory
 		copy.initialize<SD,SB>();
 
 		SD theDetectorSummary;
-		initializePlot(&theDetectorSummary,Form("%s_Detector",detectorSummaryHistogramGenericName.data()), Form("%s Detector",detectorSummaryHistogramGenericTitle.data()), &detectorSummary);
+		initializePlot(&theDetectorSummary,
+                       Form("%s_Detector",
+                            detectorSummaryHistogramGenericName.data()),
+                       Form("%s Detector",
+                            detectorSummaryHistogramGenericTitle.data()),
+                       &detectorSummary);
 		copy.getSummary<SD,SB>() = std::move(theDetectorSummary);
 
 		//Boards
@@ -102,7 +107,14 @@ namespace RootContainerFactory
 			copyBoard->initialize<SB,SM>();
 
 			SB theBoardSummary;
-			initializePlot(&theBoardSummary,Form("%s_Board_%d",boardSummaryHistogramGenericName.data(),board->getId()), Form("%s Board_%d",boardSummaryHistogramGenericTitle.data(),board->getId()), &boardSummary);
+			initializePlot(&theBoardSummary,
+                           Form("D_%s_Board_(%d)",
+                                boardSummaryHistogramGenericName.data(),
+                                board->getId()),
+                           Form("D_%s_Board(%d)",
+                                boardSummaryHistogramGenericTitle.data(),
+                                board->getId()),
+                           &boardSummary);
 			copyBoard->getSummary<SB,SM>() = std::move(theBoardSummary);
 
 			//Modules
@@ -116,7 +128,16 @@ namespace RootContainerFactory
 				copyModule->initialize<SM,SC>();
 
 				SM theModuleSummary;
-				initializePlot(&theModuleSummary,Form("%s_module_%d",moduleSummaryHistogramGenericName.data(),module->getId()), Form("%s module_%d",moduleSummaryHistogramGenericTitle.data(),module->getId()), &moduleSummary);
+				initializePlot(&theModuleSummary,
+                               Form("D_B(%d)_%s_Module(%d)",
+                                    board->getId(),
+                                    moduleSummaryHistogramGenericName.data(),
+                                    module->getId()),
+                               Form("D_B(%d)_%s_Module(%d)",
+                                    board->getId(),
+                                    moduleSummaryHistogramGenericTitle.data(),
+                                    module->getId()),
+                               &moduleSummary);
 				copyModule->getSummary<SM,SC>() = std::move(theModuleSummary);
 
 				//Chips
@@ -130,7 +151,18 @@ namespace RootContainerFactory
 					copyChip->initialize<SC,T>();
 					
 					SC theChipSummary;
-					initializePlot(&theChipSummary,Form("%s_Chip_%d",chipSummaryHistogramGenericName.data(),chip->getId()), Form("%s Chip_%d",chipSummaryHistogramGenericTitle.data(),chip->getId()), &chipSummary);
+					initializePlot(&theChipSummary,
+                                   Form("D_B(%d)_M(%d)_%s_Chip(%d)",
+                                        board->getId(),
+                                        module->getId(),
+                                        chipSummaryHistogramGenericName.c_str(),
+                                        chip->getId()),
+                                   Form("D_B(%d)_M(%d)_%s_Chip(%d)",
+                                        board->getId(),
+                                        module->getId(),
+                                        chipSummaryHistogramGenericTitle.c_str(),
+                                        chip->getId()),
+                                   &chipSummary);
 					copyChip->getSummary<SC,T>() = std::move(theChipSummary) ;
 	
 					//Channels
@@ -142,22 +174,43 @@ namespace RootContainerFactory
 					{
 						for(uint32_t col=0; col < chip->getNumberOfCols(); ++col)
 						{
-							if(channelHistogramGenericName != "NULL") 
+							if(channelHistogramGenericName != "NULL")
 							{
 								T theChannel;
 								std::string histogramName;
 								std::string histogramTitle;
-								if(chip->getNumberOfCols() == 1)
-								{
-									histogramName  = Form("%s_Channel_%d",channelHistogramGenericName.data(),row);
-									histogramTitle = Form("%s Channel %d",channelHistogramGenericName.data(),row);
-								}
-								else
-								{
-									histogramName  = Form("%s_Row_%d_Col_%d",channelHistogramGenericName.data(),row,col);
-									histogramTitle = Form("%s Row_%d Col_%d",channelHistogramGenericName.data(),row,col);
-								}
-								
+                                if(chip->getNumberOfCols() == 1)
+                                  {
+                                    histogramName  = Form("D_B(%d)_M(%d)_C(%d)_%s_Channel(%d)",
+                                                          board->getId(),
+                                                          module->getId(),
+                                                          chip->getId(),
+                                                          channelHistogramGenericName.data(),
+                                                          row);
+                                    histogramTitle = Form("D_B(%d)_M(%d)_C(%d)_%s_Channel(%d)",
+                                                          board->getId(),
+                                                          module->getId(),
+                                                          chip->getId(),
+                                                          channelHistogramGenericTitle.data(),
+                                                          row);
+                                  }
+                                else
+                                  {
+                                    histogramName = Form("D_B(%d)_M(%d)_C(%d)_%s_Row(%d)_Col(%d)",
+                                                         board->getId(),
+                                                         module->getId(),
+                                                         chip->getId(),
+                                                         channelHistogramGenericName.data(),
+                                                         row,
+                                                         col);
+                                    histogramTitle = Form("D_B(%d)_M(%d)_C(%d)_%s_Row(%d)_Col(%d)",
+                                                          board->getId(),
+                                                          module->getId(),
+                                                          chip->getId(),
+                                                          channelHistogramGenericTitle.data(),
+                                                          row,
+                                                          col);
+                                  }
 								initializePlot(&theChannel,histogramName, histogramTitle, &channel);
 								copyChip->getChannel<T>(row,col) = std::move(theChannel);
 							}
