@@ -30,24 +30,22 @@ namespace Ph2_HwInterface
 
     for (const auto& cModule : *boardContainer)
       for (const auto& cChip : *cModule)
-        {
-          if (RD53Event::isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
-            {
-              if (vectorRequired == true)
-                {
-                  cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.push_back(chip_events[chipIndx].bc_id);
-                  cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.push_back(chip_events[chipIndx].trigger_id);
-                }
+        if (RD53Event::isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
+          {
+            if (vectorRequired == true)
+              {
+                cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.push_back(chip_events[chipIndx].bc_id);
+                cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.push_back(chip_events[chipIndx].trigger_id);
+              }
 
-              for (const auto& hit : chip_events[chipIndx].hit_data)
-                {
-                  cChip->getChannel<OccupancyAndPh>(hit.row+RD53::nRows*(hit.col)).fOccupancy++;
-                  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPh      += float(hit.tot);
-                  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPhError += float(hit.tot*hit.tot);
-                  if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col) == false)
-                    cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).readoutError = true;
-                }
-            }
-        }
+            for (const auto& hit : chip_events[chipIndx].hit_data)
+              {
+                cChip->getChannel<OccupancyAndPh>(hit.row+RD53::nRows*(hit.col)).fOccupancy++;
+                cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPh      += float(hit.tot);
+                cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPhError += float(hit.tot*hit.tot);
+                if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col) == false)
+                  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).readoutError = true;
+              }
+          }
   }
 }

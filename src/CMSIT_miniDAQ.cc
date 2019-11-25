@@ -35,6 +35,7 @@
 #define RUNNUMBER     0
 #define RESULTDIR     "Results" // Directory containing the results
 #define FILERUNNUMBER "./RunNumber.txt"
+#define SETBATCH      false // Set batch mode when running supervisor
 
 
 INITIALIZE_EASYLOGGINGPP
@@ -171,6 +172,7 @@ int main (int argc, char** argv)
       // ###################
       // # Instantiate DQM #
       // ###################
+      gROOT->SetBatch(SETBATCH);
       TApplication theApp("App", NULL, NULL);
       DQMInterface theDQMInterface;
 
@@ -194,8 +196,11 @@ int main (int argc, char** argv)
                   {
                     LOG (INFO) << BOLDBLUE << "Supervisor sending configure" << RESET;
 
+                    LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
                     theMiddlewareInterface.configure(cmd.optionValue("calib"), cmd.optionValue("file"));
                     theDQMInterface       .configure(cmd.optionValue("calib"), cmd.optionValue("file"));
+                    LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
+                    std::cout << std::endl;
 
                     stateMachineStatus = CONFIGURED;
                     break;
@@ -214,10 +219,10 @@ int main (int argc, char** argv)
                   {
                     LOG (INFO) << BOLDBLUE << "Supervisor sending stop" << RESET;
 
-                    usleep(1e7); // @TMP@
                     // @TMP@ : shoule be inverted but it does not work
+                    usleep(2e6);
                     theMiddlewareInterface.stop();
-                    usleep(1e6); // @TMP@
+                    usleep(1e6);
                     theDQMInterface.stopProcessingData();
 
                     stateMachineStatus = STOPPED;
@@ -233,7 +238,8 @@ int main (int argc, char** argv)
         }
 
       LOG (INFO) << BOLDBLUE << "Out of supervisor state machine. Run Controller status: " << BOLDYELLOW << runControllerStatus << RESET;
-      theApp.Run();
+      if (SETBATCH == false) theApp.Run();
+      else                   theApp.Terminate(0);
 #else
       LOG (WARNING) << BOLDBLUE << "ROOT flag was OFF during compilation" << RESET;
 #endif
@@ -415,12 +421,14 @@ int main (int argc, char** argv)
           // ###############
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing Phsyics data taking @@@" << RESET;
 
+          std::string fileName("Run" + fromInt2Str(runNumber) + "_Physics");
           Physics ph;
           ph.Inherit(&mySysCntr);
-          ph.ConfigureCalibration();
+          ph.initialize(fileName, chipConfig);
           ph.Start(runNumber);
           usleep(2e6);
           ph.Stop();
+          ph.draw();
         }
       else
         {

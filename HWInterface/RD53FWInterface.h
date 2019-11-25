@@ -25,6 +25,7 @@
 #define DEEPSLEEP 100000 // [microseconds]
 #define READOUTSLEEP  50 // [microseconds]
 #define MAXATTEMPTS    2 // Maximum number of attempts for ReadNEvents
+#define NFRAMES_SYNC  16 // Number of frames to synchronize chip communication
 
 // ##################
 // # BIT DEFINITION #

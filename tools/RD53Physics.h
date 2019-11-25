@@ -19,6 +19,11 @@
 
 #include <thread>
 
+#ifdef __USE_ROOT__
+#include "TApplication.h"
+#include "../DQMUtils/RD53PhysicsHistograms.h"
+#endif
+
 
 // #############
 // # CONSTANTS #
@@ -36,8 +41,11 @@ class Physics : public Tool
   void Stop  ()                override;
   void ConfigureCalibration () override;
 
+  void StartStopEmulator ();
   void sendData          (BoardContainer* const& cBoard);
+  void initialize        (const std::string fileRes_, const std::string fileReg_);
   void run               ();
+  void draw              ();
   void fillDataContainer (BoardContainer* const& cBoard);
 
 
@@ -52,12 +60,30 @@ class Physics : public Tool
   DetectorDataContainer theBCIDContainer;
   DetectorDataContainer theTrgIDContainer;
 
+  void initHisto       ();
+  void fillHisto       ();
+  void display         ();
   void chipErrorReport ();
 
 
+  // ########
+  // # ROOT #
+  // ########
+#ifdef __USE_ROOT__
+  PhysicsHistograms histos;
+  TApplication* myApp;
+#endif
+
+
  protected:
+  std::string fileRes;
+  std::string fileReg;
+  bool doUpdateChip;
+  bool doDisplay;
+  bool doLocal;
   bool keepRunning;
   std::thread thrRun;
+  std::thread thrStartStopEmulator;
 };
 
 #endif

@@ -40,6 +40,7 @@ namespace RD53Constants
   const uint8_t NPIX_REGION      =  4;  // Number of pixels in a region (1x4)
   const uint8_t NROW_CORE        =  8;  // Number of rows in a core
   const uint8_t NBIT_ADDR        =  9;  // Number of address bits
+  const uint8_t NSYNC_WORS       = 32;  // Number of Sync words for synchronization
 }
 
 

@@ -128,13 +128,15 @@ namespace Ph2_HwInterface
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
 
 
-    // ########################################
-    // # Check communication with the chip(s) #
-    // ########################################
-    LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
-    bool commGood = RD53FWInterface::CheckChipCommunication();
-    if (commGood == true) LOG (INFO) << BOLDBLUE << "\t--> Successfully initialized the communication to all chips"     << RESET;
-    else                  LOG (INFO) << BOLDRED  << "\t--> I was not able to initialize the communication to all chips" << RESET;
+    // #################################################
+    // # Establish proper communication with the chips #
+    // #################################################
+    std::vector<uint16_t> commandList(NFRAMES_SYNC,0x0000);
+    while (RD53FWInterface::CheckChipCommunication() == false)
+      {
+        RD53FWInterface::WriteChipCommand(commandList, modules_en);
+        usleep(DEEPSLEEP);
+      }
   }
 
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, unsigned int moduleId)
@@ -277,10 +279,12 @@ namespace Ph2_HwInterface
 
   bool RD53FWInterface::CheckChipCommunication()
   {
+    LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
+
+
     // ###############################
     // # Check RD53 AURORA registers #
     // ###############################
-
     unsigned int speed_flag = ReadReg ("user.stat_regs.aurora_rx.speed");
     LOG (INFO) << GREEN << "Aurora speed: " << BOLDYELLOW << (speed_flag == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
 
@@ -290,6 +294,10 @@ namespace Ph2_HwInterface
     unsigned int lane_up = ReadReg ("user.stat_regs.aurora_rx.lane_up");
     LOG (INFO) << GREEN << "Number of available data lanes: " << BOLDYELLOW << RD53::countBitsOne(lane_up) << GREEN << " i.e. " << BOLDYELLOW << std::bitset<20>(lane_up) << RESET;
 
+
+    // ########################################
+    // # Check communication with the chip(s) #
+    // ########################################
     unsigned int chips_en = ReadReg ("user.ctrl_regs.Chips_en");
     LOG (INFO) << GREEN << "Number of enabled data lanes: " << BOLDYELLOW << RD53::countBitsOne(chips_en) << GREEN << " i.e. " << BOLDYELLOW << std::bitset<12>(chips_en) << RESET;
 
@@ -565,7 +573,7 @@ namespace Ph2_HwInterface
   uint32_t RD53FWInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
   {
     uint32_t doHandshake = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value();
-    uint32_t nWordsInMemoryOld, nWordsInMemory;
+    uint32_t nWordsInMemoryOld, nWordsInMemory = 0;
 
 
     if (doHandshake == true)
@@ -579,7 +587,7 @@ namespace Ph2_HwInterface
 
         nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value();
       }
-    else while (((nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value()) == 0) && (pWait == true)) usleep(READOUTSLEEP);
+    else while ((pWait == true) && ((nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value()) == 0)) usleep(READOUTSLEEP);
 
 
     // #############################################
@@ -590,7 +598,7 @@ namespace Ph2_HwInterface
         nWordsInMemoryOld = nWordsInMemory;
         usleep(READOUTSLEEP);
       }
-    while (((nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value()) != nWordsInMemoryOld) && (pWait == true)); // @TMP@
+    while ((pWait == true) && ((nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value()) != nWordsInMemoryOld)); // @TMP@
     // auto nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
 
 
