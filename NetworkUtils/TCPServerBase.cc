@@ -50,10 +50,10 @@ TCPServerBase::~TCPServerBase(void)
 	std::cout << __PRETTY_FUNCTION__ << "Shutting down accept for socket: " << getSocketId() << std::endl;
 	shutdownAccept();
 	while (fAcceptFuture.wait_for(std::chrono::milliseconds(100)) != std::future_status::ready)
-		std::cout << __PRETTY_FUNCTION__ << "Still running" << std::endl;
+		std::cout << __PRETTY_FUNCTION__ << "Server accept still running" << std::endl;
 	std::cout << __PRETTY_FUNCTION__ << "Closing connected client sockets for socket: " << getSocketId() << std::endl;
 	closeClientSockets();
-	std::cout << __PRETTY_FUNCTION__ << "Destructor done for socket: " << getSocketId() << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "Closed all sockets connected to server: " << getSocketId() << std::endl;
 }
 
 //========================================================================================================================
@@ -205,7 +205,7 @@ void TCPServerBase::broadcast(const std::vector<char> &message)
 		}
 		catch (const std::exception &e)
 		{
-			//std::cout << __PRETTY_FUNCTION__ << "Connection closed with the server! Stop writing!" << std::endl;
+			std::cout << __PRETTY_FUNCTION__ << "Error: " << e.what() << std::endl;
 			delete it->second;
 			fConnectedClients.erase(it--);
 		}
