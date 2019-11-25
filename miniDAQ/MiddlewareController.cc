@@ -22,7 +22,7 @@
 
 //========================================================================================================================
 MiddlewareController::MiddlewareController(int serverPort)
-: TCPServer(serverPort,1)
+: TCPServer(serverPort,1)//Only 1 client can connect!
 {
 }
 //========================================================================================================================
@@ -37,11 +37,16 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 
 	std::cout << __PRETTY_FUNCTION__ << "RECEIVED: " << buffer << std::endl;
 
-	if (buffer == "Initialize") //changing the status changes the mode in threadMain (BBC) function.
+	if (buffer.substr(0,6) == "Error:") //changing the status changes the mode in threadMain (BBC) function.
+	{
+		std::cout << __PRETTY_FUNCTION__ << buffer << " Need to take some decisions here!" << std::endl;
+		return "ErrorReceived";
+	}
+	else if (buffer == "Initialize") //changing the status changes the mode in threadMain (BBC) function.
 	{
 		return "InitializeDone";
 	}
-	if (buffer.substr(0,5) == "Start") //changing the status changes the mode in threadMain (BBC) function.
+	else if (buffer.substr(0,5) == "Start") //changing the status changes the mode in threadMain (BBC) function.
 	{
 		currentRun_ = getVariableValue("RunNumber", buffer);
 		theSystemController_->Start(stoi(currentRun_));

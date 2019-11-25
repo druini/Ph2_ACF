@@ -7,16 +7,14 @@
 
 #include <iostream>
 #include <arpa/inet.h>
-#include <errno.h>		// errno
-#include <string.h>		// errno
+#include <errno.h>  // errno
+#include <string.h> // errno
 
 //using namespace ots;
 
 //========================================================================================================================
 TCPServerBase::TCPServerBase(int serverPort, unsigned int maxNumberOfClients)
-	: fMaxNumberOfClients(maxNumberOfClients)
-	, fAccept            (true)
-	, fAcceptFuture      (fAcceptPromise.get_future())
+	: fMaxNumberOfClients(maxNumberOfClients), fAccept(true), fAcceptFuture(fAcceptPromise.get_future())
 {
 
 	int opt = 1; // SO_REUSEADDR - man socket(7)
@@ -49,14 +47,13 @@ TCPServerBase::TCPServerBase(int serverPort, unsigned int maxNumberOfClients)
 //========================================================================================================================
 TCPServerBase::~TCPServerBase(void)
 {
-	std::cout << __PRETTY_FUNCTION__ << "Closing the network server socket: " << getSocketId() << std::endl;
-	std::cout << __PRETTY_FUNCTION__ << "SHUTDOWN Closing the network server socket: " << getSocketId() << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "Shutting down accept for socket: " << getSocketId() << std::endl;
 	shutdownAccept();
-	std::cout << __PRETTY_FUNCTION__ << "Closing the network server socket: " << getSocketId() << std::endl;
 	while (fAcceptFuture.wait_for(std::chrono::milliseconds(100)) != std::future_status::ready)
 		std::cout << __PRETTY_FUNCTION__ << "Still running" << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "Closing connected client sockets for socket: " << getSocketId() << std::endl;
 	closeClientSockets();
-	std::cout << __PRETTY_FUNCTION__ << "Closed all sockets connected to server: " << getSocketId() << std::endl;
+	std::cout << __PRETTY_FUNCTION__ << "Destructor done for socket: " << getSocketId() << std::endl;
 }
 
 //========================================================================================================================
@@ -135,6 +132,7 @@ int TCPServerBase::accept(bool blocking)
 //========================================================================================================================
 void TCPServerBase::closeClientSockets(void)
 {
+//	std::lock_guard<std::mutex> lock(clientsMutex_);
 	for (auto &socket : fConnectedClients)
 	{
 		socket.second->sendClose();
@@ -146,34 +144,72 @@ void TCPServerBase::closeClientSockets(void)
 //========================================================================================================================
 void TCPServerBase::closeClientSocket(int socket)
 {
+	// lockout other receivers for the remainder of the scope
+//	std::lock_guard<std::mutex> lock(clientsMutex_);
 	for (auto it = fConnectedClients.begin(); it != fConnectedClients.end(); it++)
 		if (it->second->getSocketId() == socket)
 		{
 			it->second->sendClose();
 			delete it->second;
-			fConnectedClients.erase(it);
+			fConnectedClients.erase(it--);
 		}
 }
 
 //========================================================================================================================
 void TCPServerBase::broadcastPacket(const std::string &message)
 {
-	for (auto& socket : fConnectedClients)
-		dynamic_cast<TCPTransmitterSocket *>(socket.second)->sendPacket(message);
+//	std::lock_guard<std::mutex> lock(clientsMutex_);
+	for (auto it = fConnectedClients.begin(); it != fConnectedClients.end(); it++)
+	{
+		try
+		{
+			dynamic_cast<TCPTransmitterSocket *>(it->second)->sendPacket(message);
+		}
+		catch (const std::exception &e)
+		{
+			//std::cout << __PRETTY_FUNCTION__ << "Connection closed with the server! Stop writing!" << std::endl;
+			delete it->second;
+			fConnectedClients.erase(it--);
+		}
+	}
 }
 
 //========================================================================================================================
 void TCPServerBase::broadcast(const std::string &message)
 {
-	for (auto &socket : fConnectedClients)
-		dynamic_cast<TCPTransmitterSocket *>(socket.second)->send(message);
+//	std::lock_guard<std::mutex> lock(clientsMutex_);
+	for (auto it = fConnectedClients.begin(); it != fConnectedClients.end(); it++)
+	{
+		try
+		{
+			dynamic_cast<TCPTransmitterSocket *>(it->second)->send(message);
+		}
+		catch (const std::exception &e)
+		{
+			//std::cout << __PRETTY_FUNCTION__ << "Connection closed with the server! Stop writing!" << std::endl;
+			delete it->second;
+			fConnectedClients.erase(it--);
+		}
+	}
 }
 
 //========================================================================================================================
 void TCPServerBase::broadcast(const std::vector<char> &message)
 {
-	for (auto &socket : fConnectedClients)
-		dynamic_cast<TCPTransmitterSocket *>(socket.second)->send(message);
+//	std::lock_guard<std::mutex> lock(clientsMutex_);
+	for (auto it = fConnectedClients.begin(); it != fConnectedClients.end(); it++)
+	{
+		try
+		{
+			dynamic_cast<TCPTransmitterSocket *>(it->second)->send(message);
+		}
+		catch (const std::exception &e)
+		{
+			//std::cout << __PRETTY_FUNCTION__ << "Connection closed with the server! Stop writing!" << std::endl;
+			delete it->second;
+			fConnectedClients.erase(it--);
+		}
+	}
 }
 
 //========================================================================================================================

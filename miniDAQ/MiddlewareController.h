@@ -15,7 +15,7 @@ public:
 	virtual ~MiddlewareController(void);
 
 	//The MiddlewareController only has 1 client so send is more appropriate than broadcast
-	void send(const std::string& message){broadcast(message);}
+	//void send(const std::string& message){broadcast(message);}
 
 	std::string interpretMessage(const std::string& buffer) override;
 

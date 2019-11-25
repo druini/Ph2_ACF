@@ -178,7 +178,16 @@ bool DQMInterface::running()
 		//TODO We need to optimize the data readout so we don't do multiple copies
 		//if(fListener->receive(tmpDataBuffer, 0, 100000) > 0)
 		{
-			tmpDataBuffer = fListener->receive<std::vector<char>>();
+			try
+			{
+				tmpDataBuffer = fListener->receive<std::vector<char>>();
+			}
+			catch (const std::exception &e)
+			{
+				std::cout << __PRETTY_FUNCTION__ << "Error: " << e.what() << std::endl;
+				fRunning = false;
+				break;
+			}
 			std::cout << __PRETTY_FUNCTION__ << "Got something" << std::endl;
 			fDataBuffer.insert(fDataBuffer.end(), tmpDataBuffer.begin(), tmpDataBuffer.end());
 			std::cout << __PRETTY_FUNCTION__ << "Data buffer size: " << fDataBuffer.size() << std::endl;

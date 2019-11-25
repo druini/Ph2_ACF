@@ -22,6 +22,8 @@ protected:
 	std::string             currentRun_= "0";
 	bool                    running_   = false;
 	bool                    paused_    = false;
+private:
+	std::string sendCommand(const std::string& command);
 
 };
 
