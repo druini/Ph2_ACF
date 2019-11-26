@@ -94,7 +94,7 @@ namespace Ph2_HwInterface
     uint32_t  getBoardInfo   ()                      override;
     BoardType getBoardType   () const { return BoardType::FC7; };
 
-    void ResetSequence       (); // @TMP@
+    void ResetSequence       ();
     void ConfigureBoard      (const BeBoard* pBoard) override;
 
     void Start               () override;
