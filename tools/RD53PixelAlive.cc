@@ -212,7 +212,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
               int deltaBCID = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
                 theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
               deltaBCID += (deltaBCID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
-              if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDRED << "PixelAlive::analyze\tdeltaBCID out of range: " << deltaBCID << RESET;
+              if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDBLUE <<"PixelAlive::analyze: " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
               else theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
             }
 
@@ -221,7 +221,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
               int deltaTrgID = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
                 theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
               deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
-              if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDRED << "PixelAlive::analyze\tdeltaTrgID out of range: " << deltaTrgID << RESET;
+              if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDBLUE << "PixelAlive::analyze: " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
               else theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
             }
         }

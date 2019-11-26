@@ -332,7 +332,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    void CbcInterface::WriteBroadcastChipReg ( const Module* pModule, const std::string& pRegNode, uint16_t pValue )
+    void CbcInterface::WriteModuleBroadcastChipReg ( const Module* pModule, const std::string& pRegNode, uint16_t pValue )
     {
         //first set the correct BeBoard
         setBoard ( pModule->getBeBoardId() );

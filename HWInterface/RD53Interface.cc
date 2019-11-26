@@ -98,6 +98,8 @@ namespace Ph2_HwInterface
     RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
 
     usleep(DEEPSLEEP);
+
+    RD53Interface::SyncRD53(pChip);
   }
 
   void RD53Interface::SyncRD53 (Chip* pChip)
@@ -122,10 +124,9 @@ namespace Ph2_HwInterface
     std::vector<std::pair<uint16_t,uint16_t>> regReadback;
     unsigned int pixMode = 0;
     unsigned int row     = 0;
-    uint16_t value       = data;
     uint16_t address     = pChip->getRegItem(pRegNode).fAddress;
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, value));
+    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, data));
     if ((pRegNode == "VCAL_HIGH") || (pRegNode == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
 
     if (pVerifLoop == true)
@@ -139,24 +140,24 @@ namespace Ph2_HwInterface
             if ((pixMode == 0) &&
                 (((pRegNode == "PIX_PORTAL") && (regReadback[0].first != row))     ||
                  ((pRegNode != "PIX_PORTAL") && (regReadback[0].first != address)) ||
-                 (regReadback[0].second != value)))
+                 (regReadback[0].second != data)))
               {
                 LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
                 return false;
               }
-            else pChip->setReg(pRegNode, value);
+            else pChip->setReg(pRegNode, data);
           }
       }
 
     return true;
   }
 
-  void RD53Interface::WriteBroadcastChipReg (const Module* pModule, const std::string& pRegNode, const uint16_t data)
+  void RD53Interface::WriteBoardBroadcastChipReg (const BeBoard* pBoard, const std::string& pRegNode, const uint16_t data)
   {
-    RD53 myChip(*static_cast<RD53*>(pModule->fReadoutChipVector.at(0)));
-    myChip.setChipId(RD53Constants::BROADCAST_CHIPID);
+    this->setBoard(pBoard->getId());
 
-    RD53Interface::WriteChipReg(&myChip, pRegNode, data, false);
+    uint16_t address = pBoard->fModuleVector.at(0)->fReadoutChipVector.at(0)->getRegItem(pRegNode).fAddress;
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, address, data).getFrames(), -1);
   }
 
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode) // @TMP@
@@ -171,7 +172,7 @@ namespace Ph2_HwInterface
         auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
         if (regReadback.size() == 0)
           {
-            LOG (WARNING) << BLUE << "Empty register readback, attempt n. " << BOLDYELLOW << attempt << RESET;
+            LOG (WARNING) << BLUE << "Empty register readback, attempt n. " << YELLOW << attempt << RESET;
             usleep(VCALSLEEP);
           }
         else return regReadback[0].second;

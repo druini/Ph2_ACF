@@ -35,7 +35,7 @@
 #define RUNNUMBER     0
 #define RESULTDIR     "Results" // Directory containing the results
 #define FILERUNNUMBER "./RunNumber.txt"
-#define SETBATCH      false // Set batch mode when running supervisor
+#define SETBATCH      0 // Set batch mode when running supervisor
 
 
 INITIALIZE_EASYLOGGINGPP
@@ -99,7 +99,6 @@ int main (int argc, char** argv)
   cmd.defineOption ("sup", "Run in producer(Moddleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("sup", "s");
 
-  // @TMP@
   cmd.defineOption("reset","Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative("reset", "r");
 
@@ -116,7 +115,7 @@ int main (int argc, char** argv)
   bool saveRaw           = cmd.foundOption("raw")   == true ? true : false;
   bool program           = cmd.foundOption("prog")  == true ? true : false;
   bool supervisor        = cmd.foundOption("sup")   == true ? true : false;
-  bool reset             = cmd.foundOption("reset") == true ? true : false; // @TMP@
+  bool reset             = cmd.foundOption("reset") == true ? true : false;
 
 
   // ###################
@@ -219,7 +218,6 @@ int main (int argc, char** argv)
                   {
                     LOG (INFO) << BOLDBLUE << "Supervisor sending stop" << RESET;
 
-                    // @TMP@ : shoule be inverted but it does not work
                     usleep(2e6);
                     theMiddlewareInterface.stop();
                     usleep(1e6);
@@ -250,7 +248,6 @@ int main (int argc, char** argv)
       // # Instantiate SystemController #
       // ################################
       SystemController mySysCntr;
-      // @TMP@
       if (reset == true)
         {
           std::stringstream outp;

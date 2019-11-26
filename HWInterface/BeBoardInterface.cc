@@ -1,30 +1,27 @@
 /*
-
   FileName :                    BeBoardInterface.cc
   Content :                     User Interface to the Boards
   Programmer :                  Lorenzo BIDEGAIN, Nicolas PIERRE
   Version :                     1.0
   Date of creation :            31/07/14
   Support :                     mail to : lorenzo.bidegain@gmail.com nico.pierre@icloud.com
-
 */
 
 #include "BeBoardInterface.h"
 
-namespace Ph2_HwInterface {
-
-  BeBoardInterface::BeBoardInterface ( const BeBoardFWMap& pBoardMap ) :
-    fBoardMap ( pBoardMap ),
-    fBoardFW ( nullptr ),
-    prevBoardIdentifier ( 65535 )
-
+namespace Ph2_HwInterface
+{
+  BeBoardInterface::BeBoardInterface (const BeBoardFWMap& pBoardMap)
+    : fBoardMap           (pBoardMap)
+    , fBoardFW            (nullptr)
+    , prevBoardIdentifier (65535)
   {}
 
   BeBoardInterface::~BeBoardInterface() {}
 
-  void BeBoardInterface::setBoard ( uint16_t pBoardIdentifier )
+  void BeBoardInterface::setBoard (uint16_t pBoardIdentifier)
   {
-    if ( prevBoardIdentifier != pBoardIdentifier )
+    if (prevBoardIdentifier != pBoardIdentifier)
       {
         BeBoardFWMap::iterator i = fBoardMap.find ( pBoardIdentifier );
 
@@ -59,7 +56,6 @@ namespace Ph2_HwInterface {
   void BeBoardInterface::WriteBoardReg ( BeBoard* pBoard, const std::string& pRegNode, const uint32_t& pVal )
   {
     setBoard ( pBoard->getBeBoardId() );
-
     fBoardFW->WriteReg ( pRegNode, pVal );
     pBoard->setReg ( pRegNode, pVal );
   }
@@ -73,14 +69,9 @@ namespace Ph2_HwInterface {
   void BeBoardInterface::WriteBoardMultReg ( BeBoard* pBoard, const std::vector < std::pair< std::string, uint32_t > >& pRegVec )
   {
     setBoard ( pBoard->getBeBoardId() );
-
     fBoardFW->WriteStackReg ( pRegVec );
-
     for ( const auto& cReg : pRegVec )
-      {
-        // fBoardFW->WriteReg( cReg.first, cReg.second );
-        pBoard->setReg ( cReg.first, cReg.second );
-      }
+      pBoard->setReg ( cReg.first, cReg.second );
   }
 
   uint32_t BeBoardInterface::ReadBoardReg ( BeBoard* pBoard, const std::string& pRegNode )
@@ -94,7 +85,6 @@ namespace Ph2_HwInterface {
   void BeBoardInterface::ReadBoardMultReg ( BeBoard* pBoard, std::vector < std::pair< std::string, uint32_t > >& pRegVec )
   {
     setBoard ( pBoard->getBeBoardId() );
-
     for ( auto& cReg : pRegVec )
       try
         {
@@ -108,58 +98,70 @@ namespace Ph2_HwInterface {
         }
   }
 
-  std::vector<uint32_t> BeBoardInterface::ReadBlockBoardReg ( BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize )
+  std::vector<uint32_t> BeBoardInterface::ReadBlockBoardReg (BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize)
   {
-    setBoard ( pBoard->getBeBoardId() );
-    return fBoardFW->ReadBlockRegValue ( pRegNode, pSize );
+    setBoard(pBoard->getBeBoardId());
+    return fBoardFW->ReadBlockRegValue(pRegNode, pSize);
   }
 
-  uint32_t BeBoardInterface::getBoardInfo ( const BeBoard* pBoard )
+  uint32_t BeBoardInterface::getBoardInfo (const BeBoard* pBoard)
   {
-    setBoard ( pBoard->getBeBoardId() );
+    setBoard(pBoard->getBeBoardId());
     return fBoardFW->getBoardInfo();
   }
 
-  BoardType BeBoardInterface::getBoardType ( const BeBoard* pBoard )
+  BoardType BeBoardInterface::getBoardType (const BeBoard* pBoard)
   {
-    setBoard ( pBoard->getBeBoardId() );
+    setBoard(pBoard->getBeBoardId());
     return fBoardFW->getBoardType();
   }
 
-  void BeBoardInterface::ConfigureBoard ( const BeBoard* pBoard )
+  void BeBoardInterface::ConfigureBoard (const BeBoard* pBoard)
   {
-    setBoard ( pBoard->getBeBoardId() );
-    fBoardFW->ConfigureBoard ( pBoard );
+    setBoard(pBoard->getBeBoardId());
+    fBoardFW->ConfigureBoard (pBoard);
   }
 
-  void BeBoardInterface::Start ( BeBoard* pBoard )
+  void BeBoardInterface::Start (BeBoard* pBoard)
   {
-    setBoard ( pBoard->getBeBoardId() );
+    theMtx.lock();
+
+    setBoard(pBoard->getBeBoardId());
     fBoardFW->Start();
+
+    theMtx.unlock();
   }
 
-  void BeBoardInterface::Stop ( BeBoard* pBoard )
+  void BeBoardInterface::Stop (BeBoard* pBoard)
   {
-    setBoard ( pBoard->getBeBoardId() );
+    theMtx.lock();
+
+    setBoard(pBoard->getBeBoardId());
     fBoardFW->Stop();
+
+    theMtx.unlock();
   }
 
-  void BeBoardInterface::Pause ( BeBoard* pBoard )
+  void BeBoardInterface::Pause (BeBoard* pBoard)
   {
-    setBoard ( pBoard->getBeBoardId() );
+    setBoard(pBoard->getBeBoardId());
     fBoardFW->Pause();
   }
 
-  void BeBoardInterface::Resume ( BeBoard* pBoard )
+  void BeBoardInterface::Resume (BeBoard* pBoard)
   {
-    setBoard ( pBoard->getBeBoardId() );
+    setBoard(pBoard->getBeBoardId());
     fBoardFW->Resume();
   }
 
-  uint32_t BeBoardInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait )
+  uint32_t BeBoardInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
   {
-    setBoard ( pBoard->getBeBoardId() );
-    return fBoardFW->ReadData ( pBoard, pBreakTrigger, pData, pWait );
+    theMtx.lock();
+
+    setBoard(pBoard->getBeBoardId());
+    return fBoardFW->ReadData(pBoard, pBreakTrigger, pData, pWait);
+
+    theMtx.unlock();
   }
 
   void BeBoardInterface::ReadNEvents ( BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )

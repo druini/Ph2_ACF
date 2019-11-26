@@ -103,7 +103,7 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        void WriteBroadcastChipReg ( const Module* pModule, const std::string& pRegNode, uint16_t pValue );
+        void WriteModuleBroadcastChipReg ( const Module* pModule, const std::string& pRegNode, uint16_t pValue );
 
         /*!
          * \brief Write same register in all Cbcs and then UpdateCbc

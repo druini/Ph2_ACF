@@ -31,7 +31,7 @@ namespace Ph2_HwInterface
 
     bool     ConfigureChip                     (Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                     override;
     bool     WriteChipReg                      (Chip* pChip, const std::string& pRegNode, uint16_t data, bool pVerifLoop = true)                    override;
-    void     WriteBroadcastChipReg             (const Module* pModule, const std::string& pRegNode, uint16_t data)                                  override;
+    void     WriteBoardBroadcastChipReg        (const BeBoard* pBoard, const std::string& pRegNode, uint16_t data)                                  override;
     bool     WriteChipAllLocalReg              (ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue, bool pVerifLoop = true)      override;
     void     ReadChipAllLocalReg               (ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue)                              override;
     uint16_t ReadChipReg                       (Chip* pChip, const std::string& pRegNode)                                                           override;

@@ -45,7 +45,6 @@ namespace Ph2_HwInterface
     return cVersionWord;
   }
 
-  // @TMP@
   void RD53FWInterface::ResetSequence()
   {
     LOG (INFO) << BOLDMAGENTA << "Resetting the backend board... it may take a while" << RESET;
@@ -60,10 +59,6 @@ namespace Ph2_HwInterface
   void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)
   {
     std::stringstream myString;
-    // @TMP@
-    // RD53FWInterface::TurnOffFMC();
-    // RD53FWInterface::TurnOnFMC();
-    // RD53FWInterface::ResetBoard();
     RD53FWInterface::ChipReset();
     RD53FWInterface::ChipReSync();
     RD53FWInterface::ResetFastCmdBlk();
@@ -97,14 +92,14 @@ namespace Ph2_HwInterface
     // # 2 = double chip module       #
     // # 4 = quad chip module         #
     // ################################
-    this->singleChip    = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
-    uint16_t modules_en = 0;
-    uint32_t chips_en   = 0;
+    this->singleChip  = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
+    uint32_t chips_en = 0;
+    enabledModules    = 0;
     for (const auto& cModule : pBoard->fModuleVector)
       {
         uint16_t module_id = cModule->getFeId(); // @TMP@
-        modules_en |= 1 << module_id;
-        if (this->singleChip == true) chips_en = modules_en;
+        enabledModules |= 1 << module_id;
+        if (this->singleChip == true) chips_en = enabledModules;
         else
           {
             uint16_t mod_chips_en = 0;
@@ -116,7 +111,7 @@ namespace Ph2_HwInterface
             chips_en |= mod_chips_en << (NLANE_MODULE * module_id);
           }
       }
-    cVecReg.push_back({"user.ctrl_regs.Hybrids_en", modules_en});
+    cVecReg.push_back({"user.ctrl_regs.Hybrids_en", enabledModules});
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
 
     if (cVecReg.size() != 0) WriteStackReg(cVecReg);
@@ -134,12 +129,15 @@ namespace Ph2_HwInterface
     std::vector<uint16_t> commandList(NFRAMES_SYNC,0x0000);
     while (RD53FWInterface::CheckChipCommunication() == false)
       {
-        RD53FWInterface::WriteChipCommand(commandList, modules_en);
+        RD53FWInterface::WriteChipCommand(commandList, enabledModules);
         usleep(DEEPSLEEP);
       }
   }
 
-  void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, unsigned int moduleId)
+  void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, int moduleId)
+  // #############################################
+  // # moduleId < 0 --> broadcast to all modules #
+  // #############################################
   {
     size_t n32bitWords = (data.size() / 2) + (data.size() % 2);
 
@@ -161,7 +159,7 @@ namespace Ph2_HwInterface
     stackRegisters.reserve(n32bitWords + 1);
 
     // Header
-    stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<6, 10, 4, 12>(HEADEAR_WRTCMD, (1 << moduleId), 0, n32bitWords));
+    stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<6, 10, 4, 12>(HEADEAR_WRTCMD, (moduleId < 0 ? enabledModules : 1 << moduleId), 0, n32bitWords));
 
     // Commands
     for (auto i = 1u; i < data.size(); i += 2)
@@ -664,7 +662,7 @@ namespace Ph2_HwInterface
 
     if (retry == true)
       {
-        LOG (ERROR) << BOLDRED << "Reached the maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ") without success" << RESET;
+        LOG (ERROR) << BOLDBLUE << "RD53FWInterface::ReadNEvent: " << BOLDRED << "reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
       }
 

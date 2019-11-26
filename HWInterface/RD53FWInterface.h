@@ -109,7 +109,7 @@ namespace Ph2_HwInterface
     std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)           override;
 
     bool CheckChipCommunication ();
-    void WriteChipCommand       (const std::vector<uint16_t>& data, unsigned int moduleId);
+    void WriteChipCommand       (const std::vector<uint16_t>& data, int moduleId);
     std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Chip* pChip);
 
     struct ChipFrame
@@ -246,6 +246,7 @@ namespace Ph2_HwInterface
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
+    uint16_t           enabledModules;
     bool               singleChip;
   };
 

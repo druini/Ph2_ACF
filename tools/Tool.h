@@ -129,10 +129,11 @@ class Tool : public SystemController
     //enable commissioning loops and Test Pulse
     void setFWTestPulse();
     // make test groups for everything Test pulse or Calibration
-    void SetTestAllChannels(bool pAllChan) { fAllChan     = pAllChan;     }
-    void SetTestPulse(bool pTestPulse)     { fTestPulse   = pTestPulse;   }
-    void SetBroadcast(bool pDoBroadcast)   { fDoBroadcast = pDoBroadcast; }
-    void SetSkipMaskedChannels( bool pSkipMaskedChannels ) {fSkipMaskedChannels = pSkipMaskedChannels; }
+    void SetTestAllChannels   (bool pAllChan)            { fAllChan            = pAllChan;            }
+    void SetTestPulse         (bool pTestPulse)          { fTestPulse          = pTestPulse;          }
+    void SetModuleBroadcast   (bool pDoBroadcast)        { fDoModuleBroadcast  = pDoBroadcast;        }
+    void SetBoardBroadcast    (bool pDoBroadcast)        { fDoBoardBroadcast   = pDoBroadcast;        }
+    void SetSkipMaskedChannels(bool pSkipMaskedChannels) { fSkipMaskedChannels = pSkipMaskedChannels; }
     //for hybrid testing
     void CreateReport();
     void AmmendReport (std::string pString );
@@ -380,7 +381,8 @@ private:
     bool fAllChan;
     bool fMaskChannelsFromOtherGroups;
     bool fTestPulse;
-    bool fDoBroadcast;
+    bool fDoModuleBroadcast;
+    bool fDoBoardBroadcast;
     ChannelGroupHandler*   fChannelGroupHandler;
 
     std::string getCalibrationName();
