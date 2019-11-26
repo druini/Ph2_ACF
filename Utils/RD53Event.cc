@@ -25,6 +25,7 @@ namespace Ph2_HwInterface
 
   void RD53Event::fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
   {
+    // @TMP@
     if (boardContainer->size() == 0) std::cout << "AAA CONT " << std::endl;
     try
       {

@@ -80,8 +80,7 @@ class Physics : public Tool
   bool doUpdateChip;
   bool doDisplay;
   bool doLocal;
-  /* std::atomic<bool> keepRunning; */
-  bool keepRunning;
+  std::atomic<bool> keepRunning;
   std::thread thrRun;
 };
 
