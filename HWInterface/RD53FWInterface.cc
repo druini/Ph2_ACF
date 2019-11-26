@@ -572,11 +572,13 @@ namespace Ph2_HwInterface
 
   uint32_t RD53FWInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
   {
-    uint32_t doHandshake = ReadReg("user.ctrl_regs.readout_block.data_handshake_en").value();
     uint32_t nWordsInMemoryOld, nWordsInMemory = 0;
 
 
-    if (doHandshake == true)
+    // ########################################
+    // # Wait until we have something in DDR3 #
+    // ########################################
+    if (HANDSHAKE_EN == true)
       {
         while (ReadReg("user.stat_regs.readout4.readout_req").value() == 0)
           {
@@ -602,12 +604,15 @@ namespace Ph2_HwInterface
     // auto nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
 
 
+    // #############
+    // # Read DDR3 #
+    // #############
     uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory - ddr3Offset, ddr3Offset);
     ddr3Offset = nWordsInMemory;
     for (const auto& val : values) pData.push_back(val);
 
-    if (this->fSaveToFile == true) this->fFileHandler->set(pData);
 
+    if (this->fSaveToFile == true) this->fFileHandler->set(pData);
     return pData.size();
   }
 
@@ -673,7 +678,7 @@ namespace Ph2_HwInterface
   void RD53FWInterface::DecodeEvents (const std::vector<uint32_t>& data, uint16_t& evtStatus, std::vector<RD53FWInterface::Event>& events)
   {
     std::vector<size_t> event_start;
-    size_t maxL1Counter = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t maxL1Counter = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
     if (data.size() != 0) evtStatus = RD53FWEvtEncoder::GOOD;
     else

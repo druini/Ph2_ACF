@@ -41,7 +41,6 @@ class Physics : public Tool
   void Stop  ()                override;
   void ConfigureCalibration () override;
 
-  void StartStopEmulator ();
   void sendData          (BoardContainer* const& cBoard);
   void initialize        (const std::string fileRes_, const std::string fileReg_);
   void run               ();
@@ -83,7 +82,6 @@ class Physics : public Tool
   bool doLocal;
   bool keepRunning;
   std::thread thrRun;
-  std::thread thrStartStopEmulator;
 };
 
 #endif

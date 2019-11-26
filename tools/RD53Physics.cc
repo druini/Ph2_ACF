@@ -61,9 +61,6 @@ void Physics::Start (int currentRun)
   keepRunning = true;
   std::thread thrRun_(&Physics::run, this);
   thrRun.swap(thrRun_);
-
-  std::thread thrStartStopEmulator_(&Physics::StartStopEmulator, this);
-  thrStartStopEmulator.swap(thrStartStopEmulator_);
 }
 
 void Physics::sendData (BoardContainer* const& cBoard)
@@ -85,8 +82,8 @@ void Physics::sendData (BoardContainer* const& cBoard)
 
 void Physics::Stop ()
 {
+  SystemController::Stop();
   keepRunning = false;
-  thrStartStopEmulator.join();
   thrRun.join();
 
 
@@ -117,17 +114,6 @@ void Physics::initialize (const std::string fileRes_, const std::string fileReg_
 #endif
 
   doLocal = true;
-}
-
-void Physics::StartStopEmulator ()
-{
-  while (keepRunning == true)
-    {
-      SystemController::Start(0);
-      usleep(READOUTSLEEP);
-      SystemController::Stop();
-      usleep(READOUTSLEEP);
-    }
 }
 
 void Physics::run ()
