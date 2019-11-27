@@ -270,7 +270,7 @@ namespace Ph2_HwInterface
 
   bool RD53FWInterface::CheckChipCommunication()
   {
-    LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
+    LOG (INFO) << GREEN << "Checking status communication FW <----> RD53" << RESET;
 
 
     // ###############################

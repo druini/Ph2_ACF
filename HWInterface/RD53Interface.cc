@@ -188,8 +188,11 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pBoard->getId());
 
+    std::vector<uint16_t> commandList;
+    RD53Interface::AddSyncRD53(commandList);
     uint16_t address = pBoard->fModuleVector.at(0)->fReadoutChipVector.at(0)->getRegItem(pRegNode).fAddress;
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, address, data).getFrames(), -1);
+    RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, address, data).appendTo(commandList);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, -1);
   }
 
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode) // @TMP@
