@@ -127,19 +127,6 @@ namespace Ph2_HwInterface
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
   }
 
-  void RD53FWInterface::EstablishChipCommunication()
-  {
-    // #################################################
-    // # Establish proper communication with the chips #
-    // #################################################
-    std::vector<uint16_t> commandList(NFRAMES_SYNC,0x0000);
-    while (RD53FWInterface::CheckChipCommunication() == false)
-      {
-        RD53FWInterface::WriteChipCommand(commandList, enabledModules);
-        usleep(DEEPSLEEP);
-      }
-  }
-
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, int moduleId)
   // #############################################
   // # moduleId < 0 --> broadcast to all modules #
@@ -290,20 +277,20 @@ namespace Ph2_HwInterface
     // # Check RD53 AURORA registers #
     // ###############################
     unsigned int speed_flag = ReadReg ("user.stat_regs.aurora_rx.speed");
-    LOG (INFO) << GREEN << "Aurora speed: " << BOLDYELLOW << (speed_flag == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
+    LOG (INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (speed_flag == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
 
     unsigned int lane_up = ReadReg ("user.stat_regs.aurora_rx.lane_up");
-    LOG (INFO) << GREEN << "Number of available data lanes: " << BOLDYELLOW << RD53::countBitsOne(lane_up) << GREEN << " i.e. " << BOLDYELLOW << std::bitset<20>(lane_up) << RESET;
+    LOG (INFO) << BOLDBLUE << "\t--> Number of available data lanes: " << BOLDYELLOW << RD53::countBitsOne(lane_up) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<20>(lane_up) << RESET;
 
 
     // ########################################
     // # Check communication with the chip(s) #
     // ########################################
     unsigned int chips_en = ReadReg ("user.ctrl_regs.Chips_en");
-    LOG (INFO) << GREEN << "Number of enabled data lanes: " << BOLDYELLOW << RD53::countBitsOne(chips_en) << GREEN << " i.e. " << BOLDYELLOW << std::bitset<12>(chips_en) << RESET;
+    LOG (INFO) << BOLDBLUE << "\t--> Number of required data lanes: " << BOLDYELLOW << RD53::countBitsOne(chips_en) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<12>(chips_en) << RESET;
 
     unsigned int channel_up = ReadReg ("user.stat_regs.aurora_rx_channel_up");
-    LOG (INFO) << GREEN << "Number of active data lanes: " << BOLDYELLOW << RD53::countBitsOne(channel_up) << GREEN << "  i.e. " << BOLDYELLOW << std::bitset<12>(channel_up) << RESET;
+    LOG (INFO) << BOLDBLUE << "\t--> Number of active data lanes:   " << BOLDYELLOW << RD53::countBitsOne(channel_up) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<12>(channel_up) << RESET;
 
     if (chips_en & ~channel_up)
     {

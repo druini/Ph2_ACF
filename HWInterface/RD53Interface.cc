@@ -15,18 +15,23 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::ConfigureChip (Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
+    this->setBoard(pChip->getBeBoardId());
+
     ChipRegMap pRD53RegMap = pChip->getRegMap();
+
 
     // ###################################
     // # Initializing chip communication #
     // ###################################
-    RD53Interface::InitRD53Aurora(pChip);
+    if (RD53Interface::InitRD53Aurora(pChip) == false) return false;
+
 
     // ###############################################################
     // # Enable monitoring (needed for AutoRead register monitoring) #
     // ###############################################################
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
     RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x4));
+
 
     // ################################################
     // # Programming global registers from white list #
@@ -48,6 +53,7 @@ namespace Ph2_HwInterface
       if (it != pRD53RegMap.end()) RD53Interface::WriteChipReg(pChip, it->first, it->second.fValue, true);
     }
 
+
     // ###############################
     // # Programmig global registers #
     // ###############################
@@ -64,16 +70,29 @@ namespace Ph2_HwInterface
         if (i == arraySize(registerBlackList)) RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, true);
       }
 
+
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
     RD53Interface::WriteRD53Mask(static_cast<RD53*>(const_cast<Chip*>(pChip)), false, true, true);
 
+
     return true;
   }
 
-  void RD53Interface::InitRD53Aurora (Chip* pChip)
+  bool RD53Interface::InitRD53Aurora (Chip* pChip)
   {
+    this->setBoard(pChip->getBeBoardId());
+    auto theFWboard = static_cast<RD53FWInterface*>(fBoardFW);
+
+
+    // #############################
+    // # Synchronize communication #
+    // #############################
+    RD53Interface::sendCommand(pChip, RD53Cmd::Sync());
+    RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
+
+
     // ##############################
     // # 1 Autora active lane       #
     // # OUTPUT_CONFIG = 0b00000100 #
@@ -99,45 +118,27 @@ namespace Ph2_HwInterface
 
     usleep(DEEPSLEEP);
 
-    // #################################################
-    // # Establish proper communication with the chips #
-    // #################################################
-    /*
-    std::vector<uint16_t> commandList(2000,0x0000);
-    while (static_cast<RD53FWInterface*>(fBoardFW)->CheckChipCommunication() == false)
+
+    // #################
+    // # Forse locking #
+    // #################
+    bool status = theFWboard->CheckChipCommunication();
+    if (status == false)
       {
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, 3);
+        std::vector<uint16_t> commandList(NFRAMES_SYNC,0x0000);
+        theFWboard->WriteChipCommand(commandList, theFWboard->GetEnabledModules());
+        status = theFWboard->CheckChipCommunication();
 
-        // ########################################
-        // # Synchronize communication with chips #
-        // ########################################
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::Sync().getFrames(), 3);
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::ECR().getFrames(), 3);
-        // RD53Interface::SyncRD53(pChip);
-        // RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
-
-        // RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG",      0x04, false); // Number of active lanes [5:2]
-        // RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x01, false); // CML_EN_LANE[3:0]
-        // RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false); // 0x30 = reset Aurora AND Serializer
-        // RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(pChip->getChipId(), pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress, 0x30).getFrames(), 3);
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01).getFrames(), 3);
-
+        usleep(DEEPSLEEP);
       }
-    // static_cast<RD53FWInterface*>(fBoardFW)->EstablishChipCommunication();
-    */
 
-    // ########################################
-    // # Synchronize communication with chips #
-    // ########################################
-    RD53Interface::SyncRD53(pChip);
+
+    return status;
   }
 
-  void RD53Interface::SyncRD53 (Chip* pChip)
+  void RD53Interface::AddSyncRD53 (std::vector<uint16_t>& commandList)
   {
-    this->setBoard(pChip->getBeBoardId());
-
-    for (auto i = 0u; i < RD53Constants::NSYNC_WORS; i++) RD53Interface::sendCommand(pChip, RD53Cmd::Sync());
+    for (auto i = 0u; i < RD53Constants::NSYNC_WORS; i++) RD53Cmd::Sync().appendTo(commandList);
   }
 
   void RD53Interface::ResetRD53 (Chip* pChip)
@@ -193,6 +194,8 @@ namespace Ph2_HwInterface
 
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode) // @TMP@
   {
+    this->setBoard(pChip->getBeBoardId());
+
     // auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
     // return regReadback[0].second;
 
@@ -229,7 +232,10 @@ namespace Ph2_HwInterface
 
   void RD53Interface::WriteRD53Mask (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop)
   {
+    this->setBoard(pRD53->getBeBoardId());
+
     std::vector<uint16_t> commandList;
+    RD53Interface::AddSyncRD53(commandList);
 
     const uint16_t REGION_COL_ADDR  = pRD53->getRegItem("REGION_COL").fAddress;
     const uint16_t REGION_ROW_ADDR  = pRD53->getRegItem("REGION_ROW").fAddress;
@@ -282,6 +288,7 @@ namespace Ph2_HwInterface
                   {
                     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getFeId()); // @TMP@
                     commandList.clear();
+                    RD53Interface::AddSyncRD53(commandList);
                   }
               }
           }
@@ -313,6 +320,7 @@ namespace Ph2_HwInterface
                   {
                     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getFeId()); // @TMP@
                     commandList.clear();
+                    RD53Interface::AddSyncRD53(commandList);
                   }
               }
           }

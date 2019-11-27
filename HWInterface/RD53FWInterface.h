@@ -25,7 +25,6 @@
 #define DEEPSLEEP 100000 // [microseconds]
 #define READOUTSLEEP  50 // [microseconds]
 #define MAXATTEMPTS    2 // Maximum number of attempts for ReadNEvents
-#define NFRAMES_SYNC  16 // Number of frames to synchronize chip communication
 
 // ##################
 // # BIT DEFINITION #
@@ -108,9 +107,9 @@ namespace Ph2_HwInterface
     void     ChipReSync  ()                                                                                     override;
     std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)           override;
 
-    void EstablishChipCommunication ();
-    bool CheckChipCommunication     ();
-    void WriteChipCommand           (const std::vector<uint16_t>& data, int moduleId);
+    uint16_t GetEnabledModules      () { return enabledModules; }
+    bool     CheckChipCommunication ();
+    void     WriteChipCommand       (const std::vector<uint16_t>& data, int moduleId);
     std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Chip* pChip);
 
     struct ChipFrame
