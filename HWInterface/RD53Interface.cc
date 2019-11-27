@@ -29,8 +29,8 @@ namespace Ph2_HwInterface
     // ###############################################################
     // # Enable monitoring (needed for AutoRead register monitoring) #
     // ###############################################################
-    RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x4));
+    // RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
+    // RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x4));
 
 
     // ################################################
@@ -89,7 +89,21 @@ namespace Ph2_HwInterface
     // #############################
     // # Synchronize communication #
     // #############################
-    RD53Interface::sendCommand(pChip, RD53Cmd::Sync());
+
+    // init commands
+    do {
+      // send sync words
+      theFWboard->WriteChipCommand(std::vector<uint16_t>(32, RD53CmdEncoder::SYNC), -1);
+
+      // enable monitoring
+      RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
+      RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x4));
+      
+      usleep(1);
+
+      // read a register to see whether the chip can receive commands or not
+    } while (RD53Interface::ReadRD53Reg(pChip, "Vthreshold_LIN").size() == 0);
+      
     RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
 
 
@@ -122,23 +136,23 @@ namespace Ph2_HwInterface
     // #################
     // # Forse locking #
     // #################
-    bool status = theFWboard->CheckChipCommunication();
-    if (status == false)
-      {
-        std::vector<uint16_t> commandList(NFRAMES_SYNC,0x0000);
-        theFWboard->WriteChipCommand(commandList, theFWboard->GetEnabledModules());
-        status = theFWboard->CheckChipCommunication();
+    // bool status = theFWboard->CheckChipCommunication();
+    // if (status == false)
+    //   {
+    //     std::vector<uint16_t> commandList(NFRAMES_SYNC,0x0000);
+    //     theFWboard->WriteChipCommand(commandList, theFWboard->GetEnabledModules());
+    //     status = theFWboard->CheckChipCommunication();
 
-        usleep(DEEPSLEEP);
-      }
+    //     usleep(DEEPSLEEP);
+    //   }
 
 
-    return status;
+    return true;
   }
 
   void RD53Interface::AddSyncRD53 (std::vector<uint16_t>& commandList)
   {
-    for (auto i = 0u; i < RD53Constants::NSYNC_WORS; i++) RD53Cmd::Sync().appendTo(commandList);
+    // for (auto i = 0u; i < RD53Constants::NSYNC_WORS; i++) RD53Cmd::Sync().appendTo(commandList);
   }
 
   void RD53Interface::ResetRD53 (Chip* pChip)

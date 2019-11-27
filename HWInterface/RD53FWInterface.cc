@@ -120,6 +120,11 @@ namespace Ph2_HwInterface
 
     if (cVecReg.size() != 0) WriteStackReg(cVecReg);
 
+    // Init Chip Data Communication
+    while (!CheckChipCommunication()) {
+      WriteChipCommand(std::vector<uint16_t>(1000, 0), -1);
+      usleep(10000);
+    }
 
     // ##################
     // # Configure DIO5 #
@@ -356,58 +361,60 @@ namespace Ph2_HwInterface
     // # Set #
     // #######
     WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",0);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",0);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.global_rst",1);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.clk_gen_rst",1);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.fmc_pll_rst",0);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",1);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.i2c_rst",1);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
 
     // #########
     // # Reset #
     // #########
     WriteReg ("user.ctrl_regs.reset_reg.global_rst",0);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.clk_gen_rst",0);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.fmc_pll_rst",1);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",0);
+
     usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.i2c_rst",0);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",1);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",1);
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
 
 
     // ########
     // # DDR3 #
     // ########
+
+    LOG (INFO) << YELLOW << "Waiting for DDR3 calibration..." << RESET;
     while (!ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done").value())
       {
-        LOG (INFO) << YELLOW << "Waiting for DDR3 calibration" << RESET;
         usleep(DEEPSLEEP);
       }
 
