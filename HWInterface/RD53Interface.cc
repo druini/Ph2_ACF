@@ -99,6 +99,34 @@ namespace Ph2_HwInterface
 
     usleep(DEEPSLEEP);
 
+    // #################################################
+    // # Establish proper communication with the chips #
+    // #################################################
+    /*
+    std::vector<uint16_t> commandList(2000,0x0000);
+    while (static_cast<RD53FWInterface*>(fBoardFW)->CheckChipCommunication() == false)
+      {
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, 3);
+
+        // ########################################
+        // # Synchronize communication with chips #
+        // ########################################
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::Sync().getFrames(), 3);
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::ECR().getFrames(), 3);
+        // RD53Interface::SyncRD53(pChip);
+        // RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
+
+        // RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG",      0x04, false); // Number of active lanes [5:2]
+        // RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x01, false); // CML_EN_LANE[3:0]
+        // RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false); // 0x30 = reset Aurora AND Serializer
+        // RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(pChip->getChipId(), pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress, 0x30).getFrames(), 3);
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01).getFrames(), 3);
+
+      }
+    // static_cast<RD53FWInterface*>(fBoardFW)->EstablishChipCommunication();
+    */
+
     // ########################################
     // # Synchronize communication with chips #
     // ########################################

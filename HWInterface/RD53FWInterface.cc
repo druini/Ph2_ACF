@@ -31,15 +31,17 @@ namespace Ph2_HwInterface
   {
     uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
     uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
-    uint32_t cVersionBuild = ReadReg ("user.stat_regs.usr_ver.usr_ver_build");
 
-    uint32_t cFWyear       = ReadReg ("user.stat_regs.usr_ver.usr_firmware_yy");
-    uint32_t cFWmonth      = ReadReg ("user.stat_regs.usr_ver.usr_firmware_mm");
-    uint32_t cFWday        = ReadReg ("user.stat_regs.usr_ver.usr_firmware_dd");
+    uint32_t cFWyear       = ReadReg ("user.stat_regs.fw_date.year");
+    uint32_t cFWmonth      = ReadReg ("user.stat_regs.fw_date.month");
+    uint32_t cFWday        = ReadReg ("user.stat_regs.fw_date.day");
+    uint32_t cFWhour       = ReadReg ("user.stat_regs.fw_date.hour");
+    uint32_t cFWminute     = ReadReg ("user.stat_regs.fw_date.minute");
+    uint32_t cFWseconds    = ReadReg ("user.stat_regs.fw_date.seconds");
 
-    LOG (INFO) << BOLDBLUE << "FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor
-               << BOLDBLUE << " -- Build version : " << BOLDYELLOW << cVersionBuild
-               << BOLDBLUE << " -- Firmware date (yyyy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/" << cFWday << RESET;
+    LOG (INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor
+               << BOLDBLUE << " -- date (yyyy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/" << cFWday
+               << BOLDBLUE << " -- time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
 
     uint32_t cVersionWord = ((cVersionMajor << NBIT_FWVER) | cVersionMinor);
     return cVersionWord;
@@ -58,6 +60,8 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)
   {
+    RD53FWInterface::getBoardInfo();
+
     std::stringstream myString;
     RD53FWInterface::ChipReset();
     RD53FWInterface::ChipReSync();
@@ -121,8 +125,10 @@ namespace Ph2_HwInterface
     // # Configure DIO5 #
     // ##################
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
+  }
 
-
+  void RD53FWInterface::EstablishChipCommunication()
+  {
     // #################################################
     // # Establish proper communication with the chips #
     // #################################################
@@ -249,7 +255,7 @@ namespace Ph2_HwInterface
     LOG (INFO) << GREEN << "Fast CMD block trigger source: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency)" << RESET;
 
     fastCMDReg = ReadReg ("user.stat_regs.fast_cmd.trigger_state");
-    LOG (INFO) << GREEN << "Fast CMD block trigger state: " << BOLDYELLOW << fastCMDReg << RESET;
+    LOG (INFO) << GREEN << "Fast CMD block trigger state: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (0=idle, 2=running)" << RESET;
 
     fastCMDReg = ReadReg ("user.stat_regs.fast_cmd.if_configured");
     LOG (INFO) << GREEN << "Fast CMD block check if configuraiton registers have been set: " << BOLDYELLOW << fastCMDReg << RESET;
@@ -285,9 +291,6 @@ namespace Ph2_HwInterface
     // ###############################
     unsigned int speed_flag = ReadReg ("user.stat_regs.aurora_rx.speed");
     LOG (INFO) << GREEN << "Aurora speed: " << BOLDYELLOW << (speed_flag == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
-
-    unsigned int aurora_clk = ReadReg ("user.stat_regs.aurora_rx.gt_refclk");
-    LOG (INFO) << GREEN << "Aurora GT reference clock: " << BOLDYELLOW << (aurora_clk == 0 ? "bad" : "good") << RESET;
 
     unsigned int lane_up = ReadReg ("user.stat_regs.aurora_rx.lane_up");
     LOG (INFO) << GREEN << "Number of available data lanes: " << BOLDYELLOW << RD53::countBitsOne(lane_up) << GREEN << " i.e. " << BOLDYELLOW << std::bitset<20>(lane_up) << RESET;
@@ -635,7 +638,7 @@ namespace Ph2_HwInterface
         // ####################
         RD53FWInterface::Start();
         while (ReadReg("user.stat_regs.trigger_cntr").value() < pNEvents*(1 + RD53FWInterface::localCfgFastCmd.trigger_duration)) usleep (READOUTSLEEP);
-        RD53FWInterface::ReadData(pBoard, false, pData, false /*pWait*/); // @TMP@ : FW bug triggers are recorded but DDR3 empty
+        RD53FWInterface::ReadData(pBoard, false, pData, pWait);
         RD53FWInterface::Stop();
 
 
@@ -801,7 +804,7 @@ namespace Ph2_HwInterface
         {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en",   (uint32_t)cfg->fast_cmd_fsm.second_cal_en},
         {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en",        (uint32_t)cfg->fast_cmd_fsm.trigger_en},
 
-        {"user.ctrl_regs.fast_cmd_reg_3.delay_after_ecr",          (uint32_t)cfg->fast_cmd_fsm.delay_after_ecr},
+        {"user.ctrl_regs.fast_cmd_reg_7.delay_after_ecr",          (uint32_t)cfg->fast_cmd_fsm.delay_after_ecr},
         {"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime",           (uint32_t)cfg->fast_cmd_fsm.first_cal_data},
         {"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse",  (uint32_t)cfg->fast_cmd_fsm.delay_after_first_cal},
         {"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject",          (uint32_t)cfg->fast_cmd_fsm.second_cal_data},
@@ -812,10 +815,9 @@ namespace Ph2_HwInterface
         // ################################
         // # @TMP@ Autozero configuration #
         // ################################
-        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",    2},
-        {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",     0},
-        {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",      0},
-        {"user.ctrl_regs.fast_cmd_reg_7.veto_after_autozero",0}
+        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",2},
+        {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", 0},
+        {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",  0},
       });
 
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
