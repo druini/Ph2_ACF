@@ -99,6 +99,9 @@ namespace Ph2_HwInterface
 
     usleep(DEEPSLEEP);
 
+    // ########################################
+    // # Synchronize communication with chips #
+    // ########################################
     RD53Interface::SyncRD53(pChip);
   }
 

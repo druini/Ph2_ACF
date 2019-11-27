@@ -21,8 +21,6 @@ namespace Ph2_HwInterface
 
   void BeBoardInterface::setBoard (uint16_t pBoardIdentifier)
   {
-    theMtx.lock();
-
     if (prevBoardIdentifier != pBoardIdentifier)
       {
         BeBoardFWMap::iterator i = fBoardMap.find ( pBoardIdentifier );
@@ -35,8 +33,6 @@ namespace Ph2_HwInterface
             prevBoardIdentifier = pBoardIdentifier;
           }
       }
-
-    theMtx.unlock();
   }
 
   void BeBoardInterface::SetFileHandler (BeBoard* pBoard, FileHandler* pHandler)
@@ -128,14 +124,22 @@ namespace Ph2_HwInterface
 
   void BeBoardInterface::Start (BeBoard* pBoard)
   {
+    theMtx.lock();
+
     setBoard(pBoard->getBeBoardId());
     fBoardFW->Start();
+
+    theMtx.unlock();
   }
 
   void BeBoardInterface::Stop (BeBoard* pBoard)
   {
+    theMtx.lock();
+
     setBoard(pBoard->getBeBoardId());
     fBoardFW->Stop();
+
+    theMtx.unlock();
   }
 
   void BeBoardInterface::Pause (BeBoard* pBoard)
@@ -152,8 +156,12 @@ namespace Ph2_HwInterface
 
   uint32_t BeBoardInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
   {
+    theMtx.lock();
+
     setBoard(pBoard->getBeBoardId());
     return fBoardFW->ReadData(pBoard, pBreakTrigger, pData, pWait);
+
+    theMtx.unlock();
   }
 
   void BeBoardInterface::ReadNEvents ( BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )

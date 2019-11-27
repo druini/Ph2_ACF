@@ -25,26 +25,7 @@ namespace Ph2_HwInterface
 
   void RD53Event::fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
   {
-    // @TMP@
-    if (boardContainer->size() == 0) std::cout << "AAA CONT " << std::endl;
-    try
-      {
-        if (boardContainer->at(0)->size() == 0) std::cout << "AAA MOD " << std::endl;
-      }
-    catch (const std::exception& e)
-      {
-        std::cerr << e.what() << '\n';
-        std::cout << "AAA CATCH " << boardContainer << " " << boardContainer->size() << std::endl;
-      }
-    if (boardContainer->at(0)->at(0)->size() == 0) std::cout << "AAA CHIP " << std::endl;
-    boardContainer->at(0)->isSummaryContainerType<Summary<GenericDataVector,OccupancyAndPh>>();
-    boardContainer->at(0)->at(0)->isSummaryContainerType<Summary<GenericDataVector,OccupancyAndPh>>();
     bool   vectorRequired = boardContainer->at(0)->at(0)->isSummaryContainerType<Summary<GenericDataVector,OccupancyAndPh>>();
-    // if (vectorRequired == true)
-    //   {
-    //     std::cout << "AAA IMPOSSIBLE" << std::endl;
-    //     exit(1);
-    //   }
     size_t chipIndx;
 
     for (const auto& cModule : *boardContainer)

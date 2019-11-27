@@ -662,7 +662,7 @@ namespace Ph2_HwInterface
 
     if (retry == true)
       {
-        LOG (ERROR) << BOLDBLUE << "RD53FWInterface::ReadNEvent: " << BOLDRED << "reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ") without success" << RESET;
+        LOG (ERROR) << BOLDBLUE << "[RD53FWInterface::ReadNEvent] " << BOLDRED << "reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
       }
 
