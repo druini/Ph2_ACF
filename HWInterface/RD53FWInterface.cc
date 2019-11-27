@@ -120,16 +120,21 @@ namespace Ph2_HwInterface
 
     if (cVecReg.size() != 0) WriteStackReg(cVecReg);
 
-    // Init Chip Data Communication
-    while (!CheckChipCommunication()) {
-      WriteChipCommand(std::vector<uint16_t>(1000, 0), -1);
-      usleep(10000);
-    }
 
     // ##################
     // # Configure DIO5 #
     // ##################
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
+
+
+    // ##############################
+    // # AURORA lock on data stream #
+    // ##############################
+    while (RD53FWInterface::CheckChipCommunication() == false)
+      {
+        RD53FWInterface::WriteChipCommand(std::vector<uint16_t>(NFRAMES_SYNC, 0), -1);
+        usleep(DEEPSLEEP);
+      }
   }
 
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, int moduleId)
@@ -284,9 +289,6 @@ namespace Ph2_HwInterface
     unsigned int speed_flag = ReadReg ("user.stat_regs.aurora_rx.speed");
     LOG (INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (speed_flag == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
 
-    unsigned int lane_up = ReadReg ("user.stat_regs.aurora_rx.lane_up");
-    LOG (INFO) << BOLDBLUE << "\t--> Number of available data lanes: " << BOLDYELLOW << RD53::countBitsOne(lane_up) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<20>(lane_up) << RESET;
-
 
     // ########################################
     // # Check communication with the chip(s) #
@@ -361,62 +363,34 @@ namespace Ph2_HwInterface
     // # Set #
     // #######
     WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",0);
-    // usleep(DEEPSLEEP);
-
     WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",0);
-    // usleep(DEEPSLEEP);
-
     WriteReg ("user.ctrl_regs.reset_reg.global_rst",1);
-    // usleep(DEEPSLEEP);
-
     WriteReg ("user.ctrl_regs.reset_reg.clk_gen_rst",1);
-    // usleep(DEEPSLEEP);
-
     WriteReg ("user.ctrl_regs.reset_reg.fmc_pll_rst",0);
-    // usleep(DEEPSLEEP);
-
     WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",1);
-    // usleep(DEEPSLEEP);
-
     WriteReg ("user.ctrl_regs.reset_reg.i2c_rst",1);
-    // usleep(DEEPSLEEP);
 
 
     // #########
     // # Reset #
     // #########
     WriteReg ("user.ctrl_regs.reset_reg.global_rst",0);
-    // usleep(DEEPSLEEP);
-
     WriteReg ("user.ctrl_regs.reset_reg.clk_gen_rst",0);
-    // usleep(DEEPSLEEP);
-
     WriteReg ("user.ctrl_regs.reset_reg.fmc_pll_rst",1);
-    // usleep(DEEPSLEEP);
-
     WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",0);
 
     usleep(DEEPSLEEP);
 
     WriteReg ("user.ctrl_regs.reset_reg.i2c_rst",0);
-    // usleep(DEEPSLEEP);
-
     WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",1);
-    // usleep(DEEPSLEEP);
-
     WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",1);
-    // usleep(DEEPSLEEP);
 
 
     // ########
     // # DDR3 #
     // ########
-
     LOG (INFO) << YELLOW << "Waiting for DDR3 calibration..." << RESET;
-    while (!ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done").value())
-      {
-        usleep(DEEPSLEEP);
-      }
+    while (ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done").value() == false) usleep(DEEPSLEEP);
 
     LOG (INFO) << BOLDBLUE << "\t--> DDR3 calibration done" << RESET;
   }

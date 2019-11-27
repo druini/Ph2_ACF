@@ -186,22 +186,16 @@ namespace Ph2_System
             // ###################
             // # Configure chips #
             // ###################
-            bool commStatus;
-            do
+            for (const auto& cModule : cBoard->fModuleVector)
               {
-                commStatus = true;
-                for (const auto& cModule : cBoard->fModuleVector)
+                LOG (INFO) << GREEN << "Initializing communication to Module: " << BOLDYELLOW << +cModule->getModuleId() << RESET;
+                for (const auto& cRD53 : cModule->fReadoutChipVector)
                   {
-                    LOG (INFO) << GREEN << "Initializing communication to Module: " << BOLDYELLOW << +cModule->getModuleId() << RESET;
-                    for (const auto& cRD53 : cModule->fReadoutChipVector)
-                      {
-                        LOG (INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cRD53->getChipId() << RESET;
-                        commStatus &= static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cRD53));
-                        LOG (INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
-                      }
+                    LOG (INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cRD53->getChipId() << RESET;
+                    static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cRD53));
+                    LOG (INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
                   }
               }
-            while (commStatus == false);
           }
       }
   }

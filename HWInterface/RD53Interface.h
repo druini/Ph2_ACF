@@ -18,9 +18,8 @@
 // #############
 // # CONSTANTS #
 // #############
-#define VCALSLEEP   50000 // [microseconds]
-#define NPIXCMD       100 // Number of possible pixel commands to stack
-#define NFRAMES_SYNC 1000 // Number of frames needed to synchronize chip communication
+#define VCALSLEEP 50000 // [microseconds]
+#define NPIXCMD     100 // Number of possible pixel commands to stack
 
 
 namespace Ph2_HwInterface
@@ -43,18 +42,10 @@ namespace Ph2_HwInterface
   private:
     std::vector<std::pair<uint16_t,uint16_t>> ReadRD53Reg (Chip* pChip, const std::string& pRegNode);
     void WriteRD53Mask  (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
-    bool InitRD53Aurora (Chip* pChip);
-    void AddSyncRD53    (std::vector<uint16_t>& commandList);
-    void ResetRD53      (Chip* pChip);
+    void InitRD53Aurora (Chip* pChip);
 
     template <typename T>
-      void sendCommand (Chip* pChip, const T& cmd)
-      {
-        std::vector<uint16_t> commandList;
-        RD53Interface::AddSyncRD53(commandList);
-        cmd.appendTo(commandList);
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getFeId());
-      }
+      void sendCommand (Chip* pChip, const T& cmd) { static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getFeId()); }
 
     template <typename T, size_t N>
       static size_t arraySize (const T(&)[N]) { return N; }
