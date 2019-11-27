@@ -159,9 +159,11 @@ namespace Ph2_HwInterface
     theMtx.lock();
 
     setBoard(pBoard->getBeBoardId());
-    return fBoardFW->ReadData(pBoard, pBreakTrigger, pData, pWait);
+    uint32_t dataSize = fBoardFW->ReadData(pBoard, pBreakTrigger, pData, pWait);
 
     theMtx.unlock();
+
+    return dataSize;
   }
 
   void BeBoardInterface::ReadNEvents ( BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )

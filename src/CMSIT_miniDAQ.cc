@@ -218,9 +218,9 @@ int main (int argc, char** argv)
                   {
                     LOG (INFO) << BOLDBLUE << "Supervisor sending stop" << RESET;
 
-                    usleep(2e6);
+                    usleep(3e6);
                     theMiddlewareInterface.stop();
-                    usleep(1e6);
+                    usleep(2e6);
                     theDQMInterface.stopProcessingData();
 
                     stateMachineStatus = STOPPED;
