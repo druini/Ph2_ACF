@@ -144,14 +144,22 @@ namespace Ph2_HwInterface
 
   void BeBoardInterface::Pause (BeBoard* pBoard)
   {
+    theMtx.lock();
+
     setBoard(pBoard->getBeBoardId());
     fBoardFW->Pause();
+
+    theMtx.unlock();
   }
 
   void BeBoardInterface::Resume (BeBoard* pBoard)
   {
+    theMtx.lock();
+
     setBoard(pBoard->getBeBoardId());
     fBoardFW->Resume();
+
+    theMtx.unlock();
   }
 
   uint32_t BeBoardInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
