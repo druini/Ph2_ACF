@@ -110,11 +110,14 @@ namespace Ph2_HwInterface
             for (const auto cChip : *cModule)
               {
                 uint16_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
+                std::cout << "chip_lane: "  << chip_lane << std::endl;
                 mod_chips_en |= 1 << chip_lane;
               }
             chips_en |= mod_chips_en << (NLANE_MODULE * module_id);
           }
       }
+      std::cout << std::bitset<12>(enabledModules) << std::endl;
+      std::cout << std::bitset<12>(chips_en) << std::endl;
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", enabledModules});
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
 
@@ -130,11 +133,13 @@ namespace Ph2_HwInterface
     // ##############################
     // # AURORA lock on data stream #
     // ##############################
-    while (RD53FWInterface::CheckChipCommunication() == false)
-      {
-        RD53FWInterface::WriteChipCommand(std::vector<uint16_t>(NFRAMES_SYNC, 0), -1);
-        usleep(DEEPSLEEP);
-      }
+    if (singleChip) {
+      while (RD53FWInterface::CheckChipCommunication() == false)
+        {
+          RD53FWInterface::WriteChipCommand(std::vector<uint16_t>(NFRAMES_SYNC, 0), -1);
+          usleep(DEEPSLEEP);
+        }
+    }
   }
 
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, int moduleId)

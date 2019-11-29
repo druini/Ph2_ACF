@@ -86,14 +86,32 @@ namespace Ph2_HwInterface
       {
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53CmdEncoder::SYNC), -1);
 
+        RD53Interface::WriteChipReg(pChip, "VOLTAGE_TRIM", (24 << 5) | 23, false);
+
+        RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 95, false);
+        RD53Interface::WriteChipReg(pChip, "CML_TAP0_BIAS", 1000, false);
+        RD53Interface::WriteChipReg(pChip, "CML_TAP1_BIAS", 100, false);
+
+        RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG",      0x04, false); // Number of active lanes [5:2]
+        // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
+        // Default 0 means 2 clocks, may need higher value in case of large propagation
+        // delays, for example at low VDDD voltage after irradiation
+        // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
+        // RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x01, true); // CML_EN_LANE[3:0]
+        RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false); // 0x30 = reset Aurora AND Serializer
+        RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
+
         // ###############################################################
         // # Enable monitoring (needed for AutoRead register monitoring) #
         // ###############################################################
         RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
         RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x4));
+        usleep(1);
+        RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
 
         usleep(DEEPSLEEP);
       } while (RD53Interface::ReadRD53Reg(pChip, "VCAL_HIGH").size() == 0);
+      
     RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
     LOG (INFO) << BOLDBLUE << "\t--> Done"  << RESET;
 
@@ -112,16 +130,9 @@ namespace Ph2_HwInterface
     // # CML_CONFIG    = 0b00001111 #
     // ##############################
 
-    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG",      0x04, true); // Number of active lanes [5:2]
-    // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
-    // Default 0 means 2 clocks, may need higher value in case of large propagation
-    // delays, for example at low VDDD voltage after irradiation
-    // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x01, true); // CML_EN_LANE[3:0]
-    RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, true); // 0x30 = reset Aurora AND Serializer
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
+    
 
-    usleep(DEEPSLEEP);
+    // usleep(DEEPSLEEP);
   }
 
   bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
