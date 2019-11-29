@@ -37,6 +37,7 @@ Setup the FC7:
 3. Restart the network: `sudo /etc/init.d/network restart`
 4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://centos.pkgs.org/6/epel-x86_64/rarpd-ss981107-42.el6.x86_64.rpm.html
 5. Start the rarpd daemon: `sudo systemctl start rarpd` or `rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
+
 More details on the hardware needed to setup the system can be bound here: https://espace.cern.ch/Tracker-Upgrade/DAQ/SitePages/Home.aspx
 
 Setup the firmware:
