@@ -16,6 +16,7 @@
 
 
 <hr>
+
 ## Middleware for the Inner-Tracker (IT) system
 
 Setup the FC7:
@@ -156,6 +157,7 @@ Here you can find a detailed description of the differente calibrations: https:/
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 ### ~=-=-=~ End of Inner-Tracker section ~=-=-=~
+
 <hr>
 
 
