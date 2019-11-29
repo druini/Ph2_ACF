@@ -168,7 +168,7 @@ Here you can find a detailed description of the differente calibrations: https:/
 - Firmware tag: `2.5`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
-## ~=-=-=~
+### ~=-=-=~ End of Inner-Tracker section ~=-=-=~
 
 ### Setup on CC7 (Scroll down for instructions on setting up on SLC6)
 
