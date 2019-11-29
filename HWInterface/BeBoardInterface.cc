@@ -118,8 +118,12 @@ namespace Ph2_HwInterface
 
   void BeBoardInterface::ConfigureBoard (const BeBoard* pBoard)
   {
+    theMtx.lock();
+
     setBoard(pBoard->getBeBoardId());
     fBoardFW->ConfigureBoard (pBoard);
+
+    theMtx.unlock();
   }
 
   void BeBoardInterface::Start (BeBoard* pBoard)
