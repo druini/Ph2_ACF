@@ -15,8 +15,6 @@
     - Some applications: datatest, interfacetest, hybridtest, system, calibrate, commission, fpgaconfig
 
 
-<hr>
-
 ## Middleware for the Inner-Tracker (IT) system
 
 Setup the FC7:
