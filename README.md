@@ -49,7 +49,7 @@ Setup the firmware:
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `Setup and run the IT-DAQ` before running this command)
 
 *A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`) <br />
-A golden firmware can be downloaded from here:
+A golden firmware can be downloaded from here: https://cernbox.cern.ch/index.php/s/5tUCio08PEfTf0a
 
 Setup and run the IT-DAQ:
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
