@@ -15,20 +15,6 @@
     - some applications: datatest, interfacetest, hybridtest, system, calibrate, commission, fpgaconfig
 
 
-### Different versions
-
-On this Repo, you can find different version of the software :
-    - a hopefully working and stable version on the master branch
-    - An in-progress version in the Dev branch
-
-
-### Setup
-
-Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
-You'll need Xilinx Impact and a [Xilinx Platform Cable USB II] (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
-For more information on the firmare, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware .
-
-
 ## Middleware for the Inner-Tracker (IT) system
 
 Setup the FC7:
@@ -170,6 +156,14 @@ Here you can find a detailed description of the differente calibrations: https:/
 
 ### ~=-=-=~ End of Inner-Tracker section ~=-=-=~
 
+
+### Setup
+
+Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
+You'll need Xilinx Impact and a [Xilinx Platform Cable USB II] (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
+For more information on the firmare, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware .
+
+
 ### Setup on CC7 (Scroll down for instructions on setting up on SLC6)
 
 1. Check which version of gcc is installed on your CC7, it should be > 4.8 (could be the default on CC7):
@@ -210,6 +204,7 @@ Here you can find a detailed description of the differente calibrations: https:/
 5. Install CMAKE > 2.8:
 
         $> sudo yum install cmake
+
 
 ### Setup on SLC6
 
@@ -257,6 +252,7 @@ Here you can find a detailed description of the differente calibrations: https:/
 4. Install CMAKE > 2.8. On SLC6 the default is cmake 2.8
 
         $> sudo yum install cmake
+
 
 ### The Ph2_ACF Software : 
 
