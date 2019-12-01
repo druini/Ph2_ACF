@@ -74,7 +74,16 @@ namespace Ph2_HwInterface {
          * \param pValue : Value to write
          */
         virtual bool WriteChipReg          (Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) = 0;
-        virtual void WriteBroadcastChipReg (const Module* pModule, const std::string& pRegNode, uint16_t data) = 0;
+
+        virtual void WriteModuleBroadcastChipReg (const Module* pModule, const std::string& pRegNode, uint16_t data)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        }
+
+        virtual void WriteBoardBroadcastChipReg (const BeBoard* pBoard, const std::string& pRegNode, uint16_t data)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        }
 
         /*!
          * \brief Write several registers in both Chip and Chip Config File

@@ -12,7 +12,7 @@
 namespace Ph2_HwDescription
 {
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName)
-    : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id, pRD53Lane)
+    : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id, 255, pRD53Lane)
   {
     fMaxRegValue      = RD53::setBits(RD53Constants::NBIT_MAXREG);
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
@@ -404,7 +404,7 @@ namespace Ph2_HwDescription
     std::tie(header, trigger_id, trigger_tag, bc_id) = bits::unpack<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
     if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHIPHEAD;
 
-    size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
+    const size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
     for (auto i = 1u; i < n; i++) if (data[i] != noHitToT) DecodeQuad(data[i]);
   }
 

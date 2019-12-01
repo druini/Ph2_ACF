@@ -14,10 +14,13 @@ void Physics::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart = this->findValueInSettings("ROWstart");
-  rowStop  = this->findValueInSettings("ROWstop");
-  colStart = this->findValueInSettings("COLstart");
-  colStop  = this->findValueInSettings("COLstop");
+  rowStart     = this->findValueInSettings("ROWstart");
+  rowStop      = this->findValueInSettings("ROWstop");
+  colStart     = this->findValueInSettings("COLstart");
+  colStop      = this->findValueInSettings("COLstop");
+  doDisplay    = this->findValueInSettings("DisplayHisto");
+  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
+  doLocal      = false;
 
 
   // ################################
@@ -49,7 +52,6 @@ void Physics::ConfigureCalibration ()
   ContainerFactory::copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, theOccContainer);
   ContainerFactory::copyAndInitChip<GenericDataArray<BCIDsize>> (*fDetectorContainer, theBCIDContainer);
   ContainerFactory::copyAndInitChip<GenericDataArray<TrgIDsize>>(*fDetectorContainer, theTrgIDContainer);
-
 }
 
 void Physics::Start (int currentRun)
@@ -80,6 +82,7 @@ void Physics::sendData (BoardContainer* const& cBoard)
 
 void Physics::Stop ()
 {
+  SystemController::Stop();
   keepRunning = false;
   thrRun.join();
 
@@ -90,7 +93,27 @@ void Physics::Stop ()
   Physics::chipErrorReport();
 
 
-  this->Destroy();
+  if (doLocal == false) this->Destroy();
+}
+
+void Physics::initialize (const std::string fileRes_, const std::string fileReg_)
+{
+  fileRes = fileRes_;
+  fileReg = fileReg_;
+
+  Physics::ConfigureCalibration();
+
+#ifdef __USE_ROOT__
+  myApp = nullptr;
+
+  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+
+  this->InitResultFile(fileRes);
+
+  Physics::initHisto();
+#endif
+
+  doLocal = true;
 }
 
 void Physics::run ()
@@ -117,6 +140,57 @@ void Physics::run ()
   if (dataSize == 0) LOG (WARNING) << BOLDBLUE << "No data collected" << RESET;
 }
 
+void Physics::draw ()
+{
+#ifdef __USE_ROOT__
+  Physics::fillHisto();
+  Physics::display();
+#endif
+
+  // #######################################
+  // # Save and Update register new values #
+  // #######################################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDGREEN << "\t--> Physics saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+        }
+
+#ifdef __USE_ROOT__
+  if (doDisplay == true) myApp->Run(true);
+  this->WriteRootFile();
+  this->CloseResultFile();
+#endif
+}
+
+void Physics::initHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+
+void Physics::fillHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.fill     (theOccContainer);
+  histos.fillBCID (theBCIDContainer);
+  histos.fillTrgID(theTrgIDContainer);
+#endif
+}
+
+void Physics::display ()
+{
+#ifdef __USE_ROOT__
+  histos.process();
+#endif
+}
+
 void Physics::fillDataContainer (BoardContainer* const& cBoard)
 {
   const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
@@ -139,7 +213,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
                 theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).readoutError = false;
               }
 
-          for (auto i = 0u; i < BCIDsize; i++)  theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i]   = 0;
+          for (auto i = 0u; i < BCIDsize; i++)  theBCIDContainer .at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i]  = 0;
           for (auto i = 0u; i < TrgIDsize; i++) theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
         }
 
@@ -164,7 +238,8 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
               int deltaBCID = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
                 theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
               deltaBCID += (deltaBCID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
-              theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
+              if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDBLUE <<"[Physics::analyze] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
+              else theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
             }
 
           for (auto i = 1u; i < theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2.size(); i++)
@@ -172,7 +247,8 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
               int deltaTrgID = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
                 theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
               deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
-              theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
+              if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDBLUE << "[Physics::analyze] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
+              else theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
             }
         }
 }

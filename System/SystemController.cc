@@ -183,9 +183,9 @@ namespace Ph2_System
             LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
 
 
-            // #################
-            // Configure chips #
-            // #################
+            // ###################
+            // # Configure chips #
+            // ###################
             for (const auto& cModule : cBoard->fModuleVector)
               {
                 LOG (INFO) << GREEN << "Initializing communication to Module: " << BOLDYELLOW << +cModule->getModuleId() << RESET;
@@ -193,7 +193,7 @@ namespace Ph2_System
                   {
                     LOG (INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cRD53->getChipId() << RESET;
                     static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cRD53));
-                    LOG (INFO) << BOLDBLUE << "\t--> Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
+                    LOG (INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
                   }
               }
           }

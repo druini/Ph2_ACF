@@ -29,7 +29,8 @@ fSkipMaskedChannels         (false),
 fAllChan                    (false),
 fMaskChannelsFromOtherGroups(false),
 fTestPulse                  (false),
-fDoBroadcast                (false),
+fDoModuleBroadcast          (false),
+fDoBoardBroadcast           (false),
 fChannelGroupHandler        (nullptr)
 {
 #ifdef __HTTP__
@@ -53,7 +54,8 @@ Tool::Tool (THttpServer* pHttpServer)
 , fAllChan                    (false)
 , fMaskChannelsFromOtherGroups(false)
 , fTestPulse                  (false)
-, fDoBroadcast                (false)
+, fDoModuleBroadcast          (false)
+, fDoBoardBroadcast           (false)
 , fChannelGroupHandler        (nullptr)
 {
 }
@@ -90,7 +92,8 @@ Tool::Tool (const Tool& pTool)
 	fAllChan                     = pTool.fAllChan;
 	fMaskChannelsFromOtherGroups = pTool.fMaskChannelsFromOtherGroups;
 	fTestPulse                   = pTool.fTestPulse;
-	fDoBroadcast                 = pTool.fDoBroadcast;
+	fDoModuleBroadcast           = pTool.fDoModuleBroadcast;
+	fDoBoardBroadcast            = pTool.fDoBoardBroadcast;
 	//fChannelGroupHandler         = pTool.fChannelGroupHandler;
 
 	#ifdef __HTTP__
@@ -131,7 +134,8 @@ void Tool::Inherit (Tool* pTool)
 	fAllChan                     = pTool->fAllChan;
 	fMaskChannelsFromOtherGroups = pTool->fMaskChannelsFromOtherGroups;
 	fTestPulse                   = pTool->fTestPulse;
-	fDoBroadcast                 = pTool->fDoBroadcast;
+	fDoModuleBroadcast           = pTool->fDoModuleBroadcast;
+	fDoBoardBroadcast            = pTool->fDoBoardBroadcast;
 	//fChannelGroupHandler         = pTool->fChannelGroupHandler;
 
 	#ifdef __HTTP__
@@ -1453,13 +1457,17 @@ void Tool::setSameGlobalDac(const std::string &dacName, const uint16_t dacValue)
 //Set same global DAC for all chips in the BeBoard
 void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
 {
-  for (auto cFe : pBoard->fModuleVector)
+  if (fDoBoardBroadcast == false)
     {
-      if (fDoBroadcast == false)
-        for (auto cChip : cFe->fReadoutChipVector)
-          fReadoutChipInterface->WriteChipReg(cChip, dacName, dacValue);
-      else fReadoutChipInterface->WriteBroadcastChipReg(cFe, dacName, dacValue);
+      for (auto cFe : pBoard->fModuleVector)
+        {
+          if (fDoModuleBroadcast == false)
+            for (auto cChip : cFe->fReadoutChipVector)
+              fReadoutChipInterface->WriteChipReg(cChip, dacName, dacValue);
+          else fReadoutChipInterface->WriteModuleBroadcastChipReg(cFe, dacName, dacValue);
+        }
     }
+  else fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
 }
 
 // set same local dac for all BeBoard

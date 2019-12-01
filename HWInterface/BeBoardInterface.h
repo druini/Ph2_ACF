@@ -1,12 +1,10 @@
 /*!
-
   \file                                            BeBoardInterface.h
   \brief                                           User Interface to the Boards
   \author                                          Lorenzo BIDEGAIN, Nicolas PIERRE
   \version                                         1.0
   \date                        31/07/14
   Support :                    mail to : lorenzo.bidegain@gmail.com, nicolas.pierre@cern.ch
-
 
   \mainpage Acquisition& Control Framework
   *
@@ -39,7 +37,6 @@
   * Library using ROOT functions to perform calibration and other data processing.\n
   * Classes: Calibration, FastCalibration, Channel, HybridTester, CMTester
   * /
-
   */
 
 #ifndef __BEBOARDINTERFACE_H__
@@ -53,8 +50,8 @@ using namespace Ph2_HwDescription;
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
  */
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
   using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>;    /*!< Map of Board connected */
 
   /*!
@@ -63,11 +60,11 @@ namespace Ph2_HwInterface {
    */
   class BeBoardInterface
   {
-
   private:
-    BeBoardFWMap fBoardMap;                     /*!< Map of Board connected */
-    BeBoardFWInterface* fBoardFW;                     /*!< Board loaded */
-    uint16_t prevBoardIdentifier;                     /*!< Id of the previous board */
+    BeBoardFWMap fBoardMap;
+    BeBoardFWInterface* fBoardFW;
+    uint16_t prevBoardIdentifier;
+    std::mutex theMtx;
 
   public:
     /*!

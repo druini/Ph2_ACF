@@ -15,18 +15,16 @@ namespace Ph2_HwInterface
 
   bool RD53Interface::ConfigureChip (Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
+    this->setBoard(pChip->getBeBoardId());
+
     ChipRegMap pRD53RegMap = pChip->getRegMap();
+
 
     // ###################################
     // # Initializing chip communication #
     // ###################################
     RD53Interface::InitRD53Aurora(pChip);
 
-    // ###############################################################
-    // # Enable monitoring (needed for AutoRead register monitoring) #
-    // ###############################################################
-    RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x4));
 
     // ################################################
     // # Programming global registers from white list #
@@ -48,6 +46,7 @@ namespace Ph2_HwInterface
       if (it != pRD53RegMap.end()) RD53Interface::WriteChipReg(pChip, it->first, it->second.fValue, true);
     }
 
+
     // ###############################
     // # Programmig global registers #
     // ###############################
@@ -64,16 +63,41 @@ namespace Ph2_HwInterface
         if (i == arraySize(registerBlackList)) RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, true);
       }
 
+
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
     RD53Interface::WriteRD53Mask(static_cast<RD53*>(const_cast<Chip*>(pChip)), false, true, true);
+
 
     return true;
   }
 
   void RD53Interface::InitRD53Aurora (Chip* pChip)
   {
+    this->setBoard(pChip->getBeBoardId());
+
+
+    // ####################################
+    // # Data stream phase initialization #
+    // ####################################
+    LOG (INFO) << GREEN << "Data-stream phase initialization..." << RESET;
+    do
+      {
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53CmdEncoder::SYNC), -1);
+
+        // ###############################################################
+        // # Enable monitoring (needed for AutoRead register monitoring) #
+        // ###############################################################
+        RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
+        RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x4));
+
+        usleep(DEEPSLEEP);
+      } while (RD53Interface::ReadRD53Reg(pChip, "VCAL_HIGH").size() == 0);
+    RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
+    LOG (INFO) << BOLDBLUE << "\t--> Done"  << RESET;
+
+
     // ##############################
     // # 1 Autora active lane       #
     // # OUTPUT_CONFIG = 0b00000100 #
@@ -88,44 +112,16 @@ namespace Ph2_HwInterface
     // # CML_CONFIG    = 0b00001111 #
     // ##############################
 
-    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG",      0x04, false); // Number of active lanes [5:2]
+    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG",      0x04, true); // Number of active lanes [5:2]
     // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x01, false); // CML_EN_LANE[3:0]
-    RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false); // 0x30 = reset Aurora AND Serializer
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x01, true); // CML_EN_LANE[3:0]
+    RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, true); // 0x30 = reset Aurora AND Serializer
     RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
 
     usleep(DEEPSLEEP);
-
-
-    // #################################################
-    // # Establish proper communication with the chips #
-    // #################################################
-    /* @TMP@
-      while (static_cast<RD53FWInterface*>(fBoardFW)->CheckChipCommunication() == false)
-      {
-      RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false);
-      RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
-      usleep(DEEPSLEEP);
-      }
-    */
-  }
-
-  void RD53Interface::SyncRD53 (Chip* pChip)
-  {
-    this->setBoard(pChip->getBeBoardId());
-
-    RD53Interface::sendCommand(pChip, RD53Cmd::Sync());
-  }
-
-  void RD53Interface::ResetRD53 (Chip* pChip)
-  {
-    this->setBoard(pChip->getBeBoardId());
-
-    RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
-    RD53Interface::sendCommand(pChip, RD53Cmd::BCR());
   }
 
   bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
@@ -135,10 +131,9 @@ namespace Ph2_HwInterface
     std::vector<std::pair<uint16_t,uint16_t>> regReadback;
     unsigned int pixMode = 0;
     unsigned int row     = 0;
-    uint16_t value       = data;
     uint16_t address     = pChip->getRegItem(pRegNode).fAddress;
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, value));
+    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, data));
     if ((pRegNode == "VCAL_HIGH") || (pRegNode == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
 
     if (pVerifLoop == true)
@@ -147,30 +142,35 @@ namespace Ph2_HwInterface
         if (pixMode == 0)                             regReadback = RD53Interface::ReadRD53Reg(pChip, pRegNode);
         if ((pRegNode == "PIX_PORTAL") && (pixMode == 0)) row     = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
 
-        if ((pixMode == 0) &&
-            (((pRegNode == "PIX_PORTAL") && (regReadback[0].first != row))     ||
-             ((pRegNode != "PIX_PORTAL") && (regReadback[0].first != address)) ||
-             (regReadback[0].second != value)))
+        if (regReadback.size() != 0) // @TMP@
           {
-            LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
-            return false;
+            if ((pixMode == 0) &&
+                (((pRegNode == "PIX_PORTAL") && (regReadback[0].first != row))     ||
+                 ((pRegNode != "PIX_PORTAL") && (regReadback[0].first != address)) ||
+                 (regReadback[0].second != data)))
+              {
+                LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
+                return false;
+              }
+            else pChip->setReg(pRegNode, data);
           }
-        else pChip->setReg(pRegNode, value);
       }
 
     return true;
   }
 
-  void RD53Interface::WriteBroadcastChipReg (const Module* pModule, const std::string& pRegNode, const uint16_t data)
+  void RD53Interface::WriteBoardBroadcastChipReg (const BeBoard* pBoard, const std::string& pRegNode, const uint16_t data)
   {
-    RD53 myChip(*static_cast<RD53*>(pModule->fReadoutChipVector.at(0)));
-    myChip.setChipId(RD53Constants::BROADCAST_CHIPID);
+    this->setBoard(pBoard->getId());
 
-    RD53Interface::WriteChipReg(&myChip, pRegNode, data, false);
+    uint16_t address = pBoard->fModuleVector.at(0)->fReadoutChipVector.at(0)->getRegItem(pRegNode).fAddress;
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, address, data).getFrames(), -1);
   }
 
   uint16_t RD53Interface::ReadChipReg (Chip* pChip, const std::string& pRegNode) // @TMP@
   {
+    this->setBoard(pChip->getBeBoardId());
+
     // auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
     // return regReadback[0].second;
 
@@ -181,7 +181,7 @@ namespace Ph2_HwInterface
         auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
         if (regReadback.size() == 0)
           {
-            LOG (WARNING) << BLUE << "Empty register readback, attempt n. " << BOLDYELLOW << attempt << RESET;
+            LOG (WARNING) << BLUE << "Empty register readback, attempt n. " << YELLOW << attempt << RESET;
             usleep(VCALSLEEP);
           }
         else return regReadback[0].second;
@@ -207,6 +207,8 @@ namespace Ph2_HwInterface
 
   void RD53Interface::WriteRD53Mask (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop)
   {
+    this->setBoard(pRD53->getBeBoardId());
+
     std::vector<uint16_t> commandList;
 
     const uint16_t REGION_COL_ADDR  = pRD53->getRegItem("REGION_COL").fAddress;
@@ -235,7 +237,7 @@ namespace Ph2_HwInterface
     if (doSparse == true)
       {
         RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
-        RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x00, pVerifLoop /*false*/); // @TMP@
+        RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x00, pVerifLoop);
         RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x00, pVerifLoop);
 
         uint16_t data;
@@ -243,7 +245,7 @@ namespace Ph2_HwInterface
         // for (auto col = 0; col < RD53::nCols-1; col+=2) // @TMP@
         for (auto col = 128; col < 263; col+=2)
           {
-            RD53Cmd::WrReg(pRD53->getChipId(), REGION_COL_ADDR, col / 2).appendTo(commandList);
+            RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
 
             for (auto row = 0u; row < RD53::nRows; row++)
               {
@@ -252,8 +254,8 @@ namespace Ph2_HwInterface
                     data = bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 1].TDAC[row], mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
                                             bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 0].TDAC[row], mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
 
-                    RD53Cmd::WrReg(pRD53->getChipId(), REGION_ROW_ADDR, row).appendTo(commandList);
-                    RD53Cmd::WrReg(pRD53->getChipId(), PIX_PORTAL_ADDR, data).appendTo(commandList);
+                    RD53Cmd::WrReg(chipID, REGION_ROW_ADDR, row).appendTo(commandList);
+                    RD53Cmd::WrReg(chipID, PIX_PORTAL_ADDR, data).appendTo(commandList);
                   }
 
                 if (commandList.size() > RD53Constants::FIELDS_SHORTCMD * NPIXCMD)
@@ -273,8 +275,8 @@ namespace Ph2_HwInterface
         // for (auto col = 0; col < RD53::nCols-1; col+=2) // @TMP@
         for (auto col = 128; col < 263; col+=2)
           {
-            RD53Cmd::WrReg(pRD53->getChipId(), REGION_COL_ADDR, col / 2).appendTo(commandList);
-            RD53Cmd::WrReg(pRD53->getChipId(), REGION_ROW_ADDR, 0x0).appendTo(commandList);
+            RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
+            RD53Cmd::WrReg(chipID, REGION_ROW_ADDR, 0x0).appendTo(commandList);
 
             for (auto row = 0u; row < RD53::nRows; row++)
               {

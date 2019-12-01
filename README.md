@@ -8,28 +8,14 @@
 - A C++ object-based library describing the system components (CBCs,
         Hybrids, Boards) and their properties(values, status)
 
-- several utilities (like visitors to execute certain tasks for each item in the hierarchical Item description)
+- Several utilities (like visitors to execute certain tasks for each item in the hierarchical Item description)
 
-- a tools/ directory with several utilities (currently: calibration, hybrid testing, common-mode analysis)
+- S tools/ directory with several utilities (currently: calibration, hybrid testing, common-mode analysis)
 
-    - some applications: datatest, interfacetest, hybridtest, system, calibrate, commission, fpgaconfig
-
-
-### Different versions
-
-On this Repo, you can find different version of the software :
-    - a hopefully working and stable version on the master branch
-    - An in-progress version in the Dev branch
+    - Some applications: datatest, interfacetest, hybridtest, system, calibrate, commission, fpgaconfig
 
 
-### Setup
-
-Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
-You'll need Xilinx Impact and a [Xilinx Platform Cable USB II] (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
-For more information on the firmare, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware .
-
-
-### Middleware for the Inner-Tracker (IT) system
+## Middleware for the Inner-Tracker (IT) system
 
 Setup the FC7:
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
@@ -37,6 +23,8 @@ Setup the FC7:
 3. Restart the network: `sudo /etc/init.d/network restart`
 4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://centos.pkgs.org/6/epel-x86_64/rarpd-ss981107-42.el6.x86_64.rpm.html
 5. Start the rarpd daemon: `sudo systemctl start rarpd` or `rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
+
+More details on the hardware needed to setup the system can be bound here: https://espace.cern.ch/Tracker-Upgrade/DAQ/SitePages/Home.aspx
 
 Setup the firmware:
 1. Check whether the DIP switches on FC7 board are setup for the use of a microSD card (`out-in-in-in-out-in-in-in`)
@@ -46,8 +34,8 @@ Setup the firmware:
 5. Plug the microSD card in the FC7
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `Setup and run the IT-DAQ` before running this command)
 
-*A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`)
-**Check which firmware is in the microSD card: `fpgaconfig -c CMSIT.xml`
+*A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`) <br />
+A golden firmware can be downloaded from here: https://cernbox.cern.ch/index.php/s/5tUCio08PEfTf0a
 
 Setup and run the IT-DAQ:
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
@@ -161,9 +149,21 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
+Here you can find a detailed description of the differente calibrations: https://cernbox.cern.ch/index.php/s/nOLM0KkX0TeZ26H
 - Software git branch / tag : `chipPolymorphism` / `IT-v2.5`
 - Firmware tag: `2.5`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
+
+### ~=-=-=~ End of Inner-Tracker section ~=-=-=~
+
+<hr>
+
+
+### Setup
+
+Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
+You'll need Xilinx Impact and a [Xilinx Platform Cable USB II] (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
+For more information on the firmare, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware .
 
 
 ### Setup on CC7 (Scroll down for instructions on setting up on SLC6)
@@ -206,6 +206,7 @@ fi
 5. Install CMAKE > 2.8:
 
         $> sudo yum install cmake
+
 
 ### Setup on SLC6
 
@@ -253,6 +254,7 @@ fi
 4. Install CMAKE > 2.8. On SLC6 the default is cmake 2.8
 
         $> sudo yum install cmake
+
 
 ### The Ph2_ACF Software : 
 

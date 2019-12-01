@@ -100,7 +100,6 @@ int main ( int argc, char* argv[] )
     cTool.CreateResultDirectory ( cDirectory);
     cTool.InitResultFile ( "mytestfile" );
     cTool.ConfigureHw ();
-    std::string::size_type sz;
     t.start();
     #ifdef __USE_ROOT__
         StubTool cStubTool;

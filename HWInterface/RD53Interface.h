@@ -31,7 +31,7 @@ namespace Ph2_HwInterface
 
     bool     ConfigureChip                     (Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                     override;
     bool     WriteChipReg                      (Chip* pChip, const std::string& pRegNode, uint16_t data, bool pVerifLoop = true)                    override;
-    void     WriteBroadcastChipReg             (const Module* pModule, const std::string& pRegNode, uint16_t data)                                  override;
+    void     WriteBoardBroadcastChipReg        (const BeBoard* pBoard, const std::string& pRegNode, uint16_t data)                                  override;
     bool     WriteChipAllLocalReg              (ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue, bool pVerifLoop = true)      override;
     void     ReadChipAllLocalReg               (ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue)                              override;
     uint16_t ReadChipReg                       (Chip* pChip, const std::string& pRegNode)                                                           override;
@@ -40,11 +40,9 @@ namespace Ph2_HwInterface
     bool     maskChannelsAndSetInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
 
   private:
-    void WriteRD53Mask  (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
     std::vector<std::pair<uint16_t,uint16_t>> ReadRD53Reg (Chip* pChip, const std::string& pRegNode);
+    void WriteRD53Mask  (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
     void InitRD53Aurora (Chip* pChip);
-    void SyncRD53       (Chip* pChip);
-    void ResetRD53      (Chip* pChip);
 
     template <typename T>
       void sendCommand (Chip* pChip, const T& cmd) { static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getFeId()); }

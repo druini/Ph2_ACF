@@ -271,7 +271,9 @@ int main ( int argc, char* argv[] )
             case RUNNING:
               {
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
+                usleep(2e6);
                 theMiddlewareInterface.stop();
+                usleep(1e6);
                 theDQMInterface.stopProcessingData();
                 stateMachineStatus = STOPPED;
                 break;

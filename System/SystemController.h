@@ -72,11 +72,6 @@ namespace Ph2_System
     bool fStreamerEnabled;
     TCPPublishServer *fNetworkStreamer;
 
-  private:
-    FileParser fParser;
-    Data *fData;
-
-  public:
     /*!
      * \brief Constructor of the SystemController class
      */
@@ -221,6 +216,7 @@ namespace Ph2_System
     {
       return (index < (int)fBoardVector.size()) ? fBoardVector.at(index) : nullptr;
     }
+
     /*!
      * \brief Get next event from data buffer
      * \param pBoard
@@ -230,16 +226,22 @@ namespace Ph2_System
     {
       return fData->GetNextEvent(pBoard);
     }
+
     const Event *GetEvent(const BeBoard *pBoard, int i) const
     {
       return fData->GetEvent(pBoard, i);
     }
+
     const std::vector<Event *> &GetEvents(const BeBoard *pBoard) const
     {
       return fData->GetEvents(pBoard);
     }
 
     double findValueInSettings (const char* name);
+
+  private:
+    FileParser fParser;
+    Data *fData;
   };
 }
 

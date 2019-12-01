@@ -22,24 +22,21 @@
 // #############
 // # CONSTANTS #
 // #############
-#define DEEPSLEEP 100000 // [microseconds]
-#define READOUTSLEEP  50 // [microseconds]
-#define MAXATTEMPTS    2 // Maximum number of attempts for ReadNEvents
-
-// ##################
-// # BIT DEFINITION #
-// ##################
+#define DEEPSLEEP  100000 // [microseconds]
+#define READOUTSLEEP   50 // [microseconds]
+#define MAXATTEMPTS     2 // Maximum number of attempts for ReadNEvents
+#define NFRAMES_SYNC 1000 // Number of frames needed to synchronize chip communication
+#define NWORDS_DDR3     4 // Number of IPbus words in a DDR3 word
+#define NLANE_MODULE    4 // Number of lanes per module
 #define HEADEAR_WRTCMD  0xFF // Header of chip write command sequence
 #define NBIT_FWVER        16 // Number of bits for the firmware version
 #define IPBUS_FASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
-#define NWORDS_DDR3        4 // Number of IPbus words in a DDR3 word
-#define NLANE_MODULE       4 // Number of lanes per module
 
 // #################
 // # READOUT BLOCK #
 // #################
-#define HANDSHAKE_EN   0
-#define L1A_TIMEOUT 4000
+#define HANDSHAKE_EN false
+#define L1A_TIMEOUT   4000
 
 
 namespace RD53FWEvtEncoder
@@ -93,7 +90,7 @@ namespace Ph2_HwInterface
     uint32_t  getBoardInfo   ()                      override;
     BoardType getBoardType   () const { return BoardType::FC7; };
 
-    void ResetSequence       (); // @TMP@
+    void ResetSequence       ();
     void ConfigureBoard      (const BeBoard* pBoard) override;
 
     void Start               () override;
@@ -108,7 +105,7 @@ namespace Ph2_HwInterface
     std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)           override;
 
     bool CheckChipCommunication ();
-    void WriteChipCommand       (const std::vector<uint16_t>& data, unsigned int moduleId);
+    void WriteChipCommand       (const std::vector<uint16_t>& data, int moduleId);
     std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Chip* pChip);
 
     struct ChipFrame
@@ -245,6 +242,7 @@ namespace Ph2_HwInterface
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
+    uint16_t           enabledModules;
     bool               singleChip;
   };
 
