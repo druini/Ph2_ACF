@@ -92,6 +92,20 @@ namespace Ph2_HwInterface
         RD53Interface::WriteChipReg(pChip, "CML_TAP0_BIAS", 1000, false);
         RD53Interface::WriteChipReg(pChip, "CML_TAP1_BIAS", 100, false);
 
+        // ##############################
+        // # 1 Autora active lane       #
+        // # OUTPUT_CONFIG = 0b00000100 #
+        // # CML_CONFIG    = 0b00000001 #
+
+        // # 2 Autora active lanes      #
+        // # OUTPUT_CONFIG = 0b00001100 #
+        // # CML_CONFIG    = 0b00000011 #
+
+        // # 4 Autora active lanes      #
+        // # OUTPUT_CONFIG = 0b00111100 #
+        // # CML_CONFIG    = 0b00001111 #
+        // ##############################
+
         RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG",      0x04, false); // Number of active lanes [5:2]
         // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
         // Default 0 means 2 clocks, may need higher value in case of large propagation
@@ -112,27 +126,8 @@ namespace Ph2_HwInterface
         usleep(DEEPSLEEP);
       } while (RD53Interface::ReadRD53Reg(pChip, "VCAL_HIGH").size() == 0);
       
-    RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
+      
     LOG (INFO) << BOLDBLUE << "\t--> Done"  << RESET;
-
-
-    // ##############################
-    // # 1 Autora active lane       #
-    // # OUTPUT_CONFIG = 0b00000100 #
-    // # CML_CONFIG    = 0b00000001 #
-
-    // # 2 Autora active lanes      #
-    // # OUTPUT_CONFIG = 0b00001100 #
-    // # CML_CONFIG    = 0b00000011 #
-
-    // # 4 Autora active lanes      #
-    // # OUTPUT_CONFIG = 0b00111100 #
-    // # CML_CONFIG    = 0b00001111 #
-    // ##############################
-
-    
-
-    // usleep(DEEPSLEEP);
   }
 
   bool RD53Interface::WriteChipReg (Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
