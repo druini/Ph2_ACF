@@ -132,15 +132,19 @@ namespace Ph2_HwInterface
     // # AURORA lock on data stream #
     // ##############################
     if (singleChip) {
-      while (RD53FWInterface::CheckChipCommunication() == false)
+      while (chips_en & ~ReadReg("user.stat_regs.aurora_rx_channel_up"))
         {
           RD53FWInterface::WriteChipCommand(std::vector<uint16_t>(NFRAMES_SYNC, 0), -1);
           usleep(DEEPSLEEP);
         }
     }
+<<<<<<< HEAD
     else {
       RD53FWInterface::CheckChipCommunication();
     }
+=======
+    RD53FWInterface::CheckChipCommunication();
+>>>>>>> 0b16da8c5100fef1bc67bd4b200aadb7b1a6ad2e
   }
 
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, int moduleId)
