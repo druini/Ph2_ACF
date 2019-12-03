@@ -24,7 +24,7 @@
 // #############
 #define DEEPSLEEP  100000 // [microseconds]
 #define READOUTSLEEP   50 // [microseconds]
-#define MAXATTEMPTS     2 // Maximum number of attempts for ReadNEvents
+#define MAXATTEMPTS     200 // Maximum number of attempts for ReadNEvents
 #define NFRAMES_SYNC 1000 // Number of frames needed to synchronize chip communication
 #define NWORDS_DDR3     4 // Number of IPbus words in a DDR3 word
 #define NLANE_MODULE    4 // Number of lanes per module

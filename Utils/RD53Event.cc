@@ -19,7 +19,6 @@ namespace Ph2_HwInterface
           chipIndx = i;
           return true;
         }
-
     return false;
   }
 

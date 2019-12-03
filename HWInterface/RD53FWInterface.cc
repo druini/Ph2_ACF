@@ -116,8 +116,6 @@ namespace Ph2_HwInterface
             chips_en |= mod_chips_en << (NLANE_MODULE * module_id);
           }
       }
-      std::cout << std::bitset<12>(enabledModules) << std::endl;
-      std::cout << std::bitset<12>(chips_en) << std::endl;
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", enabledModules});
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
 
@@ -139,6 +137,9 @@ namespace Ph2_HwInterface
           RD53FWInterface::WriteChipCommand(std::vector<uint16_t>(NFRAMES_SYNC, 0), -1);
           usleep(DEEPSLEEP);
         }
+    }
+    else {
+      RD53FWInterface::CheckChipCommunication();
     }
   }
 
