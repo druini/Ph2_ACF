@@ -140,7 +140,7 @@ namespace Ph2_HwInterface
           usleep(DEEPSLEEP);
         }
     }
-    RD53FWInterface::CheckChipCommunication()
+    RD53FWInterface::CheckChipCommunication();
   }
 
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, int moduleId)
