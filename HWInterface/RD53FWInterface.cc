@@ -110,7 +110,6 @@ namespace Ph2_HwInterface
             for (const auto cChip : *cModule)
               {
                 uint16_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
-                std::cout << "chip_lane: "  << chip_lane << std::endl;
                 mod_chips_en |= 1 << chip_lane;
               }
             chips_en |= mod_chips_en << (NLANE_MODULE * module_id);
@@ -138,13 +137,9 @@ namespace Ph2_HwInterface
           usleep(DEEPSLEEP);
         }
     }
-<<<<<<< HEAD
     else {
       RD53FWInterface::CheckChipCommunication();
     }
-=======
-    RD53FWInterface::CheckChipCommunication();
->>>>>>> 0b16da8c5100fef1bc67bd4b200aadb7b1a6ad2e
   }
 
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, int moduleId)

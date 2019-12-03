@@ -81,10 +81,9 @@ namespace Ph2_HwInterface
     // ####################################
     // # Data stream phase initialization #
     // ####################################
-    LOG (INFO) << GREEN << "Data-stream phase initialization..." << RESET;
+    LOG (INFO) << GREEN << "Initializing communication..." << RESET;
     do
       {
-        std::cout << "init attempt" << std::endl;
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53CmdEncoder::SYNC), -1);
 
         RD53Interface::WriteChipReg(pChip, "VOLTAGE_TRIM", (24 << 5) | 23, false);
