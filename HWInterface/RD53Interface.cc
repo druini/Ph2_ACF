@@ -17,7 +17,7 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pChip->getBeBoardId());
 
-    ChipRegMap pRD53RegMap = pChip->getRegMap();
+    const ChipRegMap& pRD53RegMap = pChip->getRegMap();
 
 
     // ###################################
@@ -52,15 +52,16 @@ namespace Ph2_HwInterface
     // ###############################
     static const char* registerBlackList[] =
       {
-        "HighGain_LIN"
+        "HighGain_LIN",
+        "CMDERR_CNT"
       };
 
     for (const auto& cRegItem : pRD53RegMap)
       if (cRegItem.second.fPrmptCfg == true)
       {
-        auto i = 0u;
-        for (i = 0u; i < arraySize(registerBlackList); i++) if (cRegItem.first == registerBlackList[i]) break;
-        if (i == arraySize(registerBlackList)) RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, true);
+        auto it = std::find(std::begin(registerBlackList), std::end(registerBlackList), cRegItem.first);
+        if (it == std::end(registerBlackList))
+          WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, true);
       }
 
 
