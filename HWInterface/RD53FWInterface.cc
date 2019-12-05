@@ -55,7 +55,7 @@ namespace Ph2_HwInterface
     RD53FWInterface::TurnOnFMC();
     RD53FWInterface::ResetBoard();
 
-    LOG (INFO) << BOLDMAGENTA << "You now need to powercycle the frontend chip(s)" << RESET;
+    LOG (INFO) << BOLDMAGENTA << "Now you can start using the DAQ ... enjoy!" << RESET;
   }
 
   void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)
