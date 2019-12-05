@@ -27,6 +27,7 @@ void PixelAlive::ConfigureCalibration ()
   thrOccupancy = this->findValueInSettings("TargetOcc");
   doDisplay    = this->findValueInSettings("DisplayHisto");
   doUpdateChip = this->findValueInSettings("UpdateChipCfg");
+  saveRawData  = this->findValueInSettings("SaveRawData");
 
   if (injType != INJtype::None) nTRIGxEvent = 1;
   else                          doFast      = false;
@@ -70,6 +71,8 @@ void PixelAlive::ConfigureCalibration ()
 
 void PixelAlive::Start (int currentRun)
 {
+  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+
   PixelAlive::run();
   PixelAlive::analyze();
   PixelAlive::sendData();

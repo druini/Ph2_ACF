@@ -25,6 +25,7 @@ void ThrEqualization::ConfigureCalibration ()
   doFast       = this->findValueInSettings("DoFast");
   doDisplay    = this->findValueInSettings("DisplayHisto");
   doUpdateChip = this->findValueInSettings("UpdateChipCfg");
+  saveRawData  = this->findValueInSettings("SaveRawData");
 
 
   // ########################
@@ -58,6 +59,8 @@ void ThrEqualization::ConfigureCalibration ()
 
 void ThrEqualization::Start (int currentRun)
 {
+  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+
   ThrEqualization::run();
   ThrEqualization::sendData();
   sc.sendData();

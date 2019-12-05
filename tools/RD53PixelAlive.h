@@ -14,6 +14,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+#include "../Utils/RD53SharedConstants.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
@@ -87,6 +88,7 @@ class PixelAlive : public Tool
   bool doUpdateChip;
   bool doDisplay;
   bool doFast;
+  bool saveRawData;
 };
 
 #endif

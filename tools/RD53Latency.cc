@@ -29,6 +29,7 @@ void Latency::ConfigureCalibration ()
   stopValue    = this->findValueInSettings("LatencyStop");
   doDisplay    = this->findValueInSettings("DisplayHisto");
   doUpdateChip = this->findValueInSettings("UpdateChipCfg");
+  saveRawData  = this->findValueInSettings("SaveRawData");
 
 
   // ##############################
@@ -47,6 +48,8 @@ void Latency::ConfigureCalibration ()
 
 void Latency::Start (int currentRun)
 {
+  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+
   Latency::run();
   Latency::analyze();
   Latency::sendData();

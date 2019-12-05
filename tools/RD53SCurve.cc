@@ -27,6 +27,7 @@ void SCurve::ConfigureCalibration ()
   doFast       = this->findValueInSettings("DoFast");
   doDisplay    = this->findValueInSettings("DisplayHisto");
   doUpdateChip = this->findValueInSettings("UpdateChipCfg");
+  saveRawData  = this->findValueInSettings("SaveRawData");
 
 
   // ########################
@@ -58,6 +59,8 @@ void SCurve::ConfigureCalibration ()
 
 void SCurve::Start (int currentRun)
 {
+  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+
   SCurve::run();
   SCurve::analyze();
   SCurve::sendData();
@@ -231,6 +234,36 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 
           LOG (INFO) << BOLDGREEN << "\t\t--> Highest threshold: " << BOLDYELLOW << maxThreshold << RESET;
         }
+
+
+  // @TMP@ : CalibFile
+  if (saveRawData == true)
+    {
+      for (const auto cBoard : *fDetectorContainer)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              std::stringstream myString;
+              myString.clear(); myString.str("");
+              myString << "B"    << std::setfill('0') << std::setw(2) << cBoard->getId()  << "_"
+                       << "M"    << std::setfill('0') << std::setw(2) << cModule->getId() << "_"
+                       << "C"    << std::setfill('0') << std::setw(2) << cChip->getId()   << ".dat";
+              std::ofstream fileOutID(myString.str(),std::ios::out);
+              for (auto i = 0u; i < dacList.size(); i++)
+                {
+                  fileOutID << "Iteration " << i << " --- reg = " << dacList[i] << std::endl;
+                  for (auto row = 0u; row < RD53::nRows; row++)
+                    for (auto col = 0u; col < RD53::nCols; col++)
+                      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+                        fileOutID << "r " << row << " c " << col
+                                  << " h " << detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy*nEvents
+                                  << " a " << detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh
+                                  << std::endl;
+                }
+              fileOutID.close();
+            }
+    }
+
 
   return theThresholdAndNoiseContainer;
 }

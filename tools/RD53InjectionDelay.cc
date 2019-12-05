@@ -30,6 +30,7 @@ void InjectionDelay::ConfigureCalibration ()
   stopValue    = RD53SharedConstants::NLATENCYBINS*(RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"))+1) - 1;
   doDisplay    = this->findValueInSettings("DisplayHisto");
   doUpdateChip = this->findValueInSettings("UpdateChipCfg");
+  saveRawData  = this->findValueInSettings("SaveRawData");
 
 
   // ##############################
@@ -65,6 +66,8 @@ void InjectionDelay::ConfigureCalibration ()
 
 void InjectionDelay::Start (int currentRun)
 {
+  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+
   InjectionDelay::run();
   InjectionDelay::analyze();
   InjectionDelay::sendData();

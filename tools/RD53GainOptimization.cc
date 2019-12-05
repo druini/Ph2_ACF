@@ -35,6 +35,7 @@ void GainOptimization::ConfigureCalibration ()
   doFast        = this->findValueInSettings("DoFast");
   doDisplay     = this->findValueInSettings("DisplayHisto");
   doUpdateChip  = this->findValueInSettings("UpdateChipCfg");
+  saveRawData   = this->findValueInSettings("SaveRawData");
 
 
   // #######################
@@ -45,6 +46,8 @@ void GainOptimization::ConfigureCalibration ()
 
 void GainOptimization::Start (int currentRun)
 {
+  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+
   GainOptimization::run();
   GainOptimization::analyze();
   GainOptimization::sendData();

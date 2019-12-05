@@ -32,6 +32,7 @@ void ThrMinimization::ConfigureCalibration ()
   ThrStop         = this->findValueInSettings("ThrStop");
   doDisplay       = this->findValueInSettings("DisplayHisto");
   doUpdateChip    = this->findValueInSettings("UpdateChipCfg");
+  saveRawData     = this->findValueInSettings("SaveRawData");
 
 
   // #######################
@@ -42,6 +43,8 @@ void ThrMinimization::ConfigureCalibration ()
 
 void ThrMinimization::Start (int currentRun)
 {
+  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+
   ThrMinimization::run();
   ThrMinimization::analyze();
   ThrMinimization::sendData();

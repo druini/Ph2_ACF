@@ -20,6 +20,7 @@ void Physics::ConfigureCalibration ()
   colStop      = this->findValueInSettings("COLstop");
   doDisplay    = this->findValueInSettings("DisplayHisto");
   doUpdateChip = this->findValueInSettings("UpdateChipCfg");
+  saveRawData  = this->findValueInSettings("SaveRawData");
   doLocal      = false;
 
 
@@ -56,6 +57,7 @@ void Physics::ConfigureCalibration ()
 
 void Physics::Start (int currentRun)
 {
+  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
   SystemController::Start(currentRun);
 
   keepRunning = true;
