@@ -248,7 +248,8 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
             {
               std::stringstream myString;
               myString.clear(); myString.str("");
-              myString << "B"    << std::setfill('0') << std::setw(2) << cBoard->getId()  << "_"
+              myString << "Gain_"
+                       << "B"    << std::setfill('0') << std::setw(2) << cBoard->getId()  << "_"
                        << "M"    << std::setfill('0') << std::setw(2) << cModule->getId() << "_"
                        << "C"    << std::setfill('0') << std::setw(2) << cChip->getId()   << ".dat";
               std::ofstream fileOutID(myString.str(),std::ios::out);
