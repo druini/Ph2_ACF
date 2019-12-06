@@ -132,7 +132,7 @@ namespace Ph2_System
         fData = new Data();
 
     //pass data by reference to set and let it know what board we are dealing with
-        fData->Set (pBoard, pData, pNEvents, pBoard->getBoardType () );
+        fData->DecodeData(pBoard, pData, pNEvents, pBoard->getBoardType () );
     //return the packet size
     }
 

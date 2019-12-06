@@ -23,7 +23,7 @@ namespace Ph2_HwInterface { // start namespace
 	public:
         SSAInterface ( const BeBoardFWMap& pBoardMap );
         ~SSAInterface();
-	bool ConfigureChip ( const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
+	bool ConfigureChip ( Chip* pSSA, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
 	bool setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
 	bool maskChannelsGroup  (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
 	bool maskChannelsAndSetInjectionSchema  (ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop = true ) override;
