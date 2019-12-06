@@ -112,7 +112,7 @@ namespace Ph2_HwInterface
                         }
                         else
                         {
-                            fEventList.push_back(new D19cCbc3Event(pBoard, fNCbc, fNFe, lvec));
+                            fEventList.push_back(new D19cCbc3EventZS(pBoard, fZSEventSize, lvec));
                         }
                     }
                     lvec.clear();
