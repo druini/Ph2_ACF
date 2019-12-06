@@ -77,13 +77,13 @@ then
     echo "You should provide one, and only one, argument [step1, step2, step3, step4, step5, help]"
 elif [ $1 == "step1" ]
 then
-    time CMSIT_miniDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels
+    CMSIT_miniDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels
     echo "noise" >> calibDone.txt
 
-    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive # Masks dead pixels
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive # Masks dead pixels
     echo "pixelalive" >> calibDone.txt
 
-    time CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
+    CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
     echo "Choose whether to accept new threshold (i.e. copy it into the xml file(s))"
@@ -91,17 +91,17 @@ then
     echo
 elif [ $1 == "step2" ]
 then
-    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
     echo "scurve" >> calibDone.txt
     echo "threqu" >> calibDone.txt
 
-    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
     echo "scurve" >> calibDone.txt
 
-    time CMSIT_miniDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels @ new threshold
+    CMSIT_miniDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels @ new threshold
     echo "noise" >> calibDone.txt
 
-    time CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
+    CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
     echo "Choose whether to accept new threshold (i.e. copy it into the xml file(s))"
@@ -109,13 +109,13 @@ then
     echo
 elif [ $1 == "step3" ]
 then
-    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
     echo "scurve" >> calibDone.txt
 
-    time CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
+    CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
     echo "gain" >> calibDone.txt
 
-    time CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
+    CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
     echo "gainopt" >> calibDone.txt
 
     echo "Choose whether to accept new Krummenacher current (i.e. copy it into the xml file(s))"
@@ -125,7 +125,7 @@ then
     echo
 elif [ $1 == "step4" ]
 then
-    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c injdelay
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c injdelay
     echo "latency" >> calibDone.txt
     echo "injdelay" >> calibDone.txt
 
@@ -135,7 +135,7 @@ then
     echo
 elif [ $1 == "step5" ]
 then
-    time CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
     echo "scurve" >> calibDone.txt
 elif [ $1 == "help" ]
 then
