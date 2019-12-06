@@ -14,18 +14,19 @@ void Gain::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart   = this->findValueInSettings("ROWstart");
-  rowStop    = this->findValueInSettings("ROWstop");
-  colStart   = this->findValueInSettings("COLstart");
-  colStop    = this->findValueInSettings("COLstop");
-  nEvents    = this->findValueInSettings("nEvents");
-  startValue = this->findValueInSettings("VCalHstart");
-  stopValue  = this->findValueInSettings("VCalHstop");
-  nSteps     = this->findValueInSettings("VCalHnsteps");
-  offset     = this->findValueInSettings("VCalMED");
-  doFast     = this->findValueInSettings("DoFast");
-  doDisplay  = this->findValueInSettings("DisplayHisto");
-  doSave     = this->findValueInSettings("Save");
+  rowStart     = this->findValueInSettings("ROWstart");
+  rowStop      = this->findValueInSettings("ROWstop");
+  colStart     = this->findValueInSettings("COLstart");
+  colStop      = this->findValueInSettings("COLstop");
+  nEvents      = this->findValueInSettings("nEvents");
+  startValue   = this->findValueInSettings("VCalHstart");
+  stopValue    = this->findValueInSettings("VCalHstop");
+  nSteps       = this->findValueInSettings("VCalHnsteps");
+  offset       = this->findValueInSettings("VCalMED");
+  nHITxCol     = this->findValueInSettings("nHITxCol");
+  doFast       = this->findValueInSettings("DoFast");
+  doDisplay    = this->findValueInSettings("DisplayHisto");
+  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
 
 
   // ########################
@@ -38,7 +39,7 @@ void Gain::ConfigureCalibration ()
     for (auto col = colStart; col <= colStop; col++)
       customChannelGroup.enableChannel(row,col);
 
-  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup,doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups);
+  theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
 
@@ -47,17 +48,23 @@ void Gain::ConfigureCalibration ()
   // ##############################
   float step = (stopValue - startValue) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
+
+
+  // #######################
+  // # Initialize progress #
+  // #######################
+  RD53RunProgress::total() += Gain::getNumberIterations();
 }
 
 void Gain::Start (int currentRun)
 {
   Gain::run();
   Gain::analyze();
+  Gain::sendData();
+}
 
-
-  // #############
-  // # Send data #
-  // #############
+void Gain::sendData ()
+{
   auto theOccStream              = prepareChannelContainerStreamer<OccupancyAndPh>  ("Occ");
   auto theGainAndInterceptStream = prepareChannelContainerStreamer<GainAndIntercept>("GainAndIntercept");
 
@@ -71,7 +78,7 @@ void Gain::Start (int currentRun)
 
           for (const auto cBoard : *theOccContainer)
             {
-              theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+              theOccStream .streamAndSendBoard(cBoard, fNetworkStreamer);
               theVCalStream.streamAndSendBoard(cBoard, fNetworkStreamer);
             }
 
@@ -116,6 +123,7 @@ void Gain::run ()
     }
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
+  this->SetBoardBroadcast(true);
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
   this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
@@ -129,9 +137,9 @@ void Gain::run ()
       for (const auto cChip : *cModule)
         for (auto row = 0u; row < RD53::nRows; row++)
           for (auto col = 0u; col < RD53::nCols; col++)
-            if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+            if (!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) || !this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
               for (auto i = 0u; i < dacList.size(); i++)
-                detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).isEnabled = true;
+                detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy = RD53SharedConstants::ISDISABLED;
 
 
   // ################
@@ -140,8 +148,9 @@ void Gain::run ()
   Gain::chipErrorReport();
 }
 
-void Gain::draw ()
+void Gain::draw (bool doSave)
 {
+#ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
@@ -154,28 +163,34 @@ void Gain::draw ()
   Gain::initHisto();
   Gain::fillHisto();
   Gain::display();
+#endif
 
+  // ######################################
+  // # Save or Update register new values #
+  // ######################################
   if (doSave == true)
     {
-      this->WriteRootFile();
-
-      // ############################
-      // # Save register new values #
-      // ############################
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
             {
               static_cast<RD53*>(cChip)->copyMaskFromDefault();
+              if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
               static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-              static_cast<RD53*>(cChip)->saveRegMap("");
               std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
               system(command.c_str());
+              LOG (INFO) << BOLDGREEN << "\t--> Gain saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
             }
     }
 
+#ifdef __USE_ROOT__
   if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true) this->CloseResultFile();
+  if (doSave    == true)
+    {
+      this->WriteRootFile();
+      this->CloseResultFile();
+    }
+#endif
 }
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze ()
@@ -185,7 +200,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
   std::vector<float> y(dacList.size(),0);
   std::vector<float> e(dacList.size(),0);
 
-  theGainAndInterceptContainer = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
+  theGainAndInterceptContainer = std::make_shared<DetectorDataContainer>();
   ContainerFactory::copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
 
   size_t index = 0;
@@ -204,18 +219,17 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
                       e[i] = detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPhError;
                     }
 
-                  this->computeStats(x,y,e,gain,gainErr,intercept,interceptErr);
+                  Gain::computeStats(x,y,e,gain,gainErr,intercept,interceptErr);
 
                   if (gain != 0)
                     {
-                      theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fitError        = false;
                       theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain           = gain;
                       theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGainError      = gainErr;
                       theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept      = intercept;
                       theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fInterceptError = interceptErr;
                     }
                   else
-                    theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fitError = true;
+                    theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain = RD53SharedConstants::FITERROR;
                 }
 
           index++;
@@ -224,16 +238,30 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
   return theGainAndInterceptContainer;
 }
 
-void Gain::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void Gain::initHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+
 void Gain::fillHisto ()
 {
+#ifdef __USE_ROOT__
   for (auto i = 0u; i < dacList.size(); i++)
     histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
   histos.fillGainAndIntercept(*theGainAndInterceptContainer);
+#endif
 }
-void Gain::display   () { histos.process(); }
 
-void Gain::computeStats (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
+void Gain::display ()
+{
+#ifdef __USE_ROOT__
+  histos.process();
+#endif
+}
+
+void Gain::computeStats (const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
 // ##############################################
 // # Linear regression with least-square method #
 // # Model: y = f(x) = q + mx                   #
@@ -311,9 +339,10 @@ void Gain::chipErrorReport ()
       for (const auto cChip : *cModule)
         {
           LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
-          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
+          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
         }
 }

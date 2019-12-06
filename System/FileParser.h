@@ -24,10 +24,11 @@
 #include "../Utils/ConditionDataSet.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/easylogging++.h"
-#include "pugixml/pugixml.hpp"
+
+#include "pugixml.hpp"
 #include <iostream>
+#include <unordered_map>
 #include <vector>
-#include <map>
 #include <stdlib.h>
 #include <string>
 
@@ -39,11 +40,11 @@ using namespace Ph2_HwInterface;
  * \namespace Ph2_System
  * \brief Namespace regrouping the framework wrapper
  */
-namespace Ph2_System {
-
-    using BeBoardVec = std::vector<BeBoard*>;             /*!< Vector of Board pointers */
-    using SettingsMap = std::map<std::string, double>;    /*!< Maps the settings */
-    using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>;    /*!< Map of Board connected */
+namespace Ph2_System
+{
+    using BeBoardVec   = std::vector<BeBoard*>;                   /*!< Vector of Board pointers */
+    using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board connected */
+    using SettingsMap  = std::unordered_map<std::string, double>; /*!< Maps the settings */
 
     /*!
      * \class FileParser
@@ -55,24 +56,10 @@ namespace Ph2_System {
         FileParser() {}
         ~FileParser() {}
 
-        // void parseHW      (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector,                                        std::ostream& os, bool pIsFile );
         void parseHW      (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile );
         void parseSettings(const std::string& pFilename, SettingsMap&  pSettingsMap,                                                                   std::ostream& os, bool pIsFile );
-        //void parseConditionDataSet (const std::string& pFilename, ConditionDataSet& pSet, std::ostream& os);
-
 
       protected:
-        /*!
-         * \brief converts any char array to int by automatically detecting if it is hex or dec
-         * \param pRegValue: parsed xml parmaeter char*
-         * \return converted integer
-         */
-        uint32_t convertAnyInt ( const char* pRegValue )
-        {
-            if ( std::string ( pRegValue ).find ( "0x" ) != std::string::npos ) return static_cast<uint32_t> ( strtoul ( pRegValue, 0, 16 ) );
-            else return static_cast<uint32_t> ( strtoul ( pRegValue, 0, 10 ) );
-
-        }
         /*!
          * \convert a voltage level to it's 8bit DAC value
          * \param pVoltage: the Voltage level
@@ -89,12 +76,6 @@ namespace Ph2_System {
          * \param pFilename : HW Description file
          *\param os : ostream to dump output
          */
-        // void parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os, bool pIsFile );
-        /*!
-         * \brief Initialize the hardware via  XML config file
-         * \param pFilename : HW Description file
-         *\param os : ostream to dump output
-         */
         void parseHWxml ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile );
         /*!
          * \brief Initialize the hardware via xml config file
@@ -102,21 +83,11 @@ namespace Ph2_System {
          *\param os : ostream to dump output
          */
         void parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile );
-        /*!
-         * \brief Initialize the ConditionData from xml file
-         * \param pFilename : HW Description file
-         *\param os : ostream to dump output
-         */
-        //void parseConditionDataSetxml (const std::string& pFilename, ConditionDataSet& pSet, std::ostream& os);
 
-        // void parseBeBoard          (pugi::xml_node pBeBordNode,   BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os );
         void parseBeBoard          (pugi::xml_node pBeBordNode,   BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os );
         void parseRegister         (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os );
-        // void parseRegister         (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard &pBoard, std::ostream& os );
         void parseSLink            (pugi::xml_node pSLinkNode,    BeBoard* pBoard,               std::ostream& os );
-        // void parseModule           (pugi::xml_node pModuleNode,   BeBoard* pBoard,               std::ostream& os );
         void parseModuleContainer  (pugi::xml_node pModuleNode,   BeBoard* pBoard,               std::ostream& os );
-        // void parseCbc              (pugi::xml_node pModuleNode,   Module* cModule,               std::string cFilePrefix, std::ostream& os );
         void parseCbcContainer     (pugi::xml_node pModuleNode,   Module* cModule,               std::string cFilePrefix, std::ostream& os );
         void parseCbcSettings      (pugi::xml_node pCbcNode,      ReadoutChip* pCbc,             std::ostream& os);
         void parseGlobalCbcSettings(pugi::xml_node pModuleNode,   Module* pModule,               std::ostream& os);

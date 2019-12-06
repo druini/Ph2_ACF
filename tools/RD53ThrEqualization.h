@@ -10,14 +10,17 @@
 #ifndef RD53ThrEqualization_H
 #define RD53ThrEqualization_H
 
+#include "Tool.h"
+#include "RD53SCurve.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/ThresholdAndNoise.h"
-#include "../DQMUtils/RD53ThrEqualizationHistograms.h"
-#include "Tool.h"
+#include "../Utils/RD53SharedConstants.h"
 
+#ifdef __USE_ROOT__
 #include "TApplication.h"
+#include "../DQMUtils/RD53ThrEqualizationHistograms.h"
+#endif
 
 
 // #############
@@ -36,27 +39,29 @@ class ThrEqualization : public Tool
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
-  void writeObjects         () {}; // @TMP@
 
+  void   sendData            ();
   void   initialize          (const std::string fileRes_, const std::string fileReg_);
-  void   run                 (std::shared_ptr<DetectorDataContainer> newVCal = nullptr);
+  void   run                 ();
   void   draw                ();
   size_t getNumberIterations ()
   {
     uint16_t nBitTDAC       = 4;
     uint16_t moreIterations = 2;
-    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups)*(nBitTDAC + moreIterations) *
-      nEvents/nEvtsBurst;
+    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*(nBitTDAC + moreIterations) *
+      nEvents/nEvtsBurst + sc.getNumberIterations();
   }
 
 
  private:
+  SCurve sc;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
   size_t colStop;
   size_t nEvents;
   size_t nEvtsBurst;
+  size_t nHITxCol;
   bool   doFast;
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
@@ -73,14 +78,16 @@ class ThrEqualization : public Tool
   // ########
   // # ROOT #
   // ########
+#ifdef __USE_ROOT__
   ThrEqualizationHistograms histos;
+#endif
 
 
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
 };
 
 #endif

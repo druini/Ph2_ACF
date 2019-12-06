@@ -10,13 +10,17 @@
 #ifndef RD53SCurve_H
 #define RD53SCurve_H
 
+#include "Tool.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../DQMUtils/RD53SCurveHistograms.h"
-#include "Tool.h"
+#include "../Utils/RD53SharedConstants.h"
 
+#ifdef __USE_ROOT__
 #include "TApplication.h"
+#include "../DQMUtils/RD53SCurveHistograms.h"
+#endif
 
 
 // #############
@@ -36,15 +40,15 @@ class SCurve : public Tool
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
-  void writeObjects         () {}; // @TMP@
 
+  void sendData                                  ();
   void initialize                                (const std::string fileRes_, const std::string fileReg_);
   void run                                       ();
   void draw                                      ();
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
-    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups)*nSteps;
+    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*nSteps;
   }
 
 
@@ -58,6 +62,7 @@ class SCurve : public Tool
   size_t stopValue;
   size_t nSteps;
   size_t offset;
+  size_t nHITxCol;
   bool   doFast;
 
   std::vector<uint16_t> dacList;
@@ -69,21 +74,23 @@ class SCurve : public Tool
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void computeStats    (std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+  void computeStats    (const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
   void chipErrorReport ();
 
 
   // ########
   // # ROOT #
   // ########
+#ifdef __USE_ROOT__
   SCurveHistograms histos;
+#endif
 
 
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
 };
 
 #endif

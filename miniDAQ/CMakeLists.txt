@@ -61,58 +61,38 @@ if(Boost_FOUND)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time")
 endif()
 
-#last but not least, find root and link against it
-if(ROOT_FOUND)
-    include_directories(${ROOT_INCLUDE_DIRS})
-    set(LIBS ${LIBS} ${ROOT_LIBRARIES})
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__USE_ROOT__")
-
-    #check for THttpServer
-    if(${ROOT_HAS_HTTP})
-        set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HTTP__")
-    endif()
-
-    #check ROOT version
-    if(${ROOT_VERSION} VERSION_GREATER 5)
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ROOT5__")
-    else()
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ROOT6__")
-    endif()
-endif()
-
 ####################################
 ## EXECUTABLES
 ####################################
 
-#CMSIT_miniDAQ
-add_executable(CMSIT_miniDAQ CMSIT_miniDAQ.cc)
-target_link_libraries(CMSIT_miniDAQ ${LIBS} Ph2_Tools RootWeb)
+# #CMSIT_miniDAQ
+# add_executable(CMSIT_miniDAQ CMSIT_miniDAQ.cc)
+# target_link_libraries(CMSIT_miniDAQ ${LIBS} Ph2_Tools RootWeb)
 
-#miniDAQ
-add_executable(miniDAQ miniDAQ.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.h ../DQMUtils/DQMEvent.cc ../DQMUtils/SLinkDQMHistogrammer.cc ../DQMUtils/SLinkDQMHistogrammer.cc)
-target_link_libraries(miniDAQ ${LIBS} RootWeb)
+# #miniDAQ
+# add_executable(miniDAQ miniDAQ.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.h ../DQMUtils/DQMEvent.cc ../DQMUtils/SLinkDQMHistogrammer.cc ../DQMUtils/SLinkDQMHistogrammer.cc)
+# target_link_libraries(miniDAQ ${LIBS} RootWeb)
 
 #miniDQM
 #add_executable(miniDQM miniDQM.cc publisher.cc publisher.h ../DQMUtils/DQMHistogrammer.cc ../DQMUtils/DQMHistogrammer.h)
 #target_link_libraries(miniDQM ${LIBS} Ph2_Tools RootWeb)
 
-#miniSLinkDQM
-add_executable(miniSLinkDQM miniSLinkDQM.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.h ../DQMUtils/DQMEvent.cc ../DQMUtils/SLinkDQMHistogrammer.cc ../DQMUtils/SLinkDQMHistogrammer.h)
-target_link_libraries(miniSLinkDQM ${LIBS} RootWeb)
+# #miniSLinkDQM
+# add_executable(miniSLinkDQM miniSLinkDQM.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.h ../DQMUtils/DQMEvent.cc ../DQMUtils/SLinkDQMHistogrammer.cc ../DQMUtils/SLinkDQMHistogrammer.h)
+# target_link_libraries(miniSLinkDQM ${LIBS} RootWeb)
 
 #RunController
 add_executable(RunController RunController.cc MiddlewareController.cc)
 target_link_libraries(RunController ${LIBS} Ph2_Tools)
 
-file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/miniDAQ *.cc)
+# file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/miniDAQ *.cc)
 
-message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
-foreach( sourcefile ${BINARIES} )
-    string(REPLACE ".cc" "" name ${sourcefile})
-    message(STATUS "    ${name}")
-endforeach(sourcefile ${BINARIES})
-message("--     ${BoldCyan}#### End ####${Reset}")
+# message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
+# foreach( sourcefile ${BINARIES} )
+#     string(REPLACE ".cc" "" name ${sourcefile})
+#     message(STATUS "    ${name}")
+# endforeach(sourcefile ${BINARIES})
+# message("--     ${BoldCyan}#### End ####${Reset}")
 
 MESSAGE(STATUS " ") 
 MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/miniDAQ/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}") 
@@ -159,7 +139,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
               Ph2_Utils_${Ph2_ACF_Master}
               Ph2_NetworkUtils_${Ph2_ACF_Master}
               Ph2_Tools_${Ph2_ACF_Master}
-              Ph2_DQMUtils_${Ph2_ACF_Master}
+            #   Ph2_DQMUtils_${Ph2_ACF_Master}
             # $ENV{XDAQ_LIB}/libxdaq.so
             # $ENV{XDAQ_LIB}/libconfig.so
             # $ENV{XDAQ_LIB}/libpeer.so

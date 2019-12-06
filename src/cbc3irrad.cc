@@ -226,40 +226,45 @@ int main ( int argc, char* argv[] )
         if (cFull)
         {
             Timer t;
-            //then sweep a bunch of biases
-#ifdef __USBINST__
-            BiasSweep cBiasSweep (cLVClient, cKeController);
-#else
-            BiasSweep cBiasSweep;
-#endif
+            #ifdef __USE_ROOT__
 
-            cBiasSweep.Inherit (&cTool);
-            cBiasSweep.Initialize();
-            cDog.Reset (5);
-            std::vector<std::string> cBiases{"VCth", "CAL_Vcasc", "VPLUS1", "VPLUS2", "VBGbias", "VBG_LDO", "Vpafb", "VDDA", "Nc50", "Ipa", "Ipre1", "Ipre2", "CAL_I", "Ibias", "Ipsf", "Ipaos", "Icomp", "Ihyst"};
+                //then sweep a bunch of biases
+                #ifdef __USBINST__
+                    BiasSweep cBiasSweep (cLVClient, cKeController);
+                #else
+                    BiasSweep cBiasSweep;
+                #endif
 
-            for (auto cBoard : cBiasSweep.fBoardVector)
-            {
-                for (auto cFe : cBoard->fModuleVector)
+                cBiasSweep.Inherit (&cTool);
+                cBiasSweep.Initialize();
+                cDog.Reset (5);
+                std::vector<std::string> cBiases{"VCth", "CAL_Vcasc", "VPLUS1", "VPLUS2", "VBGbias", "VBG_LDO", "Vpafb", "VDDA", "Nc50", "Ipa", "Ipre1", "Ipre2", "CAL_I", "Ibias", "Ipsf", "Ipaos", "Icomp", "Ihyst"};
+
+                for (auto cBoard : cBiasSweep.fBoardVector)
                 {
-                    for (auto cCbc : cFe->fReadoutChipVector)
+                    for (auto cFe : cBoard->fModuleVector)
                     {
-
-                        for (auto cBias : cBiases)
+                        for (auto cCbc : cFe->fReadoutChipVector)
                         {
-                            cDog.Reset (160);
-                            t.start();
-                            cBiasSweep.SweepBias (cBias, cCbc);
-                            t.stop();
-                            t.show ("Time for this bias");
-                        }
 
-                        cDog.Reset (25);
-                        cBiasSweep.MeasureMinPower (cBoard, cCbc);
+                            for (auto cBias : cBiases)
+                            {
+                                cDog.Reset (160);
+                                t.start();
+                                cBiasSweep.SweepBias (cBias, cCbc);
+                                t.stop();
+                                t.show ("Time for this bias");
+                            }
+
+                            cDog.Reset (25);
+                            cBiasSweep.MeasureMinPower (cBoard, cCbc);
+                        }
                     }
                 }
-            }
+            #endif
         }
+
+
 
         ////first, run offset tuning
         cDog.Reset (50);
@@ -304,10 +309,12 @@ int main ( int argc, char* argv[] )
                 cTool.accept (cVisitor);
             }
 
-            StubSweep cStubSweep;
-            cStubSweep.Inherit (&cTool);
-            cStubSweep.Initialize();
-            cStubSweep.SweepStubs (1);
+            #ifdef __USE_ROOT__
+                StubSweep cStubSweep;
+                cStubSweep.Inherit (&cTool);
+                cStubSweep.Initialize();
+                cStubSweep.SweepStubs (1);
+            #endif
 
         }
 

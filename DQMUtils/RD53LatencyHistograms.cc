@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
+void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
   ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
@@ -24,17 +24,19 @@ void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& the
   stopValue  = this->findValueInSettings(settingsMap,"LatencyStop");
 
 
-  auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue, startValue, stopValue);
+  auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue + 1, startValue, stopValue + 1);
   bookImplementer(theOutputFile, theDetectorStructure, hLatency, Latency, "Latency (n.bx)", "Entries");
 
-  auto hOcc1D = CanvasContainer<TH1F>("LatencyScan", "Latency Scan", stopValue - startValue, startValue, stopValue);
+  auto hOcc1D = CanvasContainer<TH1F>("LatencyScan", "Latency Scan", stopValue - startValue + 1, startValue, stopValue + 1);
   bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Latency (n.bx)", "Efficiency");
 }
 
 bool LatencyHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<GenericDataVector> theOccStreamer    ("LatencyOcc");
-  ChannelContainerStream<RegisterValue>     theLatencyStreamer("LatencyLatency");
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+
+  ChipContainerStream<EmptyContainer,GenericDataArray<LatencySize>> theOccStreamer    ("LatencyOcc"); // @TMP@
+  ChipContainerStream<EmptyContainer,uint16_t>                      theLatencyStreamer("LatencyLatency"); // @TMP@
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
@@ -56,14 +58,18 @@ bool LatencyHistograms::fill (std::vector<char>& dataBuffer)
 
 void LatencyHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer)
 {
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+
   for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<GenericDataArray<LatencySize>>() == nullptr) continue;
+
           auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          for (size_t i = startValue; i < stopValue; i++)
-            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i),cChip->getSummary<GenericDataVector>().data1[i-startValue]);
+          for (size_t i = startValue; i <= stopValue; i++)
+            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i),cChip->getSummary<GenericDataArray<LatencySize>>().data[i-startValue]);
         }
 }
 
@@ -73,9 +79,11 @@ void LatencyHistograms::fillLatency (const DetectorDataContainer& LatencyContain
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+
           auto* LatencyHist = Latency.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          LatencyHist->Fill(LatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue);
+          LatencyHist->Fill(cChip->getSummary<uint16_t>());
         }
 }
 

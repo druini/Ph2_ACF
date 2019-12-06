@@ -22,9 +22,6 @@ using namespace std;
 
 INITIALIZE_EASYLOGGINGPP
 
-#define LOGGER "settings/logger.conf"
-
-
 class AcqVisitor: public HwInterfaceVisitor
 {
   int cN;
@@ -48,27 +45,27 @@ void verifyImageName ( const string& strImage, const vector<string>& lstNames)
     {
       if (strImage.compare ("1") != 0 && strImage.compare ("2") != 0)
         {
-	  LOG (ERROR) << "Error, invalid image name, should be 1 (golden) or 2 (user)";
-	  exit (1);
+          LOG (ERROR) << "Error, invalid image name, should be 1 (golden) or 2 (user)";
+          exit (1);
         }
     }
   else
     {
       bool bFound = false;
-      
+
       for (size_t iName = 0; iName < lstNames.size(); iName++)
-	{
-	  if (!strImage.compare (lstNames[iName]) )
+        {
+          if (!strImage.compare (lstNames[iName]) )
             {
-	      bFound = true;
-	      break;
-	    }
+              bFound = true;
+              break;
+            }
         }
-      
+
       if (!bFound)
         {
-	  LOG (ERROR) << "Error, this image name: " << strImage << " is not available on SD card";
-	  exit (1);
+          LOG (ERROR) << "Error, this image name: " << strImage << " is not available on SD card";
+          exit (1);
         }
     }
 }
@@ -76,7 +73,9 @@ void verifyImageName ( const string& strImage, const vector<string>& lstNames)
 int main ( int argc, char* argv[] )
 {
   //configure the logger
-  el::Configurations conf (LOGGER);
+  std::string loggerConfigFile = std::getenv("BASE_DIR");
+  loggerConfigFile += "/settings/logger.conf";
+  el::Configurations conf (loggerConfigFile);
   el::Loggers::reconfigureAllLoggers (conf);
 
   SystemController cSystemController;
@@ -104,7 +103,7 @@ int main ( int argc, char* argv[] )
   cmd.defineOption ( "config", "Hw Description File . Default value: settings/HWDescription_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
   cmd.defineOptionAlternative ( "config", "c" );
 
-  cmd.defineOption ( "image", "Without -f: load image from SD card to FPGA.\nWith -f: name of image written to SD card (-f specified the source filename).", ArgvParser::OptionRequiresValue);
+  cmd.defineOption ( "image", "Without -f: load image from SD card to FPGA\nWith -f: name of image written to SD card (-f specified the source filename)", ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("image", "i");
 
   int result = cmd.parse (argc, argv);
@@ -128,7 +127,7 @@ int main ( int argc, char* argv[] )
       LOG (INFO) << lstNames.size() << " firmware images on SD card:";
 
       for (auto& name : lstNames)
-	LOG (INFO) << " - " << name;
+        LOG (INFO) << " - " << name;
 
       exit (0);
     }
@@ -138,13 +137,13 @@ int main ( int argc, char* argv[] )
 
       if (lstNames.size() == 0 && cFWFile.find (".mcs") == std::string::npos)
         {
-	  LOG (ERROR) << "Error, the specified file is not a .mcs file" ;
-	  exit (1);
+          LOG (ERROR) << "Error, the specified file is not a .mcs file" ;
+          exit (1);
         }
       else if (lstNames.size() > 0 && cFWFile.compare (cFWFile.length() - 4, 4, ".bit") && cFWFile.compare (cFWFile.length() - 4, 4, ".bin") )
         {
-	  LOG (ERROR) << "Error, the specified file is neither a .bit nor a .bin file";
-	  exit (1);
+          LOG (ERROR) << "Error, the specified file is neither a .bit nor a .bin file";
+          exit (1);
         }
     }
   else if (cmd.foundOption ("delete") && !lstNames.empty() )
@@ -167,7 +166,7 @@ int main ( int argc, char* argv[] )
       strImage = cmd.optionValue ("image");
 
       if (!cmd.foundOption ("file") )
-	verifyImageName (strImage, lstNames);
+        verifyImageName (strImage, lstNames);
     }
   else if (!lstNames.empty() )
     strImage = "GoldenImage.bin";
@@ -196,17 +195,17 @@ int main ( int argc, char* argv[] )
 
   while (cDone == 0)
     {
-      progress = cSystemController.fBeBoardInterface->getConfiguringFpga (pBoard)->getProgressValue();
+      progress = cSystemController.fBeBoardInterface->GetConfiguringFpga (pBoard)->getProgressValue();
 
       if (progress == 100)
         {
-	  cDone = 1;
-	  LOG (INFO) << "\n 100% Done" ;
+          cDone = 1;
+          LOG (INFO) << "\n 100% Done" ;
         }
       else
         {
-	  LOG (INFO) << progress << "%  " << cSystemController.fBeBoardInterface->getConfiguringFpga (pBoard)->getProgressString() << "                 \r" << flush;
-	  sleep (1);
+          LOG (INFO) << progress << "%  " << cSystemController.fBeBoardInterface->GetConfiguringFpga (pBoard)->getProgressString() << "                 \r" << flush;
+          sleep (1);
         }
     }
 

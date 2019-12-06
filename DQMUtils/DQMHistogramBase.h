@@ -16,6 +16,7 @@
 #include <memory>
 
 #include "../HWDescription/RD53.h"
+#include "../System/SystemController.h"
 #include "../RootUtils/RootContainerFactory.h"
 #include "../RootUtils/CanvasContainer.h"
 #include "../RootUtils/HistContainer.h"
@@ -35,7 +36,6 @@ class DetectorContainer;
  */
 class DQMHistogramBase
 {
-
  public:
   /*!
    * constructor
@@ -51,7 +51,7 @@ class DQMHistogramBase
    * \brief Book histograms
    * \param theDetectorStructure : Container of the Detector structure
    */
-  virtual void book(TFile *outputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap) = 0;
+  virtual void book(TFile *outputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) = 0;
 
   /*!
    * \brief Book histograms
@@ -132,7 +132,7 @@ class DQMHistogramBase
             }
     }
 
-  double findValueInSettings (const std::map<std::string, double>& settingsMap, const char* name)
+  double findValueInSettings (const Ph2_System::SettingsMap& settingsMap, const char* name)
   {
     auto setting = settingsMap.find(name);
     return ((setting != std::end(settingsMap)) ? setting->second : 0);

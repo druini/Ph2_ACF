@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
+void ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
   ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
@@ -25,7 +25,7 @@ void ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContai
 
 bool ThrMinimizationHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<RegisterValue> theThrStreamer("ThrMinimization");
+  ChipContainerStream<EmptyContainer,uint16_t> theThrStreamer("ThrMinimization"); //@TMP@
 
   if(theThrStreamer.attachBuffer(&dataBuffer))
     {
@@ -44,9 +44,11 @@ void ThrMinimizationHistograms::fill (const DetectorDataContainer& DataContainer
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+
           auto* hThrehsold = Threhsold.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          hThrehsold->Fill(cChip->getSummary<RegisterValue>().fRegisterValue);
+          hThrehsold->Fill(cChip->getSummary<uint16_t>());
         }
 }
 

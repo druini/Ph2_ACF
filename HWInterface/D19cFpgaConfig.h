@@ -24,10 +24,11 @@ namespace Ph2_HwInterface
 class D19cFpgaConfig : public FpgaConfig
 {
 private:
-    fc7::MmcPipeInterface lNode;
+    fc7::MmcPipeInterface *lNode;
 
 public:
     D19cFpgaConfig(BeBoardFWInterface* pbbi);
+    ~D19cFpgaConfig();
     /*! \brief Launch the firmware upload in a separate thread
      * \param strConfig FPGA configuration name
      * \param pstrFile absolute path to the .bit or .bin file

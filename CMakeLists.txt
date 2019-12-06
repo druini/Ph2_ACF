@@ -57,27 +57,63 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     #set the cmakeL module path
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-
-    # compiler flags
-    # set (CMAKE_CXX_FLAGS "-std=c++1y -O3 -Wcpp -pthread -pedantic -Wall -Werror -w -g -fPIC ${CMAKE_CXX_FLAGS}  -D__USE_ROOT__")
-    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-error=maybe-uninitialized -Wno-ignored-qualifiers -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-missing-field-initializers -std=c++1y -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor -pthread  -Wcpp -fPIC ${CMAKE_CXX_FLAGS}  -D__USE_ROOT__")
     
+    set(CompileForShep "$ENV{CompileForShep}")
+    set(CompileForHerd "$ENV{CompileForHerd}")
+    if( (NOT CompileForShep) AND (NOT CompileForHerd) )
+    set(NoDataShipping TRUE)
+    else()
+    set(NoDataShipping FALSE)
+    endif()
+    
+    MESSAGE(STATUS "CompileForShep = ${CompileForShep}")
+    MESSAGE(STATUS "CompileForHerd = ${CompileForHerd}")
+    MESSAGE(STATUS "NoDataShipping = ${NoDataShipping}")
+
+    # If it's a recent gcc compiler, then let's add some
+    # compiler options to avoid warnings promoted to errors
+
+    set (GCC_NOERROR_FLAGS "-Wno-error=maybe-uninitialized -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-error=unused-result -Wno-error=deprecated-declarations")
+    set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
+    set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined")
+    set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
+    if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+      EXECUTE_PROCESS( COMMAND gcc -dumpversion OUTPUT_VARIABLE GCC_VERSION )
+      if(NOT (GCC_VERSION VERSION_LESS 6))
+        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_6_NOERROR_FLAGS}")
+      endif()
+      if(NOT (GCC_VERSION VERSION_LESS 7))
+        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_7_NOERROR_FLAGS}")
+      endif()
+      if(NOT (GCC_VERSION VERSION_LESS 8))
+        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_8_NOERROR_FLAGS}")
+      endif()
+    endif ()
+    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -std=c++1y -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread  -Wcpp -fPIC ${CMAKE_CXX_FLAGS}")
+    if(NoDataShipping)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+    endif()
+
+
+
     #check for external dependences
     message("--")
     message("--     ${BoldCyan}#### Checking for external Dependencies ####${Reset}")
-    #ROOT
-    find_package(ROOT COMPONENTS RHTTP)
-    if(ROOT_FOUND)
-        #check for THttpServer
-        if(EXISTS ${ROOT_RHTTP_LIBRARY})
-            message(STATUS "    Found THttp Server support - enabling compiler flags")
-            set(ROOT_HAS_HTTP TRUE)
-        elseif()
-            message(STATUS "    ROOT built without THttp Server - disabling compiler flags")
-        endif()
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_NO_USE_ROOT__")
-        message(STATUS "    Using ROOT version ${ROOT_VERSION}")
-    endif(ROOT_FOUND)
+    if(CompileForShep OR NoDataShipping)
+        #ROOT
+        find_package(ROOT COMPONENTS RHTTP)
+        if(ROOT_FOUND)
+            #check for THttpServer
+            if(EXISTS ${ROOT_RHTTP_LIBRARY})
+                message(STATUS "    Found THttp Server support - enabling compiler flags")
+                set(ROOT_HAS_HTTP TRUE)
+            elseif()
+                message(STATUS "    ROOT built without THttp Server - disabling compiler flags")
+            endif()
+            # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -")
+            message(STATUS "    Using ROOT version ${ROOT_VERSION}")
+        endif(ROOT_FOUND)
+    endif()
 
     find_package(CACTUS)      #========================================================
     if(${CACTUS_AMC13_FOUND})
@@ -133,17 +169,33 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         add_subdirectory(AMC13)
     endif()
 
-    add_subdirectory(tools)
-    add_subdirectory(RootWeb)
-    add_subdirectory(DQMUtils)
-    add_subdirectory(src)
-    add_subdirectory(miniDAQ)
+    MESSAGE(STATUS " ")
+    if(CompileForHerd OR NoDataShipping)
+        add_subdirectory(tools)
+        add_subdirectory(HWDescription)
+        add_subdirectory(HWInterface)
+        add_subdirectory(System)
+    endif()
+
+    if(CompileForHerd)
+        add_subdirectory(miniDAQ)
+    endif()
+
+    if(CompileForShep OR NoDataShipping)
+        add_subdirectory(DQMUtils)
+        add_subdirectory(RootUtils)
+    endif()
+
+    if(NoDataShipping OR (CompileForShep AND CompileForHerd))
+        add_subdirectory(src)
+    endif()
+
+    if(NoDataShipping)
+        add_subdirectory(RootWeb)
+    endif()
+
     add_subdirectory(Utils)
-    add_subdirectory(RootUtils)
     add_subdirectory(NetworkUtils)
-    add_subdirectory(HWDescription)
-    add_subdirectory(HWInterface)
-    add_subdirectory(System)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
     #set(ENV{PATH} "$ENV{PATH}:${PROJECT_SOURCE_DIR}/bin")
@@ -164,8 +216,6 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS " ") 
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
-
-    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_NO_USE_ROOT__")
 
     add_subdirectory(tools)
 #    add_subdirectory(RootWeb)

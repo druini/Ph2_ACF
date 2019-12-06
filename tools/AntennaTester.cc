@@ -1,5 +1,7 @@
 #include "AntennaTester.h"
 
+#ifdef __USE_ROOT__
+
 // fill the Histograms, count the hits and increment Vcth
 struct HistogramFiller  : public HwDescriptionVisitor
 {
@@ -318,3 +320,4 @@ void AntennaTester::Measure(uint8_t pDigiPotentiometer)
 
 
 }
+#endif

@@ -13,9 +13,6 @@
 #define __READOUTCHIPINTERFACE_H__
 
 #include <vector>
-//#include "../HWInterface/GlibFWInterface.h"
-//#include "../HWInterface/CtaFWInterface.h"
-//#include "../HWInterface/ICGlibFWInterface.h"
 #include "BeBoardFWInterface.h"
 #include "ChipInterface.h"
 
@@ -23,7 +20,6 @@ using namespace Ph2_HwDescription;
 
 template <typename T>
 class ChannelContainer;
-class RegisterValue;
 
 /*!
  * \namespace Ph2_HwInterface
@@ -57,15 +53,24 @@ namespace Ph2_HwInterface {
          * \param group: group of channels under test
          * \param pVerifLoop: perform a readback check
          */
-        virtual bool setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true ) = 0;
+        virtual bool setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+          return false;
+        }
+
         /*!
          * \brief Mask the channels not belonging to the group under test
          * \param pChip: pointer to Chip object
          * \param group: group of channels under test
          * \param pVerifLoop: perform a readback check
          */
-        virtual bool maskChannelsGroup (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true ) = 0;
-        
+        virtual bool maskChannelsGroup (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+          return false;
+        }
+
         /*!
          * \brief mask and inject with one function to increase speed
          * \param pChip: pointer to Chip object

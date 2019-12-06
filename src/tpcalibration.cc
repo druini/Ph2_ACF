@@ -93,21 +93,23 @@ int main ( int argc, char* argv[] )
     Timer t;
     t.start();
 
-    TPCalibration cTBCalibrate;
-    cTBCalibrate.InitializeHw ( cHWFile, outp);
-    cTBCalibrate.InitializeSettings ( cHWFile, outp );
-    LOG (INFO) << outp.str();
-    cTBCalibrate.CreateResultDirectory ( cDirectory );
-    cTBCalibrate.InitResultFile ( cResultfile );
-    cTBCalibrate.StartHttpServer();
-    cTBCalibrate.ConfigureHw ();
-    cTBCalibrate.Initialise(false);
-    cTBCalibrate.Init(cStartAmp, cEndAmp, cStepSize);
+    #ifdef __USE_ROOT__
+        TPCalibration cTBCalibrate;
+        cTBCalibrate.InitializeHw ( cHWFile, outp);
+        cTBCalibrate.InitializeSettings ( cHWFile, outp );
+        LOG (INFO) << outp.str();
+        cTBCalibrate.CreateResultDirectory ( cDirectory );
+        cTBCalibrate.InitResultFile ( cResultfile );
+        cTBCalibrate.StartHttpServer();
+        cTBCalibrate.ConfigureHw ();
+        cTBCalibrate.Initialise(false);
+        cTBCalibrate.Init(cStartAmp, cEndAmp, cStepSize);
 
-    //Now do the actual calirbation
-    cTBCalibrate.RunCalibration();
+        //Now do the actual calirbation
+        cTBCalibrate.RunCalibration();
 
-    cTBCalibrate.SaveResults();
+        cTBCalibrate.SaveResults();
+    #endif
 
     t.stop();
     t.show("Time to run the test pulse calibration ");

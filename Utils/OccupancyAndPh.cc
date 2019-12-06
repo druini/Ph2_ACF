@@ -11,9 +11,9 @@
 
 void OccupancyAndPh::makeSummaryAverage (const std::vector<OccupancyAndPh>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
 {
-  if (theOccupancyVector->size() != theNumberOfEnabledChannelsList.size()) 
+  if (theOccupancyVector->size() != theNumberOfEnabledChannelsList.size())
     {
-      std::cout << __PRETTY_FUNCTION__ << "theOccupancyVector size = " << theOccupancyVector->size() 
+      std::cout << __PRETTY_FUNCTION__ << "theOccupancyVector size = " << theOccupancyVector->size()
                 << " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
       abort();
     }

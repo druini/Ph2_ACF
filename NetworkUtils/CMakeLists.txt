@@ -5,7 +5,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 #find source files
 file(GLOB SOURCES *.cc)
-add_library(Ph2_NetworkUtils SHARED ${SOURCES})
+add_library(Ph2_NetworkUtils STATIC ${SOURCES})
 
 else()
 

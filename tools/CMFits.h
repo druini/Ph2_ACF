@@ -1,6 +1,8 @@
 #ifndef CMFITS_H__
 #define CMFITS_H__
 
+#ifdef __USE_ROOT__
+
 #include "TH1F.h"
 #include "TF1.h"
 #include "TMath.h"
@@ -10,13 +12,13 @@
 #define NORMGAUS  3.98942280401432703e-01
 
 
-double findMaximum( TH1F* histogram )
+inline double findMaximum( TH1F* histogram )
 {
 	int maxbin = histogram->GetMaximumBin();
 	return histogram->GetXaxis()->GetBinCenter( maxbin );
 }
 
-double hitProbability( double threshold )
+inline double hitProbability( double threshold )
 {
 	return 0.5 - ( TMath::Erf( threshold / sqrt( 2 ) ) / 2 );
 	// area above threshold under the gaussian curve.
@@ -24,18 +26,18 @@ double hitProbability( double threshold )
 	// 1-erf(x/sqrt(2)/2 + .5)
 }
 
-double inverse_hitProbability( double probability )
+inline double inverse_hitProbability( double probability )
 {
 	// the inverse of the above function!
 	return sqrt( 2 ) * TMath::ErfInverse( 1 - 2 * probability );
 }
 
-double binomialPdf( int n, int k, double p )
+inline double binomialPdf( int n, int k, double p )
 {
 	return TMath::Binomial( n, k ) * pow( p, k ) * pow( ( 1 - p ), n - k );
 }
 
-double hitProbFunction( double* xStrips, Double_t* par )
+inline double hitProbFunction( double* xStrips, Double_t* par )
 {
 
 	const double samplingHalfStep = SIGMARANGE / static_cast<double>( NSAMPLINGSCMN );
@@ -67,7 +69,7 @@ double hitProbFunction( double* xStrips, Double_t* par )
 	return result;
 }
 
-void fitDistribution( TH1F* pHitCountHisto, TF1* pFit,  int nActiveStrips )
+inline void fitDistribution( TH1F* pHitCountHisto, TF1* pFit,  int nActiveStrips )
 {
 	// First-order approximation
 	double prob = findMaximum( pHitCountHisto ) / pHitCountHisto->GetNbinsX();
@@ -97,7 +99,7 @@ void fitDistribution( TH1F* pHitCountHisto, TF1* pFit,  int nActiveStrips )
 	pHitCountHisto->Fit( pFit, "RQNM+" );
 }
 
-TH1F* createNoiseDistribution( TH1F* pNoCM, double pThreshold, double pCMNFraction, int pNEvents, int pNActiveStrips )
+inline TH1F* createNoiseDistribution( TH1F* pNoCM, double pThreshold, double pCMNFraction, int pNEvents, int pNActiveStrips )
 {
 	pNoCM->SetBins( pNActiveStrips + 1, -0.5, pNActiveStrips + 0.5 );
 	double par[4];
@@ -116,4 +118,5 @@ TH1F* createNoiseDistribution( TH1F* pNoCM, double pThreshold, double pCMNFracti
 }
 
 
+#endif
 #endif

@@ -15,8 +15,8 @@ void GainOptimization::ConfigureCalibration ()
   // # Initialize sub-calibration #
   // ##############################
   Gain::ConfigureCalibration();
-  Gain::doDisplay = false;
-  Gain::doSave    = false;
+  Gain::doDisplay    = false;
+  Gain::doUpdateChip = false;
 
 
   // #######################
@@ -34,19 +34,25 @@ void GainOptimization::ConfigureCalibration ()
   KrumCurrStop  = this->findValueInSettings("KrumCurrStop");;
   doFast        = this->findValueInSettings("DoFast");
   doDisplay     = this->findValueInSettings("DisplayHisto");
-  doSave        = this->findValueInSettings("Save");
+  doUpdateChip  = this->findValueInSettings("UpdateChipCfg");
+
+
+  // #######################
+  // # Initialize progress #
+  // #######################
+  RD53RunProgress::total() += GainOptimization::getNumberIterations();
 }
 
 void GainOptimization::Start (int currentRun)
 {
   GainOptimization::run();
   GainOptimization::analyze();
+  GainOptimization::sendData();
+}
 
-
-  // #############
-  // # Send data #
-  // #############
-  auto theKrumStream = prepareChannelContainerStreamer<RegisterValue>();
+void GainOptimization::sendData ()
+{
+  auto theKrumStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>(); // @TMP@
 
   if (fStreamerEnabled == true)
     for (const auto cBoard : theKrumCurrContainer) theKrumStream.streamAndSendBoard(cBoard, fNetworkStreamer);
@@ -80,11 +86,11 @@ void GainOptimization::run ()
   // #######################################
   // # Fill Krummenacher Current container #
   // #######################################
-  ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, theKrumCurrContainer);
+  ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theKrumCurrContainer);
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = static_cast<RD53*>(cChip)->getReg("KRUM_CURR_LIN");
+        theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<RD53*>(cChip)->getReg("KRUM_CURR_LIN");
 
 
   // ################
@@ -95,42 +101,41 @@ void GainOptimization::run ()
 
 void GainOptimization::draw ()
 {
+#ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (doSave    == true)
-    {
-      this->CreateResultDirectory(RESULTDIR,false,false);
-      this->InitResultFile(fileRes);
-    }
 
-  Gain::draw();
+  this->CreateResultDirectory(RESULTDIR,false,false);
+  this->InitResultFile(fileRes);
+
+  Gain::draw(false);
 
   GainOptimization::initHisto();
   GainOptimization::fillHisto();
   GainOptimization::display();
+#endif
 
-  if (doSave == true)
-    {
-      this->WriteRootFile();
+  // ######################################
+  // # Save or Update register new values #
+  // ######################################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          static_cast<RD53*>(cChip)->copyMaskFromDefault();
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDGREEN << "\t--> GainOptimization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+        }
 
-      // ############################
-      // # Save register new values #
-      // ############################
-      for (const auto cBoard : *fDetectorContainer)
-        for (const auto cModule : *cBoard)
-          for (const auto cChip : *cModule)
-            {
-              static_cast<RD53*>(cChip)->copyMaskFromDefault();
-              static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-              static_cast<RD53*>(cChip)->saveRegMap("");
-              std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-              system(command.c_str());
-            }
-    }
-
+#ifdef __USE_ROOT__
   if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true) this->CloseResultFile();
+  this->WriteRootFile();
+  this->CloseResultFile();
+#endif
 }
 
 void GainOptimization::analyze ()
@@ -139,20 +144,33 @@ void GainOptimization::analyze ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         LOG(INFO) << BOLDGREEN << "\t--> Krummenacher Current for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-                  << cChip->getSummary<RegisterValue>().fRegisterValue << RESET;
+                  << cChip->getSummary<uint16_t>() << RESET;
 }
 
-void GainOptimization::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
-void GainOptimization::fillHisto () { histos.fill(theKrumCurrContainer);                           }
-void GainOptimization::display   () { histos.process();                                            }
+void GainOptimization::initHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+
+void GainOptimization::fillHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.fill(theKrumCurrContainer);
+#endif
+}
+
+void GainOptimization::display ()
+{
+#ifdef __USE_ROOT__
+  histos.process();
+#endif
+}
 
 void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
-  // #################################
-  // # Number of standard deviations #
-  // #################################
-  float nStDev = 2;
-
+  uint16_t init;
   uint16_t numberOfBits = log2(stopValue - startValue + 1) + 1;
 
   DetectorDataContainer minDACcontainer;
@@ -162,22 +180,17 @@ void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents
   DetectorDataContainer bestDACcontainer;
   DetectorDataContainer bestContainer;
 
-  ContainerFactory::copyAndInitStructure<RegisterValue> (*fDetectorContainer, minDACcontainer);
-  ContainerFactory::copyAndInitStructure<RegisterValue> (*fDetectorContainer, midDACcontainer);
-  ContainerFactory::copyAndInitStructure<RegisterValue> (*fDetectorContainer, maxDACcontainer);
+  ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, minDACcontainer, init = startValue);
+  ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, midDACcontainer);
+  ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
-  ContainerFactory::copyAndInitStructure<RegisterValue> (*fDetectorContainer, bestDACcontainer);
-  ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, bestContainer);
+  ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, bestDACcontainer);
+  ContainerFactory::copyAndInitChip<OccupancyAndPh>(*fDetectorContainer, bestContainer);
 
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        {
-          minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = startValue;
-          maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = stopValue + 1;
-
-          bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = 0;
-        }
+        bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = 0;
 
 
   for (auto i = 0u; i <= numberOfBits; i++)
@@ -189,11 +202,11 @@ void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
             {
-              midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
-                (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue +
-                 maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue) / 2;
+              midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
+                 maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) / 2;
 
-              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue, true);
+              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(), true);
             }
 
 
@@ -226,8 +239,8 @@ void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents
                     }
               stdDev = (cnt != 0 ? stdDev/cnt : 0) - cChip->getSummary<GainAndIntercept>().fGain * cChip->getSummary<GainAndIntercept>().fGain;
               stdDev = (stdDev > 0 ? sqrt(stdDev) : 0);
-              size_t ToTpoint = RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION) - 2;
-              float newValue  = (ToTpoint - cChip->getSummary<GainAndIntercept>().fIntercept) / (cChip->getSummary<GainAndIntercept>().fGain + nStDev*stdDev);
+              size_t ToTpoint = RD53::setBits(RD53EvtEncoder::NBIT_TOT/RD53Constants::NPIX_REGION) - 2;
+              float newValue  = (ToTpoint - cChip->getSummary<GainAndIntercept>().fIntercept) / (cChip->getSummary<GainAndIntercept>().fGain + NSTDEV*stdDev);
 
 
               // ########################
@@ -237,19 +250,19 @@ void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents
               if (fabs(newValue - target) < fabs(oldValue - target))
                 {
                   bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = newValue;
-                  bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
-                    midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue;
+                  bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                    midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                 }
 
               if ((newValue > target) || (newValue < 0))
 
-                maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
-                  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue;
+                maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
 
               else
 
-                minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue =
-                  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue;
+                minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
             }
     }
 
@@ -260,7 +273,7 @@ void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue, true);
+        this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(), true);
 
 
   // ################
@@ -279,9 +292,10 @@ void GainOptimization::chipErrorReport ()
       for (const auto cChip : *cModule)
         {
           LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
-          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
+          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
         }
 }

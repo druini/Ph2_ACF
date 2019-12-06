@@ -13,16 +13,12 @@
 #define __CHIPINTERFACE_H__
 
 #include <vector>
-//#include "../HWInterface/GlibFWInterface.h"
-//#include "../HWInterface/CtaFWInterface.h"
-//#include "../HWInterface/ICGlibFWInterface.h"
 #include "BeBoardFWInterface.h"
 
 using namespace Ph2_HwDescription;
 
 template <typename T>
 class ChannelContainer;
-class RegisterValue;
 
 /*!
  * \namespace Ph2_HwInterface
@@ -69,7 +65,7 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        virtual bool ConfigureChip ( const Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
+        virtual bool ConfigureChip ( Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
 
         /*!
          * \brief Write the designated register in both Chip and Chip Config File
@@ -77,15 +73,29 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        virtual bool WriteChipReg ( Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true ) = 0;
+        virtual bool WriteChipReg          (Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) = 0;
+
+        virtual void WriteModuleBroadcastChipReg (const Module* pModule, const std::string& pRegNode, uint16_t data)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        }
+
+        virtual void WriteBoardBroadcastChipReg (const BeBoard* pBoard, const std::string& pRegNode, uint16_t data)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        }
 
         /*!
          * \brief Write several registers in both Chip and Chip Config File
          * \param pChip
          * \param pVecReq : Vector of pair: Node of the register to write versus value to write
          */
-        virtual bool WriteChipMultReg ( Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true ) = 0;
-        
+        virtual bool WriteChipMultReg (Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+          return false;
+        }
+
         /*!
          * \brief Read the designated register in the Chip
          * \param pChip

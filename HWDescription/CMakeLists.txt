@@ -9,7 +9,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     #find source files
     file(GLOB SOURCES *.cc)
-    add_library(Ph2_Description SHARED ${SOURCES})
+    add_library(Ph2_Description STATIC ${SOURCES})
 
     ####################################
     ## EXECUTABLES

@@ -13,7 +13,6 @@
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/Container.h"
-#include "../Utils/RegisterValue.h"
 #include <bitset>
 
 #define DEV_FLAG 0
@@ -30,7 +29,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    bool CbcInterface::ConfigureChip ( const Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
+    bool CbcInterface::ConfigureChip ( Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize )
     {
         //std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
         //std::cout << __PRETTY_FUNCTION__ << "!!!!!!!!!!!!!!!!" << std::endl;
@@ -141,7 +140,7 @@ namespace Ph2_HwInterface {
         return WriteChipMultReg ( pCbc, cRegVec, pVerifLoop );
     }
 
-    bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop )
+  bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop)
     {
         if(dacName=="VCth"){
             if (pCbc->getFrontEndType() == FrontEndType::CBC3)
@@ -287,7 +286,7 @@ namespace Ph2_HwInterface {
 
         for(uint8_t iChannel=0; iChannel<pCbc->getNumberOfChannels(); ++iChannel){
             if(isMask){
-                if( localRegValues.getChannel<RegisterValue>(iChannel).fRegisterValue ){
+                if( localRegValues.getChannel<uint16_t>(iChannel) ){
                     channelToEnable.enableChannel(iChannel);
                     // listOfChannelToUnMask.emplace_back(iChannel);
                 }
@@ -295,7 +294,7 @@ namespace Ph2_HwInterface {
             else {
                 char dacName1[20];
                 sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
-                cRegVec.emplace_back(dacName1,localRegValues.getChannel<RegisterValue>(iChannel).fRegisterValue);
+                cRegVec.emplace_back(dacName1,localRegValues.getChannel<uint16_t>(iChannel));
             }
         }
 
@@ -333,7 +332,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    void CbcInterface::WriteBroadcastCbcReg ( const Module* pModule, const std::string& pRegNode, uint32_t pValue )
+    void CbcInterface::WriteModuleBroadcastChipReg ( const Module* pModule, const std::string& pRegNode, uint16_t pValue )
     {
         //first set the correct BeBoard
         setBoard ( pModule->getBeBoardId() );

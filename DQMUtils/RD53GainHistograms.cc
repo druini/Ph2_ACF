@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
+void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
   ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
@@ -27,7 +27,7 @@ void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDet
   offset     = this->findValueInSettings(settingsMap,"VCalMED");
 
 
-  auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue-offset, stopValue-offset, nEvents, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / NPIX_REGION));
+  auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue-offset, stopValue-offset, nEvents, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION));
   bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "ToT");
 
   auto hErrReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
@@ -79,13 +79,15 @@ void GainHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContai
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
+
           auto* hOcc2D             = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
           auto* ErrorReadOut2DHist = ErrorReadOut2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
               {
-                if (cChip->getChannel<OccupancyAndPh>(row, col).isEnabled == true)
+                if (cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53SharedConstants::ISDISABLED)
                   hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row,col).fPh);
                 if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
               }
@@ -98,15 +100,17 @@ void GainHistograms::fillGainAndIntercept (const DetectorDataContainer& GainAndI
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getChannelContainer<GainAndIntercept>() == nullptr) continue;
+
           auto* Gain1DHist      = Gain1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
           auto* Intercept1DHist = Intercept1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-          auto* Gain2DHist      = Gain2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-          auto* Intercept2DHist = Intercept2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+          auto* Gain2DHist      = Gain2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+          auto* Intercept2DHist = Intercept2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
           auto* ErrorFit2DHist  = ErrorFit2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
-              if (cChip->getChannel<GainAndIntercept>(row, col).fitError == true) ErrorFit2DHist->Fill(col + 1, row + 1);
+              if (cChip->getChannel<GainAndIntercept>(row, col).fGain == RD53SharedConstants::FITERROR) ErrorFit2DHist->Fill(col + 1, row + 1);
               else if (cChip->getChannel<GainAndIntercept>(row, col).fGain != 0)
                 {
                   Gain1DHist->Fill(cChip->getChannel<GainAndIntercept>(row, col).fGain);

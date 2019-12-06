@@ -10,7 +10,9 @@
 #ifndef RD53GainOptimization_H
 #define RD53GainOptimization_H
 
+#ifdef __USE_ROOT__
 #include "../DQMUtils/RD53GainOptimizationHistograms.h"
+#endif
 #include "RD53Gain.h"
 
 
@@ -18,6 +20,7 @@
 // # CONSTANTS #
 // #############
 #define RESULTDIR "Results" // Directory containing the results
+#define NSTDEV 1            // Number of standard deviations for gain tolerance
 
 
 // ################################
@@ -29,8 +32,8 @@ class GainOptimization : public Gain
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
-  void writeObjects         () {}; // @TMP@
 
+  void   sendData            ();
   void   initialize          (const std::string fileRes_, const std::string fileReg_);
   void   run                 ();
   void   analyze             ();
@@ -68,14 +71,16 @@ class GainOptimization : public Gain
   // ########
   // # ROOT #
   // ########
+#ifdef __USE_ROOT__
   GainOptimizationHistograms histos;
+#endif
 
 
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
 };
 
 #endif

@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void GainOptimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
+void GainOptimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
   ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
@@ -25,7 +25,7 @@ void GainOptimizationHistograms::book (TFile* theOutputFile, const DetectorConta
 
 bool GainOptimizationHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<RegisterValue> theKrumStreamer("GainOptimization");
+  ChipContainerStream<EmptyContainer,uint16_t> theKrumStreamer("GainOptimization"); // @TMP@
 
   if(theKrumStreamer.attachBuffer(&dataBuffer))
     {
@@ -44,9 +44,11 @@ void GainOptimizationHistograms::fill (const DetectorDataContainer& DataContaine
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+
           auto* hKrumCurr = KrumCurr.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          hKrumCurr->Fill(cChip->getSummary<RegisterValue>().fRegisterValue);
+          hKrumCurr->Fill(cChip->getSummary<uint16_t>());
         }
 }
 

@@ -1,23 +1,22 @@
 /*
 
-        FileName :                    SystemController.cc
-        Content :                     Controller of the System, overall wrapper of the framework
-        Programmer :                  Nicolas PIERRE
-        Version :                     1.0
-        Date of creation :            10/08/14
-        Support :                     mail to : nicolas.pierre@cern.ch
+  FileName :                    SystemController.cc
+  Content :                     Controller of the System, overall wrapper of the framework
+  Programmer :                  Nicolas PIERRE
+  Version :                     1.0
+  Date of creation :            10/08/14
+  Support :                     mail to : nicolas.pierre@cern.ch
 
- */
+*/
 
 #include "SystemController.h"
-#include "../HWInterface/CbcInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-namespace Ph2_System {
-
-    SystemController::SystemController()
+namespace Ph2_System
+{
+  SystemController::SystemController()
     : fBeBoardInterface    (nullptr)
     , fReadoutChipInterface(nullptr)
     , fChipInterface       (nullptr)
@@ -28,7 +27,7 @@ namespace Ph2_System {
     , fRawFileName         ("")
     , fWriteHandlerEnabled (false)
     , fStreamerEnabled     (false)
-    , fNetworkStreamer     (nullptr)//This is the server listening port
+    , fNetworkStreamer     (nullptr) // This is the server listening port
     , fData                (nullptr)
     {
     //      bool fStreamData = true;
@@ -197,225 +196,206 @@ namespace Ph2_System {
                         fReadoutChipInterface->ConfigureChip ( cCbc );
                         LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
                       }
-		    }
-                }
-	      fBeBoardInterface->ChipReSync ( cBoard );
-          LOG (INFO) << BOLDGREEN << "Successfully sent resync." << RESET;
-	  }
-	  else
-	    {
-	      // ######################################
-	      // # Configuring Inner Tracker hardware #
-	      // ######################################
-	      RD53Interface* fRD53Interface = static_cast<RD53Interface*>(fReadoutChipInterface);
-	      
-	      LOG (INFO) << BOLDGREEN << "\t--> Found an Inner Tracker board" << RESET;
-	      LOG (INFO) << GREEN << "Configuring Board " << BOLDYELLOW << +cBoard->getBeId() << RESET;
-	      fBeBoardInterface->ConfigureBoard (cBoard);
-	      
-	      for (const auto& cModule : cBoard->fModuleVector)
-		{
-		  LOG (INFO) << GREEN << "Initializing communication to Module " << BOLDYELLOW << +cModule->getModuleId() << RESET;
-		  for (const auto& cRD53 : cModule->fReadoutChipVector)
-		    {
-		      LOG (INFO) << GREEN << "Configuring RD53 " << BOLDYELLOW << +cRD53->getChipId() << RESET;
-		      fRD53Interface->ConfigureChip (static_cast<RD53*>(cRD53));
-		      LOG (INFO) << BOLDGREEN << "\t--> Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
-		    }
-		}
-	      
-	      LOG (INFO) << GREEN << "Checking status FW <---> RD53 communication" << RESET;
-	      bool commGood = fBeBoardInterface->InitChipCommunication(cBoard);
-	      if (commGood == true) LOG (INFO) << BOLDGREEN << "\t--> Successfully initialized the communication to all chips" << RESET;
-	      else LOG (INFO) << BOLDRED << "\t--> I was not able to initialize the communication to all chips" << RESET;
-	    }
-	}
-    }
+                  }
+              }
+            fBeBoardInterface->ChipReSync ( cBoard );
+            LOG (INFO) << BOLDGREEN << "Successfully sent resync." << RESET;
+          }
+        else
+          {
+            // ######################################
+            // # Configuring Inner Tracker hardware #
+            // ######################################
+            LOG (INFO) << BOLDBLUE << "\t--> Found an Inner Tracker board" << RESET;
+            LOG (INFO) << GREEN << "Configuring Board: " << BOLDYELLOW << +cBoard->getBeId() << RESET;
+            fBeBoardInterface->ConfigureBoard(cBoard);
 
 
-    void SystemController::initializeFileHandler()
-    {
+            // ###################
+            // # Configuring FSM #
+            // ###################
+            size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
+            size_t injType     = SystemController::findValueInSettings("INJtype");
+            size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays);
+            LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
+
+
+            // ###################
+            // # Configure chips #
+            // ###################
+            for (const auto& cModule : cBoard->fModuleVector)
+              {
+                LOG (INFO) << GREEN << "Initializing communication to Module: " << BOLDYELLOW << +cModule->getModuleId() << RESET;
+                for (const auto& cRD53 : cModule->fReadoutChipVector)
+                  {
+                    LOG (INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cRD53->getChipId() << RESET;
+                    static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cRD53));
+                    LOG (INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
+                  }
+              }
+          }
+      }
+  }
+
+  void SystemController::initializeFileHandler()
+  {
     // here would be the ideal position to fill the file Header and call openFile when in read mode
-        for (const auto& cBoard : fBoardVector)
-        {
-            uint32_t cBeId = cBoard->getBeId();
-            uint32_t cNChip = 0;
+    for (const auto& cBoard : fBoardVector)
+      {
+        uint32_t cBeId = cBoard->getBeId();
+        uint32_t cNChip = 0;
 
         //uint32_t cNFe = cBoard->getNFe();
-            uint32_t cNEventSize32 = this->computeEventSize32 (cBoard);
+        uint32_t cNEventSize32 = this->computeEventSize32 (cBoard);
 
-            std::string cBoardTypeString;
-            BoardType cBoardType = cBoard->getBoardType();
+        std::string cBoardTypeString;
+        BoardType cBoardType = cBoard->getBoardType();
 
-            for (const auto& cFe : cBoard->fModuleVector) cNChip += cFe->getNChip();
+        for (const auto& cFe : cBoard->fModuleVector) cNChip += cFe->getNChip();
 
-              if (cBoardType == BoardType::D19C)
-                 cBoardTypeString = "D19C";
-             else if (cBoardType == BoardType::FC7)
-                 cBoardTypeString = "FC7";
+        if (cBoardType == BoardType::D19C)
+          cBoardTypeString = "D19C";
+        else if (cBoardType == BoardType::FC7)
+          cBoardTypeString = "FC7";
 
-             uint32_t cFWWord = fBeBoardInterface->getBoardInfo (cBoard);
-             uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
-             uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
+        uint32_t cFWWord = fBeBoardInterface->getBoardInfo (cBoard);
+        uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
+        uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
 
         //with the above info fill the header
-             FileHeader cHeader (cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType() );
+        FileHeader cHeader (cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType() );
 
         //construct a Handler
-             std::stringstream cBeBoardString;
-             cBeBoardString << "_Board" << std::setw (3) << std::setfill ('0') << cBeId;
-             std::string cFilename = fRawFileName;
+        std::stringstream cBeBoardString;
+        cBeBoardString << "_Board" << std::setw (3) << std::setfill ('0') << cBeId;
+        std::string cFilename = fRawFileName;
 
-             if (fRawFileName.find (".raw") != std::string::npos)
-                 cFilename.insert (fRawFileName.find (".raw"), cBeBoardString.str() );
+        if (fRawFileName.find (".raw") != std::string::npos)
+          cFilename.insert (fRawFileName.find (".raw"), cBeBoardString.str() );
 
-             FileHandler* cHandler = new FileHandler (cFilename, 'w', cHeader);
+        FileHandler* cHandler = new FileHandler (cFilename, 'w', cHeader);
 
         //finally set the handler
-             fBeBoardInterface->SetFileHandler (cBoard, cHandler);
-             LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << BOLDYELLOW << cFilename << RESET;
-         }
-     }
-     uint32_t SystemController::computeEventSize32 (BeBoard* pBoard)
-     {
-        uint32_t cNEventSize32 = 0;
-        uint32_t cNCbc = 0;
+        fBeBoardInterface->SetFileHandler (cBoard, cHandler);
+        LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << BOLDYELLOW << cFilename << RESET;
+      }
+  }
 
-        for (const auto& cFe : pBoard->fModuleVector)
-            cNCbc += cFe->getNChip();
-        if (pBoard->getBoardType() == BoardType::D19C)
-            cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNCbc * D19C_EVENT_SIZE_32_CBC3;
+  uint32_t SystemController::computeEventSize32 (BeBoard* pBoard)
+  {
+    uint32_t cNEventSize32 = 0;
+    uint32_t cNCbc = 0;
 
-        return cNEventSize32;
-    }
+    for (const auto& cFe : pBoard->fModuleVector)
+      cNCbc += cFe->getNChip();
+    if (pBoard->getBoardType() == BoardType::D19C)
+      cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNCbc * D19C_EVENT_SIZE_32_CBC3;
 
-    void SystemController::Start(int currentRun)
-    {
-        for (auto& cBoard : fBoardVector)
-            fBeBoardInterface->Start (cBoard);
-    }
-    void SystemController::Stop()
-    {
-        for (auto& cBoard : fBoardVector)
-            fBeBoardInterface->Stop (cBoard);
-    }
-    void SystemController::Pause()
-    {
-        for (auto& cBoard : fBoardVector)
-            fBeBoardInterface->Pause (cBoard);
-    }
-    void SystemController::Resume()
-    {
-        for (auto& cBoard : fBoardVector)
-            fBeBoardInterface->Resume (cBoard);
-    }
+    return cNEventSize32;
+  }
+
+  void SystemController::Start(int currentRun)
+  {
+    for (auto& cBoard : fBoardVector)
+      fBeBoardInterface->Start(cBoard);
+  }
+  void SystemController::Stop()
+  {
+    for (auto& cBoard : fBoardVector)
+      fBeBoardInterface->Stop(cBoard);
+  }
+  void SystemController::Pause()
+  {
+    for (auto& cBoard : fBoardVector)
+      fBeBoardInterface->Pause(cBoard);
+  }
+  void SystemController::Resume()
+  {
+    for (auto& cBoard : fBoardVector)
+      fBeBoardInterface->Resume(cBoard);
+  }
 
   void SystemController::ConfigureHardware(std::string cHWFile, bool enableStream)
   {
     std::stringstream outp;
-    
-    InitializeHw ( cHWFile, outp, true, enableStream );
-    InitializeSettings ( cHWFile, outp );
-    LOG (INFO) << outp.str();
-    outp.str ("");
+
+    InitializeHw(cHWFile, outp, true, enableStream);
+    InitializeSettings(cHWFile, outp);
+    std::cout << outp.str() << std::endl;
+    outp.str("");
     ConfigureHw();
   }
 
-    void SystemController::ConfigureCalibration()
-    {
-    }
+  void SystemController::ConfigureCalibration() {}
 
-    void SystemController::Configure(std::string cHWFile, bool enableStream)
-    {
-        ConfigureHardware(cHWFile, enableStream);
-        ConfigureCalibration();
-    }
+  void SystemController::Configure(std::string cHWFile, bool enableStream)
+  {
+    ConfigureHardware(cHWFile, enableStream);
+    ConfigureCalibration();
+  }
 
-    void SystemController::Start (BeBoard* pBoard)
-    {
-        fBeBoardInterface->Start (pBoard);
-    }
+  void SystemController::Start (BeBoard* pBoard)
+  {
+    fBeBoardInterface->Start(pBoard);
+  }
 
-    void SystemController::Stop (BeBoard* pBoard)
-    {
-        fBeBoardInterface->Stop (pBoard);
-    }
-    void SystemController::Pause (BeBoard* pBoard)
-    {
-        fBeBoardInterface->Pause (pBoard);
-    }
-    void SystemController::Resume (BeBoard* pBoard)
-    {
-        fBeBoardInterface->Resume (pBoard);
-    }
+  void SystemController::Stop (BeBoard* pBoard)
+  {
+    fBeBoardInterface->Stop(pBoard);
+  }
+  void SystemController::Pause (BeBoard* pBoard)
+  {
+    fBeBoardInterface->Pause(pBoard);
+  }
+  void SystemController::Resume (BeBoard* pBoard)
+  {
+    fBeBoardInterface->Resume(pBoard);
+  }
 
-//method to read data standalone
-    uint32_t SystemController::ReadData (BeBoard* pBoard, bool pWait)
-    {
-    //reset the data object
-    //if (fData) delete fData;
+  uint32_t SystemController::ReadData (BeBoard* pBoard, bool pWait)
+  {
+    std::vector<uint32_t> cData;
+    return this->ReadData(pBoard, cData, pWait);
+  }
 
-    //fData = new Data();
+  void SystemController::ReadData (bool pWait)
+  {
+    for (auto cBoard : fBoardVector)
+      this->ReadData(cBoard, pWait);
+  }
 
-    //std::vector<uint32_t> cData;
-    //read the data and get it by reference
-    //uint32_t cNPackets = fBeBoardInterface->ReadData (pBoard, false, cData);
-    //pass data by reference to set and let it know what board we are dealing with
-    //fData->Set (pBoard, cData, cNPackets, fBeBoardInterface->getBoardType (pBoard) );
-    //return the packet size
-    //return cNPackets;
-        std::vector<uint32_t> cData;
-        return this->ReadData (pBoard, cData, pWait);
-    }
+  uint32_t SystemController::ReadData (BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
+  {
+    if (fData) delete fData;
+    fData = new Data();
 
-// for OTSDAQ
-    uint32_t SystemController::ReadData (BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
-    {
-    //reset the data object
-        if (fData) delete fData;
+    uint32_t cNPackets = fBeBoardInterface->ReadData(pBoard, false, pData, pWait);
+    fData->DecodeData(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType(pBoard));
 
-        fData = new Data();
+    return cNPackets;
+  }
 
-    //read the data and get it by reference
-        uint32_t cNPackets = fBeBoardInterface->ReadData (pBoard, false, pData, pWait);
-    //pass data by reference to set and let it know what board we are dealing with
-        fData->Set (pBoard, pData, cNPackets, fBeBoardInterface->getBoardType (pBoard) );
-    //return the packet size
-        return cNPackets;
-    }
+  void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents)
+  {
+    std::vector<uint32_t> cData;
+    return this->ReadNEvents(pBoard, pNEvents, cData, true);
+  }
 
-    void SystemController::ReadData (bool pWait)
-    {
-        for (auto cBoard : fBoardVector)
-            this->ReadData (cBoard, pWait);
-    }
+  void SystemController::ReadNEvents (uint32_t pNEvents)
+  {
+    for (auto cBoard : fBoardVector)
+      this->ReadNEvents(cBoard, pNEvents);
+  }
 
-//standalone
-    void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents)
-    {
-        std::vector<uint32_t> cData;
-        return this->ReadNEvents (pBoard, pNEvents, cData, true);
-    }
+  void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
+  {
+    if (fData) delete fData;
+    fData = new Data();
 
-//for OTSDAQ
-    void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
-    {
-    //reset the data object
-        if (fData) delete fData;
-
-        fData = new Data();
-    //read the data and get it by reference
-        fBeBoardInterface->ReadNEvents (pBoard, pNEvents, pData, pWait);
-    //pass data by reference to set and let it know what board we are dealing with
-        fData->Set (pBoard, pData, pNEvents, fBeBoardInterface->getBoardType (pBoard) );
-    //return the packet size
-    }
-
-    void SystemController::ReadNEvents (uint32_t pNEvents)
-    {
-        for (auto cBoard : fBoardVector)
-            this->ReadNEvents (cBoard, pNEvents);
-    }
+    fBeBoardInterface->ReadNEvents(pBoard, pNEvents, pData, pWait);
+    fData->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
+  }
 
   double SystemController::findValueInSettings (const char* name)
   {

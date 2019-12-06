@@ -20,40 +20,48 @@ void Latency::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart   = this->findValueInSettings("ROWstart");
-  rowStop    = this->findValueInSettings("ROWstop");
-  colStart   = this->findValueInSettings("COLstart");
-  colStop    = this->findValueInSettings("COLstop");
-  nEvents    = this->findValueInSettings("nEvents");
-  startValue = this->findValueInSettings("LatencyStart");
-  stopValue  = this->findValueInSettings("LatencyStop");
-  doDisplay  = this->findValueInSettings("DisplayHisto");
-  doSave     = this->findValueInSettings("Save");
+  rowStart     = this->findValueInSettings("ROWstart");
+  rowStop      = this->findValueInSettings("ROWstop");
+  colStart     = this->findValueInSettings("COLstart");
+  colStop      = this->findValueInSettings("COLstop");
+  nEvents      = this->findValueInSettings("nEvents");
+  startValue   = this->findValueInSettings("LatencyStart");
+  stopValue    = this->findValueInSettings("LatencyStop");
+  doDisplay    = this->findValueInSettings("DisplayHisto");
+  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
 
 
   // ##############################
   // # Initialize dac scan values #
   // ##############################
-  size_t nSteps = stopValue - startValue + 1;
+  size_t nSteps = (stopValue - startValue + 1 <= RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1);
   float step    = (stopValue - startValue + 1) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
+
+
+  // #######################
+  // # Initialize progress #
+  // #######################
+  RD53RunProgress::total() += Latency::getNumberIterations();
 }
 
 void Latency::Start (int currentRun)
 {
   Latency::run();
   Latency::analyze();
+  Latency::sendData();
+}
 
+void Latency::sendData ()
+{
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
 
-  // #############
-  // # Send data #
-  // #############
-  auto theStream        = prepareChannelContainerStreamer<GenericDataVector>("Occ");
-  auto theLatencyStream = prepareChannelContainerStreamer<RegisterValue>    ("Latency");
+  auto theStream        = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<LatencySize>>("Occ"); // @TMP@
+  auto theLatencyStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>                     ("Latency"); // @TMP@
 
   if (fStreamerEnabled == true)
     {
-      for (const auto cBoard : theOccContainer)     theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+      for (const auto cBoard : theOccContainer)     theStream       .streamAndSendBoard(cBoard, fNetworkStreamer);
       for (const auto cBoard : theLatencyContainer) theLatencyStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
@@ -68,8 +76,7 @@ void Latency::initialize (const std::string fileRes_, const std::string fileReg_
   // ##############################
   // # Initialize sub-calibration #
   // ##############################
-  PixelAlive::fileRes = fileRes_;
-  PixelAlive::fileReg = "";
+  PixelAlive::doFast = 1;
 
 
   fileRes = fileRes_;
@@ -80,7 +87,9 @@ void Latency::initialize (const std::string fileRes_, const std::string fileReg_
 
 void Latency::run ()
 {
-  ContainerFactory::copyAndInitChip<GenericDataVector>(*fDetectorContainer, theOccContainer);
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+
+  ContainerFactory::copyAndInitChip<GenericDataArray<LatencySize>>(*fDetectorContainer, theOccContainer);
   Latency::scanDac("LATENCY_CONFIG", dacList, nEvents, &theOccContainer);
 
 
@@ -92,44 +101,47 @@ void Latency::run ()
 
 void Latency::draw ()
 {
+#ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (doSave    == true)
-    {
-      this->CreateResultDirectory(RESULTDIR,false,false);
-      this->InitResultFile(fileRes);
-    }
+
+  this->CreateResultDirectory(RESULTDIR,false,false);
+  this->InitResultFile(fileRes);
 
   Latency::initHisto();
   Latency::fillHisto();
   Latency::display();
+#endif
 
-  if (doSave == true)
-    {
-      this->WriteRootFile();
+  // ######################################
+  // # Save or Update register new values #
+  // ######################################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          static_cast<RD53*>(cChip)->copyMaskFromDefault();
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDGREEN << "\t--> Latency saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+        }
 
-      // ############################
-      // # Save register new values #
-      // ############################
-      for (const auto cBoard : *fDetectorContainer)
-        for (const auto cModule : *cBoard)
-          for (const auto cChip : *cModule)
-            {
-              static_cast<RD53*>(cChip)->copyMaskFromDefault();
-              static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-              static_cast<RD53*>(cChip)->saveRegMap("");
-              std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-              system(command.c_str());
-            }
-    }
-
+#ifdef __USE_ROOT__
   if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true) this->CloseResultFile();
+  this->WriteRootFile();
+  this->CloseResultFile();
+#endif
 }
 
 void Latency::analyze ()
 {
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+
+  ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theLatencyContainer);
+
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
@@ -137,50 +149,62 @@ void Latency::analyze ()
           auto best   = 0.;
           auto regVal = 0;
 
-          for (auto dac : dacList)
+          for (auto i = 0u; i < dacList.size(); i++)
             {
-              auto current = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1[dac-startValue];
+              auto current = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i];
               if (current > best)
                 {
-                  regVal = dac;
+                  regVal = dacList[i];
                   best   = current;
                 }
             }
 
           LOG (INFO) << BOLDGREEN << "\t--> Best latency for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
-                     << BOLDYELLOW << regVal << RESET;
+                     << BOLDYELLOW << regVal << BOLDGREEN << " (n.bx)" << RESET;
 
 
           // ######################################################
           // # Fill latency container and download new DAC values #
           // ######################################################
-          ContainerFactory::copyAndInitStructure<RegisterValue>(*fDetectorContainer, theLatencyContainer);
-          theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<RegisterValue>().fRegisterValue = regVal;
-
+          theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
           this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", regVal, true);
         }
 }
 
-void Latency::initHisto () { histos.book(fResultFile, *fDetectorContainer, fSettingsMap); }
+void Latency::initHisto ()
+{
+#ifdef __USE_ROOT__
+  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+
 void Latency::fillHisto ()
 {
+#ifdef __USE_ROOT__
   histos.fillOccupancy(theOccContainer);
   histos.fillLatency  (theLatencyContainer);
+#endif
 }
-void Latency::display   () { histos.process(); }
+
+void Latency::display ()
+{
+#ifdef __USE_ROOT__
+  histos.process();
+#endif
+}
 
 void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-  for (auto dac : dacList)
+  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+
+  for (auto i = 0u; i < dacList.size(); i++)
     {
       // ###########################
       // # Download new DAC values #
       // ###########################
-      LOG (INFO) << BOLDMAGENTA << ">>> Register value = " << BOLDYELLOW << dac << BOLDMAGENTA << " <<<" << RESET;
+      LOG (INFO) << BOLDMAGENTA << ">>> Register value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
       for (const auto cBoard : *fDetectorContainer)
-        for (const auto cModule : *cBoard)
-          for (const auto cChip : *cModule)
-            this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, dac, true);
+        this->fReadoutChipInterface->WriteBoardBroadcastChipReg(static_cast<BeBoard*>(cBoard), regName, dacList[i]);
 
 
       // ################
@@ -188,7 +212,7 @@ void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& 
       // ################
       PixelAlive::run();
       auto output = PixelAlive::analyze();
-      output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), 1);
+      output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
 
       // ###############
@@ -198,8 +222,8 @@ void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& 
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
             {
-              float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
-              theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector>().data1.push_back(occ);
+              float occ = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
+              theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] = occ;
             }
     }
 }
@@ -213,9 +237,10 @@ void Latency::chipErrorReport ()
       for (const auto cChip : *cModule)
         {
           LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
-          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << RESET;
-          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << RESET;
+          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
         }
 }

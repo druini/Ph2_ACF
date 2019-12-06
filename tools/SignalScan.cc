@@ -1,5 +1,6 @@
 
 #include "SignalScan.h"
+#ifdef __USE_ROOT__
 
 SignalScan::SignalScan() : Tool()
 {}
@@ -405,3 +406,5 @@ void SignalScan::parseSettings()
     LOG (INFO) << "	Step back from Pedestal = " << fStepback ;
     LOG (INFO) << "	SignalScanStep = " << fSignalScanStep ;
 }
+
+#endif

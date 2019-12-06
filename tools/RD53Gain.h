@@ -10,13 +10,17 @@
 #ifndef RD53Gain_H
 #define RD53Gain_H
 
+#include "Tool.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/GainAndIntercept.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../DQMUtils/RD53GainHistograms.h"
-#include "Tool.h"
+#include "../Utils/RD53SharedConstants.h"
 
+#ifdef __USE_ROOT__
 #include "TApplication.h"
+#include "../DQMUtils/RD53GainHistograms.h"
+#endif
 
 
 // #############
@@ -36,15 +40,15 @@ class Gain : public Tool
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
-  void writeObjects         () {}; // @TMP@
 
+  void sendData                                  ();
   void initialize                                (const std::string fileRes_, const std::string fileReg_);
   void run                                       ();
-  void draw                                      ();
+  void draw                                      (bool doSave = true);
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
-    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups)*nSteps;
+    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*nSteps;
   }
 
 
@@ -58,6 +62,7 @@ class Gain : public Tool
   size_t stopValue;
   size_t nSteps;
   size_t offset;
+  size_t nHITxCol;
   bool   doFast;
 
   std::vector<uint16_t> dacList;
@@ -69,21 +74,23 @@ class Gain : public Tool
   void initHisto       ();
   void fillHisto       ();
   void display         ();
-  void computeStats    (std::vector<float>& x, std::vector<float>& y, std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
+  void computeStats    (const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
   void chipErrorReport ();
 
 
   // ########
   // # ROOT #
   // ########
+#ifdef __USE_ROOT__
   GainHistograms histos;
+#endif
 
 
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
 };
 
 #endif

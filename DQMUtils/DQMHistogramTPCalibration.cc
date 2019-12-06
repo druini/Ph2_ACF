@@ -15,8 +15,6 @@
 #include "../Utils/EmptyContainer.h"
 #include "../RootUtils/RootContainerFactory.h"
 #include "../Utils/ContainerFactory.h"
-#include "../RootUtils/TH1FContainer.h"
-#include "../RootUtils/TH2FContainer.h"
 #include "../Utils/Container.h"
 #include "TCanvas.h"
 #include "TFile.h"
@@ -35,7 +33,7 @@ DQMHistogramTPCalibration::~DQMHistogramTPCalibration ()
 
 
 //========================================================================================================================
-void DQMHistogramTPCalibration::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap)
+void DQMHistogramTPCalibration::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 

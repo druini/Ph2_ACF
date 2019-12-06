@@ -1,4 +1,5 @@
 #include "TPCalibration.h"
+#ifdef __USE_ROOT__
 
 
 TPCalibration::TPCalibration()
@@ -268,3 +269,5 @@ void TPCalibration::Pause()
 void TPCalibration::Resume()
 {
 }
+
+#endif

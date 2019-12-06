@@ -16,6 +16,7 @@
 #include <vector>
 #include <map>
 #include <cxxabi.h>
+#include <type_traits>
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/Container.h"
 #include "../Utils/EmptyContainer.h"
@@ -35,6 +36,7 @@ public:
 	virtual ~SummaryBase() {;}
 	virtual void makeSummaryOfChannels(const ChipContainer* theChipContainer, const ChannelGroupBase *chipOriginalMask, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) = 0;
 	virtual void makeSummaryOfSummary (const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) = 0;
+	virtual void* getSummaryPointer() = 0;
 };
 
 class SummaryContainerBase 
@@ -78,7 +80,7 @@ template<class S, class C, bool hasAverageFunction = false>
 struct SummarySummarizer{
 	void operator() (Summary<S,C> &theSummary, const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) 
 	{
-		int32_t status;
+		int32_t status = 0;
 		LOG(ERROR) << __PRETTY_FUNCTION__ << " Member function makeSummaryAverage does not exist for " << abi::__cxa_demangle(typeid(S).name(),0,0,&status) <<
 			" \nAborting...";
 		abort();
@@ -86,49 +88,70 @@ struct SummarySummarizer{
 };
 
 
+// // SFINAE: check if object T has makeChannelAverage<S> member function
+// template <typename T, typename S>
+// class has_makeChannelAverage
+// {
+//     typedef char one;
+//     struct two { char x[2]; };
+
+//     template <typename C, typename D> static one test( decltype(&C::template makeChannelAverage<D>) ) ;
+//     template <typename C, typename D> static two test(...);    
+
+// public:
+//     enum { value = sizeof(test<T,S>(0)) == sizeof(char) };
+// };
+
+namespace user_detail{
+  template<typename> struct sfinae_true : std::true_type{};
+    
+  template<typename T, typename S, typename... A0>
+  static auto test_makeChannelAverage(int)
+    -> sfinae_true<decltype(std::declval<T>().template makeChannelAverage<S>(std::declval<A0>()...))>;
+  template<typename, typename... A0>
+  static auto test_makeChannelAverage(long) -> std::false_type;
+
+  template<typename T, typename... A0>
+  static auto test_makeSummaryAverage(int)
+    -> sfinae_true<decltype(std::declval<T>().makeSummaryAverage(std::declval<A0>()...))>;
+  template<typename, typename... A0>
+  static auto test_makeSummaryAverage(long) -> std::false_type;
+
+
+  template<typename T, typename... A0>
+  static auto test_normalize(int)
+    -> sfinae_true<decltype(std::declval<T>().normalize(std::declval<A0>()...))>;
+  template<typename, typename... A0>
+  static auto test_normalize(long) -> std::false_type;
+
+} // user_detail::
+
+class ChannelGroupBase;
+
 // SFINAE: check if object T has makeChannelAverage<S> member function
-template <typename T, typename S>
-class has_makeChannelAverage
-{
-    typedef char one;
-    struct two { char x[2]; };
-
-    template <typename C, typename D> static one test( decltype(&C::template makeChannelAverage<D>) ) ;
-    template <typename C, typename D> static two test(...);    
-
-public:
-    enum { value = sizeof(test<T,S>(0)) == sizeof(char) };
-};
-
+template<typename T, typename S>
+struct has_makeChannelAverage : decltype(user_detail::test_makeChannelAverage<T, S, const ChipContainer*, const ChannelGroupBase*, const ChannelGroupBase*, const uint32_t>(0)){};
 
 // SFINAE: check if object T has makeSummaryAverage member function
-template <typename T>
-class has_makeSummaryAverage
-{
-    typedef char one;
-    struct two { char x[2]; };
-
-    template <typename C> static one test( decltype(&C::makeSummaryAverage) ) ;
-    template <typename C> static two test(...);
-
-public:
-    enum { value = sizeof(test<T>(0)) == sizeof(char) };
-};
-
+template<typename T, typename Arg>
+struct has_makeSummaryAverage : decltype(user_detail::test_makeSummaryAverage<T, const std::vector<Arg>*, const std::vector<uint32_t>&, const uint32_t>(0)){};
 
 // SFINAE: check if object T has normalize member function
-template <typename T>
-class has_normalize
-{
-    typedef char one;
-    struct two { char x[2]; };
+template<typename T>
+struct has_normalize : decltype(user_detail::test_normalize<T, const uint32_t>(0)){};
 
-    template <typename C> static one test( decltype(&C::normalize) ) ;
-    template <typename C> static two test(...);    
+// template <typename T>
+// class has_normalize
+// {
+//     typedef char one;
+//     struct two { char x[2]; };
 
-public:
-    enum { value = sizeof(test<T>(0)) == sizeof(char) };
-};
+//     template <typename C> static one test( decltype(&C::normalize) ) ;
+//     template <typename C> static two test(...);    
+
+// public:
+//     enum { value = sizeof(test<T>(0)) == sizeof(char) };
+// };
 
 
 template <class S, class C>
@@ -169,8 +192,13 @@ public:
 	
 	void makeSummaryOfSummary(const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) override
 	{
-		SummarySummarizer<S,C,has_makeSummaryAverage<S>::value> theSummarySummarizer;
+		SummarySummarizer<S,C,has_makeSummaryAverage<S,C>::value> theSummarySummarizer;
 		theSummarySummarizer(*this, theSummaryList, theNumberOfEnabledChannelsList, numberOfEvents);
+	}
+
+	void* getSummaryPointer()
+	{
+		return static_cast<void*>(&theSummary_);
 	}
 
 	S theSummary_;
@@ -191,10 +219,10 @@ struct SummarySummarizer<S,C,true>{
 	void operator() (Summary<S,C> &theSummary, const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) 
 	{
 		const SummaryContainer<SummaryBase>* tmpSummaryContainer = static_cast<const SummaryContainer<SummaryBase>*>(theSummaryList);
-		std::vector<S> tmpSummaryVector;
+		std::vector<C> tmpSummaryVector;
 		for(auto summary : *tmpSummaryContainer) 
 		{
-			tmpSummaryVector.emplace_back(std::move(static_cast<Summary<S,C>*>(summary)->theSummary_));
+			tmpSummaryVector.emplace_back( std::move( *static_cast<C*>(summary->getSummaryPointer()) ) );
 		}
 		theSummary.theSummary_.makeSummaryAverage(&tmpSummaryVector,theNumberOfEnabledChannelsList, numberOfEvents);
 		delete theSummaryList;
@@ -383,6 +411,12 @@ public:
 		return cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask());
 	}
 
+    void cleanDataStored() override
+    {
+      delete summary_;
+      summary_ = nullptr;
+      ChipContainer::cleanDataStored();
+    }
 };
 
 class ModuleDataContainer : public DataContainer<ChipDataContainer>

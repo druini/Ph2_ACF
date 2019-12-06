@@ -36,7 +36,7 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, std::map<std::string, double> pSettingsMap) override;
+    void book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
 
     /*!
      * Fill histogram

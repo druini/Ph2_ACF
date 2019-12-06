@@ -12,7 +12,9 @@
 #ifndef PULSESHAPE_H__
 #define PULSESHAPE_H__
 
+
 #include "Tool.h"
+#ifdef __USE_ROOT__
 #include "Channel.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/Utilities.h"
@@ -129,4 +131,5 @@ class PulseShape : public Tool
 double pulseshape ( double* x, double* par );
 double pulseshape2 ( double* x, double* par );
 
+#endif
 #endif

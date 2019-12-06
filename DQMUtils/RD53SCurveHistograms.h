@@ -12,6 +12,7 @@
 #define RD53SCurveHistograms_H
 
 #include "../System/SystemController.h"
+#include "../Utils/RD53SharedConstants.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
@@ -24,10 +25,10 @@
 class SCurveHistograms : public DQMHistogramBase
 {
  public:
-  void book          (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap) override;
-  void process       ()                                                                                                         override;
-  bool fill          (std::vector<char>& dataBuffer)                                                                            override;
-  void reset         ()                                                                                                         override {};
+  void book          (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+  void process       ()                                                                                                                override;
+  bool fill          (std::vector<char>& dataBuffer)                                                                                   override;
+  void reset         ()                                                                                                                override {};
 
   void fillOccupancy   (const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL);
   void fillThrAndNoise (const DetectorDataContainer& ThrAndNoiseContainer);

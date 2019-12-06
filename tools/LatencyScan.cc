@@ -1,4 +1,6 @@
 #include "LatencyScan.h"
+
+#ifdef __USE_ROOT__
 #include "../HWDescription/Cbc.h"
 
 LatencyScan::LatencyScan() : Tool()
@@ -593,3 +595,5 @@ void LatencyScan::Pause()
 void LatencyScan::Resume()
 {
 }
+
+#endif

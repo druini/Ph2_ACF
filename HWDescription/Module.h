@@ -120,13 +120,11 @@ namespace Ph2_HwDescription {
 
         // std::vector < RD53* > fRD53Vector;
         std::vector < ReadoutChip* > fReadoutChipVector;
-        
-      protected:
 
-        //moduleID
+
+      protected:
         uint8_t fModuleId;
     };
 }
-
 
 #endif

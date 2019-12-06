@@ -196,7 +196,7 @@ void PedestalEqualization::FindOffsets()
 
                 for (auto &channel : *chip->getChannelContainer<uint8_t>()) // for on channel - begin
                 {
-                    char charRegName[10];
+                    char charRegName[20];
                     sprintf(charRegName, "Channel%03d", channelNumber++);
                     std::string cRegName = charRegName;
                     channel = static_cast<ReadoutChip *>(fDetectorContainer->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex()))->getReg(cRegName);
@@ -241,16 +241,7 @@ void PedestalEqualization::FindOffsets()
 void PedestalEqualization::writeObjects()
 {
     this->SaveResults();
-    fResultFile->cd();
-    // Save hist maps for CBCs
-
-    //Tool::SaveResults();
-
-    // save canvases too
-    //-----------fOffsetCanvas->Write ( fOffsetCanvas->GetName(), TObject::kOverwrite );
-    //-----------fOccupancyCanvas->Write ( fOccupancyCanvas->GetName(), TObject::kOverwrite );
-    //-----------fResultFile->Flush();
-
+    
     #ifdef __USE_ROOT__
         fDQMHistogramPedestalEqualization.process();
     #endif
@@ -262,7 +253,6 @@ void PedestalEqualization::writeObjects()
 void PedestalEqualization::ConfigureCalibration()
 {  
     CreateResultDirectory ( "Results/Run_PedestalEqualization" );
-    InitResultFile ( "PedestalEqualizationResults" );
 }
 
 void PedestalEqualization::Start(int currentRun)
@@ -279,7 +269,6 @@ void PedestalEqualization::Stop()
     LOG (INFO) << "Stopping Pedestal Equalization.";
     writeObjects();
     dumpConfigFiles();
-    CloseResultFile();
     Destroy();
     LOG (INFO) << "Pedestal Equalization stopped.";
 }

@@ -11,7 +11,7 @@
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
       <RD53_Files path="./" />
 
-      <RD53 Id="0" configfile="CMSIT_RD53.txt">
+      <RD53 Id="0" Lane="0" configfile="CMSIT_RD53.txt">
         <!-- Overwrite .txt configuration file settings -->
         <Settings
             PA_IN_BIAS_LIN       =   "350"
@@ -25,7 +25,7 @@
             VCAL_HIGH            =   "600"
             VCAL_MED             =   "100"
 
-            INJECTION_SELECT     =    "12"
+            INJECTION_SELECT     =     "0"
             GP_LVDS_ROUTE        =     "0"
             LATENCY_CONFIG       =   "136"
             MONITOR_SELECT       =  "8203"
@@ -77,9 +77,16 @@
     <!-- Configuration for backend readout board -->
     <Register name="user">
       <Register name="ctrl_regs">
-        <Register name="reset_reg">
-          <Register name="i2c_rst"> 0x0 </Register>
+
+        <Register name="fast_cmd_reg_2">
+          <Register name="trigger_source"> 2 </Register>
+          <!-- 1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency -->
         </Register>
+
+        <Register name="ext_tlu_reg2">
+          <Register name="ext_clk_en"> 0 </Register>
+        </Register>
+
       </Register>
     </Register>
 
@@ -88,10 +95,10 @@
   <Settings>
     <!--
         === Calibration parameters ===
-        INJtype      = 0: no injection;                           INJtype      = 1: analog;         INJtype = 2: digital
-        DoFast       = 0: run on all pixels in the selected area; DoFast       = 1: run on a subset
-        DisplayHisto = 0: don't display;                          DisplayHisto = 1: display
-        Save         = 0: don't save;                             Save         = 1: save
+        INJtype       = 0: no injection;                             INJtype       = 1: analog;         INJtype = 2: digital
+        DoFast        = 0: run on all pixels in the selected region; DoFast        = 1: run on a subset
+        DisplayHisto  = 0: don't display;                            DisplayHisto  = 1: display
+        UpdateChipCfg = 0: don't update;                             UpdateChipCfg = 1: update
 
         TargetCharge: average charge (electrons) corresponding to ToT point = max value - 1
         TargetOcc:    average fraction of acceptable hits per pixel
@@ -109,13 +116,10 @@
     <Setting name="ROWstart">         0 </Setting>
     <Setting name="ROWstop">        191 </Setting>
     <Setting name="COLstart">       128 </Setting>
-    <Setting name="COLstop">        191 </Setting>
+    <Setting name="COLstop">        263 </Setting>
 
     <Setting name="LatencyStart">     0 </Setting>
     <Setting name="LatencyStop">    511 </Setting>
-
-    <Setting name="InjDelayStart">    0 </Setting>
-    <Setting name="InjDelayStop">    15 </Setting>
 
     <Setting name="VCalHstart">     100 </Setting>
     <Setting name="VCalHstop">      600 </Setting>
@@ -126,13 +130,20 @@
     <Setting name="KrumCurrStart">    0 </Setting>
     <Setting name="KrumCurrStop">   127 </Setting>
 
-    <Setting name="TargetOcc">        1 </Setting>
+    <Setting name="TargetOcc">     1e-6 </Setting>
     <Setting name="ThrStart">       340 </Setting>
     <Setting name="ThrStop">        440 </Setting>
 
     <Setting name="DoFast">           0 </Setting>
     <Setting name="DisplayHisto">     0 </Setting>
-    <Setting name="Save">             1 </Setting>
+    <Setting name="UpdateChipCfg">    1 </Setting>
+
+    <!-- === Expert settings ===
+         nHITxCol:   number of simultaneously injected pixels per column (it must be a divider of chip rows)
+         nClkDelays: delay between two consecutive injections in terms of 100ns period
+    -->
+    <Setting name="nHITxCol">         1 </Setting>
+    <Setting name="nClkDelays">     300 </Setting>
   </Settings>
 
 </HwDescription>

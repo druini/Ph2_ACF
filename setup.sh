@@ -22,8 +22,8 @@ fi
 ########
 # ROOT #
 ########
-#source /opt/local/root/bin/thisroot.sh
-export ROOTSYS=/usr/local/lib/root
+source /usr/local/root/bin/thisroot.sh
+# source $ROOTSYS/bin/thisroot.sh
 
 #######
 # ZMQ #
@@ -67,8 +67,26 @@ export ZmqFlag='-D__ZMQ__'
 export USBINSTFlag='-D__USBINST__'
 export Amc13Flag='-D__AMC13__'
 export AntennaFlag='-D__ANTENNA__'
-export DevFlags='-D__DEV__'
-export Root5Flag='-D__ROOT5__'
-export Root6Flag='-D__ROOT6__'
+export UseRootFlag='-D__USE_ROOT__'
 
-echo "---DONE---"
+################
+# Compilations #
+################
+
+# Stand-alone application, without data streaming
+export CompileForHerd=false
+export CompileForShep=false
+
+# Stand-alone application, with data streaming
+# export CompileForHerd=true
+# export CompileForShep=true
+
+# Herd application
+# export CompileForHerd=true
+# export CompileForShep=false
+
+# Shep application
+# export CompileForHerd=false
+# export CompileForShep=true
+
+echo "=== DONE ==="

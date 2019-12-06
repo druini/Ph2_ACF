@@ -23,49 +23,49 @@ template <class Hist>
 class CanvasContainer : public PlotContainer
 {
  public:
- CanvasContainer() : fTheHistogram(nullptr), fCanvas(nullptr) {}
+  CanvasContainer() : fTheHistogram(nullptr), fCanvas(nullptr) {}
 
   CanvasContainer (const CanvasContainer<Hist>& container) = delete;
   CanvasContainer<Hist>& operator= (const CanvasContainer<Hist>& container) = delete;
 
   template <class... Args>
-    CanvasContainer (Args... args)
-    {
-      fTheHistogram = new Hist(args...);
-      fTheHistogram->SetDirectory(0);
-      fCanvas       = nullptr;
-    }
+  CanvasContainer (Args... args)
+  {
+    fTheHistogram = new Hist(args...);
+    fTheHistogram->SetDirectory(0);
+    fCanvas       = nullptr;
+  }
 
   ~CanvasContainer()
-    {
-      if (fHasToBeDeletedManually == true)
-        {
-          delete fTheHistogram;
-          if (fCanvas != nullptr) delete fCanvas;
-        }
+  {
+    if (fHasToBeDeletedManually == true)
+      {
+        delete fTheHistogram;
+        if (fCanvas != nullptr) delete fCanvas;
+      }
 
-      fTheHistogram = nullptr;
-      fCanvas       = nullptr;
-    }
+    fTheHistogram = nullptr;
+    fCanvas       = nullptr;
+  }
 
   CanvasContainer (CanvasContainer<Hist>&& container)
-    {
-      fHasToBeDeletedManually = container.fHasToBeDeletedManually;
-      fTheHistogram           = container.fTheHistogram;
-      container.fTheHistogram = nullptr;
-      fCanvas                 = container.fCanvas;
-      container.fCanvas       = nullptr;
-    }
+  {
+    fHasToBeDeletedManually = container.fHasToBeDeletedManually;
+    fTheHistogram           = container.fTheHistogram;
+    container.fTheHistogram = nullptr;
+    fCanvas                 = container.fCanvas;
+    container.fCanvas       = nullptr;
+  }
 
   CanvasContainer<Hist>& operator= (CanvasContainer<Hist>&& container)
-    {
-      fHasToBeDeletedManually = container.fHasToBeDeletedManually;
-      fTheHistogram           = container.fTheHistogram;
-      container.fTheHistogram = nullptr;
-      fCanvas                 = container.fCanvas;
-      container.fCanvas       = nullptr;
-      return *this;
-    }
+  {
+    fHasToBeDeletedManually = container.fHasToBeDeletedManually;
+    fTheHistogram           = container.fTheHistogram;
+    container.fTheHistogram = nullptr;
+    fCanvas                 = container.fCanvas;
+    container.fCanvas       = nullptr;
+    return *this;
+  }
 
   void initialize (std::string name, std::string title, const PlotContainer* reference) override
   {
@@ -86,27 +86,20 @@ class CanvasContainer : public PlotContainer
     std::cout << "CanvasContainer " << fTheHistogram->GetName() << std::endl;
   }
 
-  template<typename T>
-    void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
-
-  void makeSummaryAverage (const std::vector<CanvasContainer<Hist>>* theTH1FContainerVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
-
-  void normalize (const uint32_t numberOfEvents) {}
-
-  void setNameTitle (std::string histogramName, std::string histogramTitle) override 
+  void setNameTitle (std::string histogramName, std::string histogramTitle) override
   {
     fTheHistogram->SetNameTitle(histogramName.data(), histogramTitle.data());
   }
 
   std::string getName() const override
-    {
-      return fTheHistogram->GetName();
-    }
+  {
+    return fTheHistogram->GetName();
+  }
 
   std::string getTitle() const override
-    {
-      return fTheHistogram->GetTitle();
-    }
+  {
+    return fTheHistogram->GetTitle();
+  }
 
   Hist*    fTheHistogram;
   TCanvas* fCanvas;

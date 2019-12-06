@@ -10,8 +10,11 @@
 #ifndef RD53ThrMinimization_H
 #define RD53ThrMinimization_H
 
-#include "../DQMUtils/RD53ThrMinimizationHistograms.h"
 #include "RD53PixelAlive.h"
+
+#ifdef __USE_ROOT__
+#include "../DQMUtils/RD53ThrMinimizationHistograms.h"
+#endif
 
 
 // #############
@@ -29,8 +32,8 @@ class ThrMinimization : public PixelAlive
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
-  void writeObjects         () {}; // @TMP@
 
+  void   sendData            ();
   void   initialize          (const std::string fileRes_, const std::string fileReg_);
   void   run                 ();
   void   draw                ();
@@ -65,14 +68,16 @@ class ThrMinimization : public PixelAlive
   // ########
   // # ROOT #
   // ########
+#ifdef __USE_ROOT__
   ThrMinimizationHistograms histos;
+#endif
 
 
  protected:
   std::string fileRes;
   std::string fileReg;
+  bool doUpdateChip;
   bool doDisplay;
-  bool doSave;
 };
 
 #endif

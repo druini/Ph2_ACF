@@ -2,6 +2,7 @@
 #define TPCalibration_h__
 
 #include "Tool.h"
+#ifdef __USE_ROOT__
 
 #ifdef __USE_ROOT__
   #include "../DQMUtils/DQMHistogramTPCalibration.h"
@@ -55,4 +56,5 @@ private: //methods
    #endif
 };
 
+#endif
 #endif

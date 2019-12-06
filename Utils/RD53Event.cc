@@ -13,18 +13,12 @@ namespace Ph2_HwInterface
 {
   bool RD53Event::isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const
   {
-    for (auto j = 0u; j < module_id_vec.size(); j++)
-      {
-        if (module_id == module_id_vec[j])
-          {
-            for (auto i = 0u; i < chip_events.size(); i++)
-              if ((chip_id == chip_id_vec[i]) && (chip_events[i].data.size() != 0))
-                {
-                  chipIndx = i;
-                  return true;
-                }
-          }
-      }
+    for (auto i = 0u; i < moduleAndChipIDs.size(); i++)
+      if ((module_id == moduleAndChipIDs[i].first) && (chip_id == moduleAndChipIDs[i].second) && (chip_events[i].hit_data.size() != 0))
+        {
+          chipIndx = i;
+          return true;
+        }
 
     return false;
   }
@@ -36,27 +30,22 @@ namespace Ph2_HwInterface
 
     for (const auto& cModule : *boardContainer)
       for (const auto& cChip : *cModule)
-        {
-          if (this->isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
-            {
-              if (vectorRequired == true)
-                {
-                  cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.push_back(chip_events[chipIndx].bc_id);
-                  cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.push_back(chip_events[chipIndx].trigger_id);
-                }
+        if (RD53Event::isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
+          {
+            if (vectorRequired == true)
+              {
+                cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.push_back(chip_events[chipIndx].bc_id);
+                cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.push_back(chip_events[chipIndx].trigger_id);
+              }
 
-              for (const auto& hit : chip_events[chipIndx].data)
-                if ((hit.row < RD53::nRows) && (hit.col < RD53::nCols))
-                  for (auto i = 0; i < NPIX_REGION; i++)
-                    if (hit.tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT/NPIX_REGION))
-                      {
-                        cChip->getChannel<OccupancyAndPh>(hit.row+RD53::nRows*(hit.col+i)).fOccupancy++;
-                        cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPh      += float(hit.tots[i]);
-                        cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).fPhError += float(hit.tots[i]*hit.tots[i]);
-                        if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col+i) == false)
-                          cChip->getChannel<OccupancyAndPh>(hit.row,hit.col+i).readoutError = true;
-                      }
-            }
-        }
+            for (const auto& hit : chip_events[chipIndx].hit_data)
+              {
+                cChip->getChannel<OccupancyAndPh>(hit.row+RD53::nRows*(hit.col)).fOccupancy++;
+                cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPh      += float(hit.tot);
+                cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPhError += float(hit.tot*hit.tot);
+                if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col) == false)
+                  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).readoutError = true;
+              }
+          }
   }
 }

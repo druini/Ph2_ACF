@@ -8,8 +8,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-    include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
-    include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
     include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR})
@@ -22,7 +20,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     file(GLOB SOURCES *.cc)
 
     #add the library
-    add_library(Ph2_RootUtils SHARED ${SOURCES} ${HEADERS})
+    add_library(Ph2_RootUtils STATIC ${SOURCES} ${HEADERS})
 
     #check for ZMQ installed
     if(ZMQ_FOUND)
@@ -61,7 +59,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(${ROOT_FOUND})
         include_directories(${ROOT_INCLUDE_DIRS})
         set(LIBS ${LIBS} ${ROOT_LIBRARIES})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__USE_ROOT__")
+        if(NoDataShipping)
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+        endif()
 
         #check for THttpServer
         if(${ROOT_HAS_HTTP})
@@ -70,7 +70,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         endif()
     endif()
 
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
+    set(LIBS ${LIBS} Ph2_Utils )
     TARGET_LINK_LIBRARIES(Ph2_RootUtils ${LIBS})
 
     ####################################

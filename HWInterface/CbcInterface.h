@@ -51,7 +51,7 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        bool ConfigureChip ( const Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
+        bool ConfigureChip ( Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
         
         bool setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
 
@@ -80,7 +80,7 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true ) override;
+        bool WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
 
         /*!
          * \brief Write the designated register in both Chip and Chip Config File
@@ -103,7 +103,7 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        void WriteBroadcastCbcReg ( const Module* pModule, const std::string& pRegNode, uint32_t pValue );
+        void WriteModuleBroadcastChipReg ( const Module* pModule, const std::string& pRegNode, uint16_t pValue );
 
         /*!
          * \brief Write same register in all Cbcs and then UpdateCbc

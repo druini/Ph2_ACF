@@ -12,6 +12,7 @@
 #define RD53ThrEqualizationHistograms_H
 
 #include "../System/SystemController.h"
+#include "../Utils/RD53SharedConstants.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "DQMHistogramBase.h"
@@ -23,10 +24,10 @@
 class ThrEqualizationHistograms : public DQMHistogramBase
 {
  public:
-  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap) override;
-  void process ()                                                                                                         override;
-  bool fill    (std::vector<char>& dataBuffer)                                                                            override;
-  void reset   ()                                                                                                         override {};
+  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+  void process ()                                                                                                                override;
+  bool fill    (std::vector<char>& dataBuffer)                                                                                   override;
+  void reset   ()                                                                                                                override {};
 
   void fillOccupancy (const DetectorDataContainer& OccupancyContainer);
   void fillTDAC      (const DetectorDataContainer& TDACContainer);
