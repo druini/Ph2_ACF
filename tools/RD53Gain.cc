@@ -239,7 +239,9 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
         }
 
 
-  // @TMP@ : CalibFile
+  // #####################
+  // # @TMP@ : CalibFile #
+  // #####################
   if (saveRawData == true)
     {
       for (const auto cBoard : *fDetectorContainer)

@@ -236,7 +236,9 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
         }
 
 
-  // @TMP@ : CalibFile
+  // #####################
+  // # @TMP@ : CalibFile #
+  // #####################
   if (saveRawData == true)
     {
       for (const auto cBoard : *fDetectorContainer)
@@ -245,7 +247,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
             {
               std::stringstream myString;
               myString.clear(); myString.str("");
-              myString << "Scurve_"
+              myString << "SCurve_"
                        << "B"    << std::setfill('0') << std::setw(2) << cBoard->getId()  << "_"
                        << "M"    << std::setfill('0') << std::setw(2) << cModule->getId() << "_"
                        << "C"    << std::setfill('0') << std::setw(2) << cChip->getId()   << ".dat";
