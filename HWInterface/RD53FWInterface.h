@@ -204,7 +204,7 @@ namespace Ph2_HwInterface
       bool     ext_clk_en         = false;
       uint32_t ch_out_en          = 0;    // chn-1 = TLU clk input, chn-2 = ext. trigger, chn-3 = TLU busy, chn-4 = TLU reset, chn-5 = ext. clk
       uint32_t fiftyohm_en        = 0;
-      uint32_t ch1_thr            = 0x7F; // [thr/256*3.3V]
+      uint32_t ch1_thr            = 0x7F; // [thr/256*(5-1)V + 1V]
       uint32_t ch2_thr            = 0x7F;
       uint32_t ch3_thr            = 0x7F;
       uint32_t ch4_thr            = 0x7F;
