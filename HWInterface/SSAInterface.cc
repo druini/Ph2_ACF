@@ -13,7 +13,6 @@
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/Container.h"
-#include "../Utils/RegisterValue.h"
 #include <bitset>
 
 #define DEV_FLAG 0
@@ -21,7 +20,7 @@ namespace Ph2_HwInterface {// start namespace
     	SSAInterface::SSAInterface ( const BeBoardFWMap& pBoardMap ) : ReadoutChipInterface ( pBoardMap ){}
     	SSAInterface::~SSAInterface(){}
 	//
-	bool SSAInterface::ConfigureChip ( const Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize )
+	bool SSAInterface::ConfigureChip ( const Chip* pChip, bool pVerifLoop, uint32_t pBlockSize )
     	{
     		uint8_t cWriteAttempts = 0 ;
 		//first, identify the correct BeBoardFWInterface
