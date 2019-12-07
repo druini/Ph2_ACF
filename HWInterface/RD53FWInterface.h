@@ -69,12 +69,14 @@ namespace RD53FWEvtEncoder
   // ################
   // # Event status #
   // ################
-  const uint16_t GOOD   = 0x0000; // Event status Good
-  const uint16_t EVSIZE = 0x0001; // Event status Invalid event size
-  const uint16_t EMPTY  = 0x0002; // Event status Empty event
-  const uint16_t L1A    = 0x0004; // Event status L1A counter mismatch
-  const uint16_t FRSIZE = 0x0008; // Event status Invalid frame size
-  const uint16_t FWERR  = 0x0010; // Event status Firmware error
+  const uint16_t GOOD       = 0x0000; // Event status Good
+  const uint16_t EVSIZE     = 0x0001; // Event status Invalid event size
+  const uint16_t EMPTY      = 0x0002; // Event status Empty event
+  const uint16_t INCOMPLETE = 0x0004; // Event status Incomplete event header
+  const uint16_t L1A        = 0x0008; // Event status L1A counter mismatch
+  const uint16_t FWERR      = 0x0010; // Event status Firmware error
+  const uint16_t FRSIZE     = 0x0020; // Event status Invalid frame size
+  const uint16_t MISSCHIP   = 0x0040; // Event status Chip data are missing
 }
 
 
