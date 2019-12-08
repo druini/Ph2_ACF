@@ -27,7 +27,7 @@ namespace Ph2_HwInterface
     else LOG (ERROR) << BOLDRED << "NULL FileHandler" << RESET;
   }
 
-  uint32_t RD53FWInterface::getBoardInfo()
+  void RD53FWInterface::getFWinfo()
   {
     uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
     uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
@@ -42,8 +42,13 @@ namespace Ph2_HwInterface
     LOG (INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor
                << BOLDBLUE << " -- date (yyyy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/" << cFWday
                << BOLDBLUE << " -- time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
+  }
 
-    uint32_t cVersionWord = ((cVersionMajor << NBIT_FWVER) | cVersionMinor);
+  uint32_t RD53FWInterface::getBoardInfo()
+  {
+    uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
+    uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
+    uint32_t cVersionWord  = ((cVersionMajor << NBIT_FWVER) | cVersionMinor);
     return cVersionWord;
   }
 
@@ -60,7 +65,7 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)
   {
-    RD53FWInterface::getBoardInfo();
+    RD53FWInterface::getFWinfo();
 
     std::stringstream myString;
     RD53FWInterface::ChipReset();

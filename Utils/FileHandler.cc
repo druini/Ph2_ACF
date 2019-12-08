@@ -123,17 +123,17 @@ bool FileHandler::openFile( )
 
 void FileHandler::closeFile()
 {
-    if (fFileIsOpened.load() )
+    if (fFileIsOpened.load())
     {
-        fFileIsOpened = false;
+      fFileIsOpened = false;
 
-        if (fOption == 'w' && fThread.joinable() )
-            fThread.join();
+      if (fOption == 'w' && fThread.joinable() )
+        fThread.join();
     }
 
     //std::lock_guard<std::mutex> cLock (fMemberMutex);
 
-    if (fBinaryFile.is_open() )
+    if (fBinaryFile.is_open())
         fBinaryFile.close();
 
     //if (fFileIsOpened.load() )

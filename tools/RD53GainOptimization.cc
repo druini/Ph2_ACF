@@ -46,7 +46,12 @@ void GainOptimization::ConfigureCalibration ()
 
 void GainOptimization::Start (int currentRun)
 {
-  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+  if (saveRawData == true)
+    {
+      std::string dir(RESULTDIR);
+      this->addFileHandler(dir + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 
   GainOptimization::run();
   GainOptimization::analyze();

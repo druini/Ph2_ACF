@@ -59,7 +59,12 @@ void ThrEqualization::ConfigureCalibration ()
 
 void ThrEqualization::Start (int currentRun)
 {
-  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+  if (saveRawData == true)
+    {
+      std::string dir(RESULTDIR);
+      this->addFileHandler(dir + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 
   ThrEqualization::run();
   ThrEqualization::sendData();
@@ -80,7 +85,7 @@ void ThrEqualization::sendData ()
 
 void ThrEqualization::Stop ()
 {
-  this->Destroy();
+  this->closeFileHandler();
 }
 
 void ThrEqualization::initialize (const std::string fileRes_, const std::string fileReg_)

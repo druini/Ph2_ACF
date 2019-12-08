@@ -43,7 +43,12 @@ void ThrMinimization::ConfigureCalibration ()
 
 void ThrMinimization::Start (int currentRun)
 {
-  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+  if (saveRawData == true)
+    {
+      std::string dir(RESULTDIR);
+      this->addFileHandler(dir + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 
   ThrMinimization::run();
   ThrMinimization::analyze();
@@ -60,7 +65,7 @@ void ThrMinimization::sendData ()
 
 void ThrMinimization::Stop ()
 {
-  this->Destroy();
+  this->closeFileHandler();
 }
 
 void ThrMinimization::initialize (const std::string fileRes_, const std::string fileReg_)

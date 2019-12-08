@@ -57,7 +57,12 @@ void Physics::ConfigureCalibration ()
 
 void Physics::Start (int currentRun)
 {
-  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+  if (saveRawData == true)
+    {
+      std::string dir(RESULTDIR);
+      this->addFileHandler(dir + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
   SystemController::Start(currentRun);
 
   keepRunning = true;
@@ -95,7 +100,7 @@ void Physics::Stop ()
   Physics::chipErrorReport();
 
 
-  if (doLocal == false) this->Destroy();
+  this->closeFileHandler();
 }
 
 void Physics::initialize (const std::string fileRes_, const std::string fileReg_)

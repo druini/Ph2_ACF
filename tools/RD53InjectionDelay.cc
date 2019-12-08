@@ -66,7 +66,12 @@ void InjectionDelay::ConfigureCalibration ()
 
 void InjectionDelay::Start (int currentRun)
 {
-  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+  if (saveRawData == true)
+    {
+      std::string dir(RESULTDIR);
+      this->addFileHandler(dir + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 
   InjectionDelay::run();
   InjectionDelay::analyze();
@@ -90,7 +95,7 @@ void InjectionDelay::sendData ()
 
 void InjectionDelay::Stop ()
 {
-  this->Destroy();
+  this->closeFileHandler();
 }
 
 void InjectionDelay::initialize (const std::string fileRes_, const std::string fileReg_)

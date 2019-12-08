@@ -71,7 +71,12 @@ void PixelAlive::ConfigureCalibration ()
 
 void PixelAlive::Start (int currentRun)
 {
-  if (saveRawData == true) this->addFileHandler("run_" + fromInt2Str(currentRun) + ".raw", 'w');
+  if (saveRawData == true)
+    {
+      std::string dir(RESULTDIR);
+      this->addFileHandler(dir + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 
   PixelAlive::run();
   PixelAlive::analyze();
@@ -97,7 +102,7 @@ void PixelAlive::sendData ()
 
 void PixelAlive::Stop ()
 {
-  this->Destroy();
+  this->closeFileHandler();
 }
 
 void PixelAlive::initialize (const std::string fileRes_, const std::string fileReg_)
