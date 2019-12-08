@@ -9,8 +9,8 @@
 
 */
 
-#ifndef __SYSTEMCONTROLLER_H__
-#define __SYSTEMCONTROLLER_H__
+#ifndef SYSTEMCONTROLLER_H
+#define SYSTEMCONTROLLER_H
 
 #include "FileParser.h"
 #include "../HWInterface/ReadoutChipInterface.h"

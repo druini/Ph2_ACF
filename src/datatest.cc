@@ -167,9 +167,9 @@ int main ( int argc, char* argv[] )
         pBoard->setEventType (cHeader.fEventType);
         fPlaybackEventSize32 = cHeader.fEventSize32;
 
-        if (cHeader.fNCbc != cCbcCounter.getNChip() )
+        if (cHeader.fNchip != cCbcCounter.getNChip() )
         {
-            LOG (ERROR) << "Error, wrong number of CBCs in config file w.r.t. File Header; config file: " << +cCbcCounter.getNChip() << " - header: " << cHeader.fNCbc << " - aborting!";
+            LOG (ERROR) << "Error, wrong number of CBCs in config file w.r.t. File Header; config file: " << +cCbcCounter.getNChip() << " - header: " << cHeader.fNchip << " - aborting!";
             exit (1);
         }
     }

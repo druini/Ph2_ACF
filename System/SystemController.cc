@@ -82,7 +82,7 @@ namespace Ph2_System
       }
   }
 
-  void SystemController::readFile ( std::vector<uint32_t>& pVec, uint32_t pNWords32 )
+  void SystemController::readFile (std::vector<uint32_t>& pVec, uint32_t pNWords32)
   {
     if (pNWords32 == 0) pVec = fFileHandler->readFile();
     else pVec = fFileHandler->readFileChunks(pNWords32);
@@ -96,7 +96,7 @@ namespace Ph2_System
     fData->DecodeData(pBoard, pData, pNEvents, pBoard->getBoardType());
   }
 
-  void SystemController::InitializeHw ( const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
+  void SystemController::InitializeHw (const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
   {
     fStreamerEnabled = streamData;
     if (streamData)
