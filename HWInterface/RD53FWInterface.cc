@@ -27,23 +27,6 @@ namespace Ph2_HwInterface
     else LOG (ERROR) << BOLDRED << "NULL FileHandler" << RESET;
   }
 
-  void RD53FWInterface::getFWinfo()
-  {
-    uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
-    uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
-
-    uint32_t cFWyear       = ReadReg ("user.stat_regs.fw_date.year");
-    uint32_t cFWmonth      = ReadReg ("user.stat_regs.fw_date.month");
-    uint32_t cFWday        = ReadReg ("user.stat_regs.fw_date.day");
-    uint32_t cFWhour       = ReadReg ("user.stat_regs.fw_date.hour");
-    uint32_t cFWminute     = ReadReg ("user.stat_regs.fw_date.minute");
-    uint32_t cFWseconds    = ReadReg ("user.stat_regs.fw_date.seconds");
-
-    LOG (INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor
-               << BOLDBLUE << " -- date (yyyy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/" << cFWday
-               << BOLDBLUE << " -- time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
-  }
-
   uint32_t RD53FWInterface::getBoardInfo()
   {
     uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
@@ -65,7 +48,20 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)
   {
-    RD53FWInterface::getFWinfo();
+    uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
+    uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
+
+    uint32_t cFWyear       = ReadReg ("user.stat_regs.fw_date.year");
+    uint32_t cFWmonth      = ReadReg ("user.stat_regs.fw_date.month");
+    uint32_t cFWday        = ReadReg ("user.stat_regs.fw_date.day");
+    uint32_t cFWhour       = ReadReg ("user.stat_regs.fw_date.hour");
+    uint32_t cFWminute     = ReadReg ("user.stat_regs.fw_date.minute");
+    uint32_t cFWseconds    = ReadReg ("user.stat_regs.fw_date.seconds");
+
+    LOG (INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor
+               << BOLDBLUE << " -- date (yyyy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/" << cFWday
+               << BOLDBLUE << " -- time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
+
 
     std::stringstream myString;
     RD53FWInterface::ChipReset();
