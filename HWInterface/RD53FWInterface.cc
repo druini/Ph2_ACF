@@ -567,17 +567,13 @@ namespace Ph2_HwInterface
     // # Wait until we have something in DDR3 #
     // ########################################
     if (HANDSHAKE_EN == true)
-      {
-        while (ReadReg("user.stat_regs.readout4.readout_req").value() == 0)
-          {
-            uint32_t fsm_status = ReadReg("user.stat_regs.readout4.fsm_status").value();
-            LOG (ERROR) << BOLDRED << "Waiting for readout request, FSM status: " << BOLDYELLOW << fsm_status << RESET;
-            usleep(READOUTSLEEP);
-          }
-
-        nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value();
-      }
-    else while ((pWait == true) && ((nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value()) == 0)) usleep(READOUTSLEEP);
+      while (ReadReg("user.stat_regs.readout4.readout_req").value() == 0)
+        {
+          uint32_t fsm_status = ReadReg("user.stat_regs.readout4.fsm_status").value();
+          LOG (ERROR) << BOLDRED << "Waiting for readout request, FSM status: " << BOLDYELLOW << fsm_status << RESET;
+          usleep(READOUTSLEEP);
+        }
+    nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value();
 
 
     // #############################################
