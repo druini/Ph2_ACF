@@ -45,8 +45,7 @@ void ThrMinimization::Start (int currentRun)
 {
   if (saveRawData == true)
     {
-      std::string dir(RESULTDIR);
-      this->addFileHandler(dir + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 
