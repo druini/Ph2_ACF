@@ -225,7 +225,7 @@ namespace Ph2_HwInterface
     // # Check clock generator locking #
     // #################################
     if (ReadReg ("user.stat_regs.global_reg.clk_gen_lock") == 1)
-      LOG (INFO) << BOLDBLUE << "\t--> Clock generator is locked" << RESET;
+      LOG (INFO) << BOLDBLUE << "\t--> Clock generator is " << BOLDYELLOW << "locked" << RESET;
     else
       LOG (ERROR) << BOLDRED << "\t--> Clock generator is not locked" << RESET;
 
@@ -234,7 +234,7 @@ namespace Ph2_HwInterface
     // # Check I2C initialization #
     // ############################
     if (ReadReg ("user.stat_regs.global_reg.i2c_init") == 1)
-      LOG (INFO) << BOLDBLUE << "\t--> I2C initialized" << RESET;
+      LOG (INFO) << BOLDBLUE << "\t--> I2C " << BOLDYELLOW << "initialized" << RESET;
     else
       {
         LOG (ERROR) << BOLDRED << "I2C not initialized" << RESET;

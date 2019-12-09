@@ -47,7 +47,7 @@ void Gain::ConfigureCalibration ()
   // ##############################
   // # Initialize dac scan values #
   // ##############################
-  float step = (stopValue - startValue) / nSteps;
+  const float step = (stopValue - startValue) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
 
