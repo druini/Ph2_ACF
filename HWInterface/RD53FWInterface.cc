@@ -595,6 +595,7 @@ namespace Ph2_HwInterface
     // #############
     // # Read DDR3 #
     // #############
+    if (nWordsInMemory < ddr3Offset) LOG (ERROR) << BOLDRED << "[RD53FWInterface::ReadData] Number of data in DDR3 smaller than offset" << RESET; // @TMP@
     uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory - ddr3Offset, ddr3Offset);
     ddr3Offset = nWordsInMemory;
     for (const auto& val : values) pData.push_back(val);
@@ -999,4 +1000,156 @@ namespace Ph2_HwInterface
   // # Vector containing the decoded events #
   // ########################################
   std::vector<RD53FWInterface::Event> RD53decodedEvents;
+
+
+  /*
+  // ################################################
+  // # I2C block for programming peripheral devices #
+  // ################################################
+  bool RD53FWInterface::I2cCmdAckWait (unsigned int cWait, unsigned int trials)
+  {
+    uint32_t cLoop = 0;
+
+    while (++cLoop < trials)
+      {
+        uint32_t status = ReadReg ("STAT.BOARD.i2c_ack");
+
+        if      (status == 0)             usleep (cWait);
+        else if (status == I2CcmdAckGOOD) return true;
+        else if (status == I2CcmdAckBAD)  return false;
+        else                              usleep(cWait);
+      }
+
+    return false;
+  }
+
+  void RD53FWInterface::WriteI2C (std::vector<uint32_t>& pVecReg)
+  {
+    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_reset",1);
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_reset",0);
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_fifo_rx_dsel",1);
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_req",I2CwriteREQ);
+    usleep(DEEPSLEEP);
+
+    bool outcome = RegManager::WriteBlockReg ("CTRL.BOARD.i2c_fifo_tx", pVecReg);
+    usleep(DEEPSLEEP);
+
+    if (I2cCmdAckWait (DEEPSLEEP,20) == false)
+      throw Exception ("[FC7FWInterface::WriteI2C]\tI2C transaction error");
+
+    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
+    usleep(DEEPSLEEP);
+  }
+
+  void RD53FWInterface::ReadI2C (std::vector<uint32_t>& pVecReg)
+  {
+    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_reset",1);
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_reset",0);
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_fifo_rx_dsel",1);
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_req",I2CreadREQ);
+    usleep(DEEPSLEEP);
+
+    uint32_t sizeI2Cfifo = ReadReg("STAT.BOARD.i2c_fifo_rx_dcnt");
+    usleep(DEEPSLEEP);
+
+    int size2read = 0;
+    if (sizeI2Cfifo > pVecReg.size())
+      {
+        size2read = pVecReg.size();
+        LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tWarning, I2C FIFO contains more data than the vector size" << RESET;
+      }
+    else
+      size2read = sizeI2Cfifo;
+
+    pVecReg = ReadBlockRegValue ("CTRL.BOARD.i2c_fifo_rx", size2read);
+    usleep(DEEPSLEEP);
+
+    if (I2cCmdAckWait (DEEPSLEEP,20) == false)
+      throw Exception ("[FC7FWInterface::ReadI2C]\tI2C transaction error");
+
+    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
+  }
+
+  void RD53FWInterface::ConfigureClockSi5324 ()
+  {
+    // ###########################################################
+    // # The Si5324 chip is meant to reduce the FC7 clock jitter #
+    // ###########################################################
+
+    uint8_t start_wr     = 0x90;
+    uint8_t stop_wr      = 0x50;
+    uint8_t stop_rd_nack = 0x68;
+    uint8_t rd_incr      = 0x20;
+    uint8_t wr_incr      = 0x10;
+
+    uint8_t enable_i2cmux  = 1;
+    uint8_t disable_i2cmux = 0;
+
+    uint8_t i2cmux_addr_wr = 0xe8;
+    uint8_t i2cmux_addr_rd = 0xe9;
+
+    uint8_t si5324_pos     = 7;
+    uint8_t si5324_addr_wr = 0xd0;
+    uint8_t si5324_addr_rd = 0xd1;
+
+    uint32_t word;
+    std::vector<uint32_t> data;
+
+    // ###########################################
+    // # Program Si5324 for 160MHz precise clock #
+    // ###########################################
+    std::vector< std::pair<uint8_t,uint8_t> > si5324Program;
+    si5324Program.push_back({0x00,0x54});
+    si5324Program.push_back({0x0B,0x41});
+    si5324Program.push_back({0x06,0x0F});
+    si5324Program.push_back({0x15,0xFE});
+    si5324Program.push_back({0x03,0x55});
+    si5324Program.push_back({0x02,0x22});
+    si5324Program.push_back({0x19,0x80});
+    si5324Program.push_back({0x1F,0x00});
+    si5324Program.push_back({0x20,0x00});
+    si5324Program.push_back({0x21,0x03});
+    si5324Program.push_back({0x28,0xC1});
+    si5324Program.push_back({0x29,0x8F});
+    si5324Program.push_back({0x2A,0xFF});
+    si5324Program.push_back({0x2E,0x00});
+    si5324Program.push_back({0x2F,0x59});
+    si5324Program.push_back({0x30,0x48});
+    si5324Program.push_back({0x89,0x01});
+    si5324Program.push_back({0x88,0x40});
+    // ###########################################
+
+    word = (i2cmux_addr_wr << 8) | start_wr;
+    data.push_back(word);
+    word = (enable_i2cmux << si5324_pos) << 8 | stop_wr;
+    data.push_back(word);
+
+    for (unsigned int i = 0; i < si5324Program.size(); i++)
+      {
+        word = (si5324_addr_wr << 8) | start_wr;
+        data.push_back(word);
+        word = (si5324Program[i].first << 8) | wr_incr;
+        data.push_back(word);
+        word = (si5324Program[i].second << 8) | stop_wr;
+        data.push_back(word);
+      }
+
+    word = (i2cmux_addr_wr << 8) | start_wr;
+    data.push_back(word);
+    word = (disable_i2cmux << si5324_pos) << 8 | stop_wr;
+    data.push_back(word);
+
+    RD53FWInterface::WriteI2C(data);
+  }
+  */
 }
