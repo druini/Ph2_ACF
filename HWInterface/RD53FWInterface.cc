@@ -48,6 +48,9 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)
   {
+    // ########################
+    // # Print firmware infos #
+    // ########################
     uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
     uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
 
@@ -61,15 +64,6 @@ namespace Ph2_HwInterface
     LOG (INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor
                << BOLDBLUE << " -- date (yyyy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/" << cFWday
                << BOLDBLUE << " -- time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
-
-
-    // ###########################
-    // # Print clock measurement #
-    // ###########################
-    uint32_t inputClk   = 0; //ReadReg ("user.stat_regs.stat_reg_22");
-    uint32_t derivedClk = 0; //ReadReg ("user.stat_regs.stat_reg_21");
-    LOG (INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk/1000. << " MHz" << RESET;
-    LOG (INFO) << GREEN << "Derived clock frequency (should be ~160 MHz): " << BOLDYELLOW << derivedClk/1000. << " MHz" << RESET;
 
 
     std::stringstream myString;
@@ -135,6 +129,16 @@ namespace Ph2_HwInterface
     // # Configure DIO5 #
     // ##################
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
+    LOG(INFO) << GREEN<< "DIO5 configured" << RESET;
+
+
+    // ###########################
+    // # Print clock measurement #
+    // ###########################
+    uint32_t inputClk   = 0; //ReadReg ("user.stat_regs.stat_reg_22");
+    uint32_t derivedClk = 0; //ReadReg ("user.stat_regs.stat_reg_21");
+    LOG (INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk/1000. << " MHz" << RESET;
+    LOG (INFO) << GREEN << "Derived clock frequency (should be ~160 MHz): " << BOLDYELLOW << derivedClk/1000. << " MHz" << RESET;
 
 
     // ##############################
