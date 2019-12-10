@@ -130,6 +130,7 @@ namespace Ph2_HwInterface
     // ##################
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
     LOG(INFO) << GREEN<< "DIO5 configured" << RESET;
+    usleep(DEEPSLEEP);
 
 
     // ###########################
