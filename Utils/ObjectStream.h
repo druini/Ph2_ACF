@@ -191,7 +191,8 @@ public:
 	{
 		if(fTheStream != nullptr)
 		{
-
+          delete fTheStream;
+          fTheStream = nullptr;
 		}
 	};
 
