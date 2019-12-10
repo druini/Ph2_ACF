@@ -591,9 +591,9 @@ namespace Ph2_HwInterface
     // #############
     // # Read DDR3 #
     // #############
-    if (nWordsInMemory < ddr3Offset) LOG (ERROR) << BOLDRED << "[RD53FWInterface::ReadData] Number of data in DDR3 smaller than offset" << RESET; // @TMP@
-    uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory - ddr3Offset, ddr3Offset);
-    ddr3Offset = nWordsInMemory;
+    // if (nWordsInMemory < ddr3Offset) LOG (ERROR) << BOLDRED << "[RD53FWInterface::ReadData] Number of data in DDR3 smaller than offset" << RESET; // @TMP@
+    uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
+    ddr3Offset += nWordsInMemory;
     for (const auto& val : values) pData.push_back(val);
 
 
@@ -998,29 +998,29 @@ namespace Ph2_HwInterface
   std::vector<RD53FWInterface::Event> RD53decodedEvents;
 
 
-  /*
   // ################################################
   // # I2C block for programming peripheral devices #
   // ################################################
-  bool RD53FWInterface::I2cCmdAckWait (unsigned int cWait, unsigned int trials)
+  bool RD53FWInterface::I2cCmdAckWait (unsigned int trials)
   {
-    uint32_t cLoop = 0;
+    const uint16_t I2CcmdAckGOOD = 0x01;
+    uint16_t status = 0x02; // 0x02 = I2CcmdAckBAD
+    uint32_t cLoop  = 0;
 
     while (++cLoop < trials)
       {
-        uint32_t status = ReadReg ("STAT.BOARD.i2c_ack");
-
-        if      (status == 0)             usleep (cWait);
-        else if (status == I2CcmdAckGOOD) return true;
-        else if (status == I2CcmdAckBAD)  return false;
-        else                              usleep(cWait);
+        status = ReadReg ("user.stat_regs.global_reg.i2c_acq_err");
+        if (status == I2CcmdAckGOOD) return true;
+        usleep(DEEPSLEEP);
       }
 
     return false;
   }
 
-  void RD53FWInterface::WriteI2C (std::vector<uint32_t>& pVecReg)
+  void RD53FWInterface::WriteI2C (std::vector<uint32_t>& data)
   {
+    const uint16_t I2CwriteREQ = 0x01;
+
     WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
     usleep(DEEPSLEEP);
     WriteReg ("CTRL.BOARD.i2c_reset",1);
@@ -1032,18 +1032,20 @@ namespace Ph2_HwInterface
     WriteReg ("CTRL.BOARD.i2c_req",I2CwriteREQ);
     usleep(DEEPSLEEP);
 
-    bool outcome = RegManager::WriteBlockReg ("CTRL.BOARD.i2c_fifo_tx", pVecReg);
+    /* bool outcome = */ RegManager::WriteBlockReg ("CTRL.BOARD.i2c_fifo_tx", data);
     usleep(DEEPSLEEP);
 
-    if (I2cCmdAckWait (DEEPSLEEP,20) == false)
+    if (I2cCmdAckWait (20) == false)
       throw Exception ("[FC7FWInterface::WriteI2C]\tI2C transaction error");
 
     WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
     usleep(DEEPSLEEP);
   }
 
-  void RD53FWInterface::ReadI2C (std::vector<uint32_t>& pVecReg)
+  void RD53FWInterface::ReadI2C (std::vector<uint32_t>& data)
   {
+    const uint16_t I2CreadREQ = 0x03;
+
     WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
     usleep(DEEPSLEEP);
     WriteReg ("CTRL.BOARD.i2c_reset",1);
@@ -1059,18 +1061,17 @@ namespace Ph2_HwInterface
     usleep(DEEPSLEEP);
 
     int size2read = 0;
-    if (sizeI2Cfifo > pVecReg.size())
+    if (sizeI2Cfifo > data.size())
       {
-        size2read = pVecReg.size();
+        size2read = data.size();
         LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tWarning, I2C FIFO contains more data than the vector size" << RESET;
       }
-    else
-      size2read = sizeI2Cfifo;
+    else size2read = sizeI2Cfifo;
 
-    pVecReg = ReadBlockRegValue ("CTRL.BOARD.i2c_fifo_rx", size2read);
+    data = ReadBlockRegValue ("CTRL.BOARD.i2c_fifo_rx", size2read);
     usleep(DEEPSLEEP);
 
-    if (I2cCmdAckWait (DEEPSLEEP,20) == false)
+    if (RD53FWInterface::I2cCmdAckWait(20) == false)
       throw Exception ("[FC7FWInterface::ReadI2C]\tI2C transaction error");
 
     WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
@@ -1084,19 +1085,19 @@ namespace Ph2_HwInterface
 
     uint8_t start_wr     = 0x90;
     uint8_t stop_wr      = 0x50;
-    uint8_t stop_rd_nack = 0x68;
-    uint8_t rd_incr      = 0x20;
+    // uint8_t stop_rd_nack = 0x68;
+    // uint8_t rd_incr      = 0x20;
     uint8_t wr_incr      = 0x10;
 
     uint8_t enable_i2cmux  = 1;
     uint8_t disable_i2cmux = 0;
 
     uint8_t i2cmux_addr_wr = 0xe8;
-    uint8_t i2cmux_addr_rd = 0xe9;
+    // uint8_t i2cmux_addr_rd = 0xe9;
 
     uint8_t si5324_pos     = 7;
     uint8_t si5324_addr_wr = 0xd0;
-    uint8_t si5324_addr_rd = 0xd1;
+    // uint8_t si5324_addr_rd = 0xd1;
 
     uint32_t word;
     std::vector<uint32_t> data;
@@ -1147,5 +1148,4 @@ namespace Ph2_HwInterface
 
     RD53FWInterface::WriteI2C(data);
   }
-  */
 }

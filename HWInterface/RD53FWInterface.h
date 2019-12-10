@@ -229,6 +229,14 @@ namespace Ph2_HwInterface
     void RebootBoard                           ();
     const FpgaConfig* GetConfiguringFpga       ();
 
+    // ################################################
+    // # I2C block for programming peripheral devices #
+    // ################################################
+    bool I2cCmdAckWait        (unsigned int trials);
+    void WriteI2C             (std::vector<uint32_t>& data);
+    void ReadI2C              (std::vector<uint32_t>& data);
+    void ConfigureClockSi5324 ();
+
   private:
     void PrintFWstatus         ();
     void TurnOffFMC            ();

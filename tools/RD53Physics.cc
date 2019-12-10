@@ -131,7 +131,7 @@ void Physics::run ()
       for (const auto cBoard : *fDetectorContainer)
         {
           RD53decodedEvents.clear();
-          dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
+          dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
 
           if (dataSize != 0)
             {
