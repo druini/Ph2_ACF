@@ -144,7 +144,7 @@ void Physics::run ()
             }
         }
 
-      usleep(READOUTSLEEP);
+      std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
     }
 
   if (dataSize == 0) LOG (WARNING) << BOLDBLUE << "No data collected" << RESET;
