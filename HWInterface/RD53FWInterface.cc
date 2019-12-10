@@ -591,7 +591,6 @@ namespace Ph2_HwInterface
     // #############
     // # Read DDR3 #
     // #############
-    // if (nWordsInMemory < ddr3Offset) LOG (ERROR) << BOLDRED << "[RD53FWInterface::ReadData] Number of data in DDR3 smaller than offset" << RESET; // @TMP@
     uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
     ddr3Offset += nWordsInMemory;
     for (const auto& val : values) pData.push_back(val);
