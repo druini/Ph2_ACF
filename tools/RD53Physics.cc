@@ -132,17 +132,14 @@ void Physics::run ()
 
   while (keepRunning == true)
     {
-      for (const auto cBoard : *fDetectorContainer)
-        {
-          RD53decodedEvents.clear();
-          dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
+      RD53decodedEvents.clear();
 
-          if (dataSize != 0)
-            {
-              Physics::fillDataContainer(cBoard);
-              Physics::sendData(cBoard);
-            }
-        }
+      for (const auto cBoard : *fDetectorContainer)
+        if ((dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true)) != 0)
+          {
+            Physics::fillDataContainer(cBoard);
+            Physics::sendData(cBoard);
+          }
 
       std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
     }
