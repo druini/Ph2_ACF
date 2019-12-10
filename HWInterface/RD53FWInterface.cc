@@ -66,10 +66,10 @@ namespace Ph2_HwInterface
     // ###########################
     // # Print clock measurement #
     // ###########################
-    uint32_t inputClk   = 0; //ReadReg ("user.stat_regs.stat_reg_21");
-    uint32_t derivedClk = 0; //ReadReg ("user.stat_regs.stat_reg_22");
-    LOG (INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk << RESET;
-    LOG (INFO) << GREEN << "Derived clock frequency (should be ~160 MHz): " << BOLDYELLOW << derivedClk << RESET;
+    uint32_t inputClk   = 0; //ReadReg ("user.stat_regs.stat_reg_22");
+    uint32_t derivedClk = 0; //ReadReg ("user.stat_regs.stat_reg_21");
+    LOG (INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk/100. << " MHz" << RESET;
+    LOG (INFO) << GREEN << "Derived clock frequency (should be ~160 MHz): " << BOLDYELLOW << derivedClk/100. << " MHz" << RESET;
 
 
     std::stringstream myString;
