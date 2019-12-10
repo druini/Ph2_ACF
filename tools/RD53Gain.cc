@@ -59,6 +59,8 @@ void Gain::ConfigureCalibration ()
 
 void Gain::Start (int currentRun)
 {
+  LOG (INFO) << GREEN << "[Gain::Start] Starting" << RESET;
+
   if (saveRawData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
@@ -98,6 +100,8 @@ void Gain::sendData ()
 
 void Gain::Stop ()
 {
+  LOG (INFO) << GREEN << "[Gain::Stop] Stopping" << RESET;
+
   this->closeFileHandler();
 }
 

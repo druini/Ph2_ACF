@@ -59,6 +59,8 @@ void SCurve::ConfigureCalibration ()
 
 void SCurve::Start (int currentRun)
 {
+  LOG (INFO) << GREEN << "[SCurve::Start] Starting" << RESET;
+
   if (saveRawData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
@@ -98,6 +100,8 @@ void SCurve::sendData ()
 
 void SCurve::Stop ()
 {
+  LOG (INFO) << GREEN << "[SCurve::Stop] Stopping" << RESET;
+
   this->Destroy();
 }
 

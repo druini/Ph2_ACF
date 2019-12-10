@@ -43,6 +43,8 @@ void ThrMinimization::ConfigureCalibration ()
 
 void ThrMinimization::Start (int currentRun)
 {
+  LOG (INFO) << GREEN << "[ThrMinimization::Start] Starting" << RESET;
+
   if (saveRawData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
@@ -64,6 +66,8 @@ void ThrMinimization::sendData ()
 
 void ThrMinimization::Stop ()
 {
+  LOG (INFO) << GREEN << "[ThrMinimization::Stop] Stopping" << RESET;
+
   this->closeFileHandler();
 }
 

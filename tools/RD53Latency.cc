@@ -48,6 +48,8 @@ void Latency::ConfigureCalibration ()
 
 void Latency::Start (int currentRun)
 {
+  LOG (INFO) << GREEN << "[Latency::Start] Starting" << RESET;
+
   if (saveRawData == true)
     {
       std::string dir(RESULTDIR);
@@ -76,6 +78,8 @@ void Latency::sendData ()
 
 void Latency::Stop ()
 {
+  LOG (INFO) << GREEN << "[Latency::Stop] Stopping" << RESET;
+
   this->closeFileHandler();
 }
 

@@ -46,6 +46,8 @@ void GainOptimization::ConfigureCalibration ()
 
 void GainOptimization::Start (int currentRun)
 {
+  LOG (INFO) << GREEN << "[GainOptimization::Start] Starting" << RESET;
+
   if (saveRawData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
@@ -67,6 +69,8 @@ void GainOptimization::sendData ()
 
 void GainOptimization::Stop ()
 {
+  LOG (INFO) << GREEN << "[GainOptimization::Stop] Stopping" << RESET;
+
   this->Destroy();
 }
 

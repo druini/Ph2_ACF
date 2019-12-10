@@ -1101,28 +1101,42 @@ namespace Ph2_HwInterface
     uint32_t word;
     std::vector<uint32_t> data;
 
+
+    // #############
+    // # Frequency #
+    // #############
+    const int N1_HS  =   0;
+    const int NC1_LS =  19;
+    const int N2_HS  =   1;
+    const int N2_LS  = 511;
+    const int N32    =  31;
+
+
     // ###########################################
     // # Program Si5324 for 160MHz precise clock #
     // ###########################################
     std::vector< std::pair<uint8_t,uint8_t> > si5324Program;
-    si5324Program.push_back({0x00,0x54});
-    si5324Program.push_back({0x0B,0x41});
-    si5324Program.push_back({0x06,0x0F});
-    si5324Program.push_back({0x15,0xFE});
-    si5324Program.push_back({0x03,0x55});
+    si5324Program.push_back({0x00,0x54}); // Free running mode = 1, CKOUT_ALWAYS_ON = 0
+    si5324Program.push_back({0x0B,0x41}); // Disable CLKIN1
+    si5324Program.push_back({0x06,0x0F}); // Disable CKOUT2 (SFOUT2_REG=001), set CKOUT1 to LVDS (SFOUT1_REG=111)
+    si5324Program.push_back({0x15,0xFE}); // CKSEL_PIN = 0
+    si5324Program.push_back({0x03,0x55}); // CKIN2 selected, SQ_ICAL = 1
+
     si5324Program.push_back({0x02,0x22});
-    si5324Program.push_back({0x19,0x80});
-    si5324Program.push_back({0x1F,0x00});
-    si5324Program.push_back({0x20,0x00});
-    si5324Program.push_back({0x21,0x03});
-    si5324Program.push_back({0x28,0xC1});
-    si5324Program.push_back({0x29,0x8F});
-    si5324Program.push_back({0x2A,0xFF});
-    si5324Program.push_back({0x2E,0x00});
-    si5324Program.push_back({0x2F,0x59});
-    si5324Program.push_back({0x30,0x48});
-    si5324Program.push_back({0x89,0x01});
-    si5324Program.push_back({0x88,0x40});
+
+    si5324Program.push_back({0x19, N1_HS << 5});
+    si5324Program.push_back({0x1F, NC1_LS >> 16});
+    si5324Program.push_back({0x20, NC1_LS >> 8});
+    si5324Program.push_back({0x21, NC1_LS});
+    si5324Program.push_back({0x28,(N2_HS << 5) | (N2_LS >> 16)});
+    si5324Program.push_back({0x29, N2_LS >> 8});
+    si5324Program.push_back({0x2A, N2_LS});
+    si5324Program.push_back({0x2E, N32 >> 16});
+    si5324Program.push_back({0x2F, N32 >> 8});
+    si5324Program.push_back({0x30, N32});
+
+    si5324Program.push_back({0x89,0x01}); // FASTLOCK = 1
+    si5324Program.push_back({0x88,0x40}); // ICAL = 1
     // ###########################################
 
     word = (i2cmux_addr_wr << 8) | start_wr;

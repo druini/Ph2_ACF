@@ -57,6 +57,8 @@ void Physics::ConfigureCalibration ()
 
 void Physics::Start (int currentRun)
 {
+  LOG (INFO) << GREEN << "[Physics::Start] Starting" << RESET;
+
   if (saveRawData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
@@ -88,6 +90,8 @@ void Physics::sendData (BoardContainer* const& cBoard)
 
 void Physics::Stop ()
 {
+  LOG (INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
+
   SystemController::Stop();
   keepRunning = false;
   thrRun.join();

@@ -66,6 +66,8 @@ void InjectionDelay::ConfigureCalibration ()
 
 void InjectionDelay::Start (int currentRun)
 {
+  LOG (INFO) << GREEN << "[InjectionDelay::Start] Starting" << RESET;
+
   if (saveRawData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
@@ -94,6 +96,8 @@ void InjectionDelay::sendData ()
 
 void InjectionDelay::Stop ()
 {
+  LOG (INFO) << GREEN << "[InjectionDelay::Stop] Stopping" << RESET;
+
   this->closeFileHandler();
 }
 

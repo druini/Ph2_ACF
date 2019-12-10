@@ -67,6 +67,8 @@ void ClockDelay::ConfigureCalibration ()
 
 void ClockDelay::Start (int currentRun)
 {
+  LOG (INFO) << GREEN << "[ClockDelay::Start] Starting" << RESET;
+
   if (saveRawData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
@@ -95,6 +97,8 @@ void ClockDelay::sendData ()
 
 void ClockDelay::Stop ()
 {
+  LOG (INFO) << GREEN << "[ClockDelay::Stop] Stopping" << RESET;
+
   this->closeFileHandler();
 }
 
