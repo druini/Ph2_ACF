@@ -1004,7 +1004,7 @@ namespace Ph2_HwInterface
   {
     const uint16_t I2CcmdAckGOOD = 0x01;
     uint16_t status = 0x02; // 0x02 = I2CcmdAckBAD
-    uint32_t cLoop  = 0;
+    uint16_t cLoop  = 0;
 
     while (++cLoop < trials)
       {
@@ -1035,7 +1035,7 @@ namespace Ph2_HwInterface
     usleep(DEEPSLEEP);
 
     if (I2cCmdAckWait (20) == false)
-      throw Exception ("[FC7FWInterface::WriteI2C]\tI2C transaction error");
+      throw Exception ("[RD53FWInterface::WriteI2C] I2C transaction error");
 
     WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
     usleep(DEEPSLEEP);
@@ -1063,7 +1063,7 @@ namespace Ph2_HwInterface
     if (sizeI2Cfifo > data.size())
       {
         size2read = data.size();
-        LOG (INFO) << BOLDRED << __PRETTY_FUNCTION__ << "\tWarning, I2C FIFO contains more data than the vector size" << RESET;
+        LOG (WARNING) << BOLDRED << "[RD53FWInterface::ReadI2C] I2C FIFO contains more data than the vector size" << RESET;
       }
     else size2read = sizeI2Cfifo;
 
@@ -1071,7 +1071,7 @@ namespace Ph2_HwInterface
     usleep(DEEPSLEEP);
 
     if (RD53FWInterface::I2cCmdAckWait(20) == false)
-      throw Exception ("[FC7FWInterface::ReadI2C]\tI2C transaction error");
+      throw Exception ("[RD53FWInterface::ReadI2C] I2C transaction error");
 
     WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
   }
@@ -1082,11 +1082,11 @@ namespace Ph2_HwInterface
     // # The Si5324 chip is meant to reduce the FC7 clock jitter #
     // ###########################################################
 
-    uint8_t start_wr     = 0x90;
-    uint8_t stop_wr      = 0x50;
-    // uint8_t stop_rd_nack = 0x68;
-    // uint8_t rd_incr      = 0x20;
-    uint8_t wr_incr      = 0x10;
+    uint8_t start_wr       = 0x90;
+    uint8_t stop_wr        = 0x50;
+    // uint8_t stop_rd_nack   = 0x68;
+    // uint8_t rd_incr        = 0x20;
+    uint8_t wr_incr        = 0x10;
 
     uint8_t enable_i2cmux  = 1;
     uint8_t disable_i2cmux = 0;
@@ -1144,7 +1144,7 @@ namespace Ph2_HwInterface
     word = (enable_i2cmux << si5324_pos) << 8 | stop_wr;
     data.push_back(word);
 
-    for (unsigned int i = 0; i < si5324Program.size(); i++)
+    for (auto i = 0u; i < si5324Program.size(); i++)
       {
         word = (si5324_addr_wr << 8) | start_wr;
         data.push_back(word);
