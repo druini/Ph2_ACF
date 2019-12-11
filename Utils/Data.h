@@ -77,7 +77,6 @@ namespace Ph2_HwInterface
 
     //private methods to be used in set according to the BoardType enum
     void setIC (uint32_t& pWord, uint32_t pWordIndex, uint32_t pSwapIndex);
-    void setCbc3Fc7 (uint32_t& pWord);
     void setStrasbourgSupervisor (uint32_t& pWord);
 
   public:

@@ -90,7 +90,7 @@ namespace Ph2_HwInterface
 
     void      setFileHandler (FileHandler* pHandler) override;
     uint32_t  getBoardInfo   ()                      override;
-    BoardType getBoardType   () const { return BoardType::FC7; };
+    BoardType getBoardType   () const { return BoardType::RD53; };
 
     void ResetSequence       ();
     void ConfigureBoard      (const BeBoard* pBoard) override;

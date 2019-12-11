@@ -1092,9 +1092,9 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ConfigureClockSi5324 ()
   {
-    // ###########################################################
-    // # The Si5324 chip is meant to reduce the FC7 clock jitter #
-    // ###########################################################
+    // ###################################################
+    // # The Si5324 chip generates the clock for the GTX #
+    // ###################################################
 
     uint8_t start_wr       = 0x90;
     uint8_t stop_wr        = 0x50;
@@ -1126,9 +1126,9 @@ namespace Ph2_HwInterface
     const int N32    =  31;
 
 
-    // ###########################################
-    // # Program Si5324 for 160MHz precise clock #
-    // ###########################################
+    // ############################################
+    // # Program Si5324 for 160 MHz precise clock #
+    // ############################################
     std::vector< std::pair<uint8_t,uint8_t> > si5324Program;
     si5324Program.push_back({0x00,0x54}); // Free running mode = 1, CKOUT_ALWAYS_ON = 0
     si5324Program.push_back({0x0B,0x41}); // Disable CLKIN1

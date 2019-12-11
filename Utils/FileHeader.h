@@ -57,7 +57,7 @@ class FileHeader
   BoardType getBoardType()
   {
     if      (fType == "D19C") return BoardType::D19C;
-    else if (fType == "FC7")  return BoardType::FC7;
+    else if (fType == "RD53") return BoardType::RD53;
     else return BoardType::D19C;
   }
 

@@ -106,7 +106,7 @@ namespace Ph2_System
     this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile );
 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
-    if (fBoardVector[0]->getBoardType() != BoardType::FC7)
+    if (fBoardVector[0]->getBoardType() != BoardType::RD53)
       fReadoutChipInterface = new CbcInterface (fBeBoardFWMap);
     else
       fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
@@ -131,7 +131,7 @@ namespace Ph2_System
         // # Configuring Outer Tracker hardware #
         // ######################################
 
-        if (cBoard->getBoardType() != BoardType::FC7)
+        if (cBoard->getBoardType() != BoardType::RD53)
           {
             fBeBoardInterface->ConfigureBoard ( cBoard );
 
@@ -204,7 +204,7 @@ namespace Ph2_System
         for (const auto& cFe : cBoard->fModuleVector) cNChip += cFe->getNChip();
 
         if      (cBoardType == BoardType::D19C) cBoardTypeString = "D19C";
-        else if (cBoardType == BoardType::FC7)  cBoardTypeString = "FC7";
+        else if (cBoardType == BoardType::RD53) cBoardTypeString = "RD53";
 
         uint32_t cFWWord  = fBeBoardInterface->getBoardInfo (cBoard);
         uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
