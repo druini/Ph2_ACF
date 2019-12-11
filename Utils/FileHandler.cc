@@ -42,7 +42,7 @@ FileHandler::~FileHandler()
   this->closeFile();
 }
 
-void FileHandler::set ( std::vector<uint32_t> pVector )
+void FileHandler::set ( std::vector<uint32_t>& pVector )
 {
   std::lock_guard<std::mutex> cLock (fMutex);
   fQueue.push (pVector);
@@ -218,7 +218,7 @@ void FileHandler::writeFile()
           //this method blocks this thread until it receives data
           bool cDataPresent = this->dequeue (cData);
 
-          if (cDataPresent)
+          if (cDataPresent && (cData.size() != 0))
             {
               std::lock_guard<std::mutex> cLock (fMemberMutex);
               //write the vector - this is guaranteed by the standard

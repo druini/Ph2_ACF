@@ -610,7 +610,7 @@ namespace Ph2_HwInterface
     for (const auto& val : values) pData.push_back(val);
 
 
-    if (this->fSaveToFile == true) this->fFileHandler->set(pData);
+    if ((this->fSaveToFile == true) && (pData.size() != 0)) this->fFileHandler->set(pData);
     return pData.size();
   }
 

@@ -75,7 +75,7 @@ class FileHandler
     /*!
      * \brief set fData to pVector
      */
-    void set ( std::vector<uint32_t> pVector );
+    void set ( std::vector<uint32_t>& pVector );
 
 
     /*!

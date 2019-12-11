@@ -211,7 +211,8 @@ int main ( int argc, char* argv[] )
             if (cDAQFile)
             {
                 SLinkEvent cSLev = ev->GetSLinkEvent (pBoard);
-                cDAQFileHandler->set (cSLev.getData<uint32_t>() );
+                auto data = cSLev.getData<uint32_t>();
+                cDAQFileHandler->set (data);
                 cSLev.print (std::cout);
             }
         }
