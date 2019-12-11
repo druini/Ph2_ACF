@@ -12,6 +12,6 @@
 std::string fromInt2Str (int val)
 {
   std::stringstream myString;
-  myString << std::setfill('0') << std::setw(4) << val;
+  myString << std::setfill('0') << std::setw(6) << val;
   return myString.str();
 }
