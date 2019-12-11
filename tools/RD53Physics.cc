@@ -67,8 +67,7 @@ void Physics::Start (int currentRun)
   SystemController::Start(currentRun);
 
   keepRunning = true;
-  std::thread thrRun_(&Physics::run, this);
-  thrRun.swap(thrRun_);
+  thrRun = std::thread(&Physics::run, this);
 }
 
 void Physics::sendData (BoardContainer* const& cBoard)
