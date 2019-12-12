@@ -136,12 +136,21 @@ class FileHeader
         if (fEventType == EventType::VR) cEventTypeString = "EventType::VR" ;
         else                             cEventTypeString = "EventType::ZS";
 
-        LOG (INFO) << BOLDGREEN <<"Sucess, this is a valid header!" << RESET;
-        LOG (INFO) << "Board Type: " << fType << " FWMajor " << fVersionMajor << " FWMinor " << fVersionMinor << " Event Type: " << cEventTypeString << " BeId " << fBeId << " fNchip " << fNchip << " EventSize32  " << fEventSize32 << " valid: " << fValid;
+        LOG (INFO) << GREEN <<"Sucess, this is a valid header" << RESET;
+        LOG (INFO) << GREEN
+                   << "Board Type: " << fType
+                   << " FWMajor " << fVersionMajor
+                   << " FWMinor " << fVersionMinor
+                   << " Event Type: " << cEventTypeString
+                   << " BeId " << fBeId
+                   << " fNchip " << fNchip
+                   << " EventSize32  " << fEventSize32
+                   << " valid: " << fValid
+                   << RESET;
       }
     else
       {
-        LOG (INFO) << BOLDRED << "Error, this is not a valid header!" << RESET;
+        LOG (ERROR) << BOLDRED << "This is not a valid header" << RESET;
         fValid = false;
       }
   }

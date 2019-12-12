@@ -130,7 +130,7 @@ namespace Ph2_HwInterface
       uint16_t tlu_trigger_id;
       uint16_t data_format_ver;
       uint16_t tdc;
-      uint16_t l1a_counter;
+      uint32_t l1a_counter;
       uint32_t bx_counter;
 
       std::vector<ChipFrame>   chip_frames;

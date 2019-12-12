@@ -42,7 +42,7 @@ FileHandler::~FileHandler()
 void FileHandler::set (std::vector<uint32_t>& pVector)
 {
   std::lock_guard<std::mutex> cLock (fMutex);
-  fQueue.push (pVector);
+  fQueue.push(pVector);
   fSet.notify_one();
 }
 
@@ -83,7 +83,7 @@ bool FileHandler::openFile()
             }
           else if (fHeader.fValid == true)
             {
-              LOG (INFO) << "[FileHandler::openFile] Found a valid header in file " << fBinaryFileName << RESET;
+              LOG (INFO) << "[FileHandler::openFile] Found a valid header in file " << BOLDYELLOW << fBinaryFileName << RESET;
               fHeaderPresent = true;
             }
         }
@@ -110,10 +110,11 @@ std::vector<uint32_t> FileHandler::readFile ()
 {
   std::vector<uint32_t> cVector;
 
-  while ( !fBinaryFile.eof() )
+  while (true)
     {
       uint32_t word;
-      fBinaryFile.read((char*) &word, sizeof (uint32_t));
+      fBinaryFile.read((char*) &word, sizeof(uint32_t));
+      if (fBinaryFile.eof() == true) break;
       cVector.push_back(word);
     }
 
@@ -121,41 +122,39 @@ std::vector<uint32_t> FileHandler::readFile ()
   return cVector;
 }
 
-std::vector<uint32_t> FileHandler::readFileChunks ( uint32_t pNWords32 )
+std::vector<uint32_t> FileHandler::readFileChunks (uint32_t pNWords32)
 {
   std::vector<uint32_t> cVector;
 
   for (size_t i = 0; i < pNWords32; i++)
     {
-      if (fBinaryFile.eof() == false)
-        {
-          uint32_t cBuf;
-          fBinaryFile.read((char*) &cBuf, sizeof(uint32_t));
-          cVector.push_back(cBuf);
-        }
-      else
+      uint32_t cBuf;
+      fBinaryFile.read((char*) &cBuf, sizeof(uint32_t));
+
+      if (fBinaryFile.eof() == true)
         {
           LOG (WARNING) << "[FileHandler::readFileChunks] Attention, input file " << fBinaryFileName << " ended before reading " << pNWords32 << " 32-bit words" << RESET;
-
           closeFile();
           break;
         }
+
+      cVector.push_back(cBuf);
     }
 
   return cVector;
 }
 
-std::vector<uint32_t> FileHandler::readFileTail ( long pNbytes )
+std::vector<uint32_t> FileHandler::readFileTail (long pNbytes)
 {
   if (pNbytes > -1)
     {
-      fBinaryFile.seekp (0, std::ios::end);
-      fBinaryFile.seekp (-pNbytes, std::ios::cur);
+      fBinaryFile.seekp(0, std::ios::end);
+      fBinaryFile.seekp(-pNbytes, std::ios::cur);
     }
 
   std::vector<uint32_t> cVector;
 
-  while (!fBinaryFile.eof())
+  while (fBinaryFile.eof() == false)
     {
       char buffer[4];
       fBinaryFile.read(buffer, 4);
@@ -176,7 +175,7 @@ void FileHandler::writeFile()
       else
         {
           std::vector<uint32_t> cData;
-          bool cDataPresent = this->dequeue (cData);
+          bool cDataPresent = this->dequeue(cData);
 
           if (cDataPresent && (cData.size() != 0))
             {
@@ -191,9 +190,9 @@ void FileHandler::writeFile()
 bool FileHandler::dequeue (std::vector<uint32_t>& pData)
 {
   std::unique_lock<std::mutex> cLock (fMutex);
-  bool cQueueEmpty = fSet.wait_for (cLock, std::chrono::microseconds (100), [&] { return  FileHandler::fQueue.empty(); });
+  bool cQueueEmpty = fSet.wait_for(cLock, std::chrono::microseconds (100), [&] { return  FileHandler::fQueue.empty(); });
 
-  if (!cQueueEmpty)
+  if (cQueueEmpty == false)
     {
       pData = fQueue.front();
       fQueue.pop();
