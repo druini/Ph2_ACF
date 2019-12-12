@@ -34,6 +34,7 @@ namespace Ph2_HwInterface
     uint32_t fNevents;              /*! Number of Events<*/
     uint32_t fCurrentEvent;         /*! Current EventNumber in use <*/
     uint32_t fNCbc;                 /*! Number of CBCs in the setup <*/
+    uint32_t fNSSA;                 /*! Number of CBCs in the setup <*/
     uint32_t fEventSize;            /*! Size of 1 Event <*/
 
     const std::set<uint32_t> fChannelFirstRows {5, 14, 23, 32, 41, 50, 59, 68};

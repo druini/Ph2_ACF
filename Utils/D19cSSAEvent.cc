@@ -10,12 +10,11 @@ using namespace Ph2_HwDescription;
 namespace Ph2_HwInterface {
 	D19cSSAEvent::D19cSSAEvent ( const BeBoard* pBoard,  uint32_t pNSSA, uint32_t pNFe, const std::vector<uint32_t>& list ) : fEventDataVector(pNSSA*pNFe)
     	{
-    		LOG (INFO) << BOLDBLUE << "I'M AN EVENT!!" << RESET;
+		fNSSA = pNSSA;
         	SetEvent ( pBoard, pNSSA, list );
     	}
     	void D19cSSAEvent::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
     	{
-    		LOG (INFO) << BOLDBLUE << "I'M AN FDC EVENT!!" << RESET;
         	for(auto module: *boardContainer)
     		{
     			for(auto chip: *module)
@@ -33,10 +32,19 @@ namespace Ph2_HwInterface {
     	}
 	void D19cSSAEvent::SetEvent ( const BeBoard* pBoard, uint32_t pNSSA, const std::vector<uint32_t>& list )
     	{
-    	LOG (INFO) << BOLDBLUE << "I'M A SET EVENT!!" << RESET;
-		uint32_t cSSAId = list[4] & 0xF000; // Chip ID
-		uint32_t cFeId = list[4] & 0xFF0000; // Module ID
-		fEventDataVector[encodeVectorIndex(cFeId, cSSAId, pNSSA)] = list;
+		for (auto L : list) LOG (INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
+		// start reading here for first SSA
+		for (uint32_t chip = 0; chip<pNSSA; chip++)
+		{
+			uint32_t cFeId = (list.at(4+(chip*12)) & 0xFF0000) >> 16;
+			uint32_t cSSAId = (list.at(4+(chip*12)) & 0xF000) >> 12;
+			std::vector<uint32_t> lvec;
+			lvec.push_back(list.at(8+(chip*12)));
+			lvec.push_back(list.at(9+(chip*12)));
+			lvec.push_back(list.at(10+(chip*12)));
+			lvec.push_back(list.at(11+(chip*12)));
+			fEventDataVector[encodeVectorIndex(cFeId, cSSAId, pNSSA)] = lvec;
+		}
 	}
 	std::string D19cSSAEvent::HexString() const {return "";}
 	std::string D19cSSAEvent::DataHexString ( uint8_t pFeId, uint8_t pSSAId ) const {return "";}

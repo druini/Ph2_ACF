@@ -1356,6 +1356,7 @@ namespace Ph2_HwInterface {
 
             // check the amount of words
             uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+		LOG (INFO) << GREEN << "words = " << cNWords << RESET;
             if (pBoard->getEventType() == EventType::VR)
             {
                 if ( (cNWords % computeEventSize (pBoard) ) != 0) {
@@ -1375,11 +1376,6 @@ namespace Ph2_HwInterface {
                 fDDR3Offset = 0;
             }
             else pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
-            for ( auto& L : pData )
-            {
-                LOG (INFO) << RED << std::bitset<32>(L) << RESET;
-            }
-
         }
 
         // again check if failed to re-run in case
@@ -1394,8 +1390,9 @@ namespace Ph2_HwInterface {
         }        
 
         if (fSaveToFile)
+	{
             fFileHandler->set (pData);
-        LOG (INFO) << "check end of evt get" << RESET;
+	}
     }
 
 /** compute the block size according to the number of CBC's on this board
@@ -1414,8 +1411,11 @@ namespace Ph2_HwInterface {
             cNChips += cFe->getNChip();
         }
         if (fFirmwareFrontEndType == FrontEndType::CBC3) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNChips * D19C_EVENT_SIZE_32_CBC3;
-        if (fFirmwareFrontEndType == FrontEndType::SSA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_SSA + D19C_EVENT_SIZE_32_SSA * cNChips;
-        //LOG (INFO) << RED << cNEventSize32 << RESET;
+        if (fFirmwareFrontEndType == FrontEndType::SSA)
+	{
+		cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_SSA + (cNChips*D19C_EVENT_SIZE_32_SSA);
+	}
+
         if (fIsDDR3Readout) {
             //LOG (INFO) << BOLDGREEN << "DDR3 Event Size Computing" << RESET;
             uint32_t cNEventSize32_divided_by_8 = ((cNEventSize32 >> 3) << 3);
@@ -1423,7 +1423,6 @@ namespace Ph2_HwInterface {
                 cNEventSize32 = cNEventSize32_divided_by_8 + 8;
             }
         }
-        //LOG (INFO) << RED << cNEventSize32 << RESET;
         return cNEventSize32;
     }
 

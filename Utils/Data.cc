@@ -20,6 +20,7 @@ namespace Ph2_HwInterface
     : fNevents      (pD.fNevents)
     , fCurrentEvent (pD.fCurrentEvent)
     , fNCbc         (pD.fNCbc)
+    , fNSSA         (pD.fNSSA)
     , fEventSize    (pD.fEventSize)
   {}
 
@@ -55,7 +56,10 @@ namespace Ph2_HwInterface
         if (fEventType == EventType::ZS)
             fNCbc = 0;
         else if (fEventType == EventType::SSA)
-            fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+	{
+            fNSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+	    LOG (INFO) << BOLDBLUE << " fNSSA = "  << fNSSA << RESET;
+	}
         else
           fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
 
@@ -71,7 +75,7 @@ namespace Ph2_HwInterface
         uint32_t cZSWordIndex = 0;
 
         for (auto word : pData)
-          {
+          	{
             //if the SwapIndex is greater than 0 and a multiple of the event size in 32 bit words, reset SwapIndex to 0
             if (cSwapIndex > 0 && cSwapIndex % fEventSize == 0)
               cSwapIndex = 0;
@@ -96,15 +100,7 @@ namespace Ph2_HwInterface
                     //LOG(INFO) << "Packing event # " << fEventList.size() << ", Event size is " << fZSEventSize << " words";
                     if (pType == BoardType::D19C)
                     {
-                        if (fEventType == EventType::SSA)
-                        {
-                            LOG (INFO) << "<----->";
-                            fEventList.push_back(new D19cSSAEvent(pBoard, fNCbc, fNFe, lvec));
-                        }
-                        else
-                        {
                             fEventList.push_back(new D19cCbc3EventZS(pBoard, fZSEventSize, lvec));
-                        }
                     }
                     lvec.clear();
 
@@ -131,8 +127,13 @@ namespace Ph2_HwInterface
                 if (cWordIndex > 0 && (cWordIndex + 1) % fEventSize == 0)
                   {
                     if (pType == BoardType::D19C)
-                      fEventList.push_back(new D19cCbc3Event(pBoard, fNCbc, fNFe, lvec));
-
+		    {
+		      if (fEventType == EventType::SSA)
+                      {
+            	      	fEventList.push_back(new D19cSSAEvent(pBoard, fNSSA, fNFe, lvec));
+            	      }
+		      else {fEventList.push_back(new D19cCbc3Event(pBoard, fNCbc, fNFe, lvec));}
+                    }
                     lvec.clear();
 
                     if (fEventList.size() >= fNevents)

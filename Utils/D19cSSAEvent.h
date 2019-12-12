@@ -41,7 +41,7 @@ namespace Ph2_HwInterface { // Begin namespace
 		{
 		    try 
 		    {
-		        return  ( fEventDataVector.at(encodeVectorIndex(pFeId, pSSAId,fNCbc)).at( calculateChannelWordPosition(i) ) >> ( calculateChannelBitPosition(i)) ) & 0x1;
+		        return  ( fEventDataVector.at(encodeVectorIndex(pFeId,pSSAId,fNSSA)).at( calculateChannelWordPosition(i) ) >> ( calculateChannelBitPosition(i)) ) & 0x1;
 		    }
 		    catch (const std::out_of_range& outOfRange) {
 		        LOG (ERROR) << "Word " << +i << " for FE " << +pFeId << " SSA " << +pSSAId << " is not found:" ;
@@ -57,7 +57,7 @@ namespace Ph2_HwInterface { // Begin namespace
 		}
 		static constexpr uint32_t calculateChannelWordPosition (uint32_t channel)
 		{
-			return 8 + (channel-channel%32)/32;
+			return (channel-channel%32)/32;
 		}
         	static constexpr uint32_t calculateChannelBitPosition  (uint32_t channel)
 		{

@@ -125,6 +125,7 @@ namespace Ph2_HwInterface {
         uint8_t fBeFWType;
         uint8_t fCBCDataType;
         uint8_t fNCbc;
+        uint8_t fNSSA;
         uint16_t fEventDataSize;
         uint32_t fBeStatus;
 

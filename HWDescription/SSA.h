@@ -28,7 +28,6 @@
 
 namespace Ph2_HwDescription { //open namespace 
 
-    using ChipRegMap = std::map < std::string, ChipRegItem >;
     using SSARegPair = std::pair <std::string, ChipRegItem>;
     using CommentMap = std::map <int, std::string>;
 

@@ -38,6 +38,7 @@ namespace Ph2_HwInterface {
         , fBeFWType (pEvent.fBeFWType)
         , fCBCDataType (pEvent.fCBCDataType)
         , fNCbc (pEvent.fNCbc)
+        , fNSSA (pEvent.fNSSA)
         , fEventDataSize (pEvent.fEventDataSize)
         , fBeStatus (pEvent.fBeStatus)
     {
