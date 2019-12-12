@@ -76,7 +76,7 @@ namespace Ph2_System
   {
     if (fFileHandler != nullptr)
       {
-        if (fFileHandler->file_open()) fFileHandler->closeFile();
+        if (fFileHandler->isFileOpen() == true) fFileHandler->closeFile();
         if (fFileHandler != nullptr) delete fFileHandler;
         fFileHandler = nullptr;
       }

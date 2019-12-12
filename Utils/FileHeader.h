@@ -1,10 +1,10 @@
 /*!
-  \file                   FileHeader.h
-  \brief                  class for binary Raw data file header with infor
-  \author                 Georg AUZINGER
-  \version                1.0
-  \date                   09/06/16
-  Support :               mail to : georg.auzinger@cern.ch
+  \file                  FileHeader.h
+  \brief                 Binary file header
+  \author                Mauro DINARDO
+  \version               1.0
+  \date                  28/06/18
+  Support:               email to mauro.dinard@cern.ch
 */
 
 #ifndef FILEHEADER_H
@@ -16,6 +16,9 @@
 
 #include <iostream>
 #include <vector>
+
+
+#define SEPARATOR 0xAAAAAAAA
 
 
 class FileHeader
@@ -33,15 +36,15 @@ class FileHeader
 
  public:
  FileHeader()
-   : fType         ( "" )
-   , fVersionMajor (0)
-   , fVersionMinor (0)
-   , fBeId         (0)
-   , fNchip        (0)
-   , fEventSize32  (0)
-   , fEventType    (EventType::VR)
-   , fValid        (false)
-   {}
+   : fType          ("")
+    , fVersionMajor (0)
+    , fVersionMinor (0)
+    , fBeId         (0)
+    , fNchip        (0)
+    , fEventSize32  (0)
+    , fEventType    (EventType::VR)
+    , fValid        (false)
+    {}
 
   FileHeader (const std::string pType, const uint32_t& pFWMajor, const uint32_t& pFWMinor, const uint32_t& pBeId, const uint32_t& pNchip, const uint32_t& pEventSize32, EventType pEventType = EventType::VR)
     : fType         (pType)
@@ -66,7 +69,7 @@ class FileHeader
       std::vector<uint32_t> cVec;
 
       // Surround every block with 10101...
-      cVec.push_back (0xAAAAAAAA);
+      cVec.push_back(SEPARATOR);
       char cType[8] = {0};
 
       if (fType.size() < 9) strcpy (cType, fType.c_str());
@@ -75,19 +78,18 @@ class FileHeader
       cVec.push_back(cType[0] << 24 | cType[1] << 16 | cType[2] << 8 | cType[3]);
       cVec.push_back(cType[4] << 24 | cType[5] << 16 | cType[6] << 8 | cType[7]);
 
-      cVec.push_back(0xAAAAAAAA);
+      cVec.push_back(SEPARATOR);
       cVec.push_back(fVersionMajor);
       cVec.push_back(fVersionMinor);
 
-      cVec.push_back(0xAAAAAAAA);
-      // 1 word w. BeBoardInfo: 2MSBs: EventType (VR or ZS), 10 LSBs: fBeId, ... to be filled as needed
+      cVec.push_back(SEPARATOR);
       cVec.push_back((uint32_t (fEventType) & 0x3) << 30 | (fBeId & 0x000003FF));
       cVec.push_back(fNchip);
 
-      cVec.push_back(0xAAAAAAAA);
+      cVec.push_back(SEPARATOR);
       cVec.push_back(fEventSize32);
 
-      cVec.push_back (0xAAAAAAAA);
+      cVec.push_back(SEPARATOR);
 
       std::string cEventTypeString;
 
@@ -99,32 +101,30 @@ class FileHeader
 
   void decodeHeader (const std::vector<uint32_t>& pVec)
   {
-    uint32_t cMask = 0xAAAAAAAA;
-
-    if (pVec.at(0) == cMask && pVec.at(3) == cMask && pVec.at(6) == cMask && pVec.at(9) == cMask && pVec.at(11) == cMask)
+    if (pVec.at(0) == SEPARATOR && pVec.at(3) == SEPARATOR && pVec.at(6) == SEPARATOR && pVec.at(9) == SEPARATOR && pVec.at(11) == SEPARATOR)
       {
         char cType[8] = {0};
-        cType[0] = (pVec.at (1) & 0xFF000000) >> 24;
-        cType[1] = (pVec.at (1) & 0x00FF0000) >> 16;
-        cType[2] = (pVec.at (1) & 0x0000FF00) >> 8;
-        cType[3] = (pVec.at (1) & 0x000000FF);
+        cType[0] = (pVec.at(1) & 0xFF000000) >> 24;
+        cType[1] = (pVec.at(1) & 0x00FF0000) >> 16;
+        cType[2] = (pVec.at(1) & 0x0000FF00) >> 8;
+        cType[3] = (pVec.at(1) & 0x000000FF);
 
-        cType[4] = (pVec.at (2) & 0xFF000000) >> 24;
-        cType[5] = (pVec.at (2) & 0x00FF0000) >> 16;
-        cType[6] = (pVec.at (2) & 0x0000FF00) >> 8;
-        cType[7] = (pVec.at (2) & 0x000000FF);
+        cType[4] = (pVec.at(2) & 0xFF000000) >> 24;
+        cType[5] = (pVec.at(2) & 0x00FF0000) >> 16;
+        cType[6] = (pVec.at(2) & 0x0000FF00) >> 8;
+        cType[7] = (pVec.at(2) & 0x000000FF);
 
         std::string cTypeString (cType);
         fType = cTypeString;
 
-        fVersionMajor = pVec.at (4);
-        fVersionMinor = pVec.at (5);
+        fVersionMajor = pVec.at(4);
+        fVersionMinor = pVec.at(5);
 
-        uint32_t cEventTypeId = (pVec.at (7) & 0xC0000000) >> 30;
-        fBeId = pVec.at (7) & 0x000003FF;
-        fNchip = pVec.at (8);
+        uint32_t cEventTypeId = (pVec.at(7) & 0xC0000000) >> 30;
+        fBeId  = pVec.at(7) & 0x000003FF;
+        fNchip = pVec.at(8);
 
-        fEventSize32 = pVec.at (10);
+        fEventSize32 = pVec.at(10);
         fValid = true;
 
         if      (cEventTypeId == 0) fEventType = EventType::VR;
