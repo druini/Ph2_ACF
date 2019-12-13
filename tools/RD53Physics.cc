@@ -64,6 +64,9 @@ void Physics::Start (int currentRun)
       this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
+
+  for (const auto cBoard : *fDetectorContainer)
+    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->ChipReSync();
   SystemController::Start(currentRun);
 
   keepRunning = true;
