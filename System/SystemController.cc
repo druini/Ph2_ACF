@@ -31,7 +31,7 @@ namespace Ph2_System
     , fData                (nullptr)
   {}
 
-  SystemController::~SystemController() {}
+  SystemController::~SystemController() { this->Destroy(); }
 
   void SystemController::Inherit (SystemController* pController)
   {

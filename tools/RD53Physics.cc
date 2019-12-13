@@ -22,6 +22,7 @@ void Physics::ConfigureCalibration ()
   doUpdateChip = this->findValueInSettings("UpdateChipCfg");
   saveRawData  = this->findValueInSettings("SaveRawData");
   doLocal      = false;
+  keepRunning  = true;
 
 
   // ################################
@@ -96,7 +97,7 @@ void Physics::Stop ()
 
   SystemController::Stop();
   keepRunning = false;
-  thrRun.join();
+  if (thrRun.joinable() == true) thrRun.join();
 
 
   // ################
