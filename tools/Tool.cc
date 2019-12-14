@@ -172,7 +172,11 @@ void Tool::Destroy()
 	LOG (INFO) << BOLDRED << "Destroying memory objects" << RESET;
 	SystemController::Destroy();
 	#ifdef __HTTP__
-		if (fHttpServer) delete fHttpServer;
+		if (fHttpServer)
+          {
+            delete fHttpServer;
+            fHttpServer = nullptr;
+          }
 	#endif
 
 	SoftDestroy();
@@ -186,7 +190,11 @@ void Tool::SoftDestroy()
 		{
 			if (fResultFile->IsOpen() ) fResultFile->Close();
 
-			if (fResultFile) delete fResultFile;
+			if (fResultFile)
+              {
+                delete fResultFile;
+                fResultFile = nullptr;
+              }
 		}
 
 		for(auto canvas : fCanvasMap)
@@ -482,7 +490,7 @@ void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool
 
 	if ( pDate ) nDirname +=  currentDateTime();
 
-	LOG (INFO) << BOLDGREEN << "Creating directory: " << BOLDYELLOW << nDirname << RESET;
+	LOG (INFO) << GREEN << "Creating directory: " << BOLDYELLOW << nDirname << RESET;
 	std::string cCommand = "mkdir -p " + nDirname;
 
 	try
@@ -523,7 +531,7 @@ void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool
 
 	void Tool::CloseResultFile()
 	{
-	LOG (INFO) << BOLDGREEN << "Closing result file" << RESET;
+	LOG (INFO) << GREEN << "Closing result file" << RESET;
 
 		if (fResultFile)
 			fResultFile->Close();
@@ -534,7 +542,10 @@ void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool
 		#ifdef __HTTP__
 
 			if (fHttpServer)
-				delete fHttpServer;
+              {
+                delete fHttpServer;
+                fHttpServer = nullptr;
+              }
 
 			char hostname[HOST_NAME_MAX];
 
@@ -558,7 +569,7 @@ void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool
 				LOG (ERROR) << "Exception when trying to start THttpServer: " << e.what();
 			}
 
-			LOG (INFO) << "Opening THttpServer on port " << pPort << ". Point your browser to: " << BOLDGREEN << hostname << ":" << pPort << RESET ;
+			LOG (INFO) << "Opening THttpServer on port " << pPort << ". Point your browser to: " << GREEN << hostname << ":" << pPort << RESET ;
 		#else
 			LOG (INFO) << "Error, ROOT version < 5.34 detected or not compiled with Http Server support!"  << " No THttpServer available! - The webgui will fail to show plots!" ;
 			LOG (INFO) << "ROOT must be built with '--enable-http' flag to use this feature." ;
@@ -783,17 +794,17 @@ std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pChip)
 	std::map<uint8_t, double> cLUT;
 
 	double cBend=-7.0;
-	LOG (DEBUG) << BOLDGREEN << "Decoding bend LUT for CBC" << +pChip->getChipId() << " ." << RESET;
+	LOG (DEBUG) << GREEN << "Decoding bend LUT for CBC" << +pChip->getChipId() << " ." << RESET;
 	for( int i = 0 ; i <= 14 ; i++ )
 	{
 		std::string cRegName = "Bend" + i;
 		uint8_t cRegValue = fReadoutChipInterface->ReadChipReg (pChip, cRegName.data() );
-		//LOG (INFO) << BOLDGREEN << "Reading register " << cRegName.Data() << " - value of 0x" << std::hex <<  +cRegValue << " found [LUT entry for bend of " << cBend << " strips]" <<  RESET;
+		//LOG (INFO) << GREEN << "Reading register " << cRegName.Data() << " - value of 0x" << std::hex <<  +cRegValue << " found [LUT entry for bend of " << cBend << " strips]" <<  RESET;
 
 		uint8_t cLUTvalue_0 = (cRegValue >> 0) & 0x0F;
 		uint8_t cLUTvalue_1 = (cRegValue >> 4) & 0x0F;
 
-		LOG (DEBUG) << BOLDGREEN << "LUT entry for bend of " << cBend << " strips found to be " << std::bitset<4>(cLUTvalue_0) <<   RESET;
+		LOG (DEBUG) << GREEN << "LUT entry for bend of " << cBend << " strips found to be " << std::bitset<4>(cLUTvalue_0) <<   RESET;
 		cLUT[cLUTvalue_0] =  cBend ;
 		// just check if the bend code is already in the map
 		// and if it is ... do nothing
@@ -803,7 +814,7 @@ std::map<uint8_t, double> Tool::decodeBendLUT(Chip* pChip)
 		auto cItem = cLUT.find(cLUTvalue_1);
 		if(cItem == cLUT.end())
 		{
-			LOG (DEBUG) << BOLDGREEN << "LUT entry for bend of " << cBend << " strips found to be " << std::bitset<4>(cLUTvalue_1) <<   RESET;
+			LOG (DEBUG) << GREEN << "LUT entry for bend of " << cBend << " strips found to be " << std::bitset<4>(cLUTvalue_1) <<   RESET;
 			cLUT[cLUTvalue_1] = cBend ;
 		}
 		cBend += 0.5;

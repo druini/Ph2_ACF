@@ -52,7 +52,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
   else if (buffer.substr(0,4) == "Halt")
     {
       theSystemController_->Stop();
-      delete theSystemController_;
+      theSystemController_->Destroy();
       theSystemController_ = nullptr;
       LOG (INFO) << "Run " << currentRun_ << " halted" << RESET;
       return "HaltDone";

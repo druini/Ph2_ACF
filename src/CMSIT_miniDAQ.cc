@@ -132,14 +132,14 @@ int main (int argc, char** argv)
       runControllerPid = fork();
       if (runControllerPid == -1)
         {
-          LOG (ERROR) << BOLDRED << "Can't fork RunController, error occured" << RESET;
+          LOG (ERROR) << BOLDRED << "I can't fork RunController, error occured" << RESET;
           exit(EXIT_FAILURE);
         }
       else if (runControllerPid == 0)
         {
           char* argv[] = {(char*)"RunController", NULL};
           execv((std::string(getenv("BASE_DIR")) + "/bin/RunController").c_str(), argv);
-          LOG (ERROR) << BOLDRED << "Can't run RunController, error occured" << RESET;
+          LOG (ERROR) << BOLDRED << "I Can't run RunController, error occured" << RESET;
           exit(EXIT_FAILURE);
         }
 
@@ -413,7 +413,6 @@ int main (int argc, char** argv)
       else
         {
           LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
-          mySysCntr.Destroy();
           exit(EXIT_FAILURE);
         }
 
@@ -436,7 +435,6 @@ int main (int argc, char** argv)
       fileRunNumberOut.close();
 
 
-      mySysCntr.Destroy();
       LOG (INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }
 

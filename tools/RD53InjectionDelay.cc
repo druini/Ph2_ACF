@@ -202,7 +202,7 @@ void InjectionDelay::draw ()
           static_cast<RD53*>(cChip)->saveRegMap(fileReg);
           std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
           system(command.c_str());
-          LOG (INFO) << BOLDGREEN << "\t--> InjectionDelay saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> InjectionDelay saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 
 #ifdef __USE_ROOT__
@@ -235,9 +235,9 @@ void InjectionDelay::analyze ()
                 }
             }
 
-          LOG (INFO) << BOLDGREEN << "\t--> Best delay for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
-                     << BOLDYELLOW << regVal << BOLDGREEN << " (1.5625 ns) computed over two bx" << RESET;
-          LOG (INFO) << BOLDGREEN << "\t--> New delay dac value for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
+          LOG (INFO) << GREEN << "Best delay for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
+                     << BOLDYELLOW << regVal << RESET << GREEN << " (1.5625 ns) computed over two bx" << RESET;
+          LOG (INFO) << GREEN << "New delay dac value for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
                      << BOLDYELLOW << (regVal & maxDelay) << RESET;
 
 
@@ -251,7 +251,7 @@ void InjectionDelay::analyze ()
           auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG");
           if (regVal / (maxDelay+1) == 0) latency--;
           this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency, true);
-          LOG (INFO) << BOLDGREEN << "\t--> New latency dac value for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is "
+          LOG (INFO) << GREEN << "New latency dac value for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
                      << BOLDYELLOW << latency << RESET;
         }
 }
@@ -326,7 +326,7 @@ void InjectionDelay::chipErrorReport ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << GREEN << "Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
           LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;

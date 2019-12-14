@@ -621,7 +621,7 @@ namespace Ph2_System
                     int cChipId = cChild.attribute("Id").as_int();
                     std::string cFileName = expandEnvironmentVariables (static_cast<std::string> ( cChild.attribute ( "configfile" ).value() ) );
                     LOG (DEBUG) << BOLDBLUE << "Configuration file ... " << cName << " --- " << cConfigFileDirectory << RESET;
-                    LOG (DEBUG) << BOLDGREEN << cName << " Id = " << +cChipId << " --- " << cFileName << RESET;
+                    LOG (DEBUG) << GREEN << cName << " Id = " << +cChipId << " --- " << cFileName << RESET;
 
                     if (cName == "RD53")
                       {
@@ -779,7 +779,7 @@ namespace Ph2_System
             for (auto cCbc : pModule->fReadoutChipVector)
               cCbc->setReg ( regname, uint8_t ( regvalue ) ) ;
 
-            os << BOLDGREEN << "|" << " " << "|" << "   " << "|" << "----" << cCbcGlobalNode.name()
+            os << GREEN << "|" << " " << "|" << "   " << "|" << "----" << cCbcGlobalNode.name()
                << "  " << cCbcGlobalNode.first_attribute().name() << " :"
                << regname << " =  0x" << std::hex << std::setw ( 2 ) << std::setfill ( '0' ) << RED << regvalue << std::dec << RESET << std:: endl;
           }

@@ -136,10 +136,10 @@ namespace Ph2_HwInterface
     // ###########################
     // # Print clock measurement #
     // ###########################
-    uint32_t inputClk   = ReadReg ("user.stat_regs.stat_reg_22");
-    uint32_t derivedClk = ReadReg ("user.stat_regs.stat_reg_21");
+    uint32_t inputClk = ReadReg ("user.stat_regs.stat_reg_22");
+    uint32_t gtxClk   = ReadReg ("user.stat_regs.stat_reg_21");
     LOG (INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk/1000. << " MHz" << RESET;
-    LOG (INFO) << GREEN << "Derived clock frequency (should be ~160 MHz): " << BOLDYELLOW << derivedClk/1000. << " MHz" << RESET;
+    LOG (INFO) << GREEN << "GTX receiver clock frequency (should be ~160 MHz): " << BOLDYELLOW << gtxClk/1000. << " MHz" << RESET;
 
 
     // ##############################

@@ -186,7 +186,7 @@ void SCurve::draw ()
           static_cast<RD53*>(cChip)->saveRegMap(fileReg);
           std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
           system(command.c_str());
-          LOG (INFO) << BOLDGREEN << "\t--> SCurve saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> SCurve saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 
 #ifdef __USE_ROOT__
@@ -236,11 +236,11 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
           index++;
 
           theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
-          LOG (INFO) << BOLDGREEN << "\t--> Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
+          LOG (INFO) << GREEN << "Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << GREEN << "] is " << BOLDYELLOW
                      << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold
-                     << BOLDGREEN << " (Delta_VCal)" << RESET;
+                     << RESET << GREEN << " (Delta_VCal)" << RESET;
 
-          LOG (INFO) << BOLDGREEN << "\t\t--> Highest threshold: " << BOLDYELLOW << maxThreshold << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << maxThreshold << RESET;
         }
 
 
@@ -338,7 +338,7 @@ void SCurve::chipErrorReport ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << GREEN << "Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
           LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;

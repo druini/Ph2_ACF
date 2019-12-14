@@ -31,7 +31,7 @@ namespace Ph2_System
     , fData                (nullptr)
   {}
 
-  SystemController::~SystemController() { this->Destroy(); }
+  SystemController::~SystemController() {}
 
   void SystemController::Inherit (SystemController* pController)
   {
@@ -50,16 +50,45 @@ namespace Ph2_System
   {
     this->closeFileHandler();
 
-    if (fBeBoardInterface     != nullptr) delete fBeBoardInterface;
-    if (fReadoutChipInterface != nullptr) delete fReadoutChipInterface;
-    if (fChipInterface        != nullptr) delete fChipInterface;
-    if (fMPAInterface         != nullptr) delete fMPAInterface;
-    if (fDetectorContainer    != nullptr) delete fDetectorContainer;
+    if (fBeBoardInterface != nullptr)
+      {
+        delete fBeBoardInterface;
+        fBeBoardInterface = nullptr;
+      }
+    if (fReadoutChipInterface != nullptr)
+      {
+        delete fReadoutChipInterface;
+        fReadoutChipInterface = nullptr;
+      }
+    if (fChipInterface != nullptr)
+      {
+        delete fChipInterface;
+        fChipInterface = nullptr;
+      }
+    if (fMPAInterface != nullptr)
+      {
+        delete fMPAInterface;
+        fMPAInterface = nullptr;
+      }
+    if (fDetectorContainer != nullptr)
+      {
+        delete fDetectorContainer;
+        fDetectorContainer = nullptr;
+      }
 
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
-    if (fNetworkStreamer != nullptr) delete fNetworkStreamer;
-    if (fData            != nullptr) delete fData;
+
+    if (fNetworkStreamer != nullptr)
+      {
+        delete fNetworkStreamer;
+        fNetworkStreamer = nullptr;
+      }
+    if (fData != nullptr)
+      {
+        delete fData;
+        fData = nullptr;
+      }
   }
 
   void SystemController::addFileHandler (const std::string& pFilename, char pOption)
@@ -127,12 +156,11 @@ namespace Ph2_System
 
     for (auto& cBoard : fBoardVector)
       {
-        // ######################################
-        // # Configuring Outer Tracker hardware #
-        // ######################################
-
         if (cBoard->getBoardType() != BoardType::RD53)
           {
+            // ######################################
+            // # Configuring Outer Tracker hardware #
+            // ######################################
             fBeBoardInterface->ConfigureBoard ( cBoard );
 
             LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
@@ -144,13 +172,13 @@ namespace Ph2_System
                   {
                     if ( !bIgnoreI2c )
                       {
-                        fReadoutChipInterface->ConfigureChip ( cCbc );
-                        LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
+                        fReadoutChipInterface->ConfigureChip(cCbc);
+                        LOG (INFO) << GREEN <<  "Successfully configured Chip " << int(cCbc->getChipId()) << RESET;
                       }
                   }
               }
             fBeBoardInterface->ChipReSync ( cBoard );
-            LOG (INFO) << BOLDGREEN << "Successfully sent resync." << RESET;
+            LOG (INFO) << GREEN << "Successfully sent resync." << RESET;
           }
         else
           {
