@@ -262,7 +262,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
               std::ofstream fileOutID(myString.str(),std::ios::out);
               for (auto i = 0u; i < dacList.size(); i++)
                 {
-                  fileOutID << "Iteration " << i << " --- reg = " << dacList[i] << std::endl;
+                  fileOutID << "Iteration " << i << " --- reg = " << dacList[i]-offset << std::endl;
                   for (auto row = 0u; row < RD53::nRows; row++)
                     for (auto col = 0u; col < RD53::nCols; col++)
                       if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
