@@ -22,8 +22,8 @@ fi
 ########
 # ROOT #
 ########
-#source /usr/local/root/bin/thisroot.sh
-source $ROOTSYS/bin/thisroot.sh
+source /usr/local/root/bin/thisroot.sh
+# source $ROOTSYS/bin/thisroot.sh
 
 #######
 # ZMQ #
@@ -74,12 +74,12 @@ export UseRootFlag='-D__USE_ROOT__'
 ################
 
 # Stand-alone application, without data streaming
-export CompileForHerd=false
-export CompileForShep=false
+# export CompileForHerd=false
+# export CompileForShep=false
 
 # Stand-alone application, with data streaming
-# export CompileForHerd=true
-# export CompileForShep=true
+export CompileForHerd=true
+export CompileForShep=true
 
 # Herd application
 # export CompileForHerd=true
