@@ -35,6 +35,7 @@ void GainOptimization::ConfigureCalibration ()
   doFast        = this->findValueInSettings("DoFast");
   doDisplay     = this->findValueInSettings("DisplayHisto");
   doUpdateChip  = this->findValueInSettings("UpdateChipCfg");
+  saveRawData   = this->findValueInSettings("SaveRawData");
 
 
   // #######################
@@ -45,6 +46,14 @@ void GainOptimization::ConfigureCalibration ()
 
 void GainOptimization::Start (int currentRun)
 {
+  LOG (INFO) << GREEN << "[GainOptimization::Start] Starting" << RESET;
+
+  if (saveRawData == true)
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
+
   GainOptimization::run();
   GainOptimization::analyze();
   GainOptimization::sendData();
@@ -60,6 +69,8 @@ void GainOptimization::sendData ()
 
 void GainOptimization::Stop ()
 {
+  LOG (INFO) << GREEN << "[GainOptimization::Stop] Stopping" << RESET;
+
   this->Destroy();
 }
 
@@ -128,7 +139,7 @@ void GainOptimization::draw ()
           static_cast<RD53*>(cChip)->saveRegMap(fileReg);
           std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
           system(command.c_str());
-          LOG (INFO) << BOLDGREEN << "\t--> GainOptimization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> GainOptimization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 
 #ifdef __USE_ROOT__
@@ -143,8 +154,8 @@ void GainOptimization::analyze ()
   for (const auto cBoard : theKrumCurrContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        LOG(INFO) << BOLDGREEN << "\t--> Krummenacher Current for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-                  << cChip->getSummary<uint16_t>() << RESET;
+        LOG(INFO) << GREEN << "Krummenacher Current for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
+                  << BOLDYELLOW << cChip->getSummary<uint16_t>() << RESET;
 }
 
 void GainOptimization::initHisto ()
@@ -291,7 +302,7 @@ void GainOptimization::chipErrorReport ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << GREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << GREEN << "]" << RESET;
           LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;

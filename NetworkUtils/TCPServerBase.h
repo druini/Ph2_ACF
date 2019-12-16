@@ -35,7 +35,7 @@ protected:
 		return dynamic_cast<T*>(fConnectedClients[socketId]);
 	}
 	
-	std::promise<bool>                  fAcceptPromise;
+	std::promise<bool>        fAcceptPromise;
 	std::map<int, TCPSocket*> fConnectedClients;
 	const int E_SHUTDOWN = 0;
 

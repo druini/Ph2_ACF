@@ -15,6 +15,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+#include "../Utils/RD53SharedConstants.h"
 #include "../HWInterface/RD53FWInterface.h"
 
 #include <thread>
@@ -79,6 +80,7 @@ class Physics : public Tool
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
+  bool saveRawData;
   bool doLocal;
   std::atomic<bool> keepRunning;
   std::thread thrRun;

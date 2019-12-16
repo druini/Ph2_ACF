@@ -10,6 +10,9 @@
 #ifndef RD53SharedConstants_H
 #define RD53SharedConstants_H
 
+#include <sstream>
+#include <iomanip>
+
 namespace RD53SharedConstants
 {
   const double ISDISABLED    = -1.0; // Encoding disabled channels
@@ -17,5 +20,7 @@ namespace RD53SharedConstants
   const int    NLATENCYBINS  =  2;   // Number of latencies spanned
   const int    MAXBITCHIPREG = 16;   // Maximum number of bits of a chp register
 }
+
+std::string fromInt2Str (int val);
 
 #endif

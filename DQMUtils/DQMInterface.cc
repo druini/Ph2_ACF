@@ -209,7 +209,7 @@ bool DQMInterface::running()
 				{
 					LOG(ERROR) << BOLDRED << "Packet number expected = " << --packetNumber << " But received "
 							   << int(theCurrentStream->getPacketNumber()) << ", Aborting" << RESET;
-					LOG(INFO) << BOLDGREEN << "Did you check that the Endianness of the two comupters is the same?" << RESET;
+					LOG(INFO) << GREEN << "Did you check that the Endianness of the two comupters is the same?" << RESET;
 					abort();
 				}
 

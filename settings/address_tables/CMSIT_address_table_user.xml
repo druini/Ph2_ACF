@@ -151,8 +151,8 @@
     </node>
 
     <node id="usr_ver"              address="0x00000001"      permission="r"      description="User firmware version number.">
-      <node id="usr_ver_major"         mask="0xfffffff0"      permission="r"      description="Major version number." />
-      <node id="usr_ver_minor"         mask="0x0000000f"      permission="r"      description="Minor version number." />
+      <node id="usr_ver_major"         mask="0xffff0000"      permission="r"      description="Major version number." />
+      <node id="usr_ver_minor"         mask="0x0000ffff"      permission="r"      description="Minor version number." />
     </node>
 
     <node id="global_reg"           address="0x00000002"      permission="r"      description="Global status register, reflecting various blocks.">

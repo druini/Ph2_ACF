@@ -191,7 +191,8 @@ public:
 	{
 		if(fTheStream != nullptr)
 		{
-
+          delete fTheStream;
+          fTheStream = nullptr;
 		}
 	};
 
@@ -220,12 +221,12 @@ public:
 	unsigned int attachBuffer(std::vector<char>* bufferBegin)
 	{
 		fMetadataStream = reinterpret_cast<Metadata*>(&bufferBegin->at(0));
-		std::cout << __PRETTY_FUNCTION__<< "    "
-			<< +fMetadataStream->fObjectNameLength << " == " << getObjectName().size() << " | " 
-			<<  fMetadataStream->getObjectName() << " == " << getObjectName()
-			<< " | " << +fMetadataStream->fCreatorNameLength << " == " << fCreatorName.size() << " | " 
-			<<  fMetadataStream->getCreatorName() << " == " << fCreatorName
-			<< std::endl;
+		/* std::cout << __PRETTY_FUNCTION__<< "    " */
+		/* 	<< +fMetadataStream->fObjectNameLength << " == " << getObjectName().size() << " | "  */
+		/* 	<<  fMetadataStream->getObjectName() << " == " << getObjectName() */
+		/* 	<< " | " << +fMetadataStream->fCreatorNameLength << " == " << fCreatorName.size() << " | "  */
+		/* 	<<  fMetadataStream->getCreatorName() << " == " << fCreatorName */
+		/* 	<< std::endl; */
 		if(fMetadataStream->fObjectNameLength == getObjectName().size() &&  fMetadataStream->getObjectName() == getObjectName()
 			&& fMetadataStream->fCreatorNameLength == fCreatorName.size() &&  fMetadataStream->getCreatorName() == fCreatorName)
 		{

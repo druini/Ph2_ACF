@@ -79,6 +79,7 @@ class InjectionDelay : public PixelAlive
   size_t maxDelay;
   bool   doUpdateChip;
   bool   doDisplay;
+  bool   saveRawData;
 };
 
 #endif

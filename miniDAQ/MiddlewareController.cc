@@ -31,13 +31,13 @@ MiddlewareController::~MiddlewareController(void)
 //========================================================================================================================
 std::string MiddlewareController::interpretMessage(const std::string& buffer)
 {
-  LOG (INFO) << __PRETTY_FUNCTION__ << " RECEIVED: " << buffer << RESET;
+  LOG (INFO) << __PRETTY_FUNCTION__ << " Message received from OTSDAQ: " << buffer << RESET;
 
   if (buffer == "Initialize") // Changing the status changes the mode in threadMain (BBC) function
     {
       return "InitializeDone";
     }
-  if (buffer.substr(0,5) == "Start") // Changing the status changes the mode in threadMain (BBC) function
+  else if (buffer.substr(0,5) == "Start") // Changing the status changes the mode in threadMain (BBC) function
     {
       currentRun_ = getVariableValue("RunNumber", buffer);
       theSystemController_->Start(stoi(currentRun_));
@@ -48,6 +48,14 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
       theSystemController_->Stop();
       LOG (INFO) << "Run " << currentRun_ << " stopped" << RESET;
       return "StopDone";
+    }
+  else if (buffer.substr(0,4) == "Halt")
+    {
+      theSystemController_->Stop();
+      theSystemController_->Destroy();
+      theSystemController_ = nullptr;
+      LOG (INFO) << "Run " << currentRun_ << " halted" << RESET;
+      return "HaltDone";
     }
   else if (buffer == "Pause")
     {
@@ -89,6 +97,18 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
       theSystemController_->Configure(getVariableValue("ConfigurationFile",buffer),true);
       return "ConfigureDone";
     }
+    else if( buffer.substr(0,6) == "Error:" )
+    {
+          if( buffer == "Error: Connection closed")
+            LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << buffer << ". Closing client server connection!" << RESET;
+          return "";
+    }
+    else
+    {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Can't recognige message: " << buffer << ". Aborting..." << RESET;
+          abort();
+    }
+    
 
   if (running_ || paused_) // We go through here after start and resume or pause: sending back current status
     {

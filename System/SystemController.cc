@@ -35,43 +35,63 @@ namespace Ph2_System
 
   void SystemController::Inherit (SystemController* pController)
   {
-    fBeBoardInterface = pController->fBeBoardInterface;
+    fBeBoardInterface     = pController->fBeBoardInterface;
     fReadoutChipInterface = pController->fReadoutChipInterface;
-    fChipInterface = pController->fChipInterface;
-    fBoardVector = pController->fBoardVector;
-    fBeBoardFWMap = pController->fBeBoardFWMap;
-    fSettingsMap = pController->fSettingsMap;
-    fFileHandler = pController->fFileHandler;
-    fStreamerEnabled = pController->fStreamerEnabled;
-    fNetworkStreamer = pController->fNetworkStreamer;
+    fChipInterface        = pController->fChipInterface;
+    fBoardVector          = pController->fBoardVector;
+    fBeBoardFWMap         = pController->fBeBoardFWMap;
+    fSettingsMap          = pController->fSettingsMap;
+    fFileHandler          = pController->fFileHandler;
+    fStreamerEnabled      = pController->fStreamerEnabled;
+    fNetworkStreamer      = pController->fNetworkStreamer;
   }
 
   void SystemController::Destroy()
   {
-    if (fFileHandler)
+    this->closeFileHandler();
+
+    if (fBeBoardInterface != nullptr)
       {
-        if (fFileHandler->file_open()) fFileHandler->closeFile();
-        if (fFileHandler!=nullptr) delete fFileHandler;
+        delete fBeBoardInterface;
+        fBeBoardInterface = nullptr;
+      }
+    if (fReadoutChipInterface != nullptr)
+      {
+        delete fReadoutChipInterface;
+        fReadoutChipInterface = nullptr;
+      }
+    if (fChipInterface != nullptr)
+      {
+        delete fChipInterface;
+        fChipInterface = nullptr;
+      }
+    if (fMPAInterface != nullptr)
+      {
+        delete fMPAInterface;
+        fMPAInterface = nullptr;
+      }
+    if (fDetectorContainer != nullptr)
+      {
+        delete fDetectorContainer;
+        fDetectorContainer = nullptr;
       }
 
-    if (fBeBoardInterface!=nullptr)      delete fBeBoardInterface;
-    if (fReadoutChipInterface!=nullptr)  delete fReadoutChipInterface;
-    if (fChipInterface!=nullptr)         delete fChipInterface;
-    if (fMPAInterface!=nullptr)          delete fMPAInterface;
-    if (fDetectorContainer!=nullptr)     delete fDetectorContainer;
-
-    // It crash if I try to delete them !!!!!!!!!!
-    // for (auto& it : fBeBoardFWMap) {
-    //     if (it.second)
-    //         delete it.second;
-    // }
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
-    if(fNetworkStreamer!=nullptr) delete fNetworkStreamer;
-    if (fData!=nullptr) delete fData;
+
+    if (fNetworkStreamer != nullptr)
+      {
+        delete fNetworkStreamer;
+        fNetworkStreamer = nullptr;
+      }
+    if (fData != nullptr)
+      {
+        delete fData;
+        fData = nullptr;
+      }
   }
 
-  void SystemController::addFileHandler ( const std::string& pFilename, char pOption )
+  void SystemController::addFileHandler (const std::string& pFilename, char pOption)
   {
     if (pOption == 'r') fFileHandler = new FileHandler ( pFilename, pOption );
     else if (pOption == 'w')
@@ -83,15 +103,15 @@ namespace Ph2_System
 
   void SystemController::closeFileHandler()
   {
-    if (fFileHandler)
+    if (fFileHandler != nullptr)
       {
-        if (fFileHandler->file_open()) fFileHandler->closeFile();
-        if (fFileHandler) delete fFileHandler;
+        if (fFileHandler->isFileOpen() == true) fFileHandler->closeFile();
+        if (fFileHandler != nullptr) delete fFileHandler;
         fFileHandler = nullptr;
       }
   }
 
-  void SystemController::readFile ( std::vector<uint32_t>& pVec, uint32_t pNWords32 )
+  void SystemController::readFile (std::vector<uint32_t>& pVec, uint32_t pNWords32)
   {
     if (pNWords32 == 0) pVec = fFileHandler->readFile();
     else pVec = fFileHandler->readFileChunks(pNWords32);
@@ -105,19 +125,17 @@ namespace Ph2_System
     fData->DecodeData(pBoard, pData, pNEvents, pBoard->getBoardType());
   }
 
-  void SystemController::InitializeHw ( const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
+  void SystemController::InitializeHw (const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
   {
     fStreamerEnabled = streamData;
-    if(streamData)
-      {
-        fNetworkStreamer = new TCPPublishServer(6000,1);
-      }
+    if (streamData)
+      fNetworkStreamer = new TCPPublishServer(6000,1);
 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile );
 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
-    if (fBoardVector[0]->getBoardType() != BoardType::FC7)
+    if (fBoardVector[0]->getBoardType() != BoardType::RD53)
       fReadoutChipInterface = new CbcInterface (fBeBoardFWMap);
     else
       fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
@@ -138,12 +156,11 @@ namespace Ph2_System
 
     for (auto& cBoard : fBoardVector)
       {
-        // ######################################
-        // # Configuring Outer Tracker hardware #
-        // ######################################
-
-        if (cBoard->getBoardType() != BoardType::FC7)
+        if (cBoard->getBoardType() != BoardType::RD53)
           {
+            // ######################################
+            // # Configuring Outer Tracker hardware #
+            // ######################################
             fBeBoardInterface->ConfigureBoard ( cBoard );
 
             LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
@@ -155,13 +172,13 @@ namespace Ph2_System
                   {
                     if ( !bIgnoreI2c )
                       {
-                        fReadoutChipInterface->ConfigureChip ( cCbc );
-                        LOG (INFO) << GREEN <<  "Successfully configured Chip " << int ( cCbc->getChipId() ) << RESET;
+                        fReadoutChipInterface->ConfigureChip(cCbc);
+                        LOG (INFO) << GREEN <<  "Successfully configured Chip " << int(cCbc->getChipId()) << RESET;
                       }
                   }
               }
             fBeBoardInterface->ChipReSync ( cBoard );
-            LOG (INFO) << BOLDGREEN << "Successfully sent resync." << RESET;
+            LOG (INFO) << GREEN << "Successfully sent resync." << RESET;
           }
         else
           {
@@ -202,13 +219,11 @@ namespace Ph2_System
 
   void SystemController::initializeFileHandler()
   {
-    // here would be the ideal position to fill the file Header and call openFile when in read mode
     for (const auto& cBoard : fBoardVector)
       {
         uint32_t cBeId = cBoard->getBeId();
         uint32_t cNChip = 0;
 
-        //uint32_t cNFe = cBoard->getNFe();
         uint32_t cNEventSize32 = this->computeEventSize32 (cBoard);
 
         std::string cBoardTypeString;
@@ -216,31 +231,25 @@ namespace Ph2_System
 
         for (const auto& cFe : cBoard->fModuleVector) cNChip += cFe->getNChip();
 
-        if (cBoardType == BoardType::D19C)
-          cBoardTypeString = "D19C";
-        else if (cBoardType == BoardType::FC7)
-          cBoardTypeString = "FC7";
+        if      (cBoardType == BoardType::D19C) cBoardTypeString = "D19C";
+        else if (cBoardType == BoardType::RD53) cBoardTypeString = "RD53";
 
-        uint32_t cFWWord = fBeBoardInterface->getBoardInfo (cBoard);
+        uint32_t cFWWord  = fBeBoardInterface->getBoardInfo (cBoard);
         uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
         uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
 
-        //with the above info fill the header
-        FileHeader cHeader (cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType() );
+        FileHeader cHeader(cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType());
 
-        //construct a Handler
         std::stringstream cBeBoardString;
         cBeBoardString << "_Board" << std::setw (3) << std::setfill ('0') << cBeId;
         std::string cFilename = fRawFileName;
-
         if (fRawFileName.find (".raw") != std::string::npos)
-          cFilename.insert (fRawFileName.find (".raw"), cBeBoardString.str() );
+          cFilename.insert(fRawFileName.find(".raw"), cBeBoardString.str());
 
-        FileHandler* cHandler = new FileHandler (cFilename, 'w', cHeader);
+        FileHandler* cHandler = new FileHandler(cFilename, 'w', cHeader);
 
-        //finally set the handler
-        fBeBoardInterface->SetFileHandler (cBoard, cHandler);
-        LOG (INFO) << BOLDBLUE << "Saving binary raw data to: " << BOLDYELLOW << cFilename << RESET;
+        fBeBoardInterface->SetFileHandler(cBoard, cHandler);
+        LOG (INFO) << BOLDBLUE << "Saving binary raw data into: " << BOLDYELLOW << cFilename << RESET;
       }
   }
 
@@ -262,16 +271,19 @@ namespace Ph2_System
     for (auto& cBoard : fBoardVector)
       fBeBoardInterface->Start(cBoard);
   }
+
   void SystemController::Stop()
   {
     for (auto& cBoard : fBoardVector)
       fBeBoardInterface->Stop(cBoard);
   }
+
   void SystemController::Pause()
   {
     for (auto& cBoard : fBoardVector)
       fBeBoardInterface->Pause(cBoard);
   }
+
   void SystemController::Resume()
   {
     for (auto& cBoard : fBoardVector)

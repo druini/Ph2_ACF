@@ -8,18 +8,6 @@
 
 namespace Ph2_System
 {
-  // void FileParser::parseHW ( const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, std::ostream& os, bool pIsFile )
-  // {
-
-  // //FIXME-FR
-  //     if (pIsFile && pFilename.find ( ".xml" ) != std::string::npos )
-  //         parseHWxml ( pFilename, pBeBoardFWMap, pBoardVector, os, pIsFile );
-  //     else if (!pIsFile)
-  //         parseHWxml ( pFilename, pBeBoardFWMap, pBoardVector, os, pIsFile );
-  //     else
-  //         LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xml!" ;
-  // }
-
   void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
   {
     //FIXME-FR
@@ -35,7 +23,6 @@ namespace Ph2_System
       {
         LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xml!" ;
       }
-
   }
 
   void FileParser::parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
@@ -198,7 +185,7 @@ namespace Ph2_System
   //     std::string cBoardType = cBoardTypeAttribute.value();
 
   //     if (cBoardType == "D19C")     cBeBoard->setBoardType (BoardType::D19C);
-  //     else if (cBoardType == "FC7") cBeBoard->setBoardType (BoardType::FC7);
+  //     else if (cBoardType == "RD53") cBeBoard->setBoardType (BoardType::RD53);
   //     else
   //     {
   //         LOG (ERROR) << "Error: Unknown Board Type: " << cBoardType << " - aborting!";
@@ -234,7 +221,7 @@ namespace Ph2_System
 
   //     if (cBeBoard->getBoardType() == BoardType::D19C)
   //         pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-  //     else if (cBeBoard->getBoardType() == BoardType::FC7)
+  //     else if (cBeBoard->getBoardType() == BoardType::RD53)
   //         pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
 
   //     os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
@@ -289,8 +276,8 @@ namespace Ph2_System
     //std::string cBoardType = pBeBordNode.attribute ( "boardType" ).value();
     std::string cBoardType = cBoardTypeAttribute.value();
 
-    if (cBoardType == "D19C")     cBeBoard->setBoardType (BoardType::D19C);
-    else if (cBoardType == "FC7") cBeBoard->setBoardType (BoardType::FC7);
+    if      (cBoardType == "D19C") cBeBoard->setBoardType (BoardType::D19C);
+    else if (cBoardType == "RD53") cBeBoard->setBoardType (BoardType::RD53);
     else
       {
         LOG (ERROR) << "Error: Unknown Board Type: " << cBoardType << " - aborting!";
@@ -331,7 +318,7 @@ namespace Ph2_System
       {
         pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
       }
-    else if (cBeBoard->getBoardType() == BoardType::FC7)
+    else if (cBeBoard->getBoardType() == BoardType::RD53)
       {
         pBeBoardFWMap[cBeBoard->getBeBoardId()] = new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
       }
@@ -528,7 +515,7 @@ namespace Ph2_System
 
   //         pugi::xml_node cChipPathPrefixNode;
   //     // Iterate the CBC node
-  //         if (pBoard->getBoardType() == BoardType::FC7)
+  //         if (pBoard->getBoardType() == BoardType::RD53)
   //             cChipPathPrefixNode = pModuleNode.child ( "RD53_Files" );
   //         else
   //             cChipPathPrefixNode = pModuleNode.child ( "CBC_Files" );
@@ -538,7 +525,7 @@ namespace Ph2_System
   //         if ( !cFilePrefix.empty() ) os << BOLDBLUE << "|" << "       " << "|" << "       " << "|" << "----" << "Chip Files Path: " << BOLDYELLOW << cFilePrefix << RESET << std::endl;
 
   //     // Iterate the Chip node
-  //         if (pBoard->getBoardType() == BoardType::FC7)
+  //         if (pBoard->getBoardType() == BoardType::RD53)
   //         {
   //             for (pugi::xml_node theChipNode = pModuleNode.child ("RD53"); theChipNode, theChipNode.name() == std::string("RD53"); theChipNode = theChipNode.next_sibling())
   //                 this->parseRD53 (theChipNode, cModule, cFilePrefix, os);
@@ -608,7 +595,7 @@ namespace Ph2_System
 
         uint32_t cModuleId = pModuleNode.attribute ( "ModuleId" ).as_int();
         Module* cModule;
-        if (pBoard->getBoardType() == BoardType::FC7)
+        if (pBoard->getBoardType() == BoardType::RD53)
           {
             cModule = pBoard->addModuleContainer(cModuleId, new Module(pBoard->getBeBoardId(), pModuleNode.attribute("FMCId").as_int(), pModuleNode.attribute("FeId").as_int(), cModuleId));
           }
@@ -634,7 +621,7 @@ namespace Ph2_System
                     int cChipId = cChild.attribute("Id").as_int();
                     std::string cFileName = expandEnvironmentVariables (static_cast<std::string> ( cChild.attribute ( "configfile" ).value() ) );
                     LOG (DEBUG) << BOLDBLUE << "Configuration file ... " << cName << " --- " << cConfigFileDirectory << RESET;
-                    LOG (DEBUG) << BOLDGREEN << cName << " Id = " << +cChipId << " --- " << cFileName << RESET;
+                    LOG (DEBUG) << GREEN << cName << " Id = " << +cChipId << " --- " << cFileName << RESET;
 
                     if (cName == "RD53")
                       {
@@ -792,7 +779,7 @@ namespace Ph2_System
             for (auto cCbc : pModule->fReadoutChipVector)
               cCbc->setReg ( regname, uint8_t ( regvalue ) ) ;
 
-            os << BOLDGREEN << "|" << " " << "|" << "   " << "|" << "----" << cCbcGlobalNode.name()
+            os << GREEN << "|" << " " << "|" << "   " << "|" << "----" << cCbcGlobalNode.name()
                << "  " << cCbcGlobalNode.first_attribute().name() << " :"
                << regname << " =  0x" << std::hex << std::setw ( 2 ) << std::setfill ( '0' ) << RED << regvalue << std::dec << RESET << std:: endl;
           }

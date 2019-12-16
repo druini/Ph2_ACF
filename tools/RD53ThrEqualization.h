@@ -88,6 +88,7 @@ class ThrEqualization : public Tool
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
+  bool saveRawData;
 };
 
 #endif

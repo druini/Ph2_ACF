@@ -15,11 +15,11 @@
 template<size_t size>
 class GenericDataArray
 {
-public:
-GenericDataArray()  {}
-~GenericDataArray() {}
+ public:
+  GenericDataArray()  {}
+  ~GenericDataArray() {}
 
-int data[size];
+  float data[size];
 };
 
 #endif

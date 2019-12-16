@@ -150,7 +150,10 @@ int main ( int argc, char* argv[] )
                 SLinkEvent cSLev = ev->GetSLinkEvent (pBoard);
 
                 if (cDAQFile)
-                    cDAQFileHandler->set (cSLev.getData<uint32_t>() );
+                  {
+                    auto data = cSLev.getData<uint32_t>();
+                    cDAQFileHandler->set (data);
+                  }
 
                 //if DQM histos are enabled and we are treating the first event, book the histograms
                 if (cDQM && cN == 1)
