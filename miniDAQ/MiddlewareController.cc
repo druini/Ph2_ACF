@@ -20,7 +20,10 @@
 
 
 //========================================================================================================================
-MiddlewareController::MiddlewareController(int serverPort) : TCPServer(serverPort,1) {}
+MiddlewareController::MiddlewareController(int serverPort) : TCPServer(serverPort,1) 
+{
+  //TCPServer::setReceiveTimeout(1,0);//Doesn't work
+}
 
 //========================================================================================================================
 MiddlewareController::~MiddlewareController(void)
