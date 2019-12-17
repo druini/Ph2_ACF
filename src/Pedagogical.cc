@@ -20,6 +20,7 @@
 #include "../tools/CalibrationExample.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TLine.h"
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TApplication.h"
@@ -49,7 +50,7 @@ int main( int argc, char* argv[] )
 	
 	BeBoard* pBoard = cTool.fBoardVector.at(0);
 	std::vector < ReadoutChip* > &ChipVec = pBoard->getModule(0)->fReadoutChipVector;
-	TH2I *strip_v_thdac_31 = new TH2I("strip_v_thdac_31", "All TRIMDACs = 31;strip # ; THDAC (lsb)", 60, 30, 90, 55, 0, 55);
+	TH2I *strip_v_thdac_31 = new TH2I("strip_v_thdac_31", "All TRIMDACs = 31;strip # ; THDAC (lsb)", 360, -60, 300, 25, 0, 25);
 	strip_v_thdac_31->SetStats(0);
 	for(auto cSSA: ChipVec)
 	{
@@ -57,38 +58,55 @@ int main( int argc, char* argv[] )
 		for (int i = 1; i<=120;i++ ) // loop over all strips
 		{
 			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "THTRIMMING_S" + std::to_string(i), 31); // MAXIMIZE THE TRIM
-			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S" + std::to_string(i), 1); // ENABLE THE STRIP
+			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S" + std::to_string(i), 0); // ENABLE THE STRIP
 		}
 	}
-	for (int thd = 0; thd<=55; thd++)
+	for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S100", 0x1);}
+	for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S101", 0x1);}
+	for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S102", 0x1);}
+	for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S103", 0x1);}
+	for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S104", 0x1);}
+	for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S105", 0x1);}
+	for (int thd = 8; thd<=8; thd++)
 	{
 		for(auto cSSA: ChipVec)
 		{
 			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_THDAC", thd);
 		}
-		cTool.ReadNEvents(pBoard, 50);
-		const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
-
-		for ( auto &event : eventVector ) //for on events - begin 
-	    {
-	        for(auto module: *pBoard) // for on module - begin 
-	        {
-	            for(auto chip: *module) // for on chip - begin 
-	            {
-	                unsigned int channelNumber = 0;
-	                for (int i = 0; i<=120;i++ ) // loop over all strips
-					{
-						strip_v_thdac_31->Fill(channelNumber+(120*int(chip->getId())), thd, event->DataBit ( module->getId(), chip->getId(), channelNumber));
-	                	channelNumber++;
-	                } // for on channel - end 
-	            } // for on chip - end 
-	        } // for on module - end 
+	cTool.ReadNEvents(pBoard, 500);
+	const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
+	for ( auto &event : eventVector ) //for on events - begin 
+    	{
+		for(auto module: *pBoard) // for on module - begin 
+		{
+		    for(auto chip: *module) // for on chip - begin 
+		    {
+		        unsigned int channelNumber = 0;
+		        for (int i = 0; i<=120;i++ ) // loop over all strips
+			{
+				if (event->DataBit ( module->getId(), chip->getId(), channelNumber)) LOG (INFO) << RED << i << ", " << int(chip->getId()) <<  RESET;
+				strip_v_thdac_31->Fill(channelNumber+(120*int(chip->getId())), thd, event->DataBit ( module->getId(), chip->getId(), channelNumber));
+		        	channelNumber++;
+		        } // for on channel - end 
+		        for (auto S: event->GetHits(module->getId(), chip->getId()))
+			{
+				LOG(INFO) << BOLDRED << "stub: " << float(S)/2. << RESET;
+			}
+		    } // for on chip - end 
+		} // for on module - end 
 	    } // for on events - end
 	}
+	TLine * L1 = new TLine(120,0,120,25);
+	TLine * L2 = new TLine(240,0,240,25);
+	L1->SetLineColor(2);
+	L2->SetLineColor(2);
+
 
 	TCanvas * C_svd = new TCanvas("C_svd", "C_svd", 600, 600);
 	C_svd->cd();
 	strip_v_thdac_31->Draw("col");
+	L1->Draw();
+	L2->Draw();
 	C_svd->Print("STRIP_DAC_MAP.png");		
 
 	//IB->PSInterfaceBoard_PowerOff_SSA();
