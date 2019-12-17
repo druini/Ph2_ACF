@@ -149,7 +149,7 @@ namespace Ph2_HwInterface
       // #############################
       Module* module = pBoard->getModule(module_id);
       auto it = std::find_if(module->fReadoutChipVector.begin(), module->fReadoutChipVector.end(), [=] (ReadoutChip* pChip)
-                             { return pChip->getChipLane() == chip_lane; });
+                             { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
       if (it != module->fReadoutChipVector.end()) return (*it)->getChipId();
       return -1; // Chip not found
     }

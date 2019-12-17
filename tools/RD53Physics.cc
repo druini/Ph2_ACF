@@ -96,8 +96,11 @@ void Physics::Stop ()
   LOG (INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
 
   SystemController::Stop();
+  std::cout << "AAA " << __LINE__ << std::endl;
   keepRunning = false;
+  std::cout << "AAA " << __LINE__ << std::endl;
   if (thrRun.joinable() == true) thrRun.join();
+  std::cout << "AAA " << __LINE__ << std::endl;
 
 
   // ################

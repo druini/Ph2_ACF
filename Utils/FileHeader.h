@@ -18,19 +18,22 @@
 #include <vector>
 
 
+// #############
+// # CONSTANTS #
+// #############
 #define SEPARATOR 0xAAAAAAAA
 
 
 class FileHeader
 {
  public:
+  static const uint32_t fHeaderSize32 = 12;
   std::string fType;
   uint32_t fVersionMajor;
   uint32_t fVersionMinor;
   uint32_t fBeId;
   uint32_t fNchip;
   uint32_t fEventSize32;
-  static const uint32_t fHeaderSize32 = 12;
   EventType fEventType;
   bool fValid;
 
@@ -73,7 +76,7 @@ class FileHeader
       char cType[8] = {0};
 
       if (fType.size() < 9) strcpy (cType, fType.c_str());
-      else LOG (INFO) << BOLDRED << "FileHeader: Error, type string can only be up to 8 characters long!" << RESET;
+      else LOG (INFO) << BOLDRED << "Error, type string can only be up to 8 characters long" << RESET;
 
       cVec.push_back(cType[0] << 24 | cType[1] << 16 | cType[2] << 8 | cType[3]);
       cVec.push_back(cType[4] << 24 | cType[5] << 16 | cType[6] << 8 | cType[7]);
@@ -135,22 +138,10 @@ class FileHeader
 
         if (fEventType == EventType::VR) cEventTypeString = "EventType::VR" ;
         else                             cEventTypeString = "EventType::ZS";
-
-        LOG (INFO) << GREEN <<"Sucess, this is a valid header" << RESET;
-        LOG (INFO) << GREEN
-                   << "Board Type: " << fType
-                   << " FWMajor " << fVersionMajor
-                   << " FWMinor " << fVersionMinor
-                   << " Event Type: " << cEventTypeString
-                   << " BeId " << fBeId
-                   << " fNchip " << fNchip
-                   << " EventSize32  " << fEventSize32
-                   << " valid: " << fValid
-                   << RESET;
       }
     else
       {
-        LOG (ERROR) << BOLDRED << "This is not a valid header" << RESET;
+        LOG (ERROR) << BOLDRED << "Invalid header from binary file" << RESET;
         fValid = false;
       }
   }

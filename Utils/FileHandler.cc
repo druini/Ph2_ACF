@@ -58,13 +58,13 @@ bool FileHandler::openFile()
 
           if (fHeader.fValid == false)
             {
-              LOG (WARNING) << "[FileHandler::openFile] No valid file Header provided, writing file without ..." << RESET;
+              LOG (WARNING) << "Invalid file Header provided, writing file without it ..." << RESET;
               fHeaderPresent = false;
             }
           else if (fHeader.fValid)
             {
               std::vector<uint32_t> cHeaderVec = fHeader.encodeHeader();
-              fBinaryFile.write((char*) &cHeaderVec.at (0), cHeaderVec.size() * sizeof(uint32_t));
+              fBinaryFile.write((char*) &cHeaderVec.at(0), cHeaderVec.size() * sizeof(uint32_t));
               fHeaderPresent = true;
             }
         }
@@ -77,13 +77,14 @@ bool FileHandler::openFile()
           if (fHeader.fValid == false)
             {
               fHeaderPresent = false;
-              LOG (WARNING) << "[FileHandler::openFile] No valid header found in file " << fBinaryFileName << " - resetting to 0 and treating as normal data!"  << RESET;
+              LOG (WARNING) << BOLDRED << "No valid header found in binary file: "
+                            << BOLDYELLOW << fBinaryFileName << BOLDRED << " - resetting to 0 and treating as normal data" << RESET;
               fBinaryFile.clear();
               fBinaryFile.seekg(0, std::ios::beg);
             }
           else if (fHeader.fValid == true)
             {
-              LOG (INFO) << "[FileHandler::openFile] Found a valid header in file " << BOLDYELLOW << fBinaryFileName << RESET;
+              LOG (INFO) << GREEN << "Found a valid header in binary file: " << BOLDYELLOW << fBinaryFileName << RESET;
               fHeaderPresent = true;
             }
         }
@@ -103,7 +104,7 @@ void FileHandler::closeFile()
     }
   if (fBinaryFile.is_open() == true) fBinaryFile.close();
 
-  LOG (INFO) << GREEN << "Closing raw data file " << BOLDYELLOW << fBinaryFileName << RESET;
+  LOG (INFO) << GREEN << "Closing binary file: " << BOLDYELLOW << fBinaryFileName << RESET;
 }
 
 std::vector<uint32_t> FileHandler::readFile ()
@@ -133,7 +134,10 @@ std::vector<uint32_t> FileHandler::readFileChunks (uint32_t pNWords32)
 
       if (fBinaryFile.eof() == true)
         {
-          LOG (WARNING) << "[FileHandler::readFileChunks] Attention, input file " << fBinaryFileName << " ended before reading " << pNWords32 << " 32-bit words" << RESET;
+          LOG (WARNING) << BOLDRED << "Attention, input file "
+                        << BOLDYELLOW << fBinaryFileName
+                        << BOLDRED << " ended before reading "
+                        << BOLDYELLOW << pNWords32 << " 32-bit words" << RESET;
           closeFile();
           break;
         }
@@ -180,7 +184,7 @@ void FileHandler::writeFile()
           if (cDataPresent && (cData.size() != 0))
             {
               std::lock_guard<std::mutex> cLock (fMemberMutex);
-              fBinaryFile.write((char*) &cData.at (0), cData.size() * sizeof(uint32_t));
+              fBinaryFile.write((char*) &cData.at(0), cData.size() * sizeof(uint32_t));
               fBinaryFile.flush();
             }
         }
@@ -190,7 +194,7 @@ void FileHandler::writeFile()
 bool FileHandler::dequeue (std::vector<uint32_t>& pData)
 {
   std::unique_lock<std::mutex> cLock (fMutex);
-  bool cQueueEmpty = fSet.wait_for(cLock, std::chrono::microseconds (100), [&] { return  FileHandler::fQueue.empty(); });
+  bool cQueueEmpty = fSet.wait_for(cLock, std::chrono::microseconds(100), [&] { return  FileHandler::fQueue.empty(); });
 
   if (cQueueEmpty == false)
     {

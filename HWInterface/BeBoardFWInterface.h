@@ -164,51 +164,6 @@ namespace Ph2_HwInterface
     } 
     /*!< Decode a word from a read of a register of the Chip*/
 
-    //Encode/Decode MPA/SSA values
-    virtual void EncodeReg ( const RegItem& pRegItem, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) 
-    {
-      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
-    /*!< Encode a/several word(s) readable for a Chip*/\
-    virtual void EncodeReg ( const RegItem& pRegItem, uint8_t pFeId, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) 
-    {
-      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
-    /*!< Encode a/several word(s) readable for a Chip*/	
-    virtual void BCEncodeReg ( const RegItem& pRegItem, uint8_t pNChip, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) 
-    {
-      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
-    /*!< Encode a/several word(s) readable for a Chip*/
-    virtual void DecodeReg ( RegItem& pRegItem, uint8_t& pChipId, uint32_t pWord, bool& pRead, bool& pFailed ) 
-    {
-      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
-    /*!< Decode a word from a read of a register of the Chip*/
-
-
-    //virtual pure methods which are defined in the proper BoardFWInterface class
-    //r/w the Chip registers
-    /*!
-     * \brief Write register blocks of a Chip
-     * \param pFeId : FrontEnd to work with
-     * \param pVecReq : Block of words to write
-     * \param pWriteAttempt : number of tries write was attempted
-     */
-    // virtual bool WriteChipBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts, bool pReadback ) = 0;
-    //r/w the Chip registers
-    /*!
-     * \brief Write register blocks of a Chip
-     * \param pFeId : FrontEnd to work with
-     * \param pVecReq : Block of words to write
-     */
-    // virtual bool BCWriteChipBlockReg (  std::vector<uint32_t>& pVecReq, bool pReadback ) = 0;
-    /*!
-     * \brief Read register blocks of a Chip
-     * \param pFeId : FrontEnd to work with
-     * \param pVecReq : Vector to stack the read words
-     */
-    // virtual void ReadChipBlockReg (  std::vector<uint32_t>& pVecReq ) = 0;
     /*!
      * \brief Configure the board with its Config File
      * \param pBoard

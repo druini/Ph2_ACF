@@ -7,8 +7,8 @@
   Support :               mail to : lorenzo.bidegain@gmail.com
 */
 
-#ifndef Chip_h__
-#define Chip_h__
+#ifndef Chip_H
+#define Chip_H
 
 #include "FrontEndDescription.h"
 #include "ChipRegItem.h"
@@ -45,11 +45,11 @@ namespace Ph2_HwDescription
 
   public:
 
-    // C'tors which take Board ID, Frontend ID/Module ID, FMC ID, Chip ID, Chip Lane
-    Chip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue=255, uint8_t pChipLane = 0);
+    // C'tors which take Board ID, Frontend ID/Module ID, FMC ID, Chip ID
+    Chip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue=255);
 
     // C'tors with object FE Description
-    Chip (const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue=255, uint8_t pChipLane = 0);
+    Chip (const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue=255);
 
     // Default C'tor
     Chip();
@@ -106,15 +106,9 @@ namespace Ph2_HwDescription
      * \brief Get the Map of the registers
      * \return The map of register
      */
-    ChipRegMap& getRegMap()
-      {
-        return fRegMap;
-      }
+    ChipRegMap& getRegMap() { return fRegMap; }
 
-    const ChipRegMap& getRegMap() const
-    {
-      return fRegMap;
-    }
+    const ChipRegMap& getRegMap() const { return fRegMap; }
 
     /*!
      * \brief Get the Chip Id
@@ -122,23 +116,17 @@ namespace Ph2_HwDescription
      */
     uint8_t getChipId() const { return fChipId; }
 
-    uint8_t getChipLane() const { return fChipLane; }
-
     /*!
      * \brief Set the Chip Id
      * \param pChipId
      */
-    void setChipId ( uint8_t pChipId )
-    {
-      fChipId = pChipId;
-    }
+    void setChipId (uint8_t pChipId) { fChipId = pChipId; }
 
     virtual uint8_t getNumberOfBits(const std::string &dacName) = 0;
 
   protected:
     uint8_t  fChipId;
     uint16_t fMaxRegValue;
-    uint8_t  fChipLane;
 
     // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value
     ChipRegMap fRegMap;

@@ -8,8 +8,8 @@
 */
 
 
-#ifndef FrontEndDescription_h__
-#define FrontEndDescription_h__
+#ifndef FrontEndDescription_H
+#define FrontEndDescription_H
 
 #include <stdint.h>
 #include "Definition.h"

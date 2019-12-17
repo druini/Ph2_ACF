@@ -71,7 +71,7 @@ void GainOptimization::Stop ()
 {
   LOG (INFO) << GREEN << "[GainOptimization::Stop] Stopping" << RESET;
 
-  this->Destroy();
+  this->closeFileHandler();
 }
 
 void GainOptimization::initialize (const std::string fileRes_, const std::string fileReg_)

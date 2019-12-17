@@ -102,7 +102,7 @@ void SCurve::Stop ()
 {
   LOG (INFO) << GREEN << "[SCurve::Stop] Stopping" << RESET;
 
-  this->Destroy();
+  this->closeFileHandler();
 }
 
 void SCurve::initialize (const std::string fileRes_, const std::string fileReg_)

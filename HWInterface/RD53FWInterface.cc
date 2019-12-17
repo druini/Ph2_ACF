@@ -206,7 +206,7 @@ namespace Ph2_HwInterface
 
     uint32_t chipLane;
     if (this->singleChip == true) chipLane = pChip->getFeId(); // @TMP@
-    else                          chipLane = NLANE_MODULE * pChip->getFeId() + pChip->getChipLane(); // @TMP@
+    else                          chipLane = NLANE_MODULE * pChip->getFeId() + static_cast<RD53*>(pChip)->getChipLane(); // @TMP@
 
 
     // #####################

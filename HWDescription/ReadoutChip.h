@@ -1,17 +1,15 @@
 /*!
-
   \file                   Chip.h
   \brief                  Chip Description class, config of the Chips
   \author                 Lorenzo BIDEGAIN
   \version                1.0
   \date                   25/06/14
   Support :               mail to : lorenzo.bidegain@gmail.com
-
 */
 
 
-#ifndef ReadoutChip_h__
-#define ReadoutChip_h__
+#ifndef ReadoutChip_H
+#define ReadoutChip_H
 
 #include "Chip.h"
 #include "Definition.h"
@@ -45,11 +43,11 @@ namespace Ph2_HwDescription
   {
 
   public:
-    // C'tors which take Board ID, Frontend ID/Module ID, FMC ID, Chip ID, Chip Lane
-    ReadoutChip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue=255, uint8_t pChipLane = 0);
+    // C'tors which take Board ID, Frontend ID/Module ID, FMC ID, Chip ID
+    ReadoutChip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue=255);
 
     // C'tors with object FE Description
-    ReadoutChip (const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue=255, uint8_t pChipLane = 0);
+    ReadoutChip (const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue=255);
 
     // Copy C'tor
     ReadoutChip (const ReadoutChip& chipObj);
@@ -65,9 +63,9 @@ namespace Ph2_HwDescription
       pVisitor.visitChip ( *this );
     }
 
-    virtual uint32_t getNumberOfChannels() const  = 0;
+    virtual uint32_t getNumberOfChannels() const = 0;
 
-    virtual bool isDACLocal(const std::string &dacName)  = 0;
+    virtual bool isDACLocal(const std::string &dacName) = 0;
 
     const ChannelGroupBase* getChipOriginalMask() const override {return fChipOriginalMask;}
 

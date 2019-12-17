@@ -246,21 +246,15 @@ namespace Ph2_HwInterface {
         //Encode/Decode Chip values
         /*!
         * \brief Encode a/several word(s) readable for a Chip
-        * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
+        * \param pRegItem : ChipRegItem containing infos (name, adress, value...) about the register to write
         * \param pCbcId : Id of the Chip to work with
         * \param pVecReq : Vector to stack the encoded words
         */
         void EncodeReg (const ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
         void EncodeReg (const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
-        void EncodeReg (const RegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
-        void EncodeReg (const RegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
 
         void BCEncodeReg (const ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override;
         void DecodeReg ( ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
-        void BCEncodeReg ( const RegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) override; /*!< Encode a/several word(s) readable for a MPA/SSA*/
-        void DecodeReg ( RegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override; /*!< Decode a word from a read of a register of the MPA/SSA*/
-
-
 
         bool WriteChipBlockReg   ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
         bool BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
@@ -311,8 +305,8 @@ namespace Ph2_HwInterface {
         void KillI2C();
         ///
 
-        void Pix_write_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
-        uint32_t Pix_read_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel);
+        void Pix_write_MPA(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
+        uint32_t Pix_read_MPA(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel);
         std::vector<uint16_t> ReadoutCounters_MPA(uint32_t raw_mode_en = 0);
 
         void Compose_fast_command(uint32_t duration = 0,uint32_t resync_en = 0,uint32_t l1a_en = 0,uint32_t cal_pulse_en = 0,uint32_t bc0_en = 0);

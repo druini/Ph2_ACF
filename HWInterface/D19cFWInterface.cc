@@ -934,7 +934,7 @@ namespace Ph2_HwInterface {
                     cStubModeMap[cMpa] = cOriginalStubMode;
 
                         // sync mode
-                    RegItem cRegItem = cMpa->getRegItem ( "ReadoutMode" );
+                    ChipRegItem cRegItem = cMpa->getRegItem ( "ReadoutMode" );
                     cRegItem.fValue = 0x00;
                     this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
 
@@ -968,7 +968,7 @@ namespace Ph2_HwInterface {
                 for (auto cMpa : static_cast<OuterTrackerModule*>(cFe)->fMPAVector)
                 {
 
-                    RegItem cRegItem = cMpa->getRegItem ( "ReadoutMode" );
+                    ChipRegItem cRegItem = cMpa->getRegItem ( "ReadoutMode" );
                     cRegItem.fValue = cReadoutModeMap[cMpa];
                     this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
 
@@ -1304,17 +1304,17 @@ namespace Ph2_HwInterface {
     //TODO: check what to do with fFMCid and if I need it!
     // this is clearly for addressing individual CBCs, have to see how to deal with broadcast commands
 
-    void D19cFWInterface::EncodeReg ( const ChipRegItem& pRegItem,
-      uint8_t pCbcId,
-      std::vector<uint32_t>& pVecReq,
-      bool pReadBack,
-      bool pWrite )
-    {
-        //use fBroadcastCBCId for broadcast commands
-        bool pUseMask = false;
-        uint8_t pFeId = 0;
-        pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue);
-    }
+  void D19cFWInterface::EncodeReg ( const ChipRegItem& pRegItem,
+                                    uint8_t pCbcId,
+                                    std::vector<uint32_t>& pVecReq,
+                                    bool pReadBack,
+                                    bool pWrite )
+  {
+    //use fBroadcastCBCId for broadcast commands
+    bool pUseMask = false;
+    uint8_t pFeId = 0;
+    pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue);
+  }
 
     void D19cFWInterface::EncodeReg (const ChipRegItem& pRegItem,
        uint8_t pFeId,
@@ -1334,49 +1334,6 @@ namespace Ph2_HwInterface {
             pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
         }
     }
-
-    void D19cFWInterface::EncodeReg ( const RegItem& pRegItem,
-      uint8_t pCbcId,
-      std::vector<uint32_t>& pVecReq,
-      bool pReadBack,
-      bool pWrite )
-    {
-        //use fBroadcastCBCId for broadcast commands
-        bool pUseMask = false;
-        uint8_t pFeId = 0;
-        pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue);
-    }
-
-    void D19cFWInterface::EncodeReg (const RegItem& pRegItem,
-       uint8_t pFeId,
-       uint8_t pCbcId,
-       std::vector<uint32_t>& pVecReq,
-       bool pReadBack,
-       bool pWrite )
-    {
-        //use fBroadcastCBCId for broadcast commands
-        bool pUseMask = false;
-        if (fI2CVersion >= 1) {
-        // new command consists of one word if its read command, and of two words if its write. first word is always the same
-            pVecReq.push_back( (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0) );
-        // only for write commands
-            if (pWrite) pVecReq.push_back( (0 << 28) | (1 << 27) | (pRegItem.fValue << 0) );
-        } else {
-            pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
-        }
-    }
-
-    void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
-        uint8_t pNCbc,
-        std::vector<uint32_t>& pVecReq,
-        bool pReadBack,
-        bool pWrite )
-    {
-        //use fBroadcastCBCId for broadcast commands
-        bool pUseMask = false;
-        pVecReq.push_back ( ( 2 << 28 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
-    }
-
 
     void D19cFWInterface::DecodeReg ( ChipRegItem& pRegItem,
       uint8_t& pCbcId,
@@ -1404,8 +1361,7 @@ namespace Ph2_HwInterface {
 
     }
 
-
-    void D19cFWInterface::BCEncodeReg ( const RegItem& pRegItem,
+    void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
         uint8_t pNCbc,
         std::vector<uint32_t>& pVecReq,
         bool pReadBack,
@@ -1414,33 +1370,6 @@ namespace Ph2_HwInterface {
     //use fBroadcastCBCId for broadcast commands
         bool pUseMask = false;
         pVecReq.push_back ( ( 2 << 28 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
-    }
-
-
-    void D19cFWInterface::DecodeReg ( RegItem& pRegItem,
-      uint8_t& pCbcId,
-      uint32_t pWord,
-      bool& pRead,
-      bool& pFailed )
-    {
-        if (fI2CVersion >= 1) {
-        //pFeId    =  ( ( pWord & 0x07800000 ) >> 27) ;
-            pCbcId   =  ( ( pWord & 0x007c0000 ) >> 22) ;
-            pFailed  =  0 ;
-            pRegItem.fPage    =  0 ;
-            pRead    =  true ;
-            pRegItem.fAddress =  ( pWord & 0x00FFFF00 ) >> 8;
-            pRegItem.fValue   =  ( pWord & 0x000000FF );
-        } else {
-        //pFeId    =  ( ( pWord & 0x00f00000 ) >> 24) ;
-            pCbcId   =  ( ( pWord & 0x00f00000 ) >> 20) ;
-            pFailed  =  0 ;
-            pRegItem.fPage    =  ( (pWord & 0x00020000 ) >> 17);
-            pRead    =  (pWord & 0x00010000) >> 16;
-            pRegItem.fAddress =  ( pWord & 0x0000FF00 ) >> 8;
-            pRegItem.fValue   =  ( pWord & 0x000000FF );
-        }
-
     }
 
     bool D19cFWInterface::ReadI2C (  uint32_t pNReplies, std::vector<uint32_t>& pReplies)
@@ -2322,11 +2251,11 @@ namespace Ph2_HwInterface {
     }
 
 
-    void D19cFWInterface::Pix_write_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
+    void D19cFWInterface::Pix_write_MPA(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
     {
         uint8_t cWriteAttempts = 0;
 
-        RegItem rowreg =cRegItem;
+        ChipRegItem rowreg =cRegItem;
         rowreg.fAddress  = ((row & 0x0001f) << 11 ) | ((cRegItem.fAddress & 0x000f) << 7 ) | (pixel & 0xfffffff);
         rowreg.fValue  = data;
         std::vector<uint32_t> cVecReq;
@@ -2335,7 +2264,7 @@ namespace Ph2_HwInterface {
         this->WriteChipBlockReg (cVecReq, cWriteAttempts, false);
     }
 
-    uint32_t D19cFWInterface::Pix_read_MPA(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel)
+    uint32_t D19cFWInterface::Pix_read_MPA(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel)
     {
         uint8_t cWriteAttempts = 0;
         uint32_t rep;

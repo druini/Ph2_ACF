@@ -105,8 +105,8 @@ public:
 
 
 
-    void Pix_write(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
-    uint32_t Pix_read(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel);
+    void Pix_write(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
+    uint32_t Pix_read(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel);
 
 
     void activate_I2C_chip();

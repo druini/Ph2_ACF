@@ -50,45 +50,24 @@ namespace Ph2_System
   {
     this->closeFileHandler();
 
-    if (fBeBoardInterface != nullptr)
-      {
-        delete fBeBoardInterface;
-        fBeBoardInterface = nullptr;
-      }
-    if (fReadoutChipInterface != nullptr)
-      {
-        delete fReadoutChipInterface;
-        fReadoutChipInterface = nullptr;
-      }
-    if (fChipInterface != nullptr)
-      {
-        delete fChipInterface;
-        fChipInterface = nullptr;
-      }
-    if (fMPAInterface != nullptr)
-      {
-        delete fMPAInterface;
-        fMPAInterface = nullptr;
-      }
-    if (fDetectorContainer != nullptr)
-      {
-        delete fDetectorContainer;
-        fDetectorContainer = nullptr;
-      }
+    delete fBeBoardInterface;
+    fBeBoardInterface = nullptr;
+    delete fReadoutChipInterface;
+    fReadoutChipInterface = nullptr;
+    delete fChipInterface;
+    fChipInterface = nullptr;
+    delete fMPAInterface;
+    fMPAInterface = nullptr;
+    delete fDetectorContainer;
+    fDetectorContainer = nullptr;
 
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
 
-    if (fNetworkStreamer != nullptr)
-      {
-        delete fNetworkStreamer;
-        fNetworkStreamer = nullptr;
-      }
-    if (fData != nullptr)
-      {
-        delete fData;
-        fData = nullptr;
-      }
+    delete fNetworkStreamer;
+    fNetworkStreamer = nullptr;
+    delete fData;
+    fData = nullptr;
   }
 
   void SystemController::addFileHandler (const std::string& pFilename, char pOption)
@@ -106,7 +85,7 @@ namespace Ph2_System
     if (fFileHandler != nullptr)
       {
         if (fFileHandler->isFileOpen() == true) fFileHandler->closeFile();
-        if (fFileHandler != nullptr) delete fFileHandler;
+        delete fFileHandler;
         fFileHandler = nullptr;
       }
   }
@@ -249,7 +228,7 @@ namespace Ph2_System
         FileHandler* cHandler = new FileHandler(cFilename, 'w', cHeader);
 
         fBeBoardInterface->SetFileHandler(cBoard, cHandler);
-        LOG (INFO) << BOLDBLUE << "Saving binary raw data into: " << BOLDYELLOW << cFilename << RESET;
+        LOG (INFO) << BOLDBLUE << "Saving binary data into: " << BOLDYELLOW << cFilename << RESET;
       }
   }
 
