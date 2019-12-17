@@ -32,17 +32,23 @@ namespace Ph2_HwInterface {
     	}
 	void D19cSSAEvent::SetEvent ( const BeBoard* pBoard, uint32_t pNSSA, const std::vector<uint32_t>& list )
     	{
-		for (auto L : list) LOG (INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
 		// start reading here for first SSA
 		for (uint32_t chip = 0; chip<pNSSA; chip++)
 		{
 			uint32_t cFeId = (list.at(4+(chip*12)) & 0xFF0000) >> 16;
 			uint32_t cSSAId = (list.at(4+(chip*12)) & 0xF000) >> 12;
 			std::vector<uint32_t> lvec;
+			// L1 hits
 			lvec.push_back(list.at(8+(chip*12)));
 			lvec.push_back(list.at(9+(chip*12)));
 			lvec.push_back(list.at(10+(chip*12)));
 			lvec.push_back(list.at(11+(chip*12)));
+			for (auto L : lvec) LOG (INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
+			LOG (INFO) << BOLDRED << "==============================" << RESET;
+			// stubs
+			lvec.push_back(list.at(13+(chip*12)));
+			lvec.push_back(list.at(14+(chip*12)));
+			// save it
 			fEventDataVector[encodeVectorIndex(cFeId, cSSAId, pNSSA)] = lvec;
 		}
 	}
@@ -140,12 +146,28 @@ namespace Ph2_HwInterface {
 	}
     	std::vector<uint32_t> D19cSSAEvent::GetHits (uint8_t pFeId, uint8_t pSSAId) const
     	{
-        	std::vector<uint32_t> cHits;
-                for ( uint32_t i = 0; i < NSSACHANNELS; ++i )
-        	{
-        		cHits.push_back(privateDataBit(pFeId, pSSAId, i));
-        	}
-		return cHits;
+		std::vector<uint32_t> CA(8);
+		std::vector<uint32_t> stubs;
+		std::vector<uint32_t> lvec = fEventDataVector[encodeVectorIndex(pFeId, pSSAId, fNSSA)];
+		CA.at(0) = (lvec.at(4) & 0xFF);
+		CA.at(1) = (lvec.at(4) & 0xFF00) >> 8;
+		CA.at(2) = (lvec.at(4) & 0xFF0000) >> 16;
+		CA.at(3) = (lvec.at(4) & 0xFF000000) >> 24;
+		CA.at(4) = (lvec.at(5) & 0xFF);
+		CA.at(5) = (lvec.at(5) & 0xFF00) >> 8;
+		CA.at(6) = (lvec.at(5) & 0xFF0000) >> 16;
+		CA.at(7) = (lvec.at(5) & 0xFF000000) >> 24;
+		for (auto ca : CA)
+		{
+			if (ca != 0) {stubs.push_back(ca);}
+		}
+		return stubs;
+        	//std::vector<uint32_t> cHits;
+                //for ( uint32_t i = 0; i < NSSACHANNELS; ++i )
+        	//{
+        	//	cHits.push_back(privateDataBit(pFeId, pSSAId, i));
+        	//}
+		//return cHits;
 	}
 	void D19cSSAEvent::print ( std::ostream& os) const //TODO add info here as needed
     	{
