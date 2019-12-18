@@ -20,7 +20,9 @@ void Physics::ConfigureCalibration ()
   colStop      = this->findValueInSettings("COLstop");
   doDisplay    = this->findValueInSettings("DisplayHisto");
   doUpdateChip = this->findValueInSettings("UpdateChipCfg");
+  saveRawData  = this->findValueInSettings("SaveRawData");
   doLocal      = false;
+  keepRunning  = true;
 
 
   // ################################
@@ -59,8 +61,7 @@ void Physics::Start (int currentRun)
   SystemController::Start(currentRun);
 
   keepRunning = true;
-  std::thread thrRun_(&Physics::run, this);
-  thrRun.swap(thrRun_);
+  thrRun = std::thread(&Physics::run, this);
 }
 
 void Physics::sendData (BoardContainer* const& cBoard)
@@ -82,9 +83,11 @@ void Physics::sendData (BoardContainer* const& cBoard)
 
 void Physics::Stop ()
 {
+  LOG (INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
+
   SystemController::Stop();
   keepRunning = false;
-  thrRun.join();
+  if (thrRun.joinable() == true) thrRun.join();
 
 
   // ################
@@ -93,7 +96,7 @@ void Physics::Stop ()
   Physics::chipErrorReport();
 
 
-  if (doLocal == false) this->Destroy();
+  this->closeFileHandler();
 }
 
 void Physics::initialize (const std::string fileRes_, const std::string fileReg_)
@@ -122,19 +125,16 @@ void Physics::run ()
 
   while (keepRunning == true)
     {
+      RD53decodedEvents.clear();
+
       for (const auto cBoard : *fDetectorContainer)
-        {
-          RD53decodedEvents.clear();
-          dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
+        if ((dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true)) != 0)
+          {
+            Physics::fillDataContainer(cBoard);
+            Physics::sendData(cBoard);
+          }
 
-          if (dataSize != 0)
-            {
-              Physics::fillDataContainer(cBoard);
-              Physics::sendData(cBoard);
-            }
-        }
-
-      usleep(READOUTSLEEP);
+      std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
     }
 
   if (dataSize == 0) LOG (WARNING) << BOLDBLUE << "No data collected" << RESET;
@@ -158,7 +158,7 @@ void Physics::draw ()
           static_cast<RD53*>(cChip)->saveRegMap(fileReg);
           std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
           system(command.c_str());
-          LOG (INFO) << BOLDGREEN << "\t--> Physics saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> Physics saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 
 #ifdef __USE_ROOT__
@@ -241,6 +241,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
               if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDBLUE <<"[Physics::analyze] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
               else theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
             }
+          theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1.clear();
 
           for (auto i = 1u; i < theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2.size(); i++)
             {
@@ -250,6 +251,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
               if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDBLUE << "[Physics::analyze] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
               else theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
             }
+          theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2.clear();
         }
 }
 
@@ -261,7 +263,7 @@ void Physics::chipErrorReport ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << GREEN << "Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
           LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;

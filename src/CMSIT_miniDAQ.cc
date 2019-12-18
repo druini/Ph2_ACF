@@ -9,6 +9,7 @@
 
 #include "../Utils/argvparser.h"
 #include "../Utils/MiddlewareInterface.h"
+#include "../Utils/RD53SharedConstants.h"
 #include "../DQMUtils/DQMInterface.h"
 #include "../System/SystemController.h"
 
@@ -57,14 +58,6 @@ void interruptHandler (int handler)
 }
 
 
-std::string fromInt2Str (int val)
-{
-  std::stringstream myString;
-  myString << std::setfill('0') << std::setw(4) << val;
-  return myString.str();
-}
-
-
 int main (int argc, char** argv)
 {
   // ########################
@@ -90,9 +83,6 @@ int main (int argc, char** argv)
   cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin injdelay physics]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
-  cmd.defineOption ("raw", "Save raw data. Default: disabled", CommandLineProcessing::ArgvParser::NoOptionAttribute);
-  cmd.defineOptionAlternative ("raw", "w");
-
   cmd.defineOption ("prog", "Simply program the system components.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("prog", "p");
 
@@ -112,7 +102,6 @@ int main (int argc, char** argv)
 
   std::string configFile = cmd.foundOption("file")  == true ? cmd.optionValue("file") : "CMSIT.xml";
   std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "pixelalive";
-  bool saveRaw           = cmd.foundOption("raw")   == true ? true : false;
   bool program           = cmd.foundOption("prog")  == true ? true : false;
   bool supervisor        = cmd.foundOption("sup")   == true ? true : false;
   bool reset             = cmd.foundOption("reset") == true ? true : false;
@@ -143,14 +132,14 @@ int main (int argc, char** argv)
       runControllerPid = fork();
       if (runControllerPid == -1)
         {
-          LOG (ERROR) << BOLDRED << "Can't fork RunController, error occured" << RESET;
+          LOG (ERROR) << BOLDRED << "I can't fork RunController, error occured" << RESET;
           exit(EXIT_FAILURE);
         }
       else if (runControllerPid == 0)
         {
           char* argv[] = {(char*)"RunController", NULL};
           execv((std::string(getenv("BASE_DIR")) + "/bin/RunController").c_str(), argv);
-          LOG (ERROR) << BOLDRED << "Can't run RunController, error occured" << RESET;
+          LOG (ERROR) << BOLDRED << "I Can't run RunController, error occured" << RESET;
           exit(EXIT_FAILURE);
         }
 
@@ -256,12 +245,6 @@ int main (int argc, char** argv)
           static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fBoardVector[0]->getBeBoardId()])->ResetSequence();
           exit(EXIT_SUCCESS);
         }
-
-
-      // ###################################
-      // # Initialize Raw-Data Output File #
-      // ###################################
-      if ((program == false) && (saveRaw == true)) mySysCntr.addFileHandler("run_" + fromInt2Str(runNumber) + ".raw", 'w');
 
 
       // #######################
@@ -430,7 +413,6 @@ int main (int argc, char** argv)
       else
         {
           LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
-          mySysCntr.Destroy();
           exit(EXIT_FAILURE);
         }
 
@@ -453,7 +435,6 @@ int main (int argc, char** argv)
       fileRunNumberOut.close();
 
 
-      mySysCntr.Destroy();
       LOG (INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }
 

@@ -69,12 +69,14 @@ namespace RD53FWEvtEncoder
   // ################
   // # Event status #
   // ################
-  const uint16_t GOOD   = 0x0000; // Event status Good
-  const uint16_t EVSIZE = 0x0001; // Event status Invalid event size
-  const uint16_t EMPTY  = 0x0002; // Event status Empty event
-  const uint16_t L1A    = 0x0004; // Event status L1A counter mismatch
-  const uint16_t FRSIZE = 0x0008; // Event status Invalid frame size
-  const uint16_t FWERR  = 0x0010; // Event status Firmware error
+  const uint16_t GOOD       = 0x0000; // Event status Good
+  const uint16_t EVSIZE     = 0x0001; // Event status Invalid event size
+  const uint16_t EMPTY      = 0x0002; // Event status Empty event
+  const uint16_t INCOMPLETE = 0x0004; // Event status Incomplete event header
+  const uint16_t L1A        = 0x0008; // Event status L1A counter mismatch
+  const uint16_t FWERR      = 0x0010; // Event status Firmware error
+  const uint16_t FRSIZE     = 0x0020; // Event status Invalid frame size
+  const uint16_t MISSCHIP   = 0x0040; // Event status Chip data are missing
 }
 
 
@@ -88,7 +90,7 @@ namespace Ph2_HwInterface
 
     void      setFileHandler (FileHandler* pHandler) override;
     uint32_t  getBoardInfo   ()                      override;
-    BoardType getBoardType   () const { return BoardType::FC7; };
+    BoardType getBoardType   () const { return BoardType::RD53; };
 
     void ResetSequence       ();
     void ConfigureBoard      (const BeBoard* pBoard) override;
@@ -128,7 +130,7 @@ namespace Ph2_HwInterface
       uint16_t tlu_trigger_id;
       uint16_t data_format_ver;
       uint16_t tdc;
-      uint16_t l1a_counter;
+      uint32_t l1a_counter;
       uint32_t bx_counter;
 
       std::vector<ChipFrame>   chip_frames;
@@ -204,11 +206,11 @@ namespace Ph2_HwInterface
       bool     ext_clk_en         = false;
       uint32_t ch_out_en          = 0;    // chn-1 = TLU clk input, chn-2 = ext. trigger, chn-3 = TLU busy, chn-4 = TLU reset, chn-5 = ext. clk
       uint32_t fiftyohm_en        = 0;
-      uint32_t ch1_thr            = 0x7F; // [thr/256*3.3V]
-      uint32_t ch2_thr            = 0x7F;
-      uint32_t ch3_thr            = 0x7F;
-      uint32_t ch4_thr            = 0x7F;
-      uint32_t ch5_thr            = 0x7F;
+      uint32_t ch1_thr            = 0x80; // [(thr/256*(5-1)V + 1V) * 3.3V/5V]
+      uint32_t ch2_thr            = 0x80;
+      uint32_t ch3_thr            = 0x80;
+      uint32_t ch4_thr            = 0x80;
+      uint32_t ch5_thr            = 0x80;
       bool     tlu_en             = false;
       uint32_t tlu_handshake_mode = 0;    // 0 = no handshake, 1 = simple handshake, 2 = data handshake
     };
@@ -226,6 +228,14 @@ namespace Ph2_HwInterface
     void CheckIfUploading                      ();
     void RebootBoard                           ();
     const FpgaConfig* GetConfiguringFpga       ();
+
+    // ################################################
+    // # I2C block for programming peripheral devices #
+    // ################################################
+    bool I2cCmdAckWait        (unsigned int trials);
+    void WriteI2C             (std::vector<uint32_t>& data);
+    void ReadI2C              (std::vector<uint32_t>& data);
+    void ConfigureClockSi5324 ();
 
   private:
     void PrintFWstatus         ();

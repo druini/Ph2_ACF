@@ -27,6 +27,7 @@ void Gain::ConfigureCalibration ()
   doFast       = this->findValueInSettings("DoFast");
   doDisplay    = this->findValueInSettings("DisplayHisto");
   doUpdateChip = this->findValueInSettings("UpdateChipCfg");
+  saveRawData  = this->findValueInSettings("SaveRawData");
 
 
   // ########################
@@ -46,7 +47,7 @@ void Gain::ConfigureCalibration ()
   // ##############################
   // # Initialize dac scan values #
   // ##############################
-  float step = (stopValue - startValue) / nSteps;
+  const float step = (stopValue - startValue) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
 
@@ -58,6 +59,14 @@ void Gain::ConfigureCalibration ()
 
 void Gain::Start (int currentRun)
 {
+  LOG (INFO) << GREEN << "[Gain::Start] Starting" << RESET;
+
+  if (saveRawData == true)
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
+
   Gain::run();
   Gain::analyze();
   Gain::sendData();
@@ -91,7 +100,9 @@ void Gain::sendData ()
 
 void Gain::Stop ()
 {
-  this->Destroy();
+  LOG (INFO) << GREEN << "[Gain::Stop] Stopping" << RESET;
+
+  this->closeFileHandler();
 }
 
 void Gain::initialize (const std::string fileRes_, const std::string fileReg_)
@@ -179,7 +190,7 @@ void Gain::draw (bool doSave)
               static_cast<RD53*>(cChip)->saveRegMap(fileReg);
               std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
               system(command.c_str());
-              LOG (INFO) << BOLDGREEN << "\t--> Gain saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+              LOG (INFO) << BOLDBLUE << "\t--> Gain saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
             }
     }
 
@@ -234,6 +245,39 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
 
           index++;
         }
+
+
+  // #####################
+  // # @TMP@ : CalibFile #
+  // #####################
+  if (saveRawData == true)
+    {
+      for (const auto cBoard : *fDetectorContainer)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              std::stringstream myString;
+              myString.clear(); myString.str("");
+              myString << "Gain_"
+                       << "B"    << std::setfill('0') << std::setw(2) << cBoard->getId()  << "_"
+                       << "M"    << std::setfill('0') << std::setw(2) << cModule->getId() << "_"
+                       << "C"    << std::setfill('0') << std::setw(2) << cChip->getId()   << ".dat";
+              std::ofstream fileOutID(myString.str(),std::ios::out);
+              for (auto i = 0u; i < dacList.size(); i++)
+                {
+                  fileOutID << "Iteration " << i << " --- reg = " << dacList[i]-offset << std::endl;
+                  for (auto row = 0u; row < RD53::nRows; row++)
+                    for (auto col = 0u; col < RD53::nCols; col++)
+                      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+                        fileOutID << "r " << row << " c " << col
+                                  << " h " << detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy*nEvents
+                                  << " a " << detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh
+                                  << std::endl;
+                }
+              fileOutID.close();
+            }
+    }
+
 
   return theGainAndInterceptContainer;
 }
@@ -338,7 +382,7 @@ void Gain::chipErrorReport ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << GREEN << "Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
           LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;

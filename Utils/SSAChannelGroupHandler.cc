@@ -4,8 +4,8 @@
 
 SSAChannelGroupHandler::SSAChannelGroupHandler()
 {
-    allChannelGroup_     = new ChannelGroup<NCHANNELS,1>();
-    currentChannelGroup_ = new ChannelGroup<NCHANNELS,1>();
+    allChannelGroup_     = new ChannelGroup<NSSACHANNELS,1>();
+    currentChannelGroup_ = new ChannelGroup<NSSACHANNELS,1>();
 }
 
 SSAChannelGroupHandler::~SSAChannelGroupHandler()

@@ -406,6 +406,7 @@ namespace Ph2_HwDescription
 
     const size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
     for (auto i = 1u; i < n; i++) if (data[i] != noHitToT) DecodeQuad(data[i]);
+    if (n == 1) evtStatus |= RD53EvtEncoder::CHIPNOHIT;
   }
 
   RD53::CalCmd::CalCmd (const uint8_t& cal_edge_mode,

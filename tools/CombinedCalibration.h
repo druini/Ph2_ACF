@@ -28,7 +28,7 @@ public:
         std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Configuring !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
         toolPointer = this;
         Tool::Configure(cHWFile,enableStream);
-        Tool::CreateResultDirectory ( "Results/Run_CombinedCalibration" );
+        Tool::CreateResultDirectory("Results",false,false);
     }
 
     void Start(int currentRun) override

@@ -91,6 +91,7 @@ class Gain : public Tool
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
+  bool saveRawData;
 };
 
 #endif

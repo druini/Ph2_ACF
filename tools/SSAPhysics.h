@@ -1,28 +1,27 @@
 /*!
-  \file                  RD53Physics.h
-  \brief                 Implementaion of Physics data taking
+  \file                  SSASSAPhysics.h
+  \brief                 Implementaion of SSAPhysics data taking
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef RD53Physics_H
-#define RD53Physics_H
+#ifndef SSAPhysics_H
+#define SSAPhysics_H
 
 #include "Tool.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53SharedConstants.h"
-#include "../HWInterface/RD53FWInterface.h"
+#include "../Utils/SSAChannelGroupHandler.h"
+// #include "../Utils/SSASharedConstants.h"
+// #include "../HWInterface/SSAFWInterface.h"
 
 #include <thread>
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
-#include "../DQMUtils/RD53PhysicsHistograms.h"
+#include "../DQMUtils/SSAPhysicsHistograms.h"
 #endif
 
 
@@ -33,9 +32,9 @@
 
 
 // #######################
-// # Physics data taking #
+// # SSAPhysics data taking #
 // #######################
-class Physics : public Tool
+class SSAPhysics : public Tool
 {
  public:
   void Start (int currentRun)  override;
@@ -50,15 +49,7 @@ class Physics : public Tool
 
 
  private:
-  size_t rowStart;
-  size_t rowStop;
-  size_t colStart;
-  size_t colStop;
-
-  std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
-  DetectorDataContainer theOccContainer;
-  DetectorDataContainer theBCIDContainer;
-  DetectorDataContainer theTrgIDContainer;
+  DetectorDataContainer fOccContainer;
 
   void initHisto       ();
   void fillHisto       ();
@@ -70,7 +61,7 @@ class Physics : public Tool
   // # ROOT #
   // ########
 #ifdef __USE_ROOT__
-  PhysicsHistograms histos;
+  SSAPhysicsHistograms histos;
   TApplication* myApp;
 #endif
 

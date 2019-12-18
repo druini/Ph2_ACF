@@ -17,6 +17,7 @@
 #include "RD53InjectionDelayHistograms.h"
 #include "RD53ThrEqualizationHistograms.h"
 #include "RD53PhysicsHistograms.h"
+#include "SSAPhysicsHistograms.h"
 
 #include "TFile.h"
 
@@ -124,6 +125,8 @@ void DQMInterface::configure(std::string const &calibrationName, std::string con
 		fDQMHistogrammerVector.push_back(new ThrEqualizationHistograms());
 	else if (calibrationName == "physics")
 		fDQMHistogrammerVector.push_back(new PhysicsHistograms());
+	else if (calibrationName == "ssaphysics")
+		fDQMHistogrammerVector.push_back(new SSAPhysicsHistograms());
 
 	fOutputFile = new TFile("tmp.root", "RECREATE");
 	for (auto dqmHistogrammer : fDQMHistogrammerVector)
@@ -209,7 +212,7 @@ bool DQMInterface::running()
 				{
 					LOG(ERROR) << BOLDRED << "Packet number expected = " << --packetNumber << " But received "
 							   << int(theCurrentStream->getPacketNumber()) << ", Aborting" << RESET;
-					LOG(INFO) << BOLDGREEN << "Did you check that the Endianness of the two comupters is the same?" << RESET;
+					LOG(INFO) << GREEN << "Did you check that the Endianness of the two comupters is the same?" << RESET;
 					abort();
 				}
 

@@ -28,7 +28,7 @@ namespace Ph2_HwInterface
   {
     Reset();
 
-    if (pType == BoardType::FC7)
+    if (pType == BoardType::RD53)
       {
         uint16_t status;
         if (RD53decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, status, RD53decodedEvents);
@@ -45,6 +45,8 @@ namespace Ph2_HwInterface
       }
     else
       {
+        if(pData.size() == 0) return;
+        
         fNevents = static_cast<uint32_t>(pNevents);
         // be aware that eventsize is not constant for the zs event, so we are not using it
         fEventSize = static_cast<uint32_t>((pData.size()) / fNevents);
@@ -193,6 +195,4 @@ namespace Ph2_HwInterface
   {
     pWord = this->swap_bytes(pWord);
   }
-
-  void Data::setCbc3Fc7 (uint32_t &pWord) {}
 }

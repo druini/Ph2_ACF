@@ -37,7 +37,7 @@ namespace Ph2_HwInterface { // Begin namespace
 		void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup) override;
 		void print (std::ostream& out) const override;
 		bool DataBit ( uint8_t pFeId, uint8_t pSSAId, uint32_t i ) const override {return privateDataBit(pFeId, pSSAId, i);};
-		inline bool privateDataBit ( uint8_t pFeId, uint8_t pSSAId, uint32_t i ) const
+		inline bool privateDataBit ( uint8_t pFeId, uint8_t pSSAId, uint8_t i ) const
 		{
 		    try 
 		    {

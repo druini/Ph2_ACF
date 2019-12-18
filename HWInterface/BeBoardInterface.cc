@@ -118,52 +118,42 @@ namespace Ph2_HwInterface
 
   void BeBoardInterface::ConfigureBoard (const BeBoard* pBoard)
   {
-    theMtx.lock();
+    std::lock_guard<std::mutex> guard(theMtx);
 
     setBoard(pBoard->getBeBoardId());
     fBoardFW->ConfigureBoard (pBoard);
-
-    theMtx.unlock();
   }
 
   void BeBoardInterface::Start (BeBoard* pBoard)
   {
-    theMtx.lock();
+    std::lock_guard<std::mutex> guard(theMtx);
 
     setBoard(pBoard->getBeBoardId());
     fBoardFW->Start();
-
-    theMtx.unlock();
   }
 
   void BeBoardInterface::Stop (BeBoard* pBoard)
   {
-    theMtx.lock();
+    std::lock_guard<std::mutex> guard(theMtx);
 
     setBoard(pBoard->getBeBoardId());
     fBoardFW->Stop();
-
-    theMtx.unlock();
   }
 
   void BeBoardInterface::Pause (BeBoard* pBoard)
   {
-    theMtx.lock();
+    std::lock_guard<std::mutex> guard(theMtx);
 
     setBoard(pBoard->getBeBoardId());
     fBoardFW->Pause();
-
-    theMtx.unlock();
   }
 
   void BeBoardInterface::Resume (BeBoard* pBoard)
   {
-    theMtx.lock();
+    std::lock_guard<std::mutex> guard(theMtx);
 
     setBoard(pBoard->getBeBoardId());
     fBoardFW->Resume();
-
-    theMtx.unlock();
   }
 
   uint32_t BeBoardInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)

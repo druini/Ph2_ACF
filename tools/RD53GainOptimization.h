@@ -10,10 +10,11 @@
 #ifndef RD53GainOptimization_H
 #define RD53GainOptimization_H
 
+#include "RD53Gain.h"
+
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53GainOptimizationHistograms.h"
 #endif
-#include "RD53Gain.h"
 
 
 // #############
@@ -81,6 +82,7 @@ class GainOptimization : public Gain
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
+  bool saveRawData;
 };
 
 #endif

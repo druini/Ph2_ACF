@@ -9,8 +9,8 @@
 
 */
 
-#ifndef __SYSTEMCONTROLLER_H__
-#define __SYSTEMCONTROLLER_H__
+#ifndef SYSTEMCONTROLLER_H
+#define SYSTEMCONTROLLER_H
 
 #include "FileParser.h"
 #include "../HWInterface/ReadoutChipInterface.h"
@@ -65,7 +65,7 @@ namespace Ph2_System
     BeBoardFWMap fBeBoardFWMap;
     SettingsMap fSettingsMap; //!< Maps the settings
     //for reading single files
-    FileHandler *fFileHandler;
+    FileHandler* fFileHandler;
     //for writing 1 file for each FED
     std::string fRawFileName;
     bool fWriteHandlerEnabled;
@@ -96,14 +96,7 @@ namespace Ph2_System
 
     void addFileHandler(const std::string &pFilename, char pOption);
     void closeFileHandler();
-
-    FileHandler *getFileHandler()
-    {
-      if (fFileHandler != nullptr)
-        return fFileHandler;
-      else
-        return nullptr;
-    }
+    FileHandler* getFileHandler() { return fFileHandler; }
 
     /*!
      * \brief issues a FileHandler for writing files to every BeBoardFWInterface if addFileHandler was called

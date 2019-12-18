@@ -76,6 +76,7 @@ class Latency : public PixelAlive
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
+  bool saveRawData;
 };
 
 #endif

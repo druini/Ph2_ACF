@@ -31,6 +31,28 @@ namespace Ph2_HwInterface
   {
     uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
     uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
+    uint32_t cVersionWord  = ((cVersionMajor << NBIT_FWVER) | cVersionMinor);
+    return cVersionWord;
+  }
+
+  void RD53FWInterface::ResetSequence()
+  {
+    LOG (INFO) << BOLDMAGENTA << "Resetting the backend board... it may take a while" << RESET;
+
+    RD53FWInterface::TurnOffFMC();
+    RD53FWInterface::TurnOnFMC();
+    RD53FWInterface::ResetBoard();
+
+    LOG (INFO) << BOLDMAGENTA << "Now you can start using the DAQ ... enjoy!" << RESET;
+  }
+
+  void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)
+  {
+    // ########################
+    // # Print firmware infos #
+    // ########################
+    uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
+    uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
 
     uint32_t cFWyear       = ReadReg ("user.stat_regs.fw_date.year");
     uint32_t cFWmonth      = ReadReg ("user.stat_regs.fw_date.month");
@@ -43,24 +65,6 @@ namespace Ph2_HwInterface
                << BOLDBLUE << " -- date (yyyy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/" << cFWday
                << BOLDBLUE << " -- time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
 
-    uint32_t cVersionWord = ((cVersionMajor << NBIT_FWVER) | cVersionMinor);
-    return cVersionWord;
-  }
-
-  void RD53FWInterface::ResetSequence()
-  {
-    LOG (INFO) << BOLDMAGENTA << "Resetting the backend board... it may take a while" << RESET;
-
-    RD53FWInterface::TurnOffFMC();
-    RD53FWInterface::TurnOnFMC();
-    RD53FWInterface::ResetBoard();
-
-    LOG (INFO) << BOLDMAGENTA << "You now need to powercycle the frontend chip(s)" << RESET;
-  }
-
-  void RD53FWInterface::ConfigureBoard (const BeBoard* pBoard)
-  {
-    RD53FWInterface::getBoardInfo();
 
     std::stringstream myString;
     RD53FWInterface::ChipReset();
@@ -125,6 +129,17 @@ namespace Ph2_HwInterface
     // # Configure DIO5 #
     // ##################
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
+    LOG(INFO) << GREEN<< "DIO5 configured" << RESET;
+    usleep(DEEPSLEEP);
+
+
+    // ###########################
+    // # Print clock measurement #
+    // ###########################
+    uint32_t inputClk = ReadReg ("user.stat_regs.stat_reg_22");
+    uint32_t gtxClk   = ReadReg ("user.stat_regs.stat_reg_21");
+    LOG (INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk/1000. << " MHz" << RESET;
+    LOG (INFO) << GREEN << "GTX receiver clock frequency (should be ~160 MHz): " << BOLDYELLOW << gtxClk/1000. << " MHz" << RESET;
 
 
     // ##############################
@@ -224,7 +239,7 @@ namespace Ph2_HwInterface
     // # Check clock generator locking #
     // #################################
     if (ReadReg ("user.stat_regs.global_reg.clk_gen_lock") == 1)
-      LOG (INFO) << BOLDBLUE << "\t--> Clock generator is locked" << RESET;
+      LOG (INFO) << BOLDBLUE << "\t--> Clock generator is " << BOLDYELLOW << "locked" << RESET;
     else
       LOG (ERROR) << BOLDRED << "\t--> Clock generator is not locked" << RESET;
 
@@ -233,7 +248,7 @@ namespace Ph2_HwInterface
     // # Check I2C initialization #
     // ############################
     if (ReadReg ("user.stat_regs.global_reg.i2c_init") == 1)
-      LOG (INFO) << BOLDBLUE << "\t--> I2C initialized" << RESET;
+      LOG (INFO) << BOLDBLUE << "\t--> I2C " << BOLDYELLOW << "initialized" << RESET;
     else
       {
         LOG (ERROR) << BOLDRED << "I2C not initialized" << RESET;
@@ -506,9 +521,21 @@ namespace Ph2_HwInterface
         isGood = false;
       }
 
+    if (status & RD53FWEvtEncoder::INCOMPLETE)
+      {
+        LOG (ERROR) << BOLDRED << "Incomplete event header " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+      }
+
     if (status & RD53FWEvtEncoder::L1A)
       {
         LOG (ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+      }
+
+    if (status & RD53FWEvtEncoder::FWERR)
+      {
+        LOG (ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
@@ -518,9 +545,9 @@ namespace Ph2_HwInterface
         isGood = false;
       }
 
-    if (status & RD53FWEvtEncoder::FWERR)
+    if (status & RD53FWEvtEncoder::MISSCHIP)
       {
-        LOG (ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG (ERROR) << BOLDRED << "Chip data are missing " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
       }
 
@@ -536,6 +563,12 @@ namespace Ph2_HwInterface
         isGood = false;
       }
 
+    if (status & RD53EvtEncoder::CHIPNOHIT)
+      {
+        LOG (ERROR) << BOLDRED << " Hit data are missing " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+      }
+
     return isGood;
   }
 
@@ -548,17 +581,13 @@ namespace Ph2_HwInterface
     // # Wait until we have something in DDR3 #
     // ########################################
     if (HANDSHAKE_EN == true)
-      {
-        while (ReadReg("user.stat_regs.readout4.readout_req").value() == 0)
-          {
-            uint32_t fsm_status = ReadReg("user.stat_regs.readout4.fsm_status").value();
-            LOG (ERROR) << BOLDRED << "Waiting for readout request, FSM status: " << BOLDYELLOW << fsm_status << RESET;
-            usleep(READOUTSLEEP);
-          }
-
-        nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value();
-      }
-    else while ((pWait == true) && ((nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value()) == 0)) usleep(READOUTSLEEP);
+      while (ReadReg("user.stat_regs.readout4.readout_req").value() == 0)
+        {
+          uint32_t fsm_status = ReadReg("user.stat_regs.readout4.fsm_status").value();
+          LOG (ERROR) << BOLDRED << "Waiting for readout request, FSM status: " << BOLDYELLOW << fsm_status << RESET;
+          usleep(READOUTSLEEP);
+        }
+    nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value();
 
 
     // #############################################
@@ -576,12 +605,12 @@ namespace Ph2_HwInterface
     // #############
     // # Read DDR3 #
     // #############
-    uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory - ddr3Offset, ddr3Offset);
-    ddr3Offset = nWordsInMemory;
+    uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
+    ddr3Offset += nWordsInMemory;
     for (const auto& val : values) pData.push_back(val);
 
 
-    if (this->fSaveToFile == true) this->fFileHandler->set(pData);
+    if ((this->fSaveToFile == true) && (pData.size() != 0)) this->fFileHandler->set(pData);
     return pData.size();
   }
 
@@ -649,21 +678,28 @@ namespace Ph2_HwInterface
     std::vector<size_t> event_start;
     const size_t maxL1Counter = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
-    if (data.size() != 0) evtStatus = RD53FWEvtEncoder::GOOD;
-    else
+    evtStatus = RD53FWEvtEncoder::GOOD;
+
+
+    // ######################
+    // # Consistency checks #
+    // ######################
+    if (data.size() == 0)
       {
         evtStatus = RD53FWEvtEncoder::EMPTY;
         return;
       }
 
+
     for (auto i = 0u; i < data.size(); i++)
       if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) event_start.push_back(i);
+
     events.reserve(events.size() + event_start.size());
 
     for (auto i = 0u; i < event_start.size(); i++)
       {
         const size_t start = event_start[i];
-        const size_t end   = ((i == event_start.size() - 1) ? data.size() : event_start[i + 1]);
+        const size_t end   = (i == event_start.size() - 1 ? data.size() : event_start[i + 1]);
 
         events.emplace_back(&data[start], end - start);
         if (events.back().evtStatus != RD53FWEvtEncoder::GOOD) evtStatus |= events.back().evtStatus;
@@ -679,8 +715,22 @@ namespace Ph2_HwInterface
   {
     evtStatus = RD53FWEvtEncoder::GOOD;
 
+
+    // ######################
+    // # Consistency checks #
+    // ######################
+    if (n < 4)
+      {
+        evtStatus = RD53FWEvtEncoder::INCOMPLETE;
+        return;
+      }
+
     std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);
-    if (block_size * NWORDS_DDR3 != n) evtStatus |= RD53FWEvtEncoder::EVSIZE;
+    if (block_size * NWORDS_DDR3 != n)
+      {
+        evtStatus = RD53FWEvtEncoder::EVSIZE;
+        return;
+      }
 
 
     // #########################
@@ -693,7 +743,7 @@ namespace Ph2_HwInterface
 
 
     std::vector<size_t> chip_start;
-    for (auto i = 4u; i < n - dummy_size * NWORDS_DDR3; i += 1)
+    for (auto i = 4u; i < n - dummy_size * NWORDS_DDR3; i++)
       if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER)
         chip_start.push_back(i);
 
@@ -706,18 +756,17 @@ namespace Ph2_HwInterface
     for (auto i = 0u; i < chip_start.size(); i++)
       {
         const size_t start = chip_start[i];
-        const size_t end   = ((i == chip_start.size() - 1) ? n - dummy_size * NWORDS_DDR3 : chip_start[i + 1]);
+        const size_t end   = (i == chip_start.size() - 1 ? n - dummy_size * NWORDS_DDR3 : chip_start[i + 1]);
         chip_frames.emplace_back(data[start], data[start + 1]);
 
-        if (chip_frames[i].error_code != 0)
-          {
-            evtStatus |= RD53FWEvtEncoder::FWERR;
-            return;
-          }
+        if (chip_frames[i].error_code != 0)                                     evtStatus |= RD53FWEvtEncoder::FWERR;
+        else if ((chip_frames[i].l1a_data_size * NWORDS_DDR3) != (end - start)) evtStatus |= RD53FWEvtEncoder::FRSIZE;
+        else if ((end - start) <= 2)                                            evtStatus |= RD53FWEvtEncoder::MISSCHIP;
 
-        if ((chip_frames[i].l1a_data_size * NWORDS_DDR3) != (end - start))
+        if ((evtStatus & RD53FWEvtEncoder::FWERR)  ||
+            (evtStatus & RD53FWEvtEncoder::FRSIZE) ||
+            (evtStatus & RD53FWEvtEncoder::MISSCHIP))
           {
-            evtStatus |= RD53FWEvtEncoder::FRSIZE;
             chip_frames.clear();
             chip_events.clear();
             return;
@@ -960,4 +1009,170 @@ namespace Ph2_HwInterface
   // # Vector containing the decoded events #
   // ########################################
   std::vector<RD53FWInterface::Event> RD53decodedEvents;
+
+
+  // ################################################
+  // # I2C block for programming peripheral devices #
+  // ################################################
+  bool RD53FWInterface::I2cCmdAckWait (unsigned int trials)
+  {
+    const uint16_t I2CcmdAckGOOD = 0x01;
+    uint16_t status = 0x02; // 0x02 = I2CcmdAckBAD
+    uint16_t cLoop  = 0;
+
+    while (++cLoop < trials)
+      {
+        status = ReadReg ("user.stat_regs.global_reg.i2c_acq_err");
+        if (status == I2CcmdAckGOOD) return true;
+        usleep(DEEPSLEEP);
+      }
+
+    return false;
+  }
+
+  void RD53FWInterface::WriteI2C (std::vector<uint32_t>& data)
+  {
+    const uint16_t I2CwriteREQ = 0x01;
+
+    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_reset",1);
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_reset",0);
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_fifo_rx_dsel",1);
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_req",I2CwriteREQ);
+    usleep(DEEPSLEEP);
+
+    /* bool outcome = */ RegManager::WriteBlockReg ("CTRL.BOARD.i2c_fifo_tx", data);
+    usleep(DEEPSLEEP);
+
+    if (I2cCmdAckWait (20) == false)
+      throw Exception ("[RD53FWInterface::WriteI2C] I2C transaction error");
+
+    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
+    usleep(DEEPSLEEP);
+  }
+
+  void RD53FWInterface::ReadI2C (std::vector<uint32_t>& data)
+  {
+    const uint16_t I2CreadREQ = 0x03;
+
+    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_reset",1);
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_reset",0);
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_fifo_rx_dsel",1);
+    usleep(DEEPSLEEP);
+    WriteReg ("CTRL.BOARD.i2c_req",I2CreadREQ);
+    usleep(DEEPSLEEP);
+
+    uint32_t sizeI2Cfifo = ReadReg("STAT.BOARD.i2c_fifo_rx_dcnt");
+    usleep(DEEPSLEEP);
+
+    int size2read = 0;
+    if (sizeI2Cfifo > data.size())
+      {
+        size2read = data.size();
+        LOG (WARNING) << BOLDRED << "[RD53FWInterface::ReadI2C] I2C FIFO contains more data than the vector size" << RESET;
+      }
+    else size2read = sizeI2Cfifo;
+
+    data = ReadBlockRegValue ("CTRL.BOARD.i2c_fifo_rx", size2read);
+    usleep(DEEPSLEEP);
+
+    if (RD53FWInterface::I2cCmdAckWait(20) == false)
+      throw Exception ("[RD53FWInterface::ReadI2C] I2C transaction error");
+
+    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
+  }
+
+  void RD53FWInterface::ConfigureClockSi5324 ()
+  {
+    // ###################################################
+    // # The Si5324 chip generates the clock for the GTX #
+    // ###################################################
+
+    uint8_t start_wr       = 0x90;
+    uint8_t stop_wr        = 0x50;
+    // uint8_t stop_rd_nack   = 0x68;
+    // uint8_t rd_incr        = 0x20;
+    uint8_t wr_incr        = 0x10;
+
+    uint8_t enable_i2cmux  = 1;
+    uint8_t disable_i2cmux = 0;
+
+    uint8_t i2cmux_addr_wr = 0xe8;
+    // uint8_t i2cmux_addr_rd = 0xe9;
+
+    uint8_t si5324_pos     = 7;
+    uint8_t si5324_addr_wr = 0xd0;
+    // uint8_t si5324_addr_rd = 0xd1;
+
+    uint32_t word;
+    std::vector<uint32_t> data;
+
+
+    // #############
+    // # Frequency #
+    // #############
+    const int N1_HS  =   0;
+    const int NC1_LS =  19;
+    const int N2_HS  =   1;
+    const int N2_LS  = 511;
+    const int N32    =  31;
+
+
+    // ############################################
+    // # Program Si5324 for 160 MHz precise clock #
+    // ############################################
+    std::vector< std::pair<uint8_t,uint8_t> > si5324Program;
+    si5324Program.push_back({0x00,0x54}); // Free running mode = 1, CKOUT_ALWAYS_ON = 0
+    si5324Program.push_back({0x0B,0x41}); // Disable CLKIN1
+    si5324Program.push_back({0x06,0x0F}); // Disable CKOUT2 (SFOUT2_REG=001), set CKOUT1 to LVDS (SFOUT1_REG=111)
+    si5324Program.push_back({0x15,0xFE}); // CKSEL_PIN = 0
+    si5324Program.push_back({0x03,0x55}); // CKIN2 selected, SQ_ICAL = 1
+
+    si5324Program.push_back({0x02,0x22});
+
+    si5324Program.push_back({0x19, N1_HS << 5});
+    si5324Program.push_back({0x1F, NC1_LS >> 16});
+    si5324Program.push_back({0x20, NC1_LS >> 8});
+    si5324Program.push_back({0x21, NC1_LS});
+    si5324Program.push_back({0x28,(N2_HS << 5) | (N2_LS >> 16)});
+    si5324Program.push_back({0x29, N2_LS >> 8});
+    si5324Program.push_back({0x2A, N2_LS});
+    si5324Program.push_back({0x2E, N32 >> 16});
+    si5324Program.push_back({0x2F, N32 >> 8});
+    si5324Program.push_back({0x30, N32});
+
+    si5324Program.push_back({0x89,0x01}); // FASTLOCK = 1
+    si5324Program.push_back({0x88,0x40}); // ICAL = 1
+    // ###########################################
+
+    word = (i2cmux_addr_wr << 8) | start_wr;
+    data.push_back(word);
+    word = (enable_i2cmux << si5324_pos) << 8 | stop_wr;
+    data.push_back(word);
+
+    for (auto i = 0u; i < si5324Program.size(); i++)
+      {
+        word = (si5324_addr_wr << 8) | start_wr;
+        data.push_back(word);
+        word = (si5324Program[i].first << 8) | wr_incr;
+        data.push_back(word);
+        word = (si5324Program[i].second << 8) | stop_wr;
+        data.push_back(word);
+      }
+
+    word = (i2cmux_addr_wr << 8) | start_wr;
+    data.push_back(word);
+    word = (disable_i2cmux << si5324_pos) << 8 | stop_wr;
+    data.push_back(word);
+
+    RD53FWInterface::WriteI2C(data);
+  }
 }

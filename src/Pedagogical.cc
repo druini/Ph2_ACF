@@ -58,16 +58,16 @@ int main( int argc, char* argv[] )
 		for (int i = 1; i<=120;i++ ) // loop over all strips
 		{
 			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "THTRIMMING_S" + std::to_string(i), 31); // MAXIMIZE THE TRIM
-			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S" + std::to_string(i), 0); // ENABLE THE STRIP
+			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S" + std::to_string(i), 1); // ENABLE THE STRIP
 		}
 	}
-	for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S100", 0x1);}
-	for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S101", 0x1);}
-	for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S102", 0x1);}
-	for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S103", 0x1);}
-	for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S104", 0x1);}
-	for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S105", 0x1);}
-	for (int thd = 8; thd<=8; thd++)
+	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S100", 0x1);}
+	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S101", 0x1);}
+	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S102", 0x1);}
+	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S103", 0x1);}
+	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S104", 0x1);}
+	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S105", 0x1);}
+	for (int thd = 0; thd<=50; thd++)
 	{
 		for(auto cSSA: ChipVec)
 		{
@@ -104,7 +104,7 @@ int main( int argc, char* argv[] )
 
 	TCanvas * C_svd = new TCanvas("C_svd", "C_svd", 600, 600);
 	C_svd->cd();
-	strip_v_thdac_31->Draw("col");
+	strip_v_thdac_31->Draw("colz");
 	L1->Draw();
 	L2->Draw();
 	C_svd->Print("STRIP_DAC_MAP.png");		

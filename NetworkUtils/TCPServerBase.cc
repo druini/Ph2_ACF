@@ -89,7 +89,7 @@ int TCPServerBase::accept(bool blocking)
 			std::cout << __PRETTY_FUNCTION__ << "New socket invalid?: " << clientSocket << " errno: " << errno << std::endl;
 			throw std::runtime_error(std::string("Accept: ") + strerror(errno));
 		}
-		std::cout << __PRETTY_FUNCTION__ << "Server just accepted a connection on socket: " << getSocketId() << " Client socket: " << clientSocket << std::endl;
+		// std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << "Server just accepted a connection on socket: " << getSocketId() << " Client socket: " << clientSocket << std::endl;
 		return clientSocket;
 	}
 	else

@@ -78,9 +78,10 @@ namespace RD53EvtEncoder
   // ################
   // # Event status #
   // ################
-  const uint16_t CHIPGOOD = 0x0000; // Chip event status Good
-  const uint16_t CHIPHEAD = 0x0100; // Chip event status Bad chip header
-  const uint16_t CHIPPIX  = 0x0200; // Chip event status Bad pixel row or column
+  const uint16_t CHIPGOOD  = 0x0000; // Chip event status Good
+  const uint16_t CHIPHEAD  = 0x0100; // Chip event status Bad chip header
+  const uint16_t CHIPPIX   = 0x0200; // Chip event status Bad pixel row or column
+  const uint16_t CHIPNOHIT = 0x0400; // Chip event status Hit data are missing
 }
 
 

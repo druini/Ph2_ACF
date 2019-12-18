@@ -16,9 +16,9 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface {
 
-    double Cluster::getBaricentre()
+    float Cluster::getBaricentre()
     {
-        return fFirstStrip + double (fClusterWidth) / 2. - 0.5;
+        return fFirstStrip + float (fClusterWidth) / 2. - 0.5;
     }
 
     Event::Event ()

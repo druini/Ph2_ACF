@@ -94,9 +94,9 @@ public:
 
 // Generic Header which allows to add other members to the header
 // !!! IMPORTANT: the members that you add need to be continuos in memory or data want to shipped and you will get a crash !!!
-// ContainerStream<Occupancy,int>         -->  OK
-// ComtainerStream<Occupancy,char*>       --> ERROR
-// ComtainerStream<Occupancy,vector<int>> --> ERROR
+// ContainerStream<Occupancy,int>         --> OK
+// ContainerStream<Occupancy,char*>       --> ERROR
+// ContainerStream<Occupancy,vector<int>> --> ERROR
 
 template <typename... I>
 class HeaderStreamContainer : public HeaderStreamContainerBase<HeaderStreamContainer<I...>>
