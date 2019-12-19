@@ -100,22 +100,29 @@ void SSAPhysics::initialize(const std::string fileRes_, const std::string fileRe
 
 void SSAPhysics::run()
 {
-  unsigned int dataSize = 0;
+  unsigned int totalDataSize = 0;
 
   while (keepRunning == true)
   {
 
     for (const auto cBoard : *fDetectorContainer)
-      if ((dataSize = SystemController::ReadData(static_cast<BeBoard *>(cBoard), false)) != 0)
+    {
+      unsigned int dataSize = SystemController::ReadData(static_cast<BeBoard *>(cBoard), false);
+      if (dataSize != 0)
       {
         SSAPhysics::fillDataContainer(cBoard);
         SSAPhysics::sendData(cBoard);
       }
+      totalDataSize += dataSize;
+    }
 
     std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
   }
 
-  if (dataSize == 0)
+  LOG(WARNING) << BOLDBLUE << "Number of collected events = " << totalDataSize << RESET;
+
+
+  if (totalDataSize == 0)
     LOG(WARNING) << BOLDBLUE << "No data collected" << RESET;
 }
 

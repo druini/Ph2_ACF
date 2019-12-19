@@ -18,6 +18,7 @@
 #include "D19cFpgaConfig.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/OuterTrackerModule.h"
+#include "../Utils/D19cSSAEvent.h"
 
 #pragma GCC diagnostic ignored "-Wpedantic"
 // #pragma GCC diagnostic pop
@@ -1156,7 +1157,7 @@ namespace Ph2_HwInterface {
     uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
     {
         uint32_t cEventSize = computeEventSize (pBoard);
-        LOG (INFO) << RED << "EVENT SIZE = "<<cEventSize << RESET;
+        //LOG (INFO) << RED << "EVENT SIZE = "<<cEventSize << RESET;
         uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
         uint32_t data_handshake = ReadReg ("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
         uint32_t cPackageSize = ReadReg ("fc7_daq_cnfg.readout_block.packet_nbr") + 1;
@@ -2898,4 +2899,29 @@ namespace Ph2_HwInterface {
     hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
         }
     }  
+
+    void D19cFWInterface::DecodeSSAEvents (const std::vector<uint32_t>& data, std::vector<D19cSSAEvent*>& events, uint32_t fEventSize, uint32_t fNFe)
+    {
+        uint32_t fNSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+
+        std::vector<uint32_t> lvec;
+        uint32_t cWordIndex = 0;
+
+        for (auto word : data)
+        {
+            lvec.push_back(word);
+
+            if (cWordIndex > 0 && (cWordIndex + 1) % fEventSize == 0)
+            {
+                events.push_back(new D19cSSAEvent(nullptr, fNSSA, fNFe, lvec));
+                lvec.clear();
+
+                if (events.size() >= fEventSize) break;
+            }
+
+            cWordIndex++;
+
+        }
+    }
+
 }

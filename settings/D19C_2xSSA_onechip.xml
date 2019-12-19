@@ -13,7 +13,7 @@
     <Register name="fc7_daq_cnfg">
 	<!-- Clock control -->
 	<Register name="clock">
-	    <Register name="ext_clk_en"> 0 </Register>
+	    <Register name="ext_clk_en"> 1 </Register>
 	</Register>
         <!-- TTC -->
         <Register name="ttc">

@@ -11,7 +11,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/Occupancy.h"
-#include "HWDescription/Definition.h"
+#include "../HWDescription/Definition.h"
 
 using namespace Ph2_HwDescription;
 

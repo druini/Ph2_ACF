@@ -30,6 +30,7 @@ using namespace Ph2_HwDescription;
  */
 namespace Ph2_HwInterface {
     class D19cFpgaConfig;
+    class D19cSSAEvent;
     /*!
      * \class Cbc3Fc7FWInterface
      *
@@ -176,6 +177,9 @@ namespace Ph2_HwInterface {
          * \param pNEvents :  the 1 indexed number of Events to read - this will set the packet size to this value -1
          */
         void ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true);
+
+        static void DecodeSSAEvents (const std::vector<uint32_t>& data, std::vector<D19cSSAEvent*>& events, uint32_t fEventSize, uint32_t fNFe);
+
 
       private:
         uint32_t computeEventSize ( BeBoard* pBoard );

@@ -58,10 +58,10 @@ namespace Ph2_HwInterface
         if (fEventType == EventType::ZS)
             fNCbc = 0;
         else if (fEventType == EventType::SSA)
-	{
+        {
             fNSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-	    LOG (INFO) << BOLDBLUE << " fNSSA = "  << fNSSA << RESET;
-	}
+            LOG (INFO) << BOLDBLUE << " fNSSA = "  << fNSSA << RESET;
+        }
         else
           fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
 
@@ -125,23 +125,25 @@ namespace Ph2_HwInterface
                   }
               }
             else
+            {
+              if (cWordIndex > 0 && (cWordIndex + 1) % fEventSize == 0)
               {
-                if (cWordIndex > 0 && (cWordIndex + 1) % fEventSize == 0)
+                if (pType == BoardType::D19C)
+                {
+                  if (fEventType == EventType::SSA)
                   {
-                    if (pType == BoardType::D19C)
-		    {
-		      if (fEventType == EventType::SSA)
-                      {
-            	      	fEventList.push_back(new D19cSSAEvent(pBoard, fNSSA, fNFe, lvec));
-            	      }
-		      else {fEventList.push_back(new D19cCbc3Event(pBoard, fNCbc, fNFe, lvec));}
-                    }
-                    lvec.clear();
-
-                    if (fEventList.size() >= fNevents)
-                      break;
+            	      fEventList.push_back(new D19cSSAEvent(pBoard, fNSSA, fNFe, lvec));
+            	    }
+		              else 
+                  {
+                    fEventList.push_back(new D19cCbc3Event(pBoard, fNCbc, fNFe, lvec));
                   }
+                }
+                lvec.clear();
+
+                if (fEventList.size() >= fNevents) break;
               }
+            }
 
             cWordIndex++;
             cSwapIndex++;
