@@ -57,7 +57,7 @@ Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name
 - Run the command: `fpgaconfig --help` for help
 
 The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking.
-Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
+Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/ calibrations/ operation mode:
 ```
 1. Latency scan
 2. PixelAlive
@@ -68,6 +68,8 @@ Through `CMSIT_miniDAQ`, and with the right command line option, you can run the
 7. Gain optimization
 8. Threshold minimization
 9. Injection delay scan
+10. Clock delay scan
+11. Physics
 ```
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
 ```
