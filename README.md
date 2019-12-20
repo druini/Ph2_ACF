@@ -151,7 +151,7 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
-Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/MTO6MsfJ6LcsCdW
+Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 - Software git branch / tag : `chipPolymorphism` / `IT-v3.0`
 - Firmware tag: `3.0`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
