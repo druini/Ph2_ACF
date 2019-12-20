@@ -47,13 +47,13 @@ Setup and run the IT-DAQ:
 7. `cp settings/CMSIT.xml choose_a_name`
 8. `cd choose_a_name`
 9. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-10. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the FC7 (just once)
+10. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
 11. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
 
 Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):
 - Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
 - Run the command: `fpgaconfig -c CMSIT.xml -f firmware_file_name_on_the_PC -i firmware_file_name_on_the_microSD` to upload a new firmware to the microSD card
-- Run the command: `fpgaconfig -c CMSIT.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card
+- Run the command: `fpgaconfig -c CMSIT.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
 - Run the command: `fpgaconfig --help` for help
 
 The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking.
@@ -149,9 +149,9 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
-Here you can find a detailed description of the differente calibrations: https://cernbox.cern.ch/index.php/s/MTO6MsfJ6LcsCdW
-- Software git branch / tag : `chipPolymorphism` / `IT-v2.5`
-- Firmware tag: `2.5`
+Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/MTO6MsfJ6LcsCdW
+- Software git branch / tag : `chipPolymorphism` / `IT-v3.0`
+- Firmware tag: `3.0`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 ### ~=-=-=~ End of Inner-Tracker section ~=-=-=~
