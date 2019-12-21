@@ -17,9 +17,6 @@
 
 ## Middleware for the Inner-Tracker (IT) system
 
-TIP: **Tip:**
-This is a tip.
-
 ```diff
 + 20/12/2019
 ```
