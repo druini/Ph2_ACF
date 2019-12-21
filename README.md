@@ -16,13 +16,9 @@
 
 
 ## Middleware for the Inner-Tracker (IT) system
-
 ```diff
 + Last change of this section: 20/12/2019
 ```
-
-<p style='color:green'>This is some red text.</p>
-
 
 Setup the FC7:
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
