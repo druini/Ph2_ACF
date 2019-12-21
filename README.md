@@ -17,8 +17,8 @@
 
 ## Middleware for the Inner-Tracker (IT) system
 
-```
-+ 20/12/2019
+```diff
++ Last change of this section: 20/12/2019
 ```
 
 Setup the FC7:
