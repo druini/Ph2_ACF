@@ -15,12 +15,8 @@
     - Some applications: datatest, interfacetest, hybridtest, system, calibrate, commission, fpgaconfig
 
 
-<div class="panel panel-gitlab-red">
 ## Middleware for the Inner-Tracker (IT) system
-{: .panel-heading}
-</div>
-
-## Middleware for the Inner-Tracker (IT) system
+{: .gitlab-orange}
 ```diff
 + 20/12/2019
 ```
