@@ -17,7 +17,7 @@
 
 ## Middleware for the Inner-Tracker (IT) system
 
-```diff
+```
 + 20/12/2019
 ```
 
