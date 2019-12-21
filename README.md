@@ -158,7 +158,7 @@ Here you can find a detailed description of the various calibrations: https://ce
 - Firmware tag: `3.0`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
-### ~=-=-=~ End of Inner-Tracker section ~=-=-=~
+### ~=-=~ End of Inner-Tracker section ~=-=~
 
 <hr>
 
