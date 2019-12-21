@@ -17,7 +17,9 @@
 
 ## Middleware for the Inner-Tracker (IT) system
 
-~ciao
+~bug
+
+{#f00 ciao}
 
 {: .gitlab-orange}
 ```diff
