@@ -4,15 +4,7 @@
 ### Contains:
 
 - A middleware API layer, implemented in C++, which wraps the firmware calls and handshakes into abstracted functions
-
-- A C++ object-based library describing the system components (CBCs,
-        Hybrids, Boards) and their properties(values, status)
-
-- Several utilities (like visitors to execute certain tasks for each item in the hierarchical Item description)
-
-- S tools/ directory with several utilities (currently: calibration, hybrid testing, common-mode analysis)
-
-    - Some applications: datatest, interfacetest, hybridtest, system, calibrate, commission, fpgaconfig
+- A C++ object-based library describing the system components (CBCs, RD53, Hybrids, Boards) and their properties (values, status)
 
 
 ## Middleware for the Inner-Tracker (IT) system
