@@ -22,20 +22,20 @@ void GainOptimization::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart      = this->findValueInSettings("ROWstart");
-  rowStop       = this->findValueInSettings("ROWstop");
-  colStart      = this->findValueInSettings("COLstart");
-  colStop       = this->findValueInSettings("COLstop");
-  nEvents       = this->findValueInSettings("nEvents");
-  startValue    = this->findValueInSettings("VCalHstart");
-  stopValue     = this->findValueInSettings("VCalHstop");
-  targetCharge  = RD53chargeConverter::Charge2VCal(this->findValueInSettings("TargetCharge"));
-  KrumCurrStart = this->findValueInSettings("KrumCurrStart");
-  KrumCurrStop  = this->findValueInSettings("KrumCurrStop");;
-  doFast        = this->findValueInSettings("DoFast");
-  doDisplay     = this->findValueInSettings("DisplayHisto");
-  doUpdateChip  = this->findValueInSettings("UpdateChipCfg");
-  saveRawData   = this->findValueInSettings("SaveRawData");
+  rowStart       = this->findValueInSettings("ROWstart");
+  rowStop        = this->findValueInSettings("ROWstop");
+  colStart       = this->findValueInSettings("COLstart");
+  colStop        = this->findValueInSettings("COLstop");
+  nEvents        = this->findValueInSettings("nEvents");
+  startValue     = this->findValueInSettings("VCalHstart");
+  stopValue      = this->findValueInSettings("VCalHstop");
+  targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings("TargetCharge"));
+  KrumCurrStart  = this->findValueInSettings("KrumCurrStart");
+  KrumCurrStop   = this->findValueInSettings("KrumCurrStop");;
+  doFast         = this->findValueInSettings("DoFast");
+  doDisplay      = this->findValueInSettings("DisplayHisto");
+  doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+  saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
 
   // #######################
@@ -48,7 +48,7 @@ void GainOptimization::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[GainOptimization::Start] Starting" << RESET;
 
-  if (saveRawData == true)
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();

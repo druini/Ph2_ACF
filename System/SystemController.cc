@@ -107,29 +107,27 @@ namespace Ph2_System
   void SystemController::InitializeHw (const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
   {
     fStreamerEnabled = streamData;
-    if (streamData)
-      fNetworkStreamer = new TCPPublishServer(6000,1);
+    if (streamData) fNetworkStreamer = new TCPPublishServer(6000,1);
 
     fDetectorContainer = new DetectorContainer;
-    this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile );
+    this->fParser.parseHW(pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile);
 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     if (fBoardVector[0]->getBoardType() != BoardType::RD53)
-      fReadoutChipInterface = new CbcInterface (fBeBoardFWMap);
+      fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
     else
       fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
     fMPAInterface = new MPAInterface(fBeBoardFWMap);
 
-    if (fWriteHandlerEnabled)
-      this->initializeFileHandler();
+    if (fWriteHandlerEnabled) this->initializeFileHandler();
   }
 
-  void SystemController::InitializeSettings ( const std::string& pFilename, std::ostream& os, bool pIsFile )
+  void SystemController::InitializeSettings (const std::string& pFilename, std::ostream& os, bool pIsFile)
   {
-    this->fParser.parseSettings (pFilename, fSettingsMap, os, pIsFile );
+    this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile);
   }
 
-  void SystemController::ConfigureHw ( bool bIgnoreI2c )
+  void SystemController::ConfigureHw (bool bIgnoreI2c)
   {
     LOG (INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from .xml file @@@" << RESET;
 
@@ -320,7 +318,7 @@ namespace Ph2_System
 
   uint32_t SystemController::ReadData (BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
   {
-    if (fData) delete fData;
+    delete fData;
     fData = new Data();
 
     uint32_t cNPackets = fBeBoardInterface->ReadData(pBoard, false, pData, pWait);

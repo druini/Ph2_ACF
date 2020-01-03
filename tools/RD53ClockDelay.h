@@ -80,7 +80,7 @@ class ClockDelay : public PixelAlive
   size_t maxDelay;
   bool   doUpdateChip;
   bool   doDisplay;
-  bool   saveRawData;
+  bool   saveBinaryData;
 };
 
 #endif

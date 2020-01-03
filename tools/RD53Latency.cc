@@ -20,16 +20,16 @@ void Latency::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart     = this->findValueInSettings("ROWstart");
-  rowStop      = this->findValueInSettings("ROWstop");
-  colStart     = this->findValueInSettings("COLstart");
-  colStop      = this->findValueInSettings("COLstop");
-  nEvents      = this->findValueInSettings("nEvents");
-  startValue   = this->findValueInSettings("LatencyStart");
-  stopValue    = this->findValueInSettings("LatencyStop");
-  doDisplay    = this->findValueInSettings("DisplayHisto");
-  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
-  saveRawData  = this->findValueInSettings("SaveRawData");
+  rowStart       = this->findValueInSettings("ROWstart");
+  rowStop        = this->findValueInSettings("ROWstop");
+  colStart       = this->findValueInSettings("COLstart");
+  colStop        = this->findValueInSettings("COLstop");
+  nEvents        = this->findValueInSettings("nEvents");
+  startValue     = this->findValueInSettings("LatencyStart");
+  stopValue      = this->findValueInSettings("LatencyStop");
+  doDisplay      = this->findValueInSettings("DisplayHisto");
+  doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+  saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
 
   // ##############################
@@ -50,7 +50,7 @@ void Latency::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[Latency::Start] Starting" << RESET;
 
-  if (saveRawData == true)
+  if (saveBinaryData == true)
     {
       std::string dir(RESULTDIR);
       this->addFileHandler(dir + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');

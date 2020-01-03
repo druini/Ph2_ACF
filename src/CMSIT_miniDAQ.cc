@@ -59,6 +59,30 @@ void interruptHandler (int handler)
 }
 
 
+void readBinaryData (std::string configFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& RD53decodedEvents)
+{
+  LOG (INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
+  uint16_t status;
+  unsigned int errors = 0;
+  std::vector<uint32_t> data;
+  mySysCntr.addFileHandler(configFile, 'r');
+  mySysCntr.initializeFileHandler();
+  LOG (INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
+  mySysCntr.readFile(data, 0);
+
+  RD53FWInterface::DecodeEvents(data, status, RD53decodedEvents);
+  LOG (INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << RD53decodedEvents.size() << RESET;
+
+  for (auto i = 0u; i < RD53decodedEvents.size(); i++)
+    if (RD53FWInterface::EvtErrorHandler(RD53decodedEvents[i].evtStatus) == false)
+      {
+        LOG (ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
+        errors++;
+      }
+  LOG (INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(5) << BOLDYELLOW << 1. * errors / RD53decodedEvents.size() * 100. << "%" << RESET;
+}
+
+
 int main (int argc, char** argv)
 {
   // ########################
@@ -78,17 +102,17 @@ int main (int argc, char** argv)
 
   cmd.setHelpOption("h","help","Print this help page");
 
-  cmd.defineOption("file","Hardware description file (or binary file for option -prog-). Default value: CMSIT.xml", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
   cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin injdelay clockdelay physics]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
+  cmd.defineOption ("decode", "Binary file to decode.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOptionAlternative ("decode", "d");
+
   cmd.defineOption ("prog", "Program the system components.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("prog", "p");
-
-  cmd.defineOption ("decode", "Decode binary file.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
-  cmd.defineOptionAlternative ("decode", "d");
 
   cmd.defineOption ("sup", "Run in producer(Middleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("sup", "s");
@@ -104,10 +128,10 @@ int main (int argc, char** argv)
       exit(EXIT_FAILURE);
     }
 
-  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file") : "CMSIT.xml";
-  std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib") : "pixelalive";
+  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file")   : "CMSIT.xml";
+  std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib")  : "pixelalive";
+  std::string binaryFile = cmd.foundOption("decode") == true ? cmd.optionValue("decode") : "";
   bool program           = cmd.foundOption("prog")   == true ? true : false;
-  bool decode            = cmd.foundOption("decode") == true ? true : false;
   bool supervisor        = cmd.foundOption("sup")    == true ? true : false;
   bool reset             = cmd.foundOption("reset")  == true ? true : false;
 
@@ -235,24 +259,30 @@ int main (int argc, char** argv)
     }
   else
     {
-      // ################################
-      // # Instantiate SystemController #
-      // ################################
       SystemController mySysCntr;
-      if (reset == true)
+
+
+      // ######################################
+      // # Reset hardware or read binary file #
+      // ######################################
+      if ((reset == true) || (binaryFile != ""))
         {
           std::stringstream outp;
           mySysCntr.InitializeHw(configFile, outp, true, false);
           mySysCntr.InitializeSettings(configFile, outp);
-          static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fBoardVector[0]->getBeBoardId()])->ResetSequence();
-          exit(EXIT_SUCCESS);
+          if (reset == true)
+            {
+              static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fBoardVector[0]->getBeBoardId()])->ResetSequence();
+              exit(EXIT_SUCCESS);
+            }
+          if (binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53decodedEvents);
         }
 
 
       // #######################
       // # Initialize Hardware #
       // #######################
-      if (decode == false)
+      if (binaryFile == "")
         {
           LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
           mySysCntr.ConfigureHardware(configFile);
@@ -263,31 +293,8 @@ int main (int argc, char** argv)
               exit(EXIT_SUCCESS);
             }
         }
-      else
-        {
-          LOG (INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
-          uint16_t status;
-          unsigned int errors = 0;
-          std::vector<uint32_t> data;
-          mySysCntr.addFileHandler(configFile, 'r');
-          mySysCntr.initializeFileHandler();
-          LOG (INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
-          mySysCntr.readFile(data, 0);
 
-          RD53FWInterface::DecodeEvents(data, status, RD53decodedEvents);
-          LOG (INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << RD53decodedEvents.size() << RESET;
 
-          for (auto i = 0u; i < RD53decodedEvents.size(); i++)
-            if (RD53FWInterface::EvtErrorHandler(RD53decodedEvents[i].evtStatus) == false)
-              {
-                LOG (ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
-                errors++;
-              }
-          LOG (INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(5) << BOLDYELLOW << 1. * errors / RD53decodedEvents.size() * 100. << "%" << RESET;
-
-          LOG (INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
-          exit(EXIT_SUCCESS);
-        }
       std::cout << std::endl;
 
 
@@ -320,7 +327,7 @@ int main (int argc, char** argv)
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
           pa.initialize(fileName, chipConfig);
-          pa.run();
+          if (binaryFile == "") pa.run();
           pa.analyze();
           pa.draw();
         }
@@ -454,9 +461,13 @@ int main (int argc, char** argv)
           Physics ph;
           ph.Inherit(&mySysCntr);
           ph.initialize(fileName, chipConfig);
-          ph.Start(runNumber);
-          usleep(2e6);
-          ph.Stop();
+          if (binaryFile == "")
+            {
+              ph.Start(runNumber);
+              usleep(2e6);
+              ph.Stop();
+            }
+          else ph.analyze();
           ph.draw();
         }
       else

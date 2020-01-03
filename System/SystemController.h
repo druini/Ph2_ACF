@@ -44,7 +44,7 @@
  */
 namespace Ph2_System
 {
-  using BeBoardVec  = std::vector<BeBoard *>;                  /*!< Vector of Board pointers */
+  using BeBoardVec  = std::vector<BeBoard*>;                   /*!< Vector of Board pointers */
   using SettingsMap = std::unordered_map<std::string, double>; /*!< Maps the settings */
 
   /*!
@@ -54,46 +54,48 @@ namespace Ph2_System
   class SystemController
   {
   public:
-    BeBoardInterface *fBeBoardInterface; //!< Interface to the BeBoard
-    ReadoutChipInterface *fReadoutChipInterface;
-    ChipInterface *fChipInterface; //!< Interface to the CBC
-    SSAInterface *fSSAInterface;   //!< Interface to the SSA
-    MPAInterface *fMPAInterface;   //!< Interface to the MPA
+    BeBoardInterface* fBeBoardInterface; //!< Interface to the BeBoard
+    ReadoutChipInterface* fReadoutChipInterface;
+    ChipInterface* fChipInterface; //!< Interface to the Chip
 
-    DetectorContainer *fDetectorContainer; //Detector Container
+    SSAInterface* fSSAInterface;   //!< Interface to the SSA
+    MPAInterface* fMPAInterface;   //!< Interface to the MPA
+
+    DetectorContainer* fDetectorContainer; //Detector Container
     BeBoardVec fBoardVector;               //!< Vector of Board pointers
     BeBoardFWMap fBeBoardFWMap;
-    SettingsMap fSettingsMap; //!< Maps the settings
-    //for reading single files
+    SettingsMap fSettingsMap;
     FileHandler* fFileHandler;
-    //for writing 1 file for each FED
     std::string fRawFileName;
     bool fWriteHandlerEnabled;
     bool fStreamerEnabled;
-    TCPPublishServer *fNetworkStreamer;
+    TCPPublishServer* fNetworkStreamer;
 
     /*!
      * \brief Constructor of the SystemController class
      */
     SystemController();
+
     /*!
      * \brief Destructor of the SystemController class
      */
     virtual ~SystemController();
+
     /*!
      * \brief Method to construct a system controller object from another one while re-using the same members
      */
     //here all my members are set to the objects contained already in pController, I can then safely delete pController (because the destructor does not delete any of the objects)
-    void Inherit(SystemController *pController);
+    void Inherit(SystemController* pController);
+
     /*!
      * \brief Destroy the SystemController object: clear the HWDescription Objects, FWInterface etc.
      */
     void Destroy();
+
     /*!
      * \brief create a FileHandler object with
      * \param pFilename : the filename of the binary file
      */
-
     void addFileHandler(const std::string &pFilename, char pOption);
     void closeFileHandler();
     FileHandler* getFileHandler() { return fFileHandler; }
@@ -109,12 +111,14 @@ namespace Ph2_System
      * \param pVec : the data vector
      */
     void readFile(std::vector<uint32_t> &pVec, uint32_t pNWords32 = 0);
+
     /*!
      * \brief set the Data read from file in the previous Method to the interanl data object
      * \param pVec : the data vector
      * \param pBoard : the BeBoard
      */
     void setData(BeBoard *pBoard, std::vector<uint32_t> &pVec, uint32_t pNEvents);
+
     /*!
      * \brief acceptor method for HwDescriptionVisitor
      * \param pVisitor
@@ -140,22 +144,19 @@ namespace Ph2_System
      *\param os : ostream to dump output
      */
     void InitializeSettings(const std::string &pFilename, std::ostream &os = std::cout, bool pIsFile = true);
+
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */
     void ConfigureHw(bool bIgnoreI2c = false);
-    /*!
-     * \brief Run a DAQ
-     * \param pBeBoard
-     */
-    //void Run ( BeBoard* pBoard );
 
     /*!
      * \brief Read Data from pBoard
      * \param pBeBoard
      * \return: number of packets
      */
-    uint32_t ReadData(BeBoard *pBoard, bool pWait = true);
+    uint32_t ReadData(BeBoard* pBoard, bool pWait = true);
+
     /*!
      * \brief Read Data from pBoard for use with OTSDAQ
      * \param pBeBoard
@@ -163,7 +164,7 @@ namespace Ph2_System
      * \param pWait: wait  until sufficient data is there, default true
      * \return: number of packets
      */
-    uint32_t ReadData(BeBoard *pBoard, std::vector<uint32_t> &pData, bool pWait = true);
+    uint32_t ReadData(BeBoard* pBoard, std::vector<uint32_t> &pData, bool pWait = true);
 
     /*!
      * \brief Read Data from all boards
@@ -178,18 +179,18 @@ namespace Ph2_System
     virtual void ConfigureHardware(std::string cHWFile, bool enableStream = false);
     virtual void Configure(std::string cHWFile, bool enableStream = false);
 
-    //these start and stop acquistion on a single board
-    void Start(BeBoard *pBoard);
-    void Stop(BeBoard *pBoard);
-    void Pause(BeBoard *pBoard);
-    void Resume(BeBoard *pBoard);
+    void Start (BeBoard* pBoard);
+    void Stop  (BeBoard* pBoard);
+    void Pause (BeBoard* pBoard);
+    void Resume(BeBoard* pBoard);
 
     /*!
      * \brief Read N Events from pBoard
      * \param pBeBoard
      * \param pNEvents
      */
-    void ReadNEvents(BeBoard *pBoard, uint32_t pNEvents);
+    void ReadNEvents(BeBoard* pBoard, uint32_t pNEvents);
+
     /*!
      * \brief Read N Events from pBoard
      * \param pBeBoard
@@ -205,7 +206,7 @@ namespace Ph2_System
      */
     void ReadNEvents(uint32_t pNEvents);
 
-    const BeBoard *getBoard(int index) const
+    const BeBoard* getBoard(int index) const
     {
       return (index < (int)fBoardVector.size()) ? fBoardVector.at(index) : nullptr;
     }
@@ -215,17 +216,17 @@ namespace Ph2_System
      * \param pBoard
      * \return Next event
      */
-    const Event *GetNextEvent(const BeBoard *pBoard)
+    const Event* GetNextEvent(const BeBoard* pBoard)
     {
       return fData->GetNextEvent(pBoard);
     }
 
-    const Event *GetEvent(const BeBoard *pBoard, int i) const
+    const Event* GetEvent(const BeBoard* pBoard, int i) const
     {
       return fData->GetEvent(pBoard, i);
     }
 
-    const std::vector<Event *> &GetEvents(const BeBoard *pBoard) const
+    const std::vector<Event*> &GetEvents(const BeBoard* pBoard) const
     {
       return fData->GetEvents(pBoard);
     }

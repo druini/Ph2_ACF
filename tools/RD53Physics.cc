@@ -14,15 +14,15 @@ void Physics::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart     = this->findValueInSettings("ROWstart");
-  rowStop      = this->findValueInSettings("ROWstop");
-  colStart     = this->findValueInSettings("COLstart");
-  colStop      = this->findValueInSettings("COLstop");
-  doDisplay    = this->findValueInSettings("DisplayHisto");
-  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
-  saveRawData  = this->findValueInSettings("SaveRawData");
-  doLocal      = false;
-  keepRunning  = true;
+  rowStart       = this->findValueInSettings("ROWstart");
+  rowStop        = this->findValueInSettings("ROWstop");
+  colStart       = this->findValueInSettings("COLstart");
+  colStop        = this->findValueInSettings("COLstop");
+  doDisplay      = this->findValueInSettings("DisplayHisto");
+  doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+  saveBinaryData = this->findValueInSettings("SaveBinaryData");
+  doLocal        = false;
+  keepRunning    = true;
 
 
   // ################################
@@ -60,7 +60,7 @@ void Physics::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[Physics::Start] Starting" << RESET;
 
-  if (saveRawData == true)
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -96,11 +96,8 @@ void Physics::Stop ()
   LOG (INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
 
   SystemController::Stop();
-  std::cout << "AAA " << __LINE__ << std::endl;
   keepRunning = false;
-  std::cout << "AAA " << __LINE__ << std::endl;
   if (thrRun.joinable() == true) thrRun.join();
-  std::cout << "AAA " << __LINE__ << std::endl;
 
 
   // ################
@@ -134,23 +131,12 @@ void Physics::initialize (const std::string fileRes_, const std::string fileReg_
 
 void Physics::run ()
 {
-  unsigned int dataSize = 0;
-
   while (keepRunning == true)
     {
       RD53decodedEvents.clear();
-
-      for (const auto cBoard : *fDetectorContainer)
-        if ((dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true)) != 0)
-          {
-            Physics::fillDataContainer(cBoard);
-            Physics::sendData(cBoard);
-          }
-
+      Physics::analyze(true);
       std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
     }
-
-  if (dataSize == 0) LOG (WARNING) << BOLDBLUE << "No data collected" << RESET;
 }
 
 void Physics::draw ()
@@ -179,6 +165,23 @@ void Physics::draw ()
   this->WriteRootFile();
   this->CloseResultFile();
 #endif
+}
+
+void Physics::analyze (bool doReadData)
+{
+  unsigned int dataSize = 0;
+
+  for (const auto cBoard : *fDetectorContainer)
+    {
+      if (doReadData == true) dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
+      else dataSize = 1;
+
+      if (dataSize != 0)
+        {
+          Physics::fillDataContainer(cBoard);
+          Physics::sendData(cBoard);
+        }
+    }
 }
 
 void Physics::initHisto ()

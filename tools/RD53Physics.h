@@ -46,6 +46,7 @@ class Physics : public Tool
   void initialize        (const std::string fileRes_, const std::string fileReg_);
   void run               ();
   void draw              ();
+  void analyze           (bool doReadData = false);
   void fillDataContainer (BoardContainer* const& cBoard);
 
 
@@ -80,7 +81,7 @@ class Physics : public Tool
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
-  bool saveRawData;
+  bool saveBinaryData;
   bool doLocal;
   std::atomic<bool> keepRunning;
   std::thread thrRun;

@@ -14,20 +14,20 @@ void SCurve::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart     = this->findValueInSettings("ROWstart");
-  rowStop      = this->findValueInSettings("ROWstop");
-  colStart     = this->findValueInSettings("COLstart");
-  colStop      = this->findValueInSettings("COLstop");
-  nEvents      = this->findValueInSettings("nEvents");
-  startValue   = this->findValueInSettings("VCalHstart");
-  stopValue    = this->findValueInSettings("VCalHstop");
-  nSteps       = this->findValueInSettings("VCalHnsteps");
-  offset       = this->findValueInSettings("VCalMED");
-  nHITxCol     = this->findValueInSettings("nHITxCol");
-  doFast       = this->findValueInSettings("DoFast");
-  doDisplay    = this->findValueInSettings("DisplayHisto");
-  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
-  saveRawData  = this->findValueInSettings("SaveRawData");
+  rowStart       = this->findValueInSettings("ROWstart");
+  rowStop        = this->findValueInSettings("ROWstop");
+  colStart       = this->findValueInSettings("COLstart");
+  colStop        = this->findValueInSettings("COLstop");
+  nEvents        = this->findValueInSettings("nEvents");
+  startValue     = this->findValueInSettings("VCalHstart");
+  stopValue      = this->findValueInSettings("VCalHstop");
+  nSteps         = this->findValueInSettings("VCalHnsteps");
+  offset         = this->findValueInSettings("VCalMED");
+  nHITxCol       = this->findValueInSettings("nHITxCol");
+  doFast         = this->findValueInSettings("DoFast");
+  doDisplay      = this->findValueInSettings("DisplayHisto");
+  doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+  saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
 
   // ########################
@@ -61,7 +61,7 @@ void SCurve::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[SCurve::Start] Starting" << RESET;
 
-  if (saveRawData == true)
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -247,7 +247,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
   // #####################
   // # @TMP@ : CalibFile #
   // #####################
-  if (saveRawData == true)
+  if (saveBinaryData == true)
     {
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)

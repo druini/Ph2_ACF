@@ -78,7 +78,7 @@ class ThrMinimization : public PixelAlive
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
-  bool saveRawData;
+  bool saveBinaryData;
 };
 
 #endif
