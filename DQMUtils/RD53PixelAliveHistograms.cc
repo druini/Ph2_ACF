@@ -99,10 +99,10 @@ void PixelAliveHistograms::fill (const DetectorDataContainer& DataContainer)
                 if (cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != 0)
                   {
                     Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy * nEvents);
-                    Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
+                    Occupancy2DHist->SetBinContent(col+1, row+1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                     ToTHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                   }
-                if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
+                if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col+1, row+1);
               }
         }
 }

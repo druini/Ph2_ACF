@@ -407,6 +407,11 @@ namespace Ph2_HwDescription
 
     const size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
     for (auto i = 1u; i < n; i++) if (data[i] != noHitToT) DecodeQuad(data[i]);
+    // #######################################################
+    // # If the number of 32bit words do not make an integer #
+    // # number of 128bit words, then 0x0000FFFF words are   #
+    // # added to the event                                  #
+    // #######################################################
     if (n == 1) evtStatus |= RD53EvtEncoder::CHIPNOHIT;
   }
 

@@ -53,7 +53,7 @@ void Latency::Start (int currentRun)
   if (saveBinaryData == true)
     {
       std::string dir(RESULTDIR);
-      this->addFileHandler(dir + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(dir + "/LatencyRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 

@@ -71,9 +71,11 @@ void PixelAlive::ConfigureCalibration ()
 
 void PixelAlive::Start (int currentRun)
 {
+  LOG (INFO) << GREEN << "[PixelAlive::Start] Starting" << RESET;
+
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 

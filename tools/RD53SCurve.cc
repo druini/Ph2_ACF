@@ -63,7 +63,7 @@ void SCurve::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/SCurveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 

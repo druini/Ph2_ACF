@@ -592,48 +592,25 @@ void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool
 
 void Tool::dumpConfigFiles()
 {
-	// visitor to call dumpRegFile on each Chip
-	// struct RegMapDumper : public HwDescriptionVisitor
-	// {
-	// 	std::string fDirectoryName;
-	// 	RegMapDumper ( std::string pDirectoryName ) : fDirectoryName ( pDirectoryName ) {};
-	// 	void visit ( ReadoutChip& pChip )
-	// 	{
-	// 		if ( !fDirectoryName.empty() )
-	// 		{
-	// 			//Fabio: CBC specific -> to be moved out from Tool
-	// 			TString cFilename = fDirectoryName + Form ( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
-	// 			// cFilename += Form( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
-	// 			pChip.saveRegMap ( cFilename.Data() );
-	// 		}
-	// 		else LOG (INFO) << "Error: no results Directory initialized! "  ;
-	// 	}
-	// };
-
-	// RegMapDumper cDumper ( fDirectoryName );
-	// accept ( cDumper );
-
-	if ( !fDirectoryName.empty() )
-	{
-		//Fabio: CBC specific -> to be moved out from Tool
-		for(auto board : *fDetectorContainer)
-		{
-			for(auto module : *board)
-			{
-				for(auto chip : *module)
-				{
-					std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_FE" + std::to_string(module->getId()) + "_Chip" + std::to_string(chip->getId()) + ".txt";
-					static_cast<ReadoutChip*>(chip)->saveRegMap ( cFilename.data() );
-				}
-			}
-		}
-		// cFilename += Form( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
-	}
-	else LOG (INFO) << "Error: no results Directory initialized! "  ;
-
-	LOG (INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fDirectoryName << RESET ;
+  if (!fDirectoryName.empty())
+    {
+      //Fabio: CBC specific -> to be moved out from Tool
+      for(auto board : *fDetectorContainer)
+        {
+          for(auto module : *board)
+            {
+              for(auto chip : *module)
+                {
+                  std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_FE" + std::to_string(module->getId()) + "_Chip" + std::to_string(chip->getId()) + ".txt";
+                  static_cast<ReadoutChip*>(chip)->saveRegMap ( cFilename.data() );
+                }
+            }
+        }
+      // cFilename += Form( "/FE%dCBC%d.txt", pChip.getFeId(), pChip.getChipId() );
+      LOG (INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fDirectoryName << RESET;
+    }
+  else LOG (ERROR) << "Error: no results Directory initialized" << RESET;
 }
-
 
 void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTPState, bool pHoleMode )
 {

@@ -38,14 +38,14 @@ void OccupancyAndPh::makeSummaryAverage (const std::vector<OccupancyAndPh>* theO
   if (fPhError > 0)
     {
       fPh      /= fPhError;
-      fPhError /= sqrt(1./ fPhError);
+      fPhError /= sqrt(1. / fPhError);
     }
 }
 
-void OccupancyAndPh::normalize (const uint32_t numberOfEvents)
+void OccupancyAndPh::normalize (const uint32_t numberOfEvents, bool doOnlyPh)
 {
   fPh        /= (fOccupancy > 0 ? fOccupancy : 1);
   fPhError    = (fOccupancy > 1 ? sqrt((fPhError / fOccupancy - fPh*fPh) * fOccupancy / (fOccupancy-1)) : 0);
 
-  fOccupancy /= numberOfEvents;
+  if (doOnlyPh == false) fOccupancy /= numberOfEvents;
 }

@@ -38,7 +38,8 @@ namespace Ph2_HwInterface
                 if (chip_id != -1) moduleAndChipIDs.push_back(std::pair<size_t,size_t>(chip_frame.module_id, chip_id));
               }
 
-            fEventList.push_back(new RD53Event(std::move(moduleAndChipIDs), evt.chip_events));
+            if (moduleAndChipIDs.size() != 0)
+              fEventList.push_back(new RD53Event(std::move(moduleAndChipIDs), evt.chip_events));
           }
       }
     else

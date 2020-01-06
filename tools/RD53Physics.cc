@@ -57,7 +57,7 @@ void Physics::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/PhysicsRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -126,15 +126,18 @@ void Physics::initialize (const std::string fileRes_, const std::string fileReg_
 
 void Physics::run ()
 {
-  // ##################################
-  // # Download the mask to the chips #
-  // ##################################
+  // ##############################
+  // # Download mask to the chips #
+  // ##############################
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), theChnGroupHandler->allChannelGroup(), true, false);
 
 
+  // #############
+  // # Take data #
+  // #############
   while (keepRunning == true)
     {
       RD53decodedEvents.clear();
@@ -171,13 +174,13 @@ void Physics::draw ()
 #endif
 }
 
-void Physics::analyze (bool doReadData)
+void Physics::analyze (bool doReadBinary)
 {
   for (const auto cBoard : *fDetectorContainer)
     {
       size_t dataSize = 0;
 
-      if (doReadData == true) dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
+      if (doReadBinary == true) dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
       else
         {
           dataSize = 1;
@@ -278,6 +281,17 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
             }
           theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2.clear();
         }
+
+
+  // #######################
+  // # Normalize container #
+  // #######################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        for (auto row = 0u; row < RD53::nRows; row++)
+          for (auto col = 0u; col < RD53::nCols; col++)
+            theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).normalize(events.size(), true);
 }
 
 void Physics::chipErrorReport ()

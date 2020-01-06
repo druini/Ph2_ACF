@@ -46,7 +46,7 @@ class Physics : public Tool
   void initialize        (const std::string fileRes_, const std::string fileReg_);
   void run               ();
   void draw              ();
-  void analyze           (bool doReadData = false);
+  void analyze           (bool doReadBinary = false);
   void fillDataContainer (BoardContainer* const& cBoard);
 
 

@@ -273,7 +273,7 @@ namespace Ph2_HwInterface
     LOG (INFO) << GREEN << "Fast CMD block check if configuraiton registers have been set: " << BOLDYELLOW << fastCMDReg << RESET;
 
     fastCMDReg = ReadReg ("user.stat_regs.fast_cmd.error_code");
-    LOG (INFO) << GREEN << "Fast CMD block error code (0 = no error): " << BOLDYELLOW << fastCMDReg << RESET;
+    LOG (INFO) << GREEN << "Fast CMD block error code (0=no error): " << BOLDYELLOW << fastCMDReg << RESET;
 
 
     // ###########################

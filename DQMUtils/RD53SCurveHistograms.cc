@@ -89,7 +89,7 @@ void SCurveHistograms::fillOccupancy (const DetectorDataContainer& OccupancyCont
               {
                 if (cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53SharedConstants::ISDISABLED)
                   hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(0) / 2.);
-                if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
+                if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col+1, row+1);
               }
         }
 }
@@ -110,13 +110,13 @@ void SCurveHistograms::fillThrAndNoise (const DetectorDataContainer& ThrAndNoise
 
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
-              if (cChip->getChannel<ThresholdAndNoise>(row, col).fNoise == RD53SharedConstants::FITERROR) ErrorFit2DHist->Fill(col + 1, row + 1);
+              if (cChip->getChannel<ThresholdAndNoise>(row, col).fNoise == RD53SharedConstants::FITERROR) ErrorFit2DHist->Fill(col+1, row+1);
               else if (cChip->getChannel<ThresholdAndNoise>(row, col).fNoise != 0)
                 {
                   Threshold1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
                   Noise1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
-                  Threshold2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
-                  Noise2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
+                  Threshold2DHist->SetBinContent(col+1, row+1, cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
+                  Noise2DHist->SetBinContent(col+1, row+1, cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
                 }
         }
 }
