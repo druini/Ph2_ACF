@@ -72,7 +72,7 @@ namespace Ph2_System
 
   void SystemController::addFileHandler (const std::string& pFilename, char pOption)
   {
-    if (pOption == 'r') fFileHandler = new FileHandler ( pFilename, pOption );
+    if (pOption == 'r') fFileHandler = new FileHandler(pFilename, pOption);
     else if (pOption == 'w')
       {
         fRawFileName = pFilename;
@@ -98,7 +98,7 @@ namespace Ph2_System
 
   void SystemController::setData (BeBoard* pBoard, std::vector<uint32_t>& pData, uint32_t pNEvents)
   {
-    if (fData!=nullptr) delete fData;
+    delete fData;
     fData = new Data();
 
     fData->DecodeData(pBoard, pData, pNEvents, pBoard->getBoardType());
@@ -138,7 +138,7 @@ namespace Ph2_System
             // ######################################
             // # Configuring Outer Tracker hardware #
             // ######################################
-            fBeBoardInterface->ConfigureBoard ( cBoard );
+            fBeBoardInterface->ConfigureBoard(cBoard);
 
             LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
 
@@ -147,14 +147,14 @@ namespace Ph2_System
                 LOG (INFO) << "Configuring board.." << RESET;
                 for (auto& cCbc : cFe->fReadoutChipVector)
                   {
-                    if ( !bIgnoreI2c )
+                    if (bIgnoreI2c == false)
                       {
                         fReadoutChipInterface->ConfigureChip(cCbc);
                         LOG (INFO) << GREEN <<  "Successfully configured Chip " << int(cCbc->getChipId()) << RESET;
                       }
                   }
               }
-            fBeBoardInterface->ChipReSync ( cBoard );
+            fBeBoardInterface->ChipReSync(cBoard);
             LOG (INFO) << GREEN << "Successfully sent resync." << RESET;
           }
         else
@@ -341,7 +341,7 @@ namespace Ph2_System
 
   void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
-    if (fData) delete fData;
+    delete fData;
     fData = new Data();
 
     fBeBoardInterface->ReadNEvents(pBoard, pNEvents, pData, pWait);

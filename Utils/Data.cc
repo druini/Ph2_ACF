@@ -33,20 +33,21 @@ namespace Ph2_HwInterface
             std::vector<std::pair<size_t,size_t>> moduleAndChipIDs;
 
             for (const auto& chip_frame : evt.chip_frames)
-              moduleAndChipIDs.push_back(std::pair<size_t,size_t>(chip_frame.module_id, RD53FWInterface::lane2chipId(pBoard, chip_frame.module_id, chip_frame.chip_lane)));
+              {
+                int chip_id = RD53FWInterface::lane2chipId(pBoard, chip_frame.module_id, chip_frame.chip_lane);
+                if (chip_id != -1) moduleAndChipIDs.push_back(std::pair<size_t,size_t>(chip_frame.module_id, chip_id));
+              }
 
             fEventList.push_back(new RD53Event(std::move(moduleAndChipIDs), evt.chip_events));
           }
       }
     else
       {
-        fNevents = static_cast<uint32_t>(pNevents);
-        // be aware that eventsize is not constant for the zs event, so we are not using it
+        fNevents   = static_cast<uint32_t>(pNevents);
         fEventSize = static_cast<uint32_t>((pData.size()) / fNevents);
 
         EventType fEventType = pBoard->getEventType();
-
-        uint32_t fNFe = pBoard->getNFe();
+        uint32_t fNFe        = pBoard->getNFe();
 
         if (fEventType == EventType::ZS)
           fNCbc = 0;

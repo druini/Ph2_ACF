@@ -59,14 +59,13 @@ void interruptHandler (int handler)
 }
 
 
-void readBinaryData (std::string configFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& RD53decodedEvents)
+void readBinaryData (std::string binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& RD53decodedEvents)
 {
   LOG (INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
   uint16_t status;
   unsigned int errors = 0;
   std::vector<uint32_t> data;
-  mySysCntr.addFileHandler(configFile, 'r');
-  mySysCntr.initializeFileHandler();
+  mySysCntr.addFileHandler(binaryFile, 'r');
   LOG (INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
   mySysCntr.readFile(data, 0);
 
@@ -79,7 +78,7 @@ void readBinaryData (std::string configFile, SystemController& mySysCntr, std::v
         LOG (ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
         errors++;
       }
-  LOG (INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(5) << BOLDYELLOW << 1. * errors / RD53decodedEvents.size() * 100. << "%" << RESET;
+  LOG (INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(3) << BOLDYELLOW << 1. * errors / RD53decodedEvents.size() * 100. << "%" << RESET;
 }
 
 
@@ -108,8 +107,8 @@ int main (int argc, char** argv)
   cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin injdelay clockdelay physics]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
-  cmd.defineOption ("decode", "Binary file to decode.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
-  cmd.defineOptionAlternative ("decode", "d");
+  cmd.defineOption ("binary", "Binary file to decode.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOptionAlternative ("binary", "b");
 
   cmd.defineOption ("prog", "Program the system components.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("prog", "p");
@@ -130,7 +129,7 @@ int main (int argc, char** argv)
 
   std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file")   : "CMSIT.xml";
   std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib")  : "pixelalive";
-  std::string binaryFile = cmd.foundOption("decode") == true ? cmd.optionValue("decode") : "";
+  std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
   bool program           = cmd.foundOption("prog")   == true ? true : false;
   bool supervisor        = cmd.foundOption("sup")    == true ? true : false;
   bool reset             = cmd.foundOption("reset")  == true ? true : false;
@@ -262,11 +261,12 @@ int main (int argc, char** argv)
       SystemController mySysCntr;
 
 
-      // ######################################
-      // # Reset hardware or read binary file #
-      // ######################################
       if ((reset == true) || (binaryFile != ""))
         {
+          // ######################################
+          // # Reset hardware or read binary file #
+          // ######################################
+
           std::stringstream outp;
           mySysCntr.InitializeHw(configFile, outp, true, false);
           mySysCntr.InitializeSettings(configFile, outp);
@@ -277,13 +277,12 @@ int main (int argc, char** argv)
             }
           if (binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53decodedEvents);
         }
-
-
-      // #######################
-      // # Initialize Hardware #
-      // #######################
-      if (binaryFile == "")
+      else if (binaryFile == "")
         {
+          // #######################
+          // # Initialize Hardware #
+          // #######################
+
           LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
           mySysCntr.ConfigureHardware(configFile);
           LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
@@ -327,7 +326,7 @@ int main (int argc, char** argv)
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
           pa.initialize(fileName, chipConfig);
-          if (binaryFile == "") pa.run();
+          pa.run();
           pa.analyze();
           pa.draw();
         }

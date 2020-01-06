@@ -38,11 +38,6 @@ void Physics::ConfigureCalibration ()
   theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, RD53GroupType::AllPixels);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), theChnGroupHandler->allChannelGroup(), true, false);
-
 
   // ###########################################
   // # Initialize directory and data container #
@@ -131,6 +126,15 @@ void Physics::initialize (const std::string fileRes_, const std::string fileReg_
 
 void Physics::run ()
 {
+  // ##################################
+  // # Download the mask to the chips #
+  // ##################################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), theChnGroupHandler->allChannelGroup(), true, false);
+
+
   while (keepRunning == true)
     {
       RD53decodedEvents.clear();
@@ -169,12 +173,17 @@ void Physics::draw ()
 
 void Physics::analyze (bool doReadData)
 {
-  unsigned int dataSize = 0;
-
   for (const auto cBoard : *fDetectorContainer)
     {
+      size_t dataSize = 0;
+
       if (doReadData == true) dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
-      else dataSize = 1;
+      else
+        {
+          dataSize = 1;
+          std::vector<uint32_t> data;
+          SystemController::setData(static_cast<BeBoard*>(cBoard), data, dataSize);
+        }
 
       if (dataSize != 0)
         {
@@ -254,7 +263,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
               int deltaBCID = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
                 theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
               deltaBCID += (deltaBCID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
-              if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDBLUE <<"[Physics::analyze] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
+              if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDBLUE <<"[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
               else theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
             }
           theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1.clear();
@@ -264,7 +273,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
               int deltaTrgID = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
                 theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
               deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
-              if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDBLUE << "[Physics::analyze] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
+              if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
               else theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
             }
           theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2.clear();

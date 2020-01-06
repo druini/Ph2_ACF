@@ -226,7 +226,7 @@ namespace Ph2_System
       return fData->GetEvent(pBoard, i);
     }
 
-    const std::vector<Event*> &GetEvents(const BeBoard* pBoard) const
+    const std::vector<Event*>& GetEvents(const BeBoard* pBoard) const
     {
       return fData->GetEvents(pBoard);
     }
