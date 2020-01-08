@@ -23,7 +23,6 @@
     #include "TObject.h"
     #include "TCanvas.h"
 #endif
-//#include "../Utils/Container.h"
 
 
 class DetectorContainer;
@@ -37,18 +36,16 @@ class ScanBase;
 #include "THttpServer.h"
 #endif
 
-using namespace Ph2_System;
 
-
-typedef std::vector<uint16_t> MaskedChannels ;
-typedef std::map<std::string , MaskedChannels> MaskedChannelsList ; 
+typedef std::vector<uint16_t> MaskedChannels;
+typedef std::map<std::string , MaskedChannels> MaskedChannelsList;
 typedef std::vector<std::pair< std::string, uint16_t> > RegisterVector;
 
 /*!
  * \class Tool
  * \brief A base class for all kinds of applications that have to use ROOT that inherits from SystemController which does not have any dependence on ROOT
  */
-class Tool : public SystemController
+class Tool : public Ph2_System::SystemController
 {
 
     #ifdef __USE_ROOT__
@@ -79,7 +76,7 @@ class Tool : public SystemController
     ~Tool();
 
     void Inherit      (Tool* pTool);
-    void Inherit      (SystemController* pSystemController);
+    void Inherit      (Ph2_System::SystemController* pSystemController);
     void resetPointers();
     void Destroy      ();
     void SoftDestroy  ();

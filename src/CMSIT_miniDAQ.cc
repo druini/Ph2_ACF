@@ -59,7 +59,7 @@ void interruptHandler (int handler)
 }
 
 
-void readBinaryData (std::string binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& RD53decodedEvents)
+void readBinaryData (std::string binaryFile, Ph2_System::SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& RD53decodedEvents)
 {
   LOG (INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
   uint16_t status;
@@ -258,7 +258,7 @@ int main (int argc, char** argv)
     }
   else
     {
-      SystemController mySysCntr;
+      Ph2_System::SystemController mySysCntr;
 
 
       if ((reset == true) || (binaryFile != ""))

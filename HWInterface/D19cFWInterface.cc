@@ -20,9 +20,11 @@
 #include "../HWDescription/OuterTrackerModule.h"
 
 #pragma GCC diagnostic ignored "-Wpedantic"
-// #pragma GCC diagnostic pop
-namespace Ph2_HwInterface {
 
+using namespace Ph2_HwDescription;
+
+namespace Ph2_HwInterface
+{
     D19cFWInterface::D19cFWInterface ( const char* puHalConfigFileName,
      uint32_t pBoardId ) 
     : BeBoardFWInterface ( puHalConfigFileName, pBoardId )
@@ -2715,10 +2717,9 @@ namespace Ph2_HwInterface {
         this->ChipReSync();
         usleep (10);
         // reset  the timing tuning
-	WriteReg("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
-	
-	std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-	hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
+        WriteReg("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+        hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
         }
-    }  
+    }
 }

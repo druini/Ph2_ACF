@@ -31,9 +31,9 @@ namespace Ph2_HwInterface
     bool isHittedChip      (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const;
 
 
-    // @TMP@ not implemented yet
+    // @TMP@ not implemented
     bool DataBit                     (uint8_t /*module_id*/, uint8_t chip_id, uint32_t channel_id) const         override {return false;}
-    void SetEvent                    (const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list) override {}
+    void SetEvent                    (const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list) override {}
     std::string HexString            () const override { return ""; }
     uint32_t GetEventCountCBC        () const override { return 0;  }
     std::string DataHexString        (uint8_t pFeId, uint8_t pCbcId) const override { return ""; }
@@ -49,7 +49,7 @@ namespace Ph2_HwInterface
     std::vector<Stub> StubVector     (uint8_t pFeId, uint8_t pCbcId) const override { return std::vector<Stub>(); }
     uint32_t GetNHits                (uint8_t pFeId, uint8_t pCbcId) const override { return 0; }
     std::vector<uint32_t> GetHits    (uint8_t pFeId, uint8_t pCbcId) const override { return std::vector<uint32_t>(); }
-    SLinkEvent GetSLinkEvent         (BeBoard* pBoard)               const override { return SLinkEvent(); }
+    SLinkEvent GetSLinkEvent         (Ph2_HwDescription::BeBoard* pBoard) const override { return SLinkEvent(); }
     std::vector<Cluster> getClusters (uint8_t pFeId, uint8_t pCbcId) const override { return std::vector<Cluster>(); }
 
 

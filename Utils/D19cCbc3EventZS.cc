@@ -16,11 +16,9 @@
 
 using namespace Ph2_HwDescription;
 
-
-namespace Ph2_HwInterface {
-
-
-    void D19cCbc3EventZS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
+namespace Ph2_HwInterface
+{
+  void D19cCbc3EventZS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
     {
         for(auto module: *boardContainer)
         {

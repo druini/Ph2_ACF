@@ -14,11 +14,8 @@
 
 #include "Event.h"
 
-
-using namespace Ph2_HwDescription;
-
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
     using EventDataVector = std::vector<std::vector<uint32_t>>;
     // struct Address
     // {
@@ -40,7 +37,7 @@ namespace Ph2_HwInterface {
          * \param pNbCbc
          * \param pEventBuf : the pointer to the raw Event buffer of this Event
          */
-        D19cCbc3Event ( const BeBoard* pBoard, uint32_t pNbCbc, uint32_t pNFe, const std::vector<uint32_t>& list );
+        D19cCbc3Event ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, uint32_t pNFe, const std::vector<uint32_t>& list );
         /*!
          * \brief Copy Constructor of the Event Class
          */
@@ -56,7 +53,7 @@ namespace Ph2_HwInterface {
          * \param pEvent : Event to set
          * \return Aknowledgement of the Event setting (1/0)
          */
-        void SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) override;
+        void SetEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) override;
 
         /*!
          * \brief Get the Cbc Event counter
@@ -234,7 +231,7 @@ namespace Ph2_HwInterface {
 
         void printCbcHeader (std::ostream& os, uint8_t pFeId, uint8_t pCbcId) const;
 
-        SLinkEvent GetSLinkEvent ( BeBoard* pBoard) const override;
+        SLinkEvent GetSLinkEvent ( Ph2_HwDescription::BeBoard* pBoard) const override;
     };
 }
 #endif

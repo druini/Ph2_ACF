@@ -2,6 +2,7 @@
 #ifdef __USE_ROOT__
 #include "TH1.h"
 #endif
+
 #include "../HWDescription/Chip.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/ChannelGroupHandler.h"
@@ -11,6 +12,7 @@
 #include "../Utils/DataContainer.h"
 #include "../Utils/Container.h"
 
+using namespace Ph2_System;
 
 Tool::Tool() :
 SystemController            (),

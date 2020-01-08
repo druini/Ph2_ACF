@@ -14,9 +14,8 @@
 
 using namespace Ph2_HwDescription;
 
-
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
     // Event implementation
     SSAEvent::SSAEvent ( const BeBoard* pBoard,  uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
@@ -58,43 +57,8 @@ namespace Ph2_HwInterface {
                 uint32_t end = begin + SSA_EVENT_SIZE_32;
 
                 std::vector<uint32_t> cSSAData (std::next (std::begin (list), begin), std::next (std::begin (list), end) );
-		
-
-
                 fEventDataMap[cKey] = cSSAData;
             }
-
-
         }
-
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

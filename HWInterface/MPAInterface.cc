@@ -1,24 +1,21 @@
 /*
-
         FileName :                     MPAInterface.cc
         Content :                      User Interface to the MPAs
         Programmer :                   K. nash, M. Haranko, D. Ceresa
         Version :                      1.0
         Date of creation :             5/01/18
-
  */
 
 #include "MPAInterface.h"
 #include "../Utils/ConsoleColor.h"
 #include <typeinfo>
+
 #define DEV_FLAG 0
-// #define COUNT_FLAG 0
+
+using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-
-
-
 MPAInterface::MPAInterface( const BeBoardFWMap& pBoardMap ) :
     fBoardMap( pBoardMap ),
     fBoardFW( nullptr ),

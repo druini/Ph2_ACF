@@ -14,9 +14,8 @@
 
 using namespace Ph2_HwDescription;
 
-
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
     // Event implementation
     D19cSSAEvent::D19cSSAEvent ( const BeBoard* pBoard,  uint32_t pNbSSA, const std::vector<uint32_t>& list )
     {

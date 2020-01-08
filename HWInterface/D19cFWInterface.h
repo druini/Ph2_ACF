@@ -22,13 +22,12 @@
 #include "BeBoardFWInterface.h"
 
 
-using namespace Ph2_HwDescription;
-
 /*!
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
  */
-namespace Ph2_HwInterface {
+namespace Ph2_HwInterface
+{
     class D19cFpgaConfig;
     /*!
      * \class Cbc3Fc7FWInterface
@@ -37,7 +36,6 @@ namespace Ph2_HwInterface {
      */
     class D19cFWInterface : public BeBoardFWInterface
     {
-
       private:
         D19cFpgaConfig* fpgaConfig;
         FileHandler* fFileHandler ;
@@ -47,7 +45,6 @@ namespace Ph2_HwInterface {
         uint32_t fNSSA;
         uint32_t fFMCId;
 
-        // number of chips and hybrids defined in firmware (compiled for)
         uint32_t fFWNHybrids;
         uint32_t fFWNChips;
         FrontEndType fFirmwareFrontEndType;
@@ -55,8 +52,7 @@ namespace Ph2_HwInterface {
         bool fIsDDR3Readout;
         bool fDDR3Calibrated;
         uint32_t fDDR3Offset;
-	// i2c version of master
-	uint32_t fI2CVersion;	
+        uint32_t fI2CVersion;
 
         const uint32_t SINGLE_I2C_WAIT = 200; //used for 1MHz I2C
 
@@ -114,6 +110,7 @@ namespace Ph2_HwInterface {
         std::vector<uint32_t> ReadBlockRegOffsetValue ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset );
 
         bool WriteBlockReg ( const std::string& pRegNode, const std::vector< uint32_t >& pValues ) override;
+
         /*!
          * \brief Get the FW info
          */
@@ -127,7 +124,7 @@ namespace Ph2_HwInterface {
          * \brief Configure the board with its Config File
          * \param pBoard
          */
-        void ConfigureBoard ( const BeBoard* pBoard ) override;
+        void ConfigureBoard ( const Ph2_HwDescription::BeBoard* pBoard ) override;
         /*!
          * \brief Detect the right FE Id to write the right registers (not working with the latest Firmware)
          */
@@ -162,23 +159,24 @@ namespace Ph2_HwInterface {
         /*!
           * \brief Tune the 320MHz buses phase shift
           */
-        void PhaseTuning(const BeBoard *pBoard);
+        void PhaseTuning(const Ph2_HwDescription::BeBoard *pBoard);
 
         /*!
          * \brief Read data from DAQ
          * \param pBreakTrigger : if true, enable the break trigger
          * \return fNpackets: the number of packets read
          */
-        uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true ) override;
+
+        uint32_t ReadData ( Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true ) override;
         /*!
          * \brief Read data for pNEvents
          * \param pBoard : the pointer to the BeBoard
          * \param pNEvents :  the 1 indexed number of Events to read - this will set the packet size to this value -1
          */
-        void ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true);
+        void ReadNEvents (Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true);
 
       private:
-        uint32_t computeEventSize ( BeBoard* pBoard );
+        uint32_t computeEventSize ( Ph2_HwDescription::BeBoard* pBoard );
         //I2C command sending implementation
         bool WriteI2C (  std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pWriteRead, bool pBroadcast );
         bool ReadI2C (  uint32_t pNReplies, std::vector<uint32_t>& pReplies);
@@ -187,17 +185,12 @@ namespace Ph2_HwInterface {
         static bool cmd_reply_comp (const uint32_t& cWord1, const uint32_t& cWord2);
         static bool cmd_reply_ack (const uint32_t& cWord1, const uint32_t& cWord2);
 
-        // dedicated method to power on dio5
         void PowerOnDIO5();
-        // get fmc card name
         std::string getFMCCardName (uint32_t id);
-        // convert code of the chip from firmware
         std::string getChipName(uint32_t pChipCode);
         FrontEndType getFrontEndType(uint32_t pChipCode);
-	// set i2c address table depending on the hybrid
-	void SetI2CAddressTable();
-	void Align_out();
-
+        void SetI2CAddressTable();
+        void Align_out();
 
         //template to copy every nth element out of a vector to another vector
         template<class in_it, class out_it>
@@ -236,7 +229,6 @@ namespace Ph2_HwInterface {
         }
 
         void ReadErrors();
-
 
       public:
         ///////////////////////////////////////////////////////
@@ -343,8 +335,6 @@ namespace Ph2_HwInterface {
         void RebootBoard();
         /*! \brief Set or reset the start signal */
         void SetForceStart ( bool bStart) {}
-
-
     };
 }
 

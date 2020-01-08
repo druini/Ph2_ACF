@@ -4,10 +4,8 @@
 
 #include "Event.h"
 
-using namespace Ph2_HwDescription;
-
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
     /*!
      * \class SSAEvent
      */
@@ -20,7 +18,7 @@ namespace Ph2_HwInterface {
          * \param pNbSSA
          * \param pEventBuf : the pointer to the raw Event buffer of this Event
          */
-        D19cSSAEvent ( const BeBoard* pBoard, uint32_t pNbSSA, const std::vector<uint32_t>& list );
+        D19cSSAEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbSSA, const std::vector<uint32_t>& list );
         /*!
          * \brief Copy Constructor of the Event Class
          */
@@ -36,7 +34,7 @@ namespace Ph2_HwInterface {
          * \param pEvent : Event to set
          * \return Aknowledgement of the Event setting (1/0)
          */
-        void SetEvent ( const BeBoard* pBoard, uint32_t pNbSSA, const std::vector<uint32_t>& list ) override;
+        void SetEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbSSA, const std::vector<uint32_t>& list ) override;
 
         /*!
          * \brief Get the SSA Event counter
@@ -261,7 +259,7 @@ namespace Ph2_HwInterface {
 
         void printSSAHeader (std::ostream& os, uint8_t pFeId, uint8_t pSSAId) const;
 
-        SLinkEvent GetSLinkEvent ( BeBoard* pBoard) const override;
+        SLinkEvent GetSLinkEvent ( Ph2_HwDescription::BeBoard* pBoard) const override;
     };
 }
 #endif

@@ -1,12 +1,10 @@
 /*
-
         \file                          Event.h
         \brief                         Event handling from DAQ
         \author                        Nicolas PIERRE
         \version                       1.0
         \date                                  10/07/14
         Support :                      mail to : nicolas.pierre@icloud.com
-
  */
 
 #ifndef __EVENT_H__
@@ -23,14 +21,11 @@
 #include "../HWDescription/BeBoard.h"
 #include "SLinkEvent.h"
 
-
 class BoardDataContainer;
 class ChannelGroupBase;
 
-using namespace Ph2_HwDescription;
-
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
     using EventDataMap = std::map<uint16_t, std::vector<uint32_t>>;
 
     /*!
@@ -280,7 +275,7 @@ namespace Ph2_HwInterface {
          * \param pEvent : Event to set
          * \return Aknowledgement of the Event setting (1/0)
          */
-        virtual void SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) = 0;
+        virtual void SetEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) = 0;
         /*!
          * \brief Convert Data to Hex string
          * \return Data string in hex
@@ -390,11 +385,11 @@ namespace Ph2_HwInterface {
         virtual std::vector<uint32_t> GetHits (uint8_t pFeId, uint8_t pCbcId) const = 0;
         /*!
         * \brief Function to get an encoded SLinkEvent object
-        * \param pBoard : pointer to BeBoard
+        * \param pBoard : pointer to Ph2_HwDescription::BeBoard
         * \param pSet : set of condition data parsed from config file
         * \return SlinkEvent object
         */
-        virtual SLinkEvent GetSLinkEvent (  BeBoard* pBoard) const = 0;
+        virtual SLinkEvent GetSLinkEvent (  Ph2_HwDescription::BeBoard* pBoard) const = 0;
 
         friend std::ostream& operator<< ( std::ostream& out, const Event& ev )
         {
@@ -408,7 +403,6 @@ namespace Ph2_HwInterface {
 
       protected:
         virtual void print (std::ostream& out) const = 0;
-
     };
 }
 #endif

@@ -12,11 +12,9 @@
 #ifndef __MPAINTERFACE_H__
 #define __MPAINTERFACE_H__
 
-#include <vector>
 #include "../HWInterface/D19cFWInterface.h"
 #include "pugixml.hpp"
-
-using namespace Ph2_HwDescription;
+#include <vector>
 
 /*!
  * \namespace Ph2_HwInterface

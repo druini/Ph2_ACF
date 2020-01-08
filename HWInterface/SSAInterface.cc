@@ -1,23 +1,22 @@
 /*
-
         FileName :                     SSAInterface.cc
         Content :                      User Interface to the SSAs
         Programmer :                   Lorenzo BIDEGAIN, Nicolas PIERRE, Georg AUZINGER
         Version :                      1.0
         Date of creation :             10/07/14
         Support :                      mail to : lorenzo.bidegain@gmail.com, nico.pierre@icloud.com
-
  */
 
 #include "SSAInterface.h"
 #include "../Utils/ConsoleColor.h"
 #include <typeinfo>
+
 #define DEV_FLAG 0
-// #define COUNT_FLAG 0
+
+using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-
 SSAInterface::SSAInterface( const BeBoardFWMap& pBoardMap ) :
     fBoardMap( pBoardMap ),
     fBoardFW( nullptr ),

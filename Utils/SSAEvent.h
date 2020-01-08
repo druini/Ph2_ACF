@@ -14,11 +14,8 @@
 
 #include "Event.h"
 
-
-using namespace Ph2_HwDescription;
-
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
     /*!
      * \class SSAEvent
      * \brief Event container to manipulate event flux from the SSA
@@ -32,7 +29,7 @@ namespace Ph2_HwInterface {
          * \param pNbCbc
          * \param pEventBuf : the pointer to the raw Event buffer of this Event
          */
-        SSAEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list );
+        SSAEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list );
         /*!
          * \brief Copy Constructor of the Event Class
          */
@@ -48,7 +45,7 @@ namespace Ph2_HwInterface {
          * \param pEvent : Event to set
          * \return Aknowledgement of the Event setting (1/0)
          */
-        void SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) override;
+        void SetEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) override;
 
         uint32_t GetEventCountCBC() const override{ return 0;};
 
@@ -157,11 +154,8 @@ namespace Ph2_HwInterface {
 
         void print (std::ostream& out) const override{};
 
-        SLinkEvent GetSLinkEvent (  BeBoard* pBoard) const override{ return SLinkEvent();};
-
-
-      private:
-
+        SLinkEvent GetSLinkEvent (  Ph2_HwDescription::BeBoard* pBoard) const override{ return SLinkEvent();};
     };
 }
+
 #endif

@@ -13,9 +13,8 @@
 
 using namespace Ph2_HwDescription;
 
-
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
     double Cluster::getBaricentre()
     {
         return fFirstStrip + double (fClusterWidth) / 2. - 0.5;
@@ -165,6 +164,4 @@ namespace Ph2_HwInterface {
 
         return blist;
     }
-
-
 }
