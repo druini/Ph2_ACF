@@ -1,19 +1,20 @@
-#include <cstring>
-#include <fstream>
-#include "../Utils/Utilities.h"
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
+#include "../HWDescription/Definition.h"
 #include "../HWInterface/ChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
-#include "../HWDescription/Definition.h"
+#include "../Utils/Utilities.h"
 #include "../Utils/Timer.h"
-#include <inttypes.h>
 #include "../Utils/argvparser.h"
 #include "../Utils/ConsoleColor.h"
-#include "../System/SystemController.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/SLinkEvent.h"
+#include "../System/SystemController.h"
+
+#include <inttypes.h>
+#include <cstring>
+#include <fstream>
 
 
 using namespace Ph2_HwDescription;
@@ -155,14 +156,12 @@ int main ( int argc, char* argv[] )
 
     Counter cCbcCounter;
     pBoard->accept ( cCbcCounter );
-    Data data;
 
     if (!cmd.foundOption ( "read") )
         cSystemController.fBeBoardInterface->Start ( pBoard );
     else
     {
         FileHeader cHeader = cSystemController.fFileHandler->getHeader();
-        //the below ensures we have the right Event Object that is used when calling Data.set()
         pBoard->setBoardType (cHeader.getBoardType() );
         pBoard->setEventType (cHeader.fEventType);
         fPlaybackEventSize32 = cHeader.fEventSize32;
@@ -182,12 +181,9 @@ int main ( int argc, char* argv[] )
         if (cmd.foundOption ( "read") )
         {
             std::vector<uint32_t> cReadVec;
-            //fFile->readFileChunks(
             cSystemController.readFile (cReadVec, 10 * fPlaybackEventSize32);
-            //cSystemController.readFile (cReadVec);
             size_t cCalcEvents = cReadVec.size() / fPlaybackEventSize32;
             cSystemController.setData (pBoard, cReadVec, cCalcEvents);
-            //pEvents = &data.GetEvents ( pBoard);
             pEvents = &cSystemController.GetEvents ( pBoard );
         }
         else

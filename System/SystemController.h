@@ -24,7 +24,6 @@
 #include "../HWInterface/D19cFWInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/Visitor.h"
-#include "../Utils/Data.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/FileHandler.h"
 #include "../Utils/ConsoleColor.h"
@@ -32,11 +31,17 @@
 #include "../Utils/Container.h"
 #include "../NetworkUtils/TCPPublishServer.h"
 
-#include <iostream>
+#include "../Utils/Event.h"
+#include "../Utils/RD53Event.h"
+#include "../Utils/D19cCbc3Event.h"
+#include "../Utils/D19cCbc3EventZS.h"
+
 #include <unordered_map>
+#include <iostream>
 #include <vector>
 #include <stdlib.h>
 #include <string.h>
+#include <future>
 
 /*!
  * \namespace Ph2_System
@@ -218,24 +223,36 @@ namespace Ph2_System
      */
     const Event* GetNextEvent(const BeBoard* pBoard)
     {
-      return fData->GetNextEvent(pBoard);
+      if (fFuture.valid() == true) fFuture.get();
+      return ((fCurrentEvent >= fEventList.size()) ? nullptr : fEventList.at(fCurrentEvent++));
     }
 
-    const Event* GetEvent(const BeBoard* pBoard, int i) const
+    const Event* GetEvent(const BeBoard* pBoard, unsigned int i)
     {
-      return fData->GetEvent(pBoard, i);
+      if (fFuture.valid() == true) fFuture.get();
+      return ((i >= fEventList.size()) ? nullptr : fEventList.at(i));
     }
 
-    const std::vector<Event*>& GetEvents(const BeBoard* pBoard) const
+    const std::vector<Event*>& GetEvents(const BeBoard* pBoard)
     {
-      return fData->GetEvents(pBoard);
+      if (fFuture.valid() == true) fFuture.get();
+      return fEventList;
     }
 
     double findValueInSettings (const char* name);
 
   private:
+    void ResetEventList();
+    void SetFuture  (const BeBoard *pBoard, const std::vector<uint32_t> &pData, uint32_t pNevents, BoardType pType);
+    void DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+
+    std::vector<Event*> fEventList;
+    std::future<void> fFuture;
+    uint32_t fCurrentEvent;
+    uint32_t fEventSize;
+    uint32_t fNevents;
+    uint32_t fNCbc;
     FileParser fParser;
-    Data *fData;
   };
 }
 
