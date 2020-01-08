@@ -164,7 +164,7 @@ int main (int argc, char** argv)
         {
           char* argv[] = {(char*)"RunController", NULL};
           execv((std::string(getenv("BASE_DIR")) + "/bin/RunController").c_str(), argv);
-          LOG (ERROR) << BOLDRED << "I Can't run RunController, error occured" << RESET;
+          LOG (ERROR) << BOLDRED << "I can't run RunController, error occured" << RESET;
           exit(EXIT_FAILURE);
         }
 

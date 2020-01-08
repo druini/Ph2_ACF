@@ -15,6 +15,7 @@
 #include "../tools/RD53GainOptimization.h"
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53InjectionDelay.h"
+#include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53Physics.h"
 
@@ -87,6 +88,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
       else if (getVariableValue("Calibration",buffer) == "gainopt")                 theSystemController_ = new CombinedCalibration<GainOptimization>;
       else if (getVariableValue("Calibration",buffer) == "thrmin")                  theSystemController_ = new CombinedCalibration<ThrMinimization>;
       else if (getVariableValue("Calibration",buffer) == "injdelay")                theSystemController_ = new CombinedCalibration<InjectionDelay>;
+      else if (getVariableValue("Calibration",buffer) == "clockdelay")              theSystemController_ = new CombinedCalibration<ClockDelay>;
       else if (getVariableValue("Calibration",buffer) == "threqu")                  theSystemController_ = new CombinedCalibration<ThrEqualization>;
       else if (getVariableValue("Calibration",buffer) == "physics")                 theSystemController_ = new Physics;
 
@@ -100,18 +102,17 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
       theSystemController_->Configure(getVariableValue("ConfigurationFile",buffer),true);
       return "ConfigureDone";
     }
-    else if( buffer.substr(0,6) == "Error:" )
+  else if( buffer.substr(0,6) == "Error:" )
     {
-          if( buffer == "Error: Connection closed")
-            LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << buffer << ". Closing client server connection!" << RESET;
-          return "";
+      if( buffer == "Error: Connection closed")
+        LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << buffer << ". Closing client server connection!" << RESET;
+      return "";
     }
-    else
+  else
     {
-          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Can't recognige message: " << buffer << ". Aborting..." << RESET;
-          abort();
+      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Can't recognige message: " << buffer << ". Aborting..." << RESET;
+      abort();
     }
-    
 
   if (running_ || paused_) // We go through here after start and resume or pause: sending back current status
     {
