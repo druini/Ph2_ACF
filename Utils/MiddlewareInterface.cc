@@ -14,6 +14,20 @@ MiddlewareInterface::~MiddlewareInterface(void)
 }
 
 //========================================================================================================================
+std::string MiddlewareInterface::sendCommand(const std::string& command)
+{
+	try
+	{
+		return TCPClient::sendAndReceivePacket(command);
+	}
+	catch(const std::exception &e)
+	{
+		std::cout << __PRETTY_FUNCTION__ << "Error: " << e.what() << " Need to take some actions here!" << std::endl;
+		return ""; 
+	}
+}
+
+//========================================================================================================================
 void MiddlewareInterface::initialize(void)
 {
 	if(!TCPClient::connect())
@@ -21,14 +35,14 @@ void MiddlewareInterface::initialize(void)
 		std::cout << __PRETTY_FUNCTION__ << "ERROR CAN'T CONNECT TO SERVER!"<< std::endl;
 		abort();
 	}
-	std::string readBuffer = TCPClient::sendAndReceivePacket("Initialize");
+	std::string readBuffer = sendCommand("Initialize");
 	std::cout << __PRETTY_FUNCTION__ << "DONE WITH Initialize-" << readBuffer << "-"<< std::endl;
 }
 
 //========================================================================================================================
-void MiddlewareInterface::configure(std::string calibrationName, std::string configurationFilePath)
+void MiddlewareInterface::configure(std::string const& calibrationName, std::string const& configurationFilePath)
 {
-	std::string readBuffer = TCPClient::sendAndReceivePacket("Configure,Calibration:" + calibrationName + ",ConfigurationFile:" + configurationFilePath);
+	std::string readBuffer = sendCommand("Configure,Calibration:" + calibrationName + ",ConfigurationFile:" + configurationFilePath);
 	std::cout << __PRETTY_FUNCTION__ << "DONE WITH Configure-" << readBuffer << "-"<< std::endl;
 }
 
@@ -53,7 +67,7 @@ void MiddlewareInterface::resume(void)
 //========================================================================================================================
 void MiddlewareInterface::start(std::string runNumber)
 {
-	std::string readBuffer = TCPClient::sendAndReceivePacket("Start:{RunNumber:" + runNumber + "}");
+	std::string readBuffer = sendCommand("Start:{RunNumber:" + runNumber + "}");
 	std::cout << __PRETTY_FUNCTION__ << "DONE WITH Start-" << readBuffer << "-"<< std::endl;
 }
 
@@ -61,7 +75,7 @@ void MiddlewareInterface::start(std::string runNumber)
 void MiddlewareInterface::stop(void)
 {
 	std::cout << __PRETTY_FUNCTION__ << "Sending Stop!" << std::endl;
-	std::string readBuffer = TCPClient::sendAndReceivePacket("Stop");
+	std::string readBuffer = sendCommand("Stop");
 
 	std::cout << __PRETTY_FUNCTION__ << "DONE WITH Stop-" << readBuffer << "-"<< std::endl;
 

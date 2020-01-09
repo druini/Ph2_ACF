@@ -39,7 +39,6 @@ class ThrEqualization : public Tool
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
-  void writeObjects         () {}; // @TMP@
 
   void   sendData            ();
   void   initialize          (const std::string fileRes_, const std::string fileReg_);
@@ -89,6 +88,7 @@ class ThrEqualization : public Tool
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
+  bool saveRawData;
 };
 
 #endif

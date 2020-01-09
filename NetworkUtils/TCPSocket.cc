@@ -20,7 +20,7 @@ TCPSocket::~TCPSocket()
 	try
 	{
 		close();
-		std::cout << __PRETTY_FUNCTION__ << "Clean close!" << std::endl;
+		std::cout << __PRETTY_FUNCTION__ << "Clean socket close!" << std::endl;
 	}
 	catch (...)
 	{
@@ -43,7 +43,7 @@ void TCPSocket::close()
 		throw std::logic_error("Bad socket object (this object was moved)");
 	}
 	int state = ::close(fSocketId);
-	std::cout << __PRETTY_FUNCTION__ << "Socket id: " << getSocketId() << " close state: " << state << " errno: " << errno << std::endl;
+	//std::cout << __PRETTY_FUNCTION__ << "Socket id: " << getSocketId() << " close state: " << state << " errno: " << errno << std::endl;
 	if (state == 0) //0 means socket closed correctly
 		fSocketId = invalidSocketId;
 	else

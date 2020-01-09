@@ -4,6 +4,7 @@
 #include "../NetworkUtils/TCPSocket.h"
 #include "../NetworkUtils/TCPPacket.h"
 #include <string>
+//#include <iostream>
 
 class TCPReceiverSocket : public virtual TCPSocket
 {
@@ -20,8 +21,8 @@ public:
 		T buffer;
 		buffer.resize(maxSocketSize);
 		int length = receive(static_cast<char *>(&buffer.at(0)), maxSocketSize);
+		//std::cout << __PRETTY_FUNCTION__ << "Message received-" << buffer.at(0) << "- length: " << length << std::endl;
 		buffer.resize(length);
-		//std::cout << __PRETTY_FUNCTION__ << "Message received-" << fBuffer << "-" << std::endl;
 		return buffer; //c++11 doesn't make a copy anymore when returned
 	}
 	std::string receivePacket(void);

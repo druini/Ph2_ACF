@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap)
+void ThrEqualizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
   ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
@@ -62,6 +62,8 @@ void ThrEqualizationHistograms::fillOccupancy (const DetectorDataContainer& Occu
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
+
           auto* hThrEqualization = ThrEqualization.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (auto row = 0u; row < RD53::nRows; row++)
@@ -79,6 +81,8 @@ void ThrEqualizationHistograms::fillTDAC (const DetectorDataContainer& TDACConta
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          if (cChip->getChannelContainer<uint16_t>() == nullptr) continue;
+
           auto* hTDAC = TDAC.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (auto row = 0u; row < RD53::nRows; row++)

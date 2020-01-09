@@ -25,10 +25,10 @@
 class SCurveHistograms : public DQMHistogramBase
 {
  public:
-  void book          (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, Ph2_System::SettingsMap settingsMap) override;
-  void process       ()                                                                                                         override;
-  bool fill          (std::vector<char>& dataBuffer)                                                                            override;
-  void reset         ()                                                                                                         override {};
+  void book          (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+  void process       ()                                                                                                                override;
+  bool fill          (std::vector<char>& dataBuffer)                                                                                   override;
+  void reset         ()                                                                                                                override {};
 
   void fillOccupancy   (const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL);
   void fillThrAndNoise (const DetectorDataContainer& ThrAndNoiseContainer);

@@ -14,12 +14,14 @@ TCPPublishServer::~TCPPublishServer(void)
 {
 }
 
+//========================================================================================================================
 void TCPPublishServer::acceptConnections()
 {
     while(true)
     {
         try
         {
+            // if(fConnectedClients.size() < fMaxNumberOfClients)
             __attribute__((unused)) TCPTransmitterSocket* clientSocket = acceptClient<TCPTransmitterSocket>();
         }
         catch (int e)

@@ -353,7 +353,7 @@ private:
 // unpack range into range
 template <size_t Size, class InIt, class OutIt>
 static CONSTEXPR_ void unpack_range(InIt in_first, InIt in_last, OutIt out_first) {
-  using input_type = typename std::iterator_traits<OutIt>::value_type;
+  // using input_type = typename std::iterator_traits<OutIt>::value_type;
   using output_type = typename std::iterator_traits<OutIt>::value_type;
   constexpr size_t input_size = bit_count<typename std::iterator_traits<InIt>::value_type>();
   static_assert(input_size > Size, "The size of the input range's value type is too small.");

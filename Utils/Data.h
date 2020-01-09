@@ -1,12 +1,10 @@
 /*
-
   \file                          Data.h
   \brief                         Data handling from DAQ
   \author                        Nicolas PIERRE
   \version                       1.0
   \date                          10/07/14
   Support :                      mail to : nicolas.pierre@icloud.com
-
 */
 
 #ifndef DATA_H
@@ -19,11 +17,13 @@
 #include "easylogging++.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
+#include "../HWInterface/RD53FWInterface.h"
 
 
 using namespace Ph2_HwDescription;
-namespace Ph2_HwInterface {
 
+namespace Ph2_HwInterface
+{
   /*!
    * \class Data
    * \brief Data buffer class for CBC data
@@ -77,7 +77,6 @@ namespace Ph2_HwInterface {
 
     //private methods to be used in set according to the BoardType enum
     void setIC (uint32_t& pWord, uint32_t pWordIndex, uint32_t pSwapIndex);
-    void setCbc3Fc7 (uint32_t& pWord);
     void setStrasbourgSupervisor (uint32_t& pWord);
 
   public:
@@ -102,7 +101,7 @@ namespace Ph2_HwInterface {
      */
     void Reset();
 
-    void DecodeEvents (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+    void DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
     const Event* GetNextEvent (const BeBoard* pBoard)
     {

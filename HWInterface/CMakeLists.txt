@@ -20,8 +20,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     file(GLOB SOURCES *.cc)
     
     #add the library
-    add_library(Ph2_Interface SHARED ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} Ph2_Description cactus_uhal_uhal )
+    add_library(Ph2_Interface STATIC ${SOURCES} ${HEADERS})
+    set(LIBS ${LIBS} Ph2_Description cactus_uhal_uhal cactus_uhal_log boost_regex)
     TARGET_LINK_LIBRARIES(Ph2_Interface ${LIBS})
 
     ####################################

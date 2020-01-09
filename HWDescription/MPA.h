@@ -18,6 +18,7 @@
 #include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
+
 #include <iostream>
 #include <map>
 #include <string>
@@ -25,21 +26,19 @@
 #include <utility>
 #include <set>
 
-// MPA Chip HW Description Class
-
 
 /*!
  * \namespace Ph2_HwDescription
  * \brief Namespace regrouping all the hardware description
  */
-namespace Ph2_HwDescription {
-    using MPARegMap = std::map < std::string, RegItem >;
+namespace Ph2_HwDescription
+ {
+    using MPARegMap  = std::map  <std::string, RegItem>;
     using MPARegPair = std::pair <std::string, RegItem>;
-    using CommentMap = std::map <int, std::string>;
+    using CommentMap = std::map  <int, std::string>;
 
     class MPA : public FrontEndDescription
     {
-
       public:
 
         // C'tors which take BeId, FMCId, FeID, MPAId
@@ -116,9 +115,7 @@ namespace Ph2_HwDescription {
 
     struct MPARegItemComparer
     {
-
         bool operator() ( const MPARegPair& pRegItem1, const MPARegPair& pRegItem2 ) const;
-
     };
 }
 

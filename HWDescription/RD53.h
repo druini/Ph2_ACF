@@ -11,7 +11,6 @@
 #define RD53_H
 
 #include "ReadoutChip.h"
-
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/bit_packing.h"
@@ -41,6 +40,7 @@ namespace RD53Constants
   const uint8_t NPIX_REGION      =  4;  // Number of pixels in a region (1x4)
   const uint8_t NROW_CORE        =  8;  // Number of rows in a core
   const uint8_t NBIT_ADDR        =  9;  // Number of address bits
+  const uint8_t NSYNC_WORS       = 32;  // Number of Sync words for synchronization
 }
 
 
@@ -78,9 +78,10 @@ namespace RD53EvtEncoder
   // ################
   // # Event status #
   // ################
-  const uint8_t CGOOD = 0x00; // Chip event status Good
-  const uint8_t CHEAD = 0x40; // Chip event status Bad chip header
-  const uint8_t CPIX  = 0x80; // Chip event status Bad pixel row or column
+  const uint16_t CHIPGOOD  = 0x0000; // Chip event status Good
+  const uint16_t CHIPHEAD  = 0x0100; // Chip event status Bad chip header
+  const uint16_t CHIPPIX   = 0x0200; // Chip event status Bad pixel row or column
+  const uint16_t CHIPNOHIT = 0x0400; // Chip event status Hit data are missing
 }
 
 
@@ -123,8 +124,8 @@ namespace Ph2_HwDescription
     static constexpr size_t nRows = NROWS;
     static constexpr size_t nCols = NCOLS;
 
-    RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, const std::string& fileName);
-    RD53 (const FrontEndDescription& pFeDesc, uint8_t pRD53Id, const std::string& fileName);
+    RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName);
+    RD53 (const RD53& chipObj);
 
     void     loadfRegMap         (const std::string& fileName)  override;
     void     saveRegMap          (const std::string& fName2Add) override;
@@ -169,10 +170,10 @@ namespace Ph2_HwDescription
       uint16_t bc_id;
       std::vector<HitData> hit_data;
 
-      uint8_t evtStatus;
+      uint16_t evtStatus;
 
     private:
-      void DecodeQuad (uint32_t data, std::vector<RD53::HitData>& result);
+      void DecodeQuad (uint32_t data);
     };
 
     struct CalCmd
@@ -198,12 +199,7 @@ namespace Ph2_HwDescription
       uint8_t cal_aux_delay;
     };
 
-    static size_t setBits (size_t nBit2Set)
-    {
-      auto output = 1 << (nBit2Set-1);
-      for (auto i = 0u; i < nBit2Set-1; i++) output |= 1 << i;
-      return output;
-    }
+    static constexpr size_t setBits (size_t nBit2Set) { return (1 << nBit2Set) - 1; }
 
     static auto countBitsOne (size_t num)
     {

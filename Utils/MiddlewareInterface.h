@@ -11,7 +11,7 @@ public:
 	MiddlewareInterface(std::string serverIP, int serverPort);
 	virtual ~MiddlewareInterface(void);
 	void initialize       (void);
-	void configure        (std::string calibrationName, std::string configurationFilePath);
+	void configure        (std::string const& calibrationName, std::string const& configurationFilePath);
 	void halt             (void);
 	void pause            (void);
 	void resume           (void);
@@ -22,6 +22,8 @@ protected:
 	std::string             currentRun_= "0";
 	bool                    running_   = false;
 	bool                    paused_    = false;
+private:
+	std::string sendCommand(const std::string& command);
 
 };
 

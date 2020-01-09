@@ -17,8 +17,8 @@
     file(GLOB SOURCES *.cc)
     
     # Add the library
-    add_library(Ph2_Utils SHARED ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} pugixml)
+    add_library(Ph2_Utils STATIC ${SOURCES} ${HEADERS})
+    set(LIBS ${LIBS} pugixml boost_thread)
     TARGET_LINK_LIBRARIES(Ph2_Utils ${LIBS})
     
     # Check for ZMQ installed

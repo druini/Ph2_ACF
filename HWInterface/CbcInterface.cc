@@ -77,7 +77,7 @@ namespace Ph2_HwInterface {
 
     bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group, bool pVerifLoop)
     {
-        uint8_t testPulseDel  = pCbc->getReg ("TestPulseDel&ChanGroup") & 0xF8;
+
         std::bitset<NCHANNELS> baseInjectionChannel (std::string("00000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011"));
         uint8_t channelGroup = 0;
         for(; channelGroup<=8; ++channelGroup)
@@ -86,10 +86,15 @@ namespace Ph2_HwInterface {
             {
                 break;
             }
+            baseInjectionChannel = baseInjectionChannel<<2;
         }
         if(channelGroup == 8)
             throw Exception( "bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group, bool pVerifLoop): CBC is not able to inject the channel pattern" );
-        uint8_t cRegValue = testPulseDel & 3;
+
+        uint8_t groupLookupTable[8] = {0x0, 0x4, 0x2, 0x6, 0x1, 0x5, 0x3, 0x7};
+
+        uint8_t cRegValue = pCbc->getReg("TestPulseDel&ChanGroup");
+        cRegValue =  (cRegValue & 0xF8) | groupLookupTable[channelGroup];
         return WriteChipReg ( pCbc, "TestPulseDel&ChanGroup",  cRegValue );
     }
 
@@ -140,7 +145,7 @@ namespace Ph2_HwInterface {
         return WriteChipMultReg ( pCbc, cRegVec, pVerifLoop );
     }
 
-    bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop )
+  bool CbcInterface::WriteChipReg ( Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop)
     {
         if(dacName=="VCth"){
             if (pCbc->getFrontEndType() == FrontEndType::CBC3)
@@ -332,7 +337,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    void CbcInterface::WriteBroadcastCbcReg ( const Module* pModule, const std::string& pRegNode, uint32_t pValue )
+    void CbcInterface::WriteModuleBroadcastChipReg ( const Module* pModule, const std::string& pRegNode, uint16_t pValue )
     {
         //first set the correct BeBoard
         setBoard ( pModule->getBeBoardId() );

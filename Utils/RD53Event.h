@@ -22,16 +22,13 @@ namespace Ph2_HwInterface
   class RD53Event : public Event
   {
   public:
-    RD53Event (std::vector<size_t>&& module_id, std::vector<size_t>&& chip_id, std::vector<Ph2_HwDescription::RD53::Event>&& events)
-      : chip_events(std::move(events))
-      , module_id_vec(std::move(module_id))
-      , chip_id_vec(std::move(chip_id))
+    RD53Event (std::vector<std::pair<size_t,size_t>>&& moduleAndChipIDs, const std::vector<Ph2_HwDescription::RD53::Event>& events)
+      : moduleAndChipIDs (std::move(moduleAndChipIDs))
+      , chip_events      (events)
       {}
 
     void fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
     bool isHittedChip      (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const;
-
-    std::vector<Ph2_HwDescription::RD53::Event> chip_events;
 
 
     // @TMP@ not implemented yet
@@ -57,8 +54,8 @@ namespace Ph2_HwInterface
 
 
   private:
-    std::vector<size_t> module_id_vec;
-    std::vector<size_t> chip_id_vec;
+    std::vector<std::pair<size_t,size_t>> moduleAndChipIDs;
+    const std::vector<Ph2_HwDescription::RD53::Event>& chip_events;
 
 
   protected:

@@ -32,10 +32,25 @@ void ThrMinimization::ConfigureCalibration ()
   ThrStop         = this->findValueInSettings("ThrStop");
   doDisplay       = this->findValueInSettings("DisplayHisto");
   doUpdateChip    = this->findValueInSettings("UpdateChipCfg");
+  saveRawData     = this->findValueInSettings("SaveRawData");
+
+
+  // #######################
+  // # Initialize progress #
+  // #######################
+  RD53RunProgress::total() += ThrMinimization::getNumberIterations();
 }
 
 void ThrMinimization::Start (int currentRun)
 {
+  LOG (INFO) << GREEN << "[ThrMinimization::Start] Starting" << RESET;
+
+  if (saveRawData == true)
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
+
   ThrMinimization::run();
   ThrMinimization::analyze();
   ThrMinimization::sendData();
@@ -43,7 +58,7 @@ void ThrMinimization::Start (int currentRun)
 
 void ThrMinimization::sendData ()
 {
-  auto theThrStream = prepareChannelContainerStreamer<uint16_t>();
+  auto theThrStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>(); // @TMP@
 
   if (fStreamerEnabled == true)
     for (const auto cBoard : theThrContainer) theThrStream.streamAndSendBoard(cBoard, fNetworkStreamer);
@@ -51,7 +66,9 @@ void ThrMinimization::sendData ()
 
 void ThrMinimization::Stop ()
 {
-  this->Destroy();
+  LOG (INFO) << GREEN << "[ThrMinimization::Stop] Stopping" << RESET;
+
+  this->closeFileHandler();
 }
 
 void ThrMinimization::initialize (const std::string fileRes_, const std::string fileReg_)
@@ -119,7 +136,7 @@ void ThrMinimization::draw ()
           static_cast<RD53*>(cChip)->saveRegMap(fileReg);
           std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
           system(command.c_str());
-          LOG (INFO) << BOLDGREEN << "\t--> ThrMinimization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> ThrMinimization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 
 #ifdef __USE_ROOT__
@@ -134,8 +151,8 @@ void ThrMinimization::analyze ()
   for (const auto cBoard : theThrContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        LOG(INFO) << BOLDGREEN << "\t--> Global threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "] is " << BOLDYELLOW
-                  << cChip->getSummary<uint16_t>() << RESET;
+        LOG(INFO) << GREEN << "Global threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
+                  << BOLDYELLOW << cChip->getSummary<uint16_t>() << RESET;
 }
 
 void ThrMinimization::initHisto ()
@@ -271,10 +288,11 @@ void ThrMinimization::chipErrorReport()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          LOG (INFO) << BOLDGREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << BOLDGREEN << "]" << RESET;
+          LOG (INFO) << GREEN << "Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
           LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
         }
 }

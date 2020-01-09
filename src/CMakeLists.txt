@@ -1,9 +1,9 @@
 if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}") 
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}") 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
 
     #includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
@@ -51,7 +51,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(${PH2_ANTENNA_FOUND})
         include_directories(${PH2_ANTENNA_INCLUDE_DIRS})
         link_directories(${PH2_ANTENNA_LIBRARY_DIRS})
-        set(LIBS ${LIBS} usb ${PH2_ANTENNA_LIBRARIES})
+        set(LIBS ${LIBS} ${PH2_ANTENNA_LIBRARIES} usb)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ANTENNA__")
     endif()
 
@@ -81,23 +81,24 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     ####################################
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src *.cc)
-    
+
     #to remove binaries
     if(CompileForShep AND CompileForHerd)
         list(REMOVE_ITEM BINARIES *.cc)
-        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc)
+        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc CMSIT_miniDAQ.cc, fpgaconfig.cc)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     else()
         list(REMOVE_ITEM BINARIES supervisor.cc)
-    endif()
+     endif()
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
     foreach( sourcefile ${BINARIES} )
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
         add_executable(${name} ${sourcefile})
         if( ("${name}" STREQUAL "miniDAQ") OR ("${name}" STREQUAL "miniSLinkDQM") )
-            target_link_libraries(${name} ${LIBS} RootWeb Ph2_RootUtils)
+          target_link_libraries(${name} ${LIBS} Ph2_RootUtils RootWeb)
         else()
-            target_link_libraries(${name} ${LIBS})
+          target_link_libraries(${name} ${LIBS})
         endif()
         endforeach(sourcefile ${BINARIES})
     message("--     ${BoldCyan}#### End ####${Reset}")

@@ -14,5 +14,5 @@ file(GLOB HEADERS *.h)
 file(GLOB SOURCES *.cc)
 
 #add the library
-add_library(Ph2_Amc13 SHARED ${SOURCES} ${HEADERS})
+add_library(Ph2_Amc13 STATIC ${SOURCES} ${HEADERS})
 TARGET_LINK_LIBRARIES(Ph2_Amc13 ${LIBS})

@@ -1,16 +1,13 @@
 /*
-
   FileName :                     Data.cc
   Content :                      Data handling from DAQ
   Programmer :                   Nicolas PIERRE
   Version :                      1.0
   Date of creation :             10/07/14
   Support :                      mail to : nicolas.pierre@icloud.com
-
 */
 
 #include "Data.h"
-#include "../HWInterface/RD53FWInterface.h"
 
 namespace Ph2_HwInterface
 {
@@ -22,27 +19,23 @@ namespace Ph2_HwInterface
     , fEventSize    (pD.fEventSize)
   {}
 
-  void Data::DecodeEvents (const BeBoard *pBoard, const std::vector<uint32_t> &pData, uint32_t pNevents, BoardType pType)
+  void Data::DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
   {
     Reset();
 
-    if (pType == BoardType::FC7)
+    if (pType == BoardType::RD53)
       {
-        uint8_t status;
-        auto RD53FWEvts = RD53FWInterface::DecodeEvents(pData, status);
+        uint16_t status;
+        if (RD53decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, status, RD53decodedEvents);
 
-        for (auto &evt : RD53FWEvts)
+        for (const auto& evt : RD53decodedEvents)
           {
-            std::vector<size_t> chip_id_vec;
-            std::vector<size_t> module_id_vec;
+            std::vector<std::pair<size_t,size_t>> moduleAndChipIDs;
 
-            for (auto &chip_frame : evt.chip_frames)
-              {
-                module_id_vec.push_back(chip_frame.hybrid_id);
-                chip_id_vec.push_back(chip_frame.chip_id);
-              }
+            for (const auto& chip_frame : evt.chip_frames)
+              moduleAndChipIDs.push_back(std::pair<size_t,size_t>(chip_frame.module_id, RD53FWInterface::lane2chipId(pBoard, chip_frame.module_id, chip_frame.chip_lane)));
 
-            fEventList.push_back(new RD53Event(std::move(module_id_vec), std::move(chip_id_vec), std::move(evt.chip_events)));
+            fEventList.push_back(new RD53Event(std::move(moduleAndChipIDs), evt.chip_events));
           }
       }
     else
@@ -184,6 +177,4 @@ namespace Ph2_HwInterface
   {
     pWord = this->swap_bytes(pWord);
   }
-
-  void Data::setCbc3Fc7 (uint32_t &pWord) {}
 }

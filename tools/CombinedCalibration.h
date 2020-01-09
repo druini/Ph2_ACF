@@ -28,7 +28,7 @@ public:
         std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Configuring !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
         toolPointer = this;
         Tool::Configure(cHWFile,enableStream);
-        Tool::CreateResultDirectory ( "Results/Run_CombinedCalibration" );
+        Tool::CreateResultDirectory("Results",false,false);
     }
 
     void Start(int currentRun) override
@@ -69,8 +69,9 @@ void privateStart(int currentRun, CombinedCalibration<T, Rest...>& calList)
     std::cout << __PRETTY_FUNCTION__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Private Starting !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
     std::cout << __PRETTY_FUNCTION__ << calList.toolPointer<<std::endl;
     calList.calibrationHead.Inherit(calList.toolPointer);
+    calList.calibrationHead.ConfigureCalibration();
     calList.calibrationHead.Start(currentRun);
-    calList.calibrationHead.writeObjects( );
+    /* calList.calibrationHead.writeObjects( ); */
     calList.calibrationHead.resetPointers();
     std::cout << __PRETTY_FUNCTION__ <<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! The Rest !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
     calList.calibrationTail.toolPointer = calList.toolPointer;
@@ -80,13 +81,6 @@ void privateStart(int currentRun, CombinedCalibration<T, Rest...>& calList)
 
 
 // typedef CombinedCalibration<Calibration,PedeNoise> CalibrationAndPedeNoise;
-
-
-
-
-
-
-
 
 // class CalibrationAndPedeNoise : public Tool
 // {

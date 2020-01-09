@@ -27,7 +27,7 @@ TCPServer::~TCPServer(void)
 void TCPServer::connectClient(TCPTransceiverSocket *socket)
 {
 	//std::cout << __PRETTY_FUNCTION__ << "Waiting 3 seconds" << std::endl;
-	std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 	while (1)
 	{
 		std::cout << __PRETTY_FUNCTION__ << "Waiting for message for socket  #: " << socket->getSocketId() << std::endl;
@@ -38,27 +38,30 @@ void TCPServer::connectClient(TCPTransceiverSocket *socket)
 		}
 		catch (const std::exception &e)
 		{
-			std::cerr << e.what() << '\n';
-			closeClientSocket(socket->getSocketId());
-			break;
+			std::cout << __PRETTY_FUNCTION__ << "Error: " << e.what() << std::endl;//Client connection must have closed
+			std::cerr << __PRETTY_FUNCTION__ << e.what() << '\n';
+			TCPServerBase::closeClientSocket(socket->getSocketId());
+			interpretMessage("Error: " + std::string(e.what()));
+			return;//the pointer to socket has been deleted in closeClientSocket
 		}
 
-		std::cout << __PRETTY_FUNCTION__
-				  //<< "Received message:-" << message << "-"
-				  << "Message Length=" << message.length()
-				  << " From socket #: " << socket->getSocketId()
-				  << std::endl;
+		// std::cout << __PRETTY_FUNCTION__
+		// 		  << "Received message:-" << message << "-"
+		// 		  << "Message Length=" << message.length()
+		// 		  << " From socket #: " << socket->getSocketId()
+		// 		  << std::endl;
 		std::string messageToClient = interpretMessage(message);
 
+		//Send back something only if there is actually a message to be sent!
 		if (messageToClient != "")
 		{
 			//std::cout << __PRETTY_FUNCTION__ << "Sending back message:-" << messageToClient << "-(nbytes=" << messageToClient.length() << ") to socket #: " << socket->getSocketId() << std::endl;
 			socket->sendPacket(messageToClient);
 		}
-		else
-			std::cout << __PRETTY_FUNCTION__ << "Not sending anything back to socket  #: " << socket->getSocketId() << std::endl;
+		// else
+		// 	std::cout << __PRETTY_FUNCTION__ << "Not sending anything back to socket  #: " << socket->getSocketId() << std::endl;
 
-		std::cout << __PRETTY_FUNCTION__ << "After message sent now checking for more... socket #: " << socket->getSocketId() << std::endl;
+		// std::cout << __PRETTY_FUNCTION__ << "After message sent now checking for more... socket #: " << socket->getSocketId() << std::endl;
 	}
 
 	std::cout << __PRETTY_FUNCTION__ << "Thread done for socket  #: " << socket->getSocketId() << std::endl;
@@ -77,10 +80,7 @@ void TCPServer::acceptConnections()
 		}
 		catch (int e)
 		{
-			std::cout << __PRETTY_FUNCTION__ << "SHUTTING DOWN SOCKET" << std::endl;
-			std::cout << __PRETTY_FUNCTION__ << "SHUTTING DOWN SOCKET" << std::endl;
-			std::cout << __PRETTY_FUNCTION__ << "SHUTTING DOWN SOCKET" << std::endl;
-
+			std::cout << __PRETTY_FUNCTION__ << "Shutting down socket!" << std::endl;
 			if (e == E_SHUTDOWN)
 				break;
 		}

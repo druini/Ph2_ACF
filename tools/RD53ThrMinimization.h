@@ -32,7 +32,6 @@ class ThrMinimization : public PixelAlive
   void Start (int currentRun)  override;
   void Stop  ()                override;
   void ConfigureCalibration () override;
-  void writeObjects         () {}; // @TMP@
 
   void   sendData            ();
   void   initialize          (const std::string fileRes_, const std::string fileReg_);
@@ -79,6 +78,7 @@ class ThrMinimization : public PixelAlive
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
+  bool saveRawData;
 };
 
 #endif

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <future>
-#include <unordered_map>
+#include <map>
 
 
 
@@ -35,8 +35,8 @@ protected:
 		return dynamic_cast<T*>(fConnectedClients[socketId]);
 	}
 	
-	std::promise<bool>                  fAcceptPromise;
-	std::unordered_map<int, TCPSocket*> fConnectedClients;
+	std::promise<bool>        fAcceptPromise;
+	std::map<int, TCPSocket*> fConnectedClients;
 	const int E_SHUTDOWN = 0;
 
 private:
@@ -48,6 +48,7 @@ private:
 	unsigned int      fMaxNumberOfClients;
 	std::atomic_bool  fAccept;
 	std::future<bool> fAcceptFuture;
+	//std::mutex        clientsMutex_;
 };
 
 //}

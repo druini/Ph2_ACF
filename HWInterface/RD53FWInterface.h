@@ -10,36 +10,33 @@
 #ifndef RD53FWInterface_H
 #define RD53FWInterface_H
 
-#include "BeBoardFWInterface.h"
 #include "D19cFpgaConfig.h"
+#include "BeBoardFWInterface.h"
+#include "../HWDescription/RD53.h"
 #include "../Utils/RD53RunProgress.h"
 #include "../Utils/easylogging++.h"
 
 #include <uhal/uhal.hpp>
 
-#include <sstream>
-
 
 // #############
 // # CONSTANTS #
 // #############
-#define DEEPSLEEP 100000 // [microseconds]
-#define READOUTSLEEP  50 // [microseconds]
-#define MAXTRIALS     10 // Maximum number of trials for ReadNEvents
-
-// ##################
-// # BIT DEFINITION #
-// ##################
+#define DEEPSLEEP  100000 // [microseconds]
+#define READOUTSLEEP   50 // [microseconds]
+#define MAXATTEMPTS     2 // Maximum number of attempts for ReadNEvents
+#define NFRAMES_SYNC 1000 // Number of frames needed to synchronize chip communication
+#define NWORDS_DDR3     4 // Number of IPbus words in a DDR3 word
+#define NLANE_MODULE    4 // Number of lanes per module
 #define HEADEAR_WRTCMD  0xFF // Header of chip write command sequence
 #define NBIT_FWVER        16 // Number of bits for the firmware version
 #define IPBUS_FASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
-#define NWORDS_DDR3        4 // Number of IPbus words in a DDR3 word
 
 // #################
 // # READOUT BLOCK #
 // #################
-#define HANDSHAKE_EN   0
-#define L1A_TIMEOUT 4000
+#define HANDSHAKE_EN false
+#define L1A_TIMEOUT   4000
 
 
 namespace RD53FWEvtEncoder
@@ -72,12 +69,14 @@ namespace RD53FWEvtEncoder
   // ################
   // # Event status #
   // ################
-  const uint8_t GOOD   = 0x00; // Event status Good
-  const uint8_t EVSIZE = 0x02; // Event status Invalid event size
-  const uint8_t EMPTY  = 0x04; // Event status Empty event
-  const uint8_t L1A    = 0x08; // Event status L1A counter mismatch
-  const uint8_t FRSIZE = 0x10; // Event status Invalid frame size
-  const uint8_t FWERR  = 0x20; // Event status Firmware error
+  const uint16_t GOOD       = 0x0000; // Event status Good
+  const uint16_t EVSIZE     = 0x0001; // Event status Invalid event size
+  const uint16_t EMPTY      = 0x0002; // Event status Empty event
+  const uint16_t INCOMPLETE = 0x0004; // Event status Incomplete event header
+  const uint16_t L1A        = 0x0008; // Event status L1A counter mismatch
+  const uint16_t FWERR      = 0x0010; // Event status Firmware error
+  const uint16_t FRSIZE     = 0x0020; // Event status Invalid frame size
+  const uint16_t MISSCHIP   = 0x0040; // Event status Chip data are missing
 }
 
 
@@ -91,9 +90,9 @@ namespace Ph2_HwInterface
 
     void      setFileHandler (FileHandler* pHandler) override;
     uint32_t  getBoardInfo   ()                      override;
-    BoardType getBoardType   () const { return BoardType::FC7; };
+    BoardType getBoardType   () const { return BoardType::RD53; };
 
-    void ResetSequence       (); // @TMP@
+    void ResetSequence       ();
     void ConfigureBoard      (const BeBoard* pBoard) override;
 
     void Start               () override;
@@ -107,8 +106,8 @@ namespace Ph2_HwInterface
     void     ChipReSync  ()                                                                                     override;
     std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)           override;
 
-    bool InitChipCommunication ();
-    void WriteChipCommand      (const std::vector<uint16_t>& data, unsigned int moduleId);
+    bool CheckChipCommunication ();
+    void WriteChipCommand       (const std::vector<uint16_t>& data, int moduleId);
     std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Chip* pChip);
 
     struct ChipFrame
@@ -116,8 +115,8 @@ namespace Ph2_HwInterface
       ChipFrame (const uint32_t data0, const uint32_t data1);
 
       uint16_t error_code;
-      uint16_t hybrid_id;
-      uint16_t chip_id;
+      uint16_t module_id;
+      uint16_t chip_lane;
       uint16_t l1a_data_size;
       uint16_t chip_type;
       uint16_t frame_delay;
@@ -131,18 +130,29 @@ namespace Ph2_HwInterface
       uint16_t tlu_trigger_id;
       uint16_t data_format_ver;
       uint16_t tdc;
-      uint16_t l1a_counter;
+      uint32_t l1a_counter;
       uint32_t bx_counter;
 
       std::vector<ChipFrame>   chip_frames;
       std::vector<RD53::Event> chip_events;
 
-      uint8_t evtStatus;
+      uint16_t evtStatus;
     };
 
-    static std::vector<Event> DecodeEvents (const std::vector<uint32_t>& data, uint8_t& status);
-    static void PrintEvents                (const std::vector<RD53FWInterface::Event>& events, std::vector<uint32_t>* pData = nullptr);
-    static bool EvtErrorHandler            (uint8_t status);
+    static void    DecodeEvents    (const std::vector<uint32_t>& data, uint16_t& status, std::vector<RD53FWInterface::Event>& events);
+    static bool    EvtErrorHandler (uint16_t status);
+    static void    PrintEvents     (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
+    static uint8_t lane2chipId     (const BeBoard* pBoard, uint16_t module_id, uint16_t chip_lane)
+    {
+      // #############################
+      // # Translate lane to chip ID #
+      // #############################
+      Module* module = pBoard->getModule(module_id);
+      auto it = std::find_if(module->fReadoutChipVector.begin(), module->fReadoutChipVector.end(), [=] (ReadoutChip* pChip)
+                             { return pChip->getChipLane() == chip_lane; });
+      if (it != module->fReadoutChipVector.end()) return (*it)->getChipId();
+      return -1; // Chip not found
+    }
 
     enum class TriggerSource : uint32_t
     {
@@ -196,11 +206,11 @@ namespace Ph2_HwInterface
       bool     ext_clk_en         = false;
       uint32_t ch_out_en          = 0;    // chn-1 = TLU clk input, chn-2 = ext. trigger, chn-3 = TLU busy, chn-4 = TLU reset, chn-5 = ext. clk
       uint32_t fiftyohm_en        = 0;
-      uint32_t ch1_thr            = 0x7F; // [thr/256*3.3V]
-      uint32_t ch2_thr            = 0x7F;
-      uint32_t ch3_thr            = 0x7F;
-      uint32_t ch4_thr            = 0x7F;
-      uint32_t ch5_thr            = 0x7F;
+      uint32_t ch1_thr            = 0x80; // [(thr/256*(5-1)V + 1V) * 3.3V/5V]
+      uint32_t ch2_thr            = 0x80;
+      uint32_t ch3_thr            = 0x80;
+      uint32_t ch4_thr            = 0x80;
+      uint32_t ch5_thr            = 0x80;
       bool     tlu_en             = false;
       uint32_t tlu_handshake_mode = 0;    // 0 = no handshake, 1 = simple handshake, 2 = data handshake
     };
@@ -219,9 +229,16 @@ namespace Ph2_HwInterface
     void RebootBoard                           ();
     const FpgaConfig* GetConfiguringFpga       ();
 
+    // ################################################
+    // # I2C block for programming peripheral devices #
+    // ################################################
+    bool I2cCmdAckWait        (unsigned int trials);
+    void WriteI2C             (std::vector<uint32_t>& data);
+    void ReadI2C              (std::vector<uint32_t>& data);
+    void ConfigureClockSi5324 ();
+
   private:
     void PrintFWstatus         ();
-    void SerializeSymbols      (std::vector<std::vector<uint16_t> >& data, std::vector<uint32_t>& serialData);
     void TurnOffFMC            ();
     void TurnOnFMC             ();
     void ResetBoard            ();
@@ -235,8 +252,15 @@ namespace Ph2_HwInterface
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
+    uint16_t           enabledModules;
     bool               singleChip;
   };
+
+
+  // ########################################
+  // # Vector containing the decoded events #
+  // ########################################
+  extern std::vector<RD53FWInterface::Event> RD53decodedEvents;
 }
 
 #endif
