@@ -222,7 +222,7 @@ int main ( int argc, char* argv[] )
 
         cPedeNoise.Initialise (cAllChan); // canvases etc. for fast calibration
         t.start();
-        cPedeNoise.measureNoise();
+        cPedeNoise.measureNoise(200);
         t.stop();
         t.show ("Time for noise measurement");
         //cPedeNoise.Validate();
