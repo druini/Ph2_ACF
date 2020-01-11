@@ -76,7 +76,7 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
                     fHIPCountCointainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<uint8_t>() = value;
 
                     fReadoutChipInterface->WriteChipReg (theChip, "Pipe&StubInpSel&Ptwidth", 0x23);
-                    fReadoutChipInterface->WriteChipReg (theChip, "HIP&TestMode", 0x08);
+                    fReadoutChipInterface->WriteChipReg (theChip, "HIP&TestMode", 0x00);
                     
                 }
             }

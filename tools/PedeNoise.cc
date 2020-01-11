@@ -69,7 +69,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
                     fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth");
                     fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode"           );
                     fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth", 0x23);
-                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode", 0x08);
+                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode", 0x00);
                 }
             }
         }
@@ -164,7 +164,8 @@ void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
         this->SetTestPulse( true );
         fTestPulseAmplitude = pTPAmplitude;
         setFWTestPulse();
-        setSameGlobalDac("TestPulsePotNodeSel",  pTPAmplitude);
+        setSystemTestPulse ( pTPAmplitude, 0, true, false );
+        // setSameGlobalDac("TestPulsePotNodeSel",  pTPAmplitude);
         LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
         cStartValue = this->findPedestal ();
     }
