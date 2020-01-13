@@ -1011,8 +1011,8 @@ namespace Ph2_HwInterface {
 
                     uint8_t cOriginalReadoutMode = cReadoutChip->getReg ("ReadoutMode");
                     uint8_t cOriginalStubMode = cReadoutChip->getReg ("OutPattern0");
-                    cReadoutModeMap[cSsa] = cOriginalReadoutMode;
-                    cStubModeMap[cSsa] = cOriginalStubMode;
+                    cReadoutModeMap[cReadoutChip] = cOriginalReadoutMode;
+                    cStubModeMap[cReadoutChip] = cOriginalStubMode;
                 }
             }
 
@@ -1032,46 +1032,47 @@ namespace Ph2_HwInterface {
 
                         LOG (INFO) << BOLDBLUE << "Setting SSA register " << cRegNames[cIndex] << " to " << std::bitset<8>(cRegItem.fValue) << RESET;
                         bool cWrite = true; 
-                        this->EncodeReg (cRegItem, cHybrid, cChipId, cVec, true, cWrite);
+                        this->EncodeReg (cRegItem, cReadoutChip->getFeId(), cReadoutChip->getChipId(), cVec, true, cWrite);
                         if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
                         {
                             LOG (INFO) << BOLDRED << "Failed to write to I2C register..." << RESET;
                             exit(0);
                         }
-                        cVec.clear(); cRegName.clear();
+                        cVec.clear(); cReplies.clear();
                     }
 
                     // configure output pattern on sutb lines 
-                    uint8_t cMaxLine = (cSsa->getChipId() == 0 ) ? 8 : 9 ;
+                    uint8_t cMaxLine = (cReadoutChip->getChipId() == 0 ) ? 8 : 9 ;
+                    uint8_t cPattern = 0x80;
                     for( uint8_t cLineId = 1 ; cLineId < 2 ; cLineId ++ )
                     {
+                        PhaseTuner cTuner;
                         char cBuffer[11];
                         sprintf(cBuffer,"OutPattern%d", cLineId); 
                         std::string cRegName = (cLineId == 8 ) ? "OutPattern7/FIFOconfig" : std::string(cBuffer,sizeof(cBuffer));
                         auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( cRegName ));
-                        cRegItem.fValue = 0x80; 
+                        cRegItem.fValue = cPattern; 
                         LOG (INFO) << BOLDBLUE << "Setting SSA register " << cRegName << " to " << std::bitset<8>(cRegItem.fValue) << RESET;
                         bool cWrite = true; 
-                        this->EncodeReg (cRegItem, cHybrid, cChipId, cVec, true, cWrite);
+                        this->EncodeReg (cRegItem, cReadoutChip->getFeId(), cReadoutChip->getChipId(), cVec, true, cWrite);
                         if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
                         {
                             LOG (INFO) << BOLDRED << "Failed to write to I2C register..." << RESET;
                             exit(0);
                         }
-                        cVec.clear(); cRegName.clear();
+                        cVec.clear(); cReplies.clear();
 
-                        // to comment out ... 
-                        // unsigned int cAttempts=0;
-                        // bool cSuccess = false;
-                        // cTuner.SetLineMode( this, cFe->getFeId() , cSsa->getChipId() , cLineId , 2 , 0, 0, 0, 0 );
-                        // do 
-                        // {
-                        //     cSuccess = cTuner.TuneLine(this,  cFe->getFeId() , cSsa->getChipId() , cLineId , cPattern , 8 , true);
-                        //     std::this_thread::sleep_for (std::chrono::milliseconds (200) );
-                        //     //uint8_t cLineStatus = pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
-                        //     LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
-                        //     cAttempts++;
-                        // }while(!cSuccess && cAttempts <10);
+                        unsigned int cAttempts=0;
+                        bool cSuccess = false;
+                        cTuner.SetLineMode( this, cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId , 2 , 0, 0, 0, 0 );
+                        do 
+                        {
+                            cSuccess = cTuner.TuneLine(this,  cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId , cPattern , 8 , true);
+                            std::this_thread::sleep_for (std::chrono::milliseconds (200) );
+                            //uint8_t cLineStatus = pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
+                            LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
+                            cAttempts++;
+                        }while(!cSuccess && cAttempts <10);
                     }
                 }
             }
