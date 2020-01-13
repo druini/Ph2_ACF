@@ -1025,11 +1025,15 @@ namespace Ph2_HwInterface {
                     // configure SLVS drive strength and readout mode 
                     std::vector<std::string> cRegNames{ "SLVS_pad_current" , "ReadoutMode" };
                     std::vector<uint8_t> cRegValues{0x7 , 2}; 
+                    uint16_t cOriginalMode=0;
                     for( size_t cIndex = 0 ;cIndex < 2 ; cIndex ++ )
                     {
                         auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( cRegNames[cIndex] ));
+                        // read back original mode 
+                        if( cRegNames[cIndex] == "ReadoutMode") 
+                            cOriginalMode = cRegItem.fValue;
+                        
                         cRegItem.fValue = cRegValues[cIndex];
-
                         LOG (INFO) << BOLDBLUE << "Setting SSA register " << cRegNames[cIndex] << " to " << std::bitset<8>(cRegItem.fValue) << RESET;
                         bool cWrite = true; 
                         this->EncodeReg (cRegItem, cReadoutChip->getFeId(), cReadoutChip->getChipId(), cVec, true, cWrite);
@@ -1044,7 +1048,7 @@ namespace Ph2_HwInterface {
                     // configure output pattern on sutb lines 
                     uint8_t cMaxLine = (cReadoutChip->getChipId() == 0 ) ? 8 : 9 ;
                     uint8_t cPattern = 0x80;
-                    for( uint8_t cLineId = 1 ; cLineId < 2 ; cLineId ++ )
+                    for( uint8_t cLineId = 1 ; cLineId < 3 ; cLineId ++ )
                     {
                         PhaseTuner cTuner;
                         char cBuffer[11];
@@ -1069,35 +1073,35 @@ namespace Ph2_HwInterface {
                         {
                             cSuccess = cTuner.TuneLine(this,  cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId , cPattern , 8 , true);
                             std::this_thread::sleep_for (std::chrono::milliseconds (200) );
-                            //uint8_t cLineStatus = pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
+                            uint8_t cLineStatus = cTuner.GetLineStatus(this,  cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId );
                             LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
                             cAttempts++;
                         }while(!cSuccess && cAttempts <10);
+                        if( cLineId == 1 && cSuccess ) 
+                        {
+                            // force L1A line to match phase tuning result for first stub lines to match 
+                            uint8_t cEnableL1=0; 
+                            uint8_t cDelay = cTuner.fDelay;
+                            uint8_t cMode=2;
+                            uint8_t cBitslip = cTuner.fBitslip;
+                            cTuner.SetLineMode( this, cReadoutChip->getFeId() , cReadoutChip->getChipId() , 0 , cMode , cDelay, cBitslip, cEnableL1, 0 );
+                        }
                     }
+
+                    // set readout mode back to original value 
+                    auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( "ReadoutMode" ));
+                    cRegItem.fValue = cOriginalMode;
+                    LOG (INFO) << BOLDBLUE << "Setting SSA register ReadoutMode " << " to " << std::bitset<8>(cRegItem.fValue) << RESET;
+                    bool cWrite = true; 
+                    this->EncodeReg (cRegItem, cReadoutChip->getFeId(), cReadoutChip->getChipId(), cVec, true, cWrite);
+                    if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
+                    {
+                        LOG (INFO) << BOLDRED << "Failed to write to I2C register..." << RESET;
+                        exit(0);
+                    }
+                    cVec.clear(); cReplies.clear();
                 }
             }
-            // int tries = 0;
-            // uint32_t hardware_ready = 0;
-            // while (hardware_ready < 1)
-            // {
-            //     LOG (INFO) << BOLDYELLOW << "====" << RESET;
-            //     this->ChipReSync();
-            //     usleep (25);
-            //     // reset  the timing tuning
-            //     WriteReg ("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
-            //     //exit(1);
-            //     std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
-            //     PhaseTuningGetLineStatus(0,0,1);
-            //     PhaseTuningGetLineStatus(0,1,1);
-            //     std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-            //     hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
-            //     tries++;
-            //     if (tries > 10)
-            //     {
-            //         D19cFWInterface::PhaseTuningGetDefaultFSMState();
-            //         hardware_ready = 4;
-            //     }
-            // }
 
             // for (auto cFe : pBoard->fModuleVector)
             // {
