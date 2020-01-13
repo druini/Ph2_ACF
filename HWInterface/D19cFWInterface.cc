@@ -1060,15 +1060,15 @@ namespace Ph2_HwInterface {
                     cVecReq.clear();
 
                     //configure ps stub pattern - one line at a time 
-                    uint8_t cMaxLine = (cSsa->getChipId() == 0 ) ? 7 : 8 ;
-                    for( uint8_t cLineId = 0 ; cLineId < 1 ; cLineId ++ )
+                    uint8_t cMaxLine = (cSsa->getChipId() == 0 ) ? 8 : 9 ;
+                    for( uint8_t cLineId = 1 ; cLineId < 2 ; cLineId ++ )
                     {
                         PhaseTuner cTuner;
                         this->ChipReSync();
         
                         char cBuffer[11];
                         sprintf(cBuffer,"OutPattern%d", cLineId); 
-                        std::string cRegName = (cLineId == 7 ) ? "OutPattern7/FIFOconfig" : std::string(cBuffer,sizeof(cBuffer));
+                        std::string cRegName = (cLineId == 8 ) ? "OutPattern7/FIFOconfig" : std::string(cBuffer,sizeof(cBuffer));
 
                         uint16_t cPattern = 0x80; // 128 
                         cSsa->setReg(cRegName, cPattern);
