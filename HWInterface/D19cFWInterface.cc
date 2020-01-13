@@ -1048,7 +1048,7 @@ namespace Ph2_HwInterface {
                     {
                         PhaseTuner cTuner;
                         char cBuffer[11];
-                        sprintf(cBuffer,"OutPattern%d", cLineId); 
+                        sprintf(cBuffer,"OutPattern%d", cLineId-1); 
                         std::string cRegName = (cLineId == 8 ) ? "OutPattern7/FIFOconfig" : std::string(cBuffer,sizeof(cBuffer));
                         auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( cRegName ));
                         cRegItem.fValue = cPattern; 
@@ -1062,42 +1062,42 @@ namespace Ph2_HwInterface {
                         }
                         cVec.clear(); cReplies.clear();
 
-                        unsigned int cAttempts=0;
-                        bool cSuccess = false;
-                        cTuner.SetLineMode( this, cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId , 2 , 0, 0, 0, 0 );
-                        do 
-                        {
-                            cSuccess = cTuner.TuneLine(this,  cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId , cPattern , 8 , true);
-                            std::this_thread::sleep_for (std::chrono::milliseconds (200) );
-                            //uint8_t cLineStatus = pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
-                            LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
-                            cAttempts++;
-                        }while(!cSuccess && cAttempts <10);
+                        // unsigned int cAttempts=0;
+                        // bool cSuccess = false;
+                        // cTuner.SetLineMode( this, cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId , 2 , 0, 0, 0, 0 );
+                        // do 
+                        // {
+                        //     cSuccess = cTuner.TuneLine(this,  cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId , cPattern , 8 , true);
+                        //     std::this_thread::sleep_for (std::chrono::milliseconds (200) );
+                        //     //uint8_t cLineStatus = pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
+                        //     LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
+                        //     cAttempts++;
+                        // }while(!cSuccess && cAttempts <10);
                     }
                 }
             }
-            // int tries = 0;
-            // uint32_t hardware_ready = 0;
-            // while (hardware_ready < 1)
-            // {
-            //     LOG (INFO) << BOLDYELLOW << "====" << RESET;
-            //     this->ChipReSync();
-            //     usleep (25);
-            //     // reset  the timing tuning
-            //     WriteReg ("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
-            //     //exit(1);
-            //     std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
-            //     PhaseTuningGetLineStatus(0,0,1);
-            //     PhaseTuningGetLineStatus(0,1,1);
-            //     std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-            //     hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
-            //     tries++;
-            //     if (tries > 10)
-            //     {
-            //         D19cFWInterface::PhaseTuningGetDefaultFSMState();
-            //         hardware_ready = 4;
-            //     }
-            // }
+            int tries = 0;
+            uint32_t hardware_ready = 0;
+            while (hardware_ready < 1)
+            {
+                LOG (INFO) << BOLDYELLOW << "====" << RESET;
+                this->ChipReSync();
+                usleep (25);
+                // reset  the timing tuning
+                WriteReg ("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
+                //exit(1);
+                std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+                PhaseTuningGetLineStatus(0,0,1);
+                PhaseTuningGetLineStatus(0,1,1);
+                std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+                hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
+                tries++;
+                if (tries > 10)
+                {
+                    D19cFWInterface::PhaseTuningGetDefaultFSMState();
+                    hardware_ready = 4;
+                }
+            }
 
             // for (auto cFe : pBoard->fModuleVector)
             // {
