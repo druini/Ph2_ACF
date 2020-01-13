@@ -833,7 +833,7 @@ namespace Ph2_HwInterface {
                         hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
                     }
 
-                        //re-enable the stub logic
+                    //re-enable the stub logic
                     cVecReq.clear();
                     for (auto cFe : pBoard->fModuleVector)
                     {
@@ -1003,178 +1003,152 @@ namespace Ph2_HwInterface {
 
             cVecReq.clear();
 
+            // read back original values 
             for (auto cFe : pBoard->fModuleVector)
             {
-
-                for (auto cSsa : cFe->fReadoutChipVector)
+                for (auto cReadoutChip : cFe->fReadoutChipVector)
                 {
-                    LOG (INFO) << BLUE << std::bitset<8>(cSsa->getChipId()) << " << SSA ID" << RESET;
-                    // tell chip to output pattern on stub lines and get original configuration 
-                    uint8_t cOriginalReadoutMode = cSsa->getReg ("ReadoutMode");
-                    uint8_t cOriginalStubMode = cSsa->getReg ("OutPattern0");
+
+                    uint8_t cOriginalReadoutMode = cReadoutChip->getReg ("ReadoutMode");
+                    uint8_t cOriginalStubMode = cReadoutChip->getReg ("OutPattern0");
                     cReadoutModeMap[cSsa] = cOriginalReadoutMode;
                     cStubModeMap[cSsa] = cOriginalStubMode;
-                    LOG (INFO) << std::bitset<8>(cOriginalReadoutMode) << "   " << std::bitset<8>(cOriginalStubMode);       
+                }
+            }
 
+            // configure patterns 
+            std::vector<uint32_t> cVec(0); std::vector<uint32_t> cReplies(0); 
+            for (auto cFe : pBoard->fModuleVector)
+            {
+                for (auto cReadoutChip : cFe->fReadoutChipVector)
+                {
+                    // configure SLVS drive strength and readout mode 
+                    std::vector<std::string> cRegNames{ "SLVS_pad_current" , "ReadoutMode" };
+                    std::vector<uint8_t> cRegValues{0x7 , 2}; 
+                    for( size_t cIndex = 0 ;cIndex < 2 ; cIndex ++ )
+                    {
+                        auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( cRegNames[cIndex] ));
+                        cRegItem.fValue = cRegValues[cIndex];
 
-                    ChipRegItem cRegItem = cSsa->getRegItem ( "ReadoutMode" );
-                    this->EncodeReg ( cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, false );
-                    this->ReadChipBlockReg (  cVecReq );
-                    bool cRead;
-                    bool cFail = false;
-                    uint32_t CVQ = cVecReq[0];
-                    
-                    LOG (INFO) << "Start: " << std::bitset<32>(CVQ);
-                    cVecReq.clear();    
-                    cRegItem = cSsa->getRegItem ( "OutPattern0" );
-                    this->EncodeReg ( cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, false );
-                    this->ReadChipBlockReg (  cVecReq );
-                    CVQ = cVecReq[0];
-                    LOG (INFO) << "Start: " << std::bitset<32>(CVQ);
-                    cVecReq.clear();    
+                        LOG (INFO) << BOLDBLUE << "Setting SSA register " << cRegNames[cIndex] << " to " << std::bitset<8>(cRegItem.fValue) << RESET;
+                        bool cWrite = true; 
+                        this->EncodeReg (cRegItem, cHybrid, cChipId, cVec, true, cWrite);
+                        if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
+                        {
+                            LOG (INFO) << BOLDRED << "Failed to write to I2C register..." << RESET;
+                            exit(0);
+                        }
+                        cVec.clear(); cRegName.clear();
+                    }
 
-                    cSsa->setReg("ReadoutMode", 2);
-                    cSsa->setReg("OutPattern0", 128);
-                    cSsa->setReg("SLVS_pad_current", 7);
-
-                    //sync mode
-                    cRegItem = cSsa->getRegItem ( "ReadoutMode" );
-                    this->EncodeReg (cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, true);
-
-                    uint8_t cWriteAttempts = 0;
-                    this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
-                    cVecReq.clear();
-
-                    this->EncodeReg ( cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, false );
-                    this->ReadChipBlockReg (  cVecReq );
-                    CVQ = cVecReq[0];
-                    LOG (INFO) << "Changed: " << std::bitset<32>(CVQ);  
-                    cVecReq.clear();
-
-                    //turn on SLVS pad current
-                    cRegItem = cSsa->getRegItem ( "SLVS_pad_current" );
-                    this->EncodeReg (cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, true);
-
-                    cWriteAttempts = 0;
-                    this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
-                    cVecReq.clear();
-
-                    //configure ps stub pattern - one line at a time 
+                    // configure output pattern on sutb lines 
                     uint8_t cMaxLine = (cSsa->getChipId() == 0 ) ? 8 : 9 ;
                     for( uint8_t cLineId = 1 ; cLineId < 2 ; cLineId ++ )
                     {
-                        PhaseTuner cTuner;
-                        this->ChipReSync();
-        
                         char cBuffer[11];
                         sprintf(cBuffer,"OutPattern%d", cLineId); 
                         std::string cRegName = (cLineId == 8 ) ? "OutPattern7/FIFOconfig" : std::string(cBuffer,sizeof(cBuffer));
-
-                        uint16_t cPattern = 0x80; // 128 
-                        cSsa->setReg(cRegName, cPattern);
-                        cRegItem = cSsa->getRegItem ( cRegName );
-                        this->EncodeReg (cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, true);
-                        cWriteAttempts = 0;
-                        this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
-                        cVecReq.clear();
-
-                        this->EncodeReg ( cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, false );
-                        this->ReadChipBlockReg (  cVecReq );
-                        CVQ = cVecReq[0];
-                        LOG (INFO) << "Changed: " << std::bitset<32>(CVQ);
-                        cVecReq.clear(); 
-                        
-                        unsigned int cAttempts=0;
-                        bool cSuccess = false;
-                        cTuner.SetLineMode( this, cFe->getFeId() , cSsa->getChipId() , cLineId , 2 , 0, 0, 0, 0 );
-                        do 
+                        auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( cRegName ));
+                        cRegItem.fValue = 0x80; 
+                        LOG (INFO) << BOLDBLUE << "Setting SSA register " << cRegName << " to " << std::bitset<8>(cRegItem.fValue) << RESET;
+                        bool cWrite = true; 
+                        this->EncodeReg (cRegItem, cHybrid, cChipId, cVec, true, cWrite);
+                        if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
                         {
-                            cSuccess = cTuner.TuneLine(this,  cFe->getFeId() , cSsa->getChipId() , cLineId , cPattern , 8 , true);
-                            std::this_thread::sleep_for (std::chrono::milliseconds (200) );
-                            //uint8_t cLineStatus = pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
-                            LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
-                            cAttempts++;
-                        }while(!cSuccess && cAttempts <10);
+                            LOG (INFO) << BOLDRED << "Failed to write to I2C register..." << RESET;
+                            exit(0);
+                        }
+                        cVec.clear(); cRegName.clear();
 
+                        // to comment out ... 
+                        // unsigned int cAttempts=0;
+                        // bool cSuccess = false;
+                        // cTuner.SetLineMode( this, cFe->getFeId() , cSsa->getChipId() , cLineId , 2 , 0, 0, 0, 0 );
+                        // do 
+                        // {
+                        //     cSuccess = cTuner.TuneLine(this,  cFe->getFeId() , cSsa->getChipId() , cLineId , cPattern , 8 , true);
+                        //     std::this_thread::sleep_for (std::chrono::milliseconds (200) );
+                        //     //uint8_t cLineStatus = pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
+                        //     LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
+                        //     cAttempts++;
+                        // }while(!cSuccess && cAttempts <10);
                     }
-                    // everything is configured for this line 
+                }
+            }
+            int tries = 0;
+            uint32_t hardware_ready = 0;
+            while (hardware_ready < 1)
+            {
+                LOG (INFO) << BOLDYELLOW << "====" << RESET;
+                this->ChipReSync();
+                usleep (25);
+                // reset  the timing tuning
+                WriteReg ("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
+                //exit(1);
+                std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+                PhaseTuningGetLineStatus(0,0,1);
+                PhaseTuningGetLineStatus(0,1,1);
+                std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+                hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
+                tries++;
+                if (tries > 10)
+                {
+                    D19cFWInterface::PhaseTuningGetDefaultFSMState();
+                    hardware_ready = 4;
                 }
             }
 
-            // int tries = 0;
-            // uint32_t hardware_ready = 0;
-            // while (hardware_ready < 1)
+            // for (auto cFe : pBoard->fModuleVector)
             // {
-            //     LOG (INFO) << BOLDYELLOW << "====" << RESET;
-            //     this->ChipReSync();
-            //     usleep (25);
-            //     // reset  the timing tuning
-            //     WriteReg ("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
-            //     //exit(1);
-            //     std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
-            //     PhaseTuningGetLineStatus(0,0,1);
-            //     PhaseTuningGetLineStatus(0,1,1);
-            //     std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-            //     hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
-            //     tries++;
-            //     if (tries > 10)
+            //     for (auto cSsa : cFe->fReadoutChipVector)
             //     {
-            //         D19cFWInterface::PhaseTuningGetDefaultFSMState();
-            //         hardware_ready = 4;
+            //         // sync mode
+            //         ChipRegItem cRegItem = cSsa->getRegItem ( "ReadoutMode" );
+            //         cRegItem.fValue = cReadoutModeMap[cSsa];
+            //         this->EncodeReg (cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, true);
+
+            //         uint8_t cWriteAttempts = 0;
+            //         this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
+            //         cVecReq.clear();
+
+            //         // ps stub mode
+            //         cRegItem = cSsa->getRegItem ( "OutPattern0" );
+            //         cRegItem.fValue = cStubModeMap[cSsa]; 
+            //         this->EncodeReg (cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, true);
+
+            //         cWriteAttempts = 0;
+            //         this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
+            //         cVecReq.clear();    
+
+            //         cRegItem = cSsa->getRegItem ( "OutPattern0" );
+            //         this->EncodeReg ( cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, false );
+            //         this->ReadChipBlockReg (  cVecReq );
+            //         uint32_t CVQ = cVecReq[0];
+            //         LOG (INFO) << "End: " << std::bitset<32>(CVQ);
             //     }
             // }
+            // LOG (INFO) << GREEN << "SSA Phase tuning finished succesfully" << RESET;
+            // for (auto cFe : pBoard->fModuleVector)
+            // {
+            //     for (auto cSsa : cFe->fReadoutChipVector)
+            //     {
+            //         PhaseTuningGetLineStatus(cFe->getFeId(), cSsa->getChipId(), 1);
+            //         // const
+            //         uint32_t hybrid_raw = (0 & 0xF) << 28; // hybrid id - will be always zero in your case
+            //         uint32_t chip_raw = (cSsa->getChipId() & 0xF) << 24; // ? = chip ID
+            //         uint32_t line_raw = (0 & 0xF) << 20; // line id has to be 0 - it is the real number of the l1a line
+            //         uint32_t command_raw = (2 & 0xF) << 16; // command type - sets the line in manual mode
 
-            for (auto cFe : pBoard->fModuleVector)
-            {
-                for (auto cSsa : cFe->fReadoutChipVector)
-                {
-                    // sync mode
-                    ChipRegItem cRegItem = cSsa->getRegItem ( "ReadoutMode" );
-                    cRegItem.fValue = cReadoutModeMap[cSsa];
-                    this->EncodeReg (cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, true);
+            //         // manual mode
+            //         uint32_t mode_raw = (2 & 0x3) << 12; // the manual delays for the line
+            //         uint32_t delay_raw = (0 & 0x1F) << 3; // phase should be 0?
+            //         uint32_t bitslip_raw = (2 & 0x7) << 0; // bitslip should be 1?
 
-                    uint8_t cWriteAttempts = 0;
-                    this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
-                    cVecReq.clear();
-
-                    // ps stub mode
-                    cRegItem = cSsa->getRegItem ( "OutPattern0" );
-                    cRegItem.fValue = cStubModeMap[cSsa]; 
-                    this->EncodeReg (cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, true);
-
-                    cWriteAttempts = 0;
-                    this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
-                    cVecReq.clear();    
-
-                    cRegItem = cSsa->getRegItem ( "OutPattern0" );
-                    this->EncodeReg ( cRegItem, cSsa->getFeId(), cSsa->getChipId(), cVecReq, true, false );
-                    this->ReadChipBlockReg (  cVecReq );
-                    uint32_t CVQ = cVecReq[0];
-                    LOG (INFO) << "End: " << std::bitset<32>(CVQ);
-                }
-            }
-            LOG (INFO) << GREEN << "SSA Phase tuning finished succesfully" << RESET;
-            for (auto cFe : pBoard->fModuleVector)
-            {
-                for (auto cSsa : cFe->fReadoutChipVector)
-                {
-                    PhaseTuningGetLineStatus(cFe->getFeId(), cSsa->getChipId(), 1);
-                    // const
-                    uint32_t hybrid_raw = (0 & 0xF) << 28; // hybrid id - will be always zero in your case
-                    uint32_t chip_raw = (cSsa->getChipId() & 0xF) << 24; // ? = chip ID
-                    uint32_t line_raw = (0 & 0xF) << 20; // line id has to be 0 - it is the real number of the l1a line
-                    uint32_t command_raw = (2 & 0xF) << 16; // command type - sets the line in manual mode
-
-                    // manual mode
-                    uint32_t mode_raw = (2 & 0x3) << 12; // the manual delays for the line
-                    uint32_t delay_raw = (0 & 0x1F) << 3; // phase should be 0?
-                    uint32_t bitslip_raw = (2 & 0x7) << 0; // bitslip should be 1?
-
-                    // write
-                    uint32_t command_final = command_raw + hybrid_raw + chip_raw + line_raw + mode_raw + delay_raw + bitslip_raw;
-                    WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
-                }
-            }
+            //         // write
+            //         uint32_t command_final = command_raw + hybrid_raw + chip_raw + line_raw + mode_raw + delay_raw + bitslip_raw;
+            //         WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
+            //     }
+            // }
         }
         else
         {
