@@ -17,11 +17,12 @@
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53InjectionDelay.h"
+#include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53PixelAlive.h"
 #include "../tools/RD53Latency.h"
+#include "../tools/RD53Physics.h"
 #include "../tools/RD53SCurve.h"
 #include "../tools/RD53Gain.h"
-#include "../tools/RD53Physics.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
@@ -58,6 +59,29 @@ void interruptHandler (int handler)
 }
 
 
+void readBinaryData (std::string binaryFile, Ph2_System::SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& RD53decodedEvents)
+{
+  LOG (INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
+  uint16_t status;
+  unsigned int errors = 0;
+  std::vector<uint32_t> data;
+  mySysCntr.addFileHandler(binaryFile, 'r');
+  LOG (INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
+  mySysCntr.readFile(data, 0);
+
+  RD53FWInterface::DecodeEvents(data, status, RD53decodedEvents);
+  LOG (INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << RD53decodedEvents.size() << RESET;
+
+  for (auto i = 0u; i < RD53decodedEvents.size(); i++)
+    if (RD53FWInterface::EvtErrorHandler(RD53decodedEvents[i].evtStatus) == false)
+      {
+        LOG (ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
+        errors++;
+      }
+  LOG (INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(3) << BOLDYELLOW << 1. * errors / RD53decodedEvents.size() * 100. << "%" << RESET;
+}
+
+
 int main (int argc, char** argv)
 {
   // ########################
@@ -77,16 +101,19 @@ int main (int argc, char** argv)
 
   cmd.setHelpOption("h","help","Print this help page");
 
-  cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml",CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin injdelay physics]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin injdelay clockdelay physics]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
-  cmd.defineOption ("prog", "Simply program the system components.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+  cmd.defineOption ("binary", "Binary file to decode.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOptionAlternative ("binary", "b");
+
+  cmd.defineOption ("prog", "Program the system components.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("prog", "p");
 
-  cmd.defineOption ("sup", "Run in producer(Moddleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+  cmd.defineOption ("sup", "Run in producer(Middleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("sup", "s");
 
   cmd.defineOption("reset","Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
@@ -100,24 +127,22 @@ int main (int argc, char** argv)
       exit(EXIT_FAILURE);
     }
 
-  std::string configFile = cmd.foundOption("file")  == true ? cmd.optionValue("file") : "CMSIT.xml";
-  std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "pixelalive";
-  bool program           = cmd.foundOption("prog")  == true ? true : false;
-  bool supervisor        = cmd.foundOption("sup")   == true ? true : false;
-  bool reset             = cmd.foundOption("reset") == true ? true : false;
+  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file")   : "CMSIT.xml";
+  std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib")  : "pixelalive";
+  std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
+  bool program           = cmd.foundOption("prog")   == true ? true : false;
+  bool supervisor        = cmd.foundOption("sup")    == true ? true : false;
+  bool reset             = cmd.foundOption("reset")  == true ? true : false;
 
 
   // ###################
   // # Read run number #
   // ###################
   int runNumber = RUNNUMBER;
-  if (program == false)
-    {
-      std::ifstream fileRunNumberIn;
-      fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
-      if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
-      fileRunNumberIn.close();
-    }
+  std::ifstream fileRunNumberIn;
+  fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
+  if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
+  fileRunNumberIn.close();
   std::string chipConfig("Run" + fromInt2Str(runNumber) + "_");
 
 
@@ -139,7 +164,7 @@ int main (int argc, char** argv)
         {
           char* argv[] = {(char*)"RunController", NULL};
           execv((std::string(getenv("BASE_DIR")) + "/bin/RunController").c_str(), argv);
-          LOG (ERROR) << BOLDRED << "I Can't run RunController, error occured" << RESET;
+          LOG (ERROR) << BOLDRED << "I can't run RunController, error occured" << RESET;
           exit(EXIT_FAILURE);
         }
 
@@ -207,7 +232,7 @@ int main (int argc, char** argv)
                   {
                     LOG (INFO) << BOLDBLUE << "Supervisor sending stop" << RESET;
 
-                    usleep(3e6);
+                    usleep(2e6);
                     theMiddlewareInterface.stop();
                     usleep(2e6);
                     theDQMInterface.stopProcessingData();
@@ -233,27 +258,42 @@ int main (int argc, char** argv)
     }
   else
     {
-      // ################################
-      // # Instantiate SystemController #
-      // ################################
-      SystemController mySysCntr;
-      if (reset == true)
+      Ph2_System::SystemController mySysCntr;
+
+
+      if ((reset == true) || (binaryFile != ""))
         {
+          // ######################################
+          // # Reset hardware or read binary file #
+          // ######################################
+
           std::stringstream outp;
           mySysCntr.InitializeHw(configFile, outp, true, false);
           mySysCntr.InitializeSettings(configFile, outp);
-          static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fBoardVector[0]->getBeBoardId()])->ResetSequence();
-          exit(EXIT_SUCCESS);
+          if (reset == true)
+            {
+              static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fBoardVector[0]->getBeBoardId()])->ResetSequence();
+              exit(EXIT_SUCCESS);
+            }
+          if (binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53decodedEvents);
+        }
+      else if (binaryFile == "")
+        {
+          // #######################
+          // # Initialize Hardware #
+          // #######################
+
+          LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
+          mySysCntr.ConfigureHardware(configFile);
+          LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
+          if (program == true)
+            {
+              LOG (INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
+              exit(EXIT_SUCCESS);
+            }
         }
 
 
-      // #######################
-      // # Initialize Hardware #
-      // #######################
-      LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-      mySysCntr.ConfigureHardware(configFile);
-      LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
-      if (program == true) exit(EXIT_SUCCESS);
       std::cout << std::endl;
 
 
@@ -394,6 +434,21 @@ int main (int argc, char** argv)
           id.analyze();
           id.draw();
         }
+      else if (whichCalib == "clockdelay")
+        {
+          // ###################
+          // # Run Clock Delay #
+          // ###################
+          LOG (INFO) << BOLDMAGENTA << "@@@ Performing Clock Delay scan @@@" << RESET;
+
+          std::string fileName("Run" + fromInt2Str(runNumber) + "_ClockDelay");
+          ClockDelay cd;
+          cd.Inherit(&mySysCntr);
+          cd.initialize(fileName, chipConfig);
+          cd.run();
+          cd.analyze();
+          cd.draw();
+        }
       else if (whichCalib == "physics")
         {
           // ###############
@@ -405,9 +460,13 @@ int main (int argc, char** argv)
           Physics ph;
           ph.Inherit(&mySysCntr);
           ph.initialize(fileName, chipConfig);
-          ph.Start(runNumber);
-          usleep(2e6);
-          ph.Stop();
+          if (binaryFile == "")
+            {
+              ph.Start(runNumber);
+              usleep(2e6);
+              ph.Stop();
+            }
+          else ph.analyze();
           ph.draw();
         }
       else

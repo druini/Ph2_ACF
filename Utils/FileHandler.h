@@ -54,6 +54,7 @@ class FileHandler
 
   bool openFile ();
   void closeFile();
+
   bool isFileOpen()
   {
     std::lock_guard<std::mutex> cLock (fMemberMutex);
@@ -69,7 +70,7 @@ class FileHandler
         if (fHeader.fValid == true) fBinaryFile.seekg (48, std::ios::beg);
         else                        fBinaryFile.seekg ( 0, std::ios::beg);
       }
-    else LOG (ERROR) << BOLDRED << "[FileHandler::rewind] You should not try to rewind a file opened in write mode (or file not open)" << RESET;
+    else LOG (ERROR) << BOLDRED << "You should not try to rewind a file opened in write mode (or file not open)" << RESET;
   }
 
   std::vector<uint32_t> readFile       ();

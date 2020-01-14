@@ -1,15 +1,15 @@
 #include <cstring>
+#include <inttypes.h>
+
+#include "../Utils/ConsoleColor.h"
 #include "../Utils/Utilities.h"
+#include "../Utils/argvparser.h"
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWInterface/ChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
-#include "../Utils/Timer.h"
-#include <inttypes.h>
-#include "../Utils/argvparser.h"
-#include "../Utils/ConsoleColor.h"
 #include "../System/SystemController.h"
 
 
@@ -25,12 +25,10 @@ INITIALIZE_EASYLOGGINGPP
 class AcqVisitor: public HwInterfaceVisitor
 {
   int cN;
+
 public:
-  AcqVisitor()
-  {
-    cN = 0;
-  }
-  virtual void visit ( const Ph2_HwInterface::Event& pEvent )
+  AcqVisitor() { cN = 0; }
+  virtual void visit (const Ph2_HwInterface::Event& pEvent)
   {
     cN++;
     LOG (INFO) << ">>> Event #" << cN ;
@@ -38,10 +36,9 @@ public:
   }
 };
 
-
-void verifyImageName ( const string& strImage, const vector<string>& lstNames)
+void verifyImageName (const string& strImage, const vector<string>& lstNames)
 {
-  if (lstNames.empty() )
+  if (lstNames.empty())
     {
       if (strImage.compare ("1") != 0 && strImage.compare ("2") != 0)
         {
@@ -72,7 +69,6 @@ void verifyImageName ( const string& strImage, const vector<string>& lstNames)
 
 int main ( int argc, char* argv[] )
 {
-  //configure the logger
   std::string loggerConfigFile = std::getenv("BASE_DIR");
   loggerConfigFile += "/settings/logger.conf";
   el::Configurations conf (loggerConfigFile);
@@ -171,12 +167,6 @@ int main ( int argc, char* argv[] )
   else if (!lstNames.empty() )
     strImage = "GoldenImage.bin";
 
-  Timer t;
-  t.start();
-
-  t.stop();
-  t.show ("Time to Initialize/configure the system: ");
-
   if (!cmd.foundOption ("file") && !cmd.foundOption ("download") )
     {
       cSystemController.fBeBoardInterface->JumpToFpgaConfig (pBoard, strImage);
@@ -208,7 +198,4 @@ int main ( int argc, char* argv[] )
           sleep (1);
         }
     }
-
-  t.stop();
-  t.show ("Time elapsed:");
 }

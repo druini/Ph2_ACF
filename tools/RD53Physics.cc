@@ -14,15 +14,15 @@ void Physics::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart     = this->findValueInSettings("ROWstart");
-  rowStop      = this->findValueInSettings("ROWstop");
-  colStart     = this->findValueInSettings("COLstart");
-  colStop      = this->findValueInSettings("COLstop");
-  doDisplay    = this->findValueInSettings("DisplayHisto");
-  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
-  saveRawData  = this->findValueInSettings("SaveRawData");
-  doLocal      = false;
-  keepRunning  = true;
+  rowStart       = this->findValueInSettings("ROWstart");
+  rowStop        = this->findValueInSettings("ROWstop");
+  colStart       = this->findValueInSettings("COLstart");
+  colStop        = this->findValueInSettings("COLstop");
+  doDisplay      = this->findValueInSettings("DisplayHisto");
+  doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+  saveBinaryData = this->findValueInSettings("SaveBinaryData");
+  doLocal        = false;
+  keepRunning    = true;
 
 
   // ################################
@@ -37,11 +37,6 @@ void Physics::ConfigureCalibration ()
 
   theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, RD53GroupType::AllPixels);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
-
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), theChnGroupHandler->allChannelGroup(), true, false);
 
 
   // ###########################################
@@ -60,9 +55,9 @@ void Physics::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[Physics::Start] Starting" << RESET;
 
-  if (saveRawData == true)
+  if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/PhysicsRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -131,23 +126,24 @@ void Physics::initialize (const std::string fileRes_, const std::string fileReg_
 
 void Physics::run ()
 {
-  unsigned int dataSize = 0;
+  // ##############################
+  // # Download mask to the chips #
+  // ##############################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), theChnGroupHandler->allChannelGroup(), true, false);
 
+
+  // #############
+  // # Take data #
+  // #############
   while (keepRunning == true)
     {
       RD53decodedEvents.clear();
-
-      for (const auto cBoard : *fDetectorContainer)
-        if ((dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true)) != 0)
-          {
-            Physics::fillDataContainer(cBoard);
-            Physics::sendData(cBoard);
-          }
-
+      Physics::analyze(true);
       std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
     }
-
-  if (dataSize == 0) LOG (WARNING) << BOLDBLUE << "No data collected" << RESET;
 }
 
 void Physics::draw ()
@@ -176,6 +172,28 @@ void Physics::draw ()
   this->WriteRootFile();
   this->CloseResultFile();
 #endif
+}
+
+void Physics::analyze (bool doReadBinary)
+{
+  for (const auto cBoard : *fDetectorContainer)
+    {
+      size_t dataSize = 0;
+
+      if (doReadBinary == true) dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
+      else
+        {
+          dataSize = 1;
+          std::vector<uint32_t> data;
+          SystemController::setData(static_cast<BeBoard*>(cBoard), data, dataSize);
+        }
+
+      if (dataSize != 0)
+        {
+          Physics::fillDataContainer(cBoard);
+          Physics::sendData(cBoard);
+        }
+    }
 }
 
 void Physics::initHisto ()
@@ -248,7 +266,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
               int deltaBCID = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
                 theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
               deltaBCID += (deltaBCID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
-              if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDBLUE <<"[Physics::analyze] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
+              if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDBLUE <<"[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
               else theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
             }
           theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1.clear();
@@ -258,11 +276,22 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
               int deltaTrgID = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
                 theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
               deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
-              if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDBLUE << "[Physics::analyze] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
+              if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
               else theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
             }
           theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2.clear();
         }
+
+
+  // #######################
+  // # Normalize container #
+  // #######################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        for (auto row = 0u; row < RD53::nRows; row++)
+          for (auto col = 0u; col < RD53::nCols; col++)
+            theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).normalize(events.size(), true);
 }
 
 void Physics::chipErrorReport ()

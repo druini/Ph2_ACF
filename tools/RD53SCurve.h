@@ -91,7 +91,7 @@ class SCurve : public Tool
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
-  bool saveRawData;
+  bool saveBinaryData;
 };
 
 #endif

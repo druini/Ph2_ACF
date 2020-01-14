@@ -88,7 +88,7 @@ class PixelAlive : public Tool
   bool doUpdateChip;
   bool doDisplay;
   bool doFast;
-  bool saveRawData;
+  bool saveBinaryData;
 };
 
 #endif

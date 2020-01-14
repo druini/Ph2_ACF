@@ -12,21 +12,17 @@
 #ifndef __CBCINTERFACE_H__
 #define __CBCINTERFACE_H__
 
-#include <vector>
-//#include "../HWInterface/GlibFWInterface.h"
-//#include "../HWInterface/CtaFWInterface.h"
-//#include "../HWInterface/ICGlibFWInterface.h"
 #include "BeBoardFWInterface.h"
 #include "ReadoutChipInterface.h"
 
-using namespace Ph2_HwDescription;
+#include <vector>
 
 /*!
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
  */
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
     /*!
      * \class CbcInterface
      * \brief Class representing the User Interface to the Chip on different boards

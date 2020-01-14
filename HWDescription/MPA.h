@@ -14,7 +14,7 @@
 #define MPA_h__
 
 #include "FrontEndDescription.h"
-#include "RegItem.h"
+#include "ChipRegItem.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
 #include "../Utils/easylogging++.h"
@@ -33,8 +33,8 @@
  */
 namespace Ph2_HwDescription
  {
-    using MPARegMap  = std::map  <std::string, RegItem>;
-    using MPARegPair = std::pair <std::string, RegItem>;
+    using MPARegMap  = std::map  <std::string, ChipRegItem>;
+    using MPARegPair = std::pair <std::string, ChipRegItem>;
     using CommentMap = std::map  <int, std::string>;
 
     class MPA : public FrontEndDescription
@@ -85,9 +85,9 @@ namespace Ph2_HwDescription
        /*!
         * \brief Get any registeritem of the Map
         * \param pReg
-        * \return  RegItem
+        * \return ChipRegItem
         */
-        RegItem getRegItem ( const std::string& pReg );
+        ChipRegItem getRegItem ( const std::string& pReg );
         /*!
         * \brief Write the registers of the Map in a file
         * \param filename

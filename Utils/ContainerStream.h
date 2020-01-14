@@ -191,7 +191,7 @@ public:
 				retrieveChipData(board->getIndex(), module->getIndex(), chip);
 				const std::vector<char> &stream = this->encodeStream();
 				this->incrementStreamPacketNumber();
-				std::cout << __PRETTY_FUNCTION__ << "SENDING STREAM!" << std::endl;
+				/* std::cout << __PRETTY_FUNCTION__ << "SENDING STREAM!" << std::endl; */
 				networkStreamer->broadcast(stream);
 			}
 		}

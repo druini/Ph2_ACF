@@ -14,18 +14,18 @@ void ThrEqualization::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart     = this->findValueInSettings("ROWstart");
-  rowStop      = this->findValueInSettings("ROWstop");
-  colStart     = this->findValueInSettings("COLstart");
-  colStop      = this->findValueInSettings("COLstop");
-  nEvents      = this->findValueInSettings("nEvents");
-  nEvtsBurst   = nEvents;
-  nEvents     *= this->findValueInSettings("VCalHnsteps");
-  nHITxCol     = this->findValueInSettings("nHITxCol");
-  doFast       = this->findValueInSettings("DoFast");
-  doDisplay    = this->findValueInSettings("DisplayHisto");
-  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
-  saveRawData  = this->findValueInSettings("SaveRawData");
+  rowStart       = this->findValueInSettings("ROWstart");
+  rowStop        = this->findValueInSettings("ROWstop");
+  colStart       = this->findValueInSettings("COLstart");
+  colStop        = this->findValueInSettings("COLstop");
+  nEvents        = this->findValueInSettings("nEvents");
+  nEvtsBurst     = nEvents;
+  nEvents       *= this->findValueInSettings("VCalHnsteps");
+  nHITxCol       = this->findValueInSettings("nHITxCol");
+  doFast         = this->findValueInSettings("DoFast");
+  doDisplay      = this->findValueInSettings("DisplayHisto");
+  doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+  saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
 
   // ########################
@@ -61,9 +61,9 @@ void ThrEqualization::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[ThrEqualization::Start] Starting" << RESET;
 
-  if (saveRawData == true)
+  if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/ThrEqualizationRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 

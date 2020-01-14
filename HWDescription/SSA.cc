@@ -48,7 +48,7 @@ namespace Ph2_HwDescription {
         {
             std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
             int cLineCounter = 0;
-            RegItem fRegItem;
+            ChipRegItem fRegItem;
 
             while ( getline ( file, line ) )
             {
@@ -113,9 +113,9 @@ namespace Ph2_HwDescription {
             i->second.fValue = psetValue;
     }
 
-    RegItem SSA::getRegItem ( const std::string& pReg )
+    ChipRegItem SSA::getRegItem ( const std::string& pReg )
     {
-        RegItem cItem;
+        ChipRegItem cItem;
         SSARegMap::iterator i = fRegMap.find ( pReg );
 
         if ( i != std::end ( fRegMap ) ) return ( i->second );

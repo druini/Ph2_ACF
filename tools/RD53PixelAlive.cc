@@ -14,20 +14,20 @@ void PixelAlive::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart     = this->findValueInSettings("ROWstart");
-  rowStop      = this->findValueInSettings("ROWstop");
-  colStart     = this->findValueInSettings("COLstart");
-  colStop      = this->findValueInSettings("COLstop");
-  nEvents      = this->findValueInSettings("nEvents");
-  nEvtsBurst   = this->findValueInSettings("nEvtsBurst");
-  nTRIGxEvent  = this->findValueInSettings("nTRIGxEvent");
-  injType      = this->findValueInSettings("INJtype");
-  nHITxCol     = this->findValueInSettings("nHITxCol");
-  doFast       = this->findValueInSettings("DoFast");
-  thrOccupancy = this->findValueInSettings("TargetOcc");
-  doDisplay    = this->findValueInSettings("DisplayHisto");
-  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
-  saveRawData  = this->findValueInSettings("SaveRawData");
+  rowStart       = this->findValueInSettings("ROWstart");
+  rowStop        = this->findValueInSettings("ROWstop");
+  colStart       = this->findValueInSettings("COLstart");
+  colStop        = this->findValueInSettings("COLstop");
+  nEvents        = this->findValueInSettings("nEvents");
+  nEvtsBurst     = this->findValueInSettings("nEvtsBurst");
+  nTRIGxEvent    = this->findValueInSettings("nTRIGxEvent");
+  injType        = this->findValueInSettings("INJtype");
+  nHITxCol       = this->findValueInSettings("nHITxCol");
+  doFast         = this->findValueInSettings("DoFast");
+  thrOccupancy   = this->findValueInSettings("TargetOcc");
+  doDisplay      = this->findValueInSettings("DisplayHisto");
+  doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+  saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
   if (injType != INJtype::None) nTRIGxEvent = 1;
   else                          doFast      = false;
@@ -71,9 +71,11 @@ void PixelAlive::ConfigureCalibration ()
 
 void PixelAlive::Start (int currentRun)
 {
-  if (saveRawData == true)
+  LOG (INFO) << GREEN << "[PixelAlive::Start] Starting" << RESET;
+
+  if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 

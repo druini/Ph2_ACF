@@ -237,6 +237,5 @@ int main ( int argc, char* argv[] )
         LOG (INFO) << "Saving root file to " << dqmFilename << " and webpage to " << cDirBasePath ;
     }
 
-    cSystemController.Destroy();
     return 0;
 }

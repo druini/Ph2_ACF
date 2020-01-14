@@ -31,6 +31,7 @@ public:
 	}
 
 	void sendPacket(const std::string &buffer);
+	void setSendTimeout(unsigned int timeoutSeconds, unsigned int timeoutMicroSeconds);
 };
 
 #endif

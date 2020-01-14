@@ -1,12 +1,10 @@
 /*
-
         \file                          Event.h
         \brief                         Event handling from DAQ
         \author                        Nicolas PIERRE
         \version                       1.0
         \date                                  10/07/14
         Support :                      mail to : nicolas.pierre@icloud.com
-
  */
 
 #ifndef __MPAEVENT_H__
@@ -14,11 +12,8 @@
 
 #include "Event.h"
 
-
-using namespace Ph2_HwDescription;
-
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
     /*!
      * \class MPAEvent
      * \brief Event container to manipulate event flux from the MPA
@@ -32,7 +27,7 @@ namespace Ph2_HwInterface {
          * \param pNbCbc
          * \param pEventBuf : the pointer to the raw Event buffer of this Event
          */
-        MPAEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list );
+        MPAEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list );
         /*!
          * \brief Copy Constructor of the Event Class
          */
@@ -48,11 +43,8 @@ namespace Ph2_HwInterface {
          * \param pEvent : Event to set
          * \return Aknowledgement of the Event setting (1/0)
          */
-        void SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) override;
-
-      private:
-
-
+        void SetEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) override;
     };
 }
+
 #endif

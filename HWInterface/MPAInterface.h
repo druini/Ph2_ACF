@@ -12,11 +12,9 @@
 #ifndef __MPAINTERFACE_H__
 #define __MPAINTERFACE_H__
 
-#include <vector>
 #include "../HWInterface/D19cFWInterface.h"
 #include "pugixml.hpp"
-
-using namespace Ph2_HwDescription;
+#include <vector>
 
 /*!
  * \namespace Ph2_HwInterface
@@ -105,8 +103,8 @@ public:
 
 
 
-    void Pix_write(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
-    uint32_t Pix_read(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel);
+    void Pix_write(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
+    uint32_t Pix_read(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel);
 
 
     void activate_I2C_chip();

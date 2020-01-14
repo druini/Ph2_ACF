@@ -1,12 +1,10 @@
 /*!
-
   Filename :                      Chip.cc
   Content :                       Chip Description class, config of the Chips
   Programmer :                    Lorenzo BIDEGAIN
   Version :                       1.0
   Date of Creation :              25/06/14
   Support :                       mail to : lorenzo.bidegain@gmail.com
-
 */
 
 #include "Chip.h"
@@ -23,26 +21,23 @@
 namespace Ph2_HwDescription
 {
   // C'tors with object FE Description
-  Chip::Chip (const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue, uint8_t pChipLane)
+  Chip::Chip (const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue)
     : FrontEndDescription (pFeDesc)
     , fChipId             (pChipId)
     , fMaxRegValue        (pMaxRegValue)
-    , fChipLane           (pChipLane)
   {}
 
-  // C'tors which take Board ID, Frontend ID/Module ID, FMC ID, Chip ID, Chip Lane
-  Chip::Chip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue, uint8_t pChipLane)
+  // C'tors which take Board ID, Frontend ID/Module ID, FMC ID, Chip ID
+  Chip::Chip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue)
     : FrontEndDescription (pBeId, pFMCId, pFeId)
     , fChipId             (pChipId)
     , fMaxRegValue        (pMaxRegValue)
-    , fChipLane           (pChipLane)
   {}
 
   // Copy C'tor
   Chip::Chip (const Chip& chipObj)
     : FrontEndDescription (chipObj)
     , fChipId             (chipObj.fChipId)
-    , fChipLane           (chipObj.fChipLane)
     , fRegMap             (chipObj.fRegMap)
     ,fCommentMap          (chipObj.fCommentMap)
   {}

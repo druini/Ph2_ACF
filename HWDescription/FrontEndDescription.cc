@@ -1,11 +1,10 @@
 /*!
-  Filename :                              FrontEndDescription.cc
-  Content :                               FrontEndDescription base class to describe all parameters common to all FE Components in the DAQ chain
-  Programmer :                    Lorenzo BIDEGAIN
-  Version :               1.0
-  Date of Creation :              25/06/14
-  Support :                               mail to : lorenzo.bidegain@gmail.com
-
+  \file                           FrontEndDescription.cc
+  \brief                          FrontEndDescription base class to describe all parameters common to all FE Components in the DAQ chain
+  \author                         Lorenzo BIDEGAIN
+  \version                        1.0
+  \date                           25/06/14
+  Support :                       mail to : lorenzo.bidegain@gmail.com
 */
 
 #include "FrontEndDescription.h"

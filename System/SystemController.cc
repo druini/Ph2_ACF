@@ -28,7 +28,7 @@ namespace Ph2_System
     , fWriteHandlerEnabled (false)
     , fStreamerEnabled     (false)
     , fNetworkStreamer     (nullptr) // This is the server listening port
-    , fData                (nullptr)
+    // , fData                (nullptr)
   {}
 
   SystemController::~SystemController() {}
@@ -50,50 +50,29 @@ namespace Ph2_System
   {
     this->closeFileHandler();
 
-    if (fBeBoardInterface != nullptr)
-      {
-        delete fBeBoardInterface;
-        fBeBoardInterface = nullptr;
-      }
-    if (fReadoutChipInterface != nullptr)
-      {
-        delete fReadoutChipInterface;
-        fReadoutChipInterface = nullptr;
-      }
-    if (fChipInterface != nullptr)
-      {
-        delete fChipInterface;
-        fChipInterface = nullptr;
-      }
-    if (fMPAInterface != nullptr)
-      {
-        delete fMPAInterface;
-        fMPAInterface = nullptr;
-      }
-    if (fDetectorContainer != nullptr)
-      {
-        delete fDetectorContainer;
-        fDetectorContainer = nullptr;
-      }
+    delete fBeBoardInterface;
+    fBeBoardInterface = nullptr;
+    delete fReadoutChipInterface;
+    fReadoutChipInterface = nullptr;
+    delete fChipInterface;
+    fChipInterface = nullptr;
+    delete fMPAInterface;
+    fMPAInterface = nullptr;
+    delete fDetectorContainer;
+    fDetectorContainer = nullptr;
 
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
 
-    if (fNetworkStreamer != nullptr)
-      {
-        delete fNetworkStreamer;
-        fNetworkStreamer = nullptr;
-      }
-    if (fData != nullptr)
-      {
-        delete fData;
-        fData = nullptr;
-      }
+    delete fNetworkStreamer;
+    fNetworkStreamer = nullptr;
+    // delete fData;
+    // fData = nullptr;
   }
 
   void SystemController::addFileHandler (const std::string& pFilename, char pOption)
   {
-    if (pOption == 'r') fFileHandler = new FileHandler ( pFilename, pOption );
+    if (pOption == 'r') fFileHandler = new FileHandler(pFilename, pOption);
     else if (pOption == 'w')
       {
         fRawFileName = pFilename;
@@ -106,7 +85,7 @@ namespace Ph2_System
     if (fFileHandler != nullptr)
       {
         if (fFileHandler->isFileOpen() == true) fFileHandler->closeFile();
-        if (fFileHandler != nullptr) delete fFileHandler;
+        delete fFileHandler;
         fFileHandler = nullptr;
       }
   }
@@ -119,38 +98,33 @@ namespace Ph2_System
 
   void SystemController::setData (BeBoard* pBoard, std::vector<uint32_t>& pData, uint32_t pNEvents)
   {
-    if (fData!=nullptr) delete fData;
-    fData = new Data();
-
-    fData->DecodeData(pBoard, pData, pNEvents, pBoard->getBoardType());
+    this->DecodeData(pBoard, pData, pNEvents, pBoard->getBoardType());
   }
 
   void SystemController::InitializeHw (const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
   {
     fStreamerEnabled = streamData;
-    if (streamData)
-      fNetworkStreamer = new TCPPublishServer(6000,1);
+    if (streamData) fNetworkStreamer = new TCPPublishServer(6000,1);
 
     fDetectorContainer = new DetectorContainer;
-    this->fParser.parseHW (pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile );
+    this->fParser.parseHW(pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile);
 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     if (fBoardVector[0]->getBoardType() != BoardType::RD53)
-      fReadoutChipInterface = new CbcInterface (fBeBoardFWMap);
+      fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
     else
       fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
     fMPAInterface = new MPAInterface(fBeBoardFWMap);
 
-    if (fWriteHandlerEnabled)
-      this->initializeFileHandler();
+    if (fWriteHandlerEnabled) this->initializeFileHandler();
   }
 
-  void SystemController::InitializeSettings ( const std::string& pFilename, std::ostream& os, bool pIsFile )
+  void SystemController::InitializeSettings (const std::string& pFilename, std::ostream& os, bool pIsFile)
   {
-    this->fParser.parseSettings (pFilename, fSettingsMap, os, pIsFile );
+    this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile);
   }
 
-  void SystemController::ConfigureHw ( bool bIgnoreI2c )
+  void SystemController::ConfigureHw (bool bIgnoreI2c)
   {
     LOG (INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from .xml file @@@" << RESET;
 
@@ -161,7 +135,7 @@ namespace Ph2_System
             // ######################################
             // # Configuring Outer Tracker hardware #
             // ######################################
-            fBeBoardInterface->ConfigureBoard ( cBoard );
+            fBeBoardInterface->ConfigureBoard(cBoard);
 
             LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
 
@@ -170,14 +144,14 @@ namespace Ph2_System
                 LOG (INFO) << "Configuring board.." << RESET;
                 for (auto& cCbc : cFe->fReadoutChipVector)
                   {
-                    if ( !bIgnoreI2c )
+                    if (bIgnoreI2c == false)
                       {
                         fReadoutChipInterface->ConfigureChip(cCbc);
                         LOG (INFO) << GREEN <<  "Successfully configured Chip " << int(cCbc->getChipId()) << RESET;
                       }
                   }
               }
-            fBeBoardInterface->ChipReSync ( cBoard );
+            fBeBoardInterface->ChipReSync(cBoard);
             LOG (INFO) << GREEN << "Successfully sent resync." << RESET;
           }
         else
@@ -249,7 +223,7 @@ namespace Ph2_System
         FileHandler* cHandler = new FileHandler(cFilename, 'w', cHeader);
 
         fBeBoardInterface->SetFileHandler(cBoard, cHandler);
-        LOG (INFO) << BOLDBLUE << "Saving binary raw data into: " << BOLDYELLOW << cFilename << RESET;
+        LOG (INFO) << BOLDBLUE << "Saving binary data into: " << BOLDYELLOW << cFilename << RESET;
       }
   }
 
@@ -341,11 +315,8 @@ namespace Ph2_System
 
   uint32_t SystemController::ReadData (BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
   {
-    if (fData) delete fData;
-    fData = new Data();
-
     uint32_t cNPackets = fBeBoardInterface->ReadData(pBoard, false, pData, pWait);
-    fData->DecodeData(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType(pBoard));
+    this->DecodeData(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType(pBoard));
 
     return cNPackets;
   }
@@ -364,16 +335,137 @@ namespace Ph2_System
 
   void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
-    if (fData) delete fData;
-    fData = new Data();
-
     fBeBoardInterface->ReadNEvents(pBoard, pNEvents, pData, pWait);
-    fData->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
+    this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
   }
 
   double SystemController::findValueInSettings (const char* name)
   {
     auto setting = fSettingsMap.find(name);
     return ((setting != std::end(fSettingsMap)) ? setting->second : 0);
+  }
+
+
+  void SystemController::SetFuture (const BeBoard *pBoard, const std::vector<uint32_t> &pData, uint32_t pNevents, BoardType pType)
+  {
+    if (pData.size() != 0) fFuture = std::async(&SystemController::DecodeData, this, pBoard, pData, pNevents, pType);
+  }
+
+  void SystemController::DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
+  {
+    this->ResetEventList();
+
+    if (pType == BoardType::RD53)
+      {
+        uint16_t status;
+        if (RD53decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, status, RD53decodedEvents);
+
+        for (const auto& evt : RD53decodedEvents)
+          {
+            std::vector<std::pair<size_t,size_t>> moduleAndChipIDs;
+
+            for (const auto& chip_frame : evt.chip_frames)
+              {
+                int chip_id = RD53FWInterface::lane2chipId(pBoard, chip_frame.module_id, chip_frame.chip_lane);
+                if (chip_id != -1) moduleAndChipIDs.push_back(std::pair<size_t,size_t>(chip_frame.module_id, chip_id));
+              }
+
+            if (moduleAndChipIDs.size() != 0)
+              fEventList.push_back(new RD53Event(std::move(moduleAndChipIDs), evt.chip_events));
+          }
+      }
+    else
+      {
+        fNevents   = static_cast<uint32_t>(pNevents);
+        fEventSize = static_cast<uint32_t>((pData.size()) / fNevents);
+
+        EventType fEventType = pBoard->getEventType();
+        uint32_t fNFe        = pBoard->getNFe();
+
+        if (fEventType == EventType::ZS) fNCbc = 0;
+        else fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
+
+        // to fill fEventList
+        std::vector<uint32_t> lvec;
+
+        //use a SwapIndex to decide wether to swap a word or not
+        //use a WordIndex to pick events apart
+        uint32_t cWordIndex = 0;
+        uint32_t cSwapIndex = 0;
+        // index of the word inside the event (ZS)
+        uint32_t fZSEventSize = 0;
+        uint32_t cZSWordIndex = 0;
+
+        for (auto word : pData)
+          {
+            //if the SwapIndex is greater than 0 and a multiple of the event size in 32 bit words, reset SwapIndex to 0
+            if (cSwapIndex > 0 && cSwapIndex % fEventSize == 0)
+              cSwapIndex = 0;
+
+#ifdef __CBCDAQ_DEV__
+            //TODO
+            LOG(DEBUG) << std::setw(3) << "Original " << cWordIndex << " ### " << std::bitset<32>(pData.at(cWordIndex));
+            //LOG (DEBUG) << std::setw (3) << "Treated  " << cWordIndex << " ### " << std::bitset<32> (word);
+
+            if ((cWordIndex + 1) % fEventSize == 0 && cWordIndex > 0)
+              LOG(DEBUG) << std::endl
+                         << std::endl;
+
+#endif
+
+            lvec.push_back(word);
+
+            if (fEventType == EventType::ZS)
+              {
+                if (cZSWordIndex == fZSEventSize - 1)
+                  {
+                    if (pType == BoardType::D19C)
+                      fEventList.push_back(new D19cCbc3EventZS(pBoard, fZSEventSize, lvec));
+
+                    lvec.clear();
+
+                    if (fEventList.size() >= fNevents)
+                      break;
+                  }
+                else if (cZSWordIndex == fZSEventSize)
+                  {
+                    cZSWordIndex = 0;
+
+                    if (pType == BoardType::D19C)
+                      fZSEventSize = (0x0000FFFF & word);
+
+                    if (fZSEventSize > pData.size())
+                      {
+                        LOG(ERROR) << "Missaligned data, not accepted";
+                        break;
+                      }
+                  }
+              }
+            else
+              {
+                if (cWordIndex > 0 && (cWordIndex + 1) % fEventSize == 0)
+                  {
+                    if (pType == BoardType::D19C)
+                      fEventList.push_back(new D19cCbc3Event(pBoard, fNCbc, fNFe, lvec));
+
+                    lvec.clear();
+
+                    if (fEventList.size() >= fNevents)
+                      break;
+                  }
+              }
+
+            cWordIndex++;
+            cSwapIndex++;
+            cZSWordIndex++;
+          }
+      }
+  }
+
+  void SystemController::ResetEventList ()
+  {
+    for (auto &pevt : fEventList) delete pevt;
+    fEventList.clear();
+    fCurrentEvent = 0;
   }
 }

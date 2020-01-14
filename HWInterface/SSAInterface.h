@@ -1,22 +1,19 @@
 /*!
-
         \file                                            SSAInterface.h
         \brief                                           User Interface to the SSAs
         \author                                          Lorenzo BIDEGAIN, Nicolas PIERRE
         \version                                         1.0
         \date                        31/07/14
         Support :                    mail to : lorenzo.bidegain@gmail.com, nico.pierre@icloud.com
-
  */
 
 #ifndef __SSAINTERFACE_H__
 #define __SSAINTERFACE_H__
 
-#include <vector>
 #include "../HWInterface/D19cFWInterface.h"
 #include "pugixml.hpp"
+#include <vector>
 
-using namespace Ph2_HwDescription;
 
 /*!
  * \namespace Ph2_HwInterface

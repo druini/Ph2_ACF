@@ -553,7 +553,7 @@ void PedeNoise::Stop()
     writeObjects();
     dumpConfigFiles();
     SaveResults();
-    Destroy();
+    closeFileHandler();
     LOG (INFO) << "Noise measurement stopped.";
 }
 

@@ -1,23 +1,22 @@
 /*
-
         FileName :                     SSAInterface.cc
         Content :                      User Interface to the SSAs
         Programmer :                   Lorenzo BIDEGAIN, Nicolas PIERRE, Georg AUZINGER
         Version :                      1.0
         Date of creation :             10/07/14
         Support :                      mail to : lorenzo.bidegain@gmail.com, nico.pierre@icloud.com
-
  */
 
 #include "SSAInterface.h"
 #include "../Utils/ConsoleColor.h"
 #include <typeinfo>
+
 #define DEV_FLAG 0
-// #define COUNT_FLAG 0
+
+using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-
 SSAInterface::SSAInterface( const BeBoardFWMap& pBoardMap ) :
     fBoardMap( pBoardMap ),
     fBoardFW( nullptr ),
@@ -135,7 +134,7 @@ void SSAInterface::setFileHandler (FileHandler* pHandler)
 	    //vector to encode all the registers into
 	    std::vector<uint32_t> cVec;
 
-	    //Deal with the RegItems and encode them
+	    //Deal with the ChipRegItems and encode them
 
 	    SSARegMap cSSARegMap = pSSA->getRegMap();
 
@@ -186,7 +185,7 @@ void SSAInterface::setFileHandler (FileHandler* pHandler)
 	    setBoard ( pSSA->getBeBoardId() );
 
 	    //next, get the reg item
-	    RegItem cRegItem = pSSA->getRegItem ( pRegNode );
+	    ChipRegItem cRegItem = pSSA->getRegItem ( pRegNode );
 	    cRegItem.fValue = pValue;
 
 	    //vector for transaction
@@ -215,7 +214,7 @@ void SSAInterface::setFileHandler (FileHandler* pHandler)
 	{
 	    setBoard ( pSSA->getBeBoardId() );
 
-	    RegItem cRegItem = pSSA->getRegItem ( pRegNode );
+	    ChipRegItem cRegItem = pSSA->getRegItem ( pRegNode );
 	    std::vector<uint32_t> cVecReq;
 
 	    fBoardFW->EncodeReg ( cRegItem, pSSA->getFeId(), pSSA->getSSAId(), cVecReq, true, false );

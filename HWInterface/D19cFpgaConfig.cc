@@ -17,7 +17,8 @@
    Date of creation : 2014-07-10
    Support :        mail to : christian.bonnin@iphc.cnrs.fr
 */
-#include <sys/stat.h>//file size
+
+#include <sys/stat.h>
 #include <time.h>
 #include <fstream>
 #include <boost/format.hpp>
@@ -26,12 +27,12 @@
 #include "D19cFpgaConfig.h"
 
 using namespace std;
+using namespace Ph2_HwDescription;
 
-#define SECURE_MODE_PASSWORD    "RuleBritannia"
+#define SECURE_MODE_PASSWORD "RuleBritannia"
 
-
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
     D19cFpgaConfig::D19cFpgaConfig (BeBoardFWInterface* pbbi) :
         FpgaConfig (pbbi),
         lNode(nullptr)
@@ -45,7 +46,6 @@ namespace Ph2_HwInterface {
         {
             lNode  = new fc7::MmcPipeInterface(dynamic_cast< const fc7::MmcPipeInterface& > (fwManager->getUhalNode ( "buf_cta" ) ) );
         }
-        
     }
 
     D19cFpgaConfig::~D19cFpgaConfig()

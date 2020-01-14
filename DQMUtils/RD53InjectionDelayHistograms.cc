@@ -69,7 +69,7 @@ void InjectionDelayHistograms::fillOccupancy (const DetectorDataContainer& Occup
           auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
           for (size_t i = startValue; i <= stopValue; i++)
-            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i),cChip->getSummary<GenericDataArray<InjDelaySize>>().data[i-startValue]);
+            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<InjDelaySize>>().data[i-startValue]);
         }
 }
 

@@ -269,7 +269,7 @@ void PedestalEqualization::Stop()
     LOG (INFO) << "Stopping Pedestal Equalization.";
     writeObjects();
     dumpConfigFiles();
-    Destroy();
+    closeFileHandler();
     LOG (INFO) << "Pedestal Equalization stopped.";
 }
 
