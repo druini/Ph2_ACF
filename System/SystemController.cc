@@ -28,7 +28,6 @@ namespace Ph2_System
     , fWriteHandlerEnabled (false)
     , fStreamerEnabled     (false)
     , fNetworkStreamer     (nullptr) // This is the server listening port
-    // , fData                (nullptr)
   {}
 
   SystemController::~SystemController() {}
@@ -66,8 +65,6 @@ namespace Ph2_System
 
     delete fNetworkStreamer;
     fNetworkStreamer = nullptr;
-    // delete fData;
-    // fData = nullptr;
   }
 
   void SystemController::addFileHandler (const std::string& pFilename, char pOption)
@@ -358,9 +355,9 @@ namespace Ph2_System
     if (pType == BoardType::RD53)
       {
         uint16_t status;
-        if (RD53decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, status, RD53decodedEvents);
+        if (RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, status, RD53FWInterface::decodedEvents);
 
-        for (const auto& evt : RD53decodedEvents)
+        for (const auto& evt : RD53FWInterface::decodedEvents)
           {
             std::vector<std::pair<size_t,size_t>> moduleAndChipIDs;
 

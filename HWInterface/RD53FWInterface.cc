@@ -642,18 +642,18 @@ namespace Ph2_HwInterface
         // ##################
         // # Error checking #
         // ##################
-        RD53decodedEvents.clear();
-        RD53FWInterface::DecodeEvents(pData, status, RD53decodedEvents);
-        // RD53FWInterface::PrintEvents(RD53decodedEvents, pData); // @TMP@
+        decodedEvents.clear();
+        RD53FWInterface::DecodeEvents(pData, status, decodedEvents);
+        // RD53FWInterface::PrintEvents(decodedEvents, pData); // @TMP@
         if (RD53FWInterface::EvtErrorHandler(status) == false)
           {
             retry = true;
             continue;
           }
 
-        if (RD53decodedEvents.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
+        if (decodedEvents.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
           {
-            LOG (ERROR) << BOLDRED << "Sent " << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << " triggers, but collected " << RD53decodedEvents.size() << " events" << BOLDYELLOW << " --> retry" << RESET;
+            LOG (ERROR) << BOLDRED << "Sent " << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << " triggers, but collected " << decodedEvents.size() << " events" << BOLDYELLOW << " --> retry" << RESET;
             retry = true;
             continue;
           }
@@ -1008,7 +1008,7 @@ namespace Ph2_HwInterface
   // ########################################
   // # Vector containing the decoded events #
   // ########################################
-  std::vector<RD53FWInterface::Event> RD53decodedEvents;
+  std::vector<RD53FWInterface::Event> RD53FWInterface::decodedEvents;
 
 
   // ################################################

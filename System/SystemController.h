@@ -15,6 +15,9 @@
 #include "FileParser.h"
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/ChipInterface.h"
+
+#include "../HWInterface/RD53FWInterface.h"
+
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/SSAInterface.h"

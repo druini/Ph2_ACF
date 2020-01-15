@@ -140,7 +140,7 @@ void Physics::run ()
   // #############
   while (keepRunning == true)
     {
-      RD53decodedEvents.clear();
+      RD53FWInterface::decodedEvents.clear();
       Physics::analyze(true);
       std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
     }

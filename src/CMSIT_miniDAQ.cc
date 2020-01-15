@@ -35,9 +35,9 @@
 // # Default values #
 // ##################
 #define RUNNUMBER     0
+#define SETBATCH      0         // Set batch mode when running supervisor
 #define RESULTDIR     "Results" // Directory containing the results
 #define FILERUNNUMBER "./RunNumber.txt"
-#define SETBATCH      0 // Set batch mode when running supervisor
 
 
 INITIALIZE_EASYLOGGINGPP
@@ -59,7 +59,7 @@ void interruptHandler (int handler)
 }
 
 
-void readBinaryData (std::string binaryFile, Ph2_System::SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& RD53decodedEvents)
+void readBinaryData (std::string binaryFile, Ph2_System::SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
 {
   LOG (INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
   uint16_t status;
@@ -69,16 +69,16 @@ void readBinaryData (std::string binaryFile, Ph2_System::SystemController& mySys
   LOG (INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
   mySysCntr.readFile(data, 0);
 
-  RD53FWInterface::DecodeEvents(data, status, RD53decodedEvents);
-  LOG (INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << RD53decodedEvents.size() << RESET;
+  RD53FWInterface::DecodeEvents(data, status, decodedEvents);
+  LOG (INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
-  for (auto i = 0u; i < RD53decodedEvents.size(); i++)
-    if (RD53FWInterface::EvtErrorHandler(RD53decodedEvents[i].evtStatus) == false)
+  for (auto i = 0u; i < decodedEvents.size(); i++)
+    if (RD53FWInterface::EvtErrorHandler(decodedEvents[i].evtStatus) == false)
       {
         LOG (ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
         errors++;
       }
-  LOG (INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(3) << BOLDYELLOW << 1. * errors / RD53decodedEvents.size() * 100. << "%" << RESET;
+  LOG (INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(3) << BOLDYELLOW << 1. * errors / decodedEvents.size() * 100. << "%" << RESET;
 }
 
 
@@ -275,7 +275,7 @@ int main (int argc, char** argv)
               static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fBoardVector[0]->getBeBoardId()])->ResetSequence();
               exit(EXIT_SUCCESS);
             }
-          if (binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53decodedEvents);
+          if (binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);
         }
       else if (binaryFile == "")
         {

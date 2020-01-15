@@ -240,6 +240,11 @@ namespace Ph2_HwInterface
     void ReadI2C              (std::vector<uint32_t>& data);
     void ConfigureClockSi5324 ();
 
+    // ########################################
+    // # Vector containing the decoded events #
+    // ########################################
+    static std::vector<RD53FWInterface::Event> decodedEvents;
+
   private:
     void PrintFWstatus         ();
     void TurnOffFMC            ();
@@ -260,10 +265,6 @@ namespace Ph2_HwInterface
   };
 
 
-  // ########################################
-  // # Vector containing the decoded events #
-  // ########################################
-  extern std::vector<RD53FWInterface::Event> RD53decodedEvents;
 }
 
 #endif
