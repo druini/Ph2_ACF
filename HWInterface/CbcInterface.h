@@ -51,6 +51,10 @@ namespace Ph2_HwInterface
         
         bool setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
 
+        bool enableInjection (Ph2_HwDescription::ReadoutChip* pChip, bool inject = true, bool pVerifLoop = true) override;
+
+        bool setInjectionAmplitude (Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop = true) override;
+
         bool maskChannelsGroup  (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
 
         bool maskChannelsAndSetInjectionSchema  (ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop = true ) override;

@@ -57,6 +57,18 @@ namespace Ph2_HwInterface
           return false;
         }
 
+        virtual bool enableInjection (Ph2_HwDescription::ReadoutChip* pChip, bool inject = true, bool pVerifLoop = true)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+          return false;
+        }
+
+        virtual bool setInjectionAmplitude (Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop = true)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+          return false;
+        }
+
         /*!
          * \brief Mask the channels not belonging to the group under test
          * \param pChip: pointer to Chip object

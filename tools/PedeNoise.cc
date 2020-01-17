@@ -153,6 +153,7 @@ void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
 {
     uint16_t cStartValue = 0;
     bool originalAllChannelFlag = this->fAllChan;
+    fTestPulseAmplitude = pTPAmplitude;
 
     if(pTPAmplitude != 0 && originalAllChannelFlag){
         this->SetTestAllChannels(false);
@@ -161,18 +162,27 @@ void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
 
 
     if(pTPAmplitude != 0){
-        this->SetTestPulse( true );
-        fTestPulseAmplitude = pTPAmplitude;
+        this->enableTestPulse( true );
         setFWTestPulse();
-        setSystemTestPulse ( pTPAmplitude, 0, true, false );
+
+        for ( auto cBoard : *fDetectorContainer )
+        {
+            for ( auto cFe : *cBoard )
+            {
+                for ( auto cCbc : *cFe )
+                {
+                    fReadoutChipInterface->setInjectionAmplitude(static_cast<ReadoutChip*>(cCbc), fTestPulseAmplitude);
+                }
+            }
+        }
+
         // setSameGlobalDac("TestPulsePotNodeSel",  pTPAmplitude);
         LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
         cStartValue = this->findPedestal ();
     }
     else
     {
-        fTestPulseAmplitude = pTPAmplitude;
-        this->SetTestPulse( false );
+        this->enableTestPulse( false );
         cStartValue = this->findPedestal (true);
     }
 
@@ -202,6 +212,7 @@ void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
     this->SetTestAllChannels(originalAllChannelFlag);
     if(pTPAmplitude != 0){
         this->SetTestPulse( false );
+        this->enableTestPulse( false );
         setSameGlobalDac("TestPulsePotNodeSel",  0);
         LOG (INFO) << BLUE <<  "Disabled test pulse. " << RESET ;
 
