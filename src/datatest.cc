@@ -164,7 +164,7 @@ int main ( int argc, char* argv[] )
         FileHeader cHeader = cSystemController.fFileHandler->getHeader();
         pBoard->setBoardType (cHeader.getBoardType() );
         pBoard->setEventType (cHeader.fEventType);
-        fPlaybackEventSize32 = cHeader.fEventSize32;
+        fPlaybackEventSize32 = cHeader.fEventSize;
 
         if (cHeader.fNchip != cCbcCounter.getNChip() )
         {
@@ -183,7 +183,7 @@ int main ( int argc, char* argv[] )
             std::vector<uint32_t> cReadVec;
             cSystemController.readFile (cReadVec, 10 * fPlaybackEventSize32);
             size_t cCalcEvents = cReadVec.size() / fPlaybackEventSize32;
-            cSystemController.setData (pBoard, cReadVec, cCalcEvents);
+            cSystemController.DecodeData(pBoard, cReadVec, cCalcEvents, pBoard->getBoardType());
             pEvents = &cSystemController.GetEvents ( pBoard );
         }
         else

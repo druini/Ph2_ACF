@@ -27,13 +27,14 @@
 class FileHeader
 {
  public:
-  static const uint32_t fHeaderSize32 = 12;
+  static const uint32_t fHeaderSize = 12;
+
   std::string fType;
   uint32_t fVersionMajor;
   uint32_t fVersionMinor;
   uint32_t fBeId;
   uint32_t fNchip;
-  uint32_t fEventSize32;
+  uint32_t fEventSize;
   EventType fEventType;
   bool fValid;
 
@@ -44,18 +45,18 @@ class FileHeader
     , fVersionMinor (0)
     , fBeId         (0)
     , fNchip        (0)
-    , fEventSize32  (0)
+    , fEventSize    (0)
     , fEventType    (EventType::VR)
     , fValid        (false)
     {}
 
-  FileHeader (const std::string pType, const uint32_t& pFWMajor, const uint32_t& pFWMinor, const uint32_t& pBeId, const uint32_t& pNchip, const uint32_t& pEventSize32, EventType pEventType = EventType::VR)
+  FileHeader (const std::string pType, const uint32_t& pFWMajor, const uint32_t& pFWMinor, const uint32_t& pBeId, const uint32_t& pNchip, const uint32_t& pEventSize, EventType pEventType = EventType::VR)
     : fType         (pType)
     , fVersionMajor (pFWMajor)
     , fVersionMinor (pFWMinor)
     , fBeId         (pBeId)
     , fNchip        (pNchip)
-    , fEventSize32  (pEventSize32)
+    , fEventSize    (pEventSize)
     , fEventType    (pEventType)
     , fValid        (true)
     {}
@@ -64,7 +65,7 @@ class FileHeader
   {
     if      (fType == "D19C") return BoardType::D19C;
     else if (fType == "RD53") return BoardType::RD53;
-    else return BoardType::D19C;
+    return BoardType::D19C;
   }
 
   std::vector<uint32_t> encodeHeader()
@@ -90,7 +91,7 @@ class FileHeader
       cVec.push_back(fNchip);
 
       cVec.push_back(SEPARATOR);
-      cVec.push_back(fEventSize32);
+      cVec.push_back(fEventSize);
 
       cVec.push_back(SEPARATOR);
 
@@ -127,7 +128,7 @@ class FileHeader
         fBeId  = pVec.at(7) & 0x000003FF;
         fNchip = pVec.at(8);
 
-        fEventSize32 = pVec.at(10);
+        fEventSize = pVec.at(10);
         fValid = true;
 
         if      (cEventTypeId == 0) fEventType = EventType::VR;
@@ -136,7 +137,7 @@ class FileHeader
 
         std::string cEventTypeString;
 
-        if (fEventType == EventType::VR) cEventTypeString = "EventType::VR" ;
+        if (fEventType == EventType::VR) cEventTypeString = "EventType::VR";
         else                             cEventTypeString = "EventType::ZS";
       }
     else

@@ -72,7 +72,7 @@ bool FileHandler::openFile()
       else if (fOption == 'r')
         {
           fBinaryFile.open(getFilename().c_str(),  std::fstream::in |  std::fstream::binary);
-          fHeader.decodeHeader(this->readFileChunks(fHeader.fHeaderSize32));
+          fHeader.decodeHeader(this->readFileChunks(fHeader.fHeaderSize));
 
           if (fHeader.fValid == false)
             {

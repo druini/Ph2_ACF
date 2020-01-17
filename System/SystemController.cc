@@ -93,11 +93,6 @@ namespace Ph2_System
     else pVec = fFileHandler->readFileChunks(pNWords32);
   }
 
-  void SystemController::setData (BeBoard* pBoard, std::vector<uint32_t>& pData, uint32_t pNEvents)
-  {
-    this->DecodeData(pBoard, pData, pNEvents, pBoard->getBoardType());
-  }
-
   void SystemController::InitializeHw (const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
   {
     fStreamerEnabled = streamData;

@@ -112,13 +112,6 @@ namespace Ph2_System
     void readFile(std::vector<uint32_t> &pVec, uint32_t pNWords32 = 0);
 
     /*!
-     * \brief set the Data read from file in the previous Method to the interanl data object
-     * \param pVec : the data vector
-     * \param pBoard : the BeBoard
-     */
-    void setData(BeBoard *pBoard, std::vector<uint32_t> &pVec, uint32_t pNEvents);
-
-    /*!
      * \brief acceptor method for HwDescriptionVisitor
      * \param pVisitor
      */
@@ -235,11 +228,13 @@ namespace Ph2_System
 
     double findValueInSettings (const char* name);
 
-  private:
-    void SetFuture  (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
     void DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
+  private:
+    void SetFuture (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+
     std::vector<Event*> fEventList;
+
     std::future<void> fFuture;
     uint32_t fCurrentEvent;
     uint32_t fEventSize;

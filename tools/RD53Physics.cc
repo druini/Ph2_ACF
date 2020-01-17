@@ -185,7 +185,7 @@ void Physics::analyze (bool doReadBinary)
         {
           dataSize = 1;
           std::vector<uint32_t> data;
-          SystemController::setData(static_cast<BeBoard*>(cBoard), data, dataSize);
+          SystemController::DecodeData(static_cast<BeBoard*>(cBoard), data, dataSize, static_cast<BeBoard*>(cBoard)->getBoardType());
         }
 
       if (dataSize != 0)
