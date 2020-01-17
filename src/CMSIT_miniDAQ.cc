@@ -61,15 +61,15 @@ void interruptHandler (int handler)
 
 void readBinaryData (std::string binaryFile, Ph2_System::SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
 {
-  LOG (INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
-  uint16_t status;
   unsigned int errors = 0;
   std::vector<uint32_t> data;
+
+  LOG (INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
   mySysCntr.addFileHandler(binaryFile, 'r');
   LOG (INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
   mySysCntr.readFile(data, 0);
 
-  RD53FWInterface::DecodeEvents(data, status, decodedEvents);
+  RD53FWInterface::DecodeEvents(data, decodedEvents);
   LOG (INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
   for (auto i = 0u; i < decodedEvents.size(); i++)
@@ -78,6 +78,7 @@ void readBinaryData (std::string binaryFile, Ph2_System::SystemController& mySys
         LOG (ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
         errors++;
       }
+
   LOG (INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(3) << BOLDYELLOW << 1. * errors / decodedEvents.size() * 100. << "%" << RESET;
 }
 

@@ -15,7 +15,10 @@
 #include "../HWDescription/RD53.h"
 #include "../Utils/RD53RunProgress.h"
 #include "../Utils/easylogging++.h"
-
+#include "../Utils/Event.h"
+#include "../Utils/DataContainer.h"
+#include "../Utils/OccupancyAndPh.h"
+#include "../Utils/GenericDataVector.h"
 #include <uhal/uhal.hpp>
 
 
@@ -116,15 +119,19 @@ namespace Ph2_HwInterface
 
       uint16_t error_code;
       uint16_t module_id;
+      uint16_t chip_id;
       uint16_t chip_lane;
       uint16_t l1a_data_size;
       uint16_t chip_type;
       uint16_t frame_delay;
     };
 
-    struct Event
+    struct Event : public Ph2_HwInterface::Event
     {
       Event (const uint32_t* data, size_t n);
+
+      void fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
+      static void addBoardInfo2Events (const BeBoard* pBoard, std::vector<RD53FWInterface::Event>& decodedEvents);
 
       uint16_t block_size;
       uint16_t tlu_trigger_id;
@@ -137,25 +144,15 @@ namespace Ph2_HwInterface
       std::vector<RD53::Event> chip_events;
 
       uint16_t evtStatus;
+
+    protected:
+      bool isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx);
+      static int lane2chipId (const BeBoard* pBoard, uint16_t module_id, uint16_t chip_lane);
     };
 
-    static void DecodeEvents    (const std::vector<uint32_t>& data, uint16_t& status, std::vector<RD53FWInterface::Event>& events);
-    static bool EvtErrorHandler (uint16_t status);
-    static void PrintEvents     (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
-    static int  lane2chipId     (const BeBoard* pBoard, uint16_t module_id, uint16_t chip_lane)
-    {
-      // #############################
-      // # Translate lane to chip ID #
-      // #############################
-      Module* module = pBoard->getModule(module_id);
-      if (module != nullptr)
-        {
-          auto it = std::find_if(module->fReadoutChipVector.begin(), module->fReadoutChipVector.end(), [=] (ReadoutChip* pChip)
-                                 { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
-          if (it != module->fReadoutChipVector.end()) return (*it)->getChipId();
-        }
-      return -1; // Chip not found
-    }
+    static uint16_t DecodeEvents    (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
+    static bool     EvtErrorHandler (uint16_t status);
+    static void     PrintEvents     (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
 
     enum class TriggerSource : uint32_t
     {

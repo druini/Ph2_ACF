@@ -616,9 +616,8 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
-    uint16_t status;
-    bool     retry;
-    int      nAttempts = 0;
+    bool retry;
+    int  nAttempts = 0;
 
     RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents;
     RD53FWInterface::ConfigureFastCommands();
@@ -643,7 +642,7 @@ namespace Ph2_HwInterface
         // # Error checking #
         // ##################
         decodedEvents.clear();
-        RD53FWInterface::DecodeEvents(pData, status, decodedEvents);
+        uint16_t status = RD53FWInterface::DecodeEvents(pData, decodedEvents);
         // RD53FWInterface::PrintEvents(decodedEvents, pData); // @TMP@
         if (RD53FWInterface::EvtErrorHandler(status) == false)
           {
@@ -673,22 +672,17 @@ namespace Ph2_HwInterface
     RD53RunProgress::update(pData.size(),true);
   }
 
-  void RD53FWInterface::DecodeEvents (const std::vector<uint32_t>& data, uint16_t& evtStatus, std::vector<RD53FWInterface::Event>& events)
+  uint16_t RD53FWInterface::DecodeEvents (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
   {
+    uint16_t evtStatus = RD53FWEvtEncoder::GOOD;
     std::vector<size_t> event_start;
     const size_t maxL1Counter = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
-
-    evtStatus = RD53FWEvtEncoder::GOOD;
 
 
     // ######################
     // # Consistency checks #
     // ######################
-    if (data.size() == 0)
-      {
-        evtStatus = RD53FWEvtEncoder::EMPTY;
-        return;
-      }
+    if (data.size() == 0) return RD53FWEvtEncoder::EMPTY;
 
 
     for (auto i = 0u; i < data.size(); i++)
@@ -709,6 +703,80 @@ namespace Ph2_HwInterface
               if (events.back().l1a_counter % maxL1Counter != events.back().chip_events[j].trigger_id) evtStatus |= RD53FWEvtEncoder::L1A;
           }
       }
+
+    return evtStatus;
+  }
+
+
+
+
+  // ########################
+  // # Event Implementation #
+  // ########################
+  void RD53FWInterface::Event::addBoardInfo2Events (const BeBoard* pBoard, std::vector<RD53FWInterface::Event>& decodedEvents)
+  {
+    for (auto& evt : decodedEvents)
+      for (auto& chip_frame : evt.chip_frames)
+        {
+          int chip_id = RD53FWInterface::Event::lane2chipId(pBoard, chip_frame.module_id, chip_frame.chip_lane);
+          if (chip_id != -1) chip_frame.chip_id = chip_id;
+        }
+  }
+
+  void RD53FWInterface::Event::fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+  {
+    bool   vectorRequired = boardContainer->at(0)->at(0)->isSummaryContainerType<Summary<GenericDataVector,OccupancyAndPh>>();
+    size_t chipIndx;
+
+    for (const auto& cModule : *boardContainer)
+      for (const auto& cChip : *cModule)
+        if (RD53FWInterface::Event::isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
+          {
+            if (vectorRequired == true)
+              {
+                cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.push_back(chip_events[chipIndx].bc_id);
+                cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.push_back(chip_events[chipIndx].trigger_id);
+              }
+
+            for (const auto& hit : chip_events[chipIndx].hit_data)
+              {
+                cChip->getChannel<OccupancyAndPh>(hit.row+Ph2_HwDescription::RD53::nRows*(hit.col)).fOccupancy++;
+                cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPh      += float(hit.tot);
+                cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPhError += float(hit.tot*hit.tot);
+                if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col) == false)
+                  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).readoutError = true;
+              }
+          }
+  }
+
+  bool RD53FWInterface::Event::isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx)
+  {
+    for (auto i = 0u; i < chip_frames.size(); i++)
+      if ((module_id == chip_frames[i].module_id) && (chip_id == chip_frames[i].chip_id) && (chip_events[i].hit_data.size() != 0))
+        {
+          chipIndx = i;
+          return true;
+        }
+
+    return false;
+  }
+
+  int RD53FWInterface::Event::lane2chipId (const BeBoard* pBoard, uint16_t module_id, uint16_t chip_lane)
+  {
+    // #############################
+    // # Translate lane to chip ID #
+    // #############################
+    if (pBoard != nullptr)
+      {
+        Module* module = pBoard->getModule(module_id);
+        if (module != nullptr)
+          {
+            auto it = std::find_if(module->fReadoutChipVector.begin(), module->fReadoutChipVector.end(), [=] (ReadoutChip* pChip)
+                                   { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
+            if (it != module->fReadoutChipVector.end()) return (*it)->getChipId();
+          }
+      }
+    return -1; // Chip not found
   }
 
   RD53FWInterface::Event::Event (const uint32_t* data, size_t n)
@@ -783,6 +851,10 @@ namespace Ph2_HwInterface
     std::tie(error_code, module_id, chip_lane, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
     std::tie(chip_type, frame_delay)                          = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
   }
+  // ########################
+
+
+
 
   void RD53FWInterface::SendBoardCommand (const std::string& cmd_reg)
   {

@@ -1,12 +1,10 @@
 /*!
-
   \file                    SystemController.h
   \brief                   Controller of the System, overall wrapper of the framework
   \author                  Nicolas PIERRE
   \version                 1.0
   \date                    10/08/14
   Support :                mail to : lorenzo.bidegain@cern.ch, nico.pierre@icloud.com
-
 */
 
 #ifndef SYSTEMCONTROLLER_H
@@ -15,27 +13,20 @@
 #include "FileParser.h"
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/ChipInterface.h"
-
-#include "../HWInterface/RD53FWInterface.h"
-
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/CbcInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/D19cFWInterface.h"
 #include "../HWDescription/Definition.h"
-#include "../Utils/Visitor.h"
+#include "../NetworkUtils/TCPPublishServer.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/FileHandler.h"
 #include "../Utils/ConsoleColor.h"
-#include "../Utils/easylogging++.h"
 #include "../Utils/Container.h"
-#include "../NetworkUtils/TCPPublishServer.h"
-
+#include "../Utils/easylogging++.h"
 #include "../Utils/Event.h"
-#include "../Utils/RD53Event.h"
 #include "../Utils/D19cCbc3Event.h"
 #include "../Utils/D19cCbc3EventZS.h"
 
@@ -245,7 +236,6 @@ namespace Ph2_System
     double findValueInSettings (const char* name);
 
   private:
-    void ResetEventList();
     void SetFuture  (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
     void DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
