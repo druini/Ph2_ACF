@@ -9,6 +9,9 @@
 
 #include "RD53Gain.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void Gain::ConfigureCalibration ()
 {
   // #######################

@@ -67,16 +67,16 @@ namespace Ph2_HwInterface
 		void KillI2C();
 		void MainPowerOn(uint8_t mpaid = 0, uint8_t ssaid = 0);
 		void MainPowerOff();
-		bool ConfigureSSA (const SSA* pSSA , bool pVerifLoop = true);
+		bool ConfigureSSA (const Ph2_HwDescription::SSA* pSSA , bool pVerifLoop = true);
 		
-		bool WriteSSAReg ( SSA* pSSA, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true );
-   		uint8_t ReadSSAReg ( SSA* pSSA, const std::string& pRegNode );
+		bool WriteSSAReg ( Ph2_HwDescription::SSA* pSSA, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true );
+   		uint8_t ReadSSAReg ( Ph2_HwDescription::SSA* pSSA, const std::string& pRegNode );
 
 		void PS_Clear_counters(uint32_t duration = 0 );
 
 		void SCurves ();
 
-		void checkRegVals(SSA* pSSA, const std::string& pRegNode);
+		void checkRegVals(Ph2_HwDescription::SSA* pSSA, const std::string& pRegNode);
 
 		void ssaEnableAsyncRO(bool value);
 		/*!

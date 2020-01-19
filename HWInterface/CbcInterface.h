@@ -47,19 +47,19 @@ namespace Ph2_HwInterface
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        bool ConfigureChip ( Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
+        bool ConfigureChip ( Ph2_HwDescription::Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
         
-        bool setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
+        bool setInjectionSchema (Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
 
-        bool maskChannelsGroup  (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
+        bool maskChannelsGroup  (Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true) override;
 
-        bool maskChannelsAndSetInjectionSchema  (ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop = true ) override;
+        bool maskChannelsAndSetInjectionSchema  (Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop = true ) override;
 
          /*!
          * \brief Reapply the stored mask for the CBC, use it after group masking is applied
          * \param pCbc: pointer to CBC object
          */
-        bool ConfigureChipOriginalMask (ReadoutChip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
+        bool ConfigureChipOriginalMask (Ph2_HwDescription::ReadoutChip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) override;
 
          /*!
          * \brief Mask all channels of the chip
@@ -68,7 +68,7 @@ namespace Ph2_HwInterface
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        bool MaskAllChannels ( ReadoutChip* pCbc, bool mask, bool pVerifLoop = true ) override;
+        bool MaskAllChannels ( Ph2_HwDescription::ReadoutChip* pCbc, bool mask, bool pVerifLoop = true ) override;
         
         /*!
          * \brief Write the designated register in both Chip and Chip Config File
@@ -76,7 +76,7 @@ namespace Ph2_HwInterface
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteChipReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
+        bool WriteChipReg ( Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
 
         /*!
          * \brief Write the designated register in both Chip and Chip Config File
@@ -84,14 +84,14 @@ namespace Ph2_HwInterface
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteChipSingleReg ( Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true );
+        bool WriteChipSingleReg ( Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true );
 
         /*!
          * \brief Write several registers in both Chip and Chip Config File
          * \param pCbc
          * \param pVecReq : Vector of pair: Node of the register to write versus value to write
          */
-        bool WriteChipMultReg ( Chip* pCbc, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true ) override;
+        bool WriteChipMultReg ( Ph2_HwDescription::Chip* pCbc, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true ) override;
 
         /*!
          * \brief Write same register in all Cbcs and then UpdateCbc
@@ -99,7 +99,7 @@ namespace Ph2_HwInterface
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        void WriteModuleBroadcastChipReg ( const Module* pModule, const std::string& pRegNode, uint16_t pValue );
+        void WriteModuleBroadcastChipReg ( const Ph2_HwDescription::Module* pModule, const std::string& pRegNode, uint16_t pValue );
 
         /*!
          * \brief Write same register in all Cbcs and then UpdateCbc
@@ -107,7 +107,7 @@ namespace Ph2_HwInterface
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        void WriteBroadcastCbcMultiReg ( const Module* pModule, const std::vector<std::pair<std::string, uint8_t>> pVecReg );
+        void WriteBroadcastCbcMultiReg ( const Ph2_HwDescription::Module* pModule, const std::vector<std::pair<std::string, uint8_t>> pVecReg );
 
         /*!
          * \brief Write all Local registers on Cbc and Cbc Config File (able to recognize local parameter names such as ChannelOffset)
@@ -115,21 +115,21 @@ namespace Ph2_HwInterface
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        bool WriteChipAllLocalReg ( ReadoutChip* pCbc, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true ) override;
+        bool WriteChipAllLocalReg ( Ph2_HwDescription::ReadoutChip* pCbc, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true ) override;
 
 	/*!
          * \brief Read the designated register in the Chip
          * \param pCbc
          * \param pRegNode : Node of the register to read
          */
-        uint16_t ReadChipReg ( Chip* pCbc, const std::string& pRegNode ) override;
+        uint16_t ReadChipReg ( Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode ) override;
 
     private:
         /*!
          * \brief Read CBC ID eFuse
          * \param pChip: pointer to Chip object
          */
-        uint32_t ReadCbcIDeFuse ( Chip* pCbc );
+        uint32_t ReadCbcIDeFuse ( Ph2_HwDescription::Chip* pCbc );
         //void ReadAllCbc ( const Module* pModule );
         //void CbcCalibrationTrigger(const Cbc* pCbc );
         void output();

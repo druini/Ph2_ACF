@@ -35,11 +35,9 @@
 #include "TStyle.h"
 
 using namespace Ph2_System;
-using namespace Ph2_HwInterface;
-using namespace Ph2_HwDescription;
 
-typedef std::map<Chip*, std::map<std::string, TObject*> >  CbcHistogramMap;
-typedef std::map<Module*, std::map<std::string, TObject*> > ModuleHistogramMap;
+typedef std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*> >  CbcHistogramMap;
+typedef std::map<Ph2_HwDescription::Module*, std::map<std::string, TObject*> > ModuleHistogramMap;
 
 /*!
  * \class SignalScanFit
@@ -65,9 +63,9 @@ class SignalScanFit : public Tool
   private:
     void updateHists ( std::string pHistName, bool pFinal );
     void parseSettings();
-    void processCurves ( BeBoard *pBoard, std::string pHistName );
-    void differentiateHist ( Chip* pCbc, std::string pHistName );
-    void fitHist ( Chip* pCbc, std::string pHistName );
+    void processCurves ( Ph2_HwDescription::BeBoard *pBoard, std::string pHistName );
+    void differentiateHist ( Ph2_HwDescription::Chip* pCbc, std::string pHistName );
+    void fitHist ( Ph2_HwDescription::Chip* pCbc, std::string pHistName );
 
     //  Members
     uint32_t fNevents;

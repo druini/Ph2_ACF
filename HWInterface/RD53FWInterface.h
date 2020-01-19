@@ -96,22 +96,22 @@ namespace Ph2_HwInterface
     BoardType getBoardType   () const { return BoardType::RD53; };
 
     void ResetSequence       ();
-    void ConfigureBoard      (const BeBoard* pBoard) override;
+    void ConfigureBoard      (const Ph2_HwDescription::BeBoard* pBoard) override;
 
     void Start               () override;
     void Stop                () override;
     void Pause               () override;
     void Resume              () override;
 
-    void     ReadNEvents (BeBoard* pBoard, uint32_t pNEvents,  std::vector<uint32_t>& pData, bool pWait = true) override;
-    uint32_t ReadData    (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
+    void     ReadNEvents (Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents,  std::vector<uint32_t>& pData, bool pWait = true) override;
+    uint32_t ReadData    (Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
     void     ChipReset   ()                                                                                     override;
     void     ChipReSync  ()                                                                                     override;
     std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)           override;
 
     bool CheckChipCommunication ();
     void WriteChipCommand       (const std::vector<uint16_t>& data, int moduleId);
-    std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Chip* pChip);
+    std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Ph2_HwDescription::Chip* pChip);
 
     struct ChipFrame
     {
@@ -131,7 +131,7 @@ namespace Ph2_HwInterface
       Event (const uint32_t* data, size_t n);
 
       void fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
-      static void addBoardInfo2Events (const BeBoard* pBoard, std::vector<RD53FWInterface::Event>& decodedEvents);
+      static void addBoardInfo2Events (const Ph2_HwDescription::BeBoard* pBoard, std::vector<RD53FWInterface::Event>& decodedEvents);
 
       uint16_t block_size;
       uint16_t tlu_trigger_id;
@@ -141,13 +141,13 @@ namespace Ph2_HwInterface
       uint32_t bx_counter;
 
       std::vector<ChipFrame>   chip_frames;
-      std::vector<RD53::Event> chip_events;
+      std::vector<Ph2_HwDescription::RD53::Event> chip_events;
 
       uint16_t evtStatus;
 
     protected:
       bool isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx);
-      static int lane2chipId (const BeBoard* pBoard, uint16_t module_id, uint16_t chip_lane);
+      static int lane2chipId (const Ph2_HwDescription::BeBoard* pBoard, uint16_t module_id, uint16_t chip_lane);
     };
 
     static uint16_t DecodeEvents    (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
@@ -198,7 +198,7 @@ namespace Ph2_HwInterface
       FastCmdFSMConfig fast_cmd_fsm;
     };
 
-    void SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0);
+    void SetAndConfigureFastCommands (const Ph2_HwDescription::BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0);
 
     struct DIO5Config
     {

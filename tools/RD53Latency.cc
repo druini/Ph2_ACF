@@ -9,6 +9,9 @@
 
 #include "RD53Latency.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void Latency::ConfigureCalibration ()
 {
   // ##############################

@@ -28,8 +28,6 @@
 #include "../Utils/CommonVisitors.h"
 
 
-using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 #ifdef __USBINST__
@@ -87,8 +85,8 @@ class BiasSweep : public Tool
     ~BiasSweep();
     void Initialize();
     // *******
-    void SweepBias (std::string pBias, Chip* pCbc);
-    void MeasureMinPower (BeBoard* pBoard, Chip* pCbc);
+    void SweepBias (std::string pBias, Ph2_HwDescription::Chip* pCbc);
+    void MeasureMinPower (Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::Chip* pCbc);
 
 
 
@@ -97,11 +95,11 @@ class BiasSweep : public Tool
     //std::mutex fHWMutex;
     std::atomic<bool> fDAQrunning;
     void InitializeAmuxMap();
-    uint8_t configureAmux (std::map<std::string, AmuxSetting>::iterator pAmuxValue, Chip* pCbc, double pSettlingTime_s = 0);
-    void resetAmux (uint8_t pAmuxValue, Chip* pCbc, double pSettlingTime_s = 0  );
-    void sweep8Bit (std::map<std::string, AmuxSetting>::iterator pAmuxValue, TGraph* pGraph, Chip* pCbc, bool pCurrent);
-    void measureSingle (std::map<std::string, AmuxSetting>::iterator pAmuxMap, Chip* pCbc);
-    void sweepVCth (TGraph* pGraph, Chip* pCbc);
+    uint8_t configureAmux (std::map<std::string, AmuxSetting>::iterator pAmuxValue, Ph2_HwDescription::Chip* pCbc, double pSettlingTime_s = 0);
+    void resetAmux (uint8_t pAmuxValue, Ph2_HwDescription::Chip* pCbc, double pSettlingTime_s = 0  );
+    void sweep8Bit (std::map<std::string, AmuxSetting>::iterator pAmuxValue, TGraph* pGraph, Ph2_HwDescription::Chip* pCbc, bool pCurrent);
+    void measureSingle (std::map<std::string, AmuxSetting>::iterator pAmuxMap, Ph2_HwDescription::Chip* pCbc);
+    void sweepVCth (TGraph* pGraph, Ph2_HwDescription::Chip* pCbc);
     void cleanup();
     void DAQloop();
     void StartDAQ();

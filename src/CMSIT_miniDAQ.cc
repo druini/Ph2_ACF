@@ -43,6 +43,10 @@
 INITIALIZE_EASYLOGGINGPP
 
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
+
 pid_t runControllerPid    = -1;
 int   runControllerStatus =  0;
 

@@ -9,6 +9,8 @@
 
 #include "RD53FWInterface.h"
 
+using namespace Ph2_HwDescription;
+
 namespace Ph2_HwInterface
 {
   RD53FWInterface::RD53FWInterface (const char* pId, const char* pUri, const char* pAddressTable)

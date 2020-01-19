@@ -33,8 +33,6 @@
 #include "TRandom.h"
 #include "TMath.h"
 
-using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 
@@ -114,8 +112,8 @@ class ShortFinder : public Tool
     uint8_t fTestPulseAmplitude;
 
     // functions/methods
-    void SetBeBoard (BeBoard* pBoard);
-    void SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup);
+    void SetBeBoard (Ph2_HwDescription::BeBoard* pBoard);
+    void SetTestGroup(Ph2_HwDescription::BeBoard* pBoard, uint8_t pTestGroup);
     bool CheckChannel (Short pShort, ShortsList pShortsList);
     void MergeShorts (ShortsList pShortA);
     void ReconstructShorts (ShortedGroupsList pShortedGroupsArray, std::ostream& os = std::cout );

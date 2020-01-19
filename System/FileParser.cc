@@ -5,6 +5,9 @@
 #include "../HWDescription/Module.h"
 #include "../HWDescription/OuterTrackerModule.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 namespace Ph2_System
 {
   void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
