@@ -13,6 +13,8 @@
 #include "../Utils/Container.h"
 
 using namespace Ph2_System;
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
 
 Tool::Tool() :
 SystemController            (),

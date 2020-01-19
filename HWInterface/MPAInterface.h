@@ -85,26 +85,26 @@ public:
     void MainPowerOn(uint8_t mpaid = 0, uint8_t ssaid = 0);
     void MainPowerOff();
 
-    bool ConfigureMPA (const MPA* pMPA , bool pVerifLoop = true);
+    bool ConfigureMPA (const Ph2_HwDescription::MPA* pMPA , bool pVerifLoop = true);
 
 
 
-    uint32_t ReadData( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait );
+    uint32_t ReadData( Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait );
 
 
-    void ReadMPA ( MPA* pMPA );
+    void ReadMPA ( Ph2_HwDescription::MPA* pMPA );
 
 
-    bool WriteMPAReg ( MPA* pMPA, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true );
-    bool WriteMPAMultReg ( MPA* pMPA, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop = true );
-    uint8_t ReadMPAReg ( MPA* pMPA, const std::string& pRegNode );
-    void ReadMPAMultReg ( MPA* pMPA, const std::vector<std::string>& pVecReg );
+    bool WriteMPAReg ( Ph2_HwDescription::MPA* pMPA, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop = true );
+    bool WriteMPAMultReg ( Ph2_HwDescription::MPA* pMPA, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop = true );
+    uint8_t ReadMPAReg ( Ph2_HwDescription::MPA* pMPA, const std::string& pRegNode );
+    void ReadMPAMultReg ( Ph2_HwDescription::MPA* pMPA, const std::vector<std::string>& pVecReg );
 
 
 
 
-    void Pix_write(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
-    uint32_t Pix_read(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel);
+    void Pix_write(Ph2_HwDescription::MPA* cMPA,Ph2_HwDescription::ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
+    uint32_t Pix_read(Ph2_HwDescription::MPA* cMPA,Ph2_HwDescription::ChipRegItem cRegItem,uint32_t row,uint32_t pixel);
 
 
     void activate_I2C_chip();
@@ -115,30 +115,30 @@ public:
     void PS_Clear_counters(uint32_t duration = 0 );
     void PS_Start_counters_read(uint32_t duration = 0 );
 
-    void Activate_async(MPA* pMPA);
-    void Activate_sync(MPA* pMPA);
-    void Activate_pp(MPA* pMPA);
-    void Activate_ss(MPA* pMPA);
-    void Activate_ps(MPA* pMPA);
+    void Activate_async(Ph2_HwDescription::MPA* pMPA);
+    void Activate_sync(Ph2_HwDescription::MPA* pMPA);
+    void Activate_pp(Ph2_HwDescription::MPA* pMPA);
+    void Activate_ss(Ph2_HwDescription::MPA* pMPA);
+    void Activate_ps(Ph2_HwDescription::MPA* pMPA);
 
-    void Enable_pix_counter(MPA* pMPA,uint32_t r,uint32_t p);
-    void Enable_pix_sync(MPA* pMPA,uint32_t r,uint32_t p);
-    void Disable_pixel(MPA* pMPA,uint32_t r,uint32_t p);
-    void Enable_pix_digi(MPA* pMPA,uint32_t r,uint32_t p);
-    void Set_calibration(MPA* pMPA,uint32_t cal);
-    void Set_threshold(MPA* pMPA,uint32_t th);
+    void Enable_pix_counter(Ph2_HwDescription::MPA* pMPA,uint32_t r,uint32_t p);
+    void Enable_pix_sync(Ph2_HwDescription::MPA* pMPA,uint32_t r,uint32_t p);
+    void Disable_pixel(Ph2_HwDescription::MPA* pMPA,uint32_t r,uint32_t p);
+    void Enable_pix_digi(Ph2_HwDescription::MPA* pMPA,uint32_t r,uint32_t p);
+    void Set_calibration(Ph2_HwDescription::MPA* pMPA,uint32_t cal);
+    void Set_threshold(Ph2_HwDescription::MPA* pMPA,uint32_t th);
 
-    uint32_t Read_pixel_counter(MPA* pMPA,uint32_t row, uint32_t pixel);
+    uint32_t Read_pixel_counter(Ph2_HwDescription::MPA* pMPA,uint32_t row, uint32_t pixel);
     void Send_pulses(uint32_t n_pulse, uint32_t duration = 0 );
 
-    void Pix_Smode(MPA* pMPA,uint32_t r,uint32_t p, std::string smode);
+    void Pix_Smode(Ph2_HwDescription::MPA* pMPA,uint32_t r,uint32_t p, std::string smode);
 
     std::vector< uint32_t > ReadConfig(const std::string& pFilename, int nmpa, int conf);
 
     void ModifyPerif(std::pair < std::vector< std::string > ,std::vector< uint32_t >> mod , std::vector< uint32_t >* conf_upload);
 
-    void Enable_pix_BRcal(MPA* pMPA,uint32_t r,uint32_t p,std::string polarity = "rise",std::string smode = "edge");
-    void Pix_Set_enable(MPA* pMPA,uint32_t r,uint32_t p,uint32_t PixelMask,uint32_t Polarity,uint32_t EnEdgeBR,uint32_t EnLevelBR,uint32_t Encount,uint32_t DigCal,uint32_t AnCal,uint32_t BRclk);
+    void Enable_pix_BRcal(Ph2_HwDescription::MPA* pMPA,uint32_t r,uint32_t p,std::string polarity = "rise",std::string smode = "edge");
+    void Pix_Set_enable(Ph2_HwDescription::MPA* pMPA,uint32_t r,uint32_t p,uint32_t PixelMask,uint32_t Polarity,uint32_t EnEdgeBR,uint32_t EnLevelBR,uint32_t Encount,uint32_t DigCal,uint32_t AnCal,uint32_t BRclk);
     Stubs Format_stubs(std::vector<std::vector<uint8_t>> rawstubs);
     L1data Format_l1(std::vector<uint8_t> rawl1,bool verbose=false);
 

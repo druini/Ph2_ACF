@@ -9,6 +9,8 @@
 
 #include "RD53Interface.h"
 
+using namespace Ph2_HwDescription;
+
 namespace Ph2_HwInterface
 {
   RD53Interface::RD53Interface (const BeBoardFWMap& pBoardMap): ReadoutChipInterface (pBoardMap) {}

@@ -9,6 +9,9 @@
 
 #include "RD53ClockDelay.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void ClockDelay::ConfigureCalibration ()
 {
   // ##############################

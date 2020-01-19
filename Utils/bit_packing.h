@@ -50,7 +50,7 @@ using std::size_t;
 namespace local_detail {
 
 // if c++14 is not fully supported...
-#if __cplusplus < 201402
+#if __cplusplus < 999999//201402
 
 #define CONSTEXPR_
 

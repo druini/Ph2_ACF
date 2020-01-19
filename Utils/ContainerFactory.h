@@ -28,7 +28,7 @@ namespace ContainerFactory
 	template <typename T>
 	void print(const DetectorDataContainer& detector)
 	{
-		for(const BoardContainer *board : detector)
+		for(const BoardDataContainer *board : detector)
 		{
 			std::cout << "Board" << std::endl;
 			for(const ModuleDataContainer* module : *board)

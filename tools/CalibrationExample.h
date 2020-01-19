@@ -19,8 +19,6 @@
   #include "../DQMUtils/DQMHistogramCalibrationExample.h"
 #endif
 
-using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 class CalibrationExample : public Tool
