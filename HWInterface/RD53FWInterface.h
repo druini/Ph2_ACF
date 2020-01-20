@@ -89,11 +89,11 @@ namespace Ph2_HwInterface
   {
   public:
     RD53FWInterface (const char* pId, const char* pUri, const char* pAddressTable);
-    virtual ~RD53FWInterface() { delete fFileHandler; }
+    ~RD53FWInterface() { delete fFileHandler; }
 
     void      setFileHandler (FileHandler* pHandler) override;
     uint32_t  getBoardInfo   ()                      override;
-    BoardType getBoardType   () const { return BoardType::RD53; };
+    BoardType getBoardType   () const                override { return BoardType::RD53; }
 
     void ResetSequence       ();
     void ConfigureBoard      (const Ph2_HwDescription::BeBoard* pBoard) override;
@@ -105,9 +105,9 @@ namespace Ph2_HwInterface
 
     void     ReadNEvents (Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents,  std::vector<uint32_t>& pData, bool pWait = true) override;
     uint32_t ReadData    (Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
-    void     ChipReset   ()                                                                                     override;
-    void     ChipReSync  ()                                                                                     override;
-    std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)           override;
+    void     ChipReset   ()                                                                                                        override;
+    void     ChipReSync  ()                                                                                                        override;
+    std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)                              override;
 
     bool CheckChipCommunication ();
     void WriteChipCommand       (const std::vector<uint16_t>& data, int moduleId);
@@ -130,7 +130,7 @@ namespace Ph2_HwInterface
     {
       Event (const uint32_t* data, size_t n);
 
-      void fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
+      void fillDataContainer          (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
       static void addBoardInfo2Events (const Ph2_HwDescription::BeBoard* pBoard, std::vector<RD53FWInterface::Event>& decodedEvents);
 
       uint16_t block_size;
@@ -146,7 +146,7 @@ namespace Ph2_HwInterface
       uint16_t evtStatus;
 
     protected:
-      bool isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx);
+      bool isHittedChip      (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const;
       static int lane2chipId (const Ph2_HwDescription::BeBoard* pBoard, uint16_t module_id, uint16_t chip_lane);
     };
 
@@ -260,8 +260,6 @@ namespace Ph2_HwInterface
     uint16_t           enabledModules;
     bool               singleChip;
   };
-
-
 }
 
 #endif
