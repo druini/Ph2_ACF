@@ -95,21 +95,21 @@ namespace Ph2_HwInterface {
         * \param pRegNode : Node of the register to read
         * \return ValWord value of the register
         */
-        virtual uhal::ValWord<uint32_t> ReadReg ( const std::string& pRegNode );
+        virtual uint32_t ReadReg ( const std::string& pRegNode );
         /*!
         * \brief Read a value at a given address
         * \param uAddr 32-bit address
         * \param uMask 32-bit mask
         * \return ValWord value of the register
         */
-        virtual uhal::ValWord<uint32_t> ReadAtAddress (uint32_t uAddr, uint32_t uMask = 0xFFFFFFFF);
+        virtual uint32_t ReadAtAddress (uint32_t uAddr, uint32_t uMask = 0xFFFFFFFF);
         /*!
         * \brief Read a block of values in a register
         * \param pRegNode : Node of the register to read
         * \param pBlocksize : Size of the block to read
         * \return ValVector block values of the register
         */
-        virtual uhal::ValVector<uint32_t> ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlocksize );
+        virtual std::vector<uint32_t> ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlocksize );
         /*!
         * \brief Read a block of values in a register
         * \param pRegNode : Node of the register to read
@@ -117,7 +117,7 @@ namespace Ph2_HwInterface {
         * \param pBlockOffset : Offset of the block
         * \return ValVector block values of the register
         */
-        virtual uhal::ValVector<uint32_t> ReadBlockRegOffset ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset );
+        virtual std::vector<uint32_t> ReadBlockRegOffset ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset );
         /*!
         * \brief Time Out for sending the register/value stack in the writting.
         * \brief It has only to be set in a detached thread from the one you're working on
@@ -186,10 +186,12 @@ namespace Ph2_HwInterface {
 
         static void enableCapture(const char* filename) {
             capture_file.open(filename, std::ios::binary);
+            mode = Mode::Capture;
         }
 
         static void enableReplay(const char* filename) {
             replay_file.open(filename, std::ios::binary);
+            mode = Mode::Replay;
         }
 
     private:

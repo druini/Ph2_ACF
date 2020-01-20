@@ -239,7 +239,7 @@ namespace Ph2_HwInterface {
         return cWriteCorr;
     }
 
-    uhal::ValWord<uint32_t> RegManager::ReadReg ( const std::string& pRegNode )
+    uint32_t RegManager::ReadReg ( const std::string& pRegNode )
     {
         if (mode == Mode::Replay) {
             return replayRead();
@@ -263,7 +263,7 @@ namespace Ph2_HwInterface {
         return cValRead;
     }
 
-    uhal::ValWord<uint32_t> RegManager::ReadAtAddress ( uint32_t uAddr, uint32_t uMask )
+    uint32_t RegManager::ReadAtAddress ( uint32_t uAddr, uint32_t uMask )
     {
         if (mode == Mode::Replay) {
             return replayRead();
@@ -287,7 +287,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    uhal::ValVector<uint32_t> RegManager::ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlockSize )
+    std::vector<uint32_t> RegManager::ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlockSize )
     {
         if (mode == Mode::Replay) {
             return replayBlockRead(pBlockSize);
@@ -317,10 +317,10 @@ namespace Ph2_HwInterface {
             captureBlockRead(cBlockRead.value());
         }
 
-        return cBlockRead;
+        return cBlockRead.value();
     }
 
-    uhal::ValVector<uint32_t> RegManager::ReadBlockRegOffset ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
+    std::vector<uint32_t> RegManager::ReadBlockRegOffset ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
     {
         if (mode == Mode::Replay) {
             return replayBlockRead(pBlocksize);
@@ -350,7 +350,7 @@ namespace Ph2_HwInterface {
             captureBlockRead(cBlockRead.value());
         }
 
-        return cBlockRead;
+        return cBlockRead.value();
     }
 
     void RegManager::StackReg ( const std::string& pRegNode, const uint32_t& pVal, bool pSend )
@@ -409,14 +409,26 @@ namespace Ph2_HwInterface {
         return replayBlockRead(1)[0];
     }
 
+    template <class S, class T>
+    void read_binary(S& stream, T& data) {
+        stream.read(reinterpret_cast<char *>(&data), sizeof(data));
+    }
+
+    template <class S, class T>
+    void write_binary(S& stream, const T& data) {
+        stream.write(reinterpret_cast<const char *>(&data), sizeof(data));
+    }
+
     std::vector<uint32_t> RegManager::replayBlockRead(size_t size) {
         // read size
         size_t read_size;
-        replay_file >> read_size;
+        read_binary(replay_file, read_size);
+        // std::cout << read_size << "\n";
         // read data
         std::vector<uint32_t> data(read_size);
         for (auto& d : data) {
-            replay_file >> d;
+            read_binary(replay_file, d);
+            // replay_file >> d;
         }
 
         if (read_size != size) {
@@ -432,10 +444,10 @@ namespace Ph2_HwInterface {
 
     void RegManager::captureBlockRead(std::vector<uint32_t> data) {
         // write size
-        capture_file << data.size();
+        write_binary(capture_file, data.size());
         // write data
         for (const auto& d : data) {
-            capture_file << d;
+            write_binary(capture_file, d);
         }
     }
 }
