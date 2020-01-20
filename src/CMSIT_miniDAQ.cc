@@ -146,15 +146,19 @@ int main (int argc, char** argv)
   if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
   fileRunNumberIn.close();
   std::string chipConfig("Run" + fromInt2Str(runNumber) + "_");
+  system(std::string("mkdir " + std::string(RESULTDIR)).c_str());
 
 
+  // ####################
+  // # Retrieve options #
+  // ####################
   std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file")   : "CMSIT.xml";
   std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib")  : "pixelalive";
   std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
   bool program           = cmd.foundOption("prog")   == true ? true : false;
   bool supervisor        = cmd.foundOption("sup")    == true ? true : false;
   bool reset             = cmd.foundOption("reset")  == true ? true : false;
-  if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").replace(cmd.optionValue("capture").find(".raw"), 4, "_" + fromInt2Str(runNumber) + ".raw"));
+  if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").replace(cmd.optionValue("capture").find(".raw"), 4, "_" + fromInt2Str(runNumber) + ".raw").insert(0,std::string(RESULTDIR) + "/"));
   else if (cmd.foundOption("replay") == true)  RegManager::enableReplay(cmd.optionValue("replay"));
 
 
