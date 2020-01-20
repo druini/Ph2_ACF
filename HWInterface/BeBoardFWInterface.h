@@ -240,25 +240,28 @@ namespace Ph2_HwInterface
      */
     virtual void ReadNEvents (Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) = 0;
 
-    virtual std::vector<uint32_t> ReadBlockRegValue ( const std::string& pRegNode, const uint32_t& pBlocksize ) = 0;
+    virtual std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
+    {
+      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+      return {};
+    }
 
-
-    //LORE
     virtual bool WriteChipBlockReg   ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) 
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
       return false;
     }
+
     virtual bool BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) 
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
       return false;
     }
+
     virtual void ReadChipBlockReg (  std::vector<uint32_t>& pVecReq )
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
-    //LORE
 
 
     /*!

@@ -31,8 +31,8 @@ namespace Ph2_HwInterface
 
   uint32_t RD53FWInterface::getBoardInfo()
   {
-    uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
-    uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
+    uint32_t cVersionMajor = ReadReg("user.stat_regs.usr_ver.usr_ver_major");
+    uint32_t cVersionMinor = ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
     uint32_t cVersionWord  = ((cVersionMajor << NBIT_FWVER) | cVersionMinor);
     return cVersionWord;
   }
@@ -53,15 +53,15 @@ namespace Ph2_HwInterface
     // ########################
     // # Print firmware infos #
     // ########################
-    uint32_t cVersionMajor = ReadReg ("user.stat_regs.usr_ver.usr_ver_major");
-    uint32_t cVersionMinor = ReadReg ("user.stat_regs.usr_ver.usr_ver_minor");
+    uint32_t cVersionMajor = ReadReg("user.stat_regs.usr_ver.usr_ver_major");
+    uint32_t cVersionMinor = ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
 
-    uint32_t cFWyear       = ReadReg ("user.stat_regs.fw_date.year");
-    uint32_t cFWmonth      = ReadReg ("user.stat_regs.fw_date.month");
-    uint32_t cFWday        = ReadReg ("user.stat_regs.fw_date.day");
-    uint32_t cFWhour       = ReadReg ("user.stat_regs.fw_date.hour");
-    uint32_t cFWminute     = ReadReg ("user.stat_regs.fw_date.minute");
-    uint32_t cFWseconds    = ReadReg ("user.stat_regs.fw_date.seconds");
+    uint32_t cFWyear       = ReadReg("user.stat_regs.fw_date.year");
+    uint32_t cFWmonth      = ReadReg("user.stat_regs.fw_date.month");
+    uint32_t cFWday        = ReadReg("user.stat_regs.fw_date.day");
+    uint32_t cFWhour       = ReadReg("user.stat_regs.fw_date.hour");
+    uint32_t cFWminute     = ReadReg("user.stat_regs.fw_date.minute");
+    uint32_t cFWseconds    = ReadReg("user.stat_regs.fw_date.seconds");
 
     LOG (INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor
                << BOLDBLUE << " -- date (yyyy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/" << cFWday
@@ -138,8 +138,8 @@ namespace Ph2_HwInterface
     // ###########################
     // # Print clock measurement #
     // ###########################
-    uint32_t inputClk = ReadReg ("user.stat_regs.stat_reg_22");
-    uint32_t gtxClk   = ReadReg ("user.stat_regs.stat_reg_21");
+    uint32_t inputClk = ReadReg("user.stat_regs.stat_reg_22");
+    uint32_t gtxClk   = ReadReg("user.stat_regs.stat_reg_21");
     LOG (INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk/1000. << " MHz" << RESET;
     LOG (INFO) << GREEN << "GTX receiver clock frequency (should be ~160 MHz): " << BOLDYELLOW << gtxClk/1000. << " MHz" << RESET;
 
@@ -240,7 +240,7 @@ namespace Ph2_HwInterface
     // #################################
     // # Check clock generator locking #
     // #################################
-    if (ReadReg ("user.stat_regs.global_reg.clk_gen_lock") == 1)
+    if (ReadReg("user.stat_regs.global_reg.clk_gen_lock") == 1)
       LOG (INFO) << BOLDBLUE << "\t--> Clock generator is " << BOLDYELLOW << "locked" << RESET;
     else
       LOG (ERROR) << BOLDRED << "\t--> Clock generator is not locked" << RESET;
@@ -249,39 +249,39 @@ namespace Ph2_HwInterface
     // ############################
     // # Check I2C initialization #
     // ############################
-    if (ReadReg ("user.stat_regs.global_reg.i2c_init") == 1)
+    if (ReadReg("user.stat_regs.global_reg.i2c_init") == 1)
       LOG (INFO) << BOLDBLUE << "\t--> I2C " << BOLDYELLOW << "initialized" << RESET;
     else
       {
         LOG (ERROR) << BOLDRED << "I2C not initialized" << RESET;
-        unsigned int status = ReadReg ("user.stat_regs.global_reg.i2c_init_err");
+        unsigned int status = ReadReg("user.stat_regs.global_reg.i2c_init_err");
         LOG (ERROR) << BOLDRED << "\t--> I2C initialization status: " << BOLDYELLOW << status << RESET;
       }
 
-    if (ReadReg ("user.stat_regs.global_reg.i2c_acq_err") == 1)
+    if (ReadReg("user.stat_regs.global_reg.i2c_acq_err") == 1)
       LOG (INFO) << GREEN << "I2C ack error during analog readout (for KSU FMC only)" << RESET;
 
 
     // ############################################################
     // # Check status registers associated wih fast command block #
     // ############################################################
-    unsigned int fastCMDReg = ReadReg ("user.stat_regs.fast_cmd.trigger_source_o");
+    unsigned int fastCMDReg = ReadReg("user.stat_regs.fast_cmd.trigger_source_o");
     LOG (INFO) << GREEN << "Fast CMD block trigger source: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency)" << RESET;
 
-    fastCMDReg = ReadReg ("user.stat_regs.fast_cmd.trigger_state");
+    fastCMDReg = ReadReg("user.stat_regs.fast_cmd.trigger_state");
     LOG (INFO) << GREEN << "Fast CMD block trigger state: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (0=idle, 2=running)" << RESET;
 
-    fastCMDReg = ReadReg ("user.stat_regs.fast_cmd.if_configured");
+    fastCMDReg = ReadReg("user.stat_regs.fast_cmd.if_configured");
     LOG (INFO) << GREEN << "Fast CMD block check if configuraiton registers have been set: " << BOLDYELLOW << fastCMDReg << RESET;
 
-    fastCMDReg = ReadReg ("user.stat_regs.fast_cmd.error_code");
+    fastCMDReg = ReadReg("user.stat_regs.fast_cmd.error_code");
     LOG (INFO) << GREEN << "Fast CMD block error code (0=no error): " << BOLDYELLOW << fastCMDReg << RESET;
 
 
     // ###########################
     // # Check trigger registers #
     // ###########################
-    unsigned int trigReg = ReadReg ("user.stat_regs.trigger_cntr");
+    unsigned int trigReg = ReadReg("user.stat_regs.trigger_cntr");
     LOG (INFO) << GREEN << "Trigger counter: " << BOLDYELLOW << trigReg << RESET;
 
 
@@ -303,17 +303,17 @@ namespace Ph2_HwInterface
     // ###############################
     // # Check RD53 AURORA registers #
     // ###############################
-    unsigned int speed_flag = ReadReg ("user.stat_regs.aurora_rx.speed");
+    unsigned int speed_flag = ReadReg("user.stat_regs.aurora_rx.speed");
     LOG (INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (speed_flag == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
 
 
     // ########################################
     // # Check communication with the chip(s) #
     // ########################################
-    unsigned int chips_en = ReadReg ("user.ctrl_regs.Chips_en");
+    unsigned int chips_en = ReadReg("user.ctrl_regs.Chips_en");
     LOG (INFO) << BOLDBLUE << "\t--> Number of required data lanes: " << BOLDYELLOW << RD53::countBitsOne(chips_en) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<12>(chips_en) << RESET;
 
-    unsigned int channel_up = ReadReg ("user.stat_regs.aurora_rx_channel_up");
+    unsigned int channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
     LOG (INFO) << BOLDBLUE << "\t--> Number of active data lanes:   " << BOLDYELLOW << RD53::countBitsOne(channel_up) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<12>(channel_up) << RESET;
 
     if (chips_en & ~channel_up)
@@ -348,13 +348,6 @@ namespace Ph2_HwInterface
   void RD53FWInterface::Resume()
   {
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
-  }
-
-  std::vector<uint32_t> RD53FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
-  {
-    // uhal::ValVector<uint32_t> valBlock = 
-    return RegManager::ReadBlockReg (pRegNode, pBlocksize);
-    // return valBlock.value();
   }
 
   void RD53FWInterface::TurnOffFMC()
@@ -1097,7 +1090,7 @@ namespace Ph2_HwInterface
 
     while (++cLoop < trials)
       {
-        status = ReadReg ("user.stat_regs.global_reg.i2c_acq_err");
+        status = ReadReg("user.stat_regs.global_reg.i2c_acq_err");
         if (status == I2CcmdAckGOOD) return true;
         usleep(DEEPSLEEP);
       }
@@ -1156,7 +1149,7 @@ namespace Ph2_HwInterface
       }
     else size2read = sizeI2Cfifo;
 
-    data = ReadBlockRegValue ("CTRL.BOARD.i2c_fifo_rx", size2read);
+    data = RegManager::ReadBlockReg("CTRL.BOARD.i2c_fifo_rx", size2read);
     usleep(DEEPSLEEP);
 
     if (RD53FWInterface::I2cCmdAckWait(20) == false)

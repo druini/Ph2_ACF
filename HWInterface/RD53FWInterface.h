@@ -107,7 +107,6 @@ namespace Ph2_HwInterface
     uint32_t ReadData    (Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
     void     ChipReset   ()                                                                                                        override;
     void     ChipReSync  ()                                                                                                        override;
-    std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)                              override;
 
     bool CheckChipCommunication ();
     void WriteChipCommand       (const std::vector<uint16_t>& data, int moduleId);

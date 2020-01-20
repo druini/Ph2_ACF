@@ -1279,27 +1279,19 @@ namespace Ph2_HwInterface
 
     std::vector<uint32_t> D19cFWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize )
     {
-        // uhal::ValVector<uint32_t> valBlock = ReadBlockReg ( pRegNode, pBlocksize );
-        // std::vector<uint32_t> vBlock = valBlock.value();
-        // return vBlock;
-        return ReadBlockReg ( pRegNode, pBlocksize );
+      return ReadBlockReg(pRegNode, pBlocksize);
     }
 
     std::vector<uint32_t> D19cFWInterface::ReadBlockRegOffsetValue ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
     {
-        // uhal::ValVector<uint32_t> valBlock = ReadBlockRegOffset( pRegNode, pBlocksize, pBlockOffset );
-        // std::vector<uint32_t> vBlock = valBlock.value();
-        if (fIsDDR3Readout) {
-            fDDR3Offset += pBlocksize;
-        }
-        // return vBlock;
-        return ReadBlockRegOffset( pRegNode, pBlocksize, pBlockOffset );
+      if (fIsDDR3Readout) fDDR3Offset += pBlocksize;
+      return ReadBlockRegOffset( pRegNode, pBlocksize, pBlockOffset );
     }
 
     bool D19cFWInterface::WriteBlockReg ( const std::string& pRegNode, const std::vector< uint32_t >& pValues )
     {
-        bool cWriteCorr = RegManager::WriteBlockReg ( pRegNode, pValues );
-        return cWriteCorr;
+      bool cWriteCorr = RegManager::WriteBlockReg(pRegNode, pValues);
+      return cWriteCorr;
     }
 
     ///////////////////////////////////////////////////////
