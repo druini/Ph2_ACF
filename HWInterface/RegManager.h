@@ -178,22 +178,19 @@ namespace Ph2_HwInterface {
 
     public:
 
-        enum class Mode {
-            Default,
-            Capture,
-            Replay
-        };
-
         static void enableCapture(const char* filename);
 
         static void enableReplay(const char* filename);
 
     private:
 
-        static Mode mode;
+        enum class Mode {
+            Default,
+            Capture,
+            Replay
+        };
 
-        // static std::ofstream capture_file;
-        // static std::ifstream replay_file;
+        static Mode mode;
 
         uint32_t replayRead();
 

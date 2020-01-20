@@ -442,7 +442,7 @@ namespace Ph2_HwInterface {
 
     std::vector<uint32_t> RegManager::replayBlockRead(size_t size) {
         // read size
-        uint16_t read_size;
+        uint32_t read_size;
         // replay_stream >> read_size;
         read_binary(replay_file, read_size);
 
@@ -467,7 +467,7 @@ namespace Ph2_HwInterface {
 
     void RegManager::captureBlockRead(std::vector<uint32_t> data) {
         // write size
-        write_binary(capture_file, uint16_t(data.size()));
+        write_binary(capture_file, uint32_t(data.size()));
         // write data
         for (const auto& d : data) {
             write_binary(capture_file, d);
