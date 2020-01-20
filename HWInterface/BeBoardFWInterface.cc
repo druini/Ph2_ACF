@@ -38,7 +38,7 @@ namespace Ph2_HwInterface {
     {
         std::string cBoardTypeString;
 
-        uhal::ValWord<uint32_t> cBoardType = ReadReg ( "board_id" );
+        uint32_t cBoardType = ReadReg ( "board_id" );
 
         char cChar = ( ( cBoardType & cMask4 ) >> 24 );
         cBoardTypeString.push_back ( cChar );

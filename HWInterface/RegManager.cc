@@ -13,6 +13,10 @@
 #include "../Utils/Utilities.h"
 #include "../HWDescription/Definition.h"
 
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 #define DEV_FLAG    0
 
 namespace Ph2_HwInterface {
@@ -25,16 +29,18 @@ namespace Ph2_HwInterface {
     //fDeactiveThread ( false )
      // : log_file("./logs/ipb_log.txt")
     {
-        // Loging settings
-        uhal::disableLogging();
-        //uhal::setLogLevelTo (uhal::Debug() ); //Raise the log level
-        fUHalConfigFileName = puHalConfigFileName;
-        uhal::ConnectionManager cm ( fUHalConfigFileName ); // Get connection
-        char cBuff[7];
-        sprintf ( cBuff, "board%d", pBoardId );
-        fBoard = new uhal::HwInterface ( cm.getDevice ( ( cBuff ) ) );
-        fBoard->setTimeoutPeriod (10000);
-        //fThread.detach();
+        if (mode != Mode::Replay) {
+            // Loging settings
+            uhal::disableLogging();
+            //uhal::setLogLevelTo (uhal::Debug() ); //Raise the log level
+            fUHalConfigFileName = puHalConfigFileName;
+            uhal::ConnectionManager cm ( fUHalConfigFileName ); // Get connection
+            char cBuff[7];
+            sprintf ( cBuff, "board%d", pBoardId );
+            fBoard = new uhal::HwInterface ( cm.getDevice ( ( cBuff ) ) );
+            fBoard->setTimeoutPeriod (10000);
+            //fThread.detach();
+        }
     }
 
     RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddressTable )  :
@@ -49,17 +55,18 @@ namespace Ph2_HwInterface {
         //fDeactiveThread ( false )
         // , log_file("./logs/ipb_log.txt")
     {
-        // Loging settings
-        uhal::disableLogging();
-        //uhal::setLogLevelTo (uhal::Debug() ); //Raise the log level
+        if (mode != Mode::Replay) {
+            // Loging settings
+            uhal::disableLogging();
+            //uhal::setLogLevelTo (uhal::Debug() ); //Raise the log level
 
-        if (fBoard == nullptr) delete fBoard;
+            // if (fBoard == nullptr) delete fBoard;
 
-        fBoard = new uhal::HwInterface (uhal::ConnectionManager::getDevice (fId, fUri, fAddressTable) );
-        fBoard->setTimeoutPeriod (10000);
-        //fThread.detach();
+            fBoard = new uhal::HwInterface (uhal::ConnectionManager::getDevice (fId, fUri, fAddressTable) );
+            fBoard->setTimeoutPeriod (10000);
+            //fThread.detach();
+        }
     }
-
 
     RegManager::~RegManager()
     {
@@ -67,8 +74,12 @@ namespace Ph2_HwInterface {
         if ( fBoard ) delete fBoard;
     }
 
+
     bool RegManager::WriteReg ( const std::string& pRegNode, const uint32_t& pVal )
     {
+        if (mode == Mode::Replay) {
+            return true;
+        }
         // log_file << pRegNode << " = " << pVal << std::endl;
         //std::lock_guard<std::mutex> cGuard (fBoardMutex);
         fBoard->getNode ( pRegNode ).write ( pVal );
@@ -99,6 +110,9 @@ namespace Ph2_HwInterface {
 
     bool RegManager::WriteStackReg ( const std::vector< std::pair<std::string, uint32_t> >& pVecReg )
     {
+        if (mode == Mode::Replay) {
+            return true;
+        }
         //std::lock_guard<std::mutex> cGuard (fBoardMutex);
 
         for ( auto const& v : pVecReg )
@@ -154,6 +168,10 @@ namespace Ph2_HwInterface {
 
     bool RegManager::WriteBlockReg ( const std::string& pRegNode, const std::vector< uint32_t >& pValues )
     {
+        if (mode == Mode::Replay) {
+            return true;
+        }
+
         //std::lock_guard<std::mutex> cGuard (fBoardMutex);
         fBoard->getNode ( pRegNode ).writeBlock ( pValues );
         fBoard->dispatch();
@@ -191,6 +209,10 @@ namespace Ph2_HwInterface {
 
     bool RegManager::WriteBlockAtAddress ( uint32_t uAddr, const std::vector< uint32_t >& pValues, bool bNonInc )
     {
+        if (mode == Mode::Replay) {
+            return true;
+        }
+
         //std::lock_guard<std::mutex> cGuard (fBoardMutex);
         fBoard->getClient().writeBlock ( uAddr, pValues, bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL );
         fBoard->dispatch();
@@ -221,9 +243,12 @@ namespace Ph2_HwInterface {
         return cWriteCorr;
     }
 
-
-    uhal::ValWord<uint32_t> RegManager::ReadReg ( const std::string& pRegNode )
+    uint32_t RegManager::ReadReg ( const std::string& pRegNode )
     {
+        if (mode == Mode::Replay) {
+            return replayRead();
+        }
+
         //std::lock_guard<std::mutex> cGuard (fBoardMutex);
         uhal::ValWord<uint32_t> cValRead = fBoard->getNode ( pRegNode ).read();
         fBoard->dispatch();
@@ -235,11 +260,19 @@ namespace Ph2_HwInterface {
             LOG (DEBUG) << "Value in register ID " << pRegNode << " : " << read ;
         }
 
+        if (mode == Mode::Capture) {
+            captureRead(cValRead.value());
+        }
+
         return cValRead;
     }
 
-    uhal::ValWord<uint32_t> RegManager::ReadAtAddress ( uint32_t uAddr, uint32_t uMask )
+    uint32_t RegManager::ReadAtAddress ( uint32_t uAddr, uint32_t uMask )
     {
+        if (mode == Mode::Replay) {
+            return replayRead();
+        }
+
         //std::lock_guard<std::mutex> cGuard (fBoardMutex);
         uhal::ValWord<uint32_t> cValRead = fBoard->getClient().read ( uAddr, uMask );
         fBoard->dispatch();
@@ -250,12 +283,20 @@ namespace Ph2_HwInterface {
             LOG (DEBUG) << "Value at address " << std::hex << uAddr << std::dec << " : " << read ;
         }
 
+        if (mode == Mode::Capture) {
+            captureRead(cValRead.value());
+        }
+
         return cValRead;
     }
 
 
-    uhal::ValVector<uint32_t> RegManager::ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlockSize )
+    std::vector<uint32_t> RegManager::ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlockSize )
     {
+        if (mode == Mode::Replay) {
+            return replayBlockRead(pBlockSize);
+        }
+
         //std::lock_guard<std::mutex> cGuard (fBoardMutex);
         uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlock ( pBlockSize );
         fBoard->dispatch();
@@ -276,11 +317,19 @@ namespace Ph2_HwInterface {
             }
         }
 
-        return cBlockRead;
+        if (mode == Mode::Capture) {
+            captureBlockRead(cBlockRead.value());
+        }
+
+        return cBlockRead.value();
     }
 
-    uhal::ValVector<uint32_t> RegManager::ReadBlockRegOffset ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
+    std::vector<uint32_t> RegManager::ReadBlockRegOffset ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
     {
+        if (mode == Mode::Replay) {
+            return replayBlockRead(pBlocksize);
+        }
+
         //std::lock_guard<std::mutex> cGuard (fBoardMutex);
         uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlockOffset ( pBlocksize, pBlockOffset );
         fBoard->dispatch();
@@ -301,7 +350,11 @@ namespace Ph2_HwInterface {
             }
         }
 
-        return cBlockRead;
+        if (mode == Mode::Capture) {
+            captureBlockRead(cBlockRead.value());
+        }
+
+        return cBlockRead.value();
     }
 
     void RegManager::StackReg ( const std::string& pRegNode, const uint32_t& pVal, bool pSend )
@@ -350,4 +403,74 @@ namespace Ph2_HwInterface {
         return fBoard->getNode ( pStrPath );
     }
 
+
+    RegManager::Mode RegManager::mode = RegManager::Mode::Default;
+
+    // std::ofstream RegManager::capture_file{};
+    // std::ifstream RegManager::replay_file{};
+
+    boost::iostreams::filtering_ostream capture_file{};
+    boost::iostreams::filtering_istream replay_file{};
+
+    void RegManager::enableCapture(const char* filename) {
+        // capture_file.open(filename, std::ios::binary);
+        capture_file.push(boost::iostreams::gzip_compressor());
+        capture_file.push(boost::iostreams::file_sink(filename));
+        mode = Mode::Capture;
+    }
+
+    void RegManager::enableReplay(const char* filename) {
+        // replay_file.open(filename, std::ios::binary);
+        replay_file.push(boost::iostreams::gzip_decompressor());
+        replay_file.push(boost::iostreams::file_source(filename));
+        mode = Mode::Replay;
+    }
+
+    template <class S, class T>
+    void read_binary(S& stream, T& data) {
+        stream.read(reinterpret_cast<char *>(&data), sizeof(data));
+    }
+
+    template <class S, class T>
+    void write_binary(S& stream, const T& data) {
+        stream.write(reinterpret_cast<const char *>(&data), sizeof(data));
+    }
+
+    uint32_t RegManager::replayRead() {
+        return replayBlockRead(1)[0];
+    }
+
+    std::vector<uint32_t> RegManager::replayBlockRead(size_t size) {
+        // read size
+        uint32_t read_size;
+        // replay_stream >> read_size;
+        read_binary(replay_file, read_size);
+
+        if (read_size != size) {
+            std::cerr << "Replay Error!" << std::endl;
+            throw;
+        }
+
+        // read data
+        std::vector<uint32_t> data(read_size);
+        for (auto& d : data) {
+            read_binary(replay_file, d);
+            // replay_file >> d;
+        }
+
+        return data;
+    }
+
+    void RegManager::captureRead(uint32_t value) {
+        captureBlockRead({value});
+    }
+
+    void RegManager::captureBlockRead(std::vector<uint32_t> data) {
+        // write size
+        write_binary(capture_file, uint32_t(data.size()));
+        // write data
+        for (const auto& d : data) {
+            write_binary(capture_file, d);
+        }
+    }
 }

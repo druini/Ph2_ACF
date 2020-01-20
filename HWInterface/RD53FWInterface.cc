@@ -352,8 +352,9 @@ namespace Ph2_HwInterface
 
   std::vector<uint32_t> RD53FWInterface::ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
   {
-    uhal::ValVector<uint32_t> valBlock = RegManager::ReadBlockReg (pRegNode, pBlocksize);
-    return valBlock.value();
+    // uhal::ValVector<uint32_t> valBlock = 
+    return RegManager::ReadBlockReg (pRegNode, pBlocksize);
+    // return valBlock.value();
   }
 
   void RD53FWInterface::TurnOffFMC()
@@ -407,7 +408,7 @@ namespace Ph2_HwInterface
     // # DDR3 #
     // ########
     LOG (INFO) << YELLOW << "Waiting for DDR3 calibration..." << RESET;
-    while (ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done").value() == false) usleep(DEEPSLEEP);
+    while (ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done") == false) usleep(DEEPSLEEP);
 
     LOG (INFO) << BOLDBLUE << "\t--> DDR3 calibration done" << RESET;
   }
@@ -583,13 +584,13 @@ namespace Ph2_HwInterface
     // # Wait until we have something in DDR3 #
     // ########################################
     if (HANDSHAKE_EN == true)
-      while (ReadReg("user.stat_regs.readout4.readout_req").value() == 0)
+      while (ReadReg("user.stat_regs.readout4.readout_req") == 0)
         {
-          uint32_t fsm_status = ReadReg("user.stat_regs.readout4.fsm_status").value();
+          uint32_t fsm_status = ReadReg("user.stat_regs.readout4.fsm_status");
           LOG (ERROR) << BOLDRED << "Waiting for readout request, FSM status: " << BOLDYELLOW << fsm_status << RESET;
           usleep(READOUTSLEEP);
         }
-    nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value();
+    nWordsInMemory = ReadReg("user.stat_regs.words_to_read");
 
 
     // #############################################
@@ -600,14 +601,14 @@ namespace Ph2_HwInterface
         nWordsInMemoryOld = nWordsInMemory;
         usleep(READOUTSLEEP);
       }
-    while (((nWordsInMemory = ReadReg("user.stat_regs.words_to_read").value()) != nWordsInMemoryOld) && (pWait == true)); // @TMP@
-    // auto nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr").value();
+    while (((nWordsInMemory = ReadReg("user.stat_regs.words_to_read")) != nWordsInMemoryOld) && (pWait == true)); // @TMP@
+    // auto nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr");
 
 
     // #############
     // # Read DDR3 #
     // #############
-    uhal::ValVector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
+    std::vector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
     ddr3Offset += nWordsInMemory;
     for (const auto& val : values) pData.push_back(val);
 
@@ -635,7 +636,7 @@ namespace Ph2_HwInterface
         // # Readout sequence #
         // ####################
         RD53FWInterface::Start();
-        while (ReadReg("user.stat_regs.trigger_cntr").value() < pNEvents*(1 + RD53FWInterface::localCfgFastCmd.trigger_duration)) usleep (READOUTSLEEP);
+        while (ReadReg("user.stat_regs.trigger_cntr") < pNEvents*(1 + RD53FWInterface::localCfgFastCmd.trigger_duration)) usleep (READOUTSLEEP);
         RD53FWInterface::ReadData(pBoard, false, pData, pWait);
         RD53FWInterface::Stop();
 
