@@ -99,6 +99,24 @@ namespace Ph2_HwInterface
         return WriteChipReg ( pCbc, "TestPulseDel&ChanGroup",  cRegValue );
     }
 
+
+    bool CbcInterface::enableInjection (Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop)
+    {
+        uint8_t cTPRegValue;
+        if(inject) cTPRegValue  = (pChip->getReg ("MiscTestPulseCtrl&AnalogMux" ) |    (0x1 << 6)   );
+        else       cTPRegValue =  (pChip->getReg ("MiscTestPulseCtrl&AnalogMux" ) & (~ (0x1 << 6))  );
+        std::cout<<__PRETTY_FUNCTION__<< (inject ? "Enabling" : "Disabling") << " testpulse: "<< std::hex << +cTPRegValue << std::dec<< std::endl;
+
+        return WriteChipReg(pChip, "MiscTestPulseCtrl&AnalogMux", cTPRegValue, pVerifLoop);
+    }
+
+    bool CbcInterface::setInjectionAmplitude (Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool  pVerifLoop)
+    {
+    	return WriteChipReg(pChip, "TestPulsePotNodeSel", injectionAmplitude, pVerifLoop);
+    }
+
+
+
     bool CbcInterface::maskChannelsGroup (ReadoutChip* pCbc, const ChannelGroupBase *group, bool pVerifLoop)
     {
         const ChannelGroup<NCHANNELS>* originalMask    = static_cast<const ChannelGroup<NCHANNELS>*>(pCbc->getChipOriginalMask());

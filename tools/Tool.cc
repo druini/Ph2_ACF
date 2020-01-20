@@ -660,38 +660,14 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
 
 void Tool::enableTestPulse(bool enableTP)
 {
-
+	fTestPulse = enableTP;          
 	for (auto cBoard : this->fBoardVector)
 	{
 		for (auto cFe : cBoard->fModuleVector)
 		{
 			for (auto cChip : cFe->fReadoutChipVector)
 			{
-				switch(cChip->getFrontEndType())
-				{
-				case FrontEndType::CBC3 :
-				{
-					uint8_t cOriginalAmuxValue;
-					cOriginalAmuxValue = cChip->getReg ("MiscTestPulseCtrl&AnalogMux" );
-
-					uint8_t cTPRegValue;
-
-					if (enableTP) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
-					else cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
-
-					this->fReadoutChipInterface->WriteChipReg ( cChip, "MiscTestPulseCtrl&AnalogMux",  cTPRegValue );
-					break;
-				}
-
-				default :
-				{
-					LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord "<<
-							cBoard->getBeId() << " Module " << cFe->getModuleId() << " Chip " << cChip->getChipId() << ", aborting" << RESET;
-					throw ("[Tool::enableTestPulse]\tError, FrontEnd type not found");
-					break;
-				}
-				}
-
+				fReadoutChipInterface->enableInjection(cChip, enableTP);
 			}
 		}
 	}
