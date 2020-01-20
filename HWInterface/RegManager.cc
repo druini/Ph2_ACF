@@ -13,6 +13,10 @@
 #include "../Utils/Utilities.h"
 #include "../HWDescription/Definition.h"
 
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 #define DEV_FLAG    0
 
 namespace Ph2_HwInterface {
@@ -402,11 +406,24 @@ namespace Ph2_HwInterface {
 
     RegManager::Mode RegManager::mode = RegManager::Mode::Default;
 
-    std::ofstream RegManager::capture_file{};
-    std::ifstream RegManager::replay_file{};
+    // std::ofstream RegManager::capture_file{};
+    // std::ifstream RegManager::replay_file{};
 
-    uint32_t RegManager::replayRead() {
-        return replayBlockRead(1)[0];
+    boost::iostreams::filtering_ostream capture_file{};
+    boost::iostreams::filtering_istream replay_file{};
+
+    void RegManager::enableCapture(const char* filename) {
+        // capture_file.open(filename, std::ios::binary);
+        capture_file.push(boost::iostreams::gzip_compressor());
+        capture_file.push(boost::iostreams::file_sink(filename));
+        mode = Mode::Capture;
+    }
+
+    void RegManager::enableReplay(const char* filename) {
+        // replay_file.open(filename, std::ios::binary);
+        replay_file.push(boost::iostreams::gzip_decompressor());
+        replay_file.push(boost::iostreams::file_source(filename));
+        mode = Mode::Replay;
     }
 
     template <class S, class T>
@@ -419,11 +436,21 @@ namespace Ph2_HwInterface {
         stream.write(reinterpret_cast<const char *>(&data), sizeof(data));
     }
 
+    uint32_t RegManager::replayRead() {
+        return replayBlockRead(1)[0];
+    }
+
     std::vector<uint32_t> RegManager::replayBlockRead(size_t size) {
         // read size
-        size_t read_size;
+        uint16_t read_size;
+        // replay_stream >> read_size;
         read_binary(replay_file, read_size);
-        // std::cout << read_size << "\n";
+
+        if (read_size != size) {
+            std::cerr << "Replay Error!" << std::endl;
+            throw;
+        }
+
         // read data
         std::vector<uint32_t> data(read_size);
         for (auto& d : data) {
@@ -431,10 +458,6 @@ namespace Ph2_HwInterface {
             // replay_file >> d;
         }
 
-        if (read_size != size) {
-            std::cerr << "Replay Error!" << std::endl;
-            throw;
-        }
         return data;
     }
 
@@ -444,7 +467,7 @@ namespace Ph2_HwInterface {
 
     void RegManager::captureBlockRead(std::vector<uint32_t> data) {
         // write size
-        write_binary(capture_file, data.size());
+        write_binary(capture_file, uint16_t(data.size()));
         // write data
         for (const auto& d : data) {
             write_binary(capture_file, d);

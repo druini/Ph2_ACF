@@ -184,22 +184,16 @@ namespace Ph2_HwInterface {
             Replay
         };
 
-        static void enableCapture(const char* filename) {
-            capture_file.open(filename, std::ios::binary);
-            mode = Mode::Capture;
-        }
+        static void enableCapture(const char* filename);
 
-        static void enableReplay(const char* filename) {
-            replay_file.open(filename, std::ios::binary);
-            mode = Mode::Replay;
-        }
+        static void enableReplay(const char* filename);
 
     private:
 
         static Mode mode;
 
-        static std::ofstream capture_file;
-        static std::ifstream replay_file;
+        // static std::ofstream capture_file;
+        // static std::ifstream replay_file;
 
         uint32_t replayRead();
 
