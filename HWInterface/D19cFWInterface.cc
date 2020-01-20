@@ -1157,7 +1157,7 @@ namespace Ph2_HwInterface
             cNEvents = this->ReadData(pBoard,  pBreakTrigger,  pData, pWait);
         }
         if (fSaveToFile)
-            fFileHandler->set (pData);
+            fFileHandler->setData(pData);
 
         //need to return the number of events read
         return cNEvents;
@@ -1239,7 +1239,7 @@ namespace Ph2_HwInterface
         }        
 
         if (fSaveToFile)
-            fFileHandler->set (pData);
+            fFileHandler->setData(pData);
     }
 
 /** compute the block size according to the number of CBC's on this board

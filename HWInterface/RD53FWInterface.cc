@@ -612,7 +612,7 @@ namespace Ph2_HwInterface
     for (const auto& val : values) pData.push_back(val);
 
 
-    if ((this->fSaveToFile == true) && (pData.size() != 0)) this->fFileHandler->set(pData);
+    if ((this->fSaveToFile == true) && (pData.size() != 0)) this->fFileHandler->setData(pData);
     return pData.size();
   }
 
@@ -751,7 +751,7 @@ namespace Ph2_HwInterface
           }
   }
 
-  bool RD53FWInterface::Event::isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx)
+  bool RD53FWInterface::Event::isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const
   {
     for (auto i = 0u; i < chip_frames.size(); i++)
       if ((module_id == chip_frames[i].module_id) && (chip_id == chip_frames[i].chip_id) && (chip_events[i].hit_data.size() != 0))
