@@ -124,6 +124,11 @@ int main (int argc, char** argv)
   cmd.defineOption("reset","Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative("reset", "r");
 
+  cmd.defineOption("capture","Capture communication with board.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  
+  cmd.defineOption("replay","Replay previously captured communication.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  
+
   int result = cmd.parse(argc,argv);
 
   if (result != CommandLineProcessing::ArgvParser::NoParserError)
@@ -139,6 +144,12 @@ int main (int argc, char** argv)
   bool supervisor        = cmd.foundOption("sup")    == true ? true : false;
   bool reset             = cmd.foundOption("reset")  == true ? true : false;
 
+  if (cmd.foundOption("capture")) {
+    RegManager::enableCapture(cmd.optionValue("capture").c_str());
+  }
+  else if (cmd.foundOption("replay")) {
+    RegManager::enableReplay(cmd.optionValue("replay").c_str());
+  }
 
   // ###################
   // # Read run number #

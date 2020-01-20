@@ -175,6 +175,38 @@ namespace Ph2_HwInterface {
          * \brief get the uHAL node
          */
         const uhal::Node& getUhalNode ( const std::string& pStrPath );
+
+    public:
+
+        enum class Mode {
+            Default,
+            Capture,
+            Replay
+        };
+
+        static void enableCapture(const char* filename) {
+            capture_file.open(filename, std::ios::binary);
+        }
+
+        static void enableReplay(const char* filename) {
+            replay_file.open(filename, std::ios::binary);
+        }
+
+    private:
+
+        static Mode mode;
+
+        static std::ofstream capture_file;
+        static std::ifstream replay_file;
+
+        uint32_t replayRead();
+
+        std::vector<uint32_t>  replayBlockRead(size_t size);
+
+        void captureRead(uint32_t value);
+
+        void captureBlockRead(std::vector<uint32_t> data);
+
     };
 }
 
