@@ -124,9 +124,9 @@ int main (int argc, char** argv)
   cmd.defineOption("reset","Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative("reset", "r");
 
-  cmd.defineOption("capture", "Capture communication with board.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOption("capture", "Capture communication with board (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
-  cmd.defineOption("replay", "Replay previously captured communication.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOption("replay", "Replay previously captured communication (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
   int result = cmd.parse(argc,argv);
 
@@ -135,15 +135,6 @@ int main (int argc, char** argv)
       LOG (INFO) << cmd.parseErrorDescription(result);
       exit(EXIT_FAILURE);
     }
-
-  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file")   : "CMSIT.xml";
-  std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib")  : "pixelalive";
-  std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
-  bool program           = cmd.foundOption("prog")   == true ? true : false;
-  bool supervisor        = cmd.foundOption("sup")    == true ? true : false;
-  bool reset             = cmd.foundOption("reset")  == true ? true : false;
-  if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").c_str());
-  else if (cmd.foundOption("replay") == true)  RegManager::enableReplay(cmd.optionValue("replay").c_str());
 
 
   // ###################
@@ -157,6 +148,19 @@ int main (int argc, char** argv)
   std::string chipConfig("Run" + fromInt2Str(runNumber) + "_");
 
 
+  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file")   : "CMSIT.xml";
+  std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib")  : "pixelalive";
+  std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
+  bool program           = cmd.foundOption("prog")   == true ? true : false;
+  bool supervisor        = cmd.foundOption("sup")    == true ? true : false;
+  bool reset             = cmd.foundOption("reset")  == true ? true : false;
+  if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").replace(cmd.optionValue("capture").find(".raw"), 4, "_" + fromInt2Str(runNumber) + ".raw"));
+  else if (cmd.foundOption("replay") == true)  RegManager::enableReplay(cmd.optionValue("replay"));
+
+
+  // ######################
+  // # Supervisor section #
+  // ######################
   if (supervisor == true)
     {
 #ifdef __USE_ROOT__

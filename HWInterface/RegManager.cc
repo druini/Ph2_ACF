@@ -10,6 +10,7 @@
 #include <uhal/uhal.hpp>
 #include "RegManager.h"
 #include "../Utils/Utilities.h"
+#include "../Utils/ConsoleColor.h"
 #include "../HWDescription/Definition.h"
 
 #include <boost/iostreams/device/file.hpp>
@@ -346,7 +347,7 @@ namespace Ph2_HwInterface
 
     if (read_size != size)
       {
-        LOG (ERROR) << "Binary data replay error\n";
+        LOG (ERROR) << BOLDRED << "Binary data replay error" << RESET;
         throw;
       }
 
