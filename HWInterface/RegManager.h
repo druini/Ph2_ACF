@@ -33,9 +33,9 @@ namespace Ph2_HwInterface
   class RegManager
   {
   protected:
-    uhal::HwInterface* fBoard;         /*!< Board in use*/
-    const char* fUHalConfigFileName;         /*!< path of the uHal Config File*/
-    std::vector< std::pair<std::string, uint32_t> > fStackReg;        /*!< Stack of registers*/
+    uhal::HwInterface* fBoard;                                 /*!< Board in use*/
+    const char* fUHalConfigFileName;                           /*!< path of the uHal Config File*/
+    std::vector< std::pair<std::string, uint32_t> > fStackReg; /*!< Stack of registers*/
     const char* fUri;
     const char* fAddressTable;
     const char* fId;
@@ -48,6 +48,7 @@ namespace Ph2_HwInterface
      * \param pBoardId Board Id in the XML configuration file. The uHAL connection name will be boardX where X is the number Id.
      */
     RegManager ( const char* puHalConfigFileName, uint32_t pBoardId );
+
     /*!
      * \brief Constructor of the RegManager class
      * \param pId : id in the connections node
@@ -55,10 +56,12 @@ namespace Ph2_HwInterface
      * \param pAddressTable: address table path
      */
     RegManager ( const char* pId, const char* pUri, const char* pAddressTable );
+
     /*!
      * \brief Destructor of the RegManager class
      */
     virtual ~RegManager();
+
     /*!
      * \brief Write a register
      * \param pRegNode : Node of the register to write
@@ -66,12 +69,14 @@ namespace Ph2_HwInterface
      * \return boolean confirming the writing
      */
     virtual bool WriteReg ( const std::string& pRegNode, const uint32_t& pVal );
+
     /*!
      * \brief Write a stack of registers
      * \param pVecReg : vector containing the registers and the associated values to write
      * \return boolean confirming the writing
      */
     virtual bool WriteStackReg ( const std::vector<std::pair<std::string, uint32_t> >& pVecReg );
+
     /*!
      * \brief Write a block of values in a register
      * \param pRegNode : Node of the register to write
@@ -79,6 +84,7 @@ namespace Ph2_HwInterface
      * \return boolean confirming the writing
      */
     virtual bool WriteBlockReg ( const std::string& pRegNode, const std::vector< uint32_t >& pValues );
+
     /** \brief Write a block of values at a given address
      * \param uAddr 32-bit address
      * \param pValues : Block of values to write
@@ -86,12 +92,14 @@ namespace Ph2_HwInterface
      * \return boolean confirming the writing
      */
     virtual bool WriteBlockAtAddress (uint32_t uAddr, const std::vector< uint32_t >& pValues, bool bNonInc = false);
+
     /*!
      * \brief Read a value in a register
      * \param pRegNode : Node of the register to read
      * \return ValWord value of the register
      */
     virtual uint32_t ReadReg ( const std::string& pRegNode );
+
     /*!
      * \brief Read a value at a given address
      * \param uAddr 32-bit address
@@ -99,6 +107,7 @@ namespace Ph2_HwInterface
      * \return ValWord value of the register
      */
     virtual uint32_t ReadAtAddress (uint32_t uAddr, uint32_t uMask = 0xFFFFFFFF);
+
     /*!
      * \brief Read a block of values in a register
      * \param pRegNode : Node of the register to read
@@ -106,6 +115,7 @@ namespace Ph2_HwInterface
      * \return ValVector block values of the register
      */
     virtual std::vector<uint32_t> ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlocksize );
+
     /*!
      * \brief Read a block of values in a register
      * \param pRegNode : Node of the register to read
@@ -126,6 +136,7 @@ namespace Ph2_HwInterface
           fBoard = new uhal::HwInterface ( uhal::ConnectionManager::getDevice ( pId, pUri, pAddressTable ) );
         }
     }
+
     /*!
      * \brief Stack the commands, deliver when full or timeout
      * \param pRegNode : Register to write
@@ -133,13 +144,15 @@ namespace Ph2_HwInterface
      * \param pSend : Send the stack to write or nor (1/0)
      */
     virtual void StackReg ( const std::string& pRegNode, const uint32_t& pVal, bool pSend = false );
+
     /*!
      * \brief get the uHAL HW Interface
      */
     uhal::HwInterface* getHardwareInterface() const
-      {
-        return fBoard;
-      }
+    {
+      return fBoard;
+    }
+
     /*!
      * \brief get the uHAL HW Id
      */
@@ -147,6 +160,7 @@ namespace Ph2_HwInterface
     {
       return fId;
     }
+
     /*!
      * \brief get the uHAL HW Uri
      */
@@ -154,6 +168,7 @@ namespace Ph2_HwInterface
     {
       return fUri;
     }
+
     /*!
      * \brief get the uHAL HW AddressTable
      */
@@ -161,6 +176,7 @@ namespace Ph2_HwInterface
     {
       return fAddressTable;
     }
+
     /*!
      * \brief get the uHAL node
      */
@@ -182,7 +198,7 @@ namespace Ph2_HwInterface
     };
 
     static Mode mode;
-    uint32_t replayRead ();
+    uint32_t replayRead   ();
     std::vector<uint32_t> replayBlockRead (size_t size);
     void captureRead      (uint32_t value);
     void captureBlockRead (std::vector<uint32_t> data);
