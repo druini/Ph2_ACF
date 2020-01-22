@@ -51,7 +51,7 @@ void GainOptimization::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[GainOptimization::Start] Starting" << RESET;
 
-  if (saveBinaryData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/GainOptimizationRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -77,7 +77,7 @@ void GainOptimization::Stop ()
   this->closeFileHandler();
 }
 
-void GainOptimization::initialize (const std::string fileRes_, const std::string fileReg_)
+void GainOptimization::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -90,6 +90,12 @@ void GainOptimization::initialize (const std::string fileRes_, const std::string
   fileReg = fileReg_;
 
   GainOptimization::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/GainOptimizationRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void GainOptimization::run ()

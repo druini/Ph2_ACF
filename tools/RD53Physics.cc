@@ -58,7 +58,7 @@ void Physics::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[Physics::Start] Starting" << RESET;
 
-  if (saveBinaryData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/PhysicsRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -107,7 +107,7 @@ void Physics::Stop ()
   this->closeFileHandler();
 }
 
-void Physics::initialize (const std::string fileRes_, const std::string fileReg_)
+void Physics::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
@@ -125,6 +125,12 @@ void Physics::initialize (const std::string fileRes_, const std::string fileReg_
 #endif
 
   doLocal = true;
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/PhysicsRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void Physics::run ()

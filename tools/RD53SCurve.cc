@@ -64,7 +64,7 @@ void SCurve::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[SCurve::Start] Starting" << RESET;
 
-  if (saveBinaryData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/SCurveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -108,12 +108,18 @@ void SCurve::Stop ()
   this->closeFileHandler();
 }
 
-void SCurve::initialize (const std::string fileRes_, const std::string fileReg_)
+void SCurve::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
 
   SCurve::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/SCurveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void SCurve::run ()

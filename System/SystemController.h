@@ -163,7 +163,7 @@ namespace Ph2_System
      */
     void ReadData(bool pWait = true);
 
-    virtual void Start(int currentRun);
+    virtual void Start(int currentRun = -1);
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();

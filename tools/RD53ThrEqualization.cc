@@ -64,7 +64,7 @@ void ThrEqualization::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[ThrEqualization::Start] Starting" << RESET;
 
-  if (saveBinaryData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/ThrEqualizationRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -94,12 +94,18 @@ void ThrEqualization::Stop ()
   this->closeFileHandler();
 }
 
-void ThrEqualization::initialize (const std::string fileRes_, const std::string fileReg_)
+void ThrEqualization::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
 
   ThrEqualization::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/ThrEqualizationRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void ThrEqualization::run ()

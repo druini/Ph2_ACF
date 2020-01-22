@@ -234,7 +234,7 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::PrintFWstatus()
   {
-    LOG (INFO) << GREEN << "Checking Firmware status" << RESET;
+    LOG (INFO) << GREEN << "Checking firmware status" << RESET;
 
 
     // #################################

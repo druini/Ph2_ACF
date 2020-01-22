@@ -76,7 +76,7 @@ void PixelAlive::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[PixelAlive::Start] Starting" << RESET;
 
-  if (saveBinaryData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -111,12 +111,18 @@ void PixelAlive::Stop ()
   this->closeFileHandler();
 }
 
-void PixelAlive::initialize (const std::string fileRes_, const std::string fileReg_)
+void PixelAlive::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
 
   PixelAlive::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void PixelAlive::run ()

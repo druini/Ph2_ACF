@@ -53,10 +53,9 @@ void Latency::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[Latency::Start] Starting" << RESET;
 
-  if (saveBinaryData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
-      std::string dir(RESULTDIR);
-      this->addFileHandler(dir + "/LatencyRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/LatencyRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -86,7 +85,7 @@ void Latency::Stop ()
   this->closeFileHandler();
 }
 
-void Latency::initialize (const std::string fileRes_, const std::string fileReg_)
+void Latency::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -98,6 +97,12 @@ void Latency::initialize (const std::string fileRes_, const std::string fileReg_
   fileReg = fileReg_;
 
   Latency::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/LatencyRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void Latency::run ()

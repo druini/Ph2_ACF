@@ -329,7 +329,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
           Latency la;
           la.Inherit(&mySysCntr);
-          la.initialize(fileName, chipConfig);
+          la.initialize(fileName, chipConfig, runNumber);
           la.run();
           la.analyze();
           la.draw();
@@ -344,7 +344,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
-          pa.initialize(fileName, chipConfig);
+          pa.initialize(fileName, chipConfig, runNumber);
           pa.run();
           pa.analyze();
           pa.draw();
@@ -359,7 +359,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan");
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
-          pa.initialize(fileName, chipConfig);
+          pa.initialize(fileName, chipConfig, runNumber);
           pa.run();
           pa.analyze();
           pa.draw();
@@ -374,7 +374,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
           SCurve sc;
           sc.Inherit(&mySysCntr);
-          sc.initialize(fileName, chipConfig);
+          sc.initialize(fileName, chipConfig, runNumber);
           sc.run();
           sc.analyze();
           sc.draw();
@@ -389,7 +389,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_Gain");
           Gain ga;
           ga.Inherit(&mySysCntr);
-          ga.initialize(fileName, chipConfig);
+          ga.initialize(fileName, chipConfig, runNumber);
           ga.run();
           ga.analyze();
           ga.draw();
@@ -404,7 +404,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_GainOptimization");
           GainOptimization go;
           go.Inherit(&mySysCntr);
-          go.initialize(fileName, chipConfig);
+          go.initialize(fileName, chipConfig, runNumber);
           go.run();
           go.analyze();
           go.draw();
@@ -419,7 +419,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrEqualization");
           ThrEqualization te;
           te.Inherit(&mySysCntr);
-          te.initialize(fileName, chipConfig);
+          te.initialize(fileName, chipConfig, runNumber);
           te.run();
           te.draw();
         }
@@ -433,7 +433,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
           ThrMinimization tm;
           tm.Inherit(&mySysCntr);
-          tm.initialize(fileName, chipConfig);
+          tm.initialize(fileName, chipConfig, runNumber);
           tm.run();
           tm.analyze();
           tm.draw();
@@ -448,7 +448,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_InjectionDelay");
           InjectionDelay id;
           id.Inherit(&mySysCntr);
-          id.initialize(fileName, chipConfig);
+          id.initialize(fileName, chipConfig, runNumber);
           id.run();
           id.analyze();
           id.draw();
@@ -463,7 +463,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_ClockDelay");
           ClockDelay cd;
           cd.Inherit(&mySysCntr);
-          cd.initialize(fileName, chipConfig);
+          cd.initialize(fileName, chipConfig, runNumber);
           cd.run();
           cd.analyze();
           cd.draw();
@@ -478,7 +478,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_Physics");
           Physics ph;
           ph.Inherit(&mySysCntr);
-          ph.initialize(fileName, chipConfig);
+          ph.initialize(fileName, chipConfig, runNumber);
           if (binaryFile == "")
             {
               ph.Start(runNumber);

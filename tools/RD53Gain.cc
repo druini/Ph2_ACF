@@ -64,7 +64,7 @@ void Gain::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[Gain::Start] Starting" << RESET;
 
-  if (saveBinaryData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/GainRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -108,12 +108,18 @@ void Gain::Stop ()
   this->closeFileHandler();
 }
 
-void Gain::initialize (const std::string fileRes_, const std::string fileReg_)
+void Gain::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
 
   Gain::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/GainRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void Gain::run ()

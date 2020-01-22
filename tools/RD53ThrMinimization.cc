@@ -48,7 +48,7 @@ void ThrMinimization::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[ThrMinimization::Start] Starting" << RESET;
 
-  if (saveBinaryData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/ThrMinimizationRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -74,7 +74,7 @@ void ThrMinimization::Stop ()
   this->closeFileHandler();
 }
 
-void ThrMinimization::initialize (const std::string fileRes_, const std::string fileReg_)
+void ThrMinimization::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -87,6 +87,12 @@ void ThrMinimization::initialize (const std::string fileRes_, const std::string 
   fileReg = fileReg_;
 
   ThrMinimization::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/ThrMinimizationRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void ThrMinimization::run ()
