@@ -4,6 +4,10 @@
 #include "../Utils/ContainerStream.h"
 #include <math.h>
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+using namespace Ph2_System;
+
 CalibrationExample::CalibrationExample() :
     Tool(),
     fEventsPerPoint(0)

@@ -43,8 +43,6 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     fSkipMaskedChannels = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : false;
     cSetting = fSettingsMap.find ( "MaskChannelsFromOtherGroups" );
     fMaskChannelsFromOtherGroups = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-    cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
-    fSkipMaskedChannels = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
     this->SetSkipMaskedChannels( fSkipMaskedChannels );
     cSetting = fSettingsMap.find ( "PlotSCurves" );
     fPlotSCurves = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
@@ -211,7 +209,6 @@ void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
 
     this->SetTestAllChannels(originalAllChannelFlag);
     if(pTPAmplitude != 0){
-        this->SetTestPulse( false );
         this->enableTestPulse( false );
         setSameGlobalDac("TestPulsePotNodeSel",  0);
         LOG (INFO) << BLUE <<  "Disabled test pulse. " << RESET ;

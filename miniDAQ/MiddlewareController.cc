@@ -6,6 +6,7 @@
 #include "../tools/Tool.h"
 #include "../tools/PedestalEqualization.h"
 #include "../tools/PedeNoise.h"
+#include "../tools/CBCTornadoPlot.h"
 #include "../tools/CombinedCalibration.h"
 #include "../tools/CalibrationExample.h"
 #include "../tools/RD53PixelAlive.h"
@@ -79,6 +80,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
       else if (getVariableValue("Calibration",buffer) == "pedenoise")               theSystemController_ = new CombinedCalibration<PedeNoise>;
       else if (getVariableValue("Calibration",buffer) == "calibrationandpedenoise") theSystemController_ = new CombinedCalibration<PedestalEqualization,PedeNoise>();
       else if (getVariableValue("Calibration",buffer) == "calibrationexample")      theSystemController_ = new CombinedCalibration<CalibrationExample>;
+      else if (getVariableValue("Calibration",buffer) == "cbctornado")              theSystemController_ = new CombinedCalibration<CBCTornadoPlot>;
 
       else if (getVariableValue("Calibration",buffer) == "pixelalive")              theSystemController_ = new CombinedCalibration<PixelAlive>;
       else if (getVariableValue("Calibration",buffer) == "noise")                   theSystemController_ = new CombinedCalibration<PixelAlive>;

@@ -8,6 +8,7 @@
 #include "DQMHistogramPedeNoise.h"
 #include "DQMHistogramPedestalEqualization.h"
 #include "DQMHistogramCalibrationExample.h"
+#include "CBCHistogramTornadoPlot.h"
 #include "RD53PixelAliveHistograms.h"
 #include "RD53SCurveHistograms.h"
 #include "RD53GainHistograms.h"
@@ -92,18 +93,16 @@ void DQMInterface::configure(std::string const &calibrationName, std::string con
 	fParser.parseSettings(configurationFilePath, pSettingsMap, out, true);
 
 	if (calibrationName == "pedenoise")
-	{
 		fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
-	}
 	else if (calibrationName == "calibrationandpedenoise")
 	{
 		fDQMHistogrammerVector.push_back(new DQMHistogramPedestalEqualization());
 		fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
 	}
 	else if (calibrationName == "calibrationexample")
-	{
 		fDQMHistogrammerVector.push_back(new DQMHistogramCalibrationExample());
-	}
+	else if (calibrationName == "cbctornado")
+		fDQMHistogrammerVector.push_back(new CBCHistogramTornadoPlot());
 	else if (calibrationName == "pixelalive")
 		fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
 	else if (calibrationName == "noise")
