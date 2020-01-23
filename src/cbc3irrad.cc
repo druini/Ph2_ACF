@@ -288,7 +288,7 @@ int main ( int argc, char* argv[] )
         //maximal tp amplitude is 0, minimal is 255
         //so in orde to get 30 we need 225
         //this only records SCurves
-        cPedeNoise.sweepSCurves (225);
+        cPedeNoise.sweepSCurves ();
         cPedeNoise.writeObjects();
 
         //get the pedestal determined in the step above so I can adjust the threshold for the stub sweep and the DAQ
