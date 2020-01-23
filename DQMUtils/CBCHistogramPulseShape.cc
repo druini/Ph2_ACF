@@ -74,7 +74,7 @@ void CBCHistogramPulseShape::book(TFile *theOutputFile, const DetectorContainer 
 }
 
 //========================================================================================================================
-void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t threshold, uint16_t delay, DetectorDataContainer &theOccupancyContainer)
+void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t threshold, uint16_t delay, DetectorDataContainer&& theOccupancyContainer)
 {
 
     // float latencyStep = -int(delay/25);
@@ -169,7 +169,7 @@ bool CBCHistogramPulseShape::fill(std::vector<char>& dataBuffer)
         theOccupancyStreamer.decodeChipData(fDetectorData);
         //Filling the histograms
         
-        fillCBCPulseShapePlots(theOccupancyStreamer.getHeaderElement<0>(), theOccupancyStreamer.getHeaderElement<1>(), fDetectorData);
+        fillCBCPulseShapePlots(theOccupancyStreamer.getHeaderElement<0>(), theOccupancyStreamer.getHeaderElement<1>(), std::move(fDetectorData));
         //Cleaning the data container to be ready for the next TCP string
         fDetectorData.cleanDataStored();
         return true;

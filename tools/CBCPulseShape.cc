@@ -76,14 +76,14 @@ void CBCPulseShape::runCBCPulseShape(void)
         {
             setSameDac("TestPulseDel&ChanGroup", reverseBits(delay%25));
             setSameDac("TriggerLatency"        , fInitialLatency - delay/25);
-            DetectorDataContainer *theOccupancyContainer = new DetectorDataContainer();
-            ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *theOccupancyContainer);
-            fDetectorDataContainer = theOccupancyContainer;
+            DetectorDataContainer theOccupancyContainer;
+            ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, theOccupancyContainer);
+            fDetectorDataContainer = &theOccupancyContainer;
             measureData(fEventsPerPoint);
 
             #ifdef __USE_ROOT__
                 //Calibration is not running on the SoC: plotting directly the data, no shipping is done
-                fCBCHistogramPulseShape.fillCBCPulseShapePlots(threshold, delay, *theOccupancyContainer);
+                fCBCHistogramPulseShape.fillCBCPulseShapePlots(threshold, delay, std::move(theOccupancyContainer));
 
             #else
                 //Calibration is running on the SoC: shipping the data!!!
@@ -95,10 +95,9 @@ void CBCPulseShape::runCBCPulseShape(void)
                     auto theOccupancyStreamer = prepareChipContainerStreamer<Occupancy,Occupancy,uint16_t,uint16_t>();
                     theOccupancyStreamer.setHeaderElement<0>(threshold);
                     theOccupancyStreamer.setHeaderElement<1>(delay    );
-                    for(auto board : *theOccupancyContainer)  theOccupancyStreamer.streamAndSendBoard(board, fNetworkStreamer);
+                    for(auto board : theOccupancyContainer)  theOccupancyStreamer.streamAndSendBoard(board, fNetworkStreamer);
                 }
             #endif
-            delete theOccupancyContainer;
         }
     }
 

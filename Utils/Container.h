@@ -32,6 +32,15 @@ public:
 	, index_                     (0)
 	{;}
 
+
+	BaseContainer(const BaseContainer&) = delete;
+	BaseContainer(BaseContainer&& theCopyContainer)
+	{
+		id_      = theCopyContainer.id_;
+		index_   = theCopyContainer.index_;
+	}
+
+
 	virtual ~BaseContainer() {;}
 	uint16_t getId   (void) const {return id_;}
 	uint16_t getIndex(void) const {return index_;}
@@ -50,9 +59,17 @@ class Container : public std::vector<T*> , public BaseContainer
 {
 public:
 	Container(uint16_t id) : BaseContainer(id)
-{
-}
+	{
+	}
 	Container(unsigned int size) : std::vector<T*>(size) {}
+
+
+	Container(const Container&) = delete;
+	Container(Container&& theCopyContainer)
+	: std::vector<T*>(std::move(theCopyContainer))
+	, BaseContainer(std::move(theCopyContainer))
+	{}
+
 	virtual ~Container()
 	{
 		reset();
@@ -144,6 +161,17 @@ public:
 	, container_(nullptr)
 	{
 	}
+
+	ChipContainer(const ChipContainer&) = delete;
+	ChipContainer(ChipContainer&& theCopyContainer)
+	: BaseContainer(std::move(theCopyContainer))
+	{
+		container_ = theCopyContainer.container_;
+		nOfRows_   = theCopyContainer.nOfRows_;
+		nOfCols_   = theCopyContainer.nOfCols_;
+		theCopyContainer.container_ = nullptr;
+	}
+
 	virtual ~ChipContainer()
 	{
 		reset();
