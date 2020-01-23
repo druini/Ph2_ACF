@@ -37,26 +37,26 @@ void CBCHistogramPulseShape::book(TFile *theOutputFile, const DetectorContainer 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     // SoC utilities only - END
 
-    float initialVcth    = findValueInSettings(pSettingsMap, "PulseShapeInitialVcth"   , 250);
-    float finalVcth      = findValueInSettings(pSettingsMap, "PulseShapeFinalVcth"     , 600);
-    float vcthStep       = findValueInSettings(pSettingsMap, "PulseShapeVCthStep"      ,  10);
-    float initialDelay   = findValueInSettings(pSettingsMap, "PulseShapeInitialDelay"  ,   0);
-    float finalDelay     = findValueInSettings(pSettingsMap, "PulseShapeFinalDelay"    ,  25);
-    float delayStep      = findValueInSettings(pSettingsMap, "PulseShapeDelayStep"     ,   1);
+    fInitialVcth    = findValueInSettings(pSettingsMap, "PulseShapeInitialVcth"   , 250);
+    fFinalVcth      = findValueInSettings(pSettingsMap, "PulseShapeFinalVcth"     , 600);
+    fVcthStep       = findValueInSettings(pSettingsMap, "PulseShapeVCthStep"      ,  10);
+    fInitialDelay   = findValueInSettings(pSettingsMap, "PulseShapeInitialDelay"  ,   0);
+    fFinalDelay     = findValueInSettings(pSettingsMap, "PulseShapeFinalDelay"    ,  25);
+    fDelayStep      = findValueInSettings(pSettingsMap, "PulseShapeDelayStep"     ,   1);
 
     float maxVCth = 1023;
-    if(finalVcth>maxVCth) finalVcth = maxVCth;
+    if(fFinalVcth>maxVCth) fFinalVcth = maxVCth;
     
-    int delayNbins = (finalDelay - initialDelay)/delayStep + 1;
-    int vcthNbins  = (finalVcth  - initialVcth )/vcthStep + 1;
-    fEffectiveFinalDelay = (delayNbins-1) * delayStep + initialDelay;
-    float effectiveFinalVcth  = (vcthNbins -1) * vcthStep  + initialVcth ;
+    int delayNbins = (fFinalDelay - fInitialDelay)/fDelayStep + 1;
+    int vcthNbins  = (fFinalVcth  - fInitialVcth )/fVcthStep + 1;
+    fEffectiveFinalDelay = (delayNbins-1) * fDelayStep + fInitialDelay;
+    float effectiveFinalVcth  = (vcthNbins -1) * fVcthStep  + fInitialVcth ;
 
-    float delayHistogramMin = initialDelay - delayStep/2.;
-    float vcthHistogramMin  = initialVcth  - vcthStep /2.;
+    float delayHistogramMin = fInitialDelay - fDelayStep/2.;
+    float vcthHistogramMin  = fInitialVcth  - fVcthStep /2.;
 
-    float delayHistogramMax = fEffectiveFinalDelay + delayStep/2.;
-    float vcthHistogramMax  = effectiveFinalVcth   + vcthStep /2.;
+    float delayHistogramMax = fEffectiveFinalDelay + fDelayStep/2.;
+    float vcthHistogramMax  = effectiveFinalVcth   + fVcthStep /2.;
     
     // auto theCanvasPulseShapeContainer = CanvasContainer<TH2F>("PulseShapePerChannel", "PulseShape Per Channel", delayNbins, delayHistogramMin, delayHistogramMax, vcthNbins, vcthHistogramMin, vcthHistogramMax);
     // RootContainerFactory::bookChannelHistograms(theOutputFile, theDetectorStructure, fDetectorChannelPulseShapeHistograms, theCanvasPulseShapeContainer);
@@ -77,7 +77,9 @@ void CBCHistogramPulseShape::book(TFile *theOutputFile, const DetectorContainer 
 void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t threshold, uint16_t delay, DetectorDataContainer &theOccupancyContainer)
 {
 
-    float binCenterValue = fEffectiveFinalDelay - (delay/25)*25. - (24. - delay%25); 
+    // float latencyStep = -int(delay/25);
+    float binCenterValue = ceil(fFinalDelay/25.)*25 - (delay/25)*25. - (25. - delay%25);
+    // std::cout<<delay << " - " <<  binCenterValue <<  std::endl;
     
     for(auto board : theOccupancyContainer) //for on boards - begin 
     {
@@ -110,6 +112,7 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t threshold, uint16_t
 //========================================================================================================================
 void CBCHistogramPulseShape::process()
 {
+
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
     for(auto board : fDetectorChipPulseShapeHistograms) //for on boards - begin 
@@ -124,13 +127,20 @@ void CBCHistogramPulseShape::process()
             for(auto chip: *module)  //for on chip - begin 
             {
                 size_t chipIndex = chip->getIndex();
-                cChipPulseShape->cd(chipIndex+1);
+                TVirtualPad* currentCanvas = cChipPulseShape->cd(chipIndex+1);
+                TPad* myPad = static_cast<TPad*>(cChipPulseShape->GetPad(chipIndex+1));
                 // Retreive the corresponging chip histogram:
                 TH2F *chipPulseShapeHistogram = chip->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                TGaxis *theAxis = new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax()/3, myPad->GetUymax(), 0., 25., 510, "-");
 
                 //Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you need)
                 chipPulseShapeHistogram->SetStats(false);
                 chipPulseShapeHistogram->DrawCopy("colz");
+                theAxis->SetLabelColor(kRed);
+                theAxis->SetLineColor(kRed);
+                theAxis->Draw();
+                currentCanvas->Modified();
+                currentCanvas->Update();
             } //for on chip - end 
         } //for on module - end 
     } //for on boards - end 

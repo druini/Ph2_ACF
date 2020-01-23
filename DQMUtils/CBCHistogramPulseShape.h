@@ -69,6 +69,13 @@ class CBCHistogramPulseShape : public DQMHistogramBase
     DetectorDataContainer fDetectorChannelPulseShapeHistograms;
     DetectorDataContainer fDetectorChipPulseShapeHistograms;
     DetectorDataContainer fDetectorData;
-    float fEffectiveFinalDelay;
+    float fInitialVcth         {0};
+    float fFinalVcth           {0};
+    float fVcthStep            {0};
+    float fInitialDelay        {0};
+    float fFinalDelay          {0};
+    float fDelayStep           {0};
+    float fEffectiveFinalDelay {0};
+
 };
 #endif

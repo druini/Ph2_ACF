@@ -146,7 +146,7 @@
     <Setting name="FitSignal">0</Setting>
 
     <!--PulseShape-->
-    <Setting name="PulseShapeNevents"       >100</Setting>
+    <Setting name="PulseShapeNevents"       > 10</Setting>
 	<Setting name="PulseShapeInitialVcth"   >150</Setting>
 	<Setting name="PulseShapeFinalVcth"     >650</Setting>
 	<Setting name="PulseShapeIntialLatency" >199</Setting>
