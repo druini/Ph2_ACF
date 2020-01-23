@@ -1,13 +1,13 @@
 /*!
-        \file                CBCHistogramTornadoPlot.h
+        \file                CBCHistogramPulseShape.h
         \brief               DQM class for Calibration example -> use it as a templare
         \author              Fabio Ravera
         \date                17/1/20
         Support :            mail to : fabio.ravera@cern.ch
 */
 
-#ifndef __CBCHistogramTornadoPlot_H__
-#define __CBCHistogramTornadoPlot_H__
+#ifndef __CBCHistogramPulseShape_H__
+#define __CBCHistogramPulseShape_H__
 #include "../DQMUtils/DQMHistogramBase.h"
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
@@ -15,22 +15,22 @@
 class TFile;
 
 /*!
- * \class CBCHistogramTornadoPlot
+ * \class CBCHistogramPulseShape
  * \brief Class for CalibrationExample monitoring histograms
  */
-class CBCHistogramTornadoPlot : public DQMHistogramBase
+class CBCHistogramPulseShape : public DQMHistogramBase
 {
 
   public:
     /*!
      * constructor
      */
-    CBCHistogramTornadoPlot ();
+    CBCHistogramPulseShape ();
 
     /*!
      * destructor
      */
-    ~CBCHistogramTornadoPlot();
+    ~CBCHistogramPulseShape();
 
     /*!
      * \brief Book histograms
@@ -57,17 +57,18 @@ class CBCHistogramTornadoPlot : public DQMHistogramBase
     void reset(void) override;
    
     /*!
-     * \brief fillCBCTornadoPlotPlots
+     * \brief fillCBCPulseShapePlots
      * \brief threshold
      * \brief delay
      * \param theHitContainer : Container with the hits you want to plot 
      */
-    void fillCBCTornadoPlotPlots(uint16_t threshold, uint8_t delay, DetectorDataContainer &theOccupancyContainer);
+    void fillCBCPulseShapePlots(uint16_t threshold, uint16_t delay, DetectorDataContainer &theOccupancyContainer);
 
   private:
 
-    DetectorDataContainer fDetectorChannelTornadoHistograms;
-    DetectorDataContainer fDetectorChipTornadoHistograms;
+    DetectorDataContainer fDetectorChannelPulseShapeHistograms;
+    DetectorDataContainer fDetectorChipPulseShapeHistograms;
     DetectorDataContainer fDetectorData;
+    float fEffectiveFinalDelay;
 };
 #endif

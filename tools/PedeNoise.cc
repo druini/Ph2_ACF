@@ -165,13 +165,7 @@ void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
 
         for ( auto cBoard : *fDetectorContainer )
         {
-            for ( auto cFe : *cBoard )
-            {
-                for ( auto cCbc : *cFe )
-                {
-                    fReadoutChipInterface->setInjectionAmplitude(static_cast<ReadoutChip*>(cCbc), fTestPulseAmplitude);
-                }
-            }
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", pTPAmplitude);
         }
 
         // setSameGlobalDac("TestPulsePotNodeSel",  pTPAmplitude);

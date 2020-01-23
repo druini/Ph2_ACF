@@ -9,7 +9,7 @@
 #include "../tools/LatencyScan.h"
 #include "../tools/PedeNoise.h"
 #include "../tools/AntennaTester.h"
-#include "../tools/CBCTornadoPlot.h"
+#include "../tools/CBCPulseShape.h"
 
 #include "../Utils/argvparser.h"
 #include "TROOT.h"
@@ -77,7 +77,7 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "allChan", "Do pedestal and noise measurement using all channels? Default: false", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "allChan", "a" );
 
-    cmd.defineOption ( "tornado", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute );
 
     int result = cmd.parse ( argc, argv );
 
@@ -97,7 +97,7 @@ int main ( int argc, char* argv[] )
 //    bool cHitOR = ( cmd.foundOption ( "hitOR" ) ) ? true : false;
     bool cNoise = ( cmd.foundOption ( "noise" ) ) ? true : false;
     bool cAntenna = (cmd.foundOption ("antenna") )? true : false;
-    bool cTornado = (cmd.foundOption ("tornado") )? true : false;
+    bool cPulseShape = (cmd.foundOption ("pulseShape") )? true : false;
 
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
 
@@ -244,17 +244,17 @@ int main ( int argc, char* argv[] )
         cPedeNoise.dumpConfigFiles();
     }
 
-    else if(cTornado)
+    else if(cPulseShape)
     {
         Timer t;
         t.start();
-        CBCTornadoPlot cCBCTornadoPlot;
-        cCBCTornadoPlot.Inherit (&cTool);
-        cCBCTornadoPlot.Initialise();
-        cCBCTornadoPlot.runCBCTornadoPlot();
-        cCBCTornadoPlot.writeObjects();
+        CBCPulseShape cCBCPulseShape;
+        cCBCPulseShape.Inherit (&cTool);
+        cCBCPulseShape.Initialise();
+        cCBCPulseShape.runCBCPulseShape();
+        cCBCPulseShape.writeObjects();
         t.stop();
-        t.show ("Time for tornado plot measurement");
+        t.show ("Time for pulseShape plot measurement");
         t.reset();
     }
 

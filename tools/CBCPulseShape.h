@@ -1,6 +1,6 @@
 /*!
 *
-* \file CBCTornadoPlot.h
+* \file CBCPulseShape.h
 * \brief Calibration example -> use it as a template
 * \author Fabio Ravera
 * \date 25 / 07 / 19
@@ -9,25 +9,25 @@
 *
 */
 
-#ifndef CBCTornadoPlot_h__
-#define CBCTornadoPlot_h__
+#ifndef CBCPulseShape_h__
+#define CBCPulseShape_h__
 
 #include "Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
   //Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
-  #include "../DQMUtils/CBCHistogramTornadoPlot.h"
+  #include "../DQMUtils/CBCHistogramPulseShape.h"
 #endif
 
-class CBCTornadoPlot : public Tool
+class CBCPulseShape : public Tool
 {
 
   public:
-    CBCTornadoPlot();
-    ~CBCTornadoPlot();
+    CBCPulseShape();
+    ~CBCPulseShape();
 
     void Initialise           (void);
-    void runCBCTornadoPlot(void);
+    void runCBCPulseShape(void);
     void writeObjects         (void);
 
     //State machine 
@@ -35,18 +35,19 @@ class CBCTornadoPlot : public Tool
     void Stop                 (void) override;
   
   private:
-    uint32_t fEventsPerPoint;
-    uint16_t fInitialVcth   ;
-    uint16_t fFinalVcth     ;
-    uint16_t fVCthStep      ;
-    uint8_t  fInitialDelay  ;
-    uint8_t  fFinalDelay    ;
-    uint8_t  fDelayStep     ;
-    uint8_t  fPulseAmplitude;
+    uint32_t fEventsPerPoint {0} ;
+    uint16_t fInitialVcth    {0} ;
+    uint16_t fFinalVcth      {0} ;
+    uint16_t fVCthStep       {0} ;
+    uint16_t fInitialLatency {0} ;
+    uint16_t  fInitialDelay   {0} ;
+    uint16_t  fFinalDelay     {0} ;
+    uint16_t  fDelayStep      {0} ;
+    uint16_t  fPulseAmplitude {0} ;
 
     #ifdef __USE_ROOT__
       //Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
-      CBCHistogramTornadoPlot fCBCHistogramTornadoPlot;
+      CBCHistogramPulseShape fCBCHistogramPulseShape;
     #endif
 };
 

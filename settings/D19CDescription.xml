@@ -145,14 +145,14 @@
 	<Setting name="SignalScanStep">2</Setting>
     <Setting name="FitSignal">0</Setting>
 
-    <!--Tornado-->
-    <Setting name="TornadoNevents"       >100</Setting>
-	<Setting name="TornadoInitialVcth"   >200</Setting>
-	<Setting name="TornadoFinalVcth"     >600</Setting>
-	<Setting name="TornadoVCthStep"      >  2</Setting>
-    <Setting name="TornadoInitialDelay"  >  0</Setting>
-	<Setting name="TornadoFinalDelay"    > 25</Setting>
-	<Setting name="TornadoDelayStep"     >  1</Setting>
-    <Setting name="TornadoPulseAmplitude">  0</Setting>
+    <!--PulseShape-->
+    <Setting name="PulseShapeNevents"       >100</Setting>
+	<Setting name="PulseShapeInitialVcth"   >200</Setting>
+	<Setting name="PulseShapeFinalVcth"     >600</Setting>
+	<Setting name="PulseShapeVCthStep"      >  2</Setting>
+    <Setting name="PulseShapeInitialDelay"  >  0</Setting>
+	<Setting name="PulseShapeFinalDelay"    > 25</Setting>
+	<Setting name="PulseShapeDelayStep"     >  1</Setting>
+    <Setting name="PulseShapePulseAmplitude">  0</Setting>
 </Settings>
 </HwDescription>
