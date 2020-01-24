@@ -9,6 +9,9 @@
 
 #include "RD53InjectionDelay.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void InjectionDelay::ConfigureCalibration ()
 {
   // ##############################
@@ -68,7 +71,7 @@ void InjectionDelay::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[InjectionDelay::Start] Starting" << RESET;
 
-  if (saveBinaryData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/InjectionDelayRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -101,7 +104,7 @@ void InjectionDelay::Stop ()
   this->closeFileHandler();
 }
 
-void InjectionDelay::initialize (const std::string fileRes_, const std::string fileReg_)
+void InjectionDelay::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -113,6 +116,12 @@ void InjectionDelay::initialize (const std::string fileRes_, const std::string f
   fileReg = fileReg_;
 
   InjectionDelay::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/InjectionDelayRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void InjectionDelay::run ()

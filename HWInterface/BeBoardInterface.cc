@@ -9,6 +9,8 @@
 
 #include "BeBoardInterface.h"
 
+using namespace Ph2_HwDescription;
+
 namespace Ph2_HwInterface
 {
   BeBoardInterface::BeBoardInterface (const BeBoardFWMap& pBoardMap)

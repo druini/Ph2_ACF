@@ -152,7 +152,7 @@ int main ( int argc, char* argv[] )
                 if (cDAQFile)
                   {
                     auto data = cSLev.getData<uint32_t>();
-                    cDAQFileHandler->set (data);
+                    cDAQFileHandler->setData(data);
                   }
 
                 //if DQM histos are enabled and we are treating the first event, book the histograms

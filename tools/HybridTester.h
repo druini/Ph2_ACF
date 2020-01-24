@@ -42,8 +42,6 @@ namespace patch {
 }
 #endif
 
-using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 
@@ -154,8 +152,8 @@ class HybridTester : public Tool
     bool fThresholdScan; /*!< Flag for SCurve Canvas */
     TCanvas* fSCurveCanvas;   /*!< Canvas for threshold scan */
 
-    std::map<Chip*, TH1F*> fSCurveMap;  /*!< Histograms for SCurve */
-    std::map<Chip*, TF1*> fFitMap;   /*!< fits for SCurve*/
+    std::map<Ph2_HwDescription::Chip*, TH1F*> fSCurveMap;  /*!< Histograms for SCurve */
+    std::map<Ph2_HwDescription::Chip*, TF1*> fFitMap;   /*!< fits for SCurve*/
 
     // noisy and dead channels on top/bottom sensors
     std::vector<int> fNoisyChannelsTop;
@@ -171,8 +169,8 @@ class HybridTester : public Tool
     double fDecisionThreshold = 10.0;   /*!< Decision Threshold for channels occupancy based tests, values from 1 to 100 as % */
        uint32_t trigSource;
 
-    void SetBeBoardForShortsFinding (BeBoard* pBoard);
-    void SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup);
+    void SetBeBoardForShortsFinding (Ph2_HwDescription::BeBoard* pBoard);
+    void SetTestGroup(Ph2_HwDescription::BeBoard* pBoard, uint8_t pTestGroup);
     void ReconstructShorts (std::array<std::vector<std::array<int, 5>>, 8> pShortedGroupsArray);
     void DisplayGroupsContent (std::array<std::vector<std::array<int, 5>>, 8> pShortedGroupsArray);
     bool CheckShortsConnection (std::vector<std::array<int, 2>> pShortA, std::vector<std::array<int, 2>> pShortB);
@@ -227,8 +225,8 @@ class HybridTester : public Tool
     }
 
     // To measure the occupancy per Chip
-    uint32_t fillSCurves ( BeBoard* pBoard,  const Event* pEvent, uint16_t pValue );
-    void updateSCurveCanvas ( BeBoard* pBoard );
+    uint32_t fillSCurves ( Ph2_HwDescription::BeBoard* pBoard,  const Ph2_HwInterface::Event* pEvent, uint16_t pValue );
+    void updateSCurveCanvas ( Ph2_HwDescription::BeBoard* pBoard );
     void processSCurves ( uint32_t pEventsperVcth );
 
 

@@ -177,7 +177,8 @@ private:
 		CheckStream	fStreamSizeAndNumber;
 		uint8_t     fObjectNameLength;
 		uint8_t		fCreatorNameLength;
-		char        fBuffer[size_t(pow(2,( (sizeof(fObjectNameLength) + sizeof(fObjectNameLength)) *8)))];
+		//char        fBuffer[size_t(pow(2,( (sizeof(fObjectNameLength) + sizeof(fObjectNameLength)) *8)))];
+		char        fBuffer[1 << ( (sizeof(fObjectNameLength) + sizeof(fObjectNameLength)) *8)];
 	};
 
 public:

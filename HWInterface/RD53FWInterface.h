@@ -15,7 +15,10 @@
 #include "../HWDescription/RD53.h"
 #include "../Utils/RD53RunProgress.h"
 #include "../Utils/easylogging++.h"
-
+#include "../Utils/Event.h"
+#include "../Utils/DataContainer.h"
+#include "../Utils/OccupancyAndPh.h"
+#include "../Utils/GenericDataVector.h"
 #include <uhal/uhal.hpp>
 
 
@@ -86,29 +89,28 @@ namespace Ph2_HwInterface
   {
   public:
     RD53FWInterface (const char* pId, const char* pUri, const char* pAddressTable);
-    virtual ~RD53FWInterface() { delete fFileHandler; }
+    ~RD53FWInterface() { delete fFileHandler; }
 
     void      setFileHandler (FileHandler* pHandler) override;
     uint32_t  getBoardInfo   ()                      override;
-    BoardType getBoardType   () const { return BoardType::RD53; };
+    BoardType getBoardType   () const                override { return BoardType::RD53; }
 
     void ResetSequence       ();
-    void ConfigureBoard      (const BeBoard* pBoard) override;
+    void ConfigureBoard      (const Ph2_HwDescription::BeBoard* pBoard) override;
 
     void Start               () override;
     void Stop                () override;
     void Pause               () override;
     void Resume              () override;
 
-    void     ReadNEvents (BeBoard* pBoard, uint32_t pNEvents,  std::vector<uint32_t>& pData, bool pWait = true) override;
-    uint32_t ReadData    (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
-    void     ChipReset   ()                                                                                     override;
-    void     ChipReSync  ()                                                                                     override;
-    std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlockSize)           override;
+    void     ReadNEvents (Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents,  std::vector<uint32_t>& pData, bool pWait = true) override;
+    uint32_t ReadData    (Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
+    void     ChipReset   ()                                                                                                        override;
+    void     ChipReSync  ()                                                                                                        override;
 
     bool CheckChipCommunication ();
     void WriteChipCommand       (const std::vector<uint16_t>& data, int moduleId);
-    std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Chip* pChip);
+    std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Ph2_HwDescription::Chip* pChip);
 
     struct ChipFrame
     {
@@ -116,15 +118,19 @@ namespace Ph2_HwInterface
 
       uint16_t error_code;
       uint16_t module_id;
+      uint16_t chip_id;
       uint16_t chip_lane;
       uint16_t l1a_data_size;
       uint16_t chip_type;
       uint16_t frame_delay;
     };
 
-    struct Event
+    struct Event : public Ph2_HwInterface::Event
     {
       Event (const uint32_t* data, size_t n);
+
+      void fillDataContainer          (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
+      static void addBoardInfo2Events (const Ph2_HwDescription::BeBoard* pBoard, std::vector<RD53FWInterface::Event>& decodedEvents);
 
       uint16_t block_size;
       uint16_t tlu_trigger_id;
@@ -134,28 +140,18 @@ namespace Ph2_HwInterface
       uint32_t bx_counter;
 
       std::vector<ChipFrame>   chip_frames;
-      std::vector<RD53::Event> chip_events;
+      std::vector<Ph2_HwDescription::RD53::Event> chip_events;
 
       uint16_t evtStatus;
+
+    protected:
+      bool isHittedChip      (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const;
+      static int lane2chipId (const Ph2_HwDescription::BeBoard* pBoard, uint16_t module_id, uint16_t chip_lane);
     };
 
-    static void DecodeEvents    (const std::vector<uint32_t>& data, uint16_t& status, std::vector<RD53FWInterface::Event>& events);
-    static bool EvtErrorHandler (uint16_t status);
-    static void PrintEvents     (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
-    static int  lane2chipId     (const BeBoard* pBoard, uint16_t module_id, uint16_t chip_lane)
-    {
-      // #############################
-      // # Translate lane to chip ID #
-      // #############################
-      Module* module = pBoard->getModule(module_id);
-      if (module != nullptr)
-        {
-          auto it = std::find_if(module->fReadoutChipVector.begin(), module->fReadoutChipVector.end(), [=] (ReadoutChip* pChip)
-                                 { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
-          if (it != module->fReadoutChipVector.end()) return (*it)->getChipId();
-        }
-      return -1; // Chip not found
-    }
+    static uint16_t DecodeEvents    (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
+    static bool     EvtErrorHandler (uint16_t status);
+    static void     PrintEvents     (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
 
     enum class TriggerSource : uint32_t
     {
@@ -201,7 +197,7 @@ namespace Ph2_HwInterface
       FastCmdFSMConfig fast_cmd_fsm;
     };
 
-    void SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0);
+    void SetAndConfigureFastCommands (const Ph2_HwDescription::BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0);
 
     struct DIO5Config
     {
@@ -240,6 +236,11 @@ namespace Ph2_HwInterface
     void ReadI2C              (std::vector<uint32_t>& data);
     void ConfigureClockSi5324 ();
 
+    // ########################################
+    // # Vector containing the decoded events #
+    // ########################################
+    static std::vector<RD53FWInterface::Event> decodedEvents;
+
   private:
     void PrintFWstatus         ();
     void TurnOffFMC            ();
@@ -258,12 +259,6 @@ namespace Ph2_HwInterface
     uint16_t           enabledModules;
     bool               singleChip;
   };
-
-
-  // ########################################
-  // # Vector containing the decoded events #
-  // ########################################
-  extern std::vector<RD53FWInterface::Event> RD53decodedEvents;
 }
 
 #endif

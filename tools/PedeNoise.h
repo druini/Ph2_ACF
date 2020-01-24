@@ -22,8 +22,6 @@
 
 #include <map>
 
-using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 class DetectorContainer;

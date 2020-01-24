@@ -31,14 +31,12 @@
 #include "TMath.h"
 
 using namespace Ph2_System;
-using namespace Ph2_HwInterface;
-using namespace Ph2_HwDescription;
 
 /*!
  * \class PulseShape
  * \brief Class to reconstruct pulse shape
  */
-typedef std::map<Chip*, std::vector<Channel*> > ChannelMap;
+typedef std::map<Ph2_HwDescription::Chip*, std::vector<Channel*> > ChannelMap;
 
 class PulseShape : public Tool
 {
@@ -89,7 +87,7 @@ class PulseShape : public Tool
     */
     void updateHists ( std::string pHistName, bool pFinal );
 
-    uint32_t fillVcthHist ( BeBoard* pBoard, Event* pEvent, uint32_t pVcth );
+    uint32_t fillVcthHist ( Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent, uint32_t pVcth );
     /*!
     * \brief convert the delay before concat to the  test group number
     * \param pDelay: the actual dealy

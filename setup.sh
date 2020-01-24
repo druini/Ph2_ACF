@@ -22,8 +22,8 @@ fi
 ########
 # ROOT #
 ########
-source /usr/local/root/bin/thisroot.sh
 # source $ROOTSYS/bin/thisroot.sh
+source /usr/local/root/bin/thisroot.sh
 #source /opt/local/root/bin/thisroot.sh
 
 #######

@@ -44,7 +44,6 @@
 
 #include "BeBoardFWInterface.h"
 
-using namespace Ph2_HwDescription;
 
 /*!
  * \namespace Ph2_HwInterface
@@ -88,19 +87,19 @@ namespace Ph2_HwInterface
      * \param pBoard
      * \param pHandler : pointer to FileHandler object
      */
-    void SetFileHandler (BeBoard* pBoard, FileHandler* pHandler);
+    void SetFileHandler (Ph2_HwDescription::BeBoard* pBoard, FileHandler* pHandler);
 
     /*!
      * \brief enable the file handler
      * \param pBoard
      */
-    void enableFileHandler (BeBoard* pBoard);
+    void enableFileHandler (Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * \brief disable the file handler
      * \param pBoard
      */
-    void disableFileHandler (BeBoard* pBoard);
+    void disableFileHandler (Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * \brief Update both Board register and Config File
@@ -108,122 +107,122 @@ namespace Ph2_HwInterface
      * \param pRegNode : Node of the register to update
      * \param pVal : Value to write
      */
-    void WriteBoardReg ( BeBoard* pBoard, const std::string& pRegNode, const uint32_t& pVal );
+    void WriteBoardReg ( Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode, const uint32_t& pVal );
     /*!
      * \brief Write a block of a given size into the board
      * \param pBoard
      * \param pRegNode : Node of the register to write
      * pValVec Vector of values to write
      */
-    void WriteBlockBoardReg ( BeBoard* pBoard, const std::string& pRegNode, const std::vector<uint32_t>& pValVec );
+    void WriteBlockBoardReg ( Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode, const std::vector<uint32_t>& pValVec );
     /*!
      * \brief Write: Update both Board register and Config File
      * \param pBoard
      * \param pRegVec : Vector of Register/Value pairs
      */
-    void WriteBoardMultReg ( BeBoard* pBoard, const std::vector < std::pair< std::string, uint32_t > >& pRegVec );
+    void WriteBoardMultReg ( Ph2_HwDescription::BeBoard* pBoard, const std::vector < std::pair< std::string, uint32_t > >& pRegVec );
     /*!
      * \brief Update Config File with the value in the Board register
      * \param pBoard
      * \param pRegNode : Node of the register to update
      */
-    uint32_t ReadBoardReg ( BeBoard* pBoard, const std::string& pRegNode );
+    uint32_t ReadBoardReg ( Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode );
     /*!
      * \brief Read a block of a given size from the board
      * \param pBoard
      * \param pRegNode : Node of the register to read
      * \param pSize Number of 32-bit words in the block
      */
-    std::vector<uint32_t> ReadBlockBoardReg ( BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize );
+    std::vector<uint32_t> ReadBlockBoardReg ( Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize );
     /*!
      * \brief Read a vector of Registers
      * \param pBoard
      * \param pRegVec : Vector of Register/Value pairs
      */
-    void ReadBoardMultReg ( BeBoard* pBoard, std::vector < std::pair< std::string, uint32_t > >& pRegVec );
+    void ReadBoardMultReg ( Ph2_HwDescription::BeBoard* pBoard, std::vector < std::pair< std::string, uint32_t > >& pRegVec );
     /*!
      * \brief Get the board infos
      * \param pBoard
      */
-    uint32_t getBoardInfo ( const BeBoard* pBoard );
+    uint32_t getBoardInfo ( const Ph2_HwDescription::BeBoard* pBoard );
     /*!
      * \brief Get the board infos
      * \param pBoard
      */
-    BoardType getBoardType ( const BeBoard* pBoard );
+    BoardType getBoardType ( const Ph2_HwDescription::BeBoard* pBoard );
 
     /*!
      * \brief Configure the board with its Config File
      * \param pBoard
      */
-    void ConfigureBoard ( const BeBoard* pBoard );
+    void ConfigureBoard ( const Ph2_HwDescription::BeBoard* pBoard );
 
     /*!
      * \brief Hard reset of all Chip
      * \param pChip
      */
-    void ChipReSync ( const BeBoard* pBoard );
+    void ChipReSync ( const Ph2_HwDescription::BeBoard* pBoard );
     /*!
      * \brief Fast Reset of the Chip
      * \param pChip
      */
-    void ChipReset ( const BeBoard* pBoard );
+    void ChipReset ( const Ph2_HwDescription::BeBoard* pBoard );
     /*!
      * \brief Send Chip Trigger
      * \param pChip
      */
-    void ChipTrigger ( const BeBoard* pBoard );
+    void ChipTrigger ( const Ph2_HwDescription::BeBoard* pBoard );
 
     /*!
      * \brief Send Chip TestPulse
      * \param pChip
      */
-    void ChipTestPulse ( const BeBoard* pBoard );
+    void ChipTestPulse ( const Ph2_HwDescription::BeBoard* pBoard );
 
     /*!
      * \brief Start a DAQ
      * \param pBoard
      */
-    void Start ( BeBoard* pBoard );
+    void Start ( Ph2_HwDescription::BeBoard* pBoard );
     /*!
      * \brief Stop a DAQ
      * \param pBoard
      */
-    void Stop ( BeBoard* pBoard );
+    void Stop ( Ph2_HwDescription::BeBoard* pBoard );
     /*!
      * \brief Pause a DAQ
      * \param pBoard
      */
-    void Pause ( BeBoard* pBoard );
+    void Pause ( Ph2_HwDescription::BeBoard* pBoard );
     /*!
      * \brief Resume a DAQ
      * \param pBoard
      */
-    void Resume ( BeBoard* pBoard );
+    void Resume ( Ph2_HwDescription::BeBoard* pBoard );
     /*!
      * \brief Read data from DAQ
      * \param pBoard
      * \param pBreakTrigger : if true, enable the break trigger
      * \return fNpackets: the number of packets read
      */
-    uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true );
+    uint32_t ReadData ( Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true );
     /*!
      * \brief Read data for pNEvents
      * \param pBoard : the pointer to the BeBoard
      * \param pNEvents :  the 1 indexed number of Events to read - this will set the packet size to this value -1
      */
-    void ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true);
+    void ReadNEvents (Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true);
 
     /*! \brief Get a uHAL node object from its path in the uHAL XML address file
      * \param pBoard pointer to a board description
      * \return Reference to the uhal::node object
      */
-    const uhal::Node& getUhalNode ( const BeBoard* pBoard, const std::string& pStrPath );
+    const uhal::Node& getUhalNode ( const Ph2_HwDescription::BeBoard* pBoard, const std::string& pStrPath );
     /*! \brief Access to the uHAL main interface for a given board
      * \param pBoard pointer to a board description
      * \return pointer to the uhal::HwInterface object
      */
-    uhal::HwInterface* getHardwareInterface ( const BeBoard* pBoard );
+    uhal::HwInterface* getHardwareInterface ( const Ph2_HwDescription::BeBoard* pBoard );
     /*! \brief Access to the firmware interface for a given board
      * \return pointer to the BeBoardFWInterface object
      */
@@ -233,49 +232,49 @@ namespace Ph2_HwInterface
      * \param numConfig FPGA configuration number to be uploaded
      * \param pstrFile path to MCS file containing the FPGA configuration
      */
-    void FlashProm ( BeBoard* pBoard, const std::string& strConfig, const char* pstrFile );
+    void FlashProm ( Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const char* pstrFile );
     /*! \brief Jump to an FPGA configuration
      * \param pBoard pointer to a board description
      * \param numConfig FPGA configuration number
      */
-    void JumpToFpgaConfig ( BeBoard* pBoard, const std::string& strConfig);
+    void JumpToFpgaConfig ( Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig);
 
-    void DownloadFpgaConfig ( BeBoard* pBoard, const std::string& strConfig, const std::string& strDest);
+    void DownloadFpgaConfig ( Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const std::string& strDest);
     /*! \brief Current FPGA configuration
      * \param pBoard pointer to a board description
      * \return const pointer to an FPGA uploading process. NULL means that no upload is been processed.
      */
-    const FpgaConfig* GetConfiguringFpga ( BeBoard* pBoard );
+    const FpgaConfig* GetConfiguringFpga ( Ph2_HwDescription::BeBoard* pBoard );
 
     /*! \brief Get the list of available FPGA configuration (or firmware images)
      * \param pBoard pointer to a board description */
-    std::vector<std::string> getFpgaConfigList ( BeBoard* pBoard);
+    std::vector<std::string> getFpgaConfigList ( Ph2_HwDescription::BeBoard* pBoard);
 
     /*! \brief Delete one Fpga configuration (or firmware image)
      * \param pBoard pointer to a board description
      * \param strId Firmware image identifier*/
-    void DeleteFpgaConfig (BeBoard* pBoard, const std::string& strId);
+    void DeleteFpgaConfig (Ph2_HwDescription::BeBoard* pBoard, const std::string& strId);
     /*! \brief Reboot the board */
-    void RebootBoard (BeBoard* pBoard);
+    void RebootBoard (Ph2_HwDescription::BeBoard* pBoard);
     /*! \brief Set or reset the start signal */
-    void SetForceStart (BeBoard* pBoard, bool bStart);
+    void SetForceStart (Ph2_HwDescription::BeBoard* pBoard, bool bStart);
 
     /*!
      * Activate power on and off sequence 
      */
-    void PowerOn( BeBoard* pBoard );
+    void PowerOn( Ph2_HwDescription::BeBoard* pBoard );
 
-    void PowerOff( BeBoard* pBoard );
+    void PowerOff( Ph2_HwDescription::BeBoard* pBoard );
 
     /*!
      * Read the firmware version
      */
-    void ReadVer( BeBoard* pBoard );
+    void ReadVer( Ph2_HwDescription::BeBoard* pBoard );
 
     /*!
      * Returns data from buffernum and mpa.  Raw register output.
      */
-    std::pair<std::vector<uint32_t>, std::vector<uint32_t>>   ReadData( BeBoard* pBoard, int buffernum, int mpa);
+    std::pair<std::vector<uint32_t>, std::vector<uint32_t>>   ReadData( Ph2_HwDescription::BeBoard* pBoard, int buffernum, int mpa);
   };
 }
 

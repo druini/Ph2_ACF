@@ -9,6 +9,9 @@
 
 #include "RD53ClockDelay.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void ClockDelay::ConfigureCalibration ()
 {
   // ##############################
@@ -69,7 +72,7 @@ void ClockDelay::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[ClockDelay::Start] Starting" << RESET;
 
-  if (saveBinaryData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/ClockDelayRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -102,7 +105,7 @@ void ClockDelay::Stop ()
   this->closeFileHandler();
 }
 
-void ClockDelay::initialize (const std::string fileRes_, const std::string fileReg_)
+void ClockDelay::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -114,6 +117,12 @@ void ClockDelay::initialize (const std::string fileRes_, const std::string fileR
   fileReg = fileReg_;
 
   ClockDelay::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/ClockDelayRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void ClockDelay::run ()

@@ -28,7 +28,6 @@ namespace Ph2_System
     , fWriteHandlerEnabled (false)
     , fStreamerEnabled     (false)
     , fNetworkStreamer     (nullptr) // This is the server listening port
-    // , fData                (nullptr)
   {}
 
   SystemController::~SystemController() {}
@@ -66,8 +65,6 @@ namespace Ph2_System
 
     delete fNetworkStreamer;
     fNetworkStreamer = nullptr;
-    // delete fData;
-    // fData = nullptr;
   }
 
   void SystemController::addFileHandler (const std::string& pFilename, char pOption)
@@ -94,11 +91,6 @@ namespace Ph2_System
   {
     if (pNWords32 == 0) pVec = fFileHandler->readFile();
     else pVec = fFileHandler->readFileChunks(pNWords32);
-  }
-
-  void SystemController::setData (BeBoard* pBoard, std::vector<uint32_t>& pData, uint32_t pNEvents)
-  {
-    this->DecodeData(pBoard, pData, pNEvents, pBoard->getBoardType());
   }
 
   void SystemController::InitializeHw (const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
@@ -346,36 +338,32 @@ namespace Ph2_System
   }
 
 
-  void SystemController::SetFuture (const BeBoard *pBoard, const std::vector<uint32_t> &pData, uint32_t pNevents, BoardType pType)
+
+
+  // #################
+  // # Data decoding #
+  // #################
+  void SystemController::SetFuture (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
   {
     if (pData.size() != 0) fFuture = std::async(&SystemController::DecodeData, this, pBoard, pData, pNevents, pType);
   }
 
   void SystemController::DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
   {
-    this->ResetEventList();
-
     if (pType == BoardType::RD53)
       {
-        uint16_t status;
-        if (RD53decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, status, RD53decodedEvents);
+        fEventList.clear();
 
-        for (const auto& evt : RD53decodedEvents)
-          {
-            std::vector<std::pair<size_t,size_t>> moduleAndChipIDs;
-
-            for (const auto& chip_frame : evt.chip_frames)
-              {
-                int chip_id = RD53FWInterface::lane2chipId(pBoard, chip_frame.module_id, chip_frame.chip_lane);
-                if (chip_id != -1) moduleAndChipIDs.push_back(std::pair<size_t,size_t>(chip_frame.module_id, chip_id));
-              }
-
-            if (moduleAndChipIDs.size() != 0)
-              fEventList.push_back(new RD53Event(std::move(moduleAndChipIDs), evt.chip_events));
-          }
+        if (RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, RD53FWInterface::decodedEvents);
+        RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
+        for (auto i = 0u; i < RD53FWInterface::decodedEvents.size(); i++) fEventList.push_back(&RD53FWInterface::decodedEvents[i]);
       }
     else
       {
+        for (auto &pevt : fEventList) delete pevt;
+        fEventList.clear();
+        fCurrentEvent = 0;
+
         fNevents   = static_cast<uint32_t>(pNevents);
         fEventSize = static_cast<uint32_t>((pData.size()) / fNevents);
 
@@ -385,7 +373,6 @@ namespace Ph2_System
         if (fEventType == EventType::ZS) fNCbc = 0;
         else fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
 
-        // to fill fEventList
         std::vector<uint32_t> lvec;
 
         //use a SwapIndex to decide wether to swap a word or not
@@ -460,12 +447,5 @@ namespace Ph2_System
             cZSWordIndex++;
           }
       }
-  }
-
-  void SystemController::ResetEventList ()
-  {
-    for (auto &pevt : fEventList) delete pevt;
-    fEventList.clear();
-    fCurrentEvent = 0;
   }
 }

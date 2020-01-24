@@ -15,8 +15,6 @@
 #include "TString.h"
 #include "TLine.h"
 
-using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 class StubTool : public Tool
@@ -36,12 +34,12 @@ class StubTool : public Tool
 
 
   private:
-    void CheckCbcReg( Chip* pCbc);
+    void CheckCbcReg( Ph2_HwDescription::Chip* pCbc);
     void setDelayAndTestGroup ( uint32_t pDelayns , uint8_t cTestGroup);
     void parseSettings();
     void setInitialOffsets();
 
-    void maskChannel(Chip* pCbc, uint8_t iChan, bool mask = true);
+    void maskChannel(Ph2_HwDescription::Chip* pCbc, uint8_t iChan, bool mask = true);
 
     uint16_t encodeId (uint8_t pFeId, uint8_t pCbcId);
 
@@ -59,14 +57,14 @@ class StubTool : public Tool
         //         // { 3.0  , 0x0a} , {2.5 , 0x0b} , {2.0 , 0x0c } , {1.5,0x0d}, {1.0,0x0e}  , {0.5, 0x0f}
         //             };
     };
-    void setCorrelationWinodwOffsets ( Chip* pCbc, double pOffsetR1, double pOffsetR2, double pOffsetR3, double pOffsetR4 );
+    void setCorrelationWinodwOffsets ( Ph2_HwDescription::Chip* pCbc, double pOffsetR1, double pOffsetR2, double pOffsetR3, double pOffsetR4 );
 
     // method to configure test pulse on the CBC
-    void configureTestPulse (Chip* pCbc, uint8_t pPulseState);
+    void configureTestPulse (Ph2_HwDescription::Chip* pCbc, uint8_t pPulseState);
 
     //to hold the original register values
-    std::map<Chip*, uint8_t> fStubLogicValue;
-    std::map<Chip*, uint8_t> fHIPCountValue;
+    std::map<Ph2_HwDescription::Chip*, uint8_t> fStubLogicValue;
+    std::map<Ph2_HwDescription::Chip*, uint8_t> fHIPCountValue;
 
     double Decoding_stub1(int Stub_pos);
     double Decoding_stub2(int Stub_pos);
@@ -86,8 +84,8 @@ class StubTool : public Tool
     std::vector<Channel *> fChannelVector;
 
     //for our convenience
-    Chip* fCbc;
-    BeBoard* fBoard;
+    Ph2_HwDescription::Chip* fCbc;
+    Ph2_HwDescription::BeBoard* fBoard;
 
     //root stuff
     TCanvas* fCanvas;

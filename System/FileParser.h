@@ -33,8 +33,6 @@
 #include <string>
 
 
-using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
 
 /*!
  * \namespace Ph2_System
@@ -42,8 +40,8 @@ using namespace Ph2_HwInterface;
  */
 namespace Ph2_System
 {
-    using BeBoardVec   = std::vector<BeBoard*>;                   /*!< Vector of Board pointers */
-    using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board connected */
+    using BeBoardVec   = std::vector<Ph2_HwDescription::BeBoard*>;                   /*!< Vector of Board pointers */
+    using BeBoardFWMap = std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*>; /*!< Map of Board connected */
     using SettingsMap  = std::unordered_map<std::string, double>; /*!< Maps the settings */
 
     /*!
@@ -85,20 +83,20 @@ namespace Ph2_System
         void parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile );
 
         void parseBeBoard          (pugi::xml_node pBeBordNode,   BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os );
-        void parseRegister         (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os );
-        void parseSLink            (pugi::xml_node pSLinkNode,    BeBoard* pBoard,               std::ostream& os );
-        void parseModuleContainer  (pugi::xml_node pModuleNode,   BeBoard* pBoard,               std::ostream& os );
-        void parseCbcContainer     (pugi::xml_node pModuleNode,   Module* cModule,               std::string cFilePrefix, std::ostream& os );
-        void parseCbcSettings      (pugi::xml_node pCbcNode,      ReadoutChip* pCbc,             std::ostream& os);
-        void parseGlobalCbcSettings(pugi::xml_node pModuleNode,   Module* pModule,               std::ostream& os);
+        void parseRegister         (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os );
+        void parseSLink            (pugi::xml_node pSLinkNode,    Ph2_HwDescription::BeBoard* pBoard,               std::ostream& os );
+        void parseModuleContainer  (pugi::xml_node pModuleNode,   Ph2_HwDescription::BeBoard* pBoard,               std::ostream& os );
+        void parseCbcContainer     (pugi::xml_node pModuleNode,   Ph2_HwDescription::Module* cModule,               std::string cFilePrefix, std::ostream& os );
+        void parseCbcSettings      (pugi::xml_node pCbcNode,      Ph2_HwDescription::ReadoutChip* pCbc,             std::ostream& os);
+        void parseGlobalCbcSettings(pugi::xml_node pModuleNode,   Ph2_HwDescription::Module* pModule,               std::ostream& os);
 
 
 	// ########################
 	// # RD53 specific parser #
 	// ########################
-        void parseRD53               (pugi::xml_node pModuleNode, Module* cModule, std::string cFilePrefix, std::ostream& os);
-        void parseRD53Settings       (pugi::xml_node pRd53Node,   ReadoutChip* pRD53,std::ostream& os);
-        void parseGlobalRD53Settings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os);
+        void parseRD53               (pugi::xml_node pModuleNode, Ph2_HwDescription::Module* cModule, std::string cFilePrefix, std::ostream& os);
+        void parseRD53Settings       (pugi::xml_node pRd53Node,   Ph2_HwDescription::ReadoutChip* pRD53,std::ostream& os);
+        void parseGlobalRD53Settings (pugi::xml_node pModuleNode, Ph2_HwDescription::Module* pModule, std::ostream& os);
 	// ########################
 
 
