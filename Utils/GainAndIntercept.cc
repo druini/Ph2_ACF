@@ -18,6 +18,11 @@ void GainAndIntercept::makeSummaryAverage (const std::vector<GainAndIntercept>* 
       abort();
     }
 
+  fGain           = 0;
+  fGainError      = 0;
+  fIntercept      = 0;
+  fInterceptError = 0;
+
   for (size_t iContainer = 0; iContainer<theGainAndInterceptVector->size(); iContainer++)
     {
       if (theGainAndInterceptVector->at(iContainer).fGainError > 0)

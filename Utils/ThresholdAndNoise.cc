@@ -9,6 +9,11 @@ void ThresholdAndNoise::makeSummaryAverage(const std::vector<ThresholdAndNoise>*
       abort();
     }
 
+  fThreshold      = 0;
+  fThresholdError = 0;
+  fNoise          = 0;
+  fNoiseError     = 0;
+
   for(size_t iContainer = 0; iContainer<theThresholdAndNoiseVector->size(); ++iContainer)
     {
       if (theThresholdAndNoiseVector->at(iContainer).fThresholdError > 0)
