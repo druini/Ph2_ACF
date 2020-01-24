@@ -455,18 +455,40 @@ public:
 private:
 };
 
-class BoardDataContainer : public DataContainer<ModuleDataContainer>
+class OpticalGroupDataContainer : public DataContainer<ModuleDataContainer>
 {
 public:
-	BoardDataContainer(uint16_t id) : DataContainer<ModuleDataContainer>(id){}
-	BoardDataContainer(const BoardDataContainer&) = delete;
-	BoardDataContainer(BoardDataContainer&& theCopyContainer)
+	OpticalGroupDataContainer(uint16_t id) : DataContainer<ModuleDataContainer>(id){}
+	OpticalGroupDataContainer(const OpticalGroupDataContainer&) = delete;
+	OpticalGroupDataContainer(OpticalGroupDataContainer&& theCopyContainer)
 	: DataContainer<ModuleDataContainer>(std::move(theCopyContainer))
 	{}
 
 	template <class T>
 	T*               addModuleDataContainer(uint16_t id, T* module){return static_cast<T*>(DataContainer<ModuleDataContainer>::addObject(id, module));}
 	ModuleDataContainer* addModuleDataContainer(uint16_t id)                 {return DataContainer<ModuleDataContainer>::addObject(id, new ModuleDataContainer(id));}
+private:
+};
+
+class BoardDataContainer : public DataContainer<OpticalGroupDataContainer>
+{
+public:
+	BoardDataContainer(uint16_t id) : DataContainer<OpticalGroupDataContainer>(id){}
+	BoardDataContainer(const BoardDataContainer&) = delete;
+	BoardDataContainer(BoardDataContainer&& theCopyContainer)
+	: DataContainer<OpticalGroupDataContainer>(std::move(theCopyContainer))
+	{}
+
+	#ifndef PATCH_FOR_OPTICALGROUP
+	template <class T>
+	T*                          addOpticalGroupDataContainer(uint16_t id, T* opticalGroup){return static_cast<T*>(DataContainer<OpticalGroupDataContainer>::addObject(id, opticalGroup));}
+	OpticalGroupDataContainer*  addOpticalGroupDataContainer(uint16_t id)           {return DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(id));}
+	#elif
+	template <class T>
+	T*                          addOpticalGroupDataContainer(uint16_t id, T* opticalGroup){return static_cast<T*>(DataContainer<OpticalGroupDataContainer>::addObject(id, opticalGroup));}
+	ModuleDataContainer*        addOpticalGroupDataContainer(uint16_t id)           {return DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(id));}
+	#endif
+
 private:
 };
 
