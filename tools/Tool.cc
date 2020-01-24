@@ -893,6 +893,9 @@ void Tool::scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, c
 
 	for(size_t dacIt = 0; dacIt<dac1List.size(); ++dacIt)
 	{
+		// el::LoggingFlag::NewLineForContainer (0);
+		if(boardIndex==0) LOG(INFO) << BOLDBLUE << " Scanning dac1 " << dac1Name << ", value = " << dac1List[dacIt] << " vs " << dac2Name <<  RESET ;
+		// el::LoggingFlag::NewLineForContainer (1);
 		setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)), dac1Name, dac1List[dacIt]);
 		scanBeBoardDac(boardIndex, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector[dacIt],numberOfEventsPerBurst);
 	}
@@ -1209,6 +1212,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 
 	if(fChannelGroupHandler == nullptr)
 	{
+		std::cout<<__PRETTY_FUNCTION__<< " fChannelGroupHandler was not initialized!!! Aborting..." << std::endl;
 	    abort();
 	}
 	if(!fAllChan)
@@ -1379,6 +1383,7 @@ void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const
 
 	for(size_t dacIt = 0; dacIt<dacList.size(); ++dacIt)
 	{
+		// if(boardIndex==0) LOG(INFO) << " Scanning dac " << dacName << ", value = " << dacList[dacIt]  << RESET ;
 		fDetectorDataContainer = detectorContainerVector[dacIt];
 		setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents,numberOfEventsPerBurst);
 	}

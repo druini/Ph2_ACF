@@ -285,6 +285,12 @@ class Tool : public Ph2_System::SystemController
     //Set same DAC list for all Chips (it is able to recognize if the dac is local or global)
     void setSameDac(const std::string &dacName, const uint16_t dacValue);
 
+    float readFromSettingMap(std::string theSettingName, float theDefaultValue)
+    {
+        auto cSetting = fSettingsMap.find ( theSettingName );
+        return ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : theDefaultValue;
+    }
+
     template<typename T, typename... H>
     ChannelContainerStream<T,H...> prepareChannelContainerStreamer(std::string appendName = "")
     {

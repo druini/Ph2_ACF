@@ -34,8 +34,8 @@ class PedeNoise : public Tool
     ~PedeNoise();
 
     void Initialise (bool pAllChan = false, bool pDisableStubLogic = true);
-    void measureNoise (uint8_t pTPAmplitude = 0); //method based on the one below that actually analyzes the scurves and extracts the noise
-    void sweepSCurves (uint8_t pTPAmplitude); // actual methods to measure SCurves
+    void measureNoise (); //method based on the one below that actually analyzes the scurves and extracts the noise
+    void sweepSCurves (); // actual methods to measure SCurves
     void Validate (uint32_t pNoiseStripThreshold = 1, uint32_t pMultiple = 100);
     void writeObjects();
 
@@ -45,6 +45,9 @@ class PedeNoise : public Tool
     void Pause() override;
     void Resume() override;
 
+  protected:
+    uint8_t  fTestPulseAmplitude {    0};
+
   private:
 
     DetectorDataContainer fThresholdAndNoiseContainer;
@@ -53,12 +56,10 @@ class PedeNoise : public Tool
     DetectorDataContainer fHIPCountValue;
 
     // Settings
-    bool fHoleMode;
-    bool fPlotSCurves;
-    bool fFitSCurves;
-    uint8_t fTestPulseAmplitude;
-    uint32_t fEventsPerPoint;
-    bool fDisableStubLogic;
+    bool     fPlotSCurves        {false};
+    bool     fFitSCurves         {false};
+    uint32_t fEventsPerPoint     {    0};
+    bool     fDisableStubLogic   { true};
 
   private:
     void measureSCurves (uint16_t pStartValue = 0 );

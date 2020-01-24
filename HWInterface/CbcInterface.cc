@@ -105,8 +105,7 @@ namespace Ph2_HwInterface
         uint8_t cTPRegValue;
         if(inject) cTPRegValue  = (pChip->getReg ("MiscTestPulseCtrl&AnalogMux" ) |    (0x1 << 6)   );
         else       cTPRegValue =  (pChip->getReg ("MiscTestPulseCtrl&AnalogMux" ) & (~ (0x1 << 6))  );
-        std::cout<<__PRETTY_FUNCTION__<< (inject ? "Enabling" : "Disabling") << " testpulse: "<< std::hex << +cTPRegValue << std::dec<< std::endl;
-
+        
         return WriteChipReg(pChip, "MiscTestPulseCtrl&AnalogMux", cTPRegValue, pVerifLoop);
     }
 

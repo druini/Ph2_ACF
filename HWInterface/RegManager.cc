@@ -67,7 +67,7 @@ namespace Ph2_HwInterface
         uhal::ValWord<uint32_t> reply = fBoard->getNode ( pRegNode ).read();
         fBoard->dispatch();
 
-        uint32_t comp = ( uint32_t ) reply;
+        uint32_t comp = reply.value();
 
         if ( comp == pVal )
           {
@@ -112,7 +112,7 @@ namespace Ph2_HwInterface
             uhal::ValWord<uint32_t> reply = fBoard->getNode ( v.first ).read();
             fBoard->dispatch();
 
-            comp = static_cast<uint32_t> ( reply );
+            comp = reply.value();
 
             if ( comp ==  v.second )
               LOG (DEBUG) << "Values written correctly !" << v.first << "=" << v.second ;
@@ -205,13 +205,13 @@ namespace Ph2_HwInterface
 
     if ( DEV_FLAG )
       {
-        uint32_t read = ( uint32_t ) cValRead;
+        uint32_t read = cValRead.value();
         LOG (DEBUG) << "Value in register ID " << pRegNode << " : " << read ;
       }
 
     if (mode == Mode::Capture) captureRead(cValRead.value());
 
-    return cValRead;
+    return cValRead.value();
   }
 
   uint32_t RegManager::ReadAtAddress ( uint32_t uAddr, uint32_t uMask )
@@ -223,13 +223,13 @@ namespace Ph2_HwInterface
 
     if ( DEV_FLAG )
       {
-        uint32_t read = ( uint32_t ) cValRead;
+        uint32_t read = cValRead.value();
         LOG (DEBUG) << "Value at address " << std::hex << uAddr << std::dec << " : " << read ;
       }
 
     if (mode == Mode::Capture) captureRead(cValRead.value());
 
-    return cValRead;
+    return cValRead.value();
   }
 
   std::vector<uint32_t> RegManager::ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlockSize )

@@ -8,6 +8,7 @@
 #include "DQMHistogramPedeNoise.h"
 #include "DQMHistogramPedestalEqualization.h"
 #include "DQMHistogramCalibrationExample.h"
+#include "CBCHistogramPulseShape.h"
 #include "RD53PixelAliveHistograms.h"
 #include "RD53SCurveHistograms.h"
 #include "RD53GainHistograms.h"
@@ -92,18 +93,16 @@ void DQMInterface::configure(std::string const &calibrationName, std::string con
 	fParser.parseSettings(configurationFilePath, pSettingsMap, out, true);
 
 	if (calibrationName == "pedenoise")
-	{
 		fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
-	}
 	else if (calibrationName == "calibrationandpedenoise")
 	{
 		fDQMHistogrammerVector.push_back(new DQMHistogramPedestalEqualization());
 		fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
 	}
 	else if (calibrationName == "calibrationexample")
-	{
 		fDQMHistogrammerVector.push_back(new DQMHistogramCalibrationExample());
-	}
+	else if (calibrationName == "cbcPulseShape")
+		fDQMHistogrammerVector.push_back(new CBCHistogramPulseShape());
 	else if (calibrationName == "pixelalive")
 		fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
 	else if (calibrationName == "noise")
@@ -190,9 +189,9 @@ bool DQMInterface::running()
 				fRunning = false;
 				break;
 			}
-			LOG(INFO) << "Got something" << RESET;
+			LOG(DEBUG) << "Got something" << RESET;
 			fDataBuffer.insert(fDataBuffer.end(), tmpDataBuffer.begin(), tmpDataBuffer.end());
-			LOG(INFO) << "Data buffer size: " << fDataBuffer.size() << RESET;
+			LOG(DEBUG) << "Data buffer size: " << fDataBuffer.size() << RESET;
 			while (fDataBuffer.size() > 0)
 			{
 				if (fDataBuffer.size() < sizeof(CheckStream))
@@ -201,7 +200,7 @@ bool DQMInterface::running()
 					break; // Not enough bytes to retreive the packet size
 				}
 				theCurrentStream = reinterpret_cast<CheckStream *>(&fDataBuffer.at(0));
-				LOG(INFO) << "Packet number received = " << int(theCurrentStream->getPacketNumber()) << RESET;
+				LOG(DEBUG) << "Packet number received = " << int(theCurrentStream->getPacketNumber()) << RESET;
 
 				if (packetNumber < 0)
 					packetNumber = int(theCurrentStream->getPacketNumber()); // first packet received
@@ -209,15 +208,15 @@ bool DQMInterface::running()
 				{
 					LOG(ERROR) << BOLDRED << "Packet number expected = " << --packetNumber << " But received "
 							   << int(theCurrentStream->getPacketNumber()) << ", Aborting" << RESET;
-					LOG(INFO) << GREEN << "Did you check that the Endianness of the two comupters is the same?" << RESET;
+					LOG(ERROR) << GREEN << "Did you check that the Endianness of the two comupters is the same?" << RESET;
 					abort();
 				}
 
-				LOG(INFO) << "Vector size  = " << fDataBuffer.size() << "; expected = " << theCurrentStream->getPacketSize() << RESET;
+				LOG(DEBUG) << "Vector size  = " << fDataBuffer.size() << "; expected = " << theCurrentStream->getPacketSize() << RESET;
 
 				if (fDataBuffer.size() < theCurrentStream->getPacketSize())
 				{
-					LOG(INFO) << "Packet not completed, waiting" << RESET;
+					LOG(DEBUG) << "Packet not completed, waiting" << RESET;
 					break;
 				}
 

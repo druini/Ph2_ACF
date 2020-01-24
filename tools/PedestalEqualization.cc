@@ -22,23 +22,13 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
     this->fAllChan = pAllChan;
     
-    // now read the settings from the map
-    auto cSetting = fSettingsMap.find ( "HoleMode" );
-    fHoleMode = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-    cSetting = fSettingsMap.find ( "TargetVcth" );
-    fTargetVcth = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0x78;
-    cSetting = fSettingsMap.find ( "TargetOffset" );
-    fTargetOffset = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0x80;
-    cSetting = fSettingsMap.find ( "Nevents" );
-    fEventsPerPoint = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10;
-    cSetting = fSettingsMap.find ( "TestPulseAmplitude" );
-    fTestPulseAmplitude = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
-    cSetting = fSettingsMap.find ( "VerificationLoop" );
-    fCheckLoop = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-    cSetting = fSettingsMap.find ( "MaskChannelsFromOtherGroups" );
-    fMaskChannelsFromOtherGroups = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-    cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
-    fSkipMaskedChannels = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
+    fSkipMaskedChannels          = readFromSettingMap("SkipMaskedChannels"                ,    0);
+    fMaskChannelsFromOtherGroups = readFromSettingMap("MaskChannelsFromOtherGroups"       ,    1);
+    fCheckLoop                   = readFromSettingMap("VerificationLoop"                  ,    1);
+    fTestPulseAmplitude          = readFromSettingMap("PedestalEqualizationPulseAmplitude",    0);
+    fEventsPerPoint              = readFromSettingMap("Nevents"                           ,   10);
+    fTargetOffset = 0x80;
+    fTargetVcth   =  0x0;
 
     this->SetSkipMaskedChannels( fSkipMaskedChannels );
 
@@ -83,9 +73,6 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
         }
     }
 
-    fHoleMode = 0;
-    fTargetOffset = 0x80;
-    fTargetVcth = 0x0000;
     LOG (INFO) << "Parsed settings:" ;
     LOG (INFO) << "	Nevents = " << fEventsPerPoint ;
     LOG (INFO) << "	TestPulseAmplitude = " << int ( fTestPulseAmplitude ) ;
@@ -125,6 +112,7 @@ void PedestalEqualization::FindVplus()
     {
         for(auto module: *board) // for on module - begin 
         {
+            nCbc += module->size();
             for(auto chip: *module) // for on chip - begin 
             {
                 ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex()));
@@ -133,7 +121,6 @@ void PedestalEqualization::FindVplus()
 
                 LOG (INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " Module " << +module->getId() << " CBC " << +chip->getId() << " = " << tmpVthr << RESET;
                 cMeanValue+=tmpVthr;
-                ++nCbc;
             } // for on chip - end 
         } // for on module - end 
     } // for on board - end 
@@ -227,15 +214,6 @@ void PedestalEqualization::FindOffsets()
 
    //a add write original register ;
 }
-
-
-// float PedestalEqualization::findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint )
-// {
-//     TH1F* cOccHist = static_cast<TH1F*> ( getHist ( pCbc, "Occupancy" ) );
-//     float cOccupancy = cOccHist->GetEntries();
-//     // return the hitcount divided by the the number of channels and events
-//     return cOccupancy / ( static_cast<float> ( fTestGroupChannelMap[pTGroup].size() * pEventsPerPoint ) );
-// }
 
 
 void PedestalEqualization::writeObjects()

@@ -48,15 +48,14 @@ class PedestalEqualization : public Tool
   private:
 
     // Settings
-    bool fHoleMode;
-    bool fTestPulse;
-    uint8_t fTestPulseAmplitude;
-    uint32_t fEventsPerPoint;
-    uint16_t fTargetVcth;
-    uint8_t fTargetOffset;
-    bool fCheckLoop;
-    bool fAllChan;
-    bool fDisableStubLogic;
+    bool     fTestPulse          {false};
+    uint8_t  fTestPulseAmplitude {    0};
+    uint32_t fEventsPerPoint     {   10};
+    uint16_t fTargetVcth         {  0x0};
+    uint8_t  fTargetOffset       { 0x80};
+    bool     fCheckLoop          { true};
+    bool     fAllChan            { true};
+    bool     fDisableStubLogic   { true};
 
     //to hold the original register values
     DetectorDataContainer fStubLogicCointainer;

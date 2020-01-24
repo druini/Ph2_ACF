@@ -9,6 +9,7 @@
 #include "../tools/LatencyScan.h"
 #include "../tools/PedeNoise.h"
 #include "../tools/AntennaTester.h"
+#include "../tools/CBCPulseShape.h"
 
 #include "../Utils/argvparser.h"
 #include "TROOT.h"
@@ -76,6 +77,8 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "allChan", "Do pedestal and noise measurement using all channels? Default: false", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "allChan", "a" );
 
+    cmd.defineOption ( "pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute );
+
     int result = cmd.parse ( argc, argv );
 
     if ( result != ArgvParser::NoParserError )
@@ -94,6 +97,7 @@ int main ( int argc, char* argv[] )
 //    bool cHitOR = ( cmd.foundOption ( "hitOR" ) ) ? true : false;
     bool cNoise = ( cmd.foundOption ( "noise" ) ) ? true : false;
     bool cAntenna = (cmd.foundOption ("antenna") )? true : false;
+    bool cPulseShape = (cmd.foundOption ("pulseShape") )? true : false;
 
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
 
@@ -222,7 +226,7 @@ int main ( int argc, char* argv[] )
 
         cPedeNoise.Initialise (cAllChan); // canvases etc. for fast calibration
         t.start();
-        cPedeNoise.measureNoise(200);
+        cPedeNoise.measureNoise();
         t.stop();
         t.show ("Time for noise measurement");
         //cPedeNoise.Validate();
@@ -238,6 +242,20 @@ int main ( int argc, char* argv[] )
 
         cPedeNoise.writeObjects( );
         cPedeNoise.dumpConfigFiles();
+    }
+
+    else if(cPulseShape)
+    {
+        Timer t;
+        t.start();
+        CBCPulseShape cCBCPulseShape;
+        cCBCPulseShape.Inherit (&cTool);
+        cCBCPulseShape.Initialise();
+        cCBCPulseShape.runCBCPulseShape();
+        cCBCPulseShape.writeObjects();
+        t.stop();
+        t.show ("Time for pulseShape plot measurement");
+        t.reset();
     }
 
     cTool.SaveResults();
