@@ -24,7 +24,7 @@ class GenericDataVector : public OccupancyAndPh
   }
 
   void makeSummaryAverage (const std::vector<GenericDataVector>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
-  void makeSummaryAverage (const std::vector<EmptyContainer>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
+  void makeSummaryAverage (const std::vector<EmptyContainer>*    theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
   {
     OccupancyAndPh::makeSummaryAverage (theOccupancyVector, theNumberOfEnabledChannelsList, numberOfEvents);
   }

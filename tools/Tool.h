@@ -49,9 +49,9 @@ class Tool : public Ph2_System::SystemController
 {
 
     #ifdef __USE_ROOT__
-        using ChipHistogramMap = std::map<Chip*, std::map<std::string, TObject*> >;
-        using ModuleHistogramMap = std::map<Module*, std::map<std::string, TObject*> >;
-        using BeBoardHistogramMap = std::map<BeBoard*, std::map<std::string, TObject*> >;
+        using ChipHistogramMap = std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*> >;
+        using ModuleHistogramMap = std::map<Ph2_HwDescription::Module*, std::map<std::string, TObject*> >;
+        using BeBoardHistogramMap = std::map<Ph2_HwDescription::BeBoard*, std::map<std::string, TObject*> >;
         using CanvasMap = std::map<Ph2_HwDescription::FrontEndDescription*, TCanvas*>;
     #endif
 
@@ -82,17 +82,17 @@ class Tool : public Ph2_System::SystemController
     void SoftDestroy  ();
 
     #ifdef __USE_ROOT__
-        void bookHistogram ( Chip* pChip, std::string pName, TObject* pObject );
+        void bookHistogram ( Ph2_HwDescription::Chip* pChip, std::string pName, TObject* pObject );
 
-        void bookHistogram ( Module* pModule, std::string pName, TObject* pObject );
+        void bookHistogram ( Ph2_HwDescription::Module* pModule, std::string pName, TObject* pObject );
 
-        void bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObject );
+        void bookHistogram ( Ph2_HwDescription::BeBoard* pBeBoard, std::string pName, TObject* pObject );
 
-        TObject* getHist ( Chip* pChip, std::string pName );
+        TObject* getHist ( Ph2_HwDescription::Chip* pChip, std::string pName );
 
-        TObject* getHist ( Module* pModule, std::string pName );
+        TObject* getHist ( Ph2_HwDescription::Module* pModule, std::string pName );
         
-        TObject* getHist ( BeBoard* pBeBoard, std::string pName );
+        TObject* getHist ( Ph2_HwDescription::BeBoard* pBeBoard, std::string pName );
 
         void WriteRootFile();
     #endif
@@ -235,16 +235,16 @@ class Tool : public Ph2_System::SystemController
     };
 
     // decode bend LUT for a given CBC
-    std::map<uint8_t, double> decodeBendLUT(Chip* pChip);
+    std::map<uint8_t, double> decodeBendLUT(Ph2_HwDescription::Chip* pChip);
     
     //method to unmask a channel group
     // void maskChannelFromOtherGroups (Chip* pChip, int pTestGroup);
 
     // then a method to un-mask pairs of channels on a given CBC
-    void unmaskPair(Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair);
+    void unmaskPair(Ph2_HwDescription::Chip* cChip ,  std::pair<uint8_t,uint8_t> pPair);
 
     //select the group of channels for injecting the pulse
-    void selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup);
+    void selectGroupTestPulse(Ph2_HwDescription::Chip* cChip, uint8_t pTestGroup);
 
     // // Two dimensional dac scan
     void scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name, const std::vector<uint16_t> &dac2List, uint32_t numberOfEvents, std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector, int32_t numberOfEventsPerBurst = -1);
@@ -275,13 +275,13 @@ class Tool : public Ph2_System::SystemController
     //Set same global DAC for all Chips
     void setSameGlobalDac(const std::string &dacName, const uint16_t dacValue);
     //Set same global DAC for all Chips in the BeBoard
-    void setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue);
+    void setSameGlobalDacBeBoard(Ph2_HwDescription::BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue);
     //Set same local DAC list for all Chips
     void setSameLocalDac(const std::string &dacName, const uint16_t dacValue);
     //Set same local DAC for all Chips in the BeBoard
-    void setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue);
+    void setSameLocalDacBeBoard(Ph2_HwDescription::BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue);
     //Set same DAC for all Chips in the BeBoard (it is able to recognize if the dac is local or global)
-    void setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue);
+    void setSameDacBeBoard(Ph2_HwDescription::BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue);
     //Set same DAC list for all Chips (it is able to recognize if the dac is local or global)
     void setSameDac(const std::string &dacName, const uint16_t dacValue);
 

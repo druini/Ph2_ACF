@@ -60,8 +60,8 @@ void CBCPulseShape::runCBCPulseShape(void)
 
     for ( auto cBoard : *fDetectorContainer )
     {
-        setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
-        setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TriggerLatency"     , fInitialLatency);
+      setSameDacBeBoard(static_cast<Ph2_HwDescription::BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
+      setSameDacBeBoard(static_cast<Ph2_HwDescription::BeBoard*>(cBoard), "TriggerLatency"     , fInitialLatency);
     }
 
 

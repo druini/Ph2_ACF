@@ -9,7 +9,7 @@
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 13/01/2020
++ Last change made to this section: 24/01/2020
 ```
 Setup the FC7:
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
@@ -35,7 +35,7 @@ Setup and run the IT-DAQ:
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
 2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
 3. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
-4. `cd Ph2_ACF; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..; source setup.sh`
+4. `cd Ph2_ACF; source setup.sh; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
 5. `mkdir choose_a_name`
 6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
 7. `cp settings/CMSIT.xml choose_a_name`
@@ -146,7 +146,7 @@ else
 fi
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
-- Software git branch / tag : `chipPolymorphism` / `IT-v3.0`
+- Software git branch / tag : `chipPolymorphism` / `IT-v3.1`
 - Firmware tag: `3.0`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 

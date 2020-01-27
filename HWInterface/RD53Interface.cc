@@ -9,6 +9,8 @@
 
 #include "RD53Interface.h"
 
+using namespace Ph2_HwDescription;
+
 namespace Ph2_HwInterface
 {
   RD53Interface::RD53Interface (const BeBoardFWMap& pBoardMap): ReadoutChipInterface (pBoardMap) {}
@@ -329,8 +331,8 @@ namespace Ph2_HwInterface
     for (auto row = 0u; row < RD53::nRows; row++)
       for (auto col = 0u; col < RD53::nCols; col++)
         {
-          if (mask   == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
-          if (inject == true) pRD53->injectPixel(row, col, group->isChannelEnabled(row, col));
+          if (mask   == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row,col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
+          if (inject == true) pRD53->injectPixel(row, col, group->isChannelEnabled(row,col));
         }
 
     RD53Interface::WriteRD53Mask(pRD53, true, false, pVerifLoop);
@@ -344,7 +346,7 @@ namespace Ph2_HwInterface
 
     for (auto row = 0u; row < RD53::nRows; row++)
       for (auto col = 0u; col < RD53::nCols; col++)
-        pRD53->setTDAC(row, col, pValue.getChannel<uint16_t>(row, col));
+        pRD53->setTDAC(row, col, pValue.getChannel<uint16_t>(row,col));
 
     RD53Interface::WriteRD53Mask(pRD53, false, false, pVerifLoop);
 
@@ -357,6 +359,6 @@ namespace Ph2_HwInterface
 
     for (auto row = 0u; row < RD53::nRows; row++)
       for (auto col = 0u; col < RD53::nCols; col++)
-        pValue.getChannel<uint16_t>(row, col) = pRD53->getTDAC(row, col);
+        pValue.getChannel<uint16_t>(row,col) = pRD53->getTDAC(row,col);
   }
 }

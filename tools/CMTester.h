@@ -34,12 +34,10 @@
 #include "CMFits.h"
 
 using namespace Ph2_System;
-using namespace Ph2_HwInterface;
-using namespace Ph2_HwDescription;
 
-typedef std::map<Chip*, std::map<std::string, TObject*> >  CbcHistogramMap;
+typedef std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*> >  CbcHistogramMap;
 // typedef std::map<Chip*, TCanvas*> CanvasMap;
-typedef std::map<Module*, std::map<std::string, TObject*> > ModuleHistogramMap;
+typedef std::map<Ph2_HwDescription::Module*, std::map<std::string, TObject*> > ModuleHistogramMap;
 
 
 /*!
@@ -63,16 +61,16 @@ class CMTester : public Tool
   private:
     void updateHists ( bool pFinal = false );
     void parseSettings();
-    void analyze ( BeBoard* pBoard, const Event* pEvent );
+    void analyze ( Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwInterface::Event* pEvent );
     bool randHit ( float pProbability );
-    bool isMasked ( Chip* pCbc, int pChan );
+    bool isMasked ( Ph2_HwDescription::Chip* pCbc, int pChan );
     bool isMasked ( int pGlobalChannel );
 
     uint32_t fNevents, fDoSimulate, fSimOccupancy;
      std::vector<double> fTotalNoise;
     uint32_t fVcth;
 
-    std::map<Chip*, std::set<int> > fNoiseStripMap;
+    std::map<Ph2_HwDescription::Chip*, std::set<int> > fNoiseStripMap;
 
 };
 

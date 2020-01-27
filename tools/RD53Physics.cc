@@ -9,6 +9,9 @@
 
 #include "RD53Physics.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void Physics::ConfigureCalibration ()
 {
   // #######################
@@ -55,7 +58,7 @@ void Physics::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[Physics::Start] Starting" << RESET;
 
-  if (saveBinaryData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/PhysicsRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -104,7 +107,7 @@ void Physics::Stop ()
   this->closeFileHandler();
 }
 
-void Physics::initialize (const std::string fileRes_, const std::string fileReg_)
+void Physics::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
@@ -122,6 +125,12 @@ void Physics::initialize (const std::string fileRes_, const std::string fileReg_
 #endif
 
   doLocal = true;
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/PhysicsRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void Physics::run ()
@@ -140,7 +149,7 @@ void Physics::run ()
   // #############
   while (keepRunning == true)
     {
-      RD53decodedEvents.clear();
+      RD53FWInterface::decodedEvents.clear();
       Physics::analyze(true);
       std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
     }
@@ -185,7 +194,7 @@ void Physics::analyze (bool doReadBinary)
         {
           dataSize = 1;
           std::vector<uint32_t> data;
-          SystemController::setData(static_cast<BeBoard*>(cBoard), data, dataSize);
+          SystemController::DecodeData(static_cast<BeBoard*>(cBoard), data, dataSize, static_cast<BeBoard*>(cBoard)->getBoardType());
         }
 
       if (dataSize != 0)

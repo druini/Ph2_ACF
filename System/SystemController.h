@@ -1,12 +1,10 @@
 /*!
-
   \file                    SystemController.h
   \brief                   Controller of the System, overall wrapper of the framework
   \author                  Nicolas PIERRE
   \version                 1.0
   \date                    10/08/14
   Support :                mail to : lorenzo.bidegain@cern.ch, nico.pierre@icloud.com
-
 */
 
 #ifndef SYSTEMCONTROLLER_H
@@ -21,18 +19,14 @@
 #include "../HWInterface/CbcInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/D19cFWInterface.h"
 #include "../HWDescription/Definition.h"
-#include "../Utils/Visitor.h"
+#include "../NetworkUtils/TCPPublishServer.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/FileHandler.h"
 #include "../Utils/ConsoleColor.h"
-#include "../Utils/easylogging++.h"
 #include "../Utils/Container.h"
-#include "../NetworkUtils/TCPPublishServer.h"
-
+#include "../Utils/easylogging++.h"
 #include "../Utils/Event.h"
-#include "../Utils/RD53Event.h"
 #include "../Utils/D19cCbc3Event.h"
 #include "../Utils/D19cCbc3EventZS.h"
 
@@ -49,7 +43,7 @@
  */
 namespace Ph2_System
 {
-  using BeBoardVec  = std::vector<BeBoard*>;                   /*!< Vector of Board pointers */
+  using BeBoardVec  = std::vector<Ph2_HwDescription::BeBoard*>;                   /*!< Vector of Board pointers */
   using SettingsMap = std::unordered_map<std::string, double>; /*!< Maps the settings */
 
   /*!
@@ -59,12 +53,12 @@ namespace Ph2_System
   class SystemController
   {
   public:
-    BeBoardInterface* fBeBoardInterface; //!< Interface to the BeBoard
-    ReadoutChipInterface* fReadoutChipInterface;
-    ChipInterface* fChipInterface; //!< Interface to the Chip
+    Ph2_HwInterface::BeBoardInterface* fBeBoardInterface; //!< Interface to the BeBoard
+    Ph2_HwInterface::ReadoutChipInterface* fReadoutChipInterface;
+    Ph2_HwInterface::ChipInterface* fChipInterface; //!< Interface to the Chip
 
-    SSAInterface* fSSAInterface;   //!< Interface to the SSA
-    MPAInterface* fMPAInterface;   //!< Interface to the MPA
+    Ph2_HwInterface::SSAInterface* fSSAInterface;   //!< Interface to the SSA
+    Ph2_HwInterface::MPAInterface* fMPAInterface;   //!< Interface to the MPA
 
     DetectorContainer* fDetectorContainer; //Detector Container
     BeBoardVec fBoardVector;               //!< Vector of Board pointers
@@ -109,20 +103,13 @@ namespace Ph2_System
      * \brief issues a FileHandler for writing files to every BeBoardFWInterface if addFileHandler was called
      */
     void initializeFileHandler();
-    uint32_t computeEventSize32(BeBoard *pBoard);
+    uint32_t computeEventSize32(Ph2_HwDescription::BeBoard *pBoard);
 
     /*!
      * \brief read file in the a FileHandler object
      * \param pVec : the data vector
      */
     void readFile(std::vector<uint32_t> &pVec, uint32_t pNWords32 = 0);
-
-    /*!
-     * \brief set the Data read from file in the previous Method to the interanl data object
-     * \param pVec : the data vector
-     * \param pBoard : the BeBoard
-     */
-    void setData(BeBoard *pBoard, std::vector<uint32_t> &pVec, uint32_t pNEvents);
 
     /*!
      * \brief acceptor method for HwDescriptionVisitor
@@ -132,7 +119,7 @@ namespace Ph2_System
     {
       pVisitor.visitSystemController(*this);
 
-      for (BeBoard *cBoard : fBoardVector)
+      for (Ph2_HwDescription::BeBoard *cBoard : fBoardVector)
         cBoard->accept(pVisitor);
     }
 
@@ -160,7 +147,7 @@ namespace Ph2_System
      * \param pBeBoard
      * \return: number of packets
      */
-    uint32_t ReadData(BeBoard* pBoard, bool pWait = true);
+    uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pWait = true);
 
     /*!
      * \brief Read Data from pBoard for use with OTSDAQ
@@ -169,14 +156,14 @@ namespace Ph2_System
      * \param pWait: wait  until sufficient data is there, default true
      * \return: number of packets
      */
-    uint32_t ReadData(BeBoard* pBoard, std::vector<uint32_t> &pData, bool pWait = true);
+    uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t> &pData, bool pWait = true);
 
     /*!
      * \brief Read Data from all boards
      */
     void ReadData(bool pWait = true);
 
-    virtual void Start(int currentRun);
+    virtual void Start(int currentRun = -1);
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
@@ -184,17 +171,17 @@ namespace Ph2_System
     virtual void ConfigureHardware(std::string cHWFile, bool enableStream = false);
     virtual void Configure(std::string cHWFile, bool enableStream = false);
 
-    void Start (BeBoard* pBoard);
-    void Stop  (BeBoard* pBoard);
-    void Pause (BeBoard* pBoard);
-    void Resume(BeBoard* pBoard);
+    void Start (Ph2_HwDescription::BeBoard* pBoard);
+    void Stop  (Ph2_HwDescription::BeBoard* pBoard);
+    void Pause (Ph2_HwDescription::BeBoard* pBoard);
+    void Resume(Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * \brief Read N Events from pBoard
      * \param pBeBoard
      * \param pNEvents
      */
-    void ReadNEvents(BeBoard* pBoard, uint32_t pNEvents);
+    void ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents);
 
     /*!
      * \brief Read N Events from pBoard
@@ -203,7 +190,7 @@ namespace Ph2_System
      * \param pData: data vector
      * \param pWait: contunue polling until enough data is present
      */
-    void ReadNEvents(BeBoard *pBoard, uint32_t pNEvents, std::vector<uint32_t> &pData, bool pWait = true);
+    void ReadNEvents(Ph2_HwDescription::BeBoard *pBoard, uint32_t pNEvents, std::vector<uint32_t> &pData, bool pWait = true);
 
     /*!
      * \brief Read N Events from all boards
@@ -211,7 +198,7 @@ namespace Ph2_System
      */
     void ReadNEvents(uint32_t pNEvents);
 
-    const BeBoard* getBoard(int index) const
+    const Ph2_HwDescription::BeBoard* getBoard(int index) const
     {
       return (index < (int)fBoardVector.size()) ? fBoardVector.at(index) : nullptr;
     }
@@ -221,19 +208,19 @@ namespace Ph2_System
      * \param pBoard
      * \return Next event
      */
-    const Event* GetNextEvent(const BeBoard* pBoard)
+    const Ph2_HwInterface::Event* GetNextEvent(const Ph2_HwDescription::BeBoard* pBoard)
     {
       if (fFuture.valid() == true) fFuture.get();
       return ((fCurrentEvent >= fEventList.size()) ? nullptr : fEventList.at(fCurrentEvent++));
     }
 
-    const Event* GetEvent(const BeBoard* pBoard, unsigned int i)
+    const Ph2_HwInterface::Event* GetEvent(const Ph2_HwDescription::BeBoard* pBoard, unsigned int i)
     {
       if (fFuture.valid() == true) fFuture.get();
       return ((i >= fEventList.size()) ? nullptr : fEventList.at(i));
     }
 
-    const std::vector<Event*>& GetEvents(const BeBoard* pBoard)
+    const std::vector<Ph2_HwInterface::Event*>& GetEvents(const Ph2_HwDescription::BeBoard* pBoard)
     {
       if (fFuture.valid() == true) fFuture.get();
       return fEventList;
@@ -241,12 +228,13 @@ namespace Ph2_System
 
     double findValueInSettings (const char* name);
 
-  private:
-    void ResetEventList();
-    void SetFuture  (const BeBoard *pBoard, const std::vector<uint32_t> &pData, uint32_t pNevents, BoardType pType);
-    void DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+    void DecodeData (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
-    std::vector<Event*> fEventList;
+  private:
+    void SetFuture (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+
+    std::vector<Ph2_HwInterface::Event*> fEventList;
+
     std::future<void> fFuture;
     uint32_t fCurrentEvent;
     uint32_t fEventSize;

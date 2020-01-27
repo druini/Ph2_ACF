@@ -9,6 +9,9 @@
 
 #include "RD53PixelAlive.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void PixelAlive::ConfigureCalibration ()
 {
   // #######################
@@ -73,7 +76,7 @@ void PixelAlive::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[PixelAlive::Start] Starting" << RESET;
 
-  if (saveBinaryData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -108,12 +111,18 @@ void PixelAlive::Stop ()
   this->closeFileHandler();
 }
 
-void PixelAlive::initialize (const std::string fileRes_, const std::string fileReg_)
+void PixelAlive::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
 
   PixelAlive::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void PixelAlive::run ()
@@ -204,7 +213,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
               if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
                 {
                   float occupancy = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
-                  static_cast<RD53*>(cChip)->enablePixel(row,col,injType == INJtype::None ? occupancy < thrOccupancy : occupancy != 0);
+                  static_cast<RD53*>(cChip)->enablePixel(row, col, injType == INJtype::None ? occupancy < thrOccupancy : occupancy != 0);
                   if (((injType == INJtype::None) && (occupancy >= thrOccupancy)) || ((injType != INJtype::None) && (occupancy == 0))) nMaskedPixelsPerCalib++;
                 }
 

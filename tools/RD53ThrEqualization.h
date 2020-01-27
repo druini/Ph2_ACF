@@ -36,12 +36,12 @@
 class ThrEqualization : public Tool
 {
  public:
-  void Start (int currentRun)  override;
-  void Stop  ()                override;
-  void ConfigureCalibration () override;
+  void Start (int currentRun = -1) override;
+  void Stop  ()                    override;
+  void ConfigureCalibration ()     override;
 
   void   sendData            ();
-  void   initialize          (const std::string fileRes_, const std::string fileReg_);
+  void   initialize          (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void   run                 ();
   void   draw                ();
   size_t getNumberIterations ()

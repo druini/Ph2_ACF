@@ -242,11 +242,11 @@ namespace Ph2_HwInterface
         * \param pCbcId : Id of the Chip to work with
         * \param pVecReq : Vector to stack the encoded words
         */
-        void EncodeReg (const ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
-        void EncodeReg (const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
+        void EncodeReg (const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
+        void EncodeReg (const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override; /*!< Encode a/several word(s) readable for a Chip*/
 
-        void BCEncodeReg (const ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override;
-        void DecodeReg ( ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
+        void BCEncodeReg (const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite ) override;
+        void DecodeReg ( Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed ) override;
 
         bool WriteChipBlockReg   ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
         bool BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) override;
@@ -297,8 +297,8 @@ namespace Ph2_HwInterface
         void KillI2C();
         ///
 
-        void Pix_write_MPA(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
-        uint32_t Pix_read_MPA(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel);
+        void Pix_write_MPA(Ph2_HwDescription::MPA* cMPA,Ph2_HwDescription::ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
+        uint32_t Pix_read_MPA(Ph2_HwDescription::MPA* cMPA,Ph2_HwDescription::ChipRegItem cRegItem,uint32_t row,uint32_t pixel);
         std::vector<uint16_t> ReadoutCounters_MPA(uint32_t raw_mode_en = 0);
 
         void Compose_fast_command(uint32_t duration = 0,uint32_t resync_en = 0,uint32_t l1a_en = 0,uint32_t cal_pulse_en = 0,uint32_t bc0_en = 0);
