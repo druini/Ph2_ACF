@@ -146,7 +146,8 @@ void PedeNoise::sweepSCurves ()
 void PedeNoise::measureNoise ()
 {
     sweepSCurves ();
-    this->extractPedeNoise ();
+    extractPedeNoise ();
+    producePedeNoisePlots();
 }
 
 void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
@@ -417,6 +418,10 @@ void PedeNoise::extractPedeNoise ()
         board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), fChannelGroupHandler->allChannelGroup(), 0);
     }
 
+}
+
+void PedeNoise::producePedeNoisePlots()
+{
     #ifdef __USE_ROOT__
         if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
     #else
@@ -426,9 +431,6 @@ void PedeNoise::extractPedeNoise ()
             if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
         }
     #endif
-
-
-
 }
 
 void PedeNoise::setThresholdtoNSigma (BoardContainer* board, uint32_t pNSigma)

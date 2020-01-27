@@ -79,7 +79,7 @@ namespace Ph2_HwInterface
     bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group, bool pVerifLoop)
     {
 
-        std::bitset<NCHANNELS> baseInjectionChannel (std::string("00000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011"));
+        std::bitset<NCHANNELS> baseInjectionChannel (std::string(CBC_CHANNEL_GROUP_BITSET));
         uint8_t channelGroup = 0;
         for(; channelGroup<=8; ++channelGroup)
         {

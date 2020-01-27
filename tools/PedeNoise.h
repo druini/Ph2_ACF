@@ -39,6 +39,7 @@ class PedeNoise : public Tool
     void Validate (uint32_t pNoiseStripThreshold = 1, uint32_t pMultiple = 100);
     void writeObjects();
 
+
     void Start(int currentRun) override;
     void Stop() override;
     void ConfigureCalibration() override;
@@ -63,6 +64,7 @@ class PedeNoise : public Tool
 
   private:
     void measureSCurves (uint16_t pStartValue = 0 );
+    void producePedeNoisePlots();
     void extractPedeNoise ();
     
     // for validation

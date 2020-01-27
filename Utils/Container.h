@@ -97,7 +97,7 @@ public:
 
 	T* getObject(uint16_t id)
 	{
-		if(idObjectMap_.find(id) == idObjectMap_.end()) throw Ph2_HwDescription::Exception("T* getObject(uint16_t id) : Object Id not found");
+		if(idObjectMap_.find(id) == idObjectMap_.end()) throw Exception("T* getObject(uint16_t id) : Object Id not found");
 		return idObjectMap_[id];
 	}
 

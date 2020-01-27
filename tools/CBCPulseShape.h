@@ -35,15 +35,16 @@ class CBCPulseShape : public Tool
     void Stop                 (void) override;
   
   private:
-    uint32_t fEventsPerPoint {0} ;
-    uint16_t fInitialVcth    {0} ;
-    uint16_t fFinalVcth      {0} ;
-    uint16_t fVCthStep       {0} ;
-    uint16_t fInitialLatency {0} ;
-    uint16_t  fInitialDelay   {0} ;
-    uint16_t  fFinalDelay     {0} ;
-    uint16_t  fDelayStep      {0} ;
-    uint16_t  fPulseAmplitude {0} ;
+    uint32_t fEventsPerPoint { 0} ;
+    uint16_t fInitialVcth    { 0} ;
+    uint16_t fFinalVcth      { 0} ;
+    uint16_t fVCthStep       { 0} ;
+    uint16_t fInitialLatency { 0} ;
+    uint16_t fInitialDelay   { 0} ;
+    uint16_t fFinalDelay     { 0} ;
+    uint16_t fDelayStep      { 0} ;
+    uint16_t fPulseAmplitude { 0} ;
+    int8_t   fChannelGroup   {-1} ;
 
     #ifdef __USE_ROOT__
       //Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
