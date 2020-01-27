@@ -1284,8 +1284,9 @@ namespace Ph2_HwInterface
 
     std::vector<uint32_t> D19cFWInterface::ReadBlockRegOffsetValue ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
     {
-      if (fIsDDR3Readout) fDDR3Offset += pBlocksize;
-      return ReadBlockRegOffset( pRegNode, pBlocksize, pBlockOffset );
+        std::vector<uint32_t> valueVector = ReadBlockRegOffset( pRegNode, pBlocksize, pBlockOffset );
+        if (fIsDDR3Readout) fDDR3Offset += pBlocksize;
+        return valueVector;
     }
 
     bool D19cFWInterface::WriteBlockReg ( const std::string& pRegNode, const std::vector< uint32_t >& pValues )
