@@ -316,7 +316,12 @@ public:
 	{
 		if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S,V>(theSummary);
 	}
+
+	#ifdef PATCH_FOR_OPTICALGROUP
+	virtual SummaryContainerBase* getAllObjectSummaryContainers() const
+	#else
 	SummaryContainerBase* getAllObjectSummaryContainers() const
+	#endif
 	{
 		SummaryContainerBase *SummaryContainerList = new SummaryContainer<SummaryBase>;
 		for(auto container : *this) SummaryContainerList->emplace_back(container->summary_);
@@ -455,18 +460,66 @@ public:
 private:
 };
 
-class BoardDataContainer : public DataContainer<ModuleDataContainer>
+class OpticalGroupDataContainer : public DataContainer<ModuleDataContainer>
 {
 public:
-	BoardDataContainer(uint16_t id) : DataContainer<ModuleDataContainer>(id){}
-	BoardDataContainer(const BoardDataContainer&) = delete;
-	BoardDataContainer(BoardDataContainer&& theCopyContainer)
+	OpticalGroupDataContainer(uint16_t id) : DataContainer<ModuleDataContainer>(id){}
+	OpticalGroupDataContainer(const OpticalGroupDataContainer&) = delete;
+	OpticalGroupDataContainer(OpticalGroupDataContainer&& theCopyContainer)
 	: DataContainer<ModuleDataContainer>(std::move(theCopyContainer))
 	{}
 
 	template <class T>
 	T*               addModuleDataContainer(uint16_t id, T* module){return static_cast<T*>(DataContainer<ModuleDataContainer>::addObject(id, module));}
-	ModuleDataContainer* addModuleDataContainer(uint16_t id)                 {return DataContainer<ModuleDataContainer>::addObject(id, new ModuleDataContainer(id));}
+	ModuleDataContainer* addModuleDataContainer(uint16_t id)       {return DataContainer<ModuleDataContainer>::addObject(id, new ModuleDataContainer(id));}
+private:
+};
+
+class BoardDataContainer : public DataContainer<OpticalGroupDataContainer>
+{
+public:
+	BoardDataContainer(uint16_t id) : DataContainer<OpticalGroupDataContainer>(id){}
+	BoardDataContainer(const BoardDataContainer&) = delete;
+	BoardDataContainer(BoardDataContainer&& theCopyContainer)
+	: DataContainer<OpticalGroupDataContainer>(std::move(theCopyContainer))
+	{}
+
+	#ifdef PATCH_FOR_OPTICALGROUP
+
+	template <class T>
+	T*                          addModuleDataContainer(uint16_t id, T* module)
+	{
+		if(this->size() == 0) DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(0));
+		OpticalGroupDataContainer* theOpticalGroupDataContainer = static_cast<OpticalGroupDataContainer*>(this->vector::at(0));
+		return static_cast<T*>(theOpticalGroupDataContainer->addObject(id, module));
+	}
+	ModuleDataContainer*        addModuleDataContainer(uint16_t id)           {return addModuleDataContainer(id, new ModuleDataContainer(id));}
+	ModuleDataContainer*        at(size_t index) {return this->vector::at(0)->at(index);}
+	ModuleDataContainer*        back() {return this->vector::at(0)->vector::back();}
+
+
+	ModuleDataContainer* getObject(uint16_t id) {return this->vector::at(0)->getObject(id);}
+
+
+	OpticalGroupDataContainer::iterator begin() {return static_cast<OpticalGroupDataContainer*>(this->vector::at(0))->begin();}
+	OpticalGroupDataContainer::iterator end  () {return static_cast<OpticalGroupDataContainer*>(this->vector::at(0))->end  ();}
+
+	OpticalGroupDataContainer::const_iterator begin() const {return static_cast<OpticalGroupDataContainer*>(this->vector::at(0))->begin();}
+	OpticalGroupDataContainer::const_iterator end  () const {return static_cast<OpticalGroupDataContainer*>(this->vector::at(0))->end  ();}
+
+	SummaryContainerBase* getAllObjectSummaryContainers() const override
+	{
+		SummaryContainerBase *SummaryContainerList = new SummaryContainer<SummaryBase>;
+		for(auto container : *this) SummaryContainerList->emplace_back(container->summary_);
+		return SummaryContainerList;
+	}
+
+	#else
+	template <class T>
+	T*                          addOpticalGroupDataContainer(uint16_t id, T* opticalGroup){return static_cast<T*>(DataContainer<OpticalGroupDataContainer>::addObject(id, opticalGroup));}
+	OpticalGroupDataContainer*  addOpticalGroupDataContainer(uint16_t id)           {return DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(id));}
+	#endif
+
 private:
 };
 
