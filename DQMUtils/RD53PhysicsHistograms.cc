@@ -88,14 +88,14 @@ void PhysicsHistograms::fill (const DetectorDataContainer& DataContainer)
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
               {
-                if (cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != 0)
+                if (cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy != 0)
                   {
-                    ToT1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
-                    ToT2DHist->SetBinContent(col+1, row+1, ToT2DHist->GetBinContent(col+1, row+1) + cChip->getChannel<OccupancyAndPh>(row, col).fPh);
-                    Occupancy2DHist->SetBinContent(col+1, row+1, Occupancy2DHist->GetBinContent(col+1, row+1) + cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
+                    ToT1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row,col).fPh);
+                    ToT2DHist->SetBinContent(col+1, row+1, ToT2DHist->GetBinContent(col+1, row+1) + cChip->getChannel<OccupancyAndPh>(row,col).fPh);
+                    Occupancy2DHist->SetBinContent(col+1, row+1, Occupancy2DHist->GetBinContent(col+1, row+1) + cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy);
                   }
 
-                if (cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col+1, row+1);
+                if (cChip->getChannel<OccupancyAndPh>(row,col).readoutError == true) ErrorReadOut2DHist->Fill(col+1, row+1);
               }
         }
 }

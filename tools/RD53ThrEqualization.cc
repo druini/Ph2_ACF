@@ -39,7 +39,7 @@ void ThrEqualization::ConfigureCalibration ()
 
   for (auto row = rowStart; row <= rowStop; row++)
     for (auto col = colStart; col <= colStop; col++)
-      customChannelGroup.enableChannel(row, col);
+      customChannelGroup.enableChannel(row,col);
 
   theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol);
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
@@ -131,7 +131,7 @@ void ThrEqualization::run ()
       for (const auto cModule : *cBoard)
         for (const auto cChip : *cModule)
           {
-            auto value = static_cast<RD53*>(cChip)->getReg("VCAL_MED") + newVCal->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise>().fThreshold;
+            auto value = static_cast<RD53*>(cChip)->getReg("VCAL_MED") + newVCal->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold;
             this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", value, true);
           }
 
@@ -196,8 +196,8 @@ void ThrEqualization::draw ()
 
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
-              if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
-                static_cast<RD53*>(cChip)->setTDAC(row, col, theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col));
+              if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+                static_cast<RD53*>(cChip)->setTDAC(row, col, theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row,col));
 
           if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
 
@@ -260,7 +260,7 @@ void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents,
       for (const auto cChip : *cModule)
         for (auto row = 0u; row < RD53::nRows; row++)
           for (auto col = 0u; col < RD53::nCols; col++)
-            bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
+            bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy = 0;
 
 
   // ############################
@@ -301,34 +301,34 @@ void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents,
                   // #######################
                   // # Build discriminator #
                   // #######################
-                  float newValue = cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy;
+                  float newValue = cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy;
 
 
                   // ########################
                   // # Save best DAC values #
                   // ########################
-                  float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy;
+                  float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
 
                   if (fabs(newValue - target) < fabs(oldValue - target) || (newValue == oldValue))
                     {
-                      bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy = newValue;
-                      bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                        midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                      bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy = newValue;
+                      bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row,col) =
+                        midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row,col);
                     }
 
                   if (newValue < target)
 
-                    minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                      midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                    minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row,col) =
+                      midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row,col);
 
                   else
 
-                    maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                      midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                    maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row,col) =
+                      midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row,col);
 
-                  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                    (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) +
-                     maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col)) / 2;
+                  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row,col) =
+                    (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row,col) +
+                     maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row,col)) / 2;
                 }
     }
 

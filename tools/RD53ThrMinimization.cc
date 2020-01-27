@@ -244,7 +244,7 @@ void ThrMinimization::bitWiseScan (const std::string& regName, uint32_t nEvents,
               // #######################
               // # Build discriminator #
               // #######################
-              float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+              float newValue = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
 
 
               // ########################

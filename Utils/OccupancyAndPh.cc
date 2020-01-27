@@ -18,7 +18,11 @@ void OccupancyAndPh::makeSummaryAverage (const std::vector<OccupancyAndPh>* theO
       abort();
     }
 
-  float totalNumberOfEnableChannels = 0;
+  fOccupancy = 0;
+  fPh        = 0;
+  fPhError   = 0;
+
+  size_t totalNumberOfEnableChannels = 0;
 
   for (size_t iContainer = 0; iContainer<theOccupancyVector->size(); iContainer++)
     {
