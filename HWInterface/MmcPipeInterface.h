@@ -14,9 +14,9 @@ namespace uhal
 {
   namespace exception
   {
-    ExceptionClass ( TextExceedsSpaceAvailable , "Text exceeds space available for it in the MMC" )
-    ExceptionClass ( ReplyIndicatesError , "Reply value from MMC indicates an error" )
-    ExceptionClass ( GoldenImageIsInvolateError , "An attempt was made to modify the inviolate boot image" )
+    UHAL_DEFINE_EXCEPTION_CLASS ( TextExceedsSpaceAvailable , "Text exceeds space available for it in the MMC" )
+    UHAL_DEFINE_EXCEPTION_CLASS ( ReplyIndicatesError , "Reply value from MMC indicates an error" )
+    UHAL_DEFINE_EXCEPTION_CLASS ( GoldenImageIsInvolateError , "An attempt was made to modify the inviolate boot image" )
   }
 }
 
