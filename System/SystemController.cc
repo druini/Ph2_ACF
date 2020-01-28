@@ -269,7 +269,7 @@ namespace Ph2_System
 
   void SystemController::ConfigureCalibration() {}
 
-  void SystemController::Configure(std::string cHWFile, bool enableStream)
+  void SystemController::Configure (std::string cHWFile, bool enableStream)
   {
     ConfigureHardware(cHWFile, enableStream);
     ConfigureCalibration();
@@ -334,7 +334,7 @@ namespace Ph2_System
   double SystemController::findValueInSettings (const char* name)
   {
     auto setting = fSettingsMap.find(name);
-    return ((setting != std::end(fSettingsMap)) ? setting->second : 0);
+    return (setting != std::end(fSettingsMap) ? setting->second : 0);
   }
 
 
@@ -352,7 +352,11 @@ namespace Ph2_System
   {
     if (pType == BoardType::RD53)
       {
+        // ######################
+        // # Clear event vector #
+        // ######################
         fEventList.clear();
+
 
         if (RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, RD53FWInterface::decodedEvents);
         RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
@@ -360,9 +364,13 @@ namespace Ph2_System
       }
     else
       {
+        // ######################
+        // # Clear event vector #
+        // ######################
         for (auto &pevt : fEventList) delete pevt;
         fEventList.clear();
         fCurrentEvent = 0;
+
 
         fNevents   = static_cast<uint32_t>(pNevents);
         fEventSize = static_cast<uint32_t>((pData.size()) / fNevents);
@@ -437,8 +445,7 @@ namespace Ph2_System
 
                     lvec.clear();
 
-                    if (fEventList.size() >= fNevents)
-                      break;
+                    if (fEventList.size() >= fNevents) break;
                   }
               }
 

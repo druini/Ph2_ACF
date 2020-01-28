@@ -200,7 +200,7 @@ namespace Ph2_System
 
     const Ph2_HwDescription::BeBoard* getBoard(int index) const
     {
-      return (index < (int)fBoardVector.size()) ? fBoardVector.at(index) : nullptr;
+      return (index < static_cast<int>(fBoardVector.size()) ? fBoardVector.at(index) : nullptr);
     }
 
     /*!
