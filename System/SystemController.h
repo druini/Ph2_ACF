@@ -229,7 +229,7 @@ namespace Ph2_System
     void ClearEvtVector (const Ph2_HwDescription::BeBoard* pBoard);
     void DecodeData     (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
-    double findValueInSettings (const char* name);
+    double findValueInSettings (const char* name, double defaultValue = 0);
 
   private:
     void SetFuture (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);

@@ -344,10 +344,10 @@ namespace Ph2_System
     fEventList.clear();
   }
 
-  double SystemController::findValueInSettings (const char* name)
+  double SystemController::findValueInSettings (const char* name, double defaultValue)
   {
     auto setting = fSettingsMap.find(name);
-    return (setting != std::end(fSettingsMap) ? setting->second : 0);
+    return (setting != std::end(fSettingsMap) ? setting->second : defaultValue);
   }
 
 
