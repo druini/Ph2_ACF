@@ -14,7 +14,7 @@
 
 #include "Tool.h"
 #include "../Utils/Visitor.h"
-#include "../Utils/ContainerRecicleBin.h"
+#include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/CommonVisitors.h"
 #ifdef __USE_ROOT__
   #include "../DQMUtils/DQMHistogramPedeNoise.h"
@@ -55,7 +55,7 @@ class PedeNoise : public Tool
     void disableStubLogic();
     void reloadStubLogic();
     void cleanContainerMap();
-    void initializeRecicleBin() {fRecicleBin.setDetectorContainer(fDetectorContainer);}
+    void initializeRecycleBin() {fRecycleBin.setDetectorContainer(fDetectorContainer);}
 
     uint8_t  fPulseAmplitude     {    0};
     uint32_t fEventsPerPoint     {    0};
@@ -80,9 +80,7 @@ class PedeNoise : public Tool
     //helpers for SCurve measurement
 
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
-    ContainerRecicleBin<Occupancy> fRecicleBin;
-
-    std::vector<DetectorDataContainer*> fContainerRecicleBin;
+    ContainerRecycleBin<Occupancy> fRecycleBin;
 
     #ifdef __USE_ROOT__
       DQMHistogramPedeNoise fDQMHistogramPedeNoise;
