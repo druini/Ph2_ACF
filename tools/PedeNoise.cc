@@ -26,7 +26,7 @@ PedeNoise::~PedeNoise()
 
 void PedeNoise::cleanContainerMap()
 {
-    for(auto container : fSCurveOccupancyMap) fRecicleBin.free(container.second);
+    for(auto container : fSCurveOccupancyMap) fRecycleBin.free(container.second);
     fSCurveOccupancyMap.clear();
 }
 
@@ -34,7 +34,7 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 {
     fDisableStubLogic = pDisableStubLogic;
     fChannelGroupHandler = new CBCChannelGroupHandler();//This will be erased in tool.resetPointers()
-    initializeRecicleBin();
+    initializeRecycleBin();
 
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
     fAllChan = pAllChan;
@@ -266,35 +266,6 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
 
 }
 
-
-template<typename T, typename SC, typename SM, typename SB, typename SD>
-void copyAndInitStructureLocal(const DetectorContainer& original, DetectorDataContainer& copy)
-{
-    copy.initialize<SD,SB>();
-    for(const BoardContainer *board : original)
-    {
-        BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
-        copy.back()->initialize<SB,SM>();
-        for(const ModuleContainer* module : *board)
-        {
-            ModuleDataContainer* copyModule = copyBoard->addModuleDataContainer(module->getId());
-            copyBoard->back()->initialize<SM,SC>();
-            for(const ChipContainer* chip : *module)
-            {
-                copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
-                copyModule->back()->initialize<SC,T>();
-            }
-        }
-    }
-}
-
-template<typename T>
-void copyAndInitStructureLocal(const DetectorContainer& original, DetectorDataContainer& copy)
-{
-    copyAndInitStructureLocal<T,T,T,T,T>(original, copy);
-}
-
-
 void PedeNoise::measureSCurves (uint16_t pStartValue)
 {
 
@@ -311,7 +282,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
 
     while (! (cAllZero && cAllOne) )
     {
-        DetectorDataContainer *theOccupancyContainer = fRecicleBin.get<void (*)(const DetectorContainer&, DetectorDataContainer&, Occupancy&)>(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+        DetectorDataContainer *theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         fDetectorDataContainer = theOccupancyContainer;
         fSCurveOccupancyMap[cValue] = theOccupancyContainer;
 
