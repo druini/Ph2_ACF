@@ -253,7 +253,6 @@ public:
 		theCopyContainer.summary_ = nullptr;
 	}
 
-	// virtual void initialize() = 0;
 	virtual uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) = 0;
 	
 	template<typename T>
@@ -315,6 +314,17 @@ public:
 	void initialize(S& theSummary)
 	{
 		if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S,V>(theSummary);
+	}
+
+	template <typename S, typename V>
+	void resetSummary()
+	{	
+		if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S,V>*>(summary_)->theSummary_ = S();
+	}
+	template <typename S, typename V>
+	void resetSummary(S& theSummary)
+	{
+		if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S,V>*>(summary_)->theSummary_ = theSummary;
 	}
 
 	#ifdef PATCH_FOR_OPTICALGROUP
@@ -429,6 +439,28 @@ public:
 		if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S,V>(theSummary);
 		if(!std::is_same<V, EmptyContainer>::value) container_ = new ChannelDataContainer<V>(nOfRows_*nOfCols_, initialValue);
 	}
+
+	template <typename S, typename V>
+	void resetSummary()
+	{	
+		if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S,V>*>(summary_)->theSummary_ = S();
+	}
+	template <typename S, typename V>
+	void resetSummary(S& theSummary)
+	{
+		if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S,V>*>(summary_)->theSummary_ = theSummary;
+	}
+
+	template <typename V>
+	void resetChannels()
+	{	
+		if(!std::is_same<V, EmptyContainer>::value) for(auto &channel : *this->getChannelContainer<V>()) channel = V();
+	}
+	template <typename V>
+	void resetChannels(V& initialValue)
+	{
+		if(!std::is_same<V, EmptyContainer>::value) for(auto &channel : *this->getChannelContainer<V>()) channel = initialValue;
+	}
 	
 	uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents)
 	{
@@ -494,7 +526,7 @@ public:
 		return static_cast<T*>(theOpticalGroupDataContainer->addObject(id, module));
 	}
 	ModuleDataContainer*        addModuleDataContainer(uint16_t id)           {return addModuleDataContainer(id, new ModuleDataContainer(id));}
-	ModuleDataContainer*        at(size_t index) {return this->vector::at(0)->at(index);}
+	ModuleDataContainer*        at(size_t index) const {return this->vector::at(0)->at(index);}
 	ModuleDataContainer*        back() {return this->vector::at(0)->vector::back();}
 
 
@@ -512,6 +544,11 @@ public:
 		SummaryContainerBase *SummaryContainerList = new SummaryContainer<SummaryBase>;
 		for(auto container : *this) SummaryContainerList->emplace_back(container->summary_);
 		return SummaryContainerList;
+	}
+
+	BaseContainer* getElement(uint16_t index) const override
+	{
+		return this->at(index);
 	}
 
 	#else

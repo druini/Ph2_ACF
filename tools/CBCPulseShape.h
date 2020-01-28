@@ -12,14 +12,14 @@
 #ifndef CBCPulseShape_h__
 #define CBCPulseShape_h__
 
-#include "Tool.h"
+#include "PedeNoise.h"
 #include <map>
 #ifdef __USE_ROOT__
   //Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
   #include "../DQMUtils/CBCHistogramPulseShape.h"
 #endif
 
-class CBCPulseShape : public Tool
+class CBCPulseShape : public PedeNoise
 {
 
   public:
@@ -35,7 +35,6 @@ class CBCPulseShape : public Tool
     void Stop                 (void) override;
   
   private:
-    uint32_t fEventsPerPoint { 0} ;
     uint16_t fInitialVcth    { 0} ;
     uint16_t fFinalVcth      { 0} ;
     uint16_t fVCthStep       { 0} ;

@@ -82,7 +82,7 @@ void TPCalibration::RunCalibration()
   for(int cTPAmp = fStartAmp; cTPAmp <= fEndAmp; cTPAmp += fStepsize)
   {
     LOG(INFO) << BLUE << "Measure pedestals for amplitude " << cTPAmp << RESET;
-    fTestPulseAmplitude = cTPAmp;
+    fPulseAmplitude = cTPAmp;
     measureNoise();
     FillHistograms(cTPAmp);
     fTPCount++;

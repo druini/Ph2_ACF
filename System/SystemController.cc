@@ -331,13 +331,11 @@ namespace Ph2_System
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
   }
 
-  double SystemController::findValueInSettings (const char* name)
+  double SystemController::findValueInSettings (const std::string name, double defaultValue) const
   {
     auto setting = fSettingsMap.find(name);
-    return ((setting != std::end(fSettingsMap)) ? setting->second : 0);
+    return ((setting != std::end(fSettingsMap)) ? setting->second : defaultValue);
   }
-
-
 
 
   // #################

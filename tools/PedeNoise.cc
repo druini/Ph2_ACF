@@ -21,26 +21,31 @@ PedeNoise::PedeNoise()
 
 PedeNoise::~PedeNoise()
 {
-    for(auto container : fSCurveOccupancyMap)
-    	delete container.second;
+    cleanContainerMap();
+}
+
+void PedeNoise::cleanContainerMap()
+{
+    for(auto container : fSCurveOccupancyMap) fRecicleBin.free(container.second);
     fSCurveOccupancyMap.clear();
- }
+}
 
 void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 {
     fDisableStubLogic = pDisableStubLogic;
     fChannelGroupHandler = new CBCChannelGroupHandler();//This will be erased in tool.resetPointers()
+    initializeRecicleBin();
 
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
     fAllChan = pAllChan;
 
-    fSkipMaskedChannels          = readFromSettingMap("SkipMaskedChannels"         ,  0);
-    fMaskChannelsFromOtherGroups = readFromSettingMap("MaskChannelsFromOtherGroups",  1);
-    fPlotSCurves                 = readFromSettingMap("PlotSCurves"                ,  0);
-    fFitSCurves                  = readFromSettingMap("FitSCurves"                 ,  0);
-    fFitSCurves                  = readFromSettingMap("FitSCurves"                 ,  0);
-    fTestPulseAmplitude          = readFromSettingMap("PedeNoisePulseAmplitude"    ,  0);
-    fEventsPerPoint              = readFromSettingMap("Nevents"                    , 10);
+    fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels"         ,  0);
+    fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups",  1);
+    fPlotSCurves                 = findValueInSettings("PlotSCurves"                ,  0);
+    fFitSCurves                  = findValueInSettings("FitSCurves"                 ,  0);
+    fFitSCurves                  = findValueInSettings("FitSCurves"                 ,  0);
+    fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude"    ,  0);
+    fEventsPerPoint              = findValueInSettings("Nevents"                    , 10);
 
     LOG (INFO) << "Parsed settings:" ;
     LOG (INFO) << " Nevents = " << fEventsPerPoint ;
@@ -48,6 +53,14 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     this->SetSkipMaskedChannels( fSkipMaskedChannels );
     if(fFitSCurves) fPlotSCurves = true;
 
+    #ifdef __USE_ROOT__
+        fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    #endif
+
+}
+
+void PedeNoise::disableStubLogic()
+{
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fStubLogicValue);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fHIPCountValue);
 
@@ -57,58 +70,19 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
         {
             for ( auto cCbc : *cFe )
             {
-                if (fDisableStubLogic)
-                {
-                    LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET ;
-                    fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth");
-                    fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode"           );
-                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth", 0x23);
-                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode", 0x00);
-                }
+                LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET ;
+                fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth");
+                fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode"           );
+                fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth", 0x23);
+                fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode", 0x00);
             }
         }
 
     }
-
-    #ifdef __USE_ROOT__
-        fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
-    #endif    
-
 }
 
-
-void PedeNoise::sweepSCurves ()
+void PedeNoise::reloadStubLogic()
 {
-    uint16_t cStartValue = 0;
-    bool originalAllChannelFlag = this->fAllChan;
-    
-    if(fTestPulseAmplitude != 0 && originalAllChannelFlag){
-        this->SetTestAllChannels(false);
-        LOG (INFO) << RED <<  "Cannot inject pulse for all channels, test in groups enabled. " << RESET ;
-    }
-
-
-    if(fTestPulseAmplitude != 0){
-        this->enableTestPulse( true );
-        setFWTestPulse();
-
-        for ( auto cBoard : *fDetectorContainer )
-        {
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
-        }
-
-        // setSameGlobalDac("TestPulsePotNodeSel",  fTestPulseAmplitude);
-        LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
-        cStartValue = this->findPedestal ();
-    }
-    else
-    {
-        this->enableTestPulse( false );
-        cStartValue = this->findPedestal (true);
-    }
-
-    measureSCurves (cStartValue );
-
     //re-enable stub logic
     for ( auto cBoard : *fDetectorContainer )
     {
@@ -118,20 +92,54 @@ void PedeNoise::sweepSCurves ()
             {
                 RegisterVector cRegVec;
 
-                if (fDisableStubLogic)
-                {
-                    LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
-                    cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
-                    cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
-                }
+                LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
+                cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
+                cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
 
                 fReadoutChipInterface->WriteChipMultReg (static_cast<Cbc*>(cCbc), cRegVec);
             }
         }
     }
+}
+
+void PedeNoise::sweepSCurves ()
+{
+    uint16_t cStartValue = 0;
+    bool originalAllChannelFlag = this->fAllChan;
+    
+    if(fPulseAmplitude != 0 && originalAllChannelFlag){
+        this->SetTestAllChannels(false);
+        LOG (INFO) << RED <<  "Cannot inject pulse for all channels, test in groups enabled. " << RESET ;
+    }
+
+
+    if(fPulseAmplitude != 0){
+        this->enableTestPulse( true );
+        setFWTestPulse();
+
+        for ( auto cBoard : *fDetectorContainer )
+        {
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
+        }
+
+        // setSameGlobalDac("TestPulsePotNodeSel",  fPulseAmplitude);
+        LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
+        cStartValue = this->findPedestal ();
+    }
+    else
+    {
+        this->enableTestPulse( false );
+        cStartValue = this->findPedestal (true);
+    }
+
+    if (fDisableStubLogic) disableStubLogic();
+
+    measureSCurves (cStartValue );
+
+    if (fDisableStubLogic) reloadStubLogic();
 
     this->SetTestAllChannels(originalAllChannelFlag);
-    if(fTestPulseAmplitude != 0){
+    if(fPulseAmplitude != 0){
         this->enableTestPulse( false );
         setSameGlobalDac("TestPulsePotNodeSel",  0);
         LOG (INFO) << BLUE <<  "Disabled test pulse. " << RESET ;
@@ -220,8 +228,6 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     }
 }
 
-//////////////////////////////////////      PRIVATE METHODS     /////////////////////////////////////////////
-
 uint16_t PedeNoise::findPedestal (bool forceAllChannels)
 {
 
@@ -260,6 +266,35 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
 
 }
 
+
+template<typename T, typename SC, typename SM, typename SB, typename SD>
+void copyAndInitStructureLocal(const DetectorContainer& original, DetectorDataContainer& copy)
+{
+    copy.initialize<SD,SB>();
+    for(const BoardContainer *board : original)
+    {
+        BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
+        copy.back()->initialize<SB,SM>();
+        for(const ModuleContainer* module : *board)
+        {
+            ModuleDataContainer* copyModule = copyBoard->addModuleDataContainer(module->getId());
+            copyBoard->back()->initialize<SM,SC>();
+            for(const ChipContainer* chip : *module)
+            {
+                copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
+                copyModule->back()->initialize<SC,T>();
+            }
+        }
+    }
+}
+
+template<typename T>
+void copyAndInitStructureLocal(const DetectorContainer& original, DetectorDataContainer& copy)
+{
+    copyAndInitStructureLocal<T,T,T,T,T>(original, copy);
+}
+
+
 void PedeNoise::measureSCurves (uint16_t pStartValue)
 {
 
@@ -276,10 +311,11 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
 
     while (! (cAllZero && cAllOne) )
     {
-        DetectorDataContainer *theOccupancyContainer = new DetectorDataContainer();
+        DetectorDataContainer *theOccupancyContainer = fRecicleBin.get<void (*)(const DetectorContainer&, DetectorDataContainer&, Occupancy&)>(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         fDetectorDataContainer = theOccupancyContainer;
-        ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
         fSCurveOccupancyMap[cValue] = theOccupancyContainer;
+
+        
 
         this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
 
@@ -375,6 +411,7 @@ void PedeNoise::extractPedeNoise ()
                 {
                     for(uint8_t iChannel=0; iChannel<chip->size(); ++iChannel)
                     {
+                        if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
                         float previousOccupancy = (previousIterator)->second->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
                         float currentOccupancy  = mIt->second->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
                         float binCenter = (mIt->first + (previousIterator)->first)/2.;
@@ -407,6 +444,7 @@ void PedeNoise::extractPedeNoise ()
             {
                 for(uint8_t iChannel=0; iChannel<chip->size(); ++iChannel)
                 {
+                    if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
                     chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold/=chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                     chip->getChannel<ThresholdAndNoise>(iChannel).fNoise/=chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                     chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold * chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold));

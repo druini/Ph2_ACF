@@ -12,6 +12,7 @@
 #include "../Utils/ContainerStream.h"
 #include "../Utils/Occupancy.h"
 #include "../RootUtils/HistContainer.h"
+#include "../Utils/ThresholdAndNoise.h"
 #include "TH2F.h"
 #include "TCanvas.h"
 #include "TFile.h"
@@ -44,44 +45,32 @@ void CBCHistogramPulseShape::book(TFile *theOutputFile, const DetectorContainer 
     fFinalDelay     = findValueInSettings(pSettingsMap, "PulseShapeFinalDelay"    ,  25);
     fDelayStep      = findValueInSettings(pSettingsMap, "PulseShapeDelayStep"     ,   1);
 
-    float maxVCth = 1023;
-    if(fFinalVcth>maxVCth) fFinalVcth = maxVCth;
-    
     int delayNbins = (fFinalDelay - fInitialDelay)/fDelayStep + 1;
-    int vcthNbins  = (fFinalVcth  - fInitialVcth )/fVcthStep + 1;
     fEffectiveFinalDelay = (delayNbins-1) * fDelayStep + fInitialDelay;
-    float effectiveFinalVcth  = (vcthNbins -1) * fVcthStep  + fInitialVcth ;
-
+    
     float delayHistogramMin = fInitialDelay - fDelayStep/2.;
-    float vcthHistogramMin  = fInitialVcth  - fVcthStep /2.;
-
     float delayHistogramMax = fEffectiveFinalDelay + fDelayStep/2.;
-    float vcthHistogramMax  = effectiveFinalVcth   + fVcthStep /2.;
     
-    // auto theCanvasPulseShapeContainer = CanvasContainer<TH2F>("PulseShapePerChannel", "PulseShape Per Channel", delayNbins, delayHistogramMin, delayHistogramMax, vcthNbins, vcthHistogramMin, vcthHistogramMax);
-    // RootContainerFactory::bookChannelHistograms(theOutputFile, theDetectorStructure, fDetectorChannelPulseShapeHistograms, theCanvasPulseShapeContainer);
-    // theCanvasPulseShapeContainer.SetNameTitle("PulseShapePerChip", "PulseShape Per Chip");
-    // RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorChipPulseShapeHistograms, theCanvasPulseShapeContainer);
-
-
-    HistContainer<TH2F> theTH2FPulseShapeContainer("PulseShapePerChannel", "PulseShape Per Channel", delayNbins, delayHistogramMin, delayHistogramMax, vcthNbins, vcthHistogramMin, vcthHistogramMax);
-    theTH2FPulseShapeContainer.fTheHistogram->GetXaxis()->SetTitle("delay");
-    theTH2FPulseShapeContainer.fTheHistogram->GetYaxis()->SetTitle("Vcth");
-    RootContainerFactory::bookChannelHistograms(theOutputFile, theDetectorStructure, fDetectorChannelPulseShapeHistograms, theTH2FPulseShapeContainer);
+    HistContainer<TH1F> theTH1FPulseShapeContainer("PulseShapePerChannel", "PulseShape Per Channel", delayNbins, delayHistogramMin, delayHistogramMax);
+    theTH1FPulseShapeContainer.fTheHistogram->GetXaxis()->SetTitle("delay");
+    theTH1FPulseShapeContainer.fTheHistogram->GetYaxis()->SetTitle("Vcth");
+    theTH1FPulseShapeContainer.fTheHistogram->SetStats(false);
+    RootContainerFactory::bookChannelHistograms(theOutputFile, theDetectorStructure, fDetectorChannelPulseShapeHistograms, theTH1FPulseShapeContainer);
     
-    theTH2FPulseShapeContainer.fTheHistogram->SetNameTitle("PulseShapePerChip", "PulseShape Per Chip");
-    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorChipPulseShapeHistograms, theTH2FPulseShapeContainer);
+    theTH1FPulseShapeContainer.fTheHistogram->SetNameTitle("PulseShapePerChip", "PulseShape Per Chip");
+    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorChipPulseShapeHistograms, theTH1FPulseShapeContainer);
+
 }
 
 //========================================================================================================================
-void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t threshold, uint16_t delay, DetectorDataContainer&& theOccupancyContainer)
+void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorDataContainer& theThresholdAndNoiseContainer)
 {
 
     // float latencyStep = -int(delay/25);
     float binCenterValue = ceil(fFinalDelay/25.)*25 - (delay/25)*25. - (25. - delay%25);
     // std::cout<<delay << " - " <<  binCenterValue <<  std::endl;
     
-    for(auto board : theOccupancyContainer) //for on boards - begin 
+    for(auto board : theThresholdAndNoiseContainer) //for on boards - begin 
     {
         size_t boardIndex = board->getIndex();
         for(auto module: *board) //for on module - begin 
@@ -92,16 +81,20 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t threshold, uint16_t
             {
                 size_t chipIndex = chip->getIndex();
                 // Retreive the corresponging chip histogram:
-                if(chip->getSummaryContainer<Occupancy,Occupancy>() == nullptr ) continue;
-                TH2F *chipPulseShapeHistogram = fDetectorChipPulseShapeHistograms.at(boardIndex)->at(moduleIndex)->at(chipIndex)->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                chipPulseShapeHistogram->Fill(binCenterValue, threshold, chip->getSummary<Occupancy,Occupancy>().fOccupancy);
+                if(chip->getSummaryContainer<ThresholdAndNoise,ThresholdAndNoise>() == nullptr ) continue;
+                TH1F *chipPulseShapeHistogram = fDetectorChipPulseShapeHistograms.at(boardIndex)->at(moduleIndex)->at(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                int currentBin = chipPulseShapeHistogram->FindBin(binCenterValue);
+                chipPulseShapeHistogram->SetBinContent(currentBin, chip->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold     );
+                chipPulseShapeHistogram->SetBinError  (currentBin, chip->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThresholdError);
                 // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip by chip and not in one shot)
                 // Get channel data and fill the histogram
                 uint8_t channelNumber = 0;
-                for(auto channel : *chip->getChannelContainer<Occupancy>()) //for on channel - begin 
+                for(auto channel : *chip->getChannelContainer<ThresholdAndNoise>()) //for on channel - begin 
                 {
-                    TH2F *channelPulseShapeHistogram = fDetectorChannelPulseShapeHistograms.at(boardIndex)->at(moduleIndex)->at(chipIndex)->getChannel<HistContainer<TH2F>>(channelNumber).fTheHistogram;
-                    channelPulseShapeHistogram->Fill(binCenterValue, threshold, channel.fOccupancy);
+                    TH1F *channelPulseShapeHistogram = fDetectorChannelPulseShapeHistograms.at(boardIndex)->at(moduleIndex)->at(chipIndex)->getChannel<HistContainer<TH1F>>(channelNumber).fTheHistogram;
+                    int currentBin = channelPulseShapeHistogram->FindBin(binCenterValue);
+                    channelPulseShapeHistogram->SetBinContent(currentBin, channel.fThreshold);
+                    channelPulseShapeHistogram->SetBinError  (currentBin, channel.fNoise    );
                     ++channelNumber;
                 } //for on channel - end 
             } //for on chip - end 
@@ -130,12 +123,11 @@ void CBCHistogramPulseShape::process()
                 TVirtualPad* currentCanvas = cChipPulseShape->cd(chipIndex+1);
                 TPad* myPad = static_cast<TPad*>(cChipPulseShape->GetPad(chipIndex+1));
                 // Retreive the corresponging chip histogram:
-                TH2F *chipPulseShapeHistogram = chip->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                TH1F *chipPulseShapeHistogram = chip->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 TGaxis *theAxis = new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax()/3, myPad->GetUymax(), 0., 25., 510, "-");
 
                 //Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you need)
-                chipPulseShapeHistogram->SetStats(false);
-                chipPulseShapeHistogram->DrawCopy("colz");
+                chipPulseShapeHistogram->DrawCopy();
                 theAxis->SetLabelColor(kRed);
                 theAxis->SetLineColor(kRed);
                 theAxis->Draw();
@@ -160,7 +152,7 @@ bool CBCHistogramPulseShape::fill(std::vector<char>& dataBuffer)
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     //I'm expecting to receive a data stream from an uint32_t contained from calibration "CalibrationExample"
-    ChipContainerStream<Occupancy,Occupancy,uint16_t,uint16_t>  theOccupancyStreamer("CBCPulseShape");
+    ChipContainerStream<ThresholdAndNoise,ThresholdAndNoise,uint16_t>  theOccupancyStreamer("CBCPulseShape");
 
     // Try to see if the char buffer matched what I'm expection (container of uint32_t from CalibrationExample procedure)
     if(theOccupancyStreamer.attachBuffer(&dataBuffer))
@@ -169,7 +161,7 @@ bool CBCHistogramPulseShape::fill(std::vector<char>& dataBuffer)
         theOccupancyStreamer.decodeChipData(fDetectorData);
         //Filling the histograms
         
-        fillCBCPulseShapePlots(theOccupancyStreamer.getHeaderElement<0>(), theOccupancyStreamer.getHeaderElement<1>(), std::move(fDetectorData));
+        fillCBCPulseShapePlots(theOccupancyStreamer.getHeaderElement<0>(), fDetectorData);
         //Cleaning the data container to be ready for the next TCP string
         fDetectorData.cleanDataStored();
         return true;
