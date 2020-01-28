@@ -19,8 +19,6 @@
 #include "../Utils/ChannelGroupHandler.h"
 #include <typeinfo>
 
-#define PATCH_FOR_OPTICALGROUP
-
 class ChannelContainerBase;
 template <typename T>
 class ChannelContainer;
@@ -56,17 +54,9 @@ private:
 	uint16_t index_;
 };
 
-class BoardContainer;
-class BoardDataContainer;
-
 template <class T>
 class Container : public std::vector<T*> , public BaseContainer
 {
-	#ifdef PATCH_FOR_OPTICALGROUP
-		friend BoardContainer;
-		friend BoardDataContainer;
-	#endif
-
 public:
 	Container(uint16_t id) : BaseContainer(id)
 	{
@@ -280,56 +270,13 @@ public:
 private:
 };
 
-
-class OpticalGroupContainer : public Container<ModuleContainer>
+class BoardContainer : public Container<ModuleContainer>
 {
 public:
-	OpticalGroupContainer(uint16_t id) : Container<ModuleContainer>(id){}
-	OpticalGroupContainer(const OpticalGroupContainer&) = delete;
-	OpticalGroupContainer(OpticalGroupContainer&& theCopyContainer)
-	: Container<ModuleContainer>(std::move(theCopyContainer))
-	{}
-
+	BoardContainer(uint16_t id) : Container<ModuleContainer>(id){}
 	template <class T>
 	T*               addModuleContainer(uint16_t id, T* module){return static_cast<T*>(Container<ModuleContainer>::addObject(id, module));}
-	ModuleContainer* addModuleContainer(uint16_t id)       {return Container<ModuleContainer>::addObject(id, new ModuleContainer(id));}
-private:
-};
-
-class BoardContainer : public Container<OpticalGroupContainer>
-{
-public:
-	BoardContainer(uint16_t id) : Container<OpticalGroupContainer>(id){}
-	BoardContainer(const BoardContainer&) = delete;
-	BoardContainer(BoardContainer&& theCopyContainer)
-	: Container<OpticalGroupContainer>(std::move(theCopyContainer))
-	{}
-
-	#ifdef PATCH_FOR_OPTICALGROUP
-	template <class T>
-	T*                      addModuleContainer(uint16_t id, T* module)
-	{
-		if(this->size() == 0) Container<OpticalGroupContainer>::addObject(id, new OpticalGroupContainer(0));
-		OpticalGroupContainer* theOpticalGroupContainer = static_cast<OpticalGroupContainer*>(this->vector::at(0));
-		return static_cast<T*>(theOpticalGroupContainer->addObject(id, module));
-	}
-	ModuleContainer*        addModuleContainer(uint16_t id)           {return addModuleContainer(id, new ModuleContainer(id));}
-	ModuleContainer*        at(size_t index) {return this->vector::at(0)->at(index);}
-	ModuleContainer*        back() {return this->vector::at(0)->vector::back();}
-
-
-	OpticalGroupContainer::iterator begin() {return static_cast<OpticalGroupContainer*>(this->vector::at(0))->begin();}
-	OpticalGroupContainer::iterator end  () {return static_cast<OpticalGroupContainer*>(this->vector::at(0))->end  ();}
-
-	OpticalGroupContainer::const_iterator begin() const {return static_cast<OpticalGroupContainer*>(this->vector::at(0))->begin();}
-	OpticalGroupContainer::const_iterator end  () const {return static_cast<OpticalGroupContainer*>(this->vector::at(0))->end  ();}
-	
-	#else
-	template <class T>
-	T*                      addOpticalGroupContainer(uint16_t id, T* opticalGroup){return static_cast<T*>(Container<OpticalGroupContainer>::addObject(id, opticalGroup));}
-	OpticalGroupContainer*  addOpticalGroupContainer(uint16_t id)           {return Container<OpticalGroupContainer>::addObject(id, new OpticalGroupContainer(id));}
-	#endif
-
+	ModuleContainer* addModuleContainer(uint16_t id)                 {return Container<ModuleContainer>::addObject(id, new ModuleContainer(id));}
 private:
 };
 
