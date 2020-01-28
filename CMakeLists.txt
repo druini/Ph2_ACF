@@ -97,7 +97,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif()
 
 
-
     #check for external dependences
     message("--")
     message("--     ${BoldCyan}#### Checking for external Dependencies ####${Reset}")
@@ -160,14 +159,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
 
     #EUDAQ
-    if (DEFINED ENV{EUDAQ})
+    if (CompileWithEUDAQ)
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQ}/include $ENV{EUDAQ}/user/tlu/module/src)
         set(EUDAQ_LIB -L$ENV{EUDAQ}/lib eudaq_core)
         message(STATUS "    EUDAQ variable is definedd. EUDAQ directory: $ENV{EUDAQ}")
-    else(DEFINED ENV{EUDAQ})
+    else(CompileWithEUDAQ)
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
-    endif(DEFINED ENV{EUDAQ})
+    endif(CompileWithEUDAQ)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 

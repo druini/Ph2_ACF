@@ -97,4 +97,7 @@ export CompileForShep=false
 # export CompileForHerd=false
 # export CompileForShep=true
 
+# Compile with EUDAQ libraries
+export CompileWithEUDAQ=false
+
 echo "=== DONE ==="

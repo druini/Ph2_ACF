@@ -37,7 +37,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
             #and link against the libs
             set(LIBS ${LIBS} ${ZMQ_LIBRARIES} ${PH2_USBINSTLIB_LIBRARIES})
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ZMQ__ -D__USBINST__")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{ZmqFlag} $ENV{USBINSTFlag}")
         endif()
     endif()
 
@@ -47,7 +47,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         include_directories(${UHAL_AMC13_INCLUDE_PREFIX})
         link_directories(${UHAL_AMC13_LIB_PREFIX})
         set(LIBS ${LIBS} cactus_amc13_amc13 Ph2_Amc13)
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__AMC13__")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{Amc13Flag}")
     endif()
 
     #check for AntennaDriver
@@ -55,7 +55,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         include_directories(${PH2_ANTENNA_INCLUDE_DIRS})
         link_directories(${PH2_ANTENNA_LIBRARY_DIRS})
         set(LIBS ${LIBS} usb ${PH2_ANTENNA_LIBRARIES})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ANTENNA__")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
     endif()
 
     #last but not least, find root and link against it
@@ -70,7 +70,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             #check for THttpServer
             if(${ROOT_HAS_HTTP})
                 set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
-                set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HTTP__")
+                set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
             endif()
         endif()
     endif()
@@ -83,7 +83,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #build eudaq producer
     if (USE_EUDAQ)
         set(LIBS ${LIBS} ${EUDAQ_LIB})
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__EUDAQ__")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{EuDaqFlag}")
     endif(USE_EUDAQ)
 
     TARGET_LINK_LIBRARIES(Ph2_Tools ${LIBS})
