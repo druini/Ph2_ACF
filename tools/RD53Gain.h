@@ -13,6 +13,7 @@
 #include "Tool.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/GainAndIntercept.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/RD53SharedConstants.h"
@@ -35,7 +36,7 @@
 class Gain : public Tool
 {
  public:
-  ~Gain () { for (auto container : detectorContainerVector) delete container; }
+  ~Gain () { for (auto container : detectorContainerVector) theRecyclingBin.free(container); }
 
   void Start (int currentRun = -1) override;
   void Stop  ()                    override;
@@ -70,6 +71,7 @@ class Gain : public Tool
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   std::vector<DetectorDataContainer*>      detectorContainerVector;
   std::shared_ptr<DetectorDataContainer>   theGainAndInterceptContainer;
+  ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
   void initHisto       ();
   void fillHisto       ();

@@ -53,7 +53,7 @@ void CBCPulseShape::Initialise (void)
 
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
-    initializeRecicleBin();
+    initializeRecycleBin();
 
     #ifdef __USE_ROOT__  // to disable and anable ROOT by command 
         //Calibration is not running on the SoC: plots are booked during initialization

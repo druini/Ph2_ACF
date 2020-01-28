@@ -3,6 +3,10 @@
 
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
+#include "../Utils/ContainerFactory.h"
+
+template<typename... Ts>
+using TestType = decltype(ContainerFactory::copyAndInitStructure(std::declval<const DetectorContainer&>(), std::declval<DetectorDataContainer&>(), std::declval<Ts&>()...))(const DetectorContainer&, DetectorDataContainer&, Ts&...);
 
 template<typename T, typename SC, typename SM, typename SB, typename SD>
 void reinitializeContainer(DetectorDataContainer *theDataContainer)
@@ -70,28 +74,28 @@ void reinitializeContainer(DetectorDataContainer *theDataContainer, T& channel)
 
 
 template<typename... Args>
-class ContainerRecicleBin
+class ContainerRecycleBin
 {
 public:
-    ContainerRecicleBin() {;}
+    ContainerRecycleBin() {;}
 
-    ~ContainerRecicleBin()
+    ~ContainerRecycleBin()
     {
-        for(auto container : fRecicleBin)
+        for(auto container : fRecycleBin)
         {
             delete container;
             container = nullptr;
         }
-        fRecicleBin.clear();
+        fRecycleBin.clear();
     }
 
     void setDetectorContainer(DetectorContainer *theDetector) {fDetectorContainer = theDetector;}
 
-    template<typename F, typename... InitArgs>
-    DetectorDataContainer* get(F function, InitArgs... theInitArguments)
+    template<typename... InitArgs>
+    DetectorDataContainer* get(TestType<InitArgs...> function, InitArgs... theInitArguments)
     {
 
-        if(fRecicleBin.size() == 0)
+        if(fRecycleBin.size() == 0)
         {
             DetectorDataContainer *theDataContainer = new DetectorDataContainer();
             function(*fDetectorContainer, *theDataContainer, theInitArguments...);
@@ -99,8 +103,8 @@ public:
         }
         else
         {
-            DetectorDataContainer* availableContainer = fRecicleBin.back();
-            fRecicleBin.pop_back();
+            DetectorDataContainer* availableContainer = fRecycleBin.back();
+            fRecycleBin.pop_back();
             reinitializeContainer<Args...>(availableContainer,theInitArguments...);
             return availableContainer;
         }
@@ -108,11 +112,11 @@ public:
 
     void free(DetectorDataContainer *theDataContainer)
     {
-        fRecicleBin.push_back(theDataContainer);
+        fRecycleBin.push_back(theDataContainer);
     }
 
 private:
-    std::vector<DetectorDataContainer*> fRecicleBin;
+    std::vector<DetectorDataContainer*> fRecycleBin;
     DetectorContainer *fDetectorContainer;
 
 };
