@@ -54,6 +54,12 @@ void SCurve::ConfigureCalibration ()
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
 
+  // #################################
+  // # Initialize container recycler #
+  // #################################
+  theRecyclingBin.setDetectorContainer(fDetectorContainer);
+
+
   // #######################
   // # Initialize progress #
   // #######################
@@ -133,14 +139,10 @@ void SCurve::run ()
         this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
 
 
-  for (auto i = 0u; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
+  for (auto container : detectorContainerVector) theRecyclingBin.free(container);
   detectorContainerVector.clear();
-  detectorContainerVector.reserve(dacList.size());
   for (auto i = 0u; i < dacList.size(); i++)
-    {
-      detectorContainerVector.emplace_back(new DetectorDataContainer());
-      ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *detectorContainerVector.back());
-    }
+    detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetBoardBroadcast(true);
