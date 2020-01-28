@@ -66,6 +66,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set(NoDataShipping false)
     endif()
 
+    MESSAGE(STATUS "")
     MESSAGE(STATUS "${BoldYellow}COMPILATION FLAGS:${Reset}")
     MESSAGE(STATUS "     CompileForShep = ${BoldRed}${CompileForShep}${Reset}")
     MESSAGE(STATUS "     CompileForHerd = ${BoldRed}${CompileForHerd}${Reset}")
@@ -119,15 +120,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     find_package(CACTUS)      #========================================================
     if(${CACTUS_AMC13_FOUND})
         message(STATUS "    enabling AMC13 component")
-    else(${CACTUS_AMC13_FOUND})
-        message(STATUS "    continuing without AMC13 components")
     endif(${CACTUS_AMC13_FOUND})
 
     find_package(PH2_ANTENNA) #========================================================
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    building the Antenna components")
-    else(PH2_ANTENNA_FOUND)
-        message(STATUS "    continuing without Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
     #ZeroMQ optional
@@ -161,13 +158,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # endif(uhal_boost)
 
     find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
-    
+
     #EUDAQ
     if (DEFINED ENV{EUDAQ})
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQ}/include $ENV{EUDAQ}/user/tlu/module/src)
         set(EUDAQ_LIB -L$ENV{EUDAQ}/lib eudaq_core)
-        message(STATUS "    Using EUDAQ from $ENV{EUDAQ}")
+        message(STATUS "    EUDAQ variable is definedd. EUDAQ directory: $ENV{EUDAQ}")
     else(DEFINED ENV{EUDAQ})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
     endif(DEFINED ENV{EUDAQ})
