@@ -9,38 +9,6 @@ template<typename... Ts>
 using TestType = decltype(ContainerFactory::copyAndInitStructure(std::declval<const DetectorContainer&>(), std::declval<DetectorDataContainer&>(), std::declval<Ts&>()...))(const DetectorContainer&, DetectorDataContainer&, Ts&...);
 
 template<typename T, typename SC, typename SM, typename SB, typename SD>
-void reinitializeContainer(DetectorDataContainer *theDataContainer)
-{
-    theDataContainer->resetSummary<SD, SB>();
-    for(auto board : *theDataContainer)
-    {
-        board->resetSummary<SB, SM>();
-        for(auto module : *board)
-        {
-            module->resetSummary<SM, SC>();
-            for(auto chip : *module)
-            {
-                chip->resetSummary<SC, T>();
-                chip->resetChannels<T>();
-            }   
-        }
-    }
-}
-
-template<typename T, typename S>
-void reinitializeContainer(DetectorDataContainer* theDataContainer)
-{
-    reinitializeContainer<T,S,S,S,S>(theDataContainer);
-}
-
-template<typename T>
-void reinitializeContainer(DetectorDataContainer *theDataContainer)
-{
-    reinitializeContainer<T,T,T,T,T>(theDataContainer); 
-}
-
-
-template<typename T, typename SC, typename SM, typename SB, typename SD>
 void reinitializeContainer(DetectorDataContainer *theDataContainer, T& channel, SC& chipSummary, SM& moduleSummary, SB& boardSummary, SD& detectorSummary)
 {
     theDataContainer->resetSummary<SD, SB>(detectorSummary);
@@ -79,6 +47,12 @@ class ContainerRecycleBin
 public:
     ContainerRecycleBin() {;}
 
+    ContainerRecycleBin(const ContainerRecycleBin&) = delete;
+    ContainerRecycleBin(ContainerRecycleBin&&)      = delete;
+
+    ContainerRecycleBin& operator=(const ContainerRecycleBin&) = delete;
+    ContainerRecycleBin& operator=(ContainerRecycleBin&&)      = delete;
+
     ~ContainerRecycleBin()
     {
         for(auto container : fRecycleBin)
@@ -91,8 +65,7 @@ public:
 
     void setDetectorContainer(DetectorContainer *theDetector) {fDetectorContainer = theDetector;}
 
-    template<typename... InitArgs>
-    DetectorDataContainer* get(TestType<InitArgs...> function, InitArgs... theInitArguments)
+    DetectorDataContainer* get(TestType<Args...> function, Args... theInitArguments)
     {
 
         if(fRecycleBin.size() == 0)
