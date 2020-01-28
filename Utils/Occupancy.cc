@@ -6,7 +6,7 @@ void Occupancy::makeSummaryAverage(const std::vector<Occupancy>* theOccupancyVec
 {
     if(theOccupancyVector->size()!=theNumberOfEnabledChannelsList.size()) 
     {
-        std::cout << __PRETTY_FUNCTION__ << "theOccupancyVector size = " << theOccupancyVector->size() 
+        std::cout << __PRETTY_FUNCTION__ << " theOccupancyVector size = " << theOccupancyVector->size() 
         << " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
         abort();
     }
