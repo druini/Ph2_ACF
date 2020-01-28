@@ -60,15 +60,16 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     
     set(CompileForShep "$ENV{CompileForShep}")
     set(CompileForHerd "$ENV{CompileForHerd}")
-    if( (NOT CompileForShep) AND (NOT CompileForHerd) )
-    set(NoDataShipping TRUE)
+    if ((NOT CompileForShep) AND (NOT CompileForHerd))
+        set(NoDataShipping true)
     else()
-    set(NoDataShipping FALSE)
+        set(NoDataShipping false)
     endif()
-    
-    MESSAGE(STATUS "CompileForShep = ${CompileForShep}")
-    MESSAGE(STATUS "CompileForHerd = ${CompileForHerd}")
-    MESSAGE(STATUS "NoDataShipping = ${NoDataShipping}")
+
+    MESSAGE(STATUS "${BoldYellow}COMPILATION FLAGS:${Reset}")
+    MESSAGE(STATUS "     CompileForShep = ${BoldRed}${CompileForShep}${Reset}")
+    MESSAGE(STATUS "     CompileForHerd = ${BoldRed}${CompileForHerd}${Reset}")
+    MESSAGE(STATUS "     NoDataShipping = ${BoldRed}${NoDataShipping}${Reset}")
 
     # If it's a recent gcc compiler, then let's add some
     # compiler options to avoid warnings promoted to errors
@@ -132,7 +133,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #ZeroMQ optional
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
-        #message(STATUS "Found ZMQ Library - checking for Ph2_UsbInstLib")
+        #message(STATUS "     Found ZMQ Library - checking for Ph2_UsbInstLib")
 
         #libPh2_UsbInstLib
         find_package(PH2_USBINSTLIB)
@@ -160,7 +161,16 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # endif(uhal_boost)
 
     find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
-    #find_package(Boost 1.53 REQUIRED filesystem system-mt )
+    
+    #EUDAQ
+    if (DEFINED ENV{EUDAQ})
+        set(USE_EUDAQ ON)
+        include_directories($ENV{EUDAQ}/include $ENV{EUDAQ}/user/tlu/module/src)
+        set(EUDAQ_LIB -L$ENV{EUDAQ}/lib eudaq_core)
+        message(STATUS "    Using EUDAQ from $ENV{EUDAQ}")
+    else(DEFINED ENV{EUDAQ})
+        message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
+    endif(DEFINED ENV{EUDAQ})
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
@@ -235,4 +245,3 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS " ") 
 
 endif()
-

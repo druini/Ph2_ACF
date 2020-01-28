@@ -61,7 +61,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time -lboost_iostreams")
     endif()
 
-    #last but not least, find root and link against it
+    #find root and link against it
     if(${ROOT_FOUND})
         include_directories(${ROOT_INCLUDE_DIRS})
         set(LIBS ${LIBS} ${ROOT_LIBRARIES})
@@ -75,6 +75,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HTTP__")
         endif()
     endif()
+
+    #build eudaq producer
+    if (USE_EUDAQ)
+        set(LIBS ${LIBS} ${EUDAQ_LIB})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__EUDAQ__")
+    endif(USE_EUDAQ)
 
     ####################################
     ## EXECUTABLES

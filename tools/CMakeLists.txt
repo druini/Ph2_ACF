@@ -80,6 +80,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set(LIBS ${LIBS} Ph2_DQMUtils)
     endif()
 
+    #build eudaq producer
+    if (USE_EUDAQ)
+        set(LIBS ${LIBS} ${EUDAQ_LIB})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__EUDAQ__")
+    endif(USE_EUDAQ)
+
     TARGET_LINK_LIBRARIES(Ph2_Tools ${LIBS})
 
     ####################################

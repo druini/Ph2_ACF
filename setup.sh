@@ -60,6 +60,12 @@ export USBINSTLIB=$USBINSTDIR/lib
 export PATH=$BASE_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:${LD_LIBRARY_PATH}
 
+##########
+# EUDAQ #
+##########
+export EUDAQ=$BASE_DIR/../eudaq/
+export LD_LIBRARY_PATH=$EUDAQ/lib:$LD_LIBRARY_PATH
+
 #########
 # Flags #
 #########
@@ -69,6 +75,7 @@ export USBINSTFlag='-D__USBINST__'
 export Amc13Flag='-D__AMC13__'
 export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
+export EuDaqFlag='-D__EUDAQ__'
 
 ################
 # Compilations #
