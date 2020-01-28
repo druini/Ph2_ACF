@@ -132,10 +132,10 @@ class DQMHistogramBase
             }
     }
 
-  double findValueInSettings (const Ph2_System::SettingsMap& settingsMap, const char* name, double defaultValue = 0)
+  double findValueInSettings (const Ph2_System::SettingsMap& settingsMap, const std::string name, double defaultValue = 0.) const
   {
     auto setting = settingsMap.find(name);
-    return ((setting != std::end(settingsMap)) ? setting->second : defaultValue);
+    return (setting != std::end(settingsMap) ? setting->second : defaultValue);
   }
 };
 

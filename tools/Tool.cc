@@ -1063,8 +1063,6 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 	fDetectorDataContainer = outputDataContainer;
 	measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
-	dumpConfigFiles();
-
 	delete previousStepOccupancyContainer;
 	delete currentStepOccupancyContainer;
 	delete previousDacList;

@@ -22,11 +22,11 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
     this->fAllChan = pAllChan;
     
-    fSkipMaskedChannels          = readFromSettingMap("SkipMaskedChannels"                ,    0);
-    fMaskChannelsFromOtherGroups = readFromSettingMap("MaskChannelsFromOtherGroups"       ,    1);
-    fCheckLoop                   = readFromSettingMap("VerificationLoop"                  ,    1);
-    fTestPulseAmplitude          = readFromSettingMap("PedestalEqualizationPulseAmplitude",    0);
-    fEventsPerPoint              = readFromSettingMap("Nevents"                           ,   10);
+    fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels"                ,    0);
+    fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups"       ,    1);
+    fCheckLoop                   = findValueInSettings("VerificationLoop"                  ,    1);
+    fTestPulseAmplitude          = findValueInSettings("PedestalEqualizationPulseAmplitude",    0);
+    fEventsPerPoint              = findValueInSettings("Nevents"                           ,   10);
     fTargetOffset = 0x80;
     fTargetVcth   =  0x0;
 
@@ -99,6 +99,7 @@ void PedestalEqualization::FindVplus()
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
+    dumpConfigFiles();
 
     setSameLocalDac("ChannelOffset", 0xFF);
 
@@ -156,6 +157,7 @@ void PedestalEqualization::FindOffsets()
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56);
+    dumpConfigFiles();
 
     DetectorDataContainer theOffsetsCointainer;
     ContainerFactory::copyAndInitChannel<uint8_t>(*fDetectorContainer,theOffsetsCointainer);

@@ -62,7 +62,7 @@ class CBCHistogramPulseShape : public DQMHistogramBase
      * \brief delay
      * \param theHitContainer : Container with the hits you want to plot 
      */
-    void fillCBCPulseShapePlots(uint16_t threshold, uint16_t delay, DetectorDataContainer&& theOccupancyContainer);
+    void fillCBCPulseShapePlots(uint16_t delay, DetectorDataContainer& theOccupancyContainer);
 
   private:
 

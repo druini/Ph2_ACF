@@ -28,7 +28,7 @@ class ThresholdAndNoise
   }
 
   template<typename T>
-    void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
+  void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
   void makeSummaryAverage   (const std::vector<ThresholdAndNoise>* theThresholdAndNoiseVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
   void normalize            (const uint32_t numberOfEvents)                                                                                                                             {}
 
@@ -71,13 +71,13 @@ inline void ThresholdAndNoise::makeChannelAverage<ThresholdAndNoise>(const ChipC
   if (fThresholdError > 0)
     {
       fThreshold      /= fThresholdError;
-      fThresholdError /= sqrt(1. / fThresholdError);
+      fThresholdError = sqrt(1. / fThresholdError);
     }
 
   if (fNoiseError > 0)
     {
       fNoise      /= fNoiseError;
-      fNoiseError /= sqrt(1. / fNoiseError);
+      fNoiseError = sqrt(1. / fNoiseError);
     }
 }
 

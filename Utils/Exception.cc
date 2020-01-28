@@ -12,28 +12,7 @@
 #include "../Utils/Exception.h"
 // #include "TROOT.h"
 
-namespace Ph2_System {
-    const char* Exception::what() const throw()
-    {
-        std::string pStr = "SystemController" + fStrError;
-        const char* pBuff = pStr.c_str();
-        return  pBuff;
-    }
-}
-namespace Ph2_HwInterface {
-    const char* Exception::what() const throw()
-    {
-        std::string pStr = "CBCInterface" + fStrError;
-        const char* pBuff = pStr.c_str();
-        return  pBuff;
-    }
-}
-
-namespace Ph2_HwDescription {
-    const char* Exception::what() const throw()
-    {
-        std::string pStr = "HWDescription: " + fStrError;
-        const char* pBuff = pStr.c_str();
-        return pBuff;
-    }
+const char* Exception::what() const throw()
+{
+    return  fStrError.data();
 }

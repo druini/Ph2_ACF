@@ -14,6 +14,7 @@
 
 #include "Tool.h"
 #include "../Utils/Visitor.h"
+#include "../Utils/ContainerRecicleBin.h"
 #include "../Utils/CommonVisitors.h"
 #ifdef __USE_ROOT__
   #include "../DQMUtils/DQMHistogramPedeNoise.h"
@@ -25,6 +26,7 @@
 using namespace Ph2_System;
 
 class DetectorContainer;
+class Occupancy;
 
 class PedeNoise : public Tool
 {
@@ -39,6 +41,7 @@ class PedeNoise : public Tool
     void Validate (uint32_t pNoiseStripThreshold = 1, uint32_t pMultiple = 100);
     void writeObjects();
 
+
     void Start(int currentRun) override;
     void Stop() override;
     void ConfigureCalibration() override;
@@ -46,11 +49,20 @@ class PedeNoise : public Tool
     void Resume() override;
 
   protected:
-    uint8_t  fTestPulseAmplitude {    0};
+    uint16_t findPedestal (bool forceAllChannels = false);
+    void measureSCurves (uint16_t pStartValue = 0 );
+    void extractPedeNoise ();
+    void disableStubLogic();
+    void reloadStubLogic();
+    void cleanContainerMap();
+    void initializeRecicleBin() {fRecicleBin.setDetectorContainer(fDetectorContainer);}
+
+    uint8_t  fPulseAmplitude     {    0};
+    uint32_t fEventsPerPoint     {    0};
+    DetectorDataContainer fThresholdAndNoiseContainer;
 
   private:
 
-    DetectorDataContainer fThresholdAndNoiseContainer;
     //to hold the original register values
     DetectorDataContainer fStubLogicValue;
     DetectorDataContainer fHIPCountValue;
@@ -58,20 +70,19 @@ class PedeNoise : public Tool
     // Settings
     bool     fPlotSCurves        {false};
     bool     fFitSCurves         {false};
-    uint32_t fEventsPerPoint     {    0};
     bool     fDisableStubLogic   { true};
 
-  private:
-    void measureSCurves (uint16_t pStartValue = 0 );
-    void extractPedeNoise ();
+    void producePedeNoisePlots();
     
     // for validation
     void setThresholdtoNSigma (BoardContainer* board, uint32_t pNSigma);
     
     //helpers for SCurve measurement
-    uint16_t findPedestal (bool forceAllChannels = false);
 
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
+    ContainerRecicleBin<Occupancy> fRecicleBin;
+
+    std::vector<DetectorDataContainer*> fContainerRecicleBin;
 
     #ifdef __USE_ROOT__
       DQMHistogramPedeNoise fDQMHistogramPedeNoise;

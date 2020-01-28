@@ -308,6 +308,7 @@ namespace Ph2_System
   uint32_t SystemController::ReadData (BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
   {
     uint32_t cNPackets = fBeBoardInterface->ReadData(pBoard, false, pData, pWait);
+    SystemController::ClearEvtVector(pBoard);
     this->DecodeData(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType(pBoard));
 
     return cNPackets;
@@ -344,13 +345,11 @@ namespace Ph2_System
     fEventList.clear();
   }
 
-  double SystemController::findValueInSettings (const char* name, double defaultValue)
+  double SystemController::findValueInSettings (const std::string name, double defaultValue) const
   {
     auto setting = fSettingsMap.find(name);
     return (setting != std::end(fSettingsMap) ? setting->second : defaultValue);
   }
-
-
 
 
   // #################

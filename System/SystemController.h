@@ -226,13 +226,13 @@ namespace Ph2_System
       return fEventList;
     }
 
-    void ClearEvtVector (const Ph2_HwDescription::BeBoard* pBoard);
-    void DecodeData     (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+    void ClearEvtVector(const Ph2_HwDescription::BeBoard* pBoard);
+    void DecodeData    (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
-    double findValueInSettings (const char* name, double defaultValue = 0);
+    double findValueInSettings(const std::string name, double defaultValue = 0.) const;
 
   private:
-    void SetFuture (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+    void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
     std::vector<Ph2_HwInterface::Event*> fEventList;
 

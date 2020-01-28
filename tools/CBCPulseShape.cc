@@ -5,6 +5,8 @@
 #include "../Utils/Occupancy.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/CBCChannelGroupHandler.h"
+#include "../Utils/Exception.h"
+#include "../Utils/ThresholdAndNoise.h"
 
 #include <math.h>
 
@@ -12,26 +14,28 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
 CBCPulseShape::CBCPulseShape() 
-    : Tool()
+    : PedeNoise()
 {
 }
 
 CBCPulseShape::~CBCPulseShape()
 {
+    delete fChannelGroupHandler;
 }
 
 void CBCPulseShape::Initialise (void)
 {
 
-    fEventsPerPoint = readFromSettingMap("PulseShapeNevents"       ,  10);
-    fInitialVcth    = readFromSettingMap("PulseShapeInitialVcth"   , 250);
-    fFinalVcth      = readFromSettingMap("PulseShapeFinalVcth"     , 600);
-    fVCthStep       = readFromSettingMap("PulseShapeVCthStep"      ,  10);
-    fInitialLatency = readFromSettingMap("PulseShapeInitialLatency", 199);
-    fInitialDelay   = readFromSettingMap("PulseShapeInitialDelay"  ,   0);
-    fFinalDelay     = readFromSettingMap("PulseShapeFinalDelay"    ,  25);
-    fDelayStep      = readFromSettingMap("PulseShapeDelayStep"     ,   1);
-    fPulseAmplitude = readFromSettingMap("PulseShapePulseAmplitude", 150);
+    fEventsPerPoint = findValueInSettings("PulseShapeNevents"       ,  10);
+    fInitialVcth    = findValueInSettings("PulseShapeInitialVcth"   , 250);
+    fFinalVcth      = findValueInSettings("PulseShapeFinalVcth"     , 600);
+    fVCthStep       = findValueInSettings("PulseShapeVCthStep"      ,  10);
+    fInitialLatency = findValueInSettings("PulseShapeInitialLatency", 199);
+    fInitialDelay   = findValueInSettings("PulseShapeInitialDelay"  ,   0);
+    fFinalDelay     = findValueInSettings("PulseShapeFinalDelay"    ,  25);
+    fDelayStep      = findValueInSettings("PulseShapeDelayStep"     ,   1);
+    fPulseAmplitude = findValueInSettings("PulseShapePulseAmplitude", 150);
+    fChannelGroup   = findValueInSettings("PulseShapeChannelGroup"  ,  -1);
 
     uint16_t maxVCth = 1023;
     if(fFinalVcth>maxVCth)
@@ -43,6 +47,13 @@ void CBCPulseShape::Initialise (void)
     LOG (INFO) << "Parsed settings:" ;
     LOG (INFO) << " Nevents = " << fEventsPerPoint ;
 
+    if(fChannelGroup >= 8) throw Exception( std::string(__PRETTY_FUNCTION__) + " fChannelGroup cannot be grater than 7" );
+    if(fChannelGroup <  0) fChannelGroupHandler = new CBCChannelGroupHandler();
+    else                   fChannelGroupHandler = new CBCChannelGroupHandler(std::bitset<NCHANNELS>(CBC_CHANNEL_GROUP_BITSET) << fChannelGroup);
+
+    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+
+    initializeRecicleBin();
 
     #ifdef __USE_ROOT__  // to disable and anable ROOT by command 
         //Calibration is not running on the SoC: plots are booked during initialization
@@ -53,13 +64,11 @@ void CBCPulseShape::Initialise (void)
 
 void CBCPulseShape::runCBCPulseShape(void)
 {
-    fChannelGroupHandler = new CBCChannelGroupHandler(std::bitset<NCHANNELS>(std::string("00000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011000000000000001100000000000000110000000000000011")));
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
-    
     LOG (INFO) << "Taking Data with " << fEventsPerPoint << " triggers!" ;
 
     this->enableTestPulse( true );
     setFWTestPulse();
+    disableStubLogic();
 
     for ( auto cBoard : *fDetectorContainer )
     {
@@ -67,45 +76,40 @@ void CBCPulseShape::runCBCPulseShape(void)
       setSameDacBeBoard(static_cast<Ph2_HwDescription::BeBoard*>(cBoard), "TriggerLatency"     , fInitialLatency);
     }
 
-
     // setSameGlobalDac("TestPulsePotNodeSel",  pTPAmplitude);
     LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
 
-    for(uint16_t threshold = fInitialVcth; threshold<=fFinalVcth; threshold+=fVCthStep)
+    for(uint16_t delay = fInitialDelay; delay<=fFinalDelay; delay+=fDelayStep)
     {
-        LOG(INFO) << BOLDBLUE << "Measuring occupancy vs delay for VCth = " << threshold << RESET;
-        setSameDac("VCth", threshold);
-        for(uint16_t delay = fInitialDelay; delay<=fFinalDelay; delay+=fDelayStep)
-        {
-            setSameDac("TestPulseDel&ChanGroup", reverseBits(delay%25));
-            setSameDac("TriggerLatency"        , fInitialLatency - delay/25);
-            DetectorDataContainer theOccupancyContainer;
-            ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, theOccupancyContainer);
-            fDetectorDataContainer = &theOccupancyContainer;
-            measureData(fEventsPerPoint);
+        uint8_t  delayDAC   = delay%25;
+        uint16_t latencyDAC = fInitialLatency - delay/25;
+        LOG(INFO) << BOLDBLUE << "Scanning VcThr for delay = " << +delayDAC << " and latency = " << +latencyDAC << RESET;
+        setSameDac("TestPulseDel&ChanGroup", reverseBits(delayDAC));
+        setSameDac("TriggerLatency"        , latencyDAC);
 
-            #ifdef __USE_ROOT__
-                //Calibration is not running on the SoC: plotting directly the data, no shipping is done
-                fCBCHistogramPulseShape.fillCBCPulseShapePlots(threshold, delay, std::move(theOccupancyContainer));
+        measureSCurves( findPedestal() );
+        extractPedeNoise();
 
-            #else
-                //Calibration is running on the SoC: shipping the data!!!
-                //I prepare a stream of an uint32_t container, prepareChannelContainerStreamer adds in the stream also the calibration name
-                // that is used when multiple calibrations are concatenated
-                // if the streamer was enabled (the supervisor script enable it) data are streamed
-                if(fStreamerEnabled)
+        #ifdef __USE_ROOT__
+            fCBCHistogramPulseShape.fillCBCPulseShapePlots(delay, fThresholdAndNoiseContainer);
+        #else
+            if(fStreamerEnabled)
+            {
+                auto theThresholdAndNoiseStream = prepareChipContainerStreamer<ThresholdAndNoise, ThresholdAndNoise, uint16_t>();
+                theThresholdAndNoiseStream.setHeaderElement<0>(delay);
+
+                for(auto board : fThresholdAndNoiseContainer )
                 {
-                    auto theOccupancyStreamer = prepareChipContainerStreamer<Occupancy,Occupancy,uint16_t,uint16_t>();
-                    theOccupancyStreamer.setHeaderElement<0>(threshold);
-                    theOccupancyStreamer.setHeaderElement<1>(delay    );
-                    for(auto board : theOccupancyContainer)  theOccupancyStreamer.streamAndSendBoard(board, fNetworkStreamer);
+                    theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
                 }
-            #endif
-        }
+            }
+        #endif
+        fThresholdAndNoiseContainer.reset();
+        cleanContainerMap();
+
     }
 
-
-    
+    reloadStubLogic();
     this->enableTestPulse( false );
     setSameGlobalDac("TestPulsePotNodeSel",  0);
     LOG (INFO) << BLUE <<  "Disabled test pulse. " << RESET ;
