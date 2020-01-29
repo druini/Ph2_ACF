@@ -156,7 +156,7 @@
     <Setting name="PulseShapePulseAmplitude">  0</Setting>
 
     <!--PedeNoise-->
-    <Setting name="PulseShapePulseAmplitude">  0</Setting>
+    <Setting name="PedeNoisePulseAmplitude">100</Setting>
 
     
 </Settings>

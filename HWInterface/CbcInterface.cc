@@ -81,7 +81,7 @@ namespace Ph2_HwInterface
 
         std::bitset<NCHANNELS> baseInjectionChannel (std::string(CBC_CHANNEL_GROUP_BITSET));
         uint8_t channelGroup = 0;
-        for(; channelGroup<=8; ++channelGroup)
+        for(; channelGroup<8; channelGroup++)
         {
             if(static_cast<const ChannelGroup<NCHANNELS>*>(group)->getBitset() == baseInjectionChannel)
             {
