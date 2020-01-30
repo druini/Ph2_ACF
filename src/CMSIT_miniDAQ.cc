@@ -1,5 +1,5 @@
 /*!
-  \file                  CMSIT_miniDAQ.cc
+  \file                  CMSITminiDAQ.cc
   \brief                 Mini DAQ to test RD53 readout
   \author                Mauro DINARDO
   \version               1.0
