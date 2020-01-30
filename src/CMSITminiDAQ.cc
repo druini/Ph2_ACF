@@ -488,53 +488,53 @@ int main (int argc, char** argv)
           ph.Inherit(&mySysCntr);
 
 
-	  // ######################
-	  // # Run EUDAQ producer #
-	  // ######################
-	  if (eudaq == true)
-	    {
+          // ######################
+          // # Run EUDAQ producer #
+          // ######################
+          if (eudaq == true)
+            {
 #ifdef __EUDAQ__
-	      RD53eudaqProducer theEUDAQproducer(ph, configFile, "RD53eudaqProducer", cmd.optionValue("eudaq"));
+              RD53eudaqProducer theEUDAQproducer(ph, configFile, "RD53eudaqProducer", cmd.optionValue("eudaq"));
 
-	      try
-		{
-		  LOG (INFO) << GREEN << "Connecting to EUDAQ run control" << RESET;
-		  theEUDAQproducer.Connect();
-		}
-	      catch (...)
-		{
-		  LOG (ERROR) << BOLDRED << "Can not connect to EUDAQ run control at " << cmd.optionValue("eudaq") << RESET;
-		  exit(EXIT_FAILURE);
-		}
-	      LOG (INFO) << BOLDBLUE << "\t--> Connected" << RESET;
+              try
+                {
+                  LOG (INFO) << GREEN << "Connecting to EUDAQ run control" << RESET;
+                  theEUDAQproducer.Connect();
+                }
+              catch (...)
+                {
+                  LOG (ERROR) << BOLDRED << "Can not connect to EUDAQ run control at " << cmd.optionValue("eudaq") << RESET;
+                  exit(EXIT_FAILURE);
+                }
+              LOG (INFO) << BOLDBLUE << "\t--> Connected" << RESET;
 
-	      while (theEUDAQproducer.IsConnected() == true)
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+              while (theEUDAQproducer.IsConnected() == true)
+                std::this_thread::sleep_for(std::chrono::seconds(1));
 
-	      exit(EXIT_SUCCESS);
+              exit(EXIT_SUCCESS);
 #else
-	      LOG (WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
-	      exit(EXIT_FAILURE);
+              LOG (WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
+              exit(EXIT_FAILURE);
 #endif
-	    }
-	  else
-	    {
-	      ph.initialize(fileName, chipConfig, runNumber);
-	      if (binaryFile == "")
-		{
-		  ph.Start(runNumber);
-		  usleep(2e6);
-		  ph.Stop();
-		}
-	      else ph.analyze();
-	      ph.draw();
-	    }
-	}
+            }
+          else
+            {
+              ph.initialize(fileName, chipConfig, runNumber);
+              if (binaryFile == "")
+                {
+                  ph.Start(runNumber);
+                  usleep(2e6);
+                  ph.Stop();
+                }
+              else ph.analyze();
+              ph.draw();
+            }
+        }
       else
-	{
-	  LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
-	  exit(EXIT_FAILURE);
-	}
+        {
+          LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
+          exit(EXIT_FAILURE);
+        }
 
 
       // ###########################
