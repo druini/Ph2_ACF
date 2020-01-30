@@ -41,8 +41,8 @@ Setup and run the IT-DAQ:
 7. `cp settings/CMSIT.xml choose_a_name`
 8. `cd choose_a_name`
 9. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-10. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
-11. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
+10. Run the command: `CMSITminiDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
+11. Run the command: `CMSITminiDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
 
 Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):
 - Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
@@ -50,8 +50,8 @@ Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name
 - Run the command: `fpgaconfig -c CMSIT.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
 - Run the command: `fpgaconfig --help` for help
 
-The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking.
-Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/ calibrations/ operation mode:
+The program `CMSITminiDAQ` is the portal for all calibrations and for data taking.
+Through `CMSITminiDAQ`, and with the right command line option, you can run the following scans/ calibrations/ operation mode:
 ```
 1. Latency scan
 2. PixelAlive
@@ -73,13 +73,13 @@ then
     echo "You should provide one, and only one, argument [step1, step2, step3, step4, step5, help]"
 elif [ $1 == "step1" ]
 then
-    CMSIT_miniDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels
+    CMSITminiDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels
     echo "noise" >> calibDone.txt
 
-    CMSIT_miniDAQ -f CMSIT_scurve.xml -c pixelalive # Masks dead pixels
+    CMSITminiDAQ -f CMSIT_scurve.xml -c pixelalive # Masks dead pixels
     echo "pixelalive" >> calibDone.txt
 
-    CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
+    CMSITminiDAQ -f CMSIT_noise.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
     echo "Choose whether to accept new threshold (i.e. copy it into the xml file(s))"
@@ -87,17 +87,17 @@ then
     echo
 elif [ $1 == "step2" ]
 then
-    CMSIT_miniDAQ -f CMSIT_scurve.xml -c threqu
+    CMSITminiDAQ -f CMSIT_scurve.xml -c threqu
     echo "scurve" >> calibDone.txt
     echo "threqu" >> calibDone.txt
 
-    CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    CMSITminiDAQ -f CMSIT_scurve.xml -c scurve
     echo "scurve" >> calibDone.txt
 
-    CMSIT_miniDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels @ new threshold
+    CMSITminiDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels @ new threshold
     echo "noise" >> calibDone.txt
 
-    CMSIT_miniDAQ -f CMSIT_noise.xml -c thrmin
+    CMSITminiDAQ -f CMSIT_noise.xml -c thrmin
     echo "thrmin" >> calibDone.txt
 
     echo "Choose whether to accept new threshold (i.e. copy it into the xml file(s))"
@@ -105,13 +105,13 @@ then
     echo
 elif [ $1 == "step3" ]
 then
-    CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    CMSITminiDAQ -f CMSIT_scurve.xml -c scurve
     echo "scurve" >> calibDone.txt
 
-    CMSIT_miniDAQ -f CMSIT_gain.xml -c gain
+    CMSITminiDAQ -f CMSIT_gain.xml -c gain
     echo "gain" >> calibDone.txt
 
-    CMSIT_miniDAQ -f CMSIT_gain.xml -c gainopt
+    CMSITminiDAQ -f CMSIT_gain.xml -c gainopt
     echo "gainopt" >> calibDone.txt
 
     echo "Choose whether to accept new Krummenacher current (i.e. copy it into the xml file(s))"
@@ -121,7 +121,7 @@ then
     echo
 elif [ $1 == "step4" ]
 then
-    CMSIT_miniDAQ -f CMSIT_scurve.xml -c injdelay
+    CMSITminiDAQ -f CMSIT_scurve.xml -c injdelay
     echo "latency" >> calibDone.txt
     echo "injdelay" >> calibDone.txt
 
@@ -131,7 +131,7 @@ then
     echo
 elif [ $1 == "step5" ]
 then
-    CMSIT_miniDAQ -f CMSIT_scurve.xml -c scurve
+    CMSITminiDAQ -f CMSIT_scurve.xml -c scurve
     echo "scurve" >> calibDone.txt
 elif [ $1 == "help" ]
 then
