@@ -1,5 +1,5 @@
 /*!
-  \file                  CMSIT_miniDAQ.cc
+  \file                  CMSITminiDAQ.cc
   \brief                 Mini DAQ to test RD53 readout
   \author                Mauro DINARDO
   \version               1.0
@@ -9,7 +9,7 @@
 
 #include "../Utils/argvparser.h"
 #include "../Utils/MiddlewareInterface.h"
-#include "../Utils/RD53SharedConstants.h"
+#include "../Utils/RD53Shared.h"
 #include "../DQMUtils/DQMInterface.h"
 #include "../System/SystemController.h"
 
@@ -152,7 +152,7 @@ int main (int argc, char** argv)
   fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
   if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
   fileRunNumberIn.close();
-  std::string chipConfig("Run" + fromInt2Str(runNumber) + "_");
+  std::string chipConfig("Run" + RD53Shared::fromInt2Str(runNumber) + "_");
   system(std::string("mkdir " + std::string(RESULTDIR)).c_str());
 
 
@@ -166,7 +166,7 @@ int main (int argc, char** argv)
   bool supervisor        = cmd.foundOption("sup")    == true ? true : false;
   bool eudaq             = cmd.foundOption("eudaq")  == true ? true : false;
   bool reset             = cmd.foundOption("reset")  == true ? true : false;
-  if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").insert(0,std::string(RESULTDIR) + "/Run" + fromInt2Str(runNumber) + "_"));
+  if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").insert(0,std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
   else if (cmd.foundOption("replay") == true)  RegManager::enableReplay(cmd.optionValue("replay"));
 
 
@@ -199,7 +199,6 @@ int main (int argc, char** argv)
       struct sigaction act;
       act.sa_handler = interruptHandler;
       sigaction(SIGINT, &act, NULL);
-
 
 
       // ##########################
@@ -249,8 +248,8 @@ int main (int argc, char** argv)
                   {
                     LOG (INFO) << BOLDBLUE << "Supervisor sending start" << RESET;
 
-                    theDQMInterface       .startProcessingData(fromInt2Str(runNumber));
-                    theMiddlewareInterface.start              (fromInt2Str(runNumber));
+                    theDQMInterface       .startProcessingData(RD53Shared::fromInt2Str(runNumber));
+                    theMiddlewareInterface.start              (RD53Shared::fromInt2Str(runNumber));
 
                     stateMachineStatus = RUNNING;
                     break;
@@ -281,29 +280,7 @@ int main (int argc, char** argv)
       else                   theApp.Terminate(0);
 #else
       LOG (WARNING) << BOLDBLUE << "ROOT flag was OFF during compilation" << RESET;
-#endif
-    }
-  else if (eudaq == true)
-    {
-#ifdef __EUDAQ__
-      RD53eudaqProducer theEUDAQproducer("thename", cmd.optionValue("eudaq"));
-
-      try
-	{
-	  LOG (INFO) << BOLDMAGENTA << "@@@ Connecting to RunControl @@@" << RESET;
-	  theEUDAQproducer.Connect();
-	}
-      catch (...)
-	{
-	  LOG (ERROR) << BOLDRED << "Can not connect to RunControl at " << cmd.optionValue("eudaq") << RESET;
-	  exit(EXIT_FAILURE);
-	}
-      LOG (INFO) << BOLDMAGENTA << "@@@ Connected @@@" << RESET;
-
-      while (theEUDAQproducer.IsConnected() == true)
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-#else
-      LOG (WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
+      exit(EXIT_FAILURE);
 #endif
     }
   else
@@ -357,7 +334,7 @@ int main (int argc, char** argv)
           // ###################
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
 
-          std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
+          std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Latency");
           Latency la;
           la.Inherit(&mySysCntr);
           la.initialize(fileName, chipConfig, runNumber);
@@ -372,7 +349,7 @@ int main (int argc, char** argv)
           // ##################
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
 
-          std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
+          std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_PixelAlive");
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
           pa.initialize(fileName, chipConfig, runNumber);
@@ -387,7 +364,7 @@ int main (int argc, char** argv)
           // #############
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
 
-          std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan");
+          std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_NoiseScan");
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
           pa.initialize(fileName, chipConfig, runNumber);
@@ -402,7 +379,7 @@ int main (int argc, char** argv)
           // ##############
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
-          std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
+          std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_SCurve");
           SCurve sc;
           sc.Inherit(&mySysCntr);
           sc.initialize(fileName, chipConfig, runNumber);
@@ -417,7 +394,7 @@ int main (int argc, char** argv)
           // ############
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
-          std::string fileName("Run" + fromInt2Str(runNumber) + "_Gain");
+          std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Gain");
           Gain ga;
           ga.Inherit(&mySysCntr);
           ga.initialize(fileName, chipConfig, runNumber);
@@ -432,7 +409,7 @@ int main (int argc, char** argv)
           // #########################
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
 
-          std::string fileName("Run" + fromInt2Str(runNumber) + "_GainOptimization");
+          std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_GainOptimization");
           GainOptimization go;
           go.Inherit(&mySysCntr);
           go.initialize(fileName, chipConfig, runNumber);
@@ -447,7 +424,7 @@ int main (int argc, char** argv)
           // ##############################
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
-          std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrEqualization");
+          std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrEqualization");
           ThrEqualization te;
           te.Inherit(&mySysCntr);
           te.initialize(fileName, chipConfig, runNumber);
@@ -461,7 +438,7 @@ int main (int argc, char** argv)
           // ##############################
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Minimization @@@" << RESET;
 
-          std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
+          std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrMinimization");
           ThrMinimization tm;
           tm.Inherit(&mySysCntr);
           tm.initialize(fileName, chipConfig, runNumber);
@@ -476,7 +453,7 @@ int main (int argc, char** argv)
           // #######################
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing Injection Delay scan @@@" << RESET;
 
-          std::string fileName("Run" + fromInt2Str(runNumber) + "_InjectionDelay");
+          std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_InjectionDelay");
           InjectionDelay id;
           id.Inherit(&mySysCntr);
           id.initialize(fileName, chipConfig, runNumber);
@@ -491,7 +468,7 @@ int main (int argc, char** argv)
           // ###################
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing Clock Delay scan @@@" << RESET;
 
-          std::string fileName("Run" + fromInt2Str(runNumber) + "_ClockDelay");
+          std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ClockDelay");
           ClockDelay cd;
           cd.Inherit(&mySysCntr);
           cd.initialize(fileName, chipConfig, runNumber);
@@ -506,30 +483,64 @@ int main (int argc, char** argv)
           // ###############
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing Phsyics data taking @@@" << RESET;
 
-          std::string fileName("Run" + fromInt2Str(runNumber) + "_Physics");
+          std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
           Physics ph;
           ph.Inherit(&mySysCntr);
-          ph.initialize(fileName, chipConfig, runNumber);
-          if (binaryFile == "")
-            {
-              ph.Start(runNumber);
-              usleep(2e6);
-              ph.Stop();
-            }
-          else ph.analyze();
-          ph.draw();
-        }
+
+
+	  // ######################
+	  // # Run EUDAQ producer #
+	  // ######################
+	  if (eudaq == true)
+	    {
+#ifdef __EUDAQ__
+	      RD53eudaqProducer theEUDAQproducer(ph, configFile, "RD53eudaqProducer", cmd.optionValue("eudaq"));
+
+	      try
+		{
+		  LOG (INFO) << GREEN << "Connecting to EUDAQ run control" << RESET;
+		  theEUDAQproducer.Connect();
+		}
+	      catch (...)
+		{
+		  LOG (ERROR) << BOLDRED << "Can not connect to EUDAQ run control at " << cmd.optionValue("eudaq") << RESET;
+		  exit(EXIT_FAILURE);
+		}
+	      LOG (INFO) << BOLDBLUE << "\t--> Connected" << RESET;
+
+	      while (theEUDAQproducer.IsConnected() == true)
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+
+	      exit(EXIT_SUCCESS);
+#else
+	      LOG (WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
+	      exit(EXIT_FAILURE);
+#endif
+	    }
+	  else
+	    {
+	      ph.initialize(fileName, chipConfig, runNumber);
+	      if (binaryFile == "")
+		{
+		  ph.Start(runNumber);
+		  usleep(2e6);
+		  ph.Stop();
+		}
+	      else ph.analyze();
+	      ph.draw();
+	    }
+	}
       else
-        {
-          LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
-          exit(EXIT_FAILURE);
-        }
+	{
+	  LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
+	  exit(EXIT_FAILURE);
+	}
 
 
       // ###########################
       // # Copy configuration file #
       // ###########################
-      std::string fName2Add (std::string(RESULTDIR) + "/Run" + fromInt2Str(runNumber) + "_");
+      std::string fName2Add (std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_");
       std::string output    (RD53::composeFileName(configFile,fName2Add));
       std::string command   ("cp " + configFile + " " + output);
       system(command.c_str());
@@ -540,12 +551,12 @@ int main (int argc, char** argv)
       std::ofstream fileRunNumberOut;
       runNumber++;
       fileRunNumberOut.open(FILERUNNUMBER, std::ios::out);
-      if (fileRunNumberOut.is_open() == true) fileRunNumberOut << fromInt2Str(runNumber) << std::endl;
+      if (fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(runNumber) << std::endl;
       fileRunNumberOut.close();
 
 
       LOG (INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }
 
-  return 0;
+  return EXIT_SUCCESS;
 }

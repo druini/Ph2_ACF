@@ -11,7 +11,6 @@
 #define RD53Latency_H
 
 #include "RD53PixelAlive.h"
-#include "../Utils/RD53SharedConstants.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53LatencyHistograms.h"

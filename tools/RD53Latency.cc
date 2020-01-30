@@ -38,7 +38,7 @@ void Latency::ConfigureCalibration ()
   // ##############################
   // # Initialize dac scan values #
   // ##############################
-  const size_t nSteps = (stopValue - startValue + 1 <= RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1);
+  const size_t nSteps = (stopValue - startValue + 1 <= RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1);
   const float  step   = (stopValue - startValue + 1) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
@@ -55,7 +55,7 @@ void Latency::Start (int currentRun)
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/LatencyRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/LatencyRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -66,7 +66,7 @@ void Latency::Start (int currentRun)
 
 void Latency::sendData ()
 {
-  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+  const size_t LatencySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   auto theStream        = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<LatencySize>>("Occ"); // @TMP@
   auto theLatencyStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>                     ("Latency"); // @TMP@
@@ -100,14 +100,14 @@ void Latency::initialize (const std::string fileRes_, const std::string fileReg_
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/LatencyRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/LatencyRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 }
 
 void Latency::run ()
 {
-  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+  const size_t LatencySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   ContainerFactory::copyAndInitChip<GenericDataArray<LatencySize>>(*fDetectorContainer, theOccContainer);
   Latency::scanDac("LATENCY_CONFIG", dacList, nEvents, &theOccContainer);
@@ -158,7 +158,7 @@ void Latency::draw ()
 
 void Latency::analyze ()
 {
-  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+  const size_t LatencySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theLatencyContainer);
 
@@ -215,7 +215,7 @@ void Latency::display ()
 
 void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-  const size_t LatencySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+  const size_t LatencySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   for (auto i = 0u; i < dacList.size(); i++)
     {

@@ -87,7 +87,7 @@ void GainHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContai
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
               {
-                if (cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy != RD53SharedConstants::ISDISABLED)
+                if (cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy != RD53Shared::ISDISABLED)
                   hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row,col).fPh);
                 if (cChip->getChannel<OccupancyAndPh>(row,col).readoutError == true) ErrorReadOut2DHist->Fill(col+1, row+1);
               }
@@ -110,7 +110,7 @@ void GainHistograms::fillGainAndIntercept (const DetectorDataContainer& GainAndI
 
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
-              if (cChip->getChannel<GainAndIntercept>(row,col).fGain == RD53SharedConstants::FITERROR) ErrorFit2DHist->Fill(col+1, row+1);
+              if (cChip->getChannel<GainAndIntercept>(row,col).fGain == RD53Shared::FITERROR) ErrorFit2DHist->Fill(col+1, row+1);
               else if (cChip->getChannel<GainAndIntercept>(row,col).fGain != 0)
                 {
                   Gain1DHist->Fill(cChip->getChannel<GainAndIntercept>(row,col).fGain);

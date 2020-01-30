@@ -7,299 +7,57 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifdef __EUDAQ__
-
-#include "../tools/CicFEAlignment.h"
 #include "RD53eudaqProducer.h"
 
-//std::map<Chip*, uint16_t> CicFEAlignment::fVplusMap;
+RD53eudaqProducer::RD53eudaqProducer (Physics& RD53sysCntrPhys, const std::string configFile, const std::string producerName, const std::string runControl)
+  : eudaq::Producer (producerName, runControl)
+  , RD53sysCntrPhys (RD53sysCntrPhys)
+  , configFile      (configFile)
+{}
 
-Eudaq2Producer::Eudaq2Producer(const std::string &name, const std::string &runcontrol):
-  Tool(), eudaq::Producer(name, runcontrol),
-    fInitialised(false), fConfigured(false), fStarted(false), fStopped(false), fTerminated(false)
+void RD53eudaqProducer::DoInitialise ()
 {
-  fPh2FileHandler=nullptr;
-  fSLinkFileHandler=nullptr;
-}
-
-Eudaq2Producer::~Eudaq2Producer()
-{
-}
-
-void Eudaq2Producer::Initialise ()
-{
-}
-
-void Eudaq2Producer::DoInitialise ()
-{
-  LOG (INFO) << "Initialising producer..." << RESET;
-  auto ini = GetInitConfiguration();
-  fInitialised = true;
-  //LOG (INFO) << "  INITIALIZE ID: " << ini->Get("initid", 0) << std::endl;
-  //EUDAQ_INFO("TLU INITIALIZE ID: " + std::to_string(ini->Get("initid", 0)));
-}
-
-void Eudaq2Producer::DoConfigure ()
-{
-  LOG (INFO) << "Configuring producer..." << RESET;
-
-  // only thing I don't understand is where the run number goes 
-  // getting the configuration
-  auto cRunNumber = GetRunNumber();
-  auto conf = GetConfiguration();
   std::stringstream outp;
-  fHWFile = conf->Get("HWFile", "./settings/D19CDescription.xml" );
-  
-  //initialisng ph2acf
-  this->InitializeHw( fHWFile, outp);
-  this->InitializeSettings( fHWFile, outp);
-  LOG(INFO) << outp.str();
-
-  // configure hardware
-  this->ConfigureHw();
-  fHandshakeEnabled = (this->fBeBoardInterface->ReadBoardReg(this->fBoardVector.at(0), "fc7_daq_cnfg.readout_block.global.data_handshake_enable") > 0);
-  fTriggerMultiplicity = this->fBeBoardInterface->ReadBoardReg(this->fBoardVector.at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-
-  // now do cic alignment if needed
-  // udtc does not support different front-end types that is why checking for only board 0 is enough
-  if (this->fBoardVector.at(0)->getFrontEndType() == FrontEndType::CIC) {
-      //CIC FE alignment tool
-      CicFEAlignment cCicAligner;
-      cCicAligner.Inherit (this);
-      cCicAligner.Initialise ();
-
-      // run phase alignment
-      
-      bool cPhaseAligned = cCicAligner.PhaseAlignment(50);
-      if( !cPhaseAligned )
-      {
-          LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET;
-          exit(0);
-      }
-      LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET;
-
-      // run word alignment
-      bool cWordAligned = cCicAligner.WordAlignment(false);
-      if( !cWordAligned )
-      {
-          LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET;
-          exit(0);
-      }
-      LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET;
-      
-      // manually set bx0 alignment and package delay in firmware [needed for stub packing]
-      uint8_t cBx0DelayCIC = 8; 
-      bool cBxAligned = cCicAligner.SetBx0Delay(cBx0DelayCIC); 
-      //bool cBxAligned = cCicAligner.Bx0Alignment(4, 0 , 1, 100);
-      if( !cBxAligned )
-      {
-          LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET ;
-          exit(0);
-      }
-      LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
-  }
-
-  // done configuration
-  fConfigured = true;
+  RD53sysCntrPhys.InitializeHw(configFile, outp, true, false);
+  RD53sysCntrPhys.InitializeSettings(configFile, outp);
 }
 
-void Eudaq2Producer::DoStartRun()
+void RD53eudaqProducer::DoConfigure ()
 {
-  LOG(INFO) << "Starting Run..." << RESET;
+  std::string fileName("Run" + RD53Shared::fromInt2Str(GetRunNumber()) + "_Physics");
+  std::string chipConfig("Run" + RD53Shared::fromInt2Str(GetRunNumber()) + "_");
+  RD53sysCntrPhys.initialize(fileName, chipConfig);
+}
 
+void RD53eudaqProducer::DoStartRun()
+{
+  RD53sysCntrPhys.Start(GetRunNumber());
+}
+
+void RD53eudaqProducer::DoStopRun()
+{
+  RD53sysCntrPhys.Stop();
+  RD53sysCntrPhys.draw();
+
+  // ###########################
+  // # Copy configuration file #
+  // ###########################
+  std::string fName2Add (std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(GetRunNumber()) + "_");
+  std::string output    (Ph2_HwDescription::RD53::composeFileName(configFile,fName2Add));
+  std::string command   ("cp " + configFile + " " + output);
+  system(command.c_str());
+
+  // RD53eudaqProducer::ConvertToEUDAQevent();
+}
+
+void RD53eudaqProducer::DoTerminate()
+{
+  RD53eudaqProducer::DoStopRun();
+}
+
+void RD53eudaqProducer::ConvertToEUDAQevent(const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwInterface::Event* pPh2Event, eudaq::EventSP pEudaqSubEvent)
+{
   /*
-  // FIXME we are not sending BORE event ....
-  //Readout the CBCs register data and store them as Tags in a BORE event
-  char name[150];
-  LOG(INFO) << "Downloading the register configuration of the CBCs" << RESET;
-  for(auto cBoard : this->fBoardVector){
-    for(auto cFe : cBoard->fModuleVector){
-      int cFeId = int(cFe->getFeId());
-      for(auto cCbc : cFe->fReadoutChipVector ){
-        int cCbcId = int(cCbc->getChipId());
-        auto cRegMap = cCbc->getRegMap();
-        for(auto& ireg : cRegMap){
-          std::printf (name, "%s_%02d_%02d", ireg.first.c_str(), int(cFeId), int(cCbcId));
-         // event->SetTag(name, (uint32_t)ireg.second.fValue);
-         event->SetBORE();
-        }//end of ireg loop
-      }// end of cCBC loop
-    }// end of cFe loop
-  }//end of cBoard loop
-  */  
-  
-  auto conf = GetConfiguration();
-  auto cRunNumber = GetRunNumber();
-  // file handlers for Ph2ACF raw + s-link
-  fRawPh2ACF = conf->Get("RawDataDirectory", "/tmp/" ) + "Run_" + std::to_string(cRunNumber) + ".raw"; 
-  LOG (INFO) << BOLDBLUE << "Writing raw ph2_acf data to " << fRawPh2ACF << RESET;
- 
-    auto cBoard = this->fBoardVector[0];
-    uint32_t cBeId = cBoard->getBeId();
-    uint32_t cNChip = 0;
-    // this is hard coded now .. should figure out how to calculate this
-    uint32_t cNEventSize32 = 80;//this->computeEventSize32 (cBoard);
-    std::string cBoardTypeString;
-    BoardType cBoardType = cBoard->getBoardType();
-    for (const auto& cFe : cBoard->fModuleVector) cNChip += cFe->getNChip();
-      if (cBoardType == BoardType::D19C)
-	 cBoardTypeString = "D19C";
-     else if (cBoardType != BoardType::RD53)
-	 cBoardTypeString = "FC7";
-     uint32_t cFWWord = fBeBoardInterface->getBoardInfo (cBoard);
-     uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
-     uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
-     FileHeader cHeader (cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType() );
-
- 
-  fPh2FileHandler = new FileHandler (fRawPh2ACF, 'w', cHeader);
-  std::string cSlinkPh2ACF = conf->Get("RawDataDirectory", "/tmp/" ) + "Run_" + std::to_string(cRunNumber) + ".daq"; 
-  LOG (INFO) << BOLDBLUE << "Writing s-link data to " << cSlinkPh2ACF << RESET;
-  fSLinkFileHandler= new FileHandler (cSlinkPh2ACF, 'w', cHeader);
-  
-  // Ph2 object stuff 
-  LOG (INFO) << BOLDBLUE << "Opening shutter ...." << RESET;
-  for(auto cBoard : this->fBoardVector)
-  {
-    //Start() also does CBC fast reset and readout reset 
-    this->fBeBoardInterface->Start(cBoard);
-    LOG (INFO) << BOLDBLUE << "Shutter opened on board " << +cBoard->getId() << RESET;
-  }
-
-  LOG(INFO) << "Run Started, number of triggers received so far: " 
-    << +this->fBeBoardInterface->ReadBoardReg(this->fBoardVector.at(0), "fc7_daq_stat.fast_command_block.trigger_in_counter");
-
-  // starting readout loop in thread
-  fStarted = true, fStopped = false;
-  fThreadRun = std::thread(&Eudaq2Producer::ReadoutLoop, this);  
-}
-
-void Eudaq2Producer::DoStopRun()
-{
-  // TLU stuff 
-  LOG(INFO) << "Stopping Run..." << RESET;
-  
-  // Ph2ACF stuff
-  LOG (INFO) << BOLDBLUE << "Closing shutter..." << RESET;
-  for(auto cBoard : this->fBoardVector)
-  {
-    this->fBeBoardInterface->Stop(cBoard);
-    LOG (INFO) << BOLDBLUE << "Shutter closed on board " << +cBoard->getId() << RESET;
-  }
-
-  LOG(INFO) << "Run Stopped, number of triggers received so far: " 
-    << +this->fBeBoardInterface->ReadBoardReg(this->fBoardVector.at(0), "fc7_daq_stat.fast_command_block.trigger_in_counter"); 
-
-  fStarted = false, fStopped = true;
-  if(fThreadRun.joinable())
-  {
-    fThreadRun.join(); 
-  }
-  // check if file handler is open 
-  if (fPh2FileHandler->isFileOpen() ) 
-  {
-      LOG (INFO) << BOLDBLUE << "Closing file handler for .raw " << RESET;
-      fPh2FileHandler->closeFile();
-  }
-  //delete fPh2FileHandler;
-
-  // check if file handler is open 
-  if (fSLinkFileHandler->isFileOpen() ) 
-  {
-      LOG (INFO) << BOLDBLUE << "Closing file handler for .daq " << RESET;
-      fSLinkFileHandler->closeFile();
-  }
-  //delete fPh2FileHandler;
-}
-
-void Eudaq2Producer::DoReset()
-{
-    // just in case close the shutter
-    for(auto cBoard : this->fBoardVector)
-    {
-      fBeBoardInterface->Stop(cBoard);
-    }
-
-    // finish data processing
-    fStarted = false, fStopped = true, fConfigured = false;
-    if(fThreadRun.joinable()){
-        fThreadRun.join();
-    }
-
-    // configure the board again
-    this->DoConfigure();
-    fStarted = false, fStopped = true, fConfigured = true;
-}
-
-void Eudaq2Producer::DoTerminate()
-{
-  fInitialised = false, fConfigured = false, fStarted = false, fStopped = true, fTerminated = true;
-  if(fThreadRun.joinable()){
-    fThreadRun.join();
-  }
-  LOG(INFO) << "Terminating ..."; 
-  //this->Destroy();	
-}
-
-
-//ReadoutLoop has been modified in order to allow for the acquisition of multilple events by a single trigger signal. 
-//This way, time walk performance can be evaluated in the analysis
-//Multiple Ph2ACF Events are read, converted and stored as EUDAQ SubEvents within in one EUDAQ Event 
-void Eudaq2Producer::ReadoutLoop()
-{
-  std::vector<Event*> cPh2Events; //Ph2ACF Event vector to store newly read data and previously remaining one
-  while(!fStopped){
-    if(!EventsPending()){
-      continue;
-    } 
-    for(auto cBoard : this->fBoardVector)
-    {
-    	std::vector<uint32_t> cRawData(0); this->ReadData(cBoard, cRawData);
-        // empty data - wait and pass
-      	if( cRawData.size() == 0 )
-      	{		
-           LOG (INFO) << BOLDBLUE << "Read-back 0 words from the DD3 memory using ReadData.. waiting 100 ms " << RESET;
-	   std::this_thread::sleep_for (std::chrono::microseconds (100) );
-           continue;
-      	}
-	fPh2FileHandler->set(cRawData);
-        std::vector<Event*> cPh2NewEvents = this->GetEvents(cBoard);
-        if (cPh2NewEvents.size() == 0 ) 
-        {
-           LOG (INFO) << BOLDBLUE << "Decoded 0 valid events.. not going to send anything ... " << RESET;
-           continue;
-        } 
-        //{
-        LOG (INFO) << BOLDBLUE << +cPh2NewEvents.size() << " events read back from FC7 with ReadData" << RESET;
-        std::move(cPh2NewEvents.begin(), cPh2NewEvents.end(), std::back_inserter(cPh2Events));
-        std::time_t cTimestamp = std::time(nullptr);
-        while(cPh2Events.size() > fTriggerMultiplicity)
-        {
-          eudaq::EventSP cEudaqEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
-          cEudaqEvent->SetTimestamp(cTimestamp, cTimestamp);
-          //Add multiple Ph2ACF Events as EUDAQ SubEvents to a EUDAQ Event
-          for(auto cPh2Event = cPh2Events.begin(); cPh2Event<cPh2Events.begin()+fTriggerMultiplicity+1; cPh2Event++)
-          {
-            // sarah
-            // un-comment this to test s-link event writing 
-            SLinkEvent cSLev = (*cPh2Event)->GetSLinkEvent (cBoard);
-            fSLinkFileHandler->set (cSLev.getData<uint32_t>() );
-            
-	    eudaq::EventSP cEudaqSubEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
-            this->ConvertToSubEvent(cBoard, *cPh2Event , cEudaqSubEvent);
-            cEudaqSubEvent->SetTimestamp(cTimestamp, cTimestamp);
-            cEudaqEvent->AddSubEvent(cEudaqSubEvent);
-          }
-          cPh2Events.erase(cPh2Events.begin(), cPh2Events.begin()+fTriggerMultiplicity+1);
-          SendEvent(cEudaqEvent);
-        //}//end of Ph2Events.size()
-      	}
-    }//end of cBoard loop
-  }//end of !fStopped loop
-}
-
-void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2Event, eudaq::EventSP pEudaqSubEvent)
-{
   pEudaqSubEvent->SetTag("L1_COUNTER_BOARD", pPh2Event->GetEventCount());
   pEudaqSubEvent->SetTag("TDC", pPh2Event->GetTDC());
   pEudaqSubEvent->SetTag("BX_COUNTER", pPh2Event->GetBunch());
@@ -463,31 +221,5 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
           }//end of cStub loop
       }//end of cCbc loop
   }//end of cFe loop
+  */
 }
-
-bool Eudaq2Producer::EventsPending()
-{
-  if(fConfigured){
-    if(fHandshakeEnabled){
-      for(auto cBoard : this->fBoardVector){
-	if(cBoard->getBoardType() == BoardType::D19C){
-	  if(this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.readout_req") > 0){
-	    return true; 
-	  }//end of if ReadBoardReg
-	}// end of if BoardType
-      }//end of cBoard loop
-    } else {
-        return true;
-    }//end of if fHandshakeEnabled
-
-  }//end of if fConfigured
-  return false;
-}
-
-//FIXME check me Sarah
-void Eudaq2Producer::writeObjects()  
-{
-  //this->SaveResults();
-  //fResultFile->Flush();
-}
-#endif

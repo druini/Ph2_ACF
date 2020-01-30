@@ -20,7 +20,7 @@ void ClockDelayHistograms::book (TFile* theOutputFile, const DetectorContainer& 
   // # Retrieve parameters #
   // #######################
   startValue = 0;
-  stopValue  = RD53SharedConstants::NLATENCYBINS*(RD53::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"))+1) - 1;
+  stopValue  = RD53Shared::NLATENCYBINS*(RD53::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"))+1) - 1;
 
 
   auto hClockDelay = CanvasContainer<TH1F>("ClockDelay", "Clock Delay", stopValue - startValue + 1, startValue, stopValue + 1);
@@ -32,7 +32,7 @@ void ClockDelayHistograms::book (TFile* theOutputFile, const DetectorContainer& 
 
 bool ClockDelayHistograms::fill (std::vector<char>& dataBuffer)
 {
-  const size_t ClkDelaySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+  const size_t ClkDelaySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   ChipContainerStream<EmptyContainer,GenericDataArray<ClkDelaySize>> theOccStreamer       ("ClockDelayOcc"); // @TMP@
   ChipContainerStream<EmptyContainer,uint16_t>                       theClockDelayStreamer("ClockDelayClkDelay"); // @TMP@
@@ -57,7 +57,7 @@ bool ClockDelayHistograms::fill (std::vector<char>& dataBuffer)
 
 void ClockDelayHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer)
 {
-  const size_t ClkDelaySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+  const size_t ClkDelaySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)

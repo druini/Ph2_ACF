@@ -14,7 +14,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53SharedConstants.h"
+#include "../Utils/RD53Shared.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__

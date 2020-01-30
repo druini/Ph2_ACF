@@ -30,7 +30,7 @@ void InjectionDelay::ConfigureCalibration ()
   nEvents        = this->findValueInSettings("nEvents");
   doFast         = this->findValueInSettings("DoFast");
   startValue     = 0;
-  stopValue      = RD53SharedConstants::NLATENCYBINS*(RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"))+1) - 1;
+  stopValue      = RD53Shared::NLATENCYBINS*(RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"))+1) - 1;
   doDisplay      = this->findValueInSettings("DisplayHisto");
   doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData = this->findValueInSettings("SaveBinaryData");
@@ -39,7 +39,7 @@ void InjectionDelay::ConfigureCalibration ()
   // ##############################
   // # Initialize dac scan values #
   // ##############################
-  const size_t nSteps = (stopValue - startValue + 1 <= RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1);
+  const size_t nSteps = (stopValue - startValue + 1 <= RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1);
   const float  step   = (stopValue - startValue + 1) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
@@ -73,7 +73,7 @@ void InjectionDelay::Start (int currentRun)
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/InjectionDelayRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/InjectionDelayRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -85,7 +85,7 @@ void InjectionDelay::Start (int currentRun)
 
 void InjectionDelay::sendData ()
 {
-  const size_t InjDelaySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+  const size_t InjDelaySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   auto theStream               = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<InjDelaySize>>("Occ"); // @TMP@
   auto theInjectionDelayStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>                      ("InjDelay"); // @TMP@
@@ -119,14 +119,14 @@ void InjectionDelay::initialize (const std::string fileRes_, const std::string f
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/InjectionDelayRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/InjectionDelayRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 }
 
 void InjectionDelay::run ()
 {
-  const size_t InjDelaySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+  const size_t InjDelaySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
 
   // ###############
@@ -223,7 +223,7 @@ void InjectionDelay::draw ()
 
 void InjectionDelay::analyze ()
 {
-  const size_t InjDelaySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+  const size_t InjDelaySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theInjectionDelayContainer);
 
@@ -289,7 +289,7 @@ void InjectionDelay::display ()
 
 void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-  const size_t InjDelaySize = RD53::setBits(RD53SharedConstants::MAXBITCHIPREG) + 1;
+  const size_t InjDelaySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   for (auto i = 0u; i < dacList.size(); i++)
     {
