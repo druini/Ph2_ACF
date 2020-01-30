@@ -1,10 +1,10 @@
 /*!
-  \file                    SystemController.h
-  \brief                   Controller of the System, overall wrapper of the framework
-  \author                  Nicolas PIERRE
-  \version                 1.0
-  \date                    10/08/14
-  Support :                mail to : lorenzo.bidegain@cern.ch, nico.pierre@icloud.com
+  \file                  SystemController.h
+  \brief                 Controller of the System, overall wrapper of the framework
+  \author                Mauro DINARDO
+  \version               2.0
+  \date                  01/01/20
+  Support:               email to mauro.dinardo@cern.ch
 */
 
 #ifndef SYSTEMCONTROLLER_H
@@ -226,8 +226,7 @@ namespace Ph2_System
       return fEventList;
     }
 
-    void ClearEvtVector(const Ph2_HwDescription::BeBoard* pBoard);
-    void DecodeData    (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+    void DecodeData (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
     double findValueInSettings(const std::string name, double defaultValue = 0.) const;
 

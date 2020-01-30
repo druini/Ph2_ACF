@@ -1,12 +1,10 @@
-/*
-
-  FileName :                    SystemController.cc
-  Content :                     Controller of the System, overall wrapper of the framework
-  Programmer :                  Nicolas PIERRE
-  Version :                     1.0
-  Date of creation :            10/08/14
-  Support :                     mail to : nicolas.pierre@cern.ch
-
+/*!
+  \file                  SystemController.cc
+  \brief                 Controller of the System, overall wrapper of the framework
+  \author                Mauro DINARDO
+  \version               2.0
+  \date                  01/01/20
+  Support:               email to mauro.dinardo@cern.ch
 */
 
 #include "SystemController.h"
@@ -308,7 +306,6 @@ namespace Ph2_System
   uint32_t SystemController::ReadData (BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
   {
     uint32_t cNPackets = fBeBoardInterface->ReadData(pBoard, false, pData, pWait);
-    SystemController::ClearEvtVector(pBoard);
     this->DecodeData(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType(pBoard));
 
     return cNPackets;
@@ -329,20 +326,7 @@ namespace Ph2_System
   void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
     fBeBoardInterface->ReadNEvents(pBoard, pNEvents, pData, pWait);
-    SystemController::ClearEvtVector(pBoard);
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
-  }
-
-  void SystemController::ClearEvtVector(const BeBoard* pBoard)
-  {
-    std::lock_guard<std::mutex> guard(theMtx);
-
-    if (fBeBoardInterface->getBoardType(pBoard) != BoardType::RD53)
-      {
-        for (auto &pevt : fEventList) delete pevt;
-        fCurrentEvent = 0;
-      }
-    fEventList.clear();
   }
 
   double SystemController::findValueInSettings (const std::string name, double defaultValue) const
@@ -362,14 +346,22 @@ namespace Ph2_System
 
   void SystemController::DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
   {
+    std::lock_guard<std::mutex> guard(theMtx);
+
     if (pType == BoardType::RD53)
       {
+        fEventList.clear();
+
         if (RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, RD53FWInterface::decodedEvents);
         RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
         for (auto i = 0u; i < RD53FWInterface::decodedEvents.size(); i++) fEventList.push_back(&RD53FWInterface::decodedEvents[i]);
       }
     else
       {
+        for (auto &pevt : fEventList) delete pevt;
+        fCurrentEvent = 0;
+        fEventList.clear();
+
         fNevents   = static_cast<uint32_t>(pNevents);
         fEventSize = static_cast<uint32_t>((pData.size()) / fNevents);
 

@@ -10,14 +10,8 @@ export CACTUSINCLUDE=/opt/cactus/include
 #########
 # BOOST #
 #########
-export KERNELRELEASE=$(uname -r)
-if [[ $KERNELRELEASE == *"el6"* ]]; then
-    export BOOST_LIB=/opt/cactus/lib
-    export BOOST_INCLUDE=/opt/cactus/include
-else
-    export BOOST_INCLUDE=/usr/include
-    export BOOST_LIB=/usr/lib64
-fi
+export BOOST_INCLUDE=/usr/include
+export BOOST_LIB=/usr/lib64
 
 ########
 # ROOT #
@@ -39,9 +33,8 @@ export BASE_DIR=$(pwd)
 ####################
 # External Plugins #
 ####################
-export ANTENNADIR=$BASE_DIR/CMSPh2_AntennaDriver
-export AMC13DIR=/opt/cactus/include/amc13
-export USBINSTDIR=~/Ph2_USBInstDriver
+export AMC13DIR=$CACTUSINCLUDE/amc13
+export ANTENNADIR=$BASE_DIR/../CMSPh2_AntennaDriver
 export USBINSTDIR=$BASE_DIR/../Ph2_USBInstDriver
 
 ###########
@@ -54,17 +47,16 @@ export ANTENNALIB=$ANTENNADIR/lib
 ###########
 export USBINSTLIB=$USBINSTDIR/lib
 
+#########
+# EUDAQ #
+#########
+export EUDAQ=$BASE_DIR/../eudaq/
+
 ##########
 # System #
 ##########
 export PATH=$BASE_DIR/bin:$PATH
-export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:${LD_LIBRARY_PATH}
-
-##########
-# EUDAQ #
-##########
-export EUDAQ=$BASE_DIR/../eudaq/
-export LD_LIBRARY_PATH=$EUDAQ/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:$EUDAQ/lib:$LD_LIBRARY_PATH
 
 #########
 # Flags #
