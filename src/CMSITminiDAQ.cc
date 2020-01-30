@@ -28,6 +28,10 @@
 #include "TApplication.h"
 #endif
 
+#ifdef __EUDAQ__
+#include "../tools/RD53eudaqProducer.h"
+#endif
+
 #include <sys/wait.h>
 
 
@@ -121,6 +125,9 @@ int main (int argc, char** argv)
   cmd.defineOption ("sup", "Run in producer(Middleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("sup", "s");
 
+  cmd.defineOption ("eudaq", "Run EUDAQ-IT producer at specified address (e.g. tcp://localhost:44000).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOptionAlternative ("eudaq", "e");
+
   cmd.defineOption("reset","Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative("reset", "r");
 
@@ -157,6 +164,7 @@ int main (int argc, char** argv)
   std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
   bool program           = cmd.foundOption("prog")   == true ? true : false;
   bool supervisor        = cmd.foundOption("sup")    == true ? true : false;
+  bool eudaq             = cmd.foundOption("eudaq")  == true ? true : false;
   bool reset             = cmd.foundOption("reset")  == true ? true : false;
   if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").insert(0,std::string(RESULTDIR) + "/Run" + fromInt2Str(runNumber) + "_"));
   else if (cmd.foundOption("replay") == true)  RegManager::enableReplay(cmd.optionValue("replay"));
@@ -273,6 +281,29 @@ int main (int argc, char** argv)
       else                   theApp.Terminate(0);
 #else
       LOG (WARNING) << BOLDBLUE << "ROOT flag was OFF during compilation" << RESET;
+#endif
+    }
+  else if (eudaq == true)
+    {
+#ifdef __EUDAQ__
+      RD53eudaqProducer theEUDAQproducer("thename", cmd.optionValue("eudaq"));
+
+      try
+	{
+	  LOG (INFO) << BOLDMAGENTA << "@@@ Connecting to RunControl @@@" << RESET;
+	  theEUDAQproducer.Connect();
+	}
+      catch (...)
+	{
+	  LOG (ERROR) << BOLDRED << "Can not connect to RunControl at " << cmd.optionValue("eudaq") << RESET;
+	  exit(EXIT_FAILURE);
+	}
+      LOG (INFO) << BOLDMAGENTA << "@@@ Connected @@@" << RESET;
+
+      while (theEUDAQproducer.IsConnected() == true)
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+#else
+      LOG (WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
 #endif
     }
   else
