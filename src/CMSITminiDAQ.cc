@@ -135,7 +135,6 @@ int main (int argc, char** argv)
   cmd.defineOption("replay", "Replay previously captured communication (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
   int result = cmd.parse(argc,argv);
-
   if (result != CommandLineProcessing::ArgvParser::NoParserError)
     {
       LOG (INFO) << cmd.parseErrorDescription(result);
@@ -504,7 +503,6 @@ int main (int argc, char** argv)
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing EUDAQ data taking @@@" << RESET;
 
           RD53eudaqProducer theEUDAQproducer(mySysCntr, configFile, "RD53eudaqProducer", eudaqRunCtr);
-
           try
             {
               LOG (INFO) << GREEN << "Connecting to EUDAQ run control" << RESET;
@@ -512,15 +510,12 @@ int main (int argc, char** argv)
             }
           catch (...)
             {
-              LOG (ERROR) << BOLDRED << "Can not connect to EUDAQ run control at " << cmd.optionValue("eudaq") << RESET;
+              LOG (ERROR) << BOLDRED << "Can not connect to EUDAQ run control at " << eudaqRunCtr << RESET;
               exit(EXIT_FAILURE);
             }
           LOG (INFO) << BOLDBLUE << "\t--> Connected" << RESET;
-
           while (theEUDAQproducer.IsConnected() == true)
             std::this_thread::sleep_for(std::chrono::seconds(1));
-
-          exit(EXIT_SUCCESS);
 #else
           LOG (WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
           exit(EXIT_FAILURE);
