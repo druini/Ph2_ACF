@@ -59,12 +59,15 @@ void AntennaTester::EnableAntenna( bool pAntennaEnable, uint8_t pDigiPotentiomet
          LOG (INFO) << BOLDBLUE << "Configuring antenna..." << RESET;
          Antenna cAntenna;
          uint8_t cADCChipSlave = 4;
-         cAntenna.initializeAntenna(trigSource); //initialize USB communication
+         cAntenna.initializeAntenna(); //initialize USB communication
          cAntenna.ConfigureADC (cADCChipSlave); //initialize SPI communication for ADC
-         if(trigSource==5){
-         cAntenna.ConfigureClockGenerator (3, 8); //initialize SPI communication for ADC
+         cAntenna.SelectTriggerSource(trigSource);
+         if(trigSource==5)
+         {
+            cAntenna.ConfigureClockGenerator (3, 8); //initialize SPI communication for ADC
          }
-         else if (trigSource==7){
+         else if (trigSource==7)
+         {
          }
          else{
            LOG (INFO)  << "ERROR, wrong trig source set " << int(trigSource);

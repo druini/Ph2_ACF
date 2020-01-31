@@ -723,7 +723,7 @@ namespace Ph2_HwInterface
     }
 
 
-    SLinkEvent D19cSSAEvent::GetSLinkEvent (  BeBoard* pBoard) const
+    SLinkEvent D19cSSAEvent::GetSLinkEvent (  BeBoard* pBoard ) const
     {
         uint16_t cSSACounter = 0;
         std::set<uint8_t> cEnabledFe;

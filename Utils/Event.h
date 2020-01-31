@@ -95,6 +95,7 @@ namespace Ph2_HwInterface
      * \class Event
      * \brief Event container to manipulate event flux from the Cbc
      */
+
     class Event
     {
 
@@ -108,6 +109,7 @@ namespace Ph2_HwInterface
       protected:
         uint32_t fEventCount;           /*!< Event Counter */
         uint32_t fTDC;                  /*!< TDC value*/
+        uint32_t fExternalTriggerID;         /*!< TLU Trigger ID*/
         //for CBC2 use
         uint32_t fBunch;                /*!< Bunch value */
         uint32_t fOrbit;                /*!< Orbit value */
@@ -208,6 +210,14 @@ namespace Ph2_HwInterface
         uint32_t GetTDC() const
         {
             return fTDC;
+        }
+        /*!
+         * \brief Get External trigger  id ??
+         * \return external trigger value
+         */
+        uint32_t GetExternalTriggerId() const
+        {
+            return fExternalTriggerID;
         }
         /*!
          * \brief Get an event contained in a Cbc
@@ -332,6 +342,21 @@ namespace Ph2_HwInterface
          */
         virtual uint32_t PipelineAddress ( uint8_t pFeId, uint8_t pCbcId ) const { return 0; }
         /*!
+         * \brief Function to get pipeline address
+         * \param pFeId : FE Id
+         * \param pCbcId : Cbc Id
+         * \return Pipeline address
+         */
+        virtual uint32_t L1Id ( uint8_t pFeId, uint8_t pCbcId ) const { return 0; }
+
+        /*!
+         * \brief Function to get pipeline address
+         * \param pFeId : FE Id
+         * \param pCbcId : Cbc Id
+         * \return Pipeline address
+         */
+        virtual uint32_t BxId ( uint8_t pFeId ) const { return 0; }
+        /*!
          * \brief Function to get a CBC pixel bit data
          * \param pFeId : FE Id
          * \param pCbcId : Cbc Id
@@ -405,6 +430,33 @@ namespace Ph2_HwInterface
 
         virtual void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup) = 0;
 
+        // split stream of data 
+        template<std::size_t N>
+        void splitStream(const std::vector<uint32_t>& pData, std::vector<std::bitset<N>>& pBitSet , size_t pOffset , size_t pSize )
+        {
+            uint8_t cBitCounter=0;
+            uint8_t cId=0;
+            auto cIterator = pData.begin() + pOffset;
+            size_t cWordCounter=0;
+            do
+            {
+              auto cWord = std::bitset<32>( *cIterator ); 
+              LOG (DEBUG) << BOLDBLUE << "Word " << +cWordCounter << " : " << cWord << RESET;
+              for( size_t cIndex = 0 ; cIndex < 32 ; cIndex++)
+              {
+                if( cId >= pSize) 
+                  continue;
+
+                pBitSet[cId][N - 1 - cBitCounter] = cWord[31  - cIndex ];
+                LOG (DEBUG) << "Bit index " << +(31  - cIndex) << " bit counter in hit word at index " << +cBitCounter << RESET;
+                cId += ( cBitCounter == (N-1)  );
+                cBitCounter = (cBitCounter+1)%N;
+              }
+              cIterator++;
+              cWordCounter++;
+            }while( cIterator < pData.end() && cId < pSize );
+        } 
+        
       protected:
         virtual void print (std::ostream& out) const {}
     };

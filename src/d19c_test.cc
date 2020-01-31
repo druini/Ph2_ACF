@@ -10,6 +10,9 @@
 #include "../tools/Tool.h"
 #include "TROOT.h"
 #include "TApplication.h"
+#ifdef __ANTENNA__
+#include "Antenna.h"
+#endif
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -91,6 +94,21 @@ int main ( int argc, char** argv )
     }
     if (!cHardReset) cTool.ConfigureHw ();
 
+    // now try and look at the temperature and current on the hybrid 
+    #ifdef __ANTENNA__
+        Antenna cAntenna;
+        cAntenna.initializeAntenna();
+        uint16_t cIter=0;
+        do
+        {
+            float cTemp = cAntenna.GetHybridTemperature (4);
+            float cCurrent = cAntenna.GetHybridCurrent (4);
+            LOG (INFO) << BOLDBLUE << "Temperature on the hybrid is " << cTemp << " degrees ..... current on the hybrid is " << cCurrent << " mA." << RESET;
+            std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+            cIter++;
+        }while(cIter < 100);
+    #endif
+
     BeBoard* pBoard = cTool.fBoardVector.at(0);
     cTool.fBeBoardInterface->getBoardInfo(pBoard);
 
@@ -99,13 +117,16 @@ int main ( int argc, char** argv )
     bool cIPB_Rate = ( cmd.foundOption ( "ipb_rate" ) ) ? true : false;
     bool cOccupancy = ( cmd.foundOption ( "occupancy" ) ) ? true : false;
 
-    if ( cHardReset ) {
+    if ( cHardReset ) 
+    {
         cTool.fBeBoardInterface->RebootBoard(pBoard);
-    } else if ( cDDR3SelfTest ) {
+    } else if ( cDDR3SelfTest ) 
+    {
         cTool.fBeBoardInterface->setBoard ( pBoard->getBeBoardId() );
         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->DDR3SelfTest();
         //(D19cFWInterface*)(cTool.fBeBoardInterface->fBoardFW)->DDR3SelfTest();
-    } else {
+    } else 
+    {
         if ( cTestPulse )
         {
             auto cSetting = cTool.fSettingsMap.find ( "TestPulsePotentiometer" );
@@ -140,8 +161,16 @@ int main ( int argc, char** argv )
 
             uint32_t cNEventsToCollect = ( cmd.foundOption ( "events" ) ) ? convertAnyInt ( cmd.optionValue ( "events" ).c_str() ) : 10000;
 
+
             // be careful works only for one hybrid
             std::vector < ReadoutChip* > &cCbcVector = pBoard->getModule(0)->fReadoutChipVector;
+            /*for( auto cCbc : cCbcVector )
+            {
+                static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->enableHipSuppression( cCbc, false, true,0);
+                std::vector<uint8_t> cSeeds_ph1{ 85, 170};
+                std::vector<int>     cBends_ph1( 2, static_cast<int>(1*2) ); 
+                static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->injectStubs( cCbc , cSeeds_ph1 , cBends_ph1);
+            }*/
             uint32_t cNCbc = cCbcVector.size();
 
             Timer t;
@@ -151,9 +180,7 @@ int main ( int argc, char** argv )
             while ( cN < cNEventsToCollect )
             {
                 cTool.ReadData ( pBoard );
-
                 const std::vector<Event*>& events = cTool.GetEvents ( pBoard );
-
                 for ( auto& ev : events )
                 {
                     count++;
@@ -307,11 +334,22 @@ int main ( int argc, char** argv )
             // release memory
             d19cfw->Manage2SCountersMemory(cErrorCounters, cChannelCounters, false);
         }
+        // if nothing else 
+ /*       uint32_t cNEventsToCollect = ( cmd.foundOption ( "events" ) ) ? convertAnyInt ( cmd.optionValue ( "events" ).c_str() ) : 10000;
+        cTool.ReadNEvents( pBoard, cNEventsToCollect );
+        const std::vector<Event*>& events = cTool.GetEvents ( pBoard );
+        int cNevents=0;
+        for( auto& cEvent : events ) 
+        {
+            LOG (INFO) << ">>> Event #" << cNevents ;
+            LOG (INFO) << *cEvent;
+            cNevents++;
+        }*/
     }
 
     LOG (INFO) << "*** End of the DAQ test ***" ;
-    cTool.SaveResults();
-    cTool.CloseResultFile();
+ //   cTool.SaveResults();
+ //   cTool.CloseResultFile();
     cTool.Destroy();
 
     return 0;

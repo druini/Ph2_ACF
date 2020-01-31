@@ -29,7 +29,7 @@ class DQMEvent;
 class ReadoutStatus 
 {
  public:
-   ReadoutStatus(size_t word)
+  ReadoutStatus(size_t word)
      : error1_((word >> 19) & 0x1), error2_((word >> 18) & 0x1), plAdd_((word >> 9) & 0x1FF), l1ACounter_(word & 0x1FF)
     {}
   bool error1() const {return error1_;}
@@ -113,18 +113,16 @@ class DQMEvent
   {
     size_t retval = 0;
     int i = 0;
-    for (std::vector<bool>::const_iterator it = v.begin()+ishift; it != v.begin()+ishift+len; ++it,++i) {
-      retval |= ((*it) ? 1 : 0) << (len -1 - i);
-    }
+    for (std::vector<bool>::const_iterator it = v.begin()+ishift; it != v.begin()+ishift+len; ++it,++i)
+      retval |= ((*it) ? 1 : 0) << (len - 1 - i);
     return retval;
   }    
   static std::vector<bool> getChannelData(const std::vector<bool>& v, size_t ishift, size_t len=STRIPS_PER_READOUT_PADDED) 
   {
     std::vector<bool> retval;
     int i = 0;
-    for (std::vector<bool>::const_iterator it = v.begin()+ishift; it != v.begin()+ishift+len; ++it,++i) {
+    for (std::vector<bool>::const_iterator it = v.begin()+ishift; it != v.begin()+ishift+len; ++it,++i)
        retval.push_back((*it));
-    }
     return retval;
   }    
   static uint16_t encodeId(const uint8_t& pFeId, const uint8_t& pCbcId)
@@ -252,9 +250,9 @@ class DQMEvent
       
       // Fill the 72 bit word
       for (size_t i = 0; i < b.size(); ++i)
-	feStatus_.set(i, b[i]);
+	  feStatus_.set(i, b[i]);
       for (size_t i = 0; i < a.size(); ++i)
-	feStatus_.set(64 + i, a[i]);
+	  feStatus_.set(64 + i, a[i]);
 
       // Readout Status, collect information
       size_t nbits = nRO * READOUT_STATUS_WORD_WIDTH;
@@ -263,9 +261,8 @@ class DQMEvent
       for (size_t i = 0; i < nwords; ++i) 
       {
 	uint64_t w = wordList.at(3+i);
-	for (size_t j = 0; j < wbit; ++j) {
-	  data.push_back((w >> (wbit - 1 - j)) & 0x1);
-	}
+	for (size_t j = 0; j < wbit; ++j)
+	    data.push_back((w >> (wbit - 1 - j)) & 0x1);
       }
       // Now fill information 
       for (size_t i = 0; i < nRO; ++i) 
@@ -306,14 +303,14 @@ class DQMEvent
       std::vector<uint8_t> feList;
       attachedFE(feStatus_, feList);
       os << "FE position: <";
-      for (size_t i = 0; i < feList.size(); ++i) {
+      for (size_t i = 0; i < feList.size(); ++i)
 	os << i << " ";
-      }
+
       os << ">" << std::endl;
+
       // Readout Status
-      for (size_t i = 0; i < roList_.size(); ++i) {
+      for (size_t i = 0; i < roList_.size(); ++i)
 	roList_[i].print((i==0 ? true : false), os);
-      }
     }
   private:
     uint8_t version_;
@@ -328,7 +325,8 @@ class DQMEvent
   class TrackerPayload 
   {
   public:
-    size_t set(const std::vector<uint64_t>& wordList, size_t ishift, 
+    size_t set(const std::vector<uint64_t>& wordList, 
+	       size_t ishift, 
                const std::bitset<72>& feStatus, 
 	       const std::vector<ReadoutStatus>& roStatusList) 
     {
@@ -343,27 +341,27 @@ class DQMEvent
       for (size_t i = 0; i < nwords; ++i) 
       {
 	uint64_t w = wordList.at(ishift+i);
-	for (size_t j = 0; j < wbit; ++j) {
-	  data.push_back((w >> (wbit -1 - j)) & 0x1);
-	}
+	for (size_t j = 0; j < wbit; ++j)
+	  data.push_back((w >> (wbit - 1 - j)) & 0x1);
       }
       // now the complicated part
-      int ipos = 0;
+      size_t ipos = nFE * MAX_READOUT_PER_FE;
       for (size_t i = 0; i < nFE; ++i) 
       {
-	size_t feh = getWord(data, ipos, MAX_READOUT_PER_FE);        
+	size_t feh = getWord(data, i * MAX_READOUT_PER_FE, MAX_READOUT_PER_FE);        
 	std::vector<uint8_t> readoutList;
         uint8_t nro = readoutInFE(std::bitset<MAX_READOUT_PER_FE>(feh), readoutList);
         feReadoutMappingList_.push_back({feList.at(i), readoutList});
 	for (int j = 0; j < nro; ++j) 
         {
-	  std::vector<bool> cdata = getChannelData(data, MAX_READOUT_PER_FE + j * STRIPS_PER_READOUT_PADDED); 
-          ReadoutStatus roStatus(roStatusList.at(i * nro + j));
+          size_t jpos = ipos + j * STRIPS_PER_READOUT_PADDED;
+	  std::vector<bool> cdata = getChannelData(data, jpos, STRIPS_PER_READOUT_PADDED);
+          ReadoutStatus roStatus(roStatusList.at(i * nro + j)); // check nro carefully
 
 	  uint16_t cKey = encodeId(feList.at(i), readoutList.at(j));
 	  readoutDataMap_.insert({cKey, {roStatus, cdata}});
         }
-        ipos += MAX_READOUT_PER_FE + STRIPS_PER_READOUT_PADDED * nro;
+        ipos += nro * STRIPS_PER_READOUT_PADDED;
       }
       nwords_ = nwords;
       return nwords;
@@ -448,26 +446,29 @@ class DQMEvent
       while (1) 
       {
 	uint64_t w = wordList.at(ishift + nwords);
-	if (nwords > 0 && !(w >> 32)) break;  
-	for (size_t j = 0; j < wbit; ++j) {
+	// std::cout << "stub word: " << std::bitset<64>(w) << std::endl;
+	//if (nwords > 0 && !(w >> 32)) break;  // using the first condition data information (Condition Data size)
+	if (nwords > 0 && (w > 0 && w < 10) && !(w >> 32)) break;  // using the first condition data information (Condition Data size)
+	for (size_t j = 0; j < wbit; ++j)
 	  data.push_back((w >> (wbit - 1 - j)) & 0x1);
-	}
 	++nwords;
       }
       // Now store the results properly
       int ipos = 0;
       std::vector<uint8_t> feList;
-      for (size_t i = 0; i < feList.size(); ++i) 
+      size_t nFE = attachedFE(feStatus, feList);
+      for (size_t i = 0; i < nFE; ++i) 
       {
 	size_t nstub = getWord(data, ipos, NSTUB_WORD_WIDTH);
 	std::vector<StubInfo> stubList;
 	for (size_t j = 0; j < nstub; ++j) {
-	  size_t stub_word = getWord(data, (NSTUB_WORD_WIDTH+1) + j * STUB_WORD_WIDTH, STUB_WORD_WIDTH);
+	  size_t jpos = NSTUB_WORD_WIDTH + 1 + j * STUB_WORD_WIDTH;
+	  size_t stub_word = getWord(data, jpos, STUB_WORD_WIDTH);
           StubInfo info(stub_word);
           stubList.push_back(info);
 	}
         dMap_.insert({feList[i], stubList});
-	ipos += (NSTUB_WORD_WIDTH+1) + nstub * STUB_WORD_WIDTH;
+	ipos += NSTUB_WORD_WIDTH + 1 + nstub * STUB_WORD_WIDTH;
       }
       nwords_ = nwords;
       return nwords;
@@ -479,9 +480,8 @@ class DQMEvent
       {
 	os << "feId: <" << +v.first << ">" << std::endl;
 	const std::vector<StubInfo>& stubList = v.second;
-        for (size_t i = 0; i < stubList.size(); ++i) {
+        for (size_t i = 0; i < stubList.size(); ++i)
           stubList.at(i).print((i == 0 ? true : false));
-        }
       }
     }
     const std::map<uint8_t, std::vector<StubInfo>>& getMap() const {return dMap_;}
@@ -581,6 +581,7 @@ class DQMEvent
        stubData().print(os);
        condData().print(os);
        daqTrailer().print(os);
+       os << std::flush;
     }
     DAQHeader& daqHeader() {return daqHeader_;}
     DAQTrailer& daqTrailer() {return daqTrailer_;}

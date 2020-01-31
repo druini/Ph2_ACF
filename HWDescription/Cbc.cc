@@ -117,7 +117,7 @@ namespace Ph2_HwDescription {
     {
 
         std::ofstream file ( filename.c_str(), std::ios::out | std::ios::trunc );
-
+        
         if ( file )
         {
             std::set<CbcRegPair, RegItemComparer> fSetRegItem;

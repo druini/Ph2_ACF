@@ -13,18 +13,12 @@
 #define PedestalEqualization_h__
 
 #include "Tool.h" 
-#include "../Utils/Visitor.h"
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/DataContainer.h"
 
 #include <map>
 
 #ifdef __USE_ROOT__
   #include "../DQMUtils/DQMHistogramPedestalEqualization.h"
 #endif 
-
-using namespace Ph2_System;
-
 
 class PedestalEqualization : public Tool
 {

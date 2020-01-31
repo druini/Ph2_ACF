@@ -23,7 +23,7 @@ namespace Ph2_HwInterface {
 
     // Event implementation
     D19cCbc3Event::D19cCbc3Event ( const BeBoard* pBoard,  uint32_t pNbCbc, uint32_t pNFe, const std::vector<uint32_t>& list ) 
-    : fEventDataVector(pNbCbc*pNFe)
+    : fEventDataVector(8*pNFe)
     {
         SetEvent ( pBoard, pNbCbc, list );
     }
@@ -182,21 +182,57 @@ namespace Ph2_HwInterface {
             return 0;
         }
     }
-
-    uint32_t D19cCbc3Event::PipelineAddress ( uint8_t pFeId, uint8_t pCbcId ) const
+    uint32_t D19cCbc3Event::L1Id ( uint8_t pFeId, uint8_t pCbcId ) const
     {
         try 
         {
             const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc));
-            uint32_t cPipeAddress = ( (hitVector.at (2) & 0x000001FF) >> 0 );
-            return cPipeAddress;
+            LOG (DEBUG) << BOLDBLUE << "L1 header " << std::bitset<32>(hitVector.at(2)) << RESET;
+            std::bitset<32> cWord = hitVector.at(2); 
+            std::bitset<9> cL1counter(0);
+            for( size_t cIndex= 16; cIndex < (16+9) ; cIndex++)
+            {
+                cL1counter[cIndex-16]= cWord[cIndex];
+            }
+            return (uint32_t)(cL1counter.to_ulong());
         }
-        catch (const std::out_of_range& outOfRange) {
+        catch (const std::out_of_range& outOfRange) 
+        {
             LOG (ERROR) << "Word 2 for FE " << +pFeId << " CBC " << +pCbcId << " is not found:" ;
             LOG (ERROR) << "Out of Range error: " << outOfRange.what() ;
             return 0;
         }
 
+    }
+    uint32_t D19cCbc3Event::PipelineAddress ( uint8_t pFeId, uint8_t pCbcId ) const
+    {
+        uint32_t cPipeline = 0;
+        LOG (DEBUG) << "Event vector has " << +fEventDataVector.size() << " 32 bit words. Number of CBCs is " <<  fNCbc << RESET;
+        if( fEventDataVector.size() == 0 )
+        {
+            LOG (ERROR) << BOLDRED << "Empty event vector..." << RESET;
+            return cPipeline;
+        }
+        try 
+        {
+            uint8_t cIndex = encodeVectorIndex(pFeId, pCbcId,fNCbc);
+            LOG (DEBUG) << BOLDBLUE << "\t.. vector index is " << cIndex << " in a list that has " << +fEventDataVector.size() << " entries." << RESET;
+            const std::vector<uint32_t> &hitVector = fEventDataVector.at(cIndex);
+            if( hitVector.size() >= 2 ) 
+            {
+                cPipeline = hitVector.at(2) & 0x1FF;
+                LOG (DEBUG) << BOLDYELLOW << "PipelineAddress is " << std::bitset<32>(cPipeline) << " [ " << cPipeline << " ]" << RESET;
+        }
+            else
+            {
+                LOG (DEBUG) << BOLDRED << "Event does not seem to contain pipeline..." << RESET;
+            }
+        }
+        catch (const std::out_of_range& outOfRange) {
+            LOG (ERROR) << "Word 2 for FE " << +pFeId << " CBC " << +pCbcId << " is not found:" ;
+            LOG (ERROR) << "Out of Range error: " << outOfRange.what() ;
+        }
+        return cPipeline;
     }
 
     std::string D19cCbc3Event::DataBitString ( uint8_t pFeId, uint8_t pCbcId ) const
@@ -208,7 +244,11 @@ namespace Ph2_HwInterface {
         }
         return os.str();
     }
-
+    std::vector<uint32_t> getL1data( uint8_t pFeId , uint8_t pCbcId ) 
+    {
+        std::vector<uint32_t> cL1data( std::ceil(274./32) , 0);
+        return cL1data;
+    }
     std::vector<bool> D19cCbc3Event::DataBitVector ( uint8_t pFeId, uint8_t pCbcId ) const
     {
         std::vector<bool> blist;
@@ -273,33 +313,23 @@ namespace Ph2_HwInterface {
 
     std::vector<Stub> D19cCbc3Event::StubVector (uint8_t pFeId, uint8_t pCbcId) const
     {
+        auto& cEventWords = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId, fNCbc));
+        size_t cL1DataSize = static_cast<size_t>( cEventWords.at(0) & 0xFFF)*4;
+        uint32_t cStubPositions = cEventWords.at( cL1DataSize+1);
+        LOG (DEBUG) << BOLDYELLOW << "Stub positions " << std::bitset<32>(cStubPositions) << RESET;
         std::vector<Stub> cStubVec;
-
-        try 
+        for( uint32_t cStubIndex=0; cStubIndex < 3 ; cStubIndex++ ) 
         {
-            uint32_t stubWord = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc)).at(13);
-            uint8_t pos1 = (stubWord &  0x000000FF) ;
-            uint8_t pos2 = (stubWord & 0x0000FF00) >> 8;
-            uint8_t pos3 = (stubWord & 0x00FF0000) >> 16;
-            
-            uint32_t bendWord = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc)).at(14);
-            uint8_t bend1 = (bendWord & 0x00000F00) >> 8;
-            uint8_t bend2 = (bendWord & 0x000F0000) >> 16;
-            uint8_t bend3 = (bendWord & 0x0F000000) >> 24;
-
-            if (pos1 != 0 ) cStubVec.emplace_back (pos1, bend1) ;
-            if (pos2 != 0 ) cStubVec.emplace_back (pos2, bend2) ;
-            if (pos3 != 0 ) cStubVec.emplace_back (pos3, bend3) ;  
-
-            return cStubVec;
-
+            uint8_t cStubPosition = static_cast<uint8_t>( ( cEventWords.at( cL1DataSize+1 ) & (0xFF << (cStubIndex*8) ) ) >> (cStubIndex*8) ) ;
+            if( cStubPosition != 0 ) 
+            {
+                LOG (DEBUG) << BOLDYELLOW << "\t" << std::bitset<32>(cStubPositions) << " [" <<  +cStubIndex << "] : " << std::bitset<8>(cStubPosition) << " -- " << +cStubPosition <<  RESET;
+                uint8_t cStubBend = static_cast<uint8_t>( ( cEventWords.at( cL1DataSize+2) & (0xF << ( (cStubIndex+1)*8)) ) >> ( (cStubIndex+1)*8) );
+                cStubVec.emplace_back (cStubPosition, cStubBend ) ;
+            }
         }
-        catch (const std::out_of_range& outOfRange) {
-            LOG (ERROR) << "Stub bit or bend for FE " << +pFeId << " CBC " << +pCbcId << " is not found:" ;
-            LOG (ERROR) << "Out of Range error: " << outOfRange.what() ;
             return cStubVec;
         }
-    }
 
     uint32_t D19cCbc3Event::GetNHits (uint8_t pFeId, uint8_t pCbcId) const
     {
@@ -332,7 +362,8 @@ namespace Ph2_HwInterface {
         
         for ( uint32_t i = 0; i < NCHANNELS; ++i )
         {
-            cHits.push_back (privateDataBit(pFeId, pCbcId, i));
+            if( privateDataBit(pFeId, pCbcId,i) == 1 ) 
+                cHits.push_back (i);
         }
 
         return cHits;
@@ -353,7 +384,7 @@ namespace Ph2_HwInterface {
     void D19cCbc3Event::print ( std::ostream& os) const
     {
         os << BOLDGREEN << "EventType: d19c CBC3" << RESET << std::endl;
-        os << BOLDBLUE <<  "L1A Counter: " << this->GetEventCount() << RESET << std::endl;
+        os << BOLDBLUE <<  "L1A Counter [FW]: " << this->GetEventCount() << RESET << std::endl;
         os << "          Be Id: " << +this->GetBeId() << std::endl;
         //os << "          Be FW: " << +this->GetFWType() << std::endl;
         //os << "      Be Status: " << +this->GetBeStatus() << std::endl;
@@ -365,19 +396,36 @@ namespace Ph2_HwInterface {
         //os << "Orbit Counter: " << this->GetOrbit() << std::endl;
         //os << " Lumi Section: " << this->GetLumi() << std::endl;
         os << BOLDRED << "    TDC Counter: " << +this->GetTDC() << RESET << std::endl;
+        os << BOLDRED << "    TLU Trigger ID: " << +this->GetExternalTriggerId() << RESET << std::endl;
 
         const int FIRST_LINE_WIDTH = 22;
         const int LINE_WIDTH = 32;
         const int LAST_LINE_WIDTH = 8;
 
         size_t vectorIndex = 0;
+        /*for( auto cPacket : fEventDataVector )
+        {
+            uint32_t cL1Header = cPacket[0]; 
+            uint8_t cFeId = getFeIdFromVectorIndex(vectorIndex,fNCbc);
+            uint8_t cCbcId = getCbcIdFromVectorIndex(vectorIndex++,fNCbc);
+            os << BOLDCYAN << "FE" << +cFeId << " CBC" << +cCbcId << RESET << std::endl;
+            os << BOLDCYAN << "L1 Header " << std::bitset<32>(cPacket[0]) << std::endl;
+
+            //this->printCbcHeader (os, cFeId, cCbcId);
+        }*/
         for (__attribute__((unused)) auto const& hitVector : fEventDataVector)
         {
             uint8_t cFeId = getFeIdFromVectorIndex(vectorIndex,fNCbc);
             uint8_t cCbcId = getCbcIdFromVectorIndex(vectorIndex++,fNCbc);
             
             //here display the Cbc Header manually
+            if( fEventDataVector.at(encodeVectorIndex(cFeId, cCbcId, fNCbc)).size() == 0 )
+                continue;
+            
             this->printCbcHeader (os, cFeId, cCbcId);
+            os << GREEN << "FEId = " << +cFeId << " CBCId = " << +cCbcId << RESET << std::endl;
+            os << YELLOW << "PipelineAddress: " << this->PipelineAddress (cFeId, cCbcId) << RESET << " L1 Counter [from CBC] " << +this->L1Id (  cFeId, cCbcId ) << RESET << std::endl;
+            os << RED << "Error: " << static_cast<std::bitset<2>> ( this->Error ( cFeId, cCbcId ) ) << RESET << std::endl;
 
             // here print a list of stubs
             uint8_t cCounter = 1;
@@ -394,11 +442,7 @@ namespace Ph2_HwInterface {
             }
 
             // here list other bits in the stub stream
-
             std::string data ( this->DataBitString ( cFeId, cCbcId ) );
-            os << GREEN << "FEId = " << +cFeId << " CBCId = " << +cCbcId << RESET << " len(data) = " << data.size() << std::endl;
-            os << YELLOW << "PipelineAddress: " << this->PipelineAddress (cFeId, cCbcId) << RESET << std::endl;
-            os << RED << "Error: " << static_cast<std::bitset<2>> ( this->Error ( cFeId, cCbcId ) ) << RESET << std::endl;
             os << CYAN << "Total number of hits: " << this->GetNHits ( cFeId, cCbcId ) << RESET << std::endl;
             os << BLUE << "List of hits: " << RESET << std::endl;
             std::vector<uint32_t> cHits = this->GetHits (cFeId, cCbcId);
@@ -444,10 +488,8 @@ namespace Ph2_HwInterface {
                 os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i, 2 ) << " ";
 
             os << std::endl;
-
             os << BLUE << "Stubs: " << this->StubBitString ( cFeId, cCbcId ).c_str() << RESET << std::endl;
         }
-
         os << std::endl;
     }
 
@@ -501,7 +543,7 @@ namespace Ph2_HwInterface {
 
         return result;
     }
-    SLinkEvent D19cCbc3Event::GetSLinkEvent (  BeBoard* pBoard) const
+    SLinkEvent D19cCbc3Event::GetSLinkEvent (  BeBoard* pBoard ) const
     {
         uint16_t cCbcCounter = 0;
         std::set<uint8_t> cEnabledFe;

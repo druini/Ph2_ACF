@@ -30,12 +30,9 @@ std::ostream& operator<< ( std::ostream& aStream, const fc7::XilinxBitFile& aBit
 
 namespace fc7
 {
-
   // http://forums.xilinx.com/t5/Spartan-Family-FPGAs/conversion-from-HEX-file-to-bit-for-header-in-multiboot/td-p/161590
   // http://www.xilinx.com/support/documentation/user_guides/ug470_7Series_Config.pdf
   // http://www.xilinx.com/support/documentation/user_guides/ug191.pdf  - Virtex 5
-
-
   ExceptionClass ( WrongFileExtension, "File has the wrong file-extension for the class trying to open it" )
   ExceptionClass ( FileNotFound, "File was not found" )
   ExceptionClass ( CorruptedFile, "File was corrupted" )

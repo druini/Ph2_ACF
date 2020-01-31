@@ -275,6 +275,10 @@ namespace Ph2_HwInterface
      * Returns data from buffernum and mpa.  Raw register output.
      */
     std::pair<std::vector<uint32_t>, std::vector<uint32_t>>   ReadData( Ph2_HwDescription::BeBoard* pBoard, int buffernum, int mpa);
+
+    // optical stuff 
+    void selectLink(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLinkId, uint32_t pWait_ms=100);
+    uint16_t ParseEvents(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData);
   };
 }
 

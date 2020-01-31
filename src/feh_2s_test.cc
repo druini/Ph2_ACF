@@ -1,0 +1,294 @@
+#include <cstring>
+
+#include "Utils/Utilities.h"
+#include "Utils/Timer.h"
+#include "tools/LatencyScan.h"
+#include "tools/PedeNoise.h"
+#include "tools/PedestalEqualization.h"
+#include "tools/ShortFinder.h"
+#include "tools/OpenFinder.h"
+#include "tools/CicFEAlignment.h"
+#include "../tools/BackEndAlignment.h"
+#include "Utils/argvparser.h"
+
+#ifdef __USE_ROOT__
+    #include "TROOT.h"
+    #include "TApplication.h"
+#endif
+
+#define __NAMEDPIPE__ 
+
+#ifdef __NAMEDPIPE__
+    #include "gui_logger.h"
+#endif
+
+
+#ifdef __ANTENNA__
+    #include "Antenna.h"
+#endif
+
+
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+using namespace Ph2_System;
+using namespace CommandLineProcessing;
+INITIALIZE_EASYLOGGINGPP
+
+#define CHIPSLAVE 4
+
+int main ( int argc, char* argv[] )
+{
+    //configure the logger
+    el::Configurations conf ("settings/logger.conf");
+    el::Loggers::reconfigureAllLoggers (conf);
+
+    ArgvParser cmd;
+
+    // init
+    cmd.setIntroductoryDescription ( "CMS Ph2_ACF  Commissioning tool to perform the following procedures:\n-Timing / Latency scan\n-Threshold Scan\n-Stub Latency Scan" );
+    // error codes
+    cmd.addErrorCode ( 0, "Success" );
+    cmd.addErrorCode ( 1, "Error" );
+    // options
+    cmd.setHelpOption ( "h", "help", "Print this help page" );
+
+    cmd.defineOption ( "file", "Hw Description File . Default value: settings/Commission_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
+    cmd.defineOptionAlternative ( "file", "f" );
+
+    cmd.defineOption ( "tuneOffsets", "tune offsets on readout chips connected to CIC.");
+    cmd.defineOptionAlternative ( "tuneOffsets", "t" );
+    
+    cmd.defineOption ( "measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
+    cmd.defineOptionAlternative ( "measurePedeNoise", "m" );
+   
+    cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "findShorts", "look for shorts", ArgvParser::NoOptionAttribute );
+
+    // general 
+    cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
+    cmd.defineOptionAlternative ( "batch", "b" );
+
+    cmd.defineOption ( "allChan", "Do pedestal and noise measurement using all channels? Default: false", ArgvParser::NoOptionAttribute );
+    cmd.defineOptionAlternative ( "allChan", "a" );
+
+    cmd.defineOption ( "hybridId", "Serial Number of mezzanine . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
+    cmd.defineOption ( "threshold", "Threshold value to set on chips for open and short finding",  ArgvParser::OptionRequiresValue );
+
+    cmd.defineOption ( "antennaDelay", "Delay between the antenna pulse and the delay [25 ns]", ArgvParser::OptionRequiresValue );
+    cmd.defineOption ( "latencyRange", "Range of latencies around pulse to scan [25 ns]", ArgvParser::OptionRequiresValue );
+    
+
+    cmd.defineOption ( "withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute );
+
+    int result = cmd.parse ( argc, argv );
+
+    if ( result != ArgvParser::NoParserError )
+    {
+        LOG (INFO) << cmd.parseErrorDescription ( result );
+        exit ( 1 );
+    }
+
+    // now query the parsing results
+    std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/Commissioning.xml";
+    bool cWithCIC = ( cmd.foundOption ( "withCIC" ) ) ;
+    bool cTune = ( cmd.foundOption ( "tuneOffsets" ) ) ;
+    bool cMeasurePedeNoise = ( cmd.foundOption( "measurePedeNoise") ); 
+    bool cFindOpens = (cmd.foundOption ("findOpens") )? true : false;
+    bool cShortFinder = ( cmd.foundOption ( "findShorts" ) ) ? true : false;
+    bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
+    bool cAllChan = ( cmd.foundOption ( "allChan" ) ) ? true : false;
+    int  cAntennaDelay = ( cmd.foundOption ( "antennaDelay" ) )   ?  convertAnyInt ( cmd.optionValue ( "antennaDelay" ).c_str() ) : -1;
+    int  cLatencyRange = ( cmd.foundOption ( "latencyRange" ) )   ?  convertAnyInt ( cmd.optionValue ( "latencyRange" ).c_str() ) :  -1;
+    uint32_t  cThreshold = ( cmd.foundOption ( "threshold" ) )   ?  convertAnyInt ( cmd.optionValue ( "threshold" ).c_str() ) :  560 ;
+    std::string cHybridId = ( cmd.foundOption ( "hybridId" ) ) ? cmd.optionValue ( "hybridId" ) : "xxxx";
+    std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
+    cDirectory += Form("FEH_2S_%s",cHybridId.c_str());
+    
+    TApplication cApp ( "Root Application", &argc, argv );
+    
+    if ( batchMode ) 
+        gROOT->SetBatch ( true );
+    else 
+        TQObject::Connect ( "TCanvas", "Closed()", "TApplication", &cApp, "Terminate()" );
+
+    std::string cResultfile = "Hybrid";
+    Timer t;
+
+    // measure hybrid current and temperature 
+    #ifdef __ANTENNA__
+        char cBuffer[120]; 
+        Antenna cAntenna;
+        cAntenna.setId("UIBV2-CMSPH2-BRD00050");
+        cAntenna.ConfigureSlaveADC (CHIPSLAVE);
+        float cTemp = cAntenna.GetHybridTemperature (CHIPSLAVE);
+        float cCurrent = cAntenna.GetHybridCurrent (CHIPSLAVE);
+        sprintf(cBuffer,"Hybrid %s [pre-configuration with default setttings]: temperature reading %.2f °C, current reading %.2f mA", cHybridId.c_str(), cTemp , cCurrent);
+        LOG (INFO) << BOLDBLUE << cBuffer << RESET;
+    #endif
+    
+    std::stringstream outp;
+    Tool cTool;
+    cTool.InitializeHw ( cHWFile, outp);
+    cTool.InitializeSettings ( cHWFile, outp );
+    LOG (INFO) << outp.str();
+    cTool.CreateResultDirectory ( cDirectory );
+    cTool.InitResultFile ( cResultfile );
+    // for some reason this does not work 
+    // error I get is new TRootSnifferFull("sniff"); 
+    //cTool.StartHttpServer();
+    cTool.ConfigureHw ();
+
+    // measure hybrid current and temperature 
+    #ifdef __ANTENNA__
+        cTemp = cAntenna.GetHybridTemperature (CHIPSLAVE);
+        cCurrent = cAntenna.GetHybridCurrent (CHIPSLAVE);
+        sprintf(cBuffer,"Hybrid %s [after configuration with default setttings]: temperature reading %.2f °C, current reading %.2f mA", cHybridId.c_str(), cTemp , cCurrent);
+        LOG (INFO) << BOLDBLUE << cBuffer << RESET;
+        cAntenna.close();
+    #endif
+
+    // align back-end .. if this moves to firmware then we can get rid of this step 
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit (&cTool);
+    cBackEndAligner.Initialise();
+    bool cAligned = cBackEndAligner.Align();
+    cBackEndAligner.resetPointers();
+    if(!cAligned )
+    {
+        LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
+        exit(0);
+    }
+
+    // if CIC is enabled 
+    if( cWithCIC )
+    {
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit (&cTool);
+        cCicAligner.Initialise ();
+        bool cPhaseAligned = cCicAligner.PhaseAlignment(100);
+        if( !cPhaseAligned ) 
+        {
+            LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET; 
+            exit(0);
+        }
+        LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET; 
+        bool cWordAligned = cCicAligner.WordAlignment(false);
+        if( !cWordAligned ) 
+        {
+            LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET; 
+            exit(0);
+        }
+        LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET; 
+    }
+    // measure some of the AMUX output voltages using ADC on UIB 
+    // MonitorAmux & hybridTester does not exist in this branch, nor it should...
+    // HybridTester cHybridTester;
+    // cHybridTester.Inherit (&cTool);
+    // cHybridTester.Initialize();
+    // monitor AMUX 
+    // cHybridTester.MonitorAmux("VBG_LDO");
+    // cHybridTester.MonitorAmux("VBGbias");
+    
+    // equalize thresholds on readout chips
+    if( cTune ) 
+    { 
+        t.start();
+        // now create a PedestalEqualization object
+        PedestalEqualization cPedestalEqualization;
+        cPedestalEqualization.Inherit (&cTool);
+        // second parameter disables stub logic on CBC3
+        cPedestalEqualization.Initialise ( cAllChan, true );
+        cPedestalEqualization.FindOffsets();
+        cPedestalEqualization.writeObjects();
+        cPedestalEqualization.dumpConfigFiles();
+        cPedestalEqualization.resetPointers();
+        t.show ( "Time to tune the front-ends on the system: " );
+    }
+
+    #ifdef __ANTENNA__
+        Antenna cAntenna2;
+        cAntenna2.ConfigureSlaveADC (CHIPSLAVE);
+        cTemp = cAntenna2.GetHybridTemperature (CHIPSLAVE);
+        cCurrent = cAntenna2.GetHybridCurrent (CHIPSLAVE);
+        sprintf(cBuffer,"Hybrid %s [after calibration]: temperature reading %.2f °C, current reading %.2f mA", cHybridId.c_str(), cTemp , cCurrent);
+        LOG (INFO) << BOLDBLUE << cBuffer << RESET;
+        cAntenna2.close();
+    #endif
+
+    // measure noise on FE chips 
+    if (cMeasurePedeNoise)
+    {
+        t.start();
+        //if this is true, I need to create an object of type PedeNoise from the members of Calibration
+        //tool provides an Inherit(Tool* pTool) for this purpose
+        PedeNoise cPedeNoise;
+        cPedeNoise.Inherit (&cTool);
+        //second parameter disables stub logic on CBC3
+        cPedeNoise.Initialise (cAllChan, true); // canvases etc. for fast calibration
+        cPedeNoise.measureNoise();
+        cPedeNoise.writeObjects();
+        cPedeNoise.dumpConfigFiles();
+        t.stop();
+        t.show ( "Time to Scan Pedestals and Noise" );
+    }
+
+    // For next step... set all thresholds on CBCs to 560 
+    cTool.setSameDac("VCth", cThreshold);
+    LOG (INFO) << BOLDBLUE << "Threshold for next steps is set to " << +cThreshold << " DAC units." << RESET;
+    // Inject charge with antenna circuit and look for opens 
+    if ( cFindOpens )
+    {
+        #ifdef __ANTENNA__
+
+            OpenFinder::Parameters cOfp;
+            // hard coded for now TODO: make this configurable
+            cOfp.potentiometer = 0x265;
+            // antenna group 
+            auto cSetting = cTool.fSettingsMap.find ( "AntennaGroup" );
+            cOfp.antennaGroup = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (0);
+            
+            // antenna delay 
+            if( cAntennaDelay > 0 )
+                cOfp.antennaDelay = cAntennaDelay;
+            else
+            {
+                auto cSetting = cTool.fSettingsMap.find ( "AntennaDelay" );
+                cOfp.antennaDelay = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (200);
+            }
+            
+            // scan range for latency  
+            if( cLatencyRange > 0 )
+                cOfp.latencyRange = cLatencyRange;
+            else
+            {
+                auto cSetting = cTool.fSettingsMap.find ( "ScanRange" );
+                cOfp.latencyRange = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (10);
+            }
+
+            
+            OpenFinder cOpenFinder;
+            cOpenFinder.Inherit (&cTool);
+            cOpenFinder.Initialise (cOfp);
+            LOG (INFO) << BOLDBLUE << "Starting open finding measurement [antenna potentiometer set to 0x" << std::hex << cOfp.potentiometer << std::dec << " written to the potentiometer" <<  RESET;
+            cOpenFinder.FindOpens();
+        	// TODO: write this one from cLatencyScan.writeObjects();
+            // cOpenFinder.writeObjects();
+        #endif
+    }   
+    //inject charge with TP and look for shorts 
+    if ( cShortFinder )
+    {
+        ShortFinder cShortFinder;
+        int cAmplitude = 25; // TODO: make this configureable
+        // V(pulse) = V_DDA*(255-cAmplitude)/255
+        cShortFinder.FindShorts(cThreshold, cAmplitude);
+    }    
+    cTool.SaveResults();
+    cTool.WriteRootFile();
+    cTool.CloseResultFile();
+    cTool.Destroy();
+
+    if ( !batchMode ) cApp.Run();
+    return 0;
+
+}

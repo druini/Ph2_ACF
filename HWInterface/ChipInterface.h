@@ -22,7 +22,8 @@ class ChannelContainer;
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
  */
-namespace Ph2_HwInterface {
+namespace Ph2_HwInterface 
+{
 
     using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>;    /*!< Map of Board connected */
 

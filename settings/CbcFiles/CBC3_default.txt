@@ -5,19 +5,19 @@
 *--------------------------------------------------------------------------------
 FeCtrl&TrgLat2                                  0x00	0x00	0x3C	0x40
 TriggerLatency1                               	0x00	0x01	0xC8	0xC8
-BetaMult&SLVS                                	0x00	0x02	0x18	0x57
+BetaMult&SLVS                                	0x00	0x02	0x18	0x38
 Ipre1                                        	0x00	0x03	0x46	0x2D
 Ipre2                                        	0x00	0x04	0x2E	0x50
 Ipsf                                         	0x00	0x05	0x7A	0x50
 Ipa                                          	0x00	0x06	0x6A	0x50
 Ipaos                                        	0x00	0x07	0x4B	0x2D
-Icomp                                        	0x00	0x09	0x23	0x28
+Icomp                                        	0x00	0x09	0x23	0x23
 Vplus1&2                                       	0x00	0x0B	0x77	0x77
 HIP&TestMode                                  	0x00	0x0C	0x00	0x00
-TestPulsePotNodeSel                           	0x00	0x0D	0x00	0xf3
+TestPulsePotNodeSel                           	0x00	0x0D	0x00	0x00
 TestPulseDel&ChanGroup                      	0x00	0x0E	0x00	0x00
-MiscTestPulseCtrl&AnalogMux                    	0x00	0x0F	0x00	0x60
-CALIbias                                       	0x00	0x10	0x10	0xF0
+MiscTestPulseCtrl&AnalogMux                    	0x00	0x0F	0x00	0x20
+CALIbias                                       	0x00	0x10	0x10	0x00
 CALVcasc                                       	0x00	0x11	0x11	0x3F
 Pipe&StubInpSel&Ptwidth                        	0x00	0x12	0x03	0x5F
 CoincWind&Offset34                            	0x00	0x13	0x00	0x00
@@ -73,29 +73,29 @@ MaskChannel-254-to-249                        	0x00	0x3F	0x00	0xFF
 *--------------------------------------------------------------------------------
 * RegName                                    	Page	Addr	Defval	Value
 *--------------------------------------------------------------------------------
-Bend0                                           0x00    0x40    0x99    0x99
-Bend1                                           0x00    0x41    0xAA    0xAA
-Bend2                                           0x00    0x42    0xBB    0xBB
+Bend0                                           0x00    0x40    0x99    0xFF
+Bend1                                           0x00    0x41    0xAA    0xEE
+Bend2                                           0x00    0x42    0xBB    0xDD
 Bend3                                           0x00    0x43    0xCC    0xCC
-Bend4                                           0x00    0x44    0xDD    0xDD
-Bend5                                           0x00    0x45    0xEE    0xEE
-Bend6                                           0x00    0x46    0xFF    0xFF
-Bend7                                           0x00    0x47    0x00    0x00
-Bend8                                           0x00    0x48    0x11    0x11
-Bend9                                           0x00    0x49    0x22    0x22
-Bend10                                          0x00    0x4A    0x33    0x33
-Bend11                                          0x00    0x4B    0x44    0x44
-Bend12                                          0x00    0x4C    0x55    0x55
-Bend13                                          0x00    0x4D    0x66    0x66
-Bend14                                          0x00    0x4E    0x77    0x78
+Bend4                                           0x00    0x44    0xDD    0xBB
+Bend5                                           0x00    0x45    0xEE    0xAA
+Bend6                                           0x00    0x46    0xFF    0x99
+Bend7                                           0x00    0x47    0x00    0x10
+Bend8                                           0x00    0x48    0x11    0x21
+Bend9                                           0x00    0x49    0x22    0x32
+Bend10                                          0x00    0x4A    0x33    0x43
+Bend11                                          0x00    0x4B    0x44    0x54
+Bend12                                          0x00    0x4C    0x55    0x65
+Bend13                                          0x00    0x4D    0x66    0x76
+Bend14                                          0x00    0x4E    0x77    0x87
 
 *--------------------------------------------------------------------------------
 * V Threshold
 *--------------------------------------------------------------------------------
 * RegName                                    	Page	Addr	Defval	Value
 *--------------------------------------------------------------------------------
-VCth1                                            0x00    0x4F    0x00    0x3A
-VCth2                                            0x00    0x50    0x02    0x02
+VCth1                                            0x00    0x4F    0x00    0x84
+VCth2                                            0x00    0x50    0x02    0x03
 
 *--------------------------------------------------------------------------------
 * Channel Offsets

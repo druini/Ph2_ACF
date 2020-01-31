@@ -70,7 +70,7 @@ void SLinkEvent::generateDAQHeader (uint32_t& pLV1Id, uint16_t& pBXId, int pSour
     uint64_t cWord = 0;
     //BOE_1 | EVENT_TYPE | L1 ID | BX ID | SOURCE ID | FOV
     cWord |= ( (uint64_t) BOE_1 & 0xF) << 60 | ( (uint64_t) EVENT_TYPE & 0xF) << 56 | ( (uint64_t) pLV1Id & 0x00FFFFFF) << 32 | ( (uint64_t) pBXId & 0x0FFF) << 20 | (pSourceId & 0x0FFF) << 8 | (FOV & 0xF) << 4;
-
+    LOG (DEBUG) << BOLDYELLOW << "DAQ header " << std::bitset<64>(cWord) << RESET;
     fData.insert (fData.begin(), cWord);
     fSize += 1;
 }
@@ -92,6 +92,10 @@ void SLinkEvent::generateTkHeader (uint32_t& pBeStatus, uint16_t& pNChips, std::
 
     fData.insert (fData.begin() + 1, cWord1);
     fData.insert (fData.begin() + 2, cWord2);
+
+    LOG (DEBUG) << BOLDYELLOW << "Tracker header " << std::bitset<64>(cWord1) << RESET;
+    LOG (DEBUG) << BOLDYELLOW << "Tracker header " << std::bitset<64>(cWord2) << RESET;
+    
     fSize += 2;
 }
 
@@ -118,11 +122,16 @@ void SLinkEvent::generateConditionData (ConditionDataSet* pSet)
     //if there are condition data defined
     if (pSet != nullptr && pSet->fCondDataVector.size() != 0)
     {
+        LOG (DEBUG) << BOLDYELLOW << +pSet->fCondDataVector.size() << " words in condition data." << RESET;
         std::vector<uint64_t> cVec;
         cVec.push_back (pSet->fCondDataVector.size() );
 
         for (auto cCondItem : pSet->fCondDataVector)
-            cVec.push_back ( ( (uint64_t) cCondItem.fFeId & 0xFF) << 56 | ( (uint64_t) cCondItem.fCbcId & 0xF) << 52 | ( (uint64_t) cCondItem.fPage & 0xF) << 48 | ( (uint64_t) cCondItem.fRegister & 0xFF) << 40 | (  (uint64_t) cCondItem.fUID & 0xFF) << 32 | cCondItem.fValue);
+        {
+            uint64_t cWord =( ( (uint64_t) cCondItem.fFeId & 0xFF) << 56 | ( (uint64_t) cCondItem.fCbcId & 0xF) << 52 | ( (uint64_t) cCondItem.fPage & 0xF) << 48 | ( (uint64_t) cCondItem.fRegister & 0xFF) << 40 | (  (uint64_t) cCondItem.fUID & 0xFF) << 32 | cCondItem.fValue);
+            LOG (DEBUG) << BOLDYELLOW << std::bitset<64>(cWord) << RESET;
+            cVec.push_back (cWord);
+        }
 
         fData.insert (fData.end(), cVec.begin(), cVec.end() );
         fSize += cVec.size();
@@ -131,10 +140,12 @@ void SLinkEvent::generateConditionData (ConditionDataSet* pSet)
 
 void SLinkEvent::generateDAQTrailer()
 {
-    fSize += 1;
+    //fSize += 1;
     uint64_t cWord = 0;
     //EOE_1 | EvtLength | CRC | Event Stat | TTS
+    //cWord |=  ( (uint64_t) EOE_1 << 56) |  ( ((uint64_t) fSize & 0xFFFFFF) << 32) | ( (TTS_VALUE & 0xF) << 4) ;
     cWord |= ( ( (uint64_t) EOE_1 & 0xFF) << 56 | ( (uint64_t) fSize & 0x00FFFFFF) << 32  | (TTS_VALUE & 0xF) << 4);
+    LOG (DEBUG) << BOLDYELLOW << "DAQ trailer " << std::bitset<64>(cWord) << RESET;
     fData.push_back (cWord);
     this->calculateCRC();
     fData.back() |= ( (uint64_t) fCRCVal & 0xFFFF) << 16;

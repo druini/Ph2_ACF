@@ -17,6 +17,7 @@
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/CbcInterface.h"
+#include "../HWInterface/CicInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/BeBoardFWInterface.h"
 #include "../HWDescription/Definition.h"
@@ -29,6 +30,9 @@
 #include "../Utils/Event.h"
 #include "../Utils/D19cCbc3Event.h"
 #include "../Utils/D19cCbc3EventZS.h"
+#include "../Utils/D19cCicEvent.h"
+#include "../Utils/D19cCic2Event.h"
+#include "../HWDescription/OuterTrackerModule.h"
 
 #include <unordered_map>
 #include <iostream>
@@ -57,6 +61,7 @@ namespace Ph2_System
     Ph2_HwInterface::ReadoutChipInterface* fReadoutChipInterface;
     Ph2_HwInterface::ChipInterface* fChipInterface; //!< Interface to the Chip
 
+    Ph2_HwInterface::CicInterface* fCicInterface;               //!< Interface to a CIC [only valid for OT]
     Ph2_HwInterface::SSAInterface* fSSAInterface;   //!< Interface to the SSA
     Ph2_HwInterface::MPAInterface* fMPAInterface;   //!< Interface to the MPA
 

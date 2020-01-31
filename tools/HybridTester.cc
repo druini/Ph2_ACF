@@ -1182,10 +1182,12 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
     sleep ( 0.1 );
     //cAntenna.TurnOnAnalogSwitchChannel (from 1 to 4); //put the signal on a given antenna strip
 
-         cAntenna.initializeAntenna(trigSource); //initialize USB communication
+         cAntenna.initializeAntenna(); //initialize USB communication
          cAntenna.ConfigureADC (cADCChipSlave); //initialize SPI communication for ADC
-         if(trigSource==5){
-         cAntenna.ConfigureClockGenerator (3, 8); //initialize SPI communication for ADC
+         cAntenna.SelectTriggerSource(trigSource);
+         if(trigSource==5)
+         {
+            cAntenna.ConfigureClockGenerator (3, 8); //initialize SPI communication for ADC
          }
          else if (trigSource==7){
          }

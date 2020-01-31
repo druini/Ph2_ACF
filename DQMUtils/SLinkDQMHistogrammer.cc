@@ -16,22 +16,21 @@
 #include "TH1D.h"
 #include "TProfile.h"
 #include "TFile.h"
+#include "TTree.h"
 #include "TString.h"
 #include "TDirectory.h"
 #include "TPaveStats.h"
 #include "TStyle.h"
 #include "TIterator.h"
 
-
-
 #ifdef __OTSDAQ__
 using namespace ots;
 #endif
 
-
-
-SLinkDQMHistogrammer::SLinkDQMHistogrammer (int evtType) :
-    eventType_ (evtType)
+SLinkDQMHistogrammer::SLinkDQMHistogrammer (int evtType, bool addTree, bool skipHist) :
+  eventType_ (evtType),
+  addTree_(addTree),
+  skipDebugHist_(skipHist)
 {
 }
 
@@ -46,494 +45,480 @@ SLinkDQMHistogrammer::~SLinkDQMHistogrammer()
     }
 }
 
-void SLinkDQMHistogrammer::bookHistograms (const std::vector<std::pair<uint8_t, std::vector<uint8_t> > >& fe_mapping)
+void SLinkDQMHistogrammer::bookHistograms (const std::vector<std::pair<uint8_t, std::vector<uint8_t>>>& link_mapping)
 {
-    totalNumberHitsH_ = new TH1I ("tot_hits", "Total Number of Hits", 101, -0.5, 100.5);
-    totalNumberStubsH_ = new TH1I ("tot_stubs", "Total Number of Stubs", 101, -0.5, 100.5);
+  std::cout << "nModules: " << link_mapping.size() << std::endl;
 
-    size_t ntot = 0;
+  // Open Tree  
+  if (addTree_) _ftree = new TTree("dqm", "Flat nTuple");  
 
-    for ( auto const& it : fe_mapping )
+  for ( auto const& it: link_mapping )
     {
-        uint8_t feId = it.first;
-        std::vector<uint8_t> rous = it.second;
-        uint8_t nrou = rous.size();
-        //book FEU histograms
-        bookFEUHistograms (feId, nrou);
+      uint8_t linkId = it.first;
+      std::vector<uint8_t> rous = it.second;
 
-        for (size_t irou = 0; irou < nrou; irou++)
-        {
-            uint8_t rouId = rous[irou];
-            LOG (INFO) << " fedId " << +feId << " rouId " << +rouId  << " ROUs " << +nrou  << std::endl;
-            ntot++;
-            // Book ROU label histograms
-            bookROUHistograms (feId, rouId);
-        }
+      LOG (INFO)  << " Booking Histograms for Link Id: " << +linkId << " with " << rous.size() << " ROUs " << std::endl;
+      bookMODHistograms(linkId, rous);
+      if (addTree_) bookNtuple(linkId);
     }
 }
 void SLinkDQMHistogrammer::fillHistograms (const std::vector<DQMEvent*>& event_list)
 {
     unsigned long ival = 0; // as the files is read in chunks
-
-    std::vector<uint8_t> rouErrs;
-    std::vector<uint16_t> rouPLAdds;
-    std::vector<uint16_t> rouL1Counters;
-    std::vector<uint8_t> evenChannels;
-    std::vector<uint8_t> oddChannels;
-
     for ( const auto& ev : event_list )
     {
         ival++;
         //std::cout << " Event # " << ival << std::endl;
-
-        // Read Condition Data
-        readConditionData (ev);
-
-        totalHits_ = 0;
-        totalStubs_ = 0;
-
-        FEUHistos feu_h;
-        uint8_t nRouFe = 0;
-        uint8_t nColFe = 0;
-        uint16_t xchn;
-
-        uint8_t nrou = 0;
-
-        for (auto& it : rouHMap_ )
-        {
-            uint16_t cKey = it.first;
-            ROUHistos rou_h = it.second;
-
-            uint8_t feId = (cKey >> 8) & 0xFF;
-            uint8_t rouId = cKey & 0xFF;
-
-            nrou++;
-
-            if (!rou_h.bookedHistos) continue;
-
-            //      std::cout << " Filling ROU histos for RouId " << +rouId << " in FeId " << +feId << std::endl;
-
-            if (nrou == 1)
-            {
-                std::map<uint8_t,  FEUHistos >::iterator fPos = feuHMap_.find (feId);
-
-                if (fPos != feuHMap_.end() )
-                {
-                    feu_h = fPos->second;
-                    nRouFe = feu_h.nROUs_;
-                    nColFe = feu_h.nColumns_;
-                }
-                else nRouFe = 0;
-            }
-
-            if (nRouFe == 0) continue;
-
-            // get Readout Data
-            const std::pair<ReadoutStatus, std::vector<bool>>& readoutData = ev->trkPayload().readoutData (cKey);
-
-            // Fill Readout Status
-            const ReadoutStatus& rs = readoutData.first;
-
-            uint8_t error_rou = 0;
-
-            if (rs.error2() ) error_rou = 1;
-
-            if (rs.error1() ) error_rou |= 1 << 1;
-
-            uint16_t pladdress_rou = rs.PA();
-            rouErrs.push_back (error_rou);
-            rouPLAdds.push_back (pladdress_rou);
-            rouL1Counters.push_back (rs.l1ACounter() );
-
-            // Fill Readout channel data
-            const std::vector<bool>& channelData = readoutData.second;
-            uint32_t nhits_rou = 0;
-
-            for ( size_t i = 0; i != channelData.size(); i++)
-            {
-                if ( !channelData[i] ) continue;
-
-                nhits_rou++;
-
-                if ( nColFe == 1 || (rouId <= (nRouFe / 2 - 1) ) ) xchn = 254 * rouId + i;
-                else  xchn = (nrou - 1) * 254 - ( (254 * rouId) + i);
-
-                fillROUHistograms (rou_h, i);
-
-                uint8_t ichan = xchn / 2 + 1;
-
-                //std::cout << " i " << i  << " xchn " << xchn << " ichan " << +ichan << std::endl;
-                if ( (xchn % 2) == 0) evenChannels.push_back (ichan);
-                else oddChannels.push_back (ichan);
-            }
-
-            rou_h.plAddH_->Fill (pladdress_rou);
-            rou_h.errBitH_->Fill (error_rou);
-            rou_h.hitVsVCTHH_->Fill (rou_h.vcthSetting_, nhits_rou);
-            totalHits_ += nhits_rou;
-
-            if (nrou == nRouFe)
-            {
-                //std::cout << " filling FEU histos for FeId " << +feId << " " << evenChannels.size() << "  " << oddChannels.size() << std::endl;
-                fillFEUHistograms (feu_h, evenChannels, oddChannels, rouErrs, rouPLAdds, rouL1Counters);
-                // stub data
-                const std::vector<StubInfo>&  stubInfos = ev->stubData().stubs (feId);
-                fillStubInformation (feu_h, stubInfos);
-                totalStubs_ += stubInfos.size();
-                evenChannels.clear();
-                oddChannels.clear();
-                rouErrs.clear();
-                rouPLAdds.clear();
-                rouL1Counters.clear();
-                nrou = 0;
-            }
-        }
-
-        if (totalNumberHitsH_) totalNumberHitsH_->Fill (totalHits_);
-
-        if (totalNumberStubsH_) totalNumberStubsH_->Fill (totalStubs_);
+        
+	try {
+          fillHistograms(ev);
+	}
+	catch (...) {
+          std::cout << " Failed to read back for histogram filling, Event # " << ival << std::endl;           
+	}
     }
 }
 void SLinkDQMHistogrammer::fillHistograms (const DQMEvent* event)
 {
-
-    std::vector<uint8_t> rouErrs;
+    std::vector<uint16_t> rouErrs;
     std::vector<uint16_t> rouPLAdds;
     std::vector<uint16_t> rouL1Counters;
-    std::vector<uint8_t> evenChannels;
-    std::vector<uint8_t> oddChannels;
+    std::vector<uint16_t> evenChannels;
+    std::vector<uint16_t> oddChannels;
 
-    //std::cout << " Event # " << ival << std::endl;
-
-    // Read Condition Data
     readConditionData (event);
 
-    totalHits_ = 0;
-    totalStubs_ = 0;
+    uint16_t modStripIndex;
 
-    FEUHistos feu_h;
-    uint8_t nRouFe = 0;
-    uint8_t nColFe = 0;
-    uint16_t xchn;
-
-    uint8_t nrou = 0;
-
-    for (auto& it : rouHMap_ )
+    uint32_t totHits;
+    uint32_t totStubs;
+    for (auto& imod: moduleHMap_ )
     {
-        uint16_t cKey = it.first;
-        ROUHistos rou_h = it.second;
+       uint8_t modId = imod.first;
+       MODHistos mod_h = imod.second;
+       uint8_t nRouMod = mod_h.totROUs_;
+       if (nRouMod == 0) continue;    
+       if (!mod_h.bookedHistos) continue;
+		 
+       uint8_t nrou = 0;
+       //std::cout << " Entering Module # " << +modId << std::endl;
+       for (auto& irou: mod_h.rouHMap_)
+	 {
+	    uint16_t cKey = irou.first;
+	    uint8_t feuId = (cKey >> 8) & 0xFF;
+	    uint8_t rouId = cKey & 0xFF;
+            TString hyb;
+            if (feuId == 0) hyb = "rightHyb";
+            else hyb = "leftHyb";
+	    ROUHistos rou_h = irou.second;
+          
+	    uint16_t dataKey = modId << 8 | rouId;            
+	   //	   uint16_t cKey_swaped = feId << 8 | rouId_swaped;
+        
+	    nrou++;
 
-        uint8_t feId = (cKey >> 8) & 0xFF;
-        uint8_t rouId = cKey & 0xFF;
+	    if (!rou_h.bookedHistos) continue;
 
-        nrou++;
+	    // get Readout Data
+	    const std::pair<ReadoutStatus, std::vector<bool>>& readoutData = event->trkPayload().readoutData (dataKey);
 
-        if (!rou_h.bookedHistos) continue;
+	    // Fill Readout Status
+	    const ReadoutStatus& rs = readoutData.first;
+	    uint8_t error_rou = 0;
+	    if (rs.error2() ) error_rou = 1;
+	    if (rs.error1() ) error_rou |= 1 << 1;
+	   
+	    uint16_t pladdress_rou = rs.PA();
+	    rouErrs.push_back (error_rou);
+	    rouPLAdds.push_back (pladdress_rou);
+	    rouL1Counters.push_back (rs.l1ACounter() );
 
-        //      std::cout << " Filling ROU histos for RouId " << +rouId << " in FeId " << +feId << std::endl;
+	    // Fill Readout channel data
+	    const std::vector<bool>& channelData = readoutData.second;
+	    uint32_t nhits_rou = 0;
+	   
+	    for ( size_t i = 0; i < channelData.size(); ++i) // CBC channels
+	    {
+	       if ( !channelData[i] ) continue;
+	       
+	       rou_h.channelOccupancyH_->Fill(i);	       
+	       modStripIndex = rouId *127 + std::floor(i/2);
+	       //	       else modStripIndex = (rouId-nRouPerFeu)*127 + 127 -1 - std::floor(i/2);
+	       //	       else modStripIndex = (nRouMod-1-rouId)*127  + std::floor((254-i)/2);
+	       
+	       nhits_rou++;
+	       
+	       if ( (i % 2) == 0) evenChannels.push_back (modStripIndex);
+	       else oddChannels.push_back (modStripIndex);
+	       //	       std::cout << "Link Id " << +modId << " Hybrid " << hyb.Data() << " ROU Id " << +rouId << " RouNew " << +(nRouMod-1-rouId)<< " i " << i  
+		 //			 << " Key " << cKey 
+	       //			 << " modStripIndex " << modStripIndex 
+	       //                        << " oddChannel size " << oddChannels.size() 
+	       //			 << " evenChanles size " << evenChannels.size() 
+	       //                        << std::endl;
+	    }
 
-        if (nrou == 1)
-        {
-            std::map<uint8_t,  FEUHistos >::iterator fPos = feuHMap_.find (feId);
+	    rou_h.plAddH_->Fill (pladdress_rou);
+	    rou_h.errBitH_->Fill (error_rou);
+	    rou_h.hitVsVCTHH_->Fill (rou_h.vcthSetting_, nhits_rou);
+	    totHits += nhits_rou;
+	   
+	    if (nrou == nRouMod)
+	     {
+	       // stub data
+	       try { 
+		 const std::vector<StubInfo>& stubInfos = event->stubData().stubs (modId);
+ 	         fillStubInformation (mod_h, stubInfos); //, varList);
+		 totStubs += stubInfos.size();
+	       }
+	       catch (...) {
+		 std::cout << "Caught exception while acessing Stub Data" << std::endl; 
+	       }
+	       fillMODHistograms (mod_h, totHits, totStubs, evenChannels, oddChannels);
+	       fillROUProperties (mod_h, rouErrs, rouPLAdds, rouL1Counters);
+	       fillNtupleBranch (modId, evenChannels, oddChannels, rouErrs, rouPLAdds, rouL1Counters);
+	   
+	       evenChannels.clear();
+	       oddChannels.clear();
+	       rouErrs.clear();
+	       rouPLAdds.clear();
+	       rouL1Counters.clear();
+	       totHits = 0;
+	       totStubs = 0;
+	     }
+	 }
+    }
+    if (addTree_ && _ftree) _ftree -> Fill();
+}
+void SLinkDQMHistogrammer::fillROUProperties(MODHistos& mod_h,
+					     std::vector<uint16_t>& errs,
+					     std::vector<uint16_t>& adds,
+					     std::vector<uint16_t>& counts)
+{    
+  
+  uint8_t totRous = mod_h.totROUs_;
+  uint8_t nRousPerFeu = mod_h.nROUsPerFEU_;
+  if (errs.size() != totRous || adds.size() != totRous || counts.size() != totRous) return;
+    
+  for (size_t ir = 0; ir <  totRous; ir++) {
+    uint8_t feu_id = ir/nRousPerFeu;
+    auto fPos = mod_h.feuHMap_.find(feu_id);
+    if (fPos != mod_h.feuHMap_.end()) 
+      {
+	FEUHistos feu_h = fPos->second;
+	
+	feu_h.rouErrorH_->Fill (ir * 4 + errs[ir]);
+	
+        for (size_t ir2 = 0; ir2 < totRous; ir2++)
+	  {
+	    if (ir == ir2) continue;
+	    uint32_t phase = (adds[ir] - adds[ir2] + 511) % 511;
+	    feu_h.PLAddPhaseDiffH_->Fill (phase);
+	    feu_h.PLAddPhaseCorrH_->Fill (adds[ir], adds[ir2]);
+	    feu_h.L1CounterDiffH_->Fill (counts[ir] - counts[ir2]);
+	    
+	  }
+      }
+  }
+}
+void SLinkDQMHistogrammer::fillMODHistograms (MODHistos& mod_h,
+					      uint32_t& tot_hits, uint32_t& tot_stubs,
+					      std::vector<uint16_t>& even_list,
+					      std::vector<uint16_t>& odd_list)
+{
+    if (!mod_h.bookedHistos) return;
 
-            if (fPos != feuHMap_.end() )
-            {
-                feu_h = fPos->second;
-                nRouFe = feu_h.nROUs_;
-                nColFe = feu_h.nColumns_;
-            }
-            else nRouFe = 0;
-        }
+    uint8_t nRousPerFeu = mod_h.nROUsPerFEU_;
+    uint16_t strEven;
+    uint16_t strOdd;
+    uint16_t strEvenSwapped;
+    uint16_t strOddSwapped;
+    uint8_t fe_id = 0;
 
-        if (nRouFe == 0) continue;
+    if      (!even_list.size() && !odd_list.size() ) mod_h.hitCountH_->Fill (1);
+    else if (!even_list.size() && !odd_list.size() ) mod_h.hitCountH_->Fill (2);
+    else if (even_list.size()  && !odd_list.size() ) mod_h.hitCountH_->Fill (3);
+    else if (even_list.size()  && odd_list.size() )  mod_h.hitCountH_->Fill (4);
 
-        // get Readout Data
-        const std::pair<ReadoutStatus, std::vector<bool>>& readoutData = event->trkPayload().readoutData (cKey);
+    for (uint16_t i = 0; i < even_list.size(); i++)
+    {
+      strOdd = 9999;
+      if (even_list[i] < nRousPerFeu*127) fe_id = 0;
+      else fe_id = 1;
+      strEven = even_list[i] - fe_id * nRousPerFeu * 127;          
+      if (odd_list.size() == even_list.size())  strOdd = odd_list[i] - fe_id * nRousPerFeu * 127;
+      
+      if (fe_id == 0)strEvenSwapped = strEven;
+      else strEvenSwapped = fe_id * nRousPerFeu * 127 - strEven;
 
-        // Fill Readout Status
-        const ReadoutStatus& rs = readoutData.first;
+      //      if (fe_id == 1) std::cout << " i " << i << " original strip Number " << even_list[i] << " strip number " << strEven << " FeU Id" <<  +fe_id << " strip Number swapped " << strEvenSwapped << std::endl;
+      auto fPos = mod_h.feuHMap_.find(fe_id);
+      if (fPos != mod_h.feuHMap_.end()) 
+	{
+         FEUHistos feu_h = fPos->second;
+         feu_h.bottomSensorHitProfH_->Fill(strEven);
+	 if (strOdd != 9999) 
+	   {
+	     feu_h.hitCorrH_->Fill(strEven, strOdd);
+	     feu_h.deltaHitH_->Fill(strEven - strOdd);
+	   } 
+	}
+      mod_h.bottomSensorHitProfH_->Fill((2-fe_id), strEvenSwapped);
+      mod_h.bottomSensorHitProfUnfoldH_->Fill(even_list[i]);
+      if (strOdd != 9999) mod_h.hitCorrH_->Fill(odd_list[i], even_list[i]);
+    }
+    for (uint16_t i = 0; i <  odd_list.size(); i++)
+      {
+	if (odd_list[i] < nRousPerFeu*127) fe_id = 0;
+	else fe_id = 1;
+	strOdd = odd_list[i] - fe_id * nRousPerFeu * 127;          
+	
+	if (fe_id == 0)strOddSwapped = strOdd;
+	else strOddSwapped = fe_id * nRousPerFeu * 127 - strOdd;
+	auto fPos = mod_h.feuHMap_.find(fe_id);
+	if (fPos != mod_h.feuHMap_.end()) 
+	  {
+	    FEUHistos feu_h = fPos->second;
+	    feu_h.topSensorHitProfH_->Fill(strOdd);
+	  }
+	mod_h.topSensorHitProfH_->Fill((2-fe_id), strOddSwapped);
+	mod_h.topSensorHitProfUnfoldH_->Fill(odd_list[i]);
+      }
 
-        uint8_t error_rou = 0;
 
-        if (rs.error2() ) error_rou = 1;
+    mod_h.totalNumberHitsH_->Fill(tot_hits);  
+    mod_h.totalNumberStubsH_->Fill(tot_stubs);
+}
+void SLinkDQMHistogrammer::fillNtupleBranch (uint8_t id,
+					     const std::vector<uint16_t>& even_list,
+					     const std::vector<uint16_t>& odd_list,
+					     const std::vector<uint16_t>& errs,
+					     const std::vector<uint16_t>& adds,
+					     const std::vector<uint16_t>& counts)
+{
+    auto fPos = ntupleMap_.find (id);
+    if (fPos != ntupleMap_.end() )
+    {
+      fPos->second->hitEven->clear();
+      std::copy(even_list.begin(), even_list.end(), back_inserter(*fPos->second->hitEven));
 
-        if (rs.error1() ) error_rou |= 1 << 1;
+      fPos->second->hitOdd->clear();
+      std::copy(odd_list.begin(), odd_list.end(), back_inserter(*fPos->second->hitOdd));
 
-        uint16_t pladdress_rou = rs.PA();
-        rouErrs.push_back (error_rou);
-        rouPLAdds.push_back (pladdress_rou);
-        rouL1Counters.push_back (rs.l1ACounter() );
+      fPos->second->error->clear();
+      std::copy(errs.begin(), errs.end(), back_inserter(*fPos->second->error));
 
-        // Fill Readout channel data
-        const std::vector<bool>& channelData = readoutData.second;
-        uint32_t nhits_rou = 0;
+      fPos->second->plAdd->clear();
+      std::copy(adds.begin(), adds.end(), back_inserter(*fPos->second->plAdd));
 
-        for ( size_t i = 0; i != channelData.size(); i++)
-        {
-            if ( !channelData[i] ) continue;
-
-            nhits_rou++;
-
-            if ( nColFe == 1 || (rouId <= (nRouFe / 2 - 1) ) ) xchn = 254 * rouId + i;
-            else  xchn = (nrou - 1) * 254 - ( (254 * rouId) + i);
-
-            fillROUHistograms (rou_h, i);
-
-            uint8_t ichan = xchn / 2 + 1;
-
-            //std::cout << " i " << i  << " xchn " << xchn << " ichan " << +ichan << std::endl;
-            if ( (xchn % 2) == 0) evenChannels.push_back (ichan);
-            else oddChannels.push_back (ichan);
-        }
-
-        rou_h.plAddH_->Fill (pladdress_rou);
-        rou_h.errBitH_->Fill (error_rou);
-        rou_h.hitVsVCTHH_->Fill (rou_h.vcthSetting_, nhits_rou);
-        totalHits_ += nhits_rou;
-
-        if (nrou == nRouFe)
-        {
-            //std::cout << " filling FEU histos for FeId " << +feId << " " << evenChannels.size() << "  " << oddChannels.size() << std::endl;
-            fillFEUHistograms (feu_h, evenChannels, oddChannels, rouErrs, rouPLAdds, rouL1Counters);
-            // stub data
-            const std::vector<StubInfo>&  stubInfos = event->stubData().stubs (feId);
-            fillStubInformation (feu_h, stubInfos);
-            totalStubs_ += stubInfos.size();
-            evenChannels.clear();
-            oddChannels.clear();
-            rouErrs.clear();
-            rouPLAdds.clear();
-            rouL1Counters.clear();
-            nrou = 0;
-        }
-
-        if (totalNumberHitsH_) totalNumberHitsH_->Fill (totalHits_);
-
-        if (totalNumberStubsH_) totalNumberStubsH_->Fill (totalStubs_);
+      fPos->second->l1Counter->clear();
+      std::copy(counts.begin(), counts.end(), back_inserter(*fPos->second->l1Counter));
     }
 }
-void SLinkDQMHistogrammer::fillROUHistograms (ROUHistos& rou_h, uint8_t ch)
-{
-    uint8_t ichan = ch / 2 + 1;
-
-    if ( (ch % 2) == 0) rou_h.evenChanOccuH_->Fill (ichan);
-    else rou_h.oddChanOccuH_->Fill (ichan );
-}
-void SLinkDQMHistogrammer::fillFEUHistograms (FEUHistos& feu_h,
-        std::vector<uint8_t>& even_list,
-        std::vector<uint8_t>& odd_list,
-        std::vector<uint8_t>& errs,
-        std::vector<uint16_t>& adds,
-        std::vector<uint16_t>& counts)
-{
-    if (!feu_h.bookedHistos) return;
-
-    uint8_t nrou = feu_h.nROUs_;
-    uint8_t col = feu_h.nColumns_;
-
-    for (uint8_t i = 0; i != even_list.size(); i++)
-    {
-        feu_h.sen0HitProfH_->Fill (even_list[i], col - 1);
-        feu_h.sen0C0HitProfH_->Fill (even_list[i]);
-
-        if (col == 2) feu_h.sen0C1HitProfH_->Fill (even_list[i]);
-
-        feu_h.sen0HitProfUnfoldedH_->Fill ( (col - 1) * 127 * nrou / 2 + even_list[i]);
-
-        if (even_list.size() == odd_list.size() )
-        {
-            feu_h.hitCorrC0H_->Fill (even_list[i], odd_list[i]);
-            feu_h.deltaHitC0H->Fill (even_list[i] - odd_list[i]);
-
-            if (col == 2)
-            {
-                feu_h.hitCorrC1H_->Fill (even_list[i], odd_list[i]);
-                feu_h.deltaHitC1H->Fill (even_list[i] - odd_list[i]);
-            }
-        }
-    }
-
-    for (uint8_t i = 0; i <  odd_list.size(); i++)
-    {
-        feu_h.sen1HitProfH_->Fill (odd_list[i], col - 1);
-        feu_h.sen1C0HitProfH_->Fill (odd_list[i]);
-
-        if (col == 2) feu_h.sen1C1HitProfH_->Fill (odd_list[i]);
-
-        feu_h.sen1HitProfUnfoldedH_->Fill ( (col - 1) * 127 * 8 + odd_list[i]);
-    }
-
-    if (!even_list.size() && !odd_list.size() )      feu_h.senCorrH_->Fill (1);
-    else if (!even_list.size() && !odd_list.size() ) feu_h.senCorrH_->Fill (2);
-    else if (even_list.size() && !odd_list.size() )  feu_h.senCorrH_->Fill (3);
-    else if (even_list.size() && odd_list.size() )   feu_h.senCorrH_->Fill (4);
-
-    for (size_t ir = 0; ir !=  errs.size(); ir++) feu_h.rouErrorH_->Fill (ir * 4 + errs[ir]);
-
-    for (size_t ip1 = 0; ip1 !=  adds.size(); ip1++)
-    {
-        for (size_t ip2 = 0; ip2 != adds.size(); ip2++)
-        {
-            if (ip1 == ip2) continue;
-
-            uint32_t phase = (adds[ip1] - adds[ip2] + 511) % 511;
-            feu_h.PLAddPhaseDiffH_->Fill (phase);
-            feu_h.PLAddPhaseCorrH_->Fill (adds[ip1], adds[ip2]);
-        }
-    }
-
-    for (size_t ic1 = 0; ic1 !=  counts.size(); ic1++)
-    {
-        for (size_t ic2 = 0; ic2 != counts.size(); ic2++)
-        {
-            if (ic1 == ic2) continue;
-
-            feu_h.L1CounterDiffH_->Fill (counts[ic1] - counts[ic2]);
-        }
-    }
-}
-void SLinkDQMHistogrammer::saveHistograms (const std::string& out_file)
-{
-    TFile* fout = TFile::Open ( out_file.c_str(), "RECREATE" );
+void SLinkDQMHistogrammer::saveHistograms (const std::string& dqmFile, const std::string& flatTreeFile)
+{ 
+    TFile* fout = TFile::Open ( dqmFile.c_str(), "RECREATE" );
+    fout->cd();
 
     // sensor plots
-    for ( auto& imap : feuHMap_ )
+    for ( auto& imod : moduleHMap_ )
     {
-        uint8_t feId = imap.first;
-        TString name = " FeId_";
-        name += feId;
-
-        //std::cout << " Saving Histograms for  FeId  " << +feId <<  " in => " << name.Data() << std::endl;
-
+        uint8_t modId = imod.first;
+        TString name = "Module_";
+        name += modId;      
+	
         fout->mkdir (name);
         fout->cd (name);
-        FEUHistos feu_h = imap.second;
-
-        if (feu_h.bookedHistos)
+        MODHistos mod_h = imod.second;
+        if (mod_h.bookedHistos)
         {
-            feu_h.hitCorrC0H_->Write();
-            feu_h.deltaHitC0H->Write();
+	  mod_h.totalNumberHitsH_->Write();
+	  mod_h.totalNumberStubsH_->Write();
+          mod_h.hitCountH_->Write();
+	  mod_h.bottomSensorHitProfH_->Write();
+	  mod_h.topSensorHitProfH_->Write();
+	  mod_h.bottomSensorHitProfUnfoldH_->Write();
+          mod_h.topSensorHitProfUnfoldH_->Write();
+          mod_h.hitCorrH_->Write();
 
-            feu_h.sen0HitProfH_->Write();
-            feu_h.sen1HitProfH_->Write();
-
-            feu_h.sen0HitProfUnfoldedH_->Write();
-            feu_h.sen1HitProfUnfoldedH_->Write();
-
-            feu_h.sen0C0HitProfH_->Write();
-            feu_h.sen1C0HitProfH_->Write();
-
-            if (feu_h.nColumns_ == 2)
-            {
-                feu_h.hitCorrC1H_->Write();
-                feu_h.deltaHitC1H->Write();
-                feu_h.sen0C1HitProfH_->Write();
-                feu_h.sen1C1HitProfH_->Write();
-            }
-
-            feu_h.L1CounterDiffH_->Write();
-            feu_h.PLAddPhaseDiffH_->Write();
-            feu_h.PLAddPhaseCorrH_->Write();
-            feu_h.rouErrorH_->Write();
-
-            feu_h.senCorrH_->Write();
-            feu_h.stubCountH_->Write();
-            feu_h.stubPositionH_->Write();
-            feu_h.stubBendH_->Write();
-
-            feu_h.stubVsHVH_->Write();
-        }
+	  mod_h.stubCountH_->Write();
+	  mod_h.stubPositionH_->Write();
+	  mod_h.stubBendH_->Write();
+	}
+	fout->cd();
+	for ( auto& ifeu : mod_h.feuHMap_ )
+	{
+	    uint8_t feId = ifeu.first;
+	    
+	    TString name = "Module_";
+	    name += modId;
+            name += "/";
+            if (feId == 0)  name += "rightHyb";
+	    else name += "leftHyb";
+	    
+            std::cout << " Saving Histograms for  FeId  " << +feId <<  " in => " << name.Data() << std::endl;
+	    
+	    fout->mkdir (name);
+	    fout->cd (name);
+	    FEUHistos feu_h = ifeu.second;
+	    if (!feu_h.bookedHistos) continue;
+	    
+	    feu_h.bottomSensorHitProfH_->Write();
+	    feu_h.topSensorHitProfH_->Write();
+	    feu_h.hitCorrH_->Write();
+	    feu_h.deltaHitH_->Write();
+	    
+	    feu_h.L1CounterDiffH_->Write();
+	    feu_h.PLAddPhaseDiffH_->Write();
+	    feu_h.PLAddPhaseCorrH_->Write();
+	    feu_h.rouErrorH_->Write();
+	    
+	    fout->cd ();
+	}
+	for ( auto& irou : mod_h.rouHMap_ )
+	{
+	     ROUHistos rou_h = irou.second;
+	     if (!rou_h.bookedHistos) continue;
+	     
+	     uint16_t key = irou.first;
+	     uint8_t feId = (key >> 8) & 0xFF;
+	     uint8_t rouId = key & 0xFF;
+	     	      	      
+	     TString name = "Module_";
+	     name += modId;
+	     name += "/";
+	     if (feId == 0)  name += "rightHyb";
+	     else name += "leftHyb";
+	     name += "/";
+	     name += "RouId_";
+	     name +=  rouId;
+	     std::cout << " Saving Histograms for  RouId " << +rouId <<  " in => " << name.Data() << std::endl;
+	     
+	     fout->mkdir (name);
+	     fout->cd (name);
+	     rou_h.errBitH_->Write();
+	     rou_h.plAddH_->Write();
+	     rou_h.channelOccupancyH_->Write();
+	     rou_h.hitVsVCTHH_->Write();
+	     fout->cd();
+	}	
     }
-
-    // ROU sections
     fout->cd();
-
-    for ( auto& imap : rouHMap_ )
-    {
-        uint8_t key = imap.first;
-
-        uint8_t feId = (key >> 8) & 0xFF;
-        uint8_t rouId = key & 0xFF;
-        //std::cout << " Save  for FeId  RouId " << +feId << " " << +rouId << std::endl;
-
-        TString name = " FeId_";
-        name += feId;
-        name += "/";
-        name += "RouId_";
-        name +=  rouId;
-        //std::cout << " Saving Histograms for  FeId  " << +feId << " RouId " << +rouId<< " in => " << name.Data() << std::endl;
-
-        fout->mkdir (name);
-        fout->cd (name);
-        ROUHistos rou_h = imap.second;
-
-        if (rou_h.bookedHistos)
-        {
-            rou_h.errBitH_->Write();
-            rou_h.plAddH_->Write();
-            rou_h.evenChanOccuH_->Write();
-            rou_h.oddChanOccuH_->Write();
-
-            rou_h.hitVsVCTHH_->Write();
-        }
-    }
-
-    // common ones
-    fout->cd();
-
-    if (totalNumberHitsH_) totalNumberHitsH_->Write();
-
-    if (totalNumberStubsH_) totalNumberStubsH_->Write();
-
     fout->Close();
+
+    if (addTree_ && _ftree) {
+        TFile* trfile = TFile::Open(flatTreeFile.c_str(), "RECREATE");
+        _ftree -> Print();
+        _ftree -> Write();
+        trfile -> Write();
+        trfile -> Close();
+    }
 }
 void SLinkDQMHistogrammer::resetHistograms()
 {
     TIter next (gROOT->GetList() );
     TObject* obj;
-
     while ( (obj = next() ) ) if (obj->InheritsFrom ("TH1") ) dynamic_cast<TH1*> (obj)->Reset();
 }
-void SLinkDQMHistogrammer::bookFEUHistograms (uint8_t fe_id, uint8_t n_rou)
+void SLinkDQMHistogrammer::bookMODHistograms(uint8_t mod_id, std::vector<uint8_t>& rou_vec)
 {
-    TString ss_feu = "FEU_";
-    ss_feu += fe_id;
-    FEUHistos feu_h;
+  if (moduleHMap_.find(mod_id) != moduleHMap_.end()) return;
 
-    uint16_t nbin;
-    uint8_t ncol;
+  uint8_t nRouTot = rou_vec.size();
+  uint8_t nRouPerFeu = nRouTot/2;
+  if (nRouTot == 2) nRouPerFeu = 2;
 
-    if (n_rou == 2)
-    {
-        ncol = 1;
-        nbin = n_rou * 127;
-    }
-    else
-    {
-        ncol = 2;
-        nbin = n_rou / 2 * 127;
-    }
+  TString ss_mod = "Module_";
+  ss_mod += mod_id;
+  
+  MODHistos mod_h;
 
-    feu_h.senCorrH_ = new TH1I ("SensorHitCount_" + ss_feu, "SensorHitCount_" + ss_feu, 4, 0.5, 4.5 );
-    feu_h.senCorrH_->GetXaxis()->SetBinLabel (1, "No hits");
-    feu_h.senCorrH_->GetXaxis()->SetBinLabel (2, "Even & !Odd");
-    feu_h.senCorrH_->GetXaxis()->SetBinLabel (3, "Odd & !Even");
-    feu_h.senCorrH_->GetXaxis()->SetBinLabel (4, "Even & Odd");
+  uint16_t nbin = nRouPerFeu * 128;
+  
+  mod_h.totalNumberHitsH_ = new TH1I ("Tot_Hits_"+ss_mod, "TotalNumberOfHits_"+ss_mod, 101, -0.5, 100.5);
+  mod_h.totalNumberStubsH_ = new TH1I ("Tot_Stubs_"+ss_mod, "TotalNumberOfStubs_"+ss_mod, 101, -0.5, 100.5);
+  
+  mod_h.hitCountH_ = new TH1I ("SensorHitCount_" + ss_mod, "SensorHitCount_" + ss_mod, 4, 0.5, 4.5 );
+  mod_h.hitCountH_->GetXaxis()->SetBinLabel (1, "No hits");
+  mod_h.hitCountH_->GetXaxis()->SetBinLabel (2, "Even & !Odd");
+  mod_h.hitCountH_->GetXaxis()->SetBinLabel (3, "Odd & !Even");
+  mod_h.hitCountH_->GetXaxis()->SetBinLabel (4, "Even & Odd");
 
-    feu_h.sen0HitProfH_ = new TH2I ("Sensor0HitProfile_" + ss_feu, "Sensor0HitProfile_" + ss_feu, nbin, -0.5, nbin - 0.5, ncol, -0.5, ncol - 0.5);
-    feu_h.sen0HitProfH_->SetStats (false);
-    feu_h.sen1HitProfH_ = new TH2I ("Sensor1HitProfile_" + ss_feu, "Sensor1HitProfile_" + ss_feu, nbin, -0.5, nbin - 0.5, ncol, -0.5, ncol - 0.5);
-    feu_h.sen1HitProfH_->SetStats (false);
-    feu_h.hitCorrC0H_ = new TH2I ("HitCorr_col0_" + ss_feu, "HitCorr_col0_" + ss_feu, nbin, -0.5, nbin - 0.5, nbin, -0.5, nbin - 0.5);
-    feu_h.hitCorrC0H_->SetStats (false);
+  mod_h.bottomSensorHitProfH_ = new TH2I ("BottomSensorHitProfile_" + ss_mod, "BottomSensorHitProfile_" + ss_mod, 2, 0.5, 2.5, nbin, -0.5, nbin - 0.5);
+  mod_h.bottomSensorHitProfH_->GetXaxis()->SetBinLabel (1, "Left Hybrid");
+  mod_h.bottomSensorHitProfH_->GetXaxis()->SetBinLabel (2, "Right Hybrid");
+  mod_h.bottomSensorHitProfH_->SetStats (false);
+  mod_h.topSensorHitProfH_ = new TH2I ("TopSensorHitProfile_" + ss_mod, "TopSensorHitProfile_" + ss_mod, 2, 0.5, 2.5, nbin, -0.5, nbin - 0.5);
+  mod_h.topSensorHitProfH_->GetXaxis()->SetBinLabel (1, "Left Hybrid");
+  mod_h.topSensorHitProfH_->GetXaxis()->SetBinLabel (2, "Right Hybrid");
+  mod_h.topSensorHitProfH_->SetStats (false);
 
-    feu_h.deltaHitC0H = new TH1D ("HitDifference_col0_" + ss_feu, "HitDifference_col0_" + ss_feu, 2 * nbin,  -nbin, nbin);
+  mod_h.bottomSensorHitProfUnfoldH_ = new TH1I ("BottomSensorHitProfileUnfolded_" + ss_mod, "BottomSensorHitProfileUnfolded_" + ss_mod, nbin*2, -0.5, nbin*2 - 0.5);
+  mod_h.bottomSensorHitProfUnfoldH_->SetStats (false);
+  mod_h.topSensorHitProfUnfoldH_ = new TH1I ("TopSensorHitProfileUnfolded_" + ss_mod, "TopSensorHitProfileUnfolded_" + ss_mod, nbin*2, -0.5, nbin*2 - 0.5);
+  mod_h.topSensorHitProfUnfoldH_->SetStats (false);
+  
+  mod_h.hitCorrH_ = new TH2I ("SensorHitCorr_" + ss_mod, "SensorHitCorrelation_" + ss_mod, nbin*2, -0.5, nbin*2 - 0.5,nbin*2, -0.5, nbin*2 - 0.5);
+  mod_h.hitCorrH_->SetStats (false);
+  mod_h.hitCorrH_->GetXaxis()->SetTitle("Top Sensor Hit");
+  mod_h.hitCorrH_->GetYaxis()->SetTitle("Bottom Sensor Hit");
 
-    feu_h.sen0HitProfUnfoldedH_ = new TH1I ("Sensor0_HitProf_Unfold_" + ss_feu, "Sensor0_HitProf_Unfold_" + ss_feu, nbin * ncol, -0.5, nbin * ncol - 0.5);
-    feu_h.sen1HitProfUnfoldedH_ = new TH1I ("Sensor1_HitProf_Unfold_" + ss_feu, "Sensor1_HitProf_Unfold_" + ss_feu, nbin * ncol, -0.5, nbin * ncol - 0.5);
+  // Stub Information
+  mod_h.stubCountH_ = new TH1I ("StubCount_" + ss_mod, "StubCount_" + ss_mod, 4 * nRouTot, 0.0, nRouTot * 4);
+  mod_h.stubCountH_->GetXaxis()->SetNdivisions (4 * 100);
+  
+  for (size_t i = 0; i < nRouTot; i++)
+  {
+      TString tag = "chip";
+      tag += i;
+      mod_h.stubCountH_->GetXaxis()->SetBinLabel ( (i * 4 + 1), tag + "(0)");
+      mod_h.stubCountH_->GetXaxis()->SetBinLabel ( (i * 4 + 2), tag + "(1)");
+      mod_h.stubCountH_->GetXaxis()->SetBinLabel ( (i * 4 + 3), tag + "(2)");
+      mod_h.stubCountH_->GetXaxis()->SetBinLabel ( (i * 4 + 4), tag + "(3)");
+      
+      mod_h.bottomSensorHitProfUnfoldH_->GetXaxis()->SetBinLabel(i*127+60, tag);
+      mod_h.topSensorHitProfUnfoldH_->GetXaxis()->SetBinLabel(i*127+60, tag);
+  }
+  
+  mod_h.stubPositionH_ = new TH1F ("StubPosition" + ss_mod, "StubPosition" + ss_mod, nbin, -0.5, nbin+0.5);
+  mod_h.stubBendH_ = new TH1I ("StubBend_" + ss_mod, "StubBend_" + ss_mod, 31, -15.5, 15.5);
+  
+  for (size_t irou = 0; irou < nRouTot; irou++)
+  {
+      uint8_t feu_id = irou/nRouPerFeu;
+      if (irou%nRouPerFeu == 0) {     
+	FEUHistos feuH;
+	LOG (INFO) << " Booking Histograms for FEU " << +feu_id << " in Link Id " << +mod_id  << " With " << +nRouPerFeu << " ROUs" << std::endl;
+	bookFEUHistograms(mod_id, feu_id, feuH, nRouPerFeu);
+	mod_h.feuHMap_.insert({feu_id, feuH});
+      }
+      uint8_t rou_id = rou_vec[irou];
+      LOG (INFO) << " Booking Histograms for ROU " << +rou_id << " in FEU Id " << +feu_id  << " in Link Id " << +mod_id <<std::endl;
+      ROUHistos rouH;
+      bookROUHistograms (mod_id, feu_id, rou_id, rouH);
+      uint16_t key = feu_id << 8 | rou_id;
+      mod_h.rouHMap_.insert({key,rouH});
+  }
+  mod_h.totROUs_ = nRouTot; 
+  mod_h.nROUsPerFEU_ = nRouPerFeu; 
+  mod_h.bookedHistos  = true;
+  moduleHMap_.insert ({mod_id, mod_h});
+}
+void SLinkDQMHistogrammer::bookFEUHistograms (uint8_t mod_id, uint8_t feu_id, FEUHistos& feu_h, uint8_t n_rou)
+{
+    TString ss_feu;
+    ss_feu = "Mod_";
+    ss_feu += mod_id;
+    if (feu_id == 0) ss_feu += "_rightHyb";
+    else ss_feu += "_leftHyb";
+   
+    uint16_t nbin = n_rou * 127;
 
-    feu_h.sen0C0HitProfH_ = new TH1I ("Sensor0_HitProf_col0_" + ss_feu, "Sensor0_HitProf_col0_" + ss_feu, nbin, -0.5, nbin - 0.5);
-    feu_h.sen1C0HitProfH_ = new TH1I ("Sensor1_HitProf_col0_" + ss_feu, "Sensor1_HitProf_col0_" + ss_feu, nbin, -0.5, nbin - 0.5);
+    feu_h.bottomSensorHitProfH_ = new TH1I ("BottomSensor_HitProf_" + ss_feu, "BottomSensor_HitProf_" + ss_feu, nbin, -0.5, nbin - 0.5);
+    feu_h.topSensorHitProfH_ = new TH1I ("TopSensor_HitProf_" + ss_feu, "TopSensor_HitProf_" + ss_feu, nbin, -0.5, nbin - 0.5);
+    feu_h.hitCorrH_ = new TH2I ("HitCorr_" + ss_feu, "HitCorr_" + ss_feu, nbin, -0.5, nbin - 0.5, nbin, -0.5, nbin - 0.5);
+    feu_h.hitCorrH_->SetStats (false);
+    feu_h.deltaHitH_ = new TH1D ("HitDifference_" + ss_feu, "HitDifference_" + ss_feu, 2 * nbin,  -nbin, nbin);
 
     feu_h.L1CounterDiffH_  = new TH1I ("L1CounterDiff_" + ss_feu, "L1CounterDiff_" + ss_feu, 1023, -511.5, 511.5);
     feu_h.PLAddPhaseDiffH_ = new TH1I ("PipeLineAddPhasedDiff_" + ss_feu, "PipeLineAddPhasedDiff_" + ss_feu, 1023, -511.5, 511.5);
@@ -554,95 +539,62 @@ void SLinkDQMHistogrammer::bookFEUHistograms (uint8_t fe_id, uint8_t n_rou)
         feu_h.rouErrorH_->GetXaxis()->SetBinLabel ( (i * 4 + 4), tag + "3)");
     }
 
-    if (ncol == 2)
-    {
-
-        feu_h.hitCorrC1H_ = new TH2I ("HitCorr_col1_" + ss_feu, "HitCorr_col1_" + ss_feu, nbin, -0.5, nbin - 0.5, nbin, -0.5, nbin - 0.5);
-        feu_h.hitCorrC1H_->SetStats (false);
-
-        feu_h.deltaHitC1H = new TH1D ("HitDifference_col1_" + ss_feu, "HitDifference_col1_" + ss_feu, 2 * nbin, -nbin, nbin);
-
-        feu_h.sen0C1HitProfH_ = new TH1I ("Sensor0_HitProf_col1_" + ss_feu, "Sensor0_HitProf_col0_" + ss_feu, nbin, -0.5, nbin - 0.5);
-        feu_h.sen1C1HitProfH_ = new TH1I ("Sensor1_HitProf_col1_" + ss_feu, "Sensor1_HitProf_col0_" + ss_feu, nbin, -0.5, nbin - 0.5);
-    }
-    else
-    {
-        feu_h.hitCorrC1H_ = nullptr;
-        feu_h.deltaHitC1H = nullptr;
-        feu_h.sen0C1HitProfH_ = nullptr;
-        feu_h.sen1C1HitProfH_ = nullptr;
-    }
-
-    feu_h.stubCountH_ = new TH1I ("StubCount_" + ss_feu, "StubCount_" + ss_feu, 4 * n_rou, 0.0, n_rou * 4);
-    feu_h.stubCountH_->GetXaxis()->SetNdivisions (4 * 100);
-
-    for (size_t i = 0; i < n_rou; i++)
-    {
-        TString tag = "chip";
-        tag += i;
-        tag += "(";
-        feu_h.stubCountH_->GetXaxis()->SetBinLabel ( (i * 4 + 1), tag + "0)");
-        feu_h.stubCountH_->GetXaxis()->SetBinLabel ( (i * 4 + 2), tag + "1)");
-        feu_h.stubCountH_->GetXaxis()->SetBinLabel ( (i * 4 + 3), tag + "2)");
-        feu_h.stubCountH_->GetXaxis()->SetBinLabel ( (i * 4 + 4), tag + "3)");
-    }
-
-    feu_h.stubPositionH_ = new TH1F ("StubPosition" + ss_feu, "StubPosition" + ss_feu, 2 * nbin * ncol, -0.25, nbin * ncol - 0.25);
-    feu_h.stubBendH_ = new TH1I ("StubBend_" + ss_feu, "StubBend_" + ss_feu, 31, -15.5, 15.5);
-    feu_h.stubVsHVH_ = new TProfile ("StubCountVsHV_" + ss_feu, "StubCountVsHV_" + ss_feu, 100, 0.0, 500.0, 0.0, 100.0);
-
-    feu_h.nROUs_ = n_rou;
-    feu_h.nColumns_ = ncol;
-    feu_h.hvSetting_ = 0;
     feu_h.bookedHistos = true;
-    feuHMap_.insert ({fe_id, feu_h});
-    //std::cout << " Booked Histograms for  FeId  " << +fe_id <<  " and inserted in FEUMap with key " << fe_id << " Tag " << ss_feu.Data() << std::endl;
 }
-void SLinkDQMHistogrammer::bookROUHistograms (uint8_t fe_id, uint8_t i_rou)
+void SLinkDQMHistogrammer::bookROUHistograms (uint8_t mod_id, uint8_t feu_id, uint8_t i_rou, ROUHistos& rou_h)
 {
-    TString ss_rou = "FEU_";
-    ss_rou += fe_id;
-    ss_rou += "_ROU_";
+    TString ss_rou = "Mod_";
+    ss_rou += mod_id;
+    if (feu_id == 0) ss_rou += "_rightHyb_";
+    else ss_rou += "_leftHyb_";
+    ss_rou += "_rou_";
     ss_rou += i_rou;
-
-    ROUHistos rou_h;
-
+    
     rou_h.errBitH_           = new TH1I ("ErrorBit_" + ss_rou, "ErrotBit_" + ss_rou, 6, -0.5, 5.5 );
     rou_h.plAddH_            = new TH1I ("PipeLineAdd_" + ss_rou, "PipeLineAdd_" + ss_rou, 256, -0.5, 255.5 );
-    rou_h.evenChanOccuH_     = new TH1I ("EvenChannelOccupancy_" + ss_rou, "EvenChannelOccupancy_" + ss_rou, 127, 0.5, 127.5 );
-    rou_h.oddChanOccuH_      = new TH1I ("OddChannelOccupancy_" + ss_rou, "OddChannelOccupancy_" + ss_rou, 127, 0.5, 127.5 );
+    rou_h.channelOccupancyH_ = new TH1I ("ChannelOccupancy_" + ss_rou, "Channel Occupancy_" + ss_rou, 254, -0.5, 253.5 );
     rou_h.hitVsVCTHH_        = new TProfile ("HitCountVsVCTH_" + ss_rou, "HitCountVsVCTH_" + ss_rou, 500, 0.0, 500.0, 0.0, 300.);
     rou_h.vcthSetting_       = 0;
     rou_h.bookedHistos = true;
-
-    uint16_t key = fe_id << 8 | i_rou;
-
-    rouHMap_.insert ({key, rou_h});
-    //std::cout << " Booked Histograms for  FeId  " << +fe_id <<  " RouId " << +i_rou << " and inserted in ROUMap with key " << key << " Tag " << ss_rou.Data() <<std::endl;
 }
-void SLinkDQMHistogrammer::fillStubInformation (FEUHistos& feu_h, const std::vector<StubInfo>& stubs)
+void SLinkDQMHistogrammer::bookNtuple(uint8_t mod_id) 
 {
-    if (!feu_h.bookedHistos) return;
+  ntupleMap_.insert({mod_id, new ntupleElements()});
 
-    uint8_t nrou = feu_h.nROUs_;
-    std::vector<uint8_t> scount;
+  TString ss_mod = "Mod_";
+  ss_mod += mod_id;
 
-    for (size_t i = 0; i < nrou; i++) scount.push_back (0);
+  ntupleMap_[mod_id]->hitEven = new std::vector <uint16_t> ();
+  _ftree->Branch ("hitEven_" + ss_mod, "std::vector<uint16_t>", &ntupleMap_[mod_id]->hitEven);
+  
+  ntupleMap_[mod_id]->hitOdd = new std::vector <uint16_t> ();
+  _ftree->Branch ("hitOdd_" + ss_mod, "std::vector<uint16_t>", &ntupleMap_[mod_id]->hitOdd);
+  
+  ntupleMap_[mod_id]->error = new std::vector <uint16_t> ();
+  _ftree->Branch ("CBCError_" + ss_mod, "std::vector<uint16_t>", &ntupleMap_[mod_id]->error);
+  
+  ntupleMap_[mod_id]->plAdd = new std::vector <uint16_t> ();
+  _ftree->Branch ("CBCPLAddress_" + ss_mod, "std::vector<uint16_t>", &ntupleMap_[mod_id]->plAdd);
+  
+  ntupleMap_[mod_id]->l1Counter = new std::vector <uint16_t> ();
+  _ftree->Branch ("CBCL1Counter_" + ss_mod, "std::vector<uint16_t>", &ntupleMap_[mod_id]->l1Counter);
+}
+void SLinkDQMHistogrammer::fillStubInformation (MODHistos& mod_h, const std::vector<StubInfo>& stubs)
+{
+    if (!mod_h.bookedHistos) return;
 
-    uint8_t ntot_stub = 0;
+    uint8_t nrou = mod_h.totROUs_;
+    std::vector<uint16_t> scount(nrou, 0);
 
-    for ( const auto& istub : stubs)
+    for ( const auto& istub: stubs)
     {
-        if (istub.chipId() < scount.size() ) scount[istub.chipId()]++;
+      if (istub.chipId() < scount.size() ) scount[istub.chipId()]++;
 
-        ntot_stub++;
-        feu_h.stubPositionH_->Fill (istub.chipId() * 127 + istub.address() / 2.);
-        feu_h.stubBendH_->Fill (istub.bend() );
+      mod_h.stubPositionH_->Fill (istub.chipId() * 127 + istub.address() / 2.);
+      mod_h.stubBendH_->Fill (istub.bend() );
     }
 
-    for (size_t i = 0; i < nrou; i++) feu_h.stubCountH_->Fill (i * 4 + scount[i]);
-
-    feu_h.stubVsHVH_->Fill (feu_h.hvSetting_, ntot_stub);
+    for (size_t i = 0; i < nrou; i++) mod_h.stubCountH_->Fill (i * 4 + scount[i]);
 }
 void SLinkDQMHistogrammer::readConditionData (const DQMEvent* evt)
 {
@@ -656,28 +608,29 @@ void SLinkDQMHistogrammer::readConditionData (const DQMEvent* evt)
         // Get HV status
         if (uid == 5)
         {
-            uint8_t feId = std::get<0> (data);
-            std::map<uint8_t,  FEUHistos >::iterator fPos = feuHMap_.find (feId);
-
-            if (fPos != feuHMap_.end() )
-            {
-                fPos->second.hvSetting_ = std::get<5> (data);;
-            }
+            uint8_t mod_id = std::get<0> (data);
+            std::map<uint8_t,  MODHistos >::iterator fPosM = moduleHMap_.find (mod_id);
+            if (fPosM != moduleHMap_.end() )
+                fPosM->second.hvSetting_ = std::get<5> (data);
         }
 
         // Get VCTH status
         if (uid == 1 && i2cPage == 0 && i2cReg == 0X4F)
         {
-            uint8_t feId = std::get<0> (data);
-            uint8_t rouId = std::get<1> (data);
-            uint16_t key = feId << 8 | rouId;
-            std::map<uint16_t,  ROUHistos >::iterator fPos = rouHMap_.find (key);
+            uint8_t mod_id = std::get<0> (data);
+            uint8_t rou_id = std::get<1> (data);
+            
+            std::map<uint8_t,  MODHistos >::iterator fPosM = moduleHMap_.find (mod_id);
+            if (fPosM != moduleHMap_.end() ) {
+              MODHistos mod_h = fPosM->second;
+	      uint8_t nRouPerFeu = mod_h.nROUsPerFEU_;
+	      uint8_t fe_id =  rou_id/nRouPerFeu;
+	      uint16_t key = fe_id << 8 | rou_id;
 
-            if (fPos != rouHMap_.end() )
-            {
-                fPos->second.vcthSetting_ = std::get<5> (data);;
-                //std::cout << " FeId " << feId << " ROU Id " << rouId << " VCTH Status " << std::get<5>(data) << std::endl;
-            }
+	      std::map<uint16_t,  ROUHistos >::iterator fPosR = mod_h.rouHMap_.find(key);
+	      if (fPosR != mod_h.rouHMap_.end() )
+		fPosR->second.vcthSetting_ = std::get<5> (data);
+	    }
         }
     }
 }

@@ -1,4 +1,4 @@
-/*!
+    /*!
 
         \file                           OuterTrackerModule.h
         \brief                          OuterTrackerModule Description class
@@ -43,7 +43,7 @@ namespace Ph2_HwDescription {
 
         // C'tors take FrontEndDescription or hierachy of connection
         OuterTrackerModule (const FrontEndDescription& pFeDesc, uint8_t pModuleId );
-        OuterTrackerModule (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId );
+        OuterTrackerModule (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId , uint8_t pLinkId);
 
         // Default C'tor
         OuterTrackerModule();

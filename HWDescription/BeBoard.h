@@ -167,6 +167,14 @@ namespace Ph2_HwDescription {
         {
             fBeId = pBeId;
         };
+        void setOptical ( bool pOptical )
+        {
+            fOptical = pOptical;
+        };
+        bool ifOptical () const
+        {
+            return fOptical;
+        }
         /*!
         * \brief Set the Number of CBCs that are used to compute the data blob size of the BeBoard (according to FW version)
         * \param pNCbcDataSize
@@ -236,7 +244,8 @@ namespace Ph2_HwDescription {
 
         BeBoardRegMap fRegMap;             /*!< Map of BeBoard Register Names vs. Register Values */
         ConditionDataSet* fCondDataSet;
-
+        // 
+        bool fOptical;
       private:
 
         /*!
