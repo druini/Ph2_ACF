@@ -23,35 +23,45 @@
 #include "eudaq/Factory.hh"
 #include "eudaq/Event.hh"
 
+
 #define RESULTDIR "Results" // Directory containing the results
+
 
 class RD53eudaqProducer : public eudaq::Producer
 {
+  class RD53eudaqEvtConverter
+  {
   public:
-    RD53eudaqProducer (Physics& RD53sysCntrPhys, const std::string configFile, const std::string producerName, const std::string runControl);
-    ~RD53eudaqProducer() {}
+    RD53eudaqEvtConverter  (RD53eudaqProducer* eudaqProducer) {}
+    void operator() (const std::vector<Ph2_HwInterface::RD53FWInterface::Event>& RD53EvtList);
+  };
 
-    void DoConfigure () override;
-    void DoInitialise() override;
-    void DoStartRun  () override;
-    void DoStopRun   () override;
-    void DoTerminate () override;
+  friend class RD53eudaqEvtConverter;
 
-    static const uint32_t m_id_factory = eudaq::cstr2hash("RD53eudaqProducer");
+ public:
+  RD53eudaqProducer  (Ph2_System::SystemController& RD53SysCntr, const std::string configFile, const std::string producerName, const std::string runControl);
 
-  private:
-    void ConvertToEUDAQevent (const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwInterface::Event* pPh2Event, eudaq::EventSP pEudaqSubEvent);
+  void DoConfigure () override;
+  void DoInitialise() override;
+  void DoStartRun  () override;
+  void DoStopRun   () override;
+  void DoTerminate () override;
 
-    Physics&    RD53sysCntrPhys;
-    std::string configFile;
+  static const uint32_t m_id_factory = eudaq::cstr2hash("RD53eudaqProducer");
+
+ private:
+  Physics     RD53sysCntrPhys;
+  std::string configFile;
+  int         currentRun;
 };
+
 
 // ##################################
 // # Call to EUDAQ producer factory #
 // ##################################
 namespace
 {
-  auto dummy = eudaq::Factory<eudaq::Producer>::Register<RD53eudaqProducer, Physics&, const std::string, const std::string, const std::string>(RD53eudaqProducer::m_id_factory);
+  auto dummy = eudaq::Factory<eudaq::Producer>::Register<RD53eudaqProducer, Ph2_System::SystemController&, const std::string, const std::string, const std::string>(RD53eudaqProducer::m_id_factory);
 }
 
 #endif

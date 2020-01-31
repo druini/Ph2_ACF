@@ -42,13 +42,13 @@ class Physics : public Tool
   void Stop  ()                    override;
   void ConfigureCalibration ()     override;
 
-  void sendData          (BoardContainer* const& cBoard);
-  void initialize        (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void run               ();
-  void draw              ();
-  void analyze           (bool doReadBinary = false);
-  void fillDataContainer (BoardContainer* const& cBoard);
-
+  void sendData               (BoardContainer* const& cBoard);
+  void initialize             (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void run                    ();
+  void draw                   ();
+  void analyze                (bool doReadBinary = false);
+  void fillDataContainer      (BoardContainer* const& cBoard);
+  void setGenericEvtConverter (std::function<void(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>&)> arg) { genericEvtConverter = std::move(arg); }
 
  private:
   size_t rowStart;
@@ -85,6 +85,7 @@ class Physics : public Tool
   bool doLocal;
   std::atomic<bool> keepRunning;
   std::thread thrRun;
+  std::function<void(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>&)> genericEvtConverter;
 };
 
 #endif

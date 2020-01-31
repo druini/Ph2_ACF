@@ -113,7 +113,7 @@ int main (int argc, char** argv)
   cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin injdelay clockdelay physics]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin injdelay clockdelay physics eudaq]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
   cmd.defineOption ("binary", "Binary file to decode.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
@@ -125,8 +125,7 @@ int main (int argc, char** argv)
   cmd.defineOption ("sup", "Run in producer(Middleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("sup", "s");
 
-  cmd.defineOption ("eudaq", "Run EUDAQ-IT producer at specified address (e.g. tcp://localhost:44000).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
-  cmd.defineOptionAlternative ("eudaq", "e");
+  cmd.defineOption ("eudaqRunCtr", "EUDA-IT run control address. Defaut: tcp://localhost:44000", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
   cmd.defineOption("reset","Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative("reset", "r");
@@ -164,10 +163,10 @@ int main (int argc, char** argv)
   std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
   bool program           = cmd.foundOption("prog")   == true ? true : false;
   bool supervisor        = cmd.foundOption("sup")    == true ? true : false;
-  bool eudaq             = cmd.foundOption("eudaq")  == true ? true : false;
   bool reset             = cmd.foundOption("reset")  == true ? true : false;
   if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").insert(0,std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
   else if (cmd.foundOption("replay") == true)  RegManager::enableReplay(cmd.optionValue("replay"));
+  std::string eudaqRunCtr = cmd.foundOption("eudaqRunCtr") == true ? cmd.optionValue("eudaqRunCtr") : "tcp://localhost:44000";
 
 
   // ######################
@@ -486,49 +485,46 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
           Physics ph;
           ph.Inherit(&mySysCntr);
-
-
+          ph.initialize(fileName, chipConfig, runNumber);
+          if (binaryFile == "")
+            {
+              ph.Start(runNumber);
+              usleep(2e6);
+              ph.Stop();
+            }
+          else ph.analyze(true);
+          ph.draw();
+        }
+      else if (whichCalib == "eudaq")
+        {
+#ifdef __EUDAQ__
           // ######################
           // # Run EUDAQ producer #
           // ######################
-          if (eudaq == true)
+          LOG (INFO) << BOLDMAGENTA << "@@@ Performing EUDAQ data taking @@@" << RESET;
+
+          RD53eudaqProducer theEUDAQproducer(mySysCntr, configFile, "RD53eudaqProducer", eudaqRunCtr);
+
+          try
             {
-#ifdef __EUDAQ__
-              RD53eudaqProducer theEUDAQproducer(ph, configFile, "RD53eudaqProducer", cmd.optionValue("eudaq"));
-
-              try
-                {
-                  LOG (INFO) << GREEN << "Connecting to EUDAQ run control" << RESET;
-                  theEUDAQproducer.Connect();
-                }
-              catch (...)
-                {
-                  LOG (ERROR) << BOLDRED << "Can not connect to EUDAQ run control at " << cmd.optionValue("eudaq") << RESET;
-                  exit(EXIT_FAILURE);
-                }
-              LOG (INFO) << BOLDBLUE << "\t--> Connected" << RESET;
-
-              while (theEUDAQproducer.IsConnected() == true)
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-
-              exit(EXIT_SUCCESS);
-#else
-              LOG (WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
+              LOG (INFO) << GREEN << "Connecting to EUDAQ run control" << RESET;
+              theEUDAQproducer.Connect();
+            }
+          catch (...)
+            {
+              LOG (ERROR) << BOLDRED << "Can not connect to EUDAQ run control at " << cmd.optionValue("eudaq") << RESET;
               exit(EXIT_FAILURE);
+            }
+          LOG (INFO) << BOLDBLUE << "\t--> Connected" << RESET;
+
+          while (theEUDAQproducer.IsConnected() == true)
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+
+          exit(EXIT_SUCCESS);
+#else
+          LOG (WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
+          exit(EXIT_FAILURE);
 #endif
-            }
-          else
-            {
-              ph.initialize(fileName, chipConfig, runNumber);
-              if (binaryFile == "")
-                {
-                  ph.Start(runNumber);
-                  usleep(2e6);
-                  ph.Stop();
-                }
-              else ph.analyze();
-              ph.draw();
-            }
         }
       else
         {

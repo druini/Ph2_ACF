@@ -150,7 +150,8 @@ void Physics::run ()
   while (keepRunning == true)
     {
       RD53FWInterface::decodedEvents.clear();
-      Physics::analyze(true);
+      Physics::analyze();
+      genericEvtConverter(RD53FWInterface::decodedEvents);
       std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
     }
 }
@@ -189,7 +190,7 @@ void Physics::analyze (bool doReadBinary)
     {
       size_t dataSize = 0;
 
-      if (doReadBinary == true) dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
+      if (doReadBinary == false) dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
       else
         {
           dataSize = 1;

@@ -9,11 +9,13 @@
 
 #include "RD53eudaqProducer.h"
 
-RD53eudaqProducer::RD53eudaqProducer (Physics& RD53sysCntrPhys, const std::string configFile, const std::string producerName, const std::string runControl)
+RD53eudaqProducer::RD53eudaqProducer (Ph2_System::SystemController& RD53SysCntr, const std::string configFile, const std::string producerName, const std::string runControl)
   : eudaq::Producer (producerName, runControl)
-  , RD53sysCntrPhys (RD53sysCntrPhys)
   , configFile      (configFile)
-{}
+{
+  RD53sysCntrPhys.Inherit(&RD53SysCntr);
+  RD53sysCntrPhys.setGenericEvtConverter(RD53eudaqProducer::RD53eudaqEvtConverter(this));
+}
 
 void RD53eudaqProducer::DoInitialise ()
 {
@@ -24,40 +26,58 @@ void RD53eudaqProducer::DoInitialise ()
 
 void RD53eudaqProducer::DoConfigure ()
 {
-  std::string fileName("Run" + RD53Shared::fromInt2Str(GetRunNumber()) + "_Physics");
-  std::string chipConfig("Run" + RD53Shared::fromInt2Str(GetRunNumber()) + "_");
+  currentRun = this->GetRunNumber();
+
+  std::string fileName("Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics");
+  std::string chipConfig("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
   RD53sysCntrPhys.initialize(fileName, chipConfig);
 }
 
-void RD53eudaqProducer::DoStartRun()
+void RD53eudaqProducer::DoStartRun ()
 {
-  RD53sysCntrPhys.Start(GetRunNumber());
+  RD53sysCntrPhys.Start(currentRun);
 }
 
-void RD53eudaqProducer::DoStopRun()
+void RD53eudaqProducer::DoStopRun ()
 {
   RD53sysCntrPhys.Stop();
   RD53sysCntrPhys.draw();
 
+
   // ###########################
   // # Copy configuration file #
   // ###########################
-  std::string fName2Add (std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(GetRunNumber()) + "_");
+  std::string fName2Add (std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_");
   std::string output    (Ph2_HwDescription::RD53::composeFileName(configFile,fName2Add));
   std::string command   ("cp " + configFile + " " + output);
   system(command.c_str());
-
-  // RD53eudaqProducer::ConvertToEUDAQevent();
 }
 
-void RD53eudaqProducer::DoTerminate()
+void RD53eudaqProducer::DoTerminate ()
 {
   RD53eudaqProducer::DoStopRun();
 }
 
-void RD53eudaqProducer::ConvertToEUDAQevent(const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwInterface::Event* pPh2Event, eudaq::EventSP pEudaqSubEvent)
+void RD53eudaqProducer::RD53eudaqEvtConverter::operator() (const std::vector<Ph2_HwInterface::RD53FWInterface::Event>& RD53EvtList)
 {
   /*
+  std::vector<Event*> cPh2NewEvents = this->GetEvents(cBoard);
+  std::time_t cTimestamp = std::time(nullptr);
+  while (cPh2Events.size() > fTriggerMultiplicity)
+    {
+      eudaq::EventSP cEudaqEvent = eudaq::Event::MakeShared("RD53eudaqEvent");
+      cEudaqEvent->SetTimestamp(cTimestamp, cTimestamp);
+      for (auto cPh2Event = cPh2Events.begin(); cPh2Event<cPh2Events.begin()+fTriggerMultiplicity+1; cPh2Event++)
+	{
+	  eudaq::EventSP cEudaqSubEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
+	  RD53eudaqProducer::ConvertToEUDAQevent(cBoard, *cPh2Event , cEudaqSubEvent);
+	  cEudaqSubEvent->SetTimestamp(cTimestamp, cTimestamp);
+	  cEudaqEvent->AddSubEvent(cEudaqSubEvent);
+	}
+      cPh2Events.erase(cPh2Events.begin(), cPh2Events.begin()+fTriggerMultiplicity+1);
+      SendEvent(cEudaqEvent);
+    }
+
   pEudaqSubEvent->SetTag("L1_COUNTER_BOARD", pPh2Event->GetEventCount());
   pEudaqSubEvent->SetTag("TDC", pPh2Event->GetTDC());
   pEudaqSubEvent->SetTag("BX_COUNTER", pPh2Event->GetBunch());
@@ -71,11 +91,12 @@ void RD53eudaqProducer::ConvertToEUDAQevent(const Ph2_HwDescription::BeBoard* pB
   uint32_t cSensorId = 0;
   // iterator for the module vector
   std::vector<Module*>::const_iterator cFeIter = pBoard->fModuleVector.begin();
-  while(cFeIter < pBoard->fModuleVector.end()){
-  // make sure that we always start counting from the right hybrid (hybrid0 within the module)
-  uint32_t cFeId0 = (*cFeIter)->getFeId();
-  // build sensor id (one needs divide by two because 2 hybrids per module, but multiply by two because 2 sensors per hybrid)
-  cSensorId = (cFeId0 - (cFeId0 % 2));
+  while(cFeIter < pBoard->fModuleVector.end())
+    {
+      // make sure that we always start counting from the right hybrid (hybrid0 within the module)
+      uint32_t cFeId0 = (*cFeIter)->getFeId();
+      // build sensor id (one needs divide by two because 2 hybrids per module, but multiply by two because 2 sensors per hybrid)
+      cSensorId = (cFeId0 - (cFeId0 % 2));
 
   // vectors to srore data
   std::vector<uint8_t> top_channel_data;
