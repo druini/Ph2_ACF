@@ -37,6 +37,8 @@
 // #######################
 class Physics : public Tool
 {
+  using converterType = std::function<void(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>&)>;
+
  public:
   void Start (int currentRun = -1) override;
   void Stop  ()                    override;
@@ -48,7 +50,7 @@ class Physics : public Tool
   void draw                   ();
   void analyze                (bool doReadBinary = false);
   void fillDataContainer      (BoardContainer* const& cBoard);
-  void setGenericEvtConverter (std::function<void(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>&)> arg) { genericEvtConverter = std::move(arg); }
+  void setGenericEvtConverter (converterType arg) { genericEvtConverter = std::move(arg); }
 
  private:
   size_t rowStart;
@@ -85,7 +87,7 @@ class Physics : public Tool
   bool doLocal;
   std::atomic<bool> keepRunning;
   std::thread thrRun;
-  std::function<void(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>&)> genericEvtConverter;
+  converterType genericEvtConverter;
 };
 
 #endif
