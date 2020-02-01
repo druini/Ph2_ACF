@@ -2640,14 +2640,14 @@ void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
     {
         GbtInterface cGBTx;
         auto cIterator = pVecSend.begin();
-        //assume that they are all the same just to test 
-        // uint8_t cFirstChip = (*cIterator & (0x1F << 18) ) >> 18;
-        // uint8_t cWriteReq = !((*cIterator & (0x1 <<16)) >> 16); 
-        // if( cWriteReq == 1  && cFirstChip < 8 )  
-        // {
-        //   LOG (INFO) << BOLDGREEN << "Writing " << +pVecSend.size() << " registers to chip " << +cFirstChip << RESET;
-        //   cFailed = !cGBTx.cbcWrite(this, pVecSend );
-        // }
+        //assume that they are all the same just to test - multibyte write for CBC
+        uint8_t cFirstChip = (*cIterator & (0x1F << 18) ) >> 18;
+        uint8_t cWriteReq = !((*cIterator & (0x1 <<16)) >> 16); 
+        if( cWriteReq == 1  && cFirstChip < 8 )  
+        {
+           //still being tested - WIP
+           //cFailed = !cGBTx.cbcWrite(this, pVecSend );
+        }
 
         while( cIterator < pVecSend.end() ) 
         {
@@ -2657,9 +2657,7 @@ void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
             uint8_t cPage    = (cWord & (0xFF <<8)) >> 8;
             uint8_t cChipId = (cWord & (0x1F << 18) ) >> 18;
             uint8_t cFeId = (cWord & (0xF << 23) ) >> 23;
-            LOG (DEBUG) << BOLDBLUE << "\t... I2C transaction for register 0x" << std::hex << +cAddress << std::dec << " on Chip" << +cChipId << " on FE" << +(cFeId%2) << RESET;
             uint32_t cReadback=0;
-            LOG (DEBUG) << BOLDBLUE << "I2C transaction [1 == write, 0 == read] : " << +cWrite  << "."<<  RESET;  
             if( cWrite == 0 ) 
             {
                 LOG (DEBUG) << BOLDBLUE << "I2C : FE" << +(cFeId%2) << " Chip" << +cChipId << " register address 0x" << std::hex << +cAddress << std::dec << " on page : " << +cPage << RESET;
@@ -2672,7 +2670,6 @@ void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
                     cReadback = cGBTx.cicRead(this, cFeId%2 , cAddress) ; 
                 }
                 uint32_t cReply = ( cFeId << 27 ) | ( cChipId << 22 ) | (cAddress << 8 ) | (cReadback & 0xFF); 
-                LOG (DEBUG) << BOLDBLUE << "Read-back a value of 0x" << std::hex << +cReadback << std::dec << " from FE" << +(cFeId%2)<< " Chip" << +cChipId << " register : 0x" << std::hex << +cAddress << std::dec << RESET;
                 pReplies.push_back( cReply ); 
             }
             else
@@ -2681,7 +2678,6 @@ void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
                 cIterator++;
                 cWord = *cIterator; 
                 uint8_t cValue = (cWord & 0xFF);
-                LOG (DEBUG) << BOLDBLUE << "I2C: FE" << +(cFeId%2) << " Chip" << +cChipId << " writing 0x" << std::hex << +cValue << std::dec << " to register 0x" << std::hex  << +cAddress << std::dec << " on page " << +cPage << RESET;
                 if( cChipId < 8 ) 
                 {
                   cFailed = !cGBTx.cbcWrite(this, cFeId%2, cChipId, cPage+1, cAddress, cValue , (cReadback == 1) );

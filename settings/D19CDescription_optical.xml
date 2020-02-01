@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
     <BeBoard Id="0" boardType="D19C" eventType="VR">
-      <connection id="board" uri="chtcp-2.0://hybridtesting:10203?target=192.168.0.11:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+      <!-- <connection id="board" uri="chtcp-2.0://hybridtesting:10203?target=192.168.0.11:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" />  -->
+      <connection id="board" uri="chtcp-2.0://cmsuptracker003:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" /> 
     
     <GBT_Links>
-        <GBT Id="0" phaseTap="7" enable="0"/>
+        <GBT Id="0" phaseTap="7" enable="1"/>
     </GBT_Links>
     
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1" LinkId="0">
@@ -14,7 +15,7 @@
             <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
             <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="1" dll="1"/>
             <ChannelMask disable=""/>
-            <CIC2 enableBend="1" enableLastLine="0" enableSparsification="1" clockFrequency="320"/>
+            <CIC enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
         </Global>
 
         <CBC_Files path="./settings/CbcFiles/" />
@@ -28,7 +29,7 @@
         <CBC Id="7" configfile="CBC3_default.txt" />
 
         <CIC_Files path="./settings/CicFiles/" />
-        <CIC2 Id="8" configfile="CIC2_default.txt" />
+        <CIC Id="8" configfile="CIC_default.txt" />
     </Module>
 
     <SLink>
@@ -54,7 +55,7 @@
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
 		<Register name="trigger_source"> 3 </Register>
-		<Register name="user_trigger_frequency"> 1 </Register>
+		<Register name="user_trigger_frequency"> 10 </Register>
 		<Register name="stubs_mask"> 0 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 10 </Register>
@@ -71,10 +72,10 @@
                 <Register name="antenna_trigger_delay_value"> 50 </Register>
                 <Register name="delay_between_two_consecutive"> 100 </Register>
                 <Register name="misc">
-                        <Register name="backpressure_enable"> 0 </Register>
+                        <Register name="backpressure_enable"> 1 </Register>
                         <Register name="stubOR"> 1 </Register>
                         <Register name="initial_fast_reset_enable"> 0 </Register>
-                        <Register name="trigger_multiplicity"> 10 </Register>
+                        <Register name="trigger_multiplicity"> 0 </Register>
                 </Register>
         </Register>
 	<!-- I2C manager -->
@@ -87,7 +88,7 @@
 		</Register>
         <Register name="cic">
                 <Register name = "clock_enable"> 1 </Register>
-                <Register name = "stub_package_delay"> 6 </Register>
+                <Register name = "stub_package_delay"> 2 </Register>
         </Register>
     </Register>
 	<!-- Readout Block -->
@@ -100,12 +101,12 @@
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 50 </Register>
+                    <Register name="common_stubdata_delay"> 5 </Register>
             </Register>
     	</Register>
 	<!-- DIO5 Block -->
 	<Register name="dio5_block">
-	    <Register name="dio5_en"> 1 </Register>
+	    <Register name="dio5_en"> 0 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 1 </Register>
                 <Register name="term_enable"> 0 </Register>
@@ -145,7 +146,7 @@
     <!--[>Calibration<]-->
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x78</Setting>
-    <Setting name="Nevents">1000</Setting>
+    <Setting name="Nevents">10</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>

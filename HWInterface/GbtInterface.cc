@@ -74,15 +74,6 @@ namespace Ph2_HwInterface
         }
         pInterface->WriteStackReg( cVecReg );
         pInterface->WriteReg("fc7_daq_ctrl.optical_block.sca.start",0x1); 
-        // check if done 
-        //uint32_t cDone = pInterface->ReadReg("fc7_daq_stat.optical_block.sca.done");
-        //do
-        //{
-        //    LOG (INFO) << BOLDBLUE << "SCA core not done writing " << +pCommands.size() << " registers... " << RESET;
-        //    std::this_thread::sleep_for (std::chrono::microseconds (10) );
-        //    cDone = pInterface->ReadReg("fc7_daq_stat.optical_block.sca.done");
-        //}while( cDone != 1) ;
-        // check for error 
         uint32_t cErrorCode = pInterface->ReadReg("fc7_daq_stat.optical_block.sca.error");
         // reset 
         //ecReset(pInterface);
@@ -660,95 +651,145 @@ namespace Ph2_HwInterface
     bool GbtInterface::cbcWrite(BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend)
     {
         // work in progress
-        std::vector<SCAI2C> cDataWordsFirstPage( pVecSend.size() );
-        std::vector<SCAI2C> cDataWordsSecondPage( pVecSend.size() );
+        std::vector<SCAI2C> cDataWordsFirstPage( 0 );
+        std::vector<SCAI2C> cDataWordsSecondPage( 0 );
         uint8_t cFeId=0;
         uint8_t cChipId=0;
-        SCAI2C cSCAdataWrite;
         SCAI2C cSCAcommand;
+
         auto cIterator = pVecSend.begin();
-        do
+        size_t cRegisters=0;
+        while( cIterator < pVecSend.end() ) 
         {
             uint32_t cWord = *cIterator;
             uint8_t cWrite = !((cWord & (0x1 <<16)) >> 16); 
-            if( cWrite == 1 ) // check again that this is a write 
+            uint8_t cAddress = (cWord & 0xFF); 
+            uint8_t cPage    = (cWord & (0xFF <<8)) >> 8;
+            cChipId = (cWord & (0x1F << 18) ) >> 18;
+            cFeId = (cWord & (0xF << 23) ) >> 23;
+            LOG (DEBUG) << BOLDBLUE << "\t... I2C transaction for register 0x" << std::hex << +cAddress << std::dec << " on Chip" << +cChipId << " on FE" << +(cFeId%2) << RESET;
+            uint32_t cReadback=0;
+            LOG (DEBUG) << BOLDBLUE << "I2C transaction [1 == write, 0 == read] : " << +cWrite  << "."<<  RESET;  
+            if( cWrite == 0 ) 
             {
-                uint8_t cAddress = (cWord & 0xFF); 
-                uint8_t cPage    = (cWord & (0xFF <<8)) >> 8;
-                cChipId = (cWord & (0x1F << 18) ) >> 18;
-                cFeId = (cWord & (0xF << 23) ) >> 23;
-                cIterator++;
-                uint8_t cValue = (*cIterator & 0xFF);
-                uint8_t cSlave = 0x40 | (1 + cChipId );
-                cSCAcommand.first = cSlave;
-                cSCAcommand.second   = (cAddress << 8) | cValue;
-                if( cPage == 0 )
-                {
-                    cDataWordsFirstPage.push_back( cSCAcommand );
-                }
-
-                if( cPage == 1 )
-                {
-                   //cDataWordsSecondPage.push_back( cSCAcommand );
-                }
-                cIterator++;
+                continue;
             }
             else
             {
-                LOG (ERROR) << BOLDRED << "For some reason sending a CBC read insted of a write" << RESET;
-                exit(0);
+                cReadback = (cWord & (0x1 << 17)) >> 17;    
+                cIterator++;
+                cWord = *cIterator; 
+                uint8_t cValue = (cWord & 0xFF);
+                LOG (DEBUG) << BOLDBLUE << "I2C: FE" << +(cFeId%2) << " Chip" << +cChipId << " writing 0x" << std::hex << +cValue << std::dec << " to register 0x" << std::hex  << +cAddress << std::dec << " on page " << +cPage << RESET;
+                cSCAcommand.first = 0x40 | (cChipId+1);
+                cSCAcommand.second = (cAddress << 8 ) | cValue ;   
+                if( cPage == 0 )
+                {
+                    cDataWordsFirstPage.push_back(cSCAcommand);
+                }
+                else
+                {
+                    cDataWordsSecondPage.push_back(cSCAcommand);
+                }
+                cRegisters++;
             }
-        }while( cIterator < pVecSend.end() );
-        //uint32_t cErrorCode=0;
-        // address first page 
-        // if( cDataWordsSecondPage.size() > 0 )
-        // {
-        //     LOG (INFO) << BOLDBLUE << "Writing " << +cDataWordsSecondPage.size() << " registers on page 0 on CBC" << +cChipId << " on FE" << +cFeId << RESET;
-        //     cErrorCode = this->cbcSetPage(pInterface,cFeId, cChipId, 2);
-        //     if( cErrorCode != 0 )
-        //     { 
-        //         LOG (INFO) << BOLDYELLOW << "Error setting CBC page register." << RESET;
-        //         return cErrorCode; 
-        //     }   
+            cIterator++;    
+        }
+        uint8_t cSlave = 0x40 | (cChipId + 1 );
+        uint8_t cMaster = fSCAMaster + cFeId;
+        uint32_t cErrorCode =0;
+        uint8_t cNBytes = 2; 
+        uint8_t cNSimWrites=1; 
+        configI2C( pInterface , cMaster, cNBytes ); // write n bytes at a time  
+        //address second page
+        if( cDataWordsSecondPage.size() > 0 )
+        {
+            cErrorCode = this->cbcSetPage(pInterface,cFeId, cChipId, 2);
+            if( cErrorCode != 0 )
+            { 
+                LOG (INFO) << BOLDYELLOW << "Error setting CBC page register." << RESET;
+                return cErrorCode; 
+            }   
 
-        //     // assuming all from one hybrid 
-        //     configI2C( pInterface , fSCAMaster + cFeId, 4 ); // 4 bytes at a time .. 32 bits at a time 
-        //     int cNwrites = std::floor( cDataWordsSecondPage.size()/2. ); 
-        //     size_t cNregisters=0;
-        //     auto cIterator = cDataWordsSecondPage.begin();
-        //     //LOG (INFO) << BOLDBLUE << "... writing 32 bits at a time [so " << +cNwrites << " 4 byte transactions.]" << RESET; 
-        //     for( int cIndex = 0; cIndex < cNwrites; cIndex ++ )
-        //     {
-        //         //upload data bytes to send in the DATA register
-        //         auto cSlave = 0x40 | (1 + (*cIterator).first );
-        //         uint32_t pData  = (*cIterator).second;
-        //         cIterator++;
-        //         pData = ( (*cIterator).second << 16) | pData;
-        //         //LOG (DEBUG) << BOLDBLUE << "Writing to slave " << std::bitset<8>(cSlave) << " : " << std::bitset<32>(pData) << RESET;
-        //         cNregisters+=2;
-        //         // sca multi-byte write 
-        //         uint32_t cErrorCode = ecWrite( pInterface, fSCAMaster + cFeId , 0x40 , pData  );
-        //         ecWrite(pInterface, fSCAMaster + cFeId , 0xDA , (cSlave << 3*8) );
-        //         cIterator++;
-                
-        //     }
-        //     cNwrites = cDataWordsSecondPage.size()%2;
-        //     //LOG (INFO) << BOLDBLUE << "Have " << +cNwrites << " 2 byte transactions to write one at a time" << RESET; 
-        //     if( cNwrites > 0 )
-        //         configI2C( pInterface , fSCAMaster + cFeId, 2 );
-        //     //this->ecWrite(pInterface, fSCAMaster + cFeId , cDataWordsFirstPage);
-        // }
-        // if( cDataWordsSecondPage.size() > 0 )
-        // {
-        //     LOG (INFO) << BOLDGREEN << "Setting second page on CBC" << +cChipId << " on FE" << +cFeId << RESET;
-        //     cErrorCode = this->cbcSetPage(pInterface,cFeId, cChipId, 2);
-        //     if( cErrorCode != 0 )
-        //     { 
-        //         LOG (INFO) << BOLDYELLOW << "Error setting CBC page register." << RESET;
-        //         return cErrorCode; 
-        //     }   
-        //     this->ecWrite(pInterface, fSCAMaster + cFeId , cDataWordsSecondPage);
-        // }
+            int cNwrites = std::floor( cDataWordsSecondPage.size()/(cNBytes/2.) ); 
+            size_t cNregisters=0;
+            auto cIterator = cDataWordsSecondPage.begin();
+            configI2C( pInterface , cMaster, cNBytes);
+            while( cIterator < cDataWordsSecondPage.end() )
+            {
+                uint32_t pData  = 0;
+                for( size_t cOffset=0; cOffset < cNSimWrites; cOffset++)
+                {
+                    //upload data bytes to send in the DATA register
+                    uint8_t cAddress = ( (*cIterator).second & (0xFF << 8) ) >> 8;
+                    uint8_t cValue = ( (*cIterator).second & (0xFF << 0) ) >> 0;
+                    cAddress = ( (*cIterator).second & (0xFF << 8) ) >> 8;
+                    cValue = ( (*cIterator).second & (0xFF << 0) ) >> 0;
+                    //LOG (DEBUG) << BOLDBLUE << "\t\t...  0x" << std::hex << +cValue << " to register 0x" << +cAddress << std::dec << RESET;
+                    uint16_t cDataField = (cAddress << 8) | cValue ; 
+                    pData = pData | (cDataField << (16*(1-cOffset%2)) ); 
+                    cIterator++;
+                }
+                //upload data bytes to send in the DATA register
+                uint32_t cErrorCode = ecWrite( pInterface, cMaster , 0x40 , pData  );
+                cErrorCode = ecWrite(pInterface, cMaster , 0xDA , (cSlave << 3*8) );
+                cIterator++;
+            };
+
+            while( cIterator < cDataWordsSecondPage.end() )
+            {
+                uint8_t cAddress = ( (*cIterator).second & (0xFF << 8) ) >> 8;
+                uint8_t cValue = ( (*cIterator).second & (0xFF << 0) ) >> 0;
+                uint32_t pData  = (cAddress << 8*3) | (cValue << 8*2) ;
+                uint32_t cErrorCode = ecWrite( pInterface, cMaster , 0x40 , pData  );
+                cErrorCode = ecWrite(pInterface, cMaster , 0xDA , (cSlave << 3*8) );
+
+                cIterator++;
+            }
+        }
+        if( cDataWordsFirstPage.size() > 0 )
+        {
+            LOG (INFO) << +cDataWordsFirstPage.size() << " registers to write on the first page" << RESET;
+            cErrorCode = this->cbcSetPage(pInterface,cFeId, cChipId, 1);
+            if( cErrorCode != 0 )
+            { 
+                LOG (INFO) << BOLDYELLOW << "Error setting CBC page register." << RESET;
+                return cErrorCode; 
+            }   
+
+            int cNwrites = std::floor( cDataWordsFirstPage.size()/(cNBytes/2.) ); 
+            size_t cNregisters=0;
+            auto cIterator = cDataWordsFirstPage.begin();
+            configI2C( pInterface , cMaster, cNBytes);
+            while( cIterator < cDataWordsFirstPage.end() )
+            {
+                uint32_t pData  = 0;
+                for( size_t cOffset=0; cOffset < cNSimWrites; cOffset++)
+                {
+                    //upload data bytes to send in the DATA register
+                    uint8_t cAddress = ( (*cIterator).second & (0xFF << 8) ) >> 8;
+                    uint8_t cValue = ( (*cIterator).second & (0xFF << 0) ) >> 0;
+                    cAddress = ( (*cIterator).second & (0xFF << 8) ) >> 8;
+                    cValue = ( (*cIterator).second & (0xFF << 0) ) >> 0;
+                    uint16_t cDataField = (cAddress << 8) | cValue ; 
+                    pData = pData | (cDataField << (16*(1-cOffset%2)) ); 
+                    cIterator++;
+                }
+                //upload data bytes to send in the DATA register
+                uint32_t cErrorCode = ecWrite( pInterface, cMaster , 0x40 , pData  );
+                cErrorCode = ecWrite(pInterface, cMaster , 0xDA , (cSlave << 3*8) );
+                cIterator++;
+            };
+            while( cIterator < cDataWordsFirstPage.end() )
+            {
+                uint8_t cAddress = ( (*cIterator).second & (0xFF << 8) ) >> 8;
+                uint8_t cValue = ( (*cIterator).second & (0xFF << 0) ) >> 0;
+                uint32_t pData  = (cAddress << 8*3) | (cValue << 8*2) ;
+                uint32_t cErrorCode = ecWrite( pInterface, cMaster , 0x40 , pData  );
+                cErrorCode = ecWrite(pInterface, cMaster , 0xDA , (cSlave << 3*8) );
+                cIterator++;
+            }
+        }
         return true;
     }
     uint32_t GbtInterface::cicRead(BeBoardFWInterface* pInterface , uint8_t pFeId, uint8_t pRegisterAddress) 
