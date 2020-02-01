@@ -139,7 +139,7 @@ namespace Ph2_HwInterface
       uint32_t l1a_counter;
       uint32_t bx_counter;
 
-      std::vector<ChipFrame>   chip_frames;
+      std::vector<ChipFrame>                      chip_frames;
       std::vector<Ph2_HwDescription::RD53::Event> chip_events;
 
       uint16_t evtStatus;

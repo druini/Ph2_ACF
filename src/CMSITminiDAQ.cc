@@ -514,8 +514,7 @@ int main (int argc, char** argv)
               exit(EXIT_FAILURE);
             }
           LOG (INFO) << BOLDBLUE << "\t--> Connected" << RESET;
-          while (theEUDAQproducer.IsConnected() == true)
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+          while (theEUDAQproducer.IsConnected() == true) std::this_thread::sleep_for(std::chrono::seconds(1));
 #else
           LOG (WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
           exit(EXIT_FAILURE);
