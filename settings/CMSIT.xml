@@ -2,7 +2,7 @@
 
 <HwDescription>
   <BeBoard Id="0" boardType="RD53" eventType="VR">
-    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://cmsuptracker003:10203?target=192.168.0.74:50001" address_table="file://settings/address_tables/CMSIT_address_table.xml" />
+    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.0.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
     <!---
         <connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
     -->
@@ -11,7 +11,7 @@
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
       <RD53_Files path="./" />
 
-      <RD53 Id="0" Lane="0" configfile="./settings/RD53Files/CMSIT_RD53.txt">
+      <RD53 Id="0" Lane="0" configfile="CMSIT_RD53.txt">
         <!-- Overwrite .txt configuration file settings -->
         <Settings
             PA_IN_BIAS_LIN       =   "350"
