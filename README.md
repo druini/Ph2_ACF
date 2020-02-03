@@ -176,7 +176,7 @@ For more information on the firmware, please check the doc directory of https://
 
     First create a new ipbus repo for yum:
 
-        sudo cat > /etc/yum.repos.d/ipbus-sw.repo << EOF
+        `sudo cat > /etc/yum.repos.d/ipbus-sw.repo << EOF
         [ipbus-sw-base]
         name=IPbus software repository
         baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/base/RPMS
@@ -187,7 +187,7 @@ For more information on the firmware, please check the doc directory of https://
         baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/updates/RPMS
         enabled=1
         gpgcheck=0
-        EOF
+        EOF`
 
     Then install uHAL as follows:
 
