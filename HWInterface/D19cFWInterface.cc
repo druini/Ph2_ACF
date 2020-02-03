@@ -618,9 +618,11 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
 bool D19cFWInterface::GBTLock( const BeBoard* pBoard ) 
 {
     // get link Ids 
-    std::vector<uint8_t> cLinkIds(0);
+    std::vector<uint8_t> cLinkIds;
+    
     for (auto& cFe : pBoard->fModuleVector)
     {
+        LOG (INFO) << BOLDBLUE << "Link " << +cFe->getLinkId() << RESET;
         if ( std::find(cLinkIds.begin(), cLinkIds.end(), cFe->getLinkId() ) == cLinkIds.end() )
         {
             cLinkIds.push_back(cFe->getLinkId() );

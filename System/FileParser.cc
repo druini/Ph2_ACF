@@ -398,7 +398,8 @@ namespace Ph2_System {
           }
         else
           {
-                cModule = pBoard->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new OuterTrackerModule ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int(), pModuleNode.attribute ( "LinkId" ).as_int() ));
+            cModule = pBoard->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new OuterTrackerModule ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
+            cModule->setLinkId( pModuleNode.attribute ( "LinkId" ).as_int() );
           }
         pBoard->addModule ( cModule );
 
