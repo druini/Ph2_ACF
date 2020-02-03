@@ -198,6 +198,7 @@ int main ( int argc, char* argv[] )
         cPedestalEqualization.Inherit (&cTool);
         // second parameter disables stub logic on CBC3
         cPedestalEqualization.Initialise ( cAllChan, true );
+        cPedestalEqualization.FindVplus();
         cPedestalEqualization.FindOffsets();
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
