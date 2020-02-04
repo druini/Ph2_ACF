@@ -28,6 +28,11 @@ void RD53eudaqProducer::DoConfigure ()
 {
   currentRun = this->GetRunNumber();
 
+  // ###################################################
+  // # Get configuration directly from EUDAQ framework #
+  // ###################################################
+  // auto eudaqConf = this->GetConfiguration();
+  // std::string fileName(eudaqConf->Get("Results", "Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics"));
   std::string fileName("Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics");
   std::string chipConfig("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
   RD53sysCntrPhys.initialize(fileName, chipConfig);
