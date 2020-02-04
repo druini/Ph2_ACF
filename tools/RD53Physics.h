@@ -40,6 +40,8 @@ class Physics : public Tool
   using evtConvType = std::function<void(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>&)>;
 
  public:
+  Physics () { Physics::setGenericEvtConverter(RD53dummyEvtConverter()); }
+
   void Start (int currentRun = -1) override;
   void Stop  ()                    override;
   void ConfigureCalibration ()     override;
@@ -80,6 +82,11 @@ class Physics : public Tool
 
 
  protected:
+  struct RD53dummyEvtConverter
+  {
+    void operator() (const std::vector<Ph2_HwInterface::RD53FWInterface::Event>& RD53EvtList) {};
+  };
+
   std::string fileRes;
   std::string fileReg;
   bool doUpdateChip;

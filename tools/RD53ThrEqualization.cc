@@ -255,12 +255,12 @@ void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents,
   ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, bestDACcontainer);
   ContainerFactory::copyAndInitChannel<OccupancyAndPh>(*fDetectorContainer, bestContainer);
 
-  for (const auto cBoard : *fDetectorContainer)
+  for (const auto cBoard : bestContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         for (auto row = 0u; row < RD53::nRows; row++)
           for (auto col = 0u; col < RD53::nCols; col++)
-            bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy = 0;
+            cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy = 0;
 
 
   // ############################

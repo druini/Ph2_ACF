@@ -207,10 +207,10 @@ void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents
   ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, bestDACcontainer);
   ContainerFactory::copyAndInitChip<OccupancyAndPh>(*fDetectorContainer, bestContainer);
 
-  for (const auto cBoard : *fDetectorContainer)
+  for (const auto cBoard : bestContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = 0;
+        cChip->getSummary<OccupancyAndPh>().fPh = 0;
 
 
   for (auto i = 0u; i <= numberOfBits; i++)

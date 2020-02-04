@@ -236,7 +236,6 @@ namespace Ph2_System
     std::vector<Ph2_HwInterface::Event*> fEventList;
 
     std::future<void> fFuture;
-    std::mutex        theMtx;
     uint32_t fCurrentEvent;
     uint32_t fEventSize;
     uint32_t fNevents;

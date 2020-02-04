@@ -346,8 +346,6 @@ namespace Ph2_System
 
   void SystemController::DecodeData (const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
   {
-    std::lock_guard<std::mutex> guard(theMtx);
-
     if (pType == BoardType::RD53)
       {
         fEventList.clear();

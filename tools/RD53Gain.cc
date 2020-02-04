@@ -257,6 +257,17 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
           index++;
         }
 
+  theGainAndInterceptContainer->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+
+  for (const auto cBoard : *theGainAndInterceptContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          LOG (INFO) << GREEN << "Average gain for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << GREEN << "] is " << BOLDYELLOW
+                     << std::fixed << std::setprecision(1) << cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGain << RESET << GREEN << " (ToT/Delta_VCal)" << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW << cChip->getSummary<float>() << RESET;
+        }
+
 
   // #####################
   // # @TMP@ : CalibFile #
