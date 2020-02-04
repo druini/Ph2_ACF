@@ -113,12 +113,17 @@ void Gain::Stop ()
   this->closeFileHandler();
 }
 
-void Gain::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void Gain::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+{
+  Gain::ConfigureCalibration();
+
+  if ((fileRes_ != "") && (fileReg_ != "")) Gain::initializeFileNames(fileRes_, fileReg_, currentRun);
+}
+
+void Gain::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
-
-  Gain::ConfigureCalibration();
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {

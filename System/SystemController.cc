@@ -164,6 +164,12 @@ namespace Ph2_System
             LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
 
 
+            // ########################
+            // # Configuring from XML #
+            // ########################
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->ConfigureFromXML(cBoard);
+
+
             // ###################
             // # Configure chips #
             // ###################

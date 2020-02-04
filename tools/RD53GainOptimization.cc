@@ -76,7 +76,14 @@ void GainOptimization::Stop ()
   this->closeFileHandler();
 }
 
-void GainOptimization::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void GainOptimization::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+{
+  GainOptimization::ConfigureCalibration();
+
+  if ((fileRes_ != "") && (fileReg_ != "")) GainOptimization::initializeFileNames(fileRes_, fileReg_, currentRun);
+}
+
+void GainOptimization::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -87,8 +94,6 @@ void GainOptimization::initialize (const std::string fileRes_, const std::string
 
   fileRes = fileRes_;
   fileReg = fileReg_;
-
-  GainOptimization::ConfigureCalibration();
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {

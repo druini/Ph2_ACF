@@ -212,7 +212,7 @@ namespace Ph2_HwDescription
   {
     const int Nspaces = 26;
 
-    std::string output = RD53::composeFileName(configFileName,fName2Add);
+    std::string output = RD53Shared::composeFileName(configFileName,fName2Add);
     std::ofstream file (output.c_str(), std::ios::out | std::ios::trunc);
 
     if (file)

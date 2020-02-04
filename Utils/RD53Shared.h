@@ -13,6 +13,8 @@
 #include <sstream>
 #include <iomanip>
 
+#define NAMESEARCHinPATH "CMSIT" // Search for this name in config file name for manipulation
+
 namespace RD53Shared
 {
   const double ISDISABLED    = -1.0; // Encoding disabled channels
@@ -21,6 +23,7 @@ namespace RD53Shared
   const int    MAXBITCHIPREG = 16;   // Maximum number of bits of a chp register
 
   std::string fromInt2Str (int val);
+  std::string composeFileName (const std::string& configFileName, const std::string& fName2Add);
 }
 
 #endif

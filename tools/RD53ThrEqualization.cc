@@ -51,7 +51,7 @@ void ThrEqualization::ConfigureCalibration ()
   std::string fileName = fileRes;
   fileName.replace(fileRes.find("_ThrEqualization"),16,"_SCurve");
   sc.Inherit(this);
-  sc.initialize(fileName, fileReg);
+  sc.localConfigure(fileName, fileReg);
 
 
   // #######################
@@ -93,12 +93,17 @@ void ThrEqualization::Stop ()
   this->closeFileHandler();
 }
 
-void ThrEqualization::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void ThrEqualization::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+{
+  if ((fileRes_ != "") && (fileReg_ != "")) ThrEqualization::initializeFileNames(fileRes_, fileReg_, currentRun);
+
+  ThrEqualization::ConfigureCalibration();
+}
+
+void ThrEqualization::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
-
-  ThrEqualization::ConfigureCalibration();
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {

@@ -118,24 +118,29 @@ void Physics::Stop ()
   LOG (INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
 }
 
-void Physics::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void Physics::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+{
+  Physics::ConfigureCalibration();
+
+  if ((fileRes_ != "") && (fileReg_ != "")) Physics::initializeFileNames(fileRes_, fileReg_, currentRun);
+
+#ifdef __USE_ROOT__
+  myApp = nullptr;
+  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+#endif
+
+  doLocal = true;
+}
+
+void Physics::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
 
-  Physics::ConfigureCalibration();
-
 #ifdef __USE_ROOT__
-  myApp = nullptr;
-
-  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
-
   this->InitResultFile(fileRes);
-
   Physics::initHisto();
 #endif
-
-  doLocal = true;
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {

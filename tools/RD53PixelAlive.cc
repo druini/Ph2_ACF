@@ -110,12 +110,17 @@ void PixelAlive::Stop ()
   this->closeFileHandler();
 }
 
-void PixelAlive::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void PixelAlive::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+{
+  PixelAlive::ConfigureCalibration();
+
+  if ((fileRes_ != "") && (fileReg_ != "")) PixelAlive::initializeFileNames(fileRes_, fileReg_, currentRun);
+}
+
+void PixelAlive::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
-
-  PixelAlive::ConfigureCalibration();
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {

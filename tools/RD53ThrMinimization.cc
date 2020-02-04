@@ -73,7 +73,14 @@ void ThrMinimization::Stop ()
   this->closeFileHandler();
 }
 
-void ThrMinimization::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void ThrMinimization::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+{
+  ThrMinimization::ConfigureCalibration();
+
+ if ((fileRes_ != "") && (fileReg_ != "")) ThrMinimization::initializeFileNames(fileRes_, fileReg_, currentRun);
+}
+
+void ThrMinimization::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -84,8 +91,6 @@ void ThrMinimization::initialize (const std::string fileRes_, const std::string 
 
   fileRes = fileRes_;
   fileReg = fileReg_;
-
-  ThrMinimization::ConfigureCalibration();
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {

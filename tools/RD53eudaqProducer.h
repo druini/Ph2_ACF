@@ -34,6 +34,7 @@ class RD53eudaqProducer : public eudaq::Producer
  public:
   RD53eudaqProducer (Ph2_System::SystemController& RD53SysCntr, const std::string configFile, const std::string producerName, const std::string runControl);
 
+  void DoReset     () override;
   void DoInitialise() override;
   void DoConfigure () override;
   void DoStartRun  () override;

@@ -83,16 +83,16 @@ namespace Ph2_HwInterface
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
     LOG (INFO) << GREEN << "Initializing board's registers:" << RESET;
     for (const auto& it : pBoard->getBeBoardRegMap())
-      {
-        LOG (INFO) << BOLDBLUE << "\t--> " << it.first << " = " << BOLDYELLOW << it.second << RESET;
-        if (it.first.find("ext_clk_en") != std::string::npos)
-          {
-            cfgDIO5.enable     = true;
-            cfgDIO5.ext_clk_en = it.second;
-          }
-        else if (it.first.find("trigger_source") != std::string::npos) RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second);
-        else cVecReg.push_back({it.first, it.second});
-      }
+      if ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos))
+        {
+          LOG (INFO) << BOLDBLUE << "\t--> " << it.first << " = " << BOLDYELLOW << it.second << RESET;
+          if (it.first.find("ext_clk_en") != std::string::npos)
+            {
+              cfgDIO5.enable     = true;
+              cfgDIO5.ext_clk_en = it.second;
+            }
+          else RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second);
+        }
 
 
     // ################################
@@ -151,6 +151,28 @@ namespace Ph2_HwInterface
       {
         RD53FWInterface::WriteChipCommand(std::vector<uint16_t>(NFRAMES_SYNC, 0), -1);
         usleep(DEEPSLEEP);
+      }
+  }
+
+  void RD53FWInterface::ConfigureFromXML (const BeBoard* pBoard)
+  {
+    // ###############################################
+    // # FW register initialization from config file #
+    // ###############################################
+    std::vector< std::pair<std::string, uint32_t> > cVecReg;
+    LOG (INFO) << GREEN << "Initializing board's registers:" << RESET;
+
+    for (const auto& it : pBoard->getBeBoardRegMap())
+      if ((it.first.find("ext_clk_en") == std::string::npos) && (it.first.find("trigger_source") == std::string::npos))
+        {
+          LOG (INFO) << BOLDBLUE << "\t--> " << it.first << " = " << BOLDYELLOW << it.second << RESET;
+          cVecReg.push_back({it.first, it.second});
+        }
+
+    if (cVecReg.size() != 0)
+      {
+        WriteStackReg(cVecReg);
+        SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
       }
   }
 
@@ -410,7 +432,7 @@ namespace Ph2_HwInterface
   {
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset");
 
-    WriteReg ("user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBUS_FASTDURATION);
+    WriteReg("user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBUS_FASTDURATION);
   }
 
   void RD53FWInterface::ResetSlowCmdBlk()

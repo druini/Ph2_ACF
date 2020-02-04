@@ -14,6 +14,7 @@
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/bit_packing.h"
+#include "../Utils/RD53Shared.h"
 
 #include <iomanip>
 
@@ -21,7 +22,6 @@
 // #############
 // # CONSTANTS #
 // #############
-#define NAMESEARCHinPATH "CMSIT" // Search for this name in config file name for manipulation
 #define NROWS 192 // Total number of rows
 #define NCOLS 400 // Total number of columns
 
@@ -133,7 +133,7 @@ namespace Ph2_HwDescription
     bool     isDACLocal          (const std::string& regName)   override;
     uint8_t  getNumberOfBits     (const std::string& regName)   override;
 
-    std::string getFileName      (const std::string& fName2Add) { return this->composeFileName(configFileName,fName2Add); }
+    std::string getFileName      (const std::string& fName2Add) { return RD53Shared::composeFileName(configFileName,fName2Add); }
     std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
     std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
 
@@ -211,13 +211,6 @@ namespace Ph2_HwDescription
           num >>= 1;
         }
       return count;
-    }
-
-    static std::string composeFileName (const std::string& configFileName, const std::string& fName2Add)
-    {
-      std::string output = configFileName;
-      output.insert(output.find(NAMESEARCHinPATH),fName2Add);
-      return output;
     }
 
   private:

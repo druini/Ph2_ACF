@@ -84,7 +84,7 @@ void Latency::Stop ()
   this->closeFileHandler();
 }
 
-void Latency::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void Latency::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -92,10 +92,15 @@ void Latency::initialize (const std::string fileRes_, const std::string fileReg_
   PixelAlive::doFast = 1;
 
 
+  Latency::ConfigureCalibration();
+
+  if ((fileRes_ != "") && (fileReg_ != "")) Latency::initializeFileNames(fileRes_, fileReg_, currentRun);
+}
+
+void Latency::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+{
   fileRes = fileRes_;
   fileReg = fileReg_;
-
-  Latency::ConfigureCalibration();
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {

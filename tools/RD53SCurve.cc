@@ -113,12 +113,17 @@ void SCurve::Stop ()
   this->closeFileHandler();
 }
 
-void SCurve::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void SCurve::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+{
+  SCurve::ConfigureCalibration();
+
+  if ((fileRes_ != "") && (fileReg_ != "")) SCurve::initializeFileNames(fileRes_, fileReg_, currentRun);
+}
+
+void SCurve::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
-
-  SCurve::ConfigureCalibration();
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {

@@ -197,6 +197,7 @@ namespace Ph2_HwInterface
       FastCmdFSMConfig fast_cmd_fsm;
     };
 
+    void ConfigureFromXML (const Ph2_HwDescription::BeBoard* pBoard);
     void SetAndConfigureFastCommands (const Ph2_HwDescription::BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0);
 
     struct DIO5Config

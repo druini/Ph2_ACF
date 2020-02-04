@@ -50,7 +50,7 @@ void ClockDelay::ConfigureCalibration ()
   std::string fileName = fileRes;
   fileName.replace(fileRes.find("_ClockDelay"),15,"_Latency");
   la.Inherit(this);
-  la.initialize(fileName, fileReg);
+  la.localConfigure(fileName, fileReg);
 
 
   // ##########################
@@ -104,7 +104,7 @@ void ClockDelay::Stop ()
   this->closeFileHandler();
 }
 
-void ClockDelay::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void ClockDelay::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -112,10 +112,15 @@ void ClockDelay::initialize (const std::string fileRes_, const std::string fileR
   PixelAlive::doFast = 1;
 
 
-  fileRes = fileRes_;
-  fileReg = fileReg_;
+  if ((fileRes_ != "") && (fileReg_ != "")) ClockDelay::initializeFileNames(fileRes_, fileReg_, currentRun);
 
   ClockDelay::ConfigureCalibration();
+}
+
+void ClockDelay::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+{
+  fileRes = fileRes_;
+  fileReg = fileReg_;
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {

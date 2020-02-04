@@ -336,7 +336,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Latency");
           Latency la;
           la.Inherit(&mySysCntr);
-          la.initialize(fileName, chipConfig, runNumber);
+          la.localConfigure(fileName, chipConfig, runNumber);
           la.run();
           la.analyze();
           la.draw();
@@ -351,7 +351,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_PixelAlive");
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
-          pa.initialize(fileName, chipConfig, runNumber);
+          pa.localConfigure(fileName, chipConfig, runNumber);
           pa.run();
           pa.analyze();
           pa.draw();
@@ -366,7 +366,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_NoiseScan");
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
-          pa.initialize(fileName, chipConfig, runNumber);
+          pa.localConfigure(fileName, chipConfig, runNumber);
           pa.run();
           pa.analyze();
           pa.draw();
@@ -381,7 +381,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_SCurve");
           SCurve sc;
           sc.Inherit(&mySysCntr);
-          sc.initialize(fileName, chipConfig, runNumber);
+          sc.localConfigure(fileName, chipConfig, runNumber);
           sc.run();
           sc.analyze();
           sc.draw();
@@ -396,7 +396,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Gain");
           Gain ga;
           ga.Inherit(&mySysCntr);
-          ga.initialize(fileName, chipConfig, runNumber);
+          ga.localConfigure(fileName, chipConfig, runNumber);
           ga.run();
           ga.analyze();
           ga.draw();
@@ -411,7 +411,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_GainOptimization");
           GainOptimization go;
           go.Inherit(&mySysCntr);
-          go.initialize(fileName, chipConfig, runNumber);
+          go.localConfigure(fileName, chipConfig, runNumber);
           go.run();
           go.analyze();
           go.draw();
@@ -426,7 +426,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrEqualization");
           ThrEqualization te;
           te.Inherit(&mySysCntr);
-          te.initialize(fileName, chipConfig, runNumber);
+          te.localConfigure(fileName, chipConfig, runNumber);
           te.run();
           te.draw();
         }
@@ -440,7 +440,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrMinimization");
           ThrMinimization tm;
           tm.Inherit(&mySysCntr);
-          tm.initialize(fileName, chipConfig, runNumber);
+          tm.localConfigure(fileName, chipConfig, runNumber);
           tm.run();
           tm.analyze();
           tm.draw();
@@ -455,7 +455,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_InjectionDelay");
           InjectionDelay id;
           id.Inherit(&mySysCntr);
-          id.initialize(fileName, chipConfig, runNumber);
+          id.localConfigure(fileName, chipConfig, runNumber);
           id.run();
           id.analyze();
           id.draw();
@@ -470,7 +470,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ClockDelay");
           ClockDelay cd;
           cd.Inherit(&mySysCntr);
-          cd.initialize(fileName, chipConfig, runNumber);
+          cd.localConfigure(fileName, chipConfig, runNumber);
           cd.run();
           cd.analyze();
           cd.draw();
@@ -485,7 +485,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
           Physics ph;
           ph.Inherit(&mySysCntr);
-          ph.initialize(fileName, chipConfig, runNumber);
+          ph.localConfigure(fileName, chipConfig, runNumber);
           if (binaryFile == "")
             {
               ph.Start(runNumber);
@@ -533,7 +533,7 @@ int main (int argc, char** argv)
       // # Copy configuration file #
       // ###########################
       std::string fName2Add (std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_");
-      std::string output    (RD53::composeFileName(configFile,fName2Add));
+      std::string output    (RD53Shared::composeFileName(configFile,fName2Add));
       std::string command   ("cp " + configFile + " " + output);
       system(command.c_str());
 

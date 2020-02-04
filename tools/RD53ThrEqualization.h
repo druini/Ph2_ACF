@@ -41,7 +41,8 @@ class ThrEqualization : public Tool
   void ConfigureCalibration ()     override;
 
   void   sendData            ();
-  void   initialize          (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void   localConfigure      (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void   initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void   run                 ();
   void   draw                ();
   size_t getNumberIterations ()

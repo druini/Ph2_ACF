@@ -50,7 +50,7 @@ void InjectionDelay::ConfigureCalibration ()
   std::string fileName = fileRes;
   fileName.replace(fileRes.find("_InjectionDelay"),15,"_Latency");
   la.Inherit(this);
-  la.initialize(fileName, fileReg);
+  la.localConfigure(fileName, fileReg);
 
 
   // ##############################
@@ -103,7 +103,7 @@ void InjectionDelay::Stop ()
   this->closeFileHandler();
 }
 
-void InjectionDelay::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void InjectionDelay::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -111,10 +111,15 @@ void InjectionDelay::initialize (const std::string fileRes_, const std::string f
   PixelAlive::doFast = 1;
 
 
-  fileRes = fileRes_;
-  fileReg = fileReg_;
+  if ((fileRes_ != "") && (fileReg_ != "")) InjectionDelay::initializeFileNames(fileRes_, fileReg_, currentRun);
 
   InjectionDelay::ConfigureCalibration();
+}
+
+void InjectionDelay::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+{
+  fileRes = fileRes_;
+  fileReg = fileReg_;
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {
