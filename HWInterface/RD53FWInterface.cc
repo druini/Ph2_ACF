@@ -594,7 +594,7 @@ namespace Ph2_HwInterface
         nWordsInMemoryOld = nWordsInMemory;
         usleep(READOUTSLEEP);
       }
-    while (((nWordsInMemory = ReadReg("user.stat_regs.words_to_read")) != nWordsInMemoryOld) && (pWait == true)); // @TMP@
+    while (((nWordsInMemory = ReadReg("user.stat_regs.words_to_read")) != nWordsInMemoryOld) && (pWait == true));
     // auto nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr");
 
 

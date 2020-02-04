@@ -47,6 +47,7 @@
 INITIALIZE_EASYLOGGINGPP
 
 
+using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
@@ -67,7 +68,7 @@ void interruptHandler (int handler)
 }
 
 
-void readBinaryData (std::string binaryFile, Ph2_System::SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
+void readBinaryData (std::string binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
 {
   unsigned int errors = 0;
   std::vector<uint32_t> data;
@@ -283,7 +284,7 @@ int main (int argc, char** argv)
     }
   else
     {
-      Ph2_System::SystemController mySysCntr;
+      SystemController mySysCntr;
 
 
       if ((reset == true) || (binaryFile != ""))

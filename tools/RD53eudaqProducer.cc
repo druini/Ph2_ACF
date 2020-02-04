@@ -15,6 +15,9 @@ RD53eudaqProducer::RD53eudaqProducer (Ph2_System::SystemController& RD53SysCntr,
 {
   RD53sysCntrPhys.Inherit(&RD53SysCntr);
   RD53sysCntrPhys.setGenericEvtConverter(RD53eudaqProducer::RD53eudaqEvtConverter(this));
+
+  this->SetStatus(eudaq::Status::STATE_UNINIT, "RD53eudaqProducer::Uninitialized");
+  this->SetStatus(eudaq::Status::STATE_UNCONF, "RD53eudaqProducer::Unconfigured");
 }
 
 void RD53eudaqProducer::DoInitialise ()
@@ -22,7 +25,15 @@ void RD53eudaqProducer::DoInitialise ()
   std::stringstream outp;
   RD53sysCntrPhys.InitializeHw(configFile, outp, true, false);
   RD53sysCntrPhys.InitializeSettings(configFile, outp);
+
+  this->SetStatus(eudaq::Status::STATE_UNCONF, "RD53eudaqProducer::Unconfigured");
 }
+
+void RD53eudaqProducer::DoConfigure ()
+{
+  this->SetStatus(eudaq::Status::STATE_CONF, "RD53eudaqProducer::Configured");
+}
+
 void RD53eudaqProducer::DoStartRun ()
 {
   currentRun = this->GetRunNumber();
@@ -35,15 +46,15 @@ void RD53eudaqProducer::DoStartRun ()
   std::string fileName("Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics");
   std::string chipConfig("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
   RD53sysCntrPhys.initialize(fileName, chipConfig);
-
   RD53sysCntrPhys.Start(currentRun);
+
+  this->SetStatus(eudaq::Status::STATE_RUNNING, "RD53eudaqProducer::Running");
 }
 
 void RD53eudaqProducer::DoStopRun ()
 {
   RD53sysCntrPhys.Stop();
   RD53sysCntrPhys.draw();
-
 
   // ###########################
   // # Copy configuration file #
@@ -52,6 +63,8 @@ void RD53eudaqProducer::DoStopRun ()
   std::string output    (Ph2_HwDescription::RD53::composeFileName(configFile,fName2Add));
   std::string command   ("cp " + configFile + " " + output);
   system(command.c_str());
+
+  this->SetStatus(eudaq::Status::STATE_STOPPED, "RD53eudaqProducer::Stopped");
 }
 
 void RD53eudaqProducer::DoTerminate ()
@@ -105,6 +118,9 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator() (const std::vector<Ph2
                   eudaq_hits.push_back(hit.tot);
                   eudaq_hits.push_back(0);
                 }
+              // ###########
+              // # Chip ID #
+              // ###########
               eudaqSubEvent->AddBlock(evt.chip_frames[i].chip_id, eudaq_hits);
             }
 

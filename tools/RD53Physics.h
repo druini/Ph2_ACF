@@ -46,7 +46,7 @@ class Physics : public Tool
   void Stop  ()                    override;
   void ConfigureCalibration ()     override;
 
-  void sendData               (BoardContainer* const& cBoard);
+  void sendData               (const BoardContainer* cBoard);
   void initialize             (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void run                    ();
   void draw                   ();
@@ -94,6 +94,7 @@ class Physics : public Tool
   bool saveBinaryData;
   bool doLocal;
   std::atomic<bool> keepRunning;
+  std::mutex theMtx;
   std::thread thrRun;
   evtConvType genericEvtConverter;
 };

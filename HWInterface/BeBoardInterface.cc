@@ -123,7 +123,7 @@ namespace Ph2_HwInterface
     std::lock_guard<std::mutex> guard(theMtx);
 
     setBoard(pBoard->getBeBoardId());
-    fBoardFW->ConfigureBoard (pBoard);
+    fBoardFW->ConfigureBoard(pBoard);
   }
 
   void BeBoardInterface::Start (BeBoard* pBoard)
@@ -160,12 +160,15 @@ namespace Ph2_HwInterface
 
   uint32_t BeBoardInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
   {
-    theMtx.lock();
+    uint32_t dataSize = 0;
 
-    setBoard(pBoard->getBeBoardId());
-    uint32_t dataSize = fBoardFW->ReadData(pBoard, pBreakTrigger, pData, pWait);
-
-    theMtx.unlock();
+    std::unique_lock<std::mutex> guard(theMtx, std::defer_lock);
+    if (guard.try_lock() == true)
+      {
+        setBoard(pBoard->getBeBoardId());
+        dataSize = fBoardFW->ReadData(pBoard, pBreakTrigger, pData, pWait);
+        guard.unlock();
+      }
 
     return dataSize;
   }

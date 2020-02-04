@@ -82,7 +82,7 @@ void Physics::Start (int currentRun)
   thrRun = std::thread(&Physics::run, this);
 }
 
-void Physics::sendData (BoardContainer* const& cBoard)
+void Physics::sendData (const BoardContainer* cBoard)
 {
   const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
   const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
@@ -102,8 +102,9 @@ void Physics::sendData (BoardContainer* const& cBoard)
 void Physics::Stop ()
 {
   LOG (INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
-  SystemController::Stop();
   keepRunning = false;
+  std::lock_guard<std::mutex> guard(theMtx);
+  SystemController::Stop();
   if (thrRun.joinable() == true) thrRun.join();
 
 
@@ -188,7 +189,15 @@ void Physics::analyze (bool doReadBinary)
     {
       size_t dataSize = 0;
 
-      if (doReadBinary == false) dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
+      if (doReadBinary == false)
+        {
+          std::unique_lock<std::mutex> guard(theMtx, std::defer_lock);
+          if (guard.try_lock() == true)
+            {
+              dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
+              guard.unlock();
+            }
+        }
       else
         {
           dataSize = 1;
