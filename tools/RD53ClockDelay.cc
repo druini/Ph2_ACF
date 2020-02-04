@@ -101,7 +101,6 @@ void ClockDelay::sendData ()
 void ClockDelay::Stop ()
 {
   LOG (INFO) << GREEN << "[ClockDelay::Stop] Stopping" << RESET;
-
   this->closeFileHandler();
 }
 

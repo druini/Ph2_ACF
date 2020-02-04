@@ -70,7 +70,6 @@ void ThrMinimization::sendData ()
 void ThrMinimization::Stop ()
 {
   LOG (INFO) << GREEN << "[ThrMinimization::Stop] Stopping" << RESET;
-
   this->closeFileHandler();
 }
 

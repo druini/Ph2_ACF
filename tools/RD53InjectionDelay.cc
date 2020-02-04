@@ -100,7 +100,6 @@ void InjectionDelay::sendData ()
 void InjectionDelay::Stop ()
 {
   LOG (INFO) << GREEN << "[InjectionDelay::Stop] Stopping" << RESET;
-
   this->closeFileHandler();
 }
 

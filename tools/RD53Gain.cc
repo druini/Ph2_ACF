@@ -110,7 +110,6 @@ void Gain::sendData ()
 void Gain::Stop ()
 {
   LOG (INFO) << GREEN << "[Gain::Stop] Stopping" << RESET;
-
   this->closeFileHandler();
 }
 

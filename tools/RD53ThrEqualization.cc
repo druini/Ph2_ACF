@@ -90,7 +90,6 @@ void ThrEqualization::sendData ()
 void ThrEqualization::Stop ()
 {
   LOG (INFO) << GREEN << "[ThrEqualization::Stop] Stopping" << RESET;
-
   this->closeFileHandler();
 }
 

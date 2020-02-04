@@ -81,7 +81,6 @@ void Latency::sendData ()
 void Latency::Stop ()
 {
   LOG (INFO) << GREEN << "[Latency::Stop] Stopping" << RESET;
-
   this->closeFileHandler();
 }
 

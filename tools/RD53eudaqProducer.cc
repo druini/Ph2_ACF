@@ -23,8 +23,7 @@ void RD53eudaqProducer::DoInitialise ()
   RD53sysCntrPhys.InitializeHw(configFile, outp, true, false);
   RD53sysCntrPhys.InitializeSettings(configFile, outp);
 }
-
-void RD53eudaqProducer::DoConfigure ()
+void RD53eudaqProducer::DoStartRun ()
 {
   currentRun = this->GetRunNumber();
 
@@ -36,10 +35,7 @@ void RD53eudaqProducer::DoConfigure ()
   std::string fileName("Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics");
   std::string chipConfig("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
   RD53sysCntrPhys.initialize(fileName, chipConfig);
-}
 
-void RD53eudaqProducer::DoStartRun ()
-{
   RD53sysCntrPhys.Start(currentRun);
 }
 

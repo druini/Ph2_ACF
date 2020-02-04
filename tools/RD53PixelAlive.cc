@@ -107,7 +107,6 @@ void PixelAlive::sendData ()
 void PixelAlive::Stop ()
 {
   LOG (INFO) << GREEN << "[PixelAlive::Stop] Stopping" << RESET;
-
   this->closeFileHandler();
 }
 

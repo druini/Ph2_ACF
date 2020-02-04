@@ -102,7 +102,6 @@ void Physics::sendData (BoardContainer* const& cBoard)
 void Physics::Stop ()
 {
   LOG (INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
-
   SystemController::Stop();
   keepRunning = false;
   if (thrRun.joinable() == true) thrRun.join();
@@ -115,6 +114,7 @@ void Physics::Stop ()
 
 
   this->closeFileHandler();
+  LOG (INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
 }
 
 void Physics::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)

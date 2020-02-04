@@ -110,7 +110,6 @@ void SCurve::sendData ()
 void SCurve::Stop ()
 {
   LOG (INFO) << GREEN << "[SCurve::Stop] Stopping" << RESET;
-
   this->closeFileHandler();
 }
 
