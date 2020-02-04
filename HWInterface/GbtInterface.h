@@ -84,7 +84,8 @@ namespace Ph2_HwInterface
         bool cicWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue , bool pReadBack=false);
         
         // multi-register write 
-        bool cbcWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend);
+        //bool cbcWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend);
+        bool i2cWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies);
         
     private : 
         // GBTX ec 

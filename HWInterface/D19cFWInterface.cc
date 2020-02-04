@@ -470,6 +470,34 @@ namespace Ph2_HwInterface
         uint32_t cVersionWord = 0;
         return cVersionWord;
     }
+void D19cFWInterface::configureCDCE_old(uint16_t pClockRate) 
+{
+    uint32_t cRegister;
+    if( pClockRate == 120 ) 
+      cRegister = 0xEB040321; 
+    else if( pClockRate == 160)
+      cRegister = 0xEB020321; 
+    else if( pClockRate == 240 )
+      cRegister = 0xEB840321 ;
+    else // 320
+      cRegister = 0xEB820321;//321
+    std::vector<uint32_t> cRegisterValues = { 0xeb840320 ,cRegister , 0xEB840302, 0xeb840303, 0xeb140334, 0x013c0cb5, 0x33041be6, 0xbd800df7 };
+    std::vector< std::pair<std::string, uint32_t> > cVecReg;
+    for( auto cRegisterValue : cRegisterValues ) 
+    {
+        // cVecReg.clear();
+        cVecReg.push_back({"sysreg.spi.tx_data", cRegisterValue} );
+        cVecReg.push_back({"sysreg.spi.command", 0x8fa38014} );
+        this->WriteStackReg( cVecReg ); 
+        uint32_t cReadBack = this->ReadReg("sysreg.spi.rx_data");
+        cReadBack = this->ReadReg("sysreg.spi.rx_data");
+        LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
+    }
+    cVecReg.clear();
+    std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+};
+
+
 void D19cFWInterface::configureCDCE( uint16_t pClockRate, std::pair<std::string,uint16_t> pCDCEselect) 
 {
   LOG (INFO) << BOLDBLUE << "...Configuring CDCE clock generator via SPI" << RESET;
@@ -649,6 +677,8 @@ bool D19cFWInterface::GBTLock( const BeBoard* pBoard )
     std::this_thread::sleep_for (std::chrono::milliseconds (500) );
     // enable FMC
     powerAllFMCs(true);
+    // configure CDCE 
+    this->configureCDCE_old(120);
     //reset GBT-FPGA
     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);  
     std::this_thread::sleep_for (std::chrono::milliseconds (50) );
@@ -2645,10 +2675,10 @@ void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
         //assume that they are all the same just to test - multibyte write for CBC
         uint8_t cFirstChip = (*cIterator & (0x1F << 18) ) >> 18;
         uint8_t cWriteReq = !((*cIterator & (0x1 <<16)) >> 16); 
-        if( cWriteReq == 1  && cFirstChip < 8 )  
+        if( cWriteReq == 1 )  
         {
            //still being tested - WIP
-           //cFailed = !cGBTx.cbcWrite(this, pVecSend );
+           //cFailed = !cGBTx.i2cWrite(this, pVecSend, pReplies);
         }
 
         while( cIterator < pVecSend.end() ) 

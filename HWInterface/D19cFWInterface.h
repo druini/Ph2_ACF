@@ -395,6 +395,7 @@ namespace Ph2_HwInterface {
         std::pair<uint16_t,float> readADC( std::string pValueToRead="AMUX_L" , bool pApplyCorrection=false );
 
         // CDCE 
+        void configureCDCE_old(uint16_t pClockRate=120 );
         void configureCDCE( uint16_t pClockRate=120, std::pair<std::string,uint16_t> pCDCEselect=std::make_pair("sec",40) ); 
         void syncCDCE();
         void epromCDCE();

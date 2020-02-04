@@ -648,7 +648,7 @@ namespace Ph2_HwInterface
             return (cErrorCode == 0 );
     }
     //multi-write.. working on it...
-    bool GbtInterface::cbcWrite(BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend)
+    /*bool GbtInterface::cbcWrite(BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend)
     {
         // work in progress
         std::vector<SCAI2C> cDataWordsFirstPage( 0 );
@@ -789,6 +789,146 @@ namespace Ph2_HwInterface
                 cErrorCode = ecWrite(pInterface, cMaster , 0xDA , (cSlave << 3*8) );
                 cIterator++;
             }
+        }
+        return true;
+    }*/
+    bool GbtInterface::i2cWrite(BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies)
+    {
+        // number of bytes to write at a time 
+        uint8_t cNBytes = 2; 
+        uint8_t cNSimWrites = 1;
+        // work in progress
+        std::map<uint8_t, std::vector<uint32_t>> cI2C; 
+        cI2C.clear();
+
+        auto cIterator = pVecSend.begin();
+        size_t cRegisters=0;
+        SCAI2C cSCAcommand;
+        while( cIterator < pVecSend.end() ) 
+        {
+            uint32_t cWord = *cIterator;
+            uint8_t cFeId = (cWord & (0xF << 23) ) >> 23;
+            cI2C[(cFeId%2) + fSCAMaster].push_back( cWord );
+            cIterator++;
+        }
+        auto cI2Citerator = cI2C.begin();
+        while(cI2Citerator != cI2C.end())
+        {
+            auto cMaster = cI2Citerator->first;
+            LOG (DEBUG) << BOLDBLUE << " I2C master " << +cMaster <<" :: " << cI2Citerator->second.size() << " registers to write to." << RESET;
+            std::map<uint8_t, std::vector<uint32_t>> cI2Cw;
+            std::map<uint8_t, std::vector<uint32_t>> cI2Cr;
+            // 
+            cIterator = cI2Citerator->second.begin();
+            while( cIterator < cI2Citerator->second.end() ) 
+            {
+                uint32_t cWord = *cIterator;
+                uint8_t cWrite = !((cWord & (0x1 <<16)) >> 16); 
+                uint8_t cLinkId = (cWord & (0x3 << 29) ) >> 29;
+                uint8_t cChipId = (cWord & (0x1F << 18) ) >> 18;
+                uint8_t cAddress = (cWord & 0xFF); 
+                uint8_t cPage    = (cWord & (0xFF <<8)) >> 8;
+                uint8_t cValue   = 0 ;
+                if( cWrite == 1 ) 
+                {
+                    cIterator++;
+                    cWord = *cIterator; 
+                    cValue = (cWord & 0xFF);
+                    cI2Cw[cLinkId].push_back( (cPage << 20 ) | (cChipId << 16) | (cAddress << 8) | (cValue << 0) );
+                }
+                else
+                    cI2Cr[cLinkId].push_back( (cPage << 20 ) | (cChipId << 16) | (cAddress << 8) | (cValue << 0 ));
+
+                cIterator++;
+            }
+            auto cWriteIterator = cI2Cw.begin();
+            while(cWriteIterator != cI2Cw.end())
+            {
+                // select link
+                LOG (DEBUG) << BOLDBLUE << " Link " << +cWriteIterator->first <<" :: " << cWriteIterator->second.size() << " registers to write to." << RESET;
+                pInterface->WriteReg("fc7_daq_cnfg.optical_block.mux",cWriteIterator->first);
+                std::this_thread::sleep_for (std::chrono::microseconds (100) );
+                std::map<uint8_t, std::vector<uint32_t>> cI2Cpages;
+                cIterator = cWriteIterator->second.begin();
+                while( cIterator < cWriteIterator->second.end() ) 
+                {
+                    //cI2Cw[cLinkId].push_back( (cPage << 19 ) | (cChipId << 16) | (cAddress << 8) | (cValue << 0) );
+                    uint32_t cWord = *cIterator;
+                    uint8_t cPage    = (cWord & (0x3 <<20)) >> 20;
+                    uint8_t cChipId = (cWord & (0xF << 16) ) >> 16;
+                    uint8_t cAddress = (cWord & (0xFF << 8)) >> 8 ; 
+                    uint8_t cValue = (cWord & (0xFF << 0)) >> 0 ;
+                    cI2Cpages[cPage].push_back( (cChipId << 16) | (cAddress << 8) | (cValue << 0) );
+                    cIterator++;
+                }
+                auto cPageIterator = cI2Cpages.begin();
+                while(cPageIterator != cI2Cpages.end())
+                {
+                    auto cPage = cPageIterator->first;
+                    LOG (DEBUG) << BOLDBLUE << "\t\t...Page " << +cPage <<" :: " << cPageIterator->second.size() << " registers to write to." << RESET;
+                    std::map<uint8_t, std::vector<uint32_t>> cI2Cchip;
+                    cIterator = cPageIterator->second.begin();
+                    while( cIterator < cPageIterator->second.end() ) 
+                    {
+                        uint32_t cWord = *cIterator;
+                        uint8_t cChipId = (cWord & (0xF << 16) ) >> 16;
+                        uint8_t cAddress = (cWord & (0xFF << 8)) >> 8 ; 
+                        uint8_t cValue = (cWord & (0xFF << 0)) >> 0 ;
+                        cI2Cchip[cChipId].push_back( (cAddress << 8) | (cValue << 0)  );
+                        cIterator++;
+                    }
+                    auto cChipIterator = cI2Cchip.begin();
+                    while(cChipIterator != cI2Cchip.end())
+                    {
+                        auto& cChipId = cChipIterator->first;
+                        auto& cRegisters = cChipIterator->second;
+                        uint32_t cErrorCode=0;
+                        uint8_t cSlave = 0; 
+                        if( cChipId < 8 ) // CBC 
+                        {
+                            cSlave = 0x40 | (cChipId + 1 );
+                            cNBytes=2;
+                            cErrorCode = this->cbcSetPage(pInterface,(cMaster-fSCAMaster), cChipId, cPage+1);
+                        }
+                        else
+                        {
+                            cSlave = 0x60;
+                            cNBytes = 3 ;
+                        }
+
+                        // configure I2C master to write  Nbytes at a time 
+                        LOG (DEBUG) << BOLDBLUE << "\t\t...Chip " << +cChipId <<" :: " << cRegisters.size() << " registers to write [ " << +cNBytes << " bytes per register]" << RESET;
+                        
+                        configI2C( pInterface , cMaster, cNBytes);
+                        cIterator = cRegisters.begin();
+                        while( cIterator < cRegisters.end() ) 
+                        {
+                            uint32_t cWord = *cIterator;
+                            //upload data bytes to send in the DATA register
+                            uint8_t cAddress = ( cWord & (0xFF << 8) ) >> 8;
+                            uint8_t cValue = ( cWord & (0xFF << 0) ) >> 0;
+                            uint16_t cDataField = (cAddress << 8) | cValue ; 
+                            uint32_t pData = (cChipId < 8 ) ? ((cAddress << 8*3) | (cValue << 8*2)) : ( (cAddress << 16) | ( cValue << 8) );
+                            cErrorCode = ecWrite( pInterface, cMaster , 0x40 , pData  );
+                            cErrorCode = ecWrite(pInterface, cMaster , 0xDA , (cSlave << 3*8) );
+                            cIterator++;
+                        }
+                        cChipIterator++;
+                    } 
+                    cPageIterator++;
+                }
+                cWriteIterator++;
+            } 
+            auto cReadIterator = cI2Cr.begin();
+            while(cReadIterator != cI2Cr.end())
+            {
+                LOG (INFO) << BOLDBLUE << " Link " << +cReadIterator->first <<" :: " << cReadIterator->second.size() << " registers to read from." << RESET;
+                pInterface->WriteReg("fc7_daq_cnfg.optical_block.mux",cReadIterator->first);
+                std::this_thread::sleep_for (std::chrono::microseconds (100) );
+          
+                cReadIterator++;
+            } 
+            cI2Citerator++;
         }
         return true;
     }
