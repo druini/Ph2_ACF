@@ -133,6 +133,17 @@ namespace Ph2_System {
             }
         }
         cBeBoard->setOptical( cWithOptical );
+        bool cConfigureCDCE=false;
+        for (pugi::xml_node cChild: pBeBordNode.children("CDCE"))
+        {
+            for (pugi::xml_attribute cAttribute: cChild.attributes())
+            {
+                if( std::string ( cAttribute.name() ) == "configure")
+                    cConfigureCDCE = cConfigureCDCE | ( convertAnyInt ( cAttribute.value() ) ==1);
+            }
+        }
+        cBeBoard->setCDCEconfiguration( cConfigureCDCE );
+
         if( cWithOptical )
             os << BOLDBLUE <<  "|"  << "----" << "Optical link is      " << BOLDGREEN << " is being used.\n" << RESET;
         else

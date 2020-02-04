@@ -678,7 +678,7 @@ bool D19cFWInterface::GBTLock( const BeBoard* pBoard )
     // enable FMC
     powerAllFMCs(true);
     // configure CDCE 
-    this->configureCDCE_old(120);
+    //this->configureCDCE_old(120);
     //reset GBT-FPGA
     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);  
     std::this_thread::sleep_for (std::chrono::milliseconds (50) );
@@ -777,7 +777,7 @@ void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
     // configure CDCE - if needed
     std::pair<std::string,uint16_t> cCDCEselect;
     uint32_t cReferenceSelect = this->ReadReg("sysreg.ctrl.cdce_refsel");
-    bool cConfigure = false;
+    //bool cConfigure = false;
     bool cSecondaryReference=false;
     LOG (INFO) << BOLDBLUE << "Reference select : " << +cReferenceSelect << RESET;
     for ( auto const& it : cRegMap )
@@ -790,15 +790,15 @@ void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
     {
         cCDCEselect.first = "sec";
         cCDCEselect.second =40;
-        cConfigure = (cReferenceSelect != 0 );
+        //cConfigure = (cReferenceSelect != 0 );
     }
     else
     {
         cCDCEselect.first = "pri";
         cCDCEselect.second =40;
-        cConfigure = (cReferenceSelect != 1 );
+        //cConfigure = (cReferenceSelect != 1 );
     }
-    if( cConfigure )
+    if( pBoard->configCDCE() )
     {
         configureCDCE(120, cCDCEselect);
         std::this_thread::sleep_for (std::chrono::milliseconds (1000) );

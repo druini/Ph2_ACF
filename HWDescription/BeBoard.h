@@ -171,9 +171,17 @@ namespace Ph2_HwDescription {
         {
             fOptical = pOptical;
         };
+        void setCDCEconfiguration ( bool pConfigure )
+        {
+            fConfigureCDCE = pConfigure;
+        };
         bool ifOptical () const
         {
             return fOptical;
+        }
+        bool configCDCE () const
+        {
+            return fConfigureCDCE;
         }
         /*!
         * \brief Set the Number of CBCs that are used to compute the data blob size of the BeBoard (according to FW version)
@@ -246,6 +254,7 @@ namespace Ph2_HwDescription {
         ConditionDataSet* fCondDataSet;
         // 
         bool fOptical;
+        bool fConfigureCDCE;
       private:
 
         /*!

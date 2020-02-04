@@ -3,10 +3,12 @@
     <BeBoard Id="0" boardType="D19C" eventType="VR">
       <connection id="board" uri="chtcp-2.0://cmsuptracker003:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" /> 
     
-   <GBT_Links>
+    <GBT_Links>
         <GBT Id="0" phaseTap="7" enable="1"/>
     </GBT_Links>
 
+    <CDCE configure = "0"/>
+   
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1" LinkId="0">
         <Global>
             <Settings threshold="500" latency="19"/>

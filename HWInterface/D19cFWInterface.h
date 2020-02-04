@@ -103,6 +103,7 @@ namespace Ph2_HwInterface {
         uint32_t fI2CVersion;	
         // optical readout
         bool fOptical=false;
+        bool fConfigureCDCE=false;
         uint32_t fGBTphase;
 
         const uint32_t SINGLE_I2C_WAIT = 200; //used for 1MHz I2C
