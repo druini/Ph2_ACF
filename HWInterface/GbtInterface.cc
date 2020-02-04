@@ -75,7 +75,8 @@ namespace Ph2_HwInterface
         }
         pInterface->WriteStackReg( cVecReg );
         std::this_thread::sleep_for (std::chrono::microseconds (10) );
-         pInterface->WriteReg("fc7_daq_ctrl.optical_block.sca.start",0x1); 
+        pInterface->WriteReg("fc7_daq_ctrl.optical_block.sca.start",0x1); 
+        std::this_thread::sleep_for (std::chrono::microseconds (100) );
         uint32_t cErrorCode = pInterface->ReadReg("fc7_daq_stat.optical_block.sca.error");
         // reset 
         //ecReset(pInterface);
