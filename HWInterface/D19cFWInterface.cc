@@ -2571,7 +2571,21 @@ bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChip
     {
         //use fBroadcastCBCId for broadcast commands
         bool pUseMask = false;
-        if (fI2CVersion >= 1) {
+        if( fOptical )
+        {
+            uint8_t pLinkId = 0 ; // placeholder .. eventually should have the link here 
+            // new command consists of one word if its read command, and of two words if its write. first word is always the same
+            uint32_t cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0);
+            pVecReq.push_back( cWord);
+            // only for write commands
+            if (pWrite)
+            {
+                cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pRegItem.fValue << 0);
+                pVecReq.push_back( cWord );
+            }
+        }
+        else if (fI2CVersion >= 1) 
+        {
         // new command consists of one word if its read command, and of two words if its write. first word is always the same
             pVecReq.push_back( (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0) );
         // only for write commands
@@ -2667,57 +2681,60 @@ void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
 
     bool D19cFWInterface::WriteI2C ( std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadback, bool pBroadcast )
     {
-        bool cFailed ( false );
+    
+    bool cFailed ( false );
     if( fOptical )
     {
         GbtInterface cGBTx;
-        auto cIterator = pVecSend.begin();
         //assume that they are all the same just to test - multibyte write for CBC
-        uint8_t cFirstChip = (*cIterator & (0x1F << 18) ) >> 18;
-        uint8_t cWriteReq = !((*cIterator & (0x1 <<16)) >> 16); 
+        uint8_t cFirstChip = (pVecSend[0] & (0x1F << 18) ) >> 18;
+        uint8_t cWriteReq = !((pVecSend[0] & (0x1 <<16)) >> 16); 
         if( cWriteReq == 1 )  
         {
            //still being tested - WIP
-           //cFailed = !cGBTx.i2cWrite(this, pVecSend, pReplies);
+           cFailed = !cGBTx.i2cWrite(this, pVecSend, pReplies);
         }
-
-        while( cIterator < pVecSend.end() ) 
+        else
         {
-            uint32_t cWord = *cIterator;
-            uint8_t cWrite = !((cWord & (0x1 <<16)) >> 16); 
-            uint8_t cAddress = (cWord & 0xFF); 
-            uint8_t cPage    = (cWord & (0xFF <<8)) >> 8;
-            uint8_t cChipId = (cWord & (0x1F << 18) ) >> 18;
-            uint8_t cFeId = (cWord & (0xF << 23) ) >> 23;
-            uint32_t cReadback=0;
-            if( cWrite == 0 ) 
+            auto cIterator = pVecSend.begin();
+            while( cIterator < pVecSend.end() ) 
             {
-                LOG (DEBUG) << BOLDBLUE << "I2C : FE" << +(cFeId%2) << " Chip" << +cChipId << " register address 0x" << std::hex << +cAddress << std::dec << " on page : " << +cPage << RESET;
-                if( cChipId < 8 ) 
+                uint32_t cWord = *cIterator;
+                uint8_t cWrite = !((cWord & (0x1 <<16)) >> 16); 
+                uint8_t cAddress = (cWord & 0xFF); 
+                uint8_t cPage    = (cWord & (0xFF <<8)) >> 8;
+                uint8_t cChipId = (cWord & (0x1F << 18) ) >> 18;
+                uint8_t cFeId = (cWord & (0xF << 23) ) >> 23;
+                uint32_t cReadback=0;
+                if( cWrite == 0 ) 
                 {
-                    cReadback = cGBTx.cbcRead(this, cFeId%2 , cChipId, cPage+1, cAddress) ; 
+                    LOG (DEBUG) << BOLDBLUE << "I2C : FE" << +(cFeId%2) << " Chip" << +cChipId << " register address 0x" << std::hex << +cAddress << std::dec << " on page : " << +cPage << RESET;
+                    if( cChipId < 8 ) 
+                    {
+                        cReadback = cGBTx.cbcRead(this, cFeId%2 , cChipId, cPage+1, cAddress) ; 
+                    }
+                    else
+                    {
+                        cReadback = cGBTx.cicRead(this, cFeId%2 , cAddress) ; 
+                    }
+                    uint32_t cReply = ( cFeId << 27 ) | ( cChipId << 22 ) | (cAddress << 8 ) | (cReadback & 0xFF); 
+                    pReplies.push_back( cReply ); 
                 }
-                else
+                /*else
                 {
-                    cReadback = cGBTx.cicRead(this, cFeId%2 , cAddress) ; 
-                }
-                uint32_t cReply = ( cFeId << 27 ) | ( cChipId << 22 ) | (cAddress << 8 ) | (cReadback & 0xFF); 
-                pReplies.push_back( cReply ); 
+                    cReadback = (cWord & (0x1 << 17)) >> 17;    
+                    cIterator++;
+                    cWord = *cIterator; 
+                    uint8_t cValue = (cWord & 0xFF);
+                    if( cChipId < 8 ) 
+                    {
+                      cFailed = !cGBTx.cbcWrite(this, cFeId%2, cChipId, cPage+1, cAddress, cValue , (cReadback == 1) );
+                    }
+                    else    
+                        cFailed = !cGBTx.cicWrite(this, cFeId%2, cAddress, cValue , (cReadback == 1) );
+                }*/
+                cIterator++;    
             }
-            else
-            {
-                cReadback = (cWord & (0x1 << 17)) >> 17;    
-                cIterator++;
-                cWord = *cIterator; 
-                uint8_t cValue = (cWord & 0xFF);
-                if( cChipId < 8 ) 
-                {
-                  cFailed = !cGBTx.cbcWrite(this, cFeId%2, cChipId, cPage+1, cAddress, cValue , (cReadback == 1) );
-                }
-                else    
-                    cFailed = !cGBTx.cicWrite(this, cFeId%2, cAddress, cValue , (cReadback == 1) );
-            }
-            cIterator++;    
         }
     }
     else

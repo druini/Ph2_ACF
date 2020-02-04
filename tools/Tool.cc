@@ -975,17 +975,20 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 		ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *previousDacList, allZeroRegister);
 		ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *currentDacList , allOneRegister);
 	}
-
+	LOG (INFO) << BOLDBLUE << "Setting all bits of registers " << dacName << "  to  " << +allZeroRegister << RESET;
 	if(localDAC) setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList);
 	else setAllGlobalDacBeBoard(boardIndex, dacName, *previousDacList);
 
 	fDetectorDataContainer = previousStepOccupancyContainer;
+	LOG (INFO) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
 	measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
+	LOG (INFO) << BOLDBLUE << "Setting all bits of registers " << dacName << "  to  " << +allOneRegister << RESET;
 	if(localDAC) setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
 	else setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
 
 	fDetectorDataContainer = currentStepOccupancyContainer;
+	LOG (INFO) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
 	measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
 
@@ -1001,7 +1004,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 
 	for(int iBit = numberOfBits-1; iBit>=0; --iBit)
 	{
-
+		LOG (INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
 		for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
 		{
 			for ( auto cChip : *cFe )

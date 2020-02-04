@@ -139,7 +139,11 @@ int main ( int argc, char* argv[] )
     cTool.InitializeSettings ( cHWFile, outp );
     LOG (INFO) << outp.str();
     outp.str ("");
+    t.start();
     cTool.ConfigureHw ();
+    t.stop();
+        t.show ( "Time to configure the front-end objects: " );
+    
     cTool.CreateResultDirectory ( cDirectory );
     cTool.InitResultFile ( "CicResults" );
     //cTool.StartHttpServer();

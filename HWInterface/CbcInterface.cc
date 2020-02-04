@@ -526,6 +526,7 @@ namespace Ph2_HwInterface
     }
     bool CbcInterface::WriteChipAllLocalReg ( ReadoutChip* pCbc, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop )
     { 
+        setBoard ( pCbc->getBeBoardId() );
         assert(localRegValues.size()==pCbc->getNumberOfChannels());
         std::string dacTemplate;
         bool isMask = false;
@@ -538,6 +539,7 @@ namespace Ph2_HwInterface
         // std::vector<uint32_t> listOfChannelToUnMask;
         ChannelGroup<NCHANNELS,1> channelToEnable;
 
+        std::vector<uint32_t> cVec;cVec.clear();
         for(uint8_t iChannel=0; iChannel<pCbc->getNumberOfChannels(); ++iChannel)
         {
             if(isMask)
@@ -552,12 +554,13 @@ namespace Ph2_HwInterface
             {
                 char dacName1[20];
                 sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
-                // only modify channel on unmasked channels 
-                //if( fActiveChannels[iChannel] ) 
+                ChipRegItem cRegItem = pCbc->getRegItem ( dacName1 );
+                cRegItem.fValue = localRegValues.getChannel<uint16_t>(iChannel);
+                // fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getChipId(), cVec, pVerifLoop, true );
+                // #ifdef COUNT_FLAG
+                //     fRegisterCount++;
+                // #endif
                 cRegVec.emplace_back(dacName1,localRegValues.getChannel<uint16_t>(iChannel));
-                //cRegVec.emplace_back(dacName1,localRegValues.getChannel<RegisterValue>(iChannel).fRegisterValue);
-                //else
-                //     cRegVec.emplace_back(dacName1,0xFF);
             }
         }
 
@@ -567,6 +570,12 @@ namespace Ph2_HwInterface
         }
         else
         {
+            // uint8_t cWriteAttempts = 0 ;
+            // bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+            // #ifdef COUNT_FLAG
+            //     fTransactionCount++;
+            // #endif
+            // return cSuccess;
             return WriteChipMultReg (pCbc, cRegVec, pVerifLoop);
         }
             

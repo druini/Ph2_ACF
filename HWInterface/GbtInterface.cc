@@ -49,6 +49,7 @@ namespace Ph2_HwInterface
         cVecReg.push_back ({"fc7_daq_cnfg.optical_block.sca.cmd", pCommand});
         cVecReg.push_back ({"fc7_daq_cnfg.optical_block.sca.data", pData});
         pInterface->WriteStackReg( cVecReg );
+        std::this_thread::sleep_for (std::chrono::microseconds (10) );
         LOG (DEBUG) << BOLDBLUE << "GBTx EC write to I2C master " << +pI2Cmaster <<  " - data field : " << +pData << " [ command 0x" << std::hex << pCommand << std::dec << "]." << RESET; 
         pInterface->WriteReg("fc7_daq_ctrl.optical_block.sca.start",0x1); 
         // check for error 
@@ -73,7 +74,8 @@ namespace Ph2_HwInterface
             LOG (DEBUG) << BOLDBLUE << "GBTx EC write to I2C master " << +pI2Cmaster <<  " - data field : " << +pCommand.second << " [ command 0x" << std::hex << pCommand.first << std::dec << "]." << RESET; 
         }
         pInterface->WriteStackReg( cVecReg );
-        pInterface->WriteReg("fc7_daq_ctrl.optical_block.sca.start",0x1); 
+        std::this_thread::sleep_for (std::chrono::microseconds (10) );
+         pInterface->WriteReg("fc7_daq_ctrl.optical_block.sca.start",0x1); 
         uint32_t cErrorCode = pInterface->ReadReg("fc7_daq_stat.optical_block.sca.error");
         // reset 
         //ecReset(pInterface);
