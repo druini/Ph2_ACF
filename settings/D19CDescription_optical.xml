@@ -132,7 +132,7 @@
         </Register>
     <!-- DIO5 Block -->
     <Register name="dio5_block">
-        <Register name="dio5_en"> 0 </Register>
+        <Register name="dio5_en"> 1 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 1 </Register>
                 <Register name="term_enable"> 0 </Register>

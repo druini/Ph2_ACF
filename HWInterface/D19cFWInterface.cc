@@ -898,11 +898,11 @@ void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
     WriteReg ("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
     // load dio5 configuration
     if (dio5_enabled)
-                    {
-        InitFMCPower();
-        //PowerOnDIO5();
+    {
+        //InitFMCPower();
+        PowerOnDIO5();
         WriteReg ("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
-                    }
+    }
 
     // now set event type (ZS or VR)
     if (pBoard->getEventType() == EventType::ZS) WriteReg ("fc7_daq_cnfg.readout_block.global.zero_suppression_enable", 0x1);
