@@ -164,11 +164,6 @@ void Physics::run ()
 
 void Physics::draw ()
 {
-#ifdef __USE_ROOT__
-  Physics::fillHisto();
-  histos->process();
-#endif
-
   // #######################################
   // # Save and Update register new values #
   // #######################################
@@ -184,6 +179,8 @@ void Physics::draw ()
         }
 
 #ifdef __USE_ROOT__
+  Physics::fillHisto();
+  histos->process();
   if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();

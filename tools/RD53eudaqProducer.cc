@@ -33,13 +33,14 @@ void RD53eudaqProducer::DoInitialise ()
   std::stringstream outp;
   RD53sysCntrPhys.InitializeHw(configFile, outp, true, false);
   RD53sysCntrPhys.InitializeSettings(configFile, outp);
-  RD53sysCntrPhys.localConfigure("", "");
 
   this->SetStatus(eudaq::Status::STATE_UNCONF, "RD53eudaqProducer::Unconfigured");
 }
 
 void RD53eudaqProducer::DoConfigure ()
 {
+  RD53sysCntrPhys.localConfigure("", "");
+
   this->SetStatus(eudaq::Status::STATE_CONF, "RD53eudaqProducer::Configured");
 }
 
