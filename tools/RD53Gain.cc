@@ -115,12 +115,15 @@ void Gain::Stop ()
 
 void Gain::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
-  Gain::ConfigureCalibration();
+#ifdef __USE_ROOT__
+  histos = nullptr;
+#endif
 
-  if ((fileRes_ != "") && (fileReg_ != "")) Gain::initializeFileNames(fileRes_, fileReg_, currentRun);
+  Gain::ConfigureCalibration();
+  if ((fileRes_ != "") && (fileReg_ != "")) Gain::initializeFiles(fileRes_, fileReg_, currentRun);
 }
 
-void Gain::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void Gain::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
@@ -130,6 +133,11 @@ void Gain::initializeFileNames (const std::string fileRes_, const std::string fi
       this->addFileHandler(std::string(RESULTDIR) + "/GainRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
+
+#ifdef __USE_ROOT__
+  delete histos;
+  histos = new GainHistograms;
+#endif
 }
 
 void Gain::run ()
@@ -186,9 +194,9 @@ void Gain::draw (bool doSave)
       this->InitResultFile(fileRes);
     }
 
-  Gain::initHisto();
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   Gain::fillHisto();
-  Gain::display();
+  histos->process();
 #endif
 
   // ######################################
@@ -308,26 +316,12 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
   return theGainAndInterceptContainer;
 }
 
-void Gain::initHisto ()
-{
-#ifdef __USE_ROOT__
-  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
-}
-
 void Gain::fillHisto ()
 {
 #ifdef __USE_ROOT__
   for (auto i = 0u; i < dacList.size(); i++)
-    histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
-  histos.fillGainAndIntercept(*theGainAndInterceptContainer);
-#endif
-}
-
-void Gain::display ()
-{
-#ifdef __USE_ROOT__
-  histos.process();
+    histos->fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
+  histos->fillGainAndIntercept(*theGainAndInterceptContainer);
 #endif
 }
 

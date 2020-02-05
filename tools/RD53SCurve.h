@@ -44,7 +44,7 @@ class SCurve : public Tool
 
   void sendData                                  ();
   void localConfigure                            (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void initializeFileNames                       (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void initializeFiles                           (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void run                                       ();
   void draw                                      ();
   std::shared_ptr<DetectorDataContainer> analyze ();
@@ -74,9 +74,7 @@ class SCurve : public Tool
   std::shared_ptr<DetectorDataContainer>   theThresholdAndNoiseContainer;
   ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
-  void initHisto       ();
   void fillHisto       ();
-  void display         ();
   void computeStats    (const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
   void chipErrorReport ();
 
@@ -85,7 +83,7 @@ class SCurve : public Tool
   // # ROOT #
   // ########
 #ifdef __USE_ROOT__
-  SCurveHistograms histos;
+  SCurveHistograms* histos;
 #endif
 
 

@@ -226,7 +226,7 @@ namespace Ph2_System
       return fEventList;
     }
 
-    void DecodeData (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+    void DecodeData(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
     double findValueInSettings(const std::string name, double defaultValue = 0.) const;
 

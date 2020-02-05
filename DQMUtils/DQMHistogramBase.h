@@ -78,8 +78,8 @@ class DQMHistogramBase
   template <typename Hist>
     void bookImplementer (TFile* theOutputFile,
                           const DetectorContainer& theDetectorStructure,
-                          const CanvasContainer<Hist>& histContainer,
                           DetectorDataContainer& dataContainer,
+                          const CanvasContainer<Hist>& histContainer,
                           const char* XTitle = nullptr,
                           const char* YTitle = nullptr)
     {
@@ -100,7 +100,7 @@ class DQMHistogramBase
           for (auto cChip : *cModule)
             {
               TCanvas* canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
-              Hist* hist      = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
+              Hist*    hist   = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
 
               canvas->cd();
               hist->Draw(opt);

@@ -44,7 +44,7 @@ class Gain : public Tool
 
   void sendData                                  ();
   void localConfigure                            (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void initializeFileNames                       (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void initializeFiles                           (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void run                                       ();
   void draw                                      (bool doSave = true);
   std::shared_ptr<DetectorDataContainer> analyze ();
@@ -74,9 +74,7 @@ class Gain : public Tool
   std::shared_ptr<DetectorDataContainer>   theGainAndInterceptContainer;
   ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
-  void initHisto       ();
   void fillHisto       ();
-  void display         ();
   void computeStats    (const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
   void chipErrorReport ();
 
@@ -85,7 +83,7 @@ class Gain : public Tool
   // # ROOT #
   // ########
 #ifdef __USE_ROOT__
-  GainHistograms histos;
+  GainHistograms* histos;
 #endif
 
 

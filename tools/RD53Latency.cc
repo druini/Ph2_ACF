@@ -92,12 +92,15 @@ void Latency::localConfigure (const std::string fileRes_, const std::string file
   PixelAlive::doFast = 1;
 
 
-  Latency::ConfigureCalibration();
+#ifdef __USE_ROOT__
+  histos = nullptr;
+#endif
 
-  if ((fileRes_ != "") && (fileReg_ != "")) Latency::initializeFileNames(fileRes_, fileReg_, currentRun);
+  Latency::ConfigureCalibration();
+  if ((fileRes_ != "") && (fileReg_ != "")) Latency::initializeFiles(fileRes_, fileReg_, currentRun);
 }
 
-void Latency::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void Latency::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
@@ -107,6 +110,11 @@ void Latency::initializeFileNames (const std::string fileRes_, const std::string
       this->addFileHandler(std::string(RESULTDIR) + "/LatencyRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
+
+#ifdef __USE_ROOT__
+  delete histos;
+  histos = new LatencyHistograms;
+#endif
 }
 
 void Latency::run ()
@@ -133,9 +141,9 @@ void Latency::draw ()
   this->CreateResultDirectory(RESULTDIR,false,false);
   this->InitResultFile(fileRes);
 
-  Latency::initHisto();
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   Latency::fillHisto();
-  Latency::display();
+  histos->process();
 #endif
 
   // ######################################
@@ -195,25 +203,11 @@ void Latency::analyze ()
         }
 }
 
-void Latency::initHisto ()
-{
-#ifdef __USE_ROOT__
-  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
-}
-
 void Latency::fillHisto ()
 {
 #ifdef __USE_ROOT__
-  histos.fillOccupancy(theOccContainer);
-  histos.fillLatency  (theLatencyContainer);
-#endif
-}
-
-void Latency::display ()
-{
-#ifdef __USE_ROOT__
-  histos.process();
+  histos->fillOccupancy(theOccContainer);
+  histos->fillLatency  (theLatencyContainer);
 #endif
 }
 

@@ -35,7 +35,7 @@ class ThrMinimization : public PixelAlive
 
   void   sendData            ();
   void   localConfigure      (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void   initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void   initializeFiles     (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void   run                 ();
   void   draw                ();
   void   analyze             ();
@@ -59,9 +59,7 @@ class ThrMinimization : public PixelAlive
 
   DetectorDataContainer theThrContainer;
 
-  void initHisto       ();
   void fillHisto       ();
-  void display         ();
   void bitWiseScan     (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
   void chipErrorReport ();
 
@@ -70,7 +68,7 @@ class ThrMinimization : public PixelAlive
   // # ROOT #
   // ########
 #ifdef __USE_ROOT__
-  ThrMinimizationHistograms histos;
+  ThrMinimizationHistograms* histos;
 #endif
 
 

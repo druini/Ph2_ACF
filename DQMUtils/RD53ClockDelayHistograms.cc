@@ -24,10 +24,10 @@ void ClockDelayHistograms::book (TFile* theOutputFile, const DetectorContainer& 
 
 
   auto hClockDelay = CanvasContainer<TH1F>("ClockDelay", "Clock Delay", stopValue - startValue + 1, startValue, stopValue + 1);
-  bookImplementer(theOutputFile, theDetectorStructure, hClockDelay, ClockDelay, "Clock Delay (1.5625 ns)", "Entries");
+  bookImplementer(theOutputFile, theDetectorStructure, ClockDelay, hClockDelay, "Clock Delay (1.5625 ns)", "Entries");
 
   auto hOcc1D = CanvasContainer<TH1F>("ClkDelayScan", "Clock Delay Scan", stopValue - startValue + 1, startValue, stopValue + 1);
-  bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Clock Delay (1.5625 ns)", "Efficiency");
+  bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Clock Delay (1.5625 ns)", "Efficiency");
 }
 
 bool ClockDelayHistograms::fill (std::vector<char>& dataBuffer)

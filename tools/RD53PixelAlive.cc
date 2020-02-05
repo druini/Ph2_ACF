@@ -112,12 +112,15 @@ void PixelAlive::Stop ()
 
 void PixelAlive::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
-  PixelAlive::ConfigureCalibration();
+#ifdef __USE_ROOT__
+  histos = nullptr;
+#endif
 
-  if ((fileRes_ != "") && (fileReg_ != "")) PixelAlive::initializeFileNames(fileRes_, fileReg_, currentRun);
+  PixelAlive::ConfigureCalibration();
+  if ((fileRes_ != "") && (fileReg_ != "")) PixelAlive::initializeFiles(fileRes_, fileReg_, currentRun);
 }
 
-void PixelAlive::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void PixelAlive::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
@@ -127,6 +130,11 @@ void PixelAlive::initializeFileNames (const std::string fileRes_, const std::str
       this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
+
+#ifdef __USE_ROOT__
+  delete histos;
+  histos = new PixelAliveHistograms;
+#endif
 }
 
 void PixelAlive::run ()
@@ -159,9 +167,9 @@ void PixelAlive::draw (bool doSave)
       this->InitResultFile(fileRes);
     }
 
-  PixelAlive::initHisto();
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   PixelAlive::fillHisto();
-  PixelAlive::display();
+  histos->process();
 #endif
 
   // #######################################
@@ -253,26 +261,12 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
   return theOccContainer;
 }
 
-void PixelAlive::initHisto ()
-{
-#ifdef __USE_ROOT__
-  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
-}
-
 void PixelAlive::fillHisto ()
 {
 #ifdef __USE_ROOT__
-  histos.fill     (*theOccContainer.get());
-  histos.fillBCID (theBCIDContainer);
-  histos.fillTrgID(theTrgIDContainer);
-#endif
-}
-
-void PixelAlive::display ()
-{
-#ifdef __USE_ROOT__
-  histos.process();
+  histos->fill     (*theOccContainer.get());
+  histos->fillBCID (theBCIDContainer);
+  histos->fillTrgID(theTrgIDContainer);
 #endif
 }
 

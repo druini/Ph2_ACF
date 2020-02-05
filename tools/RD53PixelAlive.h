@@ -41,7 +41,7 @@ class PixelAlive : public Tool
 
   void sendData                                  ();
   void localConfigure                            (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void initializeFileNames                       (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void initializeFiles                           (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void run                                       ();
   void draw                                      (bool doSave = true);
   std::shared_ptr<DetectorDataContainer> analyze ();
@@ -69,9 +69,7 @@ class PixelAlive : public Tool
   DetectorDataContainer theBCIDContainer;
   DetectorDataContainer theTrgIDContainer;
 
-  void initHisto       ();
   void fillHisto       ();
-  void display         ();
   void chipErrorReport ();
 
 
@@ -79,7 +77,7 @@ class PixelAlive : public Tool
   // # ROOT #
   // ########
 #ifdef __USE_ROOT__
-  PixelAliveHistograms histos;
+  PixelAliveHistograms* histos;
 #endif
 
 

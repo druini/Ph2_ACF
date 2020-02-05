@@ -120,33 +120,35 @@ void Physics::Stop ()
 
 void Physics::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
-  Physics::ConfigureCalibration();
-
-  if ((fileRes_ != "") && (fileReg_ != "")) Physics::initializeFileNames(fileRes_, fileReg_, currentRun);
-
 #ifdef __USE_ROOT__
   myApp = nullptr;
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+  histos = nullptr;
 #endif
+
+  Physics::ConfigureCalibration();
+  if ((fileRes_ != "") && (fileReg_ != "")) Physics::initializeFiles(fileRes_, fileReg_, currentRun);
 
   doLocal = true;
 }
 
-void Physics::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void Physics::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
-
-#ifdef __USE_ROOT__
-  this->InitResultFile(fileRes);
-  Physics::initHisto();
-#endif
 
   if ((currentRun != -1) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/PhysicsRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
+
+#ifdef __USE_ROOT__
+  delete histos;
+  histos = new PhysicsHistograms;
+  this->InitResultFile(fileRes);
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
 }
 
 void Physics::run ()
@@ -164,7 +166,7 @@ void Physics::draw ()
 {
 #ifdef __USE_ROOT__
   Physics::fillHisto();
-  Physics::display();
+  histos->process();
 #endif
 
   // #######################################
@@ -218,26 +220,12 @@ void Physics::analyze (bool doReadBinary)
     }
 }
 
-void Physics::initHisto ()
-{
-#ifdef __USE_ROOT__
-  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
-}
-
 void Physics::fillHisto ()
 {
 #ifdef __USE_ROOT__
-  histos.fill     (theOccContainer);
-  histos.fillBCID (theBCIDContainer);
-  histos.fillTrgID(theTrgIDContainer);
-#endif
-}
-
-void Physics::display ()
-{
-#ifdef __USE_ROOT__
-  histos.process();
+  histos->fill     (theOccContainer);
+  histos->fillBCID (theBCIDContainer);
+  histos->fillTrgID(theTrgIDContainer);
 #endif
 }
 

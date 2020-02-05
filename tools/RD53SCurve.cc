@@ -115,12 +115,15 @@ void SCurve::Stop ()
 
 void SCurve::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
-  SCurve::ConfigureCalibration();
+#ifdef __USE_ROOT__
+  histos = nullptr;
+#endif
 
-  if ((fileRes_ != "") && (fileReg_ != "")) SCurve::initializeFileNames(fileRes_, fileReg_, currentRun);
+  SCurve::ConfigureCalibration();
+  if ((fileRes_ != "") && (fileReg_ != "")) SCurve::initializeFiles(fileRes_, fileReg_, currentRun);
 }
 
-void SCurve::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void SCurve::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
@@ -130,6 +133,11 @@ void SCurve::initializeFileNames (const std::string fileRes_, const std::string 
       this->addFileHandler(std::string(RESULTDIR) + "/SCurveRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
+
+#ifdef __USE_ROOT__
+  delete histos;
+  histos = new SCurveHistograms;
+#endif
 }
 
 void SCurve::run ()
@@ -184,9 +192,9 @@ void SCurve::draw ()
   this->CreateResultDirectory(RESULTDIR,false,false);
   this->InitResultFile(fileRes);
 
-  SCurve::initHisto();
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   SCurve::fillHisto();
-  SCurve::display();
+  histos->process();
 #endif
 
   // ######################################
@@ -300,26 +308,12 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
   return theThresholdAndNoiseContainer;
 }
 
-void SCurve::initHisto ()
-{
-#ifdef __USE_ROOT__
-  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
-}
-
 void SCurve::fillHisto ()
 {
 #ifdef __USE_ROOT__
   for (auto i = 0u; i < dacList.size(); i++)
-    histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
-  histos.fillThrAndNoise(*theThresholdAndNoiseContainer);
-#endif
-}
-
-void SCurve::display ()
-{
-#ifdef __USE_ROOT__
-  histos.process();
+    histos->fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
+  histos->fillThrAndNoise(*theThresholdAndNoiseContainer);
 #endif
 }
 

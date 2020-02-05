@@ -48,10 +48,7 @@ void ThrEqualization::ConfigureCalibration ()
   // #####################
   // # Initialize SCurve #
   // #####################
-  std::string fileName = fileRes;
-  fileName.replace(fileRes.find("_ThrEqualization"),16,"_SCurve");
   sc.Inherit(this);
-  sc.localConfigure(fileName, fileReg);
 
 
   // #######################
@@ -95,12 +92,21 @@ void ThrEqualization::Stop ()
 
 void ThrEqualization::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
-  if ((fileRes_ != "") && (fileReg_ != "")) ThrEqualization::initializeFileNames(fileRes_, fileReg_, currentRun);
+#ifdef __USE_ROOT__
+  histos = nullptr;
+#endif
 
   ThrEqualization::ConfigureCalibration();
+  if ((fileRes_ != "") && (fileReg_ != "")) ThrEqualization::initializeFiles(fileRes_, fileReg_, currentRun);
+
+
+  // #####################
+  // # Initialize SCurve #
+  // #####################
+  sc.localConfigure("", "");
 }
 
-void ThrEqualization::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void ThrEqualization::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
@@ -110,6 +116,19 @@ void ThrEqualization::initializeFileNames (const std::string fileRes_, const std
       this->addFileHandler(std::string(RESULTDIR) + "/ThrEqualizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
+
+#ifdef __USE_ROOT__
+  delete histos;
+  histos = new ThrEqualizationHistograms;
+#endif
+
+
+  // #####################
+  // # Initialize SCurve #
+  // #####################
+  std::string fileName = fileRes;
+  fileName.replace(fileRes.find("_ThrEqualization"),16,"_SCurve");
+  sc.initializeFiles(fileName, fileReg);
 }
 
 void ThrEqualization::run ()
@@ -184,9 +203,9 @@ void ThrEqualization::draw ()
   this->CreateResultDirectory(RESULTDIR,false,false);
   this->InitResultFile(fileRes);
 
-  ThrEqualization::initHisto();
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   ThrEqualization::fillHisto();
-  ThrEqualization::display();
+  histos->process();
 #endif
 
   // ######################################
@@ -218,25 +237,11 @@ void ThrEqualization::draw ()
 #endif
 }
 
-void ThrEqualization::initHisto ()
-{
-#ifdef __USE_ROOT__
-  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
-}
-
 void ThrEqualization::fillHisto ()
 {
 #ifdef __USE_ROOT__
-  histos.fillOccupancy(theOccContainer);
-  histos.fillTDAC     (theTDACcontainer);
-#endif
-}
-
-void ThrEqualization::display ()
-{
-#ifdef __USE_ROOT__
-  histos.process();
+  histos->fillOccupancy(theOccContainer);
+  histos->fillTDAC     (theTDACcontainer);
 #endif
 }
 

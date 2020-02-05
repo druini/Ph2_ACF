@@ -35,7 +35,7 @@ class Latency : public PixelAlive
 
   void   sendData            ();
   void   localConfigure      (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void   initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void   initializeFiles     (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void   run                 ();
   void   draw                ();
   void   analyze             ();
@@ -56,9 +56,7 @@ class Latency : public PixelAlive
   DetectorDataContainer theOccContainer;
   DetectorDataContainer theLatencyContainer;
 
-  void initHisto       ();
   void fillHisto       ();
-  void display         ();
   void scanDac         (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
   void chipErrorReport ();
 
@@ -67,7 +65,7 @@ class Latency : public PixelAlive
   // # ROOT #
   // ########
 #ifdef __USE_ROOT__
-  LatencyHistograms histos;
+  LatencyHistograms* histos;
 #endif
 
 

@@ -75,12 +75,15 @@ void ThrMinimization::Stop ()
 
 void ThrMinimization::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
-  ThrMinimization::ConfigureCalibration();
+#ifdef __USE_ROOT__
+  histos = nullptr;
+#endif
 
- if ((fileRes_ != "") && (fileReg_ != "")) ThrMinimization::initializeFileNames(fileRes_, fileReg_, currentRun);
+  ThrMinimization::ConfigureCalibration();
+  if ((fileRes_ != "") && (fileReg_ != "")) ThrMinimization::initializeFiles(fileRes_, fileReg_, currentRun);
 }
 
-void ThrMinimization::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void ThrMinimization::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -97,6 +100,11 @@ void ThrMinimization::initializeFileNames (const std::string fileRes_, const std
       this->addFileHandler(std::string(RESULTDIR) + "/ThrMinimizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
+
+#ifdef __USE_ROOT__
+  delete histos;
+  histos = new ThrMinimizationHistograms;
+#endif
 }
 
 void ThrMinimization::run ()
@@ -132,9 +140,9 @@ void ThrMinimization::draw ()
 
   PixelAlive::draw(false);
 
-  ThrMinimization::initHisto();
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   ThrMinimization::fillHisto();
-  ThrMinimization::display();
+  histos->process();
 #endif
 
   // ######################################
@@ -168,23 +176,10 @@ void ThrMinimization::analyze ()
                   << BOLDYELLOW << cChip->getSummary<uint16_t>() << RESET;
 }
 
-void ThrMinimization::initHisto ()
-{
-#ifdef __USE_ROOT__
-  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
-}
 void ThrMinimization::fillHisto ()
 {
 #ifdef __USE_ROOT__
-  histos.fill(theThrContainer);
-#endif
-}
-
-void ThrMinimization::display ()
-{
-#ifdef __USE_ROOT__
-  histos.process();
+  histos->fill(theThrContainer);
 #endif
 }
 

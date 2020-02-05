@@ -48,7 +48,7 @@ class Physics : public Tool
 
   void sendData               (const BoardContainer* cBoard);
   void localConfigure         (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void initializeFileNames    (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void initializeFiles        (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void run                    ();
   void draw                   ();
   void analyze                (bool doReadBinary = false);
@@ -67,9 +67,7 @@ class Physics : public Tool
   DetectorDataContainer theBCIDContainer;
   DetectorDataContainer theTrgIDContainer;
 
-  void initHisto       ();
   void fillHisto       ();
-  void display         ();
   void chipErrorReport ();
 
 
@@ -77,7 +75,7 @@ class Physics : public Tool
   // # ROOT #
   // ########
 #ifdef __USE_ROOT__
-  PhysicsHistograms histos;
+  PhysicsHistograms* histos;
   TApplication* myApp;
 #endif
 

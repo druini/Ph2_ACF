@@ -25,10 +25,10 @@ void InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContain
 
 
   auto hInjectionDelay = CanvasContainer<TH1F>("InjectionDelay", "Injection Delay", stopValue - startValue + 1, startValue, stopValue + 1);
-  bookImplementer(theOutputFile, theDetectorStructure, hInjectionDelay, InjectionDelay, "Injection Delay (1.5625 ns)", "Entries");
+  bookImplementer(theOutputFile, theDetectorStructure, InjectionDelay, hInjectionDelay, "Injection Delay (1.5625 ns)", "Entries");
 
   auto hOcc1D = CanvasContainer<TH1F>("InjDelayScan", "Injection Delay Scan", stopValue - startValue + 1, startValue, stopValue + 1);
-  bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Injection Delay (1.5625 ns)", "Efficiency");
+  bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Injection Delay (1.5625 ns)", "Efficiency");
 }
 
 bool InjectionDelayHistograms::fill (std::vector<char>& dataBuffer)

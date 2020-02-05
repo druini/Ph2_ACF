@@ -42,7 +42,7 @@ class ThrEqualization : public Tool
 
   void   sendData            ();
   void   localConfigure      (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void   initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void   initializeFiles     (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void   run                 ();
   void   draw                ();
   size_t getNumberIterations ()
@@ -69,9 +69,7 @@ class ThrEqualization : public Tool
   DetectorDataContainer theOccContainer;
   DetectorDataContainer theTDACcontainer;
 
-  void initHisto       ();
   void fillHisto       ();
-  void display         ();
   void bitWiseScan     (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
   void chipErrorReport ();
 
@@ -80,7 +78,7 @@ class ThrEqualization : public Tool
   // # ROOT #
   // ########
 #ifdef __USE_ROOT__
-  ThrEqualizationHistograms histos;
+  ThrEqualizationHistograms* histos;
 #endif
 
 

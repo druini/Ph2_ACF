@@ -78,12 +78,15 @@ void GainOptimization::Stop ()
 
 void GainOptimization::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
-  GainOptimization::ConfigureCalibration();
+#ifdef __USE_ROOT__
+  histos = nullptr;
+#endif
 
-  if ((fileRes_ != "") && (fileReg_ != "")) GainOptimization::initializeFileNames(fileRes_, fileReg_, currentRun);
+  GainOptimization::ConfigureCalibration();
+  if ((fileRes_ != "") && (fileReg_ != "")) GainOptimization::initializeFiles(fileRes_, fileReg_, currentRun);
 }
 
-void GainOptimization::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void GainOptimization::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -100,6 +103,11 @@ void GainOptimization::initializeFileNames (const std::string fileRes_, const st
       this->addFileHandler(std::string(RESULTDIR) + "/GainOptimizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
+
+#ifdef __USE_ROOT__
+  delete histos;
+  histos = new GainOptimizationHistograms;
+#endif
 }
 
 void GainOptimization::run ()
@@ -135,9 +143,9 @@ void GainOptimization::draw ()
 
   Gain::draw(false);
 
-  GainOptimization::initHisto();
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   GainOptimization::fillHisto();
-  GainOptimization::display();
+  histos->process();
 #endif
 
   // ######################################
@@ -171,24 +179,10 @@ void GainOptimization::analyze ()
                   << BOLDYELLOW << cChip->getSummary<uint16_t>() << RESET;
 }
 
-void GainOptimization::initHisto ()
-{
-#ifdef __USE_ROOT__
-  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
-}
-
 void GainOptimization::fillHisto ()
 {
 #ifdef __USE_ROOT__
-  histos.fill(theKrumCurrContainer);
-#endif
-}
-
-void GainOptimization::display ()
-{
-#ifdef __USE_ROOT__
-  histos.process();
+  histos->fill(theKrumCurrContainer);
 #endif
 }
 

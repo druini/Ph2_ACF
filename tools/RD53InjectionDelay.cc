@@ -111,12 +111,21 @@ void InjectionDelay::localConfigure (const std::string fileRes_, const std::stri
   PixelAlive::doFast = 1;
 
 
-  if ((fileRes_ != "") && (fileReg_ != "")) InjectionDelay::initializeFileNames(fileRes_, fileReg_, currentRun);
+#ifdef __USE_ROOT__
+  histos = nullptr;
+#endif
 
   InjectionDelay::ConfigureCalibration();
+  if ((fileRes_ != "") && (fileReg_ != "")) InjectionDelay::initializeFiles(fileRes_, fileReg_, currentRun);
+
+
+  // #####################$
+  // # Initialize Latency #
+  // #####################$
+  la.localConfigure("", "");
 }
 
-void InjectionDelay::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void InjectionDelay::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
@@ -126,6 +135,19 @@ void InjectionDelay::initializeFileNames (const std::string fileRes_, const std:
       this->addFileHandler(std::string(RESULTDIR) + "/InjectionDelayRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
+
+#ifdef __USE_ROOT__
+  delete histos;
+  histos = new InjectionDelayHistograms;
+#endif
+
+
+  // ######################
+  // # Initialize Latency #
+  // ######################
+  std::string fileName = fileRes;
+  fileName.replace(fileRes.find("_InjectionDelay"),15,"_Latency");
+  la.localConfigure(fileName, fileReg);
 }
 
 void InjectionDelay::run ()
@@ -198,9 +220,9 @@ void InjectionDelay::draw ()
   this->CreateResultDirectory(RESULTDIR,false,false);
   this->InitResultFile(fileRes);
 
-  InjectionDelay::initHisto();
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   InjectionDelay::fillHisto();
-  InjectionDelay::display();
+  histos->process();
 #endif
 
   // ######################################
@@ -269,25 +291,11 @@ void InjectionDelay::analyze ()
         }
 }
 
-void InjectionDelay::initHisto ()
-{
-#ifdef __USE_ROOT__
-  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
-}
-
 void InjectionDelay::fillHisto ()
 {
 #ifdef __USE_ROOT__
-  histos.fillOccupancy     (theOccContainer);
-  histos.fillInjectionDelay(theInjectionDelayContainer);
-#endif
-}
-
-void InjectionDelay::display ()
-{
-#ifdef __USE_ROOT__
-  histos.process();
+  histos->fillOccupancy     (theOccContainer);
+  histos->fillInjectionDelay(theInjectionDelayContainer);
 #endif
 }
 

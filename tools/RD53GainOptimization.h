@@ -36,7 +36,7 @@ class GainOptimization : public Gain
 
   void   sendData            ();
   void   localConfigure      (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void   initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void   initializeFiles     (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void   run                 ();
   void   analyze             ();
   void   draw                ();
@@ -63,9 +63,7 @@ class GainOptimization : public Gain
 
   DetectorDataContainer theKrumCurrContainer;
 
-  void initHisto       ();
   void fillHisto       ();
-  void display         ();
   void bitWiseScan     (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
   void chipErrorReport ();
 
@@ -74,7 +72,7 @@ class GainOptimization : public Gain
   // # ROOT #
   // ########
 #ifdef __USE_ROOT__
-  GainOptimizationHistograms histos;
+  GainOptimizationHistograms* histos;
 #endif
 
 

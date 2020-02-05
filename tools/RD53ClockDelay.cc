@@ -47,10 +47,7 @@ void ClockDelay::ConfigureCalibration ()
   // ######################
   // # Initialize Latency #
   // ######################
-  std::string fileName = fileRes;
-  fileName.replace(fileRes.find("_ClockDelay"),15,"_Latency");
   la.Inherit(this);
-  la.localConfigure(fileName, fileReg);
 
 
   // ##########################
@@ -112,12 +109,21 @@ void ClockDelay::localConfigure (const std::string fileRes_, const std::string f
   PixelAlive::doFast = 1;
 
 
-  if ((fileRes_ != "") && (fileReg_ != "")) ClockDelay::initializeFileNames(fileRes_, fileReg_, currentRun);
+#ifdef __USE_ROOT__
+  histos = nullptr;
+#endif
 
   ClockDelay::ConfigureCalibration();
+  if ((fileRes_ != "") && (fileReg_ != "")) ClockDelay::initializeFiles(fileRes_, fileReg_, currentRun);
+
+
+  // #####################$
+  // # Initialize Latency #
+  // #####################$
+  la.localConfigure("", "");
 }
 
-void ClockDelay::initializeFileNames (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void ClockDelay::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
@@ -127,6 +133,19 @@ void ClockDelay::initializeFileNames (const std::string fileRes_, const std::str
       this->addFileHandler(std::string(RESULTDIR) + "/ClockDelayRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
+
+#ifdef __USE_ROOT__
+  delete histos;
+  histos = new ClockDelayHistograms;
+#endif
+
+
+  // ######################
+  // # Initialize Latency #
+  // ######################
+  std::string fileName = fileRes;
+  fileName.replace(fileRes.find("_ClockDelay"),15,"_Latency");
+  la.localConfigure(fileName, fileReg);
 }
 
 void ClockDelay::run ()
@@ -199,9 +218,9 @@ void ClockDelay::draw ()
   this->CreateResultDirectory(RESULTDIR,false,false);
   this->InitResultFile(fileRes);
 
-  ClockDelay::initHisto();
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   ClockDelay::fillHisto();
-  ClockDelay::display();
+  histos->process();
 #endif
 
   // ######################################
@@ -270,25 +289,11 @@ void ClockDelay::analyze ()
         }
 }
 
-void ClockDelay::initHisto ()
-{
-#ifdef __USE_ROOT__
-  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
-}
-
 void ClockDelay::fillHisto ()
 {
 #ifdef __USE_ROOT__
-  histos.fillOccupancy (theOccContainer);
-  histos.fillClockDelay(theClockDelayContainer);
-#endif
-}
-
-void ClockDelay::display ()
-{
-#ifdef __USE_ROOT__
-  histos.process();
+  histos->fillOccupancy (theOccContainer);
+  histos->fillClockDelay(theClockDelayContainer);
 #endif
 }
 

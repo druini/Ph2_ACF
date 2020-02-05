@@ -488,6 +488,7 @@ int main (int argc, char** argv)
           ph.localConfigure(fileName, chipConfig, runNumber);
           if (binaryFile == "")
             {
+              ph.initializeFiles("ciao1_", "hello1_", runNumber);
               ph.Start(runNumber);
               usleep(2e6);
               ph.Stop();
