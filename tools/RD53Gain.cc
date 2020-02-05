@@ -229,13 +229,15 @@ void Gain::draw (bool doSave)
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze ()
 {
-  double gain, gainErr, intercept, interceptErr;
+  float gain, gainErr, intercept, interceptErr;
   std::vector<float> x(dacList.size(),0);
   std::vector<float> y(dacList.size(),0);
   std::vector<float> e(dacList.size(),0);
 
   theGainAndInterceptContainer = std::make_shared<DetectorDataContainer>();
   ContainerFactory::copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
+  DetectorDataContainer theMaxGainContainer;
+  ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, theMaxGainContainer, gain = 0);
 
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
@@ -261,6 +263,9 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
                       theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGainError      = gainErr;
                       theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fIntercept      = intercept;
                       theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fInterceptError = interceptErr;
+
+                      if (gain > theMaxGainContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>())
+                        theMaxGainContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() = gain;
                     }
                   else
                     theGainAndInterceptContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<GainAndIntercept>(row,col).fGain = RD53Shared::FITERROR;
@@ -277,7 +282,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
         {
           LOG (INFO) << GREEN << "Average gain for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << GREEN << "] is " << BOLDYELLOW
                      << std::fixed << std::setprecision(1) << cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGain << RESET << GREEN << " (ToT/Delta_VCal)" << RESET;
-          LOG (INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW << cChip->getSummary<float>() << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW << theMaxGainContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() << RESET;
         }
 
 
@@ -325,7 +330,7 @@ void Gain::fillHisto ()
 #endif
 }
 
-void Gain::computeStats (const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr)
+void Gain::computeStats (const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, float& gain, float& gainErr, float& intercept, float& interceptErr)
 // ##############################################
 // # Linear regression with least-square method #
 // # Model: y = f(x) = q + mx                   #

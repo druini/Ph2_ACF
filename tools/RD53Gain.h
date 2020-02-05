@@ -75,7 +75,7 @@ class Gain : public Tool
   ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
   void fillHisto       ();
-  void computeStats    (const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
+  void computeStats    (const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, float& gain, float& gainErr, float& intercept, float& interceptErr);
   void chipErrorReport ();
 
 
