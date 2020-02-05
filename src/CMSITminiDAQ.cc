@@ -503,6 +503,9 @@ int main (int argc, char** argv)
           // ######################
           LOG (INFO) << BOLDMAGENTA << "@@@ Performing EUDAQ data taking @@@" << RESET;
 
+#ifdef __USE_ROOT__
+          gROOT->SetBatch(true);
+#endif
           RD53eudaqProducer theEUDAQproducer(mySysCntr, configFile, "RD53eudaqProducer", eudaqRunCtr);
           try
             {
