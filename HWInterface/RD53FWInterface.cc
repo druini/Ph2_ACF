@@ -1111,18 +1111,18 @@ namespace Ph2_HwInterface
   {
     const uint32_t SPIregValues[] =
       {
-        0xEB020320,
-        0xEB020321,
-        0xEB840302,
-        0xEB840303,
-        0xEB140334,
-        0x013C0CB5,
-        0x33041BE6,
-        0xBD800DF7,
-        0x20009978
+        0xEB020320, // This clock is not used, but it can be used as another GBT clock (120 MHz, LVDS, phase shift 0 deg)
+        0xEB020321, // GBT clock reference: 120 MHz, LVDS, phase shift 0 deg. 0xEB820321: 320 MHz, LVDS, phase shift 0 deg
+        0xEB840302, // DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
+        0xEB840303, // Not used output (off)
+        0xEB140334, // Not used output (off)
+        0x013C0CB5, // Reference selection: 0x10000EB5 secondary reference, 0x10000E75 primary reference
+        0x33041BE6, // VCO selection: 0x030E02E6 select VCO1 if CDCE reference is 40 MHz, 0x030E02F6 select VCO2 if CDCE reference is > 40 MHz
+        0xBD800DF7, // RC network parameters
+        0x20009978  // Sync command configuration
       };
 
-    const uint32_t writeCMD(0x8FA38014);
+    const uint32_t writeCMD(0x8FA38014); // Command to SPI block
 
     for (const auto value : SPIregValues)
       {
@@ -1138,7 +1138,7 @@ namespace Ph2_HwInterface
     // #########################
     if (doStoreInEEPROM == true)
       {
-        WriteReg("system.spi.tx_data", 0x0000001F);
+        WriteReg("system.spi.tx_data", 0x0000001F); // Write EEPROM
         WriteReg("system.spi.command", writeCMD);
 
         ReadReg("system.spi.rx_data"); // Dummy read
