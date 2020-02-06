@@ -113,13 +113,15 @@ void InjectionDelay::localConfigure (const std::string fileRes_, const std::stri
 #endif
 
   InjectionDelay::ConfigureCalibration();
-  if ((fileRes_ != "") && (fileReg_ != "")) InjectionDelay::initializeFiles(fileRes_, fileReg_, currentRun);
 
 
   // #####################$
   // # Initialize Latency #
   // #####################$
   la.localConfigure("", "");
+
+
+  if ((fileRes_ != "") && (fileReg_ != "")) InjectionDelay::initializeFiles(fileRes_, fileReg_, currentRun);
 }
 
 void InjectionDelay::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)

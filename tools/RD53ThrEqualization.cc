@@ -97,13 +97,15 @@ void ThrEqualization::localConfigure (const std::string fileRes_, const std::str
 #endif
 
   ThrEqualization::ConfigureCalibration();
-  if ((fileRes_ != "") && (fileReg_ != "")) ThrEqualization::initializeFiles(fileRes_, fileReg_, currentRun);
 
 
   // #####################
   // # Initialize SCurve #
   // #####################
   sc.localConfigure("", "");
+
+
+  if ((fileRes_ != "") && (fileReg_ != "")) ThrEqualization::initializeFiles(fileRes_, fileReg_, currentRun);
 }
 
 void ThrEqualization::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)

@@ -114,13 +114,15 @@ void ClockDelay::localConfigure (const std::string fileRes_, const std::string f
 #endif
 
   ClockDelay::ConfigureCalibration();
-  if ((fileRes_ != "") && (fileReg_ != "")) ClockDelay::initializeFiles(fileRes_, fileReg_, currentRun);
 
 
   // #####################$
   // # Initialize Latency #
   // #####################$
   la.localConfigure("", "");
+
+
+  if ((fileRes_ != "") && (fileReg_ != "")) ClockDelay::initializeFiles(fileRes_, fileReg_, currentRun);
 }
 
 void ClockDelay::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
