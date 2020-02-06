@@ -229,6 +229,13 @@ namespace Ph2_HwInterface
     void RebootBoard                           ();
     const FpgaConfig* GetConfiguringFpga       ();
 
+
+    // ########################################
+    // # Vector containing the decoded events #
+    // ########################################
+    static std::vector<RD53FWInterface::Event> decodedEvents;
+
+
     // ################################################
     // # I2C block for programming peripheral devices #
     // ################################################
@@ -237,10 +244,6 @@ namespace Ph2_HwInterface
     void ReadI2C              (std::vector<uint32_t>& data);
     void ConfigureClockSi5324 ();
 
-    // ########################################
-    // # Vector containing the decoded events #
-    // ########################################
-    static std::vector<RD53FWInterface::Event> decodedEvents;
 
   private:
     void PrintFWstatus         ();
@@ -253,6 +256,11 @@ namespace Ph2_HwInterface
     void ConfigureFastCommands (const FastCommandsConfig* config = nullptr);
     void ConfigureDIO5         (const DIO5Config* config);
     void SendBoardCommand      (const std::string& cmd_reg);
+
+    // ###################
+    // # Clock generator #
+    // ###################
+    void InitializeClockGenerator (bool doStoreInEEPROM = false);
 
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;

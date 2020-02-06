@@ -17,7 +17,7 @@ void ThrMinimization::ConfigureCalibration ()
   // ##############################
   // # Initialize sub-calibration #
   // ##############################
-  PixelAlive::ConfigureCalibration();
+  PixelAlive::localConfigure("", "");
   PixelAlive::doDisplay    = false;
   PixelAlive::doUpdateChip = false;
 
@@ -88,8 +88,7 @@ void ThrMinimization::initializeFiles (const std::string fileRes_, const std::st
   // ##############################
   // # Initialize sub-calibration #
   // ##############################
-  PixelAlive::fileRes = fileRes_;
-  PixelAlive::fileReg = fileReg_;
+  PixelAlive::initializeFiles(fileRes_, fileReg_, currentRun);
 
 
   fileRes = fileRes_;
@@ -132,7 +131,6 @@ void ThrMinimization::draw ()
 {
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
-
   if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
   this->CreateResultDirectory(RESULTDIR,false,false);

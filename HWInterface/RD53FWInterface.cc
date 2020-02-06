@@ -76,12 +76,20 @@ namespace Ph2_HwInterface
     RD53FWInterface::ResetReadoutBlk();
 
 
+    // ##############################
+    // # Initialize clock generator #
+    // ##############################
+    LOG (INFO) << GREEN << "Initializing clock generator..." << RESET;
+    RD53FWInterface::InitializeClockGenerator(false);
+    LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+
     // ###############################################
     // # FW register initialization from config file #
     // ###############################################
     RD53FWInterface::DIO5Config cfgDIO5;
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
-    LOG (INFO) << GREEN << "Initializing board's registers:" << RESET;
+    LOG (INFO) << GREEN << "Initializing DIO5:" << RESET;
     for (const auto& it : pBoard->getBeBoardRegMap())
       if ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos))
         {
@@ -131,7 +139,7 @@ namespace Ph2_HwInterface
     // # Configure DIO5 #
     // ##################
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
-    LOG(INFO) << GREEN<< "DIO5 configured" << RESET;
+    LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
     usleep(DEEPSLEEP);
 
 
@@ -174,6 +182,8 @@ namespace Ph2_HwInterface
         WriteStackReg(cVecReg);
         SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
       }
+
+    LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
   }
 
   void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, int moduleId)
@@ -256,7 +266,7 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::PrintFWstatus()
   {
-    LOG (INFO) << GREEN << "Checking firmware status" << RESET;
+    LOG (INFO) << GREEN << "Checking firmware status:" << RESET;
 
 
     // #################################
@@ -288,16 +298,16 @@ namespace Ph2_HwInterface
     // # Check status registers associated wih fast command block #
     // ############################################################
     unsigned int fastCMDReg = ReadReg("user.stat_regs.fast_cmd.trigger_source_o");
-    LOG (INFO) << GREEN << "Fast CMD block trigger source: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency)" << RESET;
+    LOG (INFO) << GREEN << "Fast command block trigger source: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency)" << RESET;
 
     fastCMDReg = ReadReg("user.stat_regs.fast_cmd.trigger_state");
-    LOG (INFO) << GREEN << "Fast CMD block trigger state: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (0=idle, 2=running)" << RESET;
+    LOG (INFO) << GREEN << "Fast command block trigger state: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (0=idle, 2=running)" << RESET;
 
     fastCMDReg = ReadReg("user.stat_regs.fast_cmd.if_configured");
-    LOG (INFO) << GREEN << "Fast CMD block check if configuraiton registers have been set: " << BOLDYELLOW << fastCMDReg << RESET;
+    LOG (INFO) << GREEN << "Fast command block check if configuraiton registers have been set: " << BOLDYELLOW << fastCMDReg << RESET;
 
     fastCMDReg = ReadReg("user.stat_regs.fast_cmd.error_code");
-    LOG (INFO) << GREEN << "Fast CMD block error code (0=no error): " << BOLDYELLOW << fastCMDReg << RESET;
+    LOG (INFO) << GREEN << "Fast command block error code (0=no error): " << BOLDYELLOW << fastCMDReg << RESET;
 
 
     // ###########################
@@ -395,28 +405,28 @@ namespace Ph2_HwInterface
     // #######
     // # Set #
     // #######
-    WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",0);
-    WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",0);
-    WriteReg ("user.ctrl_regs.reset_reg.global_rst",1);
-    WriteReg ("user.ctrl_regs.reset_reg.clk_gen_rst",1);
-    WriteReg ("user.ctrl_regs.reset_reg.fmc_pll_rst",0);
-    WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",1);
-    WriteReg ("user.ctrl_regs.reset_reg.i2c_rst",1);
+    WriteReg("user.ctrl_regs.reset_reg.aurora_rst",0);
+    WriteReg("user.ctrl_regs.reset_reg.aurora_pma_rst",0);
+    WriteReg("user.ctrl_regs.reset_reg.global_rst",1);
+    WriteReg("user.ctrl_regs.reset_reg.clk_gen_rst",1);
+    WriteReg("user.ctrl_regs.reset_reg.fmc_pll_rst",0);
+    WriteReg("user.ctrl_regs.reset_reg.cmd_rst",1);
+    WriteReg("user.ctrl_regs.reset_reg.i2c_rst",1);
 
 
     // #########
     // # Reset #
     // #########
-    WriteReg ("user.ctrl_regs.reset_reg.global_rst",0);
-    WriteReg ("user.ctrl_regs.reset_reg.clk_gen_rst",0);
-    WriteReg ("user.ctrl_regs.reset_reg.fmc_pll_rst",1);
-    WriteReg ("user.ctrl_regs.reset_reg.cmd_rst",0);
+    WriteReg("user.ctrl_regs.reset_reg.global_rst",0);
+    WriteReg("user.ctrl_regs.reset_reg.clk_gen_rst",0);
+    WriteReg("user.ctrl_regs.reset_reg.fmc_pll_rst",1);
+    WriteReg("user.ctrl_regs.reset_reg.cmd_rst",0);
 
     usleep(DEEPSLEEP);
 
-    WriteReg ("user.ctrl_regs.reset_reg.i2c_rst",0);
-    WriteReg ("user.ctrl_regs.reset_reg.aurora_pma_rst",1);
-    WriteReg ("user.ctrl_regs.reset_reg.aurora_rst",1);
+    WriteReg("user.ctrl_regs.reset_reg.i2c_rst",0);
+    WriteReg("user.ctrl_regs.reset_reg.aurora_pma_rst",1);
+    WriteReg("user.ctrl_regs.reset_reg.aurora_rst",1);
 
 
     // ########
@@ -1094,6 +1104,48 @@ namespace Ph2_HwInterface
     return (const FpgaConfig*) fpgaConfig;
   }
 
+  // ###################
+  // # Clock generator #
+  // ###################
+  void RD53FWInterface::InitializeClockGenerator (bool doStoreInEEPROM)
+  {
+    const uint32_t SPIregValues[] =
+      {
+        0xEB020320,
+        0xEB020321,
+        0xEB840302,
+        0xEB840303,
+        0xEB140334,
+        0x013C0CB5,
+        0x33041BE6,
+        0xBD800DF7,
+        0x20009978
+      };
+
+    const uint32_t writeCMD(0x8FA38014);
+
+    for (const auto value : SPIregValues)
+      {
+        WriteReg("system.spi.tx_data", value);
+        WriteReg("system.spi.command", writeCMD);
+
+        ReadReg("system.spi.rx_data"); // Dummy read
+        ReadReg("system.spi.rx_data"); // Dummy read
+      }
+
+    // #########################
+    // # Save config in EEPROM #
+    // #########################
+    if (doStoreInEEPROM == true)
+      {
+        WriteReg("system.spi.tx_data", 0x0000001F);
+        WriteReg("system.spi.command", writeCMD);
+
+        ReadReg("system.spi.rx_data"); // Dummy read
+        ReadReg("system.spi.rx_data"); // Dummy read
+      }
+  }
+
 
   // ########################################
   // # Vector containing the decoded events #
@@ -1124,15 +1176,15 @@ namespace Ph2_HwInterface
   {
     const uint16_t I2CwriteREQ = 0x01;
 
-    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
+    WriteReg("CTRL.BOARD.i2c_req",0); // Disable
     usleep(DEEPSLEEP);
-    WriteReg ("CTRL.BOARD.i2c_reset",1);
+    WriteReg("CTRL.BOARD.i2c_reset",1);
     usleep(DEEPSLEEP);
-    WriteReg ("CTRL.BOARD.i2c_reset",0);
+    WriteReg("CTRL.BOARD.i2c_reset",0);
     usleep(DEEPSLEEP);
-    WriteReg ("CTRL.BOARD.i2c_fifo_rx_dsel",1);
+    WriteReg("CTRL.BOARD.i2c_fifo_rx_dsel",1);
     usleep(DEEPSLEEP);
-    WriteReg ("CTRL.BOARD.i2c_req",I2CwriteREQ);
+    WriteReg("CTRL.BOARD.i2c_req",I2CwriteREQ);
     usleep(DEEPSLEEP);
 
     /* bool outcome = */ RegManager::WriteBlockReg ("CTRL.BOARD.i2c_fifo_tx", data);
@@ -1141,7 +1193,7 @@ namespace Ph2_HwInterface
     if (I2cCmdAckWait (20) == false)
       throw Exception ("[RD53FWInterface::WriteI2C] I2C transaction error");
 
-    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
+    WriteReg("CTRL.BOARD.i2c_req",0); // Disable
     usleep(DEEPSLEEP);
   }
 
@@ -1149,15 +1201,15 @@ namespace Ph2_HwInterface
   {
     const uint16_t I2CreadREQ = 0x03;
 
-    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
+    WriteReg("CTRL.BOARD.i2c_req",0); // Disable
     usleep(DEEPSLEEP);
-    WriteReg ("CTRL.BOARD.i2c_reset",1);
+    WriteReg("CTRL.BOARD.i2c_reset",1);
     usleep(DEEPSLEEP);
-    WriteReg ("CTRL.BOARD.i2c_reset",0);
+    WriteReg("CTRL.BOARD.i2c_reset",0);
     usleep(DEEPSLEEP);
-    WriteReg ("CTRL.BOARD.i2c_fifo_rx_dsel",1);
+    WriteReg("CTRL.BOARD.i2c_fifo_rx_dsel",1);
     usleep(DEEPSLEEP);
-    WriteReg ("CTRL.BOARD.i2c_req",I2CreadREQ);
+    WriteReg("CTRL.BOARD.i2c_req",I2CreadREQ);
     usleep(DEEPSLEEP);
 
     uint32_t sizeI2Cfifo = ReadReg("STAT.BOARD.i2c_fifo_rx_dcnt");
@@ -1177,7 +1229,7 @@ namespace Ph2_HwInterface
     if (RD53FWInterface::I2cCmdAckWait(20) == false)
       throw Exception ("[RD53FWInterface::ReadI2C] I2C transaction error");
 
-    WriteReg ("CTRL.BOARD.i2c_req",0); // Disable
+    WriteReg("CTRL.BOARD.i2c_req",0); // Disable
   }
 
   void RD53FWInterface::ConfigureClockSi5324 ()

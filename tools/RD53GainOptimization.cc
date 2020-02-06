@@ -17,7 +17,7 @@ void GainOptimization::ConfigureCalibration ()
   // ##############################
   // # Initialize sub-calibration #
   // ##############################
-  Gain::ConfigureCalibration();
+  Gain::localConfigure("", "");
   Gain::doDisplay    = false;
   Gain::doUpdateChip = false;
 
@@ -91,8 +91,7 @@ void GainOptimization::initializeFiles (const std::string fileRes_, const std::s
   // ##############################
   // # Initialize sub-calibration #
   // ##############################
-  Gain::fileRes = fileRes_;
-  Gain::fileReg = fileReg_;
+  Gain::initializeFiles(fileRes, fileReg_, currentRun);
 
 
   fileRes = fileRes_;

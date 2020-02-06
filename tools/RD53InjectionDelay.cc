@@ -47,10 +47,7 @@ void InjectionDelay::ConfigureCalibration ()
   // ######################
   // # Initialize Latency #
   // ######################
-  std::string fileName = fileRes;
-  fileName.replace(fileRes.find("_InjectionDelay"),15,"_Latency");
   la.Inherit(this);
-  la.localConfigure(fileName, fileReg);
 
 
   // ##############################
