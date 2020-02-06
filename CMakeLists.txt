@@ -168,14 +168,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(EUDAQ_FOUND)
 
 
-    find_package(PH2_ANTENNA) #========================================================
-    if(PH2_ANTENNA_FOUND)
-        message(STATUS "    building the Antenna components")
-    else(PH2_ANTENNA_FOUND)
-        message(STATUS "    continuing without Antenna components")
-    endif(PH2_ANTENNA_FOUND)
-
-
     find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
     #find_package(Boost 1.53 REQUIRED filesystem system-mt )
 
