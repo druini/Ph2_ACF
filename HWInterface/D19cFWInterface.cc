@@ -1709,7 +1709,9 @@ void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
 // tuning of L1A lines 
 bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
 {
-        
+    if( pScope) 
+          this->L1ADebug ();
+    
     // read original fast command configuration 
     uint32_t cFastCommandConfig = this->ReadReg("fc7_daq_cnfg.fast_command_block");
     LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
@@ -1738,9 +1740,7 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
         // need to know the address 
         //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
         // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging 
-        if( pScope) 
-          this->L1ADebug ();
-      
+        
         uint8_t cLineId=0;
         // tune phase on l1A line - don't have t do anything on the FEs
         if( fOptical )

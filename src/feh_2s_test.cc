@@ -118,7 +118,7 @@ int main ( int argc, char* argv[] )
     #ifdef __ANTENNA__
         char cBuffer[120]; 
         Antenna cAntenna;
-        cAntenna.setId("UIBV2-CMSPH2-BRD00050");
+        //cAntenna.setId("UIBV2-CMSPH2-BRD00050");
         cAntenna.ConfigureSlaveADC (CHIPSLAVE);
         float cTemp = cAntenna.GetHybridTemperature (CHIPSLAVE);
         float cCurrent = cAntenna.GetHybridCurrent (CHIPSLAVE);
