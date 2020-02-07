@@ -90,6 +90,10 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "cicAlignment", "Perform CIC alignment", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "cicAlignment", "c" );
 
+
+    cmd.defineOption ( "scopeL1Alignment", "Debug alignment of L1 data in back-end", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "scopeStubAlignment", "Debug alignment of Stub data in back-end", ArgvParser::NoOptionAttribute );
+    
     int result = cmd.parse ( argc, argv );
 
     if ( result != ArgvParser::NoParserError )
@@ -119,6 +123,9 @@ int main ( int argc, char* argv[] )
     uint16_t cLatencyRange = ( cmd.foundOption ( "range" ) )   ?  convertAnyInt ( cmd.optionValue ( "range" ).c_str() ) :  10;
     int cSigma = cmd.foundOption ( "evaluate" ) ?  convertAnyInt ( cmd.optionValue ( "evaluate" ).c_str() ) :  3;
     bool cCheckOccupancy = cmd.foundOption ( "occupancyCheck" );
+    bool cScopeL1A = cmd.foundOption ( "scopeL1Alignment" );
+    bool cScopeStubs = cmd.foundOption ( "scopeStubAlignment" );
+    
     int cVcth = ( cmd.foundOption ( "vcth" ) ) ? convertAnyInt ( cmd.optionValue ( "vcth" ).c_str() ) : 550;
 
     cDirectory += Form("Cic_%s",cSerial.c_str());
@@ -175,6 +182,8 @@ int main ( int argc, char* argv[] )
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit (&cTool);
     cBackEndAligner.Initialise();
+    cBackEndAligner.SetL1Debug(cScopeL1A);
+    cBackEndAligner.SetStubDebug(cScopeStubs);
     bool cAligned = cBackEndAligner.Align();
     cBackEndAligner.resetPointers();
     if(!cAligned )

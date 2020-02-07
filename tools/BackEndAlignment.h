@@ -36,6 +36,8 @@ class BackEndAlignment : public Tool
 
     void Initialise ( );
     bool Align();
+    void SetL1Debug(bool pDebug){ fL1Debug=pDebug;};
+    void SetStubDebug(bool pDebug){ fStubDebug=pDebug;};
     bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard );
     void Start(int currentRun) override;
@@ -46,6 +48,8 @@ class BackEndAlignment : public Tool
 
 
   protected:
+    bool fL1Debug=false;
+    bool fStubDebug=false;
 
   private:
     // Containers

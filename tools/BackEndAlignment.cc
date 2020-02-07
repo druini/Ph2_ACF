@@ -67,7 +67,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
            fCicInterface->SelectOutput( static_cast<OuterTrackerModule*>(cFe)->fCic, false );
     }
     //L1A line 
-    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1Tuning (pBoard,false);
+    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1Tuning (pBoard,fL1Debug);
     if( !cAligned )
     {
         LOG (INFO) << BOLDBLUE << "L1A alignment in the back-end " << BOLDRED << " FAILED ..." << RESET;
@@ -82,7 +82,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         fCicInterface->EnableFEs(static_cast<OuterTrackerModule*>(cFe)->fCic , {0,1,2,3,4,5,6,7}, true );
         fCicInterface->SelectOutput( static_cast<OuterTrackerModule*>(cFe)->fCic, true );
     }
-    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning (pBoard, false);
+    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning (pBoard, fStubDebug);
 
     // disable CIC output of pattern 
     for (auto& cFe : pBoard->fModuleVector)
