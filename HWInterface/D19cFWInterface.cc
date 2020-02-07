@@ -1647,7 +1647,7 @@ void D19cFWInterface::L1ADebug()
 {
     this->WriteReg ("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
     
-    this->ConfigureTriggerFSM(0, 10 , 3); 
+    this->ConfigureTriggerFSM(0, 1000 , 3); 
     // disable back-pressure 
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
     this->Start();
@@ -1794,13 +1794,59 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
                     cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
                     cSuccess = pTuner.fDone;
                 }
+                // if the above doesn't work.. try and find the correct bitslip manually in software 
+                if( !cSuccess)
+                {
+                    LOG (INFO) << BOLDBLUE << "Going to try and align manually in software..." << RESET; 
+                    for( cBitslip=0; cBitslip < 8; cBitslip++)
+                    {
+                        LOG (INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
+                        pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, cBitslip, 0, 0 );
+                        this->ConfigureTriggerFSM(0, 10 , 3); 
+                        // disable back-pressure 
+                        this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
+                        this->Start();
+                        std::this_thread::sleep_for (std::chrono::microseconds (100) );
+                        this->Stop();
+                        
+                        auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+                        std::string cBuffer = "";
+                        bool cAligned=false;
+                        std::string cOutput="\n";
+                        for( auto cWord : cWords )
+                        {
+                            auto cString=std::bitset<32>(cWord).to_string();
+                            std::vector<std::string> cOutputWords(0);
+                            for( size_t cIndex = 0 ; cIndex < 4 ; cIndex++)
+                            {
+                                auto c8bitWord = cString.substr(cIndex*8, 8) ;
+                                cOutputWords.push_back(c8bitWord);
+                                cAligned = (cAligned | (std::stoi( c8bitWord , nullptr,2 ) == cPattern) );
+                            }
+                            for( auto cIt = cOutputWords.end()-1 ; cIt >= cOutputWords.begin() ; cIt--)
+                            {
+                                cOutput += *cIt + " "; 
+                            }
+                            cOutput += "\n";
+                        }
+                        if( cAligned)
+                        {
+                            LOG (INFO) << BOLDGREEN << cOutput << RESET;
+                            this->ResetReadout();
+                            break;
+                        }
+                        else
+                            LOG (INFO) << BOLDRED << cOutput << RESET;
+                        this->ResetReadout(); 
+                    }
+                }
             }
         }
     }
 
-    if( pScope) 
+    if( pScope )
         this->L1ADebug ();
-    
+                    
     return cSuccess;
 }
 // tuning of stub lines 
