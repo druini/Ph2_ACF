@@ -1776,7 +1776,7 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
             {
                 uint16_t cBitslip=0;
                 LOG (INFO) << BOLDBLUE << "Forcing bit slip on L1A line to be " << +cBitslip << " bits." << RESET;
-                //pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, cBitslip, 0, 0 );
+                pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, cBitslip, 0, 0 );
             }
             else
             {    
@@ -1833,6 +1833,7 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
                         {
                             LOG (INFO) << BOLDGREEN << cOutput << RESET;
                             this->ResetReadout();
+                            cSuccess=true;
                             break;
                         }
                         else
