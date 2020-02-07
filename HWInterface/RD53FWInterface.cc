@@ -1112,10 +1112,10 @@ namespace Ph2_HwInterface
     const uint32_t SPIregValues[] =
       {
         0xEB020320, // This clock is not used, but it can be used as another GBT clock (120 MHz, LVDS, phase shift 0 deg)
-        0xEB020321, // GBT clock reference: 120 MHz, LVDS, phase shift 0 deg. 0xEB820321: 320 MHz, LVDS, phase shift 0 deg
+        0xEB020321, // GBT clock reference: 120 MHz, LVDS, phase shift 0 deg (0xEB820321: 320 MHz, LVDS, phase shift 0 deg)
         0xEB840302, // DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
-        0xEB840303, // Not used output (off)
-        0xEB140334, // Not used output (off)
+        0xEB840303, // Not used (off)
+        0xEB140334, // Not used (off)
         0x013C0CB5, // Reference selection: 0x10000EB5 secondary reference, 0x10000E75 primary reference
         0x33041BE6, // VCO selection: 0x030E02E6 select VCO1 if CDCE reference is 40 MHz, 0x030E02F6 select VCO2 if CDCE reference is > 40 MHz
         0xBD800DF7, // RC network parameters
