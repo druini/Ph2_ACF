@@ -42,19 +42,29 @@ class Physics : public Tool
  public:
   Physics () { Physics::setGenericEvtConverter(RD53dummyEvtConverter()); }
 
-  void Start (int currentRun = -1) override;
-  void Stop  ()                    override;
-  void ConfigureCalibration ()     override;
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
   void sendData               (const BoardContainer* cBoard);
-  void localConfigure         (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void initializeFiles        (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void localConfigure         (const std::string fileRes_, int currentRun);
+  void initializeFiles        (const std::string fileRes_, int currentRun);
   void run                    ();
   void draw                   ();
   void analyze                (bool doReadBinary = false);
   void fillDataContainer      (BoardContainer* const& cBoard);
 
   void setGenericEvtConverter (evtConvType arg) { genericEvtConverter = std::move(arg); }
+
+
+  // ########
+  // # ROOT #
+  // ########
+#ifdef __USE_ROOT__
+  PhysicsHistograms* histos;
+  TApplication* myApp;
+#endif
+
 
  private:
   size_t rowStart;
@@ -67,17 +77,9 @@ class Physics : public Tool
   DetectorDataContainer theBCIDContainer;
   DetectorDataContainer theTrgIDContainer;
 
-  void fillHisto       ();
-  void chipErrorReport ();
-
-
-  // ########
-  // # ROOT #
-  // ########
-#ifdef __USE_ROOT__
-  PhysicsHistograms* histos;
-  TApplication* myApp;
-#endif
+  void fillHisto         ();
+  void chipErrorReport   ();
+  void saveChipRegisters (int currentRun);
 
 
  protected:
@@ -87,11 +89,10 @@ class Physics : public Tool
   };
 
   std::string fileRes;
-  std::string fileReg;
+  int  theCurrentRun;
   bool doUpdateChip;
   bool doDisplay;
   bool saveBinaryData;
-  bool doLocal;
   std::atomic<bool> keepRunning;
   std::mutex theMtx;
   std::thread thrRun;

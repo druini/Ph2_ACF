@@ -76,7 +76,7 @@ void PixelAlive::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[PixelAlive::Start] Starting" << RESET;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -84,6 +84,7 @@ void PixelAlive::Start (int currentRun)
 
   PixelAlive::run();
   PixelAlive::analyze();
+  PixelAlive::saveChipRegisters(currentRun);
   PixelAlive::sendData();
 }
 
@@ -110,22 +111,21 @@ void PixelAlive::Stop ()
   this->closeFileHandler();
 }
 
-void PixelAlive::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void PixelAlive::localConfigure (const std::string fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
   histos = nullptr;
 #endif
 
   PixelAlive::ConfigureCalibration();
-  if ((fileRes_ != "") && (fileReg_ != "")) PixelAlive::initializeFiles(fileRes_, fileReg_, currentRun);
+  PixelAlive::initializeFiles(fileRes_, currentRun);
 }
 
-void PixelAlive::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void PixelAlive::initializeFiles (const std::string fileRes_, int currentRun)
 {
   fileRes = fileRes_;
-  fileReg = fileReg_;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if ((fileRes != "") && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -155,47 +155,33 @@ void PixelAlive::run ()
   PixelAlive::chipErrorReport();
 }
 
-void PixelAlive::draw (bool doSave)
+void PixelAlive::draw (int currentRun)
 {
+  if (fileRes != "") PixelAlive::saveChipRegisters(currentRun);
+
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (doSave    == true)
+
+  if (fileRes != "")
     {
-      this->CreateResultDirectory(RESULTDIR,false,false);
+      this->CreateResultDirectory(RESULTDIR, false, false);
       this->InitResultFile(fileRes);
+      LOG (INFO) << BOLDBLUE << "\t--> PixelAlive saving histograms..." << RESET;
     }
 
   histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   PixelAlive::fillHisto();
   histos->process();
-#endif
 
-  // #######################################
-  // # Save and Update register new values #
-  // #######################################
-  if (doSave == true)
-    {
-      for (const auto cBoard : *fDetectorContainer)
-        for (const auto cModule : *cBoard)
-          for (const auto cChip : *cModule)
-            {
-              if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-              static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-              std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-              system(command.c_str());
-              LOG (INFO) << BOLDBLUE << "\t--> PixelAlive saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-            }
-    }
-
-#ifdef __USE_ROOT__
-  if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true)
+  if (fileRes != "")
     {
       this->WriteRootFile();
       this->CloseResultFile();
     }
+
+  if (doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -284,5 +270,21 @@ void PixelAlive::chipErrorReport ()
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
+        }
+}
+
+void PixelAlive::saveChipRegisters (int currentRun)
+{
+  std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDBLUE << "\t--> PixelAlive saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 }

@@ -49,6 +49,7 @@ void ThrEqualization::ConfigureCalibration ()
   // # Initialize SCurve #
   // #####################
   sc.Inherit(this);
+  sc.localConfigure("", 0);
 
 
   // #######################
@@ -68,7 +69,11 @@ void ThrEqualization::Start (int currentRun)
     }
 
   ThrEqualization::run();
+  ThrEqualization::analyze();
+  // ThrEqualization::saveChipRegisters(currentRun);
   ThrEqualization::sendData();
+
+  sc.draw(currentRun);
   sc.sendData();
 }
 
@@ -90,30 +95,21 @@ void ThrEqualization::Stop ()
   this->closeFileHandler();
 }
 
-void ThrEqualization::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void ThrEqualization::localConfigure (const std::string fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
   histos = nullptr;
 #endif
 
   ThrEqualization::ConfigureCalibration();
-
-
-  // #####################
-  // # Initialize SCurve #
-  // #####################
-  sc.localConfigure("", "");
-
-
-  if ((fileRes_ != "") && (fileReg_ != "")) ThrEqualization::initializeFiles(fileRes_, fileReg_, currentRun);
+  ThrEqualization::initializeFiles(fileRes_, currentRun);
 }
 
-void ThrEqualization::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void ThrEqualization::initializeFiles (const std::string fileRes_, int currentRun)
 {
   fileRes = fileRes_;
-  fileReg = fileReg_;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/ThrEqualizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -130,7 +126,7 @@ void ThrEqualization::initializeFiles (const std::string fileRes_, const std::st
   // #####################
   std::string fileName = fileRes;
   fileName.replace(fileRes.find("_ThrEqualization"),16,"_SCurve");
-  sc.initializeFiles(fileName, fileReg);
+  sc.initializeFiles(fileName, currentRun);
 }
 
 void ThrEqualization::run ()
@@ -140,7 +136,6 @@ void ThrEqualization::run ()
   // ##############
   sc.run();
   auto newVCal = sc.analyze();
-  sc.draw();
 
 
   // ##############################
@@ -195,8 +190,11 @@ void ThrEqualization::run ()
   ThrEqualization::chipErrorReport();
 }
 
-void ThrEqualization::draw ()
+void ThrEqualization::draw (int currentRun)
 {
+  sc.draw(currentRun);
+  // ThrEqualization::saveChipRegisters(currentRun);
+
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
@@ -204,15 +202,21 @@ void ThrEqualization::draw ()
 
   this->CreateResultDirectory(RESULTDIR,false,false);
   this->InitResultFile(fileRes);
+  LOG (INFO) << BOLDBLUE << "\t--> ThrEqualization saving histograms..." << RESET;
 
   histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   ThrEqualization::fillHisto();
   histos->process();
-#endif
 
-  // ######################################
-  // # Save or Update register new values #
-  // ######################################
+  this->WriteRootFile();
+  this->CloseResultFile();
+
+  if (doDisplay == true) myApp->Run(true);
+#endif
+}
+
+void ThrEqualization::analyze ()
+{
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
@@ -224,19 +228,8 @@ void ThrEqualization::draw ()
               if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
                 static_cast<RD53*>(cChip)->setTDAC(row, col, theTDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row,col));
 
-          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-
-          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-          system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> ThrEqualization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+          static_cast<RD53*>(cChip)->copyMaskToDefault();
         }
-
-#ifdef __USE_ROOT__
-  if (doDisplay == true) myApp->Run(true);
-  this->WriteRootFile();
-  this->CloseResultFile();
-#endif
 }
 
 void ThrEqualization::fillHisto ()
@@ -373,5 +366,22 @@ void ThrEqualization::chipErrorReport()
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
+        }
+}
+
+void ThrEqualization::saveChipRegisters (int currentRun)
+{
+  std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          static_cast<RD53*>(cChip)->copyMaskFromDefault();
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDBLUE << "\t--> ThrEqualization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 }

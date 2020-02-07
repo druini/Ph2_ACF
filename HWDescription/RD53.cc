@@ -287,7 +287,7 @@ namespace Ph2_HwDescription
       {
         fPixelsMask[i].Enable = fPixelsMaskDefault[i].Enable;
         fPixelsMask[i].HitBus = fPixelsMaskDefault[i].HitBus;
-        fPixelsMask[i].InjEn = fPixelsMaskDefault[i].InjEn;
+        fPixelsMask[i].InjEn  = fPixelsMaskDefault[i].InjEn;
         for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = fPixelsMaskDefault[i].TDAC[j];
       }
   }
@@ -298,7 +298,7 @@ namespace Ph2_HwDescription
       {
         fPixelsMaskDefault[i].Enable = fPixelsMask[i].Enable;
         fPixelsMaskDefault[i].HitBus = fPixelsMask[i].HitBus;
-        fPixelsMaskDefault[i].InjEn = fPixelsMask[i].InjEn;
+        fPixelsMaskDefault[i].InjEn  = fPixelsMask[i].InjEn;
         for (auto j = 0u; j < fPixelsMaskDefault[i].TDAC.size(); j++) fPixelsMaskDefault[i].TDAC[j] = fPixelsMask[i].TDAC[j];
       }
   }

@@ -151,7 +151,6 @@ int main (int argc, char** argv)
   fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
   if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
   fileRunNumberIn.close();
-  std::string chipConfig("Run" + RD53Shared::fromInt2Str(runNumber) + "_");
   system(std::string("mkdir " + std::string(RESULTDIR)).c_str());
 
 
@@ -336,10 +335,10 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Latency");
           Latency la;
           la.Inherit(&mySysCntr);
-          la.localConfigure(fileName, chipConfig, runNumber);
+          la.localConfigure(fileName, runNumber);
           la.run();
           la.analyze();
-          la.draw();
+          la.draw(runNumber);
         }
       else if (whichCalib == "pixelalive")
         {
@@ -351,10 +350,10 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_PixelAlive");
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
-          pa.localConfigure(fileName, chipConfig, runNumber);
+          pa.localConfigure(fileName, runNumber);
           pa.run();
           pa.analyze();
-          pa.draw();
+          pa.draw(runNumber);
         }
       else if (whichCalib == "noise")
         {
@@ -366,10 +365,10 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_NoiseScan");
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
-          pa.localConfigure(fileName, chipConfig, runNumber);
+          pa.localConfigure(fileName, runNumber);
           pa.run();
           pa.analyze();
-          pa.draw();
+          pa.draw(runNumber);
         }
       else if (whichCalib == "scurve")
         {
@@ -381,10 +380,10 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_SCurve");
           SCurve sc;
           sc.Inherit(&mySysCntr);
-          sc.localConfigure(fileName, chipConfig, runNumber);
+          sc.localConfigure(fileName, runNumber);
           sc.run();
           sc.analyze();
-          sc.draw();
+          sc.draw(runNumber);
         }
       else if (whichCalib == "gain")
         {
@@ -396,10 +395,10 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Gain");
           Gain ga;
           ga.Inherit(&mySysCntr);
-          ga.localConfigure(fileName, chipConfig, runNumber);
+          ga.localConfigure(fileName, runNumber);
           ga.run();
           ga.analyze();
-          ga.draw();
+          ga.draw(runNumber);
         }
       else if (whichCalib == "gainopt")
         {
@@ -411,10 +410,10 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_GainOptimization");
           GainOptimization go;
           go.Inherit(&mySysCntr);
-          go.localConfigure(fileName, chipConfig, runNumber);
+          go.localConfigure(fileName, runNumber);
           go.run();
           go.analyze();
-          go.draw();
+          go.draw(runNumber);
         }
       else if (whichCalib == "threqu")
         {
@@ -426,9 +425,10 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrEqualization");
           ThrEqualization te;
           te.Inherit(&mySysCntr);
-          te.localConfigure(fileName, chipConfig, runNumber);
+          te.localConfigure(fileName, runNumber);
           te.run();
-          te.draw();
+          te.analyze();
+          te.draw(runNumber);
         }
       else if (whichCalib == "thrmin")
         {
@@ -440,10 +440,10 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrMinimization");
           ThrMinimization tm;
           tm.Inherit(&mySysCntr);
-          tm.localConfigure(fileName, chipConfig, runNumber);
+          tm.localConfigure(fileName, runNumber);
           tm.run();
           tm.analyze();
-          tm.draw();
+          tm.draw(runNumber);
         }
       else if (whichCalib == "injdelay")
         {
@@ -455,10 +455,10 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_InjectionDelay");
           InjectionDelay id;
           id.Inherit(&mySysCntr);
-          id.localConfigure(fileName, chipConfig, runNumber);
+          id.localConfigure(fileName, runNumber);
           id.run();
           id.analyze();
-          id.draw();
+          id.draw(runNumber);
         }
       else if (whichCalib == "clockdelay")
         {
@@ -470,10 +470,10 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ClockDelay");
           ClockDelay cd;
           cd.Inherit(&mySysCntr);
-          cd.localConfigure(fileName, chipConfig, runNumber);
+          cd.localConfigure(fileName, runNumber);
           cd.run();
           cd.analyze();
-          cd.draw();
+          cd.draw(runNumber);
         }
       else if (whichCalib == "physics")
         {
@@ -485,10 +485,17 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
           Physics ph;
           ph.Inherit(&mySysCntr);
-          ph.localConfigure(fileName, chipConfig, runNumber);
+          ph.localConfigure(fileName, runNumber);
           if (binaryFile == "")
             {
               ph.Start(runNumber);
+              usleep(2e6);
+              ph.Stop();
+
+              ph.draw();
+              ph.initializeFiles("ciao", runNumber+1);
+              usleep(2e6);
+              ph.Start(runNumber+1);
               usleep(2e6);
               ph.Stop();
             }

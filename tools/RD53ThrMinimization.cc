@@ -17,7 +17,7 @@ void ThrMinimization::ConfigureCalibration ()
   // ##############################
   // # Initialize sub-calibration #
   // ##############################
-  PixelAlive::localConfigure("", "");
+  PixelAlive::ConfigureCalibration();
   PixelAlive::doDisplay    = false;
   PixelAlive::doUpdateChip = false;
 
@@ -48,7 +48,7 @@ void ThrMinimization::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[ThrMinimization::Start] Starting" << RESET;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/ThrMinimizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -56,7 +56,10 @@ void ThrMinimization::Start (int currentRun)
 
   ThrMinimization::run();
   ThrMinimization::analyze();
+  ThrMinimization::saveChipRegisters(currentRun);
   ThrMinimization::sendData();
+
+  PixelAlive::sendData();
 }
 
 void ThrMinimization::sendData ()
@@ -73,28 +76,28 @@ void ThrMinimization::Stop ()
   this->closeFileHandler();
 }
 
-void ThrMinimization::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void ThrMinimization::localConfigure (const std::string fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
-  histos = nullptr;
+  histos             = nullptr;
+  PixelAlive::histos = nullptr;
 #endif
 
   ThrMinimization::ConfigureCalibration();
-  if ((fileRes_ != "") && (fileReg_ != "")) ThrMinimization::initializeFiles(fileRes_, fileReg_, currentRun);
+  ThrMinimization::initializeFiles(fileRes_, currentRun);
 }
 
-void ThrMinimization::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void ThrMinimization::initializeFiles (const std::string fileRes_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
   // ##############################
-  PixelAlive::initializeFiles(fileRes_, fileReg_, currentRun);
+  PixelAlive::initializeFiles("", currentRun);
 
 
   fileRes = fileRes_;
-  fileReg = fileReg_;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/ThrMinimizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -127,41 +130,29 @@ void ThrMinimization::run ()
   ThrMinimization::chipErrorReport();
 }
 
-void ThrMinimization::draw ()
+void ThrMinimization::draw (int currentRun)
 {
+  ThrMinimization::saveChipRegisters(currentRun);
+
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
+
   if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-  this->CreateResultDirectory(RESULTDIR,false,false);
+  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
-
-  PixelAlive::draw(false);
+  LOG (INFO) << BOLDBLUE << "\t--> ThrMinimization saving histograms..." << RESET;
 
   histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   ThrMinimization::fillHisto();
   histos->process();
-#endif
 
-  // ######################################
-  // # Save or Update register new values #
-  // ######################################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          static_cast<RD53*>(cChip)->copyMaskFromDefault();
-          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-          system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> ThrMinimization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-        }
+  PixelAlive::draw(currentRun);
 
-#ifdef __USE_ROOT__
-  if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();
+
+  if (doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -300,5 +291,22 @@ void ThrMinimization::chipErrorReport()
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
+        }
+}
+
+void ThrMinimization::saveChipRegisters (int currentRun)
+{
+  std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          static_cast<RD53*>(cChip)->copyMaskFromDefault();
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDBLUE << "\t--> ThrMinimization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 }

@@ -29,22 +29,30 @@
 class ThrMinimization : public PixelAlive
 {
  public:
-  void Start (int currentRun = -1) override;
-  void Stop  ()                    override;
-  void ConfigureCalibration ()     override;
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
   void   sendData            ();
-  void   localConfigure      (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void   initializeFiles     (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void   localConfigure      (const std::string fileRes_, int currentRun);
+  void   initializeFiles     (const std::string fileRes_, int currentRun);
   void   run                 ();
-  void   draw                ();
+  void   draw                (int currentRun);
   void   analyze             ();
   size_t getNumberIterations ()
   {
     uint16_t nBitThr        = floor(log2(ThrStop - ThrStart + 1) + 1);
-    uint16_t moreIterations = 2;
+    uint16_t moreIterations = 1;
     return PixelAlive::getNumberIterations()*(nBitThr + moreIterations);
   }
+
+
+  // ########
+  // # ROOT #
+  // ########
+#ifdef __USE_ROOT__
+  ThrMinimizationHistograms* histos;
+#endif
 
 
  private:
@@ -59,22 +67,14 @@ class ThrMinimization : public PixelAlive
 
   DetectorDataContainer theThrContainer;
 
-  void fillHisto       ();
-  void bitWiseScan     (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-  void chipErrorReport ();
-
-
-  // ########
-  // # ROOT #
-  // ########
-#ifdef __USE_ROOT__
-  ThrMinimizationHistograms* histos;
-#endif
+  void fillHisto         ();
+  void bitWiseScan       (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+  void chipErrorReport   ();
+  void saveChipRegisters (int currentRun);
 
 
  protected:
   std::string fileRes;
-  std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
   bool saveBinaryData;

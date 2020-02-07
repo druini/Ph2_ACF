@@ -35,20 +35,28 @@
 class PixelAlive : public Tool
 {
  public:
-  void Start (int currentRun = -1) override;
-  void Stop  ()                    override;
-  void ConfigureCalibration ()     override;
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
   void sendData                                  ();
-  void localConfigure                            (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void initializeFiles                           (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void localConfigure                            (const std::string fileRes_, int currentRun);
+  void initializeFiles                           (const std::string fileRes_, int currentRun);
   void run                                       ();
-  void draw                                      (bool doSave = true);
+  void draw                                      (int currentRun);
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
     return RD53ChannelGroupHandler::getNumberOfGroups(injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol) * nEvents/nEvtsBurst;
   }
+
+
+  // ########
+  // # ROOT #
+  // ########
+#ifdef __USE_ROOT__
+  PixelAliveHistograms* histos;
+#endif
 
 
  private:
@@ -69,21 +77,13 @@ class PixelAlive : public Tool
   DetectorDataContainer theBCIDContainer;
   DetectorDataContainer theTrgIDContainer;
 
-  void fillHisto       ();
-  void chipErrorReport ();
-
-
-  // ########
-  // # ROOT #
-  // ########
-#ifdef __USE_ROOT__
-  PixelAliveHistograms* histos;
-#endif
+  void fillHisto         ();
+  void chipErrorReport   ();
+  void saveChipRegisters (int currentRun);
 
 
  protected:
   std::string fileRes;
-  std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
   bool doFast;

@@ -70,7 +70,7 @@ void SCurve::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[SCurve::Start] Starting" << RESET;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/SCurveRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -78,6 +78,7 @@ void SCurve::Start (int currentRun)
 
   SCurve::run();
   SCurve::analyze();
+  SCurve::saveChipRegisters(currentRun);
   SCurve::sendData();
 }
 
@@ -113,22 +114,21 @@ void SCurve::Stop ()
   this->closeFileHandler();
 }
 
-void SCurve::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void SCurve::localConfigure (const std::string fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
   histos = nullptr;
 #endif
 
   SCurve::ConfigureCalibration();
-  if ((fileRes_ != "") && (fileReg_ != "")) SCurve::initializeFiles(fileRes_, fileReg_, currentRun);
+  SCurve::initializeFiles(fileRes_, currentRun);
 }
 
-void SCurve::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void SCurve::initializeFiles (const std::string fileRes_, int currentRun)
 {
   fileRes = fileRes_;
-  fileReg = fileReg_;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if ((fileRes != "") && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/SCurveRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -182,8 +182,10 @@ void SCurve::run ()
   SCurve::chipErrorReport();
 }
 
-void SCurve::draw ()
+void SCurve::draw (int currentRun)
 {
+  if (fileRes != "") SCurve::saveChipRegisters(currentRun);
+
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
@@ -191,31 +193,16 @@ void SCurve::draw ()
 
   this->CreateResultDirectory(RESULTDIR,false,false);
   this->InitResultFile(fileRes);
+  LOG (INFO) << BOLDBLUE << "\t--> SCurve saving histograms..." << RESET;
 
   histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   SCurve::fillHisto();
   histos->process();
-#endif
 
-  // ######################################
-  // # Save or Update register new values #
-  // ######################################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          static_cast<RD53*>(cChip)->copyMaskFromDefault();
-          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-          system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> SCurve saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-        }
-
-#ifdef __USE_ROOT__
-  if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();
+
+  if (doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -360,4 +347,22 @@ void SCurve::chipErrorReport ()
           LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
         }
+}
+
+void SCurve::saveChipRegisters (int currentRun)
+{
+  std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          static_cast<RD53*>(cChip)->copyMaskFromDefault();
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDBLUE << "\t--> SCurve saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+        }
+
 }

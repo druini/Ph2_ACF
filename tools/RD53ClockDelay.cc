@@ -48,6 +48,7 @@ void ClockDelay::ConfigureCalibration ()
   // # Initialize Latency #
   // ######################
   la.Inherit(this);
+  la.localConfigure("", 0);
 
 
   // ##########################
@@ -69,7 +70,7 @@ void ClockDelay::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[ClockDelay::Start] Starting" << RESET;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/ClockDelayRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -77,7 +78,10 @@ void ClockDelay::Start (int currentRun)
 
   ClockDelay::run();
   ClockDelay::analyze();
+  ClockDelay::saveChipRegisters(currentRun);
   ClockDelay::sendData();
+
+  la.draw(currentRun);
   la.sendData();
 }
 
@@ -101,36 +105,21 @@ void ClockDelay::Stop ()
   this->closeFileHandler();
 }
 
-void ClockDelay::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void ClockDelay::localConfigure (const std::string fileRes_, int currentRun)
 {
-  // ##############################
-  // # Initialize sub-calibration #
-  // ##############################
-  PixelAlive::doFast = 1;
-
-
 #ifdef __USE_ROOT__
   histos = nullptr;
 #endif
 
   ClockDelay::ConfigureCalibration();
-
-
-  // #####################$
-  // # Initialize Latency #
-  // #####################$
-  la.localConfigure("", "");
-
-
-  if ((fileRes_ != "") && (fileReg_ != "")) ClockDelay::initializeFiles(fileRes_, fileReg_, currentRun);
+  ClockDelay::initializeFiles(fileRes_, currentRun);
 }
 
-void ClockDelay::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void ClockDelay::initializeFiles (const std::string fileRes_, int currentRun)
 {
   fileRes = fileRes_;
-  fileReg = fileReg_;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/ClockDelayRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -147,7 +136,7 @@ void ClockDelay::initializeFiles (const std::string fileRes_, const std::string 
   // ######################
   std::string fileName = fileRes;
   fileName.replace(fileRes.find("_ClockDelay"),15,"_Latency");
-  la.localConfigure(fileName, fileReg);
+  la.initializeFiles(fileName, currentRun);
 }
 
 void ClockDelay::run ()
@@ -167,7 +156,6 @@ void ClockDelay::run ()
         }
   la.run();
   la.analyze();
-  la.draw();
 
 
   ContainerFactory::copyAndInitChip<GenericDataArray<ClkDelaySize>>(*fDetectorContainer, theOccContainer);
@@ -210,40 +198,27 @@ void ClockDelay::run ()
   ClockDelay::chipErrorReport();
 }
 
-void ClockDelay::draw ()
+void ClockDelay::draw (int currentRun)
 {
+  la.draw(currentRun);
+
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  this->CreateResultDirectory(RESULTDIR,false,false);
+  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
+  LOG (INFO) << BOLDBLUE << "\t--> ClockDelay saving histograms..." << RESET;
 
   histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   ClockDelay::fillHisto();
   histos->process();
-#endif
 
-  // ######################################
-  // # Save or Update register new values #
-  // ######################################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          static_cast<RD53*>(cChip)->copyMaskFromDefault();
-          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-          system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> ClockDelay saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-        }
-
-#ifdef __USE_ROOT__
-  if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();
+
+  if (doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -353,5 +328,22 @@ void ClockDelay::chipErrorReport ()
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
+        }
+}
+
+void ClockDelay::saveChipRegisters (int currentRun)
+{
+  std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          static_cast<RD53*>(cChip)->copyMaskFromDefault();
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDBLUE << "\t--> ClockDelay saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 }

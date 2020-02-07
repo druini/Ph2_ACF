@@ -30,22 +30,30 @@
 class GainOptimization : public Gain
 {
  public:
-  void Start (int currentRun = -1) override;
-  void Stop  ()                    override;
-  void ConfigureCalibration ()     override;
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
   void   sendData            ();
-  void   localConfigure      (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void   initializeFiles     (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void   localConfigure      (const std::string fileRes_, int currentRun);
+  void   initializeFiles     (const std::string fileRes_, int currentRun);
   void   run                 ();
   void   analyze             ();
-  void   draw                ();
+  void   draw                (int currentRun);
   size_t getNumberIterations ()
   {
     uint16_t nBitKrumCurr   = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 1);
-    uint16_t moreIterations = 2;
+    uint16_t moreIterations = 1;
     return Gain::getNumberIterations()*(nBitKrumCurr + moreIterations);
   }
+
+
+  // ########
+  // # ROOT #
+  // ########
+#ifdef __USE_ROOT__
+  GainOptimizationHistograms* histos;
+#endif
 
 
  private:
@@ -63,22 +71,14 @@ class GainOptimization : public Gain
 
   DetectorDataContainer theKrumCurrContainer;
 
-  void fillHisto       ();
-  void bitWiseScan     (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-  void chipErrorReport ();
-
-
-  // ########
-  // # ROOT #
-  // ########
-#ifdef __USE_ROOT__
-  GainOptimizationHistograms* histos;
-#endif
+  void fillHisto         ();
+  void bitWiseScan       (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+  void chipErrorReport   ();
+  void saveChipRegisters (int currentRun);
 
 
  protected:
   std::string fileRes;
-  std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
   bool saveBinaryData;

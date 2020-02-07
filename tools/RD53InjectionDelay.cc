@@ -28,7 +28,6 @@ void InjectionDelay::ConfigureCalibration ()
   colStart       = this->findValueInSettings("COLstart");
   colStop        = this->findValueInSettings("COLstop");
   nEvents        = this->findValueInSettings("nEvents");
-  doFast         = this->findValueInSettings("DoFast");
   startValue     = 0;
   stopValue      = RD53Shared::NLATENCYBINS*(RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"))+1) - 1;
   doDisplay      = this->findValueInSettings("DisplayHisto");
@@ -48,6 +47,7 @@ void InjectionDelay::ConfigureCalibration ()
   // # Initialize Latency #
   // ######################
   la.Inherit(this);
+  la.localConfigure("", 0);
 
 
   // ##############################
@@ -76,7 +76,10 @@ void InjectionDelay::Start (int currentRun)
 
   InjectionDelay::run();
   InjectionDelay::analyze();
+  InjectionDelay::saveChipRegisters(currentRun);
   InjectionDelay::sendData();
+
+  la.draw(currentRun);
   la.sendData();
 }
 
@@ -100,36 +103,21 @@ void InjectionDelay::Stop ()
   this->closeFileHandler();
 }
 
-void InjectionDelay::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void InjectionDelay::localConfigure (const std::string fileRes_, int currentRun)
 {
-  // ##############################
-  // # Initialize sub-calibration #
-  // ##############################
-  PixelAlive::doFast = 1;
-
-
 #ifdef __USE_ROOT__
   histos = nullptr;
 #endif
 
   InjectionDelay::ConfigureCalibration();
-
-
-  // #####################$
-  // # Initialize Latency #
-  // #####################$
-  la.localConfigure("", "");
-
-
-  if ((fileRes_ != "") && (fileReg_ != "")) InjectionDelay::initializeFiles(fileRes_, fileReg_, currentRun);
+  InjectionDelay::initializeFiles(fileRes_, currentRun);
 }
 
-void InjectionDelay::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void InjectionDelay::initializeFiles (const std::string fileRes_, int currentRun)
 {
   fileRes = fileRes_;
-  fileReg = fileReg_;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/InjectionDelayRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -146,7 +134,7 @@ void InjectionDelay::initializeFiles (const std::string fileRes_, const std::str
   // ######################
   std::string fileName = fileRes;
   fileName.replace(fileRes.find("_InjectionDelay"),15,"_Latency");
-  la.localConfigure(fileName, fileReg);
+  la.initializeFiles(fileName, currentRun);
 }
 
 void InjectionDelay::run ()
@@ -166,7 +154,6 @@ void InjectionDelay::run ()
         }
   la.run();
   la.analyze();
-  la.draw();
 
 
   ContainerFactory::copyAndInitChip<GenericDataArray<InjDelaySize>>(*fDetectorContainer, theOccContainer);
@@ -209,8 +196,10 @@ void InjectionDelay::run ()
   InjectionDelay::chipErrorReport();
 }
 
-void InjectionDelay::draw ()
+void InjectionDelay::draw (int currentRun)
 {
+  la.draw(currentRun);
+
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
@@ -218,31 +207,16 @@ void InjectionDelay::draw ()
 
   this->CreateResultDirectory(RESULTDIR,false,false);
   this->InitResultFile(fileRes);
+  LOG (INFO) << BOLDBLUE << "\t--> InjectionDelay saving histograms..." << RESET;
 
   histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   InjectionDelay::fillHisto();
   histos->process();
-#endif
 
-  // ######################################
-  // # Save or Update register new values #
-  // ######################################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          static_cast<RD53*>(cChip)->copyMaskFromDefault();
-          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-          system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> InjectionDelay saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-        }
-
-#ifdef __USE_ROOT__
-  if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();
+
+  if (doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -333,7 +307,7 @@ void InjectionDelay::scanDac (const std::string& regName, const std::vector<uint
           for (const auto cChip : *cModule)
             {
               float occ = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
-              theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<InjDelaySize>>().data[i] = occ;
+              theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<InjDelaySize>>().data[dacList[i]] = occ;
             }
     }
 }
@@ -352,5 +326,22 @@ void InjectionDelay::chipErrorReport ()
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
+        }
+}
+
+void InjectionDelay::saveChipRegisters (int currentRun)
+{
+  std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          static_cast<RD53*>(cChip)->copyMaskFromDefault();
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDBLUE << "\t--> InjectionDelay saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 }

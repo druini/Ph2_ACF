@@ -36,22 +36,30 @@
 class ThrEqualization : public Tool
 {
  public:
-  void Start (int currentRun = -1) override;
-  void Stop  ()                    override;
-  void ConfigureCalibration ()     override;
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
   void   sendData            ();
-  void   localConfigure      (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void   initializeFiles     (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void   localConfigure      (const std::string fileRes_, int currentRun);
+  void   initializeFiles     (const std::string fileRes_, int currentRun);
   void   run                 ();
-  void   draw                ();
+  void   draw                (int currentRun);
+  void   analyze             ();
   size_t getNumberIterations ()
   {
     uint16_t nBitTDAC       = 4;
     uint16_t moreIterations = 2;
-    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*(nBitTDAC + moreIterations) *
-      nEvents/nEvtsBurst + sc.getNumberIterations();
+    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*(nBitTDAC + moreIterations) * nEvents/nEvtsBurst;
   }
+
+
+  // ########
+  // # ROOT #
+  // ########
+#ifdef __USE_ROOT__
+  ThrEqualizationHistograms* histos;
+#endif
 
 
  private:
@@ -69,22 +77,14 @@ class ThrEqualization : public Tool
   DetectorDataContainer theOccContainer;
   DetectorDataContainer theTDACcontainer;
 
-  void fillHisto       ();
-  void bitWiseScan     (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
-  void chipErrorReport ();
-
-
-  // ########
-  // # ROOT #
-  // ########
-#ifdef __USE_ROOT__
-  ThrEqualizationHistograms* histos;
-#endif
+  void fillHisto         ();
+  void bitWiseScan       (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
+  void chipErrorReport   ();
+  void saveChipRegisters (int currentRun);
 
 
  protected:
   std::string fileRes;
-  std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
   bool saveBinaryData;

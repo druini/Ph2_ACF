@@ -29,17 +29,25 @@
 class InjectionDelay : public PixelAlive
 {
  public:
-  void Start (int currentRun = -1) override;
-  void Stop  ()                    override;
-  void ConfigureCalibration ()     override;
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
   void   sendData            ();
-  void   localConfigure      (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void   initializeFiles     (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void   localConfigure      (const std::string fileRes_, int currentRun);
+  void   initializeFiles     (const std::string fileRes_, int currentRun);
   void   run                 ();
-  void   draw                ();
+  void   draw                (int currentRun);
   void   analyze             ();
-  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue + 1) + la.getNumberIterations(); }
+  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue); }
+
+
+  // ########
+  // # ROOT #
+  // ########
+#ifdef __USE_ROOT__
+  InjectionDelayHistograms* histos;
+#endif
 
 
  private:
@@ -51,29 +59,20 @@ class InjectionDelay : public PixelAlive
   size_t startValue;
   size_t stopValue;
   size_t nEvents;
-  bool   doFast;
 
   std::vector<uint16_t> dacList;
 
   DetectorDataContainer theOccContainer;
   DetectorDataContainer theInjectionDelayContainer;
 
-  void fillHisto       ();
-  void scanDac         (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
-  void chipErrorReport ();
-
-
-  // ########
-  // # ROOT #
-  // ########
-#ifdef __USE_ROOT__
-  InjectionDelayHistograms* histos;
-#endif
+  void fillHisto         ();
+  void scanDac           (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
+  void chipErrorReport   ();
+  void saveChipRegisters (int currentRun);
 
 
  protected:
   std::string fileRes;
-  std::string fileReg;
   size_t saveInjection;
   size_t maxDelay;
   bool   doUpdateChip;

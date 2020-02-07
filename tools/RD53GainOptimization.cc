@@ -17,7 +17,7 @@ void GainOptimization::ConfigureCalibration ()
   // ##############################
   // # Initialize sub-calibration #
   // ##############################
-  Gain::localConfigure("", "");
+  Gain::ConfigureCalibration();
   Gain::doDisplay    = false;
   Gain::doUpdateChip = false;
 
@@ -51,7 +51,7 @@ void GainOptimization::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[GainOptimization::Start] Starting" << RESET;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/GainOptimizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -59,7 +59,10 @@ void GainOptimization::Start (int currentRun)
 
   GainOptimization::run();
   GainOptimization::analyze();
+  GainOptimization::saveChipRegisters(currentRun);
   GainOptimization::sendData();
+
+  Gain::sendData();
 }
 
 void GainOptimization::sendData ()
@@ -76,28 +79,28 @@ void GainOptimization::Stop ()
   this->closeFileHandler();
 }
 
-void GainOptimization::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void GainOptimization::localConfigure (const std::string fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
-  histos = nullptr;
+  histos       = nullptr;
+  Gain::histos = nullptr;
 #endif
 
   GainOptimization::ConfigureCalibration();
-  if ((fileRes_ != "") && (fileReg_ != "")) GainOptimization::initializeFiles(fileRes_, fileReg_, currentRun);
+  GainOptimization::initializeFiles(fileRes_, currentRun);
 }
 
-void GainOptimization::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void GainOptimization::initializeFiles (const std::string fileRes_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
   // ##############################
-  Gain::initializeFiles(fileRes, fileReg_, currentRun);
+  Gain::initializeFiles("", currentRun);
 
 
   fileRes = fileRes_;
-  fileReg = fileReg_;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/GainOptimizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -130,42 +133,29 @@ void GainOptimization::run ()
   GainOptimization::chipErrorReport();
 }
 
-void GainOptimization::draw ()
+void GainOptimization::draw (int currentRun)
 {
+  GainOptimization::saveChipRegisters(currentRun);
+
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  this->CreateResultDirectory(RESULTDIR,false,false);
+  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
+  LOG (INFO) << BOLDBLUE << "\t--> GainOptimization saving histograms..." << RESET;
 
-  Gain::draw(false);
+  Gain::draw(currentRun);
 
   histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   GainOptimization::fillHisto();
   histos->process();
-#endif
 
-  // ######################################
-  // # Save or Update register new values #
-  // ######################################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          static_cast<RD53*>(cChip)->copyMaskFromDefault();
-          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-          system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> GainOptimization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-        }
-
-#ifdef __USE_ROOT__
-  if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();
+
+  if (doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -308,11 +298,28 @@ void GainOptimization::chipErrorReport ()
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          LOG (INFO) << GREEN << "\t--> Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << GREEN << "]" << RESET;
+          LOG (INFO) << GREEN << "Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
           LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
+        }
+}
+
+void GainOptimization::saveChipRegisters (int currentRun)
+{
+  std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          static_cast<RD53*>(cChip)->copyMaskFromDefault();
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDBLUE << "\t--> GainOptimization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 }

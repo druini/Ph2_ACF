@@ -24,7 +24,6 @@ void Physics::ConfigureCalibration ()
   doDisplay      = this->findValueInSettings("DisplayHisto");
   doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData = this->findValueInSettings("SaveBinaryData");
-  doLocal        = false;
   keepRunning    = true;
 
 
@@ -78,8 +77,9 @@ void Physics::Start (int currentRun)
     static_cast<RD53FWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->ChipReSync();
   SystemController::Start(currentRun);
 
-  keepRunning = true;
-  thrRun = std::thread(&Physics::run, this);
+  theCurrentRun = currentRun;
+  keepRunning   = true;
+  thrRun        = std::thread(&Physics::run, this);
 }
 
 void Physics::sendData (const BoardContainer* cBoard)
@@ -114,30 +114,26 @@ void Physics::Stop ()
   Physics::chipErrorReport();
 
 
+  Physics::saveChipRegisters(theCurrentRun);
   this->closeFileHandler();
   LOG (INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
 }
 
-void Physics::localConfigure (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void Physics::localConfigure (const std::string fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
-  myApp = nullptr;
-  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
   histos = nullptr;
 #endif
 
   Physics::ConfigureCalibration();
-  if ((fileRes_ != "") && (fileReg_ != "")) Physics::initializeFiles(fileRes_, fileReg_, currentRun);
-
-  doLocal = true;
+  Physics::initializeFiles(fileRes_, currentRun);
 }
 
-void Physics::initializeFiles (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void Physics::initializeFiles (const std::string fileRes_, int currentRun)
 {
   fileRes = fileRes_;
-  fileReg = fileReg_;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(RESULTDIR) + "/PhysicsRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
@@ -146,8 +142,6 @@ void Physics::initializeFiles (const std::string fileRes_, const std::string fil
 #ifdef __USE_ROOT__
   delete histos;
   histos = new PhysicsHistograms;
-  this->InitResultFile(fileRes);
-  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 }
 
@@ -164,26 +158,22 @@ void Physics::run ()
 
 void Physics::draw ()
 {
-  // #######################################
-  // # Save and Update register new values #
-  // #######################################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-          system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> Physics saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-        }
-
 #ifdef __USE_ROOT__
+  TApplication* myApp = nullptr;
+
+  if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
+
+  this->InitResultFile(fileRes);
+  LOG (INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
+
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   Physics::fillHisto();
   histos->process();
-  if (doDisplay == true) myApp->Run(true);
+
   this->WriteRootFile();
   this->CloseResultFile();
+
+  if (doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -314,4 +304,21 @@ void Physics::chipErrorReport ()
           LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
         }
+}
+
+void Physics::saveChipRegisters (int currentRun)
+{
+  std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDBLUE << "\t--> Physics saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+        }
+
 }

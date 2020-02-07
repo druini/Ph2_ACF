@@ -38,20 +38,28 @@ class SCurve : public Tool
  public:
   ~SCurve () { for (auto container : detectorContainerVector) theRecyclingBin.free(container); }
 
-  void Start (int currentRun = -1) override;
-  void Stop  ()                    override;
-  void ConfigureCalibration ()     override;
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
   void sendData                                  ();
-  void localConfigure                            (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void initializeFiles                           (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void localConfigure                            (const std::string fileRes_, int currentRun);
+  void initializeFiles                           (const std::string fileRes_, int currentRun);
   void run                                       ();
-  void draw                                      ();
+  void draw                                      (int currentRun);
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
     return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*nSteps;
   }
+
+
+  // ########
+  // # ROOT #
+  // ########
+#ifdef __USE_ROOT__
+  SCurveHistograms* histos;
+#endif
 
 
  private:
@@ -74,22 +82,14 @@ class SCurve : public Tool
   std::shared_ptr<DetectorDataContainer>   theThresholdAndNoiseContainer;
   ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
-  void fillHisto       ();
-  void computeStats    (const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
-  void chipErrorReport ();
-
-
-  // ########
-  // # ROOT #
-  // ########
-#ifdef __USE_ROOT__
-  SCurveHistograms* histos;
-#endif
+  void fillHisto         ();
+  void computeStats      (const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+  void chipErrorReport   ();
+  void saveChipRegisters (int currentRun);
 
 
  protected:
   std::string fileRes;
-  std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
   bool saveBinaryData;
