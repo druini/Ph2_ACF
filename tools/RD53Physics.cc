@@ -133,7 +133,7 @@ void Physics::initializeFiles (const std::string fileRes_, int currentRun)
 {
   fileRes = fileRes_;
 
-  if (saveBinaryData == true)
+  if ((fileRes != "") && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(RESULTDIR) + "/PhysicsRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();

@@ -39,7 +39,7 @@ void RD53eudaqProducer::DoInitialise ()
 
 void RD53eudaqProducer::DoConfigure ()
 {
-  RD53sysCntrPhys.localConfigure("", "");
+  RD53sysCntrPhys.localConfigure("", 0);
 
   this->SetStatus(eudaq::Status::STATE_CONF, "RD53eudaqProducer::Configured");
 }
@@ -54,7 +54,7 @@ void RD53eudaqProducer::DoStartRun ()
   // auto eudaqConf = this->GetConfiguration();
   // std::string fileName(eudaqConf->Get("Results", "Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics"));
   std::string fileName("Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics");
-  RD53sysCntrPhys.initializeFiles(fileName);
+  RD53sysCntrPhys.initializeFiles(fileName, currentRun);
   RD53sysCntrPhys.Start(currentRun);
 
   this->SetStatus(eudaq::Status::STATE_RUNNING, "RD53eudaqProducer::Running");
