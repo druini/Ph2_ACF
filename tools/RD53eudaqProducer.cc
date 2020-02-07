@@ -63,7 +63,7 @@ void RD53eudaqProducer::DoStartRun ()
 void RD53eudaqProducer::DoStopRun ()
 {
   RD53sysCntrPhys.Stop();
-  RD53sysCntrPhys.draw(currentRun);
+  RD53sysCntrPhys.draw();
 
   // ###########################
   // # Copy configuration file #
