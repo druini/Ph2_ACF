@@ -80,7 +80,8 @@ namespace Ph2_HwInterface
     // # Initialize clock generator #
     // ##############################
     LOG (INFO) << GREEN << "Initializing clock generator (CDCE62005)..." << RESET;
-    RD53FWInterface::InitializeClockGenerator(false);
+    RD53FWInterface::InitializeClockGenerator();
+    RD53FWInterface::ReadClockGenerator();
     LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
 
@@ -1109,25 +1110,38 @@ namespace Ph2_HwInterface
   // ###################
   void RD53FWInterface::InitializeClockGenerator (bool doStoreInEEPROM)
   {
-    const uint32_t SPIregValues[] =
+    const uint32_t writeSPI(0x8FA38014);    // Write to SPI
+    const uint32_t writeEEPROM(0x8FA38014); // Write to EEPROM
+    const uint32_t SPIregSettings[] =
       {
-        0xEB020320, // This clock is not used, but it can be used as another GBT clock (120 MHz, LVDS, phase shift 0 deg)
-        0xEB020321, // GBT clock reference: 120 MHz, LVDS, phase shift 0 deg (0xEB820321: 320 MHz, LVDS, phase shift 0 deg)
-        0xEB840302, // DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
-        0xEB840303, // Not used (off)
-        0xEB140334, // Not used (off)
+        0xEB020320, // OUT0 --> This clock is not used, but it can be used as another GBT clock (160 MHz, LVDS, phase shift 0 deg)
+        0xEB020321, // OUT1 --> GBT clock reference: 160 MHz, LVDS, phase shift 0 deg (0xEB820321: 320 MHz, LVDS, phase shift 0 deg)
+        0xEB840302, // OUT2 --> DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
+        0xEB840303, // OUT3 --> Not used (240 MHz, LVDS, phase shift 0 deg)
+        0xEB140334, // OUT4 --> Not used (40 MHz, LVDS, R4.1 = 1, ph4adjc = 0)
         0x013C0CB5, // Reference selection: 0x10000EB5 secondary reference, 0x10000E75 primary reference
-        0x33041BE6, // VCO selection: 0x030E02E6 select VCO1 if CDCE reference is 40 MHz, 0x030E02F6 select VCO2 if CDCE reference is > 40 MHz
-        0xBD800DF7, // RC network parameters
+        0x33041BE6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE reference is > 40 MHz
+        // VCO1, PS = 4, FD = 12, FB = 1, ChargePump 50 uA, Internal Filter, R6.20 = 0, AuxOut = enable, AuxOut = OUT2
+        0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc, SEL_DEL2 = 1, SEL_DEL1 = 1
         0x20009978  // Sync command configuration
       };
 
-    const uint32_t writeCMD(0x8FA38014); // Command to SPI block
+    // 0xyy8403yy --> 240 MHz, LVDS, phase shift   0 deg
+    // 0xyy8407yy --> 240 MHz, LVDS, phase shift  90 deg
+    // 0xyy840Byy --> 240 MHz, LVDS, phase shift 180 deg
+    // 0xyy840Fyy --> 240 MHz, LVDS, phase shift 270 deg
 
-    for (const auto value : SPIregValues)
+    // 0xyy1403yy --> 040 MHz
+    // 0xyy0403yy --> 120 MHz
+    // 0xyy0203yy --> 160 MHz
+    // 0xyy8403yy --> 240 MHz
+    // 0xyy8203yy --> 320 MHz
+    // 0xyy8003yy --> 480 MHz
+
+    for (const auto value : SPIregSettings)
       {
         WriteReg("system.spi.tx_data", value);
-        WriteReg("system.spi.command", writeCMD);
+        WriteReg("system.spi.command", writeSPI);
 
         ReadReg("system.spi.rx_data"); // Dummy read
         ReadReg("system.spi.rx_data"); // Dummy read
@@ -1138,11 +1152,31 @@ namespace Ph2_HwInterface
     // #########################
     if (doStoreInEEPROM == true)
       {
-        WriteReg("system.spi.tx_data", 0x0000001F); // Write EEPROM
-        WriteReg("system.spi.command", writeCMD);
+        WriteReg("system.spi.tx_data", writeEEPROM);
+        WriteReg("system.spi.command", writeSPI);
 
         ReadReg("system.spi.rx_data"); // Dummy read
         ReadReg("system.spi.rx_data"); // Dummy read
+      }
+  }
+
+  void RD53FWInterface::ReadClockGenerator ()
+  {
+    const uint32_t writeSPI(0x8FA38014); // Write to SPI
+    const uint32_t SPIreadCommands[] = {0x0E, 0x1E, 0x2E, 0x3E, 0x4E, 0x5E, 0x6E, 0x7E, 0x8E};
+
+    for (const auto value : SPIreadCommands)
+      {
+        WriteReg("system.spi.tx_data", value);
+        WriteReg("system.spi.command", writeSPI);
+
+        WriteReg("system.spi.tx_data", 0xAAAAAAAA); // Dummy write
+        WriteReg("system.spi.command", writeSPI);
+
+        uint32_t readback = ReadReg("system.spi.rx_data");
+        std::stringstream myString("");
+        myString << std::right << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << readback << std::dec;
+        LOG (INFO) << BOLDBLUE << "\t--> SPI register content " << BOLDYELLOW << "0x" << myString.str() << RESET;
       }
   }
 

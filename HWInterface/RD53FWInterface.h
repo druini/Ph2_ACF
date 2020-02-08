@@ -261,6 +261,7 @@ namespace Ph2_HwInterface
     // # Clock generator #
     // ###################
     void InitializeClockGenerator (bool doStoreInEEPROM = false);
+    void ReadClockGenerator       ();
 
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
