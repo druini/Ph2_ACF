@@ -118,7 +118,7 @@ int main ( int argc, char* argv[] )
     #ifdef __ANTENNA__
         char cBuffer[120]; 
         Antenna cAntenna;
-        cAntenna.setId("UIBV2-CMSPH2-BRD00050");
+        //cAntenna.setId("UIBV2-CMSPH2-BRD00050");
         cAntenna.ConfigureSlaveADC (CHIPSLAVE);
         float cTemp = cAntenna.GetHybridTemperature (CHIPSLAVE);
         float cCurrent = cAntenna.GetHybridCurrent (CHIPSLAVE);
@@ -198,6 +198,7 @@ int main ( int argc, char* argv[] )
         cPedestalEqualization.Inherit (&cTool);
         // second parameter disables stub logic on CBC3
         cPedestalEqualization.Initialise ( cAllChan, true );
+        cPedestalEqualization.FindVplus();
         cPedestalEqualization.FindOffsets();
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();

@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR">
-        <connection id="board" uri="chtcp-2.0://127.0.0.1:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/d19c_address_table.xml" /> 
-<!-- 
-     <GBT_Links>
-        <GBT Id="0" phaseTap="7" enable="0"/>
-    </GBT_Links> -->
-
+    <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1:10203?target=192.168.0.10:50001" address_table="file://settings/address_tables/d19c_address_table.xml" />
+    
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
         <Global>
             <Settings threshold="500" latency="29"/>
@@ -19,13 +15,13 @@
         <CBC_Files path="./settings/CbcFiles/" />
         <CBC Id="0" configfile="CBC3_default.txt" />
         <CBC Id="1" configfile="CBC3_default.txt" />
-        <!-- <CBC Id="2" configfile="CBC3_default.txt" />
+        <CBC Id="2" configfile="CBC3_default.txt" />
         <CBC Id="3" configfile="CBC3_default.txt" />
         <CBC Id="4" configfile="CBC3_default.txt" />
         <CBC Id="5" configfile="CBC3_default.txt" />
         <CBC Id="6" configfile="CBC3_default.txt" />
         <CBC Id="7" configfile="CBC3_default.txt" />
-        <CIC Id="8" configfile="CIC_default.txt" /> -->
+        <!-- <CIC Id="8" configfile="CIC_default.txt" /> -->
     </Module>
 
     <SLink>
@@ -162,6 +158,10 @@
     <!--PedeNoise-->
     <Setting name="PedeNoisePulseAmplitude">  0</Setting>
 
+    <!--[>Opens Test<] -->
+    <Setting name="AntennaDelay">200</Setting>
+    <Setting name="AntennaGroup">0</Setting>
+    <Setting name="ScanRange">5</Setting>
     
 </Settings>
 </HwDescription>

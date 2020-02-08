@@ -122,6 +122,10 @@ namespace Ph2_HwDescription {
         {
             fModuleId = pModuleId;
         };
+        void setLinkId ( uint8_t pLinkId )
+        {
+            fLinkId = pLinkId;
+        };
 
 
         // std::vector < RD53* > fRD53Vector;

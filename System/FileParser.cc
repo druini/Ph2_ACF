@@ -133,6 +133,17 @@ namespace Ph2_System {
             }
         }
         cBeBoard->setOptical( cWithOptical );
+        bool cConfigureCDCE=false;
+        for (pugi::xml_node cChild: pBeBordNode.children("CDCE"))
+        {
+            for (pugi::xml_attribute cAttribute: cChild.attributes())
+            {
+                if( std::string ( cAttribute.name() ) == "configure")
+                    cConfigureCDCE = cConfigureCDCE | ( convertAnyInt ( cAttribute.value() ) ==1);
+            }
+        }
+        cBeBoard->setCDCEconfiguration( cConfigureCDCE );
+
         if( cWithOptical )
             os << BOLDBLUE <<  "|"  << "----" << "Optical link is      " << BOLDGREEN << " is being used.\n" << RESET;
         else
@@ -398,7 +409,8 @@ namespace Ph2_System {
           }
         else
           {
-                cModule = pBoard->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new OuterTrackerModule ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int(), pModuleNode.attribute ( "LinkId" ).as_int() ));
+            cModule = pBoard->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new OuterTrackerModule ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
+            cModule->setLinkId( pModuleNode.attribute ( "LinkId" ).as_int() );
           }
         pBoard->addModule ( cModule );
 
