@@ -1119,11 +1119,11 @@ namespace Ph2_HwInterface
         0xEB840302, // OUT2 --> DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
         0xEB840303, // OUT3 --> Not used (240 MHz, LVDS, phase shift 0 deg)
         0xEB140334, // OUT4 --> Not used (40 MHz, LVDS, R4.1 = 1, ph4adjc = 0)
-        0x013C0CB5, // Reference selection: 0x10000EB5 secondary reference, 0x10000E75 primary reference
-        0x33041BE6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE reference is > 40 MHz
+        0x10000E75, // Reference selection: 0x10000EB5 secondary reference, 0x10000E75 primary reference
+        0x030E02E6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE reference is > 40 MHz
         // VCO1, PS = 4, FD = 12, FB = 1, ChargePump 50 uA, Internal Filter, R6.20 = 0, AuxOut = enable, AuxOut = OUT2
         0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc, SEL_DEL2 = 1, SEL_DEL1 = 1
-        0x20009978  // Sync command configuration
+        0x80001808  // Sync command configuration
       };
 
     // 0xyy8403yy --> 240 MHz, LVDS, phase shift   0 deg
@@ -1146,6 +1146,13 @@ namespace Ph2_HwInterface
         ReadReg("system.spi.rx_data"); // Dummy read
         ReadReg("system.spi.rx_data"); // Dummy read
       }
+
+    // ############################################################################
+    // # Load new settings otherwise CDCE uses whatever was in EEPROM at power up #
+    // ############################################################################
+    WriteStackReg({
+        {"system.ctrl.cdce_sync", 0},
+        {"system.ctrl.cdce_sync", 1}});
 
     // #########################
     // # Save config in EEPROM #

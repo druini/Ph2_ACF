@@ -20,4 +20,15 @@
     <node id="rx_data" address = "0x00c" mask="0xFFFFFFFF"/>
   </node>
 
+  <node id="ctrl" address="0x00000004" permission="rw">
+    <node id="pcieclk_pll_sel" mask="0x000001"/>
+    <node id="pcieclk_mr"      mask="0x000002"/>
+    <node id="pcieclk_fsel1"   mask="0x000003"/>
+    <node id="pcieclk_fsel0"   mask="0x000008"/>
+    <node id="cdce_powerup"    mask="0x000010"/>
+    <node id="cdce_refsel"     mask="0x000020"/>
+    <node id="cdce_sync"       mask="0x000040"/>
+    <node id="cdce_ctrl_sel"   mask="0x000080"/>
+  </node>
+
 </node>
