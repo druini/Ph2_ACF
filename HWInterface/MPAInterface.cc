@@ -1,24 +1,21 @@
 /*
-
         FileName :                     MPAInterface.cc
         Content :                      User Interface to the MPAs
         Programmer :                   K. nash, M. Haranko, D. Ceresa
         Version :                      1.0
         Date of creation :             5/01/18
-
  */
 
 #include "MPAInterface.h"
 #include "../Utils/ConsoleColor.h"
 #include <typeinfo>
+
 #define DEV_FLAG 0
-// #define COUNT_FLAG 0
+
+using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-
-
-
 MPAInterface::MPAInterface( const BeBoardFWMap& pBoardMap ) :
     fBoardMap( pBoardMap ),
     fBoardFW( nullptr ),
@@ -99,7 +96,7 @@ bool MPAInterface::ConfigureMPA (const MPA* pMPA, bool pVerifLoop)
     //vector to encode all the registers into
     std::vector<uint32_t> cVec;
 
-    //Deal with the RegItems and encode them
+    //Deal with the ChipRegItems and encode them
 
     MPARegMap cMPARegMap = pMPA->getRegMap();
 
@@ -131,7 +128,7 @@ bool MPAInterface::WriteMPAReg ( MPA* pMPA, const std::string& pRegNode, uint8_t
     setBoard ( pMPA->getBeBoardId() );
 
     //next, get the reg item
-    RegItem cRegItem = pMPA->getRegItem ( pRegNode );
+    ChipRegItem cRegItem = pMPA->getRegItem ( pRegNode );
     cRegItem.fValue = pValue;
 
     //vector for transaction
@@ -166,8 +163,8 @@ bool MPAInterface::WriteMPAMultReg ( MPA* pMPA, const std::vector< std::pair<std
 
     std::vector<uint32_t> cVec;
 
-    //Deal with the RegItems and encode them
-    RegItem cRegItem;
+    //Deal with the ChipRegItems and encode them
+    ChipRegItem cRegItem;
 
     for ( const auto& cReg : pVecReq )
     {
@@ -206,7 +203,7 @@ uint8_t MPAInterface::ReadMPAReg ( MPA* pMPA, const std::string& pRegNode )
 {
     setBoard ( pMPA->getBeBoardId() );
 
-    RegItem cRegItem = pMPA->getRegItem ( pRegNode );
+    ChipRegItem cRegItem = pMPA->getRegItem ( pRegNode );
 
     std::vector<uint32_t> cVecReq;
 
@@ -231,8 +228,8 @@ void MPAInterface::ReadMPAMultReg ( MPA* pMPA, const std::vector<std::string>& p
 
     std::vector<uint32_t> cVec;
 
-    //Deal with the RegItems and encode them
-    RegItem cRegItem;
+    //Deal with the ChipRegItems and encode them
+    ChipRegItem cRegItem;
 
     for ( const auto& cReg : pVecReg )
     {
@@ -276,10 +273,10 @@ void MPAInterface::ReadMPA ( MPA* pMPA )
 
     //vector to encode all the registers into
     std::vector<uint32_t> cVec;
-    //helper vector to store the register names in the same order as the RegItems
+    //helper vector to store the register names in the same order as the ChipRegItems
     std::vector<std::string> cNameVec;
 
-    //Deal with the RegItems and encode them
+    //Deal with the ChipRegItems and encode them
 
     MPARegMap cMPARegMap = pMPA->getRegMap();
 
@@ -313,7 +310,7 @@ void MPAInterface::ReadMPA ( MPA* pMPA )
     //for ( const auto& cReg : cVec )
     for ( const auto& cReadWord : cVec )
     {
-        RegItem cRegItem;
+        ChipRegItem cRegItem;
         std::string cName = cNameVec[idxReadWord++];
         fBoardFW->DecodeReg ( cRegItem, cMPAId, cReadWord, cRead, cFailed );
 
@@ -325,14 +322,14 @@ void MPAInterface::ReadMPA ( MPA* pMPA )
 
 }
 
-void MPAInterface::Pix_write(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
+void MPAInterface::Pix_write(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
 {
     setBoard(0);
     return fMPAFW->Pix_write_MPA(cMPA,cRegItem,row, pixel, data);
 }
 
 
-uint32_t MPAInterface::Pix_read(MPA* cMPA,RegItem cRegItem,uint32_t row,uint32_t pixel)
+uint32_t MPAInterface::Pix_read(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel)
 {
     setBoard(0);
     return fMPAFW->Pix_read_MPA(cMPA, cRegItem, row, pixel);

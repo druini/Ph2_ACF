@@ -9,25 +9,28 @@
 
 #include "RD53SCurve.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void SCurve::ConfigureCalibration ()
 {
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart     = this->findValueInSettings("ROWstart");
-  rowStop      = this->findValueInSettings("ROWstop");
-  colStart     = this->findValueInSettings("COLstart");
-  colStop      = this->findValueInSettings("COLstop");
-  nEvents      = this->findValueInSettings("nEvents");
-  startValue   = this->findValueInSettings("VCalHstart");
-  stopValue    = this->findValueInSettings("VCalHstop");
-  nSteps       = this->findValueInSettings("VCalHnsteps");
-  offset       = this->findValueInSettings("VCalMED");
-  nHITxCol     = this->findValueInSettings("nHITxCol");
-  doFast       = this->findValueInSettings("DoFast");
-  doDisplay    = this->findValueInSettings("DisplayHisto");
-  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
-  saveRawData  = this->findValueInSettings("SaveRawData");
+  rowStart       = this->findValueInSettings("ROWstart");
+  rowStop        = this->findValueInSettings("ROWstop");
+  colStart       = this->findValueInSettings("COLstart");
+  colStop        = this->findValueInSettings("COLstop");
+  nEvents        = this->findValueInSettings("nEvents");
+  startValue     = this->findValueInSettings("VCalHstart");
+  stopValue      = this->findValueInSettings("VCalHstop");
+  nSteps         = this->findValueInSettings("VCalHnsteps");
+  offset         = this->findValueInSettings("VCalMED");
+  nHITxCol       = this->findValueInSettings("nHITxCol");
+  doFast         = this->findValueInSettings("DoFast");
+  doDisplay      = this->findValueInSettings("DisplayHisto");
+  doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+  saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
 
   // ########################
@@ -61,9 +64,9 @@ void SCurve::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[SCurve::Start] Starting" << RESET;
 
-  if (saveRawData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/SCurveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -102,15 +105,21 @@ void SCurve::Stop ()
 {
   LOG (INFO) << GREEN << "[SCurve::Stop] Stopping" << RESET;
 
-  this->Destroy();
+  this->closeFileHandler();
 }
 
-void SCurve::initialize (const std::string fileRes_, const std::string fileReg_)
+void SCurve::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
 
   SCurve::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/SCurveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void SCurve::run ()
@@ -203,14 +212,15 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 
   theThresholdAndNoiseContainer = std::make_shared<DetectorDataContainer>();
   ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
+  DetectorDataContainer theMaxThresholdContainer;
+  ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, theMaxThresholdContainer, mean = 0);
+
 
   size_t index = 0;
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          float maxThreshold = 0;
-
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
               if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
@@ -227,27 +237,33 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
                       theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fThresholdError = rms / sqrt(nHits);
                       theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise          = rms;
 
-                      if (mean > maxThreshold) maxThreshold = mean;
+                      if (mean > theMaxThresholdContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>())
+                        theMaxThresholdContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() = mean;
                     }
                   else
                     theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise = RD53SharedConstants::FITERROR;
                 }
 
           index++;
+        }
 
-          theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+  theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
           LOG (INFO) << GREEN << "Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << GREEN << "] is " << BOLDYELLOW
                      << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold
                      << RESET << GREEN << " (Delta_VCal)" << RESET;
-
-          LOG (INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << maxThreshold << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << theMaxThresholdContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() << RESET;
         }
 
 
   // #####################
   // # @TMP@ : CalibFile #
   // #####################
-  if (saveRawData == true)
+  if (saveBinaryData == true)
     {
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)

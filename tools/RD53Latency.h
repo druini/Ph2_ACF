@@ -30,12 +30,12 @@
 class Latency : public PixelAlive
 {
  public:
-  void Start (int currentRun)  override;
-  void Stop  ()                override;
-  void ConfigureCalibration () override;
+  void Start (int currentRun = -1) override;
+  void Stop  ()                    override;
+  void ConfigureCalibration ()     override;
 
   void   sendData            ();
-  void   initialize          (const std::string fileRes_, const std::string fileReg_);
+  void   initialize          (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void   run                 ();
   void   draw                ();
   void   analyze             ();
@@ -76,7 +76,7 @@ class Latency : public PixelAlive
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
-  bool saveRawData;
+  bool saveBinaryData;
 };
 
 #endif

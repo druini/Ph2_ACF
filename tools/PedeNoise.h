@@ -14,6 +14,7 @@
 
 #include "Tool.h"
 #include "../Utils/Visitor.h"
+#include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/CommonVisitors.h"
 #ifdef __USE_ROOT__
   #include "../DQMUtils/DQMHistogramPedeNoise.h"
@@ -22,11 +23,10 @@
 
 #include <map>
 
-using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 class DetectorContainer;
+class Occupancy;
 
 class PedeNoise : public Tool
 {
@@ -36,10 +36,11 @@ class PedeNoise : public Tool
     ~PedeNoise();
 
     void Initialise (bool pAllChan = false, bool pDisableStubLogic = true);
-    void measureNoise (uint8_t pTPAmplitude = 0); //method based on the one below that actually analyzes the scurves and extracts the noise
-    void sweepSCurves (uint8_t pTPAmplitude); // actual methods to measure SCurves
+    void measureNoise (); //method based on the one below that actually analyzes the scurves and extracts the noise
+    void sweepSCurves (); // actual methods to measure SCurves
     void Validate (uint32_t pNoiseStripThreshold = 1, uint32_t pMultiple = 100);
     void writeObjects();
+
 
     void Start(int currentRun) override;
     void Stop() override;
@@ -47,32 +48,39 @@ class PedeNoise : public Tool
     void Pause() override;
     void Resume() override;
 
+  protected:
+    uint16_t findPedestal (bool forceAllChannels = false);
+    void measureSCurves (uint16_t pStartValue = 0 );
+    void extractPedeNoise ();
+    void disableStubLogic();
+    void reloadStubLogic();
+    void cleanContainerMap();
+    void initializeRecycleBin() {fRecycleBin.setDetectorContainer(fDetectorContainer);}
+
+    uint8_t  fPulseAmplitude     {    0};
+    uint32_t fEventsPerPoint     {    0};
+    DetectorDataContainer fThresholdAndNoiseContainer;
+
   private:
 
-    DetectorDataContainer fThresholdAndNoiseContainer;
     //to hold the original register values
     DetectorDataContainer fStubLogicValue;
     DetectorDataContainer fHIPCountValue;
 
     // Settings
-    bool fHoleMode;
-    bool fPlotSCurves;
-    bool fFitSCurves;
-    uint8_t fTestPulseAmplitude;
-    uint32_t fEventsPerPoint;
-    bool fDisableStubLogic;
+    bool     fPlotSCurves        {false};
+    bool     fFitSCurves         {false};
+    bool     fDisableStubLogic   { true};
 
-  private:
-    void measureSCurves (uint16_t pStartValue = 0 );
-    void extractPedeNoise ();
+    void producePedeNoisePlots();
     
     // for validation
     void setThresholdtoNSigma (BoardContainer* board, uint32_t pNSigma);
     
     //helpers for SCurve measurement
-    uint16_t findPedestal (bool forceAllChannels = false);
 
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
+    ContainerRecycleBin<Occupancy> fRecycleBin;
 
     #ifdef __USE_ROOT__
       DQMHistogramPedeNoise fDQMHistogramPedeNoise;

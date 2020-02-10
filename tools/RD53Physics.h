@@ -38,14 +38,15 @@
 class Physics : public Tool
 {
  public:
-  void Start (int currentRun)  override;
-  void Stop  ()                override;
-  void ConfigureCalibration () override;
+  void Start (int currentRun = -1) override;
+  void Stop  ()                    override;
+  void ConfigureCalibration ()     override;
 
   void sendData          (BoardContainer* const& cBoard);
-  void initialize        (const std::string fileRes_, const std::string fileReg_);
+  void initialize        (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void run               ();
   void draw              ();
+  void analyze           (bool doReadBinary = false);
   void fillDataContainer (BoardContainer* const& cBoard);
 
 
@@ -80,7 +81,7 @@ class Physics : public Tool
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
-  bool saveRawData;
+  bool saveBinaryData;
   bool doLocal;
   std::atomic<bool> keepRunning;
   std::thread thrRun;

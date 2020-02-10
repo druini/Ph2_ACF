@@ -13,20 +13,12 @@
 #define PedestalEqualization_h__
 
 #include "Tool.h" 
-#include "../Utils/Visitor.h"
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/DataContainer.h"
 
 #include <map>
 
 #ifdef __USE_ROOT__
   #include "../DQMUtils/DQMHistogramPedestalEqualization.h"
 #endif 
-
-using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
-using namespace Ph2_System;
-
 
 class PedestalEqualization : public Tool
 {
@@ -50,15 +42,14 @@ class PedestalEqualization : public Tool
   private:
 
     // Settings
-    bool fHoleMode;
-    bool fTestPulse;
-    uint8_t fTestPulseAmplitude;
-    uint32_t fEventsPerPoint;
-    uint16_t fTargetVcth;
-    uint8_t fTargetOffset;
-    bool fCheckLoop;
-    bool fAllChan;
-    bool fDisableStubLogic;
+    bool     fTestPulse          {false};
+    uint8_t  fTestPulseAmplitude {    0};
+    uint32_t fEventsPerPoint     {   10};
+    uint16_t fTargetVcth         {  0x0};
+    uint8_t  fTargetOffset       { 0x80};
+    bool     fCheckLoop          { true};
+    bool     fAllChan            { true};
+    bool     fDisableStubLogic   { true};
 
     //to hold the original register values
     DetectorDataContainer fStubLogicCointainer;

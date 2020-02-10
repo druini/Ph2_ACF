@@ -14,9 +14,8 @@
 
 using namespace Ph2_HwDescription;
 
-
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
     // Event implementation
     D19cMPAEvent::D19cMPAEvent ( const BeBoard* pBoard,  uint32_t pNbMPA, const std::vector<uint32_t>& list )
     {
@@ -530,7 +529,7 @@ namespace Ph2_HwInterface {
     }
 
 
-    SLinkEvent D19cMPAEvent::GetSLinkEvent (  BeBoard* pBoard) const
+    SLinkEvent D19cMPAEvent::GetSLinkEvent (  BeBoard* pBoard ) const
     {
         uint16_t cMPACounter = 0;
         std::set<uint8_t> cEnabledFe;

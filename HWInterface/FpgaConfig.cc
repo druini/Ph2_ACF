@@ -17,26 +17,25 @@
    Date of creation : 2014-07-10
    Support : 		mail to : christian.bonnin@iphc.cnrs.fr
 */
-#include <sys/stat.h>//file size
+
+#include <sys/stat.h>
 #include <time.h>
 #include <fstream>
 #include <boost/format.hpp>
 #include <boost/thread.hpp>
-//#include <uhal/uhal.hpp>
 #include "BeBoardFWInterface.h"
 #include "FpgaConfig.h"
 
 using namespace std;
+using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-    
-FpgaConfig::FpgaConfig(BeBoardFWInterface* pbbfi){
-	fwManager = pbbfi;
-	numUploadingFpga=0;
-	progressValue=0;
-	progressString="";
+  FpgaConfig::FpgaConfig(BeBoardFWInterface* pbbfi)
+  {
+    fwManager        = pbbfi;
+    numUploadingFpga = 0;
+    progressValue    = 0;
+    progressString   = "";
+  }
 }
-	
-}
-

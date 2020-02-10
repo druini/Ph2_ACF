@@ -147,6 +147,7 @@ namespace Ph2_HwDescription
     void    injectPixel         (unsigned int row, unsigned int col, bool inject);
     void    setTDAC             (unsigned int row, unsigned int col, uint8_t TDAC);
     uint8_t getTDAC             (unsigned int row, unsigned int col);
+    uint8_t getChipLane() const { return myChipLane; }
 
     struct HitData
     {
@@ -223,7 +224,8 @@ namespace Ph2_HwDescription
     std::vector<perPixelData> fPixelsMask;
     std::vector<perPixelData> fPixelsMaskDefault;
     std::string configFileName;
-    CommentMap fCommentMap;
+    CommentMap myCommentMap;
+    uint8_t myChipLane;
   };
 }
 

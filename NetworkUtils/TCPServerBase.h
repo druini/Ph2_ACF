@@ -28,9 +28,9 @@ protected:
 
 	void closeClientSocket (int socket);
 	template <class T>
-	T*  acceptClient(bool blocking = true)
+	T*  acceptClient()
 	{
-		int socketId = accept(blocking);
+		int socketId = accept();
 		fConnectedClients.emplace(socketId, new T(socketId));
 		return dynamic_cast<T*>(fConnectedClients[socketId]);
 	}
@@ -41,14 +41,13 @@ protected:
 
 private:
 	void closeClientSockets(void);
-	int  accept            (bool blocking = true);
+	int  accept            (void);
 	void shutdownAccept    (void);
 
 	const int         fMaxConnectionBacklog = 5;
 	unsigned int      fMaxNumberOfClients;
 	std::atomic_bool  fAccept;
 	std::future<bool> fAcceptFuture;
-	//std::mutex        clientsMutex_;
 };
 
 //}

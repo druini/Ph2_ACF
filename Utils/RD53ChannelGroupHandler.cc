@@ -15,7 +15,7 @@ void RD53ChannelGroupHandler::RD53ChannelGroupAll::makeTestGroup (ChannelGroupBa
 
   for (auto row = 0u; row < Ph2_HwDescription::RD53::nRows; row++)
     for (auto col = 0u; col < Ph2_HwDescription::RD53::nCols; col++)
-      if (isChannelEnabled(row,col)) static_cast<RD53ChannelGroupAll*>(currentChannelGroup)->enableChannel(row, col);
+      if (isChannelEnabled(row,col)) static_cast<RD53ChannelGroupAll*>(currentChannelGroup)->enableChannel(row,col);
 }
 
 void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup (ChannelGroupBase* currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster) const
@@ -28,7 +28,7 @@ void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup (ChannelGro
         auto row = (RD53Constants::NROW_CORE * col + i * Ph2_HwDescription::RD53::nRows/hitPerCol)%Ph2_HwDescription::RD53::nRows;
         row += (row/Ph2_HwDescription::RD53::nRows) % RD53Constants::NROW_CORE + groupNumber;
         row %= Ph2_HwDescription::RD53::nRows;
-        if (isChannelEnabled(row,col) == true) static_cast<RD53ChannelGroupPattern*>(currentChannelGroup)->enableChannel(row, col);
+        if (isChannelEnabled(row,col) == true) static_cast<RD53ChannelGroupPattern*>(currentChannelGroup)->enableChannel(row,col);
       }
 }
 

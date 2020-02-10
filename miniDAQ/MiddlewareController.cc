@@ -6,6 +6,7 @@
 #include "../tools/Tool.h"
 #include "../tools/PedestalEqualization.h"
 #include "../tools/PedeNoise.h"
+#include "../tools/CBCPulseShape.h"
 #include "../tools/CombinedCalibration.h"
 #include "../tools/CalibrationExample.h"
 #include "../tools/RD53PixelAlive.h"
@@ -15,13 +16,17 @@
 #include "../tools/RD53GainOptimization.h"
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53InjectionDelay.h"
+#include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53Physics.h"
 #include "../tools/SSAPhysics.h"
 
 
 //========================================================================================================================
-MiddlewareController::MiddlewareController(int serverPort) : TCPServer(serverPort,1) {}
+MiddlewareController::MiddlewareController(int serverPort) : TCPServer(serverPort,1) 
+{
+  //TCPServer::setReceiveTimeout(1,0);//Doesn't work
+}
 
 //========================================================================================================================
 MiddlewareController::~MiddlewareController(void)
@@ -76,6 +81,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
       else if (getVariableValue("Calibration",buffer) == "pedenoise")               theSystemController_ = new CombinedCalibration<PedeNoise>;
       else if (getVariableValue("Calibration",buffer) == "calibrationandpedenoise") theSystemController_ = new CombinedCalibration<PedestalEqualization,PedeNoise>();
       else if (getVariableValue("Calibration",buffer) == "calibrationexample")      theSystemController_ = new CombinedCalibration<CalibrationExample>;
+      else if (getVariableValue("Calibration",buffer) == "cbcPulseShape")           theSystemController_ = new CombinedCalibration<CBCPulseShape>;
 
       else if (getVariableValue("Calibration",buffer) == "pixelalive")              theSystemController_ = new CombinedCalibration<PixelAlive>;
       else if (getVariableValue("Calibration",buffer) == "noise")                   theSystemController_ = new CombinedCalibration<PixelAlive>;
@@ -85,6 +91,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
       else if (getVariableValue("Calibration",buffer) == "gainopt")                 theSystemController_ = new CombinedCalibration<GainOptimization>;
       else if (getVariableValue("Calibration",buffer) == "thrmin")                  theSystemController_ = new CombinedCalibration<ThrMinimization>;
       else if (getVariableValue("Calibration",buffer) == "injdelay")                theSystemController_ = new CombinedCalibration<InjectionDelay>;
+      else if (getVariableValue("Calibration",buffer) == "clockdelay")              theSystemController_ = new CombinedCalibration<ClockDelay>;
       else if (getVariableValue("Calibration",buffer) == "threqu")                  theSystemController_ = new CombinedCalibration<ThrEqualization>;
       else if (getVariableValue("Calibration",buffer) == "physics")                 theSystemController_ = new Physics;
       else if (getVariableValue("Calibration",buffer) == "ssaphysics")              theSystemController_ = new SSAPhysics;
@@ -99,18 +106,17 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
       theSystemController_->Configure(getVariableValue("ConfigurationFile",buffer),true);
       return "ConfigureDone";
     }
-    else if( buffer.substr(0,6) == "Error:" )
+  else if( buffer.substr(0,6) == "Error:" )
     {
-          if( buffer == "Error: Connection closed")
-            LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << buffer << ". Closing client server connection!" << RESET;
-          return "";
+      if( buffer == "Error: Connection closed")
+        LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << buffer << ". Closing client server connection!" << RESET;
+      return "";
     }
-    else
+  else
     {
-          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Can't recognige message: " << buffer << ". Aborting..." << RESET;
-          abort();
+      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Can't recognige message: " << buffer << ". Aborting..." << RESET;
+      abort();
     }
-    
 
   if (running_ || paused_) // We go through here after start and resume or pause: sending back current status
     {

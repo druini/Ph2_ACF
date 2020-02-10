@@ -75,6 +75,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         endif()
     endif()
 
+    # build eudaq producer
+    if(USE_EUDAQ)
+        message(STATUS "    eudaq")
+        set(LIBS ${LIBS} ${EUDAQ_LIB})
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__EUDAQ__")
+    endif(USE_EUDAQ)
+    message("#### End ####")
+
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
     if(NoDataShipping)
         set(LIBS ${LIBS} Ph2_DQMUtils)

@@ -34,7 +34,6 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include <iterator>
 
 
-using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
@@ -89,6 +88,7 @@ namespace Ph2_HwInterface
     {
       fSaveToFile = false;
     }
+    
     /*!
      * \brief Get the board type
      */
@@ -109,7 +109,10 @@ namespace Ph2_HwInterface
     {
       return nullptr;
     }
-    virtual void ProgramCdce() {}
+    virtual void ProgramCdce() {} 
+    // this is temporary until the modified command processor block is in place 
+    virtual void selectLink(uint8_t pLinkId, uint32_t pWait_ms=100){}
+
     /*! \brief Get the list of available FPGA configuration (or firmware images)*/
     virtual std::vector<std::string> getFpgaConfigList( )
     {
@@ -118,6 +121,11 @@ namespace Ph2_HwInterface
     /*! \brief Delete one Fpga configuration (or firmware image)*/
     virtual void DeleteFpgaConfig ( const std::string& strId ) {}
 
+    // virtual uint16_t ParseEvents(const std::vector<uint32_t>& pData)
+    // {
+    //   LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    //   return 0;
+    // } 
     //Encode/Decode Chip values
     /*!
      * \brief Encode a/several word(s) readable for a Chip
@@ -125,7 +133,7 @@ namespace Ph2_HwInterface
      * \param pChipId : Id of the Chip to work with
      * \param pVecReq : Vector to stack the encoded words
      */
-    virtual void EncodeReg ( const ChipRegItem& pRegItem, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite )
+    virtual void EncodeReg ( const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite )
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     } 
@@ -136,7 +144,7 @@ namespace Ph2_HwInterface
      * \param pChipId : Id of the Chip to work with
      * \param pVecReq : Vector to stack the encoded words
      */
-    virtual void EncodeReg ( const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) 
+    virtual void EncodeReg ( const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) 
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     } 
@@ -147,7 +155,7 @@ namespace Ph2_HwInterface
      * \param pNChip : number of Chips to write to
      * \param pVecReq : Vector to stack the encoded words
      */
-    virtual void BCEncodeReg ( const ChipRegItem& pRegItem, uint8_t pNChip, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) 
+    virtual void BCEncodeReg ( const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNChip, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) 
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     } 
@@ -158,62 +166,17 @@ namespace Ph2_HwInterface
      * \param pChipId : Id of the Chip to work with
      * \param pWord : variable to put the decoded word
      */
-    virtual void DecodeReg ( ChipRegItem& pRegItem, uint8_t& pChipId, uint32_t pWord, bool& pRead, bool& pFailed ) 
+    virtual void DecodeReg ( Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pChipId, uint32_t pWord, bool& pRead, bool& pFailed ) 
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     } 
     /*!< Decode a word from a read of a register of the Chip*/
 
-    //Encode/Decode MPA/SSA values
-    virtual void EncodeReg ( const RegItem& pRegItem, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) 
-    {
-      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
-    /*!< Encode a/several word(s) readable for a Chip*/\
-    virtual void EncodeReg ( const RegItem& pRegItem, uint8_t pFeId, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) 
-    {
-      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
-    /*!< Encode a/several word(s) readable for a Chip*/	
-    virtual void BCEncodeReg ( const RegItem& pRegItem, uint8_t pNChip, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) 
-    {
-      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
-    /*!< Encode a/several word(s) readable for a Chip*/
-    virtual void DecodeReg ( RegItem& pRegItem, uint8_t& pChipId, uint32_t pWord, bool& pRead, bool& pFailed ) 
-    {
-      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
-    /*!< Decode a word from a read of a register of the Chip*/
-
-
-    //virtual pure methods which are defined in the proper BoardFWInterface class
-    //r/w the Chip registers
-    /*!
-     * \brief Write register blocks of a Chip
-     * \param pFeId : FrontEnd to work with
-     * \param pVecReq : Block of words to write
-     * \param pWriteAttempt : number of tries write was attempted
-     */
-    // virtual bool WriteChipBlockReg (  std::vector<uint32_t>& pVecReq, uint8_t& pWriteAttempts, bool pReadback ) = 0;
-    //r/w the Chip registers
-    /*!
-     * \brief Write register blocks of a Chip
-     * \param pFeId : FrontEnd to work with
-     * \param pVecReq : Block of words to write
-     */
-    // virtual bool BCWriteChipBlockReg (  std::vector<uint32_t>& pVecReq, bool pReadback ) = 0;
-    /*!
-     * \brief Read register blocks of a Chip
-     * \param pFeId : FrontEnd to work with
-     * \param pVecReq : Vector to stack the read words
-     */
-    // virtual void ReadChipBlockReg (  std::vector<uint32_t>& pVecReq ) = 0;
     /*!
      * \brief Configure the board with its Config File
      * \param pBoard
      */
-    virtual void ConfigureBoard ( const BeBoard* pBoard ) = 0;
+    virtual void ConfigureBoard ( const Ph2_HwDescription::BeBoard* pBoard ) = 0;
 
     /*!
      * \brief Send a Chip reset
@@ -278,33 +241,36 @@ namespace Ph2_HwInterface
      * \param pBreakTrigger : if true, enable the break trigger
      * \return fNpackets: the number of packets read
      */
-    virtual uint32_t ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true ) = 0;
+    virtual uint32_t ReadData ( Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true ) = 0;
     /*!
      * \brief Read data for pNEvents
      * \param pBoard : the pointer to the BeBoard
      * \param pNEvents :  the 1 indexed number of Events to read - this will set the packet size to this value -1
      */
-    virtual void ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) = 0;
+    virtual void ReadNEvents (Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) = 0;
 
-    virtual std::vector<uint32_t> ReadBlockRegValue ( const std::string& pRegNode, const uint32_t& pBlocksize ) = 0;
+    virtual std::vector<uint32_t> ReadBlockRegValue (const std::string& pRegNode, const uint32_t& pBlocksize)
+    {
+      LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+      return {};
+    }
 
-
-    //LORE
     virtual bool WriteChipBlockReg   ( std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) 
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
       return false;
     }
+
     virtual bool BCWriteChipBlockReg ( std::vector<uint32_t>& pVecReg, bool pReadback) 
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
       return false;
     }
+
     virtual void ReadChipBlockReg (  std::vector<uint32_t>& pVecReq )
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
-    //LORE
 
 
     /*!

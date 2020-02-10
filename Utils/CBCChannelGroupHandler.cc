@@ -1,6 +1,4 @@
 #include "../Utils/CBCChannelGroupHandler.h"
-#include "../HWDescription/Definition.h"
-
 
 CBCChannelGroupHandler::CBCChannelGroupHandler()
 {
@@ -8,6 +6,11 @@ CBCChannelGroupHandler::CBCChannelGroupHandler()
     currentChannelGroup_ = new ChannelGroup<NCHANNELS,1>();
 }
 
+CBCChannelGroupHandler::CBCChannelGroupHandler(std::bitset<NCHANNELS>&& inputChannelsBitset)
+{
+    allChannelGroup_     = new ChannelGroup<NCHANNELS,1>(std::move(inputChannelsBitset));
+    currentChannelGroup_ = new ChannelGroup<NCHANNELS,1>(std::move(inputChannelsBitset));
+}
 CBCChannelGroupHandler::~CBCChannelGroupHandler()
 {
     delete allChannelGroup_    ;

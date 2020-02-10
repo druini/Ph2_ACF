@@ -26,6 +26,7 @@
 // #############
 // # CONSTANTS #
 // #############
+// Sarah : why do you need to do this? its already a member of SystemController (fDirectoryName)
 #define RESULTDIR "Results" // Directory containing the results
 
 
@@ -37,12 +38,12 @@ class Gain : public Tool
  public:
   ~Gain () { for (auto container : detectorContainerVector) delete container; }
 
-  void Start (int currentRun)  override;
-  void Stop  ()                override;
-  void ConfigureCalibration () override;
+  void Start (int currentRun = -1) override;
+  void Stop  ()                    override;
+  void ConfigureCalibration ()     override;
 
   void sendData                                  ();
-  void initialize                                (const std::string fileRes_, const std::string fileReg_);
+  void initialize                                (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void run                                       ();
   void draw                                      (bool doSave = true);
   std::shared_ptr<DetectorDataContainer> analyze ();
@@ -91,7 +92,7 @@ class Gain : public Tool
   std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
-  bool saveRawData;
+  bool saveBinaryData;
 };
 
 #endif

@@ -4,6 +4,7 @@
 
 #include "../HWInterface/BeBoardFWInterface.h"
 #include "../HWInterface/ChipInterface.h"
+#include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/ConsoleColor.h"
@@ -25,11 +26,11 @@ using namespace Ph2_HwDescription;
 
 struct CbcRegWriter : public HwDescriptionVisitor
 {
-    ChipInterface* fInterface;
+    Ph2_HwInterface::ChipInterface* fInterface;
     std::string fRegName;
     uint16_t fRegValue;
 
-    CbcRegWriter ( ChipInterface* pInterface, std::string pRegName, uint16_t pRegValue ) : fInterface ( pInterface ), fRegName ( pRegName ), fRegValue ( pRegValue ) {}
+    CbcRegWriter ( Ph2_HwInterface::ChipInterface* pInterface, std::string pRegName, uint16_t pRegValue ) : fInterface ( pInterface ), fRegName ( pRegName ), fRegValue ( pRegValue ) {}
     CbcRegWriter ( const CbcRegWriter& writer ) : fInterface ( writer.fInterface ), fRegName ( writer.fRegName ), fRegValue ( writer.fRegValue ) {}
 
     void setRegister ( std::string pRegName, uint16_t pRegValue )
@@ -46,11 +47,11 @@ struct CbcRegWriter : public HwDescriptionVisitor
 
 struct BeBoardRegWriter : public HwDescriptionVisitor
 {
-    BeBoardInterface* fInterface;
+    Ph2_HwInterface::BeBoardInterface* fInterface;
     std::string fRegName;
     uint32_t fRegValue;
 
-    BeBoardRegWriter ( BeBoardInterface* pInterface, std::string pRegName, uint32_t pRegValue ) : fInterface ( pInterface ), fRegName ( pRegName ), fRegValue ( pRegValue ) {}
+    BeBoardRegWriter ( Ph2_HwInterface::BeBoardInterface* pInterface, std::string pRegName, uint32_t pRegValue ) : fInterface ( pInterface ), fRegName ( pRegName ), fRegValue ( pRegValue ) {}
 
     BeBoardRegWriter ( const BeBoardRegWriter& writer ) : fInterface ( writer.fInterface ), fRegName ( writer.fRegName ), fRegValue ( writer.fRegValue ) {}
 
@@ -66,13 +67,45 @@ struct BeBoardRegWriter : public HwDescriptionVisitor
     }
 };
 
-//write multi reg
-struct CbcMultiRegWriter : public HwDescriptionVisitor
+struct ReadoutChipRegWriter : public HwDescriptionVisitor
+{
+    ReadoutChipInterface* fInterface;
+    std::string fRegisterName; 
+    uint16_t fRegisterValue;
+    bool fLocal;
+
+    ReadoutChipRegWriter ( ReadoutChipInterface* pInterface, std::string pRegisterName, uint16_t pRegisterValue , bool pLocal) : 
+        fInterface ( pInterface ), fRegisterName( pRegisterName ) , fRegisterValue (pRegisterValue), fLocal(pLocal) {}
+
+    void visitReadoutChip ( Ph2_HwDescription::ReadoutChip& pChip )
+    {
+        if( fLocal ) 
+        {
+        }
+        else
+            fInterface->WriteChipReg ( &pChip, fRegisterName , fRegisterValue );
+    }
+};
+
+struct ChipMultiRegWriter : public HwDescriptionVisitor
 {
     ChipInterface* fInterface;
     std::vector<std::pair<std::string, uint16_t>> fRegVec;
 
-    CbcMultiRegWriter ( ChipInterface* pInterface, std::vector<std::pair<std::string, uint16_t>> pRegVec ) : fInterface ( pInterface ), fRegVec ( pRegVec ) {}
+    ChipMultiRegWriter ( ChipInterface* pInterface, std::vector<std::pair<std::string, uint16_t>> pRegVec ) : fInterface ( pInterface ), fRegVec ( pRegVec ) {}
+    void visitChip ( Ph2_HwDescription::Chip& pCbc )
+    {
+        fInterface->WriteChipMultReg ( &pCbc, fRegVec );
+    }
+};
+
+//write multi reg
+struct CbcMultiRegWriter : public HwDescriptionVisitor
+{
+    Ph2_HwInterface::ChipInterface* fInterface;
+    std::vector<std::pair<std::string, uint16_t>> fRegVec;
+
+    CbcMultiRegWriter ( Ph2_HwInterface::ChipInterface* pInterface, std::vector<std::pair<std::string, uint16_t>> pRegVec ) : fInterface ( pInterface ), fRegVec ( pRegVec ) {}
 
     void visitChip ( Ph2_HwDescription::Chip& pCbc )
     {
@@ -126,16 +159,16 @@ class Counter : public HwDescriptionVisitor
 class Configurator: public HwDescriptionVisitor
 {
   private:
-    BeBoardInterface* fBeBoardInterface;
-    ChipInterface* fCbcInterface;
+    Ph2_HwInterface::BeBoardInterface* fBeBoardInterface;
+    Ph2_HwInterface::ChipInterface* fCbcInterface;
   public:
-    Configurator ( BeBoardInterface* pBeBoardInterface, ChipInterface* pCbcInterface ) : fBeBoardInterface ( pBeBoardInterface ), fCbcInterface ( pCbcInterface ) {}
-    void visitBeBoard ( BeBoard& pBoard )
+    Configurator ( Ph2_HwInterface::BeBoardInterface* pBeBoardInterface, Ph2_HwInterface::ChipInterface* pCbcInterface ) : fBeBoardInterface ( pBeBoardInterface ), fCbcInterface ( pCbcInterface ) {}
+    void visitBeBoard ( Ph2_HwDescription::BeBoard& pBoard )
     {
         fBeBoardInterface->ConfigureBoard ( &pBoard );
         LOG (INFO) << "Successfully configured Board " << +pBoard.getBeId();
     }
-    void visitChip ( Chip& pCbc )
+    void visitChip ( Ph2_HwDescription::Chip& pCbc )
     {
         fCbcInterface->ConfigureChip ( &pCbc );
         LOG (INFO) << "Successfully configured Chip " <<  +pCbc.getChipId();
@@ -149,17 +182,17 @@ struct CbcRegReader : public HwDescriptionVisitor
     std::string fRegName;
     uint16_t fRegValue;
     uint16_t fReadRegValue;
-    ChipInterface* fInterface;
+    Ph2_HwInterface::ChipInterface* fInterface;
     bool fOutput;
 
-    CbcRegReader ( ChipInterface* pInterface, std::string pRegName ) : fRegName ( pRegName ), fInterface ( pInterface ), fOutput (true) {}
+    CbcRegReader ( Ph2_HwInterface::ChipInterface* pInterface, std::string pRegName ) : fRegName ( pRegName ), fInterface ( pInterface ), fOutput (true) {}
     CbcRegReader ( const CbcRegReader& reader ) : fRegName ( reader.fRegName ), fInterface ( reader.fInterface ), fOutput (reader.fOutput) {}
 
     void setRegister ( std::string pRegName )
     {
         fRegName = pRegName;
     }
-    void visitChip ( Chip& pCbc )
+    void visitChip ( Ph2_HwDescription::Chip& pCbc )
     {
         fRegValue = pCbc.getReg ( fRegName );
         fInterface->ReadChipReg ( &pCbc, fRegName );
@@ -184,11 +217,11 @@ struct CbcRegReader : public HwDescriptionVisitor
 
 struct CbcRegIncrementer : public HwDescriptionVisitor
 {
-    ChipInterface* fInterface;
+    Ph2_HwInterface::ChipInterface* fInterface;
     std::string fRegName;
     int fRegIncrement;
 
-    CbcRegIncrementer ( ChipInterface* pInterface, std::string pRegName, int pRegIncrement ) : fInterface ( pInterface ), fRegName ( pRegName ), fRegIncrement ( pRegIncrement ) {}
+    CbcRegIncrementer ( Ph2_HwInterface::ChipInterface* pInterface, std::string pRegName, int pRegIncrement ) : fInterface ( pInterface ), fRegName ( pRegName ), fRegIncrement ( pRegIncrement ) {}
     CbcRegIncrementer ( const CbcRegIncrementer& incrementer ) : fInterface ( incrementer.fInterface ), fRegName ( incrementer.fRegName ), fRegIncrement ( incrementer.fRegIncrement ) {}
 
     void setRegister ( std::string pRegName, int pRegIncrement )
@@ -213,11 +246,11 @@ struct CbcRegIncrementer : public HwDescriptionVisitor
 struct ThresholdVisitor : public HwDescriptionVisitor
 {
     uint16_t fThreshold;
-    ChipInterface* fInterface;
+    Ph2_HwInterface::ChipInterface* fInterface;
     char fOption;
 
     // Write constructor
-    ThresholdVisitor (ChipInterface* pInterface, uint16_t pThreshold) : fThreshold (pThreshold), fInterface (pInterface), fOption ('w')
+    ThresholdVisitor (Ph2_HwInterface::ChipInterface* pInterface, uint16_t pThreshold) : fThreshold (pThreshold), fInterface (pInterface), fOption ('w')
     {
         if (fThreshold > 1023)
         {
@@ -226,7 +259,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
         }
     }
     // Read constructor
-    ThresholdVisitor (ChipInterface* pInterface) : fInterface (pInterface), fOption ('r')
+    ThresholdVisitor (Ph2_HwInterface::ChipInterface* pInterface) : fInterface (pInterface), fOption ('r')
     {
     }
     // Copy constructor
@@ -288,14 +321,14 @@ struct ThresholdVisitor : public HwDescriptionVisitor
 
 struct LatencyVisitor : public HwDescriptionVisitor
 {
-    ChipInterface* fInterface;
+    Ph2_HwInterface::ChipInterface* fInterface;
     uint16_t fLatency;
     char fOption;
 
     // write constructor
-    LatencyVisitor (ChipInterface* pInterface, uint16_t pLatency) : fInterface (pInterface), fLatency (pLatency), fOption ('w') {}
+    LatencyVisitor (Ph2_HwInterface::ChipInterface* pInterface, uint16_t pLatency) : fInterface (pInterface), fLatency (pLatency), fOption ('w') {}
     // read constructor
-    LatencyVisitor (ChipInterface* pInterface) : fInterface (pInterface), fOption ('r') {}
+    LatencyVisitor (Ph2_HwInterface::ChipInterface* pInterface) : fInterface (pInterface), fOption ('r') {}
     // copy constructor
     LatencyVisitor (const LatencyVisitor& pVisitor) : fInterface (pVisitor.fInterface), fLatency (pVisitor.fLatency), fOption (pVisitor.fOption) {}
 

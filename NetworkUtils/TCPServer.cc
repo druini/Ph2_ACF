@@ -9,6 +9,10 @@
 TCPServer::TCPServer(int serverPort, unsigned int maxNumberOfClients)
 	: TCPServerBase(serverPort, maxNumberOfClients)
 {
+	fReceiveTimeout.tv_sec  = 0;
+	fReceiveTimeout.tv_usec = 0;
+	fSendTimeout.tv_sec     = 0;
+	fSendTimeout.tv_usec    = 0;
 	//fAcceptFuture = std::async(std::launch::async, &TCPServer::acceptConnections, this);
 }
 
@@ -26,8 +30,6 @@ TCPServer::~TCPServer(void)
 //void TCPServer::connectClient(int fdClientSocket)
 void TCPServer::connectClient(TCPTransceiverSocket *socket)
 {
-	//std::cout << __PRETTY_FUNCTION__ << "Waiting 3 seconds" << std::endl;
-	//std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 	while (1)
 	{
 		std::cout << __PRETTY_FUNCTION__ << "Waiting for message for socket  #: " << socket->getSocketId() << std::endl;
@@ -45,11 +47,11 @@ void TCPServer::connectClient(TCPTransceiverSocket *socket)
 			return;//the pointer to socket has been deleted in closeClientSocket
 		}
 
-		// std::cout << __PRETTY_FUNCTION__
-		// 		  << "Received message:-" << message << "-"
-		// 		  << "Message Length=" << message.length()
-		// 		  << " From socket #: " << socket->getSocketId()
-		// 		  << std::endl;
+		std::cout << __PRETTY_FUNCTION__
+				  << "Received message:-" << message << "-"
+				  << "Message Length=" << message.length()
+				  << " From socket #: " << socket->getSocketId()
+				  << std::endl;
 		std::string messageToClient = interpretMessage(message);
 
 		//Send back something only if there is actually a message to be sent!
@@ -75,7 +77,10 @@ void TCPServer::acceptConnections()
 	{
 		try
 		{
-			std::thread thread(&TCPServer::connectClient, this, acceptClient<TCPTransceiverSocket>());
+			TCPTransceiverSocket* clientSocket = acceptClient<TCPTransceiverSocket>();
+			clientSocket->setReceiveTimeout(fReceiveTimeout.tv_sec, fReceiveTimeout.tv_usec);
+			clientSocket->setSendTimeout   (fSendTimeout.tv_sec, fSendTimeout.tv_usec);
+			std::thread thread(&TCPServer::connectClient, this, clientSocket);
 			thread.detach();
 		}
 		catch (int e)
@@ -86,4 +91,18 @@ void TCPServer::acceptConnections()
 		}
 	}
 	fAcceptPromise.set_value(true);
+}
+
+//========================================================================================================================
+void TCPServer::setReceiveTimeout(unsigned int timeoutSeconds, unsigned int timeoutMicroseconds)
+{
+	fReceiveTimeout.tv_sec  = timeoutSeconds;
+	fReceiveTimeout.tv_usec = timeoutMicroseconds;
+}
+
+//========================================================================================================================
+void TCPServer::setSendTimeout(unsigned int timeoutSeconds, unsigned int timeoutMicroseconds)
+{
+	fSendTimeout.tv_sec  = timeoutSeconds;
+	fSendTimeout.tv_usec = timeoutMicroseconds;
 }

@@ -10,6 +10,9 @@
 #include "SSAPhysics.h"
 #include "../Utils/Occupancy.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void SSAPhysics::ConfigureCalibration()
 {
   // #######################

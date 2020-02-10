@@ -1,353 +1,370 @@
 /*
+  FileName :                    RegManager.cc
+  Content :                     RegManager class, permit connection & r/w registers
+  Programmer :                  Nicolas PIERRE
+  Version :                     1.0
+  Date of creation :            06/06/14
+  Support :                     mail to : nico.pierre@icloud.com
+*/
 
-    FileName :                    RegManager.cc
-    Content :                     RegManager class, permit connection & r/w registers
-    Programmer :                  Nicolas PIERRE
-    Version :                     1.0
-    Date of creation :            06/06/14
-    Support :                     mail to : nico.pierre@icloud.com
-
- */
 #include <uhal/uhal.hpp>
 #include "RegManager.h"
 #include "../Utils/Utilities.h"
+#include "../Utils/ConsoleColor.h"
 #include "../HWDescription/Definition.h"
 
-#define DEV_FLAG    0
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 
-namespace Ph2_HwInterface {
+#define DEV_FLAG 0
 
-    RegManager::RegManager ( const char* puHalConfigFileName, uint32_t pBoardId ) //:
-    //fThread ( [ = ]
-    //{
-    //StackWriteTimeOut();
-    //} ),
-    //fDeactiveThread ( false )
-     // : log_file("./logs/ipb_log.txt")
-    {
-        // Loging settings
+namespace Ph2_HwInterface
+{
+  RegManager::RegManager ( const char* puHalConfigFileName, uint32_t pBoardId )
+  {
+    if (mode != Mode::Replay)
+      {
         uhal::disableLogging();
-        //uhal::setLogLevelTo (uhal::Debug() ); //Raise the log level
         fUHalConfigFileName = puHalConfigFileName;
-        uhal::ConnectionManager cm ( fUHalConfigFileName ); // Get connection
+        uhal::ConnectionManager cm (fUHalConfigFileName);
         char cBuff[7];
-        sprintf ( cBuff, "board%d", pBoardId );
-        fBoard = new uhal::HwInterface ( cm.getDevice ( ( cBuff ) ) );
-        fBoard->setTimeoutPeriod (10000);
-        //fThread.detach();
-    }
+        sprintf(cBuff, "board%d", pBoardId);
+        fBoard = new uhal::HwInterface(cm.getDevice((cBuff)));
+        fBoard->setTimeoutPeriod(10000);
+      }
+  }
 
-    RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddressTable )  :
-        fBoard (nullptr),
-        fUri (pUri),
-        fAddressTable (pAddressTable),
-        fId (pId)
-        //fThread ( [ = ]
-        //{
-        //StackWriteTimeOut();
-        //} ),
-        //fDeactiveThread ( false )
-        // , log_file("./logs/ipb_log.txt")
-    {
-        // Loging settings
+  RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddressTable )
+    : fBoard (nullptr)
+    , fUri (pUri)
+    , fAddressTable (pAddressTable)
+    , fId (pId)
+  {
+    if (mode != Mode::Replay)
+      {
         uhal::disableLogging();
-        //uhal::setLogLevelTo (uhal::Debug() ); //Raise the log level
+        fBoard = new uhal::HwInterface(uhal::ConnectionManager::getDevice (fId, fUri, fAddressTable));
+        fBoard->setTimeoutPeriod(10000);
+      }
+  }
 
-        if (fBoard == nullptr) delete fBoard;
+  RegManager::~RegManager()
+  {
+    delete fBoard;
+  }
 
-        fBoard = new uhal::HwInterface (uhal::ConnectionManager::getDevice (fId, fUri, fAddressTable) );
-        fBoard->setTimeoutPeriod (10000);
-        //fThread.detach();
-    }
+  bool RegManager::WriteReg ( const std::string& pRegNode, const uint32_t& pVal )
+  {
+    if (mode == Mode::Replay) return true;
 
+    fBoard->getNode ( pRegNode ).write ( pVal );
+    fBoard->dispatch();
 
-    RegManager::~RegManager()
-    {
-        //fDeactiveThread = true;
-        if ( fBoard ) delete fBoard;
-    }
-
-    bool RegManager::WriteReg ( const std::string& pRegNode, const uint32_t& pVal )
-    {
-        // log_file << pRegNode << " = " << pVal << std::endl;
-        //std::lock_guard<std::mutex> cGuard (fBoardMutex);
-        fBoard->getNode ( pRegNode ).write ( pVal );
+    // Verify if the writing is done correctly
+    if ( DEV_FLAG )
+      {
+        uhal::ValWord<uint32_t> reply = fBoard->getNode ( pRegNode ).read();
         fBoard->dispatch();
 
-        //LOG (DEBUG) << "Write: " <<  pRegNode << ": " << pVal;
+        uint32_t comp = reply.value();
 
-        // Verify if the writing is done correctly
-        if ( DEV_FLAG )
-        {
-            uhal::ValWord<uint32_t> reply = fBoard->getNode ( pRegNode ).read();
-            fBoard->dispatch();
+        if ( comp == pVal )
+          {
+            LOG (DEBUG) << "Values written correctly !" << pRegNode << "=" << pVal ;
+            return true;
+          }
 
-            uint32_t comp = ( uint32_t ) reply;
+        LOG (DEBUG) << "\nERROR !!\nValues are not consistent : \nExpected : " << pVal << "\nActual : " << comp ;
+      }
 
-            if ( comp == pVal )
-            {
-                LOG (DEBUG) << "Values written correctly !" << pRegNode << "=" << pVal ;
-                return true;
-            }
+    return false;
+  }
 
-            LOG (DEBUG) << "\nERROR !!\nValues are not consistent : \nExpected : " << pVal << "\nActual : " << comp ;
-        }
+  bool RegManager::WriteStackReg ( const std::vector< std::pair<std::string, uint32_t> >& pVecReg )
+  {
+    if (mode == Mode::Replay) return true;
 
-        return false;
-    }
+    for ( auto const& v : pVecReg )
+      fBoard->getNode ( v.first ).write ( v.second );
 
+    try
+      {
+        fBoard->dispatch();
+      }
+    catch (...)
+      {
+        std::cerr << "Error while writing the following parameters: " ;
 
-    bool RegManager::WriteStackReg ( const std::vector< std::pair<std::string, uint32_t> >& pVecReg )
-    {
-        //std::lock_guard<std::mutex> cGuard (fBoardMutex);
+        for ( auto const& v : pVecReg ) std::cerr << v.first << ", ";
+
+        std::cerr << std::endl;
+        throw ;
+      }
+
+    if ( DEV_FLAG )
+      {
+        int cNbErrors = 0;
+        uint32_t comp;
 
         for ( auto const& v : pVecReg )
-        {
-            // log_file << v.first << " = " << v.second << std::endl;
-            //LOG (DEBUG) << "Write: " <<  v.first << ": " << v.second;
-            fBoard->getNode ( v.first ).write ( v.second );
-        }
-
-        try
-        {
-            fBoard->dispatch();
-        }
-        catch (...)
-        {
-            std::cerr << "Error while writing the following parameters: " ;
-
-            for ( auto const& v : pVecReg ) std::cerr << v.first << ", ";
-
-            std::cerr << std::endl;
-            throw ;
-        }
-
-
-        if ( DEV_FLAG )
-        {
-            int cNbErrors = 0;
-            uint32_t comp;
-
-            for ( auto const& v : pVecReg )
-            {
-                uhal::ValWord<uint32_t> reply = fBoard->getNode ( v.first ).read();
-                fBoard->dispatch();
-
-                comp = static_cast<uint32_t> ( reply );
-
-                if ( comp ==  v.second )
-                    LOG (DEBUG) << "Values written correctly !" << v.first << "=" << v.second ;
-            }
-
-            if ( cNbErrors == 0 )
-            {
-                LOG (DEBUG) << "All values written correctly !" ;
-                return true;
-            }
-
-            LOG (DEBUG) << "\nERROR !!\n" << cNbErrors << " have not been written correctly !" ;
-        }
-
-        return false;
-    }
-
-
-    bool RegManager::WriteBlockReg ( const std::string& pRegNode, const std::vector< uint32_t >& pValues )
-    {
-        //std::lock_guard<std::mutex> cGuard (fBoardMutex);
-        fBoard->getNode ( pRegNode ).writeBlock ( pValues );
-        fBoard->dispatch();
-
-        //LOG (DEBUG) << "Write block: " << pRegNode;
-
-        //for (auto cWord : pValues)
-        //LOG (DEBUG) << "Write block: " <<  std::bitset<32> (cWord);
-
-        bool cWriteCorr = true;
-
-        //Verifying block
-        if ( DEV_FLAG )
-        {
-            int cErrCount = 0;
-
-            uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlock ( pValues.size() );
+          {
+            uhal::ValWord<uint32_t> reply = fBoard->getNode ( v.first ).read();
             fBoard->dispatch();
 
-            //Use size_t and not an iterator as op[] only works with size_t type
-            for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
-            {
-                if ( cBlockRead[i] != pValues.at ( i ) )
-                {
-                    cWriteCorr = false;
-                    cErrCount++;
-                }
-            }
+            comp = reply.value();
 
-            LOG (DEBUG) << "Block Write finished !!\n" << cErrCount << " values failed to write !" ;
-        }
+            if ( comp ==  v.second )
+              LOG (DEBUG) << "Values written correctly !" << v.first << "=" << v.second ;
+          }
 
-        return cWriteCorr;
-    }
+        if ( cNbErrors == 0 )
+          {
+            LOG (DEBUG) << "All values written correctly !" ;
+            return true;
+          }
 
-    bool RegManager::WriteBlockAtAddress ( uint32_t uAddr, const std::vector< uint32_t >& pValues, bool bNonInc )
-    {
-        //std::lock_guard<std::mutex> cGuard (fBoardMutex);
-        fBoard->getClient().writeBlock ( uAddr, pValues, bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL );
+        LOG (DEBUG) << "\nERROR !!\n" << cNbErrors << " have not been written correctly !" ;
+      }
+
+    return false;
+  }
+
+  bool RegManager::WriteBlockReg ( const std::string& pRegNode, const std::vector< uint32_t >& pValues )
+  {
+    if (mode == Mode::Replay) return true;
+
+    fBoard->getNode ( pRegNode ).writeBlock ( pValues );
+    fBoard->dispatch();
+
+    bool cWriteCorr = true;
+
+    //Verifying block
+    if ( DEV_FLAG )
+      {
+        int cErrCount = 0;
+
+        uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlock ( pValues.size() );
         fBoard->dispatch();
 
-        bool cWriteCorr = true;
+        //Use size_t and not an iterator as op[] only works with size_t type
+        for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
+          {
+            if ( cBlockRead[i] != pValues.at ( i ) )
+              {
+                cWriteCorr = false;
+                cErrCount++;
+              }
+          }
 
-        //Verifying block
-        if ( DEV_FLAG )
-        {
-            int cErrCount = 0;
+        LOG (DEBUG) << "Block Write finished !!\n" << cErrCount << " values failed to write !" ;
+      }
 
-            uhal::ValVector<uint32_t> cBlockRead = fBoard->getClient().readBlock ( uAddr, pValues.size(), bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL );
-            fBoard->dispatch();
+    return cWriteCorr;
+  }
 
-            //Use size_t and not an iterator as op[] only works with size_t type
-            for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
-            {
-                if ( cBlockRead[i] != pValues.at ( i ) )
-                {
-                    cWriteCorr = false;
-                    cErrCount++;
-                }
-            }
+  bool RegManager::WriteBlockAtAddress ( uint32_t uAddr, const std::vector< uint32_t >& pValues, bool bNonInc )
+  {
+    if (mode == Mode::Replay) return true;
 
-            LOG (DEBUG) << "BlockWriteAtAddress finished !!\n" << cErrCount << " values failed to write !" ;
-        }
+    fBoard->getClient().writeBlock ( uAddr, pValues, bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL );
+    fBoard->dispatch();
 
-        return cWriteCorr;
-    }
+    bool cWriteCorr = true;
 
+    //Verifying block
+    if ( DEV_FLAG )
+      {
+        int cErrCount = 0;
 
-    uhal::ValWord<uint32_t> RegManager::ReadReg ( const std::string& pRegNode )
-    {
-        //std::lock_guard<std::mutex> cGuard (fBoardMutex);
-        uhal::ValWord<uint32_t> cValRead = fBoard->getNode ( pRegNode ).read();
-        fBoard->dispatch();
-        //LOG (DEBUG) << "Read: " << pRegNode << ": " << static_cast<uint32_t> (cValRead);
-
-        if ( DEV_FLAG )
-        {
-            uint32_t read = ( uint32_t ) cValRead;
-            LOG (DEBUG) << "Value in register ID " << pRegNode << " : " << read ;
-        }
-
-        return cValRead;
-    }
-
-    uhal::ValWord<uint32_t> RegManager::ReadAtAddress ( uint32_t uAddr, uint32_t uMask )
-    {
-        //std::lock_guard<std::mutex> cGuard (fBoardMutex);
-        uhal::ValWord<uint32_t> cValRead = fBoard->getClient().read ( uAddr, uMask );
+        uhal::ValVector<uint32_t> cBlockRead = fBoard->getClient().readBlock ( uAddr, pValues.size(), bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL );
         fBoard->dispatch();
 
-        if ( DEV_FLAG )
-        {
-            uint32_t read = ( uint32_t ) cValRead;
-            LOG (DEBUG) << "Value at address " << std::hex << uAddr << std::dec << " : " << read ;
-        }
+        //Use size_t and not an iterator as op[] only works with size_t type
+        for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
+          {
+            if ( cBlockRead[i] != pValues.at ( i ) )
+              {
+                cWriteCorr = false;
+                cErrCount++;
+              }
+          }
 
-        return cValRead;
-    }
+        LOG (DEBUG) << "BlockWriteAtAddress finished !!\n" << cErrCount << " values failed to write !" ;
+      }
+
+    return cWriteCorr;
+  }
+
+  uint32_t RegManager::ReadReg ( const std::string& pRegNode )
+  {
+    if (mode == Mode::Replay) return replayRead();
+
+    uhal::ValWord<uint32_t> cValRead = fBoard->getNode ( pRegNode ).read();
+    fBoard->dispatch();
+
+    if ( DEV_FLAG )
+      {
+        uint32_t read = cValRead.value();
+        LOG (DEBUG) << "Value in register ID " << pRegNode << " : " << read ;
+      }
+
+    if (mode == Mode::Capture) captureRead(cValRead.value());
+
+    return cValRead.value();
+  }
+
+  uint32_t RegManager::ReadAtAddress ( uint32_t uAddr, uint32_t uMask )
+  {
+    if (mode == Mode::Replay) return replayRead();
+
+    uhal::ValWord<uint32_t> cValRead = fBoard->getClient().read ( uAddr, uMask );
+    fBoard->dispatch();
+
+    if ( DEV_FLAG )
+      {
+        uint32_t read = cValRead.value();
+        LOG (DEBUG) << "Value at address " << std::hex << uAddr << std::dec << " : " << read ;
+      }
+
+    if (mode == Mode::Capture) captureRead(cValRead.value());
+
+    return cValRead.value();
+  }
+
+  std::vector<uint32_t> RegManager::ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlockSize )
+  {
+    if (mode == Mode::Replay) return replayBlockRead(pBlockSize);
+
+    uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlock ( pBlockSize );
+    fBoard->dispatch();
+
+    if ( DEV_FLAG )
+      {
+        LOG (DEBUG) << "Values in register block " << pRegNode << " : " ;
+
+        for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
+          {
+            uint32_t read = static_cast<uint32_t> ( cBlockRead[i] );
+            LOG (DEBUG) << " " << read << " " ;
+          }
+      }
+
+    if (mode == Mode::Capture) captureBlockRead(cBlockRead.value());
+
+    return cBlockRead.value();
+  }
+
+  std::vector<uint32_t> RegManager::ReadBlockRegOffset ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
+  {
+    if (mode == Mode::Replay) return replayBlockRead(pBlocksize);
+
+    uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlockOffset ( pBlocksize, pBlockOffset );
+    fBoard->dispatch();
+
+    if ( DEV_FLAG )
+      {
+        LOG (DEBUG) << "Values in register block " << pRegNode << " : " ;
+
+        for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
+          {
+            uint32_t read = static_cast<uint32_t> ( cBlockRead[i] );
+            LOG (DEBUG) << " " << read << " " ;
+          }
+      }
+
+    if (mode == Mode::Capture) captureBlockRead(cBlockRead.value());
+
+    return cBlockRead.value();
+  }
+
+  void RegManager::StackReg ( const std::string& pRegNode, const uint32_t& pVal, bool pSend )
+  {
+    for ( std::vector< std::pair<std::string, uint32_t> >::iterator cIt = fStackReg.begin(); cIt != fStackReg.end(); cIt++ )
+      {
+        if ( cIt->first == pRegNode )
+          fStackReg.erase ( cIt );
+      }
+
+    std::pair<std::string, uint32_t> cPair ( pRegNode, pVal );
+    fStackReg.push_back ( cPair );
+
+    if ( pSend || fStackReg.size() == 100 )
+      {
+        WriteStackReg ( fStackReg );
+        fStackReg.clear();
+      }
+  }
+
+  const uhal::Node& RegManager::getUhalNode ( const std::string& pStrPath )
+  {
+    return fBoard->getNode ( pStrPath );
+  }
 
 
-    uhal::ValVector<uint32_t> RegManager::ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlockSize )
-    {
-        //std::lock_guard<std::mutex> cGuard (fBoardMutex);
-        uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlock ( pBlockSize );
-        fBoard->dispatch();
-        //LOG (DEBUG) << "Read block: " << pRegNode;
+  // ##############################################
+  // # Capure and replay data stream to/from FPGA #
+  // ##############################################
+  RegManager::Mode RegManager::mode = RegManager::Mode::Default;
+  boost::iostreams::filtering_ostream capture_file{};
+  boost::iostreams::filtering_istream replay_file{};
 
-        //for (auto cWord : cBlockRead)
-        //if (pRegNode != "data") LOG (DEBUG) << "Read block: " << std::bitset<32> (cWord);
+  void RegManager::enableCapture(const std::string filename)
+  {
+    /*capture_file.push(boost::iostreams::gzip_compressor());
+    capture_file.push(boost::iostreams::file_sink(filename));
+    mode = Mode::Capture;*/
+  }
 
-        if ( DEV_FLAG )
-        {
-            LOG (DEBUG) << "Values in register block " << pRegNode << " : " ;
+  void RegManager::enableReplay(const std::string filename)
+  {
+    /*replay_file.push(boost::iostreams::gzip_decompressor());
+    replay_file.push(boost::iostreams::file_source(filename));
+    mode = Mode::Replay;*/
+  }
 
-            //Use size_t and not an iterator as op[] only works with size_t type
-            for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
-            {
-                uint32_t read = static_cast<uint32_t> ( cBlockRead[i] );
-                LOG (DEBUG) << " " << read << " " ;
-            }
-        }
+  template <class S, class T>
+  void read_binary(S& stream, T& data)
+  {
+    stream.read(reinterpret_cast<char *>(&data), sizeof(data));
+  }
 
-        return cBlockRead;
-    }
+  template <class S, class T>
+  void write_binary(S& stream, const T& data)
+  {
+    stream.write(reinterpret_cast<const char *>(&data), sizeof(data));
+  }
 
-    uhal::ValVector<uint32_t> RegManager::ReadBlockRegOffset ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
-    {
-        //std::lock_guard<std::mutex> cGuard (fBoardMutex);
-        uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlockOffset ( pBlocksize, pBlockOffset );
-        fBoard->dispatch();
-        //LOG (DEBUG) << "Read block: " << pRegNode;
+  uint32_t RegManager::replayRead()
+  {
+    return replayBlockRead(1)[0];
+  }
 
-        //for (auto cWord : cBlockRead)
-        //if (pRegNode != "data") LOG (DEBUG) << "Read block: " << std::bitset<32> (cWord);
+  std::vector<uint32_t> RegManager::replayBlockRead(size_t size)
+  {
+    uint32_t read_size;
+    read_binary(replay_file, read_size);
 
-        if ( DEV_FLAG )
-        {
-            LOG (DEBUG) << "Values in register block " << pRegNode << " : " ;
+    if (read_size != size)
+      {
+        LOG (ERROR) << BOLDRED << "Binary data replay error" << RESET;
+        throw;
+      }
 
-            //Use size_t and not an iterator as op[] only works with size_t type
-            for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
-            {
-                uint32_t read = static_cast<uint32_t> ( cBlockRead[i] );
-                LOG (DEBUG) << " " << read << " " ;
-            }
-        }
+    std::vector<uint32_t> data(read_size);
+    for (auto& d : data) read_binary(replay_file, d);
 
-        return cBlockRead;
-    }
+    return data;
+  }
 
-    void RegManager::StackReg ( const std::string& pRegNode, const uint32_t& pVal, bool pSend )
-    {
+  void RegManager::captureRead(uint32_t value)
+  {
+    captureBlockRead({value});
+  }
 
-        for ( std::vector< std::pair<std::string, uint32_t> >::iterator cIt = fStackReg.begin(); cIt != fStackReg.end(); cIt++ )
-        {
-            if ( cIt->first == pRegNode )
-                fStackReg.erase ( cIt );
-        }
-
-        std::pair<std::string, uint32_t> cPair ( pRegNode, pVal );
-        fStackReg.push_back ( cPair );
-
-        if ( pSend || fStackReg.size() == 100 )
-        {
-            WriteStackReg ( fStackReg );
-            fStackReg.clear();
-        }
-    }
-
-
-    void RegManager::StackWriteTimeOut()
-    {
-        //uint32_t i = 0;
-
-        //while ( !fDeactiveThread )
-        //{
-        //std::this_thread::sleep_for ( std::chrono::seconds ( TIME_OUT ) );
-        ////LOG(INFO) << "Ping ! \nThread ID : " << std::this_thread::get_id() << "\n" ;
-
-        //if ( fStackReg.size() != 0 && i == 1 )
-        //{
-        //WriteStackReg ( fStackReg );
-        //fStackReg.clear();
-        //}
-        //else if ( i == 0 )
-        //i = 1;
-
-        //}
-    }
-
-    const uhal::Node& RegManager::getUhalNode ( const std::string& pStrPath )
-    {
-        //std::lock_guard<std::mutex> cGuard (fBoardMutex);
-        return fBoard->getNode ( pStrPath );
-    }
-
+  void RegManager::captureBlockRead(std::vector<uint32_t> data)
+  {
+    write_binary(capture_file, uint32_t(data.size()));
+    for (const auto& d : data) write_binary(capture_file, d);
+  }
 }

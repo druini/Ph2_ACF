@@ -1,9 +1,17 @@
 #include "PedestalEqualization.h"
+#include "../Utils/DataContainer.h"
+#include "../HWDescription/ReadoutChip.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
 
 //initialize the static member
+
+
+using namespace Ph2_System;
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 
 PedestalEqualization::PedestalEqualization() :
   Tool()
@@ -22,23 +30,13 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
     this->fAllChan = pAllChan;
     
-    // now read the settings from the map
-    auto cSetting = fSettingsMap.find ( "HoleMode" );
-    fHoleMode = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-    cSetting = fSettingsMap.find ( "TargetVcth" );
-    fTargetVcth = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0x78;
-    cSetting = fSettingsMap.find ( "TargetOffset" );
-    fTargetOffset = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0x80;
-    cSetting = fSettingsMap.find ( "Nevents" );
-    fEventsPerPoint = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10;
-    cSetting = fSettingsMap.find ( "TestPulseAmplitude" );
-    fTestPulseAmplitude = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
-    cSetting = fSettingsMap.find ( "VerificationLoop" );
-    fCheckLoop = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-    cSetting = fSettingsMap.find ( "MaskChannelsFromOtherGroups" );
-    fMaskChannelsFromOtherGroups = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-    cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
-    fSkipMaskedChannels = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
+    fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels"                ,    0);
+    fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups"       ,    1);
+    fCheckLoop                   = findValueInSettings("VerificationLoop"                  ,    1);
+    fTestPulseAmplitude          = findValueInSettings("PedestalEqualizationPulseAmplitude",    0);
+    fEventsPerPoint              = findValueInSettings("Nevents"                           ,   10);
+    fTargetOffset = 0x80;
+    fTargetVcth   =  0x0;
 
     this->SetSkipMaskedChannels( fSkipMaskedChannels );
 
@@ -62,30 +60,24 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
                 for(auto chip: *module)
                 {
                     ReadoutChip *theChip = static_cast<ReadoutChip*>(chip);
-
-                        LOG (INFO) << BOLDBLUE << "CBC" << +chip->getId() << RESET; 
-
                     //if it is a CBC3, disable the stub logic for this procedure
-                
-                    LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning" << RESET ;
-                    
+                    if( theChip->getFrontEndType() == FrontEndType::CBC3) 
+                    {
+                        LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning for CBC " << +chip->getId() << RESET; 
                     fStubLogicCointainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<uint8_t>() 
                         = fReadoutChipInterface->ReadChipReg (theChip, "Pipe&StubInpSel&Ptwidth");
 
                     uint8_t value = fReadoutChipInterface->ReadChipReg (theChip, "HIP&TestMode");
                     fHIPCountCointainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<uint8_t>() = value;
-
-                    fReadoutChipInterface->WriteChipReg (theChip, "Pipe&StubInpSel&Ptwidth", 0x23);
-                    fReadoutChipInterface->WriteChipReg (theChip, "HIP&TestMode", 0x08);
-                    
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression( theChip, false, true , 0);
                 }
+                    else
+                        LOG (INFO) << BOLDBLUE << "Not a CBC3 .. so doing nothing with stub logic." << RESET; 
             }
         }
     }
+    }
 
-    fHoleMode = 0;
-    fTargetOffset = 0x80;
-    fTargetVcth = 0x0000;
     LOG (INFO) << "Parsed settings:" ;
     LOG (INFO) << "	Nevents = " << fEventsPerPoint ;
     LOG (INFO) << "	TestPulseAmplitude = " << int ( fTestPulseAmplitude ) ;
@@ -98,11 +90,8 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
 void PedestalEqualization::FindVplus()
 {
     LOG (INFO) << BOLDBLUE << "Identifying optimal Vplus for CBC..." << RESET;
-    // first, set VCth to the target value for each CBC
-    ThresholdVisitor cThresholdVisitor (fReadoutChipInterface, fTargetVcth);
-    this->accept (cThresholdVisitor);
-    LOG (INFO) << BOLDBLUE << "... after the visitor..." << RESET;
-
+    setSameDac("VCth", fTargetVcth);
+    
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(true);
 
@@ -112,6 +101,7 @@ void PedestalEqualization::FindVplus()
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
+    dumpConfigFiles();
 
     setSameLocalDac("ChannelOffset", 0xFF);
 
@@ -125,6 +115,7 @@ void PedestalEqualization::FindVplus()
     {
         for(auto module: *board) // for on module - begin 
         {
+            nCbc += module->size();
             for(auto chip: *module) // for on chip - begin 
             {
                 ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex()));
@@ -133,7 +124,6 @@ void PedestalEqualization::FindVplus()
 
                 LOG (INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " Module " << +module->getId() << " CBC " << +chip->getId() << " = " << tmpVthr << RESET;
                 cMeanValue+=tmpVthr;
-                ++nCbc;
             } // for on chip - end 
         } // for on module - end 
     } // for on board - end 
@@ -148,13 +138,10 @@ void PedestalEqualization::FindVplus()
         }
     #endif
     
-
     fTargetVcth = uint16_t(cMeanValue / nCbc);
-    cThresholdVisitor.setThreshold (fTargetVcth);
-    this->accept (cThresholdVisitor);
+    setSameDac("VCth", fTargetVcth);
     LOG (INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
     this->SetTestAllChannels(originalAllChannelFlag);
-
 }
 
 
@@ -162,13 +149,13 @@ void PedestalEqualization::FindOffsets()
 {
     LOG (INFO) << BOLDBLUE << "Finding offsets..." << RESET;
     // just to be sure, configure the correct VCth and VPlus values
-    ThresholdVisitor cThresholdVisitor (fReadoutChipInterface, fTargetVcth);
-    this->accept (cThresholdVisitor);
+    setSameDac("VCth", fTargetVcth);
 
     DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56);
+    dumpConfigFiles();
 
     DetectorDataContainer theOffsetsCointainer;
     ContainerFactory::copyAndInitChannel<uint8_t>(*fDetectorContainer,theOffsetsCointainer);
@@ -229,15 +216,6 @@ void PedestalEqualization::FindOffsets()
 }
 
 
-// float PedestalEqualization::findCbcOccupancy ( Chip* pCbc, int pTGroup, int pEventsPerPoint )
-// {
-//     TH1F* cOccHist = static_cast<TH1F*> ( getHist ( pCbc, "Occupancy" ) );
-//     float cOccupancy = cOccHist->GetEntries();
-//     // return the hitcount divided by the the number of channels and events
-//     return cOccupancy / ( static_cast<float> ( fTestGroupChannelMap[pTGroup].size() * pEventsPerPoint ) );
-// }
-
-
 void PedestalEqualization::writeObjects()
 {
     this->SaveResults();
@@ -269,7 +247,7 @@ void PedestalEqualization::Stop()
     LOG (INFO) << "Stopping Pedestal Equalization.";
     writeObjects();
     dumpConfigFiles();
-    Destroy();
+    closeFileHandler();
     LOG (INFO) << "Pedestal Equalization stopped.";
 }
 

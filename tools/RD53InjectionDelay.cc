@@ -9,6 +9,9 @@
 
 #include "RD53InjectionDelay.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void InjectionDelay::ConfigureCalibration ()
 {
   // ##############################
@@ -20,17 +23,17 @@ void InjectionDelay::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart     = this->findValueInSettings("ROWstart");
-  rowStop      = this->findValueInSettings("ROWstop");
-  colStart     = this->findValueInSettings("COLstart");
-  colStop      = this->findValueInSettings("COLstop");
-  nEvents      = this->findValueInSettings("nEvents");
-  doFast       = this->findValueInSettings("DoFast");
-  startValue   = 0;
-  stopValue    = RD53SharedConstants::NLATENCYBINS*(RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"))+1) - 1;
-  doDisplay    = this->findValueInSettings("DisplayHisto");
-  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
-  saveRawData  = this->findValueInSettings("SaveRawData");
+  rowStart       = this->findValueInSettings("ROWstart");
+  rowStop        = this->findValueInSettings("ROWstop");
+  colStart       = this->findValueInSettings("COLstart");
+  colStop        = this->findValueInSettings("COLstop");
+  nEvents        = this->findValueInSettings("nEvents");
+  doFast         = this->findValueInSettings("DoFast");
+  startValue     = 0;
+  stopValue      = RD53SharedConstants::NLATENCYBINS*(RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"))+1) - 1;
+  doDisplay      = this->findValueInSettings("DisplayHisto");
+  doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+  saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
 
   // ##############################
@@ -68,9 +71,9 @@ void InjectionDelay::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[InjectionDelay::Start] Starting" << RESET;
 
-  if (saveRawData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/InjectionDelayRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -101,7 +104,7 @@ void InjectionDelay::Stop ()
   this->closeFileHandler();
 }
 
-void InjectionDelay::initialize (const std::string fileRes_, const std::string fileReg_)
+void InjectionDelay::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -113,6 +116,12 @@ void InjectionDelay::initialize (const std::string fileRes_, const std::string f
   fileReg = fileReg_;
 
   InjectionDelay::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/InjectionDelayRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void InjectionDelay::run ()

@@ -51,7 +51,7 @@ class DQMHistogrammer : public Tool
     /*!
      * Fill histogram
      */
-    void fillHistos (const std::vector<Event*>& event_list, int nevtp, const int data_size);
+    void fillHistos (const std::vector<Ph2_HwInterface::Event*>& event_list, int nevtp, const int data_size);
     void saveHistos (const std::string& out_file);
     void resetHistos();
     void fillSensorHistos (int ncbc, const std::vector<int>& even_values, const std::vector<int>& odd_values);

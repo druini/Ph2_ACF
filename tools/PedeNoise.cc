@@ -14,46 +14,53 @@
     #include "../DQMUtils/DQMHistogramPedeNoise.h" 
 #endif
 
-PedeNoise::PedeNoise() :
-    Tool(),
-    fHoleMode (false),
-    fPlotSCurves (false),
-    fFitSCurves (false),
-    fTestPulseAmplitude (0),
-    fEventsPerPoint (0)
+PedeNoise::PedeNoise() 
+: Tool()
 {
 }
 
 PedeNoise::~PedeNoise()
 {
-    for(auto container : fSCurveOccupancyMap)
-    	delete container.second;
+    cleanContainerMap();
+}
+
+void PedeNoise::cleanContainerMap()
+{
+    for(auto container : fSCurveOccupancyMap) fRecycleBin.free(container.second);
     fSCurveOccupancyMap.clear();
- }
+}
 
 void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 {
     fDisableStubLogic = pDisableStubLogic;
     fChannelGroupHandler = new CBCChannelGroupHandler();//This will be erased in tool.resetPointers()
+    initializeRecycleBin();
 
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
     fAllChan = pAllChan;
 
-    auto cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
-    fSkipMaskedChannels = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : false;
-    cSetting = fSettingsMap.find ( "MaskChannelsFromOtherGroups" );
-    fMaskChannelsFromOtherGroups = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-    cSetting = fSettingsMap.find ( "SkipMaskedChannels" );
-    fSkipMaskedChannels = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
+    fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels"         ,  0);
+    fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups",  1);
+    fPlotSCurves                 = findValueInSettings("PlotSCurves"                ,  0);
+    fFitSCurves                  = findValueInSettings("FitSCurves"                 ,  0);
+    fFitSCurves                  = findValueInSettings("FitSCurves"                 ,  0);
+    fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude"    ,  0);
+    fEventsPerPoint              = findValueInSettings("Nevents"                    , 10);
+
+    LOG (INFO) << "Parsed settings:" ;
+    LOG (INFO) << " Nevents = " << fEventsPerPoint ;
+
     this->SetSkipMaskedChannels( fSkipMaskedChannels );
-    cSetting = fSettingsMap.find ( "PlotSCurves" );
-    fPlotSCurves = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
-    cSetting = fSettingsMap.find ( "FitSCurves" );
-    fFitSCurves = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
     if(fFitSCurves) fPlotSCurves = true;
 
-    uint16_t cStartValue = 0x000;
+    #ifdef __USE_ROOT__
+        fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    #endif
 
+}
+
+void PedeNoise::disableStubLogic()
+{
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fStubLogicValue);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fHIPCountValue);
 
@@ -63,120 +70,19 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
         {
             for ( auto cCbc : *cFe )
             {
-                if (fDisableStubLogic)
-                {
-                    LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET ;
-                    fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth");
-                    fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode"           );
-                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth", 0x23);
-                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode", 0x08);
-                }
+                LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET ;
+                fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth");
+                fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode"           );
+                fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth", 0x23);
+                fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode", 0x00);
             }
         }
 
-    }
-
-    // now read the settings from the map
-    cSetting = fSettingsMap.find ( "Nevents" );
-    fEventsPerPoint = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10;
-    
-    LOG (INFO) << "Parsed settings:" ;
-    LOG (INFO) << " Nevents = " << fEventsPerPoint ;
-
-    #ifdef __USE_ROOT__
-        fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
-    #endif    
-
-
-    DetectorDataContainer         theOccupancyContainer;
-    fDetectorDataContainer = &theOccupancyContainer;
-    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-
-    bool originalAllChannelFlag = this->fAllChan;
-    this->SetTestAllChannels(true);
-
-    this->setDacAndMeasureData("VCth", cStartValue, fEventsPerPoint);
-
-    this->SetTestAllChannels(originalAllChannelFlag);
-
-
-    cSetting = fSettingsMap.find ("HoleMode");
-
-    if ( cSetting != std::end (fSettingsMap) )
-    {
-        bool cHoleModeFromSettings = cSetting->second;
-        bool cHoleModeFromOccupancy = true;
-
-        for (auto cBoard : *fDetectorContainer)
-        {
-            for ( auto cFe : *cBoard )
-            {
-                for ( auto cCbc : *cFe )
-                {
-                    std::stringstream ss;
-                    
-                    float cOccupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy;
-                    cHoleModeFromOccupancy = (cOccupancy == 0) ? false :  true;
-                    std::string cMode = (fHoleMode) ? "Hole Mode" : "Electron Mode";
-
-                    if (cHoleModeFromOccupancy != cHoleModeFromSettings)
-                        ss << BOLDRED << "Be careful: " << RESET << "operation mode from settings does not correspond to the one found by measuring occupancy. Using the one from settings (" << BOLDYELLOW << cMode << RESET << ")";
-                    else
-                        ss << BOLDBLUE << "Measuring Occupancy @ Threshold " << BOLDRED << (unsigned int)cCbc->getId() << BOLDBLUE << ": " << BOLDRED << cOccupancy << BOLDBLUE << ", thus assuming " << BOLDYELLOW << cMode << RESET << " (consistent with the settings file)";
-
-                    LOG (INFO) << ss.str();
-                }
-            }
-        }
-    }
-    else
-    {
-        for (auto cBoard : *fDetectorContainer)
-        {
-            for ( auto cFe : *cBoard )
-            {
-                for ( auto cCbc : *cFe )
-                {
-                    float cOccupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy;
-                    std::string cMode = "Electron Mode";
-                    std::stringstream ss;
-                    ss << BOLDBLUE << "Measuring Occupancy @ Threshold " << BOLDRED << (unsigned int)cCbc->getId() << BOLDBLUE << ": " << BOLDRED << cOccupancy << BOLDBLUE << ", thus assuming " << BOLDYELLOW << cMode << RESET;
-                    LOG (INFO) << ss.str();
-                }
-            }
-        }
     }
 }
 
-
-void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
+void PedeNoise::reloadStubLogic()
 {
-    uint16_t cStartValue = 0;
-    bool originalAllChannelFlag = this->fAllChan;
-
-    if(pTPAmplitude != 0 && originalAllChannelFlag){
-        this->SetTestAllChannels(false);
-        LOG (INFO) << RED <<  "Cannot inject pulse for all channels, test in groups enabled. " << RESET ;
-    }
-
-
-    if(pTPAmplitude != 0){
-        this->SetTestPulse( true );
-        fTestPulseAmplitude = pTPAmplitude;
-        setFWTestPulse();
-        setSameGlobalDac("TestPulsePotNodeSel",  pTPAmplitude);
-        LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
-        cStartValue = this->findPedestal ();
-    }
-    else
-    {
-        fTestPulseAmplitude = pTPAmplitude;
-        this->SetTestPulse( false );
-        cStartValue = this->findPedestal (true);
-    }
-
-    measureSCurves (cStartValue );
-
     //re-enable stub logic
     for ( auto cBoard : *fDetectorContainer )
     {
@@ -186,21 +92,55 @@ void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
             {
                 RegisterVector cRegVec;
 
-                if (fDisableStubLogic)
-                {
-                    LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
-                    cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
-                    cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
-                }
+                LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
+                cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
+                cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
 
                 fReadoutChipInterface->WriteChipMultReg (static_cast<Cbc*>(cCbc), cRegVec);
             }
         }
     }
+}
+
+void PedeNoise::sweepSCurves ()
+{
+    uint16_t cStartValue = 0;
+    bool originalAllChannelFlag = this->fAllChan;
+    
+    if(fPulseAmplitude != 0 && originalAllChannelFlag){
+        this->SetTestAllChannels(false);
+        LOG (INFO) << RED <<  "Cannot inject pulse for all channels, test in groups enabled. " << RESET ;
+    }
+
+
+    if(fPulseAmplitude != 0){
+        this->enableTestPulse( true );
+        setFWTestPulse();
+
+        for ( auto cBoard : *fDetectorContainer )
+        {
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
+        }
+
+        // setSameGlobalDac("TestPulsePotNodeSel",  fPulseAmplitude);
+        LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
+        cStartValue = this->findPedestal ();
+    }
+    else
+    {
+        this->enableTestPulse( false );
+        cStartValue = this->findPedestal (true);
+    }
+
+    if (fDisableStubLogic) disableStubLogic();
+
+    measureSCurves (cStartValue );
+
+    if (fDisableStubLogic) reloadStubLogic();
 
     this->SetTestAllChannels(originalAllChannelFlag);
-    if(pTPAmplitude != 0){
-        this->SetTestPulse( false );
+    if(fPulseAmplitude != 0){
+        this->enableTestPulse( false );
         setSameGlobalDac("TestPulsePotNodeSel",  0);
         LOG (INFO) << BLUE <<  "Disabled test pulse. " << RESET ;
 
@@ -211,10 +151,11 @@ void PedeNoise::sweepSCurves (uint8_t pTPAmplitude)
 
 }
 
-void PedeNoise::measureNoise (uint8_t pTPAmplitude)
+void PedeNoise::measureNoise ()
 {
-    sweepSCurves (pTPAmplitude);
-    this->extractPedeNoise ();
+    sweepSCurves ();
+    extractPedeNoise ();
+    producePedeNoisePlots();
 }
 
 void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
@@ -287,8 +228,6 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
     }
 }
 
-//////////////////////////////////////      PRIVATE METHODS     /////////////////////////////////////////////
-
 uint16_t PedeNoise::findPedestal (bool forceAllChannels)
 {
 
@@ -343,10 +282,11 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
 
     while (! (cAllZero && cAllOne) )
     {
-        DetectorDataContainer *theOccupancyContainer = new DetectorDataContainer();
+        DetectorDataContainer *theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         fDetectorDataContainer = theOccupancyContainer;
-        ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
         fSCurveOccupancyMap[cValue] = theOccupancyContainer;
+
+        
 
         this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
 
@@ -379,14 +319,14 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         if (!cAllZero && cAllZeroCounter == cMinBreakCount )
         {
             cAllZero = true;
-            cSign = fHoleMode ? -1 : 1;
+            cSign = 1;
             cIncrement = 0;
         }
 
         if (!cAllOne && cAllOneCounter == cMinBreakCount)
         {
             cAllOne = true;
-            cSign = fHoleMode ? 1 : -1;
+            cSign = -1;
             cIncrement = 0;
         }
 
@@ -394,8 +334,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         // following checks if we're not going out of bounds
         if (cSign == 1 && (pStartValue + (cIncrement * cSign) > cMaxValue) )
         {
-            if (fHoleMode) cAllZero = true;
-            else cAllOne = true;
+            cAllOne = true;
 
             cIncrement = 1;
             cSign = -1 * cSign;
@@ -403,8 +342,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
 
         if (cSign == -1 && (pStartValue + (cIncrement * cSign) < 0) )
         {
-            if (fHoleMode) cAllOne = true;
-            else cAllZero = true;
+            cAllZero = true;
 
             cIncrement = 1;
             cSign = -1 * cSign;
@@ -444,6 +382,7 @@ void PedeNoise::extractPedeNoise ()
                 {
                     for(uint8_t iChannel=0; iChannel<chip->size(); ++iChannel)
                     {
+                        if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
                         float previousOccupancy = (previousIterator)->second->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
                         float currentOccupancy  = mIt->second->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
                         float binCenter = (mIt->first + (previousIterator)->first)/2.;
@@ -476,6 +415,7 @@ void PedeNoise::extractPedeNoise ()
             {
                 for(uint8_t iChannel=0; iChannel<chip->size(); ++iChannel)
                 {
+                    if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
                     chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold/=chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                     chip->getChannel<ThresholdAndNoise>(iChannel).fNoise/=chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                     chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold * chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold));
@@ -487,6 +427,10 @@ void PedeNoise::extractPedeNoise ()
         board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), fChannelGroupHandler->allChannelGroup(), 0);
     }
 
+}
+
+void PedeNoise::producePedeNoisePlots()
+{
     #ifdef __USE_ROOT__
         if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
     #else
@@ -496,9 +440,6 @@ void PedeNoise::extractPedeNoise ()
             if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
         }
     #endif
-
-
-
 }
 
 void PedeNoise::setThresholdtoNSigma (BoardContainer* board, uint32_t pNSigma)
@@ -511,7 +452,7 @@ void PedeNoise::setThresholdtoNSigma (BoardContainer* board, uint32_t pNSigma)
             
             uint16_t cPedestal = round (fThresholdAndNoiseContainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold);
             uint16_t cNoise    = round (fThresholdAndNoiseContainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fNoise);
-            int cDiff = fHoleMode ? pNSigma * cNoise : -pNSigma * cNoise;
+            int cDiff = -pNSigma * cNoise;
             uint16_t cValue = cPedestal + cDiff;
 
 
@@ -552,7 +493,7 @@ void PedeNoise::Stop()
     writeObjects();
     dumpConfigFiles();
     SaveResults();
-    Destroy();
+    closeFileHandler();
     LOG (INFO) << "Noise measurement stopped.";
 }
 

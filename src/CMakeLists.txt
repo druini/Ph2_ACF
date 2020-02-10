@@ -58,7 +58,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #boost also needs to be linked
     if(Boost_FOUND)
         set(LIBS ${LIBS} ${Boost_LIBRARIES})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time -lboost_iostreams")
     endif()
 
     #last but not least, find root and link against it
@@ -75,6 +75,20 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HTTP__")
         endif()
     endif()
+    
+    #check if the setup is based on the multiplexing backplane
+    if(DEFINED ENV{MultiplexingFlag})
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{MultiplexingFlag}")
+    endif()
+
+
+    # build eudaq producer
+    if(USE_EUDAQ)
+        message(STATUS "    eudaq")
+        set(LIBS ${LIBS} ${EUDAQ_LIB})
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__EUDAQ__")
+    endif(USE_EUDAQ)
+    message("#### End ####")
 
     ####################################
     ## EXECUTABLES

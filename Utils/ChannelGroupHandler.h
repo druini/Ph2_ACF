@@ -60,20 +60,28 @@ public:
         numberOfEnabledChannels_=numberOfRows_*numberOfCols_;
 
     };
+    ChannelGroup(std::bitset<R*C>&& inputChannelsBitset)
+    : ChannelGroupBase(R,C)
+    , channelsBitset_(inputChannelsBitset)
+    {
+        customPatternSet_ = true;
+        numberOfEnabledChannels_=channelsBitset_.count();
+    };
     ChannelGroup(const ChannelGroup& theChannelGroup)
     : ChannelGroupBase(R,C)
     {
         channelsBitset_ = theChannelGroup.channelsBitset_;
+        numberOfEnabledChannels_=getNumberOfEnabledChannels(theChannelGroup);
     } 
 
     virtual ~ChannelGroup(){;}
     
     inline bool isChannelEnabled     (uint16_t row, uint16_t col = 0) const override { return channelsBitset_[row+numberOfRows_*col] ; }
-    inline void enableChannel        (uint16_t row, uint16_t col = 0)       override { channelsBitset_[row+numberOfRows_*col] = true ; }
-    inline void disableChannel       (uint16_t row, uint16_t col = 0)       override { channelsBitset_[row+numberOfRows_*col] = false; }
-    inline void disableAllChannels   (void                          )       override { channelsBitset_.reset()                       ; }
-    inline void enableAllChannels    (void                          )       override { channelsBitset_.set()                         ; }
-    inline void flipAllChannels      (void                          )       override { channelsBitset_.flip()                        ; }
+    inline void enableChannel        (uint16_t row, uint16_t col = 0)       override { channelsBitset_[row+numberOfRows_*col] = true ; numberOfEnabledChannels_ = channelsBitset_.count();}
+    inline void disableChannel       (uint16_t row, uint16_t col = 0)       override { channelsBitset_[row+numberOfRows_*col] = false; numberOfEnabledChannels_ = channelsBitset_.count();}
+    inline void disableAllChannels   (void                          )       override { channelsBitset_.reset()                       ; numberOfEnabledChannels_ = channelsBitset_.count();}
+    inline void enableAllChannels    (void                          )       override { channelsBitset_.set()                         ; numberOfEnabledChannels_ = channelsBitset_.count();}
+    inline void flipAllChannels      (void                          )       override { channelsBitset_.flip()                        ; numberOfEnabledChannels_ = channelsBitset_.count();}
     inline bool areAllChannelsEnabled(void                          ) const override { return channelsBitset_.all()                  ; }
 
     inline uint32_t  getNumberOfEnabledChannels(const ChannelGroupBase* mask ) const
@@ -97,8 +105,8 @@ public:
 
     virtual void makeTestGroup (ChannelGroupBase *currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster=1) const override
     {
-        if(customPatternSet_ && (numberOfRowsPerCluster>1 || numberOfColsPerCluster>1))  
-            std::cout<<"Warning, automatic group creation may not work when a custom pattern is set\n";
+        // if(customPatternSet_ && (numberOfRowsPerCluster>1 || numberOfColsPerCluster>1))  
+        //     std::cout << __PRETTY_FUNCTION__ << " Warning, automatic group creation may not work when a custom pattern is set" << std::endl;
         if(numberOfClustersPerGroup*numberOfRowsPerCluster*numberOfColsPerCluster >= numberOfEnabledChannels_)
         {
             static_cast<ChannelGroup<R,C>*>(currentChannelGroup)->setCustomPattern(*this);

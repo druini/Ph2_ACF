@@ -6,12 +6,14 @@
    \date        02/03/2015
    Support :        mail to : christian.bonnin@iphc.cnrs.fr
 */
+
 #ifndef _FPGACONFIG_H_
 #define _FPGACONFIG_H_
 
 #include "../HWDescription/BeBoard.h"
-using namespace Ph2_HwDescription;
-namespace Ph2_HwInterface {
+
+namespace Ph2_HwInterface
+{
     class BeBoardFWInterface;
     /*!
      * \brief Upload MCS files into Flash EPROM as FPGA configuration

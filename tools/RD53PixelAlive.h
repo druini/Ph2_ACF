@@ -35,12 +35,12 @@
 class PixelAlive : public Tool
 {
  public:
-  void Start (int currentRun)  override;
-  void Stop  ()                override;
-  void ConfigureCalibration () override;
+  void Start (int currentRun = -1) override;
+  void Stop  ()                    override;
+  void ConfigureCalibration ()     override;
 
   void sendData                                  ();
-  void initialize                                (const std::string fileRes_, const std::string fileReg_);
+  void initialize                                (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
   void run                                       ();
   void draw                                      (bool doSave = true);
   std::shared_ptr<DetectorDataContainer> analyze ();
@@ -88,7 +88,7 @@ class PixelAlive : public Tool
   bool doUpdateChip;
   bool doDisplay;
   bool doFast;
-  bool saveRawData;
+  bool saveBinaryData;
 };
 
 #endif

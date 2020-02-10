@@ -246,6 +246,13 @@ public:
 		}
 	}
 
+	BaseDataContainer(const BaseDataContainer&) = delete;
+	BaseDataContainer(BaseDataContainer&& theCopyContainer)
+	{
+		summary_ = theCopyContainer.summary_;
+		theCopyContainer.summary_ = nullptr;
+	}
+
 	// virtual void initialize() = 0;
 	virtual uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents) = 0;
 	
@@ -292,6 +299,13 @@ public:
 	DataContainer(unsigned int size) : Container<T>(size) {}
 	virtual ~DataContainer() {;}
 
+	DataContainer(const DataContainer&) = delete;
+	DataContainer(DataContainer&& theCopyContainer)
+	: Container<T>(std::move(theCopyContainer))
+	, BaseDataContainer(std::move(theCopyContainer))
+	{}
+
+
 	template <typename S, typename V>
 	void initialize()
 	{	
@@ -302,6 +316,18 @@ public:
 	{
 		if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S,V>(theSummary);
 	}
+
+	template <typename S, typename V>
+	void resetSummary()
+	{	
+		if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S,V>*>(summary_)->theSummary_ = S();
+	}
+	template <typename S, typename V>
+	void resetSummary(S& theSummary)
+	{
+		if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S,V>*>(summary_)->theSummary_ = theSummary;
+	}
+
 	SummaryContainerBase* getAllObjectSummaryContainers() const
 	{
 		SummaryContainerBase *SummaryContainerList = new SummaryContainer<SummaryBase>;
@@ -389,6 +415,13 @@ public:
 	: ChipContainer(id, numberOfRows, numberOfCols)
 	{}
 
+	ChipDataContainer(const ChipDataContainer&) = delete;
+	ChipDataContainer(ChipDataContainer&& theCopyContainer)
+	: ChipContainer(std::move(theCopyContainer))
+	, BaseDataContainer(std::move(theCopyContainer))
+	{}
+
+
 	virtual ~ChipDataContainer() {;}
 
 	template <typename S, typename V>
@@ -402,6 +435,28 @@ public:
 	{
 		if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S,V>(theSummary);
 		if(!std::is_same<V, EmptyContainer>::value) container_ = new ChannelDataContainer<V>(nOfRows_*nOfCols_, initialValue);
+	}
+
+	template <typename S, typename V>
+	void resetSummary()
+	{	
+		if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S,V>*>(summary_)->theSummary_ = S();
+	}
+	template <typename S, typename V>
+	void resetSummary(S& theSummary)
+	{
+		if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S,V>*>(summary_)->theSummary_ = theSummary;
+	}
+
+	template <typename V>
+	void resetChannels()
+	{	
+		if(!std::is_same<V, EmptyContainer>::value) for(auto &channel : *this->getChannelContainer<V>()) channel = V();
+	}
+	template <typename V>
+	void resetChannels(V& initialValue)
+	{
+		if(!std::is_same<V, EmptyContainer>::value) for(auto &channel : *this->getChannelContainer<V>()) channel = initialValue;
 	}
 	
 	uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase *cTestChannelGroup, const uint32_t numberOfEvents)
@@ -423,6 +478,11 @@ class ModuleDataContainer : public DataContainer<ChipDataContainer>
 {
 public:
 	ModuleDataContainer(uint16_t id) : DataContainer<ChipDataContainer>(id){}
+	ModuleDataContainer(const ModuleDataContainer&) = delete;
+	ModuleDataContainer(ModuleDataContainer&& theCopyContainer)
+	: DataContainer<ChipDataContainer>(std::move(theCopyContainer))
+	{}
+
 	template <typename T>
 	T*             addChipDataContainer(uint16_t id, T* chip)     {return static_cast<T*>(DataContainer<ChipDataContainer>::addObject(id, chip));}
 	ChipDataContainer* addChipDataContainer(uint16_t id, uint16_t row, uint16_t col=1){return DataContainer<ChipDataContainer>::addObject(id, new ChipDataContainer(id, row, col));}
@@ -433,6 +493,11 @@ class BoardDataContainer : public DataContainer<ModuleDataContainer>
 {
 public:
 	BoardDataContainer(uint16_t id) : DataContainer<ModuleDataContainer>(id){}
+	BoardDataContainer(const BoardDataContainer&) = delete;
+	BoardDataContainer(BoardDataContainer&& theCopyContainer)
+	: DataContainer<ModuleDataContainer>(std::move(theCopyContainer))
+	{}
+
 	template <class T>
 	T*               addModuleDataContainer(uint16_t id, T* module){return static_cast<T*>(DataContainer<ModuleDataContainer>::addObject(id, module));}
 	ModuleDataContainer* addModuleDataContainer(uint16_t id)                 {return DataContainer<ModuleDataContainer>::addObject(id, new ModuleDataContainer(id));}
@@ -443,6 +508,11 @@ class DetectorDataContainer : public DataContainer<BoardDataContainer>
 {
 public:
 	DetectorDataContainer(uint16_t id=0) : DataContainer<BoardDataContainer>(id){}
+	DetectorDataContainer(const DetectorDataContainer&) = delete;
+	DetectorDataContainer(DetectorDataContainer&& theCopyContainer)
+	: DataContainer<BoardDataContainer>(std::move(theCopyContainer))
+	{}
+
 	~DetectorDataContainer() {}
 	template <class T>
 	T*              addBoardDataContainer(uint16_t id, T* board){return static_cast<T*>(DataContainer<BoardDataContainer>::addObject(id, board));}

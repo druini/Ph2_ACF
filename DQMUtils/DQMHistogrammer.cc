@@ -23,6 +23,7 @@
 #include "TIterator.h"
 #include "../Utils/Event.h"
 
+using namespace Ph2_HwInterface;
 
 DQMHistogrammer::DQMHistogrammer (bool addTree, int ncol, bool eventFilter, bool skipHist) :
     Tool(),

@@ -9,6 +9,9 @@
 
 #include "RD53ThrMinimization.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void ThrMinimization::ConfigureCalibration ()
 {
   // ##############################
@@ -32,7 +35,7 @@ void ThrMinimization::ConfigureCalibration ()
   ThrStop         = this->findValueInSettings("ThrStop");
   doDisplay       = this->findValueInSettings("DisplayHisto");
   doUpdateChip    = this->findValueInSettings("UpdateChipCfg");
-  saveRawData     = this->findValueInSettings("SaveRawData");
+  saveBinaryData  = this->findValueInSettings("SaveBinaryData");
 
 
   // #######################
@@ -45,9 +48,9 @@ void ThrMinimization::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[ThrMinimization::Start] Starting" << RESET;
 
-  if (saveRawData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/ThrMinimizationRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -71,7 +74,7 @@ void ThrMinimization::Stop ()
   this->closeFileHandler();
 }
 
-void ThrMinimization::initialize (const std::string fileRes_, const std::string fileReg_)
+void ThrMinimization::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -84,6 +87,12 @@ void ThrMinimization::initialize (const std::string fileRes_, const std::string 
   fileReg = fileReg_;
 
   ThrMinimization::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/ThrMinimizationRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void ThrMinimization::run ()
@@ -235,7 +244,7 @@ void ThrMinimization::bitWiseScan (const std::string& regName, uint32_t nEvents,
               // #######################
               // # Build discriminator #
               // #######################
-              float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+              float newValue = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
 
 
               // ########################

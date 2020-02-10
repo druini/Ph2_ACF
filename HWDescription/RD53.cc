@@ -12,13 +12,14 @@
 namespace Ph2_HwDescription
 {
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName)
-    : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id, 255, pRD53Lane)
+    : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id)
   {
     fMaxRegValue      = RD53::setBits(RD53Constants::NBIT_MAXREG);
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     configFileName    = fileName;
     loadfRegMap(configFileName);
     setFrontEndType(FrontEndType::RD53);
+    myChipLane = pRD53Lane;
   }
 
   RD53::RD53 (const RD53& chipObj) : ReadoutChip (chipObj) {}
@@ -39,7 +40,7 @@ namespace Ph2_HwDescription
 
         while (getline (file, line))
           {
-            if (line.find_first_not_of (" \t") == std::string::npos || line.at (0) == '#' || line.at (0) == '*' || line.empty()) fCommentMap[cLineCounter] = line;
+            if (line.find_first_not_of (" \t") == std::string::npos || line.at (0) == '#' || line.at (0) == '*' || line.empty()) myCommentMap[cLineCounter] = line;
             else if ((line.find("PIXELCONFIGURATION") != std::string::npos) || (foundPixelConfig == true))
               {
                 foundPixelConfig = true;
@@ -223,9 +224,9 @@ namespace Ph2_HwDescription
         int cLineCounter = 0;
         for (const auto& v : fSetRegItem)
           {
-            while (fCommentMap.find (cLineCounter) != std::end (fCommentMap))
+            while (myCommentMap.find (cLineCounter) != std::end (myCommentMap))
               {
-                auto cComment = fCommentMap.find (cLineCounter);
+                auto cComment = myCommentMap.find (cLineCounter);
 
                 file << cComment->second << std::endl;
                 cLineCounter++;
@@ -406,6 +407,11 @@ namespace Ph2_HwDescription
 
     const size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
     for (auto i = 1u; i < n; i++) if (data[i] != noHitToT) DecodeQuad(data[i]);
+    // #######################################################
+    // # If the number of 32bit words do not make an integer #
+    // # number of 128bit words, then 0x0000FFFF words are   #
+    // # added to the event                                  #
+    // #######################################################
     if (n == 1) evtStatus |= RD53EvtEncoder::CHIPNOHIT;
   }
 

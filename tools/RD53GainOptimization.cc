@@ -9,6 +9,9 @@
 
 #include "RD53GainOptimization.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void GainOptimization::ConfigureCalibration ()
 {
   // ##############################
@@ -22,20 +25,20 @@ void GainOptimization::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart      = this->findValueInSettings("ROWstart");
-  rowStop       = this->findValueInSettings("ROWstop");
-  colStart      = this->findValueInSettings("COLstart");
-  colStop       = this->findValueInSettings("COLstop");
-  nEvents       = this->findValueInSettings("nEvents");
-  startValue    = this->findValueInSettings("VCalHstart");
-  stopValue     = this->findValueInSettings("VCalHstop");
-  targetCharge  = RD53chargeConverter::Charge2VCal(this->findValueInSettings("TargetCharge"));
-  KrumCurrStart = this->findValueInSettings("KrumCurrStart");
-  KrumCurrStop  = this->findValueInSettings("KrumCurrStop");;
-  doFast        = this->findValueInSettings("DoFast");
-  doDisplay     = this->findValueInSettings("DisplayHisto");
-  doUpdateChip  = this->findValueInSettings("UpdateChipCfg");
-  saveRawData   = this->findValueInSettings("SaveRawData");
+  rowStart       = this->findValueInSettings("ROWstart");
+  rowStop        = this->findValueInSettings("ROWstop");
+  colStart       = this->findValueInSettings("COLstart");
+  colStop        = this->findValueInSettings("COLstop");
+  nEvents        = this->findValueInSettings("nEvents");
+  startValue     = this->findValueInSettings("VCalHstart");
+  stopValue      = this->findValueInSettings("VCalHstop");
+  targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings("TargetCharge"));
+  KrumCurrStart  = this->findValueInSettings("KrumCurrStart");
+  KrumCurrStop   = this->findValueInSettings("KrumCurrStop");;
+  doFast         = this->findValueInSettings("DoFast");
+  doDisplay      = this->findValueInSettings("DisplayHisto");
+  doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+  saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
 
   // #######################
@@ -48,9 +51,9 @@ void GainOptimization::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[GainOptimization::Start] Starting" << RESET;
 
-  if (saveRawData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/GainOptimizationRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -71,10 +74,10 @@ void GainOptimization::Stop ()
 {
   LOG (INFO) << GREEN << "[GainOptimization::Stop] Stopping" << RESET;
 
-  this->Destroy();
+  this->closeFileHandler();
 }
 
-void GainOptimization::initialize (const std::string fileRes_, const std::string fileReg_)
+void GainOptimization::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   // ##############################
   // # Initialize sub-calibration #
@@ -87,6 +90,12 @@ void GainOptimization::initialize (const std::string fileRes_, const std::string
   fileReg = fileReg_;
 
   GainOptimization::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/GainOptimizationRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void GainOptimization::run ()

@@ -152,7 +152,7 @@ int main ( int argc, char* argv[] )
                 if (cDAQFile)
                   {
                     auto data = cSLev.getData<uint32_t>();
-                    cDAQFileHandler->set (data);
+                    cDAQFileHandler->setData(data);
                   }
 
                 //if DQM histos are enabled and we are treating the first event, book the histograms
@@ -219,7 +219,7 @@ int main ( int argc, char* argv[] )
         tokenize ( fname, tokens, "." );
         std::string runLabel = tokens[0];
         std::string dqmFilename =  runLabel + "_dqm.root";
-        dqmH->saveHistograms (dqmFilename);
+        dqmH->saveHistograms (dqmFilename, runLabel + "_flat.root" );
 
         // find the folder (i.e DQM page) where the histograms will be published
         std::string cDirBasePath;
@@ -237,6 +237,5 @@ int main ( int argc, char* argv[] )
         LOG (INFO) << "Saving root file to " << dqmFilename << " and webpage to " << cDirBasePath ;
     }
 
-    cSystemController.Destroy();
     return 0;
 }

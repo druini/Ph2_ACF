@@ -9,25 +9,28 @@
 
 #include "RD53Gain.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void Gain::ConfigureCalibration ()
 {
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart     = this->findValueInSettings("ROWstart");
-  rowStop      = this->findValueInSettings("ROWstop");
-  colStart     = this->findValueInSettings("COLstart");
-  colStop      = this->findValueInSettings("COLstop");
-  nEvents      = this->findValueInSettings("nEvents");
-  startValue   = this->findValueInSettings("VCalHstart");
-  stopValue    = this->findValueInSettings("VCalHstop");
-  nSteps       = this->findValueInSettings("VCalHnsteps");
-  offset       = this->findValueInSettings("VCalMED");
-  nHITxCol     = this->findValueInSettings("nHITxCol");
-  doFast       = this->findValueInSettings("DoFast");
-  doDisplay    = this->findValueInSettings("DisplayHisto");
-  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
-  saveRawData  = this->findValueInSettings("SaveRawData");
+  rowStart       = this->findValueInSettings("ROWstart");
+  rowStop        = this->findValueInSettings("ROWstop");
+  colStart       = this->findValueInSettings("COLstart");
+  colStop        = this->findValueInSettings("COLstop");
+  nEvents        = this->findValueInSettings("nEvents");
+  startValue     = this->findValueInSettings("VCalHstart");
+  stopValue      = this->findValueInSettings("VCalHstop");
+  nSteps         = this->findValueInSettings("VCalHnsteps");
+  offset         = this->findValueInSettings("VCalMED");
+  nHITxCol       = this->findValueInSettings("nHITxCol");
+  doFast         = this->findValueInSettings("DoFast");
+  doDisplay      = this->findValueInSettings("DisplayHisto");
+  doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+  saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
 
   // ########################
@@ -61,9 +64,9 @@ void Gain::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[Gain::Start] Starting" << RESET;
 
-  if (saveRawData == true)
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/GainRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -105,12 +108,18 @@ void Gain::Stop ()
   this->closeFileHandler();
 }
 
-void Gain::initialize (const std::string fileRes_, const std::string fileReg_)
+void Gain::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
 
   Gain::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/GainRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void Gain::run ()
@@ -250,7 +259,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
   // #####################
   // # @TMP@ : CalibFile #
   // #####################
-  if (saveRawData == true)
+  if (saveBinaryData == true)
     {
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)

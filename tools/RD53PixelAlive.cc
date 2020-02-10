@@ -9,25 +9,28 @@
 
 #include "RD53PixelAlive.h"
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 void PixelAlive::ConfigureCalibration ()
 {
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart     = this->findValueInSettings("ROWstart");
-  rowStop      = this->findValueInSettings("ROWstop");
-  colStart     = this->findValueInSettings("COLstart");
-  colStop      = this->findValueInSettings("COLstop");
-  nEvents      = this->findValueInSettings("nEvents");
-  nEvtsBurst   = this->findValueInSettings("nEvtsBurst");
-  nTRIGxEvent  = this->findValueInSettings("nTRIGxEvent");
-  injType      = this->findValueInSettings("INJtype");
-  nHITxCol     = this->findValueInSettings("nHITxCol");
-  doFast       = this->findValueInSettings("DoFast");
-  thrOccupancy = this->findValueInSettings("TargetOcc");
-  doDisplay    = this->findValueInSettings("DisplayHisto");
-  doUpdateChip = this->findValueInSettings("UpdateChipCfg");
-  saveRawData  = this->findValueInSettings("SaveRawData");
+  rowStart       = this->findValueInSettings("ROWstart");
+  rowStop        = this->findValueInSettings("ROWstop");
+  colStart       = this->findValueInSettings("COLstart");
+  colStop        = this->findValueInSettings("COLstop");
+  nEvents        = this->findValueInSettings("nEvents");
+  nEvtsBurst     = this->findValueInSettings("nEvtsBurst");
+  nTRIGxEvent    = this->findValueInSettings("nTRIGxEvent");
+  injType        = this->findValueInSettings("INJtype");
+  nHITxCol       = this->findValueInSettings("nHITxCol");
+  doFast         = this->findValueInSettings("DoFast");
+  thrOccupancy   = this->findValueInSettings("TargetOcc");
+  doDisplay      = this->findValueInSettings("DisplayHisto");
+  doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+  saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
   if (injType != INJtype::None) nTRIGxEvent = 1;
   else                          doFast      = false;
@@ -71,9 +74,11 @@ void PixelAlive::ConfigureCalibration ()
 
 void PixelAlive::Start (int currentRun)
 {
-  if (saveRawData == true)
+  LOG (INFO) << GREEN << "[PixelAlive::Start] Starting" << RESET;
+
+  if ((currentRun != -1) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -106,12 +111,18 @@ void PixelAlive::Stop ()
   this->closeFileHandler();
 }
 
-void PixelAlive::initialize (const std::string fileRes_, const std::string fileReg_)
+void PixelAlive::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
 {
   fileRes = fileRes_;
   fileReg = fileReg_;
 
   PixelAlive::ConfigureCalibration();
+
+  if ((currentRun != -1) && (saveBinaryData == true))
+    {
+      this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->initializeFileHandler();
+    }
 }
 
 void PixelAlive::run ()
@@ -202,7 +213,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
               if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
                 {
                   float occupancy = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
-                  static_cast<RD53*>(cChip)->enablePixel(row,col,injType == INJtype::None ? occupancy < thrOccupancy : occupancy != 0);
+                  static_cast<RD53*>(cChip)->enablePixel(row, col, injType == INJtype::None ? occupancy < thrOccupancy : occupancy != 0);
                   if (((injType == INJtype::None) && (occupancy >= thrOccupancy)) || ((injType != INJtype::None) && (occupancy == 0))) nMaskedPixelsPerCalib++;
                 }
 

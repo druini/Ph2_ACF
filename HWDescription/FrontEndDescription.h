@@ -8,8 +8,8 @@
 */
 
 
-#ifndef FrontEndDescription_h__
-#define FrontEndDescription_h__
+#ifndef FrontEndDescription_H
+#define FrontEndDescription_H
 
 #include <stdint.h>
 #include "Definition.h"
@@ -29,16 +29,14 @@ namespace Ph2_HwDescription
 
   public:
     // 3 C'tors with different parameter sets
-    FrontEndDescription ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, bool pStatus = true, FrontEndType pType = FrontEndType::UNDEFINED );
-    FrontEndDescription( );
+    FrontEndDescription (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, bool pStatus = true, FrontEndType pType = FrontEndType::UNDEFINED);
+    FrontEndDescription ();
 
     //Copy C'tors
-    FrontEndDescription ( const FrontEndDescription& pFeDesc );
+    FrontEndDescription (const FrontEndDescription& pFeDesc);
 
     // Default D'tor
-    virtual ~FrontEndDescription( );
-
-    // Getter methods
+    virtual ~FrontEndDescription();
 
     /*!
      * \brief Get the Be ID
@@ -143,6 +141,5 @@ namespace Ph2_HwDescription
     FrontEndType fType;
   };
 }
-
 
 #endif

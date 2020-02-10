@@ -22,8 +22,9 @@ fi
 ########
 # ROOT #
 ########
-#source /usr/local/root/bin/thisroot.sh
- source $ROOTSYS/bin/thisroot.sh
+source $ROOTSYS/bin/thisroot.sh
+# source /usr/local/root/bin/thisroot.sh
+#source /opt/local/root/bin/thisroot.sh
 
 #######
 # ZMQ #
@@ -42,6 +43,7 @@ export ANTENNADIR=$BASE_DIR/CMSPh2_AntennaDriver
 export AMC13DIR=/opt/cactus/include/amc13
 export USBINSTDIR=~/Ph2_USBInstDriver
 export USBINSTDIR=$BASE_DIR/../Ph2_USBInstDriver
+export EUDAQDIR=$BASE_DIR/../eudaq
 
 ###########
 # ANTENNA #
@@ -59,6 +61,12 @@ export USBINSTLIB=$USBINSTDIR/lib
 export PATH=$BASE_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:${LD_LIBRARY_PATH}
 
+##########
+# EUDAQ #
+##########
+export EUDAQLIB=$EUDAQDIR/eudaq/lib
+export LD_LIBRARY_PATH=$EUDAQLIB/lib
+
 #########
 # Flags #
 #########
@@ -68,6 +76,8 @@ export USBINSTFlag='-D__USBINST__'
 export Amc13Flag='-D__AMC13__'
 export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
+export MultiplexingFlag='-D__MULTIPLEXING__'
+export EuDaqFlag='-D__EUDAQ__'
 
 ################
 # Compilations #

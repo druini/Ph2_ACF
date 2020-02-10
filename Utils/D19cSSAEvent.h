@@ -4,17 +4,15 @@
 
 #include "Event.h"
 
-using namespace Ph2_HwDescription;
-
 namespace Ph2_HwInterface { // Begin namespace
 
 	using EventDataVector = std::vector<std::vector<uint32_t>>;
 	class D19cSSAEvent : public Event
 	{
 		public:
-		D19cSSAEvent ( const BeBoard* pBoard, uint32_t pNSSA, uint32_t pNFe, const std::vector<uint32_t>& list );
+		D19cSSAEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNSSA, uint32_t pNFe, const std::vector<uint32_t>& list );
 		~D19cSSAEvent(){}
-		void SetEvent ( const BeBoard* pBoard, uint32_t pNSSA, const std::vector<uint32_t>& list ) override;
+		void SetEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNSSA, const std::vector<uint32_t>& list ) override;
 	        uint32_t GetEventCountCBC() const override
         	{
             		return fEventCountCBC;
@@ -71,7 +69,7 @@ namespace Ph2_HwInterface { // Begin namespace
 		{
 			return vectorIndex % numberOfSSAs;
 		}
-		SLinkEvent GetSLinkEvent ( BeBoard* pBoard) const override;
+		SLinkEvent GetSLinkEvent ( Ph2_HwDescription::BeBoard* pBoard) const override;
 	};
 
 } //end namespace

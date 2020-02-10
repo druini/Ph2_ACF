@@ -141,7 +141,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         endif(PH2_USBINSTLIB_FOUND)
     endif(ZMQ_FOUND)
 
-    #Boost
+    # #Boost
     file(GLOB_RECURSE uhal_boost /opt/cactus/*version.hpp)
     if(uhal_boost)
         MESSAGE(STATUS "    Found boost installation that comes with uHAL, using this version") 
@@ -158,6 +158,15 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     else(uhal_boost)
         MESSAGE(STATUS "    No boost headers found with uHAL (you are most likely using CC7) - make sure to install boost 1.53 (default version on CC7)")
     endif(uhal_boost)
+
+    # builds eudaq producer
+    find_package(EUDAQ) #========================================================
+    if(EUDAQ_FOUND)
+        message(STATUS "    building the EUDAQ components")
+    else(EUDAQ_FOUND)
+        message(STATUS "    continuing without EUDAQ components")
+    endif(EUDAQ_FOUND)
+
 
     find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
     #find_package(Boost 1.53 REQUIRED filesystem system-mt )

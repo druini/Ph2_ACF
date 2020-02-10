@@ -1,6 +1,8 @@
 #ifndef _TCPSocket_h_
 #define _TCPSocket_h_
 
+#include <sys/time.h>
+
 class TCPSocket
 {
 public:
@@ -20,6 +22,7 @@ public:
 	TCPSocket& operator=(TCPSocket const&) = delete;
 
 	int  getSocketId(void) const {return fSocketId;}
+	void open(void);
 	void close      (void);
 	void sendClose  (void);
 

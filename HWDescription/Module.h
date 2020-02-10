@@ -42,6 +42,7 @@ namespace Ph2_HwDescription {
         // C'tors take FrontEndDescription or hierachy of connection
         Module (const FrontEndDescription& pFeDesc, uint8_t pModuleId );
         Module (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId );
+        Module (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId , uint8_t pLinkId);
 
         // Default C'tor
         Module();
@@ -108,6 +109,11 @@ namespace Ph2_HwDescription {
         {
             return fModuleId;
         };
+
+        uint8_t getLinkId() const
+        {
+            return fLinkId;
+        };
         /*!
          * \brief Set the Module Id
          * \param pModuleId
@@ -115,6 +121,10 @@ namespace Ph2_HwDescription {
         void setModuleId ( uint8_t pModuleId )
         {
             fModuleId = pModuleId;
+        };
+        void setLinkId ( uint8_t pLinkId )
+        {
+            fLinkId = pLinkId;
         };
 
 
@@ -124,6 +134,8 @@ namespace Ph2_HwDescription {
 
       protected:
         uint8_t fModuleId;
+        //link ID 
+        uint8_t fLinkId;
     };
 }
 

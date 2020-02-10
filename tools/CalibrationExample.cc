@@ -4,6 +4,9 @@
 #include "../Utils/ContainerStream.h"
 #include <math.h>
 
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 CalibrationExample::CalibrationExample() :
     Tool(),
     fEventsPerPoint(0)
@@ -105,6 +108,6 @@ void CalibrationExample::Stop(void)
     writeObjects();
     dumpConfigFiles();
     SaveResults();
-    Destroy();
+    closeFileHandler();
 	LOG (INFO) << "Calibration example stopped.";
 }

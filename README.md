@@ -4,19 +4,13 @@
 ### Contains:
 
 - A middleware API layer, implemented in C++, which wraps the firmware calls and handshakes into abstracted functions
-
-- A C++ object-based library describing the system components (CBCs,
-        Hybrids, Boards) and their properties(values, status)
-
-- Several utilities (like visitors to execute certain tasks for each item in the hierarchical Item description)
-
-- S tools/ directory with several utilities (currently: calibration, hybrid testing, common-mode analysis)
-
-    - Some applications: datatest, interfacetest, hybridtest, system, calibrate, commission, fpgaconfig
+- A C++ object-based library describing the system components (CBCs, RD53, Hybrids, Boards) and their properties (values, status)
 
 
 ## Middleware for the Inner-Tracker (IT) system
-
+```diff
++ Last change made to this section: 24/01/2020
+```
 Setup the FC7:
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
@@ -41,23 +35,23 @@ Setup and run the IT-DAQ:
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
 2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
 3. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
-4. `cd Ph2_ACF; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..; source setup.sh`
+4. `cd Ph2_ACF; source setup.sh; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
 5. `mkdir choose_a_name`
 6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
 7. `cp settings/CMSIT.xml choose_a_name`
 8. `cd choose_a_name`
 9. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-10. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -s` to reset the FC7 (just once)
+10. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
 11. Run the command: `CMSIT_miniDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSIT_miniDAQ --help` for help)
 
 Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):
 - Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
 - Run the command: `fpgaconfig -c CMSIT.xml -f firmware_file_name_on_the_PC -i firmware_file_name_on_the_microSD` to upload a new firmware to the microSD card
-- Run the command: `fpgaconfig -c CMSIT.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card
+- Run the command: `fpgaconfig -c CMSIT.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
 - Run the command: `fpgaconfig --help` for help
 
 The program `CMSIT_miniDAQ` is the portal for all calibrations and for data taking.
-Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/calibrations:
+Through `CMSIT_miniDAQ`, and with the right command line option, you can run the following scans/ calibrations/ operation mode:
 ```
 1. Latency scan
 2. PixelAlive
@@ -68,6 +62,8 @@ Through `CMSIT_miniDAQ`, and with the right command line option, you can run the
 7. Gain optimization
 8. Threshold minimization
 9. Injection delay scan
+10. Clock delay scan
+11. Physics
 ```
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
 ```
@@ -149,12 +145,12 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
-Here you can find a detailed description of the differente calibrations: https://cernbox.cern.ch/index.php/s/MTO6MsfJ6LcsCdW
-- Software git branch / tag : `chipPolymorphism` / `IT-v2.5`
-- Firmware tag: `2.5`
+Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
+- Software git branch / tag : `chipPolymorphism` / `IT-v3.1`
+- Firmware tag: `3.0`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
-### ~=-=-=~ End of Inner-Tracker section ~=-=-=~
+### ~=-=~ End of Inner-Tracker section ~=-=~
 
 <hr>
 
@@ -162,8 +158,8 @@ Here you can find a detailed description of the differente calibrations: https:/
 ### Setup
 
 Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
-You'll need Xilinx Impact and a [Xilinx Platform Cable USB II] (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
-For more information on the firmare, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware .
+You'll need Xilinx Vivado and a Xilinx Platform Cable USB II (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
+For more information on the firmware, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware
 
 
 ### Setup on CC7 (Scroll down for instructions on setting up on SLC6)
@@ -180,18 +176,20 @@ For more information on the firmare, please check the doc directory of https://g
 
     First create a new ipbus repo for yum:
 
-        $> sudo cat > /etc/yum.repos.d/ipbus-sw.repo << EOF
-        $> [ipbus-sw-base]
-        $> name=IPbus software repository
-        $> baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/base/RPMS
-        $> enabled=1
-        $> gpgcheck=0
-
-        $> [ipbus-sw-updates]
-        $> name=IPbus software repository updates
-        $> baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/updates/RPMS
-        $> enabled=1
-        $> gpgcheck=0
+    ```
+    sudo cat > /etc/yum.repos.d/ipbus-sw.repo << EOF
+    [ipbus-sw-base]
+    name=IPbus software repository
+    baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/base/RPMS
+    enabled=1
+    gpgcheck=0
+    [ipbus-sw-updates]
+    name=IPbus software repository updates
+    baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/updates/RPMS
+    enabled=1
+    gpgcheck=0
+    EOF
+    ```
 
     Then install uHAL as follows:
 

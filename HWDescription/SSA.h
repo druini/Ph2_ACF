@@ -15,6 +15,7 @@
 
 #include "FrontEndDescription.h"
 #include "ReadoutChip.h"
+#include "ChipRegItem.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
 #include <iostream>
@@ -24,7 +25,6 @@
 #include <utility>
 #include <set>
 #include "../Utils/easylogging++.h"
-//#include "ChipRegItem.h"
 
 namespace Ph2_HwDescription { //open namespace 
 

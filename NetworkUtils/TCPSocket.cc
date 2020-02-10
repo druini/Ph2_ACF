@@ -9,9 +9,7 @@
 TCPSocket::TCPSocket(int socketId)
 	: fSocketId(socketId)
 {
-	if (socketId == invalidSocketId && (fSocketId = ::socket(PF_INET, SOCK_STREAM, 0)) == invalidSocketId)
-		throw std::runtime_error(std::string("Bad socket: ") + strerror(errno));
-	// std::cout << __PRETTY_FUNCTION__ << "New socket: " << fSocketId << std::endl;
+	open();
 }
 
 //========================================================================================================================
@@ -33,6 +31,13 @@ TCPSocket::~TCPSocket()
 		// destructor they are indicating that failures is
 		// an OK condition.
 	}
+}
+
+//========================================================================================================================
+void TCPSocket::open()
+{
+	if(fSocketId == invalidSocketId && (fSocketId = ::socket(PF_INET, SOCK_STREAM, 0)) == invalidSocketId)
+		throw std::runtime_error(std::string("Bad socket: ") + strerror(errno));
 }
 
 //========================================================================================================================

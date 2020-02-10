@@ -17,8 +17,6 @@
 #include "ReadoutChip.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/Exception.h"
-#include "../Utils/easylogging++.h"
-
 #include <iostream>
 #include <string>
 #include <stdint.h>

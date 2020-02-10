@@ -123,7 +123,6 @@ std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uin
     uint32_t cIterationCount = 0;
 
     // //Fabio - clean BEGIN
-    // MakeTestGroups (FrontEndType::CBC3);
     // setFWTestPulse();
     // setSystemTestPulse ( 200, 0, true, false );
     // //Fabio - clean END

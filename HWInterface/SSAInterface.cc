@@ -15,6 +15,8 @@
 #include "../Utils/Container.h"
 #include <bitset>
 
+using namespace Ph2_HwDescription;
+
 #define DEV_FLAG 0
 namespace Ph2_HwInterface {// start namespace
     	SSAInterface::SSAInterface ( const BeBoardFWMap& pBoardMap ) : ReadoutChipInterface ( pBoardMap ){}

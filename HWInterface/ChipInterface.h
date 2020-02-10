@@ -15,8 +15,6 @@
 #include <vector>
 #include "BeBoardFWInterface.h"
 
-using namespace Ph2_HwDescription;
-
 template <typename T>
 class ChannelContainer;
 
@@ -24,7 +22,8 @@ class ChannelContainer;
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
  */
-namespace Ph2_HwInterface {
+namespace Ph2_HwInterface 
+{
 
     using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>;    /*!< Map of Board connected */
 
@@ -65,7 +64,7 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        virtual bool ConfigureChip ( Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
+        virtual bool ConfigureChip ( Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
 
         /*!
          * \brief Write the designated register in both Chip and Chip Config File
@@ -73,14 +72,14 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        virtual bool WriteChipReg          (Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) = 0;
+        virtual bool WriteChipReg          (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) = 0;
 
-        virtual void WriteModuleBroadcastChipReg (const Module* pModule, const std::string& pRegNode, uint16_t data)
+        virtual void WriteModuleBroadcastChipReg (const Ph2_HwDescription::Module* pModule, const std::string& pRegNode, uint16_t data)
         {
           LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         }
 
-        virtual void WriteBoardBroadcastChipReg (const BeBoard* pBoard, const std::string& pRegNode, uint16_t data)
+        virtual void WriteBoardBroadcastChipReg (const Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode, uint16_t data)
         {
           LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         }
@@ -90,7 +89,7 @@ namespace Ph2_HwInterface {
          * \param pChip
          * \param pVecReq : Vector of pair: Node of the register to write versus value to write
          */
-        virtual bool WriteChipMultReg (Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true)
+        virtual bool WriteChipMultReg (Ph2_HwDescription::Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop = true)
         {
           LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
           return false;
@@ -101,7 +100,7 @@ namespace Ph2_HwInterface {
          * \param pChip
          * \param pRegNode : Node of the register to read
          */
-        virtual uint16_t ReadChipReg ( Chip* pChip, const std::string& pRegNode ) = 0;
+        virtual uint16_t ReadChipReg ( Ph2_HwDescription::Chip* pChip, const std::string& pRegNode ) = 0;
 
         void output();
 

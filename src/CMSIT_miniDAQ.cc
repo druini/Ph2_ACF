@@ -17,11 +17,12 @@
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53InjectionDelay.h"
+#include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53PixelAlive.h"
 #include "../tools/RD53Latency.h"
+#include "../tools/RD53Physics.h"
 #include "../tools/RD53SCurve.h"
 #include "../tools/RD53Gain.h"
-#include "../tools/RD53Physics.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
@@ -34,12 +35,16 @@
 // # Default values #
 // ##################
 #define RUNNUMBER     0
+#define SETBATCH      0         // Set batch mode when running supervisor
 #define RESULTDIR     "Results" // Directory containing the results
 #define FILERUNNUMBER "./RunNumber.txt"
-#define SETBATCH      0 // Set batch mode when running supervisor
 
 
 INITIALIZE_EASYLOGGINGPP
+
+
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
 
 
 pid_t runControllerPid    = -1;
@@ -55,6 +60,30 @@ void interruptHandler (int handler)
     }
 
   exit(EXIT_FAILURE);
+}
+
+
+void readBinaryData (std::string binaryFile, Ph2_System::SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
+{
+  unsigned int errors = 0;
+  std::vector<uint32_t> data;
+
+  LOG (INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
+  mySysCntr.addFileHandler(binaryFile, 'r');
+  LOG (INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
+  mySysCntr.readFile(data, 0);
+
+  RD53FWInterface::DecodeEvents(data, decodedEvents);
+  LOG (INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
+
+  for (auto i = 0u; i < decodedEvents.size(); i++)
+    if (RD53FWInterface::EvtErrorHandler(decodedEvents[i].evtStatus) == false)
+      {
+        LOG (ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
+        errors++;
+      }
+
+  LOG (INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(3) << BOLDYELLOW << 1. * errors / decodedEvents.size() * 100. << "%" << RESET;
 }
 
 
@@ -77,20 +106,27 @@ int main (int argc, char** argv)
 
   cmd.setHelpOption("h","help","Print this help page");
 
-  cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml",CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin injdelay physics]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin injdelay clockdelay physics]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
-  cmd.defineOption ("prog", "Simply program the system components.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+  cmd.defineOption ("binary", "Binary file to decode.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOptionAlternative ("binary", "b");
+
+  cmd.defineOption ("prog", "Program the system components.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("prog", "p");
 
-  cmd.defineOption ("sup", "Run in producer(Moddleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+  cmd.defineOption ("sup", "Run in producer(Middleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative ("sup", "s");
 
   cmd.defineOption("reset","Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
   cmd.defineOptionAlternative("reset", "r");
+
+  cmd.defineOption("capture", "Capture communication with board (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+
+  cmd.defineOption("replay", "Replay previously captured communication (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
   int result = cmd.parse(argc,argv);
 
@@ -100,27 +136,35 @@ int main (int argc, char** argv)
       exit(EXIT_FAILURE);
     }
 
-  std::string configFile = cmd.foundOption("file")  == true ? cmd.optionValue("file") : "CMSIT.xml";
-  std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "pixelalive";
-  bool program           = cmd.foundOption("prog")  == true ? true : false;
-  bool supervisor        = cmd.foundOption("sup")   == true ? true : false;
-  bool reset             = cmd.foundOption("reset") == true ? true : false;
-
 
   // ###################
   // # Read run number #
   // ###################
   int runNumber = RUNNUMBER;
-  if (program == false)
-    {
-      std::ifstream fileRunNumberIn;
-      fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
-      if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
-      fileRunNumberIn.close();
-    }
+  std::ifstream fileRunNumberIn;
+  fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
+  if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
+  fileRunNumberIn.close();
   std::string chipConfig("Run" + fromInt2Str(runNumber) + "_");
+  system(std::string("mkdir " + std::string(RESULTDIR)).c_str());
 
 
+  // ####################
+  // # Retrieve options #
+  // ####################
+  std::string configFile = cmd.foundOption("file")   == true ? cmd.optionValue("file")   : "CMSIT.xml";
+  std::string whichCalib = cmd.foundOption("calib")  == true ? cmd.optionValue("calib")  : "pixelalive";
+  std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
+  bool program           = cmd.foundOption("prog")   == true ? true : false;
+  bool supervisor        = cmd.foundOption("sup")    == true ? true : false;
+  bool reset             = cmd.foundOption("reset")  == true ? true : false;
+  if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").replace(cmd.optionValue("capture").find(".raw"), 4, "_" + fromInt2Str(runNumber) + ".raw").insert(0,std::string(RESULTDIR) + "/"));
+  else if (cmd.foundOption("replay") == true)  RegManager::enableReplay(cmd.optionValue("replay"));
+
+
+  // ######################
+  // # Supervisor section #
+  // ######################
   if (supervisor == true)
     {
 #ifdef __USE_ROOT__
@@ -139,7 +183,7 @@ int main (int argc, char** argv)
         {
           char* argv[] = {(char*)"RunController", NULL};
           execv((std::string(getenv("BASE_DIR")) + "/bin/RunController").c_str(), argv);
-          LOG (ERROR) << BOLDRED << "I Can't run RunController, error occured" << RESET;
+          LOG (ERROR) << BOLDRED << "I can't run RunController, error occured" << RESET;
           exit(EXIT_FAILURE);
         }
 
@@ -207,7 +251,7 @@ int main (int argc, char** argv)
                   {
                     LOG (INFO) << BOLDBLUE << "Supervisor sending stop" << RESET;
 
-                    usleep(3e6);
+                    usleep(2e6);
                     theMiddlewareInterface.stop();
                     usleep(2e6);
                     theDQMInterface.stopProcessingData();
@@ -233,27 +277,42 @@ int main (int argc, char** argv)
     }
   else
     {
-      // ################################
-      // # Instantiate SystemController #
-      // ################################
-      SystemController mySysCntr;
-      if (reset == true)
+      Ph2_System::SystemController mySysCntr;
+
+
+      if ((reset == true) || (binaryFile != ""))
         {
+          // ######################################
+          // # Reset hardware or read binary file #
+          // ######################################
+
           std::stringstream outp;
           mySysCntr.InitializeHw(configFile, outp, true, false);
           mySysCntr.InitializeSettings(configFile, outp);
-          static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fBoardVector[0]->getBeBoardId()])->ResetSequence();
-          exit(EXIT_SUCCESS);
+          if (reset == true)
+            {
+              static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fBoardVector[0]->getBeBoardId()])->ResetSequence();
+              exit(EXIT_SUCCESS);
+            }
+          if (binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);
+        }
+      else if (binaryFile == "")
+        {
+          // #######################
+          // # Initialize Hardware #
+          // #######################
+
+          LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
+          mySysCntr.ConfigureHardware(configFile);
+          LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
+          if (program == true)
+            {
+              LOG (INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
+              exit(EXIT_SUCCESS);
+            }
         }
 
 
-      // #######################
-      // # Initialize Hardware #
-      // #######################
-      LOG (INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-      mySysCntr.ConfigureHardware(configFile);
-      LOG (INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
-      if (program == true) exit(EXIT_SUCCESS);
       std::cout << std::endl;
 
 
@@ -270,7 +329,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_Latency");
           Latency la;
           la.Inherit(&mySysCntr);
-          la.initialize(fileName, chipConfig);
+          la.initialize(fileName, chipConfig, runNumber);
           la.run();
           la.analyze();
           la.draw();
@@ -285,7 +344,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_PixelAlive");
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
-          pa.initialize(fileName, chipConfig);
+          pa.initialize(fileName, chipConfig, runNumber);
           pa.run();
           pa.analyze();
           pa.draw();
@@ -300,7 +359,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_NoiseScan");
           PixelAlive pa;
           pa.Inherit(&mySysCntr);
-          pa.initialize(fileName, chipConfig);
+          pa.initialize(fileName, chipConfig, runNumber);
           pa.run();
           pa.analyze();
           pa.draw();
@@ -315,7 +374,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_SCurve");
           SCurve sc;
           sc.Inherit(&mySysCntr);
-          sc.initialize(fileName, chipConfig);
+          sc.initialize(fileName, chipConfig, runNumber);
           sc.run();
           sc.analyze();
           sc.draw();
@@ -330,7 +389,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_Gain");
           Gain ga;
           ga.Inherit(&mySysCntr);
-          ga.initialize(fileName, chipConfig);
+          ga.initialize(fileName, chipConfig, runNumber);
           ga.run();
           ga.analyze();
           ga.draw();
@@ -345,7 +404,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_GainOptimization");
           GainOptimization go;
           go.Inherit(&mySysCntr);
-          go.initialize(fileName, chipConfig);
+          go.initialize(fileName, chipConfig, runNumber);
           go.run();
           go.analyze();
           go.draw();
@@ -360,7 +419,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrEqualization");
           ThrEqualization te;
           te.Inherit(&mySysCntr);
-          te.initialize(fileName, chipConfig);
+          te.initialize(fileName, chipConfig, runNumber);
           te.run();
           te.draw();
         }
@@ -374,7 +433,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_ThrMinimization");
           ThrMinimization tm;
           tm.Inherit(&mySysCntr);
-          tm.initialize(fileName, chipConfig);
+          tm.initialize(fileName, chipConfig, runNumber);
           tm.run();
           tm.analyze();
           tm.draw();
@@ -389,10 +448,25 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_InjectionDelay");
           InjectionDelay id;
           id.Inherit(&mySysCntr);
-          id.initialize(fileName, chipConfig);
+          id.initialize(fileName, chipConfig, runNumber);
           id.run();
           id.analyze();
           id.draw();
+        }
+      else if (whichCalib == "clockdelay")
+        {
+          // ###################
+          // # Run Clock Delay #
+          // ###################
+          LOG (INFO) << BOLDMAGENTA << "@@@ Performing Clock Delay scan @@@" << RESET;
+
+          std::string fileName("Run" + fromInt2Str(runNumber) + "_ClockDelay");
+          ClockDelay cd;
+          cd.Inherit(&mySysCntr);
+          cd.initialize(fileName, chipConfig, runNumber);
+          cd.run();
+          cd.analyze();
+          cd.draw();
         }
       else if (whichCalib == "physics")
         {
@@ -404,10 +478,14 @@ int main (int argc, char** argv)
           std::string fileName("Run" + fromInt2Str(runNumber) + "_Physics");
           Physics ph;
           ph.Inherit(&mySysCntr);
-          ph.initialize(fileName, chipConfig);
-          ph.Start(runNumber);
-          usleep(2e6);
-          ph.Stop();
+          ph.initialize(fileName, chipConfig, runNumber);
+          if (binaryFile == "")
+            {
+              ph.Start(runNumber);
+              usleep(2e6);
+              ph.Stop();
+            }
+          else ph.analyze();
           ph.draw();
         }
       else

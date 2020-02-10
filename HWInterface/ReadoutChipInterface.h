@@ -16,8 +16,6 @@
 #include "BeBoardFWInterface.h"
 #include "ChipInterface.h"
 
-using namespace Ph2_HwDescription;
-
 template <typename T>
 class ChannelContainer;
 
@@ -25,8 +23,8 @@ class ChannelContainer;
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
  */
-namespace Ph2_HwInterface {
-
+namespace Ph2_HwInterface
+{
     using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>;    /*!< Map of Board connected */
 
     /*!
@@ -35,25 +33,37 @@ namespace Ph2_HwInterface {
      */
     class ReadoutChipInterface : public ChipInterface
     {
-
-      public:
+    public:
         /*!
          * \brief Constructor of the ReadoutChipInterface Class
          * \param pBoardMap
          */
         ReadoutChipInterface ( const BeBoardFWMap& pBoardMap );
+
         /*!
          * \brief Destructor of the ReadoutChipInterface Class
          */
         ~ReadoutChipInterface();
-        
+
         /*!
          * \brief setChannels fo be injected
          * \param pChip: pointer to Chip object
          * \param group: group of channels under test
          * \param pVerifLoop: perform a readback check
          */
-        virtual bool setInjectionSchema (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true)
+        virtual bool setInjectionSchema (Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+          return false;
+        }
+
+        virtual bool enableInjection (Ph2_HwDescription::ReadoutChip* pChip, bool inject = true, bool pVerifLoop = true)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+          return false;
+        }
+
+        virtual bool setInjectionAmplitude (Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop = true)
         {
           LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
           return false;
@@ -65,7 +75,7 @@ namespace Ph2_HwInterface {
          * \param group: group of channels under test
          * \param pVerifLoop: perform a readback check
          */
-        virtual bool maskChannelsGroup (ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true)
+        virtual bool maskChannelsGroup (Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase *group, bool pVerifLoop = true)
         {
           LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
           return false;
@@ -79,7 +89,7 @@ namespace Ph2_HwInterface {
          * \param inject: inject channels belonging to the group under test
          * \param pVerifLoop: perform a readback check
          */
-        virtual bool maskChannelsAndSetInjectionSchema  (ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop = true ) = 0;
+        virtual bool maskChannelsAndSetInjectionSchema  (Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop = true ) = 0;
 
          /*!
          * \brief Reapply the stored mask for the Chip, use it after group masking is applied
@@ -87,8 +97,7 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        virtual bool ConfigureChipOriginalMask (ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
-        
+        virtual bool ConfigureChipOriginalMask (Ph2_HwDescription::ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310 ) = 0;
 
         /*!
          * \brief Write all Local registers on Chip and Chip Config File (able to recognize local parameter names)
@@ -96,7 +105,7 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Value to write
          */
-        virtual bool WriteChipAllLocalReg ( ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true ) = 0;
+        virtual bool WriteChipAllLocalReg ( Ph2_HwDescription::ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true ) = 0;
 
         /*!
          * \brief Read all Local registers on Chip and Chip Config File (able to recognize local parameter names)
@@ -104,7 +113,7 @@ namespace Ph2_HwInterface {
          * \param pRegNode : Node of the register to write
          * \param pValue : Readout value
          */
-	virtual void ReadChipAllLocalReg  ( ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue) {}
+        virtual void ReadChipAllLocalReg  ( Ph2_HwDescription::ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue) {}
 
         /*!
          * \brief Mask all channels of the chip
@@ -113,8 +122,7 @@ namespace Ph2_HwInterface {
          * \param pVerifLoop: perform a readback check
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
-        virtual bool MaskAllChannels ( ReadoutChip* pChip, bool mask, bool pVerifLoop = true ) = 0;
-   
+        virtual bool MaskAllChannels ( Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true ) = 0;
     };
 }
 

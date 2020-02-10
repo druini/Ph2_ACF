@@ -50,5 +50,10 @@
                 <node id="r_8b"                 mask="0x000000ff"/>
                 <node id="r_16b"                mask="0x0000ffff"/>
         </node>
+        <node id="spi">
+            <node id="tx_data"                  address = "0x00a" mask="0xFFFFFFFF"/>
+            <node id="command"                  address = "0x00b" mask="0xFFFFFFFF"/>
+            <node id="rx_data"                  address = "0x00c" mask="0xFFFFFFFF"/>
+        </node>
 </node>
 
