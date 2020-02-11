@@ -71,6 +71,7 @@
           BITFLIP_WNG_CNT        =     "0"
           BITFLIP_ERR_CNT        =     "0"
           CMDERR_CNT             =     "0"
+          SKIPPED_TRIGGER_CNT    =     "0"
           />
     </Module>
 

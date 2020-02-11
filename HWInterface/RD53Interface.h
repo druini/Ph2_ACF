@@ -38,11 +38,12 @@ namespace Ph2_HwInterface
     bool     ConfigureChipOriginalMask         (Ph2_HwDescription::ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                              override;
     bool     MaskAllChannels                   (Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true)                                              override;
     bool     maskChannelsAndSetInjectionSchema (Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
+    void     RunMonitoring                     (Ph2_HwDescription::Chip* pChip);
 
   private:
     std::vector<std::pair<uint16_t,uint16_t>> ReadRD53Reg (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode);
     void WriteRD53Mask  (Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
-    void InitRD53Aurora (Ph2_HwDescription::Chip* pChip);
+    void InitRD53Aurora (Ph2_HwDescription::Chip* pChip, int nActiveLanes = 1);
 
     template <typename T>
       void sendCommand (Ph2_HwDescription::Chip* pChip, const T& cmd) { static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getFeId()); }

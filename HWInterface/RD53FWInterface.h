@@ -217,6 +217,7 @@ namespace Ph2_HwInterface
 
     FastCommandsConfig* getLocalCfgFastCmd() { return &localCfgFastCmd; }
 
+
     // ###########################################
     // # Member functions to handle the firmware #
     // ###########################################

@@ -72,10 +72,16 @@ namespace Ph2_HwInterface
     RD53Interface::WriteRD53Mask(static_cast<RD53*>(const_cast<Chip*>(pChip)), false, true, true);
 
 
+    // ##################
+    // # Run monitoring #
+    // ##################
+    RD53Interface::RunMonitoring(pChip);
+
+
     return true;
   }
 
-  void RD53Interface::InitRD53Aurora (Chip* pChip)
+  void RD53Interface::InitRD53Aurora (Chip* pChip, int nActiveLanes)
   {
     this->setBoard(pChip->getBeBoardId());
 
@@ -114,12 +120,13 @@ namespace Ph2_HwInterface
     // # CML_CONFIG    = 0b00001111 #
     // ##############################
 
-    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG",      0x04, true); // Number of active lanes [5:2]
+
+    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG", RD53::setBits(nActiveLanes) << 2, true); // Number of active lanes [5:2]
     // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
-    // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x01, true); // CML_EN_LANE[3:0]
+     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG",         0x0F, true); // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, true); // 0x30 = reset Aurora AND Serializer
     RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
 
@@ -360,5 +367,69 @@ namespace Ph2_HwInterface
     for (auto row = 0u; row < RD53::nRows; row++)
       for (auto col = 0u; col < RD53::nCols; col++)
         pValue.getChannel<uint16_t>(row,col) = pRD53->getTDAC(row,col);
+  }
+
+  void RD53Interface::RunMonitoring (Chip* pChip)
+  {
+    this->setBoard(pChip->getBeBoardId());
+
+    const uint16_t MONITOR_CONFIG     = pChip->getRegItem("MONITOR_CONFIG").fAddress;
+    const uint16_t MONITOR_SELECT     = pChip->getRegItem("MONITOR_SELECT").fAddress;
+    const uint16_t GLOBAL_PULSE_ROUTE = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
+    const uint8_t  chipID             = pChip->getChipId();
+
+    uint32_t value;
+    std::vector<uint16_t> commandList;
+
+
+    LOG (INFO) << GREEN << "Monitoring data sequence" << RESET;
+    RD53Cmd::WrReg(chipID, MONITOR_CONFIG, 0x800).appendTo(commandList);
+
+
+    RD53Cmd::WrReg(chipID, MONITOR_SELECT, 0x2000).appendTo(commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
+
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0040).appendTo(commandList); // Reset Monitor Data
+    RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0001).appendTo(commandList);
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0008).appendTo(commandList); // Clear Monitor Data
+    RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0001).appendTo(commandList);
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x1000).appendTo(commandList); // Trigger Monitor Data to start conversion
+    RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0001).appendTo(commandList);
+
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getFeId());
+    usleep(1e3);
+    value = RD53Interface::ReadChipReg(pChip, "MONITORING_DATA_ADC");
+    LOG (INFO) << BOLDBLUE << "\t--> ADC bandgap = " << BOLDYELLOW << value << RESET;
+
+
+    commandList.clear();
+    RD53Cmd::WrReg(chipID, MONITOR_SELECT, 0x2009).appendTo(commandList);
+
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0040).appendTo(commandList);
+    RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0001).appendTo(commandList);
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0008).appendTo(commandList);
+    RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0001).appendTo(commandList);
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x1000).appendTo(commandList);
+    RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0001).appendTo(commandList);
+
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getFeId());
+    usleep(1e3);
+    value = RD53Interface::ReadChipReg(pChip, "MONITORING_DATA_ADC");
+    LOG (INFO) << BOLDBLUE << "\t--> Vref = " << BOLDYELLOW << value << RESET;
+
+
+    commandList.clear();
+    RD53Cmd::WrReg(chipID, MONITOR_SELECT, 0x200B).appendTo(commandList);
+
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0040).appendTo(commandList);
+    RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0001).appendTo(commandList);
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0008).appendTo(commandList);
+    RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0001).appendTo(commandList);
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x1000).appendTo(commandList);
+    RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0001).appendTo(commandList);
+
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getFeId());
+    usleep(1e3);
+    value = RD53Interface::ReadChipReg(pChip, "MONITORING_DATA_ADC");
+    LOG (INFO) << BOLDBLUE << "\t--> Iref = " << BOLDYELLOW << value << RESET;
   }
 }
