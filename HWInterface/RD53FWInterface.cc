@@ -92,7 +92,7 @@ namespace Ph2_HwInterface
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
     LOG (INFO) << GREEN << "Initializing DIO5:" << RESET;
     for (const auto& it : pBoard->getBeBoardRegMap())
-      if ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos))
+      if ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("HitOr_enable_l12") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos))
         {
           LOG (INFO) << BOLDBLUE << "\t--> " << it.first << " = " << BOLDYELLOW << it.second << RESET;
           if (it.first.find("ext_clk_en") != std::string::npos)
@@ -100,6 +100,7 @@ namespace Ph2_HwInterface
               cfgDIO5.enable     = true;
               cfgDIO5.ext_clk_en = it.second;
             }
+          else if (it.first.find("HitOr_enable_l12") != std::string::npos) RD53FWInterface::localCfgFastCmd.enable_hitor = it.second;
           else RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second);
         }
 
@@ -923,6 +924,7 @@ namespace Ph2_HwInterface
         {"user.ctrl_regs.fast_cmd_reg_2.veto_en",                  (uint32_t)cfg->veto_en},
         {"user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay",           (uint32_t)cfg->ext_trigger_delay},
         {"user.ctrl_regs.fast_cmd_reg_2.trigger_duration",         (uint32_t)cfg->trigger_duration},
+        {"user.ctrl_regs.fast_cmd_reg_2.HitOr_enable_l12",         (uint32_t)cfg->enable_hitor},
         {"user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",       (uint32_t)cfg->n_triggers},
 
         // ##############################
@@ -931,7 +933,7 @@ namespace Ph2_HwInterface
         {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_ecr_en",            (uint32_t)cfg->fast_cmd_fsm.ecr_en},
         {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_test_pulse_en",     (uint32_t)cfg->fast_cmd_fsm.first_cal_en},
         {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en",   (uint32_t)cfg->fast_cmd_fsm.second_cal_en},
-        {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en",        (uint32_t)cfg->fast_cmd_fsm.trigger_en},
+        {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en",        (uint32_t)(cfg->enable_hitor != 0 ? 0 : cfg->fast_cmd_fsm.trigger_en)},
 
         {"user.ctrl_regs.fast_cmd_reg_7.delay_after_ecr",          (uint32_t)cfg->fast_cmd_fsm.delay_after_ecr},
         {"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime",           (uint32_t)cfg->fast_cmd_fsm.first_cal_data},
@@ -1025,7 +1027,7 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
       }
-    else LOG (ERROR) << BOLDRED << "Option non recognized " << injType << RESET;
+    else LOG (ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
 
 
     // ##############################

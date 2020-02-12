@@ -193,6 +193,7 @@ namespace Ph2_HwInterface
       uint32_t n_triggers        = 0;
       uint32_t ext_trigger_delay = 0; // Used when trigger_source == TriggerSource::External
       uint32_t trigger_duration  = 0; // Number of triggers on top of the L1A (maximum value is 31)
+      uint32_t enable_hitor      = 0; // Enable HitOr signals
 
       FastCmdFSMConfig fast_cmd_fsm;
     };

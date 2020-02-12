@@ -534,7 +534,7 @@ int main (int argc, char** argv)
         }
       else
         {
-          LOG (ERROR) << BOLDRED << "Option non recognized: " << BOLDYELLOW << whichCalib << RESET;
+          LOG (ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
           exit(EXIT_FAILURE);
         }
 
