@@ -264,6 +264,7 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
     for (auto cBoard : this->fBoardVector)
     {
         // make sure you're only sending one trigger at a time here
+        auto cMult = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
         fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
        
         for (auto& cFe : cBoard->fModuleVector)
@@ -288,17 +289,16 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
                     LOG (INFO) << BOLDBLUE << "Automated BX0 alignment on CIC" << +cFe->getFeId() << " : " << BOLDRED << " FAILED!." << RESET;
             }
         }
+        fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
+       
     }
     if( !cSuccess ) 
     {
         LOG (INFO) << BOLDRED << "Bx0 alignment failed ..." << RESET;
         return cSuccess;
     }
-    for (auto cBoard : this->fBoardVector)
-    {
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Bx0Alignment();
-    }
-
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Bx0Alignment();
+    
     //unmask all channels and reset offsets 
     for (auto cBoard : this->fBoardVector)
     {   

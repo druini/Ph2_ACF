@@ -340,7 +340,6 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
     // parse xml file 
     // now read the settings from the map
     auto cSetting = fSettingsMap.find ( "Nevents" );
-    uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
     
     LOG (INFO) << BOLDBLUE << "Quick [manual] check of noise and pedetal of the FE ASICs  ..." << RESET;
     uint16_t cDefaultStubLatency=50;
@@ -372,7 +371,9 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
     for (auto cBoard : this->fBoardVector)
     {
         auto cMultiplicity = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        cNevents = cNevents*(1+cMultiplicity); // trigger_mult == 0 --> single triggers 
+        LOG (INFO) << BOLDMAGENTA << "Trigger multiplicity set to " << +cMultiplicity << RESET;
+        uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? (cSetting->second)*(1+cMultiplicity) : 100*(1+cMultiplicity);
+        // trigger_mult == 0 --> single triggers 
 
         uint16_t cStart = 450; 
         uint16_t cMaxValue = 675; 
