@@ -237,6 +237,14 @@ namespace Ph2_HwDescription {
         }
         void updateCondData (uint32_t& pTDCVal);
 
+        void setSparsification(bool cSparsified)
+        {
+            fSparsifed=cSparsified;
+        }
+        bool getSparsification() const 
+        {
+            return fSparsifed;
+        }
         // Vector of FEModules, each module is supposed to know which FMC slot it is connected to...
         std::vector< Module* > fModuleVector;
 
@@ -254,6 +262,7 @@ namespace Ph2_HwDescription {
         // 
         bool fOptical;
         bool fConfigureCDCE;
+        bool fSparsifed;
       private:
 
         /*!

@@ -288,7 +288,6 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         fSCurveOccupancyMap[cValue] = theOccupancyContainer;
 
         
-
         this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
 
 

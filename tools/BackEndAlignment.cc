@@ -50,6 +50,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
     bool cAligned = false;
     // make sure you're only sending one trigger at a time here
     bool cSparsified = (fBeBoardInterface->ReadBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
+    auto cTriggerMultiplicity = fBeBoardInterface->ReadBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
 
     // force CIC to output empty L1A frames [by disabling all FEs]
@@ -99,6 +100,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
     // re-load configuration of fast command block from register map loaded from xml file 
     LOG (INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFastCommandBlock(pBoard);
+    fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMultiplicity);
     return cAligned;     
 }
 bool BackEndAlignment::CBCAlignment(BeBoard* pBoard )

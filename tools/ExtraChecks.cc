@@ -371,6 +371,9 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fPedestalContainer);
     for (auto cBoard : this->fBoardVector)
     {
+        auto cMultiplicity = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+        cNevents = cNevents*cMultiplicity;
+        
         uint16_t cStart = 450; 
         uint16_t cMaxValue = 675; 
         uint16_t cStep=1; 

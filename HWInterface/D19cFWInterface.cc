@@ -491,7 +491,7 @@ void D19cFWInterface::configureCDCE_old(uint16_t pClockRate)
         this->WriteStackReg( cVecReg ); 
         uint32_t cReadBack = this->ReadReg("sysreg.spi.rx_data");
         cReadBack = this->ReadReg("sysreg.spi.rx_data");
-        LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
+        //LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
     }
     cVecReg.clear();
     std::this_thread::sleep_for (std::chrono::milliseconds (500) );
@@ -578,7 +578,7 @@ void D19cFWInterface::configureCDCE( uint16_t pClockRate, std::pair<std::string,
     this->WriteReg("sysreg.spi.tx_data",cBufferValue);
     uint32_t cReadBack = this->ReadReg("sysreg.spi.rx_data");
     cReadBack = this->ReadReg("sysreg.spi.rx_data");
-    LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
+    //LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
   }
   // store in EEprom
   std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
@@ -634,7 +634,7 @@ void D19cFWInterface::epromCDCE()
     this->WriteReg("sysreg.spi.command", cSPIcommand);
     uint32_t cReadBack = this->ReadReg("sysreg.spi.rx_data");
     cReadBack = this->ReadReg("sysreg.spi.rx_data");
-    LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
+    //LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
 }
 void D19cFWInterface::powerAllFMCs(bool pEnable)
 {
@@ -1564,25 +1564,25 @@ void D19cFWInterface::InitFMCPower()
 
     void D19cFWInterface::ResetReadout()
     {
-    LOG (DEBUG) << BOLDBLUE << "Resetting readout..." << RESET;
+        //LOG (DEBUG) << BOLDBLUE << "Resetting readout..." << RESET;
         WriteReg ("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
         std::this_thread::sleep_for (std::chrono::microseconds (10) );
 
         WriteReg ("fc7_daq_ctrl.readout_block.control.readout_reset", 0x0);
         std::this_thread::sleep_for (std::chrono::microseconds (10) );
 
-    if (fIsDDR3Readout) 
-    {
-        LOG (DEBUG) << BOLDBLUE << "Reseting DDR3 " << RESET;
+        if (fIsDDR3Readout) 
+        {
+            LOG (DEBUG) << BOLDBLUE << "Reseting DDR3 " << RESET;
             fDDR3Offset = 0;
             fDDR3Calibrated = (ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
             bool i=false;
-        while(!fDDR3Calibrated) 
-        {
-            if(i==false) LOG(DEBUG) << "Waiting for DDR3 to finish initial calibration";
-                i=true;
-                std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                fDDR3Calibrated = (ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
+            while(!fDDR3Calibrated) 
+            {
+                if(i==false) LOG(DEBUG) << "Waiting for DDR3 to finish initial calibration";
+                    i=true;
+                    std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+                    fDDR3Calibrated = (ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
             }
         }
     }
@@ -1632,7 +1632,7 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
         auto cRegName = it.first;
         if( cRegName.find("fc7_daq_cnfg.fast_command_block.") != std::string::npos ) 
         {
-            LOG (DEBUG) << BOLDBLUE << "Setting " << cRegName << " : " << it.second << RESET;
+            //LOG (DEBUG) << BOLDBLUE << "Setting " << cRegName << " : " << it.second << RESET;
             cVecReg.push_back ( {it.first, it.second} );
         }
     }
@@ -1886,7 +1886,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                 pTuner.SendControl(this, cHybrid, 0 , cLineId , "WordAlignment"); 
                 std::this_thread::sleep_for (std::chrono::milliseconds (50) );
                 uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, 0, cLineId);
-                LOG (DEBUG) << BOLDBLUE << "Line status " << +cLineStatus << RESET;
+                //LOG (DEBUG) << BOLDBLUE << "Line status " << +cLineStatus << RESET;
                 uint8_t cAttempts=0;
                 if( pTuner.fBitslip == 0 )
                 {
@@ -2363,7 +2363,7 @@ bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChip
             {                    
     	    LOG (INFO) << BOLDRED << +cNWords << " words in the reaodut." << RESET; 
             pData = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNWords, fDDR3Offset);
-            LOG (DEBUG) << BOLDGREEN << "DDR3 offset is now " << +fDDR3Offset << RESET;
+            //LOG (DEBUG) << BOLDGREEN << "DDR3 offset is now " << +fDDR3Offset << RESET;
             uint32_t cEventSize = 0x0000FFFF & pData.at(0) ;
             cEventSize *= 4; // block size is in 128 bit words
             // number of words missing from the readout ...
@@ -2424,8 +2424,8 @@ bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChip
     this->ResetReadout();
 
     // check 
-    LOG (DEBUG) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
-    LOG (DEBUG) << BOLDBLUE << "Initial fast reset " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable") << RESET;
+    //LOG (DEBUG) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
+    //LOG (DEBUG) << BOLDBLUE << "Initial fast reset " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable") << RESET;
 
         // data hadnshake has to be enabled in that mode
         WriteReg ("fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-1);
@@ -2482,7 +2482,7 @@ bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChip
     {
             // check the amount of words
         cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-        LOG (DEBUG) << BOLDBLUE << "Read back " << +cNWords << " words from DDR3 memory in FC7." << RESET;
+        //LOG (DEBUG) << BOLDBLUE << "Read back " << +cNWords << " words from DDR3 memory in FC7." << RESET;
         
             if (pBoard->getEventType() == EventType::VR)
             {
@@ -2576,7 +2576,7 @@ bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChip
     std::vector<uint32_t> D19cFWInterface::ReadBlockRegOffsetValue ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
     {
     std::vector<uint32_t> vBlock = ReadBlockRegOffset( pRegNode, pBlocksize, pBlockOffset );
-    LOG (DEBUG) << BOLDGREEN << +pBlocksize << " words read back from memory " << RESET;
+    //LOG (DEBUG) << BOLDGREEN << +pBlocksize << " words read back from memory " << RESET;
     if (fIsDDR3Readout) 
     {
         fDDR3Offset += pBlocksize;
@@ -2755,7 +2755,7 @@ void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
                 uint32_t cReadback=0;
                 if( cWrite == 0 ) 
                 {
-                    LOG (DEBUG) << BOLDBLUE << "I2C : FE" << +(cFeId%2) << " Chip" << +cChipId << " register address 0x" << std::hex << +cAddress << std::dec << " on page : " << +cPage << RESET;
+                    //LOG (DEBUG) << BOLDBLUE << "I2C : FE" << +(cFeId%2) << " Chip" << +cChipId << " register address 0x" << std::hex << +cAddress << std::dec << " on page : " << +cPage << RESET;
                     if( cChipId < 8 ) 
                     {
                         cReadback = cGBTx.cbcRead(this, cFeId%2 , cChipId, cPage+1, cAddress) ; 
@@ -2945,12 +2945,12 @@ void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
       WriteReg( "fc7_daq_ctrl.fast_command_block.control", (1 << 19) | (1 << 16) );
       //WriteReg( "fc7_daq_ctrl.fast_command_block.control", (1 << 19) | (1 << 16) );
       //uint32_t cReg = ReadReg("fc7_daq_ctrl.fast_command_block.control"); 
-      LOG (DEBUG) << BOLDBLUE << "Sending simultaneous orbit and fast reset." << RESET;
+      //LOG (DEBUG) << BOLDBLUE << "Sending simultaneous orbit and fast reset." << RESET;
   }
   else
   {
     WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_reset", 0x1 );
-      LOG (DEBUG) << BOLDBLUE << "Sending fast reset." << RESET;
+      //LOG (DEBUG) << BOLDBLUE << "Sending fast reset." << RESET;
   }
   std::this_thread::sleep_for (std::chrono::microseconds (10) );
   }
@@ -2962,7 +2962,7 @@ void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
 void D19cFWInterface::ReadoutChipReset()
 {
     //for CBCs
-    LOG (DEBUG) << BOLDBLUE << "Sending hard reset to all read-out chips..." << RESET;
+    //LOG (DEBUG) << BOLDBLUE << "Sending hard reset to all read-out chips..." << RESET;
     if( fOptical )
     {
         GbtInterface cGBTx; 
@@ -2986,7 +2986,7 @@ void D19cFWInterface::ReadoutChipReset()
     //for CBCs
     ReadoutChipReset(); 
     //for CICs
-    LOG (DEBUG) << BOLDBLUE << "Sending hard reset to CICs..." << RESET; 
+    //LOG (DEBUG) << BOLDBLUE << "Sending hard reset to CICs..." << RESET; 
     if( fOptical )
     {
         GbtInterface cGBTx; 

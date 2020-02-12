@@ -145,6 +145,10 @@ namespace Ph2_System
               static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
               auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
 
+              // read CIC sparsification setting 
+              bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard,"fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
+              cBoard->setSparsification( cSparsified );
+
               LOG (INFO) << BOLDBLUE << "Configuring CIC" << +(cFe->getFeId()%2) << " on link " << +cFe->getLinkId() << " on hybrid " << +cFe->getFeId() << RESET;
               fCicInterface->ConfigureChip( static_cast<OuterTrackerModule*>(cFe)->fCic);
               auto cRegisterMap = cCic->getRegMap();
