@@ -226,7 +226,6 @@ namespace Ph2_HwDescription {
         {
             return fFrontEndType;
         }
-
         void addConditionDataSet (ConditionDataSet* pSet)
         {
             if (pSet != nullptr)

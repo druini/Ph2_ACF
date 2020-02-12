@@ -50,6 +50,7 @@ namespace Ph2_HwInterface {
     }
     void D19cCic2Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
+        fIsSparsified=false;
         LOG (DEBUG) << BOLDBLUE << " Found " << +pBoard->fModuleVector.size() << " FE connected to this board.." << RESET;
         auto cNHybrids = pBoard->fModuleVector.size(); 
         fEventHitList.clear();
@@ -58,9 +59,16 @@ namespace Ph2_HwInterface {
         {
             FeData cFeData;
             fEventStubList.push_back( cFeData );
-            fEventHitList.push_back( cFeData );
+            if( fIsSparsified)
+            {
+                fEventHitList.push_back( cFeData );
+            }
+            else
+            {
+                RawFeData cRawFeData;
+                fEventRawList.push_back( cRawFeData );
+            }
         }
-        
         fBeId = pBoard->getBeId();
         fBeFWType = 0;
         fCBCDataType = 0;
@@ -132,19 +140,67 @@ namespace Ph2_HwInterface {
         uint32_t cFrameDelay = *(cIterator + 1) & 0xFFF; 
         cL1Information.first = ( *(cIterator + 2)  & 0x7FC000 ) >> 14;
         cL1Information.second = ( *(cIterator + 2)  & 0xFF800000 ) >> 23;
-        uint8_t cNClusters =  ( *(cIterator + 2)  & 0x7F);
-        // clusters/hit data first 
-        LOG (DEBUG) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +cL1DataSize << " status " << std::bitset<9>(cL1Information.second) << " -- number of S clusters : " << +cNClusters <<  RESET;
-        std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNClusters, 0);
-        this->splitStream(list , cL1Words , EVENT_HEADER_SIZE+3 , cNClusters ); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
-        size_t cClusterId=0;
-        fEventHitList[cFeIndex].first = cL1Information;
-        fEventHitList[cFeIndex].second.clear();
-        for(auto cL1Word : cL1Words)
-        {   
-            fEventHitList[cFeIndex].second.push_back( cL1Word.to_ulong() );
+        LOG (INFO) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +cL1DataSize << " status " << std::bitset<9>(cL1Information.second) << RESET;
+        if( fIsSparsified )
+        {
+            uint8_t cNClusters =  ( *(cIterator + 2)  & 0x7F);
+            // clusters/hit data first 
+            std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNClusters, 0);
+            this->splitStream(list , cL1Words , EVENT_HEADER_SIZE+3 , cNClusters ); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
+            size_t cClusterId=0;
+            fEventHitList[cFeIndex].first = cL1Information;
+            fEventHitList[cFeIndex].second.clear();
+            for(auto cL1Word : cL1Words)
+            {   
+                fEventHitList[cFeIndex].second.push_back( cL1Word.to_ulong() );
+            }
         }
-
+        else
+        {
+            auto& cHybrid = pBoard->fModuleVector[cFeIndex];
+            auto& cReadoutChips = cHybrid->fReadoutChipVector; 
+            
+            const size_t cNblocks = RAW_L1_CBC*cReadoutChips.size()/L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits 
+            std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks , 0);
+            this->splitStream(list , cL1Words , EVENT_HEADER_SIZE+3 , cNblocks ); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
+            // now try and arrange them by CBC again ... 
+            fEventRawList[cFeIndex].first = cL1Information;
+            fEventRawList[cFeIndex].second.clear();
+            for(size_t cChipIndex=0; cChipIndex < cReadoutChips.size() ; cChipIndex++)
+            {
+                std::bitset<RAW_L1_CBC> cBitset(0);
+                size_t cPosition=0;
+                for( size_t cBlockIndex =0; cBlockIndex < RAW_L1_CBC/L1_BLOCK_SIZE ; cBlockIndex ++) // RAW_L1_CBC/L1_BLOCK_SIZE
+                {
+                    auto& cL1block = cL1Words[cChipIndex + cReadoutChips.size()*cBlockIndex];
+                    //LOG (INFO) << BOLDBLUE << "\t... L1 block " << +cBlockIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
+                    for(size_t cNbit=0; cNbit < cL1block.size() ; cNbit++ )
+                    {
+                        cBitset[cBitset.size()-1-cPosition] = cL1block[cL1block.size()-1-cNbit];
+                        cPosition++;
+                    }
+                }
+                fEventRawList[cFeIndex].second.push_back( cBitset );
+            }
+            // size_t cCounter=0;
+            // for(auto& cBitset : fEventRawList[cFeIndex].second ) 
+            // {
+            //     std::bitset<2> cErrorBits(0);
+            //     size_t cOffset=0;
+            //     for(size_t cIndex=0;cIndex<cErrorBits.size(); cIndex++)
+            //         cErrorBits[cErrorBits.size()-1-cIndex] = cBitset[cBitset.size()-cOffset-1-cIndex];
+            //     cOffset += cErrorBits.size(); 
+            //     std::bitset<9> cPipeline(0);
+            //     for(size_t cIndex=0;cIndex<cPipeline.size(); cIndex++)
+            //         cPipeline[cPipeline.size()-1-cIndex] = cBitset[cBitset.size()-cOffset-1-cIndex];
+            //     cOffset += cPipeline.size(); 
+            //     std::bitset<9> cL1Id(0);
+            //     for(size_t cIndex=0;cIndex<cL1Id.size(); cIndex++)
+            //         cL1Id[cL1Id.size()-1-cIndex] = cBitset[cBitset.size()-cOffset-1-cIndex];
+            //     LOG (INFO) << BOLDMAGENTA << "Status bits : " << std::bitset<2>(cErrorBits) << " Pipeline bits : " << std::bitset<9>(cPipeline) << " L1 id is : " << std::bitset<9>(cL1Id) << RESET;
+            //     cCounter++;
+            // }
+        }
         // then stubs 
         // using StubData = std::pair< std::pair<uint16_t,uint16_t>, std::vector<uint16_t>>;
         // using EventStubList = std::vector<StubData> ;
@@ -164,6 +220,14 @@ namespace Ph2_HwInterface {
         {   
             fEventStubList[cFeIndex].second.push_back( cStubWord.to_ulong() );
         }
+       
+    }
+
+    std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word( uint8_t pFeId , uint8_t pReadoutChipId) const 
+    {
+        auto cChipIdMapped = 7 - std::distance( fFeMapping.begin() , std::find( fFeMapping.begin(), fFeMapping.end() , pReadoutChipId ) ) ; 
+        auto& cDataBitset = fEventRawList[pFeId].second[ cChipIdMapped ];
+        return cDataBitset;    
     }
 
 
@@ -227,10 +291,22 @@ namespace Ph2_HwInterface {
     uint32_t D19cCic2Event::Error ( uint8_t pFeId, uint8_t pReadoutChipId ) const
     {
         // now only 1 bit per chip - OR of a few error flags 
-        auto& cHitInformation = fEventHitList[pFeId].first;
-        auto cChipIdMapped = std::distance( fFeMapping.begin() , std::find( fFeMapping.begin(), fFeMapping.end() , pReadoutChipId ) ) ; 
-        uint32_t cError = (cHitInformation.second & (0x1 << (1+cChipIdMapped) )) >> (1+cChipIdMapped);
-        return cError;
+        if( fIsSparsified )
+        {
+            auto& cHitInformation = fEventHitList[pFeId].first;
+            auto cChipIdMapped = std::distance( fFeMapping.begin() , std::find( fFeMapping.begin(), fFeMapping.end() , pReadoutChipId ) ) ; 
+            uint32_t cError = (cHitInformation.second & (0x1 << (1+cChipIdMapped) )) >> (1+cChipIdMapped);
+            return cError;
+        }
+        else
+        {
+            auto cDataBitset = getRawL1Word( pFeId, pReadoutChipId);
+            std::bitset<2> cErrorBits(0);
+            size_t cOffset=0;
+            for(size_t cIndex=0;cIndex<cErrorBits.size(); cIndex++)
+                cErrorBits[cErrorBits.size()-1-cIndex] = cDataBitset[cDataBitset.size()-cOffset-1-cIndex];
+            return (uint32_t)(cErrorBits.to_ulong());
+        }
     }
     uint32_t D19cCic2Event::BxId ( uint8_t pFeId ) const
     {
@@ -244,15 +320,38 @@ namespace Ph2_HwInterface {
     }
     uint32_t D19cCic2Event::L1Id ( uint8_t pFeId, uint8_t pReadoutChipId ) const
     {
-        auto& cHitInformation = fEventHitList[pFeId].first;
-        return cHitInformation.first;
+        if(fIsSparsified)
+        {
+            auto& cHitInformation = fEventHitList[pFeId].first;
+            return cHitInformation.first;
+        }
+        else
+        {
+            auto cDataBitset = getRawL1Word( pFeId, pReadoutChipId);
+            std::bitset<9> cL1Id(0);
+            size_t cOffset = 9+2; 
+            for(size_t cIndex=0;cIndex<cL1Id.size(); cIndex++)
+                cL1Id[cL1Id.size()-1-cIndex] = cDataBitset[cDataBitset.size()-cOffset-1-cIndex];
+            return cL1Id.to_ulong();
+        }
     }
     // does not apply for sparsified event 
     uint32_t D19cCic2Event::PipelineAddress ( uint8_t pFeId, uint8_t pReadoutChipId ) const
     {
-        return 666;
+        if(fIsSparsified)
+        {
+            return 666;
+        }
+        else
+        {
+            auto cDataBitset = getRawL1Word( pFeId, pReadoutChipId);
+            std::bitset<9> cPipeline(0);
+            size_t cOffset = 2; 
+            for(size_t cIndex=0;cIndex<cPipeline.size(); cIndex++)
+                cPipeline[cPipeline.size()-1-cIndex] = cDataBitset[cDataBitset.size()-cOffset-1-cIndex];
+            return cPipeline.to_ulong();
+        }
     }
-    
     std::bitset<NCHANNELS> D19cCic2Event::decodeClusters(uint8_t pFeId , uint8_t pReadoutChipId) const 
     {
         auto& cClusterWords = fEventHitList[pFeId].second;
@@ -281,37 +380,75 @@ namespace Ph2_HwInterface {
     }
     bool D19cCic2Event::DataBit ( uint8_t pFeId, uint8_t pReadoutChipId, uint32_t i ) const
     {
-        return ( decodeClusters(pFeId , pReadoutChipId  )[i] > 0 );
+        if(fIsSparsified)
+        {
+            return ( decodeClusters(pFeId , pReadoutChipId  )[i] > 0 );
+        }
+        else
+        {
+            size_t cOffset=2+9+9; 
+            return ( getRawL1Word( pFeId, pReadoutChipId)[cOffset+i] > 0 );
+        }
     }
 
     std::string D19cCic2Event::DataBitString ( uint8_t pFeId, uint8_t pReadoutChipId ) const
     {
-    	std::string cBitStream = std::bitset<NCHANNELS>( this->decodeClusters(pFeId, pReadoutChipId) ).to_string();
-        LOG (DEBUG) << BOLDBLUE << "Original bit stream was : " << cBitStream << RESET;
-        // not sure I need this....
-        //std::reverse( cBitStream.begin(), cBitStream.end() );
-        //LOG (DEBUG) << BOLDBLUE << "Now it is : " <<  cBitStream << RESET;
-        return cBitStream;
+        if(fIsSparsified)
+        {
+            std::string cBitStream = std::bitset<NCHANNELS>( this->decodeClusters(pFeId, pReadoutChipId) ).to_string();
+            LOG (DEBUG) << BOLDBLUE << "Original bit stream was : " << cBitStream << RESET;
+            return cBitStream;
+        }
+        else
+        {
+            size_t cOffset=2+9+9; 
+            std::string cBitStream = std::bitset<RAW_L1_CBC>( getRawL1Word( pFeId, pReadoutChipId) ).to_string();
+            return cBitStream.substr(cOffset, RAW_L1_CBC); 
+        }
     }
 
     std::vector<bool> D19cCic2Event::DataBitVector ( uint8_t pFeId, uint8_t pReadoutChipId ) const
     {
-        auto cDataBitset = this->decodeClusters(pFeId, pReadoutChipId);
         std::vector<bool> blist;
-        for( uint8_t cPos=0; cPos < NCHANNELS ; cPos++) 
+        if(fIsSparsified)
         {
-            blist.push_back( cDataBitset[cPos] == 1 );
+            auto cDataBitset = this->decodeClusters(pFeId, pReadoutChipId);
+            for( uint8_t cPos=0; cPos < NCHANNELS ; cPos++) 
+            {
+                blist.push_back( cDataBitset[cPos] == 1 );
+            }
+        }
+        else
+        {
+            size_t cOffset=2+9+9; 
+            auto cDataBitset = getRawL1Word( pFeId, pReadoutChipId);
+            for( uint8_t cPos=0; cPos < NCHANNELS ; cPos++) 
+            {
+                blist.push_back( cDataBitset[cDataBitset.size()-cOffset-1-cPos] == 1 );
+            }
         }
         return blist;
     }
 
     std::vector<bool> D19cCic2Event::DataBitVector ( uint8_t pFeId, uint8_t pReadoutChipId, const std::vector<uint8_t>& channelList ) const
     {
-        auto cDataBitset = this->decodeClusters(pFeId, pReadoutChipId);
         std::vector<bool> blist;
-        for ( auto cChannel :  channelList )
+        if(fIsSparsified)
         {
-            blist.push_back( cDataBitset[cChannel] == 1 );
+            auto cDataBitset = this->decodeClusters(pFeId, pReadoutChipId);
+            for ( auto cChannel :  channelList )
+            {
+                blist.push_back( cDataBitset[cChannel] == 1 );
+            }
+        }
+        else
+        {
+            size_t cOffset=2+9+9; 
+            auto cDataBitset = getRawL1Word( pFeId, pReadoutChipId);
+            for ( auto cChannel :  channelList )
+            {
+                blist.push_back( cDataBitset[cDataBitset.size()-cOffset-1-cChannel] == 1 );
+            }
         }
         return blist;
     }
@@ -363,20 +500,47 @@ namespace Ph2_HwInterface {
 
     uint32_t D19cCic2Event::GetNHits (uint8_t pFeId, uint8_t pReadoutChipId) const
     {
-        auto cDataBitset = this->decodeClusters(pFeId, pReadoutChipId);
-        uint32_t cNHits = cDataBitset.count();
+        uint32_t cNHits=0;
+        if(fIsSparsified)
+        {
+            auto cDataBitset = this->decodeClusters(pFeId, pReadoutChipId);
+            cNHits = cDataBitset.count();
+        }
+        else
+        {
+            size_t cOffset=2+9+9; 
+            auto cDataBitset = this->getRawL1Word( pFeId, pReadoutChipId);
+            for( uint8_t cPos=0; cPos < NCHANNELS ; cPos++) 
+            {
+                cNHits += ( cDataBitset[cDataBitset.size()-cOffset-1-cPos] == 1 );
+            }
+        }
         return cNHits;
+        
     }
 
     std::vector<uint32_t> D19cCic2Event::GetHits (uint8_t pFeId, uint8_t pReadoutChipId) const
     {
-        auto cDataBitset = this->decodeClusters(pFeId, pReadoutChipId);
         std::vector<uint32_t> cHits(0);
-        for ( uint32_t i = 0; i < NCHANNELS; ++i )
+        if(fIsSparsified)
         {
-            if( cDataBitset[i] > 0 ) 
-                cHits.push_back (i);
+            auto cDataBitset = this->decodeClusters(pFeId, pReadoutChipId);
+            for ( uint32_t i = 0; i < NCHANNELS; ++i )
+            {
+                if( cDataBitset[i] > 0 ) 
+                    cHits.push_back (i);
+            }
         } 
+        else
+        {
+            size_t cOffset=2+9+9; 
+            auto cDataBitset = this->getRawL1Word( pFeId, pReadoutChipId);
+            for( uint8_t cPos=0; cPos < NCHANNELS ; cPos++) 
+            {
+                if ( cDataBitset[cDataBitset.size()-cOffset-1-cPos] == 1 )
+                    cHits.push_back(cPos);
+            }
+        }
         return cHits;
     }
 

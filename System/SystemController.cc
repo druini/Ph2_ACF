@@ -524,6 +524,7 @@ namespace Ph2_System
                   {
                     fNCbc = 8; 
                     fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
+                    // check if the board is reading sparsified or unsparsified data 
                     fEventList.push_back ( new D19cCic2Event ( pBoard, fNCbc , fNFe, cEvent ) );
                   }
                   cEventIndex++;

@@ -16,6 +16,8 @@
 #include <iterator>
 
 const size_t CLUSTER_WORD_SIZE = 3+8+3;
+const size_t L1_BLOCK_SIZE = 11;
+const size_t RAW_L1_CBC = 275;
 const size_t HIT_WORD_SIZE = 2+9+9+254;
 const size_t STUB_WORD_SIZE = 3+8+4; 
 const size_t EVENT_HEADER_SIZE = 4; // in 32 bit words 
@@ -24,7 +26,10 @@ namespace Ph2_HwInterface
 {
     
     using FeData = std::pair< std::pair<uint16_t,uint16_t>, std::vector<uint16_t>>;
+    using RawFeData = std::pair< std::pair<uint16_t,uint16_t>, std::vector<std::bitset<RAW_L1_CBC>> >;
+
     using EventList = std::vector<FeData>;
+    using RawEventList = std::vector<RawFeData>;
     /*!
      * \class CicEvent
      * \brief Event container to manipulate event flux from the Cbc2
@@ -205,11 +210,13 @@ namespace Ph2_HwInterface
         uint16_t Status(uint8_t pFeId) const;
 
         std::bitset<NCHANNELS> decodeClusters( uint8_t pFeId , uint8_t pReadoutChipId) const;
+        std::bitset<RAW_L1_CBC> getRawL1Word( uint8_t pFeId , uint8_t pReadoutChipId) const;
       
       private:
         std::vector<uint8_t> fFeMapping{ 3,2,1,0,4,5,6,7 }; // FE --> FE CIC
-        
+        bool fIsSparsified=true;
         EventList fEventHitList;
+        RawEventList fEventRawList;
         EventList fEventStubList; 
         
         std::vector<Cluster> formClusters(std::vector<uint32_t> pHits, int pSensorId ) const 

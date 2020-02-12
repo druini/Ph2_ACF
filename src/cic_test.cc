@@ -191,7 +191,8 @@ int main ( int argc, char* argv[] )
         LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
         exit(0);
     }
-
+    t.stop();
+    t.show ( "Time to tune the back-end on the system: " );
     // equalize thresholds on readout chips
     if( cTune ) 
     { 
@@ -250,9 +251,9 @@ int main ( int argc, char* argv[] )
     cExtra.Initialise ();
     if(cDataTest)
     {
-        uint8_t cSeed=10;
-        uint8_t cBendCode=0;
-        cExtra.DataCheck({0}, cTriggerRate , cSeed, cBendCode , false );
+        // uint8_t cSeed=10;
+        // uint8_t cBendCode=0;
+        // cExtra.DataCheck({0}, cTriggerRate , cSeed, cBendCode , false );
 
         // check hits and stubs one chip at a time 
         // for( uint8_t cChipId=0; cChipId < 8; cChipId++)
@@ -284,36 +285,36 @@ int main ( int argc, char* argv[] )
         //         }
         //     }
         // }
-        // for( auto& cBoard : cCicAligner.fBoardVector )
-        // {
-        //     cCicAligner.ReadNEvents ( cBoard , 10 );
-        //     const std::vector<Event*>& cEvents = cCicAligner.GetEvents ( cBoard );
-        //     size_t cEventIndex=0;
-        //     for ( auto& cEvent : cEvents )
-        //     {
-        //         LOG (INFO) << BOLDBLUE << "Event " << +cEventIndex << RESET;
-        //         for (auto& cFe : cBoard->fModuleVector)
-        //         {
-        //             for (auto& cChip : cFe->fReadoutChipVector)
-        //             {
-        //                 auto cNhits = cEvent->GetNHits ( cFe->getFeId() , cChip->getChipId() );
-        //                 LOG (INFO) << BOLDBLUE << "\t\t ... " << +cNhits << " hits found." << RESET;
-        //             }
-        //         }
-        //         cEventIndex++;
-        //     }
-        //     // uint32_t cN=0;
-        //     // for ( auto& cEvent : cEvents )
-        //     // {
-        //     //     //LOG (INFO) << ">>> Event #" << cN++ ;
-        //     //     //outp.str ("");
-        //     //     //outp << *cEvent;
-        //     //     //LOG (INFO) << outp.str();
-        //     //     //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBoard);
-        //     //     //cDAQFileHandler->set (cSLev.getData<uint32_t>() );
-        //     //     //cSLev.print (std::cout);
-        //     // }
-        // }
+        for( auto& cBoard : cCicAligner.fBoardVector )
+        {
+            cCicAligner.ReadNEvents ( cBoard , 10 );
+            const std::vector<Event*>& cEvents = cCicAligner.GetEvents ( cBoard );
+            // size_t cEventIndex=0;
+            // for ( auto& cEvent : cEvents )
+            // {
+            //     LOG (INFO) << BOLDBLUE << "Event " << +cEventIndex << RESET;
+            //     for (auto& cFe : cBoard->fModuleVector)
+            //     {
+            //         for (auto& cChip : cFe->fReadoutChipVector)
+            //         {
+            //             auto cNhits = cEvent->GetNHits ( cFe->getFeId() , cChip->getChipId() );
+            //             LOG (INFO) << BOLDBLUE << "\t\t ... " << +cNhits << " hits found." << RESET;
+            //         }
+            //     }
+            //     cEventIndex++;
+            // }
+            // uint32_t cN=0;
+            // for ( auto& cEvent : cEvents )
+            // {
+            //     //LOG (INFO) << ">>> Event #" << cN++ ;
+            //     //outp.str ("");
+            //     //outp << *cEvent;
+            //     //LOG (INFO) << outp.str();
+            //     //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBoard);
+            //     //cDAQFileHandler->set (cSLev.getData<uint32_t>() );
+            //     //cSLev.print (std::cout);
+            // }
+        }
         //delete cDAQFileHandler;
     }
     
