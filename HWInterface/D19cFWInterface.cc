@@ -2422,7 +2422,9 @@ bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChip
     {
     // RESET the readout
     this->ResetReadout();
-
+    auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    pNEvents = pNEvents*(cMultiplicity+1);
+    
     // check 
     //LOG (DEBUG) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
     //LOG (DEBUG) << BOLDBLUE << "Initial fast reset " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable") << RESET;

@@ -370,9 +370,9 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fPedestalContainer);
     for (auto cBoard : this->fBoardVector)
     {
-        auto cMultiplicity = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        LOG (INFO) << BOLDMAGENTA << "Trigger multiplicity set to " << +cMultiplicity << RESET;
-        uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? (cSetting->second)*(1+cMultiplicity) : 100*(1+cMultiplicity);
+        //auto cMultiplicity = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+        //LOG (INFO) << BOLDMAGENTA << "Trigger multiplicity set to " << +cMultiplicity << RESET;
+        //uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? (cSetting->second)*(1+cMultiplicity) : 100*(1+cMultiplicity);
         // trigger_mult == 0 --> single triggers 
 
         uint16_t cStart = 450; 
