@@ -289,27 +289,27 @@ int main ( int argc, char* argv[] )
         {
             cCicAligner.ReadNEvents ( cBoard , 10 );
             const std::vector<Event*>& cEvents = cCicAligner.GetEvents ( cBoard );
-            // size_t cEventIndex=0;
-            // for ( auto& cEvent : cEvents )
-            // {
-            //     LOG (INFO) << BOLDBLUE << "Event " << +cEventIndex << RESET;
-            //     for (auto& cFe : cBoard->fModuleVector)
-            //     {
-            //         for (auto& cChip : cFe->fReadoutChipVector)
-            //         {
-            //             auto cNhits = cEvent->GetNHits ( cFe->getFeId() , cChip->getChipId() );
-            //             LOG (INFO) << BOLDBLUE << "\t\t ... " << +cNhits << " hits found." << RESET;
-            //         }
-            //     }
-            //     cEventIndex++;
-            // }
+            size_t cEventIndex=0;
+            for ( auto& cEvent : cEvents )
+            {
+                LOG (INFO) << BOLDBLUE << "Event " << +cEventIndex << RESET;
+                for (auto& cFe : cBoard->fModuleVector)
+                {
+                    for (auto& cChip : cFe->fReadoutChipVector)
+                    {
+                        auto cNhits = cEvent->GetNHits ( cFe->getFeId() , cChip->getChipId() );
+                        LOG (INFO) << BOLDBLUE << "\t\t ... " << +cNhits << " hits found." << RESET;
+                    }
+                }
+                cEventIndex++;
+            }
             // uint32_t cN=0;
             // for ( auto& cEvent : cEvents )
             // {
-            //     //LOG (INFO) << ">>> Event #" << cN++ ;
-            //     //outp.str ("");
-            //     //outp << *cEvent;
-            //     //LOG (INFO) << outp.str();
+            //     LOG (INFO) << ">>> Event #" << cN++ ;
+            //     outp.str ("");
+            //     outp << *cEvent;
+            //     LOG (INFO) << outp.str();
             //     //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBoard);
             //     //cDAQFileHandler->set (cSLev.getData<uint32_t>() );
             //     //cSLev.print (std::cout);

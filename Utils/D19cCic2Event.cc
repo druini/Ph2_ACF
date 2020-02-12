@@ -140,7 +140,7 @@ namespace Ph2_HwInterface {
         uint32_t cFrameDelay = *(cIterator + 1) & 0xFFF; 
         cL1Information.first = ( *(cIterator + 2)  & 0x7FC000 ) >> 14;
         cL1Information.second = ( *(cIterator + 2)  & 0xFF800000 ) >> 23;
-        LOG (INFO) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +cL1DataSize << " status " << std::bitset<9>(cL1Information.second) << RESET;
+        LOG (DEBUG) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +cL1DataSize << " status " << std::bitset<9>(cL1Information.second) << RESET;
         if( fIsSparsified )
         {
             uint8_t cNClusters =  ( *(cIterator + 2)  & 0x7F);
