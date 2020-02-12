@@ -372,8 +372,8 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
     for (auto cBoard : this->fBoardVector)
     {
         auto cMultiplicity = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        cNevents = cNevents*cMultiplicity;
-        
+        cNevents = cNevents*(1+cMultiplicity); // trigger_mult == 0 --> single triggers 
+
         uint16_t cStart = 450; 
         uint16_t cMaxValue = 675; 
         uint16_t cStep=1; 
