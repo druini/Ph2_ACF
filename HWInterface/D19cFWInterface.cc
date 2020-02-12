@@ -1722,6 +1722,7 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
     bool cSuccess=true;
 
     // make sure you're only sending one trigger at a time 
+    auto cMult = this->ReadReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
             
     // configure triggers 
@@ -1845,6 +1846,7 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
         }
     }
 
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
     if( pScope )
         this->L1ADebug ();
                     
@@ -2420,14 +2422,12 @@ bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChip
 
     void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )
     {
-    // RESET the readout
-    this->ResetReadout();
-    auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    pNEvents = pNEvents*(cMultiplicity+1);
-    
-    // check 
-    //LOG (DEBUG) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
-    //LOG (DEBUG) << BOLDBLUE << "Initial fast reset " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable") << RESET;
+        // RESET the readout
+        this->ResetReadout();
+        
+        // check 
+        //LOG (DEBUG) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
+        //LOG (DEBUG) << BOLDBLUE << "Initial fast reset " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable") << RESET;
 
         // data hadnshake has to be enabled in that mode
         WriteReg ("fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-1);
@@ -2445,12 +2445,12 @@ bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChip
         bool pFailed = false;
         uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
         uint32_t cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
-    uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+        uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
 
   
 
         uint32_t cTimeoutCounter = 0 ;
-    uint32_t cTimeoutValue = 100;
+        uint32_t cTimeoutValue = 100;
         while (cReadoutReq == 0 && !pFailed )
         {
             cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
