@@ -81,7 +81,7 @@ namespace Ph2_HwInterface
     // ##############################
     LOG (INFO) << GREEN << "Initializing clock generator (CDCE62005)..." << RESET;
     RD53FWInterface::InitializeClockGenerator();
-    RD53FWInterface::ReadClockGenerator();
+    // RD53FWInterface::ReadClockGenerator(); // @TMP@
     LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
 

@@ -53,7 +53,7 @@ class RD53eudaqProducer : public eudaq::Producer
 // ##################################
 namespace
 {
-  auto dummy = eudaq::Factory<eudaq::Producer>::Register<RD53eudaqProducer, Ph2_System::SystemController&, const std::string, const std::string, const std::string>(eudaq::cstr2hash("RD53eudaqProducer"));
+  __attribute__((unused)) auto dummy = eudaq::Factory<eudaq::Producer>::Register<RD53eudaqProducer, Ph2_System::SystemController&, const std::string, const std::string, const std::string>(eudaq::cstr2hash("RD53eudaqProducer"));
 }
 
 #endif

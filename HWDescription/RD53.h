@@ -228,7 +228,7 @@ namespace Ph2_HwDescription
 // ###############################
 namespace RD53Cmd
 {
-  // Maps 5-bit to 8-bit fields
+  // Map 5-bit to 8-bit fields
   constexpr uint8_t map5to8bit[] =
     {
       0x6A, // 00: 0b01101010,
