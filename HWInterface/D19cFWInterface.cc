@@ -664,21 +664,20 @@ bool D19cFWInterface::GBTLock( const BeBoard* pBoard )
             //std::this_thread::sleep_for (std::chrono::milliseconds (200) );
         }
     }
-
     powerAllFMCs(false);
     LOG (INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
     do
     {
         std::this_thread::sleep_for (std::chrono::milliseconds (10) );
     }while( std::cin.get()!='\n');
+    
     // reset FC7
     LOG (INFO) << BOLDBLUE << "Sending global reset to FC7...." << RESET; 
     this->WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
     std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+    // sync 
     // enable FMC
     powerAllFMCs(true);
-    // configure CDCE 
-    //this->configureCDCE_old(120);
     //reset GBT-FPGA
     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);  
     std::this_thread::sleep_for (std::chrono::milliseconds (50) );
@@ -689,8 +688,9 @@ bool D19cFWInterface::GBTLock( const BeBoard* pBoard )
         std::this_thread::sleep_for (std::chrono::milliseconds (10) );
     }while( std::cin.get()!='\n');
     std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+    LOG (INFO) << BOLDBLUE << "Resyncing CDCE .... " << RESET;
     
-    // check link Ids 
+    //check link Ids 
     bool cLinksLocked=true;
     for(auto cLinkId : cLinkIds )
     {
@@ -713,6 +713,8 @@ bool D19cFWInterface::GBTLock( const BeBoard* pBoard )
                 LOG (INFO) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
             cIndex++;
         }
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+        LOG (INFO) << BOLDMAGENTA << RESET;
         cLinksLocked = cLinksLocked && cGBTxLocked;
         this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x00) ;
     }
@@ -800,12 +802,13 @@ void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
     }
     if( pBoard->configCDCE() )
     {
-        configureCDCE(120, cCDCEselect);
+        // remember oyu chnged it 
+        configureCDCE(320, cCDCEselect);
         std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
     }
     // sync 
     syncCDCE();
-
+    
     // unique link Ids
     std::vector<uint8_t> cLinkIds(0);
     for (auto& cFe : pBoard->fModuleVector)
@@ -1647,7 +1650,7 @@ void D19cFWInterface::L1ADebug()
 {
     this->WriteReg ("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
     
-    this->ConfigureTriggerFSM(0, 1000 , 3); 
+    this->ConfigureTriggerFSM(0, 10 , 3); 
     // disable back-pressure 
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
     this->Start();
@@ -1710,7 +1713,7 @@ void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
 bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
 {
     if( pScope) 
-          this->L1ADebug ();
+        this->L1ADebug ();
     
     // read original fast command configuration 
     uint32_t cFastCommandConfig = this->ReadReg("fc7_daq_cnfg.fast_command_block");
@@ -1726,7 +1729,7 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
             
     // configure triggers 
-    this->ConfigureTriggerFSM(0, 1000 , 3);
+    this->ConfigureTriggerFSM(0, 1 , 3);
     // disable back-pressure 
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
     // back-end tuning on l1 lines
@@ -1754,7 +1757,7 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
             std::this_thread::sleep_for (std::chrono::microseconds (10) );
             // send 100 triggers .. waiting 10 ms between each 
             this->Start();
-            std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+            std::this_thread::sleep_for (std::chrono::milliseconds (10) );
             this->Stop();
             uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
             cSuccess = pTuner.fDone;
@@ -1763,23 +1766,28 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
         }
         else 
         {
+            this->ChipReSync();
             LOG (INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid << " Chip" << +cChipId << RESET;
             uint16_t cPattern = 0xAA;
             // configure pattern
+            pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
             pTuner.SetLinePattern( this, cHybrid, cChip, cLineId , cPattern, 8);
             std::this_thread::sleep_for (std::chrono::microseconds (10) );
             // start phase aligner 
             pTuner.SendControl(this, cHybrid, cChip, cLineId, "PhaseAlignment");
             std::this_thread::sleep_for (std::chrono::microseconds (10) );
+            this->Start();
+            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+            this->Stop();
             uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
 
-            if( fFirmwareFrontEndType == FrontEndType::CIC ) 
-            {
-                uint16_t cBitslip=0;
-                LOG (INFO) << BOLDBLUE << "Forcing bit slip on L1A line to be " << +cBitslip << " bits." << RESET;
-                pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, cBitslip, 0, 0 );
-            }
-            else
+            //{
+            //    uint16_t cBitslip=0;
+            //    LOG (INFO) << BOLDBLUE << "Forcing bit slip on L1A line to be " << +cBitslip << " bits." << RESET;
+            //    pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, cBitslip, 0, 0 );
+            //}
+            //else
+            if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
             {    
                 cPattern = 0xFE;
                 for(uint16_t cPatternLength=40; cPatternLength < 41; cPatternLength++)
@@ -2423,10 +2431,13 @@ bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChip
     void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )
     {
         // RESET the readout
+        auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+        //LOG (INFO) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << RESET;
         this->ResetReadout();
-        
+        pNEvents = pNEvents*(cMultiplicity+1);
+
         // check 
-        //LOG (DEBUG) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
+        //LOG (INFO) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
         //LOG (DEBUG) << BOLDBLUE << "Initial fast reset " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable") << RESET;
 
         // data hadnshake has to be enabled in that mode

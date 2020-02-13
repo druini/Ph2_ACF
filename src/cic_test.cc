@@ -251,10 +251,16 @@ int main ( int argc, char* argv[] )
     cExtra.Initialise ();
     if(cDataTest)
     {
+        // data check with noise injection 
         uint8_t cSeed=10;
         uint8_t cBendCode=0;
-        cExtra.DataCheck({0}, cTriggerRate , cSeed, cBendCode , false );
-
+        for(uint8_t cIndex=0; cIndex < 4; cIndex++)
+        {
+            std::vector<uint8_t> cChips;
+            cChips.push_back(cIndex*2);
+            cChips.push_back(cIndex*2+1);
+            cExtra.DataCheck(cChips, cTriggerRate , cSeed, cBendCode , false );
+        }
         // check hits and stubs one chip at a time 
         // for( uint8_t cChipId=0; cChipId < 8; cChipId++)
         // {   

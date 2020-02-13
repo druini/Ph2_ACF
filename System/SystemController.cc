@@ -451,6 +451,10 @@ namespace Ph2_System
   void SystemController::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
   {
     fBeBoardInterface->ReadNEvents(pBoard, pNEvents, pData, pWait);
+    uint32_t cMultiplicity=0;
+    if (fBeBoardInterface->getBoardType(pBoard) == BoardType::D19C)
+      cMultiplicity = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    pNEvents = pNEvents*(cMultiplicity+1);
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
   }
 

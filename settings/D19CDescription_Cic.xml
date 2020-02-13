@@ -4,6 +4,7 @@
       <!-- <connection id="board" uri="chtcp-2.0://hybridtesting:10203?target=192.168.0.11:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" />  -->
       <connection id="board" uri="chtcp-2.0://cmsuptracker003:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" /> 
     
+    
     <GBT_Links>
         <GBT Id="0" phaseTap="7" enable="1"/>
     </GBT_Links>

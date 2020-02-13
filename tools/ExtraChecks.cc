@@ -363,7 +363,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
         fBeBoardInterface->ChipReSync ( cBoard );
     }
 
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0,pTriggerRate,3,0,cDefaultStubLatency);
+    //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0,pTriggerRate,3,0,cDefaultStubLatency);
     // scan threshold and look at events (checking pipeline errors , L1 counters ,etc. )
     // extract pedestal and noise .. store in histogram
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fNoiseContainer);
@@ -1334,7 +1334,6 @@ void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTrigge
 // check hits and stubs using noise
 void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate , uint8_t pSeed , int pBend , bool pScan)
 {
-    uint32_t cTriggerMultiplicity = 0;
     auto cSetting = fSettingsMap.find ( "Nevents" );
     uint32_t cEventsPerPoint = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
     uint16_t cDefaultStubLatency=50;
@@ -1428,9 +1427,6 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
                     cReadoutChipStubCheck->getSummary<int>() = 0 ;
                 }
             }
-
-            fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMultiplicity);
-            LOG (DEBUG) << BOLDBLUE << "Trigger multiplicity for this run is " << +cTriggerMultiplicity << RESET;
             if( pScan ) 
             {
                 LOG (INFO) << BOLDBLUE << "Setting package delay to " << +cPackageDelay << RESET;
@@ -1438,9 +1434,9 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Bx0Alignment();
             }
             // read N events 
-            this->ReadNEvents ( cBoard , cEventsPerPoint*(1+cTriggerMultiplicity) );
+            this->ReadNEvents ( cBoard , cEventsPerPoint);//*(1+cTriggerMultiplicity) );
             const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
-
+            LOG (INFO) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from board." << RESET;
             for( auto cEvent : cEvents )
             {
                 auto cEventCount = cEvent->GetEventCount(); 

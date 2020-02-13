@@ -63,9 +63,34 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         if( !cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2 ) 
             fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 1);
 
-        fCicInterface->EnableFEs(cCic , {0,1,2,3,4,5,6,7}, false );  
+        if( cCic->getFrontEndType() == FrontEndType::CIC2 )
+            fCicInterface->EnableFEs(cCic , {0,1,2,3,4,5,6,7}, false );  
         if( cCic->getFrontEndType() == FrontEndType::CIC )
-           fCicInterface->SelectOutput( static_cast<OuterTrackerModule*>(cFe)->fCic, false );
+        {
+            fCicInterface->EnableFEs(cCic , {0,1,2,3,4,5,6,7}, true );  
+            //fCicInterface->SelectOutput( static_cast<OuterTrackerModule*>(cFe)->fCic, true );
+            //configure chips to output 1010 pattern 
+            
+            // ChannelGroup<NCHANNELS,1> cChannelMask; cChannelMask.disableAllChannels();
+            // for( uint8_t cChannel=0; cChannel<NCHANNELS; cChannel+=2) cChannelMask.enableChannel( cChannel);//generate a hit in every Nth channel
+            // // generate alignment pattern on all stub lines  
+            // for (auto& cChip : cFe->fReadoutChipVector)
+            // {
+            //     // original mask
+            //     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip , "VCth" , 900);
+            //     const ChannelGroup<NCHANNELS>* cOriginalMask  = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+            //     //LOG (INFO) << BOLDBLUE << "Generating HIT patterns needed for phase alignment on FE" << +cFe->getFeId() << " CBC" << +cChip->getChipId() << RESET;
+            //     fReadoutChipInterface-> maskChannelsGroup (cChip, &cChannelMask);
+            //     // //send triggers ...
+            //     // for( auto cTrigger=0; cTrigger < 1000 ; cTrigger++)
+            //     // {
+            //     //     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Trigger(0);
+            //     //     std::this_thread::sleep_for (std::chrono::microseconds (10) );
+            //     // }
+            //     //fReadoutChipInterface->maskChannelsGroup( cChip ,cOriginalMask );
+            // }
+
+        }
     }
     //L1A line 
     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1Tuning (pBoard,fL1Debug);
