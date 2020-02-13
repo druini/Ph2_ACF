@@ -1077,13 +1077,13 @@ void D19cFWInterface::DisconnectMultiplexingSetup()
 }
 
 //scan setup with multiplexing backplane
-uint32_t D19cFWInterface::ScanMultiplexingSetup()
+uint32_t D19cFWInterface::ScanMultiplexingSetup(uint8_t pWait_ms)
 {
     int AvailableBackplanesCards = 0;
     this-> DisconnectMultiplexingSetup();
     WriteReg ("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.backplane_num", 0xF);
     WriteReg ("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.card_num", 0xF);
-    std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+    std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
     bool ConfigurationRequired = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.configuration_required") == 1);
     bool SystemNotConfigured=false;
     if (ConfigurationRequired) 
@@ -1102,7 +1102,7 @@ uint32_t D19cFWInterface::ScanMultiplexingSetup()
             {
             if (s==false) LOG(INFO) << "Scanning setup";
             s=true;
-            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+            std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
             SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
             }
             

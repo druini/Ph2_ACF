@@ -236,7 +236,7 @@ namespace Ph2_HwInterface {
         /*!
         * \breif Scan Setup with Multiplexing Backplane
         */
-        uint32_t ScanMultiplexingSetup() ;
+        uint32_t ScanMultiplexingSetup(uint8_t pWait_ms=100) ;
    
         /*!
         * \breif Configure Setup with Multiplexing Backplane
