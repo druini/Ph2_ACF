@@ -10,6 +10,8 @@
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
 + Last change made to this section: 28/01/2020
+- Software git branch / tag : `chipPolymorphism` / `IT-v3.2`
+- Firmware tag: `3.0`
 ```
 Setup the FC7:
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
@@ -145,9 +147,7 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
-Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
-- Software git branch / tag : `chipPolymorphism` / `IT-v3.2`
-- Firmware tag: `3.0`
+- Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 ### ~=-=~ End of Inner-Tracker section ~=-=~
