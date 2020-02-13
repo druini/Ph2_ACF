@@ -10,10 +10,15 @@
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
 + Last change made to this section: 28/01/2020
+```
+
+Suggested software and firmware versions:
 - Software git branch / tag : `chipPolymorphism` / `IT-v3.2`
 - Firmware tag: `3.0`
-```
-Setup the FC7:
+
+<hr>
+
+FC7 setup:
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
 3. Restart the network: `sudo /etc/init.d/network restart`
@@ -22,7 +27,7 @@ Setup the FC7:
 
 More details on the hardware needed to setup the system can be bound here: https://espace.cern.ch/Tracker-Upgrade/DAQ/SitePages/Home.aspx
 
-Setup the firmware:
+Firmware setup:
 1. Check whether the DIP switches on FC7 board are setup for the use of a microSD card (`out-in-in-in-out-in-in-in`)
 2. Insert a microSD card in the PC and run `/sbin/fdisk -l` to understand to which dev it's attached to (`/dev/sd_card_name`)
 3. Upload a golden firmware* on the microSD card (read FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
@@ -33,7 +38,7 @@ Setup the firmware:
 *A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`) <br />
 A golden firmware can be downloaded from here: https://cernbox.cern.ch/index.php/s/5tUCio08PEfTf0a
 
-Setup and run the IT-DAQ:
+IT-DAQ setup and run:
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
 2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
 3. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
@@ -67,7 +72,11 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 10. Clock delay scan
 11. Physics
 ```
-It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it is reported the suggested sequence of calibrations, implemented in bash shell script:
+
+- Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
+- Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
+
+It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it's reported the suggested sequence of calibrations, implemented in bash shell script:
 ```
 #!/bin/bash
 if [ $# -ne 1 ]
@@ -147,11 +156,7 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
-- Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
-- Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
-
 ### ~=-=~ End of Inner-Tracker section ~=-=~
-
 <hr>
 
 
