@@ -38,7 +38,7 @@ namespace Ph2_HwInterface
     bool     ConfigureChipOriginalMask         (Ph2_HwDescription::ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                              override;
     bool     MaskAllChannels                   (Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true)                                              override;
     bool     maskChannelsAndSetInjectionSchema (Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
-    bool     RunMonitoring                     (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V, const std::string observableName);
+    bool     RunChipMonitor                    (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V, const std::string observableName);
 
 
   private:
@@ -58,14 +58,14 @@ namespace Ph2_HwInterface
     // ###########################
   public:
     template<typename T, typename... Ts>
-      void RunMonitoring (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V, const T& observableName, const Ts&... observableNames)
+      void RunChipMonitor (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V, const T& observableName, const Ts&... observableNames)
     {
-      RunMonitoring (pChip, offset, VrefADC, resistorI2V, observableName);
-      RunMonitoring (pChip, offset, VrefADC, resistorI2V, observableNames...);
+      RunChipMonitor (pChip, offset, VrefADC, resistorI2V, observableName);
+      RunChipMonitor (pChip, offset, VrefADC, resistorI2V, observableNames...);
     }
 
     template<typename T>
-      void RunMonitoring (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V, const T& observableName)
+      void RunChipMonitor (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V, const T& observableName)
       // #####################
       // # offset      [V]   #
       // # VrefADC     [V]   #
@@ -185,7 +185,7 @@ namespace Ph2_HwInterface
 
 
   private:
-    void RunMonitoring (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V) {}
+    void RunChipMonitor (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V) {}
   };
 }
 

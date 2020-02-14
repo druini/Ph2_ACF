@@ -72,11 +72,11 @@ namespace Ph2_HwInterface
     RD53Interface::WriteRD53Mask(static_cast<RD53*>(const_cast<Chip*>(pChip)), false, true, true);
 
 
-    // ##################
-    // # Run monitoring #
-    // ##################
-    LOG (INFO) << GREEN << "Monitoring data:" << RESET;
-    RD53Interface::RunMonitoring(pChip, 0, 0.9, 1e4, "ADCbandgap", "VREF_VDAC", "Iref");
+    // ################
+    // # Chip monitor #
+    // ################
+    LOG (INFO) << GREEN << "Chip monitor data:" << RESET;
+    RD53Interface::RunChipMonitor(pChip, 0, 0.9, 1e4, "ADCbandgap", "VREF_VDAC", "Iref");
 
 
     return true;
