@@ -493,6 +493,16 @@ namespace Ph2_System
         uint32_t fNFe = pBoard->getNFe();
         uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
         LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
+        
+        if (fEventType == EventType::SSA)
+        {
+          uint32_t eventSize = static_cast<uint32_t>((pData.size()) / fNevents);
+          uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+          LOG (INFO) << BOLDBLUE << " fNSSA = "  << nSSA << RESET;
+          fEventList.push_back(new D19cSSAEvent(pBoard, nSSA, fNFe, lvec));
+          return;
+        }
+
         if (fEventType != EventType::ZS)
         {
             auto it = pData.begin();
