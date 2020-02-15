@@ -95,13 +95,29 @@ namespace Ph2_HwInterface
       if ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("HitOr_enable_l12") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos))
         {
           LOG (INFO) << BOLDBLUE << "\t--> " << it.first << " = " << BOLDYELLOW << it.second << RESET;
-          if (it.first.find("ext_clk_en") != std::string::npos)
+          if (it.first.find("HitOr_enable_l12") != std::string::npos) RD53FWInterface::localCfgFastCmd.enable_hitor = it.second;
+          else if (it.first.find("ext_clk_en") != std::string::npos)
             {
-              cfgDIO5.enable     = true;
+              cfgDIO5.enable     = it.second;
+              cfgDIO5.ch_out_en  = 0x00;
               cfgDIO5.ext_clk_en = it.second;
             }
-          else if (it.first.find("HitOr_enable_l12") != std::string::npos) RD53FWInterface::localCfgFastCmd.enable_hitor = it.second;
-          else RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second);
+          else
+            {
+              RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second);
+              if (static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::External)
+                {
+                  cfgDIO5.enable    = true;
+                  cfgDIO5.ch_out_en = 0x00;
+                }
+              else if (static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::TLU)
+                {
+                  cfgDIO5.enable             = true;
+                  cfgDIO5.ch_out_en          = 0x0D;
+                  cfgDIO5.tlu_en             = true;
+                  cfgDIO5.tlu_handshake_mode = 0x00;
+                }
+            }
         }
 
 
@@ -1039,7 +1055,6 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ConfigureDIO5 (const DIO5Config* cfg)
   {
-    const uint8_t chnOutEnable   = 0x00;
     const uint8_t fiftyOhmEnable = 0x12;
 
     if (ReadReg("user.stat_regs.stat_dio5.dio5_not_ready") == true)
@@ -1050,7 +1065,7 @@ namespace Ph2_HwInterface
 
     WriteStackReg({
         {"user.ctrl_regs.ext_tlu_reg1.dio5_en",            (uint32_t)cfg->enable},
-        {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en",     (uint32_t)chnOutEnable},
+        {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en",     (uint32_t)cfg->ch_out_en},
         {"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)fiftyOhmEnable},
         {"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr",       (uint32_t)cfg->ch1_thr},
         {"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr",       (uint32_t)cfg->ch2_thr},
