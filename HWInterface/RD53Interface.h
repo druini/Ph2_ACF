@@ -74,7 +74,7 @@ namespace Ph2_HwInterface
       {
         this->setBoard(pChip->getBeBoardId());
 
-        std::unordered_map<std::string, uint32_t> currentMultiplexer =
+        const std::unordered_map<std::string, uint32_t> currentMultiplexer =
           {
             {"Iref",             0x00},
             {"IBIASP1_SYNC",     0x01},
@@ -104,7 +104,7 @@ namespace Ph2_HwInterface
             {"CML_TAP_BIAS2",    0x19}
           };
 
-        std::unordered_map<std::string, uint32_t> voltageMultiplexer =
+        const std::unordered_map<std::string, uint32_t> voltageMultiplexer =
           {
             {"ADCbandgap",      0x00},
             {"CAL_MED",         0x01},
@@ -165,6 +165,15 @@ namespace Ph2_HwInterface
             isCurrentNotVoltage = true;
           }
         observable = ((1 << (pChip->getNumberOfBits("I_MONITOR_SELECT") + pChip->getNumberOfBits("V_MONITOR_SELECT"))) | (currentObservable << pChip->getNumberOfBits("V_MONITOR_SELECT")) | voltageObservable);
+
+
+        // #######################################################################
+        // # - Enable generic ADC, set ADC bang gap trim bits, and ADC trim bits #
+        // # - Enable all temperature sensors                                    #
+        // #######################################################################
+        RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_CONFIG").fAddress,  0x800).appendTo(commandList);
+        RD53Cmd::WrReg(chipID, pChip->getRegItem("SENSOR_CONFIG_0").fAddress, 0x820).appendTo(commandList);
+        RD53Cmd::WrReg(chipID, pChip->getRegItem("SENSOR_CONFIG_1").fAddress, 0x820).appendTo(commandList);
 
 
         RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0040).appendTo(commandList); // Reset Monitor Data

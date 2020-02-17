@@ -76,7 +76,7 @@ namespace Ph2_HwInterface
     // # Chip monitor #
     // ################
     LOG (INFO) << GREEN << "Chip monitor data:" << RESET;
-    RD53Interface::RunChipMonitor(pChip, 0, 0.9, 1e4, "ADCbandgap", "VREF_VDAC", "Iref");
+    RD53Interface::RunChipMonitor(pChip, 0, 0.9, 1e4, "ADCbandgap", "VREF_VDAC", "Iref", "TEMPSENS_1");
 
 
     return true;
