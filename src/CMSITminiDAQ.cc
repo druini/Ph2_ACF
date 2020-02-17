@@ -491,13 +491,6 @@ int main (int argc, char** argv)
               ph.Start(runNumber);
               usleep(2e6);
               ph.Stop();
-
-              ph.draw();
-              ph.initializeFiles("ciao", runNumber+1);
-              usleep(2e6);
-              ph.Start(runNumber+1);
-              usleep(2e6);
-              ph.Stop();
             }
           else ph.analyze(true);
           ph.draw();

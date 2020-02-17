@@ -20,6 +20,7 @@
 // #############
 #define VCALSLEEP 50000 // [microseconds]
 #define NPIXCMD     100 // Number of possible pixel commands to stack
+#define MONITORSLEEP 10 // [seconds]
 
 
 namespace Ph2_HwInterface
@@ -38,7 +39,6 @@ namespace Ph2_HwInterface
     bool     ConfigureChipOriginalMask         (Ph2_HwDescription::ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                              override;
     bool     MaskAllChannels                   (Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true)                                              override;
     bool     maskChannelsAndSetInjectionSchema (Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
-    bool     RunChipMonitor                    (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V, const std::string observableName);
 
 
   private:
@@ -58,14 +58,14 @@ namespace Ph2_HwInterface
     // ###########################
   public:
     template<typename T, typename... Ts>
-      void RunChipMonitor (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V, const T& observableName, const Ts&... observableNames)
+      void ReadChipMonitor (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V, const T& observableName, const Ts&... observableNames)
     {
-      RunChipMonitor (pChip, offset, VrefADC, resistorI2V, observableName);
-      RunChipMonitor (pChip, offset, VrefADC, resistorI2V, observableNames...);
+      ReadChipMonitor (pChip, offset, VrefADC, resistorI2V, observableName);
+      ReadChipMonitor (pChip, offset, VrefADC, resistorI2V, observableNames...);
     }
 
     template<typename T>
-      void RunChipMonitor (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V, const T& observableName)
+      void ReadChipMonitor (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V, const T& observableName)
       // #####################
       // # offset      [V]   #
       // # VrefADC     [V]   #
@@ -188,13 +188,13 @@ namespace Ph2_HwInterface
 
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getFeId());
 
-        value = (offset + RD53Interface::ReadChipReg(pChip, "MONITORING_DATA_ADC") / (Ph2_HwDescription::RD53::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC"))+1.) * VrefADC) / (isCurrentNotVoltage == true ? resistorI2V : 1.);
+        value = (offset + RD53Interface::ReadChipReg(pChip, "MONITORING_DATA_ADC") / (Ph2_HwDescription::RD53::setBits(static_cast<Ph2_HwDescription::RD53*>(pChip)->getNumberOfBits("MONITORING_DATA_ADC"))+1.) * VrefADC) / (isCurrentNotVoltage == true ? resistorI2V : 1.);
         LOG (INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " " << (isCurrentNotVoltage == true ? "A" : "V") << RESET;
       }
 
 
   private:
-    void RunChipMonitor (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V) {}
+    void ReadChipMonitor (Ph2_HwDescription::Chip* pChip, float offset, float VrefADC, float resistorI2V) {}
   };
 }
 

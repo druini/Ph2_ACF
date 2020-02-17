@@ -143,6 +143,13 @@ namespace Ph2_System
     void ConfigureHw(bool bIgnoreI2c = false);
 
     /*!
+     * \brief Read Monitor Data from pBoard
+     * \param pBeBoard
+     * \return: none
+     */
+    void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard);
+
+    /*!
      * \brief Read Data from pBoard
      * \param pBeBoard
      * \return: number of packets

@@ -297,6 +297,17 @@ namespace Ph2_System
     fBeBoardInterface->Resume(pBoard);
   }
 
+  void SystemController::ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard)
+  {
+    for (const auto cModule : *pBoard)
+      for (const auto cChip : *cModule)
+        {
+          LOG (INFO) << GREEN << "Chip monitor data for [board/module/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+          fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, static_cast<ReadoutChip*>(cChip));
+          LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
+        }
+  }
+
   uint32_t SystemController::ReadData (BeBoard* pBoard, bool pWait)
   {
     std::vector<uint32_t> cData;

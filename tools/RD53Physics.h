@@ -53,6 +53,7 @@ class Physics : public Tool
   void draw                   ();
   void analyze                (bool doReadBinary = false);
   void fillDataContainer      (BoardContainer* const& cBoard);
+  void monitor                ();
 
   void setGenericEvtConverter (evtConvType arg) { genericEvtConverter = std::move(arg); }
 
@@ -94,8 +95,8 @@ class Physics : public Tool
   bool doDisplay;
   bool saveBinaryData;
   std::atomic<bool> keepRunning;
-  std::mutex theMtx;
   std::thread thrRun;
+  std::thread thrMonitor;
   evtConvType genericEvtConverter;
 };
 

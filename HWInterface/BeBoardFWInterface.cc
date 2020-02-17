@@ -7,48 +7,44 @@
   Support :                     mail to : lorenzo.bidegain@gmail.com, nico.pierre@icloud.com
 */
 
-
 #include "BeBoardFWInterface.h"
 #include "FpgaConfig.h"
 
 namespace Ph2_HwInterface
 {
-  //Constructor, makes the board map
-  BeBoardFWInterface::BeBoardFWInterface ( const char* puHalConfigFileName, uint32_t pBoardId ) 
-    : RegManager ( puHalConfigFileName, pBoardId )
-    , fSaveToFile ( false )
-    , fFileHandler ( nullptr )
-    , fFpgaConfig ( nullptr )
+  BeBoardFWInterface::BeBoardFWInterface (const char* puHalConfigFileName, uint32_t pBoardId)
+    : RegManager   (puHalConfigFileName, pBoardId)
+    , fSaveToFile  (false)
+    , fFileHandler (nullptr)
+    , fFpgaConfig  (nullptr)
   {}
 
-  //Constructor, makes the board map
-  BeBoardFWInterface::BeBoardFWInterface ( const char* pId, const char* pUri, const char* pAddressTable )
-    : RegManager ( pId, pUri, pAddressTable )
-    , fSaveToFile ( false )
-    , fFileHandler ( nullptr )
-    , fFpgaConfig ( nullptr )
+  BeBoardFWInterface::BeBoardFWInterface (const char* pId, const char* pUri, const char* pAddressTable)
+    : RegManager   (pId, pUri, pAddressTable)
+    , fSaveToFile  (false)
+    , fFileHandler (nullptr)
+    , fFpgaConfig  (nullptr)
   {}
 
-  std::string BeBoardFWInterface::readBoardType()
+  std::string BeBoardFWInterface::readBoardType ()
   {
     std::string cBoardTypeString;
 
-    uint32_t cBoardType = ReadReg ( "board_id" );
+    uint32_t cBoardType = ReadReg("board_id");
 
-    char cChar = ( ( cBoardType & cMask4 ) >> 24 );
-    cBoardTypeString.push_back ( cChar );
+    char cChar = ((cBoardType & cMask4) >> 24);
+    cBoardTypeString.push_back(cChar);
 
-    cChar = ( ( cBoardType & cMask3 ) >> 16 );
-    cBoardTypeString.push_back ( cChar );
+    cChar = ((cBoardType & cMask3) >> 16);
+    cBoardTypeString.push_back(cChar);
 
-    cChar = ( ( cBoardType & cMask2 ) >> 8 );
-    cBoardTypeString.push_back ( cChar );
+    cChar = ((cBoardType & cMask2) >> 8);
+    cBoardTypeString.push_back(cChar);
 
-    cChar = ( cBoardType & cMask1 );
-    cBoardTypeString.push_back ( cChar );
+    cChar = (cBoardType & cMask1);
+    cBoardTypeString.push_back(cChar);
 
     return cBoardTypeString;
-
   }
 
   void BeBoardFWInterface::PowerOn()  {}

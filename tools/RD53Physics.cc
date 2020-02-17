@@ -77,9 +77,11 @@ void Physics::Start (int currentRun)
     static_cast<RD53FWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->ChipReSync();
   SystemController::Start(currentRun);
 
+
   theCurrentRun = currentRun;
   keepRunning   = true;
-  thrRun        = std::thread(&Physics::run, this);
+  thrRun        = std::thread(&Physics::run,     this);
+  thrMonitor    = std::thread(&Physics::monitor, this);
 }
 
 void Physics::sendData (const BoardContainer* cBoard)
@@ -103,9 +105,9 @@ void Physics::Stop ()
 {
   LOG (INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
   keepRunning = false;
-  std::lock_guard<std::mutex> guard(theMtx);
   SystemController::Stop();
   if (thrRun.joinable() == true) thrRun.join();
+  if (thrMonitor.joinable() == true) thrMonitor.join();
 
 
   // ################
@@ -183,15 +185,7 @@ void Physics::analyze (bool doReadBinary)
     {
       size_t dataSize = 0;
 
-      if (doReadBinary == false)
-        {
-          std::unique_lock<std::mutex> guard(theMtx, std::defer_lock);
-          if (guard.try_lock() == true)
-            {
-              dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
-              guard.unlock();
-            }
-        }
+      if (doReadBinary == false) dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), true);
       else
         {
           dataSize = 1;
@@ -323,4 +317,13 @@ void Physics::saveChipRegisters (int currentRun)
           LOG (INFO) << BOLDBLUE << "\t--> Physics saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 
+}
+
+void Physics::monitor()
+{
+  while (keepRunning == true)
+    {
+      for (const auto cBoard : *fDetectorContainer) SystemController::ReadSystemMonitor(static_cast<BeBoard*>(cBoard));
+      std::this_thread::sleep_for(std::chrono::seconds(MONITORSLEEP));
+    }
 }
