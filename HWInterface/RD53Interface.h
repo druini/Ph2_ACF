@@ -189,7 +189,7 @@ namespace Ph2_HwInterface
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getFeId());
 
         value = (offset + RD53Interface::ReadChipReg(pChip, "MONITORING_DATA_ADC") / (Ph2_HwDescription::RD53::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC"))+1.) * VrefADC) / (isCurrentNotVoltage == true ? resistorI2V : 1.);
-        LOG (INFO) << BOLDBLUE << "\t--> " << observableName << " " << BOLDYELLOW << value << BOLDBLUE << " " << (isCurrentNotVoltage == true ? "A" : "V") << RESET;
+        LOG (INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " " << (isCurrentNotVoltage == true ? "A" : "V") << RESET;
       }
 
 

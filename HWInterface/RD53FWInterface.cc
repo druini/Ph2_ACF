@@ -81,7 +81,7 @@ namespace Ph2_HwInterface
     // ##############################
     LOG (INFO) << GREEN << "Initializing clock generator (CDCE62005)..." << RESET;
     RD53FWInterface::InitializeClockGenerator();
-    // RD53FWInterface::ReadClockGenerator(); // @TMP@
+    RD53FWInterface::ReadClockGenerator();
     LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
 
@@ -94,7 +94,7 @@ namespace Ph2_HwInterface
     for (const auto& it : pBoard->getBeBoardRegMap())
       if ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("HitOr_enable_l12") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos))
         {
-          LOG (INFO) << BOLDBLUE << "\t--> " << it.first << " = " << BOLDYELLOW << it.second << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> " << it.first << ": " << BOLDYELLOW << std::hex << "0x" << it.second << std::dec << " (" << it.second << ")" << RESET;
           if (it.first.find("HitOr_enable_l12") != std::string::npos) RD53FWInterface::localCfgFastCmd.enable_hitor = it.second;
           else if (it.first.find("ext_clk_en") != std::string::npos)
             {
@@ -113,7 +113,7 @@ namespace Ph2_HwInterface
               else if (static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::TLU)
                 {
                   cfgDIO5.enable             = true;
-                  cfgDIO5.ch_out_en          = 0x0D;
+                  cfgDIO5.ch_out_en          = 0x05;
                   cfgDIO5.tlu_en             = true;
                   cfgDIO5.tlu_handshake_mode = 0x00;
                 }
@@ -202,7 +202,7 @@ namespace Ph2_HwInterface
     for (const auto& it : pBoard->getBeBoardRegMap())
       if ((it.first.find("ext_clk_en") == std::string::npos) && (it.first.find("trigger_source") == std::string::npos))
         {
-          LOG (INFO) << BOLDBLUE << "\t--> " << it.first << " = " << BOLDYELLOW << it.second << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> " << it.first << ": " << BOLDYELLOW << std::hex << "0x" << it.second << std::dec << " (" << it.second << ")" << RESET;
           cVecReg.push_back({it.first, it.second});
         }
 
@@ -1213,7 +1213,7 @@ namespace Ph2_HwInterface
         uint32_t readback = ReadReg("system.spi.rx_data");
         std::stringstream myString("");
         myString << std::right << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << readback << std::dec;
-        LOG (INFO) << BOLDBLUE << "\t--> SPI register content " << BOLDYELLOW << "0x" << myString.str() << RESET;
+        LOG (INFO) << BOLDBLUE << "\t--> SPI register content: " << BOLDYELLOW << "0x" << myString.str() << RESET;
       }
   }
 
