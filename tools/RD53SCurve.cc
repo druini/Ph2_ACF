@@ -72,7 +72,7 @@ void SCurve::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/SCurveRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -128,9 +128,9 @@ void SCurve::initializeFiles (const std::string fileRes_, int currentRun)
 {
   fileRes = fileRes_;
 
-  if ((fileRes != "") && (saveBinaryData == true))
+  if ((currentRun >= 0) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/SCurveRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -184,14 +184,14 @@ void SCurve::run ()
 
 void SCurve::draw (int currentRun)
 {
-  if (fileRes != "") SCurve::saveChipRegisters(currentRun);
+  SCurve::saveChipRegisters(currentRun);
 
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  this->CreateResultDirectory(RESULTDIR,false,false);
+  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> SCurve saving histograms..." << RESET;
 
@@ -366,5 +366,4 @@ void SCurve::saveChipRegisters (int currentRun)
           system(command.c_str());
           LOG (INFO) << BOLDBLUE << "\t--> SCurve saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
-
 }

@@ -55,7 +55,7 @@ void Latency::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/LatencyRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Latency.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -99,9 +99,9 @@ void Latency::initializeFiles (const std::string fileRes_, int currentRun)
 {
   fileRes = fileRes_;
 
-  if ((fileRes != "") && (saveBinaryData == true))
+  if ((currentRun >= 0) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/LatencyRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Latency.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -127,7 +127,7 @@ void Latency::run ()
 
 void Latency::draw (int currentRun)
 {
-  if (fileRes != "") Latency::saveChipRegisters(currentRun);
+  Latency::saveChipRegisters(currentRun);
 
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;

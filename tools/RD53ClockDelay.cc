@@ -48,7 +48,7 @@ void ClockDelay::ConfigureCalibration ()
   // # Initialize Latency #
   // ######################
   la.Inherit(this);
-  la.localConfigure("", 0);
+  la.localConfigure("", -1);
 
 
   // ##########################
@@ -72,13 +72,12 @@ void ClockDelay::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/ClockDelayRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ClockDelay.raw", 'w');
       this->initializeFileHandler();
     }
 
   ClockDelay::run();
   ClockDelay::analyze();
-  ClockDelay::saveChipRegisters(currentRun);
   ClockDelay::sendData();
 
   la.draw(currentRun);
@@ -121,7 +120,7 @@ void ClockDelay::initializeFiles (const std::string fileRes_, int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/ClockDelayRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ClockDelay.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -136,7 +135,7 @@ void ClockDelay::initializeFiles (const std::string fileRes_, int currentRun)
   // ######################
   std::string fileName = fileRes;
   fileName.replace(fileRes.find("_ClockDelay"),15,"_Latency");
-  la.initializeFiles(fileName, currentRun);
+  la.initializeFiles(fileName, -1);
 }
 
 void ClockDelay::run ()

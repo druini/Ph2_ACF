@@ -47,7 +47,7 @@ void InjectionDelay::ConfigureCalibration ()
   // # Initialize Latency #
   // ######################
   la.Inherit(this);
-  la.localConfigure("", 0);
+  la.localConfigure("", -1);
 
 
   // ##############################
@@ -68,15 +68,14 @@ void InjectionDelay::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[InjectionDelay::Start] Starting" << RESET;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/InjectionDelayRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_InjectionDelay.raw", 'w');
       this->initializeFileHandler();
     }
 
   InjectionDelay::run();
   InjectionDelay::analyze();
-  InjectionDelay::saveChipRegisters(currentRun);
   InjectionDelay::sendData();
 
   la.draw(currentRun);
@@ -119,7 +118,7 @@ void InjectionDelay::initializeFiles (const std::string fileRes_, int currentRun
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/InjectionDelayRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_InjectionDelay.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -134,7 +133,7 @@ void InjectionDelay::initializeFiles (const std::string fileRes_, int currentRun
   // ######################
   std::string fileName = fileRes;
   fileName.replace(fileRes.find("_InjectionDelay"),15,"_Latency");
-  la.initializeFiles(fileName, currentRun);
+  la.initializeFiles(fileName, -1);
 }
 
 void InjectionDelay::run ()
@@ -205,7 +204,7 @@ void InjectionDelay::draw (int currentRun)
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  this->CreateResultDirectory(RESULTDIR,false,false);
+  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> InjectionDelay saving histograms..." << RESET;
 

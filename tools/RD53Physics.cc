@@ -47,7 +47,7 @@ void Physics::ConfigureCalibration ()
   const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
   const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
-  this->CreateResultDirectory(RESULTDIR,false,false);
+  this->CreateResultDirectory(RESULTDIR, false, false);
   ContainerFactory::copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, theOccContainer);
   ContainerFactory::copyAndInitChip<GenericDataArray<BCIDsize>> (*fDetectorContainer, theBCIDContainer);
   ContainerFactory::copyAndInitChip<GenericDataArray<TrgIDsize>>(*fDetectorContainer, theTrgIDContainer);
@@ -57,9 +57,9 @@ void Physics::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[Physics::Start] Starting" << RESET;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/PhysicsRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -106,7 +106,7 @@ void Physics::Stop ()
   LOG (INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
   keepRunning = false;
   SystemController::Stop();
-  if (thrRun.joinable() == true) thrRun.join();
+  if (thrRun.joinable()     == true) thrRun.join();
   if (thrMonitor.joinable() == true) thrMonitor.join();
 
 
@@ -135,9 +135,9 @@ void Physics::initializeFiles (const std::string fileRes_, int currentRun)
 {
   fileRes = fileRes_;
 
-  if ((fileRes != "") && (saveBinaryData == true))
+  if ((currentRun >= 0) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/PhysicsRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
       this->initializeFileHandler();
     }
 

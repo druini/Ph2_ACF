@@ -94,7 +94,7 @@ namespace Ph2_System
   void SystemController::InitializeHw (const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
   {
     fStreamerEnabled = streamData;
-    if (streamData) fNetworkStreamer = new TCPPublishServer(6000,1);
+    if (streamData == true) fNetworkStreamer = new TCPPublishServer(6000,1);
 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile);
@@ -106,7 +106,7 @@ namespace Ph2_System
       fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
     fMPAInterface = new MPAInterface(fBeBoardFWMap);
 
-    if (fWriteHandlerEnabled) this->initializeFileHandler();
+    if (fWriteHandlerEnabled == true) this->initializeFileHandler();
   }
 
   void SystemController::InitializeSettings (const std::string& pFilename, std::ostream& os, bool pIsFile)
@@ -191,10 +191,9 @@ namespace Ph2_System
   {
     for (const auto& cBoard : fBoardVector)
       {
-        uint32_t cBeId = cBoard->getBeId();
-        uint32_t cNChip = 0;
-
-        uint32_t cNEventSize32 = this->computeEventSize32 (cBoard);
+        uint32_t cBeId         = cBoard->getBeId();
+        uint32_t cNChip        = 0;
+        uint32_t cNEventSize32 = this->computeEventSize32(cBoard);
 
         std::string cBoardTypeString;
         BoardType cBoardType = cBoard->getBoardType();
@@ -204,14 +203,14 @@ namespace Ph2_System
         if      (cBoardType == BoardType::D19C) cBoardTypeString = "D19C";
         else if (cBoardType == BoardType::RD53) cBoardTypeString = "RD53";
 
-        uint32_t cFWWord  = fBeBoardInterface->getBoardInfo (cBoard);
+        uint32_t cFWWord  = fBeBoardInterface->getBoardInfo(cBoard);
         uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
         uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
 
         FileHeader cHeader(cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType());
 
         std::stringstream cBeBoardString;
-        cBeBoardString << "_Board" << std::setw (3) << std::setfill ('0') << cBeId;
+        cBeBoardString << "_Board" << std::setw(3) << std::setfill ('0') << cBeId;
         std::string cFilename = fRawFileName;
         if (fRawFileName.find (".raw") != std::string::npos)
           cFilename.insert(fRawFileName.find(".raw"), cBeBoardString.str());

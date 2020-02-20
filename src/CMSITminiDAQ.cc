@@ -485,7 +485,7 @@ int main (int argc, char** argv)
           std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
           Physics ph;
           ph.Inherit(&mySysCntr);
-          ph.localConfigure(fileName, runNumber);
+          ph.localConfigure(fileName, -1);
           if (binaryFile == "")
             {
               ph.Start(runNumber);

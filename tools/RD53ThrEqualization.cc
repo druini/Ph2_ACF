@@ -49,7 +49,7 @@ void ThrEqualization::ConfigureCalibration ()
   // # Initialize SCurve #
   // #####################
   sc.Inherit(this);
-  sc.localConfigure("", 0);
+  sc.localConfigure("", -1);
 
 
   // #######################
@@ -62,15 +62,14 @@ void ThrEqualization::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[ThrEqualization::Start] Starting" << RESET;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/ThrEqualizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrEqualization.raw", 'w');
       this->initializeFileHandler();
     }
 
   ThrEqualization::run();
   ThrEqualization::analyze();
-  // ThrEqualization::saveChipRegisters(currentRun);
   ThrEqualization::sendData();
 
   sc.draw(currentRun);
@@ -111,7 +110,7 @@ void ThrEqualization::initializeFiles (const std::string fileRes_, int currentRu
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/ThrEqualizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrEqualization.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -126,7 +125,7 @@ void ThrEqualization::initializeFiles (const std::string fileRes_, int currentRu
   // #####################
   std::string fileName = fileRes;
   fileName.replace(fileRes.find("_ThrEqualization"),16,"_SCurve");
-  sc.initializeFiles(fileName, currentRun);
+  sc.initializeFiles(fileName, -1);
 }
 
 void ThrEqualization::run ()
@@ -193,14 +192,13 @@ void ThrEqualization::run ()
 void ThrEqualization::draw (int currentRun)
 {
   sc.draw(currentRun);
-  // ThrEqualization::saveChipRegisters(currentRun);
 
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-  this->CreateResultDirectory(RESULTDIR,false,false);
+  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> ThrEqualization saving histograms..." << RESET;
 

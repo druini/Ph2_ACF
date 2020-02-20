@@ -35,7 +35,7 @@ FileHandler::FileHandler (const std::string& pBinaryFileName, char pOption, File
 
 FileHandler::~FileHandler()
 {
-  while(fQueue.empty() == false) usleep(1000);
+  while (fQueue.empty() == false) usleep(1000);
   FileHandler::closeFile();
 }
 
@@ -98,7 +98,6 @@ bool FileHandler::openFile ()
               fHeaderPresent = true;
             }
         }
-
       else if (fOption == 'r')
         {
           fBinaryFile.open(getFilename().c_str(), std::fstream::in | std::fstream::binary);

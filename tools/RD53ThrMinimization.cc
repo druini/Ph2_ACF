@@ -50,7 +50,7 @@ void ThrMinimization::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/ThrMinimizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrMinimization.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -92,14 +92,14 @@ void ThrMinimization::initializeFiles (const std::string fileRes_, int currentRu
   // ##############################
   // # Initialize sub-calibration #
   // ##############################
-  PixelAlive::initializeFiles("", currentRun);
+  PixelAlive::initializeFiles("", -1);
 
 
   fileRes = fileRes_;
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/ThrMinimizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrMinimization.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -147,7 +147,7 @@ void ThrMinimization::draw (int currentRun)
   ThrMinimization::fillHisto();
   histos->process();
 
-  PixelAlive::draw(currentRun);
+  PixelAlive::draw(-1);
 
   this->WriteRootFile();
   this->CloseResultFile();

@@ -72,7 +72,7 @@ void Gain::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/GainRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Gain.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -128,9 +128,9 @@ void Gain::initializeFiles (const std::string fileRes_, int currentRun)
 {
   fileRes = fileRes_;
 
-  if ((fileRes != "") && (saveBinaryData == true))
+  if ((currentRun >= 0) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/GainRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Gain.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -184,16 +184,16 @@ void Gain::run ()
 
 void Gain::draw (int currentRun)
 {
-  if (fileRes != "") Gain::saveChipRegisters(currentRun);
+  if (currentRun >= 0) Gain::saveChipRegisters(currentRun);
 
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  if (fileRes != "")
+  if (currentRun >= 0)
     {
-      this->CreateResultDirectory(RESULTDIR,false,false);
+      this->CreateResultDirectory(RESULTDIR, false, false);
       this->InitResultFile(fileRes);
       LOG (INFO) << BOLDBLUE << "\t--> Gain saving histograms..." << RESET;
     }
@@ -202,7 +202,7 @@ void Gain::draw (int currentRun)
   Gain::fillHisto();
   histos->process();
 
-  if (fileRes != "")
+  if (currentRun >= 0)
     {
       this->WriteRootFile();
       this->CloseResultFile();

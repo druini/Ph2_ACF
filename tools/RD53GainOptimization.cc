@@ -53,7 +53,7 @@ void GainOptimization::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/GainOptimizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -95,14 +95,14 @@ void GainOptimization::initializeFiles (const std::string fileRes_, int currentR
   // ##############################
   // # Initialize sub-calibration #
   // ##############################
-  Gain::initializeFiles("", currentRun);
+  Gain::initializeFiles("", -1);
 
 
   fileRes = fileRes_;
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/GainOptimizationRun_" + RD53Shared::fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -146,7 +146,7 @@ void GainOptimization::draw (int currentRun)
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> GainOptimization saving histograms..." << RESET;
 
-  Gain::draw(currentRun);
+  Gain::draw(-1);
 
   histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   GainOptimization::fillHisto();

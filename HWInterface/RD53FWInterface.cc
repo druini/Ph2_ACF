@@ -640,8 +640,7 @@ namespace Ph2_HwInterface
     if (HANDSHAKE_EN == true)
       while (ReadReg("user.stat_regs.readout4.readout_req") == 0)
         {
-          uint32_t fsm_status = ReadReg("user.stat_regs.readout4.fsm_status");
-          LOG (ERROR) << BOLDRED << "Waiting for readout request, FSM status: " << BOLDYELLOW << fsm_status << RESET;
+          LOG (ERROR) << BOLDRED << "Waiting for readout request, FSM status: " << BOLDYELLOW << ReadReg("user.stat_regs.readout4.fsm_status") << RESET;
           usleep(READOUTSLEEP);
         }
     nWordsInMemory = ReadReg("user.stat_regs.words_to_read");
@@ -664,7 +663,7 @@ namespace Ph2_HwInterface
     // #############
     std::vector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
     ddr3Offset += nWordsInMemory;
-    for (const auto& val : values) pData.push_back(val);
+    pData.insert(pData.end(), values.begin(), values.end());
 
 
     if ((this->fSaveToFile == true) && (pData.size() != 0)) this->fFileHandler->setData(pData);
