@@ -191,8 +191,8 @@ namespace Ph2_System
   {
     for (const auto& cBoard : fBoardVector)
       {
-        uint32_t cBeId         = cBoard->getBeId();
         uint32_t cNChip        = 0;
+        uint32_t cBeId         = cBoard->getBeId();
         uint32_t cNEventSize32 = this->computeEventSize32(cBoard);
 
         std::string cBoardTypeString;
@@ -215,10 +215,10 @@ namespace Ph2_System
         if (fRawFileName.find (".raw") != std::string::npos)
           cFilename.insert(fRawFileName.find(".raw"), cBeBoardString.str());
 
-        FileHandler* cHandler = new FileHandler(cFilename, 'w', cHeader);
+        fFileHandler = new FileHandler(cFilename, 'w', cHeader);
 
-        fBeBoardInterface->SetFileHandler(cBoard, cHandler);
-        LOG (INFO) << BOLDBLUE << "Saving binary data into: " << BOLDYELLOW << cFilename << RESET;
+        fBeBoardInterface->SetFileHandler(cBoard, fFileHandler);
+        LOG (INFO) << GREEN << "Saving binary data into: " << BOLDYELLOW << cFilename << RESET;
       }
   }
 
