@@ -39,7 +39,7 @@ class Latency : public PixelAlive
   void   run                 ();
   void   draw                (int currentRun);
   void   analyze             ();
-  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue); }
+  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue)/nTRIGxEvent; }
 
 
   // ########
@@ -58,6 +58,7 @@ class Latency : public PixelAlive
   size_t startValue;
   size_t stopValue;
   size_t nEvents;
+  size_t nTRIGxEvent;
 
   std::vector<uint16_t> dacList;
 

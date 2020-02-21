@@ -20,14 +20,15 @@ void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& the
   // #######################
   // # Retrieve parameters #
   // #######################
-  startValue = this->findValueInSettings(settingsMap,"LatencyStart");
-  stopValue  = this->findValueInSettings(settingsMap,"LatencyStop");
+  nTRIGxEvent = this->findValueInSettings(settingsMap,"nTRIGxEvent");
+  startValue  = this->findValueInSettings(settingsMap,"LatencyStart");
+  stopValue   = this->findValueInSettings(settingsMap,"LatencyStop");
 
 
-  auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue + 1, startValue, stopValue + 1);
+  auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue + nTRIGxEvent, startValue, stopValue + nTRIGxEvent);
   bookImplementer(theOutputFile, theDetectorStructure, Latency, hLatency, "Latency (n.bx)", "Entries");
 
-  auto hOcc1D = CanvasContainer<TH1F>("LatencyScan", "Latency Scan", stopValue - startValue + 1, startValue, stopValue + 1);
+  auto hOcc1D = CanvasContainer<TH1F>("LatencyScan", "Latency Scan", stopValue - startValue + nTRIGxEvent, startValue, stopValue + nTRIGxEvent);
   bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Latency (n.bx)", "Efficiency");
 }
 
@@ -68,8 +69,8 @@ void LatencyHistograms::fillOccupancy (const DetectorDataContainer& OccupancyCon
 
           auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          for (size_t i = startValue; i <= stopValue; i++)
-            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<LatencySize>>().data[i-startValue]);
+          for (size_t i = startValue; i <= stopValue; i+=nTRIGxEvent)
+            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<LatencySize>>().data[(i-startValue)/nTRIGxEvent]);
         }
 }
 
@@ -83,7 +84,7 @@ void LatencyHistograms::fillLatency (const DetectorDataContainer& LatencyContain
 
           auto* LatencyHist = Latency.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          LatencyHist->Fill(cChip->getSummary<uint16_t>());
+          for (auto i = 0u; i < nTRIGxEvent; i++) LatencyHist->Fill(cChip->getSummary<uint16_t>() - i);
         }
 }
 

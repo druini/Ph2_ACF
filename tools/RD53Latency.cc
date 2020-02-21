@@ -28,6 +28,7 @@ void Latency::ConfigureCalibration ()
   colStart       = this->findValueInSettings("COLstart");
   colStop        = this->findValueInSettings("COLstop");
   nEvents        = this->findValueInSettings("nEvents");
+  nTRIGxEvent    = this->findValueInSettings("nTRIGxEvent");
   startValue     = this->findValueInSettings("LatencyStart");
   stopValue      = this->findValueInSettings("LatencyStop");
   doDisplay      = this->findValueInSettings("DisplayHisto");
@@ -38,8 +39,8 @@ void Latency::ConfigureCalibration ()
   // ##############################
   // # Initialize dac scan values #
   // ##############################
-  const size_t nSteps = (stopValue - startValue + 1 <= RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1);
-  const float  step   = (stopValue - startValue + 1) / nSteps;
+  const size_t nSteps = ((stopValue - startValue)/nTRIGxEvent + 1 <= RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? (stopValue - startValue)/nTRIGxEvent + 1 : RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+  const size_t step   = nTRIGxEvent;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
 
@@ -172,8 +173,12 @@ void Latency::analyze ()
                 }
             }
 
-          LOG (INFO) << GREEN << "Best latency for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
-                     << BOLDYELLOW << regVal << GREEN << " (n.bx)" << RESET;
+          if (nTRIGxEvent > 1)
+            LOG (INFO) << GREEN << "Best latency for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is within ["
+                       << BOLDYELLOW << regVal - nTRIGxEvent + 1 << "," << regVal << GREEN << "] (n.bx)" << RESET;
+          else
+            LOG (INFO) << GREEN << "Best latency for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
+                       << BOLDYELLOW << regVal << RESET << GREEN << " (n.bx)" << RESET;
 
 
           // ######################################################

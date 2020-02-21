@@ -38,6 +38,7 @@ class LatencyHistograms : public DQMHistogramBase
   DetectorDataContainer Occupancy1D;
   DetectorDataContainer Latency;
 
+  size_t nTRIGxEvent;
   size_t startValue;
   size_t stopValue;
 };
