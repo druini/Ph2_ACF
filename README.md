@@ -9,11 +9,11 @@
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 17/02/2020
++ Last change made to this section: 20/02/2020
 ```
 
 Suggested software and firmware versions:
-- Software git branch / tag : `chipPolymorphism` / `IT-v3.3`
+- Software git branch / tag : `chipPolymorphism` / `IT-v3.4`
 - Firmware tag: `3.1`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
