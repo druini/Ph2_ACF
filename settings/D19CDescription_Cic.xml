@@ -4,7 +4,8 @@
       <!-- <connection id="board" uri="chtcp-2.0://hybridtesting:10203?target=192.168.0.11:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" />  -->
       <connection id="board" uri="chtcp-2.0://cmsuptracker003:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" /> 
     
-    
+    <CDCE configure="1"/>
+   
     <GBT_Links>
         <GBT Id="0" phaseTap="7" enable="1"/>
     </GBT_Links>
@@ -33,7 +34,7 @@
         <CIC Id="8" configfile="CIC_default.txt" />
     </Module>
 
-    <Module FeId="1" FMCId="0" ModuleId="0" Status="1" LinkId="0">
+    <!-- <Module FeId="1" FMCId="0" ModuleId="0" Status="1" LinkId="0">
         <Global>
             <Settings threshold="500" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -56,7 +57,7 @@
 
         <CIC_Files path="./settings/CicFiles/" />
         <CIC Id="8" configfile="CIC_default.txt" />
-    </Module>
+    </Module> -->
 
 
     <SLink>
@@ -72,7 +73,7 @@
     <Register name="fc7_daq_cnfg">
 	<!-- Clock control -->
 	<Register name="clock">
-	    <Register name="ext_clk_en"> 0 </Register>
+	    <Register name="ext_clk_en"> 1 </Register>
 	</Register>
         <!-- TTC -->
         <Register name="ttc">
@@ -133,7 +134,7 @@
     	</Register>
 	<!-- DIO5 Block -->
 	<Register name="dio5_block">
-	    <Register name="dio5_en"> 0 </Register>
+	    <Register name="dio5_en"> 1 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 1 </Register>
                 <Register name="term_enable"> 0 </Register>
@@ -155,8 +156,8 @@
                 <Register name="threshold"> 50 </Register>
             </Register>
 	    <Register name="ch5">
-                <Register name="out_enable"> 1 </Register>
-                <Register name="term_enable"> 0 </Register>
+                <Register name="out_enable"> 0 </Register>
+                <Register name="term_enable"> 1 </Register>
                 <Register name="threshold"> 0 </Register>
             </Register>
 	</Register>

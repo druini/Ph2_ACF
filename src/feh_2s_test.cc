@@ -8,7 +8,8 @@
 #include "tools/ShortFinder.h"
 #include "tools/OpenFinder.h"
 #include "tools/CicFEAlignment.h"
-#include "../tools/BackEndAlignment.h"
+#include "tools/BackEndAlignment.h"
+#include "tools/DataChecker.h"
 #include "Utils/argvparser.h"
 
 #ifdef __USE_ROOT__
@@ -74,6 +75,8 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "hybridId", "Serial Number of mezzanine . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     cmd.defineOption ( "threshold", "Threshold value to set on chips for open and short finding",  ArgvParser::OptionRequiresValue );
 
+    cmd.defineOption ( "checkData", "Compare injected hits and stubs with output", ArgvParser::OptionRequiresValue );
+    
     cmd.defineOption ( "antennaDelay", "Delay between the antenna pulse and the delay [25 ns]", ArgvParser::OptionRequiresValue );
     cmd.defineOption ( "latencyRange", "Range of latencies around pulse to scan [25 ns]", ArgvParser::OptionRequiresValue );
     
@@ -97,6 +100,8 @@ int main ( int argc, char* argv[] )
     bool cShortFinder = ( cmd.foundOption ( "findShorts" ) ) ? true : false;
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
     bool cAllChan = ( cmd.foundOption ( "allChan" ) ) ? true : false;
+    bool cCheckData = ( cmd.foundOption ( "checkData" ) ) ;
+    
     int  cAntennaDelay = ( cmd.foundOption ( "antennaDelay" ) )   ?  convertAnyInt ( cmd.optionValue ( "antennaDelay" ).c_str() ) : -1;
     int  cLatencyRange = ( cmd.foundOption ( "latencyRange" ) )   ?  convertAnyInt ( cmd.optionValue ( "latencyRange" ).c_str() ) :  -1;
     uint32_t  cThreshold = ( cmd.foundOption ( "threshold" ) )   ?  convertAnyInt ( cmd.optionValue ( "threshold" ).c_str() ) :  560 ;
@@ -283,7 +288,26 @@ int main ( int argc, char* argv[] )
         int cAmplitude = 25; // TODO: make this configureable
         // V(pulse) = V_DDA*(255-cAmplitude)/255
         cShortFinder.FindShorts(cThreshold, cAmplitude);
-    }    
+    }
+
+    //inject hits and stubs using mask and compare input against output 
+    if( cCheckData )
+    {
+        t.start();
+        // now create a PedestalEqualization object
+        DataChecker cDataChecker;
+        cDataChecker.Inherit (&cTool);
+        cDataChecker.Initialise ( );
+        uint8_t cSeed=1;
+        uint8_t cBendCode=0;
+        cDataChecker.DataCheck({1}, {cSeed} , {cBendCode});
+
+        cDataChecker.writeObjects();
+        cDataChecker.dumpConfigFiles();
+        cDataChecker.resetPointers();
+        t.show ( "Time to check data of the front-ends on the system: " );
+    }
+
     cTool.SaveResults();
     cTool.WriteRootFile();
     cTool.CloseResultFile();

@@ -340,14 +340,14 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
     // parse xml file 
     // now read the settings from the map
     auto cSetting = fSettingsMap.find ( "Nevents" );
-        
+    uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
+
     LOG (INFO) << BOLDBLUE << "Quick [manual] check of noise and pedetal of the FE ASICs  ..." << RESET;
     uint16_t cDefaultStubLatency=50;
     for (auto cBoard : this->fBoardVector)
     {
         for (auto& cFe : cBoard->fModuleVector)
         {
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
             //configure CBCs 
             for (auto& cChip : cFe->fReadoutChipVector)
             {
@@ -363,6 +363,15 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
         fBeBoardInterface->ChipReSync ( cBoard );
     }
 
+    // get trigger rate from xml
+    cSetting = fSettingsMap.find ( "TriggerRate" );
+    bool cConfigureTrigger = ( cSetting != std::end ( fSettingsMap ) );
+    uint16_t cTriggerRate = cConfigureTrigger ? cSetting->second : 100;
+    // get trigger multiplicity from xml 
+    cSetting = fSettingsMap.find ( "TriggerMultiplicity" );
+    bool cConfigureTriggerMult = ( cSetting != std::end ( fSettingsMap ) );
+    uint16_t cTriggerMult = cConfigureTriggerMult ? cSetting->second : 0;
+
     //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0,pTriggerRate,3,0,cDefaultStubLatency);
     // scan threshold and look at events (checking pipeline errors , L1 counters ,etc. )
     // extract pedestal and noise .. store in histogram
@@ -370,10 +379,6 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fPedestalContainer);
     for (auto cBoard : this->fBoardVector)
     {
-        uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? (cSetting->second): 100;
-        auto cMultiplicity = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        cNevents = cNevents*(cMultiplicity+1);
-
         uint16_t cStart = 450; 
         uint16_t cMaxValue = 675; 
         uint16_t cStep=1; 
@@ -384,6 +389,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
         
         std::vector<DetectorDataContainer*> cContainerVector(0);
         TProfile* cEventHist = static_cast<TProfile*> ( getHist ( cBoard, "ReadoutEvents" ) );
+        size_t cStepCount=0;
         for( auto cVcth : cListOfThresholds ) 
         {
             // push new container into vector
@@ -396,7 +402,9 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
             {
                 this->ReadNEvents ( cBoard , cNevents );
                 const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
-                LOG (INFO) << BOLDBLUE << "\tIteration " << +cIteration << " : " << +cEvents.size() << " events read back from fc7." << RESET;
+                if( cIteration == 0 && cStepCount%10 == 0 )
+                    LOG (INFO) << BOLDBLUE << "\tIteration " << +cIteration << " : " << +cEvents.size() << " events read back from fc7." << RESET;
+                
                 cEventHist->Fill( cVcth , (int)cEvents.size() );
                 for (auto& cFe : cBoard->fModuleVector)
                 {
@@ -457,6 +465,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
                     cHistOcc->Fill(cVcth, 1. ,  cMeanHits_Top);
                 }
             }
+            cStepCount++;
         }
         
         // process result of threshold scan to obtain pedestal and noise 

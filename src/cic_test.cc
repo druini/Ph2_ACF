@@ -5,6 +5,7 @@
 #include "LatencyScan.h"
 #include "PedeNoise.h"
 #include "PedestalEqualization.h"
+#include "tools/DataChecker.h"
 #include "argvparser.h"
 
 #ifdef __USE_ROOT__
@@ -249,18 +250,39 @@ int main ( int argc, char* argv[] )
     ExtraChecks cExtra;
     cExtra.Inherit (&cTool);
     cExtra.Initialise ();
+    if( cEvaluate )
+    {
+        LOG (INFO) << BOLDBLUE << "Measuring noise and setting thresholds to " << +cSigma << " noise units away from pedestal...." << RESET;
+        cExtra.Evaluate(cSigma, cTriggerRate, cDisableStubLogic);
+    }
+
     if(cDataTest)
     {
         // data check with noise injection 
         uint8_t cSeed=10;
         uint8_t cBendCode=0;
-        for(uint8_t cIndex=0; cIndex < 4; cIndex++)
+
+        t.start();
+        // now create a PedestalEqualization object
+        DataChecker cDataChecker;
+        cDataChecker.Inherit (&cTool);
+        cDataChecker.Initialise ( );
+        cDataChecker.zeroContainers();
+        /*for(uint8_t cIndex=0; cIndex < 1; cIndex++)
         {
             std::vector<uint8_t> cChips;
             cChips.push_back(cIndex*2);
-            cChips.push_back(cIndex*2+1);
-            cExtra.DataCheck(cChips, cTriggerRate , cSeed, cBendCode , false );
-        }
+            //cChips.push_back(cIndex*2+1);
+        }*/
+        
+        cDataChecker.DataCheck({0}, {cSeed} , {cBendCode});
+        //cDataChecker.L1Eye();
+        cDataChecker.writeObjects();
+        cDataChecker.dumpConfigFiles();
+        cDataChecker.resetPointers();
+        t.show ( "Time to check data of the front-ends on the system: " );
+
+
         // check hits and stubs one chip at a time 
         // for( uint8_t cChipId=0; cChipId < 8; cChipId++)
         // {   
@@ -325,41 +347,33 @@ int main ( int argc, char* argv[] )
     }
     
     //reconstruct TP 
-    if( cTPamplitude > 0 )
-    {
-        t.start();
-        cExtra.ReconstructTP(cTPamplitude);
-        t.stop();
-    }
-    if( cEvaluate )
-    {
-        LOG (INFO) << BOLDBLUE << "Measuring noise and setting thresholds to " << +cSigma << " noise units away from pedestal...." << RESET;
-        cExtra.Evaluate(cSigma, cTriggerRate, cDisableStubLogic);
-        //cExtra.DataCheck({0}, cTriggerRate , 10,0 );
-        //cExtra.DataCheckTP( {0}, 0xFF - 100 , 2 , 0);
-        //cExtra.DataCheck( {0} , cTriggerRate , 8 , 0 );
-        //cExtra.DataCheck( {4} , cTriggerRate , 8 , 0 );
-        //cExtra.QuickStubCheck({0}, cTriggerRate , 8 , 0 );
-    }
-    if( cLatency )
-    {
-        LatencyScan cLatencyScan;
-        cLatencyScan.Inherit (&cTool);
-        cLatencyScan.Initialize (cStartLatency, cLatencyRange); // fix this so its consistent with all other tools 
-        /*if( cExternal )
-            cLatencyScan.ConfigureTrigger("TLU", cNconsecutiveTriggers );
-        else
-            cLatencyScan.ConfigureTrigger("TestPulse", cNconsecutiveTriggers );
-        */
-        cLatencyScan.ScanLatency (cStartLatency, cLatencyRange);
-        cLatencyScan.writeObjects( );
-        cLatencyScan.resetPointers();
-    }
-    if( cExternal )
-    {
-        if( !cLatency )
-            cExtra.ExternalTriggers(cNconsecutiveTriggers);
-    }
+    // if( cTPamplitude > 0 )
+    // {
+    //     t.start();
+    //     cExtra.ReconstructTP(cTPamplitude);
+    //     t.stop();
+    // }
+    
+    // if( cLatency )
+    // {
+    //     LatencyScan cLatencyScan;
+    //     cLatencyScan.Inherit (&cTool);
+    //     cLatencyScan.Initialize (cStartLatency, cLatencyRange); // fix this so its consistent with all other tools 
+    //     if( cExternal )
+    //         cLatencyScan.ConfigureTrigger("TLU", cNconsecutiveTriggers );
+    //     else
+    //         cLatencyScan.ConfigureTrigger("TestPulse", cNconsecutiveTriggers );
+        
+    //     cLatencyScan.ScanLatency (cStartLatency, cLatencyRange);
+    //     cLatencyScan.writeObjects( );
+    //     cLatencyScan.resetPointers();
+    // }
+    // if( cExternal )
+    // {
+    //     if( !cLatency )
+    //         cExtra.ExternalTriggers(cNconsecutiveTriggers);
+    // }
+
     if( cCheckOccupancy )
     {
         cExtra.OccupancyCheck(cTriggerRate, cDisableStubLogic);
