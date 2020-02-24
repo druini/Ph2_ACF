@@ -1283,6 +1283,7 @@ namespace Ph2_HwInterface {
         void PSInterfaceBoard_PowerOn_SSA(float VDDPST = 1.25, float DVDD = 1.25, float AVDD = 1.25, float VBF = 0.3, float BG = 0.0, uint8_t ENABLE = 0);
         void PSInterfaceBoard_PowerOff_SSA(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
         void ReadPower_SSA(uint8_t mpaid = 0 , uint8_t ssaid = 0);
+	void SSAEqualizeDACs(uint8_t pChipId);
         void KillI2C();
         ///
 

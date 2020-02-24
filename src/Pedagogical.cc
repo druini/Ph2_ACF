@@ -39,7 +39,7 @@ int main( int argc, char* argv[] )
 	LOG (INFO) << BOLDRED << "=============" << RESET;
 	el::Configurations conf ("settings/logger.conf");
 	el::Loggers::reconfigureAllLoggers (conf);	
-	std::string cHWFile = "settings/D19C_2xSSA_onechip.xml";
+	std::string cHWFile = "settings/D19C_2xSSA_Calib.xml";
 	std::stringstream outp;
 	Tool cTool;
 	cTool.InitializeHw ( cHWFile, outp);
@@ -67,13 +67,14 @@ int main( int argc, char* argv[] )
 	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S103", 0x1);}
 	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S104", 0x1);}
 	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S105", 0x1);}
-	for (int thd = 0; thd<=50; thd++)
+	for (int thd = 10; thd<=10; thd++)
 	{
 		for(auto cSSA: ChipVec)
 		{
+			std::cout<<"Setting threshold to " << thd << std::endl;
 			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_THDAC", thd);
 		}
-	cTool.ReadNEvents(pBoard, 500);
+	cTool.ReadNEvents(pBoard, 1);
 	const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
 	for ( auto &event : eventVector ) //for on events - begin 
     	{

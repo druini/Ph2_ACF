@@ -269,8 +269,13 @@ namespace Ph2_System
                     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "VCth" , cThreshold);
                   }
                   else 
-                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning (cBoard);  
-              }
+                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning (cBoard); 
+	      if (fBoardVector[0]->getEventType() == EventType::SSA)
+	      {
+		LOG (INFO) << BOLDBLUE << "Equalizing internal SSA DACs" << RESET;
+		//static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SSAEqualizeDACs(cReadoutChip->getChipId());
+	      }
+            }
           }
         }
         else
@@ -499,7 +504,7 @@ namespace Ph2_System
           uint32_t eventSize = static_cast<uint32_t>((pData.size()) / fNevents);
           uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
           LOG (INFO) << BOLDBLUE << " fNSSA = "  << nSSA << RESET;
-          fEventList.push_back(new D19cSSAEvent(pBoard, nSSA, fNFe, lvec));
+          fEventList.push_back(new D19cSSAEvent(pBoard, nSSA, fNFe, pData));
           return;
         }
 

@@ -409,7 +409,6 @@ namespace Ph2_System {
     void FileParser::parseSSASettings (pugi::xml_node pModuleNode, ReadoutChip* pSSA)
     {
         FrontEndType cType = pSSA->getFrontEndType();
-        if (cType == FrontEndType::SSA) LOG (INFO) << RED << "SSA" << RESET;
     }
 
   void FileParser::parseModuleContainer (pugi::xml_node pModuleNode, BeBoard* pBoard, std::ostream& os )
