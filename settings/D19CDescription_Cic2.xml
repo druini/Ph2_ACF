@@ -166,7 +166,7 @@
     <!--[>DataTest<]-->
     <Setting name="UseNoise">0</Setting>
     <Setting name="Attempts">1</Setting>
-    <Setting name="TriggerRate">100</Setting>
+    <Setting name="TriggerRate">1000</Setting>
     <Setting name="TriggerMultiplicity">0</Setting>
     <Setting name="StubDelay">49</Setting>
     <Setting name="StubSeed">20</Setting>

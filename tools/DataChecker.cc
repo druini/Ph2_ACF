@@ -625,7 +625,8 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
                     fReadoutChipInterface->WriteChipReg ( cChip, "CoincWind&Offset12", cOffetReg );
                     fReadoutChipInterface->WriteChipReg ( cChip, "CoincWind&Offset34", cOffetReg );
                     */
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTargetThreshold);
+                    if(!pWithNoise)
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTargetThreshold);
                 }
                 else
                     static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels( cChip, true);
