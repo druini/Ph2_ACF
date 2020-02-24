@@ -268,30 +268,14 @@ int main ( int argc, char* argv[] )
         cDataChecker.Inherit (&cTool);
         cDataChecker.Initialise ( );
         cDataChecker.zeroContainers();
-        /*for(uint8_t cIndex=0; cIndex < 1; cIndex++)
-        {
-            std::vector<uint8_t> cChips;
-            cChips.push_back(cIndex*2);
-            //cChips.push_back(cIndex*2+1);
-        }*/
         
-        cDataChecker.DataCheck({0}, {cSeed} , {cBendCode});
-        //cDataChecker.L1Eye();
+        cDataChecker.DataCheck({0,1,2,3,4,5,6,7});
+        //cDataChecker.L1Eye({0,1,2,3,4,5,6,7});
         cDataChecker.writeObjects();
         cDataChecker.dumpConfigFiles();
         cDataChecker.resetPointers();
         t.show ( "Time to check data of the front-ends on the system: " );
 
-
-        // check hits and stubs one chip at a time 
-        // for( uint8_t cChipId=0; cChipId < 8; cChipId++)
-        // {   
-        //     LOG (INFO) << BOLDBLUE << "Injecting stubs/hits in readout chip" << +cChipId << RESET; 
-        //     cExtra.DataCheck({cChipId}, cTriggerRate , cSeed, cBendCode );
-        // }
-        //cExtra.DataCheck({2}, cTriggerRate , cSeed, cBendCode );
-        //cExtra.L1Eye();
-        
         //cExtra.DataCheckTP( {0}, 0xFF - 100 , 2 , 0);
         // //std::string cRawFileName = "RawData.raw";
         // //cTool.addFileHandler ( cRawFileName, 'w' );

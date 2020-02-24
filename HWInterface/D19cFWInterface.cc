@@ -1753,7 +1753,7 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
 
     // make sure you're only sending one trigger at a time 
     auto cMult = this->ReadReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    //this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
     auto cTriggerRate =  this->ReadReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
     LOG (INFO) << BOLDBLUE << "Tuning of L1A lines performed with trigger FSM configured to produce triggers at a frequency of " << +cTriggerRate << RESET;
 
@@ -2479,7 +2479,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     // RESET the readout
     auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     //LOG (INFO) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << RESET;
-    this->ResetReadout();
+    //this->ResetReadout();
     pNEvents = pNEvents*(cMultiplicity+1);
 
     // check 

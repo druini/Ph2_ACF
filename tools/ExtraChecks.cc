@@ -397,13 +397,14 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
             ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *cContainerVector.back() ); 
             // set DAC .. read events
             this->setSameDacBeBoard(cBoard, "VCth", cVcth);
-            LOG (INFO) << BOLDBLUE << "Threshold set to " << cVcth << RESET;
             for( size_t cIteration = 0 ; cIteration < 5 ; cIteration ++)
             {
                 this->ReadNEvents ( cBoard , cNevents );
                 const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
                 if( cIteration == 0 && cStepCount%10 == 0 )
-                    LOG (INFO) << BOLDBLUE << "\tIteration " << +cIteration << " : " << +cEvents.size() << " events read back from fc7." << RESET;
+                {
+                    LOG (INFO) << BOLDBLUE << "Threshold set to " << cVcth << "...\tIteration " << +cIteration << " : " << +cEvents.size() << " events read back from fc7." << RESET;
+                }
                 
                 cEventHist->Fill( cVcth , (int)cEvents.size() );
                 for (auto& cFe : cBoard->fModuleVector)
