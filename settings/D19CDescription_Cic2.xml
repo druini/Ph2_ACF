@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
     <BeBoard Id="0" boardType="D19C" eventType="VR">
-      <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1:10203?target=192.168.0.8:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+      <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.8:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
     
     <GBT_Links>
         <GBT Id="0" phaseTap="7" enable="0"/>
@@ -9,7 +9,7 @@
     
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1" LinkId="0">
         <Global>
-            <Settings threshold="500" latency="19"/>
+            <Settings threshold="100" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
             <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
             <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="1" dll="1"/>
@@ -17,7 +17,7 @@
             <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
         </Global>
 
-      <!--   <CBC_Files path="./settings/CbcFiles/" />
+        <CBC_Files path="./settings/CbcFiles/" />
         <CBC Id="0" configfile="CBC3_default.txt" />
         <CBC Id="1" configfile="CBC3_default.txt" />
         <CBC Id="2" configfile="CBC3_default.txt" />
@@ -25,9 +25,9 @@
         <CBC Id="4" configfile="CBC3_default.txt" />
         <CBC Id="5" configfile="CBC3_default.txt" />
         <CBC Id="6" configfile="CBC3_default.txt" />
-        <CBC Id="7" configfile="CBC3_default.txt" /> -->
+        <CBC Id="7" configfile="CBC3_default.txt" />
 
-        <CBC_Files path="./Results/Cic_xxxx_Electron_23-02-20_22h21m02/" />
+      <!--   <CBC_Files path="./Results/Cic_xxxx_Electron_23-02-20_22h21m02/" />
         <CBC Id="0" configfile="BE0_FE0_Chip0.txt" />
         <CBC Id="1" configfile="BE0_FE0_Chip1.txt" />
         <CBC Id="2" configfile="BE0_FE0_Chip2.txt" />
@@ -35,7 +35,7 @@
         <CBC Id="4" configfile="BE0_FE0_Chip4.txt" />
         <CBC Id="5" configfile="BE0_FE0_Chip5.txt" />
         <CBC Id="6" configfile="BE0_FE0_Chip6.txt" />
-        <CBC Id="7" configfile="BE0_FE0_Chip7.txt" />
+        <CBC Id="7" configfile="BE0_FE0_Chip7.txt" /> -->
 
         <CIC_Files path="./settings/CicFiles/" />
         <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -64,7 +64,7 @@
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
 		<Register name="trigger_source"> 3 </Register>
-		<Register name="user_trigger_frequency"> 100 </Register>
+		<Register name="user_trigger_frequency"> 500 </Register>
 		<Register name="stubs_mask"> 0 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 10 </Register>
@@ -153,7 +153,7 @@
 
 <Settings>
     <!--[>Calibration<]-->
-    <Setting name="Nevents">2</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="TargetVcth">0x244</Setting>
     <Setting name="TargetOffset">0x78</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>

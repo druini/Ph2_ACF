@@ -1756,6 +1756,14 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
     auto cTriggerRate =  this->ReadReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
     LOG (INFO) << BOLDBLUE << "Tuning of L1A lines performed with trigger FSM configured to produce triggers at a frequency of " << +cTriggerRate << RESET;
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 10);
+    // reset trigger 
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    // load new trigger configuration 
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+
 
     // configure triggers 
     // this->ConfigureTriggerFSM(0, 1 , 3);
@@ -1885,6 +1893,8 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
     }
 
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cTriggerRate);
+    
     if( pScope )
         this->L1ADebug ();
 
@@ -1901,8 +1911,13 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
     }
     this->WriteStackReg ( cVecReg );
     cVecReg.clear();
-    // load trigger configuration
-    WriteReg ("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+    // reset trigger 
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    // load new trigger configuration 
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    
     this->ResetReadout(); 
     return cSuccess;
 }

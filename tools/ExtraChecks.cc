@@ -342,6 +342,10 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
     auto cSetting = fSettingsMap.find ( "Nevents" );
     uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
 
+    // get number of attempts 
+    cSetting = fSettingsMap.find ( "Attempts" );
+    size_t cAttempts = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10  ; 
+
     LOG (INFO) << BOLDBLUE << "Quick [manual] check of noise and pedetal of the FE ASICs  ..." << RESET;
     uint16_t cDefaultStubLatency=50;
     for (auto cBoard : this->fBoardVector)
@@ -397,7 +401,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
             ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *cContainerVector.back() ); 
             // set DAC .. read events
             this->setSameDacBeBoard(cBoard, "VCth", cVcth);
-            for( size_t cIteration = 0 ; cIteration < 5 ; cIteration ++)
+            for( size_t cIteration = 0 ; cIteration < cAttempts ; cIteration ++)
             {
                 this->ReadNEvents ( cBoard , cNevents );
                 const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
