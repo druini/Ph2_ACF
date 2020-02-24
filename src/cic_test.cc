@@ -269,6 +269,7 @@ int main ( int argc, char* argv[] )
         cDataChecker.Initialise ( );
         cDataChecker.zeroContainers();
         
+        //cDataChecker.TestPulse({0});
         cDataChecker.DataCheck({0,1,2,3,4,5,6,7});
         //cDataChecker.L1Eye({0,1,2,3,4,5,6,7});
         cDataChecker.writeObjects();

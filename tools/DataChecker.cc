@@ -5,7 +5,6 @@
 #include "../Utils/ContainerFactory.h"
 #include "BackEndAlignment.h"
 #include "Occupancy.h"
-
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -319,6 +318,172 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
         }
    }
 }
+void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
+{
+        
+    //Prepare container to hold  measured occupancy
+    DetectorDataContainer     cMeasurement ;
+    fDetectorDataContainer = &cMeasurement;
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    
+    
+    //get number of events from xml
+    auto cSetting = fSettingsMap.find ( "Nevents" );
+    uint32_t cEventsPerPoint = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
+    uint16_t cDefaultStubLatency=50;
+
+    // get trigger rate from xml
+    cSetting = fSettingsMap.find ( "TriggerRate" );
+    bool cConfigureTrigger = ( cSetting != std::end ( fSettingsMap ) );
+    uint16_t cTriggerRate = cConfigureTrigger ? cSetting->second : 100;
+    // get trigger multiplicity from xml 
+    cSetting = fSettingsMap.find ( "TriggerMultiplicity" );
+    bool cConfigureTriggerMult = ( cSetting != std::end ( fSettingsMap ) );
+    uint16_t cTriggerMult = cConfigureTriggerMult ? cSetting->second : 0;
+
+    // get stub delay scan range from xml 
+    cSetting = fSettingsMap.find ( "StubDelay" );
+    bool cModifyStubScanRange = ( cSetting != std::end ( fSettingsMap ) );
+    int cStubDelay = cModifyStubScanRange ? cSetting->second : 48 ;
+
+    // get target threshold 
+    cSetting = fSettingsMap.find ( "TargetVcth" );
+    uint16_t cTargetThreshold = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 580  ; 
+
+    // get number of attempts 
+    cSetting = fSettingsMap.find ( "Attempts" );
+    size_t cAttempts = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10  ; 
+
+    // get mode
+    cSetting = fSettingsMap.find ( "Mode" );
+    uint8_t cMode = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0  ; 
+
+    // if TP is used - enable it 
+    cSetting = fSettingsMap.find ( "PulseShapePulseAmplitude" );
+    fTPconfig.tpAmplitude = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100; 
+
+    // set-up for TP
+    fAllChan = true;
+    fMaskChannelsFromOtherGroups = !this->fAllChan;
+    this->enableTestPulse(true);
+    this->SetTestPulse(true);
+    setSameGlobalDac("TestPulsePotNodeSel",  0xFF-fTPconfig.tpAmplitude );
+
+    bool originalAllChannelFlag = this->fAllChan;
+    this->SetTestAllChannels(false);
+        
+    // configure FE chips so that stubs are detected [i.e. make sure HIP
+    // suppression is off ] 
+    for (auto cBoard : this->fBoardVector)
+    {
+        for (auto& cFe : cBoard->fModuleVector)
+        {
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
+            //configure CBCs 
+            for (auto& cChip : cFe->fReadoutChipVector)
+            {
+                // switch off HitOr
+                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 0);
+                //enable stub logic
+                if( cMode == 0 )
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode( static_cast<ReadoutChip*>(cChip), "Sampled", true, true); 
+                else
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode( static_cast<ReadoutChip*>(cChip), "Latched", true, true); 
+                static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression( static_cast<ReadoutChip*>(cChip), false, false, 0);
+            }
+        }
+        fBeBoardInterface->ChipReSync ( cBoard );
+    }
+
+    // now measure
+    for (auto cBoard : this->fBoardVector)
+    {
+        uint16_t cBoardTriggerMult = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+        LOG (DEBUG) << BOLDBLUE << "Trigger multiplicity is set to " << +cBoardTriggerMult << " consecutive triggers per L1A." << RESET ; 
+        if( cConfigureTriggerMult )
+        {
+            LOG (DEBUG) << BOLDBLUE << "Modifying trigger multiplicity to be " << +(1+cTriggerMult) << " consecutive triggers per L1A for DataTest" << RESET;
+            fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMult);
+        }
+        
+       
+        // configure test pulse trigger 
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(fTPconfig.firmwareTPdelay ,fTPconfig.tpDelay ,fTPconfig.tpSequence, fTPconfig.tpFastReset );
+        uint16_t cTPdelay=0;
+        this->setSameDacBeBoard(cBoard, "TestPulseDelay", cTPdelay);
+        // set trigger latency 
+        uint16_t cLatency = fTPconfig.tpDelay+1;
+        this->setSameDacBeBoard(cBoard, "TriggerLatency", cLatency);
+        // set stub latency 
+        uint16_t cStubLatency = cLatency - 1*cStubDelay ;
+        fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
+        LOG (INFO) << BOLDBLUE << "Latency set to " << +cLatency << "...\tStub latency set to " << +cStubLatency << RESET;
+        fBeBoardInterface->ChipReSync ( cBoard );
+        // zero containers
+        this->zeroContainers();
+        // read N events and compare hits and stubs to injected stub 
+        for( size_t cAttempt=0; cAttempt < cAttempts ; cAttempt++)
+        {
+            // send a resync
+            fBeBoardInterface->ChipReSync ( cBoard );
+            // bitwise scan pedestal 
+            this->bitWiseScan("VCth", cEventsPerPoint, 0.56);
+            for ( auto cFe : *cBoard )
+            {
+                for ( auto cChip : *cFe )
+                {
+                    uint16_t cThreshold = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg( static_cast<ReadoutChip*>(cChip), "VCth" );
+                    LOG (INFO) << BOLDBLUE << "\t... CBC" << +cChip->getId() << " threshold is " << +cThreshold << RESET;
+                }
+            }
+            //this->ReadNEvents ( cBoard , cEventsPerPoint);
+        }
+        // and set it back to what it was 
+        if( cConfigureTriggerMult )
+            fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cBoardTriggerMult);
+    }
+
+    // disable TP 
+    this->enableTestPulse(false);
+    this->SetTestPulse(false);
+    setSameGlobalDac("TestPulsePotNodeSel",  0x00 );
+   
+    //unmask all channels and reset offsets 
+    // also re-configure thresholds + hit/stub detect logic to original values 
+    // and re-load configuration of fast command block from register map loaded from xml file 
+    for (auto cBoard : this->fBoardVector)
+    {   
+        auto& cThresholdsThisBoard = fThresholds.at(cBoard->getIndex());
+        auto& cLogicThisBoard = fLogic.at(cBoard->getIndex());
+        auto& cHIPsThisBoard = fHIPs.at(cBoard->getIndex());
+        for (auto& cFe : cBoard->fModuleVector)
+        {
+            auto& cThresholdsThisHybrid = cThresholdsThisBoard->at(cFe->getIndex());
+            auto& cLogicThisHybrid = cLogicThisBoard->at(cFe->getIndex());
+            auto& cHIPsThisHybrid = cHIPsThisBoard->at(cFe->getIndex());
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
+            for (auto& cChip : cFe->fReadoutChipVector)
+            {
+                static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels( cChip, false);
+                // set offsets back to default value 
+                fReadoutChipInterface->WriteChipReg ( cChip, "CoincWind&Offset12", (0 << 4) | (0 << 0) );
+                fReadoutChipInterface->WriteChipReg ( cChip, "CoincWind&Offset34", (0 << 4) | (0 << 0) );
+
+                LOG (DEBUG) << BOLDBLUE << "Setting threshold on CBC" << +cChip->getChipId() << " back to " << +cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() << RESET ;
+                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "Pipe&StubInpSel&Ptwidth" , cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "HIP&TestMode" , cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+            }
+        }
+        //
+        LOG (DEBUG) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFastCommandBlock(cBoard);
+        //
+        //fBeBoardInterface->ChipReSync ( cBoard );
+    }
+
+    this->SetTestAllChannels(originalAllChannelFlag);
+}
 // check hits and stubs using noise
 void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int pBend)
 {
@@ -501,7 +666,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
             uint16_t cTPdelay=0;
             this->setSameDacBeBoard(cBoard, "TestPulseDelay", cTPdelay);
             // set trigger latency 
-            uint16_t cLatency = fTPconfig.tpDelay+1;
+            uint16_t cLatency = fTPconfig.tpDelay-1;//+1;
             this->setSameDacBeBoard(cBoard, "TriggerLatency", cLatency);
             // set stub latency 
             uint16_t cStubLatency = cLatency - 1*cStubDelay ;
@@ -514,7 +679,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
             for( size_t cAttempt=0; cAttempt < cAttempts ; cAttempt++)
             {
                 // send a resync
-                fBeBoardInterface->ChipReSync ( cBoard );
+                //fBeBoardInterface->ChipReSync ( cBoard );
                 this->ReadNEvents ( cBoard , cEventsPerPoint);
                 this->matchEvents( cBoard , pChipIds ,cStub);
             }

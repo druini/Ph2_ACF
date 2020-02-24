@@ -36,6 +36,7 @@ class DataChecker : public Tool
 
     void Initialise ( );    
     // check injected hit+stubs vs. output hits+stubs
+    void TestPulse(std::vector<uint8_t> pChipIds);
     void DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed=125, int pBend=10);
     void L1Eye(std::vector<uint8_t> pChipIds);
 

@@ -403,6 +403,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
             this->setSameDacBeBoard(cBoard, "VCth", cVcth);
             for( size_t cIteration = 0 ; cIteration < cAttempts ; cIteration ++)
             {
+               fBeBoardInterface->ChipReSync ( cBoard );
                 this->ReadNEvents ( cBoard , cNevents );
                 const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
                 if( cIteration == 0 && cStepCount%10 == 0 )
