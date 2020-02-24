@@ -72,6 +72,7 @@ class Physics : public Tool
   size_t rowStop;
   size_t colStart;
   size_t colStop;
+  size_t nTRIGxEvent;
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   DetectorDataContainer theOccContainer;
@@ -90,10 +91,11 @@ class Physics : public Tool
   };
 
   std::string fileRes;
-  int  theCurrentRun;
-  bool doUpdateChip;
-  bool doDisplay;
-  bool saveBinaryData;
+  int    theCurrentRun;
+  size_t numberOfEventsPerRun;
+  bool   doUpdateChip;
+  bool   doDisplay;
+  bool   saveBinaryData;
   std::atomic<bool> keepRunning;
   std::thread thrRun;
   std::thread thrMonitor;

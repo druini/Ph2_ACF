@@ -21,6 +21,7 @@ void Physics::ConfigureCalibration ()
   rowStop        = this->findValueInSettings("ROWstop");
   colStart       = this->findValueInSettings("COLstart");
   colStop        = this->findValueInSettings("COLstop");
+  nTRIGxEvent    = this->findValueInSettings("nTRIGxEvent");
   doDisplay      = this->findValueInSettings("DisplayHisto");
   doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData = this->findValueInSettings("SaveBinaryData");
@@ -78,10 +79,11 @@ void Physics::Start (int currentRun)
   SystemController::Start(currentRun);
 
 
-  theCurrentRun = currentRun;
-  keepRunning   = true;
-  thrRun        = std::thread(&Physics::run,     this);
-  thrMonitor    = std::thread(&Physics::monitor, this);
+  theCurrentRun        = currentRun;
+  numberOfEventsPerRun = 0;
+  keepRunning          = true;
+  thrRun               = std::thread(&Physics::run,     this);
+  thrMonitor           = std::thread(&Physics::monitor, this);
 }
 
 void Physics::sendData (const BoardContainer* cBoard)
@@ -119,6 +121,8 @@ void Physics::Stop ()
   Physics::saveChipRegisters(theCurrentRun);
   this->closeFileHandler();
   LOG (INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
+  LOG (INFO) << BOLDBLUE << "\t--> Total number of recorded events: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
+  LOG (INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << 1. * numberOfEventsPerRun / nTRIGxEvent << RESET;
 }
 
 void Physics::localConfigure (const std::string fileRes_, int currentRun)
@@ -155,6 +159,7 @@ void Physics::run ()
       Physics::analyze();
       genericEvtConverter(RD53FWInterface::decodedEvents);
       std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
+      numberOfEventsPerRun += RD53FWInterface::decodedEvents.size();
     }
 }
 
