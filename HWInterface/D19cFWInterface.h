@@ -73,6 +73,7 @@ namespace D19cFWEvtEncoder
  */
 namespace Ph2_HwInterface {
     class D19cFpgaConfig;
+    class D19cSSAEvent;
     /*!
      * \class Cbc3Fc7FWInterface
      *
@@ -85,9 +86,7 @@ namespace Ph2_HwInterface {
         D19cFpgaConfig* fpgaConfig;
         FileHandler* fFileHandler ;
         uint32_t fBroadcastCbcId;
-        uint32_t fNCbc;
-        uint32_t fNMPA;
-        uint32_t fNSSA;
+        uint32_t fNReadoutChip;
         uint32_t fNCic;
         uint32_t fFMCId;
 
@@ -270,6 +269,8 @@ namespace Ph2_HwInterface {
         // # Vector containing the decoded events #
         // ########################################
         //static std::vector<D19cFWInterface::Event> decodedEvents;
+
+        static void DecodeSSAEvents (const std::vector<uint32_t>& data, std::vector<D19cSSAEvent*>& events, uint32_t fEventSize, uint32_t fNFe);
 
       private:
         uint32_t computeEventSize ( Ph2_HwDescription::BeBoard* pBoard );
@@ -1279,11 +1280,10 @@ namespace Ph2_HwInterface {
         void PSInterfaceBoard_PowerOn_MPA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, uint8_t mpaid = 0 , uint8_t ssaid = 0);
         void PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
         /// SSA power on
-        void PSInterfaceBoard_PowerOn_SSA_v1(float VDDPST = 1.25, float DVDD = 1.25, float AVDD = 1.25, float VBF = 0.3, float BG = 0.0, uint8_t mpaid = 0 , uint8_t ssaid = 0);
-        void PSInterfaceBoard_PowerOff_SSA_v1(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
-        void PSInterfaceBoard_PowerOn_SSA_v2(float VDDPST = 1.2, float DVDD = 1.0, float AVDD = 1.2, float VBG = 0.3, uint8_t mpaid = 0 , uint8_t ssaid = 0);
-        void PSInterfaceBoard_PowerOff_SSA_v2(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
+        void PSInterfaceBoard_PowerOn_SSA(float VDDPST = 1.25, float DVDD = 1.25, float AVDD = 1.25, float VBF = 0.3, float BG = 0.0, uint8_t ENABLE = 0);
+        void PSInterfaceBoard_PowerOff_SSA(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
         void ReadPower_SSA(uint8_t mpaid = 0 , uint8_t ssaid = 0);
+	void SSAEqualizeDACs(uint8_t pChipId);
         void KillI2C();
         ///
 

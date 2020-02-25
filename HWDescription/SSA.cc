@@ -1,11 +1,11 @@
 /*!
 
-        Filename :                      SSA.cc
-        Content :                       SSA Description class, config of the SSAs
-        Programmer :                    Lorenzo BIDEGAIN
-        Version :                       1.0
-        Date of Creation :              25/06/14
-        Support :                       mail to : lorenzo.bidegain@gmail.com
+        \file                   SSA.cc
+        \brief                  SSA Description class, config of the SSAs
+        \author                 Marc Osherson (copying from Cbc.h)
+        \version                1.0
+        \date                   31/07/19
+        Support :               mail to : oshersonmarc@gmail.com
 
  */
 
@@ -17,31 +17,28 @@
 #include <string.h>
 #include <iomanip>
 #include "Definition.h"
+#include "../Utils/ChannelGroupHandler.h"
 
+namespace Ph2_HwDescription { // open namespace
 
-namespace Ph2_HwDescription {
-    // C'tors with object FE Description
+    SSA::SSA ( const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pSSASide, const std::string& filename ) : ReadoutChip ( pFeDesc, pSSAId )
+     {
+        fMaxRegValue=255; // 8 bit registers in CBC
+        fChipOriginalMask = new ChannelGroup<120>;
+        loadfRegMap ( filename );
+        setFrontEndType ( FrontEndType::SSA);
+    }
 
-    SSA::SSA ( const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t) : FrontEndDescription ( pFeDesc ),
-        fSSAId ( pSSAId )
-
-    {}
-
-    // C'tors which take BeId, FMCId, FeID, SSAId
-
-    SSA::SSA ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t pSSASide, const std::string &filename) : FrontEndDescription ( pBeId, pFMCId, pFeId ), fSSAId ( pSSAId )
-
-    {  loadfRegMap ( filename );}
-
-    // Copy C'tor
-
-    SSA::SSA ( const SSA& SSAobj ) : FrontEndDescription ( SSAobj ),
-        fSSAId ( SSAobj.fSSAId )
+    SSA::SSA ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t pSSASide, const std::string& filename ) : ReadoutChip ( pBeId, pFMCId, pFeId, pSSAId)
     {
+        fMaxRegValue=255; // 8 bit registers in CBC
+        fChipOriginalMask = new ChannelGroup<120>;
+        loadfRegMap ( filename );
+        setFrontEndType ( FrontEndType::SSA);
     }
 
     void SSA::loadfRegMap ( const std::string& filename )
-    {
+    { // start loadfRegMap
         std::ifstream file ( filename.c_str(), std::ios::in );
 
         if ( file )
@@ -49,9 +46,11 @@ namespace Ph2_HwDescription {
             std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
             int cLineCounter = 0;
             ChipRegItem fRegItem;
-
+            
+            // fhasMaskedChannels = false;
             while ( getline ( file, line ) )
             {
+                //std::cout<< __PRETTY_FUNCTION__ << " " << line << std::endl;
                 if ( line.find_first_not_of ( " \t" ) == std::string::npos )
                 {
                     fCommentMap[cLineCounter] = line;
@@ -70,16 +69,32 @@ namespace Ph2_HwDescription {
                 {
                     std::istringstream input ( line );
                     input >> fName >> fPage_str >> fAddress_str >> fDefValue_str >> fValue_str;
+
                     fRegItem.fPage = strtoul ( fPage_str.c_str(), 0, 16 );
                     fRegItem.fAddress = strtoul ( fAddress_str.c_str(), 0, 16 );
                     fRegItem.fDefValue = strtoul ( fDefValue_str.c_str(), 0, 16 );
                     fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
+			//FIXME this channel masking part is currently using the CBC values. Need to check what the SSA format is
+                    if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
+                        if(fRegItem.fValue!=0xFF)
+                        {
+                            for(uint8_t channel=0; channel<8; ++channel)
+                            {
+                                if((fRegItem.fValue && (0x1<<channel)) == 0)
+                                {
+                                    fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20)*8 + channel);
+                                }
+                            }
+                        }
+                    }
                     fRegMap[fName] = fRegItem;
+                    //std::cout << __PRETTY_FUNCTION__ << +fRegItem.fValue << std::endl;
                     cLineCounter++;
                 }
             }
 
             file.close();
+
         }
         else
         {
@@ -87,58 +102,49 @@ namespace Ph2_HwDescription {
             exit (1);
         }
 
-        //for (auto cItem : fRegMap)
-        //LOG (DEBUG) << cItem.first;
-    }
+    } // end loadfRegMap
 
-    uint8_t SSA::getReg ( const std::string& pReg ) const
-    {
-        SSARegMap::const_iterator i = fRegMap.find ( pReg );
+    void SSA::saveRegMap ( const std::string& filename )
+    { // start saveRegMap
 
-        if ( i == fRegMap.end() )
+        std::ofstream file ( filename.c_str(), std::ios::out | std::ios::trunc );
+
+        if ( file )
         {
-            LOG (INFO) << "The SSA object: " << +fSSAId << " doesn't have " << pReg ;
-            return 0;
+            std::set<SSARegPair, RegItemComparer> fSetRegItem;
+
+            for ( auto& it : fRegMap )
+                fSetRegItem.insert ( {it.first, it.second} );
+
+            int cLineCounter = 0;
+
+            for ( const auto& v : fSetRegItem )
+            {
+                while (fCommentMap.find (cLineCounter) != std::end (fCommentMap) )
+                {
+                    auto cComment = fCommentMap.find (cLineCounter);
+
+                    file << cComment->second << std::endl;
+                    cLineCounter++;
+                }
+
+                file << v.first;
+
+                for ( int j = 0; j < 48; j++ )
+                    file << " ";
+
+                file.seekp ( -v.first.size(), std::ios_base::cur );
+
+
+                file << "0x" << std::setfill ( '0' ) << std::setw ( 2 ) << std::hex << std::uppercase << int ( v.second.fPage ) << "\t0x" << std::setfill ( '0' ) << std::setw ( 2 ) << std::hex << std::uppercase << int ( v.second.fAddress ) << "\t0x" << std::setfill ( '0' ) << std::setw ( 2 ) << std::hex << std::uppercase << int ( v.second.fDefValue ) << "\t0x" << std::setfill ( '0' ) << std::setw ( 2 ) << std::hex << std::uppercase << int ( v.second.fValue ) << std::endl;
+
+                cLineCounter++;
+            }
+
+            file.close();
         }
         else
-            return i->second.fValue;
-    }
-    void SSA::setReg ( const std::string& pReg, uint8_t psetValue )
-    {
-        SSARegMap::iterator i = fRegMap.find ( pReg );
+            LOG (ERROR) << "Error opening file" ;
+    } // end saveRegMap
 
-        if ( i == fRegMap.end() )
-            LOG (INFO) << "The SSA object: " << +fSSAId << " doesn't have " << pReg ;
-        else
-            i->second.fValue = psetValue;
-    }
-
-    ChipRegItem SSA::getRegItem ( const std::string& pReg )
-    {
-        ChipRegItem cItem;
-        SSARegMap::iterator i = fRegMap.find ( pReg );
-
-        if ( i != std::end ( fRegMap ) ) return ( i->second );
-        else
-        {
-            LOG (ERROR) << "Error, no Register " << pReg << " found in the RegisterMap of SSA " << +fSSAId << "!" ;
-            throw Exception ( "SSA: no matching register found" );
-            return cItem;
-        }
-    }
-
-    void SSA::CheckRegVals()
-	{
-
-		LOG (INFO) << "Checking values currently written to registers: ";
-	
-	}
-
-    // D'Tor
-
-    SSA::~SSA()
-    {
-
-    }
-
-}
+} // close namespace
