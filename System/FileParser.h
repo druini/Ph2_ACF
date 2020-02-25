@@ -90,7 +90,8 @@ namespace Ph2_System
         void parseCbcSettings      (pugi::xml_node pCbcNode,      Ph2_HwDescription::ReadoutChip* pCbc,             std::ostream& os);
         void parseGlobalCbcSettings(pugi::xml_node pModuleNode,   Ph2_HwDescription::Module* pModule,               std::ostream& os);
 
-
+        void parseSSA(pugi::xml_node pModuleNode,   Ph2_HwDescription::Module* cModule, std::string cFilePrefix);
+        void parseSSASettings(pugi::xml_node pModuleNode,   Ph2_HwDescription::ReadoutChip* cSSA);
 	// ########################
 	// # RD53 specific parser #
 	// ########################

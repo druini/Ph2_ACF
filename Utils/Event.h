@@ -38,7 +38,7 @@ namespace Ph2_HwInterface
         uint8_t fSensor;
         uint8_t fFirstStrip;
         uint8_t fClusterWidth;
-        double getBaricentre();
+        float getBaricentre();
     };
 
     class PCluster
@@ -48,7 +48,7 @@ namespace Ph2_HwInterface
         uint8_t fAddress;
         uint8_t fWidth;
         uint8_t fZpos;
-        double getBaricentre();
+        float getBaricentre();
     };
 
     class SCluster
@@ -57,7 +57,7 @@ namespace Ph2_HwInterface
         uint8_t fAddress;
         uint8_t fMip;
         uint8_t fWidth;
-        double getBaricentre();
+        float getBaricentre();
     };
 
 
@@ -122,6 +122,7 @@ namespace Ph2_HwInterface
         uint8_t fBeFWType;
         uint8_t fCBCDataType;
         uint8_t fNCbc;
+        uint8_t fNSSA;
         uint16_t fEventDataSize;
         uint32_t fBeStatus;
 

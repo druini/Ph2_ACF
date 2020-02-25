@@ -19,6 +19,7 @@
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53Physics.h"
+#include "../tools/SSAPhysics.h"
 
 
 //========================================================================================================================
@@ -93,6 +94,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
       else if (getVariableValue("Calibration",buffer) == "clockdelay")              theSystemController_ = new CombinedCalibration<ClockDelay>;
       else if (getVariableValue("Calibration",buffer) == "threqu")                  theSystemController_ = new CombinedCalibration<ThrEqualization>;
       else if (getVariableValue("Calibration",buffer) == "physics")                 theSystemController_ = new Physics;
+      else if (getVariableValue("Calibration",buffer) == "ssaphysics")              theSystemController_ = new SSAPhysics;
 
       else
         {

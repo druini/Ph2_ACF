@@ -32,6 +32,7 @@
 #include "../Utils/D19cCbc3EventZS.h"
 #include "../Utils/D19cCicEvent.h"
 #include "../Utils/D19cCic2Event.h"
+#include "../Utils/D19cSSAEvent.h"
 #include "../HWDescription/OuterTrackerModule.h"
 
 #include <unordered_map>
