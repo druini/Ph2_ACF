@@ -45,8 +45,8 @@ void Physics::ConfigureCalibration ()
   // ###########################################
   // # Initialize directory and data container #
   // ###########################################
-  const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+  const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   this->CreateResultDirectory(RESULTDIR, false, false);
   ContainerFactory::copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, theOccContainer);
@@ -88,8 +88,8 @@ void Physics::Start (int currentRun)
 
 void Physics::sendData (const BoardContainer* cBoard)
 {
-  const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+  const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   auto theOccStream   = prepareChannelContainerStreamer<OccupancyAndPh>                         ("Occ");
   auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<BCIDsize>> ("BCID");
@@ -217,8 +217,8 @@ void Physics::fillHisto ()
 
 void Physics::fillDataContainer (BoardContainer* const& cBoard)
 {
-  const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+  const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
 
   // ###################
@@ -260,7 +260,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
           for (auto i = 1u; i < cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.size(); i++)
             {
               int deltaBCID = cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
-              deltaBCID += (deltaBCID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
+              deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
               if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDBLUE <<"[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
               else theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
             }
@@ -269,7 +269,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
           for (auto i = 1u; i < cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.size(); i++)
             {
               int deltaTrgID = cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] - cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
-              deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
+              deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
               if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
               else theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
             }

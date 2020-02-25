@@ -15,7 +15,6 @@
 #include <vector>
 #include <memory>
 
-#include "../HWDescription/RD53.h"
 #include "../System/SystemController.h"
 #include "../RootUtils/RootContainerFactory.h"
 #include "../RootUtils/CanvasContainer.h"

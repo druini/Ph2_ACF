@@ -27,7 +27,7 @@ void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDet
   offset     = this->findValueInSettings(settingsMap,"VCalMED");
 
 
-  auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue-offset, stopValue-offset, nEvents, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION));
+  auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue-offset, stopValue-offset, nEvents, 0, RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION));
   bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "ToT");
 
   auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);

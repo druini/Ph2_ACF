@@ -23,9 +23,9 @@ void PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
   nEvents = this->findValueInSettings(settingsMap,"nEvents");
 
 
-  size_t ToTsize   = RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
-  size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-  size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+  size_t ToTsize   = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
+  size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   auto hOcc1D = CanvasContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, nEvents + 1);
   bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Number of hits", "Entries");
@@ -48,8 +48,8 @@ void PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
 
 bool PixelAliveHistograms::fill (std::vector<char>& dataBuffer)
 {
-  const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+  const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   ChannelContainerStream<OccupancyAndPh>                          theOccStreamer  ("PixelAliveOcc");
   ChipContainerStream<EmptyContainer,GenericDataArray<BCIDsize>>  theBCIDStreamer ("PixelAliveBCID"); // @TMP@
@@ -109,7 +109,7 @@ void PixelAliveHistograms::fill (const DetectorDataContainer& DataContainer)
 
 void PixelAliveHistograms::fillBCID (const DetectorDataContainer& DataContainer)
 {
-  const size_t BCIDsize = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t BCIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
 
   for (const auto cBoard : DataContainer)
     for (const auto cModule : *cBoard)
@@ -125,7 +125,7 @@ void PixelAliveHistograms::fillBCID (const DetectorDataContainer& DataContainer)
 
 void PixelAliveHistograms::fillTrgID (const DetectorDataContainer& DataContainer)
 {
-  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+  const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   for (const auto cBoard : DataContainer)
     for (const auto cModule : *cBoard)

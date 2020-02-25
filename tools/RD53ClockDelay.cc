@@ -30,7 +30,7 @@ void ClockDelay::ConfigureCalibration ()
   nEvents        = this->findValueInSettings("nEvents");
   doFast         = this->findValueInSettings("DoFast");
   startValue     = 0;
-  stopValue      = RD53Shared::NLATENCYBINS*(RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"))+1) - 1;
+  stopValue      = RD53Shared::NLATENCYBINS*(RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"))+1) - 1;
   doDisplay      = this->findValueInSettings("DisplayHisto");
   doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData = this->findValueInSettings("SaveBinaryData");
@@ -39,7 +39,7 @@ void ClockDelay::ConfigureCalibration ()
   // ##############################
   // # Initialize dac scan values #
   // ##############################
-  const size_t nSteps = (stopValue - startValue + 1 <= RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+  const size_t nSteps = (stopValue - startValue + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
   const float  step   = (stopValue - startValue + 1) / nSteps;
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
@@ -55,9 +55,9 @@ void ClockDelay::ConfigureCalibration ()
   // # Clock register masking #
   // ##########################
   shiftData = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_DATA_DELAY");
-  saveData = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY")) -
-    (RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY")) << shiftData);
-  maxDelay = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"));
+  saveData = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY")) -
+    (RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY")) << shiftData);
+  maxDelay = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"));
 
 
   // #######################
@@ -86,7 +86,7 @@ void ClockDelay::Start (int currentRun)
 
 void ClockDelay::sendData ()
 {
-  const size_t ClkDelaySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+  const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   auto theStream           = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<ClkDelaySize>>("Occ"); // @TMP@
   auto theClockDelayStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>                      ("ClkDelay"); // @TMP@
@@ -140,7 +140,7 @@ void ClockDelay::initializeFiles (const std::string fileRes_, int currentRun)
 
 void ClockDelay::run ()
 {
-  const size_t ClkDelaySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+  const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
 
   // ###############
@@ -223,7 +223,7 @@ void ClockDelay::draw (int currentRun)
 
 void ClockDelay::analyze ()
 {
-  const size_t ClkDelaySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+  const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theClockDelayContainer);
 
@@ -275,7 +275,7 @@ void ClockDelay::fillHisto ()
 
 void ClockDelay::scanDac (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-  const size_t ClkDelaySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+  const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   for (auto i = 0u; i < dacList.size(); i++)
     {

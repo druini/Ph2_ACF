@@ -22,8 +22,11 @@ namespace RD53Shared
   const int    NLATENCYBINS  =  2;   // Number of latencies spanned
   const int    MAXBITCHIPREG = 16;   // Maximum number of bits of a chp register
 
-  std::string fromInt2Str (int val);
+  std::string fromInt2Str     (int val);
   std::string composeFileName (const std::string& configFileName, const std::string& fName2Add);
+  size_t      countBitsOne    (size_t num);
+
+  static constexpr size_t setBits (size_t nBit2Set) { return (1 << nBit2Set) - 1; }
 }
 
 #endif

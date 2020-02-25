@@ -17,7 +17,7 @@ void ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContai
   ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
 
-  uint16_t rangeThreshold = RD53::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("Vthreshold_LIN")) + 1;
+  uint16_t rangeThreshold = RD53Shared::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("Vthreshold_LIN")) + 1;
 
   auto hThrehsold = CanvasContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
   bookImplementer(theOutputFile, theDetectorStructure, Threhsold, hThrehsold, "Threhsold", "Entries");

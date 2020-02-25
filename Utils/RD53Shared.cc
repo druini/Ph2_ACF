@@ -22,3 +22,14 @@ std::string RD53Shared::composeFileName (const std::string& configFileName, cons
   output.insert(output.find(NAMESEARCHinPATH),fName2Add);
   return output;
 }
+
+size_t RD53Shared::countBitsOne (size_t num)
+{
+  auto count = 0u;
+  while (num != 0)
+    {
+      count += (num & 1);
+      num >>= 1;
+    }
+  return count;
+}

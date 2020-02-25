@@ -140,7 +140,7 @@ void ThrEqualization::run ()
   // ##############################
   // # Run threshold equalization #
   // ##############################
-  size_t TDACsize = RD53::setBits(RD53Constants::NBIT_TDAC) + 1;
+  size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
 
   // ############################
   // # Set new VCAL_HIGH values #
@@ -252,7 +252,7 @@ void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents,
 
   ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, minDACcontainer, init = 0);
   ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, midDACcontainer);
-  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, maxDACcontainer, init = (RD53::setBits(numberOfBits) + 1));
+  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, maxDACcontainer, init = (RD53Shared::setBits(numberOfBits) + 1));
 
   ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, bestDACcontainer);
   ContainerFactory::copyAndInitChannel<OccupancyAndPh>(*fDetectorContainer, bestContainer);

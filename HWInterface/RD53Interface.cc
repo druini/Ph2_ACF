@@ -123,7 +123,7 @@ namespace Ph2_HwInterface
     // ##############################
 
 
-    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG", RD53::setBits(nActiveLanes) << 2, true); // Number of active lanes [5:2]
+    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG", RD53Shared::setBits(nActiveLanes) << 2, true); // Number of active lanes [5:2]
     // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
@@ -211,7 +211,7 @@ namespace Ph2_HwInterface
 
     for (auto i = 0u; i < regReadback.size(); i++)
       // Removing bit related to PIX_PORTAL register identification
-      regReadback[i].first = regReadback[i].first & static_cast<uint16_t>(RD53::setBits(RD53Constants::NBIT_ADDR));
+      regReadback[i].first = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR));
 
     return regReadback;
   }

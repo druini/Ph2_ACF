@@ -200,18 +200,6 @@ namespace Ph2_HwDescription
       uint8_t cal_aux_delay;
     };
 
-    static constexpr size_t setBits (size_t nBit2Set) { return (1 << nBit2Set) - 1; }
-
-    static auto countBitsOne (size_t num)
-    {
-      auto count = 0u;
-      while (num != 0)
-        {
-          count += (num & 1);
-          num >>= 1;
-        }
-      return count;
-    }
 
   private:
     std::vector<perPixelData> fPixelsMask;

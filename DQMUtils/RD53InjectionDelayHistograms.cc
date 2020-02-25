@@ -21,7 +21,7 @@ void InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContain
   // # Retrieve parameters #
   // #######################
   startValue = 0;
-  stopValue  = RD53Shared::NLATENCYBINS*(RD53::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"))+1) - 1;
+  stopValue  = RD53Shared::NLATENCYBINS*(RD53Shared::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"))+1) - 1;
 
 
   auto hInjectionDelay = CanvasContainer<TH1F>("InjectionDelay", "Injection Delay", stopValue - startValue + 1, startValue, stopValue + 1);
@@ -33,7 +33,7 @@ void InjectionDelayHistograms::book (TFile* theOutputFile, const DetectorContain
 
 bool InjectionDelayHistograms::fill (std::vector<char>& dataBuffer)
 {
-  const size_t InjDelaySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+  const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   ChipContainerStream<EmptyContainer,GenericDataArray<InjDelaySize>> theOccStreamer           ("InjectionDelayOcc"); // @TMP@
   ChipContainerStream<EmptyContainer,uint16_t>                       theInjectionDelayStreamer("InjectionDelayInjDelay"); // @TMP@
@@ -58,7 +58,7 @@ bool InjectionDelayHistograms::fill (std::vector<char>& dataBuffer)
 
 void InjectionDelayHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer)
 {
-  const size_t InjDelaySize = RD53::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+  const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   for (const auto cBoard : OccupancyContainer)
     for (const auto cModule : *cBoard)

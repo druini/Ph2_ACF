@@ -113,9 +113,9 @@ namespace Ph2_HwInterface
               else if (static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::TLU)
                 {
                   cfgDIO5.enable             = true;
-                  cfgDIO5.ch_out_en          = 0x05;
+                  cfgDIO5.ch_out_en          = 0x04;
                   cfgDIO5.tlu_en             = true;
-                  cfgDIO5.tlu_handshake_mode = 0x00;
+                  cfgDIO5.tlu_handshake_mode = 0x02;
                 }
             }
         }
@@ -221,6 +221,8 @@ namespace Ph2_HwInterface
   // #############################################
   {
     size_t n32bitWords = (data.size() / 2) + (data.size() % 2);
+    bool retry;
+    int  nAttempts = 0;
 
 
     // #####################
@@ -259,8 +261,16 @@ namespace Ph2_HwInterface
 
     WriteStackReg(stackRegisters);
 
-    if (ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched") == false)
-      LOG (ERROR) << BOLDRED << "Error while dispatching chip register program" << RESET;
+
+    // ####################################
+    // # Check if commands were dispached #
+    // ####################################
+    while (((retry = !ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched")) == true) && (nAttempts < MAXATTEMPTS))
+      {
+        nAttempts++;
+        usleep(READOUTSLEEP);
+      }
+    if (retry == true) LOG (ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ")" << RESET;
   }
 
   std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters (Chip* pChip)
@@ -372,10 +382,10 @@ namespace Ph2_HwInterface
     // # Check communication with the chip(s) #
     // ########################################
     unsigned int chips_en = ReadReg("user.ctrl_regs.Chips_en");
-    LOG (INFO) << BOLDBLUE << "\t--> Number of required data lanes: " << BOLDYELLOW << RD53::countBitsOne(chips_en) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<12>(chips_en) << RESET;
+    LOG (INFO) << BOLDBLUE << "\t--> Number of required data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<12>(chips_en) << RESET;
 
     unsigned int channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
-    LOG (INFO) << BOLDBLUE << "\t--> Number of active data lanes:   " << BOLDYELLOW << RD53::countBitsOne(channel_up) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<12>(channel_up) << RESET;
+    LOG (INFO) << BOLDBLUE << "\t--> Number of active data lanes:   " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<12>(channel_up) << RESET;
 
     if (chips_en & ~channel_up)
     {
@@ -717,7 +727,7 @@ namespace Ph2_HwInterface
 
     if (retry == true)
       {
-        LOG (ERROR) << BOLDBLUE << "[RD53FWInterface::ReadNEvent] " << BOLDRED << "reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ") without success" << RESET;
+        LOG (ERROR) << BOLDRED << "Reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
       }
 
@@ -732,7 +742,7 @@ namespace Ph2_HwInterface
   {
     uint16_t evtStatus = RD53FWEvtEncoder::GOOD;
     std::vector<size_t> event_start;
-    const size_t maxL1Counter = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t maxL1Counter = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
 
     // ######################
@@ -1226,13 +1236,13 @@ namespace Ph2_HwInterface
   // ################################################
   // # I2C block for programming peripheral devices #
   // ################################################
-  bool RD53FWInterface::I2cCmdAckWait (unsigned int trials)
+  bool RD53FWInterface::I2cCmdAckWait (unsigned int nAttempts)
   {
     const uint16_t I2CcmdAckGOOD = 0x01;
     uint16_t status = 0x02; // 0x02 = I2CcmdAckBAD
     uint16_t cLoop  = 0;
 
-    while (++cLoop < trials)
+    while (++cLoop < nAttempts)
       {
         status = ReadReg("user.stat_regs.global_reg.i2c_acq_err");
         if (status == I2CcmdAckGOOD) return true;
