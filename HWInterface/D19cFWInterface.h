@@ -385,6 +385,8 @@ namespace Ph2_HwInterface {
 
         void L1ADebug();
         void StubDebug(bool pWithTestPulse=true, uint8_t pNlines=5);
+        bool L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
+        bool L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
         bool L1Tuning(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
         bool StubTuning(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
         //bool BackEndTuning(const BeBoard* pBoard, bool pDoL1A=true);

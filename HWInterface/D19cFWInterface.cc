@@ -1735,36 +1735,649 @@ void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
     this->ResetReadout(); 
 
 }
+
 // tuning of L1A lines 
-bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
+// bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard , bool pScope)
+// {
+//     if( pScope) 
+//         this->L1ADebug ();
+    
+//     // read original fast command configuration 
+//     uint32_t cFastCommandConfig = this->ReadReg("fc7_daq_cnfg.fast_command_block");
+//     LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
+//     // reset readout 
+//     this->ResetReadout(); 
+//     std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//     PhaseTuner pTuner; 
+//     bool cSuccess=true;
+
+//     // // make sure you're only sending one trigger at a time 
+//     auto cMult = this->ReadReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+//     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
+            
+//     // configure triggers 
+//     this->ConfigureTriggerFSM(0, 1 , 3);
+//     // disable back-pressure 
+//     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
+//     // back-end tuning on l1 lines
+//     for (auto& cFe : pBoard->fModuleVector)
+//     {
+//         uint8_t cBitslip=0;
+//         selectLink (cFe->getLinkId());
+//         uint8_t cHybrid= cFe->getFeId() ;
+//         uint8_t cChip = 0;
+//         auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
+//         int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
+//         // need to know the address 
+//         //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
+//         // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging 
+        
+//         uint8_t cLineId=0;
+//         // tune phase on l1A line - don't have t do anything on the FEs
+//         if( fOptical )
+//         {
+//             LOG (INFO) << BOLDBLUE << "Optical readout .. don't have to do anything here" << RESET;
+//         }
+//         else 
+//         {
+//             this->ChipReSync();
+//             LOG (INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid << " Chip" << +cChipId << RESET;
+//             uint16_t cPattern = 0xAA;
+//             // configure pattern
+//             pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
+//             pTuner.SetLinePattern( this, cHybrid, cChip, cLineId , cPattern, 8);
+//             std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//             // start phase aligner 
+//             pTuner.SendControl(this, cHybrid, cChip, cLineId, "PhaseAlignment");
+//             std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//             this->Start();
+//             std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+//             this->Stop();
+//             uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
+//         }
+//     }
+
+//     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
+//     if( pScope )
+//         this->L1ADebug ();
+                    
+//     return cSuccess;
+// }
+// bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard , bool pScope)
+// {
+//     if( pScope) 
+//         this->L1ADebug ();
+    
+//     // read original fast command configuration 
+//     uint32_t cFastCommandConfig = this->ReadReg("fc7_daq_cnfg.fast_command_block");
+//     LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
+//     // reset readout 
+//     this->ResetReadout(); 
+//     std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//     PhaseTuner pTuner; 
+//     bool cSuccess=true;
+
+//     // make sure you're only sending one trigger at a time 
+//     auto cMult = this->ReadReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+//     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
+            
+//     // configure triggers 
+//     this->ConfigureTriggerFSM(0, 1 , 3);
+//     // disable back-pressure 
+//     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
+//     // back-end tuning on l1 lines
+//     for (auto& cFe : pBoard->fModuleVector)
+//     {
+//         uint8_t cBitslip=0;
+//         selectLink (cFe->getLinkId());
+//         uint8_t cHybrid= cFe->getFeId() ;
+//         uint8_t cChip = 0;
+//         auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
+//         int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
+//         // need to know the address 
+//         //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
+//         // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging 
+        
+//         uint8_t cLineId=0;
+//         // tune phase on l1A line - don't have t do anything on the FEs
+//         if( fOptical )
+//         {
+//             // configure tuning mode     
+//             pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
+//             std::this_thread::sleep_for (std::chrono::microseconds (100) );
+//             // start word aligner 
+//             pTuner.SendControl(this, cHybrid, cChip, cLineId, "WordAlignment");
+//             std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//             // send 100 triggers .. waiting 10 ms between each 
+//             this->Start();
+//             std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+//             this->Stop();
+//             uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
+//             cSuccess = pTuner.fDone;
+//             if( pTuner.fDone == 1  ) 
+//                 pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, pTuner.fBitslip, 0, 0 );
+//         }
+//         else 
+//         {
+//             this->ChipReSync();
+//             LOG (INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid << " Chip" << +cChipId << RESET;
+//             uint16_t cPattern = 0xAA;
+//             // configure pattern
+//             pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
+//             if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
+//             {    
+//                 cPattern = 0xFE;
+//                 for(uint16_t cPatternLength=40; cPatternLength < 41; cPatternLength++)
+//                 {
+//                     pTuner.SetLinePattern( this, cHybrid, cChip, cLineId , cPattern, cPatternLength);
+//                     std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//                     // start word aligner 
+//                     pTuner.SendControl(this, cHybrid, cChip, cLineId, "WordAlignment");
+//                     std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//                     this->Start();
+//                     std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+//                     this->Stop();
+//                     uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
+//                     cSuccess = pTuner.fDone;
+//                 }
+//                 // if the above doesn't work.. try and find the correct bitslip manually in software 
+//                 if( !cSuccess)
+//                 {
+//                     LOG (INFO) << BOLDBLUE << "Going to try and align manually in software..." << RESET; 
+//                     for( cBitslip=0; cBitslip < 8; cBitslip++)
+//                     {
+//                         LOG (INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
+//                         pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, cBitslip, 0, 0 );
+//                         this->ConfigureTriggerFSM(0, 10 , 3); 
+//                         // disable back-pressure 
+//                         this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
+//                         this->Start();
+//                         std::this_thread::sleep_for (std::chrono::microseconds (100) );
+//                         this->Stop();
+                        
+//                         auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+//                         std::string cBuffer = "";
+//                         bool cAligned=false;
+//                         std::string cOutput="\n";
+//                         for( auto cWord : cWords )
+//                         {
+//                             auto cString=std::bitset<32>(cWord).to_string();
+//                             std::vector<std::string> cOutputWords(0);
+//                             for( size_t cIndex = 0 ; cIndex < 4 ; cIndex++)
+//                             {
+//                                 auto c8bitWord = cString.substr(cIndex*8, 8) ;
+//                                 cOutputWords.push_back(c8bitWord);
+//                                 cAligned = (cAligned | (std::stoi( c8bitWord , nullptr,2 ) == cPattern) );
+//                             }
+//                             for( auto cIt = cOutputWords.end()-1 ; cIt >= cOutputWords.begin() ; cIt--)
+//                             {
+//                                 cOutput += *cIt + " "; 
+//                             }
+//                             cOutput += "\n";
+//                         }
+//                         if( cAligned)
+//                         {
+//                             LOG (INFO) << BOLDGREEN << cOutput << RESET;
+//                             this->ResetReadout();
+//                             cSuccess=true;
+//                             break;
+//                         }
+//                         else
+//                             LOG (INFO) << BOLDRED << cOutput << RESET;
+//                         this->ResetReadout(); 
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+//     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
+//     if( pScope )
+//         this->L1ADebug ();
+                    
+//     return cSuccess;
+// }
+
+// bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
+// {
+//     bool cSuccess = this->L1PhaseTuning(pBoard, pScope);
+//     if( cSuccess )
+//         cSuccess = this->L1WordAlignment(pBoard, pScope);
+//     /*if( pScope) 
+//         this->L1ADebug ();
+    
+//     // read original fast command configuration 
+//     uint32_t cFastCommandConfig = this->ReadReg("fc7_daq_cnfg.fast_command_block");
+//     LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
+//     // reset readout 
+//     this->ResetReadout(); 
+//     std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//     PhaseTuner pTuner; 
+//     bool cSuccess=true;
+
+//     // make sure you're only sending one trigger at a time 
+//     auto cMult = this->ReadReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+//     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
+            
+//     // configure triggers 
+//     this->ConfigureTriggerFSM(0, 1 , 3);
+//     // disable back-pressure 
+//     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
+//     // back-end tuning on l1 lines
+//     for (auto& cFe : pBoard->fModuleVector)
+//     {
+//         uint8_t cBitslip=0;
+//         selectLink (cFe->getLinkId());
+//         uint8_t cHybrid= cFe->getFeId() ;
+//         uint8_t cChip = 0;
+//         auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
+//         int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
+//         // need to know the address 
+//         //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
+//         // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging 
+        
+//         uint8_t cLineId=0;
+//         // tune phase on l1A line - don't have t do anything on the FEs
+//         if( fOptical )
+//         {
+//             // configure tuning mode     
+//             pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
+//             std::this_thread::sleep_for (std::chrono::microseconds (100) );
+//             // start word aligner 
+//             pTuner.SendControl(this, cHybrid, cChip, cLineId, "WordAlignment");
+//             std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//             // send 100 triggers .. waiting 10 ms between each 
+//             this->Start();
+//             std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+//             this->Stop();
+//             uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
+//             cSuccess = pTuner.fDone;
+//             if( pTuner.fDone == 1  ) 
+//                 pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, pTuner.fBitslip, 0, 0 );
+//         }
+//         else 
+//         {
+//             this->ChipReSync();
+//             LOG (INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid << " Chip" << +cChipId << RESET;
+//             uint16_t cPattern = 0xAA;
+//             // configure pattern
+//             pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
+//             pTuner.SetLinePattern( this, cHybrid, cChip, cLineId , cPattern, 8);
+//             std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//             // start phase aligner 
+//             pTuner.SendControl(this, cHybrid, cChip, cLineId, "PhaseAlignment");
+//             std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//             this->Start();
+//             std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+//             this->Stop();
+//             uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
+
+//             if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
+//             {    
+//                 cPattern = 0xFE;
+//                 for(uint16_t cPatternLength=40; cPatternLength < 41; cPatternLength++)
+//                 {
+//                     pTuner.SetLinePattern( this, cHybrid, cChip, cLineId , cPattern, cPatternLength);
+//                     std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//                     // start word aligner 
+//                     pTuner.SendControl(this, cHybrid, cChip, cLineId, "WordAlignment");
+//                     std::this_thread::sleep_for (std::chrono::microseconds (10) );
+//                     this->Start();
+//                     std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+//                     this->Stop();
+//                     cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
+//                     cSuccess = pTuner.fDone;
+//                 }
+//                 // if the above doesn't work.. try and find the correct bitslip manually in software 
+//                 if( !cSuccess)
+//                 {
+//                     LOG (INFO) << BOLDBLUE << "Going to try and align manually in software..." << RESET; 
+//                     for( cBitslip=0; cBitslip < 8; cBitslip++)
+//                     {
+//                         LOG (INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
+//                         pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, cBitslip, 0, 0 );
+//                         this->ConfigureTriggerFSM(0, 10 , 3); 
+//                         // disable back-pressure 
+//                         this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
+//                         this->Start();
+//                         std::this_thread::sleep_for (std::chrono::microseconds (100) );
+//                         this->Stop();
+                        
+//                         auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+//                         std::string cBuffer = "";
+//                         bool cAligned=false;
+//                         std::string cOutput="\n";
+//                         for( auto cWord : cWords )
+//                         {
+//                             auto cString=std::bitset<32>(cWord).to_string();
+//                             std::vector<std::string> cOutputWords(0);
+//                             for( size_t cIndex = 0 ; cIndex < 4 ; cIndex++)
+//                             {
+//                                 auto c8bitWord = cString.substr(cIndex*8, 8) ;
+//                                 cOutputWords.push_back(c8bitWord);
+//                                 cAligned = (cAligned | (std::stoi( c8bitWord , nullptr,2 ) == cPattern) );
+//                             }
+//                             for( auto cIt = cOutputWords.end()-1 ; cIt >= cOutputWords.begin() ; cIt--)
+//                             {
+//                                 cOutput += *cIt + " "; 
+//                             }
+//                             cOutput += "\n";
+//                         }
+//                         if( cAligned)
+//                         {
+//                             LOG (INFO) << BOLDGREEN << cOutput << RESET;
+//                             this->ResetReadout();
+//                             cSuccess=true;
+//                             break;
+//                         }
+//                         else
+//                             LOG (INFO) << BOLDRED << cOutput << RESET;
+//                         this->ResetReadout(); 
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+//     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
+//     if( pScope )
+//         this->L1ADebug ();
+//     */
+//     return cSuccess;
+// }
+
+// tuning of L1A lines 
+bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard , bool pScope)
 {
-    // original trigger config 
-    auto cRegisterMap = pBoard->getBeBoardRegMap();
+    LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly sample L1A data coming from the front-end objects." << RESET;
+    // original reg map 
+    BeBoardRegMap cRegisterMap = pBoard->getBeBoardRegMap();
+    
     if( pScope) 
         this->L1ADebug ();
-    // read original fast command configuration 
-    uint32_t cFastCommandConfig = this->ReadReg("fc7_daq_cnfg.fast_command_block");
-    LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
-    // reset readout 
-    this->ResetReadout(); 
-    std::this_thread::sleep_for (std::chrono::microseconds (10) );
-    PhaseTuner pTuner; 
-    bool cSuccess=true;
-
+    
+    // configure triggers 
     // make sure you're only sending one trigger at a time 
     auto cMult = this->ReadReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
     auto cTriggerRate =  this->ReadReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
-    LOG (INFO) << BOLDBLUE << "Tuning of L1A lines performed with trigger FSM configured to produce triggers at a frequency of " << +cTriggerRate << RESET;
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 10);
+    // disable back-pressure 
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
     // reset trigger 
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
     std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
     // load new trigger configuration 
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
     std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    // reset readout 
+    this->ResetReadout(); 
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
 
+    LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
+    PhaseTuner pTuner; 
+    bool cSuccess=true;
+    // back-end tuning on l1 lines
+    for (auto& cFe : pBoard->fModuleVector)
+    {
+        uint8_t cBitslip=0;
+        selectLink (cFe->getLinkId());
+        uint8_t cHybrid= cFe->getFeId() ;
+        uint8_t cChip = 0;
+        auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
+        int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
+        // need to know the address 
+        //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
+        // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging 
+        
+        uint8_t cLineId=0;
+        // tune phase on l1A line - don't have t do anything on the FEs
+        if( fOptical )
+        {
+            LOG (INFO) << BOLDBLUE << "Optical readout .. don't have to do anything here" << RESET;
+        }
+        else 
+        {
+            this->ChipReSync();
+            LOG (INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid << " Chip" << +cChipId << RESET;
+            uint16_t cPattern = 0xAA;
+            // configure pattern
+            pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
+            pTuner.SetLinePattern( this, cHybrid, cChip, cLineId , cPattern, 8);
+            std::this_thread::sleep_for (std::chrono::microseconds (10) );
+            // start phase aligner 
+            pTuner.SendControl(this, cHybrid, cChip, cLineId, "PhaseAlignment");
+            std::this_thread::sleep_for (std::chrono::microseconds (10) );
+            this->Start();
+            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+            this->Stop();
+            uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
+        }
+    }
 
+    if( pScope )
+        this->L1ADebug ();
+
+    // reconfigure trigger 
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cTriggerRate);
+    // reconfigure original trigger configu 
+    std::vector< std::pair<std::string, uint32_t> > cVecReg;
+    for ( auto const& it : cRegisterMap )
+    {
+        auto cRegName = it.first;
+        if( cRegName.find("fc7_daq_cnfg.fast_command_block.") != std::string::npos ) 
+        {
+            //LOG (DEBUG) << BOLDBLUE << "Setting " << cRegName << " : " << it.second << RESET;
+            cVecReg.push_back ( {it.first, it.second} );
+        }
+    }
+    this->WriteStackReg ( cVecReg );
+    cVecReg.clear();
+    // reset trigger 
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    // load new trigger configuration 
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    this->ResetReadout(); 
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+
+    return cSuccess;
+}
+bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard , bool pScope)
+{
+    LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
+    // original reg map 
+    BeBoardRegMap cRegisterMap = pBoard->getBeBoardRegMap();
+    if( pScope) 
+        this->L1ADebug ();
+    
+    PhaseTuner pTuner; 
+    bool cSuccess=true;
+
+    // configure triggers 
+    // make sure you're only sending one trigger at a time 
+    auto cMult = this->ReadReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
+    auto cTriggerRate =  this->ReadReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 10);
+    // disable back-pressure 
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
+    // reset trigger 
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    // load new trigger configuration 
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    // reset readout 
+    this->ResetReadout(); 
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
+    
+    // back-end tuning on l1 lines
+    for (auto& cFe : pBoard->fModuleVector)
+    {
+        uint8_t cBitslip=0;
+        selectLink (cFe->getLinkId());
+        uint8_t cHybrid= cFe->getFeId() ;
+        uint8_t cChip = 0;
+        auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
+        int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
+        // need to know the address 
+        //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
+        // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging 
+        
+        uint8_t cLineId=0;
+        // tune phase on l1A line - don't have t do anything on the FEs
+        if( fOptical )
+        {
+            // configure tuning mode     
+            pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
+            std::this_thread::sleep_for (std::chrono::microseconds (100) );
+            // start word aligner 
+            pTuner.SendControl(this, cHybrid, cChip, cLineId, "WordAlignment");
+            std::this_thread::sleep_for (std::chrono::microseconds (10) );
+            // send 100 triggers .. waiting 10 ms between each 
+            this->Start();
+            std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+            this->Stop();
+            uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
+            cSuccess = pTuner.fDone;
+            if( pTuner.fDone == 1  ) 
+                pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, pTuner.fBitslip, 0, 0 );
+        }
+        else 
+        {
+            this->ChipReSync();
+            LOG (INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid << " Chip" << +cChipId << RESET;
+            uint16_t cPattern = 0xAA;
+            // configure pattern
+            pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
+            if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
+            {    
+                cPattern = 0xFE;
+                for(uint16_t cPatternLength=40; cPatternLength < 41; cPatternLength++)
+                {
+                    pTuner.SetLinePattern( this, cHybrid, cChip, cLineId , cPattern, cPatternLength);
+                    std::this_thread::sleep_for (std::chrono::microseconds (10) );
+                    // start word aligner 
+                    pTuner.SendControl(this, cHybrid, cChip, cLineId, "WordAlignment");
+                    std::this_thread::sleep_for (std::chrono::microseconds (10) );
+                    this->Start();
+                    std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+                    this->Stop();
+                    uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
+                    cSuccess = pTuner.fDone;
+                }
+                // if the above doesn't work.. try and find the correct bitslip manually in software 
+                if( !cSuccess)
+                {
+                    LOG (INFO) << BOLDBLUE << "Going to try and align manually in software..." << RESET; 
+                    for( cBitslip=0; cBitslip < 8; cBitslip++)
+                    {
+                        LOG (INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
+                        pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, cBitslip, 0, 0 );
+                         this->Start();
+                        std::this_thread::sleep_for (std::chrono::microseconds (100) );
+                        this->Stop();
+                        
+                        auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+                        std::string cBuffer = "";
+                        bool cAligned=false;
+                        std::string cOutput="\n";
+                        for( auto cWord : cWords )
+                        {
+                            auto cString=std::bitset<32>(cWord).to_string();
+                            std::vector<std::string> cOutputWords(0);
+                            for( size_t cIndex = 0 ; cIndex < 4 ; cIndex++)
+                            {
+                                auto c8bitWord = cString.substr(cIndex*8, 8) ;
+                                cOutputWords.push_back(c8bitWord);
+                                cAligned = (cAligned | (std::stoi( c8bitWord , nullptr,2 ) == cPattern) );
+                            }
+                            for( auto cIt = cOutputWords.end()-1 ; cIt >= cOutputWords.begin() ; cIt--)
+                            {
+                                cOutput += *cIt + " "; 
+                            }
+                            cOutput += "\n";
+                        }
+                        if( cAligned)
+                        {
+                            LOG (INFO) << BOLDGREEN << cOutput << RESET;
+                            this->ResetReadout();
+                            cSuccess=true;
+                            break;
+                        }
+                        else
+                            LOG (INFO) << BOLDRED << cOutput << RESET;
+                        this->ResetReadout(); 
+                    }
+                }
+            }
+        }
+    }
+    if( pScope )
+        this->L1ADebug ();
+    
+    // reconfigure trigger 
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cTriggerRate);
+    // reconfigure original trigger configu 
+    std::vector< std::pair<std::string, uint32_t> > cVecReg;
+    for ( auto const& it : cRegisterMap )
+    {
+        auto cRegName = it.first;
+        if( cRegName.find("fc7_daq_cnfg.fast_command_block.") != std::string::npos ) 
+        {
+            //LOG (DEBUG) << BOLDBLUE << "Setting " << cRegName << " : " << it.second << RESET;
+            cVecReg.push_back ( {it.first, it.second} );
+        }
+    }
+    this->WriteStackReg ( cVecReg );
+    cVecReg.clear();
+    // reset trigger 
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    // load new trigger configuration 
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    this->ResetReadout(); 
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+
+    return cSuccess;
+}
+// tuning of L1A lines 
+bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
+{
+    bool cSuccess = this->L1PhaseTuning(pBoard, pScope);
+    if( cSuccess )
+        cSuccess = this->L1WordAlignment(pBoard, pScope);
+
+    // // original trigger config 
+    // auto cRegisterMap = pBoard->getBeBoardRegMap();
+    // if( pScope) 
+    //     this->L1ADebug ();
+    // // read original fast command configuration 
+    // uint32_t cFastCommandConfig = this->ReadReg("fc7_daq_cnfg.fast_command_block");
+    // LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
+    // // reset readout 
+    // this->ResetReadout(); 
+    // std::this_thread::sleep_for (std::chrono::microseconds (10) );
+    
+    // // make sure you're only sending one trigger at a time 
+    // auto cMult = this->ReadReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    // this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
+    // auto cTriggerRate =  this->ReadReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+    // LOG (INFO) << BOLDBLUE << "Tuning of L1A lines performed with trigger FSM configured to produce triggers at a frequency of " << +cTriggerRate << RESET;
+    // this->WriteReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 1);
+    // // reset trigger 
+    // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
+    // std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    // // load new trigger configuration 
+    // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+    // std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+
+    /*
     // configure triggers 
     // this->ConfigureTriggerFSM(0, 1 , 3);
     // disable back-pressure 
@@ -1891,7 +2504,6 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
             }
         }
     }
-
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cTriggerRate);
     
@@ -1919,6 +2531,7 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard , bool pScope)
     std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
     
     this->ResetReadout(); 
+    */
     return cSuccess;
 }
 // tuning of stub lines 
