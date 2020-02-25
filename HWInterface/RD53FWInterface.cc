@@ -1397,4 +1397,109 @@ namespace Ph2_HwInterface
 
     RD53FWInterface::WriteI2C(data);
   }
+
+
+  // ####################################################
+  // # Hybrid ADC measurements: temperature and voltage #
+  // ####################################################
+
+  float RD53FWInterface::ReadHybridTemperature (int hybridId)
+  {
+    WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
+    usleep(DEEPSLEEP);
+    uint32_t sensor1 = ReadReg("user.stat_regs.i2c_block_1.NTC1");
+    usleep(DEEPSLEEP);
+    uint32_t sensor2 = ReadReg("user.stat_regs.i2c_block_1.NTC2");
+    usleep(DEEPSLEEP);
+
+    auto value = calcTemperature(sensor1, sensor2);
+    LOG (INFO) << BOLDBLUE << "\t--> Hybrid temperature: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << RESET;
+
+    return value;
+  }
+
+  float RD53FWInterface::ReadHybridVoltage (int hybridId)
+  {
+    WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
+    usleep(DEEPSLEEP);
+    uint32_t senseVDD = ReadReg("user.stat_regs.i2c_block_2.vdd_sense");
+    usleep(DEEPSLEEP);
+    uint32_t senseGND = ReadReg("user.stat_regs.i2c_block_2.gnd_sense");
+    usleep(DEEPSLEEP);
+
+    auto value = calcVoltage(senseVDD, senseGND);
+    LOG (INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V" << RESET;
+
+    return value;
+  }
+
+  float RD53FWInterface::calcTemperature (uint32_t sensor1, uint32_t sensor2, int beta)
+  {
+    // #####################
+    // # Natural constants #
+    // #####################
+    const float T0C  = 273.15; // [Kelvin]
+    const float T25C = 298.15; // [Kelvin]
+    const float R25C = 10;     // [kOhm]
+    // For precise T measurements we should have individual -beta- for each temperature sensor
+    // i.e. thermistors with NTC = Negative Temperature Coefficient, measured in Kelvin
+
+    // #####################################
+    // # Voltage divider circuit on hybrid #
+    // #####################################
+    const float Rdivider = 39.2; // [kOhm]
+    const float Vdivider = 2.5;  // [V]
+
+    // ###################
+    // # Voltage per LSB #
+    // ###################
+    const float  safetyMargin       = 0.9;
+    const float  minimumTemperature = -35;   // [Celsius]
+    const size_t numberOfBits       = 11;    // Related to the ADC on the hybrid
+    const float  VrefADC            = 2.047; // Hybrid's ADC refence voltage [V]
+    const float  ADC_LSB            = VrefADC / (RD53Shared::setBits(numberOfBits) + 1); // [V/ADC]
+
+    // #####################
+    // # Calculate voltage #
+    // #####################
+    float voltage = (sensor1 - sensor2) * ADC_LSB;
+    if ((voltage > ((RD53Shared::setBits(numberOfBits) + 1.)*safetyMargin * ADC_LSB)) || (voltage >= Vdivider))
+      {
+        LOG (WARNING) << BOLDRED << "\t--> Thermistor measurement in saturation: either very cold or floating (voltage = " << BOLDYELLOW << voltage << BOLDRED << ")" << RESET;
+        return minimumTemperature;
+      }
+
+    // ###############################################
+    // # Calculate temperature with NTC Beta formula #
+    // ###############################################
+    float resistance  = voltage * Rdivider / (Vdivider - voltage);              // [kOhm]
+    float temperature = 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; // [Celsius]
+
+    return temperature;
+  }
+
+  float RD53FWInterface::calcVoltage (uint32_t senseVDD, uint32_t senseGND)
+  {
+    // #####################################
+    // # Voltage divider circuit on Hybrid #
+    // #####################################
+    const float R1divider = 196;   // [kOhm]
+    const float R2divider =  39.2; // [kOhm]
+    const float VdividerFactor = (R1divider + R2divider) / R2divider;
+
+    // ###################
+    // # Voltage per LSB #
+    // ###################
+    const size_t numberOfBits = 11;    // Related to the ADC on the hybrid
+    const float  VrefADC      = 2.047; // Hybrid's ADC refence voltage [V]
+    const float  ADC_LSB      = VrefADC / (RD53Shared::setBits(numberOfBits) + 1.); // [V/ADC]
+
+    // #####################
+    // # Calculate voltage #
+    // #####################
+    float voltage = (senseVDD - senseGND) * ADC_LSB * VdividerFactor;
+    if (voltage < ADC_LSB*VdividerFactor) LOG (WARNING) << BOLDRED << "\t--> Very low voltage: either floating VDD sense-line or hybrid not powered (voltage = " << BOLDYELLOW << voltage << BOLDRED << ")" << RESET;
+
+    return voltage;
+  }
 }

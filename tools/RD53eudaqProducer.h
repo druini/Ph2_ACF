@@ -11,8 +11,6 @@
 #define RD53eudaqProducer_H
 
 #include "RD53Physics.h"
-#include "../HWDescription/RD53.h"
-
 #include "eudaq/Producer.hh"
 
 

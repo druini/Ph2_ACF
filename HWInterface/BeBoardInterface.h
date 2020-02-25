@@ -205,9 +205,18 @@ namespace Ph2_HwInterface
      * \brief Read board monitor data
      * \param pReadoutChipInterface
      * \param pChip
+     * \param args
      * \return none
      */
-    void ReadChipMonitor (Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::Chip* pChip);
+    template<typename... Ts>
+      void ReadChipMonitor (Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::Chip* pChip, Ts... args)
+      {
+        std::lock_guard<std::mutex> theGuard(theMtx);
+
+        static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadHybridVoltage(pChip);
+        static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadHybridTemperature(pChip);
+        static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, args...);
+      }
     /*!
      * \brief Read data from DAQ
      * \param pBoard

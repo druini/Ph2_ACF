@@ -145,9 +145,20 @@ namespace Ph2_System
     /*!
      * \brief Read Monitor Data from pBoard
      * \param pBeBoard
+     * \param args
      * \return: none
      */
-    void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard);
+    template<typename... Ts>
+      void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, Ts... args)
+      {
+        for (const auto cModule : *pBoard)
+          for (const auto cChip : *cModule)
+            {
+              LOG (INFO) << GREEN << "Chip monitor data for [board/module/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+              fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, static_cast<Ph2_HwDescription::ReadoutChip*>(cChip), args...);
+              LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
+            }
+      }
 
     /*!
      * \brief Read Data from pBoard

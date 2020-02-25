@@ -158,13 +158,6 @@ namespace Ph2_HwInterface
     fBoardFW->Resume();
   }
 
-  void BeBoardInterface::ReadChipMonitor (ReadoutChipInterface* pReadoutChipInterface, Chip* pChip)
-  {
-    std::lock_guard<std::mutex> theGuard(theMtx);
-
-    static_cast<RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, 0, 0.9, 1e4, "ADCbandgap", "VREF_VDAC", "Iref", "TEMPSENS_1");
-  }
-
   uint32_t BeBoardInterface::ReadData (BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
   {
     uint32_t dataSize = 0;

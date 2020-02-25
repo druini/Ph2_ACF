@@ -247,6 +247,15 @@ namespace Ph2_HwInterface
     void ConfigureClockSi5324 ();
 
 
+    // ####################################################
+    // # Hybrid ADC measurements: temperature and voltage #
+    // ####################################################
+    float ReadHybridTemperature (int hybridId);
+    float ReadHybridVoltage     (int hybridId);
+    float calcTemperature       (uint32_t sensor1, uint32_t sensor2, int beta = 3435);
+    float calcVoltage           (uint32_t senseVDD, uint32_t senseGND);
+
+
   private:
     void PrintFWstatus         ();
     void TurnOffFMC            ();
