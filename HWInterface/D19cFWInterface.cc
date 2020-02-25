@@ -839,7 +839,7 @@ void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
         fFWNHybrids = ReadReg ("fc7_daq_stat.general.info.num_hybrids");
         fFWNChips = ReadReg ("fc7_daq_stat.general.info.num_chips");
         fCBC3Emulator = (ReadReg ("fc7_daq_stat.general.info.implementation") == 2);
-	LOG (INFO) << BOLDRED << "[][][][][][][][][][][][][][][][][][][][]" << RESET;
+	// LOG (INFO) << BOLDRED << "[][][][][][][][][][][][][][][][][][][][]" << RESET;
         fIsDDR3Readout = (ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type") == 1);
         fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
         if(fI2CVersion >= 1) this->SetI2CAddressTable();
@@ -952,9 +952,9 @@ void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
             ChipRegItem cRegItem = cReadoutChip->getRegItem ( cRegisterMap.begin()->first );//"Ipre1");//MaskChannel-008-to-001" );
             bool cWrite=false;
             this->EncodeReg( cRegItem, cFe->getFeId(), cReadoutChip->getChipId() , cVec , true, cWrite ) ; 
-	    LOG (INFO) << RED << "<-=1=-> " << RESET;
+	    // LOG (INFO) << RED << "<-=1=-> " << RESET;
             bool cWriteSuccess = !this->WriteI2C ( cVec, cReplies, true, false);
-	    LOG (INFO) << RED << "<-=2=-> " << RESET;
+	    // LOG (INFO) << RED << "<-=2=-> " << RESET;
             if( cWriteSuccess) 
             {
                 LOG (INFO) << BOLDGREEN << "Successful read from first I2C register of CBC on hybrid " << +cFe->getFeId() << " .... Enabling CBC" << +cReadoutChip->getChipId() << RESET;
@@ -2417,8 +2417,8 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
     	// RESET the readout
     	this->ResetReadout();
     	// check 
-    	LOG (INFO) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
-    	LOG (INFO) << BOLDBLUE << "Initial fast reset " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable") << RESET;
+    	LOG (DEBUG) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
+    	LOG (DEBUG) << BOLDBLUE << "Initial fast reset " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable") << RESET;
         // data hadnshake has to be enabled in that mode
         WriteReg ("fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-1);
         WriteReg ("fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1);
@@ -2431,22 +2431,22 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
         // sta
         bool pFailed = false;
         uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
-	LOG (INFO) << BOLDRED << "1=> "<<cReadoutReq<<" <============" << RESET;
+	// LOG (INFO) << BOLDRED << "1=> "<<cReadoutReq<<" <============" << RESET;
         uint32_t cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
-	LOG (INFO) << BOLDRED << "2=> "<<cNtriggers<<" <============" << RESET;
+	// LOG (INFO) << BOLDRED << "2=> "<<cNtriggers<<" <============" << RESET;
     	uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-	LOG (INFO) << BOLDRED << "3=> "<<cNWords<<" <============" << RESET;
+	// LOG (INFO) << BOLDRED << "3=> "<<cNWords<<" <============" << RESET;
         uint32_t cTimeoutCounter = 0 ;
     	uint32_t cTimeoutValue = 100;
         while (cReadoutReq == 0 && !pFailed )
         {
-	    LOG (INFO) << BOLDRED << "=================" << RESET;
+	    // LOG (INFO) << BOLDRED << "=================" << RESET;
             cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
-	    LOG (INFO) << BOLDGREEN << "1=> "<<cReadoutReq<<" <============" << RESET;
+	    // LOG (INFO) << BOLDGREEN << "1=> "<<cReadoutReq<<" <============" << RESET;
             cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
-	    LOG (INFO) << BOLDGREEN << "2=> "<<cNtriggers<<" <============" << RESET;
+	    // LOG (INFO) << BOLDGREEN << "2=> "<<cNtriggers<<" <============" << RESET;
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-	    LOG (INFO) << BOLDGREEN << "3=> "<<cNWords<<" <============" << RESET;
+	    // LOG (INFO) << BOLDGREEN << "3=> "<<cNWords<<" <============" << RESET;
 	    if(cNWords==0)
 	    {
 		if( cTimeoutCounter >= cTimeoutValue ) 
@@ -2472,7 +2472,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
     	{
             // check the amount of words
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-            LOG (INFO) << BOLDBLUE << "Read back " << +cNWords << " words from DDR3 memory in FC7." << RESET;
+            LOG (DEBUG) << BOLDBLUE << "Read back " << +cNWords << " words from DDR3 memory in FC7." << RESET;
         
             if (pBoard->getEventType() == EventType::VR)
             {
@@ -2494,7 +2494,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                 pData = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNWords, fDDR3Offset);
                 //in the handshake mode offset is cleared after each handshake
                 fDDR3Offset = 0;
-		LOG (INFO) << "!?!?!?!?!?!?!?!" << RESET;
+		// LOG (INFO) << "!?!?!?!?!?!?!?!" << RESET;
             }
             else pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
         }
@@ -2510,10 +2510,10 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
 
         if (fSaveToFile)
         fFileHandler->setData(pData);
-	for ( auto& L : pData )
-            {
-                LOG (INFO) << RED << std::bitset<32>(L) << RESET;
-            }
+	    // for ( auto& L : pData )
+        // {
+        //     LOG (INFO) << RED << std::bitset<32>(L) << RESET;
+        // }
     }
 
 /** compute the block size according to the number of CBC's on this board
@@ -3549,7 +3549,7 @@ void D19cFWInterface::ConfigureConsecutiveTriggerFSM( uint16_t pNtriggers, uint1
     //LOG(INFO) << BOLDGREEN << "reply err: "<< std::hex << reply_err << std::dec <<RESET;
     //LOG(INFO) << BOLDGREEN << "reply data: "<< std::hex << reply_data << std::dec <<RESET;
 
-        if (reply_err == 1) LOG(INFO) << "Error code: "<< std::hex << reply_data << std::dec;
+        if (reply_err == 1) LOG(ERROR) << "Error code: "<< std::hex << reply_data << std::dec;
     //  print "ERROR! Error flag is set to 1. The data is treated as the error code."
     //elif reply_slave_id != slave_id:
     //  print "ERROR! Slave ID doesn't correspond to the one sent"
@@ -3558,7 +3558,7 @@ void D19cFWInterface::ConfigureConsecutiveTriggerFSM( uint16_t pNtriggers, uint1
 
         else
         {
-            if (read == 1) LOG (DEBUG) << BOLDBLUE <<  "Data that was read is: "<< reply_data << RESET;
+            if (read == 1) LOG (INFO) << BOLDBLUE <<  "Data that was read is: "<< reply_data << RESET;
             else LOG (DEBUG) << BOLDBLUE << "Successful write transaction" <<RESET;
         }
     }
@@ -3599,7 +3599,7 @@ void D19cFWInterface::ConfigureConsecutiveTriggerFSM( uint16_t pNtriggers, uint1
         std::cout<<std::endl;
 
         uint32_t reply = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply");
-        LOG (INFO) << BOLDRED << std::hex << reply << std::dec << RESET;
+        // LOG (INFO) << BOLDRED << std::hex << reply << std::dec << RESET;
         uint32_t reply_err = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.err");
         uint32_t reply_data = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
 

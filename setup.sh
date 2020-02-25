@@ -22,8 +22,8 @@ fi
 ########
 # ROOT #
 ########
-source $ROOTSYS/bin/thisroot.sh
-# source /usr/local/root/bin/thisroot.sh
+# source $ROOTSYS/bin/thisroot.sh
+source /usr/local/root/bin/thisroot.sh
 #source /opt/local/root/bin/thisroot.sh
 
 #######
@@ -88,8 +88,8 @@ export CompileForHerd=false
 export CompileForShep=false
 
 # Stand-alone application, with data streaming
-#export CompileForHerd=true
-#export CompileForShep=true
+# export CompileForHerd=true
+# export CompileForShep=true
 
 # Herd application
 # export CompileForHerd=true
