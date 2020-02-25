@@ -40,6 +40,7 @@ class DataChecker : public Tool
     void DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed=125, int pBend=10);
     void L1Eye(std::vector<uint8_t> pChipIds);
 
+    void noiseCheck(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub);
     void matchEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub);
     void zeroContainers();
     void print(std::vector<uint8_t> pChipIds); 

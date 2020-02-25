@@ -71,6 +71,12 @@ void DataChecker::Initialise ()
                 if ( cObj ) delete cObj;
                 TProfile2D* cProfile2D = new TProfile2D ( cName, Form("Number of matched hits - CBC%d; Phase Tap; Trigger Number",(int)cChip->getChipId()) ,  20 , 0-0.5 , 20-0.5 , 40 , 0-0.5 , 40-0.5);
                 bookHistogram ( cChip , "MatchedHits_eye", cProfile2D );
+
+                cName = Form ( "h_NoiseHits_Fe%dCbc%d", cFe->getFeId() , cChip->getChipId() );
+                cObj = gROOT->FindObject ( cName );
+                if ( cObj ) delete cObj;
+                TProfile* cHist = new TProfile ( cName, Form("Number of noise hits - CBC%d; Channelr",(int)cChip->getChipId()) , NCHANNELS, 0-0.5 , NCHANNELS-0.5);
+                bookHistogram ( cChip , "NoiseHits", cHist );
             }
 
             // matched stubs 
@@ -208,13 +214,11 @@ void DataChecker::print(std::vector<uint8_t> pChipIds )
 }
 void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub) 
 {
-    // get trigger multiplicity from xml 
-    auto cSetting = fSettingsMap.find ( "TriggerMultiplicity" );
-    bool cConfigureTriggerMult = ( cSetting != std::end ( fSettingsMap ) );
-    size_t cTriggerMult = cConfigureTriggerMult ? cSetting->second : 0;
-
+    // get trigger multiplicity from register 
+    size_t cTriggerMult = fBeBoardInterface->ReadBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    
     //get number of events from xml
-    cSetting = fSettingsMap.find ( "Nevents" );
+    auto cSetting = fSettingsMap.find ( "Nevents" );
     size_t cEventsPerPoint = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
    
     uint8_t cSeed = pExpectedStub.first;
@@ -235,7 +239,8 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
         auto cFeId = cFe->getFeId();
         TH2D* cMatchedStubs = static_cast<TH2D*> ( getHist ( cFe, "MatchedStubs" ) );
         TH2D* cAllStubs = static_cast<TH2D*> ( getHist ( cFe, "Stubs" ) );
-            
+        
+        // matching 
         for (auto& cChip : cFe->fReadoutChipVector) 
         {
             auto cChipId = cChip->getChipId();
@@ -245,7 +250,6 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
             TH2D* cAllHits = static_cast<TH2D*> ( getHist ( cChip, "Hits_perFe" ) );
             TH2D* cMatchedHits = static_cast<TH2D*> ( getHist ( cChip, "MatchedHits_perFe" ) );
             TProfile2D* cMatchedHitsEye = static_cast<TProfile2D*> ( getHist ( cChip, "MatchedHits_eye" ) );
-
             // container for this chip 
             auto& cReadoutChipHitCheck = cHybridHitCheck->at(cChip->getIndex());
             auto& cReadoutChipStubCheck = cHybridStubCheck->at(cChip->getIndex());
@@ -316,8 +320,129 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
                 }
             }
         }
+
+        // noise hits
+        for (auto& cChip : cFe->fReadoutChipVector) 
+        {
+            auto cChipId = cChip->getChipId();
+            TProfile* cNoiseHits = static_cast<TProfile*> ( getHist ( cChip, "NoiseHits" ) );  
+    
+            std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( cChip );
+            // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
+            uint8_t cBendCode = cBendLUT[ (cBend/2. - (-7.0))/0.5 ]; 
+            std::vector<uint8_t> cExpectedHits = static_cast<CbcInterface*>(fReadoutChipInterface)->stubInjectionPattern( cChip, cSeed, cBend ); 
+            
+            auto cEventIterator = cEvents.begin();
+            size_t cEventCounter=0;
+            LOG (DEBUG) << BOLDMAGENTA << "CBC" << +cChip->getChipId() << RESET;
+            for( size_t cEventIndex=0; cEventIndex < cEventsPerPoint ; cEventIndex++) // for each event 
+            {
+                uint32_t cPipeline_first=0; 
+                uint32_t cBxId_first=0; 
+                LOG (DEBUG) << BOLDMAGENTA << "\t..Event" << +cEventIndex << RESET;
+            
+                for(size_t cTriggerIndex=0; cTriggerIndex <= cTriggerMult; cTriggerIndex++) // cTriggerMult consecutive triggers were sent 
+                {
+                    auto cEvent = *cEventIterator;
+                    auto cBxId = cEvent->BxId(cFe->getFeId());
+                    auto cErrorBit = cEvent->Error( cFeId , cChipId );
+                    uint32_t cL1Id = cEvent->L1Id( cFeId, cChipId );
+                    uint32_t cPipeline = cEvent->PipelineAddress( cFeId, cChipId );
+                    cBxId_first = (cTriggerIndex == 0 ) ? cBxId : cBxId_first;
+                    cPipeline_first = (cTriggerIndex == 0 ) ? cPipeline : cPipeline_first;
+                    
+                    //hits
+                    auto cHits = cEvent->GetHits( cFeId, cChipId ) ;
+                    for( int cChannel=0; cChannel < NCHANNELS; cChannel++)
+                    {
+                        bool cHitFound = std::find(  cHits.begin(), cHits.end(), cChannel) != cHits.end();
+                        //if( cHitFound && std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end() )
+                        //    LOG (INFO) << BOLDMAGENTA << "\t... noise hit found in channel " << +cChannel << " of readout chip" << +cChipId << RESET; 
+                        cNoiseHits->Fill(cChannel, cHitFound);
+                    }
+                    // for( auto cHit : cHits )
+                    // {
+                    //     bool cExpected = std::find(  cExpectedHits.begin(), cExpectedHits.end(), cHit) != cExpectedHits.end();
+                    //     if( std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end() )
+                    //         cNoiseHits->Fill(cHit);
+                    //     else
+                    //     {
+                    //         if(!cExpected)
+                    //         {
+                    //             // this is not going to work..I've masked out everyhing else!
+                    //             cNoiseHits->Fill(cHit);
+                    //         }
+                    //     }
+                    // }
+                    cEventIterator++;
+                }
+            }
+        }
    }
 }
+// void DataChecker::noiseCheck(BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub) 
+// {
+//     // get number of events from xml
+//     auto cSetting = fSettingsMap.find ( "Nevents" );
+//     size_t cEventsPerPoint = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
+   
+//     // get trigger multiplicity from register 
+//     size_t cTriggerMult = fBeBoardInterface->ReadBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    
+//     uint8_t cSeed = pExpectedStub.first;
+//     int cBend = pExpectedStub.second; 
+
+//     const std::vector<Event*>& cEvents = this->GetEvents ( pBoard );
+//     LOG (DEBUG) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from board." << RESET;
+//     for (auto& cFe : pBoard->fModuleVector)
+//     {
+//         auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
+//         auto cFeId = cFe->getFeId();
+            
+//         for (auto& cChip : cFe->fReadoutChipVector) 
+//         {
+//             auto cChipId = cChip->getChipId();
+//             TProfile* cNoiseHits = static_cast<TProfile*> ( getHist ( cChip, "NoiseHits" ) );  
+    
+//             std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( cChip );
+//             // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
+//             uint8_t cBendCode = cBendLUT[ (cBend/2. - (-7.0))/0.5 ]; 
+//             std::vector<uint8_t> cExpectedHits = static_cast<CbcInterface*>(fReadoutChipInterface)->stubInjectionPattern( cChip, cSeed, cBend ); 
+            
+//             auto cEventIterator = cEvents.begin();
+//             size_t cEventCounter=0;
+//             LOG (DEBUG) << BOLDMAGENTA << "CBC" << +cChip->getChipId() << RESET;
+//             for( size_t cEventIndex=0; cEventIndex < cEventsPerPoint ; cEventIndex++) // for each event 
+//             {
+//                 uint32_t cPipeline_first=0; 
+//                 uint32_t cBxId_first=0; 
+//                 LOG (DEBUG) << BOLDMAGENTA << "\t..Event" << +cEventIndex << RESET;
+            
+//                 for(size_t cTriggerIndex=0; cTriggerIndex <= cTriggerMult; cTriggerIndex++) // cTriggerMult consecutive triggers were sent 
+//                 {
+//                     auto cEvent = *cEventIterator;
+//                     auto cBxId = cEvent->BxId(cFe->getFeId());
+//                     auto cErrorBit = cEvent->Error( cFeId , cChipId );
+//                     uint32_t cL1Id = cEvent->L1Id( cFeId, cChipId );
+//                     uint32_t cPipeline = cEvent->PipelineAddress( cFeId, cChipId );
+//                     cBxId_first = (cTriggerIndex == 0 ) ? cBxId : cBxId_first;
+//                     cPipeline_first = (cTriggerIndex == 0 ) ? cPipeline : cPipeline_first;
+                    
+//                     //hits
+//                     auto cHits = cEvent->GetHits( cFeId, cChipId ) ;
+//                     for( int cChannel=0; cChannel < NCHANNELS; cChannel++)
+//                     {
+//                         bool cHitFound = std::find(  cHits.begin(), cHits.end(), cChannel) != cHits.end();
+//                         if( cHitFound )
+//                             LOG (INFO) << BOLDMAGENTA << "\t... noise hit hit found in channel " << +cHit << " of readout chip" << +cChipId << RESET; 
+//                         cNoiseHits->Fill(cHit);
+//                     }
+//                     cEventIterator++;
+//                 }
+//             }
+//         }
+//    }
+// }
 void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
 {
         
@@ -353,7 +478,6 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
     // get number of attempts 
     cSetting = fSettingsMap.find ( "Attempts" );
     size_t cAttempts = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10  ; 
-
     // get mode
     cSetting = fSettingsMap.find ( "Mode" );
     uint8_t cMode = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0  ; 
@@ -371,7 +495,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
 
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(false);
-        
+    
     // configure FE chips so that stubs are detected [i.e. make sure HIP
     // suppression is off ] 
     for (auto cBoard : this->fBoardVector)
@@ -395,6 +519,9 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         fBeBoardInterface->ChipReSync ( cBoard );
     }
 
+    // zero containers
+    this->zeroContainers();
+        
     // now measure
     for (auto cBoard : this->fBoardVector)
     {
@@ -419,8 +546,6 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
         LOG (INFO) << BOLDBLUE << "Latency set to " << +cLatency << "...\tStub latency set to " << +cStubLatency << RESET;
         fBeBoardInterface->ChipReSync ( cBoard );
-        // zero containers
-        this->zeroContainers();
         // read N events and compare hits and stubs to injected stub 
         for( size_t cAttempt=0; cAttempt < cAttempts ; cAttempt++)
         {
@@ -487,6 +612,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
 // check hits and stubs using noise
 void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int pBend)
 {
+    LOG (INFO) << BOLDBLUE << "Starting data checker.." << RESET;
     std::pair<uint8_t, int> cStub;
         
     //Prepare container to hold  measured occupancy
@@ -533,7 +659,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
     // get number of attempts 
     cSetting = fSettingsMap.find ( "Attempts" );
     size_t cAttempts = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10  ; 
-
+    
     // get injected stub from xmls 
     cSetting = fSettingsMap.find ( "ManualPhaseAlignment" );
     if( ( cSetting != std::end ( fSettingsMap ) ) )
@@ -556,18 +682,29 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
     cSetting = fSettingsMap.find ( "Mode" );
     uint8_t cMode = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0  ; 
 
+    // get latency offset
+    cSetting = fSettingsMap.find ( "LatencyOffset" );
+    int cLatencyOffset = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0  ; 
+
+
+    uint16_t cTPdelay = 0;
+
     // if TP is used - enable it 
     if(!pWithNoise)
     {
         cSetting = fSettingsMap.find ( "PulseShapePulseAmplitude" );
         fTPconfig.tpAmplitude = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100; 
 
+        // get TP delay 
+        cSetting = fSettingsMap.find("PulseShapePulseDelay");
+        cTPdelay = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0  ; 
+    
         // set-up for TP
         fAllChan = true;
         fMaskChannelsFromOtherGroups = !this->fAllChan;
-        this->enableTestPulse(true);
         this->SetTestPulse(true);
         setSameGlobalDac("TestPulsePotNodeSel",  0xFF-fTPconfig.tpAmplitude );
+        setSameGlobalDac("TestPulseDelay", cTPdelay);
         cStub.second = 0; // for now - with TP can only test bend code of 0 
     }
 
@@ -626,16 +763,19 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
                     fReadoutChipInterface->WriteChipReg ( cChip, "CoincWind&Offset34", cOffetReg );
                     */
                     if(!pWithNoise)
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTargetThreshold);
+                        fReadoutChipInterface->enableInjection(cChip, true);
                 }
+                else if(!pWithNoise)
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTargetThreshold);
                 else
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels( cChip, true);
+                   static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels( cChip, true);
             } 
         }
     }
 
-    // configure trigger generation in firmware 
-    //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0,cTriggerRate,3,0,cDefaultStubLatency);
+    // zero containers
+    this->zeroContainers();
+    // measure     
     for (auto cBoard : this->fBoardVector)
     {
         uint16_t cBoardTriggerMult = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
@@ -653,29 +793,27 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
             fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMult);
         }
         
-        // using noise injection 
-        if( pWithNoise )
+        if( pWithNoise)
         {
-            this->ReadNEvents ( cBoard , cEventsPerPoint);
-            this->matchEvents( cBoard , pChipIds ,cStub);
+             for( size_t cAttempt=0; cAttempt < cAttempts ; cAttempt++)
+            {
+                this->ReadNEvents ( cBoard , cEventsPerPoint);
+                this->matchEvents( cBoard , pChipIds ,cStub);
+            }
         }
         // using charge injection 
-        else if(!pWithNoise)
+        else
         {
             // configure test pulse trigger 
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(fTPconfig.firmwareTPdelay ,fTPconfig.tpDelay ,fTPconfig.tpSequence, fTPconfig.tpFastReset );
-            uint16_t cTPdelay=0;
-            this->setSameDacBeBoard(cBoard, "TestPulseDelay", cTPdelay);
             // set trigger latency 
-            uint16_t cLatency = fTPconfig.tpDelay-1;//+1;
+            uint16_t cLatency = fTPconfig.tpDelay+cLatencyOffset;//+1;
             this->setSameDacBeBoard(cBoard, "TriggerLatency", cLatency);
             // set stub latency 
             uint16_t cStubLatency = cLatency - 1*cStubDelay ;
             fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
             LOG (DEBUG) << BOLDBLUE << "Latency set to " << +cLatency << "...\tStub latency set to " << +cStubLatency << RESET;
             fBeBoardInterface->ChipReSync ( cBoard );
-            // zero containers
-            this->zeroContainers();
             // read N events and compare hits and stubs to injected stub 
             for( size_t cAttempt=0; cAttempt < cAttempts ; cAttempt++)
             {
@@ -764,14 +902,15 @@ void DataChecker::L1Eye(std::vector<uint8_t> pChipIds )
                 for(auto cChipId : pChipIds )
                 {
                     bool cConfigured = fCicInterface->SetStaticPhaseAlignment(  cCic , cChipId ,  0 , cPhase);
-                    //fCicInterface->ResetPhaseAligner(cCic);
-                    //LOG (INFO) << BOLDBLUE << "Checking Reset/Resync for CIC on hybrid " << +cFe->getFeId() << RESET;
                     // check if a resync is needed
                     //fCicInterface->CheckReSync( static_cast<OuterTrackerModule*>(cFe)->fCic); 
                 }
             }
+            // send a resync
+            fBeBoardInterface->ChipReSync ( cBoard );
             // re-do back-end alignment
             //cBackEndAligner.L1Alignment2S(cBoard);    
+            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
         }
         // run data check 
         this->DataCheck(pChipIds);
