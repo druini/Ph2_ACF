@@ -21,6 +21,14 @@ namespace Ph2_HwInterface {
 
     CicInterface::CicInterface ( const BeBoardFWMap& pBoardMap ) : ChipInterface( pBoardMap )
     {
+        fFeStates.clear();//8 FEs
+        for(size_t cIndex=0; cIndex<8;cIndex++)
+            fFeStates.push_back(0);
+
+        fPortStates.clear();//12 ports 
+        for(size_t cIndex=0; cIndex<12;cIndex++)
+            fPortStates.push_back(0);
+
     }
 
     CicInterface::~CicInterface()
@@ -655,7 +663,7 @@ namespace Ph2_HwInterface {
         ChipRegItem cRegItem;
         bool cLocked = true;
 
-        std::vector<std::bitset<4>> cPortStates(12);
+        //std::vector<std::bitset<4>> cPortStates(12);
         size_t cPortCounter=0; 
         // read back phase alignment on stub lines 
         for(int cIndex=0; cIndex < 6; cIndex++)
@@ -668,20 +676,20 @@ namespace Ph2_HwInterface {
             LOG (DEBUG) << BOLDBLUE << "Lock on input " << cIndex << " -- " <<  std::bitset<8>(cReadBack.second) << RESET;
             for( size_t cBitIndex = 0 ; cBitIndex < 8; cBitIndex++)
             {
-                cPortStates[cPortCounter][cBitIndex & 0x3 ] = std::bitset<8>(cReadBack.second)[cBitIndex];
+                fPortStates[cPortCounter][cBitIndex & 0x3 ] = std::bitset<8>(cReadBack.second)[cBitIndex];
                 cPortCounter += ( cBitIndex == 3 ) || ( cBitIndex == 7 );
             }
         }
         
         size_t cInputLineCounter = 0 ;
         size_t cLineCounter=0;
-        std::vector<std::bitset<6>> cFeStates(8,0);
+        //std::vector<std::bitset<6>> cFeStates(8,0);
         cPortCounter=0;
         for( size_t cFeCounter=0; cFeCounter < 8; cFeCounter++)
         {
             for(size_t cStubLineCounter=0; cStubLineCounter < 5; cStubLineCounter++)
             {
-                cFeStates[cFeCounter][cStubLineCounter] = cPortStates[cPortCounter][cInputLineCounter];
+                fFeStates[cFeCounter][cStubLineCounter] = fPortStates[cPortCounter][cInputLineCounter];
                 cInputLineCounter++;
                 if(cInputLineCounter > 3 )
                 {
@@ -690,8 +698,8 @@ namespace Ph2_HwInterface {
                 }
             }
             // L1 line 
-            cFeStates[cFeCounter][5] = cPortStates[(10 + (cFeCounter > 4))][(cFeCounter&0x3)];
-            LOG (INFO) << BOLDBLUE << "PhyPort lock FE" << +cFeCounter << " : " << BOLDYELLOW << +cFeStates[cFeCounter][5] << " [L1 lines] " << BOLDMAGENTA << std::bitset<5>(cFeStates[cFeCounter].to_ulong() & 0x1F ) << " [Stub lines 0 -- 4]" << RESET;
+            fFeStates[cFeCounter][5] = fPortStates[(10 + (cFeCounter > 4))][(cFeCounter&0x3)];
+            LOG (INFO) << BOLDBLUE << "PhyPort lock FE" << +cFeCounter << " : " << BOLDYELLOW << +fFeStates[cFeCounter][5] << " [L1 lines] " << BOLDMAGENTA << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F ) << " [Stub lines 0 -- 4]" << RESET;
         }
         if( cLocked )
             LOG (INFO) << BOLDGREEN << "SUCCESSFULL " << BOLDBLUE << " lock on all phase aligner lines.." << RESET;
@@ -774,6 +782,15 @@ namespace Ph2_HwInterface {
         LOG (INFO) << BOLDBLUE << "Register " << cRegName << " set to " << std::bitset<6>(cRegValue) << " to select CIC Mode " << +pMode << RESET;
         return true;
     }
+    // bool CicInterface::PhaseAlignerStatus(Chip* pChip, std::vector<std::vector<uint8_t>>& pPhaseTaps )
+    // {
+    //     bool cLocked=this->CheckPhaseAlignerLock(pChip);
+    //     // 4 channels per phyPort ... 12 phyPorts per CIC 
+    //     // 8 FEs per CIC .... 6 SLVS lines per FE
+    //     // read back phase aligner values 
+    //     pPhaseTaps = fCicInterface->GetOptimalTaps( pChip);
+    //     return cLocked;
+    // }
     bool CicInterface::CheckSoftReset(Chip* pChip)
     {
         setBoard ( pChip->getBeBoardId() ); 

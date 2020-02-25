@@ -270,8 +270,8 @@ int main ( int argc, char* argv[] )
         cDataChecker.zeroContainers();
         
         //cDataChecker.TestPulse({0});
-        //cDataChecker.DataCheck({4});
-        cDataChecker.L1Eye({4});
+        cDataChecker.DataCheck({4});
+        //cDataChecker.L1Eye({4});
         cDataChecker.writeObjects();
         cDataChecker.dumpConfigFiles();
         cDataChecker.resetPointers();

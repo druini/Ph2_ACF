@@ -91,11 +91,17 @@ namespace Ph2_HwInterface
         bool SelectMode(Ph2_HwDescription::Chip* pChip, uint8_t pMode=0);
         bool SelectOutput( Ph2_HwDescription::Chip* pChip , bool pFixedPattern=true );
         bool EnableFEs(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pFEs={0,1,2,3,4,5,6,7}, bool pEnable=true);
-
+        bool PhaseAlignerStatus(Ph2_HwDescription::Chip* pChip, std::vector<std::vector<uint8_t>>& pPhaseTaps, std::vector<std::vector<uint8_t>>& pPhaseTapsFEs);  
+        // return information on phase aligners 
+        std::vector<std::bitset<6>> getFeStates(){ return fFeStates;}
+        std::vector<std::bitset<4>> getPortStates(){ return fPortStates;}
+        
     protected : 
         bool ReadOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, std::vector<std::vector<uint8_t>> &pPhaseTaps);
         std::map <uint8_t,uint8_t> fTxDriveStrength = {{0, 0} , {1,2} , {2,6} , {3,1} , {4,3} , {5,7}  };
         uint8_t fMaxDriveStrength=5;
+        std::vector<std::bitset<6>> fFeStates;
+        std::vector<std::bitset<4>> fPortStates;
 
     };
 }

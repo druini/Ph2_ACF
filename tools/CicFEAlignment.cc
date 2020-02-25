@@ -403,17 +403,27 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                     double cBend_strips = -7. + 0.5*cPosition; 
                     LOG (DEBUG) << BOLDBLUE << "Bend code of " << std::bitset<4>( cBendCode_phAlign ) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET;
                     
-                    // first pattern - stubs lines 0,1,3
-                    std::vector<uint8_t> cSeeds_ph1{ 85, 170 };
-                    std::vector<int>     cBends_ph1( 2, static_cast<int>(cBend_strips*2) ); 
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph1 , cBends_ph1,true);
-                    std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
-                    
-                    // second pattern - remaining stub lines 2,4 
-                    std::vector<uint8_t> cSeeds_ph2{ 64, 128 , 170 };
-                    std::vector<int>     cBends_ph2(3, static_cast<int>(cBend_strips*2) ); 
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph2 , cBends_ph2,true);
-                    std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
+                    for( size_t cAttempt=0; cAttempt<1; cAttempt++)
+                    {
+                        // first pattern - stubs lines 0,1,3
+                        std::vector<uint8_t> cSeeds_ph1{ 85, 170 };
+                        std::vector<int>     cBends_ph1( 2, static_cast<int>(cBend_strips*2) ); 
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph1 , cBends_ph1,true);
+                        std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
+                        
+                        // second pattern - remaining stub lines 2,4 
+                        // std::vector<uint8_t> cSeeds_ph2{ 64, 128 , 170 };
+                        // std::vector<int>     cBends_ph2(3, static_cast<int>(cBend_strips*2) ); 
+                        // static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph2 , cBends_ph2,true);
+                        // std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
+
+                        // third pattern - all lines at once 
+                        std::vector<uint8_t> cSeeds_ph3{ 42, 85 , 165 };
+                        std::vector<int>     cBends_ph3(3, static_cast<int>(cBend_strips*2) ); 
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph3 , cBends_ph3,true);
+                        std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
+
+                    }
                 }
                 fCicInterface->CheckPhaseAlignerLock( static_cast<OuterTrackerModule*>(cFe)->fCic); 
                 fReadoutChipInterface-> maskChannelsGroup (cChip, cOriginalMask);
@@ -441,7 +451,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
             // 4 channels per phyPort ... 12 phyPorts per CIC 
             std::vector<std::vector<uint8_t>> cPhaseTaps( 4, std::vector<uint8_t> (12, 0));
             // 8 FEs per CIC .... 6 SLVS lines per FE
-            std::vector<std::vector<uint8_t>> cPhaseTapsFEs( 8, std::vector<uint8_t> (6, 0)); 
+            std::vector<std::vector<uint8_t>> cPhaseTapsFEs( 8, std::vector<uint8_t> (6, 0)) ; 
             // read back phase aligner values 
             if( cLocked ) 
             {

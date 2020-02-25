@@ -3627,20 +3627,20 @@ void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
 
   void D19cFWInterface::ChipReSync()
   {
-  // in CIC case always send fast reset with an orbit reset
-  if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
-  {
-      WriteReg( "fc7_daq_ctrl.fast_command_block.control", (1 << 19) | (1 << 16) );
-      //WriteReg( "fc7_daq_ctrl.fast_command_block.control", (1 << 19) | (1 << 16) );
-      //uint32_t cReg = ReadReg("fc7_daq_ctrl.fast_command_block.control"); 
-      //LOG (DEBUG) << BOLDBLUE << "Sending simultaneous orbit and fast reset." << RESET;
-  }
-  else
-  {
-    WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_reset", 0x1 );
-      //LOG (DEBUG) << BOLDBLUE << "Sending fast reset." << RESET;
-  }
-  std::this_thread::sleep_for (std::chrono::microseconds (10) );
+      // in CIC case always send fast reset with an orbit reset
+      if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
+      {
+          WriteReg( "fc7_daq_ctrl.fast_command_block.control", (1 << 19) | (1 << 16) );
+          //WriteReg( "fc7_daq_ctrl.fast_command_block.control", (1 << 19) | (1 << 16) );
+          //uint32_t cReg = ReadReg("fc7_daq_ctrl.fast_command_block.control"); 
+          //LOG (DEBUG) << BOLDBLUE << "Sending simultaneous orbit and fast reset." << RESET;
+      }
+      else
+      {
+        WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_reset", 0x1 );
+          //LOG (DEBUG) << BOLDBLUE << "Sending fast reset." << RESET;
+      }
+      //std::this_thread::sleep_for (std::chrono::microseconds (10) );
   }
   
   void D19cFWInterface::ChipI2CRefresh()

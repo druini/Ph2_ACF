@@ -92,6 +92,12 @@ void DataChecker::Initialise ()
             cHist2D = new TH2D ( cName, Form("Number of matched stubs - CIC%d; Trigger Number; Bunch Crossing Id",(int)cFe->getFeId()) , 40  , 0 -0.5 , 40 -0.5 , 4000 , 0-0.5 , 4000-0.5 );
             bookHistogram ( cFe , "MatchedStubs", cHist2D );
 
+            cName = Form ( "h_MissedHits_Cic%d", cFe->getFeId() );
+            cObj = gROOT->FindObject ( cName );
+            if ( cObj ) delete cObj;
+            cHist2D = new TH2D ( cName, Form("Number of missed hits - CIC%d; Iteration number; CBC Id",(int)cFe->getFeId()) , 100  , 0 -0.5 , 100 -0.5 , 8 , 0-0.5 , 8-0.5 );
+            bookHistogram ( cFe , "MissedHits", cHist2D );
+
             // TProfile* cProfile = new TProfile ( cName, Form("Number of matched stubs - CIC%d; CBC; Fraction of matched stubs",(int)cFe->getFeId()) ,8  , 0 -0.5 , 8 -0.5 );
             // bookHistogram ( cFe , "MatchedStubs", cProfile );
             
@@ -239,6 +245,7 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
         auto cFeId = cFe->getFeId();
         TH2D* cMatchedStubs = static_cast<TH2D*> ( getHist ( cFe, "MatchedStubs" ) );
         TH2D* cAllStubs = static_cast<TH2D*> ( getHist ( cFe, "Stubs" ) );
+        TH2D* cMissedHits = static_cast<TH2D*> ( getHist ( cFe, "MissedHits" ) );
         
         // matching 
         for (auto& cChip : cFe->fReadoutChipVector) 
@@ -294,6 +301,7 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
                         cMatchedHits->Fill(cTriggerIndex,cPipeline, static_cast<int>(cMatchFound) );
                         cMatchedHitsEye->Fill(fPhaseTap, cTriggerIndex, static_cast<int>(cMatchFound) );
                     }
+                    cMissedHits->Fill( (int)(fAttempt) ,cChipId,cExpectedHits.size() - cMatched );
                     if( cMatched == cExpectedHits.size() )
                     {
                         auto& cOcc = cReadoutChipHitCheck->getSummary<int>();
@@ -675,6 +683,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
                     bool cConfigured = fCicInterface->SetStaticPhaseAlignment(  cCic , cChipId ,  0 , fPhaseTap);
                 }
             }
+            fBeBoardInterface->ChipReSync ( cBoard );
         }
     }
 
@@ -686,6 +695,10 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
     cSetting = fSettingsMap.find ( "LatencyOffset" );
     int cLatencyOffset = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0  ; 
 
+    // resync between attempts 
+    cSetting = fSettingsMap.find ( "ReSync" );
+    bool cResync = ( cSetting != std::end ( fSettingsMap ) ) ? (cSetting->second==1) : false  ; 
+    
 
     uint16_t cTPdelay = 0;
 
@@ -795,14 +808,14 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
         
         if( pWithNoise)
         {
-             for( size_t cAttempt=0; cAttempt < cAttempts ; cAttempt++)
+            /*for( size_t cAttempt=0; cAttempt < cAttempts ; cAttempt++)
             {
                 this->ReadNEvents ( cBoard , cEventsPerPoint);
                 this->matchEvents( cBoard , pChipIds ,cStub);
-            }
+            }*/
         }
         // using charge injection 
-        else
+        if( !pWithNoise)
         {
             // configure test pulse trigger 
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(fTPconfig.firmwareTPdelay ,fTPconfig.tpDelay ,fTPconfig.tpSequence, fTPconfig.tpFastReset );
@@ -814,16 +827,19 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
             fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
             LOG (DEBUG) << BOLDBLUE << "Latency set to " << +cLatency << "...\tStub latency set to " << +cStubLatency << RESET;
             fBeBoardInterface->ChipReSync ( cBoard );
-            // read N events and compare hits and stubs to injected stub 
-            for( size_t cAttempt=0; cAttempt < cAttempts ; cAttempt++)
-            {
-                // send a resync
-                //fBeBoardInterface->ChipReSync ( cBoard );
-                this->ReadNEvents ( cBoard , cEventsPerPoint);
-                this->matchEvents( cBoard , pChipIds ,cStub);
-            }
         }
-        this->print(pChipIds);
+        // read N events and compare hits and stubs to injected stub 
+        for( size_t cAttempt=0; cAttempt < cAttempts ; cAttempt++)
+        {
+            fAttempt = cAttempt;
+            LOG (INFO) << BOLDBLUE << "Iteration# " << +fAttempt << RESET;
+            // send a resync
+            if( cResync)
+                fBeBoardInterface->ChipReSync ( cBoard );
+            this->ReadNEvents ( cBoard , cEventsPerPoint);
+            this->matchEvents( cBoard , pChipIds ,cStub);
+            this->print(pChipIds);
+        }
         
 
         // and set it back to what it was 
