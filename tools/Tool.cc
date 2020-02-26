@@ -398,10 +398,10 @@ void Tool::SoftDestroy()
 		}
 	}
 
-	void Tool::WriteRootFile()
-	{
-		fResultFile->Write();
-	}
+void Tool::WriteRootFile()
+{
+  fResultFile->Write();
+}
 #endif
 
 void Tool::SaveResults()
@@ -536,13 +536,17 @@ void Tool::CreateResultDirectory ( const std::string& pDirname, bool pMode, bool
 		else LOG (INFO) << RED << "ERROR: " << RESET << "No Result Directory initialized - not saving results!" ;
 	}
 
-	void Tool::CloseResultFile()
-	{
-	LOG (INFO) << GREEN << "Closing result file" << RESET;
+void Tool::CloseResultFile()
+{
+  LOG (INFO) << GREEN << "Closing result file" << RESET;
 
-		if (fResultFile)
-			fResultFile->Close();
-	}
+  if (fResultFile != nullptr)
+    {
+      fResultFile->Close();
+      delete fResultFile;
+      fResultFile = nullptr;
+    }
+}
 
 	void Tool::StartHttpServer ( const int pPort, bool pReadonly )
 	{

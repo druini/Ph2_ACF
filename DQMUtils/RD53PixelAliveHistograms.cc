@@ -23,33 +23,33 @@ void PixelAliveHistograms::book (TFile* theOutputFile, const DetectorContainer& 
   nEvents = this->findValueInSettings(settingsMap,"nEvents");
 
 
-  size_t ToTsize   = RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
-  size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-  size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+  size_t ToTsize   = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
+  size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   auto hOcc1D = CanvasContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, nEvents + 1);
-  bookImplementer(theOutputFile, theDetectorStructure, hOcc1D, Occupancy1D, "Number of hits", "Entries");
+  bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Number of hits", "Entries");
 
   auto hOcc2D = CanvasContainer<TH2F>("PixelAlive", "Pixel Alive", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
-  bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "Columns", "Rows");
+  bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "Columns", "Rows");
 
-  auto hErr2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
-  bookImplementer(theOutputFile, theDetectorStructure, hErr2D, ErrorReadOut2D, "Columns", "Rows");
+  auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+  bookImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
 
   auto hToT = CanvasContainer<TH1F>("ToT", "ToT Distribution", ToTsize, 0, ToTsize);
-  bookImplementer(theOutputFile, theDetectorStructure, hToT, ToT, "ToT", "Entries");
+  bookImplementer(theOutputFile, theDetectorStructure, ToT, hToT, "ToT", "Entries");
 
   auto hBCID = CanvasContainer<TH1F>("BCID", "BCID", BCIDsize, 0, BCIDsize);
-  bookImplementer(theOutputFile, theDetectorStructure, hBCID, BCID, "#DeltaBCID", "Entries");
+  bookImplementer(theOutputFile, theDetectorStructure, BCID, hBCID, "#DeltaBCID", "Entries");
 
-  auto hTrigID = CanvasContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 0, TrgIDsize);
-  bookImplementer(theOutputFile, theDetectorStructure, hTrigID, TriggerID, "#DeltaTrigger-ID", "Entries");
+  auto hTriggerID = CanvasContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 0, TrgIDsize);
+  bookImplementer(theOutputFile, theDetectorStructure, TriggerID, hTriggerID, "#DeltaTrigger-ID", "Entries");
 }
 
 bool PixelAliveHistograms::fill (std::vector<char>& dataBuffer)
 {
-  const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+  const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   ChannelContainerStream<OccupancyAndPh>                          theOccStreamer  ("PixelAliveOcc");
   ChipContainerStream<EmptyContainer,GenericDataArray<BCIDsize>>  theBCIDStreamer ("PixelAliveBCID"); // @TMP@
@@ -109,7 +109,7 @@ void PixelAliveHistograms::fill (const DetectorDataContainer& DataContainer)
 
 void PixelAliveHistograms::fillBCID (const DetectorDataContainer& DataContainer)
 {
-  const size_t BCIDsize = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t BCIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
 
   for (const auto cBoard : DataContainer)
     for (const auto cModule : *cBoard)
@@ -125,7 +125,7 @@ void PixelAliveHistograms::fillBCID (const DetectorDataContainer& DataContainer)
 
 void PixelAliveHistograms::fillTrgID (const DetectorDataContainer& DataContainer)
 {
-  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+  const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   for (const auto cBoard : DataContainer)
     for (const auto cModule : *cBoard)

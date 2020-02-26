@@ -27,26 +27,26 @@ void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDet
   offset     = this->findValueInSettings(settingsMap,"VCalMED");
 
 
-  auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue-offset, stopValue-offset, nEvents, 0, RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION));
-  bookImplementer(theOutputFile, theDetectorStructure, hOcc2D, Occupancy2D, "#DeltaVCal", "ToT");
+  auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue-offset, stopValue-offset, nEvents, 0, RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION));
+  bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "ToT");
 
-  auto hErrReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
-  bookImplementer(theOutputFile, theDetectorStructure, hErrReadOut2D, ErrorReadOut2D, "Columns", "Rows");
+  auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+  bookImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
 
-  auto hErrFit2D = CanvasContainer<TH2F>("FitErrors", "Fit Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
-  bookImplementer(theOutputFile, theDetectorStructure, hErrFit2D, ErrorFit2D, "Columns", "Rows");
+  auto hErrorFit2D = CanvasContainer<TH2F>("FitErrors", "Fit Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+  bookImplementer(theOutputFile, theDetectorStructure, ErrorFit2D, hErrorFit2D, "Columns", "Rows");
 
   auto hGain1D = CanvasContainer<TH1F>("Gain1D", "Gain1D", 100, 0, 20e-3);
-  bookImplementer(theOutputFile, theDetectorStructure, hGain1D, Gain1D, "Gain (ToT/VCal)", "Entries");
+  bookImplementer(theOutputFile, theDetectorStructure, Gain1D, hGain1D, "Gain (ToT/VCal)", "Entries");
 
   auto hIntercept1D = CanvasContainer<TH1F>("Intercept1D", "Intercept1D", 100, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
-  bookImplementer(theOutputFile, theDetectorStructure, hIntercept1D, Intercept1D, "Intercept (ToT)", "Entries");
+  bookImplementer(theOutputFile, theDetectorStructure, Intercept1D, hIntercept1D, "Intercept (ToT)", "Entries");
 
   auto hGain2D = CanvasContainer<TH2F>("Gain2D", "Gain Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
-  bookImplementer(theOutputFile, theDetectorStructure, hGain2D, Gain2D, "Column", "Row");
+  bookImplementer(theOutputFile, theDetectorStructure, Gain2D, hGain2D, "Column", "Row");
 
   auto hIntercept2D = CanvasContainer<TH2F>("Intercept2D", "Intercept Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
-  bookImplementer(theOutputFile, theDetectorStructure, hIntercept2D, Intercept2D, "Column", "Row");
+  bookImplementer(theOutputFile, theDetectorStructure, Intercept2D, hIntercept2D, "Column", "Row");
 }
 
 bool GainHistograms::fill (std::vector<char>& dataBuffer)
@@ -87,7 +87,7 @@ void GainHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContai
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
               {
-                if (cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy != RD53SharedConstants::ISDISABLED)
+                if (cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy != RD53Shared::ISDISABLED)
                   hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row,col).fPh);
                 if (cChip->getChannel<OccupancyAndPh>(row,col).readoutError == true) ErrorReadOut2DHist->Fill(col+1, row+1);
               }
@@ -110,7 +110,7 @@ void GainHistograms::fillGainAndIntercept (const DetectorDataContainer& GainAndI
 
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
-              if (cChip->getChannel<GainAndIntercept>(row,col).fGain == RD53SharedConstants::FITERROR) ErrorFit2DHist->Fill(col+1, row+1);
+              if (cChip->getChannel<GainAndIntercept>(row,col).fGain == RD53Shared::FITERROR) ErrorFit2DHist->Fill(col+1, row+1);
               else if (cChip->getChannel<GainAndIntercept>(row,col).fGain != 0)
                 {
                   Gain1DHist->Fill(cChip->getChannel<GainAndIntercept>(row,col).fGain);

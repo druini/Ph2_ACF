@@ -12,7 +12,7 @@
 #define RD53GainHistograms_H
 
 #include "../System/SystemController.h"
-#include "../Utils/RD53SharedConstants.h"
+#include "../Utils/RD53Shared.h"
 #include "../Utils/GainAndIntercept.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"

@@ -35,7 +35,7 @@ FileHandler::FileHandler (const std::string& pBinaryFileName, char pOption, File
 
 FileHandler::~FileHandler()
 {
-  while(fQueue.empty() == false) usleep(1000);
+  while (fQueue.empty() == false) usleep(DESTROYSLEEP);
   FileHandler::closeFile();
 }
 
@@ -61,14 +61,14 @@ void FileHandler::setData (std::vector<uint32_t>& pVector)
 bool FileHandler::isFileOpen ()
 {
   std::lock_guard<std::mutex> cLock (fMemberMutex);
-  return fFileIsOpened.load();
+  return fFileIsOpened;
 }
 
 void FileHandler::rewind ()
 {
   std::lock_guard<std::mutex> cLock (fMemberMutex);
 
-  if (fOption == 'r' && isFileOpen())
+  if ((fOption == 'r') && (FileHandler::isFileOpen() == true))
     {
       if (fHeader.fValid == true) fBinaryFile.seekg (48, std::ios::beg);
       else                        fBinaryFile.seekg ( 0, std::ios::beg);
@@ -78,7 +78,7 @@ void FileHandler::rewind ()
 
 bool FileHandler::openFile ()
 {
-  if (isFileOpen() == false)
+  if (FileHandler::isFileOpen() == false)
     {
       std::lock_guard<std::mutex> cLock (fMemberMutex);
 
@@ -98,7 +98,6 @@ bool FileHandler::openFile ()
               fHeaderPresent = true;
             }
         }
-
       else if (fOption == 'r')
         {
           fBinaryFile.open(getFilename().c_str(), std::fstream::in | std::fstream::binary);
@@ -131,10 +130,9 @@ void FileHandler::closeFile ()
     {
       fFileIsOpened = false;
       if ((fOption == 'w') && (fThread.joinable() == true)) fThread.join();
+      fBinaryFile.close();
+      LOG (INFO) << GREEN << "Closing binary file: " << BOLDYELLOW << fBinaryFileName << RESET;
     }
-  if (fBinaryFile.is_open() == true) fBinaryFile.close();
-
-  LOG (INFO) << GREEN << "Closing binary file: " << BOLDYELLOW << fBinaryFileName << RESET;
 }
 
 std::vector<uint32_t> FileHandler::readFile ()
@@ -202,8 +200,8 @@ bool FileHandler::dequeue (std::vector<uint32_t>& pData)
     {
       pData = fQueue.front();
       fQueue.pop();
-      return false;
+      return true;
     }
 
-  return true;
+  return false;
 }

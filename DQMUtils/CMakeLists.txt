@@ -23,7 +23,7 @@ if(${ROOT_FOUND})
     #check for THttpServer
     if(${ROOT_HAS_HTTP})
         set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HTTP__")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
     endif()
 endif()
 

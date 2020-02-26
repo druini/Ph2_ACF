@@ -4,7 +4,7 @@ void ThresholdAndNoise::makeSummaryAverage(const std::vector<ThresholdAndNoise>*
 {
   if(theThresholdAndNoiseVector->size() != theNumberOfEnabledChannelsList.size())
     {
-      std::cout << __PRETTY_FUNCTION__ << "theThresholdAndNoiseVector size = " << theThresholdAndNoiseVector->size()
+      std::cout << __PRETTY_FUNCTION__ << " theThresholdAndNoiseVector size = " << theThresholdAndNoiseVector->size()
                 << " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
       abort();
     }

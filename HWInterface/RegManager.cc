@@ -21,7 +21,7 @@
 
 namespace Ph2_HwInterface
 {
-  RegManager::RegManager ( const char* puHalConfigFileName, uint32_t pBoardId )
+  RegManager::RegManager (const char* puHalConfigFileName, uint32_t pBoardId)
   {
     if (mode != Mode::Replay)
       {
@@ -35,11 +35,11 @@ namespace Ph2_HwInterface
       }
   }
 
-  RegManager::RegManager ( const char* pId, const char* pUri, const char* pAddressTable )
-    : fBoard (nullptr)
-    , fUri (pUri)
+  RegManager::RegManager (const char* pId, const char* pUri, const char* pAddressTable)
+    : fBoard        (nullptr)
+    , fUri          (pUri)
     , fAddressTable (pAddressTable)
-    , fId (pId)
+    , fId           (pId)
   {
     if (mode != Mode::Replay)
       {
@@ -54,39 +54,39 @@ namespace Ph2_HwInterface
     delete fBoard;
   }
 
-  bool RegManager::WriteReg ( const std::string& pRegNode, const uint32_t& pVal )
+  bool RegManager::WriteReg (const std::string& pRegNode, const uint32_t& pVal)
   {
     if (mode == Mode::Replay) return true;
 
-    fBoard->getNode ( pRegNode ).write ( pVal );
+    fBoard->getNode(pRegNode).write(pVal);
     fBoard->dispatch();
 
     // Verify if the writing is done correctly
-    if ( DEV_FLAG )
+    if (DEV_FLAG)
       {
-        uhal::ValWord<uint32_t> reply = fBoard->getNode ( pRegNode ).read();
+        uhal::ValWord<uint32_t> reply = fBoard->getNode(pRegNode).read();
         fBoard->dispatch();
 
         uint32_t comp = reply.value();
 
-        if ( comp == pVal )
+        if (comp == pVal)
           {
-            LOG (DEBUG) << "Values written correctly !" << pRegNode << "=" << pVal ;
+            LOG (DEBUG) << "Values written correctly !" << pRegNode << "=" << pVal;
             return true;
           }
 
-        LOG (DEBUG) << "\nERROR !!\nValues are not consistent : \nExpected : " << pVal << "\nActual : " << comp ;
+        LOG (DEBUG) << "\nERROR !!\nValues are not consistent : \nExpected : " << pVal << "\nActual : " << comp;
       }
 
     return false;
   }
 
-  bool RegManager::WriteStackReg ( const std::vector< std::pair<std::string, uint32_t> >& pVecReg )
+  bool RegManager::WriteStackReg (const std::vector< std::pair<std::string, uint32_t> >& pVecReg)
   {
     if (mode == Mode::Replay) return true;
 
-    for ( auto const& v : pVecReg )
-      fBoard->getNode ( v.first ).write ( v.second );
+    for (auto const& v : pVecReg)
+      fBoard->getNode(v.first).write(v.second);
 
     try
       {
@@ -94,119 +94,119 @@ namespace Ph2_HwInterface
       }
     catch (...)
       {
-        std::cerr << "Error while writing the following parameters: " ;
+        std::cerr << "Error while writing the following parameters: ";
 
-        for ( auto const& v : pVecReg ) std::cerr << v.first << ", ";
+        for (auto const& v : pVecReg) std::cerr << v.first << ", ";
 
         std::cerr << std::endl;
         throw ;
       }
 
-    if ( DEV_FLAG )
+    if (DEV_FLAG)
       {
         int cNbErrors = 0;
         uint32_t comp;
 
-        for ( auto const& v : pVecReg )
+        for (auto const& v : pVecReg)
           {
-            uhal::ValWord<uint32_t> reply = fBoard->getNode ( v.first ).read();
+            uhal::ValWord<uint32_t> reply = fBoard->getNode(v.first).read();
             fBoard->dispatch();
 
             comp = reply.value();
 
-            if ( comp ==  v.second )
-              LOG (DEBUG) << "Values written correctly !" << v.first << "=" << v.second ;
+            if (comp ==  v.second)
+              LOG (DEBUG) << "Values written correctly !" << v.first << "=" << v.second;
           }
 
-        if ( cNbErrors == 0 )
+        if (cNbErrors == 0)
           {
-            LOG (DEBUG) << "All values written correctly !" ;
+            LOG (DEBUG) << "All values written correctly !";
             return true;
           }
 
-        LOG (DEBUG) << "\nERROR !!\n" << cNbErrors << " have not been written correctly !" ;
+        LOG (DEBUG) << "\nERROR !!\n" << cNbErrors << " have not been written correctly !";
       }
 
     return false;
   }
 
-  bool RegManager::WriteBlockReg ( const std::string& pRegNode, const std::vector< uint32_t >& pValues )
+  bool RegManager::WriteBlockReg (const std::string& pRegNode, const std::vector< uint32_t >& pValues)
   {
     if (mode == Mode::Replay) return true;
 
-    fBoard->getNode ( pRegNode ).writeBlock ( pValues );
+    fBoard->getNode(pRegNode).writeBlock(pValues);
     fBoard->dispatch();
 
     bool cWriteCorr = true;
 
-    //Verifying block
-    if ( DEV_FLAG )
+    // Verifying block
+    if (DEV_FLAG)
       {
         int cErrCount = 0;
 
-        uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlock ( pValues.size() );
+        uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode(pRegNode).readBlock(pValues.size());
         fBoard->dispatch();
 
-        //Use size_t and not an iterator as op[] only works with size_t type
-        for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
+        // Use size_t and not an iterator as op[] only works with size_t type
+        for (std::size_t i = 0; i != cBlockRead.size(); i++)
           {
-            if ( cBlockRead[i] != pValues.at ( i ) )
+            if (cBlockRead[i] != pValues.at(i))
               {
                 cWriteCorr = false;
                 cErrCount++;
               }
           }
 
-        LOG (DEBUG) << "Block Write finished !!\n" << cErrCount << " values failed to write !" ;
+        LOG (DEBUG) << "Block Write finished !!\n" << cErrCount << " values failed to write !";
       }
 
     return cWriteCorr;
   }
 
-  bool RegManager::WriteBlockAtAddress ( uint32_t uAddr, const std::vector< uint32_t >& pValues, bool bNonInc )
+  bool RegManager::WriteBlockAtAddress (uint32_t uAddr, const std::vector< uint32_t >& pValues, bool bNonInc)
   {
     if (mode == Mode::Replay) return true;
 
-    fBoard->getClient().writeBlock ( uAddr, pValues, bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL );
+    fBoard->getClient().writeBlock(uAddr, pValues, bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL);
     fBoard->dispatch();
 
     bool cWriteCorr = true;
 
-    //Verifying block
-    if ( DEV_FLAG )
+    // Verifying block
+    if (DEV_FLAG)
       {
         int cErrCount = 0;
 
-        uhal::ValVector<uint32_t> cBlockRead = fBoard->getClient().readBlock ( uAddr, pValues.size(), bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL );
+        uhal::ValVector<uint32_t> cBlockRead = fBoard->getClient().readBlock (uAddr, pValues.size(), bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL);
         fBoard->dispatch();
 
-        //Use size_t and not an iterator as op[] only works with size_t type
-        for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
+        // Use size_t and not an iterator as op[] only works with size_t type
+        for (std::size_t i = 0; i != cBlockRead.size(); i++)
           {
-            if ( cBlockRead[i] != pValues.at ( i ) )
+            if (cBlockRead[i] != pValues.at(i))
               {
                 cWriteCorr = false;
                 cErrCount++;
               }
           }
 
-        LOG (DEBUG) << "BlockWriteAtAddress finished !!\n" << cErrCount << " values failed to write !" ;
+        LOG (DEBUG) << "BlockWriteAtAddress finished !!\n" << cErrCount << " values failed to write !";
       }
 
     return cWriteCorr;
   }
 
-  uint32_t RegManager::ReadReg ( const std::string& pRegNode )
+  uint32_t RegManager::ReadReg (const std::string& pRegNode)
   {
     if (mode == Mode::Replay) return replayRead();
 
-    uhal::ValWord<uint32_t> cValRead = fBoard->getNode ( pRegNode ).read();
+    uhal::ValWord<uint32_t> cValRead = fBoard->getNode(pRegNode).read();
     fBoard->dispatch();
 
-    if ( DEV_FLAG )
+    if (DEV_FLAG)
       {
         uint32_t read = cValRead.value();
-        LOG (DEBUG) << "Value in register ID " << pRegNode << " : " << read ;
+        LOG (DEBUG) << "Value in register ID " << pRegNode << " : " << read;
       }
 
     if (mode == Mode::Capture) captureRead(cValRead.value());
@@ -214,17 +214,17 @@ namespace Ph2_HwInterface
     return cValRead.value();
   }
 
-  uint32_t RegManager::ReadAtAddress ( uint32_t uAddr, uint32_t uMask )
+  uint32_t RegManager::ReadAtAddress (uint32_t uAddr, uint32_t uMask)
   {
     if (mode == Mode::Replay) return replayRead();
 
-    uhal::ValWord<uint32_t> cValRead = fBoard->getClient().read ( uAddr, uMask );
+    uhal::ValWord<uint32_t> cValRead = fBoard->getClient().read(uAddr, uMask);
     fBoard->dispatch();
 
-    if ( DEV_FLAG )
+    if (DEV_FLAG)
       {
         uint32_t read = cValRead.value();
-        LOG (DEBUG) << "Value at address " << std::hex << uAddr << std::dec << " : " << read ;
+        LOG (DEBUG) << "Value at address " << std::hex << uAddr << std::dec << " : " << read;
       }
 
     if (mode == Mode::Capture) captureRead(cValRead.value());
@@ -232,73 +232,73 @@ namespace Ph2_HwInterface
     return cValRead.value();
   }
 
-  std::vector<uint32_t> RegManager::ReadBlockReg ( const std::string& pRegNode, const uint32_t& pBlockSize )
+  std::vector<uint32_t> RegManager::ReadBlockReg (const std::string& pRegNode, const uint32_t& pBlockSize)
   {
     if (mode == Mode::Replay) return replayBlockRead(pBlockSize);
 
-    uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlock ( pBlockSize );
+    uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode(pRegNode).readBlock(pBlockSize);
     fBoard->dispatch();
 
-    if ( DEV_FLAG )
+    if (DEV_FLAG)
       {
-        LOG (DEBUG) << "Values in register block " << pRegNode << " : " ;
+        LOG (DEBUG) << "Values in register block " << pRegNode << " : ";
 
-        for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
+        for (std::size_t i = 0; i != cBlockRead.size(); i++)
           {
-            uint32_t read = static_cast<uint32_t> ( cBlockRead[i] );
-            LOG (DEBUG) << " " << read << " " ;
+            uint32_t read = static_cast<uint32_t> (cBlockRead[i]);
+            LOG (DEBUG) << " " << read << " ";
           }
       }
 
     if (mode == Mode::Capture) captureBlockRead(cBlockRead.value());
 
-    return cBlockRead.value();
+    return std::move(cBlockRead.value());
   }
 
-  std::vector<uint32_t> RegManager::ReadBlockRegOffset ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
+  std::vector<uint32_t> RegManager::ReadBlockRegOffset (const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset)
   {
     if (mode == Mode::Replay) return replayBlockRead(pBlocksize);
 
-    uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode ( pRegNode ).readBlockOffset ( pBlocksize, pBlockOffset );
+    uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode(pRegNode).readBlockOffset(pBlocksize, pBlockOffset);
     fBoard->dispatch();
 
-    if ( DEV_FLAG )
+    if (DEV_FLAG)
       {
-        LOG (DEBUG) << "Values in register block " << pRegNode << " : " ;
+        LOG (DEBUG) << "Values in register block " << pRegNode << " : ";
 
-        for ( std::size_t i = 0; i != cBlockRead.size(); i++ )
+        for (std::size_t i = 0; i != cBlockRead.size(); i++)
           {
-            uint32_t read = static_cast<uint32_t> ( cBlockRead[i] );
-            LOG (DEBUG) << " " << read << " " ;
+            uint32_t read = static_cast<uint32_t> (cBlockRead[i]);
+            LOG (DEBUG) << " " << read << " ";
           }
       }
 
     if (mode == Mode::Capture) captureBlockRead(cBlockRead.value());
 
-    return cBlockRead.value();
+    return std::move(cBlockRead.value());
   }
 
-  void RegManager::StackReg ( const std::string& pRegNode, const uint32_t& pVal, bool pSend )
+  void RegManager::StackReg (const std::string& pRegNode, const uint32_t& pVal, bool pSend)
   {
-    for ( std::vector< std::pair<std::string, uint32_t> >::iterator cIt = fStackReg.begin(); cIt != fStackReg.end(); cIt++ )
+    for (std::vector< std::pair<std::string, uint32_t> >::iterator cIt = fStackReg.begin(); cIt != fStackReg.end(); cIt++)
       {
-        if ( cIt->first == pRegNode )
-          fStackReg.erase ( cIt );
+        if (cIt->first == pRegNode)
+          fStackReg.erase(cIt);
       }
 
-    std::pair<std::string, uint32_t> cPair ( pRegNode, pVal );
-    fStackReg.push_back ( cPair );
+    std::pair<std::string, uint32_t> cPair (pRegNode, pVal);
+    fStackReg.push_back(cPair);
 
-    if ( pSend || fStackReg.size() == 100 )
+    if (pSend || fStackReg.size() == 100)
       {
-        WriteStackReg ( fStackReg );
+        WriteStackReg(fStackReg);
         fStackReg.clear();
       }
   }
 
-  const uhal::Node& RegManager::getUhalNode ( const std::string& pStrPath )
+  const uhal::Node& RegManager::getUhalNode (const std::string& pStrPath)
   {
-    return fBoard->getNode ( pStrPath );
+    return fBoard->getNode(pStrPath);
   }
 
 

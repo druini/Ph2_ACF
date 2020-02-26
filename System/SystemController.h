@@ -1,10 +1,10 @@
 /*!
-  \file                    SystemController.h
-  \brief                   Controller of the System, overall wrapper of the framework
-  \author                  Nicolas PIERRE
-  \version                 1.0
-  \date                    10/08/14
-  Support :                mail to : lorenzo.bidegain@cern.ch, nico.pierre@icloud.com
+  \file                  SystemController.h
+  \brief                 Controller of the System, overall wrapper of the framework
+  \author                Mauro DINARDO
+  \version               2.0
+  \date                  01/01/20
+  Support:               email to mauro.dinardo@cern.ch
 */
 
 #ifndef SYSTEMCONTROLLER_H
@@ -149,6 +149,25 @@ namespace Ph2_System
     void ConfigureHw(bool bIgnoreI2c = false);
 
     /*!
+     * \brief Read Monitor Data from pBoard
+     * \param pBeBoard
+     * \param args
+     * \return: none
+     */
+    template<typename... Ts>
+      void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const Ts&... args)
+      {
+        if (sizeof...(Ts) > 0)
+          for (const auto cModule : *pBoard)
+            for (const auto cChip : *cModule)
+              {
+                LOG (INFO) << GREEN << "Monitor data for [board/module/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, static_cast<Ph2_HwDescription::ReadoutChip*>(cChip), args...);
+                LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
+              }
+      }
+
+    /*!
      * \brief Read Data from pBoard
      * \param pBeBoard
      * \return: number of packets
@@ -206,7 +225,7 @@ namespace Ph2_System
 
     const Ph2_HwDescription::BeBoard* getBoard(int index) const
     {
-      return (index < (int)fBoardVector.size()) ? fBoardVector.at(index) : nullptr;
+      return (index < static_cast<int>(fBoardVector.size()) ? fBoardVector.at(index) : nullptr);
     }
 
     /*!
@@ -232,9 +251,8 @@ namespace Ph2_System
       return fEventList;
     }
 
+    void   DecodeData          (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
     double findValueInSettings (const std::string name, double defaultValue = 0.) const;
-
-    void DecodeData (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
   private:
     void SetFuture (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);

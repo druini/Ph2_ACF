@@ -39,10 +39,12 @@
   * /
   */
 
-#ifndef __BEBOARDINTERFACE_H__
-#define __BEBOARDINTERFACE_H__
+#ifndef BEBOARDINTERFACE_H
+#define BEBOARDINTERFACE_H
 
 #include "BeBoardFWInterface.h"
+#include "ReadoutChipInterface.h"
+#include "RD53Interface.h"
 
 
 /*!
@@ -70,7 +72,7 @@ namespace Ph2_HwInterface
      * \brief Set the board to talk with
      * \param pBoardId
      */
-    void setBoard ( uint16_t pBoardIdentifier );
+    void setBoard (uint16_t pBoardIdentifier);
 
     /*!
      * \brief Constructor of the BeBoardInterface class
@@ -200,12 +202,28 @@ namespace Ph2_HwInterface
      */
     void Resume ( Ph2_HwDescription::BeBoard* pBoard );
     /*!
+     * \brief Read board monitor data
+     * \param pReadoutChipInterface
+     * \param pChip
+     * \param args
+     * \return none
+     */
+    template<typename... Ts>
+      void ReadChipMonitor (Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::Chip* pChip, const Ts&... args)
+      {
+        std::lock_guard<std::mutex> theGuard(theMtx);
+
+        pReadoutChipInterface->ReadHybridVoltage(pChip);
+        pReadoutChipInterface->ReadHybridTemperature(pChip);
+        static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, args...);
+      }
+    /*!
      * \brief Read data from DAQ
      * \param pBoard
      * \param pBreakTrigger : if true, enable the break trigger
      * \return fNpackets: the number of packets read
      */
-    uint32_t ReadData ( Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true );
+    uint32_t ReadData (Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true);
     /*!
      * \brief Read data for pNEvents
      * \param pBoard : the pointer to the BeBoard
@@ -217,12 +235,12 @@ namespace Ph2_HwInterface
      * \param pBoard pointer to a board description
      * \return Reference to the uhal::node object
      */
-    const uhal::Node& getUhalNode ( const Ph2_HwDescription::BeBoard* pBoard, const std::string& pStrPath );
+    const uhal::Node& getUhalNode (const Ph2_HwDescription::BeBoard* pBoard, const std::string& pStrPath);
     /*! \brief Access to the uHAL main interface for a given board
      * \param pBoard pointer to a board description
      * \return pointer to the uhal::HwInterface object
      */
-    uhal::HwInterface* getHardwareInterface ( const Ph2_HwDescription::BeBoard* pBoard );
+    uhal::HwInterface* getHardwareInterface (const Ph2_HwDescription::BeBoard* pBoard);
     /*! \brief Access to the firmware interface for a given board
      * \return pointer to the BeBoardFWInterface object
      */
@@ -232,23 +250,23 @@ namespace Ph2_HwInterface
      * \param numConfig FPGA configuration number to be uploaded
      * \param pstrFile path to MCS file containing the FPGA configuration
      */
-    void FlashProm ( Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const char* pstrFile );
+    void FlashProm (Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const char* pstrFile);
     /*! \brief Jump to an FPGA configuration
      * \param pBoard pointer to a board description
      * \param numConfig FPGA configuration number
      */
-    void JumpToFpgaConfig ( Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig);
+    void JumpToFpgaConfig (Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig);
 
-    void DownloadFpgaConfig ( Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const std::string& strDest);
+    void DownloadFpgaConfig (Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const std::string& strDest);
     /*! \brief Current FPGA configuration
      * \param pBoard pointer to a board description
      * \return const pointer to an FPGA uploading process. NULL means that no upload is been processed.
      */
-    const FpgaConfig* GetConfiguringFpga ( Ph2_HwDescription::BeBoard* pBoard );
+    const FpgaConfig* GetConfiguringFpga (Ph2_HwDescription::BeBoard* pBoard);
 
     /*! \brief Get the list of available FPGA configuration (or firmware images)
      * \param pBoard pointer to a board description */
-    std::vector<std::string> getFpgaConfigList ( Ph2_HwDescription::BeBoard* pBoard);
+    std::vector<std::string> getFpgaConfigList (Ph2_HwDescription::BeBoard* pBoard);
 
     /*! \brief Delete one Fpga configuration (or firmware image)
      * \param pBoard pointer to a board description
@@ -260,25 +278,24 @@ namespace Ph2_HwInterface
     void SetForceStart (Ph2_HwDescription::BeBoard* pBoard, bool bStart);
 
     /*!
-     * Activate power on and off sequence 
+     * Activate power on and off sequence
      */
-    void PowerOn( Ph2_HwDescription::BeBoard* pBoard );
+    void PowerOn (Ph2_HwDescription::BeBoard* pBoard);
 
-    void PowerOff( Ph2_HwDescription::BeBoard* pBoard );
+    void PowerOff (Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * Read the firmware version
      */
-    void ReadVer( Ph2_HwDescription::BeBoard* pBoard );
+    void ReadVer (Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * Returns data from buffernum and mpa.  Raw register output.
      */
-    std::pair<std::vector<uint32_t>, std::vector<uint32_t>>   ReadData( Ph2_HwDescription::BeBoard* pBoard, int buffernum, int mpa);
+    std::pair<std::vector<uint32_t>, std::vector<uint32_t>> ReadData (Ph2_HwDescription::BeBoard* pBoard, int buffernum, int mpa);
 
-    // optical stuff 
-    void selectLink(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLinkId, uint32_t pWait_ms=100);
-    uint16_t ParseEvents(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData);
+    void     selectLink  (Ph2_HwDescription::BeBoard* pBoard, uint8_t pLinkId, uint32_t pWait_ms = 100);
+    uint16_t ParseEvents (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData);
   };
 }
 

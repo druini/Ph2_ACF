@@ -162,7 +162,10 @@ int main ( int argc, char* argv[] )
       strImage = cmd.optionValue ("image");
 
       if (!cmd.foundOption ("file") )
-        verifyImageName (strImage, lstNames);
+        {
+          verifyImageName (strImage, lstNames);
+          LOG (INFO) << ">>> Done <<<" ;
+        }
     }
   else if (!lstNames.empty() )
     strImage = "GoldenImage.bin";

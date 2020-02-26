@@ -54,6 +54,12 @@ void SCurve::ConfigureCalibration ()
   for (auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
 
+  // #################################
+  // # Initialize container recycler #
+  // #################################
+  theRecyclingBin.setDetectorContainer(fDetectorContainer);
+
+
   // #######################
   // # Initialize progress #
   // #######################
@@ -64,14 +70,15 @@ void SCurve::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[SCurve::Start] Starting" << RESET;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/SCurveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
       this->initializeFileHandler();
     }
 
   SCurve::run();
   SCurve::analyze();
+  SCurve::saveChipRegisters(currentRun);
   SCurve::sendData();
 }
 
@@ -104,22 +111,33 @@ void SCurve::sendData ()
 void SCurve::Stop ()
 {
   LOG (INFO) << GREEN << "[SCurve::Stop] Stopping" << RESET;
-
   this->closeFileHandler();
 }
 
-void SCurve::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void SCurve::localConfigure (const std::string fileRes_, int currentRun)
 {
-  fileRes = fileRes_;
-  fileReg = fileReg_;
+#ifdef __USE_ROOT__
+  histos = nullptr;
+#endif
 
   SCurve::ConfigureCalibration();
+  SCurve::initializeFiles(fileRes_, currentRun);
+}
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+void SCurve::initializeFiles (const std::string fileRes_, int currentRun)
+{
+  fileRes = fileRes_;
+
+  if ((currentRun >= 0) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/SCurveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
       this->initializeFileHandler();
     }
+
+#ifdef __USE_ROOT__
+  delete histos;
+  histos = new SCurveHistograms;
+#endif
 }
 
 void SCurve::run ()
@@ -133,14 +151,10 @@ void SCurve::run ()
         this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
 
 
-  for (auto i = 0u; i < detectorContainerVector.size(); i++) delete detectorContainerVector[i];
+  for (auto container : detectorContainerVector) theRecyclingBin.free(container);
   detectorContainerVector.clear();
-  detectorContainerVector.reserve(dacList.size());
   for (auto i = 0u; i < dacList.size(); i++)
-    {
-      detectorContainerVector.emplace_back(new DetectorDataContainer());
-      ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *detectorContainerVector.back());
-    }
+    detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetBoardBroadcast(true);
@@ -159,7 +173,7 @@ void SCurve::run ()
           for (auto col = 0u; col < RD53::nCols; col++)
             if (!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) || !this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
               for (auto i = 0u; i < dacList.size(); i++)
-                detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy = RD53SharedConstants::ISDISABLED;
+                detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy = RD53Shared::ISDISABLED;
 
 
   // ################
@@ -168,40 +182,27 @@ void SCurve::run ()
   SCurve::chipErrorReport();
 }
 
-void SCurve::draw ()
+void SCurve::draw (int currentRun)
 {
+  SCurve::saveChipRegisters(currentRun);
+
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  this->CreateResultDirectory(RESULTDIR,false,false);
+  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
+  LOG (INFO) << BOLDBLUE << "\t--> SCurve saving histograms..." << RESET;
 
-  SCurve::initHisto();
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   SCurve::fillHisto();
-  SCurve::display();
-#endif
+  histos->process();
 
-  // ######################################
-  // # Save or Update register new values #
-  // ######################################
-  for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          static_cast<RD53*>(cChip)->copyMaskFromDefault();
-          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-          system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> SCurve saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-        }
-
-#ifdef __USE_ROOT__
-  if (doDisplay == true) myApp->Run(true);
   this->WriteRootFile();
   this->CloseResultFile();
+
+  if (doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -241,7 +242,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
                         theMaxThresholdContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() = mean;
                     }
                   else
-                    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise = RD53SharedConstants::FITERROR;
+                    theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<ThresholdAndNoise>(row,col).fNoise = RD53Shared::FITERROR;
                 }
 
           index++;
@@ -249,13 +250,12 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
 
   theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
-  for (const auto cBoard : *fDetectorContainer)
+  for (const auto cBoard : *theThresholdAndNoiseContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
           LOG (INFO) << GREEN << "Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << GREEN << "] is " << BOLDYELLOW
-                     << std::fixed << std::setprecision(1) << theThresholdAndNoiseContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold
-                     << RESET << GREEN << " (Delta_VCal)" << RESET;
+                     << std::fixed << std::setprecision(1) << cChip->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold << RESET << GREEN << " (Delta_VCal)" << RESET;
           LOG (INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << theMaxThresholdContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() << RESET;
         }
 
@@ -295,26 +295,12 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
   return theThresholdAndNoiseContainer;
 }
 
-void SCurve::initHisto ()
-{
-#ifdef __USE_ROOT__
-  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
-}
-
 void SCurve::fillHisto ()
 {
 #ifdef __USE_ROOT__
   for (auto i = 0u; i < dacList.size(); i++)
-    histos.fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
-  histos.fillThrAndNoise(*theThresholdAndNoiseContainer);
-#endif
-}
-
-void SCurve::display ()
-{
-#ifdef __USE_ROOT__
-  histos.process();
+    histos->fillOccupancy(*detectorContainerVector[i], dacList[i]-offset);
+  histos->fillThrAndNoise(*theThresholdAndNoiseContainer);
 #endif
 }
 
@@ -355,10 +341,29 @@ void SCurve::chipErrorReport ()
       for (const auto cChip : *cModule)
         {
           LOG (INFO) << GREEN << "Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
-          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")          << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "SKIPPED_TRIGGER_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BCID_CNT")            << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")            << std::setfill(' ') << std::setw(8) << "" << RESET;
+        }
+}
+
+void SCurve::saveChipRegisters (int currentRun)
+{
+  std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          static_cast<RD53*>(cChip)->copyMaskFromDefault();
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDBLUE << "\t--> SCurve saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 }

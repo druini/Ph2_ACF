@@ -12,7 +12,7 @@
 #define RD53LatencyHistograms_H
 
 #include "../System/SystemController.h"
-#include "../Utils/RD53SharedConstants.h"
+#include "../Utils/RD53Shared.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/GenericDataArray.h"
@@ -38,6 +38,7 @@ class LatencyHistograms : public DQMHistogramBase
   DetectorDataContainer Occupancy1D;
   DetectorDataContainer Latency;
 
+  size_t nTRIGxEvent;
   size_t startValue;
   size_t stopValue;
 };

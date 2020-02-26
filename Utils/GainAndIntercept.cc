@@ -13,7 +13,7 @@ void GainAndIntercept::makeSummaryAverage (const std::vector<GainAndIntercept>* 
 {
   if (theGainAndInterceptVector->size() != theNumberOfEnabledChannelsList.size())
     {
-      std::cout << __PRETTY_FUNCTION__ << "theGainAndInterceptVector size = " << theGainAndInterceptVector->size() 
+      std::cout << __PRETTY_FUNCTION__ << " theGainAndInterceptVector size = " << theGainAndInterceptVector->size() 
                 << " does not match theNumberOfEnabledChannelsList size = " << theNumberOfEnabledChannelsList.size() << std::endl;
       abort();
     }

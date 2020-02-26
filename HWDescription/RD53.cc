@@ -14,7 +14,7 @@ namespace Ph2_HwDescription
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName)
     : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id)
   {
-    fMaxRegValue      = RD53::setBits(RD53Constants::NBIT_MAXREG);
+    fMaxRegValue      = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     configFileName    = fileName;
     loadfRegMap(configFileName);
@@ -74,7 +74,7 @@ namespace Ph2_HwDescription
                     if (row < nRows)
                       {
                         myString.str(""); myString.clear();
-                        myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
+                        myString << "[RD53::loadfRegMap] Error, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
                         throw Exception (myString.str().c_str());
                       }
 
@@ -101,7 +101,7 @@ namespace Ph2_HwDescription
                     if (row < nRows)
                       {
                         myString.str(""); myString.clear();
-                        myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
+                        myString << "[RD53::loadfRegMap] Error, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
                         throw Exception (myString.str().c_str());
                       }
                   }
@@ -126,7 +126,7 @@ namespace Ph2_HwDescription
                     if (row < nRows)
                       {
                         myString.str(""); myString.clear();
-                        myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
+                        myString << "[RD53::loadfRegMap] Error, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
                         throw Exception (myString.str().c_str());
                       }
                   }
@@ -151,7 +151,7 @@ namespace Ph2_HwDescription
                     if (row < nRows)
                       {
                         myString.str(""); myString.clear();
-                        myString << "[RD53::loadfRegMap]\tError, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
+                        myString << "[RD53::loadfRegMap] Error, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
                         throw Exception (myString.str().c_str());
                       }
 
@@ -173,7 +173,7 @@ namespace Ph2_HwDescription
                 else
                   {
                     LOG (ERROR) << BOLDRED << "Unknown base " << BOLDYELLOW << fDefValue_str << RESET;
-                    throw Exception ("[RD53::loadfRegMap]\tError, unknown base");
+                    throw Exception ("[RD53::loadfRegMap] Error, unknown base");
                   }
                 fDefValue_str.erase(0,2);
                 fRegItem.fDefValue = strtoul (fDefValue_str.c_str(), 0, baseType);
@@ -184,7 +184,7 @@ namespace Ph2_HwDescription
                 else
                   {
                     LOG (ERROR) << BOLDRED << "Unknown base " << BOLDYELLOW << fValue_str << RESET;
-                    throw Exception ("[RD53::loadfRegMap]\tError, unknown base");
+                    throw Exception ("[RD53::loadfRegMap] Error, unknown base");
                   }
 
                 fValue_str.erase(0,2);
@@ -212,7 +212,7 @@ namespace Ph2_HwDescription
   {
     const int Nspaces = 26;
 
-    std::string output = RD53::composeFileName(configFileName,fName2Add);
+    std::string output = RD53Shared::composeFileName(configFileName,fName2Add);
     std::ofstream file (output.c_str(), std::ios::out | std::ios::trunc);
 
     if (file)
@@ -287,7 +287,7 @@ namespace Ph2_HwDescription
       {
         fPixelsMask[i].Enable = fPixelsMaskDefault[i].Enable;
         fPixelsMask[i].HitBus = fPixelsMaskDefault[i].HitBus;
-        fPixelsMask[i].InjEn = fPixelsMaskDefault[i].InjEn;
+        fPixelsMask[i].InjEn  = fPixelsMaskDefault[i].InjEn;
         for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = fPixelsMaskDefault[i].TDAC[j];
       }
   }
@@ -298,7 +298,7 @@ namespace Ph2_HwDescription
       {
         fPixelsMaskDefault[i].Enable = fPixelsMask[i].Enable;
         fPixelsMaskDefault[i].HitBus = fPixelsMask[i].HitBus;
-        fPixelsMaskDefault[i].InjEn = fPixelsMask[i].InjEn;
+        fPixelsMaskDefault[i].InjEn  = fPixelsMask[i].InjEn;
         for (auto j = 0u; j < fPixelsMaskDefault[i].TDAC.size(); j++) fPixelsMaskDefault[i].TDAC[j] = fPixelsMask[i].TDAC[j];
       }
   }
@@ -310,7 +310,7 @@ namespace Ph2_HwDescription
         fPixelsMask[i].Enable.reset();
         fPixelsMask[i].HitBus.reset();
         fPixelsMask[i].InjEn.reset();
-        for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) / 2;
+        for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) / 2;
       }
   }
 
@@ -392,7 +392,7 @@ namespace Ph2_HwDescription
     uint8_t tots[RD53Constants::NPIX_REGION];
     bits::RangePacker<RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION>::unpack_reverse(all_tots, tots);
 
-    for (int i = 0; i < RD53Constants::NPIX_REGION; i++) if (tots[i] != RD53::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) hit_data.emplace_back(row, col + i, tots[i]);
+    for (int i = 0; i < RD53Constants::NPIX_REGION; i++) if (tots[i] != RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) hit_data.emplace_back(row, col + i, tots[i]);
     if ((row >= RD53::nRows) || (col >= (RD53::nCols - (RD53Constants::NPIX_REGION-1)))) evtStatus |= RD53EvtEncoder::CHIPPIX;
   }
 
@@ -405,7 +405,7 @@ namespace Ph2_HwDescription
     std::tie(header, trigger_id, trigger_tag, bc_id) = bits::unpack<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
     if (header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHIPHEAD;
 
-    const size_t noHitToT = RD53::setBits(RD53EvtEncoder::NBIT_TOT);
+    const size_t noHitToT = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT);
     for (auto i = 1u; i < n; i++) if (data[i] != noHitToT) DecodeQuad(data[i]);
     // #######################################################
     // # If the number of 32bit words do not make an integer #

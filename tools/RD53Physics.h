@@ -15,7 +15,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53SharedConstants.h"
+#include "../Utils/RD53Shared.h"
 #include "../HWInterface/RD53FWInterface.h"
 
 #include <thread>
@@ -37,17 +37,34 @@
 // #######################
 class Physics : public Tool
 {
- public:
-  void Start (int currentRun = -1) override;
-  void Stop  ()                    override;
-  void ConfigureCalibration ()     override;
+  using evtConvType = std::function<void(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>&)>;
 
-  void sendData          (BoardContainer* const& cBoard);
-  void initialize        (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
-  void run               ();
-  void draw              ();
-  void analyze           (bool doReadBinary = false);
-  void fillDataContainer (BoardContainer* const& cBoard);
+ public:
+  Physics () { Physics::setGenericEvtConverter(RD53dummyEvtConverter()); }
+
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
+
+  void sendData               (const BoardContainer* cBoard);
+  void localConfigure         (const std::string fileRes_, int currentRun);
+  void initializeFiles        (const std::string fileRes_, int currentRun);
+  void run                    ();
+  void draw                   ();
+  void analyze                (bool doReadBinary = false);
+  void fillDataContainer      (BoardContainer* const& cBoard);
+  void monitor                ();
+
+  void setGenericEvtConverter (evtConvType arg) { genericEvtConverter = std::move(arg); }
+
+
+  // ########
+  // # ROOT #
+  // ########
+#ifdef __USE_ROOT__
+  PhysicsHistograms* histos;
+  TApplication* myApp;
+#endif
 
 
  private:
@@ -55,36 +72,34 @@ class Physics : public Tool
   size_t rowStop;
   size_t colStart;
   size_t colStop;
+  size_t nTRIGxEvent;
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   DetectorDataContainer theOccContainer;
   DetectorDataContainer theBCIDContainer;
   DetectorDataContainer theTrgIDContainer;
 
-  void initHisto       ();
-  void fillHisto       ();
-  void display         ();
-  void chipErrorReport ();
-
-
-  // ########
-  // # ROOT #
-  // ########
-#ifdef __USE_ROOT__
-  PhysicsHistograms histos;
-  TApplication* myApp;
-#endif
+  void fillHisto         ();
+  void chipErrorReport   ();
+  void saveChipRegisters (int currentRun);
 
 
  protected:
+  struct RD53dummyEvtConverter
+  {
+    void operator() (const std::vector<Ph2_HwInterface::RD53FWInterface::Event>& RD53EvtList) {};
+  };
+
   std::string fileRes;
-  std::string fileReg;
-  bool doUpdateChip;
-  bool doDisplay;
-  bool saveBinaryData;
-  bool doLocal;
+  int    theCurrentRun;
+  size_t numberOfEventsPerRun;
+  bool   doUpdateChip;
+  bool   doDisplay;
+  bool   saveBinaryData;
   std::atomic<bool> keepRunning;
   std::thread thrRun;
+  std::thread thrMonitor;
+  evtConvType genericEvtConverter;
 };
 
 #endif

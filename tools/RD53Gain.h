@@ -13,9 +13,10 @@
 #include "Tool.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/GainAndIntercept.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53SharedConstants.h"
+#include "../Utils/RD53Shared.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
@@ -36,21 +37,30 @@
 class Gain : public Tool
 {
  public:
-  ~Gain () { for (auto container : detectorContainerVector) delete container; }
+  ~Gain () { for (auto container : detectorContainerVector) theRecyclingBin.free(container); }
 
-  void Start (int currentRun = -1) override;
-  void Stop  ()                    override;
-  void ConfigureCalibration ()     override;
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
   void sendData                                  ();
-  void initialize                                (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void localConfigure                            (const std::string fileRes_, int currentRun);
+  void initializeFiles                           (const std::string fileRes_, int currentRun);
   void run                                       ();
-  void draw                                      (bool doSave = true);
+  void draw                                      (int currentRun);
   std::shared_ptr<DetectorDataContainer> analyze ();
   size_t getNumberIterations                     ()
   {
     return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*nSteps;
   }
+
+
+  // ########
+  // # ROOT #
+  // ########
+#ifdef __USE_ROOT__
+  GainHistograms* histos;
+#endif
 
 
  private:
@@ -71,25 +81,16 @@ class Gain : public Tool
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   std::vector<DetectorDataContainer*>      detectorContainerVector;
   std::shared_ptr<DetectorDataContainer>   theGainAndInterceptContainer;
+  ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
-  void initHisto       ();
-  void fillHisto       ();
-  void display         ();
-  void computeStats    (const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, double& gain, double& gainErr, double& intercept, double& interceptErr);
-  void chipErrorReport ();
-
-
-  // ########
-  // # ROOT #
-  // ########
-#ifdef __USE_ROOT__
-  GainHistograms histos;
-#endif
+  void fillHisto         ();
+  void computeStats      (const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, float& gain, float& gainErr, float& intercept, float& interceptErr);
+  void chipErrorReport   ();
+  void saveChipRegisters (int currentRun);
 
 
  protected:
   std::string fileRes;
-  std::string fileReg;
   bool doUpdateChip;
   bool doDisplay;
   bool saveBinaryData;

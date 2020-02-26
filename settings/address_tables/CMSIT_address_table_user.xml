@@ -49,6 +49,7 @@
       <node id="tp_fsm_inject_pulse_en" mask="0x00100000"     permission="rw"      description="Enables Cal command (inject) for the Test-Pulse FSM (Trigger Source = 2) " />
       <node id="tp_fsm_trigger_en"    mask="0x00200000"       permission="rw"      description="Enables trigger command for the Test-Pulse FSM (Trigger Source=2)" />
       <node id="trigger_duration"     mask="0x07C00000"       permission="rw"      description="Duration of Trigger command" />
+      <node id="HitOr_enable_l12"     mask="0x78000000"       permission="rw"      description="Enable HitOr signals" />
     </node>
 
     <node id="fast_cmd_reg_3"       address="0x00000003"      permission="rw"      description="Configuration registers associated with fast commands block">
@@ -132,6 +133,10 @@
     <node id="Aurora_block"       address="0x00000010"        permission="rw"      description="">
       <node id="error_cntr_module_addr"   mask="0x0000000F"   permission="rw"      description="" />
       <node id="error_cntr_chip_addr"     mask="0x00000070"   permission="rw"      description="" />
+    </node>
+
+    <node id="i2c_block"                  address="0x00000014"    permission="rw"      description="">
+      <node id="dp_addr"                    mask="0x0000000F"       permission="rw"      description="" />
     </node>
   </node>
 
@@ -232,6 +237,16 @@
     <node id="Register_Rdback"      address="0x00000014"    permission="r"      description="Status signals for Register Read-back fifo">
       <node id="fifo_full"             mask="0x00000001"    permission="r"      description="Fifo full flag" />
       <node id="fifo_empty"            mask="0x00000002"    permission="r"      description="Fifo empty flag" />
+    </node>
+
+    <node id="i2c_block_1"          address="0x0000001B"    permission="r"      description="">
+      <node id="NTC1"                 mask="0x00000FFF"     permission="r"      description="" />
+      <node id="NTC2"                 mask="0x00FFF000"     permission="r"      description="" />
+    </node>
+
+    <node id="i2c_block_2"          address="0x0000001C"    permission="r"      description="">
+      <node id="vdd_sense"            mask="0x00000FFF"     permission="r"      description="" />
+      <node id="gnd_sense"            mask="0x00FFF000"     permission="r"      description="" />
     </node>
 
     <node id="stat_reg_21"          address="0x00000015"    permission="r"> </node>

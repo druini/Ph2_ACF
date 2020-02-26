@@ -22,8 +22,8 @@ fi
 ########
 # ROOT #
 ########
-# source $ROOTSYS/bin/thisroot.sh
-source /usr/local/root/bin/thisroot.sh
+source $ROOTSYS/bin/thisroot.sh
+#source /usr/local/root/bin/thisroot.sh
 #source /opt/local/root/bin/thisroot.sh
 
 #######
@@ -39,9 +39,8 @@ export BASE_DIR=$(pwd)
 ####################
 # External Plugins #
 ####################
-export ANTENNADIR=$BASE_DIR/CMSPh2_AntennaDriver
-export AMC13DIR=/opt/cactus/include/amc13
-export USBINSTDIR=~/Ph2_USBInstDriver
+export AMC13DIR=$CACTUSINCLUDE/amc13
+export ANTENNADIR=$BASE_DIR/../CMSPh2_AntennaDriver
 export USBINSTDIR=$BASE_DIR/../Ph2_USBInstDriver
 export EUDAQDIR=$BASE_DIR/../eudaq
 
@@ -55,11 +54,16 @@ export ANTENNALIB=$ANTENNADIR/lib
 ###########
 export USBINSTLIB=$USBINSTDIR/lib
 
+#########
+# EUDAQ #
+#########
+export EUDAQ=$BASE_DIR/../eudaq/
+
 ##########
 # System #
 ##########
 export PATH=$BASE_DIR/bin:$PATH
-export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:$EUDAQ/lib:$LD_LIBRARY_PATH
 
 ##########
 # EUDAQ #
@@ -98,5 +102,8 @@ export CompileForShep=false
 # Shep application
 # export CompileForHerd=false
 # export CompileForShep=true
+
+# Compile with EUDAQ libraries
+export CompileWithEUDAQ=false
 
 echo "=== DONE ==="

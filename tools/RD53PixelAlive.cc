@@ -55,7 +55,7 @@ void PixelAlive::ConfigureCalibration ()
   // ######################
   size_t inj = 0;
   if (injType == INJtype::Digital) inj = 1 << static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY");
-  size_t maxDelay = RD53::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
+  size_t maxDelay = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
 
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
@@ -76,21 +76,22 @@ void PixelAlive::Start (int currentRun)
 {
   LOG (INFO) << GREEN << "[PixelAlive::Start] Starting" << RESET;
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+  if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_PixelAlive.raw", 'w');
       this->initializeFileHandler();
     }
 
   PixelAlive::run();
   PixelAlive::analyze();
+  PixelAlive::saveChipRegisters(currentRun);
   PixelAlive::sendData();
 }
 
 void PixelAlive::sendData ()
 {
-  const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+  const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   auto theOccStream   = prepareChannelContainerStreamer<OccupancyAndPh>                         ("Occ");
   auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<BCIDsize>> ("BCID"); // @TMP@
@@ -107,22 +108,33 @@ void PixelAlive::sendData ()
 void PixelAlive::Stop ()
 {
   LOG (INFO) << GREEN << "[PixelAlive::Stop] Stopping" << RESET;
-
   this->closeFileHandler();
 }
 
-void PixelAlive::initialize (const std::string fileRes_, const std::string fileReg_, int currentRun)
+void PixelAlive::localConfigure (const std::string fileRes_, int currentRun)
 {
-  fileRes = fileRes_;
-  fileReg = fileReg_;
+#ifdef __USE_ROOT__
+  histos = nullptr;
+#endif
 
   PixelAlive::ConfigureCalibration();
+  PixelAlive::initializeFiles(fileRes_, currentRun);
+}
 
-  if ((currentRun != -1) && (saveBinaryData == true))
+void PixelAlive::initializeFiles (const std::string fileRes_, int currentRun)
+{
+  fileRes = fileRes_;
+
+  if ((currentRun >= 0) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/PixelAliveRun_" + fromInt2Str(currentRun) + ".raw", 'w');
+      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_PixelAlive.raw", 'w');
       this->initializeFileHandler();
     }
+
+#ifdef __USE_ROOT__
+  delete histos;
+  histos = new PixelAliveHistograms;
+#endif
 }
 
 void PixelAlive::run ()
@@ -143,54 +155,40 @@ void PixelAlive::run ()
   PixelAlive::chipErrorReport();
 }
 
-void PixelAlive::draw (bool doSave)
+void PixelAlive::draw (int currentRun)
 {
+  if (currentRun >= 0) PixelAlive::saveChipRegisters(currentRun);
+
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
-  if (doSave    == true)
+
+  if (currentRun >= 0)
     {
-      this->CreateResultDirectory(RESULTDIR,false,false);
+      this->CreateResultDirectory(RESULTDIR, false, false);
       this->InitResultFile(fileRes);
+      LOG (INFO) << BOLDBLUE << "\t--> PixelAlive saving histograms..." << RESET;
     }
 
-  PixelAlive::initHisto();
+  histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   PixelAlive::fillHisto();
-  PixelAlive::display();
-#endif
+  histos->process();
 
-  // #######################################
-  // # Save and Update register new values #
-  // #######################################
-  if (doSave == true)
-    {
-      for (const auto cBoard : *fDetectorContainer)
-        for (const auto cModule : *cBoard)
-          for (const auto cChip : *cModule)
-            {
-              if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-              static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-              std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-              system(command.c_str());
-              LOG (INFO) << BOLDBLUE << "\t--> PixelAlive saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-            }
-    }
-
-#ifdef __USE_ROOT__
-  if (doDisplay == true) myApp->Run(true);
-  if (doSave    == true)
+  if (currentRun >= 0)
     {
       this->WriteRootFile();
       this->CloseResultFile();
     }
+
+  if (doDisplay == true) myApp->Run(true);
 #endif
 }
 
 std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
 {
-  const size_t BCIDsize  = RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-  const size_t TrgIDsize = RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+  const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+  const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   theBCIDContainer.reset();
   theTrgIDContainer.reset();
@@ -231,7 +229,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
             {
               int deltaBCID = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
                 theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
-              deltaBCID += (deltaBCID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
+              deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
               if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDBLUE <<"[PixelAlive::analyze] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
               else theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
             }
@@ -240,7 +238,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
             {
               int deltaTrgID = theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
                 theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
-              deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
+              deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
               if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
               else theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
             }
@@ -249,26 +247,12 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
   return theOccContainer;
 }
 
-void PixelAlive::initHisto ()
-{
-#ifdef __USE_ROOT__
-  histos.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
-}
-
 void PixelAlive::fillHisto ()
 {
 #ifdef __USE_ROOT__
-  histos.fill     (*theOccContainer.get());
-  histos.fillBCID (theBCIDContainer);
-  histos.fillTrgID(theTrgIDContainer);
-#endif
-}
-
-void PixelAlive::display ()
-{
-#ifdef __USE_ROOT__
-  histos.process();
+  histos->fill     (*theOccContainer.get());
+  histos->fillBCID (theBCIDContainer);
+  histos->fillTrgID(theTrgIDContainer);
 #endif
 }
 
@@ -281,10 +265,28 @@ void PixelAlive::chipErrorReport ()
       for (const auto cChip : *cModule)
         {
           LOG (INFO) << GREEN << "Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
-          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT    = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")    << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "CMDERR_CNT      = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")      << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "TRIG_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")          << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "SKIPPED_TRIGGER_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BCID_CNT")            << std::setfill(' ') << std::setw(8) << "" << RESET;
+          LOG (INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")            << std::setfill(' ') << std::setw(8) << "" << RESET;
+        }
+}
+
+void PixelAlive::saveChipRegisters (int currentRun)
+{
+  std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        {
+          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+          system(command.c_str());
+          LOG (INFO) << BOLDBLUE << "\t--> PixelAlive saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 }
