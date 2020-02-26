@@ -327,7 +327,7 @@ int main ( int argc, char* argv[] )
             //     }
             //     cEventIndex++;
             // }
-            // uint32_t cN=0;
+            uint32_t cN=0;
             for ( auto& cEvent : cEvents )
             {
                 LOG (INFO) << ">>> Event #" << cN++ ;
