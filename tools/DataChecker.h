@@ -69,6 +69,8 @@ class DataChecker : public Tool
     DetectorDataContainer  fThresholds, fLogic, fHIPs;
     int fPhaseTap=8;
     int fAttempt=0;
+    int fMissedEvent=0;
+    int fEventCounter=0;
 
     //
     TPconfig fTPconfig;

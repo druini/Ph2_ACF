@@ -34,7 +34,7 @@
         <CIC Id="8" configfile="CIC_default.txt" />
     </Module>
 
-    <!-- <Module FeId="1" FMCId="0" ModuleId="0" Status="1" LinkId="0">
+    <Module FeId="1" FMCId="0" ModuleId="0" Status="1" LinkId="0">
         <Global>
             <Settings threshold="500" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -57,7 +57,7 @@
 
         <CIC_Files path="./settings/CicFiles/" />
         <CIC Id="8" configfile="CIC_default.txt" />
-    </Module> -->
+    </Module>
 
 
     <SLink>
@@ -83,7 +83,7 @@
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
 		<Register name="trigger_source"> 3 </Register>
-		<Register name="user_trigger_frequency"> 10 </Register>
+		<Register name="user_trigger_frequency"> 1 </Register>
 		<Register name="stubs_mask"> 0 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 10 </Register>

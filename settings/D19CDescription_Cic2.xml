@@ -153,7 +153,7 @@
 
 <Settings>
     <!--[>Calibration<]-->
-    <Setting name="Nevents">25</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="TargetVcth">580</Setting>
     <Setting name="TargetOffset">0x78</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
@@ -165,9 +165,9 @@
 
     <!--[>DataTest<]-->
     <Setting name="UseNoise">1</Setting>
-    <Setting name="Attempts">20</Setting>
+    <Setting name="Attempts">500</Setting>
     <Setting name="LatencyOffset">-1</Setting>
-    <Setting name="TriggerRate">50</Setting>
+    <Setting name="TriggerRate">1</Setting>
     <Setting name="TriggerMultiplicity">1</Setting>
     <Setting name="StubDelay">49</Setting>
     <Setting name="StubSeed">20</Setting>

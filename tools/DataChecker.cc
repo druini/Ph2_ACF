@@ -77,6 +77,12 @@ void DataChecker::Initialise ()
                 if ( cObj ) delete cObj;
                 TProfile* cHist = new TProfile ( cName, Form("Number of noise hits - CBC%d; Channelr",(int)cChip->getChipId()) , NCHANNELS, 0-0.5 , NCHANNELS-0.5);
                 bookHistogram ( cChip , "NoiseHits", cHist );
+
+                cName = Form ( "h_MissedHits_Fe%dCbc%d", cFe->getFeId() , cChip->getChipId() );
+                cObj = gROOT->FindObject ( cName );
+                if ( cObj ) delete cObj;
+                TH1D* cHist1D = new TH1D ( cName, Form("Events between missed hits - CBC%d; Channelr",(int)cChip->getChipId()) , 1000, 0-0.5 , 1000-0.5);
+                bookHistogram ( cChip , "FlaggedEvents", cHist1D );
             }
 
             // matched stubs 
@@ -257,6 +263,8 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
             TH2D* cAllHits = static_cast<TH2D*> ( getHist ( cChip, "Hits_perFe" ) );
             TH2D* cMatchedHits = static_cast<TH2D*> ( getHist ( cChip, "MatchedHits_perFe" ) );
             TProfile2D* cMatchedHitsEye = static_cast<TProfile2D*> ( getHist ( cChip, "MatchedHits_eye" ) );
+            TH1D* cFlaggedEvents = static_cast<TH1D*> ( getHist ( cChip, "FlaggedEvents" ) );
+            
             // container for this chip 
             auto& cReadoutChipHitCheck = cHybridHitCheck->at(cChip->getIndex());
             auto& cReadoutChipStubCheck = cHybridStubCheck->at(cChip->getIndex());
@@ -274,7 +282,8 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
                 uint32_t cPipeline_first=0; 
                 uint32_t cBxId_first=0; 
                 LOG (DEBUG) << BOLDMAGENTA << "\t..Event" << +cEventIndex << RESET;
-            
+                
+                bool cMissedEvent=false;
                 for(size_t cTriggerIndex=0; cTriggerIndex <= cTriggerMult; cTriggerIndex++) // cTriggerMult consecutive triggers were sent 
                 {
                     auto cEvent = *cEventIterator;
@@ -307,6 +316,10 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
                         auto& cOcc = cReadoutChipHitCheck->getSummary<int>();
                         cOcc += static_cast<int>(cMatched == cExpectedHits.size());
                     }
+                    else
+                    {
+                        cMissedEvent = true;
+                    }
                     //LOG (DEBUG) << BOLDMAGENTA << +cMatched << " matched hits found in readout chip" << +cChipId << " [ " << +cExpectedHits.size() << " expected.]" << RESET; 
                     
                     //stubs
@@ -326,6 +339,14 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
                     
                     cEventIterator++;
                 }
+                if(cMissedEvent)
+                {
+                    int cDistanceToLast = fEventCounter-fMissedEvent;
+                    LOG (INFO) << BOLDMAGENTA << "Event with a missing hit " << fEventCounter << " -- distance to last missed event is " << cDistanceToLast << RESET;
+                    cFlaggedEvents->Fill(cDistanceToLast);
+                    fMissedEvent = fEventCounter;
+                }
+                fEventCounter++;
             }
         }
 
