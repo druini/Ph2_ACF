@@ -483,9 +483,11 @@ namespace Ph2_HwInterface
   {
       const uint16_t GLOBAL_PULSE_ROUTE  = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
       const uint8_t  chipID              = pChip->getChipId();
+      const uint16_t trimADC             = bits::pack<1, 5, 6>(true, 0x0C, 0x05); // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should giv an average of VrefADC of 0.9 V
 
       std::vector<uint16_t> commandList;
 
+      RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_CONFIG").fAddress, trimADC).appendTo(commandList);
       RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0040).appendTo(commandList); // Reset Monitor Data
       RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0004).appendTo(commandList);
       RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0008).appendTo(commandList); // Clear Monitor Data
