@@ -123,6 +123,26 @@ namespace Ph2_HwInterface
          * \param pBlockSize: the number of registers to be written at once, default is 310
          */
         virtual bool MaskAllChannels (Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) = 0;
+
+        /*!
+         * \brief Monitorign memeber functions
+         */
+        virtual float ReadHybridTemperature (Ph2_HwDescription::Chip* pChip)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+          return 0;
+        }
+
+        virtual float ReadHybridVoltage (Ph2_HwDescription::Chip* pChip)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+          return 0;
+        }
+
+        /* virtual void ReadChipMonitor (Ph2_HwDescription::Chip* pChip, const char* observableName) */
+        /* { */
+        /*   LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; */
+        /* } */
     };
 }
 

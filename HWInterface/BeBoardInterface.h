@@ -213,8 +213,8 @@ namespace Ph2_HwInterface
       {
         std::lock_guard<std::mutex> theGuard(theMtx);
 
-        static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadHybridVoltage(pChip);
-        static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadHybridTemperature(pChip);
+        pReadoutChipInterface->ReadHybridVoltage(pChip);
+        pReadoutChipInterface->ReadHybridTemperature(pChip);
         static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, args...);
       }
     /*!
