@@ -10,6 +10,7 @@ export CACTUSINCLUDE=/opt/cactus/include
 #########
 # BOOST #
 #########
+export KERNELRELEASE=$(uname -r)
 export BOOST_INCLUDE=/usr/include
 export BOOST_LIB=/usr/lib64
 

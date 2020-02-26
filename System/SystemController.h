@@ -161,7 +161,7 @@ namespace Ph2_System
           for (const auto cModule : *pBoard)
             for (const auto cChip : *cModule)
               {
-                LOG (INFO) << GREEN << "Chip monitor data for [board/module/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                LOG (INFO) << GREEN << "Monitor data for [board/module/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
                 fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, static_cast<Ph2_HwDescription::ReadoutChip*>(cChip), args...);
                 LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
               }
