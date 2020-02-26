@@ -149,15 +149,16 @@ namespace Ph2_System
      * \return: none
      */
     template<typename... Ts>
-      void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, Ts... args)
+      void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const Ts&... args)
       {
-        for (const auto cModule : *pBoard)
-          for (const auto cChip : *cModule)
-            {
-              LOG (INFO) << GREEN << "Chip monitor data for [board/module/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
-              fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, static_cast<Ph2_HwDescription::ReadoutChip*>(cChip), args...);
-              LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
-            }
+        if (sizeof...(Ts) > 0)
+          for (const auto cModule : *pBoard)
+            for (const auto cChip : *cModule)
+              {
+                LOG (INFO) << GREEN << "Chip monitor data for [board/module/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, static_cast<Ph2_HwDescription::ReadoutChip*>(cChip), args...);
+                LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
+              }
       }
 
     /*!

@@ -209,7 +209,7 @@ namespace Ph2_HwInterface
      * \return none
      */
     template<typename... Ts>
-      void ReadChipMonitor (Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::Chip* pChip, Ts... args)
+      void ReadChipMonitor (Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::Chip* pChip, const Ts&... args)
       {
         std::lock_guard<std::mutex> theGuard(theMtx);
 

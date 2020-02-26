@@ -543,7 +543,7 @@ namespace Ph2_HwInterface
     float ADCslope = (VrefADC - ADCoffset) / (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1); // [V/ADC]
     float voltage  = ADCoffset + ADCslope * value;
 
-    return voltage / (isCurrentNotVoltage == true ? 1 : resistorI2V);
+    return voltage / (isCurrentNotVoltage == true ? resistorI2V : 1);
   }
 
   float RD53Interface::ReadHybridTemperature (Chip* pChip)
