@@ -27,6 +27,7 @@
 // #############
 // # CONSTANTS #
 // #############
+// Sarah : why do you need to do this? its already a member of SystemController (fDirectoryName)
 #define RESULTDIR "Results" // Directory containing the results
 
 

@@ -29,6 +29,7 @@ namespace Ph2_HwDescription
 	class BeBoard;
 	class Module;
 	class Chip;
+    class ReadoutChip;
 }
 
 namespace Ph2_HwInterface
@@ -68,6 +69,11 @@ class HwDescriptionVisitor
 	 * \param pCbc
 	 */
 	virtual void visitChip( Ph2_HwDescription::Chip& pChip ) {}
+	/*!
+	 * \brief Visitor for ReadoutChip Class
+	 * \param pChip
+	 */
+	virtual void visitReadoutChip( Ph2_HwDescription::ReadoutChip& pChip ) {}
 };
 
 class HwInterfaceVisitor

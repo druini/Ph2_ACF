@@ -97,9 +97,7 @@ namespace Ph2_HwDescription {
     //Write RegValues in a file
     void Cic::saveRegMap ( const std::string& filename )
     {
-
         std::ofstream file ( filename.c_str(), std::ios::out | std::ios::trunc );
-
         if ( file )
         {
             std::set<CicRegPair, RegItemComparer> fSetRegItem;

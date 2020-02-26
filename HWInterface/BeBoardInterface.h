@@ -278,7 +278,7 @@ namespace Ph2_HwInterface
     void SetForceStart (Ph2_HwDescription::BeBoard* pBoard, bool bStart);
 
     /*!
-     * Activate power on and off sequence 
+     * Activate power on and off sequence
      */
     void PowerOn (Ph2_HwDescription::BeBoard* pBoard);
 
@@ -293,6 +293,9 @@ namespace Ph2_HwInterface
      * Returns data from buffernum and mpa.  Raw register output.
      */
     std::pair<std::vector<uint32_t>, std::vector<uint32_t>> ReadData (Ph2_HwDescription::BeBoard* pBoard, int buffernum, int mpa);
+
+    void     selectLink  (Ph2_HwDescription::BeBoard* pBoard, uint8_t pLinkId, uint32_t pWait_ms = 100);
+    uint16_t ParseEvents (const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData);
   };
 }
 

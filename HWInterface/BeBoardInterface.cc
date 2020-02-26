@@ -99,6 +99,17 @@ namespace Ph2_HwInterface
           throw ;
         }
   }
+  
+  void BeBoardInterface::selectLink(BeBoard* pBoard, uint8_t pLinkId, uint32_t pWait_ms)
+  {
+    setBoard(pBoard->getBeBoardId());
+    return fBoardFW->selectLink(pLinkId, pWait_ms);
+  }
+  // uint16_t BeBoardInterface::ParseEvents(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
+  // {
+  //   setBoard(pBoard->getBeBoardId());
+  //   return fBoardFW->ParseEvents (pData);
+  // }
 
   std::vector<uint32_t> BeBoardInterface::ReadBlockBoardReg (BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize)
   {

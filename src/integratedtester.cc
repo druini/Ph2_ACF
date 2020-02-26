@@ -322,31 +322,34 @@ void perform_PedestalEqualization (Tool* pTool)
 // find the shorts on the DUT
 bool check_Shorts (Tool* pTool,  uint32_t cMaxNumShorts)
 {
-    uint32_t cNShorts;
-    #ifdef __USE_ROOT__
-        ShortFinder cShortFinder;
-        cShortFinder.Inherit (pTool);
-        cShortFinder.ConfigureHw();
-        //reload the calibration values for the CBCs
-        //cShortFinder.ReconfigureRegisters();
-        // I don't think this is neccesary ... but here for now
-        //cShortFinder.ConfigureVcth (0x78);
+    // legacy 
+    // uint32_t cNShorts;
+    // #ifdef __USE_ROOT__
+    //     ShortFinder cShortFinder;
+    //     cShortFinder.Inherit (pTool);
+    //     cShortFinder.ConfigureHw();
+    //     //reload the calibration values for the CBCs
+    //     //cShortFinder.ReconfigureRegisters();
+    //     // I don't think this is neccesary ... but here for now
+    //     //cShortFinder.ConfigureVcth (0x78);
 
-        cShortFinder.Initialize();
-        cShortFinder.FindShorts();
-        //cShortFinder.writeObjects();
-        cShortFinder.SaveResults();
-        cNShorts = cShortFinder.GetNShorts() ;
-        char line[120];
-        sprintf (line, "# %d shorts found on hybrid", cNShorts);
-        cShortFinder.AmmendReport (line);
-        cShortFinder.AmmendReport ( ( cNShorts <= cMaxNumShorts) ? ("# Shorts test passed.") : ("# Shorts test failed.") );
+    //     cShortFinder.Initialise();
+    //     cShortFinder.FindShorts();
+    //     //cShortFinder.writeObjects();
+    //     cShortFinder.SaveResults();
+    //     cNShorts = cShortFinder.GetNShorts() ;
+    //     char line[120];
+    //     sprintf (line, "# %d shorts found on hybrid", cNShorts);
+    //     cShortFinder.AmmendReport (line);
+    //     cShortFinder.AmmendReport ( ( cNShorts <= cMaxNumShorts) ? ("# Shorts test passed.") : ("# Shorts test failed.") );
 
 
-        LOG (INFO) << GREEN << "\t\t" + std::to_string (cNShorts) + " shorts found on hybrid." << rst ;
-    #endif
+    //     LOG (INFO) << GREEN << "\t\t" + std::to_string (cNShorts) + " shorts found on hybrid." << rst ;
+    // #endif
 
-    return ( cNShorts <= cMaxNumShorts) ? true : false;
+    // return ( cNShorts <= cMaxNumShorts) ? true : false;
+    return false;
+
 }
 // measure the occupancy on the TOP/BOTTOM pads of the DUT
 void perform_OccupancyMeasurment (Tool* pTool )

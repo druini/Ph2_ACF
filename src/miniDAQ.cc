@@ -219,7 +219,7 @@ int main ( int argc, char* argv[] )
         tokenize ( fname, tokens, "." );
         std::string runLabel = tokens[0];
         std::string dqmFilename =  runLabel + "_dqm.root";
-        dqmH->saveHistograms (dqmFilename);
+        dqmH->saveHistograms (dqmFilename, runLabel + "_flat.root" );
 
         // find the folder (i.e DQM page) where the histograms will be published
         std::string cDirBasePath;

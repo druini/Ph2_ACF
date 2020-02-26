@@ -311,16 +311,16 @@ namespace Ph2_HwInterface
 
   void RegManager::enableCapture(const std::string filename)
   {
-    capture_file.push(boost::iostreams::gzip_compressor());
+    /*capture_file.push(boost::iostreams::gzip_compressor());
     capture_file.push(boost::iostreams::file_sink(filename));
-    mode = Mode::Capture;
+    mode = Mode::Capture;*/
   }
 
   void RegManager::enableReplay(const std::string filename)
   {
-    replay_file.push(boost::iostreams::gzip_decompressor());
+    /*replay_file.push(boost::iostreams::gzip_decompressor());
     replay_file.push(boost::iostreams::file_source(filename));
-    mode = Mode::Replay;
+    mode = Mode::Replay;*/
   }
 
   template <class S, class T>

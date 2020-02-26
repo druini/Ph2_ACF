@@ -25,6 +25,7 @@
 
 //------------------------------------------------------------------------------
 #define NCHANNELS                   254
+#define NSSACHANNELS                   120
 //Events
 
 //CBC2
@@ -68,11 +69,17 @@
 #define IC_OFFSET_CBCSTUBDATA     276  //BIT 12
 #define WIDTH_CBCSTUBDATA         12
 
+
+
 //CBC3
 //in uint32_t words
 #define CBC_EVENT_SIZE_32_CBC3          11 // 11 32bit words per CBC
 #define EVENT_HEADER_TDC_SIZE_32_CBC3    3 // total of 6 32 bit words for HEADER + TDC
 #define EVENT_HEADER_SIZE_32_CBC3        3  // 5 words for the header
+
+//D19C event header size (CIC) 
+//in uint32_t words
+#define D19C_EVENT_HEADER1_SIZE_32_CIC 4
 
 //D19C event header size (CBC)
 #define D19C_EVENT_HEADER1_SIZE_32_CBC3 4
@@ -82,7 +89,8 @@
 #define D19C_EVENT_SIZE_32_MPA         32 // 11 32bit words per CBC
 //SSA
 //in uint32_t words
-#define D19C_EVENT_SIZE_32_SSA         7 // FIXME??
+#define D19C_EVENT_HEADER1_SIZE_32_SSA 4
+#define D19C_EVENT_SIZE_32_SSA         12 // FIXME??
 
 // points to bufferoverlow
 #define D19C_OFFSET_ERROR_CBC3          2*32+0
@@ -121,8 +129,8 @@
 //------------------------------------------------------------------------------
 
 enum class BoardType      {D19C, RD53};
-enum class FrontEndType   {UNDEFINED = 0, MODULE, CBC3, MPA, SSA, RD53, CIC};
+enum class FrontEndType   {UNDEFINED = 0, MODULE, CBC3, MPA, SSA, RD53, CIC, CIC2};
 enum class SLinkDebugMode {SUMMARY = 0, FULL = 1, ERROR = 2};
-enum class EventType      {ZS = 1, VR = 2};
+enum class EventType {ZS = 1, VR = 2, SSA = 3, MPA = 4};
 
 #endif

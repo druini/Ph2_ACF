@@ -1,8 +1,8 @@
 /**
-        @file
-        @author Andrew W. Rose
-        @date 2011
- */
+   @file
+   @author Andrew W. Rose
+   @date 2011
+*/
 
 #ifndef Firmware_h
 #define Firmware_h
@@ -17,15 +17,14 @@
 
 namespace fc7
 {
-  // Forware declarations
   class Firmware;
   class XilinxBitFile;
 }
 
-bool operator== ( const fc7::Firmware& aFirmware1, const fc7::Firmware& aFirmware2 );
-bool operator!= ( const fc7::Firmware& aFirmware1, const fc7::Firmware& aFirmware2 );
-std::ostream& operator<< ( std::ostream& aStream, const fc7::Firmware& aFirmware );
-std::ostream& operator<< ( std::ostream& aStream, const fc7::XilinxBitFile& aBitFile );
+bool operator== (const fc7::Firmware& aFirmware1, const fc7::Firmware& aFirmware2);
+bool operator!= (const fc7::Firmware& aFirmware1, const fc7::Firmware& aFirmware2);
+std::ostream& operator<< (std::ostream& aStream, const fc7::Firmware& aFirmware);
+std::ostream& operator<< (std::ostream& aStream, const fc7::XilinxBitFile& aBitFile);
 
 
 namespace fc7
@@ -34,19 +33,19 @@ namespace fc7
   UHAL_DEFINE_EXCEPTION_CLASS ( FileNotFound, "File was not found" )
   UHAL_DEFINE_EXCEPTION_CLASS ( CorruptedFile, "File was corrupted" )
 
-  /**
-    Firmware is
+    /**
+       Firmware is
 
-    @author Andrew W. Rose
-    @date 2011
-   */
-  class Firmware
-  {
+       @author Andrew W. Rose
+       @date 2011
+    */
+    class Firmware
+    {
       friend std::ostream& ( ::operator<< ) ( std::ostream& aStream, const Firmware& aFirmware );
       friend bool ( ::operator== ) ( const Firmware& aFirmware1, const Firmware& aFirmware2 );
       friend bool ( ::operator!= ) ( const Firmware& aFirmware1, const Firmware& aFirmware2 );
-    public:
 
+    public:
       //! Default Target-specified Constructor
       Firmware ( const std::string& aFileName );
 
@@ -68,81 +67,70 @@ namespace fc7
 
     private:
       static const uint8_t mLUT[];
-
-  };
+    };
 
   class XilinxBitStream : public Firmware
   {
-    public:
-
-      //! Default Target-specified Constructor
-      XilinxBitStream( );
-
-
-      //         void BPIappend( std::vector<uint32_t>::const_iterator aStart, const std::vector<uint32_t>::const_iterator& aEnd );
-      void BigEndianAppend ( std::vector<uint32_t>::const_iterator aStart, const std::vector<uint32_t>::const_iterator& aEnd );
+  public:
+    //! Default Target-specified Constructor
+    XilinxBitStream( );
 
 
-      //! Default Destructor
-      virtual ~XilinxBitStream( );
+    //         void BPIappend( std::vector<uint32_t>::const_iterator aStart, const std::vector<uint32_t>::const_iterator& aEnd );
+    void BigEndianAppend ( std::vector<uint32_t>::const_iterator aStart, const std::vector<uint32_t>::const_iterator& aEnd );
 
-    private:
 
+    //! Default Destructor
+    virtual ~XilinxBitStream( );
   };
 
   /**
-    XilinxBitFile is
+     XilinxBitFile is
 
-    @author Andrew W. Rose
-    @date 2011
-   */
+     @author Andrew W. Rose
+     @date 2011
+  */
   class XilinxBitFile : public Firmware
   {
-      friend std::ostream& ( ::operator<< ) ( std::ostream& aStream, const XilinxBitFile& aBitFile );
+    friend std::ostream& ( ::operator<< ) ( std::ostream& aStream, const XilinxBitFile& aBitFile );
 
-    public:
+  public:
+    //! Default Target-specified Constructor
+    XilinxBitFile ( const std::string& aFileName );
 
-      //! Default Target-specified Constructor
-      XilinxBitFile ( const std::string& aFileName );
+    //! Default Destructor
+    virtual ~XilinxBitFile( );
 
-      //! Default Destructor
-      virtual ~XilinxBitFile( );
+    const std::string& DesignName( ) const;
+    const std::string& DeviceName( ) const;
+    const boost::posix_time::ptime& TimeStamp( ) const;
 
-      const std::string& DesignName( ) const;
-      const std::string& DeviceName( ) const;
-      const boost::posix_time::ptime& TimeStamp( ) const;
+    std::string StandardizedFileName() const;
 
-      std::string StandardizedFileName() const;
+  private:
+    void parse ( std::vector<uint8_t>::iterator& aIt, uint16_t& aByteCount, std::string& aString );
+    void parse ( std::vector<uint8_t>::iterator& aIt, const char& aExpectedDelimeter, uint16_t& aByteCount, std::string& aString );
+    void parse ( std::vector<uint8_t>::iterator& aIt, const char& aExpectedDelimeter, uint16_t& aByteCount, uint32_t& aUint );
 
-    private:
-      void parse ( std::vector<uint8_t>::iterator& aIt, uint16_t& aByteCount, std::string& aString );
-      void parse ( std::vector<uint8_t>::iterator& aIt, const char& aExpectedDelimeter, uint16_t& aByteCount, std::string& aString );
-      void parse ( std::vector<uint8_t>::iterator& aIt, const char& aExpectedDelimeter, uint16_t& aByteCount, uint32_t& aUint );
-
-      std::string mDesignName;
-      std::string mDeviceName;
-      boost::posix_time::ptime mTimeStamp;
+    std::string mDesignName;
+    std::string mDeviceName;
+    boost::posix_time::ptime mTimeStamp;
   };
 
   /**
-    XilinxBinFile is
-
-    @author Andrew W. Rose
-    @date 2011
-   */
+     XilinxBinFile is
+     @author Andrew W. Rose
+     @date 2011
+  */
   class XilinxBinFile : public Firmware
   {
-    public:
+  public:
+    //! Default Target-specified Constructor
+    XilinxBinFile ( const std::string& aFileName );
 
-      //! Default Target-specified Constructor
-      XilinxBinFile ( const std::string& aFileName );
-
-      //! Default Destructor
-      virtual ~XilinxBinFile( );
-
+    //! Default Destructor
+    virtual ~XilinxBinFile( );
   };
-
 }
+
 #endif
-
-

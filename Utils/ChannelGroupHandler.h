@@ -71,16 +71,17 @@ public:
     : ChannelGroupBase(R,C)
     {
         channelsBitset_ = theChannelGroup.channelsBitset_;
+        numberOfEnabledChannels_=getNumberOfEnabledChannels(theChannelGroup);
     } 
 
     virtual ~ChannelGroup(){;}
     
     inline bool isChannelEnabled     (uint16_t row, uint16_t col = 0) const override { return channelsBitset_[row+numberOfRows_*col] ; }
-    inline void enableChannel        (uint16_t row, uint16_t col = 0)       override { channelsBitset_[row+numberOfRows_*col] = true ; }
-    inline void disableChannel       (uint16_t row, uint16_t col = 0)       override { channelsBitset_[row+numberOfRows_*col] = false; }
-    inline void disableAllChannels   (void                          )       override { channelsBitset_.reset()                       ; }
-    inline void enableAllChannels    (void                          )       override { channelsBitset_.set()                         ; }
-    inline void flipAllChannels      (void                          )       override { channelsBitset_.flip()                        ; }
+    inline void enableChannel        (uint16_t row, uint16_t col = 0)       override { channelsBitset_[row+numberOfRows_*col] = true ; numberOfEnabledChannels_ = channelsBitset_.count();}
+    inline void disableChannel       (uint16_t row, uint16_t col = 0)       override { channelsBitset_[row+numberOfRows_*col] = false; numberOfEnabledChannels_ = channelsBitset_.count();}
+    inline void disableAllChannels   (void                          )       override { channelsBitset_.reset()                       ; numberOfEnabledChannels_ = channelsBitset_.count();}
+    inline void enableAllChannels    (void                          )       override { channelsBitset_.set()                         ; numberOfEnabledChannels_ = channelsBitset_.count();}
+    inline void flipAllChannels      (void                          )       override { channelsBitset_.flip()                        ; numberOfEnabledChannels_ = channelsBitset_.count();}
     inline bool areAllChannelsEnabled(void                          ) const override { return channelsBitset_.all()                  ; }
 
     inline uint32_t  getNumberOfEnabledChannels(const ChannelGroupBase* mask ) const

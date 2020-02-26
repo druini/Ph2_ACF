@@ -751,6 +751,7 @@ namespace Ph2_HwInterface
     if (data.size() == 0) return RD53FWEvtEncoder::EMPTY;
 
 
+
     for (auto i = 0u; i < data.size(); i++)
       if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) event_start.push_back(i);
 

@@ -234,6 +234,12 @@ class Tool : public Ph2_System::SystemController
         {31, "MaskChannel-254-to-249" }
     };
 
+    // statistical methods 
+    std::pair<float,float> getStats(std::vector<float> pData);
+    std::pair<float,float> evalNoise(std::vector<float> pData, std::vector<float> pWeights,bool pIgnoreNegative=true);
+    std::pair< std::vector<float>,std::vector<float>> getDerivative(std::vector<float> pData, std::vector<float> pWeights,bool pIgnoreNegative=true);
+    
+    
     // decode bend LUT for a given CBC
     std::map<uint8_t, double> decodeBendLUT(Ph2_HwDescription::Chip* pChip);
     

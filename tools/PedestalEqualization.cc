@@ -1,9 +1,17 @@
 #include "PedestalEqualization.h"
+#include "../Utils/DataContainer.h"
+#include "../HWDescription/ReadoutChip.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
 
 //initialize the static member
+
+
+using namespace Ph2_System;
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+
 
 PedestalEqualization::PedestalEqualization() :
   Tool()
@@ -52,25 +60,22 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
                 for(auto chip: *module)
                 {
                     ReadoutChip *theChip = static_cast<ReadoutChip*>(chip);
-
-                        LOG (INFO) << BOLDBLUE << "CBC" << +chip->getId() << RESET; 
-
                     //if it is a CBC3, disable the stub logic for this procedure
-                
-                    LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning" << RESET ;
-                    
+                    if( theChip->getFrontEndType() == FrontEndType::CBC3) 
+                    {
+                        LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning for CBC " << +chip->getId() << RESET; 
                     fStubLogicCointainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<uint8_t>() 
                         = fReadoutChipInterface->ReadChipReg (theChip, "Pipe&StubInpSel&Ptwidth");
 
                     uint8_t value = fReadoutChipInterface->ReadChipReg (theChip, "HIP&TestMode");
                     fHIPCountCointainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<uint8_t>() = value;
-
-                    fReadoutChipInterface->WriteChipReg (theChip, "Pipe&StubInpSel&Ptwidth", 0x23);
-                    fReadoutChipInterface->WriteChipReg (theChip, "HIP&TestMode", 0x00);
-                    
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression( theChip, false, true , 0);
                 }
+                    else
+                        LOG (INFO) << BOLDBLUE << "Not a CBC3 .. so doing nothing with stub logic." << RESET; 
             }
         }
+    }
     }
 
     LOG (INFO) << "Parsed settings:" ;
@@ -85,11 +90,8 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
 void PedestalEqualization::FindVplus()
 {
     LOG (INFO) << BOLDBLUE << "Identifying optimal Vplus for CBC..." << RESET;
-    // first, set VCth to the target value for each CBC
-    ThresholdVisitor cThresholdVisitor (fReadoutChipInterface, fTargetVcth);
-    this->accept (cThresholdVisitor);
-    LOG (INFO) << BOLDBLUE << "... after the visitor..." << RESET;
-
+    setSameDac("VCth", fTargetVcth);
+    
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(true);
 
@@ -136,13 +138,10 @@ void PedestalEqualization::FindVplus()
         }
     #endif
     
-
     fTargetVcth = uint16_t(cMeanValue / nCbc);
-    cThresholdVisitor.setThreshold (fTargetVcth);
-    this->accept (cThresholdVisitor);
+    setSameDac("VCth", fTargetVcth);
     LOG (INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
     this->SetTestAllChannels(originalAllChannelFlag);
-
 }
 
 
@@ -150,8 +149,7 @@ void PedestalEqualization::FindOffsets()
 {
     LOG (INFO) << BOLDBLUE << "Finding offsets..." << RESET;
     // just to be sure, configure the correct VCth and VPlus values
-    ThresholdVisitor cThresholdVisitor (fReadoutChipInterface, fTargetVcth);
-    this->accept (cThresholdVisitor);
+    setSameDac("VCth", fTargetVcth);
 
     DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;

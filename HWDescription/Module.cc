@@ -24,15 +24,22 @@ namespace Ph2_HwDescription {
     Module::Module (const FrontEndDescription& pFeDesc, uint8_t pModuleId)
     : FrontEndDescription(pFeDesc  )
     , ModuleContainer    (pModuleId)
-    , fModuleId          (pModuleId)
     {
     }
 
     Module::Module (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId)
     : FrontEndDescription(pBeId, pFMCId, pFeId)
     , ModuleContainer    (pModuleId)
-    , fModuleId          (pModuleId)
     {
     }
+
+    Module::Module (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId, uint8_t pLinkId)
+    : FrontEndDescription(pBeId, pFMCId, pFeId)
+    , ModuleContainer    (pFeId)
+    , fLinkId            (pLinkId)
+    {
+    }
+
+
 
 }

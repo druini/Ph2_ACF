@@ -128,7 +128,16 @@ namespace Ph2_HwInterface
          */
         uint16_t ReadChipReg ( Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode ) override;
 
+        // cbc specific functions
+        std::vector<uint8_t> createHitListFromStubs(uint8_t pSeed, bool pSeedLayer ); 
+        std::vector<uint8_t> stubInjectionPattern(Ph2_HwDescription::ReadoutChip* pCbc,  uint8_t pStubAddress , int pStubBend );  // address + bend in units of half strips
+        bool selectLogicMode( Ph2_HwDescription::ReadoutChip* pCbc, std::string pModeSelect, bool pForHits, bool pForStubs , bool pVerifLoop=true);
+        bool enableHipSuppression( Ph2_HwDescription::ReadoutChip* pCbc, bool pForHits, bool pForStubs, uint8_t pClocks, bool pVerifLoop=true);
+        bool injectStubs(Ph2_HwDescription::ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses , std::vector<int> pStubBends, bool pUseNoise=true); // address + bend in units of half strips 
+        uint16_t readErrorRegister(Ph2_HwDescription::ReadoutChip* pCbc);
+        std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc);
     private:
+        std::bitset<NCHANNELS> fActiveChannels;
         /*!
          * \brief Read CBC ID eFuse
          * \param pChip: pointer to Chip object

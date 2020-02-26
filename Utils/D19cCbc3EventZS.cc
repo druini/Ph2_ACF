@@ -821,7 +821,7 @@ namespace Ph2_HwInterface
         return cClusterVec;
     }
 
-    SLinkEvent D19cCbc3EventZS::GetSLinkEvent (  BeBoard* pBoard) const
+    SLinkEvent D19cCbc3EventZS::GetSLinkEvent (  BeBoard* pBoard ) const
     {
         uint16_t cCbcCounter = 0;
         std::set<uint8_t> cEnabledFe;

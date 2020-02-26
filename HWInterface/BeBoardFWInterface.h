@@ -86,6 +86,7 @@ namespace Ph2_HwInterface
     {
       fSaveToFile = false;
     }
+    
     /*!
      * \brief Get the board type
      */
@@ -106,7 +107,10 @@ namespace Ph2_HwInterface
     {
       return nullptr;
     }
-    virtual void ProgramCdce() {}
+    virtual void ProgramCdce() {} 
+    // this is temporary until the modified command processor block is in place 
+    virtual void selectLink(uint8_t pLinkId, uint32_t pWait_ms=100){}
+
     /*! \brief Get the list of available FPGA configuration (or firmware images)*/
     virtual std::vector<std::string> getFpgaConfigList( )
     {
@@ -115,6 +119,11 @@ namespace Ph2_HwInterface
     /*! \brief Delete one Fpga configuration (or firmware image)*/
     virtual void DeleteFpgaConfig ( const std::string& strId ) {}
 
+    // virtual uint16_t ParseEvents(const std::vector<uint32_t>& pData)
+    // {
+    //   LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    //   return 0;
+    // } 
     //Encode/Decode Chip values
     /*!
      * \brief Encode a/several word(s) readable for a Chip

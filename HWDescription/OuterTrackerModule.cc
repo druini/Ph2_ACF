@@ -22,7 +22,7 @@ namespace Ph2_HwDescription {
     {
     }
 
-    OuterTrackerModule::OuterTrackerModule (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId)
+    OuterTrackerModule::OuterTrackerModule (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pModuleId )
     : Module (pBeId, pFMCId, pFeId, pModuleId)
     , fCic(nullptr)
     {

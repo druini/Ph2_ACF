@@ -189,6 +189,7 @@ public:
 
 	void setNumberOfChannels(unsigned int numberOfRows, unsigned int numberOfCols=1){nOfRows_ = numberOfRows; nOfCols_ = numberOfCols;}
 	virtual const ChannelGroupBase* getChipOriginalMask() const {return nullptr;};
+	virtual const ChannelGroupBase* getChipCurrentMask() const {return nullptr;};
 
 	unsigned int size(void) const {return nOfRows_*nOfCols_;}
 	unsigned int getNumberOfRows() const {return nOfRows_;}

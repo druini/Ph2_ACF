@@ -4,6 +4,7 @@
 
 #include "../HWInterface/BeBoardFWInterface.h"
 #include "../HWInterface/ChipInterface.h"
+#include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/ConsoleColor.h"
@@ -63,6 +64,38 @@ struct BeBoardRegWriter : public HwDescriptionVisitor
     void visitBeBoard ( Ph2_HwDescription::BeBoard& pBoard )
     {
         fInterface->WriteBoardReg ( &pBoard, fRegName, fRegValue );
+    }
+};
+
+struct ReadoutChipRegWriter : public HwDescriptionVisitor
+{
+    ReadoutChipInterface* fInterface;
+    std::string fRegisterName; 
+    uint16_t fRegisterValue;
+    bool fLocal;
+
+    ReadoutChipRegWriter ( ReadoutChipInterface* pInterface, std::string pRegisterName, uint16_t pRegisterValue , bool pLocal) : 
+        fInterface ( pInterface ), fRegisterName( pRegisterName ) , fRegisterValue (pRegisterValue), fLocal(pLocal) {}
+
+    void visitReadoutChip ( Ph2_HwDescription::ReadoutChip& pChip )
+    {
+        if( fLocal ) 
+        {
+        }
+        else
+            fInterface->WriteChipReg ( &pChip, fRegisterName , fRegisterValue );
+    }
+};
+
+struct ChipMultiRegWriter : public HwDescriptionVisitor
+{
+    ChipInterface* fInterface;
+    std::vector<std::pair<std::string, uint16_t>> fRegVec;
+
+    ChipMultiRegWriter ( ChipInterface* pInterface, std::vector<std::pair<std::string, uint16_t>> pRegVec ) : fInterface ( pInterface ), fRegVec ( pRegVec ) {}
+    void visitChip ( Ph2_HwDescription::Chip& pCbc )
+    {
+        fInterface->WriteChipMultReg ( &pCbc, fRegVec );
     }
 };
 
