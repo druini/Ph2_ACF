@@ -90,7 +90,7 @@ namespace Ph2_System
   void SystemController::readFile (std::vector<uint32_t>& pVec, uint32_t pNWords32)
   {
     if (pNWords32 == 0) pVec = fFileHandler->readFile();
-    else pVec = fFileHandler->readFileChunks(pNWords32);
+    else                pVec = fFileHandler->readFileChunks(pNWords32);
   }
 
   void SystemController::InitializeHw (const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
@@ -104,20 +104,12 @@ namespace Ph2_System
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     if (fBoardVector[0]->getBoardType() != BoardType::RD53)
       {
-        if (fBoardVector[0]->getEventType() != EventType::SSA)
-          {
-            fReadoutChipInterface = new CbcInterface  ( fBeBoardFWMap );
-          }
-        else
-          {
-            fReadoutChipInterface  = new SSAInterface     ( fBeBoardFWMap );
-          }
-        fCicInterface = new CicInterface( fBeBoardFWMap );
+        if (fBoardVector[0]->getEventType() != EventType::SSA) fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+        else                                                   fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+        fCicInterface = new CicInterface(fBeBoardFWMap);
+        fMPAInterface = new MPAInterface(fBeBoardFWMap);
       }
-    else
-      fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
-
-    fMPAInterface = new MPAInterface(fBeBoardFWMap);
+    else fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
 
     if (fWriteHandlerEnabled == true) this->initializeFileHandler();
   }
