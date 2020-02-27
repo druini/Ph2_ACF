@@ -44,9 +44,7 @@ void D19cSSAEvent::SetEvent(const BeBoard *pBoard, uint32_t pNSSA, const std::ve
 		lvec.push_back(list.at(9 + (chip * 12)));
 		lvec.push_back(list.at(10 + (chip * 12)));
 		lvec.push_back(list.at(11 + (chip * 12)));
-		for (auto L : lvec)
-			LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
-		LOG(INFO) << BOLDRED << "==============================" << RESET;
+
 		// stubs
 		lvec.push_back(list.at(13 + (chip * 12)));
 		lvec.push_back(list.at(14 + (chip * 12)));
