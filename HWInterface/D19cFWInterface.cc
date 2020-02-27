@@ -966,7 +966,7 @@ void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
         std::sprintf (name, "fc7_daq_cnfg.global.chips_enable_hyb_%02d", cFe->getFeId() );
                 std::string name_str (name);
         cVecReg.push_back ({name_str, cChipsEnable});
-        LOG (INFO) << BOLDBLUE << "Setting chips enable register on hybrid" << +cFe->getFeId() << " to " << std::bitset<32>( cChipsEnable ) << RESET;
+        //LOG (INFO) << BOLDBLUE << "Setting chips enable register on hybrid" << +cFe->getFeId() << " to " << std::bitset<32>( cChipsEnable ) << RESET;
         
         cVec.clear();
         cReplies.clear();
@@ -999,7 +999,7 @@ void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
     }
     LOG (INFO) << BOLDBLUE << +fNCic <<  " CICs enabled." << RESET;
     cVecReg.push_back ({"fc7_daq_cnfg.global.hybrid_enable", hybrid_enable});
-    LOG (INFO) << BOLDBLUE << "Setting hybrid enable register to " << std::bitset<32>( hybrid_enable ) << RESET;
+    //LOG (INFO) << BOLDBLUE << "Setting hybrid enable register to " << std::bitset<32>( hybrid_enable ) << RESET;
     WriteStackReg ( cVecReg );
     cVecReg.clear();
 
@@ -1009,7 +1009,7 @@ void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
     this->ChipReSync();
 
     auto cValueI2C = ReadReg ("sysreg.i2c_settings.i2c_enable" );
-    LOG (INFO) << BOLDBLUE << "I2C register is " << +cValueI2C << RESET;
+    //LOG (INFO) << BOLDBLUE << "I2C register is " << +cValueI2C << RESET;
 
 }
 
@@ -1854,10 +1854,8 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
     // back-end tuning on stub lines
     for (auto& cFe : pBoard->fModuleVector)
     {
-        uint8_t cBitslip=0;
         selectLink (cFe->getLinkId());
         uint8_t cHybrid= cFe->getFeId() ;
-        uint8_t cChip = 0;
         auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
 
         if( cCic == NULL )
@@ -2168,7 +2166,6 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                         cOriginalMode = cRegItem.fValue;
                     
                     cRegItem.fValue = cRegValues[cIndex];
-                    LOG (INFO) << BOLDBLUE << "Setting SSA register " << cRegNames[cIndex] << " to " << std::bitset<8>(cRegItem.fValue) << RESET;
                     bool cWrite = true; 
                     this->EncodeReg (cRegItem, cReadoutChip->getFeId(), cReadoutChip->getChipId(), cVec, true, cWrite);
                     if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
@@ -2180,7 +2177,6 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                 } // all that did was set our pad current to max and our readout mode to transmit known patterns
 
                 // configure output pattern on sutb lines 
-                uint8_t cMaxLine = (cReadoutChip->getChipId() == 0 ) ? 8 : 9 ;
                 uint8_t cPattern = 0x80;
                 for( uint8_t cLineId = 1 ; cLineId < 3 ; cLineId ++ )
                 {
@@ -2190,7 +2186,6 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                     std::string cRegName = (cLineId == 8 ) ? "OutPattern7/FIFOconfig" : std::string(cBuffer,sizeof(cBuffer));
                     auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( cRegName ));
                     cRegItem.fValue = cPattern; 
-                    LOG (INFO) << BOLDBLUE << "Setting SSA register " << cRegName << " to " << std::bitset<8>(cRegItem.fValue) << RESET;
                     bool cWrite = true; 
                     this->EncodeReg (cRegItem, cReadoutChip->getFeId(), cReadoutChip->getChipId(), cVec, true, cWrite);
                     if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
@@ -2208,7 +2203,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                         cSuccess = cTuner.TuneLine(this,  cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId , cPattern , 8 , true);
                         std::this_thread::sleep_for (std::chrono::milliseconds (200) );
                         uint8_t cLineStatus = cTuner.GetLineStatus(this,  cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId );
-                        LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
+                        //LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
                         cAttempts++;
                     }while(!cSuccess && cAttempts <10);
                     if( cLineId == 1 && cSuccess ) 
@@ -2225,7 +2220,6 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                 // set readout mode back to original value 
                 auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( "ReadoutMode" ));
                 cRegItem.fValue = cOriginalMode;
-                LOG (INFO) << BOLDBLUE << "Setting SSA register ReadoutMode " << " to " << std::bitset<8>(cRegItem.fValue) << RESET;
                 bool cWrite = true; 
                 this->EncodeReg (cRegItem, cReadoutChip->getFeId(), cReadoutChip->getChipId(), cVec, true, cWrite);
                 if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
@@ -2260,7 +2254,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
             cSuccess = pTuner.TuneLine(this,  pFeId , pChipId , pLineId , pPattern , pPatternPeriod , true);
             std::this_thread::sleep_for (std::chrono::milliseconds (200) );
             //uint8_t cLineStatus = pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
-            LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
+            //LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
             cAttempts++;
         }while(!cSuccess && cAttempts <10);
         if( pLineId == 1 && fFirmwareFrontEndType == FrontEndType::CBC3 ) 
@@ -2451,17 +2445,8 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
 	    {
 		if( cTimeoutCounter >= cTimeoutValue ) 
 		{
-			/*pFailed = true;
-		        LOG(INFO) << "No data in the readout after receiving all triggers. Re-trying the point" 
-		        <<  cNtriggers <<  " "<< pNEvents <<  " " << cReadoutReq << RESET;*/
-
-
 		        pFailed = true;
-		        if( pNEvents == cNtriggers ) 
-		    	{
-		            LOG(INFO) << BOLDBLUE << "\t...No data in the readout after receiving all triggers. Re-trying the point [ " << +cNWords << " words in readout]" << RESET; 
-		        }
-		       	else LOG (INFO) << BOLDBLUE << "\t....No data in the readout. Retrying the point!" << RESET;
+
 		}
 	    }
 	    cTimeoutCounter++;
@@ -3358,7 +3343,6 @@ void D19cFWInterface::ConfigureConsecutiveTriggerFSM( uint16_t pNtriggers, uint1
         this->getBoardInfo();
         this->PSInterfaceBoard_PowerOn(0, 0);
 
-        uint32_t read = 1;
         uint32_t write = 0;
         uint32_t SLOW = 2;
         uint32_t i2cmux = 0;
@@ -3844,8 +3828,6 @@ void D19cFWInterface::ConfigureConsecutiveTriggerFSM( uint16_t pNtriggers, uint1
         uint32_t write = 0;
         uint32_t SLOW = 2;
         uint32_t i2cmux = 0;
-        uint32_t pcf8574 = 1;
-        uint32_t dac7678 = 4;
         uint32_t ina226_7 = 7;
         uint32_t ina226_6 = 6;
         uint32_t ina226_5 = 5;
