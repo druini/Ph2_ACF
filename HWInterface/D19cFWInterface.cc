@@ -2229,7 +2229,7 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard , bool pScope)
         
         uint8_t cLineId=0;
         // tune phase on l1A line - don't have t do anything on the FEs
-        if( fOptical )
+        /*if( fOptical )
         {
             // configure tuning mode     
             pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
@@ -2247,15 +2247,14 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard , bool pScope)
                 pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, pTuner.fBitslip, 0, 0 );
         }
         else 
-        {
+        {*/
             this->ChipReSync();
             LOG (INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid << " Chip" << +cChipId << RESET;
-            uint16_t cPattern = 0xAA;
+            uint16_t cPattern = 0xFE;
             // configure pattern
             pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
             if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
             {    
-                cPattern = 0xFE;
                 for(uint16_t cPatternLength=40; cPatternLength < 41; cPatternLength++)
                 {
                     pTuner.SetLinePattern( this, cHybrid, cChip, cLineId , cPattern, cPatternLength);
@@ -2314,7 +2313,7 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard , bool pScope)
                     }
                 }
             }
-        }
+        //}
     }
     if( pScope )
         this->L1ADebug ();
@@ -3121,6 +3120,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents} );
     cVecReg.push_back ( {"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1} );
     this->WriteStackReg ( cVecReg );
+    //std::this_thread::sleep_for (std::chrono::microseconds (100) );
     
     //std::this_thread::sleep_for (std::chrono::microseconds (10) );
     /*WriteReg ("fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-1);
@@ -3640,7 +3640,7 @@ void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
         WriteReg ( "fc7_daq_ctrl.fast_command_block.control.fast_reset", 0x1 );
           //LOG (DEBUG) << BOLDBLUE << "Sending fast reset." << RESET;
       }
-      //std::this_thread::sleep_for (std::chrono::microseconds (10) );
+      std::this_thread::sleep_for (std::chrono::microseconds (10) );
   }
   
   void D19cFWInterface::ChipI2CRefresh()

@@ -125,8 +125,10 @@ namespace Ph2_HwInterface {
         }
         auto cIterator = list.begin() + 0;
         LOG (DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
+       
         cIterator = list.begin() + 4;  
         uint8_t cHybridId=0;
+        size_t cOffset=4+3;
         do
         {
             uint32_t cL1Header = (*cIterator);
@@ -139,6 +141,18 @@ namespace Ph2_HwInterface {
                 LOG (INFO) << BOLDRED << "Weird L1 header for hybrid" << +cFeId << RESET;
             }
             std::vector<uint32_t> cL1data( cIterator + 2, cIterator +  cL1DataSize);
+
+            // const size_t L1_BLOCK_SIZE=274;
+            // auto& cHybrid = pBoard->fModuleVector[cHybridId];
+            // auto& cReadoutChips = cHybrid->fReadoutChipVector; 
+            // const size_t cNblocks = cReadoutChips.size(); // 275 bits per chip ... 8chips... blocks of 11 bits 
+            // std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks , 0);
+            // this->splitStream(cL1data , cL1Words , 0 , cNblocks ); // split 32 bit words in std::vector of L1_BLOCK_SIZE bits
+            // for(auto cWord : cL1data)
+            //     LOG (INFO) << BOLDMAGENTA << "L1 Word is " << std::bitset<32>(cWord) << RESET;
+            // for(auto cWord : cL1Words )
+            //     LOG (INFO) << BOLDBLUE << "L1 Word is " << std::bitset<L1_BLOCK_SIZE>(cWord) << RESET;
+
             //std::vector<std::bitset<274>> cL1(8, 0);
             //this->splitStream(cL1data , cL1 , 0 , 8 ); // split 32 bit words in std::vector of 274 bits
             // for(auto cL1Word : cL1 )
@@ -158,15 +172,19 @@ namespace Ph2_HwInterface {
             uint8_t  cStubCounter = (*(cIterator+1) & (0x3F << 16) ) >> 16;
             std::vector<uint32_t> cStubDataComplete( cIterator,  cIterator + cStubDataSize);
             std::vector<uint32_t> cStubData( cIterator+2, cIterator + cStubDataSize);
-            // std::vector<std::bitset<15>> cStubs(cStubCounter, 0);
-            // this->splitStream(cStubData , cStubs , 0 , 15 ); // split 32 bit words in std::vector of 15 bits
-            // for(auto cStub : cStubs )
-            //     LOG (INFO) << BOLDBLUE << std::bitset<15>(cStub) << RESET;
                         
             LOG (DEBUG) << BOLDGREEN << "Hybrid "<< +cFeId << "- header : " << std::bitset<32>(cL1Header) << " --- " << cL1DataSize << " 32 bit words" << RESET;
             LOG (DEBUG) << BOLDGREEN << "Stub Header " << std::bitset<4>(cStubHeader) << RESET;
             LOG (DEBUG) << BOLDGREEN << "Stub info : " << std::bitset<32>(*(cIterator+1)) <<  " --- " << cStubDataSize << " 32 bit words\t\t .... " << +cStubCounter << " stubs in event ... BxId " << +cStubBxId << RESET;
             cIterator+= cStubDataSize;
+
+            
+            // const size_t STUB_BLOCK_SIZE=15;
+            // std::vector<std::bitset<STUB_BLOCK_SIZE>> cStubWords(cStubCounter , 0);
+            // this->splitStream(list , cStubWords , cOffset+cL1DataSize , cStubCounter ); // split 32 bit words in std::vector of STUB_BLOCK_SIZE bits
+            // for(auto cWord : cStubWords )
+            //     LOG (INFO) << BOLDMAGENTA << "Stub Word is " << std::bitset<STUB_BLOCK_SIZE>(cWord) << RESET;
+
 
             // now store stub information
             //auto cStubIterator = cStubData.begin();
@@ -223,6 +241,7 @@ namespace Ph2_HwInterface {
                         std::string cPacket = sL1packet.substr(0, 274);
                         std::bitset<274> cDataBitset(cPacket);
                         fEventDataList[cFeId].second.push_back( cDataBitset );
+                        LOG (DEBUG) << BOLDBLUE << "L1 packet " << std::bitset<274>(cDataBitset) << RESET;
                         // get remaining l1 packet for the next readoutchip 
                         std::string cRemainder = sL1packet.substr(274, sL1packet.size() - 274 ) ;
                         sL1packet = cRemainder; 
@@ -232,6 +251,7 @@ namespace Ph2_HwInterface {
                 }
             }
             cHybridId++;
+            cOffset += cL1DataSize + cStubDataSize;
         }while( cIterator < list.end() - fDummySize );
     }
 

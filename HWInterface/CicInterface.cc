@@ -828,8 +828,8 @@ namespace Ph2_HwInterface {
         bool cSuccess = this->SoftReset(pChip);
         LOG (INFO) << BOLDBLUE <<  ".... Starting CIC start-up ........ on hybrid " << +pChip->getFeId() << RESET;
 
-        bool cClkTermination = true;
-        bool cRxTermination = (pChip->getFrontEndType() == FrontEndType::CIC ) ? false : false ;//true
+        bool cClkTermination = true; // true
+        bool cRxTermination = (pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;//true
         std::string cRegName = "SLVS_PADS_CONFIG";
         uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
         auto cIterator = fTxDriveStrength.find(pDriveStrength); 

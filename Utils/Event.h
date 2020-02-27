@@ -432,7 +432,7 @@ namespace Ph2_HwInterface
 
         // split stream of data 
         template<std::size_t N>
-        void splitStream(const std::vector<uint32_t>& pData, std::vector<std::bitset<N>>& pBitSet , size_t pOffset , size_t pSize )
+        void splitStream(const std::vector<uint32_t> pData, std::vector<std::bitset<N>>& pBitSet , size_t pOffset , size_t pSize )
         {
             uint8_t cBitCounter=0;
             uint8_t cId=0;
@@ -448,7 +448,7 @@ namespace Ph2_HwInterface
                   continue;
 
                 pBitSet[cId][N - 1 - cBitCounter] = cWord[31  - cIndex ];
-                LOG (DEBUG) << "Bit index " << +(31  - cIndex) << " bit counter in hit word at index " << +cBitCounter << RESET;
+                //LOG (INFO) << "\t..Bit index " << +(31  - cIndex) << " bit counter in hit word at index " << +cBitCounter << RESET;
                 cId += ( cBitCounter == (N-1)  );
                 cBitCounter = (cBitCounter+1)%N;
               }

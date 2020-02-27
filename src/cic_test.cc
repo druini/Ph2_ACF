@@ -201,7 +201,6 @@ int main ( int argc, char* argv[] )
         cTuning.Inherit (&cTool);
         cTuning.Initialise ( cAllChannels, cDisableStubLogic );
         // make sure trigger rate is set
-        //dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0, cTriggerRate);
         t.start();
         cTuning.FindVplus();
         cTuning.FindOffsets();
@@ -298,6 +297,8 @@ int main ( int argc, char* argv[] )
         //         }
         //     }
         // }
+
+        //dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0, cTriggerRate);
         for( auto& cBoard : cCicAligner.fBoardVector )
         {
             for (auto& cFe : cBoard->fModuleVector)
@@ -331,9 +332,9 @@ int main ( int argc, char* argv[] )
             for ( auto& cEvent : cEvents )
             {
                 LOG (INFO) << ">>> Event #" << cN++ ;
-                outp.str ("");
-                outp << *cEvent;
-                LOG (INFO) << outp.str();
+                //outp.str ("");
+                //outp << *cEvent;
+                //LOG (INFO) << outp.str();
                 //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBoard);
                 //cDAQFileHandler->set (cSLev.getData<uint32_t>() );
                 //cSLev.print (std::cout);
