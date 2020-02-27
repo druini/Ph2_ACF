@@ -515,7 +515,7 @@ namespace Ph2_HwInterface
     const float kb  = 1.38064852e-23; // [J/K]
     const float e   = 1.6021766208e-19;
     const float R   = 15; // By circuit design
-    const uint8_t sensorDEM = 14; // Sensor Dynamic Element Matching bits
+    const uint8_t sensorDEM = 0x0E; // Sensor Dynamic Element Matching bits needed to trim the thermistors
 
     uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
 

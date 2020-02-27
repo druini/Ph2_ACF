@@ -1443,7 +1443,7 @@ namespace Ph2_HwInterface
     const float T25C = 298.15; // [Kelvin]
     const float R25C = 10;     // [kOhm]
     // For precise T measurements we should have individual -beta- for each temperature sensor
-    // i.e. thermistors with NTC = Negative Temperature Coefficient, measured in Kelvin
+    // i.e. NTC thermistors = Negative Temperature Coefficient, measured in Kelvin
 
     // #####################################
     // # Voltage divider circuit on hybrid #
