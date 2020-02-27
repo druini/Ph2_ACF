@@ -471,7 +471,7 @@ namespace Ph2_HwInterface
       {
         auto ADC = RD53Interface::measureADC(pChip, observable);
         if (ADC > (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1.) * safetyMargin)
-          LOG (WARNING) << BOLDRED << "\t--> ADC measurement in saturation (ADC = " << BOLDYELLOW << ADC << BOLDRED << ")" << RESET;
+          LOG (WARNING) << BOLDRED << "\t--> ADC measurement in saturation (ADC = " << BOLDYELLOW << ADC << BOLDRED << "): likely the R-IMUX resistor, that converts the current into a voltage, is not connected" << RESET;
 
         value = RD53Interface::convertADC2VorI(pChip, ADC, isCurrentNotVoltage, ADCoffset, VrefADC, resistorI2V);
         LOG (INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " " << (isCurrentNotVoltage == true ? "A" : "V") << RESET;
@@ -481,11 +481,13 @@ namespace Ph2_HwInterface
 
   uint32_t RD53Interface::measureADC (Chip* pChip, uint32_t data)
   {
-      const uint16_t GLOBAL_PULSE_ROUTE  = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
-      const uint8_t  chipID              = pChip->getChipId();
+      const uint16_t GLOBAL_PULSE_ROUTE = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
+      const uint8_t  chipID             = pChip->getChipId();
+      const uint16_t trimADC            = bits::pack<1, 5, 6>(true, 0x0C, 0x05); // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should giv an average of VrefADC of 0.9 V
 
       std::vector<uint16_t> commandList;
 
+      RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_CONFIG").fAddress, trimADC).appendTo(commandList);
       RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0040).appendTo(commandList); // Reset Monitor Data
       RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0004).appendTo(commandList);
       RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0008).appendTo(commandList); // Clear Monitor Data
@@ -513,7 +515,7 @@ namespace Ph2_HwInterface
     const float kb  = 1.38064852e-23; // [J/K]
     const float e   = 1.6021766208e-19;
     const float R   = 15; // By circuit design
-    const uint8_t sensorDEM = 14; // Sensor Dynamic Element Matching bits
+    const uint8_t sensorDEM = 0x0E; // Sensor Dynamic Element Matching bits needed to trim the thermistors
 
     uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
 
