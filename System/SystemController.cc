@@ -285,6 +285,13 @@ namespace Ph2_System
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays);
             LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
 
+            // ########################
+            // # Configuring from XML #
+            // ########################
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->ConfigureFromXML(cBoard);
+
+
+
             // ###################
             // # Configure chips #
             // ###################
@@ -470,9 +477,7 @@ namespace Ph2_System
     if (pType == BoardType::RD53)
     {
       fEventList.clear();
-      if (RD53FWInterface::decodedEvents.size() == 0)
-        RD53FWInterface::DecodeEvents(pData, RD53FWInterface::decodedEvents);
-
+      if (RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, RD53FWInterface::decodedEvents);
       RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
       for (auto i = 0u; i < RD53FWInterface::decodedEvents.size(); i++) fEventList.push_back(&RD53FWInterface::decodedEvents[i]);
     }
