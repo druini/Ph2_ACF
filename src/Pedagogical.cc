@@ -67,7 +67,7 @@ int main( int argc, char* argv[] )
 	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S103", 0x1);}
 	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S104", 0x1);}
 	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S105", 0x1);}
-	for (int thd = 10; thd<=10; thd++)
+	for (int thd = 10; thd<=20; thd++)
 	{
 		for(auto cSSA: ChipVec)
 		{
