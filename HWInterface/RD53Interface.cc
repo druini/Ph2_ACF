@@ -471,7 +471,7 @@ namespace Ph2_HwInterface
       {
         auto ADC = RD53Interface::measureADC(pChip, observable);
         if (ADC > (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1.) * safetyMargin)
-          LOG (WARNING) << BOLDRED << "\t--> ADC measurement in saturation (ADC = " << BOLDYELLOW << ADC << BOLDRED << ")" << RESET;
+          LOG (WARNING) << BOLDRED << "\t--> ADC measurement in saturation (ADC = " << BOLDYELLOW << ADC << BOLDRED << "): likely the R-IMUX resistor, that converts the current into a voltage, is not connected" << RESET;
 
         value = RD53Interface::convertADC2VorI(pChip, ADC, isCurrentNotVoltage, ADCoffset, VrefADC, resistorI2V);
         LOG (INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " " << (isCurrentNotVoltage == true ? "A" : "V") << RESET;
@@ -481,9 +481,9 @@ namespace Ph2_HwInterface
 
   uint32_t RD53Interface::measureADC (Chip* pChip, uint32_t data)
   {
-      const uint16_t GLOBAL_PULSE_ROUTE  = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
-      const uint8_t  chipID              = pChip->getChipId();
-      const uint16_t trimADC             = bits::pack<1, 5, 6>(true, 0x0C, 0x05); // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should giv an average of VrefADC of 0.9 V
+      const uint16_t GLOBAL_PULSE_ROUTE = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
+      const uint8_t  chipID             = pChip->getChipId();
+      const uint16_t trimADC            = bits::pack<1, 5, 6>(true, 0x0C, 0x05); // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should giv an average of VrefADC of 0.9 V
 
       std::vector<uint16_t> commandList;
 
