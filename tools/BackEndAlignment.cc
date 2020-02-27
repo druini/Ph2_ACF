@@ -67,7 +67,7 @@ bool BackEndAlignment::L1Alignment2S(BeBoard* pBoard)
             fCicInterface->EnableFEs(cCic , {0,1,2,3,4,5,6,7}, false );  
         if( cCic->getFrontEndType() == FrontEndType::CIC )
         {
-            fCicInterface->EnableFEs(cCic , {0,1,2,3,4,5,6,7}, true );  
+            fCicInterface->EnableFEs(cCic , {0,1,2,3,4,5,6,7}, false );  
         }
     }
     //L1A line 
