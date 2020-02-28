@@ -343,7 +343,7 @@ namespace Ph2_HwInterface
     LOG (INFO) << GREEN << "Fast command block trigger state: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (0=idle, 2=running)" << RESET;
 
     fastCMDReg = ReadReg("user.stat_regs.fast_cmd.if_configured");
-    LOG (INFO) << GREEN << "Fast command block check if configuraiton registers have been set: " << BOLDYELLOW << fastCMDReg << RESET;
+    LOG (INFO) << GREEN << "Fast command block check if configuraiton registers have been set: " << BOLDYELLOW << (fastCMDReg == true ? "configured" : "not configured") << RESET;
 
     fastCMDReg = ReadReg("user.stat_regs.fast_cmd.error_code");
     LOG (INFO) << GREEN << "Fast command block error code (0=no error): " << BOLDYELLOW << fastCMDReg << RESET;
