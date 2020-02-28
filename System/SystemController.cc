@@ -185,7 +185,7 @@ namespace Ph2_System
               static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
               for (auto& cReadoutChip : cFe->fReadoutChipVector)
               {
-                  if ( !bIgnoreI2c && cReadoutChip->getFrontEndType() == FrontEndType::CBC3 )
+                  /*if ( !bIgnoreI2c && cReadoutChip->getFrontEndType() == FrontEndType::CBC3 )
                   {
                     LOG (INFO) << BOLDBLUE << "Configuring readout chip [CBC" << +cReadoutChip->getChipId() << " ]" << RESET;
                     fReadoutChipInterface->ConfigureChip ( cReadoutChip );
@@ -263,16 +263,16 @@ namespace Ph2_System
                     static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels( cReadoutChip, false);
                     std::this_thread::sleep_for (std::chrono::milliseconds (50) );
                     LOG (INFO) << BOLDBLUE << "Setting threshold back to orginal value [ " << +cThreshold << " ] DAC units." << RESET;
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "VCth" , 0);
-                    fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cReadoutChip->getChipId() ) ;
-                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "VCth" , 900);
-                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
+                    //static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "VCth" , 0);
+                    //fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cReadoutChip->getChipId() ) ;
+                    //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
+                    //static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "VCth" , 900);
+                    //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
                     
                     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "VCth" , cThreshold);
                   }
-                  else
-                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning (cBoard);
+                  else*/
+                  static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning (cBoard);
             }
           }
         }
