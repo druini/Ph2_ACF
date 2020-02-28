@@ -41,34 +41,13 @@ std::ostream& operator<< ( std::ostream& aStream, const fc7::XilinxBitFile& aBit
   return aStream;
 }
 
-//       std::vector<uint8_t>::const_iterator lIt1 = aFirmware1.mBitStream.begin();
-//       std::vector<uint8_t>::const_iterator lIt2 = aFirmware2.mBitStream.begin();
-//       for ( ; lIt1 < aFirmware1.mBitStream.end() && lIt2 < aFirmware2.mBitStream.end() ; lIt1+=4 , lIt2+=4 )
-//         std::cout << std::hex << std::setfill('0') << std::setw(8) << *(uint32_t*)(&*lIt1) << " : " << std::setw(8) << *(uint32_t*)(&*lIt2) << std::endl;
-//
-//       for ( ; lIt1 < aFirmware1.mBitStream.end() ; lIt1+=4 )
-//         std::cout << std::hex << std::setfill('0') << std::setw(8) << *(uint32_t*)(&*lIt1) << " : " << "        " << std::endl;
-//
-//       for ( ; lIt2 < aFirmware2.mBitStream.end() ; lIt2+=4 )
-//         std::cout << std::hex << std::setfill('0') << "        " << " : " << std::setw(8) << *(uint32_t*)(&*lIt2) << std::endl;
-
-
-
 namespace fc7
 {
-
   //! Default Target-specified Constructor
-
-  Firmware::Firmware ( const std::string& aFileName ) :
-    mFileName ( aFileName )
-  {
-  }
+  Firmware::Firmware (const std::string& aFileName) : mFileName (aFileName) {}
 
   //! Default Destructor
-
-  Firmware::~Firmware( )
-  {
-  }
+  Firmware::~Firmware() {}
 
   const std::vector<uint8_t>& Firmware::Bitstream( ) const
   {
@@ -95,7 +74,6 @@ namespace fc7
     mBitSwapped = !mBitSwapped;
   }
 
-
   const uint8_t Firmware::mLUT[] =
   {
     0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0, 0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
@@ -116,21 +94,8 @@ namespace fc7
     0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
   };
 
-
-
-
   //! Default Target-specified Constructor
-
-  XilinxBitStream::XilinxBitStream( ) : Firmware ( "A Bit Stream" )
-  {
-  }
-
-  //     void XilinxBitStream::BPIappend( std::vector<uint32_t>::const_iterator aStart, const std::vector<uint32_t>::const_iterator& aEnd ) {
-  //         for(; aStart != aEnd; ++aStart ) {
-  //             mBitStream.push_back(static_cast < uint8_t > (*aStart & 0xFF));
-  //             mBitStream.push_back(static_cast < uint8_t > ((*aStart >> 8) & 0xFF));
-  //         }
-  //     }
+  XilinxBitStream::XilinxBitStream() : Firmware("A Bit Stream") {}
 
   void XilinxBitStream::BigEndianAppend ( std::vector<uint32_t>::const_iterator aStart, const std::vector<uint32_t>::const_iterator& aEnd )
   {
@@ -147,16 +112,9 @@ namespace fc7
   }
 
   //! Default Destructor
-
-  XilinxBitStream::~XilinxBitStream( )
-  {
-  }
-
-
-
+  XilinxBitStream::~XilinxBitStream() {}
 
   //! Default Target-specified Constructor
-
   XilinxBinFile::XilinxBinFile ( const std::string& aFileName ) : Firmware ( aFileName )
   {
     using namespace uhal;
@@ -222,18 +180,9 @@ namespace fc7
   }
 
   //! Default Destructor
-
-  XilinxBinFile::~XilinxBinFile( )
-  {
-  }
-
-
-
-
-
+  XilinxBinFile::~XilinxBinFile() {}
 
   //! Default Target-specified Constructor
-
   XilinxBitFile::XilinxBitFile::XilinxBitFile ( const std::string& aFileName ) : Firmware ( aFileName )
   {
     using namespace uhal;
@@ -352,7 +301,4 @@ namespace fc7
     aByteCount = 4;
     aUint = ( ( *aIt++ ) << 24 ) | ( ( *aIt++ ) << 16 ) | ( ( *aIt++ ) << 8 ) | ( ( *aIt++ ) );
   }
-
-
 }
-

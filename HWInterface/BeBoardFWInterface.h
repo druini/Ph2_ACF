@@ -1,11 +1,10 @@
 /*!
-\file                BeBoardFWInterface.h
+\file                            BeBoardFWInterface.h
 \brief                           BeBoardFWInterface base class of all type of boards
 \author                          Lorenzo BIDEGAIN, Nicolas PIERRE
-\version             1.0
+\version                         1.0
 \date                            28/07/14
 Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pierre@icloud.com
-
 */
 
 #ifndef __BEBOARDFWINTERFACE_H__
@@ -32,7 +31,6 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include <fstream>
 #include <algorithm>
 #include <iterator>
-
 
 
 namespace Ph2_HwInterface
@@ -136,7 +134,7 @@ namespace Ph2_HwInterface
     virtual void EncodeReg ( const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite )
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
+    }
     /*!< Encode a/several word(s) readable for a Chip*/
     /*!
      * \brief Encode a/several word(s) readable for a Chip
@@ -147,7 +145,7 @@ namespace Ph2_HwInterface
     virtual void EncodeReg ( const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite ) 
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
+    }
     /*!< Encode a/several word(s) readable for a Chip*/
     /*!
      * \brief Encode a/several word(s) for Broadcast write to Chips
@@ -158,7 +156,7 @@ namespace Ph2_HwInterface
     virtual void BCEncodeReg ( const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNChip, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false ) 
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
+    }
     /*!< Encode a/several word(s) readable for a Chip*/
     /*!
      * \brief Decode a word from a read of a register of the Chip
@@ -169,7 +167,7 @@ namespace Ph2_HwInterface
     virtual void DecodeReg ( Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pChipId, uint32_t pWord, bool& pRead, bool& pFailed ) 
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
+    }
     /*!< Decode a word from a read of a register of the Chip*/
 
     /*!
@@ -191,14 +189,14 @@ namespace Ph2_HwInterface
     /*!
      * \brief Send a Chip trigger
      */
-    virtual void ChipTrigger() 
+    virtual void ChipTrigger()
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
     /*!
      * \brief Send a Chip trigger
      */
-    virtual void ChipTestPulse() 
+    virtual void ChipTestPulse()
     {
       LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
@@ -301,16 +299,12 @@ namespace Ph2_HwInterface
 
 
   protected:
-
-    //bool runningAcquisition;
     uint32_t fBlockSize {0};
     uint32_t  fNPackets {0};
     uint32_t  numAcq {0};
     uint32_t  nbMaxAcq {0};
-    //boost;:thread thrAcq;
 
-    //template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value comparison
-
+    // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value comparison
     template<typename T, class BinaryPredicate>
       std::vector<typename std::iterator_traits<T>::value_type>
       get_mismatches (T pWriteVector_begin, T pWriteVector_end, T pReadVector_begin, BinaryPredicate p)

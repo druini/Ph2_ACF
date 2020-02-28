@@ -27,7 +27,7 @@
 // #############
 #define DEEPSLEEP  100000 // [microseconds]
 #define READOUTSLEEP   50 // [microseconds]
-#define MAXATTEMPTS     2 // Maximum number of attempts for ReadNEvents
+#define MAXATTEMPTS     4 // Maximum number of attempts
 #define NFRAMES_SYNC 1000 // Number of frames needed to synchronize chip communication
 #define NWORDS_DDR3     4 // Number of IPbus words in a DDR3 word
 #define NLANE_MODULE    4 // Number of lanes per module
@@ -139,7 +139,7 @@ namespace Ph2_HwInterface
       uint32_t l1a_counter;
       uint32_t bx_counter;
 
-      std::vector<ChipFrame>   chip_frames;
+      std::vector<ChipFrame>                      chip_frames;
       std::vector<Ph2_HwDescription::RD53::Event> chip_events;
 
       uint16_t evtStatus;
@@ -193,10 +193,12 @@ namespace Ph2_HwInterface
       uint32_t n_triggers        = 0;
       uint32_t ext_trigger_delay = 0; // Used when trigger_source == TriggerSource::External
       uint32_t trigger_duration  = 0; // Number of triggers on top of the L1A (maximum value is 31)
+      uint32_t enable_hitor      = 0; // Enable HitOr signals
 
       FastCmdFSMConfig fast_cmd_fsm;
     };
 
+    void ConfigureFromXML            (const Ph2_HwDescription::BeBoard* pBoard);
     void SetAndConfigureFastCommands (const Ph2_HwDescription::BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0);
 
     struct DIO5Config
@@ -216,6 +218,7 @@ namespace Ph2_HwInterface
 
     FastCommandsConfig* getLocalCfgFastCmd() { return &localCfgFastCmd; }
 
+
     // ###########################################
     // # Member functions to handle the firmware #
     // ###########################################
@@ -228,6 +231,13 @@ namespace Ph2_HwInterface
     void RebootBoard                           ();
     const FpgaConfig* GetConfiguringFpga       ();
 
+
+    // ########################################
+    // # Vector containing the decoded events #
+    // ########################################
+    static std::vector<RD53FWInterface::Event> decodedEvents;
+
+
     // ################################################
     // # I2C block for programming peripheral devices #
     // ################################################
@@ -236,10 +246,15 @@ namespace Ph2_HwInterface
     void ReadI2C              (std::vector<uint32_t>& data);
     void ConfigureClockSi5324 ();
 
-    // ########################################
-    // # Vector containing the decoded events #
-    // ########################################
-    static std::vector<RD53FWInterface::Event> decodedEvents;
+
+    // ####################################################
+    // # Hybrid ADC measurements: temperature and voltage #
+    // ####################################################
+    float ReadHybridTemperature (int hybridId);
+    float ReadHybridVoltage     (int hybridId);
+    float calcTemperature       (uint32_t sensor1, uint32_t sensor2, int beta = 3435);
+    float calcVoltage           (uint32_t senseVDD, uint32_t senseGND);
+
 
   private:
     void PrintFWstatus         ();
@@ -252,6 +267,12 @@ namespace Ph2_HwInterface
     void ConfigureFastCommands (const FastCommandsConfig* config = nullptr);
     void ConfigureDIO5         (const DIO5Config* config);
     void SendBoardCommand      (const std::string& cmd_reg);
+
+    // ###################
+    // # Clock generator #
+    // ###################
+    void InitializeClockGenerator (bool doStoreInEEPROM = false);
+    void ReadClockGenerator       ();
 
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;

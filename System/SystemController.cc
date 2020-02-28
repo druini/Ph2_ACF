@@ -1,12 +1,10 @@
-/*
-
-  FileName :                    SystemController.cc
-  Content :                     Controller of the System, overall wrapper of the framework
-  Programmer :                  Nicolas PIERRE
-  Version :                     1.0
-  Date of creation :            10/08/14
-  Support :                     mail to : nicolas.pierre@cern.ch
-
+/*!
+  \file                  SystemController.cc
+  \brief                 Controller of the System, overall wrapper of the framework
+  \author                Mauro DINARDO
+  \version               2.0
+  \date                  01/01/20
+  Support:               email to mauro.dinardo@cern.ch
 */
 
 #include "SystemController.h"
@@ -92,13 +90,13 @@ namespace Ph2_System
   void SystemController::readFile (std::vector<uint32_t>& pVec, uint32_t pNWords32)
   {
     if (pNWords32 == 0) pVec = fFileHandler->readFile();
-    else pVec = fFileHandler->readFileChunks(pNWords32);
+    else                pVec = fFileHandler->readFileChunks(pNWords32);
   }
 
   void SystemController::InitializeHw (const std::string& pFilename, std::ostream& os, bool pIsFile , bool streamData)
   {
     fStreamerEnabled = streamData;
-    if (streamData) fNetworkStreamer = new TCPPublishServer(6000,1);
+    if (streamData == true) fNetworkStreamer = new TCPPublishServer(6000,1);
 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fBoardVector, fDetectorContainer, os, pIsFile);
@@ -106,12 +104,14 @@ namespace Ph2_System
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     if (fBoardVector[0]->getBoardType() != BoardType::RD53)
     {
-      fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
-      fCicInterface = new CicInterface( fBeBoardFWMap );
+        if (fBoardVector[0]->getEventType() != EventType::SSA) fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+        else                                                   fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+        fCicInterface = new CicInterface(fBeBoardFWMap);
+        fMPAInterface = new MPAInterface(fBeBoardFWMap);
     }
     else
       fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
-    
+
     fMPAInterface = new MPAInterface(fBeBoardFWMap);
     if (fWriteHandlerEnabled) this->initializeFileHandler();
   }
@@ -131,10 +131,10 @@ namespace Ph2_System
         {
           //setting up back-end board
           fBeBoardInterface->ConfigureBoard ( cBoard );
-          LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;  
-          LOG (INFO) << BOLDBLUE << "Now going to configure chips on Board " << int ( cBoard->getBeId() ) << RESET;  
-      
-          // CIC start-up 
+          LOG (INFO) << GREEN << "Successfully configured Board " << int ( cBoard->getBeId() ) << RESET;
+          LOG (INFO) << BOLDBLUE << "Now going to configure chips on Board " << int ( cBoard->getBeId() ) << RESET;
+
+          // CIC start-up
           bool cWithCIC=false;
           for (auto& cFe : cBoard->fModuleVector)
           {
@@ -154,18 +154,18 @@ namespace Ph2_System
               auto cRegisterMap = cCic->getRegMap();
               uint16_t cRegValue = fReadoutChipInterface->ReadChipReg( cCic, cRegisterMap.begin()->first );
               LOG (INFO) << BOLDGREEN <<  "Successfully configured CIC : " << cRegisterMap.begin()->first << " set to 0x" << std::hex << cRegValue << std::dec <<  "." << RESET;
-              
+
               // CIC start-up
-              uint8_t cModeSelect = (cFe->fReadoutChipVector[0]->getFrontEndType() != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA 
-              // select CIC mode 
+              uint8_t cModeSelect = (cFe->fReadoutChipVector[0]->getFrontEndType() != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
+              // select CIC mode
               bool cSuccess = fCicInterface->SelectMode( static_cast<OuterTrackerModule*>(cFe)->fCic, cModeSelect );
               if(!cSuccess)
               {
                   LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
                   exit(0);
               }
-              // CIC start-up sequence 
-              uint8_t cDriveStrength = 5; 
+              // CIC start-up sequence
+              uint8_t cDriveStrength = 5;
               cSuccess = fCicInterface->StartUp(cCic , cDriveStrength);
               if(!cSuccess)
               {
@@ -176,8 +176,8 @@ namespace Ph2_System
               LOG (INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cFe->getFeId()%2) << " connected to link " << +cFe->getLinkId() <<  RESET ;
               LOG (INFO) << BOLDGREEN << "####################################################################################" << RESET;
           }
-          
-          // hard reset to all readout chips 
+
+          // hard reset to all readout chips
           //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadoutChipReset();
           // Configure readout-chips [CBCs, MPAs, SSAs]
           for (auto& cFe : cBoard->fModuleVector)
@@ -193,12 +193,12 @@ namespace Ph2_System
                     auto cRegisterMap = cReadoutChip->getRegMap();
                     uint16_t cRegValue = fReadoutChipInterface->ReadChipReg( cReadoutChip, cRegisterMap.begin()->first );
                     LOG (INFO) << BOLDGREEN <<  "Successfully configured Chip " << int ( cReadoutChip->getChipId() ) << " [ " << cRegisterMap.begin()->first << " set to 0x" << std::hex << cRegValue << std::dec <<  " ]." << RESET;
-                  
-                    // if there is no CICs then do the back-end alignment here ... 
+
+                    // if there is no CICs then do the back-end alignment here ...
                     if( static_cast<OuterTrackerModule*>(cFe)->fCic != NULL )
                       continue;
-                    
-                    // original threshold 
+
+                    // original threshold
                     uint16_t cThreshold = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cReadoutChip, "VCth" );
                     LOG (INFO) << BOLDBLUE << "Running phase tuning and word alignment on FE" << +cFe->getFeId() << " CBC" << +cReadoutChip->getId() << "..." << RESET;
                     std::vector<uint8_t> cSeeds{0x35,0x6A,0xD5};
@@ -210,13 +210,13 @@ namespace Ph2_System
                         continue;
 
                     int cPosition = std::distance( cBendLUT.begin(), cIterator);
-                    double cBend_strips = -7. + 0.5*cPosition; 
+                    double cBend_strips = -7. + 0.5*cPosition;
                     std::vector<int> cBends ( cSeeds.size() , static_cast<int>( cBend_strips*2));
                     static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cReadoutChip , cSeeds , cBends);
-                    // make sure pT width is set to maximum 
+                    // make sure pT width is set to maximum
                     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cReadoutChip , "PtCut" , 14);
                     // and that hit OR is turned off
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cReadoutChip , "HitOr" , 0); 
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cReadoutChip , "HitOr" , 0);
                     LOG (INFO) << BOLDBLUE << "\t.... configured CBC" << +cReadoutChip->getId() << " to disable HitOr and set PtCut to maximum value [14 half-strips]" << RESET;
                     bool cPhaseTuningSuccess = false;
                     uint8_t cLineId=1;
@@ -229,27 +229,27 @@ namespace Ph2_System
                             exit(0);
                         }
                     }
-                    // line with bend codes 
+                    // line with bend codes
                     cPhaseTuningSuccess = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, cFe->getFeId(), cReadoutChip->getChipId() , 4 , ( cBendCode_phAlign << 4) | (cBendCode_phAlign << 0) , 8);
                     if (!cPhaseTuningSuccess )
                     {
                         LOG (INFO) << BOLDRED << "Hybrid " << +cFe->getId() << " CBC " << +cReadoutChip->getChipId() << " FAILED phase tuning on last SLVS line!" << RESET;
                         exit(0);
                     }
-                    // final line 
+                    // final line
                     fBeBoardInterface->ChipReSync ( cBoard );
                     cPhaseTuningSuccess = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, cFe->getFeId(), cReadoutChip->getChipId() , 5, (1 << 7) | (cBendCode_phAlign << 0)  , 8);
-                    if( !cPhaseTuningSuccess ) 
-                    {   
+                    if( !cPhaseTuningSuccess )
+                    {
                         // if it doen't work then try all possible
                         // combinations of error bits/SoF flags on
                         LOG (INFO) << BOLDRED << "Phase Tuning/Word Alignment failed on SLVS5 : going to try and see if this is because error flags/SoF bits are high!" << RESET;
                         cPhaseTuningSuccess = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, cFe->getFeId(), cReadoutChip->getChipId() , 5, ( 1 << 7) | (1 <<6) | (cBendCode_phAlign <<0)  , 8);
-                        if(!cPhaseTuningSuccess) 
+                        if(!cPhaseTuningSuccess)
                         {
                             cPhaseTuningSuccess = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, cFe->getFeId(), cReadoutChip->getChipId() , 5, ( 1 << 7) | (1 <<6) | (1<<4) | (cBendCode_phAlign <<0)  , 8);
-                            if(! cPhaseTuningSuccess ) 
-                            {    
+                            if(! cPhaseTuningSuccess )
+                            {
                                 cPhaseTuningSuccess = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, cFe->getFeId(), cReadoutChip->getChipId() , 5, ( 1 << 7) | (1 <<4) | (cBendCode_phAlign <<0)  , 8);
                                 if (!cPhaseTuningSuccess )
                                 {
@@ -260,14 +260,14 @@ namespace Ph2_System
                         }
                     }
                     //now unmask all channels
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels( cReadoutChip, false); 
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels( cReadoutChip, false);
                     std::this_thread::sleep_for (std::chrono::milliseconds (50) );
                     LOG (INFO) << BOLDBLUE << "Setting threshold back to orginal value [ " << +cThreshold << " ] DAC units." << RESET;
                     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "VCth" , cThreshold);
                   }
-                  else 
-                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning (cBoard);  
-              }
+                  else
+                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning (cBoard);
+            }
           }
         }
         else
@@ -289,6 +289,13 @@ namespace Ph2_System
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays);
             LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
 
+            // ########################
+            // # Configuring from XML #
+            // ########################
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->ConfigureFromXML(cBoard);
+
+
+
             // ###################
             // # Configure chips #
             // ###################
@@ -306,14 +313,14 @@ namespace Ph2_System
       }
   }
 
+
   void SystemController::initializeFileHandler()
   {
     for (const auto& cBoard : fBoardVector)
       {
-        uint32_t cBeId = cBoard->getBeId();
-        uint32_t cNChip = 0;
-
-        uint32_t cNEventSize32 = this->computeEventSize32 (cBoard);
+        uint32_t cNChip        = 0;
+        uint32_t cBeId         = cBoard->getBeId();
+        uint32_t cNEventSize32 = this->computeEventSize32(cBoard);
 
         std::string cBoardTypeString;
         BoardType cBoardType = cBoard->getBoardType();
@@ -323,22 +330,22 @@ namespace Ph2_System
         if      (cBoardType == BoardType::D19C) cBoardTypeString = "D19C";
         else if (cBoardType == BoardType::RD53) cBoardTypeString = "RD53";
 
-        uint32_t cFWWord  = fBeBoardInterface->getBoardInfo (cBoard);
+        uint32_t cFWWord  = fBeBoardInterface->getBoardInfo(cBoard);
         uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
         uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
 
         FileHeader cHeader(cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType());
 
         std::stringstream cBeBoardString;
-        cBeBoardString << "_Board" << std::setw (3) << std::setfill ('0') << cBeId;
+        cBeBoardString << "_Board" << std::setw(3) << std::setfill ('0') << cBeId;
         std::string cFilename = fRawFileName;
         if (fRawFileName.find (".raw") != std::string::npos)
           cFilename.insert(fRawFileName.find(".raw"), cBeBoardString.str());
 
-        FileHandler* cHandler = new FileHandler(cFilename, 'w', cHeader);
+        fFileHandler = new FileHandler(cFilename, 'w', cHeader);
 
-        fBeBoardInterface->SetFileHandler(cBoard, cHandler);
-        LOG (INFO) << BOLDBLUE << "Saving binary data into: " << BOLDYELLOW << cFilename << RESET;
+        fBeBoardInterface->SetFileHandler(cBoard, fFileHandler);
+        LOG (INFO) << GREEN << "Saving binary data into: " << BOLDYELLOW << cFilename << RESET;
       }
   }
 
@@ -392,7 +399,7 @@ namespace Ph2_System
 
   void SystemController::ConfigureCalibration() {}
 
-  void SystemController::Configure(std::string cHWFile, bool enableStream)
+  void SystemController::Configure (std::string cHWFile, bool enableStream)
   {
     ConfigureHardware(cHWFile, enableStream);
     ConfigureCalibration();
@@ -461,7 +468,7 @@ namespace Ph2_System
   double SystemController::findValueInSettings (const std::string name, double defaultValue) const
   {
     auto setting = fSettingsMap.find(name);
-    return ((setting != std::end(fSettingsMap)) ? setting->second : defaultValue);
+    return (setting != std::end(fSettingsMap) ? setting->second : defaultValue);
   }
 
 
@@ -478,9 +485,7 @@ namespace Ph2_System
     if (pType == BoardType::RD53)
     {
       fEventList.clear();
-      if (RD53FWInterface::decodedEvents.size() == 0) 
-        RD53FWInterface::DecodeEvents(pData, RD53FWInterface::decodedEvents);
-      
+      if (RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEvents(pData, RD53FWInterface::decodedEvents);
       RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
       for (auto i = 0u; i < RD53FWInterface::decodedEvents.size(); i++) fEventList.push_back(&RD53FWInterface::decodedEvents[i]);
     }
@@ -489,11 +494,21 @@ namespace Ph2_System
         for (auto &pevt : fEventList) delete pevt;
         fEventList.clear();
         fCurrentEvent = 0;
-        
+
         EventType fEventType = pBoard->getEventType();
         uint32_t fNFe = pBoard->getNFe();
         uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
         LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
+
+        if (fEventType == EventType::SSA)
+        {
+          fNevents   = static_cast<uint32_t>(pNevents);
+          uint32_t fEventSize = static_cast<uint32_t>((pData.size()) / fNevents);
+          uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+          fEventList.push_back(new D19cSSAEvent(pBoard, nSSA, fNFe, pData));
+          return;
+        }
+
         if (fEventType != EventType::ZS)
         {
             auto it = pData.begin();
@@ -507,13 +522,13 @@ namespace Ph2_System
                 bool cCondition2 = (pNevents > 0 ) ?  (cEnd <= pData.end() && cEventIndex < pNevents) : (cEnd <= pData.end());
                 if( cCondition2 )
                 {
-                  // retrieve chunck of data vector belonging to this event 
+                  // retrieve chunck of data vector belonging to this event
                   std::vector<uint32_t> cEvent(it, cEnd);
-                  // some useful debug information 
+                  // some useful debug information
                   LOG (DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " : " << std::bitset<32>(cEvent[0]) << " : " << +cEventSize <<  " 32 bit words..." << RESET;
                   // currently some problem with the dummy words..
                   // push back event into event list
-                  if( pBoard->getFrontEndType() == FrontEndType::CBC3 ) 
+                  if( pBoard->getFrontEndType() == FrontEndType::CBC3 )
                   {
                     fNevents   = static_cast<uint32_t>(pNevents);
                     fEventSize = static_cast<uint32_t>((pData.size()) / fNevents);
@@ -524,13 +539,13 @@ namespace Ph2_System
                   }
                   else if( pBoard->getFrontEndType() == FrontEndType::CIC )
                   {
-                    fNCbc = 8; 
+                    fNCbc = 8;
                     fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
                     fEventList.push_back ( new D19cCicEvent ( pBoard, fNCbc , fNFe, cEvent ) );
                   }
-                  else if(pBoard->getFrontEndType() == FrontEndType::CIC2 ) 
+                  else if(pBoard->getFrontEndType() == FrontEndType::CIC2 )
                   {
-                    fNCbc = 8; 
+                    fNCbc = 8;
                     fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
                     // check if the board is reading sparsified or unsparsified data 
                     fEventList.push_back ( new D19cCic2Event ( pBoard, fNCbc , fNFe, cEvent ) );
@@ -557,24 +572,24 @@ namespace Ph2_System
                 bool cCondition2 = (pNevents > 0 ) ?  (cEnd <= pData.end() && cEventIndex < pNevents) : (cEnd <= pData.end());
                 if( cCondition2 )
                 {
-                  // retrieve chunck of data vector belonging to this event 
+                  // retrieve chunck of data vector belonging to this event
                   std::vector<uint32_t> cEvent(it, cEnd);
-                  
-                  // some useful debug information 
-                  LOG (INFO) << BOLDGREEN << "Event" << +cEventIndex << " : " << std::bitset<32>(cEvent[0]) << " : " << +cEventSize <<  " 32 bit words." << RESET;  
+
+                  // some useful debug information
+                  LOG (INFO) << BOLDGREEN << "Event" << +cEventIndex << " : " << std::bitset<32>(cEvent[0]) << " : " << +cEventSize <<  " 32 bit words." << RESET;
                   // push back event into event list
                   LOG (DEBUG) << BOLDBLUE << "CIC events..." << RESET;
                   for( auto cWord : cEvent )
                   {
                     LOG (INFO) << BOLDBLUE << "\t.... " << std::bitset<32>(cWord) << RESET;
-                    
+
                   }
                   //fEventList.push_back ( new D19cCicEvent ( pBoard, fNCbc , fNFe, cEvent ) );
                   cEventIndex++;
                 }
                 it = cEnd;
             }
-          } 
+          }
           else
           {
             fNCbc = 0;
@@ -611,7 +626,7 @@ namespace Ph2_System
                 {
                     // get next event size
                     cZSWordIndex = 0;
-                    if (pType == BoardType::D19C) 
+                    if (pType == BoardType::D19C)
                         fZSEventSize = (0x0000FFFF & word);
                     if (fZSEventSize > pData.size() )
                     {

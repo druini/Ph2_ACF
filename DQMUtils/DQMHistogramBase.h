@@ -15,7 +15,6 @@
 #include <vector>
 #include <memory>
 
-#include "../HWDescription/RD53.h"
 #include "../System/SystemController.h"
 #include "../RootUtils/RootContainerFactory.h"
 #include "../RootUtils/CanvasContainer.h"
@@ -78,8 +77,8 @@ class DQMHistogramBase
   template <typename Hist>
     void bookImplementer (TFile* theOutputFile,
                           const DetectorContainer& theDetectorStructure,
-                          const CanvasContainer<Hist>& histContainer,
                           DetectorDataContainer& dataContainer,
+                          const CanvasContainer<Hist>& histContainer,
                           const char* XTitle = nullptr,
                           const char* YTitle = nullptr)
     {
@@ -93,14 +92,15 @@ class DQMHistogramBase
     void draw (DetectorDataContainer& HistDataContainer,
                const char* opt               = "",
                bool electronAxis             = false,
-               const char* electronAxisTitle = "")
+               const char* electronAxisTitle = "",
+               bool isNoise                  = false)
     {
       for (auto cBoard : HistDataContainer)
         for (auto cModule : *cBoard)
           for (auto cChip : *cModule)
             {
               TCanvas* canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
-              Hist* hist      = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
+              Hist*    hist   = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
 
               canvas->cd();
               hist->Draw(opt);
@@ -113,8 +113,8 @@ class DQMHistogramBase
                   myPad->SetTopMargin(0.16);
 
                   axes.emplace_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-                                               RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(1)),
-                                               RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())), 510, "-"));
+                                               RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(1),isNoise),
+                                               RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()),isNoise), 510, "-"));
                   axes.back()->SetTitle(electronAxisTitle);
                   axes.back()->SetTitleOffset(1.2);
                   axes.back()->SetTitleSize(0.035);
@@ -132,10 +132,10 @@ class DQMHistogramBase
             }
     }
 
-  double findValueInSettings (const Ph2_System::SettingsMap& settingsMap, const char* name, double defaultValue = 0)
+  double findValueInSettings (const Ph2_System::SettingsMap& settingsMap, const std::string name, double defaultValue = 0.) const
   {
     auto setting = settingsMap.find(name);
-    return ((setting != std::end(settingsMap)) ? setting->second : defaultValue);
+    return (setting != std::end(settingsMap) ? setting->second : defaultValue);
   }
 };
 

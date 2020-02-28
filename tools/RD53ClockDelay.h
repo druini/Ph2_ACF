@@ -29,16 +29,25 @@
 class ClockDelay : public PixelAlive
 {
  public:
-  void Start (int currentRun = -1) override;
-  void Stop  ()                    override;
-  void ConfigureCalibration ()     override;
+  void Start (int currentRun)  override;
+  void Stop  ()                override;
+  void ConfigureCalibration () override;
 
   void   sendData            ();
-  void   initialize          (const std::string fileRes_, const std::string fileReg_, int currentRun = -1);
+  void   localConfigure      (const std::string fileRes_, int currentRun);
+  void   initializeFiles     (const std::string fileRes_, int currentRun);
   void   run                 ();
-  void   draw                ();
+  void   draw                (int currentRun);
   void   analyze             ();
-  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue + 1) + la.getNumberIterations(); }
+  size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue); }
+
+
+  // ########
+  // # ROOT #
+  // ########
+#ifdef __USE_ROOT__
+  ClockDelayHistograms* histos;
+#endif
 
 
  private:
@@ -57,24 +66,14 @@ class ClockDelay : public PixelAlive
   DetectorDataContainer theOccContainer;
   DetectorDataContainer theClockDelayContainer;
 
-  void initHisto       ();
-  void fillHisto       ();
-  void display         ();
-  void scanDac         (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
-  void chipErrorReport ();
-
-
-  // ########
-  // # ROOT #
-  // ########
-#ifdef __USE_ROOT__
-  ClockDelayHistograms histos;
-#endif
+  void fillHisto         ();
+  void scanDac           (const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
+  void chipErrorReport   ();
+  void saveChipRegisters (int currentRun);
 
 
  protected:
   std::string fileRes;
-  std::string fileReg;
   size_t shiftData;
   size_t saveData;
   size_t maxDelay;

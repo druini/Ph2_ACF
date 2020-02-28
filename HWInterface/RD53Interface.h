@@ -20,6 +20,7 @@
 // #############
 #define VCALSLEEP 50000 // [microseconds]
 #define NPIXCMD     100 // Number of possible pixel commands to stack
+#define MONITORSLEEP 10 // [seconds]
 
 
 namespace Ph2_HwInterface
@@ -39,16 +40,44 @@ namespace Ph2_HwInterface
     bool     MaskAllChannels                   (Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true)                                              override;
     bool     maskChannelsAndSetInjectionSchema (Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
 
+
   private:
     std::vector<std::pair<uint16_t,uint16_t>> ReadRD53Reg (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode);
     void WriteRD53Mask  (Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
-    void InitRD53Aurora (Ph2_HwDescription::Chip* pChip);
+    void InitRD53Aurora (Ph2_HwDescription::Chip* pChip, int nActiveLanes = 1);
 
     template <typename T>
       void sendCommand (Ph2_HwDescription::Chip* pChip, const T& cmd) { static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getFeId()); }
 
     template <typename T, size_t N>
       static size_t arraySize (const T(&)[N]) { return N; }
+
+
+    // ###########################
+    // # Dedicated to minitoring #
+    // ###########################
+  public:
+    template<typename T, typename... Ts>
+      void ReadChipMonitor (Ph2_HwDescription::Chip* pChip, const T& observableName, const Ts&... observableNames)
+    {
+      ReadChipMonitor (pChip, observableName);
+      ReadChipMonitor (pChip, observableNames...);
+    }
+
+    template<typename T>
+      float ReadChipMonitor (Ph2_HwDescription::Chip* pChip, const T& observableName) { return RD53Interface::ReadChipADC(pChip, observableName); }
+
+    float ReadHybridTemperature (Ph2_HwDescription::Chip* pChip);
+    float ReadHybridVoltage     (Ph2_HwDescription::Chip* pChip);
+
+
+  private:
+    float ReadChipADC           (Ph2_HwDescription::Chip* pChip, const char* observableName, float ADCoffset = 0.0063, float VrefADC = 0.839, float resistorI2V = 10000);
+
+    uint32_t measureADC         (Ph2_HwDescription::Chip* pChip, uint32_t data);
+    float    measureTemperature (Ph2_HwDescription::Chip* pChip, uint32_t data, float idealityFactor = 1.225);
+
+    float convertADC2VorI       (Ph2_HwDescription::Chip* pChip, uint32_t value, bool isCurrentNotVoltage = false, float ADCoffset = 0.0063, float VrefADC = 0.839, float resistorI2V = 10000);
   };
 }
 

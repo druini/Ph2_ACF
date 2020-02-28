@@ -34,7 +34,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
             #and link against the libs
             set(LIBS ${LIBS} ${ZMQ_LIBRARIES} ${PH2_USBINSTLIB_LIBRARIES})
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ZMQ__ -D__USBINST__")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{ZmqFlag} $ENV{USBINSTFlag}")
         endif()
     endif()
 
@@ -44,7 +44,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         include_directories(${UHAL_AMC13_INCLUDE_PREFIX})
         link_directories(${UHAL_AMC13_LIB_PREFIX})
         set(LIBS ${LIBS} cactus_amc13_amc13 Ph2_Amc13)
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__AMC13__")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{Amc13Flag}")
     endif()
 
     #check for AntennaDriver
@@ -52,7 +52,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         include_directories(${PH2_ANTENNA_INCLUDE_DIRS})
         link_directories(${PH2_ANTENNA_LIBRARY_DIRS})
         set(LIBS ${LIBS} ${PH2_ANTENNA_LIBRARIES} usb)
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ANTENNA__")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
     endif()
 
     #boost also needs to be linked
@@ -61,7 +61,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time -lboost_iostreams")
     endif()
 
-    #last but not least, find root and link against it
+    #find root and link against it
     if(${ROOT_FOUND})
         include_directories(${ROOT_INCLUDE_DIRS})
         set(LIBS ${LIBS} ${ROOT_LIBRARIES})
@@ -72,7 +72,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         #check for THttpServer
         if(${ROOT_HAS_HTTP})
             set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HTTP__")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
         endif()
     endif()
     
@@ -90,6 +90,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(USE_EUDAQ)
     message("#### End ####")
 
+    #build eudaq producer
+    if (USE_EUDAQ)
+        set(LIBS ${LIBS} ${EUDAQ_LIB})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{EuDaqFlag}")
+    endif(USE_EUDAQ)
+
     ####################################
     ## EXECUTABLES
     ####################################
@@ -99,22 +105,25 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #to remove binaries
     if(CompileForShep AND CompileForHerd)
         list(REMOVE_ITEM BINARIES *.cc)
-        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc CMSIT_miniDAQ.cc, fpgaconfig.cc)
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc CMSITminiDAQ.cc, fpgaconfig.cc)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     else()
         list(REMOVE_ITEM BINARIES supervisor.cc)
-     endif()
+    endif()
+
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
-    foreach( sourcefile ${BINARIES} )
+
+    foreach(sourcefile ${BINARIES})
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
         add_executable(${name} ${sourcefile})
-        if( ("${name}" STREQUAL "miniDAQ") OR ("${name}" STREQUAL "miniSLinkDQM") )
+        if (("${name}" STREQUAL "miniDAQ") OR ("${name}" STREQUAL "miniSLinkDQM"))
           target_link_libraries(${name} ${LIBS} Ph2_RootUtils RootWeb)
         else()
           target_link_libraries(${name} ${LIBS})
         endif()
-        endforeach(sourcefile ${BINARIES})
+    endforeach(sourcefile ${BINARIES})
+
     message("--     ${BoldCyan}#### End ####${Reset}")
 
     MESSAGE(STATUS " ") 

@@ -12,8 +12,6 @@
 
 #include "FileHeader.h"
 
-//#include <cstring>
-//#include <iostream>
 #include <unistd.h>
 #include <vector>
 #include <mutex>
@@ -22,6 +20,12 @@
 #include <thread>
 
 #include "../Utils/easylogging++.h"
+
+
+// #############
+// # CONSTANTS #
+// #############
+#define DESTROYSLEEP 1000 // [microseconds]
 
 
 class FileHandler

@@ -27,7 +27,6 @@ namespace Ph2_System {
       {
         LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xml!" ;
       }
-
   }
 
   void FileParser::parseSettings ( const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
@@ -165,16 +164,17 @@ namespace Ph2_System {
     if (cEventTypeAttribute == nullptr)
       {
         //the HWDescription object does not have and EventType node, so assume EventType::VR
-        cBeBoard->setEventType (EventType::VR);
-        cEventTypeString = "VR";
-      }
-    else
-      {
-        cEventTypeString = cEventTypeAttribute.value();
-
-        if (cEventTypeString == "ZS") cBeBoard->setEventType (EventType::ZS);
-        else cBeBoard->setEventType (EventType::VR);
-      }
+            cBeBoard->setEventType (EventType::VR);
+            cEventTypeString = "VR";
+        }
+        else
+        {
+            cEventTypeString = cEventTypeAttribute.value();
+            if (cEventTypeString == "ZS") cBeBoard->setEventType (EventType::ZS);
+            else if (cEventTypeString == "SSA") cBeBoard->setEventType (EventType::SSA);
+            else if (cEventTypeString == "MPA") cBeBoard->setEventType (EventType::MPA);
+            else cBeBoard->setEventType (EventType::VR);
+        }
 
         os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDCYAN << ", EventType: " << BOLDYELLOW << cEventTypeString << RESET << std:: endl;
 
@@ -197,7 +197,7 @@ namespace Ph2_System {
                         {
                             static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setGBTxPhase( convertAnyInt (cAttribute.value()) );
                             os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << " phase is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
-      }
+                        }
                     }
                 }
             }
@@ -354,6 +354,7 @@ namespace Ph2_System {
                     cCbcId = convertAnyInt (cNode.attribute ("CbcId").value() );
 
                     //ok, now I need to loop th CBCs to find page & address and the initial value
+
                     for (auto cFe : pBoard->fModuleVector )
                       {
                         if (cFe->getFeId() != cFeId) continue;
@@ -387,7 +388,29 @@ namespace Ph2_System {
     pBoard->addConditionDataSet (cSet);
   }
 
-    //CIC
+    void FileParser::parseSSA (pugi::xml_node pModuleNode, Module* pModule, std::string cFilePrefix)
+    { // Get ID of SSA then add to the Module!
+        uint32_t cChipId = pModuleNode.attribute ( "Id" ).as_int();
+        std::string cFileName;
+            if ( !cFilePrefix.empty() )
+            {
+                if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
+                    cFilePrefix.append ("/");
+
+                cFileName = cFilePrefix + expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
+            }
+            else cFileName = expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
+        ReadoutChip* cSSA = pModule->addChipContainer(cChipId, new SSA ( pModule->getBeId(), pModule->getFMCId(), pModule->getFeId(), cChipId, 0, cFileName ));
+            pModule->addReadoutChip (cSSA);
+            cSSA->setNumberOfChannels(120);
+        this->parseSSASettings (pModuleNode, cSSA);
+    }
+
+    void FileParser::parseSSASettings (pugi::xml_node pModuleNode, ReadoutChip* pSSA)
+    {
+        FrontEndType cType = pSSA->getFrontEndType();
+    }
+
   void FileParser::parseModuleContainer (pugi::xml_node pModuleNode, BeBoard* pBoard, std::ostream& os )
   {
 
@@ -421,7 +444,7 @@ namespace Ph2_System {
           {
             std::string cName = cChild.name();
             std::string cNextName = cChild.next_sibling().name();
-                if ( cName.find("CBC") != std::string::npos || cName.find("RD53") != std::string::npos || cName.find("CIC") != std::string::npos) 
+            if ( cName.find("CBC") != std::string::npos || cName.find("RD53") != std::string::npos || cName.find("CIC") != std::string::npos || cName.find("SSA") != std::string::npos) 
               {
                     if( cName.find("_Files") != std::string::npos ) 
                   {
@@ -524,63 +547,10 @@ namespace Ph2_System {
                                 }
                             }
                       }
-                        // else if( cName == "CIC2")
-                        // {
-                        //     cWithCIC=true;
-                        //     pBoard->setFrontEndType( FrontEndType::CIC2);
-                        //     if ( !cConfigFileDirectory.empty() )
-                        //     {
-                        //         if (cConfigFileDirectory.at (cConfigFileDirectory.length() - 1) != '/')
-                        //             cConfigFileDirectory.append ("/");
-
-                        //         cFileName = cConfigFileDirectory + cFileName;
-                        //     }
-                        //     LOG (INFO) << BOLDBLUE << "Loading configuration for CIC2 from " << cFileName << RESET;
-                        //     os << BOLDCYAN << "|" << "  " << "|" << "   " << "|" << "----" << cName << "  "
-                        //     << "Id" << cChipId << " , File: " << cFileName << RESET << std::endl;
-                        //     Cic* cCic = new Cic ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId , cFileName );
-                        //     FrontEndType cType = FrontEndType::CIC2;
-                        //     cCic->setFrontEndType(cType);
-                        //     os << GREEN << "|\t|\t|\t|----FrontEndType: ";
-                        //     os << GREEN << "|\t|\t|\t|----FrontEndType: ";
-                        //     if (cType == FrontEndType::CIC2)
-                        //         os << RED << "CIC2";
-                        //     os << RESET << std::endl; 
-                        //     static_cast<OuterTrackerModule*>(cModule)->addCic (cCic);
-                            
-                        //     //now global settings
-                        //     pugi::xml_node cGlobalSettingsNode = pModuleNode.child ("Global");
-                        //     for (pugi::xml_node cChildGlobal: cGlobalSettingsNode.children())
-                        //     {
-                        //         std::string cNameGlobal = cChildGlobal.name();
-                        //         if ( cNameGlobal.find("CIC2") != std::string::npos )
-                        //         {
-                        //             LOG (INFO) << BOLDBLUE << " Global settings " << cNameGlobal << RESET;
-                        //             std::string cRegName = "FE_CONFIG";
-                        //             auto cRegValue = cCic->getReg ( cRegName );
-                                    
-                        //             std::vector<std::string> cAttributes{"clockFrequency", "enableBend","enableLastLine", "enableSparsification"};
-                        //             uint8_t cBitPosition = 1 ; 
-                        //             uint8_t cValue = 0;
-                        //             for( auto cAttribute: cAttributes) 
-                        //             {
-                        //                 uint16_t cValueFromFile = cChildGlobal.attribute(cAttribute.c_str()).as_int();
-                        //                 if(cBitPosition == 1 ) 
-                        //                     cValueFromFile = (cValueFromFile == 320) ? 0 : 1 ; 
-                        //                 cValue += cValueFromFile << cBitPosition ;
-                        //                 LOG (INFO) << BOLDBLUE << "\t\t... " << cAttribute.c_str() << " set to " << +cValueFromFile << RESET;
-
-                        //                 if( cAttribute == "enableSparsification" && cValueFromFile == 1 )
-                        //                     pBoard->setEventType (EventType::ZS);
-                        //                 cBitPosition++;
-                        //             }
-                        //             uint8_t cNewValue = ( cRegValue & 0x23 ) | cValue ; 
-                        //             LOG (INFO) << BOLDBLUE << "Want to set control bits to " << std::bitset<6>(cValue) << " -- complete control register to " << std::bitset<6>(cNewValue) << RESET;
-                        //             os << GREEN << "|\t|\t|\t|---- Setting " << cRegName << " to  " << std::bitset<6>(cNewValue) << "\n" << RESET;
-                        //             cCic->setReg ( cRegName, cNewValue );
-                        //         }
-                        //     }
-                        // }
+                      else if( cName == "SSA" ) 
+                        {
+                            this->parseSSA (cChild, cModule, cConfigFileDirectory);
+                        }
                   }
               }
           }

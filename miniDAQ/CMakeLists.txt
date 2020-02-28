@@ -34,7 +34,7 @@ if(ZMQ_FOUND)
 
         #and link against the libs
         set(LIBS ${LIBS} ${ZMQ_LIBRARIES} ${PH2_USBINSTLIB_LIBRARIES})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ZMQ__ -D__USBINST__")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{ZmqFlag} $ENV{USBINSTFlag}")
     endif()
 endif()
 
@@ -44,7 +44,7 @@ if(${CACTUS_AMC13_FOUND})
     include_directories(${UHAL_AMC13_INCLUDE_PREFIX})
     link_directories(${UHAL_AMC13_LIB_PREFIX})
     set(LIBS ${LIBS} cactus_amc13_amc13 Ph2_Amc13)
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__AMC13__")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{Amc13Flag}")
 endif()
 
 #check for AntennaDriver
@@ -52,7 +52,7 @@ if(${PH2_ANTENNA_FOUND})
     include_directories(${PH2_ANTENNA_INCLUDE_DIRS})
     link_directories(${PH2_ANTENNA_LIBRARY_DIRS})
     set(LIBS ${LIBS} usb ${PH2_ANTENNA_LIBRARIES})
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__ANTENNA__")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
 endif()
 
 #boost also needs to be linked
@@ -65,9 +65,9 @@ endif()
 ## EXECUTABLES
 ####################################
 
-# #CMSIT_miniDAQ
-# add_executable(CMSIT_miniDAQ CMSIT_miniDAQ.cc)
-# target_link_libraries(CMSIT_miniDAQ ${LIBS} Ph2_Tools RootWeb)
+# #CMSITminiDAQ
+# add_executable(CMSITminiDAQ CMSITminiDAQ.cc)
+# target_link_libraries(CMSITminiDAQ ${LIBS} Ph2_Tools RootWeb)
 
 # #miniDAQ
 # add_executable(miniDAQ miniDAQ.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.h ../DQMUtils/DQMEvent.cc ../DQMUtils/SLinkDQMHistogrammer.cc ../DQMUtils/SLinkDQMHistogrammer.cc)

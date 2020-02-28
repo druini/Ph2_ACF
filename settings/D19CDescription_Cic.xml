@@ -10,7 +10,8 @@
         <GBT Id="0" phaseTap="7" enable="1"/>
     </GBT_Links>
     
-    <Module FeId="0" FMCId="0" ModuleId="0" Status="1" LinkId="0">
+    <!-- RHS --> 
+    <!-- <Module FeId="0" FMCId="0" ModuleId="0" Status="1" LinkId="0">
         <Global>
             <Settings threshold="500" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -32,8 +33,9 @@
 
         <CIC_Files path="./settings/CicFiles/" />
         <CIC Id="8" configfile="CIC_default.txt" />
-    </Module>
+    </Module> -->
 
+    <!-- LHS -->
     <Module FeId="1" FMCId="0" ModuleId="0" Status="1" LinkId="0">
         <Global>
             <Settings threshold="500" latency="19"/>

@@ -60,15 +60,17 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     
     set(CompileForShep "$ENV{CompileForShep}")
     set(CompileForHerd "$ENV{CompileForHerd}")
-    if( (NOT CompileForShep) AND (NOT CompileForHerd) )
-    set(NoDataShipping TRUE)
+    if ((NOT CompileForShep) AND (NOT CompileForHerd))
+        set(NoDataShipping true)
     else()
-    set(NoDataShipping FALSE)
+        set(NoDataShipping false)
     endif()
-    
-    MESSAGE(STATUS "CompileForShep = ${CompileForShep}")
-    MESSAGE(STATUS "CompileForHerd = ${CompileForHerd}")
-    MESSAGE(STATUS "NoDataShipping = ${NoDataShipping}")
+
+    MESSAGE(STATUS "")
+    MESSAGE(STATUS "${BoldYellow}COMPILATION FLAGS:${Reset}")
+    MESSAGE(STATUS "     CompileForShep = ${BoldRed}${CompileForShep}${Reset}")
+    MESSAGE(STATUS "     CompileForHerd = ${BoldRed}${CompileForHerd}${Reset}")
+    MESSAGE(STATUS "     NoDataShipping = ${BoldRed}${NoDataShipping}${Reset}")
 
     # If it's a recent gcc compiler, then let's add some
     # compiler options to avoid warnings promoted to errors
@@ -89,11 +91,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_8_NOERROR_FLAGS}")
       endif()
     endif ()
-    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -std=c++1y -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread  -Wcpp -fPIC ${CMAKE_CXX_FLAGS}")
+    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread  -Wcpp -fPIC ${CMAKE_CXX_FLAGS}")
     if(NoDataShipping)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     endif()
-
 
 
     #check for external dependences
@@ -118,21 +119,17 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     find_package(CACTUS)      #========================================================
     if(${CACTUS_AMC13_FOUND})
         message(STATUS "    enabling AMC13 component")
-    else(${CACTUS_AMC13_FOUND})
-        message(STATUS "    continuing without AMC13 components")
     endif(${CACTUS_AMC13_FOUND})
 
     find_package(PH2_ANTENNA) #========================================================
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    building the Antenna components")
-    else(PH2_ANTENNA_FOUND)
-        message(STATUS "    continuing without Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
     #ZeroMQ optional
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
-        #message(STATUS "Found ZMQ Library - checking for Ph2_UsbInstLib")
+        #message(STATUS "     Found ZMQ Library - checking for Ph2_UsbInstLib")
 
         #libPh2_UsbInstLib
         find_package(PH2_USBINSTLIB)
@@ -169,7 +166,16 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
 
     find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
-    #find_package(Boost 1.53 REQUIRED filesystem system-mt )
+
+    #EUDAQ
+    if ($ENV{CompileWithEUDAQ})
+        set(USE_EUDAQ ON)
+        include_directories($ENV{EUDAQ}/include $ENV{EUDAQ}/user/tlu/module/src)
+        set(EUDAQ_LIB -L$ENV{EUDAQ}/lib eudaq_core)
+        message(STATUS "    EUDAQ variable is definedd. EUDAQ directory: $ENV{EUDAQ}")
+    else($ENV{CompileWithEUDAQ})
+        message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
+    endif($ENV{CompileWithEUDAQ})
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
@@ -244,4 +250,3 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS " ") 
 
 endif()
-

@@ -199,6 +199,8 @@ HighGain_LIN              0xA0          0b1                     0b1             
 INJECTION_SELECT_DELAY    0xA1          0b0000                  0b0000                              4
 CLK_DATA_DELAY_CLK_DELAY  0xA2          0b0000                  0b0000                              4
 CLK_DATA_DELAY_DATA_DELAY 0xA3          0b0000                  0b0000                              4
+I_MONITOR_SELECT          0xA4          0b0000                  0b0000                              6
+V_MONITOR_SELECT          0xA5          0b0000                  0b0000                              7
 
 *-------------------------------------------------------------------------------------------------------
 PIXELCONFIGURATION

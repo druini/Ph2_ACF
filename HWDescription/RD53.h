@@ -14,6 +14,7 @@
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/bit_packing.h"
+#include "../Utils/RD53Shared.h"
 
 #include <iomanip>
 
@@ -21,7 +22,6 @@
 // #############
 // # CONSTANTS #
 // #############
-#define NAMESEARCHinPATH "CMSIT" // Search for this name in config file name for manipulation
 #define NROWS 192 // Total number of rows
 #define NCOLS 400 // Total number of columns
 
@@ -90,15 +90,15 @@ namespace RD53EvtEncoder
 // #####################################################################
 namespace RD53chargeConverter
 {
-  constexpr float par0   =    0.9; // Vref (V)
+  constexpr float par0   =    0.9; // Vref [V]
   constexpr float par1   = 4096.0; // VCal total range
-  constexpr float cap    =    8.5; // (fF)
-  constexpr float ele    =    1.6; // (e-19)
-  constexpr float offset =   64;   // Due to VCal_High vs VCal_Med offset difference (e-)
+  constexpr float cap    =    8.5; // [fF]
+  constexpr float ele    =    1.6; // [e-19]
+  constexpr float offset =   64;   // Due to VCal_High vs VCal_Med offset difference [e-]
 
-  constexpr float VCAl2Charge (float VCal)
+  constexpr float VCAl2Charge (float VCal, bool isNoise = false)
   {
-    return (par0/par1) * VCal / ele * cap * 1e4 + offset;
+    return (par0/par1) * VCal / ele * cap * 1e4 + (isNoise == false ? offset : 0);
   }
 
   constexpr float Charge2VCal (float Charge)
@@ -133,7 +133,7 @@ namespace Ph2_HwDescription
     bool     isDACLocal          (const std::string& regName)   override;
     uint8_t  getNumberOfBits     (const std::string& regName)   override;
 
-    std::string getFileName      (const std::string& fName2Add) { return this->composeFileName(configFileName,fName2Add); }
+    std::string getFileName      (const std::string& fName2Add) { return RD53Shared::composeFileName(configFileName,fName2Add); }
     std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
     std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
 
@@ -200,25 +200,6 @@ namespace Ph2_HwDescription
       uint8_t cal_aux_delay;
     };
 
-    static constexpr size_t setBits (size_t nBit2Set) { return (1 << nBit2Set) - 1; }
-
-    static auto countBitsOne (size_t num)
-    {
-      auto count = 0u;
-      while (num != 0)
-        {
-          count += (num & 1);
-          num >>= 1;
-        }
-      return count;
-    }
-
-    static std::string composeFileName (const std::string& configFileName, const std::string& fName2Add)
-    {
-      std::string output = configFileName;
-      output.insert(output.find(NAMESEARCHinPATH),fName2Add);
-      return output;
-    }
 
   private:
     std::vector<perPixelData> fPixelsMask;
@@ -235,7 +216,7 @@ namespace Ph2_HwDescription
 // ###############################
 namespace RD53Cmd
 {
-  // Maps 5-bit to 8-bit fields
+  // Map 5-bit to 8-bit fields
   constexpr uint8_t map5to8bit[] =
     {
       0x6A, // 00: 0b01101010,
