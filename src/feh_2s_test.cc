@@ -294,17 +294,41 @@ int main ( int argc, char* argv[] )
     if( cCheckData )
     {
         t.start();
-        // now create a PedestalEqualization object
-        DataChecker cDataChecker;
-        cDataChecker.Inherit (&cTool);
-        cDataChecker.Initialise ( );
-        uint8_t cSeed=1;
-        uint8_t cBendCode=0;
-        cDataChecker.DataCheck({1}, {cSeed} , {cBendCode});
+        for( auto& cBoard : cTool.fBoardVector )
+        {
+            for (auto& cFe : cBoard->fModuleVector)
+            {
+                // matching 
+                for (auto& cChip : cFe->fReadoutChipVector) 
+                {
+                    if( cChip->getChipId()%2 == 0 )
+                        static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
+                    else
+                        static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
+                }
+            }
+            cTool.ReadNEvents( cBoard, 10 );
+            const std::vector<Event*>& cEvents = cTool.GetEvents ( cBoard );
+            uint32_t cN=0;
+            for ( auto& cEvent : cEvents )
+            {
+                LOG (INFO) << ">>> Event #" << cN++ ;
+                outp.str ("");
+                outp << *cEvent;
+                LOG (INFO) << outp.str();
+            }
+        }
+        // // now create a PedestalEqualization object
+        // DataChecker cDataChecker;
+        // cDataChecker.Inherit (&cTool);
+        // cDataChecker.Initialise ( );
+        // uint8_t cSeed=1;
+        // uint8_t cBendCode=0;
+        // cDataChecker.DataCheck({1}, {cSeed} , {cBendCode});
 
-        cDataChecker.writeObjects();
-        cDataChecker.dumpConfigFiles();
-        cDataChecker.resetPointers();
+        // cDataChecker.writeObjects();
+        // cDataChecker.dumpConfigFiles();
+        // cDataChecker.resetPointers();
         t.show ( "Time to check data of the front-ends on the system: " );
     }
 

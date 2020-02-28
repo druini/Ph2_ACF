@@ -910,185 +910,185 @@ namespace Ph2_HwInterface
         LOG (INFO) << BOLDBLUE << "I2C register is " << +cValueI2C << RESET;
     }
 
-//disconnect setup with multiplexing backplane
-void D19cFWInterface::DisconnectMultiplexingSetup()
-{
-    bool L12Power = (ReadReg("sysreg.fmc_pwr.l12_pwr_en") == 1);
-    bool L8Power = (ReadReg("sysreg.fmc_pwr.l8_pwr_en") == 1);
-    bool PGC2M = (ReadReg("sysreg.fmc_pwr.pg_c2m") == 1);
-    if (!L12Power) {LOG(ERROR) << RED << "Power on L12 is not enabled" << RESET; throw std::runtime_error("FC7 power is not enabled!");}
-    if (!L8Power) {LOG(ERROR) << RED << "Power on L8 is not enabled" << RESET; throw std::runtime_error("FC7 power is not enabled!");}
-    if (!PGC2M) {LOG(ERROR) << RED << "PG C2M is not enabled" << RESET; throw std::runtime_error("FC7 power is not enabled!");}
+    //disconnect setup with multiplexing backplane
+    void D19cFWInterface::DisconnectMultiplexingSetup()
+    {
+        bool L12Power = (ReadReg("sysreg.fmc_pwr.l12_pwr_en") == 1);
+        bool L8Power = (ReadReg("sysreg.fmc_pwr.l8_pwr_en") == 1);
+        bool PGC2M = (ReadReg("sysreg.fmc_pwr.pg_c2m") == 1);
+        if (!L12Power) {LOG(ERROR) << RED << "Power on L12 is not enabled" << RESET; throw std::runtime_error("FC7 power is not enabled!");}
+        if (!L8Power) {LOG(ERROR) << RED << "Power on L8 is not enabled" << RESET; throw std::runtime_error("FC7 power is not enabled!");}
+        if (!PGC2M) {LOG(ERROR) << RED << "PG C2M is not enabled" << RESET; throw std::runtime_error("FC7 power is not enabled!");}
 
-    bool BackplanePG = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplane_powergood") == 1);
-    bool CardPG = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.card_powergood") == 1);
-    bool SystemPowered = false;
-    if (BackplanePG && CardPG) 
-    {
-        WriteReg ("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_disconnect", 0x1);
-        SystemPowered = true;
-            }
-    else 
-    {
-        LOG (INFO) << GREEN << "============================" << RESET;
-        LOG (INFO) << BOLDGREEN << "Setup is disconnected" << RESET;
-    }
-    if (SystemPowered) 
-    {
-        bool CardsDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.cards_disconnected") == 1);
-        bool c=false;
-        bool BackplanesDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplanes_disconnected") == 1);
-        bool b=false;
-        LOG (INFO) << GREEN << "============================" << RESET;
-        LOG (INFO) << BOLDGREEN << "Disconnecting setup" << RESET;
-
-        while (!CardsDisconnected) 
+        bool BackplanePG = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplane_powergood") == 1);
+        bool CardPG = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.card_powergood") == 1);
+        bool SystemPowered = false;
+        if (BackplanePG && CardPG) 
         {
-            if (c==false) LOG(INFO) << "Disconnecting cards";
-            c=true;
-            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-            CardsDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.cards_disconnected") == 1);
-        }
-
-        while (!BackplanesDisconnected) 
+            WriteReg ("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_disconnect", 0x1);
+            SystemPowered = true;
+                }
+        else 
         {
-            if (b==false) LOG(INFO) << "Disconnecting backplanes";
-            b=true;
-            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-            BackplanesDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplanes_disconnected") == 1);
-        }
-
-        if (CardsDisconnected && BackplanesDisconnected) 
-            {
             LOG (INFO) << GREEN << "============================" << RESET;
             LOG (INFO) << BOLDGREEN << "Setup is disconnected" << RESET;
-            }
-    }
-}
-
-//scan setup with multiplexing backplane
-uint32_t D19cFWInterface::ScanMultiplexingSetup(uint8_t pWait_ms)
-{
-    int AvailableBackplanesCards = 0;
-    this-> DisconnectMultiplexingSetup();
-    WriteReg ("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.backplane_num", 0xF);
-    WriteReg ("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.card_num", 0xF);
-    std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
-    bool ConfigurationRequired = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.configuration_required") == 1);
-    bool SystemNotConfigured=false;
-    if (ConfigurationRequired) 
-    {
-        SystemNotConfigured=true;
-        WriteReg ("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_configure", 0x1);
-    }
-
-    if (SystemNotConfigured==true) 
+        }
+        if (SystemPowered) 
         {
-        bool SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
-        bool s=false;
-        LOG (INFO) << GREEN << "============================" << RESET;
-        LOG (INFO) << BOLDGREEN << "Scan setup" << RESET;
-        while (!SetupScanned) 
-            {
-            if (s==false) LOG(INFO) << "Scanning setup";
-            s=true;
-            std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
-            SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
-            }
-            
-        if (SetupScanned) 
-            {
+            bool CardsDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.cards_disconnected") == 1);
+            bool c=false;
+            bool BackplanesDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplanes_disconnected") == 1);
+            bool b=false;
             LOG (INFO) << GREEN << "============================" << RESET;
-            LOG (INFO) << BOLDGREEN << "Setup is scanned" << RESET;
-            AvailableBackplanesCards = ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.available_backplanes_cards");
-        }
-    }
-    return AvailableBackplanesCards;
-}
- 
-//configure setup with multiplexing backplane
-uint32_t D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardNum)
-{
-    uint32_t cAvailableCards=0;
-    this-> DisconnectMultiplexingSetup();
-    WriteReg ("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.backplane_num", 0xF & ~(1<<(3-BackplaneNum)));
-    WriteReg ("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.card_num", 0xF & ~(1<<(3-CardNum)));
-    std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-    bool ConfigurationRequired = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.configuration_required") == 1);
-    bool SystemNotConfigured=false;
-    if (ConfigurationRequired) 
-    {
-        SystemNotConfigured=true;
-        WriteReg ("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_configure", 0x1);
-        cAvailableCards = ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.available_backplanes_cards");
-                }
+            LOG (INFO) << BOLDGREEN << "Disconnecting setup" << RESET;
 
-    if (SystemNotConfigured==true) 
-    {
-        bool SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
-        bool s=false;
-        LOG (INFO) << GREEN << "============================" << RESET;
-        LOG (INFO) << BOLDGREEN << "Scan setup" << RESET;
-        while (!SetupScanned) 
-        {
-            if (s==false) LOG(INFO) << "Scanning setup";
-            s=true;
-            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-            SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
-        }
-
-        bool BackplaneValid = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplane_valid") == 1);
-        bool CardValid = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.card_valid") == 1);
-        if (SetupScanned) 
-        {
-            LOG (INFO) << GREEN << "============================" << RESET;
-            LOG (INFO) << BOLDGREEN << "Setup is scanned" << RESET;
-            if (BackplaneValid) 
+            while (!CardsDisconnected) 
             {
-                LOG(INFO) << BLUE <<"Backplane configuration VALID" << RESET;
-            }
-                else
-            {
-                LOG(ERROR) << RED << "Backplane configuration is NOT VALID" << RESET;
-                exit(0);
-            }
-            if (CardValid)
-            { 
-                LOG(INFO) << BLUE <<"Card configuration VALID" << RESET;
-            }
-            else
-            { 
-                LOG(ERROR) << RED << "Card configuration is NOT VALID" << RESET;
-                exit(0);
-        }
-            //LOG (INFO) << BLUE << AvailableBackplanesCards << RESET;
-            //printAvailableBackplanesCards(parseAvailableBackplanesCards(AvailableBackplanesCards,false));
-        }
-
-        bool SetupConfigured = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_configured") == 1);
-        bool c=false;
-        if (BackplaneValid && CardValid) 
-        {
-            LOG (INFO) << GREEN << "============================" << RESET;
-            LOG (INFO) << BOLDGREEN << "Configure setup" << RESET;
-            while (!SetupConfigured) 
-            {
-                if (c==false) LOG(INFO) << "Configuring setup";
+                if (c==false) LOG(INFO) << "Disconnecting cards";
                 c=true;
                 std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                SetupConfigured = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_configured") == 1);
+                CardsDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.cards_disconnected") == 1);
             }
 
-            if (SetupConfigured) 
+            while (!BackplanesDisconnected) 
+            {
+                if (b==false) LOG(INFO) << "Disconnecting backplanes";
+                b=true;
+                std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+                BackplanesDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplanes_disconnected") == 1);
+            }
+
+            if (CardsDisconnected && BackplanesDisconnected) 
+                {
+                LOG (INFO) << GREEN << "============================" << RESET;
+                LOG (INFO) << BOLDGREEN << "Setup is disconnected" << RESET;
+                }
+        }
+    }
+
+    //scan setup with multiplexing backplane
+    uint32_t D19cFWInterface::ScanMultiplexingSetup(uint8_t pWait_ms)
+    {
+        int AvailableBackplanesCards = 0;
+        this-> DisconnectMultiplexingSetup();
+        WriteReg ("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.backplane_num", 0xF);
+        WriteReg ("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.card_num", 0xF);
+        std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
+        bool ConfigurationRequired = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.configuration_required") == 1);
+        bool SystemNotConfigured=false;
+        if (ConfigurationRequired) 
+        {
+            SystemNotConfigured=true;
+            WriteReg ("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_configure", 0x1);
+        }
+
+        if (SystemNotConfigured==true) 
+            {
+            bool SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
+            bool s=false;
+            LOG (INFO) << GREEN << "============================" << RESET;
+            LOG (INFO) << BOLDGREEN << "Scan setup" << RESET;
+            while (!SetupScanned) 
+                {
+                if (s==false) LOG(INFO) << "Scanning setup";
+                s=true;
+                std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
+                SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
+                }
+                
+            if (SetupScanned) 
+                {
+                LOG (INFO) << GREEN << "============================" << RESET;
+                LOG (INFO) << BOLDGREEN << "Setup is scanned" << RESET;
+                AvailableBackplanesCards = ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.available_backplanes_cards");
+            }
+        }
+        return AvailableBackplanesCards;
+    }
+ 
+    //configure setup with multiplexing backplane
+    uint32_t D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardNum)
+    {
+        uint32_t cAvailableCards=0;
+        this-> DisconnectMultiplexingSetup();
+        WriteReg ("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.backplane_num", 0xF & ~(1<<(3-BackplaneNum)));
+        WriteReg ("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.card_num", 0xF & ~(1<<(3-CardNum)));
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+        bool ConfigurationRequired = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.configuration_required") == 1);
+        bool SystemNotConfigured=false;
+        if (ConfigurationRequired) 
+        {
+            SystemNotConfigured=true;
+            WriteReg ("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_configure", 0x1);
+            cAvailableCards = ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.available_backplanes_cards");
+                    }
+
+        if (SystemNotConfigured==true) 
+        {
+            bool SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
+            bool s=false;
+            LOG (INFO) << GREEN << "============================" << RESET;
+            LOG (INFO) << BOLDGREEN << "Scan setup" << RESET;
+            while (!SetupScanned) 
+            {
+                if (s==false) LOG(INFO) << "Scanning setup";
+                s=true;
+                std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+                SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
+            }
+
+            bool BackplaneValid = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplane_valid") == 1);
+            bool CardValid = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.card_valid") == 1);
+            if (SetupScanned) 
             {
                 LOG (INFO) << GREEN << "============================" << RESET;
-                LOG (INFO) << BOLDGREEN << "Setup with backplane " << BackplaneNum << " and card " << CardNum << " is configured" << RESET;
-                cAvailableCards = ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.available_backplanes_cards");
+                LOG (INFO) << BOLDGREEN << "Setup is scanned" << RESET;
+                if (BackplaneValid) 
+                {
+                    LOG(INFO) << BLUE <<"Backplane configuration VALID" << RESET;
+                }
+                    else
+                {
+                    LOG(ERROR) << RED << "Backplane configuration is NOT VALID" << RESET;
+                    exit(0);
+                }
+                if (CardValid)
+                { 
+                    LOG(INFO) << BLUE <<"Card configuration VALID" << RESET;
+                }
+                else
+                { 
+                    LOG(ERROR) << RED << "Card configuration is NOT VALID" << RESET;
+                    exit(0);
             }
-        }           
+                //LOG (INFO) << BLUE << AvailableBackplanesCards << RESET;
+                //printAvailableBackplanesCards(parseAvailableBackplanesCards(AvailableBackplanesCards,false));
+            }
+
+            bool SetupConfigured = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_configured") == 1);
+            bool c=false;
+            if (BackplaneValid && CardValid) 
+            {
+                LOG (INFO) << GREEN << "============================" << RESET;
+                LOG (INFO) << BOLDGREEN << "Configure setup" << RESET;
+                while (!SetupConfigured) 
+                {
+                    if (c==false) LOG(INFO) << "Configuring setup";
+                    c=true;
+                    std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+                    SetupConfigured = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_configured") == 1);
+                }
+
+                if (SetupConfigured) 
+                {
+                    LOG (INFO) << GREEN << "============================" << RESET;
+                    LOG (INFO) << BOLDGREEN << "Setup with backplane " << BackplaneNum << " and card " << CardNum << " is configured" << RESET;
+                    cAvailableCards = ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.available_backplanes_cards");
+                }
+            }           
+        }
+        return cAvailableCards;
     }
-    return cAvailableCards;
-}
 
 // S.S : this seems to break optical ... need to check carefully. 
 void D19cFWInterface::InitFMCPower()
@@ -1637,7 +1637,7 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard , bool pScope)
         auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
         int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
         // need to know the address 
-        //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
+        this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
         // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging 
         
         uint8_t cLineId=0;
@@ -2476,6 +2476,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
         cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
         cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
         cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+
         if(cNWords==0)
         {
             if( cTimeoutCounter >= cTimeoutValue ) 
@@ -2651,11 +2652,14 @@ bool D19cFWInterface::WriteBlockReg ( const std::string& pRegNode, const std::ve
         }
         else if (fI2CVersion >= 1) 
         {
-        // new command consists of one word if its read command, and of two words if its write. first word is always the same
+            // new command consists of one word if its read command, and of two words if its write. first word is always the same
             pVecReq.push_back( (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0) );
-        // only for write commands
-            if (pWrite) pVecReq.push_back( (0 << 28) | (1 << 27) | (pRegItem.fValue << 0) );
-        } else {
+            // only for write commands
+            if (pWrite) 
+                pVecReq.push_back( (0 << 28) | (pWrite << 27) | (pRegItem.fValue << 0) );
+        } 
+        else 
+        {
             pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
         }
     }

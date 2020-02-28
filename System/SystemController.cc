@@ -263,6 +263,12 @@ namespace Ph2_System
                     static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels( cReadoutChip, false);
                     std::this_thread::sleep_for (std::chrono::milliseconds (50) );
                     LOG (INFO) << BOLDBLUE << "Setting threshold back to orginal value [ " << +cThreshold << " ] DAC units." << RESET;
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "VCth" , 0);
+                    fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cReadoutChip->getChipId() ) ;
+                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "VCth" , 900);
+                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
+                    
                     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "VCth" , cThreshold);
                   }
                   else
