@@ -53,7 +53,7 @@ void GainOptimization::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
+      this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -102,7 +102,7 @@ void GainOptimization::initializeFiles (const std::string fileRes_, int currentR
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
+      this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -114,7 +114,7 @@ void GainOptimization::initializeFiles (const std::string fileRes_, int currentR
 
 void GainOptimization::run ()
 {
-  GainOptimization::bitWiseScan("KRUM_CURR_LIN", nEvents, targetCharge, KrumCurrStart, KrumCurrStop);
+  GainOptimization::bitWiseScanGlobal("KRUM_CURR_LIN", nEvents, targetCharge, KrumCurrStart, KrumCurrStop);
 
 
   // #######################################
@@ -175,7 +175,7 @@ void GainOptimization::fillHisto ()
 #endif
 }
 
-void GainOptimization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
+void GainOptimization::bitWiseScanGlobal (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
   uint16_t init;
   uint16_t numberOfBits = log2(stopValue - startValue + 1) + 1;

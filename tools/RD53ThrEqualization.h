@@ -10,15 +10,9 @@
 #ifndef RD53ThrEqualization_H
 #define RD53ThrEqualization_H
 
-#include "Tool.h"
-#include "RD53SCurve.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53Shared.h"
+#include "RD53PixelAlive.h"
 
 #ifdef __USE_ROOT__
-#include "TApplication.h"
 #include "../DQMUtils/RD53ThrEqualizationHistograms.h"
 #endif
 
@@ -33,7 +27,7 @@
 // #####################################
 // # Threshold equalization test suite #
 // #####################################
-class ThrEqualization : public Tool
+class ThrEqualization : public PixelAlive
 {
  public:
   void Start (int currentRun)  override;
@@ -48,9 +42,12 @@ class ThrEqualization : public Tool
   void   analyze             ();
   size_t getNumberIterations ()
   {
-    uint16_t nBitTDAC       = 4;
-    uint16_t moreIterations = 2;
-    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*(nBitTDAC + moreIterations) * nEvents/nEvtsBurst;
+    uint16_t nBitVCal         = floor(log2(stopValue - startValue + 1) + 1);
+    uint16_t moreIterationsPA = 1;
+    uint16_t nBitTDAC         = 4;
+    uint16_t moreIterations   = 2;
+    return PixelAlive::getNumberIterations()*(nBitVCal + moreIterationsPA) +
+      RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*(nBitTDAC + moreIterations) * nEvents/nEvtsBurst;
   }
 
 
@@ -63,13 +60,14 @@ class ThrEqualization : public Tool
 
 
  private:
-  SCurve sc;
   size_t rowStart;
   size_t rowStop;
   size_t colStart;
   size_t colStop;
   size_t nEvents;
   size_t nEvtsBurst;
+  size_t startValue;
+  size_t stopValue;
   size_t nHITxCol;
   bool   doFast;
 
@@ -78,7 +76,8 @@ class ThrEqualization : public Tool
   DetectorDataContainer theTDACcontainer;
 
   void fillHisto         ();
-  void bitWiseScan       (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
+  void bitWiseScanGlobal (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+  void bitWiseScanLocal  (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
   void chipErrorReport   ();
   void saveChipRegisters (int currentRun);
 

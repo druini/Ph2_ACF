@@ -72,7 +72,7 @@ void SCurve::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
+      this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -130,7 +130,7 @@ void SCurve::initializeFiles (const std::string fileRes_, int currentRun)
 
   if ((currentRun >= 0) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
+      this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
       this->initializeFileHandler();
     }
 
