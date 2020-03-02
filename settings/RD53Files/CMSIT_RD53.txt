@@ -201,6 +201,8 @@ CLK_DATA_DELAY_CLK_DELAY  0xA2          0b0000                  0b0000          
 CLK_DATA_DELAY_DATA_DELAY 0xA3          0b0000                  0b0000                              4
 I_MONITOR_SELECT          0xA4          0b0000                  0b0000                              6
 V_MONITOR_SELECT          0xA5          0b0000                  0b0000                              7
+ADC_MONITOR_CONFIG        0xA6          0b0000                  0b0000                              6
+BG_MONITOR_CONFIG         0xA7          0b0000                  0b0000                              5
 
 *-------------------------------------------------------------------------------------------------------
 PIXELCONFIGURATION

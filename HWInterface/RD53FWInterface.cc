@@ -1400,9 +1400,9 @@ namespace Ph2_HwInterface
   }
 
 
-  // ####################################################
-  // # Hybrid ADC measurements: temperature and voltage #
-  // ####################################################
+  // #################################################
+  // # FMC ADC measurements: temperature and voltage #
+  // #################################################
 
   float RD53FWInterface::ReadHybridTemperature (int hybridId)
   {
@@ -1445,9 +1445,9 @@ namespace Ph2_HwInterface
     // For precise T measurements we should have individual -beta- for each temperature sensor
     // i.e. NTC thermistors = Negative Temperature Coefficient, measured in Kelvin
 
-    // #####################################
-    // # Voltage divider circuit on hybrid #
-    // #####################################
+    // ##################################
+    // # Voltage divider circuit on FMC #
+    // ##################################
     const float Rdivider = 39.2; // [kOhm]
     const float Vdivider = 2.5;  // [V]
 
@@ -1456,8 +1456,8 @@ namespace Ph2_HwInterface
     // ###################
     const float  safetyMargin       = 0.9;
     const float  minimumTemperature = -35;   // [Celsius]
-    const size_t numberOfBits       = 11;    // Related to the ADC on the hybrid
-    const float  VrefADC            = 2.047; // Hybrid's ADC refence voltage [V]
+    const size_t numberOfBits       = 11;    // Related to the ADC on the FMC
+    const float  VrefADC            = 2.048; // FMC's ADC refence voltage [V]
     const float  ADC_LSB            = VrefADC / (RD53Shared::setBits(numberOfBits) + 1); // [V/ADC]
 
     // #####################
@@ -1481,9 +1481,9 @@ namespace Ph2_HwInterface
 
   float RD53FWInterface::calcVoltage (uint32_t senseVDD, uint32_t senseGND)
   {
-    // #####################################
-    // # Voltage divider circuit on Hybrid #
-    // #####################################
+    // ##################################
+    // # Voltage divider circuit on FMC #
+    // ##################################
     const float R1divider = 196;   // [kOhm]
     const float R2divider =  39.2; // [kOhm]
     const float VdividerFactor = (R1divider + R2divider) / R2divider;
@@ -1491,15 +1491,15 @@ namespace Ph2_HwInterface
     // ###################
     // # Voltage per LSB #
     // ###################
-    const size_t numberOfBits = 11;    // Related to the ADC on the hybrid
-    const float  VrefADC      = 2.047; // Hybrid's ADC refence voltage [V]
+    const size_t numberOfBits = 11;    // Related to the ADC on the FMC
+    const float  VrefADC      = 2.048; // FMC's ADC refence voltage [V]
     const float  ADC_LSB      = VrefADC / (RD53Shared::setBits(numberOfBits) + 1.); // [V/ADC]
 
     // #####################
     // # Calculate voltage #
     // #####################
     float voltage = (senseVDD - senseGND) * ADC_LSB * VdividerFactor;
-    if (voltage < ADC_LSB*VdividerFactor) LOG (WARNING) << BOLDRED << "\t--> Very low voltage: either floating VDD sense-line or hybrid not powered (voltage = " << BOLDYELLOW << voltage << BOLDRED << ")" << RESET;
+    if (voltage < ADC_LSB*VdividerFactor) LOG (WARNING) << BOLDRED << "\t--> Very low voltage: either floating VDD sense-line or FMC not powered (voltage = " << BOLDYELLOW << voltage << BOLDRED << ")" << RESET;
 
     return voltage;
   }

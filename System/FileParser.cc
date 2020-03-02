@@ -865,7 +865,7 @@ namespace Ph2_System
           {
             std::string regname = attr.name();
             uint16_t regvalue   = convertAnyInt(attr.value());
-            os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
+            os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
 
             for (auto theChip : pModule->fReadoutChipVector) theChip->setReg(regname,regvalue,true);
           }
@@ -884,7 +884,7 @@ namespace Ph2_System
             std::string regname = attr.name();
             uint16_t regvalue   = convertAnyInt(attr.value());
             theChip->setReg(regname,regvalue,true);
-            os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
+            os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
           }
       }
   }
