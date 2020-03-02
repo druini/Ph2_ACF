@@ -2466,7 +2466,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
 
 
     uint32_t cTimeoutCounter = 0 ;
-    uint32_t cTimeoutValue = 100;
+    uint32_t cTimeoutValue = 10000;
     while (cReadoutReq == 0 && !pFailed )
     {
         pFailed = pFailed || ( cTimeoutCounter >= cTimeoutValue );
@@ -2529,6 +2529,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     // again check if failed to re-run in case
     if (pFailed)
     {
+        LOG (INFO) << BOLDRED << "Failing to readout after " << cTimeoutValue << " trials, Retrying..." << RESET;
         pData.clear();
         this->Stop();
         this->ResetReadout();
