@@ -13,7 +13,7 @@
 ```
 
 Suggested software and firmware versions:
-- Software git branch / tag : `chipContainer` / `IT-v3.5`
+- Software git branch / tag : `chipContainer` / `IT-v3.6`
 - Firmware tag: `3.1`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
@@ -146,7 +146,7 @@ elif [ $1 == "help" ]
 then
     echo "Available options are:"
     echo "- step1 [noise + pixelalive + thrmin]"
-    echo "- step2 [(scurve)threqu + scurve + noise + thrmin]"
+    echo "- step2 [(pixelalive)threqu + scurve + noise + thrmin]"
     echo "- step3 [scurve + gain + gainopt]"
     echo "- step4 [(latency)injdelay]"
     echo "- step5 [scurve]"
