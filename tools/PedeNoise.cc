@@ -162,8 +162,6 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
 {
     LOG (INFO) << "Validation: Taking Data with " << fEventsPerPoint* pMultiple << " random triggers!" ;
 
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
-
     for ( auto cBoard : *fDetectorContainer )
     {
         //increase threshold to supress noise
