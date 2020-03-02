@@ -16,14 +16,13 @@ set(BoldMagenta "${Esc}[1;35m")
 set(BoldCyan    "${Esc}[1;36m")
 set(BoldWhite   "${Esc}[1;37m")
 
-if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR}) 
+if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
-
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}") 
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package") 
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
 
     cmake_minimum_required(VERSION 2.8)
     project(Ph2_ACF)
@@ -35,8 +34,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif()
 
     # ---------- Setup output Directories -------------------------
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY 
-        ${PROJECT_SOURCE_DIR}/lib 
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
+        ${PROJECT_SOURCE_DIR}/lib
         CACHE PATH
         "Single Directory for all Libraries"
        )
@@ -55,9 +54,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # ---------- Setup output Directories -------------------------
 
 
-    #set the cmakeL module path
+    # Set the cmakeL module path
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-    
+
     set(CompileForShep "$ENV{CompileForShep}")
     set(CompileForHerd "$ENV{CompileForHerd}")
     if ((NOT CompileForShep) AND (NOT CompileForHerd))
@@ -79,6 +78,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
     set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined")
     set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
+
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
       EXECUTE_PROCESS( COMMAND gcc -dumpversion OUTPUT_VARIABLE GCC_VERSION )
       if(NOT (GCC_VERSION VERSION_LESS 6))
@@ -118,61 +118,38 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     find_package(CACTUS)      #========================================================
     if(${CACTUS_AMC13_FOUND})
-        message(STATUS "    enabling AMC13 component")
+        message(STATUS "    Enabling AMC13 component")
     endif(${CACTUS_AMC13_FOUND})
 
     find_package(PH2_ANTENNA) #========================================================
     if(PH2_ANTENNA_FOUND)
-        message(STATUS "    building the Antenna components")
+        message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
-    #ZeroMQ optional
+    # ZeroMQ optional
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
-        #message(STATUS "     Found ZMQ Library - checking for Ph2_UsbInstLib")
-
-        #libPh2_UsbInstLib
         find_package(PH2_USBINSTLIB)
         if(PH2_USBINSTLIB_FOUND)
-            #message(STATUS "    Found Ph2_UsbInstLib - enabling support")
         endif(PH2_USBINSTLIB_FOUND)
     endif(ZMQ_FOUND)
 
-    # #Boost
-    file(GLOB_RECURSE uhal_boost /opt/cactus/*version.hpp)
-    if(uhal_boost)
-        MESSAGE(STATUS "    Found boost installation that comes with uHAL, using this version") 
-            set(Boost_NO_SYSTEM_PATHS TRUE)
-            if(Boost_NO_SYSTEM_PATHS)
-                if(${CACTUS_FOUND})
-                    set(BOOST_ROOT ${CACTUS_ROOT})
-                else(${CACTUS_FOUND})
-                    set(BOOST_ROOT /opt/cactus)
-                endif(${CACTUS_FOUND})
-                set(BOOST_INCLUDE_DIRS ${BOOST_ROOT}/include)
-                set(BOOST_LIBRARY_DIRS ${BOOST_ROOT}/lib)
-            endif(Boost_NO_SYSTEM_PATHS)
-    else(uhal_boost)
-        MESSAGE(STATUS "    No boost headers found with uHAL (you are most likely using CC7) - make sure to install boost 1.53 (default version on CC7)")
-    endif(uhal_boost)
-
-    # builds eudaq producer
-    find_package(EUDAQ) #========================================================
-    if(EUDAQ_FOUND)
-        message(STATUS "    building the EUDAQ components")
-    else(EUDAQ_FOUND)
-        message(STATUS "    continuing without EUDAQ components")
-    endif(EUDAQ_FOUND)
-
-
+    # Builds EUDAQ producer
     find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
 
-    #EUDAQ
+    # EUDAQ
     if ($ENV{CompileWithEUDAQ})
+        find_package(EUDAQ)       #========================================================
+        if (EUDAQ_FOUND)
+           message(STATUS "    Building with EUDAQ components")
+        else (EUDAQ_FOUND)
+           message(STATUS "    Continuing without EUDAQ components")
+        endif (EUDAQ_FOUND)
+
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQ}/include $ENV{EUDAQ}/user/tlu/module/src)
         set(EUDAQ_LIB -L$ENV{EUDAQ}/lib eudaq_core)
-        message(STATUS "    EUDAQ variable is definedd. EUDAQ directory: $ENV{EUDAQ}")
+        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQ}")
     else($ENV{CompileWithEUDAQ})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
@@ -216,19 +193,19 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #set(ENV{PATH} "$ENV{PATH}:${PROJECT_SOURCE_DIR}/bin")
     #set(ENV{LD_LIBRARY_PATH} "${PROJECT_SOURCE_DIR}/lib:$ENV(LD_LIBRARY_PATH)")
 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package done.") 
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
 
 else() # ------------------------------- Compilation in the otsdaq environment ---------------------------------------------
 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}") 
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package for OTSDAQ") 
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
 
@@ -243,10 +220,10 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(System)
     add_subdirectory(miniDAQ)
 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package done.") 
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
 
 endif()

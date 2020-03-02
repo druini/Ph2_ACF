@@ -14,6 +14,14 @@ using namespace Ph2_HwInterface;
 
 void ThrEqualization::ConfigureCalibration ()
 {
+  // ##############################
+  // # Initialize sub-calibration #
+  // ##############################
+  PixelAlive::ConfigureCalibration();
+  PixelAlive::doDisplay    = false;
+  PixelAlive::doUpdateChip = false;
+
+
   // #######################
   // # Retrieve parameters #
   // #######################
@@ -24,6 +32,8 @@ void ThrEqualization::ConfigureCalibration ()
   nEvents        = this->findValueInSettings("nEvents");
   nEvtsBurst     = nEvents;
   nEvents       *= this->findValueInSettings("VCalHnsteps");
+  startValue     = this->findValueInSettings("VCalHstart");
+  stopValue      = this->findValueInSettings("VCalHstop");
   nHITxCol       = this->findValueInSettings("nHITxCol");
   doFast         = this->findValueInSettings("DoFast");
   doDisplay      = this->findValueInSettings("DisplayHisto");
@@ -45,13 +55,6 @@ void ThrEqualization::ConfigureCalibration ()
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
 
-  // #####################
-  // # Initialize SCurve #
-  // #####################
-  sc.Inherit(this);
-  sc.localConfigure("", -1);
-
-
   // #######################
   // # Initialize progress #
   // #######################
@@ -64,7 +67,7 @@ void ThrEqualization::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrEqualization.raw", 'w');
+      this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrEqualization.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -72,8 +75,7 @@ void ThrEqualization::Start (int currentRun)
   ThrEqualization::analyze();
   ThrEqualization::sendData();
 
-  sc.draw(currentRun);
-  sc.sendData();
+  PixelAlive::sendData();
 }
 
 void ThrEqualization::sendData ()
@@ -97,7 +99,8 @@ void ThrEqualization::Stop ()
 void ThrEqualization::localConfigure (const std::string fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
-  histos = nullptr;
+  histos             = nullptr;
+  PixelAlive::histos = nullptr;
 #endif
 
   ThrEqualization::ConfigureCalibration();
@@ -106,11 +109,17 @@ void ThrEqualization::localConfigure (const std::string fileRes_, int currentRun
 
 void ThrEqualization::initializeFiles (const std::string fileRes_, int currentRun)
 {
+  // ##############################
+  // # Initialize sub-calibration #
+  // ##############################
+  PixelAlive::initializeFiles("", -1);
+
+
   fileRes = fileRes_;
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrEqualization.raw", 'w');
+      this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrEqualization.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -118,41 +127,17 @@ void ThrEqualization::initializeFiles (const std::string fileRes_, int currentRu
   delete histos;
   histos = new ThrEqualizationHistograms;
 #endif
-
-
-  // #####################
-  // # Initialize SCurve #
-  // #####################
-  std::string fileName = fileRes;
-  fileName.replace(fileRes.find("_ThrEqualization"),16,"_SCurve");
-  sc.initializeFiles(fileName, -1);
 }
 
 void ThrEqualization::run ()
 {
-  // ##############
-  // # Run SCurve #
-  // ##############
-  sc.run();
-  auto newVCal = sc.analyze();
+  ThrEqualization::bitWiseScanGlobal("VCAL_HIGH", nEvents, TARGETEFF, startValue, stopValue);
 
 
   // ##############################
   // # Run threshold equalization #
   // ##############################
   size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
-
-  // ############################
-  // # Set new VCAL_HIGH values #
-  // ############################
-  if (newVCal != nullptr)
-    for (const auto cBoard : *fDetectorContainer)
-      for (const auto cModule : *cBoard)
-        for (const auto cChip : *cModule)
-          {
-            auto value = static_cast<RD53*>(cChip)->getReg("VCAL_MED") + newVCal->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold;
-            this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", value, true);
-          }
 
   this->fDetectorDataContainer = &theOccContainer;
   ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *this->fDetectorDataContainer);
@@ -161,7 +146,7 @@ void ThrEqualization::run ()
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
-  ThrEqualization::bitWiseScan("PIX_PORTAL", nEvents, TARGETEFF, nEvtsBurst);
+  ThrEqualization::bitWiseScanLocal("PIX_PORTAL", nEvents, TARGETEFF, nEvtsBurst);
 
 
   // #################################################
@@ -191,7 +176,7 @@ void ThrEqualization::run ()
 
 void ThrEqualization::draw (int currentRun)
 {
-  sc.draw(currentRun);
+  ThrEqualization::saveChipRegisters(currentRun);
 
 #ifdef __USE_ROOT__
   TApplication* myApp = nullptr;
@@ -205,6 +190,8 @@ void ThrEqualization::draw (int currentRun)
   histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
   ThrEqualization::fillHisto();
   histos->process();
+
+  PixelAlive::draw(-1);
 
   this->WriteRootFile();
   this->CloseResultFile();
@@ -238,7 +225,112 @@ void ThrEqualization::fillHisto ()
 #endif
 }
 
-void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
+void ThrEqualization::bitWiseScanGlobal (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
+{
+  uint16_t init;
+  uint16_t numberOfBits = log2(stopValue - startValue + 1) + 1;
+
+  DetectorDataContainer minDACcontainer;
+  DetectorDataContainer midDACcontainer;
+  DetectorDataContainer maxDACcontainer;
+
+  DetectorDataContainer bestDACcontainer;
+  DetectorDataContainer bestContainer;
+
+  ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, minDACcontainer, init = startValue);
+  ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, midDACcontainer);
+  ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
+
+  ContainerFactory::copyAndInitChip<uint16_t> (*fDetectorContainer, bestDACcontainer);
+  ContainerFactory::copyAndInitChip<OccupancyAndPh>(*fDetectorContainer, bestContainer);
+
+  for (const auto cBoard : bestContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        cChip->getSummary<OccupancyAndPh>().fPh = 0;
+
+
+  for (auto i = 0u; i <= numberOfBits; i++)
+    {
+      // ###########################
+      // # Download new DAC values #
+      // ###########################
+      for (const auto cBoard : *fDetectorContainer)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
+                 maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) / 2;
+
+              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(), true);
+            }
+
+
+      // ################
+      // # Run analysis #
+      // ################
+      PixelAlive::run();
+      auto output = PixelAlive::analyze();
+      output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+
+
+      // #####################
+      // # Compute next step #
+      // #####################
+      for (const auto cBoard : *output)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              // #######################
+              // # Build discriminator #
+              // #######################
+              float newValue = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
+
+
+              // ########################
+              // # Save best DAC values #
+              // ########################
+              float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh;
+
+              if (fabs(newValue - target) < fabs(oldValue - target))
+                {
+                  bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = newValue;
+
+                  bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                    midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                }
+
+              if (newValue > target)
+
+                maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+
+              else
+
+                minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+            }
+    }
+
+
+  // ###########################
+  // # Download new DAC values #
+  // ###########################
+  for (const auto cBoard : *fDetectorContainer)
+    for (const auto cModule : *cBoard)
+      for (const auto cChip : *cModule)
+        this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(), true);
+
+
+  // ################
+  // # Run analysis #
+  // ################
+  PixelAlive::run();
+  PixelAlive::analyze();
+}
+
+void ThrEqualization::bitWiseScanLocal (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {
   uint16_t init;
   uint16_t numberOfBits = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(regName);
@@ -250,11 +342,11 @@ void ThrEqualization::bitWiseScan (const std::string& regName, uint32_t nEvents,
   DetectorDataContainer bestDACcontainer;
   DetectorDataContainer bestContainer;
 
-  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, minDACcontainer, init = 0);
-  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, midDACcontainer);
-  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, maxDACcontainer, init = (RD53Shared::setBits(numberOfBits) + 1));
+  ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, minDACcontainer, init = 0);
+  ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, midDACcontainer);
+  ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, maxDACcontainer, init = (RD53Shared::setBits(numberOfBits) + 1));
 
-  ContainerFactory::copyAndInitChannel<uint16_t>      (*fDetectorContainer, bestDACcontainer);
+  ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, bestDACcontainer);
   ContainerFactory::copyAndInitChannel<OccupancyAndPh>(*fDetectorContainer, bestContainer);
 
   for (const auto cBoard : bestContainer)
@@ -377,7 +469,6 @@ void ThrEqualization::saveChipRegisters (int currentRun)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
-          static_cast<RD53*>(cChip)->copyMaskFromDefault();
           if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
           static_cast<RD53*>(cChip)->saveRegMap(fileReg);
           std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);

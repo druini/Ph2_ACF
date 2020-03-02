@@ -72,12 +72,12 @@ namespace Ph2_HwInterface
 
 
   private:
-    float ReadChipADC           (Ph2_HwDescription::Chip* pChip, const char* observableName, float ADCoffset = 0.0063, float VrefADC = 0.839, float resistorI2V = 10000);
+    float ReadChipADC           (Ph2_HwDescription::Chip* pChip, const char* observableName, float ADCoffset = 0.0063, float actualVrefADC = 0.839, float resistorI2V = 10000);
 
     uint32_t measureADC         (Ph2_HwDescription::Chip* pChip, uint32_t data);
     float    measureTemperature (Ph2_HwDescription::Chip* pChip, uint32_t data, float idealityFactor = 1.225);
 
-    float convertADC2VorI       (Ph2_HwDescription::Chip* pChip, uint32_t value, bool isCurrentNotVoltage = false, float ADCoffset = 0.0063, float VrefADC = 0.839, float resistorI2V = 10000);
+    float convertADC2VorI       (Ph2_HwDescription::Chip* pChip, uint32_t value, bool isCurrentNotVoltage = false, float ADCoffset = 0.0063, float actualVrefADC = 0.839, float resistorI2V = 10000);
   };
 }
 

@@ -50,7 +50,7 @@ void ThrMinimization::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrMinimization.raw", 'w');
+      this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrMinimization.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -99,7 +99,7 @@ void ThrMinimization::initializeFiles (const std::string fileRes_, int currentRu
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrMinimization.raw", 'w');
+      this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrMinimization.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -111,7 +111,7 @@ void ThrMinimization::initializeFiles (const std::string fileRes_, int currentRu
 
 void ThrMinimization::run ()
 {
-  ThrMinimization::bitWiseScan("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop);
+  ThrMinimization::bitWiseScanGlobal("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop);
 
 
   // ############################
@@ -172,7 +172,7 @@ void ThrMinimization::fillHisto ()
 #endif
 }
 
-void ThrMinimization::bitWiseScan (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
+void ThrMinimization::bitWiseScanGlobal (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
   uint16_t init;
   uint16_t numberOfBits = log2(stopValue - startValue + 1) + 1;

@@ -14,9 +14,6 @@
 #include "eudaq/Producer.hh"
 
 
-#define RESULTDIR "Results" // Directory containing the results
-
-
 class RD53eudaqProducer : public eudaq::Producer
 {
   class RD53eudaqEvtConverter

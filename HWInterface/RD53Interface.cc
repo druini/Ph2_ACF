@@ -368,12 +368,12 @@ namespace Ph2_HwInterface
   // # Dedicated to minitoring #
   // ###########################
 
-  float RD53Interface::ReadChipADC (Chip* pChip, const char* observableName, float ADCoffset, float VrefADC, float resistorI2V)
+  float RD53Interface::ReadChipADC (Chip* pChip, const char* observableName, float ADCoffset, float actualVrefADC, float resistorI2V)
   {
     this->setBoard(pChip->getBeBoardId());
 
-    float value;
-    bool isCurrentNotVoltage;
+    float    value;
+    bool     isCurrentNotVoltage;
     uint32_t voltageObservable(0), currentObservable(0), observable;
     const float safetyMargin = 0.9;
 
@@ -473,7 +473,7 @@ namespace Ph2_HwInterface
         if (ADC > (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1.) * safetyMargin)
           LOG (WARNING) << BOLDRED << "\t--> ADC measurement in saturation (ADC = " << BOLDYELLOW << ADC << BOLDRED << "): likely the R-IMUX resistor, that converts the current into a voltage, is not connected" << RESET;
 
-        value = RD53Interface::convertADC2VorI(pChip, ADC, isCurrentNotVoltage, ADCoffset, VrefADC, resistorI2V);
+        value = RD53Interface::convertADC2VorI(pChip, ADC, isCurrentNotVoltage, ADCoffset, actualVrefADC, resistorI2V);
         LOG (INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " " << (isCurrentNotVoltage == true ? "A" : "V") << RESET;
         return value;
       }
@@ -483,7 +483,8 @@ namespace Ph2_HwInterface
   {
       const uint16_t GLOBAL_PULSE_ROUTE = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
       const uint8_t  chipID             = pChip->getChipId();
-      const uint16_t trimADC            = bits::pack<1, 5, 6>(true, 0x0C, 0x05); // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should giv an average of VrefADC of 0.9 V
+      const uint16_t trimADC            = bits::pack<1, 5, 6>(true, pChip->getRegItem("BG_MONITOR_CONFIG").fValue, pChip->getRegItem("ADC_MONITOR_CONFIG").fValue);
+      // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should give an average VrefADC of 0.9 V
 
       std::vector<uint16_t> commandList;
 
@@ -534,15 +535,15 @@ namespace Ph2_HwInterface
     return e / (idealityFactor * kb * log(R)) * (valueHigh  - valueLow) - T0C;
   }
 
-  float RD53Interface::convertADC2VorI (Chip* pChip, uint32_t value, bool isCurrentNotVoltage, float ADCoffset, float VrefADC, float resistorI2V)
+  float RD53Interface::convertADC2VorI (Chip* pChip, uint32_t value, bool isCurrentNotVoltage, float ADCoffset, float actualVrefADC, float resistorI2V)
   {
-    // #################################################################
-    // # Parameter values:                                             #
-    // # VrefADC     = 0.839  [V] Lower than VrefADC due to parasitics #
-    // # ADCoffset   = 0.0063 [V] Offset due to ground shift           #
-    // # resistorI2V = 10000  [Ohm]                                    #
-    // #################################################################
-    float ADCslope = (VrefADC - ADCoffset) / (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1); // [V/ADC]
+    // ###################################################################
+    // # Parameter values:                                               #
+    // # actualVrefADC = 0.839  [V] Lower than VrefADC due to parasitics #
+    // # ADCoffset     = 0.0063 [V] Offset due to ground shift           #
+    // # resistorI2V   = 10000  [Ohm]                                    #
+    // ###################################################################
+    float ADCslope = (actualVrefADC - ADCoffset) / (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1); // [V/ADC]
     float voltage  = ADCoffset + ADCslope * value;
 
     return voltage / (isCurrentNotVoltage == true ? resistorI2V : 1);
