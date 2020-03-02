@@ -1209,11 +1209,11 @@ namespace Ph2_HwInterface {
                     std::this_thread::sleep_for (std::chrono::milliseconds (10) );
                 }
                 // perform phase alignment 
-                LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
+                //LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
                 SendControl(pInterface, pHybrid, pChip, pLine, "PhaseAlignment");
                 std::this_thread::sleep_for (std::chrono::milliseconds (100) );
                 // perform word alignment
-                LOG (INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
+                //LOG (INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
                 SendControl(pInterface, pHybrid, pChip, pLine, "WordAlignment"); 
                 std::this_thread::sleep_for (std::chrono::milliseconds (100) );
                 uint8_t cLineStatus = GetLineStatus(pInterface, pHybrid, pChip, pLine);
