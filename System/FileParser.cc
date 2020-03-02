@@ -398,7 +398,7 @@ namespace Ph2_System
 
     if (cStatus)
       {
-        os << BOLDBLUE << "|" << "       " << "|" << "----" << pModuleNode.name() << "  "
+        os << BOLDBLUE << "|" << "       " << "|" << "----" << pModuleNode.name() << "   "
            << BOLDBLUE << pModuleNode.first_attribute().name() << ": " << BOLDYELLOW << pModuleNode.attribute("FeId").value()
            << BOLDBLUE << ", FMCId: " << BOLDYELLOW << expandEnvironmentVariables(pModuleNode.attribute("FMCId").value())
            << BOLDBLUE << ", ModuleId: " << BOLDYELLOW << expandEnvironmentVariables(pModuleNode.attribute("ModuleId").value())
@@ -830,9 +830,9 @@ namespace Ph2_System
   // ########################
   void FileParser::parseRD53 (pugi::xml_node theChipNode, Module* cModule, std::string cFilePrefix, std::ostream& os)
   {
-    os << BOLDBLUE   << "|\t|\t|----" << theChipNode.name()               << "  Id: "
-       << BOLDYELLOW << theChipNode.attribute("Id").value()   << BOLDBLUE << ",  Lane: "
-       << BOLDYELLOW << theChipNode.attribute("Lane").value() << BOLDBLUE << ",  File: "
+    os << BOLDBLUE   << "|\t|\t|----" << theChipNode.name()               << "   Id: "
+       << BOLDYELLOW << theChipNode.attribute("Id").value()   << BOLDBLUE << ", Lane: "
+       << BOLDYELLOW << theChipNode.attribute("Lane").value() << BOLDBLUE << ", File: "
        << BOLDYELLOW << expandEnvironmentVariables(theChipNode.attribute("configfile").value()) << RESET << std::endl;
 
     std::string cFileName;
