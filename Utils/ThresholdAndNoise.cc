@@ -37,7 +37,7 @@ void ThresholdAndNoise::makeSummaryAverage(const std::vector<ThresholdAndNoise>*
 
   if (fNoiseError > 0)
     {
+      fNoise      /= fNoiseError;
       fNoise     /= fNoiseError;
-      fNoiseError = sqrt(1. / fNoiseError);
     }
 }

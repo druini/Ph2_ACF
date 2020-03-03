@@ -402,7 +402,6 @@
                 <node id="fcmd_from_ssa1_test_is_payload_error"	mask="0x00000400" description="payload error in the return fast command from SSA1"/>
                 <node id="fcmd_from_ssa2_test_is_payload_error"	mask="0x00000800" description="payload error in the return fast command from SSA2"/>
             </node>
-
             <node id="stub_debug"                address="0x042" description="stub scoping " mode="incremental" size="80"/>
             <node id="l1a_debug"                address="0x010" description="l1a scoping " mode="incremental" size="50"/>
         </node>

@@ -54,7 +54,7 @@ namespace Ph2_HwInterface
             if (cRegItem.first != "BandgapFuse" || cRegItem.first != "ChipIDFuse")
             {
                 //if( cRegItem.second.fPage == 0 )
-                LOG (DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first <<  " : register address 0x" << std::hex << +cRegItem.second.fAddress << std::dec << " on page " << +cRegItem.second.fPage <<  RESET;
+                //LOG (DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first <<  " : register address 0x" << std::hex << +cRegItem.second.fAddress << std::dec << " on page " << +cRegItem.second.fPage <<  RESET;
                 fBoardFW->EncodeReg (cRegItem.second, pCbc->getFeId(), pCbc->getChipId(), cVec, pVerifLoop, true);
                 #ifdef COUNT_FLAG
                     fRegisterCount++;
@@ -104,7 +104,7 @@ namespace Ph2_HwInterface
         std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>( static_cast<const ChannelGroup<NCHANNELS>*>(group)->getBitset() );
         if( cBitset.count() == 0 ) // no mask set... so do nothing 
             return true;
-        LOG (DEBUG) << BOLDBLUE << "Setting injection scheme for " << std::bitset<NCHANNELS>(cBitset) << RESET;
+        //LOG (DEBUG) << BOLDBLUE << "Setting injection scheme for " << std::bitset<NCHANNELS>(cBitset) << RESET;
         uint16_t cFirstHit;
         for( cFirstHit=0; cFirstHit < NCHANNELS; cFirstHit++) 
         {
@@ -112,7 +112,7 @@ namespace Ph2_HwInterface
                 break;
         }
         uint8_t cGroupId= std::floor((cFirstHit%16)/2); 
-        LOG (DEBUG) << BOLDBLUE << "First unmasked channel in position " << +cFirstHit << " --- i.e. in TP group " << +cGroupId << RESET;
+        //LOG (DEBUG) << BOLDBLUE << "First unmasked channel in position " << +cFirstHit << " --- i.e. in TP group " << +cGroupId << RESET;
         if(cGroupId > 7)
             throw Exception( "bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group, bool pVerifLoop): CBC is not able to inject the channel pattern" );
         // write register which selects group
@@ -165,7 +165,7 @@ namespace Ph2_HwInterface
             if( cChannel >= 0 )
             {
                 cChannelList.push_back( static_cast<uint32_t>(cChannel) );
-                LOG (DEBUG) << BOLDBLUE << "Unmasking channel .... " << +cChannel <<  " [in register " << +cChannel/8 << " ]" << RESET;
+                //LOG (DEBUG) << BOLDBLUE << "Unmasking channel .... " << +cChannel <<  " [in register " << +cChannel/8 << " ]" << RESET;
             }
         }
         return cChannelList;
@@ -173,7 +173,7 @@ namespace Ph2_HwInterface
 
     std::vector<uint8_t> CbcInterface::stubInjectionPattern( ReadoutChip* pChip, uint8_t pStubAddress, int pStubBend ) 
     {
-        LOG (DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." <<  RESET;   
+        //LOG (DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." <<  RESET;   
         std::vector<uint8_t> cSeedHits = createHitListFromStubs(pStubAddress,true);
         // then in correlation layer 
         // first lets just use a bend of 0 
@@ -191,8 +191,8 @@ namespace Ph2_HwInterface
         if( pUseNoise)
         {
             uint16_t cVcth=1023;
-            LOG (DEBUG) << BOLDBLUE << "Injecting stubs in CBC" << +pCbc->getChipId() << RESET; 
-            LOG (DEBUG) << BOLDBLUE << "Starting by lowering threshold on this CBC and masking all channels." << RESET;
+            //LOG (DEBUG) << BOLDBLUE << "Injecting stubs in CBC" << +pCbc->getChipId() << RESET; 
+            //LOG (DEBUG) << BOLDBLUE << "Starting by lowering threshold on this CBC and masking all channels." << RESET;
             this->WriteChipReg ( pCbc,"VCth", cVcth);
         
         }
@@ -275,7 +275,7 @@ namespace Ph2_HwInterface
         uint16_t cOriginalValue = this->ReadChipReg( pCbc, cRegName );
         uint16_t cMask = 0xFF - (( 3*pForHits << 6) | ( 3*pForStubs << 4 ));
         uint16_t cRegValue = (cOriginalValue & cMask) | ( pMode*pForHits << 6 ) | (pMode*pForStubs << 4);
-        LOG (DEBUG) << BOLDBLUE << "Original register value : 0x" << std::hex << cOriginalValue << std::dec << "\t logic register set to 0x" << std::hex << +cRegValue << std::dec << " to select " << pModeSelect << " mode on CBC" << +pCbc->getChipId() << RESET;
+        //LOG (DEBUG) << BOLDBLUE << "Original register value : 0x" << std::hex << cOriginalValue << std::dec << "\t logic register set to 0x" << std::hex << +cRegValue << std::dec << " to select " << pModeSelect << " mode on CBC" << +pCbc->getChipId() << RESET;
         return WriteChipSingleReg ( pCbc, cRegName , cRegValue , pVerifLoop);
         //WriteChipSingleReg
         //uint8_t cMask = (uint8_t)(~(((3*pForHits) << 6) | ((3*pForStubs) << 4)));
@@ -302,7 +302,7 @@ namespace Ph2_HwInterface
         bool cEnableHips=true;
         uint8_t cMaxClocks=7;
         uint8_t cValue = ( ( (pClocks << 5) & (cMaxClocks << 5) ) & (!cEnableHips << 4) ) | (cOriginalValue & cMask);
-        LOG (DEBUG) << BOLDBLUE << "Settinng HIP configuration register to 0x" << std::hex << +cValue << std::dec << " to enable max. " << +pClocks << " clocks on CBC" << +pCbc->getChipId() << RESET;
+        //LOG (DEBUG) << BOLDBLUE << "Settinng HIP configuration register to 0x" << std::hex << +cValue << std::dec << " to enable max. " << +pClocks << " clocks on CBC" << +pCbc->getChipId() << RESET;
         cRegVec.emplace_back (cRegName, cValue);
         return WriteChipMultReg (pCbc, cRegVec, pVerifLoop);
     }
@@ -314,7 +314,7 @@ namespace Ph2_HwInterface
             cChannelMask.disableAllChannels();
         else 
             cChannelMask.enableAllChannels();
-        LOG (DEBUG)  << BOLDBLUE << "Mask to be set is " << std::bitset<254>( cChannelMask.getBitset() ) << RESET;
+        //LOG (DEBUG)  << BOLDBLUE << "Mask to be set is " << std::bitset<254>( cChannelMask.getBitset() ) << RESET;
         return this->maskChannelsGroup (pCbc, &cChannelMask, pVerifLoop);
     }
     
@@ -350,7 +350,6 @@ namespace Ph2_HwInterface
                     uint16_t cLat1 = dacValue & 0x00FF;
                     uint16_t cReg = pCbc->getReg("FeCtrl&TrgLat2"); 
                     uint16_t cLat2 = (pCbc->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
-                    LOG (DEBUG) << BOLDBLUE << "TrigRegister was 0x" << std::hex << +cReg << std::dec << " -- now will be set to 0x" << std::hex << +((cReg & 0xFE) | (dacValue & 0x0100) >> 8) << RESET;
                     cRegVec.emplace_back ("TriggerLatency1", cLat1);
                     cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
                     LOG (DEBUG) << BOLDBLUE << "Setting latency on " << +pCbc->getChipId() << " to " << +dacValue << " 0x" << std::hex << +cLat1 << std::dec << " --- 0x" << std::hex << +cLat2 << std::dec << RESET;

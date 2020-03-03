@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR">
-    <!-- <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/d19c_address_table.xml" />  -->
-    <!-- -> d19c_2cbc3_none.bin -->
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  
-    <!-- -> d19c_2cbc3_dio5.bin -->
-
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    
     <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
         <Global>
             <Settings threshold="500" latency="29"/>
@@ -134,7 +131,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">500</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
@@ -142,6 +139,7 @@
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
     <Setting name="PedeNoisePulseAmplitude">0</Setting>
+    <Setting name="TriggerRate">10</Setting>
 
     <!--Signal Scan Fit-->
 	<Setting name="InitialVcth">600</Setting>

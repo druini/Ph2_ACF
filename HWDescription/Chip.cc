@@ -88,7 +88,7 @@ namespace Ph2_HwDescription
       {
         i->second.fValue = psetValue & fMaxRegValue;
         i->second.fPrmptCfg = pPrmptCfg;
-        LOG (DEBUG) << "Setting register " << pReg << " to " << psetValue << " [ " << +i->second.fValue << " ] : Max value is " << +fMaxRegValue << "\n";
+        //LOG (DEBUG) << "Setting register " << pReg << " to " << psetValue << " [ " << +i->second.fValue << " ] : Max value is " << +fMaxRegValue << "\n";
       }
   }
 

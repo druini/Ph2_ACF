@@ -5,6 +5,7 @@
 #include "LatencyScan.h"
 #include "PedeNoise.h"
 #include "PedestalEqualization.h"
+#include "tools/DataChecker.h"
 #include "argvparser.h"
 
 #ifdef __USE_ROOT__
@@ -191,7 +192,8 @@ int main ( int argc, char* argv[] )
         LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
         exit(0);
     }
-
+    t.stop();
+    t.show ( "Time to tune the back-end on the system: " );
     // equalize thresholds on readout chips
     if( cTune ) 
     { 
@@ -199,7 +201,6 @@ int main ( int argc, char* argv[] )
         cTuning.Inherit (&cTool);
         cTuning.Initialise ( cAllChannels, cDisableStubLogic );
         // make sure trigger rate is set
-        dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0, cTriggerRate);
         t.start();
         cTuning.FindVplus();
         cTuning.FindOffsets();
@@ -214,7 +215,7 @@ int main ( int argc, char* argv[] )
     {
         LOG (INFO) << BOLDBLUE << "Going to measure pedestal and noise " << RESET;
         // make sure trigger rate is set
-        dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0, cTriggerRate);//was 10
+        //dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0, cTriggerRate);//was 10
         t.start();
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit (&cTool);
@@ -248,21 +249,33 @@ int main ( int argc, char* argv[] )
     ExtraChecks cExtra;
     cExtra.Inherit (&cTool);
     cExtra.Initialise ();
+    if( cEvaluate )
+    {
+        LOG (INFO) << BOLDBLUE << "Measuring noise and setting thresholds to " << +cSigma << " noise units away from pedestal...." << RESET;
+        cExtra.Evaluate(cSigma, cTriggerRate, cDisableStubLogic);
+    }
+
     if(cDataTest)
     {
+        // data check with noise injection 
         uint8_t cSeed=10;
         uint8_t cBendCode=0;
-        cExtra.DataCheck({0}, cTriggerRate , cSeed, cBendCode , false );
 
-        // check hits and stubs one chip at a time 
-        // for( uint8_t cChipId=0; cChipId < 8; cChipId++)
-        // {   
-        //     LOG (INFO) << BOLDBLUE << "Injecting stubs/hits in readout chip" << +cChipId << RESET; 
-        //     cExtra.DataCheck({cChipId}, cTriggerRate , cSeed, cBendCode );
-        // }
-        //cExtra.DataCheck({2}, cTriggerRate , cSeed, cBendCode );
-        //cExtra.L1Eye();
+        t.start();
+        // now create a PedestalEqualization object
+        DataChecker cDataChecker;
+        cDataChecker.Inherit (&cTool);
+        cDataChecker.Initialise ( );
+        cDataChecker.zeroContainers();
         
+        //cDataChecker.TestPulse({0});
+        // cDataChecker.DataCheck({0});
+        // //cDataChecker.L1Eye({4});
+        // cDataChecker.writeObjects();
+        // cDataChecker.dumpConfigFiles();
+        // cDataChecker.resetPointers();
+        // t.show ( "Time to check data of the front-ends on the system: " );
+
         //cExtra.DataCheckTP( {0}, 0xFF - 100 , 2 , 0);
         // //std::string cRawFileName = "RawData.raw";
         // //cTool.addFileHandler ( cRawFileName, 'w' );
@@ -284,75 +297,80 @@ int main ( int argc, char* argv[] )
         //         }
         //     }
         // }
-        // for( auto& cBoard : cCicAligner.fBoardVector )
-        // {
-        //     cCicAligner.ReadNEvents ( cBoard , 10 );
-        //     const std::vector<Event*>& cEvents = cCicAligner.GetEvents ( cBoard );
-        //     size_t cEventIndex=0;
-        //     for ( auto& cEvent : cEvents )
-        //     {
-        //         LOG (INFO) << BOLDBLUE << "Event " << +cEventIndex << RESET;
-        //         for (auto& cFe : cBoard->fModuleVector)
-        //         {
-        //             for (auto& cChip : cFe->fReadoutChipVector)
-        //             {
-        //                 auto cNhits = cEvent->GetNHits ( cFe->getFeId() , cChip->getChipId() );
-        //                 LOG (INFO) << BOLDBLUE << "\t\t ... " << +cNhits << " hits found." << RESET;
-        //             }
-        //         }
-        //         cEventIndex++;
-        //     }
-        //     // uint32_t cN=0;
-        //     // for ( auto& cEvent : cEvents )
-        //     // {
-        //     //     //LOG (INFO) << ">>> Event #" << cN++ ;
-        //     //     //outp.str ("");
-        //     //     //outp << *cEvent;
-        //     //     //LOG (INFO) << outp.str();
-        //     //     //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBoard);
-        //     //     //cDAQFileHandler->set (cSLev.getData<uint32_t>() );
-        //     //     //cSLev.print (std::cout);
-        //     // }
-        // }
+
+        //dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0, cTriggerRate);
+        for( auto& cBoard : cCicAligner.fBoardVector )
+        {
+            for (auto& cFe : cBoard->fModuleVector)
+            {
+                // matching 
+                for (auto& cChip : cFe->fReadoutChipVector) 
+                {
+                    if( cFe->getFeId()%2 == 0 )
+                        static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
+                    else
+                        static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
+                }
+            }
+            cCicAligner.ReadNEvents ( cBoard , 10 );
+            const std::vector<Event*>& cEvents = cCicAligner.GetEvents ( cBoard );
+            // size_t cEventIndex=0;
+            // for ( auto& cEvent : cEvents )
+            // {
+            //     LOG (INFO) << BOLDBLUE << "Event " << +cEventIndex << RESET;
+            //     for (auto& cFe : cBoard->fModuleVector)
+            //     {
+            //         for (auto& cChip : cFe->fReadoutChipVector)
+            //         {
+            //             auto cNhits = cEvent->GetNHits ( cFe->getFeId() , cChip->getChipId() );
+            //             LOG (INFO) << BOLDBLUE << "\t\t ... " << +cNhits << " hits found." << RESET;
+            //         }
+            //     }
+            //     cEventIndex++;
+            // }
+            uint32_t cN=0;
+            for ( auto& cEvent : cEvents )
+            {
+                LOG (INFO) << ">>> Event #" << cN++ ;
+                //outp.str ("");
+                //outp << *cEvent;
+                //LOG (INFO) << outp.str();
+                //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBoard);
+                //cDAQFileHandler->set (cSLev.getData<uint32_t>() );
+                //cSLev.print (std::cout);
+            }
+        }
         //delete cDAQFileHandler;
     }
     
     //reconstruct TP 
-    if( cTPamplitude > 0 )
-    {
-        t.start();
-        cExtra.ReconstructTP(cTPamplitude);
-        t.stop();
-    }
-    if( cEvaluate )
-    {
-        LOG (INFO) << BOLDBLUE << "Measuring noise and setting thresholds to " << +cSigma << " noise units away from pedestal...." << RESET;
-        cExtra.Evaluate(cSigma, cTriggerRate, cDisableStubLogic);
-        //cExtra.DataCheck({0}, cTriggerRate , 10,0 );
-        //cExtra.DataCheckTP( {0}, 0xFF - 100 , 2 , 0);
-        //cExtra.DataCheck( {0} , cTriggerRate , 8 , 0 );
-        //cExtra.DataCheck( {4} , cTriggerRate , 8 , 0 );
-        //cExtra.QuickStubCheck({0}, cTriggerRate , 8 , 0 );
-    }
-    if( cLatency )
-    {
-        LatencyScan cLatencyScan;
-        cLatencyScan.Inherit (&cTool);
-        cLatencyScan.Initialize (cStartLatency, cLatencyRange); // fix this so its consistent with all other tools 
-        /*if( cExternal )
-            cLatencyScan.ConfigureTrigger("TLU", cNconsecutiveTriggers );
-        else
-            cLatencyScan.ConfigureTrigger("TestPulse", cNconsecutiveTriggers );
-        */
-        cLatencyScan.ScanLatency (cStartLatency, cLatencyRange);
-        cLatencyScan.writeObjects( );
-        cLatencyScan.resetPointers();
-    }
-    if( cExternal )
-    {
-        if( !cLatency )
-            cExtra.ExternalTriggers(cNconsecutiveTriggers);
-    }
+    // if( cTPamplitude > 0 )
+    // {
+    //     t.start();
+    //     cExtra.ReconstructTP(cTPamplitude);
+    //     t.stop();
+    // }
+    
+    // if( cLatency )
+    // {
+    //     LatencyScan cLatencyScan;
+    //     cLatencyScan.Inherit (&cTool);
+    //     cLatencyScan.Initialize (cStartLatency, cLatencyRange); // fix this so its consistent with all other tools 
+    //     if( cExternal )
+    //         cLatencyScan.ConfigureTrigger("TLU", cNconsecutiveTriggers );
+    //     else
+    //         cLatencyScan.ConfigureTrigger("TestPulse", cNconsecutiveTriggers );
+        
+    //     cLatencyScan.ScanLatency (cStartLatency, cLatencyRange);
+    //     cLatencyScan.writeObjects( );
+    //     cLatencyScan.resetPointers();
+    // }
+    // if( cExternal )
+    // {
+    //     if( !cLatency )
+    //         cExtra.ExternalTriggers(cNconsecutiveTriggers);
+    // }
+
     if( cCheckOccupancy )
     {
         cExtra.OccupancyCheck(cTriggerRate, cDisableStubLogic);

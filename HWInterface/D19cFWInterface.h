@@ -235,7 +235,7 @@ namespace Ph2_HwInterface {
         /*!
         * \breif Scan Setup with Multiplexing Backplane
         */
-        uint32_t ScanMultiplexingSetup() ;
+        uint32_t ScanMultiplexingSetup(uint8_t pWait_ms=100) ;
    
         /*!
         * \breif Configure Setup with Multiplexing Backplane
@@ -386,6 +386,8 @@ namespace Ph2_HwInterface {
 
         void L1ADebug();
         void StubDebug(bool pWithTestPulse=true, uint8_t pNlines=5);
+        bool L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
+        bool L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
         bool L1Tuning(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
         bool StubTuning(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
         //bool BackEndTuning(const BeBoard* pBoard, bool pDoL1A=true);
@@ -398,7 +400,7 @@ namespace Ph2_HwInterface {
 
         // CDCE 
         void configureCDCE_old(uint16_t pClockRate=120 );
-        void configureCDCE( uint16_t pClockRate=120, std::pair<std::string,uint16_t> pCDCEselect=std::make_pair("sec",40) ); 
+        void configureCDCE( uint16_t pClockRate=120, std::pair<std::string,float> pCDCEselect=std::make_pair("sec",40) ); 
         void syncCDCE();
         void epromCDCE();
 

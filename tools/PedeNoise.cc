@@ -268,7 +268,8 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
 
 void PedeNoise::measureSCurves (uint16_t pStartValue)
 {
-
+    // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan! 
+    float cLimit = 1e-2;
     int cMinBreakCount = 10;
 
     bool     cAllZero        = false;
@@ -287,7 +288,6 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         fSCurveOccupancyMap[cValue] = theOccupancyContainer;
 
         
-
         this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
 
 
@@ -309,9 +309,9 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
 
         float globalOccupancy = theOccupancyContainer->getSummary<Occupancy,Occupancy>().fOccupancy;
         
-        if (globalOccupancy == 0) ++cAllZeroCounter;
+        if (globalOccupancy <= (0 + cLimit) ) ++cAllZeroCounter;
 
-        if (globalOccupancy > 0.98) ++cAllOneCounter;
+        if (globalOccupancy >= (1-cLimit)) ++cAllOneCounter;
 
         //it will either find one or the other extreme first and thus these will be mutually exclusive
         //if any of the two conditions is true, just revert the sign and go the opposite direction starting from startvalue+1
@@ -349,7 +349,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         }
 
 
-        LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
+        LOG (INFO) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
         cValue = pStartValue + (cIncrement * cSign);
     }
 
