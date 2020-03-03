@@ -1429,7 +1429,7 @@ namespace Ph2_HwInterface
     usleep(DEEPSLEEP);
 
     auto value = calcVoltage(senseVDD, senseGND);
-    LOG (INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V" << RESET;
+    LOG (INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V (corresponds to VOUT_dig_ShuLDO of the chip)" << RESET;
 
     return value;
   }
