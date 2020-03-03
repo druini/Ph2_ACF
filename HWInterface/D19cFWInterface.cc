@@ -544,7 +544,7 @@ namespace Ph2_HwInterface
         std::this_thread::sleep_for (std::chrono::milliseconds (2000) );
         
         // disable FMC
-        /*this->WriteReg ("sysreg.fmc_pwr.l8_pwr_en", 0);
+        this->WriteReg ("sysreg.fmc_pwr.l8_pwr_en", 0);
         LOG (INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
         do
         {
@@ -562,7 +562,7 @@ namespace Ph2_HwInterface
             std::this_thread::sleep_for (std::chrono::milliseconds (10) );
         }while( std::cin.get()!='\n');
         std::this_thread::sleep_for (std::chrono::milliseconds (500) );
-        */
+        
 
         //check link Ids 
         bool cLinksLocked=true;
@@ -702,11 +702,11 @@ namespace Ph2_HwInterface
         cVecReg.push_back ( {"fc7_daq_cnfg.optical_block.tx_polarity.l8", cPolarityTx} );
         this->WriteStackReg ( cVecReg );
         cVecReg.clear();
-        this->WriteReg("fc7_daq_cnfg.optical_block.enable.l8",0x00);*/
+        this->WriteReg("fc7_daq_cnfg.optical_block.enable.l8",0x00);
         auto cReg_L8 = this->ReadReg("fc7_daq_cnfg.optical_block.enable.l8");
         LOG (INFO) << BOLDBLUE << "Reading back tx enable register [L8] " << std::bitset<8>(cReg_L8) << RESET;
         auto cReg_L12 = this->ReadReg("fc7_daq_cnfg.optical_block.enable.l12");
-        LOG (INFO) << BOLDBLUE << "Reading back tx enable register [L12] " << std::bitset<12>(cReg_L12) << RESET;
+        LOG (INFO) << BOLDBLUE << "Reading back tx enable register [L12] " << std::bitset<12>(cReg_L12) << RESET;*/
         
 
         //this->InitFMCPower();
