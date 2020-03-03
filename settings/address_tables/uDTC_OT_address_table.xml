@@ -156,6 +156,10 @@
         </node>
 	
 	<node id="optical_block"			address="0xD000">
+            <node id="enable"                              address="0x000">
+                <node id="l8"                           mask="0x000000FF" description=""/>
+                <node id="l12"                          mask="0x0FFF0000" description=""/>
+            </node>
             <node id="sca">
                 <node id="address"                    address = "0x001" mask="0x000000FF"/>
                 <node id="id"                         address = "0x001" mask="0x0000FF00"/>
@@ -172,6 +176,14 @@
                 <node id="data"                          mask="0x0000FF00"/>
             </node>
             <node id="mux"                               address = "0x005" mask="0x0000000F"/>
+            <node id="tx_polarity"                              address="0x006">
+                <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
+                <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
+            </node>
+            <node id="rx_polarity"                              address="0x007">
+                <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
+                <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
+            </node>
     </node>
 
 	<node id="tlu_block"			address="0x7000">

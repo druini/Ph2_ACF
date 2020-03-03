@@ -133,6 +133,167 @@ namespace Ph2_System {
         }
         cBeBoard->setOptical( cWithOptical );
         bool cConfigureCDCE=false;
+        uint32_t cClockRateCDCE=120;
+        for (pugi::xml_node cChild: pBeBordNode.children("CDCE"))
+        {
+            for (pugi::xml_attribute cAttribute: cChild.attributes())
+            {
+                if( std::string ( cAttribute.name() ) == "configure")
+                    cConfigureCDCE = cConfigureCDCE | ( convertAnyInt ( cAttribute.value() ) ==1);
+                if( std::string ( cAttribute.name() ) == "clockRate")
+                    cClockRateCDCE = ( convertAnyInt ( cAttribute.value() ) );
+            }
+        }
+        cBeBoard->setCDCEconfiguration( cConfigureCDCE,cClockRateCDCE );
+
+        if( cWithOptical )
+            os << BOLDBLUE <<  "|"  << "----" << "Optical link is      " << BOLDGREEN << " is being used. CDCE clock rate is " << +cClockRateCDCE << "\n" << RESET;
+        else
+            os << BOLDBLUE <<  "|"  << "----" << "Optical link is      " << BOLDRED << " is not being used.\n" << RESET;
+
+        if (cBoardType == "D19C")     cBeBoard->setBoardType (BoardType::D19C);
+    else if (cBoardType == "RD53") cBeBoard->setBoardType (BoardType::RD53);
+    else
+      {
+        LOG (ERROR) << "Error: Unknown Board Type: " << cBoardType << " - aborting!";
+        std::string errorstring = "Unknown Board Type " + cBoardType;
+        throw Exception (errorstring.c_str() );
+        exit (1);
+      }
+
+    pugi::xml_attribute cEventTypeAttribute = pBeBordNode.attribute ("eventType");
+    std::string cEventTypeString;
+
+    if (cEventTypeAttribute == nullptr)
+      {
+        //the HWDescription object does not have and EventType node, so assume EventType::VR
+        cBeBoard->setEventType (EventType::VR);
+        cEventTypeString = "VR";
+      }
+    else
+      {
+        cEventTypeString = cEventTypeAttribute.value();
+
+        if (cEventTypeString == "ZS") cBeBoard->setEventType (EventType::ZS);
+        else cBeBoard->setEventType (EventType::VR);
+      }
+
+        os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDCYAN << ", EventType: " << BOLDYELLOW << cEventTypeString << RESET << std:: endl;
+
+    pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child ("connection");
+
+    std::string cId = cBeBoardConnectionNode.attribute ( "id" ).value();
+    std::string cUri = cBeBoardConnectionNode.attribute ( "uri" ).value();
+    std::string cAddressTable = expandEnvironmentVariables (cBeBoardConnectionNode.attribute ( "address_table" ).value() );
+
+    if (cBeBoard->getBoardType() == BoardType::D19C)
+      {
+        pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+            for (pugi::xml_node cChild: pBeBordNode.children("GBT_Links"))
+            {
+                for (pugi::xml_node cGBT : cChild.children("GBT"))
+                {
+                    uint8_t cGBTId = 0;
+                    for (pugi::xml_attribute cAttribute: cGBT.attributes())
+                    {
+                        if( std::string ( cAttribute.name() ) == "Id") // T.B.D store this somewhere...but where 
+                        {
+                          cGBTId = convertAnyInt (cAttribute.value());
+                          os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << " GBT :      " << BOLDYELLOW << +cGBTId << std::endl << RESET;
+                        }
+                        if( std::string ( cAttribute.name() ) == "phaseTap") // T.B.D store this somewhere...but where 
+                        {
+                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setGBTxPhase( convertAnyInt (cAttribute.value()) );
+                            os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " phase is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
+                        }
+                        if( std::string ( cAttribute.name() ) == "txPolarity") // T.B.D store this somewhere...but where 
+                        {
+                          auto cPolarity = convertAnyInt (cAttribute.value()); 
+                          static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setTxPolarity(cGBTId,cPolarity );
+                          os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " Tx Polarity is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
+                        }
+                        if( std::string ( cAttribute.name() ) == "rxPolarity") // T.B.D store this somewhere...but where 
+                        {
+                            auto cPolarity = convertAnyInt (cAttribute.value()); 
+                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setRxPolarity( cGBTId,cPolarity );
+                            os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " Rx Polairty is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
+                        }
+                    }
+                }
+            }
+        }
+    else if (cBeBoard->getBoardType() == BoardType::RD53)
+      {
+            pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+      }
+
+        os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
+
+    // Iterate over the BeBoardRegister Nodes
+    for ( pugi::xml_node cBeBoardRegNode = pBeBordNode.child ( "Register" ); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling() )
+      {
+        if (std::string (cBeBoardRegNode.name() ) == "Register")
+          {
+            std::string cNameString;
+            uint32_t cValue;
+            this->parseRegister (cBeBoardRegNode, cNameString, cValue, cBeBoard, os);
+                os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|    " << cNameString << " : " << +cValue << RESET; 
+                    //<< "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
+          }
+      }
+
+        os << BLUE <<  "|\t|" << RESET << std::endl;
+
+    // Iterate the module node
+    for ( pugi::xml_node pModuleNode = pBeBordNode.child ( "Module" ); pModuleNode; pModuleNode = pModuleNode.next_sibling() )
+      {
+        if ( static_cast<std::string> ( pModuleNode.name() ) == "Module" )
+          {
+                // for now try and guess based on xml nodes what the FE is 
+            this->parseModuleContainer (pModuleNode, cBeBoard, os );
+          }
+      }
+
+    //here parse the Slink Node
+    pugi::xml_node cSLinkNode = pBeBordNode.child ("SLink");
+    this->parseSLink (cSLinkNode, cBeBoard, os);
+
+    // pBoardVector.emplace_back( cBeBoard );
+
+    return;
+
+  }
+  /*void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os )
+  {
+    uint32_t cBeId = pBeBordNode.attribute ( "Id" ).as_int();
+    BeBoard* cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard ( cBeId ));//FIX Change it to Reference!!!!
+    pBoardVector.emplace_back ( cBeBoard );
+
+    pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute ("boardType");
+
+    if (cBoardTypeAttribute == nullptr)
+      {
+        LOG (ERROR) << BOLDRED << "Error: Board Type not specified - aborting!" << RESET;
+        exit (1);
+      }
+    std::string cBoardType = cBoardTypeAttribute.value();
+
+        bool cWithOptical=false;
+        for (pugi::xml_node cChild: pBeBordNode.children("GBT_Links"))
+        {
+            std::string cName = cChild.name();
+            os << BOLDBLUE <<  "|"  << "----" <<  cName << "\n" << RESET; 
+            for (pugi::xml_node cGBT : cChild.children("GBT"))
+            {
+                for (pugi::xml_attribute cAttribute: cGBT.attributes())
+                {
+                    if( std::string ( cAttribute.name() ) == "enable")
+                        cWithOptical = cWithOptical | ( convertAnyInt ( cAttribute.value() ) ==1);
+                }
+            }
+        }
+        cBeBoard->setOptical( cWithOptical );
+        bool cConfigureCDCE=false;
         for (pugi::xml_node cChild: pBeBordNode.children("CDCE"))
         {
             for (pugi::xml_attribute cAttribute: cChild.attributes())
@@ -242,7 +403,7 @@ namespace Ph2_System {
 
     return;
 
-  }
+  }*/
 
 
   void FileParser::parseRegister (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os)

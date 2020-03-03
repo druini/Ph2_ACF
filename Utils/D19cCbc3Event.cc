@@ -419,6 +419,11 @@ namespace Ph2_HwInterface {
             uint8_t cCbcId = getCbcIdFromVectorIndex(vectorIndex++,fNCbc);
             
             //here display the Cbc Header manually
+            if( fEventDataVector.size() <= encodeVectorIndex(cFeId, cCbcId, fNCbc) ) 
+            {
+                LOG (INFO) << BOLDBLUE << "AAAH! FE" << +cFeId << " CBC" << +cCbcId << " not here!" << RESET;
+                continue;
+            }
             if( fEventDataVector.at(encodeVectorIndex(cFeId, cCbcId, fNCbc)).size() == 0 )
                 continue;
             

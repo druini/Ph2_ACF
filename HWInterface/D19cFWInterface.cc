@@ -188,6 +188,14 @@ namespace Ph2_HwInterface
             name = "OPTO_QUAD";
             break;
 
+        case 0x12:
+            name = "FMC_FE_FOR_PS_ROH_FMC1";
+            break;
+
+        case 0x13:
+            name = "FMC_FE_FOR_PS_ROH_FMC2";
+            break;
+
         case 0x1f:
             name = "UNKNOWN";
             break;
@@ -531,9 +539,12 @@ namespace Ph2_HwInterface
                 //std::this_thread::sleep_for (std::chrono::milliseconds (200) );
             }
         }
+        //reset GBT-FPGA
+        this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);  
+        std::this_thread::sleep_for (std::chrono::milliseconds (2000) );
         
         // disable FMC
-        this->WriteReg ("sysreg.fmc_pwr.l8_pwr_en", 0);
+        /*this->WriteReg ("sysreg.fmc_pwr.l8_pwr_en", 0);
         LOG (INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
         do
         {
@@ -551,7 +562,7 @@ namespace Ph2_HwInterface
             std::this_thread::sleep_for (std::chrono::milliseconds (10) );
         }while( std::cin.get()!='\n');
         std::this_thread::sleep_for (std::chrono::milliseconds (500) );
-
+        */
 
         //check link Ids 
         bool cLinksLocked=true;
@@ -563,8 +574,8 @@ namespace Ph2_HwInterface
             LOG (INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
             uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
             LOG (INFO) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
-            std::vector<std::string> cStates = { "RX FrameCLK Locked", "GBT TX Ready" ,"MGT Ready", "GBT RX Ready"};
-            uint8_t cIndex=0; 
+            std::vector<std::string> cStates = { "GBT TX Ready" ,"MGT Ready", "GBT RX Ready"};
+            uint8_t cIndex=1; 
             bool cGBTxLocked=true;
             for( auto cState : cStates ) 
             {
@@ -647,6 +658,7 @@ namespace Ph2_HwInterface
         // reset FC7 if not mux crate 
         uint32_t fmc1_card_type = ReadReg ("fc7_daq_stat.general.info.fmc1_card_type");
         uint32_t fmc2_card_type = ReadReg ("fc7_daq_stat.general.info.fmc2_card_type");
+        LOG (INFO) << BOLDBLUE << "FMC1  " << +fmc1_card_type << " FMC2 " << +fmc2_card_type << RESET;
         LOG (INFO) << BOLDBLUE << "FMC1 Card: " << RESET << getFMCCardName (fmc1_card_type);
         LOG (INFO) << BOLDBLUE << "FMC2 Card: " << RESET << getFMCCardName (fmc2_card_type);
         if( getFMCCardName (fmc1_card_type) != "2S_FMC1" )
@@ -664,16 +676,44 @@ namespace Ph2_HwInterface
         {
             cVecReg.push_back ( {it.first, it.second} );
             if (it.first == "fc7_daq_cnfg.dio5_block.dio5_en") dio5_enabled = (bool) it.second;
+            if (it.first == "fc7_daq_cnfg.optical_block.enable.l8")
+            {
+                LOG (INFO) << BOLDBLUE << it.first << " set to " << std::bitset<12>(it.second) << RESET;
+            }
         }
         WriteStackReg ( cVecReg );
         cVecReg.clear();
 
+        
+        //set tx + rx polarity 
+        /*uint16_t cPolarityRx = 0xFF ;
+        for(auto cRx : fRxPolarity )
+        {
+            //cPolarityRx = cPolarityRx & ( cRx.second >> cRx.first );
+        }
+        LOG (INFO) << BOLDBLUE << "Setting Rx polarity on l8 to " << std::bitset<8>(cPolarityRx) << RESET;
+        cVecReg.push_back ( {"fc7_daq_cnfg.optical_block.rx_polarity.l8", cPolarityRx} );
+        uint16_t cPolarityTx = 0xFF ;
+        for(auto cTx : fTxPolarity )
+        {
+            //cPolarityTx = cPolarityTx & ( cTx.second >> cTx.first );
+        }
+        LOG (INFO) << BOLDBLUE << "Setting Tx polarity on l8 to " << std::bitset<8>(cPolarityTx) << RESET;
+        cVecReg.push_back ( {"fc7_daq_cnfg.optical_block.tx_polarity.l8", cPolarityTx} );
+        this->WriteStackReg ( cVecReg );
+        cVecReg.clear();
+        this->WriteReg("fc7_daq_cnfg.optical_block.enable.l8",0x00);*/
+        auto cReg_L8 = this->ReadReg("fc7_daq_cnfg.optical_block.enable.l8");
+        LOG (INFO) << BOLDBLUE << "Reading back tx enable register [L8] " << std::bitset<8>(cReg_L8) << RESET;
+        auto cReg_L12 = this->ReadReg("fc7_daq_cnfg.optical_block.enable.l12");
+        LOG (INFO) << BOLDBLUE << "Reading back tx enable register [L12] " << std::bitset<12>(cReg_L12) << RESET;
+        
+
+        //this->InitFMCPower();
         // load dio5 configuration
         if (dio5_enabled)
         {
-            //InitFMCPower();
-            PowerOnDIO5();
-            WriteReg ("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
+            this->WriteReg ("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
         }
         std::this_thread::sleep_for (std::chrono::milliseconds (500) );
       
@@ -699,9 +739,11 @@ namespace Ph2_HwInterface
             cCDCEselect.first = "pri";
             cCDCEselect.second = 40.;
         }
-        if( pBoard->configCDCE() )
+        auto cCDCEconfig = pBoard->configCDCE();
+        if( cCDCEconfig.first )
         {
-            configureCDCE(120, cCDCEselect);
+            //configureCDCE_old(cCDCEconfig.second);
+            configureCDCE(cCDCEconfig.second, cCDCEselect);
             std::this_thread::sleep_for (std::chrono::milliseconds (2000) );
         }
         
@@ -727,7 +769,6 @@ namespace Ph2_HwInterface
             if( c40MhzLocked && cRefClockLocked )
                 break;
 
-            //this->syncCDCE();
             std::this_thread::sleep_for (std::chrono::milliseconds (100) );
             cLockAttempts++;
         };
@@ -743,20 +784,6 @@ namespace Ph2_HwInterface
             if ( std::find(cLinkIds.begin(), cLinkIds.end(), cFe->getLinkId() ) == cLinkIds.end() )
                 cLinkIds.push_back(cFe->getLinkId() );
         }
-       
-        fOptical = pBoard->ifOptical();
-        // if optical readout .. then
-        if( fOptical)
-        {
-            bool cGBTlock = GBTLock(pBoard);
-            if( !cGBTlock )
-            {
-                LOG (INFO) << BOLDRED << "GBT link failed to LOCK!" << RESET;
-                exit(0);
-            }
-            // now configure SCA + GBTx 
-            configureLink(pBoard);
-        } 
 
         // read info about current firmware
         uint32_t cFrontEndTypeCode = ReadReg ("fc7_daq_stat.general.info.chip_type");
@@ -769,6 +796,24 @@ namespace Ph2_HwInterface
         fIsDDR3Readout = (ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type") == 1);
         fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
         if(fI2CVersion >= 1) this->SetI2CAddressTable();
+
+
+        fOptical = pBoard->ifOptical();
+        // if optical readout .. then
+        if( fOptical)
+        {
+            this->syncCDCE();
+            
+            LOG (INFO) << BOLDBLUE << "Configuring optical link.." << RESET;
+            bool cGBTlock = GBTLock(pBoard);
+            if( !cGBTlock )
+            {
+                LOG (INFO) << BOLDRED << "GBT link failed to LOCK!" << RESET;
+                exit(0);
+            }
+            // now configure SCA + GBTx 
+            configureLink(pBoard);
+        } 
 
         if( fFirmwareFrontEndType == FrontEndType::CIC ||  fFirmwareFrontEndType == FrontEndType::CIC2 ) 
         {
@@ -888,6 +933,14 @@ namespace Ph2_HwInterface
                 {
                     LOG (INFO) << BOLDGREEN << "Successful read from first I2C register of CIC on hybrid " << +cFe->getFeId() << " .... Enabling CIC" << +cCic->getChipId() << RESET;
                     hybrid_enable |= 1 << cFe->getFeId();
+                    
+                    /*std::vector<std::string> cRegNames{ "BEND_SEL", "N_OUTPUT_TRIGGER_LINES_SEL", "CBC_SPARSIFICATION_SEL"};
+                    for( auto it = cRegNames.begin(); it != cRegNames.end(); ++it)
+                    {
+                        auto cIndex = std::distance(cRegNames.begin(), it); 
+                        ChipRegItem cRegItem = cCic->getRegItem ( *it );
+                        LOG (INFO) << "Register " << cRegNames[cIndex] << " set to " << +cRegItem.fValue << RESET;
+                    }*/
                     fNCic++;
                 }
             }
@@ -913,6 +966,9 @@ namespace Ph2_HwInterface
     //disconnect setup with multiplexing backplane
     void D19cFWInterface::DisconnectMultiplexingSetup()
     {
+
+        LOG (INFO) << BOLDBLUE << "Disconnect multiplexing set-up" << RESET;
+
         bool L12Power = (ReadReg("sysreg.fmc_pwr.l12_pwr_en") == 1);
         bool L8Power = (ReadReg("sysreg.fmc_pwr.l8_pwr_en") == 1);
         bool PGC2M = (ReadReg("sysreg.fmc_pwr.pg_c2m") == 1);
@@ -925,9 +981,10 @@ namespace Ph2_HwInterface
         bool SystemPowered = false;
         if (BackplanePG && CardPG) 
         {
+            LOG (INFO) << BOLDBLUE << "Back-plane power good and card power good." << RESET;
             WriteReg ("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_disconnect", 0x1);
             SystemPowered = true;
-                }
+        }
         else 
         {
             LOG (INFO) << GREEN << "============================" << RESET;
@@ -983,7 +1040,7 @@ namespace Ph2_HwInterface
         }
 
         if (SystemNotConfigured==true) 
-            {
+        {
             bool SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
             bool s=false;
             LOG (INFO) << GREEN << "============================" << RESET;
@@ -1637,7 +1694,7 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard , bool pScope)
         auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
         int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
         // need to know the address 
-        this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
+        //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
         // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging 
         
         uint8_t cLineId=0;
@@ -2466,11 +2523,12 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
 
 
     uint32_t cTimeoutCounter = 0 ;
-    uint32_t cTimeoutValue = 100;
+    uint32_t cTimeoutValue = 10000;
     while (cReadoutReq == 0 && !pFailed )
     {
+
         pFailed = pFailed || ( cTimeoutCounter >= cTimeoutValue );
-        if( pFailed )
+        if(!pFailed)
             continue;
 
         cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");

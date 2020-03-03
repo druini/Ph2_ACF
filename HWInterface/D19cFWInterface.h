@@ -98,11 +98,14 @@ namespace Ph2_HwInterface {
         bool fIsDDR3Readout;
         bool fDDR3Calibrated;
         uint32_t fDDR3Offset;
-    	// i2c version of master
+    	  // i2c version of master
         uint32_t fI2CVersion;	
         // optical readout
         bool fOptical=false;
         bool fConfigureCDCE=false;
+        std::map<uint8_t,uint8_t> fRxPolarity;
+        std::map<uint8_t,uint8_t> fTxPolarity;
+        
         uint32_t fGBTphase;
 
         const uint32_t SINGLE_I2C_WAIT = 200; //used for 1MHz I2C
@@ -397,6 +400,8 @@ namespace Ph2_HwInterface {
         void configureLink(const Ph2_HwDescription::BeBoard* pBoard );
         bool GBTLock( const Ph2_HwDescription::BeBoard* pBoard);
         std::pair<uint16_t,float> readADC( std::string pValueToRead="AMUX_L" , bool pApplyCorrection=false );
+        void setRxPolarity( uint8_t pLinkId , uint8_t pPolarity=1){ fRxPolarity.insert({pLinkId,pPolarity}); };
+        void setTxPolarity( uint8_t pLinkId , uint8_t pPolarity=1){ fTxPolarity.insert({pLinkId,pPolarity}); };
 
         // CDCE 
         void configureCDCE_old(uint16_t pClockRate=120 );
