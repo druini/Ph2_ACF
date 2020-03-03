@@ -23,7 +23,6 @@ void PixelAlive::ConfigureCalibration ()
   colStop        = this->findValueInSettings("COLstop");
   nEvents        = this->findValueInSettings("nEvents");
   nEvtsBurst     = this->findValueInSettings("nEvtsBurst");
-  nTRIGxEvent    = this->findValueInSettings("nTRIGxEvent");
   injType        = this->findValueInSettings("INJtype");
   nHITxCol       = this->findValueInSettings("nHITxCol");
   doFast         = this->findValueInSettings("DoFast");
@@ -31,8 +30,6 @@ void PixelAlive::ConfigureCalibration ()
   doDisplay      = this->findValueInSettings("DisplayHisto");
   doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData = this->findValueInSettings("SaveBinaryData");
-
-  if (injType != INJtype::None) nTRIGxEvent = 1;
 
 
   // ################################
@@ -145,7 +142,7 @@ void PixelAlive::run ()
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(injType);
   this->fMaskChannelsFromOtherGroups = true;
-  this->measureData(nEvents, nEvtsBurst, nTRIGxEvent);
+  this->measureData(nEvents, nEvtsBurst);
 
 
   // ################

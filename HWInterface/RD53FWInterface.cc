@@ -1010,7 +1010,7 @@ namespace Ph2_HwInterface
     // # Configuring FastCmd block #
     // #############################
     RD53FWInterface::localCfgFastCmd.n_triggers       = 0;
-    RD53FWInterface::localCfgFastCmd.trigger_duration = nTRIGxEvent - 1;
+    RD53FWInterface::localCfgFastCmd.trigger_duration = ((injType == INJtype::None) && (RD53FWInterface::localCfgFastCmd.trigger_source == TriggerSource::FastCMDFSM) ? 0 : nTRIGxEvent - 1);
 
     if (injType == INJtype::Digital)
       {
