@@ -20,8 +20,8 @@
 // #############
 // # CONSTANTS #
 // #############
+#define NSTDEV 1.           // Number of standard deviations for gain tolerance
 #define RESULTDIR "Results" // Directory containing the results
-#define NSTDEV 1            // Number of standard deviations for gain tolerance
 
 
 // ################################
@@ -72,7 +72,7 @@ class GainOptimization : public Gain
   DetectorDataContainer theKrumCurrContainer;
 
   void fillHisto         ();
-  void bitWiseScan       (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+  void bitWiseScanGlobal (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
   void chipErrorReport   ();
   void saveChipRegisters (int currentRun);
 

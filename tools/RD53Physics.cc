@@ -60,7 +60,7 @@ void Physics::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
+      this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -141,7 +141,7 @@ void Physics::initializeFiles (const std::string fileRes_, int currentRun)
 
   if ((currentRun >= 0) && (saveBinaryData == true))
     {
-      this->addFileHandler(std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
+      this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -315,6 +315,7 @@ void Physics::saveChipRegisters (int currentRun)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
         {
+          static_cast<RD53*>(cChip)->copyMaskFromDefault();
           if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
           static_cast<RD53*>(cChip)->saveRegMap(fileReg);
           std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);

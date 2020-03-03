@@ -75,22 +75,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
         endif()
     endif()
-    
-    #check if the setup is based on the multiplexing backplane
+
+    # Check if the setup is based on the multiplexing backplane
     if(DEFINED ENV{MultiplexingFlag})
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{MultiplexingFlag}")
-    endif()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{MultiplexingFlag}")
+    endif(DEFINED ENV{MultiplexingFlag})
 
-
-    # build eudaq producer
-    if(USE_EUDAQ)
-        message(STATUS "    eudaq")
-        set(LIBS ${LIBS} ${EUDAQ_LIB})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__EUDAQ__")
-    endif(USE_EUDAQ)
-    message("#### End ####")
-
-    #build eudaq producer
+    # Build eudaq producer
     if (USE_EUDAQ)
         set(LIBS ${LIBS} ${EUDAQ_LIB})
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{EuDaqFlag}")

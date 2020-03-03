@@ -521,43 +521,43 @@ namespace Ph2_System
             bool cCondition = (pNevents > 0 ) ? (it != pData.end() && cEventIndex < pNevents) : (it != pData.end()) ;
             while(cCondition)
             {
-                cCondition = (pNevents > 0 ) ? (it != pData.end() && cEventIndex < pNevents) : (it != pData.end()) ;
-                uint32_t cEventSize = (0x0000FFFF & (*it))*4 ; // event size is given in 128 bit words
-                auto cEnd = ( (it+cEventSize) > pData.end() ) ? pData.end() : (it + cEventSize) ;
-                bool cCondition2 = (pNevents > 0 ) ?  (cEnd <= pData.end() && cEventIndex < pNevents) : (cEnd <= pData.end());
-                if( cCondition2 )
+              cCondition = (pNevents > 0 ) ? (it != pData.end() && cEventIndex < pNevents) : (it != pData.end()) ;
+              uint32_t cEventSize = (0x0000FFFF & (*it))*4 ; // event size is given in 128 bit words
+              auto cEnd = ( (it+cEventSize) > pData.end() ) ? pData.end() : (it + cEventSize) ;
+              bool cCondition2 = (pNevents > 0 ) ?  (cEnd <= pData.end() && cEventIndex < pNevents) : (cEnd <= pData.end());
+              if( cCondition2 )
+              {
+                // retrieve chunck of data vector belonging to this event
+                std::vector<uint32_t> cEvent(it, cEnd);
+                // some useful debug information
+                LOG (DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " : " << std::bitset<32>(cEvent[0]) << " : " << +cEventSize <<  " 32 bit words..." << RESET;
+                // currently some problem with the dummy words..
+                // push back event into event list
+                if( pBoard->getFrontEndType() == FrontEndType::CBC3 )
                 {
-                  // retrieve chunck of data vector belonging to this event
-                  std::vector<uint32_t> cEvent(it, cEnd);
-                  // some useful debug information
-                  LOG (DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " : " << std::bitset<32>(cEvent[0]) << " : " << +cEventSize <<  " 32 bit words..." << RESET;
-                  // currently some problem with the dummy words..
-                  // push back event into event list
-                  if( pBoard->getFrontEndType() == FrontEndType::CBC3 )
-                  {
-                    fNevents   = static_cast<uint32_t>(pNevents);
-                    fEventSize = static_cast<uint32_t>((pData.size()) / fNevents);
+                  fNevents   = static_cast<uint32_t>(pNevents);
+                  fEventSize = static_cast<uint32_t>((pData.size()) / fNevents);
 
-                    LOG (DEBUG) << BOLDBLUE << "CBC3 events..." << RESET;
-                    fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
-                    fEventList.push_back ( new D19cCbc3Event ( pBoard, fNCbc, fNFe , cEvent ) );
-                  }
-                  else if( pBoard->getFrontEndType() == FrontEndType::CIC )
-                  {
-                    fNCbc = 8;
-                    fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
-                    fEventList.push_back ( new D19cCicEvent ( pBoard, fNCbc , fNFe, cEvent ) );
-                  }
-                  else if(pBoard->getFrontEndType() == FrontEndType::CIC2 )
-                  {
-                    fNCbc = 8;
-                    fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
-                    // check if the board is reading sparsified or unsparsified data 
-                    fEventList.push_back ( new D19cCic2Event ( pBoard, fNCbc , fNFe, cEvent ) );
-                  }
-                  cEventIndex++;
+                  LOG (DEBUG) << BOLDBLUE << "CBC3 events..." << RESET;
+                  fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
+                  fEventList.push_back ( new D19cCbc3Event ( pBoard, fNCbc, fNFe , cEvent ) );
                 }
-                it = cEnd;
+                else if( pBoard->getFrontEndType() == FrontEndType::CIC )
+                {
+                  fNCbc = 8;
+                  fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
+                  fEventList.push_back ( new D19cCicEvent ( pBoard, fNCbc , fNFe, cEvent ) );
+                }
+                else if(pBoard->getFrontEndType() == FrontEndType::CIC2 )
+                {
+                  fNCbc = 8;
+                  fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
+                  // check if the board is reading sparsified or unsparsified data 
+                  fEventList.push_back ( new D19cCic2Event ( pBoard, fNCbc , fNFe, cEvent ) );
+                }
+                cEventIndex++;
+              }
+              it = cEnd;
             }
         }
         // moved the ZS case to here ... to be tackled afterwards
@@ -571,28 +571,28 @@ namespace Ph2_System
             bool cCondition = (pNevents > 0 ) ? (it != pData.end() && cEventIndex < pNevents) : (it != pData.end()) ;
             while(cCondition)
             {
-                cCondition = (pNevents > 0 ) ? (it != pData.end() && cEventIndex < pNevents) : (it != pData.end()) ;
-                uint32_t cEventSize = (0x0000FFFF & (*it))*4 ; // event size is given in 128 bit words
-                auto cEnd = ( (it+cEventSize) > pData.end() ) ? pData.end() : (it + cEventSize) ;
-                bool cCondition2 = (pNevents > 0 ) ?  (cEnd <= pData.end() && cEventIndex < pNevents) : (cEnd <= pData.end());
-                if( cCondition2 )
+              cCondition = (pNevents > 0 ) ? (it != pData.end() && cEventIndex < pNevents) : (it != pData.end()) ;
+              uint32_t cEventSize = (0x0000FFFF & (*it))*4 ; // event size is given in 128 bit words
+              auto cEnd = ( (it+cEventSize) > pData.end() ) ? pData.end() : (it + cEventSize) ;
+              bool cCondition2 = (pNevents > 0 ) ?  (cEnd <= pData.end() && cEventIndex < pNevents) : (cEnd <= pData.end());
+              if( cCondition2 )
+              {
+                // retrieve chunck of data vector belonging to this event
+                std::vector<uint32_t> cEvent(it, cEnd);
+
+                // some useful debug information
+                LOG (INFO) << BOLDGREEN << "Event" << +cEventIndex << " : " << std::bitset<32>(cEvent[0]) << " : " << +cEventSize <<  " 32 bit words." << RESET;
+                // push back event into event list
+                LOG (DEBUG) << BOLDBLUE << "CIC events..." << RESET;
+                for( auto cWord : cEvent )
                 {
-                  // retrieve chunck of data vector belonging to this event
-                  std::vector<uint32_t> cEvent(it, cEnd);
+                  LOG (INFO) << BOLDBLUE << "\t.... " << std::bitset<32>(cWord) << RESET;
 
-                  // some useful debug information
-                  LOG (INFO) << BOLDGREEN << "Event" << +cEventIndex << " : " << std::bitset<32>(cEvent[0]) << " : " << +cEventSize <<  " 32 bit words." << RESET;
-                  // push back event into event list
-                  LOG (DEBUG) << BOLDBLUE << "CIC events..." << RESET;
-                  for( auto cWord : cEvent )
-                  {
-                    LOG (INFO) << BOLDBLUE << "\t.... " << std::bitset<32>(cWord) << RESET;
-
-                  }
-                  //fEventList.push_back ( new D19cCicEvent ( pBoard, fNCbc , fNFe, cEvent ) );
-                  cEventIndex++;
                 }
-                it = cEnd;
+                //fEventList.push_back ( new D19cCicEvent ( pBoard, fNCbc , fNFe, cEvent ) );
+                cEventIndex++;
+              }
+              it = cEnd;
             }
           }
           else
