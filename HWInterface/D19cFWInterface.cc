@@ -663,9 +663,12 @@ namespace Ph2_HwInterface
         LOG (INFO) << BOLDBLUE << "FMC2 Card: " << RESET << getFMCCardName (fmc2_card_type);
         if( getFMCCardName (fmc1_card_type) != "2S_FMC1" )
         {
-            LOG (INFO) << BOLDBLUE << "Sending a global reset to the FC7 ..... " << RESET;
-            WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
-            std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+            if( getFMCCardName (fmc1_card_type) != "FMC_FE_FOR_PS_ROH_FMC1" )
+            {
+                LOG (INFO) << BOLDBLUE << "Sending a global reset to the FC7 ..... " << RESET;
+                WriteReg ("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
+                std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+            }
         }
 
         // configure FC7

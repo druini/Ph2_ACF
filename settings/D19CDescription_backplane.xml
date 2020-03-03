@@ -3,7 +3,7 @@
     <BeBoard Id="0" boardType="D19C" eventType="VR">
       <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
 
-    <GBT_Links>
+    <!-- <GBT_Links>
         <GBT Id="0" phaseTap="7" enable="0"/>
     </GBT_Links>
     
@@ -30,7 +30,7 @@
 
         <CIC_Files path="./settings/CicFiles/" />
         <CIC Id="8" configfile="CIC_default.txt" />
-    </Module>
+    </Module> -->
 
     <SLink>
         <DebugMode type="FULL"/>
