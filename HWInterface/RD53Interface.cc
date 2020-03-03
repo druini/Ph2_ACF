@@ -54,7 +54,17 @@ namespace Ph2_HwInterface
     // ###############################
     static const char* registerBlackList[] =
       {
-        "HighGain_LIN"
+        "HighGain_LIN",
+        "INJECTION_SELECT_DELAY",
+        "CLK_DATA_DELAY_CLK_DELAY",
+        "CLK_DATA_DELAY_DATA_DELAY",
+        "I_MONITOR_SELECT",
+        "V_MONITOR_SELECT",
+        "ADC_MONITOR_CONFIG",
+        "BG_MONITOR_CONFIG",
+        "ADC_OFFSET",
+        "ACTUAL_VREF_ADC",
+        "TEMPSENS_IDEAL_FACTOR"
       };
 
     for (const auto& cRegItem : pRD53RegMap)
@@ -368,14 +378,13 @@ namespace Ph2_HwInterface
   // # Dedicated to minitoring #
   // ###########################
 
-  float RD53Interface::ReadChipADC (Chip* pChip, const char* observableName, float ADCoffset, float actualVrefADC, float resistorI2V)
+  float RD53Interface::ReadChipMonitor (Chip* pChip, const char* observableName)
   {
     this->setBoard(pChip->getBeBoardId());
 
     float    value;
     bool     isCurrentNotVoltage;
     uint32_t voltageObservable(0), currentObservable(0), observable;
-    const float safetyMargin = 0.9;
 
     const std::unordered_map<std::string, uint32_t> currentMultiplexer =
     {
@@ -465,48 +474,56 @@ namespace Ph2_HwInterface
       {
         value = RD53Interface::measureTemperature(pChip, observable);
         LOG (INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << RESET;
-        return value;
       }
     else
       {
-        auto ADC = RD53Interface::measureADC(pChip, observable);
-        if (ADC > (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1.) * safetyMargin)
-          LOG (WARNING) << BOLDRED << "\t--> ADC measurement in saturation (ADC = " << BOLDYELLOW << ADC << BOLDRED << "): likely the R-IMUX resistor, that converts the current into a voltage, is not connected" << RESET;
-
-        value = RD53Interface::convertADC2VorI(pChip, ADC, isCurrentNotVoltage, ADCoffset, actualVrefADC, resistorI2V);
+        value = measureVoltageCurrent(pChip, observable, isCurrentNotVoltage);
         LOG (INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " " << (isCurrentNotVoltage == true ? "A" : "V") << RESET;
-        return value;
       }
+
+    return value;
   }
 
   uint32_t RD53Interface::measureADC (Chip* pChip, uint32_t data)
   {
-      const uint16_t GLOBAL_PULSE_ROUTE = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
-      const uint8_t  chipID             = pChip->getChipId();
-      const uint16_t trimADC            = bits::pack<1, 5, 6>(true, pChip->getRegItem("BG_MONITOR_CONFIG").fValue, pChip->getRegItem("ADC_MONITOR_CONFIG").fValue);
-      // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should give an average VrefADC of 0.9 V
+    const uint16_t GLOBAL_PULSE_ROUTE = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
+    const uint8_t  chipID             = pChip->getChipId();
+    const uint16_t trimADC            = bits::pack<1, 5, 6>(true, pChip->getRegItem("BG_MONITOR_CONFIG").fValue, pChip->getRegItem("ADC_MONITOR_CONFIG").fValue);
+    // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should give an average VrefADC of 0.9 V
 
-      std::vector<uint16_t> commandList;
+    std::vector<uint16_t> commandList;
 
-      RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_CONFIG").fAddress, trimADC).appendTo(commandList);
-      RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0040).appendTo(commandList); // Reset Monitor Data
-      RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0004).appendTo(commandList);
-      RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0008).appendTo(commandList); // Clear Monitor Data
-      RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0004).appendTo(commandList);
-      RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_SELECT").fAddress, data).appendTo(commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
-      RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x1000).appendTo(commandList); // Trigger Monitor Data to start conversion
-      RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0004).appendTo(commandList);
+    RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_CONFIG").fAddress, trimADC).appendTo(commandList);
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0040).appendTo(commandList); // Reset Monitor Data
+    RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0004).appendTo(commandList);
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0008).appendTo(commandList); // Clear Monitor Data
+    RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0004).appendTo(commandList);
+    RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_SELECT").fAddress, data).appendTo(commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x1000).appendTo(commandList); // Trigger Monitor Data to start conversion
+    RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0004).appendTo(commandList);
 
-      static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getFeId());
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getFeId());
 
-      return RD53Interface::ReadChipReg(pChip, "MONITORING_DATA_ADC");
+    return RD53Interface::ReadChipReg(pChip, "MONITORING_DATA_ADC");
   }
 
-  float RD53Interface::measureTemperature (Chip* pChip, uint32_t data, float idealityFactor)
+  float RD53Interface::measureVoltageCurrent (Chip* pChip, uint32_t data, bool isCurrentNotVoltage)
+  {
+    const float safetyMargin = 0.9;
+
+    auto ADC = RD53Interface::measureADC(pChip, data);
+    if (ADC > (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1.) * safetyMargin)
+      LOG (WARNING) << BOLDRED << "\t--> ADC measurement in saturation (ADC = " << BOLDYELLOW << ADC << BOLDRED << "): likely the R-IMUX resistor, that converts the current into a voltage, is not connected" << RESET;
+
+    return RD53Interface::convertADC2VorI(pChip, ADC, isCurrentNotVoltage);
+  }
+
+  float RD53Interface::measureTemperature (Chip* pChip, uint32_t data)
   {
     // ################################################################################################
     // # Temperature measurement is done by measuring twice, once with high bias, once with low bias  #
     // # Temperature is calculated based on the difference of the two, with the formula on the bottom #
+    // # idealityFactor = 1225 [1/1000]                                                               #
     // ################################################################################################
 
     // #####################
@@ -517,6 +534,7 @@ namespace Ph2_HwInterface
     const float e   = 1.6021766208e-19;
     const float R   = 15; // By circuit design
     const uint8_t sensorDEM = 0x0E; // Sensor Dynamic Element Matching bits needed to trim the thermistors
+    const float idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3;
 
     uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
 
@@ -535,16 +553,18 @@ namespace Ph2_HwInterface
     return e / (idealityFactor * kb * log(R)) * (valueHigh  - valueLow) - T0C;
   }
 
-  float RD53Interface::convertADC2VorI (Chip* pChip, uint32_t value, bool isCurrentNotVoltage, float ADCoffset, float actualVrefADC, float resistorI2V)
+  float RD53Interface::convertADC2VorI (Chip* pChip, uint32_t value, bool isCurrentNotVoltage)
   {
-    // ###################################################################
-    // # Parameter values:                                               #
-    // # actualVrefADC = 0.839  [V] Lower than VrefADC due to parasitics #
-    // # ADCoffset     = 0.0063 [V] Offset due to ground shift           #
-    // # resistorI2V   = 10000  [Ohm]                                    #
-    // ###################################################################
-    float ADCslope = (actualVrefADC - ADCoffset) / (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1); // [V/ADC]
-    float voltage  = ADCoffset + ADCslope * value;
+    // #####################################################################
+    // # ADCoffset     = 63  [1/10mV] Offset due to ground shift           #
+    // # actualVrefADC = 839 [mV]     Lower than VrefADC due to parasitics #
+    // #####################################################################
+    const float resistorI2V   = 10000; // [Ohm]
+    const float ADCoffset     = pChip->getRegItem("ADC_OFFSET").fValue / 1e4;
+    const float actualVrefADC = pChip->getRegItem("ACTUAL_VREF_ADC").fValue / 1e3;
+
+    const float ADCslope = (actualVrefADC - ADCoffset) / (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1); // [V/ADC]
+    const float voltage  = ADCoffset + ADCslope * value;
 
     return voltage / (isCurrentNotVoltage == true ? resistorI2V : 1);
   }
