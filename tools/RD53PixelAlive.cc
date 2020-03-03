@@ -33,7 +33,6 @@ void PixelAlive::ConfigureCalibration ()
   saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
   if (injType != INJtype::None) nTRIGxEvent = 1;
-  else                          doFast      = false;
 
 
   // ################################

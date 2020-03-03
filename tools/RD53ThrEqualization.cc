@@ -30,8 +30,7 @@ void ThrEqualization::ConfigureCalibration ()
   colStart       = this->findValueInSettings("COLstart");
   colStop        = this->findValueInSettings("COLstop");
   nEvents        = this->findValueInSettings("nEvents");
-  nEvtsBurst     = nEvents;
-  nEvents       *= this->findValueInSettings("VCalHnsteps");
+  nEvtsBurst     = this->findValueInSettings("nEvtsBurst");
   startValue     = this->findValueInSettings("VCalHstart");
   stopValue      = this->findValueInSettings("VCalHstop");
   nHITxCol       = this->findValueInSettings("nHITxCol");
