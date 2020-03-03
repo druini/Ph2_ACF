@@ -74,6 +74,7 @@ int main(int argc, char* argv[])
      LOG (INFO) << BOLDBLUE << " STATUS : Data Player Running " << RESET;
     }
   }*/
+  LOG (INFO) << BOLDRED << "When you are ready... press [ENTER] to stop data player..." << RESET;
   do
   {
       std::this_thread::sleep_for (std::chrono::milliseconds (10) );
