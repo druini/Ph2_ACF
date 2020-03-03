@@ -189,14 +189,14 @@ namespace Ph2_System
                   {
                     LOG (INFO) << BOLDBLUE << "Configuring readout chip [CBC" << +cReadoutChip->getChipId() << " ]" << RESET;
                     fReadoutChipInterface->ConfigureChip ( cReadoutChip );
-                    // // check the first value in the register map
-                    // auto cRegisterMap = cReadoutChip->getRegMap();
-                    // uint16_t cRegValue = fReadoutChipInterface->ReadChipReg( cReadoutChip, cRegisterMap.begin()->first );
-                    // LOG (INFO) << BOLDGREEN <<  "Successfully configured Chip " << int ( cReadoutChip->getChipId() ) << " [ " << cRegisterMap.begin()->first << " set to 0x" << std::hex << cRegValue << std::dec <<  " ]." << RESET;
+                    // check the first value in the register map
+                    auto cRegisterMap = cReadoutChip->getRegMap();
+                    uint16_t cRegValue = fReadoutChipInterface->ReadChipReg( cReadoutChip, cRegisterMap.begin()->first );
+                    LOG (INFO) << BOLDGREEN <<  "Successfully configured Chip " << int ( cReadoutChip->getChipId() ) << " [ " << cRegisterMap.begin()->first << " set to 0x" << std::hex << cRegValue << std::dec <<  " ]." << RESET;
 
-                    // // if there is no CICs then do the back-end alignment here ...
-                    // if( static_cast<OuterTrackerModule*>(cFe)->fCic != NULL )
-                    //   continue;
+                    // if there is no CICs then do the back-end alignment here ...
+                    if( static_cast<OuterTrackerModule*>(cFe)->fCic != NULL )
+                      continue;
 
                     // // original threshold
                     // uint16_t cThreshold = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cReadoutChip, "VCth" );
@@ -272,7 +272,8 @@ namespace Ph2_System
                   }
               }
           }
-          static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning (cBoard);
+          if( !cWithCIC)
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning (cBoard);
         }
         else
           {
