@@ -66,13 +66,19 @@ int main(int argc, char* argv[])
   //Configure and Start DataPlayer
   cROHInterfacer.ConfigureEmulator(pInterface, pPattern);
   cROHInterfacer.StartEmulator(pInterface);
-  int counter = 0;
-  while(true){
+  /*int counter = 0;
+  while(true)
+  {
     counter++;
     if (counter % 10 == 0 && cROHInterfacer.EmulatorIsRunning(pInterface) ){
      LOG (INFO) << BOLDBLUE << " STATUS : Data Player Running " << RESET;
     }
-  }
+  }*/
+  do
+  {
+      std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+  }while( std::cin.get()!='\n'  && cROHInterfacer.EmulatorIsRunning(pInterface) );
+  
   cTool.Destroy();
   return 0;  
 }
