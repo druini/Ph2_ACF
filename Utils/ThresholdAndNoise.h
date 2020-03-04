@@ -70,13 +70,13 @@ inline void ThresholdAndNoise::makeChannelAverage<ThresholdAndNoise>(const ChipC
 
   if (fThresholdError > 0)
     {
-      fThreshold      /= fThresholdError;
+      fThreshold     /= fThresholdError;
       fThresholdError = sqrt(1. / fThresholdError);
     }
 
   if (fNoiseError > 0)
     {
-      fNoise      /= fNoiseError;
+      fNoise     /= fNoiseError;
       fNoiseError = sqrt(1. / fNoiseError);
     }
 }

@@ -22,7 +22,7 @@ fi
 ########
 # ROOT #
 ########
-# source $ROOTSYS/bin/thisroot.sh
+source $ROOTSYS/bin/thisroot.sh
 #source /usr/local/root/bin/thisroot.sh
 #source /opt/local/root/bin/thisroot.sh
 
@@ -54,22 +54,17 @@ export ANTENNALIB=$ANTENNADIR/lib
 ###########
 export USBINSTLIB=$USBINSTDIR/lib
 
-#########
+##########
 # EUDAQ #
-#########
-export EUDAQ=$BASE_DIR/../eudaq/
+##########
+export EUDAQLIB=$EUDAQDIR/eudaq/lib
+export LD_LIBRARY_PATH=$EUDAQLIB/lib
 
 ##########
 # System #
 ##########
 export PATH=$BASE_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:$EUDAQ/lib:$LD_LIBRARY_PATH
-
-##########
-# EUDAQ #
-##########
-export EUDAQLIB=$EUDAQDIR/eudaq/lib
-export LD_LIBRARY_PATH=$EUDAQLIB/lib
 
 #########
 # Flags #
@@ -104,6 +99,6 @@ export CompileForShep=false
 # export CompileForShep=true
 
 # Compile with EUDAQ libraries
-export CompileWithEUDAQ=false
+export CompileWithEUDAQ=true
 
 echo "=== DONE ==="

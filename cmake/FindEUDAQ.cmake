@@ -1,4 +1,4 @@
-file(GLOB_RECURSE EUDAQ_SOURCE_DIR ${PROJECT_SOURCE_DIR}/../main/lib/core/include/eudaq/Configuration.hh)
+file(GLOB_RECURSE EUDAQ_SOURCE_DIR ${PROJECT_SOURCE_DIR}/../eudaq/main/lib/core/include/eudaq/Configuration.hh)
 if(EUDAQ_SOURCE_DIR)
          set(EUDAQ_FOUND TRUE)
          #strip to the blank path

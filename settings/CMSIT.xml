@@ -33,6 +33,8 @@
 
             VOLTAGE_TRIM         =   "528"
             MONITOR_CONFIG       =     "0"
+            ADC_MONITOR_CONFIG   =     "5"
+            BG_MONITOR_CONFIG    =    "12"
             />
         <!--
             MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)

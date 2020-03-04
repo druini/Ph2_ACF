@@ -44,7 +44,7 @@ namespace Ph2_HwInterface
     if (mode != Mode::Replay)
       {
         uhal::disableLogging();
-        fBoard = new uhal::HwInterface(uhal::ConnectionManager::getDevice (fId, fUri, fAddressTable));
+        fBoard = new uhal::HwInterface(uhal::ConnectionManager::getDevice(fId, fUri, fAddressTable));
         fBoard->setTimeoutPeriod(10000);
       }
   }
@@ -71,11 +71,11 @@ namespace Ph2_HwInterface
 
         if (comp == pVal)
           {
-            LOG (DEBUG) << "Values written correctly !" << pRegNode << "=" << pVal;
+            LOG (DEBUG) << "Values written correctly: " << pRegNode << "=" << pVal;
             return true;
           }
 
-        LOG (DEBUG) << "\nERROR !!\nValues are not consistent : \nExpected : " << pVal << "\nActual : " << comp;
+        LOG (DEBUG) << "\nERROR !!\nValues are not consistent:\nExpected : " << pVal << "\nActual: " << comp;
       }
 
     return false;
@@ -115,16 +115,16 @@ namespace Ph2_HwInterface
             comp = reply.value();
 
             if (comp ==  v.second)
-              LOG (DEBUG) << "Values written correctly !" << v.first << "=" << v.second;
+              LOG (DEBUG) << "Values written correctly: " << v.first << "=" << v.second;
           }
 
         if (cNbErrors == 0)
           {
-            LOG (DEBUG) << "All values written correctly !";
+            LOG (DEBUG) << "All values written correctly";
             return true;
           }
 
-        LOG (DEBUG) << "\nERROR !!\n" << cNbErrors << " have not been written correctly !";
+        LOG (DEBUG) << "\nERROR !!\n" << cNbErrors << " have not been written correctly";
       }
 
     return false;
@@ -157,7 +157,7 @@ namespace Ph2_HwInterface
               }
           }
 
-        LOG (DEBUG) << "Block Write finished !!\n" << cErrCount << " values failed to write !";
+        LOG (DEBUG) << "Block Write finished !!\n" << cErrCount << " values failed to write";
       }
 
     return cWriteCorr;
@@ -190,7 +190,7 @@ namespace Ph2_HwInterface
               }
           }
 
-        LOG (DEBUG) << "BlockWriteAtAddress finished !!\n" << cErrCount << " values failed to write !";
+        LOG (DEBUG) << "BlockWriteAtAddress finished !!\n" << cErrCount << " values failed to write";
       }
 
     return cWriteCorr;
@@ -281,10 +281,7 @@ namespace Ph2_HwInterface
   void RegManager::StackReg (const std::string& pRegNode, const uint32_t& pVal, bool pSend)
   {
     for (std::vector< std::pair<std::string, uint32_t> >::iterator cIt = fStackReg.begin(); cIt != fStackReg.end(); cIt++)
-      {
-        if (cIt->first == pRegNode)
-          fStackReg.erase(cIt);
-      }
+      if (cIt->first == pRegNode) fStackReg.erase(cIt);
 
     std::pair<std::string, uint32_t> cPair (pRegNode, pVal);
     fStackReg.push_back(cPair);
@@ -309,38 +306,38 @@ namespace Ph2_HwInterface
   boost::iostreams::filtering_ostream capture_file{};
   boost::iostreams::filtering_istream replay_file{};
 
-  void RegManager::enableCapture(const std::string filename)
+  void RegManager::enableCapture (const std::string filename)
   {
-    /*capture_file.push(boost::iostreams::gzip_compressor());
+    capture_file.push(boost::iostreams::gzip_compressor());
     capture_file.push(boost::iostreams::file_sink(filename));
-    mode = Mode::Capture;*/
+    mode = Mode::Capture;
   }
 
-  void RegManager::enableReplay(const std::string filename)
+  void RegManager::enableReplay (const std::string filename)
   {
-    /*replay_file.push(boost::iostreams::gzip_decompressor());
+    replay_file.push(boost::iostreams::gzip_decompressor());
     replay_file.push(boost::iostreams::file_source(filename));
-    mode = Mode::Replay;*/
+    mode = Mode::Replay;
   }
 
   template <class S, class T>
-  void read_binary(S& stream, T& data)
+  void read_binary (S& stream, T& data)
   {
     stream.read(reinterpret_cast<char *>(&data), sizeof(data));
   }
 
   template <class S, class T>
-  void write_binary(S& stream, const T& data)
+  void write_binary (S& stream, const T& data)
   {
     stream.write(reinterpret_cast<const char *>(&data), sizeof(data));
   }
 
-  uint32_t RegManager::replayRead()
+  uint32_t RegManager::replayRead ()
   {
     return replayBlockRead(1)[0];
   }
 
-  std::vector<uint32_t> RegManager::replayBlockRead(size_t size)
+  std::vector<uint32_t> RegManager::replayBlockRead (size_t size)
   {
     uint32_t read_size;
     read_binary(replay_file, read_size);
@@ -357,12 +354,12 @@ namespace Ph2_HwInterface
     return data;
   }
 
-  void RegManager::captureRead(uint32_t value)
+  void RegManager::captureRead (uint32_t value)
   {
     captureBlockRead({value});
   }
 
-  void RegManager::captureBlockRead(std::vector<uint32_t> data)
+  void RegManager::captureBlockRead (std::vector<uint32_t> data)
   {
     write_binary(capture_file, uint32_t(data.size()));
     for (const auto& d : data) write_binary(capture_file, d);

@@ -9,11 +9,11 @@
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 20/02/2020
++ Last change made to this section: 02/03/2020
 ```
 
 Suggested software and firmware versions:
-- Software git branch / tag : `chipPolymorphism` / `IT-v3.4`
+- Software git branch / tag : `chipContainer` / `IT-v3.6`
 - Firmware tag: `3.1`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
@@ -146,7 +146,7 @@ elif [ $1 == "help" ]
 then
     echo "Available options are:"
     echo "- step1 [noise + pixelalive + thrmin]"
-    echo "- step2 [(scurve)threqu + scurve + noise + thrmin]"
+    echo "- step2 [(pixelalive)threqu + scurve + noise + thrmin]"
     echo "- step3 [scurve + gain + gainopt]"
     echo "- step4 [(latency)injdelay]"
     echo "- step5 [scurve]"
@@ -175,34 +175,16 @@ For more information on the firmware, please check the doc directory of https://
 
         $> sudo yum install boost-devel
 
-3. Install uHAL. The uHAL version should be 2.5 or lower. Version 2.6 does not work with the middleware at the moment! 
+2. Install uHAL. SW tested with uHAL version up to 2.7.1
 
-    First create a new ipbus repo for yum:
+        Follow instructions from 
+        https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html
 
-    ```
-    sudo cat > /etc/yum.repos.d/ipbus-sw.repo << EOF
-    [ipbus-sw-base]
-    name=IPbus software repository
-    baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/base/RPMS
-    enabled=1
-    gpgcheck=0
-    [ipbus-sw-updates]
-    name=IPbus software repository updates
-    baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/updates/RPMS
-    enabled=1
-    gpgcheck=0
-    EOF
-    ```
-
-    Then install uHAL as follows:
-
-        $> sudo yum clean all
-        $> sudo yum groupinstall uhal
-
-4. Install CERN ROOT 6.10 on CC7, as well as libusb and xorg:
+3. Install CERN ROOT
 
         $> sudo yum install root
-        $> sudo yum install root-net-http root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+        $> sudo yum install root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+
 
 5. Install CMAKE > 2.8:
 

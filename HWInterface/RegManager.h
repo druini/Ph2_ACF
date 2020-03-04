@@ -149,9 +149,9 @@ namespace Ph2_HwInterface
      * \brief get the uHAL HW Interface
      */
     uhal::HwInterface* getHardwareInterface() const
-    {
-      return fBoard;
-    }
+      {
+        return fBoard;
+      }
 
     /*!
      * \brief get the uHAL HW Id
