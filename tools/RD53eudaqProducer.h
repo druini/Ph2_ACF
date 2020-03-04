@@ -14,7 +14,7 @@
 #include "eudaq/Producer.hh"
 
 
-class RD53eudaqProducer : public Tool, public eudaq::Producer
+class RD53eudaqProducer : public eudaq::Producer
 {
   class RD53eudaqEvtConverter
   {

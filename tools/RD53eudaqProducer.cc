@@ -68,7 +68,7 @@ void RD53eudaqProducer::DoStopRun ()
   // ###########################
   // # Copy configuration file #
   // ###########################
-  std::string fName2Add (std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+  std::string fName2Add (std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_");
   std::string output    (RD53Shared::composeFileName(configFile,fName2Add));
   std::string command   ("cp " + configFile + " " + output);
   system(command.c_str());
