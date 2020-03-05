@@ -19,7 +19,32 @@ class GenericDataArray
   GenericDataArray()  {}
   ~GenericDataArray() {}
 
+  T& operator[] (size_t position)
+  {
+    return data[position];
+  }
+
   T data[size];
 };
+
+template<size_t size, typename T=float>
+inline std::vector<GenericDataArray<size,T>>&& fromVectorToGenericDataArray(const std::vector<T>& theInputVector)
+{
+  std::vector<GenericDataArray<size,T>> theOutputVector(theInputVector.size()/size + theInputVector.size()%size>0 ? 1 : 0 );
+  
+  for(size_t it=0; it<theOutputVector.size() * size; ++it)
+  {
+    size_t outputVectorPosition = it/size;
+    size_t outputArrayPosition  = it%size;
+    if(it>=theInputVector.size()) theOutputVector[outputVectorPosition][outputArrayPosition] = T();
+    else theOutputVector[outputVectorPosition][outputArrayPosition] = theInputVector[it];
+  }
+
+  return std::move(theOutputVector);
+}
+
+
+// std::vector<std::pair<int,int>> pippo;
+// auto pluto = fromVectorToGenericDataArray<10>(pippo);
 
 #endif
