@@ -12,14 +12,14 @@
 
 #include <iostream>
 
-template<size_t size>
+template<size_t size, typename T=float>
 class GenericDataArray
 {
  public:
   GenericDataArray()  {}
   ~GenericDataArray() {}
 
-  float data[size];
+  T data[size];
 };
 
 #endif
