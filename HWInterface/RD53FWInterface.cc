@@ -1010,7 +1010,7 @@ namespace Ph2_HwInterface
     // # Configuring FastCmd block #
     // #############################
     RD53FWInterface::localCfgFastCmd.n_triggers       = 0;
-    RD53FWInterface::localCfgFastCmd.trigger_duration = nTRIGxEvent - 1;
+    RD53FWInterface::localCfgFastCmd.trigger_duration = ((injType == INJtype::None) && (RD53FWInterface::localCfgFastCmd.trigger_source == TriggerSource::FastCMDFSM) ? 0 : nTRIGxEvent - 1);
 
     if (injType == INJtype::Digital)
       {
@@ -1414,7 +1414,7 @@ namespace Ph2_HwInterface
     usleep(DEEPSLEEP);
 
     auto value = calcTemperature(sensor1, sensor2);
-    LOG (INFO) << BOLDBLUE << "\t--> Hybrid temperature: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << RESET;
+    LOG (INFO) << BOLDBLUE << "\t--> Hybrid temperature: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
 
     return value;
   }
@@ -1429,7 +1429,7 @@ namespace Ph2_HwInterface
     usleep(DEEPSLEEP);
 
     auto value = calcVoltage(senseVDD, senseGND);
-    LOG (INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V" << RESET;
+    LOG (INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V (corresponds to VOUT_dig_ShuLDO of the chip)" << std::setprecision(-1) << RESET;
 
     return value;
   }

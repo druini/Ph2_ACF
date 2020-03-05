@@ -88,7 +88,7 @@ void readBinaryData (std::string binaryFile, SystemController& mySysCntr, std::v
         errors++;
       }
 
-  LOG (INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(3) << BOLDYELLOW << 1. * errors / decodedEvents.size() * 100. << "%" << RESET;
+  LOG (INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(3) << BOLDYELLOW << 1. * errors / decodedEvents.size() * 100. << "%" << std::setprecision(-1) << RESET;
 }
 
 

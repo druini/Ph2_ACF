@@ -57,14 +57,13 @@ export USBINSTLIB=$USBINSTDIR/lib
 ##########
 # EUDAQ #
 ##########
-export EUDAQLIB=$EUDAQDIR/eudaq/lib
-export LD_LIBRARY_PATH=$EUDAQLIB/lib
+export EUDAQLIB=$EUDAQDIR/lib
 
 ##########
 # System #
 ##########
 export PATH=$BASE_DIR/bin:$PATH
-export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:$EUDAQ/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:$EUDAQLIB:$LD_LIBRARY_PATH
 
 #########
 # Flags #
