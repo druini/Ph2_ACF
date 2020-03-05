@@ -266,7 +266,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
       for (const auto cChip : *cModule)
         {
           LOG (INFO) << GREEN << "Average gain for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << GREEN << "] is " << BOLDYELLOW
-                     << std::fixed << std::setprecision(4) << cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGain << RESET << GREEN << " (ToT/Delta_VCal)" << RESET;
+                     << std::fixed << std::setprecision(4) << cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGain << RESET << GREEN << " (ToT/Delta_VCal)" << std::setprecision(-1) << RESET;
           LOG (INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW << theMaxGainContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() << RESET;
         }
 

@@ -64,20 +64,16 @@ namespace Ph2_HwInterface
       ReadChipMonitor (pChip, observableNames...);
     }
 
-    template<typename T>
-      float ReadChipMonitor (Ph2_HwDescription::Chip* pChip, const T& observableName) { return RD53Interface::ReadChipADC(pChip, observableName); }
-
+    float ReadChipMonitor       (Ph2_HwDescription::Chip* pChip, const char* observableName);
     float ReadHybridTemperature (Ph2_HwDescription::Chip* pChip);
     float ReadHybridVoltage     (Ph2_HwDescription::Chip* pChip);
 
 
   private:
-    float ReadChipADC           (Ph2_HwDescription::Chip* pChip, const char* observableName, float ADCoffset = 0.0063, float actualVrefADC = 0.839, float resistorI2V = 10000);
-
-    uint32_t measureADC         (Ph2_HwDescription::Chip* pChip, uint32_t data);
-    float    measureTemperature (Ph2_HwDescription::Chip* pChip, uint32_t data, float idealityFactor = 1.225);
-
-    float convertADC2VorI       (Ph2_HwDescription::Chip* pChip, uint32_t value, bool isCurrentNotVoltage = false, float ADCoffset = 0.0063, float actualVrefADC = 0.839, float resistorI2V = 10000);
+    uint32_t measureADC            (Ph2_HwDescription::Chip* pChip, uint32_t data);
+    float    measureVoltageCurrent (Ph2_HwDescription::Chip* pChip, uint32_t data, bool isCurrentNotVoltage);
+    float    measureTemperature    (Ph2_HwDescription::Chip* pChip, uint32_t data);
+    float    convertADC2VorI       (Ph2_HwDescription::Chip* pChip, uint32_t value, bool isCurrentNotVoltage = false);
   };
 }
 

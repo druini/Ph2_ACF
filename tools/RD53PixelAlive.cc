@@ -23,7 +23,6 @@ void PixelAlive::ConfigureCalibration ()
   colStop        = this->findValueInSettings("COLstop");
   nEvents        = this->findValueInSettings("nEvents");
   nEvtsBurst     = this->findValueInSettings("nEvtsBurst");
-  nTRIGxEvent    = this->findValueInSettings("nTRIGxEvent");
   injType        = this->findValueInSettings("INJtype");
   nHITxCol       = this->findValueInSettings("nHITxCol");
   doFast         = this->findValueInSettings("DoFast");
@@ -31,9 +30,6 @@ void PixelAlive::ConfigureCalibration ()
   doDisplay      = this->findValueInSettings("DisplayHisto");
   doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData = this->findValueInSettings("SaveBinaryData");
-
-  if (injType != INJtype::None) nTRIGxEvent = 1;
-  else                          doFast      = false;
 
 
   // ################################
@@ -146,7 +142,7 @@ void PixelAlive::run ()
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(injType);
   this->fMaskChannelsFromOtherGroups = true;
-  this->measureData(nEvents, nEvtsBurst, nTRIGxEvent);
+  this->measureData(nEvents, nEvtsBurst);
 
 
   // ################
@@ -202,7 +198,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
           size_t nMaskedPixelsPerCalib = 0;
 
           LOG (INFO) << GREEN << "Average occupancy for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW
-                     << std::setprecision(-1) << theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
+                     << theOccContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
 
           static_cast<RD53*>(cChip)->copyMaskFromDefault();
 

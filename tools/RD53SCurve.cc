@@ -255,7 +255,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze ()
       for (const auto cChip : *cModule)
         {
           LOG (INFO) << GREEN << "Average threshold for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << GREEN << "] is " << BOLDYELLOW
-                     << std::fixed << std::setprecision(1) << cChip->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold << RESET << GREEN << " (Delta_VCal)" << RESET;
+                     << std::fixed << std::setprecision(1) << cChip->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold << RESET << GREEN << " (Delta_VCal)" << std::setprecision(-1) << RESET;
           LOG (INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << theMaxThresholdContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() << RESET;
         }
 

@@ -134,22 +134,15 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         endif(PH2_USBINSTLIB_FOUND)
     endif(ZMQ_FOUND)
 
-    # Builds EUDAQ producer
+    # Boost
     find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
 
-    # EUDAQ
+   # EUDAQ
     if ($ENV{CompileWithEUDAQ})
-        find_package(EUDAQ)       #========================================================
-        if (EUDAQ_FOUND)
-           message(STATUS "    Building with EUDAQ components")
-        else (EUDAQ_FOUND)
-           message(STATUS "    Continuing without EUDAQ components")
-        endif (EUDAQ_FOUND)
-
         set(USE_EUDAQ ON)
-        include_directories($ENV{EUDAQ}/include $ENV{EUDAQ}/user/tlu/module/src)
-        set(EUDAQ_LIB -L$ENV{EUDAQ}/lib eudaq_core)
-        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQ}")
+        include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
+        set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
+        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
     else($ENV{CompileWithEUDAQ})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})

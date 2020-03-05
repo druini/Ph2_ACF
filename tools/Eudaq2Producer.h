@@ -61,7 +61,7 @@ class Eudaq2Producer : public Tool, public eudaq::Producer
 
     // to offload overriden methods a bit
     void ReadoutLoop();
-    void ConvertToSubEvent(const BeBoard*, const Event*, eudaq::EventSP);
+    void ConvertToSubEvent(const Ph2_HwDescription::BeBoard*, const Ph2_HwInterface::Event*, eudaq::EventSP);
     bool EventsPending();
 
     // override initialization from euDAQ 

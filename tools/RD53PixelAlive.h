@@ -65,7 +65,6 @@ class PixelAlive : public Tool
   size_t colStart;
   size_t colStop;
   size_t nEvents;
-  size_t nTRIGxEvent;
   size_t nEvtsBurst;
   size_t injType;
   size_t nHITxCol;
