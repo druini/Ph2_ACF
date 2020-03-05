@@ -382,6 +382,7 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pChip->getBeBoardId());
 
+    const    float measError = 4.0; // Current or Voltage measurement error due to MONITOR_CONFIG resolution [%]
     float    value;
     bool     isCurrentNotVoltage;
     uint32_t voltageObservable(0), currentObservable(0), observable;
@@ -473,12 +474,12 @@ namespace Ph2_HwInterface
     if (std::string(observableName).find("TEMPSENS") != std::string::npos)
       {
         value = RD53Interface::measureTemperature(pChip, observable);
-        LOG (INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << RESET;
+        LOG (INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << std::setprecision(1) << value*measError/100 << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
       }
     else
       {
         value = measureVoltageCurrent(pChip, observable, isCurrentNotVoltage);
-        LOG (INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " " << (isCurrentNotVoltage == true ? "A" : "V") << RESET;
+        LOG (INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << std::setprecision(1) << value*measError/100 << BOLDBLUE << (isCurrentNotVoltage == true ? " A" : " V") << std::setprecision(-1) << RESET;
       }
 
     return value;
