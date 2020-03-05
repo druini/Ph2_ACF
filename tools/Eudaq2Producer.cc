@@ -319,8 +319,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
   pEudaqSubEvent->SetTag("L1_COUNTER_BOARD", pPh2Event->GetEventCount());
   pEudaqSubEvent->SetTag("TDC", pPh2Event->GetTDC());
   pEudaqSubEvent->SetTag("BX_COUNTER", pPh2Event->GetBunch());
-  pEudaqSubEvent->SetTriggerN(pPh2Event->GetTLUTriggerID());
-  pEudaqSubEvent->SetTag("TLU_TRIGGER_ID", pPh2Event->GetTLUTriggerID());
+  pEudaqSubEvent->SetTriggerN(pPh2Event->GetExternalTriggerId());
+  pEudaqSubEvent->SetTag("TLU_TRIGGER_ID", pPh2Event->GetExternalTriggerId());
 
   // in order to get proper data alignment always 8
   uint32_t cMaxChipNumber = 8;
