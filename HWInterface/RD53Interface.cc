@@ -19,7 +19,7 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pChip->getBeBoardId());
 
-    ChipRegMap pRD53RegMap = pChip->getRegMap();
+    ChipRegMap& pRD53RegMap = pChip->getRegMap();
 
 
     // ###################################
@@ -60,20 +60,33 @@ namespace Ph2_HwInterface
         "CLK_DATA_DELAY_DATA_DELAY",
         "I_MONITOR_SELECT",
         "V_MONITOR_SELECT",
-        "ADC_MONITOR_CONFIG",
-        "BG_MONITOR_CONFIG",
-        "ADC_OFFSET",
-        "ACTUAL_VREF_ADC",
+        "ADC_OFFSET_VOLT",
+        "ADC_MAXIMUM_VOLT",
         "TEMPSENS_IDEAL_FACTOR"
       };
 
     for (const auto& cRegItem : pRD53RegMap)
       if (cRegItem.second.fPrmptCfg == true)
-      {
-        auto i = 0u;
-        for (i = 0u; i < arraySize(registerBlackList); i++) if (cRegItem.first == registerBlackList[i]) break;
-        if (i == arraySize(registerBlackList)) RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, true);
-      }
+        {
+          auto i = 0u;
+          for (i = 0u; i < arraySize(registerBlackList); i++) if (cRegItem.first == registerBlackList[i]) break;
+          if (i == arraySize(registerBlackList))
+            {
+              uint16_t value = cRegItem.second.fValue;
+
+              // #################
+              // # Special cases #
+              // #################
+              if (cRegItem.first == "ADC_MONITOR_CONFIG")
+                value = cRegItem.second.fValue |
+                  (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) ^ RD53Shared::setBits(cRegItem.second.fBitSize)));
+              else if (cRegItem.first == "BG_MONITOR_CONFIG")
+                value = (cRegItem.second.fValue << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize) |
+                  (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) ^ (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize)));
+
+              RD53Interface::WriteChipReg(pChip, cRegItem.first, value, true);
+            }
+        }
 
 
     // ###################################
@@ -561,8 +574,8 @@ namespace Ph2_HwInterface
     // # actualVrefADC = 839 [mV]     Lower than VrefADC due to parasitics #
     // #####################################################################
     const float resistorI2V   = 10000; // [Ohm]
-    const float ADCoffset     = pChip->getRegItem("ADC_OFFSET").fValue / 1e4;
-    const float actualVrefADC = pChip->getRegItem("ACTUAL_VREF_ADC").fValue / 1e3;
+    const float ADCoffset     = pChip->getRegItem("ADC_OFFSET_VOLT").fValue / 1e4;
+    const float actualVrefADC = pChip->getRegItem("ADC_MAXIMUM_VOLT").fValue / 1e3;
 
     const float ADCslope = (actualVrefADC - ADCoffset) / (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1); // [V/ADC]
     const float voltage  = ADCoffset + ADCslope * value;

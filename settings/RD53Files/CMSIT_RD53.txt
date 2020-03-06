@@ -203,8 +203,8 @@ I_MONITOR_SELECT          0xA4          0x00                    0x00            
 V_MONITOR_SELECT          0xA5          0x00                    0x00                                7
 ADC_MONITOR_CONFIG        0xA6          0d5                     0d5                                 6
 BG_MONITOR_CONFIG         0xA7          0d12                    0d12                                5
-ADC_OFFSET                0xA8          0d63                    0d63                               16
-ACTUAL_VREF_ADC           0xA9          0d839                   0d839                              16
+ADC_OFFSET_VOLT           0xA8          0d63                    0d63                               16
+ADC_MAXIMUM_VOLT          0xA9          0d839                   0d839                              16
 TEMPSENS_IDEAL_FACTOR     0xAA          0d1225                  0d1225                             16
 
 *-------------------------------------------------------------------------------------------------------

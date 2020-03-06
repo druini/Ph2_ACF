@@ -32,9 +32,9 @@ class ChannelGroupBase;
  */
 namespace Ph2_HwDescription
 {
-  using ChipRegMap  = std::unordered_map  <std::string, ChipRegItem>;
-  using ChipRegPair = std::pair <std::string, ChipRegItem>;
-  using CommentMap  = std::map  <int, std::string>;
+  using ChipRegMap  = std::unordered_map<std::string, ChipRegItem>;
+  using ChipRegPair = std::pair<std::string, ChipRegItem>;
+  using CommentMap  = std::map<int, std::string>;
 
   /*!
    * \class Chip

@@ -32,11 +32,10 @@
             CLK_DATA_DELAY        =    "0"
 
             VOLTAGE_TRIM          =  "528"
-            MONITOR_CONFIG        =    "0"
             ADC_MONITOR_CONFIG    =    "5"
             BG_MONITOR_CONFIG     =   "12"
-            ADC_OFFSET            =   "63"
-            ACTUAL_VREF_ADC       =  "839"
+            ADC_OFFSET_VOLT       =   "63"
+            ADC_MAXIMUM_VOLT      =  "839"
             TEMPSENS_IDEAL_FACTOR = "1225"
             />
         <!--
