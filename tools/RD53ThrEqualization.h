@@ -27,7 +27,7 @@
 // #####################################
 // # Threshold equalization test suite #
 // #####################################
-class ThrEqualization : public PixelAlive
+class ThrEqualization : public Tool
 {
  public:
   void Start (int currentRun)  override;
@@ -46,8 +46,7 @@ class ThrEqualization : public PixelAlive
     uint16_t moreIterationsPA = 1;
     uint16_t nBitTDAC         = 4;
     uint16_t moreIterations   = 2;
-    return PixelAlive::getNumberIterations()*(nBitVCal + moreIterationsPA) +
-      RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*(nBitTDAC + moreIterations) * nEvents/nEvtsBurst;
+    return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol)*(nBitTDAC + moreIterations) * nEvents/nEvtsBurst;
   }
 
 

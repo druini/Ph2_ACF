@@ -149,6 +149,8 @@ namespace Ph2_HwInterface
     RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, data));
     if ((pRegNode == "VCAL_HIGH") || (pRegNode == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
 
+    pChip->setReg(pRegNode, data);
+
     if (pVerifLoop == true)
       {
         if (pRegNode == "PIX_PORTAL")                     pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
@@ -168,7 +170,6 @@ namespace Ph2_HwInterface
             else pChip->setReg(pRegNode, data);
           }
       }
-
     return true;
   }
 
