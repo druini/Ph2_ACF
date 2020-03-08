@@ -72,19 +72,26 @@ namespace Ph2_HwInterface
           for (i = 0u; i < arraySize(registerBlackList); i++) if (cRegItem.first == registerBlackList[i]) break;
           if (i == arraySize(registerBlackList))
             {
-              uint16_t value = cRegItem.second.fValue;
+              std::string regName = cRegItem.first;
+              uint16_t value      = cRegItem.second.fValue;
 
               // #################
               // # Special cases #
               // #################
               if (cRegItem.first == "ADC_MONITOR_CONFIG")
-                value = cRegItem.second.fValue |
-                  (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) ^ RD53Shared::setBits(cRegItem.second.fBitSize)));
+                {
+                  value = cRegItem.second.fValue |
+                    (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) ^ RD53Shared::setBits(cRegItem.second.fBitSize)));
+                  regName = "MONITOR_CONFIG";
+                }
               else if (cRegItem.first == "BG_MONITOR_CONFIG")
-                value = (cRegItem.second.fValue << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize) |
-                  (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) ^ (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize)));
+                {
+                  value = (cRegItem.second.fValue << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize) |
+                    (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) ^ (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize)));
+                  regName = "MONITOR_CONFIG";
+                }
 
-              RD53Interface::WriteChipReg(pChip, cRegItem.first, value, true);
+              RD53Interface::WriteChipReg(pChip, regName, value, true);
             }
         }
 

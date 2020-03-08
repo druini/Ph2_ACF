@@ -25,13 +25,12 @@
             VCAL_HIGH             =  "600"
             VCAL_MED              =  "100"
 
-            INJECTION_SELECT      =    "0"
             GP_LVDS_ROUTE         =    "0"
             LATENCY_CONFIG        =  "136"
-            MONITOR_SELECT        = "8203"
             CLK_DATA_DELAY        =    "0"
 
             VOLTAGE_TRIM          =  "528"
+
             ADC_MONITOR_CONFIG    =    "5"
             BG_MONITOR_CONFIG     =   "12"
             ADC_OFFSET_VOLT       =   "63"
@@ -39,7 +38,7 @@
             TEMPSENS_IDEAL_FACTOR = "1225"
             />
         <!--
-            MONITOR_SELECT: 1(enable) 000000(Current Mux) 0001011(Votage Mux)
+            Monitoring: ADC_MONITOR_CONFIG, BG_MONITOR_CONFIG, ADC_OFFSET_VOLT, ADC_MAXIMUM_VOLT, TEMPSENS_IDEAL_FACTOR
             CLK_DATA_DELAY: [8] clk phase; [7:4] clk delay; [3:0] data delay
         -->
       </RD53>
