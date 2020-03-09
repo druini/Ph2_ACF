@@ -1,5 +1,4 @@
 #include "BackEndAlignment.h"
-#ifdef __USE_ROOT__
 
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
@@ -16,12 +15,10 @@ BackEndAlignment::BackEndAlignment() :
     Tool            ()
 {
     fRegMapContainer.reset();
-    fAlignmentInterface = new BackendAlignmentInterface(fBeBoardFWMap);
 }
 
 BackEndAlignment::~BackEndAlignment()
 {
-    delete fAlignmentInterface;
 }
 
 void BackEndAlignment::Initialise ()
@@ -47,92 +44,6 @@ void BackEndAlignment::Initialise ()
             }
         }
     }
-}
-// tuning of L1A lines 
-bool BackEndAlignment::L1PhaseAlignment(BeBoard* pBoard, uint8_t pPattern , uint16_t pPatternLength )
-{
-    LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly sample L1A data coming from the front-end objects." << RESET;
-    // original reg map 
-    BeBoardRegMap cRegisterMap = pBoard->getBeBoardRegMap();
-    
-    // configure triggers 
-    // make sure you're only sending one trigger at a time 
-    auto cMult = fBeBoardInterface->ReadBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
-    auto cTriggerRate =  fBeBoardInterface->ReadBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
-    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 10);
-    // disable back-pressure 
-    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
-    // reset trigger 
-    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_ctrl.fast_command_block.control.reset",0x1);
-    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
-    // load new trigger configuration 
-    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
-    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
-    // reset readout 
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout(); 
-    std::this_thread::sleep_for (std::chrono::microseconds (10) );
-
-    LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
-    bool cSuccess=true;
-    // back-end tuning on l1 lines
-    for (auto& cFe : pBoard->fModuleVector)
-    {
-        uint8_t cBitslip=0;
-        uint8_t cHybridId = cFe->getFeId() ;
-        uint8_t cChip = 0;
-        auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
-        int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
-        uint8_t cLineId=0;
-        // select L1 line , hybrid + chip 
-        fAlignmentInterface->SetLine( cHybridId , cChipId , cLineId  );
-        // configure pattern and pattern length 
-        fAlignmentInterface->SelectPattern( pPattern , pPatternLength );
-
-        // tune phase on l1A line - don't have t do anything on the FEs
-        if( pBoard->ifOptical() )
-        {
-            LOG (INFO) << BOLDBLUE << "Optical readout .. don't have to do anything here" << RESET;
-        }
-        else 
-        {
-            fBeBoardInterface->ChipReSync(pBoard);
-            LOG (INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybridId << " Chip" << +cChipId << RESET;
-            // configure pattern
-            fBeBoardInterface->Start(pBoard);
-            /// phase alignment
-            fAlignmentInterface->PhaseAlign(pBoard);
-            fBeBoardInterface->Stop(pBoard);
-            uint8_t cLineStatus = fAlignmentInterface->GetLineStatus(pBoard );
-        }
-    }
-
-    
-    // reconfigure trigger 
-    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
-    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cTriggerRate);
-    // reconfigure original trigger configu 
-    std::vector< std::pair<std::string, uint32_t> > cVecReg;
-    for ( auto const& it : cRegisterMap )
-    {
-        auto cRegName = it.first;
-        if( cRegName.find("fc7_daq_cnfg.fast_command_block.") != std::string::npos ) 
-        {
-            //LOG (DEBUG) << BOLDBLUE << "Setting " << cRegName << " : " << it.second << RESET;
-            cVecReg.push_back ( {it.first, it.second} );
-        }
-    }
-    fBeBoardInterface->WriteBoardMultReg ( pBoard, cVecReg );
-    cVecReg.clear();
-    // reset trigger 
-    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_ctrl.fast_command_block.control.reset",0x1);
-    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
-    // load new trigger configuration 
-    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
-    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout(); 
-    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
-    return true;
 }
 
 bool BackEndAlignment::L1Alignment2S(BeBoard* pBoard)
@@ -209,8 +120,6 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         }
     }
     //L1A line 
-    //cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1Tuning (pBoard,fL1Debug);
-    
     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning (pBoard,fL1Debug);
     if( !cAligned )
     {
@@ -418,4 +327,3 @@ void BackEndAlignment::Resume()
 {
 }
 
-#endif

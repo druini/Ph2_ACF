@@ -56,7 +56,6 @@ namespace Ph2_HwInterface
     	fLineConfig.fPattern = pPattern;
     	this->SetPattern();
     	this->SendCommand(pBoard);
-    	
     }
    	
    	void BackendAlignmentInterface::PhaseAlign(  BeBoard* pBoard )

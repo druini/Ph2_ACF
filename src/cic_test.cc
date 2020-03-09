@@ -268,8 +268,8 @@ int main ( int argc, char* argv[] )
         cDataChecker.Initialise ( );
         cDataChecker.zeroContainers();
         
+        //cDataChecker.DataCheck({0});
         //cDataChecker.TestPulse({0});
-        // cDataChecker.DataCheck({0});
         // //cDataChecker.L1Eye({4});
         // cDataChecker.writeObjects();
         // cDataChecker.dumpConfigFiles();
@@ -332,9 +332,9 @@ int main ( int argc, char* argv[] )
             for ( auto& cEvent : cEvents )
             {
                 LOG (INFO) << ">>> Event #" << cN++ ;
-                //outp.str ("");
-                //outp << *cEvent;
-                //LOG (INFO) << outp.str();
+                outp.str ("");
+                outp << *cEvent;
+                LOG (INFO) << outp.str();
                 //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBoard);
                 //cDAQFileHandler->set (cSLev.getData<uint32_t>() );
                 //cSLev.print (std::cout);

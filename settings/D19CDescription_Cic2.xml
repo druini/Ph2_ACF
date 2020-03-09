@@ -166,7 +166,7 @@
 
     <!--[>DataTest<]-->
     <Setting name="UseNoise">1</Setting>
-    <Setting name="Attempts">500</Setting>
+    <Setting name="Attempts">10</Setting>
     <Setting name="LatencyOffset">-1</Setting>
     <Setting name="TriggerRate">1</Setting>
     <Setting name="TriggerMultiplicity">1</Setting>

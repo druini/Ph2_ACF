@@ -827,14 +827,6 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
             fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMult);
         }
         
-        if( pWithNoise)
-        {
-            /*for( size_t cAttempt=0; cAttempt < cAttempts ; cAttempt++)
-            {
-                this->ReadNEvents ( cBoard , cEventsPerPoint);
-                this->matchEvents( cBoard , pChipIds ,cStub);
-            }*/
-        }
         // using charge injection 
         if( !pWithNoise)
         {

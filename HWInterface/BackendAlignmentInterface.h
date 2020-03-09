@@ -75,7 +75,6 @@ namespace Ph2_HwInterface
         // 
         void SetLine(uint8_t pHybrid , uint8_t pChip , uint8_t pLine );
         void SelectLine(uint8_t pLine );
-        void SelectPattern( uint8_t pPattern, uint16_t pPatternPeriod);
         void SelectFrontEnd( uint8_t pHybrid, uint8_t pChip );
         //
         bool GetStatus(Ph2_HwDescription::BeBoard* pBoard);

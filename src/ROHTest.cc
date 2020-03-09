@@ -1,4 +1,3 @@
-
 #include "../tools/Tool.h"
 #include "../Utils/argvparser.h"
 #include "../Utils/Timer.h"
@@ -42,7 +41,7 @@ int main(int argc, char* argv[])
  
   //FIXME 
   std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/Calibration8CBC.xml";
-  uint32_t pPattern = ( cmd.foundOption ( "pattern" ) ) ? stoi( cmd.optionValue ( "pattern" ).c_str() ) : 255; 
+  uint8_t pPattern = ( cmd.foundOption ( "pattern" ) ) ? convertAnyInt ( cmd.optionValue ( "pattern" ).c_str() ) : 0; 
 
   Tool cTool;
   std::stringstream outp;
@@ -50,8 +49,6 @@ int main(int argc, char* argv[])
   cTool.InitializeSettings ( cHWFile, outp );
   LOG (INFO) << outp.str();
   outp.str ("");
-  //cTool.ConfigureHw ();
-
 
   ROHInterface cROHInterfacer;
   BeBoardFWInterface* pInterface = dynamic_cast<BeBoardFWInterface*>( cTool.fBeBoardFWMap.find(0)->second );
@@ -66,21 +63,12 @@ int main(int argc, char* argv[])
   //Configure and Start DataPlayer
   cROHInterfacer.ConfigureEmulator(pInterface, pPattern);
   cROHInterfacer.StartEmulator(pInterface);
-  /*int counter = 0;
-  while(true)
-  {
-    counter++;
-    if (counter % 10 == 0 && cROHInterfacer.EmulatorIsRunning(pInterface) ){
-     LOG (INFO) << BOLDBLUE << " STATUS : Data Player Running " << RESET;
-    }
-  }*/
-  LOG (INFO) << BOLDRED << "When you are ready... press [ENTER] to stop data player..." << RESET;
-  do
-  {
-      std::this_thread::sleep_for (std::chrono::milliseconds (10) );
-  }while( std::cin.get()!='\n'  && cROHInterfacer.EmulatorIsRunning(pInterface) );
+  if( cROHInterfacer.EmulatorIsRunning(pInterface) )
+    LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+  else
+    LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
   
-  cROHInterfacer.StopEmulator(pInterface);
   cTool.Destroy();
   return 0;  
 }
+

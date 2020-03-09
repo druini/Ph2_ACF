@@ -80,8 +80,10 @@ namespace Ph2_HwInterface {
         // not iterate through modules
         uint32_t address_offset = D19C_EVENT_HEADER1_SIZE_32_CBC3;
 
-        while(address_offset < fEventSize-fDummySize) {
-            if (((list.at(address_offset) >> 28) & 0xF) == 0xA) {
+        while(address_offset < fEventSize-fDummySize) 
+        {
+            if (((list.at(address_offset) >> 28) & 0xF) == 0xA) 
+            {
                 uint8_t cFeId = (list.at(address_offset) >> 16) & 0xFF;
                 uint8_t cCbcId = (list.at(address_offset) >> 12) & 0xF;
                 uint32_t cL1ADataSize = (list.at(address_offset) >> 0) & 0xFFF;
@@ -99,11 +101,15 @@ namespace Ph2_HwInterface {
                     
                     // increment
                     address_offset += (cL1ADataSize+cStubDataSize);
-                } else {
+                } 
+                else 
+                {
                     LOG (ERROR) << "Stub header does not match 0b0101 - possible data corruption";
                     exit(1);
                 }
-            } else {
+            } 
+            else 
+            {
                 LOG (ERROR) << "Chip header does not match 0b1010 - possible data corruption";
                 exit(1);
             }
@@ -417,6 +423,8 @@ namespace Ph2_HwInterface {
         {
             uint8_t cFeId = getFeIdFromVectorIndex(vectorIndex,fNCbc);
             uint8_t cCbcId = getCbcIdFromVectorIndex(vectorIndex++,fNCbc);
+            this->printCbcHeader (os, cFeId, cCbcId);
+            os << GREEN << "FEId = " << +cFeId << " CBCId = " << +cCbcId << RESET << std::endl;
             
             //here display the Cbc Header manually
             if( fEventDataVector.size() <= encodeVectorIndex(cFeId, cCbcId, fNCbc) ) 
@@ -427,8 +435,6 @@ namespace Ph2_HwInterface {
             if( fEventDataVector.at(encodeVectorIndex(cFeId, cCbcId, fNCbc)).size() == 0 )
                 continue;
             
-            this->printCbcHeader (os, cFeId, cCbcId);
-            os << GREEN << "FEId = " << +cFeId << " CBCId = " << +cCbcId << RESET << std::endl;
             os << YELLOW << "PipelineAddress: " << this->PipelineAddress (cFeId, cCbcId) << RESET << " L1 Counter [from CBC] " << +this->L1Id (  cFeId, cCbcId ) << RESET << std::endl;
             os << RED << "Error: " << static_cast<std::bitset<2>> ( this->Error ( cFeId, cCbcId ) ) << RESET << std::endl;
 

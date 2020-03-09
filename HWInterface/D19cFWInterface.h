@@ -630,7 +630,7 @@ namespace Ph2_HwInterface {
         void PSInterfaceBoard_PowerOn_SSA(float VDDPST = 1.25, float DVDD = 1.25, float AVDD = 1.25, float VBF = 0.3, float BG = 0.0, uint8_t ENABLE = 0);
         void PSInterfaceBoard_PowerOff_SSA(uint8_t mpaid = 0 , uint8_t ssaid = 0 );
         void ReadPower_SSA(uint8_t mpaid = 0 , uint8_t ssaid = 0);
-	void SSAEqualizeDACs(uint8_t pChipId);
+	       void SSAEqualizeDACs(uint8_t pChipId);
         void KillI2C();
         ///
 
@@ -677,6 +677,30 @@ namespace Ph2_HwInterface {
         //      Optical readout                                 //
         /////////////////////////////////////////////////////
         void selectLink(uint8_t pLinkId=0 , uint32_t cWait_ms = 100) override;
+
+
+        ///////////////////////////////////////////////////////
+        //      Multiplexing crate                          //
+        /////////////////////////////////////////////////////
+        /*!
+        * \breif Disconnect Setup with Multiplexing Backplane
+        */
+        void DisconnectMultiplexingSetup() ;
+ 
+        /*!
+        * \breif Scan Setup with Multiplexing Backplane
+        */
+        uint32_t ScanMultiplexingSetup(uint8_t pWait_ms=100) ;
+   
+        /*!
+        * \breif Configure Setup with Multiplexing Backplane
+        * \param BackplaneNum
+        * \param CardNum
+        */
+        uint32_t ConfigureMultiplexingSetup(int BackplaneNum, int CardNum) ;
+        
+
+
 
     };
 }
