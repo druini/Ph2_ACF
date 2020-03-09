@@ -2320,12 +2320,12 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     // RESET the readout
     auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     auto cTriggerRate = this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz 
-    int  cTimeSingleTrigger_ms = std::ceil(1.0/cTriggerRate);
+    int  cTimeSingleTrigger_ms = std::ceil(1.0/(0.75*cTriggerRate));
 
     //LOG (INFO) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << RESET;
     //this->ResetReadout();
     pNEvents = pNEvents*(cMultiplicity+1);
-    int cMaxTime_us = pNEvents*cTimeSingleTrigger_ms*1e3*1.1;
+    int cMaxTime_us = pNEvents*cTimeSingleTrigger_ms*1e3;
     // check 
     //LOG (INFO) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
     //LOG (DEBUG) << BOLDBLUE << "Initial fast reset " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable") << RESET;
@@ -2412,7 +2412,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     // again check if failed to re-run in case
     if (pFailed)
     {
-        LOG (INFO) << BOLDRED << "Failing to readout after " << cTimeoutValue << " trials, Retrying..." << RESET;
+        LOG (INFO) << BOLDRED << "Failed to readout all events after " << cTimeoutValue << " trials, Retrying..." << RESET;
         pData.clear();
         this->Stop();
         this->ResetReadout();
