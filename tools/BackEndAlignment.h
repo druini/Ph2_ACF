@@ -45,7 +45,6 @@ class BackEndAlignment : public Tool
     void SetStubDebug(bool pDebug){ fStubDebug=pDebug;};
 
     
-    bool L1Alignment2S(Ph2_HwDescription::BeBoard* pBoard);
     bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard );
     void Start(int currentRun) override;

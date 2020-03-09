@@ -46,53 +46,6 @@ void BackEndAlignment::Initialise ()
     }
 }
 
-bool BackEndAlignment::L1Alignment2S(BeBoard* pBoard)
-{
-    bool cAligned = false;
-    // make sure you're only sending one trigger at a time here
-    bool cSparsified = (fBeBoardInterface->ReadBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
-    auto cTriggerMultiplicity = fBeBoardInterface->ReadBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
-
-    // force CIC to output empty L1A frames [by disabling all FEs]
-    for (auto& cFe : pBoard->fModuleVector)
-    {
-        auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
-        // select link [ if optical ]
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
-        // only produce L1A header .. so disable all FEs .. for CIC2 only
-        if( !cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2 ) 
-            fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 1);
-
-        if( cCic->getFrontEndType() == FrontEndType::CIC2 )
-            fCicInterface->EnableFEs(cCic , {0,1,2,3,4,5,6,7}, false );  
-        if( cCic->getFrontEndType() == FrontEndType::CIC )
-        {
-            fCicInterface->EnableFEs(cCic , {0,1,2,3,4,5,6,7}, false );  
-        }
-    }
-    //L1A line 
-    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1Tuning (pBoard,fL1Debug);
-    if( !cAligned )
-    {
-        LOG (INFO) << BOLDBLUE << "L1A alignment in the back-end " << BOLDRED << " FAILED ..." << RESET;
-        return false;
-    }
-    // enable CIC output of pattern .. and enable all FEs again
-    for (auto& cFe : pBoard->fModuleVector)
-    {
-        // select link [ if optical ]
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
-        fCicInterface->EnableFEs(static_cast<OuterTrackerModule*>(cFe)->fCic , {0,1,2,3,4,5,6,7}, true );
-        fCicInterface->SelectOutput( static_cast<OuterTrackerModule*>(cFe)->fCic, true );
-    }
-    
-    // re-load configuration of fast command block from register map loaded from xml file 
-    LOG (INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFastCommandBlock(pBoard);
-    fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMultiplicity);
-    return cAligned;     
-}
 bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 {
     bool cAligned = false;
@@ -120,6 +73,8 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         }
     }
     //L1A line 
+    //cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1Tuning (pBoard,fL1Debug);
+    
     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning (pBoard,fL1Debug);
     if( !cAligned )
     {

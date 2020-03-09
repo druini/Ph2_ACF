@@ -268,7 +268,7 @@ int main ( int argc, char* argv[] )
         cDataChecker.Initialise ( );
         cDataChecker.zeroContainers();
         
-        //cDataChecker.DataCheck({0});
+        cDataChecker.DataCheck({0});
         //cDataChecker.TestPulse({0});
         // //cDataChecker.L1Eye({4});
         // cDataChecker.writeObjects();
@@ -299,47 +299,47 @@ int main ( int argc, char* argv[] )
         // }
 
         //dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0, cTriggerRate);
-        for( auto& cBoard : cCicAligner.fBoardVector )
-        {
-            for (auto& cFe : cBoard->fModuleVector)
-            {
-                // matching 
-                for (auto& cChip : cFe->fReadoutChipVector) 
-                {
-                    if( cFe->getFeId()%2 == 0 )
-                        static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
-                    else
-                        static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
-                }
-            }
-            cCicAligner.ReadNEvents ( cBoard , 10 );
-            const std::vector<Event*>& cEvents = cCicAligner.GetEvents ( cBoard );
-            // size_t cEventIndex=0;
-            // for ( auto& cEvent : cEvents )
-            // {
-            //     LOG (INFO) << BOLDBLUE << "Event " << +cEventIndex << RESET;
-            //     for (auto& cFe : cBoard->fModuleVector)
-            //     {
-            //         for (auto& cChip : cFe->fReadoutChipVector)
-            //         {
-            //             auto cNhits = cEvent->GetNHits ( cFe->getFeId() , cChip->getChipId() );
-            //             LOG (INFO) << BOLDBLUE << "\t\t ... " << +cNhits << " hits found." << RESET;
-            //         }
-            //     }
-            //     cEventIndex++;
-            // }
-            uint32_t cN=0;
-            for ( auto& cEvent : cEvents )
-            {
-                LOG (INFO) << ">>> Event #" << cN++ ;
-                outp.str ("");
-                outp << *cEvent;
-                LOG (INFO) << outp.str();
-                //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBoard);
-                //cDAQFileHandler->set (cSLev.getData<uint32_t>() );
-                //cSLev.print (std::cout);
-            }
-        }
+        // for( auto& cBoard : cCicAligner.fBoardVector )
+        // {
+        //     for (auto& cFe : cBoard->fModuleVector)
+        //     {
+        //         // matching 
+        //         for (auto& cChip : cFe->fReadoutChipVector) 
+        //         {
+        //             if( cFe->getFeId()%2 == 0 )
+        //                 static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
+        //             else
+        //                 static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
+        //         }
+        //     }
+        //     cCicAligner.ReadNEvents ( cBoard , 10 );
+        //     const std::vector<Event*>& cEvents = cCicAligner.GetEvents ( cBoard );
+        //     // size_t cEventIndex=0;
+        //     // for ( auto& cEvent : cEvents )
+        //     // {
+        //     //     LOG (INFO) << BOLDBLUE << "Event " << +cEventIndex << RESET;
+        //     //     for (auto& cFe : cBoard->fModuleVector)
+        //     //     {
+        //     //         for (auto& cChip : cFe->fReadoutChipVector)
+        //     //         {
+        //     //             auto cNhits = cEvent->GetNHits ( cFe->getFeId() , cChip->getChipId() );
+        //     //             LOG (INFO) << BOLDBLUE << "\t\t ... " << +cNhits << " hits found." << RESET;
+        //     //         }
+        //     //     }
+        //     //     cEventIndex++;
+        //     // }
+        //     uint32_t cN=0;
+        //     for ( auto& cEvent : cEvents )
+        //     {
+        //         LOG (INFO) << ">>> Event #" << cN++ ;
+        //         outp.str ("");
+        //         outp << *cEvent;
+        //         LOG (INFO) << outp.str();
+        //         //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBoard);
+        //         //cDAQFileHandler->set (cSLev.getData<uint32_t>() );
+        //         //cSLev.print (std::cout);
+        //     }
+        // }
         //delete cDAQFileHandler;
     }
     
