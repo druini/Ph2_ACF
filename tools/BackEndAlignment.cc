@@ -3,6 +3,8 @@
 
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
+#include "../HWInterface/BackendAlignmentInterface.h"
+
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -14,11 +16,12 @@ BackEndAlignment::BackEndAlignment() :
     Tool            ()
 {
     fRegMapContainer.reset();
+    fAlignmentInterface = new BackendAlignmentInterface(fBeBoardFWMap);
 }
 
 BackEndAlignment::~BackEndAlignment()
 {
-
+    delete fAlignmentInterface;
 }
 
 void BackEndAlignment::Initialise ()
@@ -45,6 +48,93 @@ void BackEndAlignment::Initialise ()
         }
     }
 }
+// tuning of L1A lines 
+bool BackEndAlignment::L1PhaseAlignment(BeBoard* pBoard, uint8_t pPattern , uint16_t pPatternLength )
+{
+    LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly sample L1A data coming from the front-end objects." << RESET;
+    // original reg map 
+    BeBoardRegMap cRegisterMap = pBoard->getBeBoardRegMap();
+    
+    // configure triggers 
+    // make sure you're only sending one trigger at a time 
+    auto cMult = fBeBoardInterface->ReadBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
+    auto cTriggerRate =  fBeBoardInterface->ReadBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 10);
+    // disable back-pressure 
+    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
+    // reset trigger 
+    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_ctrl.fast_command_block.control.reset",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    // load new trigger configuration 
+    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    // reset readout 
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout(); 
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
+
+    LOG (INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
+    bool cSuccess=true;
+    // back-end tuning on l1 lines
+    for (auto& cFe : pBoard->fModuleVector)
+    {
+        uint8_t cBitslip=0;
+        uint8_t cHybridId = cFe->getFeId() ;
+        uint8_t cChip = 0;
+        auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
+        int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
+        uint8_t cLineId=0;
+        // select L1 line , hybrid + chip 
+        fAlignmentInterface->SetLine( cHybridId , cChipId , cLineId  );
+        // configure pattern and pattern length 
+        fAlignmentInterface->SelectPattern( pPattern , pPatternLength );
+
+        // tune phase on l1A line - don't have t do anything on the FEs
+        if( pBoard->ifOptical() )
+        {
+            LOG (INFO) << BOLDBLUE << "Optical readout .. don't have to do anything here" << RESET;
+        }
+        else 
+        {
+            fBeBoardInterface->ChipReSync(pBoard);
+            LOG (INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybridId << " Chip" << +cChipId << RESET;
+            // configure pattern
+            fBeBoardInterface->Start(pBoard);
+            /// phase alignment
+            fAlignmentInterface->PhaseAlign(pBoard);
+            fBeBoardInterface->Stop(pBoard);
+            uint8_t cLineStatus = fAlignmentInterface->GetLineStatus(pBoard );
+        }
+    }
+
+    
+    // reconfigure trigger 
+    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
+    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cTriggerRate);
+    // reconfigure original trigger configu 
+    std::vector< std::pair<std::string, uint32_t> > cVecReg;
+    for ( auto const& it : cRegisterMap )
+    {
+        auto cRegName = it.first;
+        if( cRegName.find("fc7_daq_cnfg.fast_command_block.") != std::string::npos ) 
+        {
+            //LOG (DEBUG) << BOLDBLUE << "Setting " << cRegName << " : " << it.second << RESET;
+            cVecReg.push_back ( {it.first, it.second} );
+        }
+    }
+    fBeBoardInterface->WriteBoardMultReg ( pBoard, cVecReg );
+    cVecReg.clear();
+    // reset trigger 
+    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_ctrl.fast_command_block.control.reset",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    // load new trigger configuration 
+    fBeBoardInterface->WriteBoardReg (pBoard,"fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout(); 
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    return true;
+}
+
 bool BackEndAlignment::L1Alignment2S(BeBoard* pBoard)
 {
     bool cAligned = false;
@@ -173,89 +263,6 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMultiplicity);
     return cAligned;     
 }
-// bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
-// {
-//     bool cAligned = false;
-//     // make sure you're only sending one trigger at a time here
-//     bool cSparsified = (fBeBoardInterface->ReadBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
-//     auto cTriggerMultiplicity = fBeBoardInterface->ReadBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-//     fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
-
-//     // force CIC to output empty L1A frames [by disabling all FEs]
-//     for (auto& cFe : pBoard->fModuleVector)
-//     {
-//         auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
-//         // select link [ if optical ]
-//         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
-//         // only produce L1A header .. so disable all FEs .. for CIC2 only
-//         if( !cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2 ) 
-//             fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 1);
-
-//         if( cCic->getFrontEndType() == FrontEndType::CIC2 )
-//             fCicInterface->EnableFEs(cCic , {0,1,2,3,4,5,6,7}, false );  
-//         if( cCic->getFrontEndType() == FrontEndType::CIC )
-//         {
-//             fCicInterface->EnableFEs(cCic , {0,1,2,3,4,5,6,7}, true );  
-//             //fCicInterface->SelectOutput( static_cast<OuterTrackerModule*>(cFe)->fCic, true );
-//             //configure chips to output 1010 pattern 
-            
-//             // ChannelGroup<NCHANNELS,1> cChannelMask; cChannelMask.disableAllChannels();
-//             // for( uint8_t cChannel=0; cChannel<NCHANNELS; cChannel+=2) cChannelMask.enableChannel( cChannel);//generate a hit in every Nth channel
-//             // // generate alignment pattern on all stub lines  
-//             // for (auto& cChip : cFe->fReadoutChipVector)
-//             // {
-//             //     // original mask
-//             //     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip , "VCth" , 900);
-//             //     const ChannelGroup<NCHANNELS>* cOriginalMask  = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
-//             //     //LOG (INFO) << BOLDBLUE << "Generating HIT patterns needed for phase alignment on FE" << +cFe->getFeId() << " CBC" << +cChip->getChipId() << RESET;
-//             //     fReadoutChipInterface-> maskChannelsGroup (cChip, &cChannelMask);
-//             //     // //send triggers ...
-//             //     // for( auto cTrigger=0; cTrigger < 1000 ; cTrigger++)
-//             //     // {
-//             //     //     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Trigger(0);
-//             //     //     std::this_thread::sleep_for (std::chrono::microseconds (10) );
-//             //     // }
-//             //     //fReadoutChipInterface->maskChannelsGroup( cChip ,cOriginalMask );
-//             // }
-
-//         }
-//     }
-//     //L1A line 
-//     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1Tuning (pBoard,fL1Debug);
-//     if( !cAligned )
-//     {
-//         LOG (INFO) << BOLDBLUE << "L1A alignment in the back-end " << BOLDRED << " FAILED ..." << RESET;
-//         return false;
-//     }
-
-//     // enable CIC output of pattern .. and enable all FEs again
-//     for (auto& cFe : pBoard->fModuleVector)
-//     {
-//         // select link [ if optical ]
-//         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
-//         fCicInterface->EnableFEs(static_cast<OuterTrackerModule*>(cFe)->fCic , {0,1,2,3,4,5,6,7}, true );
-//         fCicInterface->SelectOutput( static_cast<OuterTrackerModule*>(cFe)->fCic, true );
-//     }
-//     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning (pBoard, fStubDebug);
-
-//     // disable CIC output of pattern 
-//     for (auto& cFe : pBoard->fModuleVector)
-//     {
-//         auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
-//         // select link [ if optical ]
-//         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
-//         fCicInterface->SelectOutput( static_cast<OuterTrackerModule*>(cFe)->fCic, false );
-
-//         if( !cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2 ) 
-//             fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 0);
-//     }
-
-//     // re-load configuration of fast command block from register map loaded from xml file 
-//     LOG (INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
-//     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFastCommandBlock(pBoard);
-//     fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMultiplicity);
-//     return cAligned;     
-// }
 bool BackEndAlignment::CBCAlignment(BeBoard* pBoard )
 {
     bool cAligned = false;

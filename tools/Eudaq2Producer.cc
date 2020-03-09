@@ -269,15 +269,15 @@ void Eudaq2Producer::ReadoutLoop()
     } 
     for(auto cBoard : this->fBoardVector)
     {
-        std::vector<uint32_t> cRawData(0); this->ReadData(cBoard, cRawData);
+    	std::vector<uint32_t> cRawData(0); this->ReadData(cBoard, cRawData);
         // empty data - wait and pass
       	if( cRawData.size() == 0 )
       	{		
            LOG (INFO) << BOLDBLUE << "Read-back 0 words from the DD3 memory using ReadData.. waiting 100 ms " << RESET;
-	         std::this_thread::sleep_for (std::chrono::microseconds (100) );
+	   std::this_thread::sleep_for (std::chrono::microseconds (100) );
            continue;
       	}
-        fPh2FileHandler->setData(cRawData);
+	fPh2FileHandler->setData(cRawData);
         std::vector<Event*> cPh2NewEvents = this->GetEvents(cBoard);
         if (cPh2NewEvents.size() == 0 ) 
         {
@@ -295,11 +295,12 @@ void Eudaq2Producer::ReadoutLoop()
           //Add multiple Ph2ACF Events as EUDAQ SubEvents to a EUDAQ Event
           for(auto cPh2Event = cPh2Events.begin(); cPh2Event<cPh2Events.begin()+fTriggerMultiplicity+1; cPh2Event++)
           {
-            // S-link event writing 
-            //SLinkEvent cSLev = (*cPh2Event)->GetSLinkEvent (cBoard);
-            std::vector<uint32_t> cSLinkData = (*cPh2Event)->GetSLinkEvent(cBoard).getData<uint32_t>();
-            fSLinkFileHandler->setData ( cSLinkData );
-            
+            // sarah
+            // un-comment this to test s-link event writing
+            SLinkEvent cSLev = (*cPh2Event)->GetSLinkEvent (cBoard);
+            std::vector<uint32_t> tmp = cSLev.getData<uint32_t>();
+            fSLinkFileHandler->setData(tmp);
+
             eudaq::EventSP cEudaqSubEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
             this->ConvertToSubEvent(cBoard, *cPh2Event , cEudaqSubEvent);
             cEudaqSubEvent->SetTimestamp(cTimestamp, cTimestamp);

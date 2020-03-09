@@ -27,6 +27,10 @@
     #include "TText.h"
 #endif
 
+namespace Ph2_HwInterface
+{
+   class BackendAlignmentInterface;
+}
 
 class BackEndAlignment : public Tool
 {
@@ -36,8 +40,11 @@ class BackEndAlignment : public Tool
 
     void Initialise ( );
     bool Align();
+
     void SetL1Debug(bool pDebug){ fL1Debug=pDebug;};
     void SetStubDebug(bool pDebug){ fStubDebug=pDebug;};
+
+    bool L1PhaseAlignment(Ph2_HwDescription::BeBoard* pBoard, uint8_t pPattern , uint16_t pPatternLength );
     bool L1Alignment2S(Ph2_HwDescription::BeBoard* pBoard);
     bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard );
@@ -53,6 +60,7 @@ class BackEndAlignment : public Tool
     bool fStubDebug=false;
 
   private:
+    Ph2_HwInterface::BackendAlignmentInterface* fAlignmentInterface;
     // Containers
     DetectorDataContainer fRegMapContainer;
     // booking histograms 
