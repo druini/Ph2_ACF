@@ -2320,12 +2320,11 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     // RESET the readout
     auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     auto cTriggerRate = this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz 
-    int  cTimeSingleTrigger_ms = std::ceil(1.0/(0.75*cTriggerRate));
+    uint32_t  cTimeSingleTrigger_ms = std::ceil(1.0/(cTriggerRate));
 
-    //LOG (INFO) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << RESET;
+    LOG (DEBUG) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << " trigger rate is " << +cTriggerRate << RESET;
     //this->ResetReadout();
     pNEvents = pNEvents*(cMultiplicity+1);
-    int cMaxTime_us = pNEvents*cTimeSingleTrigger_ms*1e3;
     // check 
     //LOG (INFO) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
     //LOG (DEBUG) << BOLDBLUE << "Initial fast reset " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable") << RESET;
@@ -2337,7 +2336,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents} );
     cVecReg.push_back ( {"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1} );
     this->WriteStackReg ( cVecReg );
-    //std::this_thread::sleep_for (std::chrono::microseconds (100) );
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
     
     // start triggering machine which will collect N events
     this->Start();
@@ -2349,32 +2348,25 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
 
     uint32_t cTimeoutCounter = 0 ;
-    uint32_t cTimeoutValue = 10;
-    uint32_t cPause = static_cast<uint32_t>(cMaxTime_us/(double(cTimeoutValue)));
-    while (cReadoutReq == 0 && !pFailed )
+    uint32_t cTimeoutValue = cTimeSingleTrigger_ms*pNEvents*1.1;
+    uint32_t cPause = static_cast<uint32_t>(cTimeSingleTrigger_ms*1e3);
+    LOG (DEBUG) << BOLDMAGENTA << "Waiting " << +cPause << " microseconds between attempts at checking readout req... waiting for a maximum of " <<  +cTimeoutValue << " iterations." << RESET;
+    do
     {
-        pFailed = pFailed || ( cTimeoutCounter >= cTimeoutValue );
-        if(!pFailed)
-        {
-          cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
-          cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
-          cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-          if(cNWords==0)
-          {
-              if( cTimeoutCounter >= cTimeoutValue ) 
-              {
-                  pFailed = true;
-                  if( pNEvents == cNtriggers ) 
-                  {
-                      LOG(INFO) << BOLDBLUE << "\t...No data in the readout after receiving all triggers. Re-trying the point [ " << +cNWords << " words in readout]" << RESET; 
-                  }
-                  else
-                      LOG (INFO) << BOLDBLUE << "\t....No data in the readout. Retrying the point!" << RESET;
-              }
-          }
-          cTimeoutCounter++;
-          std::this_thread::sleep_for (std::chrono::microseconds (cPause) );
-      }
+        std::this_thread::sleep_for (std::chrono::microseconds (cPause) );
+        cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
+        cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
+        cTimeoutCounter++;
+    }while (cReadoutReq == 0 && ( cTimeoutCounter < cTimeoutValue ) );
+    pFailed = (cReadoutReq == 0 || ( cTimeoutCounter >= cTimeoutValue ) ); // fails if either one of these is true 
+
+    if(cReadoutReq==0)
+    {
+      LOG(INFO) << BOLDBLUE << "\t...Readout request not cleared..." << RESET;
+    }
+    if( cNWords == 0 ) 
+    {
+      LOG(INFO) << BOLDBLUE << "\t...No data in the readout after receiving all triggers. Re-trying the point [ " << +cNWords << " words in readout]" << RESET; 
     }
 
 
@@ -2412,6 +2404,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     // again check if failed to re-run in case
     if (pFailed)
     {
+        LOG (INFO) << BOLDMAGENTA << "Read back " << +cNWords << " from FC7... readout request is " << +cReadoutReq << RESET;
         LOG (INFO) << BOLDRED << "Failed to readout all events after " << cTimeoutValue << " trials, Retrying..." << RESET;
         pData.clear();
         this->Stop();
@@ -2419,12 +2412,12 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
         this->ReadNEvents (pBoard, pNEvents, pData);
     }        
 
-        if (fSaveToFile)
-        fFileHandler->setData(pData);
-	    // for ( auto& L : pData )
-        // {
-        //     LOG (INFO) << RED << std::bitset<32>(L) << RESET;
-        // }
+    if (fSaveToFile)
+      fFileHandler->setData(pData);
+  // for ( auto& L : pData )
+    // {
+    //     LOG (INFO) << RED << std::bitset<32>(L) << RESET;
+    // }
 }
 
 /** compute the block size according to the number of CBC's on this board
