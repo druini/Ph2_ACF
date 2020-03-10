@@ -26,9 +26,9 @@ namespace Ph2_HwDescription
 
   void RD53::loadfRegMap (const std::string& fileName)
   {
-    std::ifstream     file (fileName.c_str(), std::ios::in);
-    std::stringstream myString;
-    perPixelData      pixData;
+    std::ifstream      file (fileName.c_str(), std::ios::in);
+    std::stringstream  myString;
+    perColumnPixelData pixData;
 
     if (file.good() == true)
       {
@@ -50,7 +50,7 @@ namespace Ph2_HwDescription
                     pixData.Enable.reset();
                     pixData.HitBus.reset();
                     pixData.InjEn .reset();
-                    pixData.TDAC  .clear();
+                    pixData.TDAC  .fill(0);
                   }
                 else if (line.find("ENABLE") != std::string::npos)
                   {
@@ -143,7 +143,7 @@ namespace Ph2_HwDescription
                         readWord.erase(std::remove_if(readWord.begin(), readWord.end(), isspace), readWord.end());
                         if (std::all_of(readWord.begin(), readWord.end(), isdigit))
                           {
-                            pixData.TDAC.push_back(atoi(readWord.c_str()));
+                            pixData.TDAC[row] = atoi(readWord.c_str());
                             row++;
                           }
                       }
@@ -267,9 +267,9 @@ namespace Ph2_HwDescription
               file << "," << fPixelsMask[i].InjEn[j];
             file << std::endl;
 
-            file << "TDAC   " << unsigned(fPixelsMask[i].TDAC[0]);
+            file << "TDAC   " << +fPixelsMask[i].TDAC[0];
             for (auto j = 1u; j < fPixelsMask[i].TDAC.size(); j++)
-              file << "," << unsigned(fPixelsMask[i].TDAC[j]);
+              file << "," << +fPixelsMask[i].TDAC[j];
             file << std::endl;
 
             file << std::endl;
