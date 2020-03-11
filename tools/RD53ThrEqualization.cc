@@ -50,9 +50,8 @@ void ThrEqualization::ConfigureCalibration ()
 
   colStart = std::max(colStart, frontEnd->colStart);
   colStop = std::min(colStop, frontEnd->colStop);
-
-  std::cout << "colStart: " << colStart << '\n';
-  std::cout << "colStop: " << colStop << '\n';
+  
+  LOG (INFO) << BOLDBLUE << "\t--> ThrEqualization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
 
   // ########################
   // # Custom channel group #

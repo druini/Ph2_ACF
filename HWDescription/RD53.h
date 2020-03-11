@@ -127,9 +127,9 @@ namespace Ph2_HwDescription
     struct FrontEnd {
       const char* name;
       const char* thresholdReg;
-      unsigned int nTdacValues;
-      unsigned int colStart;
-      unsigned int colStop;
+      size_t nTdacValues;
+      size_t colStart;
+      size_t colStop;
     };
 
     static constexpr FrontEnd LIN = {"LIN", "Vthreshold_LIN", 16, 128, 263};
