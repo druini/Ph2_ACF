@@ -876,40 +876,45 @@ namespace Ph2_HwInterface
     std::tie(tdc, l1a_counter) = bits::unpack<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
     bx_counter = data[3];
 
+    std::vector<size_t> event_sizes;
+    auto current = data + 4;
+    while (current < data + n - dummy_size * NWORDS_DDR3) {
+      if (*current >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) != RD53FWEvtEncoder::FRAME_HEADER) {
+        evtStatus |= RD53FWEvtEncoder::FRSIZE;
+        return;
+      }
+      size_t size = (*current & ((1 << RD53FWEvtEncoder::NBIT_L1ASIZE) - 1)) * NWORDS_DDR3;
+      event_sizes.push_back(size);
+      current += size;
+    }
 
-    std::vector<size_t> chip_start;
-    for (auto i = 4u; i < n - dummy_size * NWORDS_DDR3; i++)
-      if (data[i] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) == RD53FWEvtEncoder::FRAME_HEADER)
-        chip_start.push_back(i);
-
+    if (current != data + n - dummy_size * NWORDS_DDR3) {
+      evtStatus |= RD53FWEvtEncoder::MISSCHIP;
+      return;
+    }
 
     // #################################
     // # Decoding frames and chip data #
     // #################################
-    chip_frames.reserve(chip_start.size());
-    chip_events.reserve(chip_start.size());
-    for (auto i = 0u; i < chip_start.size(); i++)
+    chip_frames.reserve(event_sizes.size());
+    chip_events.reserve(event_sizes.size());
+    size_t index = 4;
+    for (auto size : event_sizes)
       {
-        const size_t start = chip_start[i];
-        const size_t end   = (i == chip_start.size() - 1 ? n - dummy_size * NWORDS_DDR3 : chip_start[i + 1]);
-        chip_frames.emplace_back(data[start], data[start + 1]);
+        chip_frames.emplace_back(data[index], data[index + 1]);
 
-        if (chip_frames[i].error_code != 0)                                     evtStatus |= RD53FWEvtEncoder::FWERR;
-        else if ((chip_frames[i].l1a_data_size * NWORDS_DDR3) != (end - start)) evtStatus |= RD53FWEvtEncoder::FRSIZE;
-        else if ((end - start) <= 2)                                            evtStatus |= RD53FWEvtEncoder::MISSCHIP;
+        if (chip_frames.back().error_code != 0) {
+          evtStatus |= RD53FWEvtEncoder::FWERR;
+          chip_frames.clear();
+          chip_events.clear();
+          return;
+        }
 
-        if ((evtStatus & RD53FWEvtEncoder::FWERR)  ||
-            (evtStatus & RD53FWEvtEncoder::FRSIZE) ||
-            (evtStatus & RD53FWEvtEncoder::MISSCHIP))
-          {
-            chip_frames.clear();
-            chip_events.clear();
-            return;
-          }
+        chip_events.emplace_back(&data[index + 2], size - 2);
 
-        chip_events.emplace_back(&data[start + 2], chip_frames.back().l1a_data_size * NWORDS_DDR3 - 2);
+        if (chip_events.back().evtStatus != RD53EvtEncoder::CHIPGOOD) evtStatus |= chip_events.back().evtStatus;
 
-        if (chip_events[i].evtStatus != RD53EvtEncoder::CHIPGOOD) evtStatus |= chip_events[i].evtStatus;
+        index += size;
       }
   }
 
